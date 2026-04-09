@@ -133,7 +133,45 @@ const AdminUsers = () => {
     },
   });
 
-  const openEditDialog = (profile: Profile) => {
+  const toggleBanMutation = useMutation({
+    mutationFn: async ({ profileId, isBanned }: { profileId: string; isBanned: boolean }) => {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ is_banned: isBanned } as any)
+        .eq('id', profileId);
+      if (error) throw error;
+    },
+    onSuccess: (_, vars) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-profiles'] });
+      toast.success(vars.isBanned
+        ? (isRTL ? 'تم تعطيل الحساب' : 'Account disabled')
+        : (isRTL ? 'تم تفعيل الحساب' : 'Account enabled'));
+    },
+    onError: () => {
+      toast.error(isRTL ? 'فشل تحديث حالة الحساب' : 'Failed to update account status');
+    },
+  });
+
+  const deleteUserMutation = useMutation({
+    mutationFn: async (targetUserId: string) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await supabase.functions.invoke('admin-delete-user', {
+        body: { target_user_id: targetUserId },
+      });
+      if (res.error) throw res.error;
+      if (res.data?.error) throw new Error(res.data.error);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-profiles'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-user-roles'] });
+      setDeletingUserId(null);
+      toast.success(isRTL ? 'تم حذف الحساب بنجاح' : 'Account deleted successfully');
+    },
+    onError: () => {
+      toast.error(isRTL ? 'فشل حذف الحساب' : 'Failed to delete account');
+    },
+  });
+
     setEditingProfile(profile);
     setEditForm({
       full_name: profile.full_name || '',
