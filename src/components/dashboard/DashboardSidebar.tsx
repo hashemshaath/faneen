@@ -106,7 +106,11 @@ export const DashboardSidebar: React.FC = () => {
                       activeClassName="bg-gold/10 text-gold font-medium"
                     >
                       <item.icon className="h-4 w-4 shrink-0" />
-                      {!collapsed && <span className="ms-2">{isRTL ? (item.titleKey === 'admin.api_settings' ? 'إعدادات API' : item.titleKey === 'admin.api_docs' ? 'توثيق API' : 'المدونة') : (item.titleKey === 'admin.api_settings' ? 'API Settings' : item.titleKey === 'admin.api_docs' ? 'API Docs' : 'Blog')}</span>}
+                      {!collapsed && <span className="ms-2">{
+                        isRTL
+                          ? (item.titleKey === 'admin.api_settings' ? 'إعدادات API' : item.titleKey === 'admin.api_docs' ? 'توثيق API' : item.titleKey === 'admin.profile_systems' ? 'القطاعات' : 'المدونة')
+                          : (item.titleKey === 'admin.api_settings' ? 'API Settings' : item.titleKey === 'admin.api_docs' ? 'API Docs' : item.titleKey === 'admin.profile_systems' ? 'Profiles' : 'Blog')
+                      }</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
