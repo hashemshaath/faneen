@@ -4,15 +4,64 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { MessageSquare, Send, Search, Check, CheckCheck, ArrowLeft, ArrowRight } from 'lucide-react';
+import { toast } from 'sonner';
+import {
+  MessageSquare, Send, Search, Check, CheckCheck, ArrowLeft, ArrowRight,
+  Paperclip, Image as ImageIcon, FileText, X, Download, Loader2,
+} from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
+
+const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
+const getFileIcon = (type: string) => {
+  if (IMAGE_TYPES.includes(type)) return ImageIcon;
+  return FileText;
+};
+
+const formatFileSize = (bytes: number) => {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
+
+const AttachmentPreview = ({ url, type, name }: { url: string; type: string; name?: string }) => {
+  const isImage = IMAGE_TYPES.some(t => url.toLowerCase().includes(t.split('/')[1]) || type === t);
+  const inferredImage = /\.(jpg|jpeg|png|gif|webp)(\?|$)/i.test(url);
+
+  if (isImage || inferredImage) {
+    return (
+      <a href={url} target="_blank" rel="noopener noreferrer" className="block mt-1.5">
+        <img
+          src={url}
+          alt={name || 'attachment'}
+          className="max-w-[240px] max-h-[200px] rounded-lg object-cover border border-border/30"
+          loading="lazy"
+        />
+      </a>
+    );
+  }
+
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex items-center gap-2 mt-1.5 p-2 rounded-lg bg-background/50 border border-border/30 hover:bg-muted/50 transition-colors max-w-[240px]"
+    >
+      <FileText className="w-5 h-5 text-muted-foreground shrink-0" />
+      <span className="text-xs truncate flex-1">{name || 'ملف مرفق'}</span>
+      <Download className="w-4 h-4 text-muted-foreground shrink-0" />
+    </a>
+  );
+};
 
 const DashboardMessages = () => {
   const { isRTL, language } = useLanguage();
@@ -21,7 +70,11 @@ const DashboardMessages = () => {
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [messageText, setMessageText] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [attachedFile, setAttachedFile] = useState<File | null>(null);
+  const [attachedPreview, setAttachedPreview] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch conversations with participant profiles
   const { data: conversations = [] } = useQuery({
@@ -34,7 +87,6 @@ const DashboardMessages = () => {
         .order('last_message_at', { ascending: false });
       if (error) throw error;
 
-      // Fetch profiles for other participants
       const otherIds = data.map((c: any) =>
         c.participant_1 === user!.id ? c.participant_2 : c.participant_1
       );
@@ -113,25 +165,95 @@ const DashboardMessages = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Handle file selection
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error(isRTL ? 'حجم الملف يتجاوز 10 ميجابايت' : 'File size exceeds 10MB');
+      return;
+    }
+
+    setAttachedFile(file);
+
+    if (IMAGE_TYPES.includes(file.type)) {
+      const reader = new FileReader();
+      reader.onload = (ev) => setAttachedPreview(ev.target?.result as string);
+      reader.readAsDataURL(file);
+    } else {
+      setAttachedPreview(null);
+    }
+
+    // Reset input
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const removeAttachment = () => {
+    setAttachedFile(null);
+    setAttachedPreview(null);
+  };
+
+  // Upload file to storage
+  const uploadFile = async (file: File): Promise<string> => {
+    const ext = file.name.split('.').pop() || 'bin';
+    const fileName = `${user!.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+
+    const { error } = await supabase.storage
+      .from('chat-attachments')
+      .upload(fileName, file, { contentType: file.type });
+
+    if (error) throw error;
+
+    const { data: urlData } = supabase.storage
+      .from('chat-attachments')
+      .getPublicUrl(fileName);
+
+    return urlData.publicUrl;
+  };
+
   // Send message
   const sendMutation = useMutation({
     mutationFn: async () => {
+      setIsUploading(true);
+      let attachmentUrl: string | null = null;
+      let msgType = 'text';
+
+      if (attachedFile) {
+        attachmentUrl = await uploadFile(attachedFile);
+        msgType = IMAGE_TYPES.includes(attachedFile.type) ? 'image' : 'file';
+      }
+
+      const content = messageText.trim() || (attachedFile
+        ? (isRTL ? `📎 ${attachedFile.name}` : `📎 ${attachedFile.name}`)
+        : '');
+
+      if (!content && !attachmentUrl) return;
+
       const { error } = await supabase.from('messages').insert({
         conversation_id: selectedConversation!,
         sender_id: user!.id,
-        content: messageText.trim(),
+        content,
+        attachment_url: attachmentUrl,
+        message_type: msgType,
       });
       if (error) throw error;
     },
     onSuccess: () => {
       setMessageText('');
+      removeAttachment();
+      setIsUploading(false);
       queryClient.invalidateQueries({ queryKey: ['messages', selectedConversation] });
       queryClient.invalidateQueries({ queryKey: ['conversations', user?.id] });
+    },
+    onError: () => {
+      setIsUploading(false);
+      toast.error(isRTL ? 'فشل إرسال الرسالة' : 'Failed to send message');
     },
   });
 
   const handleSend = () => {
-    if (!messageText.trim() || !selectedConversation) return;
+    if ((!messageText.trim() && !attachedFile) || !selectedConversation) return;
     sendMutation.mutate();
   };
 
@@ -145,13 +267,6 @@ const DashboardMessages = () => {
 
   const selectedConv = conversations.find((c: any) => c.id === selectedConversation);
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
-
-  // Count unread per conversation
-  const getUnreadCount = (conv: any) => {
-    // We approximate - if the last message was not from current user and the conversation has recent activity
-    // A more accurate version would need a separate query
-    return 0; // simplified
-  };
 
   return (
     <DashboardLayout>
@@ -255,7 +370,21 @@ const DashboardMessages = () => {
                               ? 'bg-primary text-primary-foreground rounded-ee-md'
                               : 'bg-muted rounded-es-md'
                           }`}>
-                            <p className="whitespace-pre-wrap break-words">{msg.content}</p>
+                            {/* Attachment */}
+                            {msg.attachment_url && (
+                              <AttachmentPreview
+                                url={msg.attachment_url}
+                                type={msg.message_type}
+                                name={msg.content?.startsWith('📎') ? msg.content.slice(3) : undefined}
+                              />
+                            )}
+                            {/* Text content (skip if it's just the file name placeholder) */}
+                            {msg.content && !msg.content.startsWith('📎') && (
+                              <p className="whitespace-pre-wrap break-words">{msg.content}</p>
+                            )}
+                            {msg.content?.startsWith('📎') && !msg.attachment_url && (
+                              <p className="whitespace-pre-wrap break-words">{msg.content}</p>
+                            )}
                             <div className={`flex items-center gap-1 mt-1 ${isMine ? 'justify-end' : ''}`}>
                               <span className={`text-[10px] ${isMine ? 'text-primary-foreground/60' : 'text-muted-foreground'}`}>
                                 {new Date(msg.created_at).toLocaleTimeString(language === 'ar' ? 'ar-SA' : 'en', { hour: '2-digit', minute: '2-digit' })}
@@ -274,23 +403,64 @@ const DashboardMessages = () => {
                   </div>
                 </ScrollArea>
 
+                {/* Attachment Preview */}
+                {attachedFile && (
+                  <div className="px-3 pt-2 border-t border-border/30">
+                    <div className="flex items-center gap-2 p-2 bg-muted/50 rounded-lg">
+                      {attachedPreview ? (
+                        <img src={attachedPreview} alt="" className="w-12 h-12 rounded-lg object-cover" />
+                      ) : (
+                        <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
+                          <FileText className="w-6 h-6 text-muted-foreground" />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium truncate">{attachedFile.name}</p>
+                        <p className="text-[10px] text-muted-foreground">{formatFileSize(attachedFile.size)}</p>
+                      </div>
+                      <Button variant="ghost" size="icon" className="w-7 h-7 shrink-0" onClick={removeAttachment}>
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
                 {/* Input */}
                 <div className="p-3 border-t border-border/50 bg-card">
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 items-end">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
+                      className="hidden"
+                      onChange={handleFileSelect}
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="shrink-0"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isUploading}
+                      title={isRTL ? 'إرفاق ملف' : 'Attach file'}
+                    >
+                      <Paperclip className="w-5 h-5" />
+                    </Button>
                     <Input
                       value={messageText}
                       onChange={e => setMessageText(e.target.value)}
                       onKeyDown={handleKeyDown}
                       placeholder={isRTL ? 'اكتب رسالتك...' : 'Type a message...'}
                       className="flex-1"
+                      disabled={isUploading}
                     />
                     <Button
                       onClick={handleSend}
-                      disabled={!messageText.trim() || sendMutation.isPending}
+                      disabled={(!messageText.trim() && !attachedFile) || sendMutation.isPending || isUploading}
                       variant="hero"
                       size="icon"
+                      className="shrink-0"
                     >
-                      <Send className="w-4 h-4" />
+                      {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                     </Button>
                   </div>
                 </div>
