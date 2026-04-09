@@ -12,11 +12,14 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FolderOpen, Calendar, DollarSign, Clock, Building2, X, ImageIcon, Search, MapPin, Tag } from 'lucide-react';
 
+const ITEMS_PER_PAGE = 12;
+
 const Projects = () => {
   const { isRTL, language } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedCity, setSelectedCity] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
 
   const { data: categories = [] } = useQuery({
     queryKey: ['categories'],
@@ -47,7 +50,7 @@ const Projects = () => {
     },
   });
 
-  const projects = useMemo(() => {
+  const filtered = useMemo(() => {
     return allProjects.filter((p: any) => {
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
@@ -66,8 +69,20 @@ const Projects = () => {
     });
   }, [allProjects, searchQuery, selectedCategory, selectedCity]);
 
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const projects = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filtered.slice(start, start + ITEMS_PER_PAGE);
+  }, [filtered, currentPage]);
+
+  // Reset page when filters change
+  const handleFilterChange = (setter: (v: string) => void) => (val: string) => {
+    setter(val);
+    setCurrentPage(1);
+  };
+
   const hasActiveFilters = searchQuery || selectedCategory !== 'all' || selectedCity !== 'all';
-  const clearFilters = () => { setSearchQuery(''); setSelectedCategory('all'); setSelectedCity('all'); };
+  const clearFilters = () => { setSearchQuery(''); setSelectedCategory('all'); setSelectedCity('all'); setCurrentPage(1); };
 
   return (
     <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
@@ -94,11 +109,11 @@ const Projects = () => {
               <Input
                 placeholder={isRTL ? 'ابحث عن مشروع...' : 'Search projects...'}
                 value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
+                onChange={e => { setSearchQuery(e.target.value); setCurrentPage(1); }}
                 className="ps-10"
               />
             </div>
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <Select value={selectedCategory} onValueChange={handleFilterChange(setSelectedCategory)}>
               <SelectTrigger className="w-full sm:w-48">
                 <div className="flex items-center gap-2">
                   <Tag className="w-4 h-4 text-muted-foreground" />
@@ -114,7 +129,7 @@ const Projects = () => {
                 ))}
               </SelectContent>
             </Select>
-            <Select value={selectedCity} onValueChange={setSelectedCity}>
+            <Select value={selectedCity} onValueChange={handleFilterChange(setSelectedCity)}>
               <SelectTrigger className="w-full sm:w-48">
                 <div className="flex items-center gap-2">
                   <MapPin className="w-4 h-4 text-muted-foreground" />
@@ -134,7 +149,7 @@ const Projects = () => {
           {hasActiveFilters && (
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">
-                {isRTL ? `${projects.length} نتيجة` : `${projects.length} results`}
+                {isRTL ? `${filtered.length} نتيجة` : `${filtered.length} results`}
               </span>
               <Button variant="ghost" size="sm" onClick={clearFilters} className="text-xs h-7">
                 <X className="w-3 h-3 me-1" />
@@ -154,73 +169,119 @@ const Projects = () => {
             <p>{isRTL ? 'لا توجد مشاريع حالياً' : 'No projects available'}</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {projects.map((p: any) => (
-              <Link key={p.id} to={`/projects/${p.id}`} className="block">
-                <Card className="overflow-hidden border-border/50 hover:border-accent/30 transition-all hover:shadow-lg group cursor-pointer h-full">
-                  <div className="aspect-video bg-muted relative">
-                    {p.cover_image_url ? (
-                      <img src={p.cover_image_url} alt={p.title_ar} className="w-full h-full object-cover" loading="lazy" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <FolderOpen className="w-12 h-12 text-muted-foreground/30" />
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {projects.map((p: any) => (
+                <Link key={p.id} to={`/projects/${p.id}`} className="block">
+                  <Card className="overflow-hidden border-border/50 hover:border-accent/30 transition-all hover:shadow-lg group cursor-pointer h-full">
+                    <div className="aspect-video bg-muted relative">
+                      {p.cover_image_url ? (
+                        <img src={p.cover_image_url} alt={p.title_ar} className="w-full h-full object-cover" loading="lazy" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <FolderOpen className="w-12 h-12 text-muted-foreground/30" />
+                        </div>
+                      )}
+                      {p.is_featured && (
+                        <Badge className="absolute top-2 start-2 bg-accent text-accent-foreground text-[10px]">
+                          {isRTL ? 'مميز' : 'Featured'}
+                        </Badge>
+                      )}
+                      <div className="absolute bottom-2 end-2 bg-background/80 backdrop-blur-sm rounded-md px-2 py-1 flex items-center gap-1 text-xs text-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+                        <ImageIcon className="w-3.5 h-3.5" />
+                        {isRTL ? 'عرض التفاصيل' : 'View Details'}
                       </div>
-                    )}
-                    {p.is_featured && (
-                      <Badge className="absolute top-2 start-2 bg-accent text-accent-foreground text-[10px]">
-                        {isRTL ? 'مميز' : 'Featured'}
-                      </Badge>
-                    )}
-                    <div className="absolute bottom-2 end-2 bg-background/80 backdrop-blur-sm rounded-md px-2 py-1 flex items-center gap-1 text-xs text-foreground opacity-0 group-hover:opacity-100 transition-opacity">
-                      <ImageIcon className="w-3.5 h-3.5" />
-                      {isRTL ? 'عرض التفاصيل' : 'View Details'}
                     </div>
-                  </div>
-                  <CardContent className="p-4 space-y-3">
-                    <h3 className="font-heading font-bold text-lg">
-                      {language === 'ar' ? p.title_ar : (p.title_en || p.title_ar)}
-                    </h3>
-                    {(p.description_ar || p.description_en) && (
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {language === 'ar' ? p.description_ar : (p.description_en || p.description_ar)}
-                      </p>
-                    )}
-                    <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-                      {p.project_cost && (
-                        <span className="flex items-center gap-1 bg-muted px-2 py-1 rounded-full">
-                          <DollarSign className="w-3 h-3" />{Number(p.project_cost).toLocaleString()} SAR
-                        </span>
+                    <CardContent className="p-4 space-y-3">
+                      <h3 className="font-heading font-bold text-lg">
+                        {language === 'ar' ? p.title_ar : (p.title_en || p.title_ar)}
+                      </h3>
+                      {(p.description_ar || p.description_en) && (
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {language === 'ar' ? p.description_ar : (p.description_en || p.description_ar)}
+                        </p>
                       )}
-                      {p.duration_days && (
-                        <span className="flex items-center gap-1 bg-muted px-2 py-1 rounded-full">
-                          <Clock className="w-3 h-3" />{p.duration_days} {isRTL ? 'يوم' : 'days'}
-                        </span>
-                      )}
-                      {p.completion_date && (
-                        <span className="flex items-center gap-1 bg-muted px-2 py-1 rounded-full">
-                          <Calendar className="w-3 h-3" />{p.completion_date}
-                        </span>
-                      )}
-                    </div>
-                    {p.businesses && (
-                      <div className="flex items-center gap-2 pt-2 border-t border-border/30">
-                        {p.businesses.logo_url ? (
-                          <img src={p.businesses.logo_url} alt="" className="w-7 h-7 rounded-full object-cover" />
-                        ) : (
-                          <div className="w-7 h-7 rounded-full bg-accent/10 flex items-center justify-center">
-                            <Building2 className="w-3.5 h-3.5 text-accent" />
-                          </div>
+                      <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                        {p.project_cost && (
+                          <span className="flex items-center gap-1 bg-muted px-2 py-1 rounded-full">
+                            <DollarSign className="w-3 h-3" />{Number(p.project_cost).toLocaleString()} SAR
+                          </span>
                         )}
-                        <span className="text-sm font-medium text-accent">
-                          {language === 'ar' ? p.businesses.name_ar : (p.businesses.name_en || p.businesses.name_ar)}
-                        </span>
+                        {p.duration_days && (
+                          <span className="flex items-center gap-1 bg-muted px-2 py-1 rounded-full">
+                            <Clock className="w-3 h-3" />{p.duration_days} {isRTL ? 'يوم' : 'days'}
+                          </span>
+                        )}
+                        {p.completion_date && (
+                          <span className="flex items-center gap-1 bg-muted px-2 py-1 rounded-full">
+                            <Calendar className="w-3 h-3" />{p.completion_date}
+                          </span>
+                        )}
                       </div>
+                      {p.businesses && (
+                        <div className="flex items-center gap-2 pt-2 border-t border-border/30">
+                          {p.businesses.logo_url ? (
+                            <img src={p.businesses.logo_url} alt="" className="w-7 h-7 rounded-full object-cover" />
+                          ) : (
+                            <div className="w-7 h-7 rounded-full bg-accent/10 flex items-center justify-center">
+                              <Building2 className="w-3.5 h-3.5 text-accent" />
+                            </div>
+                          )}
+                          <span className="text-sm font-medium text-accent">
+                            {language === 'ar' ? p.businesses.name_ar : (p.businesses.name_en || p.businesses.name_ar)}
+                          </span>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 mt-8">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={currentPage === 1}
+                  onClick={() => { setCurrentPage(p => p - 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                >
+                  {isRTL ? 'السابق' : 'Previous'}
+                </Button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+                    .reduce<(number | string)[]>((acc, p, i, arr) => {
+                      if (i > 0 && p - (arr[i - 1] as number) > 1) acc.push('...');
+                      acc.push(p);
+                      return acc;
+                    }, [])
+                    .map((p, i) =>
+                      typeof p === 'string' ? (
+                        <span key={`dots-${i}`} className="px-1 text-muted-foreground">…</span>
+                      ) : (
+                        <Button
+                          key={p}
+                          variant={p === currentPage ? 'default' : 'outline'}
+                          size="sm"
+                          className="w-9 h-9"
+                          onClick={() => { setCurrentPage(p); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                        >
+                          {p}
+                        </Button>
+                      )
                     )}
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={currentPage === totalPages}
+                  onClick={() => { setCurrentPage(p => p + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                >
+                  {isRTL ? 'التالي' : 'Next'}
+                </Button>
+              </div>
+            )}
+          </>
         )}
       </div>
 
