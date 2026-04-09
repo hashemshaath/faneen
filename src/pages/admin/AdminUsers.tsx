@@ -340,6 +340,12 @@ const AdminUsers = () => {
                                 {isRTL ? 'أنت' : 'You'}
                               </Badge>
                             )}
+                            {(profile as any).is_banned && (
+                              <Badge variant="destructive" className="text-[10px] gap-1">
+                                <Ban className="w-3 h-3" />
+                                {isRTL ? 'معطّل' : 'Disabled'}
+                              </Badge>
+                            )}
                             <Badge className={`${tier.color} text-[10px]`}>
                               {isRTL ? tier.labelAr : tier.labelEn}
                             </Badge>
