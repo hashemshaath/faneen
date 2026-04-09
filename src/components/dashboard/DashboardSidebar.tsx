@@ -1,0 +1,112 @@
+import React from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarFooter,
+  useSidebar,
+} from '@/components/ui/sidebar';
+import { NavLink } from '@/components/NavLink';
+import { useLanguage } from '@/i18n/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
+import {
+  LayoutDashboard, Wrench, Image, Star, FileText, Shield, Settings, LogOut, Home, Globe,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+
+const menuItems = [
+  { titleKey: 'dashboard.overview', url: '/dashboard', icon: LayoutDashboard },
+  { titleKey: 'dashboard.services', url: '/dashboard/services', icon: Wrench },
+  { titleKey: 'dashboard.portfolio', url: '/dashboard/portfolio', icon: Image },
+  { titleKey: 'dashboard.reviews', url: '/dashboard/reviews', icon: Star },
+  { titleKey: 'dashboard.contracts', url: '/dashboard/contracts', icon: FileText },
+  { titleKey: 'dashboard.warranties', url: '/dashboard/warranties', icon: Shield },
+  { titleKey: 'dashboard.settings', url: '/dashboard/settings', icon: Settings },
+] as const;
+
+export const DashboardSidebar: React.FC = () => {
+  const { state } = useSidebar();
+  const collapsed = state === 'collapsed';
+  const { t, language, setLanguage, isRTL } = useLanguage();
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/');
+  };
+
+  return (
+    <Sidebar collapsible="icon" side={isRTL ? 'right' : 'left'}>
+      <SidebarContent>
+        {/* Logo */}
+        <div className="p-4 flex items-center gap-2 border-b border-border">
+          <div className="w-9 h-9 rounded-xl bg-gold flex items-center justify-center text-primary-foreground font-bold text-lg shrink-0">
+            ف
+          </div>
+          {!collapsed && (
+            <div>
+              <h1 className="font-heading font-bold text-lg leading-none">فنيين</h1>
+              <span className="text-[10px] text-gold font-medium">Faneen</span>
+            </div>
+          )}
+        </div>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>{!collapsed ? (isRTL ? 'القائمة الرئيسية' : 'Main Menu') : ''}</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {menuItems.map((item) => (
+                <SidebarMenuItem key={item.url}>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to={item.url}
+                      end={item.url === '/dashboard'}
+                      className="hover:bg-muted/50"
+                      activeClassName="bg-gold/10 text-gold font-medium"
+                    >
+                      <item.icon className="h-4 w-4 shrink-0" />
+                      {!collapsed && <span className="ms-2">{t(item.titleKey as any)}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+
+      <SidebarFooter className="border-t border-border p-3 space-y-2">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <NavLink to="/" className="hover:bg-muted/50" activeClassName="">
+                <Home className="h-4 w-4 shrink-0" />
+                {!collapsed && <span className="ms-2">{isRTL ? 'الرئيسية' : 'Home'}</span>}
+              </NavLink>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton onClick={() => setLanguage(language === 'ar' ? 'en' : 'ar')}>
+              <Globe className="h-4 w-4 shrink-0" />
+              {!collapsed && <span className="ms-2">{language === 'ar' ? 'EN' : 'عربي'}</span>}
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton onClick={handleLogout} className="text-destructive hover:text-destructive">
+              <LogOut className="h-4 w-4 shrink-0" />
+              {!collapsed && <span className="ms-2">{t('auth.logout')}</span>}
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
+    </Sidebar>
+  );
+};
