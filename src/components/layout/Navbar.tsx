@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { PrefetchLink } from "@/components/PrefetchLink";
 import { Search, Megaphone, Scale, Layers, FolderOpen, BookOpen, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -69,10 +70,10 @@ export const Navbar = () => {
           </Link>
           <div className="hidden md:flex items-center gap-6 font-body text-sm text-primary-foreground/80">
             {navLinks.map((link) => (
-              <Link key={link.to} to={link.to} className="hover:text-gold transition-colors flex items-center gap-1">
+              <PrefetchLink key={link.to} to={link.to} className="hover:text-gold transition-colors flex items-center gap-1">
                 <link.icon className="w-4 h-4" />
                 {link.label}
-              </Link>
+              </PrefetchLink>
             ))}
             <a href="#categories" className="hover:text-gold transition-colors">{t('nav.sections')}</a>
             <a href="#features" className="hover:text-gold transition-colors">{t('nav.features')}</a>
@@ -97,25 +98,25 @@ export const Navbar = () => {
             </button>
             {user ? (
               <div className="hidden md:flex items-center gap-2">
-                <Link to="/dashboard">
+                <PrefetchLink to="/dashboard">
                   <Button variant="hero" size="sm">{t('dashboard.overview')}</Button>
-                </Link>
+                </PrefetchLink>
                 <Button variant="ghost" className="text-primary-foreground/80 hover:text-gold hover:bg-gold/10 text-sm" onClick={signOut}>
                   {t('auth.logout')}
                 </Button>
               </div>
             ) : (
               <div className="hidden md:flex items-center gap-2">
-                <Link to="/auth">
+                <PrefetchLink to="/auth">
                   <Button variant="ghost" className="text-primary-foreground/80 hover:text-gold hover:bg-gold/10 text-sm">
                     {t('nav.login')}
                   </Button>
-                </Link>
-                <Link to="/auth">
+                </PrefetchLink>
+                <PrefetchLink to="/auth">
                   <Button variant="hero" size="sm">
                     {t('nav.register')}
                   </Button>
-                </Link>
+                </PrefetchLink>
               </div>
             )}
           </div>
