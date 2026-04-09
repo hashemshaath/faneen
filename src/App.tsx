@@ -25,6 +25,7 @@ import Offers from "./pages/Offers";
 import Compare from "./pages/Compare";
 import AdminApiSettings from "./pages/admin/AdminApiSettings";
 import AdminApiDocs from "./pages/admin/AdminApiDocs";
+import AdminUsers from "./pages/admin/AdminUsers";
 import DashboardProjects from "./pages/dashboard/DashboardProjects";
 import DashboardBlog from "./pages/dashboard/DashboardBlog";
 import Projects from "./pages/Projects";
@@ -79,6 +80,8 @@ const App = () => (
               <Route path="/compare-profiles" element={<CompareProfiles />} />
               <Route path="/admin/api-settings" element={<AdminApiSettings />} />
               <Route path="/admin/api-docs" element={<AdminApiDocs />} />
+              <Route path="/admin/users" element={<AdminUsers />} />
+              <Route path="/:username" element={<BusinessProfile />} />
               <Route path="/:username" element={<BusinessProfile />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

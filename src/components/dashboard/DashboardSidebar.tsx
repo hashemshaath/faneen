@@ -16,7 +16,7 @@ import { NavLink } from '@/components/NavLink';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import {
-  LayoutDashboard, Wrench, Image, Star, FileText, Shield, Settings, LogOut, Home, Globe, CreditCard, Megaphone, Key, Book, FolderOpen, PenSquare, Layers, MessageSquare,
+  LayoutDashboard, Wrench, Image, Star, FileText, Shield, Settings, LogOut, Home, Globe, CreditCard, Megaphone, Key, Book, FolderOpen, PenSquare, Layers, MessageSquare, Users,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -35,6 +35,7 @@ const menuItems = [
 ] as const;
 
 const adminItems = [
+  { titleKey: 'admin.users', url: '/admin/users', icon: Users },
   { titleKey: 'admin.profile_systems', url: '/dashboard/profile-systems', icon: Layers },
   { titleKey: 'admin.blog', url: '/dashboard/blog', icon: PenSquare },
   { titleKey: 'admin.api_settings', url: '/admin/api-settings', icon: Key },
@@ -109,8 +110,8 @@ export const DashboardSidebar: React.FC = () => {
                       <item.icon className="h-4 w-4 shrink-0" />
                       {!collapsed && <span className="ms-2">{
                         isRTL
-                          ? (item.titleKey === 'admin.api_settings' ? 'إعدادات API' : item.titleKey === 'admin.api_docs' ? 'توثيق API' : item.titleKey === 'admin.profile_systems' ? 'القطاعات' : 'المدونة')
-                          : (item.titleKey === 'admin.api_settings' ? 'API Settings' : item.titleKey === 'admin.api_docs' ? 'API Docs' : item.titleKey === 'admin.profile_systems' ? 'Profiles' : 'Blog')
+                          ? (item.titleKey === 'admin.api_settings' ? 'إعدادات API' : item.titleKey === 'admin.api_docs' ? 'توثيق API' : item.titleKey === 'admin.profile_systems' ? 'القطاعات' : item.titleKey === 'admin.users' ? 'المستخدمين' : 'المدونة')
+                          : (item.titleKey === 'admin.api_settings' ? 'API Settings' : item.titleKey === 'admin.api_docs' ? 'API Docs' : item.titleKey === 'admin.profile_systems' ? 'Profiles' : item.titleKey === 'admin.users' ? 'Users' : 'Blog')
                       }</span>}
                     </NavLink>
                   </SidebarMenuButton>
