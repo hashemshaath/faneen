@@ -225,7 +225,7 @@ const Projects = () => {
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {projects.map((p: any, index: number) => (
-                <Link key={p.id} to={`/projects/${p.id}`} className="block">
+                <Link key={p.id} to={`/projects/${p.id}`} className="block animate-card-slide-up" style={{ animationDelay: `${index * 80}ms` }}>
                   <Card
                     className="overflow-hidden border-border/50 hover:border-accent/40 transition-all duration-500 hover:shadow-xl hover:shadow-accent/5 group cursor-pointer h-full hover:-translate-y-1.5"
                     style={{ animationDelay: `${index * 80}ms` }}
