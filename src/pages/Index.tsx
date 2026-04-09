@@ -27,11 +27,23 @@ const Index = () => {
       <StatsSection />
       <Suspense fallback={<SectionFallback />}>
         <CategoriesSection />
+      </Suspense>
+      <Suspense fallback={<SectionFallback />}>
         <LatestProjectsSection />
+      </Suspense>
+      <Suspense fallback={<SectionFallback />}>
         <LatestOffersSection />
+      </Suspense>
+      <Suspense fallback={<SectionFallback />}>
         <FeaturesSection />
+      </Suspense>
+      <Suspense fallback={<SectionFallback />}>
         <LatestBlogSection />
+      </Suspense>
+      <Suspense fallback={<SectionFallback />}>
         <SearchSection />
+      </Suspense>
+      <Suspense fallback={<SectionFallback />}>
         <MembershipSection />
       </Suspense>
       <Footer />
