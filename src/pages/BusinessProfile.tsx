@@ -453,7 +453,7 @@ const BusinessProfile = () => {
         .or(`and(participant_1.eq.${user.id},participant_2.eq.${providerId}),and(participant_1.eq.${providerId},participant_2.eq.${user.id})`)
         .maybeSingle();
 
-      if (existing) return existing.id;
+      if (existing) return { id: existing.id, isNew: false };
 
       const { data: created, error: err } = await supabase
         .from('conversations')
@@ -461,9 +461,26 @@ const BusinessProfile = () => {
         .select('id')
         .single();
       if (err) throw err;
-      return created.id;
+
+      // Send automatic greeting message
+      const businessName = language === 'ar' ? business.name_ar : (business.name_en || business.name_ar);
+      const greeting = language === 'ar'
+        ? `مرحباً، أود الاستفسار عن خدماتكم في ${businessName}`
+        : `Hello, I'd like to inquire about your services at ${businessName}`;
+
+      await supabase.from('messages').insert({
+        conversation_id: created.id,
+        sender_id: user.id,
+        content: greeting,
+        message_type: 'text',
+      });
+
+      return { id: created.id, isNew: true };
     },
-    onSuccess: (convId) => {
+    onSuccess: (result) => {
+      if (result.isNew) {
+        toast.success(isRTL ? 'تم بدء المحادثة وإرسال رسالة ترحيبية' : 'Conversation started with a greeting');
+      }
       navigate('/dashboard/messages');
     },
     onError: (err: any) => {
