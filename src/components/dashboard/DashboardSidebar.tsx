@@ -88,6 +88,29 @@ export const DashboardSidebar: React.FC = () => {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {/* Admin section */}
+        <SidebarGroup>
+          <SidebarGroupLabel>{!collapsed ? (isRTL ? 'الإدارة' : 'Admin') : ''}</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {adminItems.map((item) => (
+                <SidebarMenuItem key={item.url}>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to={item.url}
+                      className="hover:bg-muted/50"
+                      activeClassName="bg-gold/10 text-gold font-medium"
+                    >
+                      <item.icon className="h-4 w-4 shrink-0" />
+                      {!collapsed && <span className="ms-2">{isRTL ? (item.titleKey === 'admin.api_settings' ? 'إعدادات API' : 'توثيق API') : (item.titleKey === 'admin.api_settings' ? 'API Settings' : 'API Docs')}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
 
       <SidebarFooter className="border-t border-border p-3 space-y-2">
