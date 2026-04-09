@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Plus, Edit, Trash2, FolderOpen, Calendar, DollarSign, Clock } from 'lucide-react';
 import { toast } from 'sonner';
+import { ImageUpload } from '@/components/ui/image-upload';
 
 const DashboardProjects = () => {
   const { isRTL, language } = useLanguage();
@@ -136,7 +137,16 @@ const DashboardProjects = () => {
                 </div>
                 <div><Label>{isRTL ? 'الوصف (عربي)' : 'Description (AR)'}</Label><Textarea value={form.description_ar} onChange={e => setForm(f => ({ ...f, description_ar: e.target.value }))} rows={3} /></div>
                 <div><Label>{isRTL ? 'الوصف (إنجليزي)' : 'Description (EN)'}</Label><Textarea value={form.description_en} onChange={e => setForm(f => ({ ...f, description_en: e.target.value }))} rows={3} dir="ltr" /></div>
-                <div><Label>{isRTL ? 'رابط صورة الغلاف' : 'Cover Image URL'}</Label><Input value={form.cover_image_url} onChange={e => setForm(f => ({ ...f, cover_image_url: e.target.value }))} dir="ltr" /></div>
+                <div>
+                  <Label>{isRTL ? 'صورة الغلاف' : 'Cover Image'}</Label>
+                  <ImageUpload
+                    bucket="project-images"
+                    value={form.cover_image_url}
+                    onChange={(url) => setForm(f => ({ ...f, cover_image_url: url }))}
+                    onRemove={() => setForm(f => ({ ...f, cover_image_url: '' }))}
+                    placeholder={isRTL ? 'اضغط لرفع صورة الغلاف' : 'Click to upload cover image'}
+                  />
+                </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div><Label>{isRTL ? 'اسم العميل' : 'Client Name'}</Label><Input value={form.client_name} onChange={e => setForm(f => ({ ...f, client_name: e.target.value }))} /></div>
                   <div><Label>{isRTL ? 'التكلفة (ر.س)' : 'Cost (SAR)'}</Label><Input type="number" value={form.project_cost} onChange={e => setForm(f => ({ ...f, project_cost: e.target.value }))} dir="ltr" /></div>
