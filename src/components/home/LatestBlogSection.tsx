@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight, Calendar } from "lucide-react";
+import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 
 export const LatestBlogSection = () => {
   const { language, isRTL } = useLanguage();
@@ -22,8 +23,10 @@ export const LatestBlogSection = () => {
 
   if (posts.length === 0) return null;
 
+  const { ref: sectionRef, isVisible } = useScrollAnimation();
+
   return (
-    <section className="py-24 bg-muted/50">
+    <section ref={sectionRef} className="py-24 bg-muted/50">
       <div className="container">
         <div className="flex items-center justify-between mb-12">
           <div>
@@ -42,9 +45,9 @@ export const LatestBlogSection = () => {
           </Link>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {posts.map((post: any) => (
+          {posts.map((post: any, i: number) => (
             <Link key={post.id} to={`/blog/${post.slug}`} className="group">
-              <div className="rounded-2xl overflow-hidden border border-border hover:border-gold/40 bg-card transition-all duration-300 hover:shadow-lg h-full">
+              <div className={`rounded-2xl overflow-hidden border border-border hover:border-gold/40 bg-card transition-all duration-500 hover:shadow-lg h-full hover-scale ${isVisible ? 'animate-fade-in' : 'opacity-0'}`} style={{ animationDelay: `${i * 100}ms`, animationFillMode: 'both' }}>
                 {post.cover_image_url && (
                   <div className="aspect-video bg-muted overflow-hidden">
                     <img src={post.cover_image_url} alt={post.title_ar} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />

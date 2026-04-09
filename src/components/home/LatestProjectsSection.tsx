@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Button } from "@/components/ui/button";
+import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { FolderOpen, Building2, DollarSign, Clock, ArrowLeft, ArrowRight } from "lucide-react";
 
 export const LatestProjectsSection = () => {
@@ -22,8 +23,10 @@ export const LatestProjectsSection = () => {
 
   if (projects.length === 0) return null;
 
+  const { ref: sectionRef, isVisible } = useScrollAnimation();
+
   return (
-    <section className="py-24 bg-background">
+    <section ref={sectionRef} className="py-24 bg-background">
       <div className="container">
         <div className="flex items-center justify-between mb-12">
           <div>
@@ -42,8 +45,8 @@ export const LatestProjectsSection = () => {
           </Link>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {projects.map((p: any) => (
-            <div key={p.id} className="group rounded-2xl overflow-hidden border border-border hover:border-gold/40 bg-card transition-all duration-300 hover:shadow-lg">
+          {projects.map((p: any, i: number) => (
+            <div key={p.id} className={`group rounded-2xl overflow-hidden border border-border hover:border-gold/40 bg-card transition-all duration-500 hover:shadow-lg hover-scale ${isVisible ? 'animate-fade-in' : 'opacity-0'}`} style={{ animationDelay: `${i * 100}ms`, animationFillMode: 'both' }}>
               <div className="aspect-video bg-muted relative overflow-hidden">
                 {p.cover_image_url ? (
                   <img src={p.cover_image_url} alt={p.title_ar} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
