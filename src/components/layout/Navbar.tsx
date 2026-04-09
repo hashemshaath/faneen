@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { PrefetchLink } from "@/components/PrefetchLink";
 import { Search, Megaphone, Scale, Layers, FolderOpen, BookOpen, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";

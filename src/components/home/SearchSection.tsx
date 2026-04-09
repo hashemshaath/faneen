@@ -8,7 +8,7 @@ export const SearchSection = () => {
   const { t } = useLanguage();
 
   return (
-    <section className="py-24 bg-gradient-navy relative overflow-hidden">
+    <section id="providers" className="py-24 bg-gradient-navy relative overflow-hidden">
       <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 20% 50%, hsl(42 85% 55% / 0.3) 0%, transparent 50%)" }} />
       <div className="container relative z-10">
         <div className="max-w-3xl mx-auto text-center">
