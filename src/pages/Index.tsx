@@ -227,7 +227,7 @@ const SearchSection = () => {
 };
 
 const MembershipSection = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const memberships = [
     {
