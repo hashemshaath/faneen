@@ -72,7 +72,7 @@ const ProfileSystems = () => {
     return true;
   });
 
-  const BackIcon = isRTL ? ArrowRight : ArrowLeft;
+  
 
   return (
     <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>

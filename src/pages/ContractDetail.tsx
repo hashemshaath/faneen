@@ -12,6 +12,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
+import { Navbar } from '@/components/layout/Navbar';
+import { Footer } from '@/components/layout/Footer';
 import {
   ArrowRight, ArrowLeft, FileText, Shield, Wrench, CheckCircle2, Clock,
   Calendar, DollarSign, AlertTriangle, XCircle, ListChecks, Plus, Send,
@@ -181,19 +183,22 @@ const ContractDetail = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <nav className="sticky top-0 z-50 bg-primary/95 backdrop-blur-sm border-b border-border/20">
-        <div className="container flex items-center justify-between h-14">
-          <Link to="/contracts" className="flex items-center gap-2 text-primary-foreground/80 hover:text-accent transition-colors font-body text-sm">
-            <BackArrow className="w-4 h-4" />
-            {t('contracts.title')}
-          </Link>
+      <Navbar />
+
+      {/* Cover */}
+      <div className="bg-primary pt-24 pb-6">
+        <div className="container flex items-center justify-between">
+          <div>
+            <h1 className="font-heading font-bold text-2xl text-primary-foreground">{title}</h1>
+            <p className="text-primary-foreground/60 text-xs font-body" dir="ltr">{contract.contract_number}</p>
+          </div>
           {canAccept && contract.status !== 'completed' && contract.status !== 'cancelled' && (
             <Button variant="hero" size="sm" onClick={() => acceptMutation.mutate()} disabled={acceptMutation.isPending}>
               {t('contracts.accept')}
             </Button>
           )}
         </div>
-      </nav>
+      </div>
 
       <div className="container py-8">
         {/* Header */}
