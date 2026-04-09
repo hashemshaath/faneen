@@ -1,4 +1,4 @@
-import { Search, Star, Shield, FileText, CreditCard, Users, Award, Video, Wrench, BarChart3, Building2, Layers } from "lucide-react";
+import { Search, Star, Shield, FileText, CreditCard, Users, Award, Video, Wrench, BarChart3, Building2, Layers, Megaphone, Scale } from "lucide-react";
 import { Link } from "react-router-dom";
 import heroBg from "@/assets/hero-bg.jpg";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,14 @@ const Navbar = () => {
           </Link>
           <a href="#categories" className="hover:text-gold transition-colors">{t('nav.sections')}</a>
           <a href="#features" className="hover:text-gold transition-colors">{t('nav.features')}</a>
+          <Link to="/offers" className="hover:text-gold transition-colors flex items-center gap-1">
+            <Megaphone className="w-4 h-4" />
+            {language === 'ar' ? 'العروض' : 'Offers'}
+          </Link>
+          <Link to="/compare" className="hover:text-gold transition-colors flex items-center gap-1">
+            <Scale className="w-4 h-4" />
+            {language === 'ar' ? 'المقارنة' : 'Compare'}
+          </Link>
           <a href="#providers" className="hover:text-gold transition-colors">{t('nav.providers')}</a>
         </div>
         <div className="flex items-center gap-3">
