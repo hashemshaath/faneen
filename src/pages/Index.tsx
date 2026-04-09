@@ -355,7 +355,7 @@ const StatsSection = () => {
 };
 
 const Footer = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   return (
     <footer className="bg-primary py-16">
