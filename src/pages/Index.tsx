@@ -36,6 +36,10 @@ const Navbar = () => {
             <Scale className="w-4 h-4" />
             {language === 'ar' ? 'المقارنة' : 'Compare'}
           </Link>
+          <Link to="/profile-systems" className="hover:text-gold transition-colors flex items-center gap-1">
+            <Layers className="w-4 h-4" />
+            {language === 'ar' ? 'القطاعات' : 'Profiles'}
+          </Link>
           <Link to="/projects" className="hover:text-gold transition-colors flex items-center gap-1">
             <FolderOpen className="w-4 h-4" />
             {language === 'ar' ? 'المشاريع' : 'Projects'}
