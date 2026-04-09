@@ -168,9 +168,9 @@ export const Navbar = () => {
           ))}
 
           <div className="border-t border-primary-foreground/10 pt-2 mt-2 space-y-1">
-            <a href="#categories" onClick={closeMobile} className="block text-primary-foreground/60 hover:text-gold transition-colors py-2 px-3 rounded-lg hover:bg-gold/5">{t('nav.sections')}</a>
-            <a href="#features" onClick={closeMobile} className="block text-primary-foreground/60 hover:text-gold transition-colors py-2 px-3 rounded-lg hover:bg-gold/5">{t('nav.features')}</a>
-            <a href="#providers" onClick={closeMobile} className="block text-primary-foreground/60 hover:text-gold transition-colors py-2 px-3 rounded-lg hover:bg-gold/5">{t('nav.providers')}</a>
+            <button onClick={() => scrollToSection('#categories')} className="block w-full text-start text-primary-foreground/60 hover:text-gold transition-colors py-2 px-3 rounded-lg hover:bg-gold/5">{t('nav.sections')}</button>
+            <button onClick={() => scrollToSection('#features')} className="block w-full text-start text-primary-foreground/60 hover:text-gold transition-colors py-2 px-3 rounded-lg hover:bg-gold/5">{t('nav.features')}</button>
+            <button onClick={() => scrollToSection('#providers')} className="block w-full text-start text-primary-foreground/60 hover:text-gold transition-colors py-2 px-3 rounded-lg hover:bg-gold/5">{t('nav.providers')}</button>
           </div>
 
           <div className="pt-3 border-t border-primary-foreground/10 flex flex-col gap-2">
