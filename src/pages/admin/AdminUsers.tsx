@@ -284,7 +284,7 @@ const AdminUsers = () => {
     toast.success(isRTL ? 'تم تصدير القائمة بنجاح' : 'Users exported successfully');
   };
 
-
+  const totalUsers = profiles.length;
   const admins = userRoles.filter(r => r.role === 'admin').length;
   const moderators = userRoles.filter(r => r.role === 'moderator').length;
 
