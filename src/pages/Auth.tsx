@@ -200,6 +200,10 @@ const Auth = () => {
               {googleLoading ? t('common.loading') : (isRTL ? 'الدخول بحساب Google' : 'Sign in with Google')}
             </Button>
           </div>
+          <div className="flex items-center justify-between text-sm">
+            <button onClick={() => setMode('forgot-password')} className="text-gold hover:underline">{t('auth.forgot')}</button>
+            <button onClick={() => { setMode('register'); setRegisterStep('type'); }} className="text-gold hover:underline">{t('auth.no_account')}</button>
+          </div>
         </div>
       </AuthLayout>
     );
