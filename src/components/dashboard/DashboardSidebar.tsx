@@ -16,7 +16,7 @@ import { NavLink } from '@/components/NavLink';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import {
-  LayoutDashboard, Wrench, Image, Star, FileText, Shield, Settings, LogOut, Home, Globe, CreditCard, Megaphone, Key, Book,
+  LayoutDashboard, Wrench, Image, Star, FileText, Shield, Settings, LogOut, Home, Globe, CreditCard, Megaphone, Key, Book, FolderOpen, PenSquare,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -29,6 +29,7 @@ const menuItems = [
   { titleKey: 'dashboard.warranties', url: '/dashboard/warranties', icon: Shield },
   { titleKey: 'dashboard.installments', url: '/dashboard/installments', icon: CreditCard },
   { titleKey: 'dashboard.promotions', url: '/dashboard/promotions', icon: Megaphone },
+  { titleKey: 'dashboard.projects', url: '/dashboard/projects', icon: FolderOpen },
   { titleKey: 'dashboard.settings', url: '/dashboard/settings', icon: Settings },
 ] as const;
 
