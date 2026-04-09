@@ -26,6 +26,8 @@ const actionLabels: Record<string, { ar: string; en: string; color: string }> = 
   setting_created: { ar: 'إنشاء إعداد', en: 'Setting Created', color: 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400' },
   setting_updated: { ar: 'تعديل إعداد', en: 'Setting Updated', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' },
   setting_deleted: { ar: 'حذف إعداد', en: 'Setting Deleted', color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' },
+  user_disabled: { ar: 'تعطيل حساب', en: 'Account Disabled', color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' },
+  user_enabled: { ar: 'تفعيل حساب', en: 'Account Enabled', color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' },
 };
 
 const entityLabels: Record<string, { ar: string; en: string }> = {
