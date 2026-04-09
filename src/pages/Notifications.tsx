@@ -17,7 +17,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Bell, Check, CheckCheck, FileText, CreditCard, Megaphone, Settings2,
   Trash2, ArrowLeft, ArrowRight, CalendarIcon, Search, Filter, MessageSquare,
-  Eye, X,
+  Eye, X, AlertTriangle,
 } from 'lucide-react';
 import { formatDistanceToNow, format, isAfter, isBefore, startOfDay, endOfDay } from 'date-fns';
 import { ar as arLocale, enUS } from 'date-fns/locale';
