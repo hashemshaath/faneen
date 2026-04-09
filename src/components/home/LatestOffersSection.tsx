@@ -58,7 +58,7 @@ export const LatestOffersSection = () => {
               <Link
                 key={offer.id}
                 to={`/offers`}
-                className={`group block ${isVisible ? "animate-fade-in" : "opacity-0"}`}
+                className={`group block ${isVisible ? "animate-fade-in" : ""}`}
                 style={{ animationDelay: `${i * 100}ms`, animationFillMode: "both" }}
               >
                 <div className="rounded-2xl overflow-hidden border border-border hover:border-gold/40 bg-card transition-all duration-500 hover:shadow-lg hover-scale h-full relative">
