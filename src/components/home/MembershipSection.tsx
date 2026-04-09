@@ -54,25 +54,47 @@ export const MembershipSection = () => {
           <h2 className="font-heading font-bold text-3xl md:text-4xl text-foreground mt-3">{t('membership.title')}</h2>
         </div>
         <div ref={visRef} className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-          {memberships.map(plan => (
-            <div key={plan.titleKey} className={`relative p-8 rounded-2xl border transition-all duration-500 ${plan.featured ? "bg-gradient-navy border-gold/40 scale-105 shadow-gold" : "bg-card border-border hover:border-gold/30 hover:-translate-y-1"} ${isVisible ? 'animate-card-slide-up' : 'opacity-0'}`} style={{ animationDelay: `${memberships.indexOf(plan) * 150}ms`, animationFillMode: 'both' }}>
+          {memberships.map((plan, idx) => (
+            <div
+              key={plan.titleKey}
+              className={`group relative p-8 rounded-2xl border transition-all duration-500 ${
+                plan.featured
+                  ? "bg-gradient-navy border-gold/40 scale-105 shadow-gold hover:shadow-[0_20px_60px_-10px_hsl(var(--gold)/0.4)] hover:scale-[1.08]"
+                  : "bg-card border-border hover:border-gold/30 hover:-translate-y-3 hover:shadow-xl hover:shadow-accent/10"
+              } ${isVisible ? 'animate-card-slide-up' : 'opacity-0'}`}
+              style={{ animationDelay: `${idx * 150}ms`, animationFillMode: 'both' }}
+            >
+              {/* Glow effect on hover for non-featured */}
+              {!plan.featured && (
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-gold/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+              )}
+              {/* Shine sweep on hover for featured */}
               {plan.featured && (
-                <div className="absolute -top-4 right-1/2 translate-x-1/2 px-4 py-1 rounded-full bg-gradient-gold text-xs font-heading font-bold text-secondary-foreground">
+                <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none">
+                  <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+                </div>
+              )}
+              {plan.featured && (
+                <div className="absolute -top-4 right-1/2 translate-x-1/2 px-4 py-1 rounded-full bg-gradient-gold text-xs font-heading font-bold text-secondary-foreground shadow-lg">
                   {t('membership.popular')}
                 </div>
               )}
-              <h3 className={`font-heading font-bold text-2xl mb-2 ${plan.featured ? "text-primary-foreground" : "text-foreground"}`}>{t(plan.titleKey)}</h3>
+              <h3 className={`font-heading font-bold text-2xl mb-2 transition-colors duration-300 ${plan.featured ? "text-primary-foreground" : "text-foreground group-hover:text-gold"}`}>{t(plan.titleKey)}</h3>
               <p className={`font-body text-sm mb-6 ${plan.featured ? "text-primary-foreground/60" : "text-muted-foreground"}`}>{t(plan.descKey)}</p>
               <ul className="space-y-3 mb-8">
-                {plan.features.map(f => (
-                  <li key={f.en} className={`flex items-center gap-2 font-body text-sm ${plan.featured ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
-                    <div className="w-1.5 h-1.5 rounded-full bg-gold" />
+                {plan.features.map((f, fi) => (
+                  <li
+                    key={f.en}
+                    className={`flex items-center gap-2 font-body text-sm transition-all duration-300 ${plan.featured ? "text-primary-foreground/80" : "text-muted-foreground group-hover:text-foreground"}`}
+                    style={{ transitionDelay: `${fi * 50}ms` }}
+                  >
+                    <div className={`w-1.5 h-1.5 rounded-full bg-gold transition-transform duration-300 group-hover:scale-150`} />
                     {language === 'ar' ? f.ar : f.en}
                   </li>
                 ))}
               </ul>
               <Link to="/auth">
-                <Button variant={plan.featured ? "hero" : "outline"} className="w-full">
+                <Button variant={plan.featured ? "hero" : "outline"} className={`w-full transition-all duration-300 ${!plan.featured ? "group-hover:bg-gold group-hover:text-secondary-foreground group-hover:border-gold" : ""}`}>
                   {t('membership.start')}
                 </Button>
               </Link>
