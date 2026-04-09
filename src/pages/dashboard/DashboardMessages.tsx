@@ -103,6 +103,7 @@ const AttachmentPreview = ({ url, type, name }: { url: string; type: string; nam
 const DashboardMessages = () => {
   const { isRTL, language } = useLanguage();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [messageText, setMessageText] = useState('');
