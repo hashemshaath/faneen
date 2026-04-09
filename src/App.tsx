@@ -20,6 +20,9 @@ import DashboardContracts from "./pages/dashboard/DashboardContracts";
 import DashboardWarranties from "./pages/dashboard/DashboardWarranties";
 import DashboardInstallments from "./pages/dashboard/DashboardInstallments";
 import DashboardSettings from "./pages/dashboard/DashboardSettings";
+import DashboardPromotions from "./pages/dashboard/DashboardPromotions";
+import Offers from "./pages/Offers";
+import Compare from "./pages/Compare";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -47,6 +50,9 @@ const App = () => (
               <Route path="/dashboard/warranties" element={<DashboardWarranties />} />
               <Route path="/dashboard/installments" element={<DashboardInstallments />} />
               <Route path="/dashboard/settings" element={<DashboardSettings />} />
+              <Route path="/dashboard/promotions" element={<DashboardPromotions />} />
+              <Route path="/offers" element={<Offers />} />
+              <Route path="/compare" element={<Compare />} />
               <Route path="/:username" element={<BusinessProfile />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
