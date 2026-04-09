@@ -294,8 +294,8 @@ const Notifications = () => {
         ) : (
           <div className="space-y-2">
             {filtered.map((n: any) => {
-              const Icon = typeIcons[n.notification_type] || Bell;
-              const color = typeColors[n.notification_type] || typeColors.system;
+              const Icon = getNotificationIcon(n);
+              const color = getNotificationColor(n);
               const title = language === 'ar' ? n.title_ar : (n.title_en || n.title_ar);
               const body = language === 'ar' ? n.body_ar : (n.body_en || n.body_ar);
               const timeAgo = formatDistanceToNow(new Date(n.created_at), {
