@@ -10,12 +10,13 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import {
   Users, Search, Shield, ShieldCheck, ShieldAlert, UserPlus, Trash2,
-  Mail, Phone, Calendar, Crown, Loader2, Pencil,
+  Mail, Phone, Calendar, Crown, Loader2, Pencil, Ban, UserX,
 } from 'lucide-react';
 import type { Tables } from '@/integrations/supabase/types';
 
@@ -51,6 +52,7 @@ const AdminUsers = () => {
   const [selectedRole, setSelectedRole] = useState<string>('user');
   const [editingProfile, setEditingProfile] = useState<Profile | null>(null);
   const [editForm, setEditForm] = useState({ full_name: '', account_type: '', membership_tier: '', phone: '', email: '' });
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
 
   const { data: profiles = [], isLoading: loadingProfiles } = useQuery({
     queryKey: ['admin-profiles'],
@@ -128,6 +130,45 @@ const AdminUsers = () => {
     },
     onError: () => {
       toast.error(isRTL ? 'فشل تحديث البيانات' : 'Failed to update profile');
+    },
+  });
+
+  const toggleBanMutation = useMutation({
+    mutationFn: async ({ profileId, isBanned }: { profileId: string; isBanned: boolean }) => {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ is_banned: isBanned } as any)
+        .eq('id', profileId);
+      if (error) throw error;
+    },
+    onSuccess: (_, vars) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-profiles'] });
+      toast.success(vars.isBanned
+        ? (isRTL ? 'تم تعطيل الحساب' : 'Account disabled')
+        : (isRTL ? 'تم تفعيل الحساب' : 'Account enabled'));
+    },
+    onError: () => {
+      toast.error(isRTL ? 'فشل تحديث حالة الحساب' : 'Failed to update account status');
+    },
+  });
+
+  const deleteUserMutation = useMutation({
+    mutationFn: async (targetUserId: string) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await supabase.functions.invoke('admin-delete-user', {
+        body: { target_user_id: targetUserId },
+      });
+      if (res.error) throw res.error;
+      if (res.data?.error) throw new Error(res.data.error);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-profiles'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-user-roles'] });
+      setDeletingUserId(null);
+      toast.success(isRTL ? 'تم حذف الحساب بنجاح' : 'Account deleted successfully');
+    },
+    onError: () => {
+      toast.error(isRTL ? 'فشل حذف الحساب' : 'Failed to delete account');
     },
   });
 
@@ -279,7 +320,7 @@ const AdminUsers = () => {
               const isCurrentUser = profile.user_id === user.id;
 
               return (
-                <Card key={profile.id} className={`transition-colors ${isCurrentUser ? 'border-gold/40' : ''}`}>
+                <Card key={profile.id} className={`transition-colors ${isCurrentUser ? 'border-gold/40' : ''} ${(profile as any).is_banned ? 'opacity-60 border-destructive/40' : ''}`}>
                   <CardContent className="p-4">
                     <div className="flex flex-col md:flex-row md:items-center gap-4">
                       <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -297,6 +338,12 @@ const AdminUsers = () => {
                             {isCurrentUser && (
                               <Badge variant="outline" className="text-[10px] border-gold text-gold">
                                 {isRTL ? 'أنت' : 'You'}
+                              </Badge>
+                            )}
+                            {(profile as any).is_banned && (
+                              <Badge variant="destructive" className="text-[10px] gap-1">
+                                <Ban className="w-3 h-3" />
+                                {isRTL ? 'معطّل' : 'Disabled'}
                               </Badge>
                             )}
                             <Badge className={`${tier.color} text-[10px]`}>
@@ -334,6 +381,30 @@ const AdminUsers = () => {
                           <Pencil className="w-3 h-3" />
                           {isRTL ? 'تعديل' : 'Edit'}
                         </Button>
+
+                        {!isCurrentUser && (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className={`h-7 gap-1 text-xs ${(profile as any).is_banned ? 'text-green-600 hover:text-green-700' : 'text-amber-600 hover:text-amber-700'}`}
+                              onClick={() => toggleBanMutation.mutate({ profileId: profile.id, isBanned: !(profile as any).is_banned })}
+                              disabled={toggleBanMutation.isPending}
+                            >
+                              <Ban className="w-3 h-3" />
+                              {(profile as any).is_banned ? (isRTL ? 'تفعيل' : 'Enable') : (isRTL ? 'تعطيل' : 'Disable')}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-7 gap-1 text-xs text-destructive hover:text-destructive"
+                              onClick={() => setDeletingUserId(profile.user_id)}
+                            >
+                              <UserX className="w-3 h-3" />
+                              {isRTL ? 'حذف' : 'Delete'}
+                            </Button>
+                          </>
+                        )}
 
                         {roles.length === 0 && (
                           <span className="text-xs text-muted-foreground">{isRTL ? 'بدون صلاحيات' : 'No roles'}</span>
@@ -483,6 +554,31 @@ const AdminUsers = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete User Confirmation */}
+      <AlertDialog open={!!deletingUserId} onOpenChange={open => { if (!open) setDeletingUserId(null); }}>
+        <AlertDialogContent dir={isRTL ? 'rtl' : 'ltr'}>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{isRTL ? 'تأكيد حذف الحساب' : 'Confirm Account Deletion'}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {isRTL
+                ? 'هل أنت متأكد من حذف هذا الحساب؟ سيتم حذف جميع بيانات المستخدم نهائياً ولا يمكن التراجع عن هذا الإجراء.'
+                : 'Are you sure you want to delete this account? All user data will be permanently removed and this action cannot be undone.'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{isRTL ? 'إلغاء' : 'Cancel'}</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => deletingUserId && deleteUserMutation.mutate(deletingUserId)}
+              disabled={deleteUserMutation.isPending}
+            >
+              {deleteUserMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin me-2" /> : null}
+              {isRTL ? 'حذف نهائي' : 'Delete Permanently'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 };
