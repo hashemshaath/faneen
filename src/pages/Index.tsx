@@ -1,4 +1,5 @@
-import { Search, Star, Shield, FileText, CreditCard, Users, Award, Video, Wrench, BarChart3, Building2, Layers, Megaphone, Scale, FolderOpen, BookOpen, ArrowLeft, ArrowRight, DollarSign, Clock, Calendar } from "lucide-react";
+import { Search, Star, Shield, FileText, CreditCard, Users, Award, Video, Wrench, BarChart3, Building2, Layers, Megaphone, Scale, FolderOpen, BookOpen, ArrowLeft, ArrowRight, DollarSign, Clock, Calendar, Menu, X } from "lucide-react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
