@@ -108,7 +108,7 @@ const AdminApiSettings = () => {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, value, isActive }: { id: string; value?: string; isActive?: boolean }) => {
-      const updates: Record<string, any> = {};
+      const updates: { setting_value?: string; is_active?: boolean } = {};
       if (value !== undefined) updates.setting_value = value;
       if (isActive !== undefined) updates.is_active = isActive;
       const { error } = await supabase
