@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider';
 import {
   Layers, Search, Thermometer, Volume2, Shield,
-  Eye, Ruler, Filter, Scale,
+  Eye, Ruler, Filter, Scale, X,
 } from 'lucide-react';
 
 const categoryOptions = [
