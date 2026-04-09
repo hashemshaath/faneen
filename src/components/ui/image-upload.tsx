@@ -232,7 +232,8 @@ export const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
           continue;
         }
 
-        const ext = file.name.split('.').pop() || 'jpg';
+        const compressed = await compressImage(file);
+        const ext = compressed.name.split('.').pop() || 'jpg';
         const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
         const path = folder
           ? `${user.id}/${folder}/${fileName}`
@@ -240,7 +241,7 @@ export const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
 
         const { error } = await supabase.storage
           .from(bucket)
-          .upload(path, file, { cacheControl: '3600', upsert: false });
+          .upload(path, compressed, { cacheControl: '3600', upsert: false });
 
         if (error) {
           console.error('Upload error:', error);
