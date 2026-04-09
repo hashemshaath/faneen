@@ -14,6 +14,59 @@ export type Database = {
   }
   public: {
     Tables: {
+      business_services: {
+        Row: {
+          business_id: string
+          created_at: string
+          currency_code: string
+          description_ar: string | null
+          description_en: string | null
+          id: string
+          is_active: boolean
+          name_ar: string
+          name_en: string | null
+          price_from: number | null
+          price_to: number | null
+          sort_order: number
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          currency_code?: string
+          description_ar?: string | null
+          description_en?: string | null
+          id?: string
+          is_active?: boolean
+          name_ar: string
+          name_en?: string | null
+          price_from?: number | null
+          price_to?: number | null
+          sort_order?: number
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          currency_code?: string
+          description_ar?: string | null
+          description_en?: string | null
+          id?: string
+          is_active?: boolean
+          name_ar?: string
+          name_en?: string | null
+          price_from?: number | null
+          price_to?: number | null
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_services_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       businesses: {
         Row: {
           address: string | null
@@ -247,6 +300,56 @@ export type Database = {
         }
         Relationships: []
       }
+      portfolio_items: {
+        Row: {
+          business_id: string
+          created_at: string
+          description_ar: string | null
+          description_en: string | null
+          id: string
+          is_featured: boolean
+          media_type: string
+          media_url: string
+          sort_order: number
+          title_ar: string
+          title_en: string | null
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          id?: string
+          is_featured?: boolean
+          media_type?: string
+          media_url: string
+          sort_order?: number
+          title_ar: string
+          title_en?: string | null
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          id?: string
+          is_featured?: boolean
+          media_type?: string
+          media_url?: string
+          sort_order?: number
+          title_ar?: string
+          title_en?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portfolio_items_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           account_type: Database["public"]["Enums"]["account_type"]
@@ -309,6 +412,50 @@ export type Database = {
             columns: ["country_id"]
             isOneToOne: false
             referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reviews: {
+        Row: {
+          business_id: string
+          content: string | null
+          created_at: string
+          id: string
+          is_verified: boolean
+          rating: number
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          business_id: string
+          content?: string | null
+          created_at?: string
+          id?: string
+          is_verified?: boolean
+          rating: number
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          business_id?: string
+          content?: string | null
+          created_at?: string
+          id?: string
+          is_verified?: boolean
+          rating?: number
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
             referencedColumns: ["id"]
           },
         ]
