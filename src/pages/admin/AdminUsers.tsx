@@ -382,7 +382,29 @@ const AdminUsers = () => {
                           {isRTL ? 'تعديل' : 'Edit'}
                         </Button>
 
-                        {roles.length === 0 && (
+                        {!isCurrentUser && (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className={`h-7 gap-1 text-xs ${(profile as any).is_banned ? 'text-green-600 hover:text-green-700' : 'text-amber-600 hover:text-amber-700'}`}
+                              onClick={() => toggleBanMutation.mutate({ profileId: profile.id, isBanned: !(profile as any).is_banned })}
+                              disabled={toggleBanMutation.isPending}
+                            >
+                              <Ban className="w-3 h-3" />
+                              {(profile as any).is_banned ? (isRTL ? 'تفعيل' : 'Enable') : (isRTL ? 'تعطيل' : 'Disable')}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-7 gap-1 text-xs text-destructive hover:text-destructive"
+                              onClick={() => setDeletingUserId(profile.user_id)}
+                            >
+                              <UserX className="w-3 h-3" />
+                              {isRTL ? 'حذف' : 'Delete'}
+                            </Button>
+                          </>
+                        )}
                           <span className="text-xs text-muted-foreground">{isRTL ? 'بدون صلاحيات' : 'No roles'}</span>
                         )}
                         {roles.map(r => {
