@@ -9,7 +9,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Star, MapPin, BadgeCheck, Plus, X, ArrowRight, ArrowLeft, Scale, Search } from 'lucide-react';
+import { Star, MapPin, BadgeCheck, Plus, X, ArrowRight, ArrowLeft, Scale, Search, Download } from 'lucide-react';
+import { exportComparePDF } from '@/lib/compare-pdf-export';
 
 const Compare = () => {
   const { isRTL } = useLanguage();
