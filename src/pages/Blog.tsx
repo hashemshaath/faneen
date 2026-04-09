@@ -3,10 +3,11 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Link } from 'react-router-dom';
+import { Navbar } from '@/components/layout/Navbar';
+import { Footer } from '@/components/layout/Footer';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { FileText, Calendar, Eye, ArrowLeft, ArrowRight } from 'lucide-react';
+import { FileText, Calendar, Eye } from 'lucide-react';
 
 const blogCategories: Record<string, { ar: string; en: string }> = {
   general: { ar: 'عام', en: 'General' },
@@ -22,36 +23,32 @@ const Blog = () => {
   const { data: posts = [], isLoading } = useQuery({
     queryKey: ['public-blog'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('blog_posts')
-        .select('*')
-        .eq('status', 'published')
-        .order('published_at', { ascending: false });
+      const { data, error } = await supabase.from('blog_posts').select('*').eq('status', 'published').order('published_at', { ascending: false });
       if (error) throw error;
       return data;
     },
   });
 
-  const BackIcon = isRTL ? ArrowRight : ArrowLeft;
-
   return (
     <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="flex items-center gap-3 mb-8">
-          <Link to="/">
-            <Button variant="ghost" size="icon"><BackIcon className="w-5 h-5" /></Button>
-          </Link>
-          <div>
-            <h1 className="font-heading font-bold text-2xl flex items-center gap-2">
-              <FileText className="w-6 h-6 text-gold" />
-              {isRTL ? 'المدونة' : 'Blog'}
-            </h1>
-            <p className="text-sm text-muted-foreground">{isRTL ? 'مقالات ونصائح في عالم الصناعات الاحترافية' : 'Articles and tips in the professional industries world'}</p>
-          </div>
-        </div>
+      <Navbar />
 
+      {/* Cover */}
+      <div className="bg-primary pt-24 pb-10">
+        <div className="container text-center">
+          <FileText className="w-10 h-10 text-accent mx-auto mb-3" />
+          <h1 className="font-heading font-bold text-3xl text-primary-foreground mb-2">
+            {isRTL ? 'المدونة' : 'Blog'}
+          </h1>
+          <p className="text-primary-foreground/60 font-body">
+            {isRTL ? 'مقالات ونصائح في عالم الصناعات الاحترافية' : 'Articles and tips in the professional industries world'}
+          </p>
+        </div>
+      </div>
+
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
         {isLoading ? (
-          <div className="flex justify-center py-12"><div className="w-8 h-8 border-4 border-gold border-t-transparent rounded-full animate-spin" /></div>
+          <div className="flex justify-center py-12"><div className="w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin" /></div>
         ) : posts.length === 0 ? (
           <div className="text-center py-20 text-muted-foreground">
             <FileText className="w-16 h-16 mx-auto mb-4 opacity-30" />
@@ -61,23 +58,19 @@ const Blog = () => {
           <div className="space-y-6">
             {posts.map((post: any) => (
               <Link key={post.id} to={`/blog/${post.slug}`}>
-                <Card className="overflow-hidden border-border/50 hover:border-gold/30 transition-all hover:shadow-lg group">
+                <Card className="overflow-hidden border-border/50 hover:border-accent/30 transition-all hover:shadow-lg group">
                   <CardContent className="p-0 flex flex-col md:flex-row">
                     {post.cover_image_url && (
                       <div className="md:w-64 aspect-video md:aspect-auto bg-muted shrink-0">
-                        <img src={post.cover_image_url} alt={post.title_ar} className="w-full h-full object-cover" />
+                        <img src={post.cover_image_url} alt={post.title_ar} className="w-full h-full object-cover" loading="lazy" />
                       </div>
                     )}
                     <div className="p-5 flex-1 space-y-2">
                       <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="text-[10px]">
-                          {blogCategories[post.category]?.[language] || post.category}
-                        </Badge>
-                        {post.tags?.slice(0, 2).map((tag: string) => (
-                          <Badge key={tag} variant="secondary" className="text-[10px]">{tag}</Badge>
-                        ))}
+                        <Badge variant="outline" className="text-[10px]">{blogCategories[post.category]?.[language] || post.category}</Badge>
+                        {post.tags?.slice(0, 2).map((tag: string) => <Badge key={tag} variant="secondary" className="text-[10px]">{tag}</Badge>)}
                       </div>
-                      <h2 className="font-heading font-bold text-lg group-hover:text-gold transition-colors">
+                      <h2 className="font-heading font-bold text-lg group-hover:text-accent transition-colors">
                         {language === 'ar' ? post.title_ar : (post.title_en || post.title_ar)}
                       </h2>
                       <p className="text-sm text-muted-foreground line-clamp-2">
@@ -95,6 +88,7 @@ const Blog = () => {
           </div>
         )}
       </div>
+      <Footer />
     </div>
   );
 };
