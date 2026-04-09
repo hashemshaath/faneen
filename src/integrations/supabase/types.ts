@@ -679,7 +679,7 @@ export type Database = {
           id: string
           is_verified: boolean
           membership_tier: Database["public"]["Enums"]["membership_tier"]
-          phone: string
+          phone: string | null
           preferred_language: string
           updated_at: string
           user_id: string
@@ -695,7 +695,7 @@ export type Database = {
           id?: string
           is_verified?: boolean
           membership_tier?: Database["public"]["Enums"]["membership_tier"]
-          phone: string
+          phone?: string | null
           preferred_language?: string
           updated_at?: string
           user_id: string
@@ -711,7 +711,7 @@ export type Database = {
           id?: string
           is_verified?: boolean
           membership_tier?: Database["public"]["Enums"]["membership_tier"]
-          phone?: string
+          phone?: string | null
           preferred_language?: string
           updated_at?: string
           user_id?: string
