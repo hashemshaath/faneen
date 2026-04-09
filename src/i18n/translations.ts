@@ -10,6 +10,7 @@ export const translations = {
   'nav.login': { ar: 'دخول', en: 'Login' },
   'nav.register': { ar: 'سجل الآن', en: 'Register' },
   'nav.language': { ar: 'EN', en: 'عربي' },
+  'nav.notifications': { ar: 'الإشعارات', en: 'Notifications' },
 
   // Hero
   'hero.badge': { ar: 'المنصة الأولى لأعمال الألمنيوم والحديد والزجاج والخشب', en: 'The Leading Platform for Aluminum, Iron, Glass & Wood Works' },
