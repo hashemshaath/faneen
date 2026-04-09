@@ -1,5 +1,7 @@
-import { Search, Star, Shield, FileText, CreditCard, Users, Award, Video, Wrench, BarChart3, Building2, Layers, Megaphone, Scale, FolderOpen, BookOpen } from "lucide-react";
+import { Search, Star, Shield, FileText, CreditCard, Users, Award, Video, Wrench, BarChart3, Building2, Layers, Megaphone, Scale, FolderOpen, BookOpen, ArrowLeft, ArrowRight, DollarSign, Clock, Calendar } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import heroBg from "@/assets/hero-bg.jpg";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
