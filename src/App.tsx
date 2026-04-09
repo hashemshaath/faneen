@@ -30,6 +30,9 @@ import DashboardBlog from "./pages/dashboard/DashboardBlog";
 import Projects from "./pages/Projects";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
+import ProfileSystems from "./pages/ProfileSystems";
+import ProfileSystemDetail from "./pages/ProfileSystemDetail";
+import DashboardProfileSystems from "./pages/dashboard/DashboardProfileSystems";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -60,10 +63,13 @@ const App = () => (
               <Route path="/dashboard/promotions" element={<DashboardPromotions />} />
               <Route path="/dashboard/projects" element={<DashboardProjects />} />
               <Route path="/dashboard/blog" element={<DashboardBlog />} />
+              <Route path="/dashboard/profile-systems" element={<DashboardProfileSystems />} />
               <Route path="/offers" element={<Offers />} />
               <Route path="/projects" element={<Projects />} />
               <Route path="/blog" element={<Blog />} />
               <Route path="/blog/:slug" element={<BlogPost />} />
+              <Route path="/profile-systems" element={<ProfileSystems />} />
+              <Route path="/profile-systems/:slug" element={<ProfileSystemDetail />} />
               <Route path="/compare" element={<Compare />} />
               <Route path="/admin/api-settings" element={<AdminApiSettings />} />
               <Route path="/admin/api-docs" element={<AdminApiDocs />} />
