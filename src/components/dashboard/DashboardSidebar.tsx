@@ -16,7 +16,7 @@ import { NavLink } from '@/components/NavLink';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import {
-  LayoutDashboard, Wrench, Image, Star, FileText, Shield, Settings, LogOut, Home, Globe, CreditCard, Megaphone, Key, Book, FolderOpen, PenSquare, Layers, MessageSquare,
+  LayoutDashboard, Wrench, Image, Star, FileText, Shield, Settings, LogOut, Home, Globe, CreditCard, Megaphone, Key, Book, FolderOpen, PenSquare, Layers, MessageSquare, Users,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -35,6 +35,7 @@ const menuItems = [
 ] as const;
 
 const adminItems = [
+  { titleKey: 'admin.users', url: '/admin/users', icon: Users },
   { titleKey: 'admin.profile_systems', url: '/dashboard/profile-systems', icon: Layers },
   { titleKey: 'admin.blog', url: '/dashboard/blog', icon: PenSquare },
   { titleKey: 'admin.api_settings', url: '/admin/api-settings', icon: Key },
