@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -8,10 +8,11 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from 'sonner';
 import {
   Star, MapPin, Phone, Mail, Globe, Shield, ArrowRight, ArrowLeft,
   Share2, Image, Video, ChevronLeft, ChevronRight, BadgeCheck, Clock,
-  MessageSquare, ExternalLink,
+  MessageSquare, ExternalLink, Loader2,
 } from 'lucide-react';
 
 // ---------- Data hooks ----------
@@ -92,7 +93,7 @@ const Stars: React.FC<{ rating: number; size?: string }> = ({ rating, size = 'w-
   </div>
 );
 
-const ProfileHeader: React.FC<{ business: any }> = ({ business }) => {
+const ProfileHeader: React.FC<{ business: any; onContact: () => void; isContacting: boolean }> = ({ business, onContact, isContacting }) => {
   const { t, language, isRTL } = useLanguage();
   const name = language === 'ar' ? business.name_ar : (business.name_en || business.name_ar);
   const desc = language === 'ar' ? business.description_ar : (business.description_en || business.description_ar);
@@ -164,9 +165,9 @@ const ProfileHeader: React.FC<{ business: any }> = ({ business }) => {
               </div>
 
               <div className="flex items-center gap-2 flex-shrink-0">
-                <Button variant="hero" className="gap-2">
-                  <MessageSquare className="w-4 h-4" />
-                  {t('profile.request_quote')}
+                <Button variant="hero" className="gap-2" onClick={onContact} disabled={isContacting}>
+                  {isContacting ? <Loader2 className="w-4 h-4 animate-spin" /> : <MessageSquare className="w-4 h-4" />}
+                  {language === 'ar' ? 'تواصل مع المزود' : 'Contact Provider'}
                 </Button>
                 <Button variant="outline" size="icon">
                   <Share2 className="w-4 h-4" />
@@ -409,9 +410,53 @@ const ContactTab: React.FC<{ business: any }> = ({ business }) => {
 
 const BusinessProfile = () => {
   const { username } = useParams<{ username: string }>();
-  const { t, isRTL } = useLanguage();
+  const { t, isRTL, language } = useLanguage();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const { data: business, isLoading, error } = useBusinessByUsername(username || '');
   const BackArrow = isRTL ? ArrowRight : ArrowLeft;
+
+  const contactMutation = useMutation({
+    mutationFn: async () => {
+      if (!user) {
+        navigate('/auth');
+        throw new Error('not_authenticated');
+      }
+      if (!business) throw new Error('no_business');
+      const providerId = business.user_id;
+      if (providerId === user.id) throw new Error('self_contact');
+
+      // Check existing conversation
+      const { data: existing } = await supabase
+        .from('conversations')
+        .select('id')
+        .or(`and(participant_1.eq.${user.id},participant_2.eq.${providerId}),and(participant_1.eq.${providerId},participant_2.eq.${user.id})`)
+        .maybeSingle();
+
+      if (existing) return existing.id;
+
+      const { data: created, error: err } = await supabase
+        .from('conversations')
+        .insert({ participant_1: user.id, participant_2: providerId })
+        .select('id')
+        .single();
+      if (err) throw err;
+      return created.id;
+    },
+    onSuccess: (convId) => {
+      navigate('/dashboard/messages');
+    },
+    onError: (err: any) => {
+      if (err.message === 'not_authenticated') return;
+      if (err.message === 'self_contact') {
+        toast.error(isRTL ? 'لا يمكنك مراسلة نفسك' : "You can't message yourself");
+        return;
+      }
+      toast.error(isRTL ? 'فشل بدء المحادثة' : 'Failed to start conversation');
+    },
+  });
+
+  const handleContact = () => contactMutation.mutate();
 
   if (isLoading) {
     return (
@@ -459,15 +504,15 @@ const BusinessProfile = () => {
               <span className="font-heading font-bold text-primary-foreground">فنيين</span>
             </div>
           </Link>
-          <Button variant="hero" size="sm" className="gap-1.5">
-            <MessageSquare className="w-3.5 h-3.5" />
-            {t('profile.request_quote')}
+          <Button variant="hero" size="sm" className="gap-1.5" onClick={handleContact} disabled={contactMutation.isPending}>
+            {contactMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <MessageSquare className="w-3.5 h-3.5" />}
+            {language === 'ar' ? 'تواصل مع المزود' : 'Contact Provider'}
           </Button>
         </div>
       </nav>
 
       <div className="pt-14">
-        <ProfileHeader business={business} />
+        <ProfileHeader business={business} onContact={handleContact} isContacting={contactMutation.isPending} />
 
         {/* Tabs */}
         <div className="container mt-8 pb-16">
