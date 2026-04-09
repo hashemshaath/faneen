@@ -31,6 +31,8 @@ const menuItems = [
   { titleKey: 'dashboard.messages', url: '/dashboard/messages', icon: MessageSquare },
   { titleKey: 'dashboard.promotions', url: '/dashboard/promotions', icon: Megaphone },
   { titleKey: 'dashboard.projects', url: '/dashboard/projects', icon: FolderOpen },
+  { titleKey: 'nav.projects', url: '/projects', icon: Building2 },
+  { titleKey: 'nav.blog', url: '/blog', icon: Newspaper },
   { titleKey: 'dashboard.settings', url: '/dashboard/settings', icon: Settings },
 ] as const;
 
