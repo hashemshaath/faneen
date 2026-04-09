@@ -1214,6 +1214,7 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
+          is_banned: boolean
           is_verified: boolean
           membership_tier: Database["public"]["Enums"]["membership_tier"]
           phone: string | null
@@ -1230,6 +1231,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          is_banned?: boolean
           is_verified?: boolean
           membership_tier?: Database["public"]["Enums"]["membership_tier"]
           phone?: string | null
@@ -1246,6 +1248,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          is_banned?: boolean
           is_verified?: boolean
           membership_tier?: Database["public"]["Enums"]["membership_tier"]
           phone?: string | null
