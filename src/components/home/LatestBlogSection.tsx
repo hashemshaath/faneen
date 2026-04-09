@@ -5,6 +5,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight, Calendar, Eye, BookOpen } from "lucide-react";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
+import { useParallax } from "@/hooks/useParallax";
 
 export const LatestBlogSection = () => {
   const { language, isRTL } = useLanguage();
@@ -22,13 +23,14 @@ export const LatestBlogSection = () => {
   });
 
   const { ref: sectionRef, isVisible } = useScrollAnimation();
+  const headerRef = useParallax<HTMLDivElement>(0.07);
 
   if (posts.length === 0) return null;
 
   return (
     <section ref={sectionRef} className="py-24 bg-muted/50">
       <div className="container">
-        <div className="flex items-center justify-between mb-12">
+        <div ref={headerRef} className="flex items-center justify-between mb-12">
           <div>
             <span className="text-sm font-body text-accent font-semibold">
               {isRTL ? 'المدونة' : 'Blog'}
