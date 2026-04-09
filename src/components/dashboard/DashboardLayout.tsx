@@ -4,6 +4,7 @@ import { DashboardSidebar } from './DashboardSidebar';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -33,6 +34,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
           <header className="h-14 flex items-center border-b border-border bg-card px-4 gap-3 sticky top-0 z-10">
             <SidebarTrigger />
             <div className="flex-1" />
+            <NotificationBell />
           </header>
           <main className="flex-1 p-4 md:p-6 bg-background overflow-auto">
             {children}
