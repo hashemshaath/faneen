@@ -96,8 +96,8 @@ const Projects = () => {
     setCurrentPage(1);
   };
 
-  const hasActiveFilters = searchQuery || selectedCategory !== 'all' || selectedCity !== 'all' || minCost || maxCost;
-  const clearFilters = () => { setSearchQuery(''); setSelectedCategory('all'); setSelectedCity('all'); setMinCost(''); setMaxCost(''); setCurrentPage(1); };
+  const hasActiveFilters = searchQuery || selectedCategory !== 'all' || selectedCity !== 'all' || minCost || maxCost || sortBy !== 'newest';
+  const clearFilters = () => { setSearchQuery(''); setSelectedCategory('all'); setSelectedCity('all'); setMinCost(''); setMaxCost(''); setSortBy('newest'); setCurrentPage(1); };
 
   return (
     <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
