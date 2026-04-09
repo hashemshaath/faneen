@@ -174,10 +174,9 @@ export const translations = {
   'profile.visit_website': { ar: 'زيارة الموقع', en: 'Visit Website' },
   'profile.send_email': { ar: 'إرسال بريد', en: 'Send Email' },
 
-  // Search
-  'search.title': { ar: 'البحث المتقدم', en: 'Advanced Search' },
-  'search.subtitle': { ar: 'ابحث عن أفضل مزودي الخدمة في منطقتك', en: 'Find the best service providers in your area' },
-  'search.placeholder': { ar: 'ابحث عن مزود خدمة...', en: 'Search for a provider...' },
+  // Search Page
+  'search.page_title': { ar: 'البحث المتقدم', en: 'Advanced Search' },
+  'search.page_subtitle': { ar: 'ابحث عن أفضل مزودي الخدمة في منطقتك', en: 'Find the best service providers in your area' },
   'search.filters': { ar: 'تصفية', en: 'Filters' },
   'search.category': { ar: 'القسم', en: 'Category' },
   'search.city': { ar: 'المدينة', en: 'City' },
