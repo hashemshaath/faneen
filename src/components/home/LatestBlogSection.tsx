@@ -23,6 +23,7 @@ export const LatestBlogSection = () => {
   });
 
   const { ref: sectionRef, isVisible } = useScrollAnimation();
+  const headerRef = useParallax<HTMLDivElement>(0.07);
 
   if (posts.length === 0) return null;
 
