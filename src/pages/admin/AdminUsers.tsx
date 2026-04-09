@@ -172,6 +172,7 @@ const AdminUsers = () => {
     },
   });
 
+  const openEditDialog = (profile: Profile) => {
     setEditingProfile(profile);
     setEditForm({
       full_name: profile.full_name || '',
