@@ -50,6 +50,7 @@ const AdminUsers = () => {
   const [filterRole, setFilterRole] = useState<string>('all');
   const [addingRoleFor, setAddingRoleFor] = useState<string | null>(null);
   const [selectedRole, setSelectedRole] = useState<string>('user');
+  const [editingProfile, setEditingProfile] = useState<Profile | null>(null);
   const [editForm, setEditForm] = useState({ full_name: '', account_type: '', membership_tier: '', phone: '', email: '' });
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
 
