@@ -4,6 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Link, useNavigate } from 'react-router-dom';
+import { Navbar } from '@/components/layout/Navbar';
+import { Footer } from '@/components/layout/Footer';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -148,27 +150,22 @@ const Notifications = () => {
 
   return (
     <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
-      {/* Header */}
-      <div className="bg-card border-b border-border sticky top-0 z-20">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link to="/dashboard">
-              <Button variant="ghost" size="icon"><BackIcon className="w-5 h-5" /></Button>
-            </Link>
-            <div>
-              <h1 className="font-heading font-bold text-lg flex items-center gap-2">
-                <Bell className="w-5 h-5 text-gold" />
-                {isRTL ? 'جميع الإشعارات' : 'All Notifications'}
-              </h1>
-              <p className="text-xs text-muted-foreground">
-                {isRTL
-                  ? `${filtered.length} إشعار${unreadCount > 0 ? ` • ${unreadCount} غير مقروء` : ''}`
-                  : `${filtered.length} notification${filtered.length !== 1 ? 's' : ''}${unreadCount > 0 ? ` • ${unreadCount} unread` : ''}`}
-              </p>
-            </div>
-          </div>
+      <Navbar />
+
+      {/* Cover */}
+      <div className="bg-primary pt-24 pb-10">
+        <div className="container text-center">
+          <Bell className="w-10 h-10 text-accent mx-auto mb-3" />
+          <h1 className="font-heading font-bold text-3xl text-primary-foreground mb-2">
+            {isRTL ? 'جميع الإشعارات' : 'All Notifications'}
+          </h1>
+          <p className="text-primary-foreground/60 font-body">
+            {isRTL
+              ? `${filtered.length} إشعار${unreadCount > 0 ? ` • ${unreadCount} غير مقروء` : ''}`
+              : `${filtered.length} notification${filtered.length !== 1 ? 's' : ''}${unreadCount > 0 ? ` • ${unreadCount} unread` : ''}`}
+          </p>
           {unreadCount > 0 && (
-            <Button variant="outline" size="sm" onClick={() => markAllRead.mutate()} className="gap-1">
+            <Button variant="hero" size="sm" onClick={() => markAllRead.mutate()} className="mt-4 gap-1">
               <CheckCheck className="w-4 h-4" />
               {isRTL ? 'قراءة الكل' : 'Mark all read'}
             </Button>
@@ -365,6 +362,7 @@ const Notifications = () => {
           </div>
         )}
       </div>
+      <Footer />
     </div>
   );
 };
