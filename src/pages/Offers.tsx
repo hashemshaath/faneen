@@ -3,25 +3,21 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { Navbar } from '@/components/layout/Navbar';
+import { Footer } from '@/components/layout/Footer';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Megaphone, Tag, Video, Star, ArrowRight, ArrowLeft, Play, Calendar, Eye } from 'lucide-react';
+import { Megaphone, Tag, Video, Star, Play, Calendar } from 'lucide-react';
 
 const Offers = () => {
-  const { isRTL } = useLanguage();
-  const ArrowIcon = isRTL ? ArrowLeft : ArrowRight;
+  const { isRTL, language } = useLanguage();
   const [activeTab, setActiveTab] = useState<string>('all');
 
   const { data: promotions = [], isLoading } = useQuery({
     queryKey: ['public-promotions'],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('promotions')
-        .select('*, businesses(id, name_ar, name_en, username, logo_url, rating_avg)')
-        .eq('is_active', true)
-        .order('created_at', { ascending: false });
+      const { data } = await supabase.from('promotions').select('*, businesses(id, name_ar, name_en, username, logo_url, rating_avg)').eq('is_active', true).order('created_at', { ascending: false });
       return data ?? [];
     },
   });
@@ -41,17 +37,18 @@ const Offers = () => {
 
   return (
     <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
-      {/* Header */}
-      <div className="bg-card border-b border-border sticky top-0 z-20">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link to="/" className="w-9 h-9 rounded-xl bg-gold flex items-center justify-center text-primary-foreground font-bold text-lg">ف</Link>
-            <div>
-              <h1 className="font-heading font-bold text-lg">{isRTL ? 'العروض والإعلانات' : 'Offers & Promotions'}</h1>
-              <p className="text-xs text-muted-foreground">{isRTL ? 'أحدث العروض والفيديوهات من مزودي الخدمة' : 'Latest offers and videos from providers'}</p>
-            </div>
-          </div>
-          <Link to="/search"><Button variant="outline" size="sm">{isRTL ? 'البحث' : 'Search'}</Button></Link>
+      <Navbar />
+
+      {/* Cover */}
+      <div className="bg-primary pt-24 pb-10">
+        <div className="container text-center">
+          <Megaphone className="w-10 h-10 text-accent mx-auto mb-3" />
+          <h1 className="font-heading font-bold text-3xl text-primary-foreground mb-2">
+            {isRTL ? 'العروض والإعلانات' : 'Offers & Promotions'}
+          </h1>
+          <p className="text-primary-foreground/60 font-body">
+            {isRTL ? 'أحدث العروض والفيديوهات من مزودي الخدمة' : 'Latest offers and videos from providers'}
+          </p>
         </div>
       </div>
 
@@ -81,38 +78,28 @@ const Offers = () => {
                   const embed = p.video_url ? getVideoEmbed(p.video_url) : null;
                   return (
                     <Card key={p.id} className="overflow-hidden group hover:shadow-lg transition-shadow">
-                      {/* Media */}
                       {p.promotion_type === 'video' && embed ? (
-                        <div className="aspect-video">
-                          <iframe src={embed} className="w-full h-full" allowFullScreen frameBorder="0" />
-                        </div>
+                        <div className="aspect-video"><iframe src={embed} className="w-full h-full" allowFullScreen frameBorder="0" /></div>
                       ) : p.image_url ? (
-                        <div className="h-48 overflow-hidden">
-                          <img src={p.image_url} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                        </div>
+                        <div className="h-48 overflow-hidden"><img src={p.image_url} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" /></div>
                       ) : (
-                        <div className="h-48 bg-gradient-to-br from-gold/20 to-gold/5 flex items-center justify-center">
-                          {p.promotion_type === 'video' ? <Play className="w-12 h-12 text-gold/50" /> : <Tag className="w-12 h-12 text-gold/50" />}
+                        <div className="h-48 bg-gradient-to-br from-accent/20 to-accent/5 flex items-center justify-center">
+                          {p.promotion_type === 'video' ? <Play className="w-12 h-12 text-accent/50" /> : <Tag className="w-12 h-12 text-accent/50" />}
                         </div>
                       )}
-
                       <CardContent className="p-4 space-y-3">
-                        {/* Provider */}
                         {biz && (
-                          <Link to={`/${biz.username}`} className="flex items-center gap-2 hover:text-gold transition-colors">
+                          <Link to={`/${biz.username}`} className="flex items-center gap-2 hover:text-accent transition-colors">
                             <div className="w-7 h-7 rounded-lg bg-muted overflow-hidden">
                               {biz.logo_url ? <img src={biz.logo_url} className="w-full h-full object-cover" /> : <span className="flex items-center justify-center w-full h-full text-[10px] font-bold">{biz.name_ar[0]}</span>}
                             </div>
                             <span className="text-sm font-medium">{isRTL ? biz.name_ar : (biz.name_en || biz.name_ar)}</span>
-                            <Star className="w-3 h-3 fill-gold text-gold ms-auto" />
+                            <Star className="w-3 h-3 fill-accent text-accent ms-auto" />
                             <span className="text-xs">{Number(biz.rating_avg).toFixed(1)}</span>
                           </Link>
                         )}
-
                         <h3 className="font-medium">{isRTL ? p.title_ar : (p.title_en || p.title_ar)}</h3>
                         {p.description_ar && <p className="text-sm text-muted-foreground line-clamp-2">{isRTL ? p.description_ar : (p.description_en || p.description_ar)}</p>}
-
-                        {/* Pricing */}
                         {p.promotion_type === 'offer' && p.original_price && (
                           <div className="flex items-center gap-2">
                             <span className="line-through text-muted-foreground text-sm">{Number(p.original_price).toLocaleString()}</span>
@@ -120,14 +107,8 @@ const Offers = () => {
                             {p.discount_percentage && <Badge className="bg-red-500 text-white text-xs">-{p.discount_percentage}%</Badge>}
                           </div>
                         )}
-
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <div className="flex items-center text-xs text-muted-foreground">
                           <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{new Date(p.start_date).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')}</span>
-                          {biz && (
-                            <Link to={`/${biz.username}`}>
-                              <Button size="sm" variant="ghost" className="text-xs h-7"><ArrowIcon className="w-3 h-3" /></Button>
-                            </Link>
-                          )}
                         </div>
                       </CardContent>
                     </Card>
@@ -138,6 +119,7 @@ const Offers = () => {
           </TabsContent>
         </Tabs>
       </div>
+      <Footer />
     </div>
   );
 };

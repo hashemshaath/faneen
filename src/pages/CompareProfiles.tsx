@@ -3,6 +3,8 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { Navbar } from '@/components/layout/Navbar';
+import { Footer } from '@/components/layout/Footer';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -116,29 +118,18 @@ const CompareProfiles = () => {
 
   return (
     <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
-      {/* Header */}
-      <div className="bg-card border-b border-border sticky top-0 z-20">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link to="/profile-systems">
-              <Button variant="ghost" size="icon"><BackIcon className="w-5 h-5" /></Button>
-            </Link>
-            <div>
-              <h1 className="font-heading font-bold text-lg flex items-center gap-2">
-                <Scale className="w-5 h-5 text-gold" />
-                {isRTL ? 'مقارنة القطاعات' : 'Compare Profiles'}
-              </h1>
-              <p className="text-xs text-muted-foreground">
-                {isRTL ? 'قارن حتى 4 قطاعات جنباً إلى جنب' : 'Compare up to 4 profiles side by side'}
-              </p>
-            </div>
-          </div>
-          <Link to="/profile-systems">
-            <Button variant="outline" size="sm">
-              <Layers className="w-4 h-4 me-1" />
-              {isRTL ? 'دليل القطاعات' : 'Profiles Guide'}
-            </Button>
-          </Link>
+      <Navbar />
+
+      {/* Cover */}
+      <div className="bg-primary pt-24 pb-10">
+        <div className="container text-center">
+          <Scale className="w-10 h-10 text-accent mx-auto mb-3" />
+          <h1 className="font-heading font-bold text-3xl text-primary-foreground mb-2">
+            {isRTL ? 'مقارنة القطاعات' : 'Compare Profiles'}
+          </h1>
+          <p className="text-primary-foreground/60 font-body">
+            {isRTL ? 'قارن حتى 4 قطاعات جنباً إلى جنب' : 'Compare up to 4 profiles side by side'}
+          </p>
         </div>
       </div>
 

@@ -3,11 +3,12 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { Navbar } from '@/components/layout/Navbar';
+import { Footer } from '@/components/layout/Footer';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Star, MapPin, BadgeCheck, Plus, X, ArrowRight, ArrowLeft, Scale, Search } from 'lucide-react';
 
 const Compare = () => {
@@ -22,34 +23,24 @@ const Compare = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Fetch all active businesses for search
   const { data: allBusinesses = [] } = useQuery({
     queryKey: ['businesses-for-compare'],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('businesses')
-        .select('id, name_ar, name_en, username, logo_url, rating_avg, rating_count, categories(name_ar, name_en), cities(name_ar, name_en)')
-        .eq('is_active', true)
-        .order('rating_avg', { ascending: false });
+      const { data } = await supabase.from('businesses').select('id, name_ar, name_en, username, logo_url, rating_avg, rating_count, categories(name_ar, name_en), cities(name_ar, name_en)').eq('is_active', true).order('rating_avg', { ascending: false });
       return data ?? [];
     },
   });
 
-  // Fetch selected businesses with services
   const { data: selectedBusinesses = [] } = useQuery({
     queryKey: ['compare-businesses', selectedIds],
     queryFn: async () => {
       if (!selectedIds.length) return [];
-      const { data } = await supabase
-        .from('businesses')
-        .select('*, categories(name_ar, name_en), cities(name_ar, name_en), business_services(*), provider_installment_settings(*)')
-        .in('id', selectedIds);
+      const { data } = await supabase.from('businesses').select('*, categories(name_ar, name_en), cities(name_ar, name_en), business_services(*), provider_installment_settings(*)').in('id', selectedIds);
       return data ?? [];
     },
     enabled: selectedIds.length > 0,
   });
 
-  // Fetch reviews count
   const { data: reviewsMap = {} } = useQuery({
     queryKey: ['compare-reviews', selectedIds],
     queryFn: async () => {
@@ -74,13 +65,9 @@ const Compare = () => {
   const filteredSearch = useMemo(() => {
     if (!searchQuery.trim()) return [];
     const q = searchQuery.toLowerCase();
-    return allBusinesses
-      .filter(b => !selectedIds.includes(b.id))
-      .filter(b => b.name_ar.toLowerCase().includes(q) || (b.name_en?.toLowerCase().includes(q)))
-      .slice(0, 6);
+    return allBusinesses.filter(b => !selectedIds.includes(b.id)).filter(b => b.name_ar.toLowerCase().includes(q) || (b.name_en?.toLowerCase().includes(q))).slice(0, 6);
   }, [searchQuery, allBusinesses, selectedIds]);
 
-  // Collect all unique services across selected
   const allServices = useMemo(() => {
     const serviceNames = new Set<string>();
     selectedBusinesses.forEach((b: any) => {
@@ -93,19 +80,18 @@ const Compare = () => {
 
   return (
     <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
-      {/* Header */}
-      <div className="bg-card border-b border-border sticky top-0 z-20">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link to="/" className="w-9 h-9 rounded-xl bg-gold flex items-center justify-center text-primary-foreground font-bold text-lg">ف</Link>
-            <div>
-              <h1 className="font-heading font-bold text-lg">{isRTL ? 'مقارنة مزودي الخدمة' : 'Compare Providers'}</h1>
-              <p className="text-xs text-muted-foreground">{isRTL ? 'قارن حتى 4 مزودين جنباً إلى جنب' : 'Compare up to 4 providers side by side'}</p>
-            </div>
-          </div>
-          <Link to="/search">
-            <Button variant="outline" size="sm"><Search className="w-4 h-4 me-1" />{isRTL ? 'البحث' : 'Search'}</Button>
-          </Link>
+      <Navbar />
+
+      {/* Cover */}
+      <div className="bg-primary pt-24 pb-10">
+        <div className="container text-center">
+          <Scale className="w-10 h-10 text-accent mx-auto mb-3" />
+          <h1 className="font-heading font-bold text-3xl text-primary-foreground mb-2">
+            {isRTL ? 'مقارنة مزودي الخدمة' : 'Compare Providers'}
+          </h1>
+          <p className="text-primary-foreground/60 font-body">
+            {isRTL ? 'قارن حتى 4 مزودين جنباً إلى جنب' : 'Compare up to 4 providers side by side'}
+          </p>
         </div>
       </div>
 
@@ -272,6 +258,7 @@ const Compare = () => {
           </div>
         )}
       </div>
+      <Footer />
     </div>
   );
 };

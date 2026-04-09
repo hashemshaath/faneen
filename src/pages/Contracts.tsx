@@ -13,6 +13,8 @@ import {
   Shield, AlertTriangle, CheckCircle2, Clock, XCircle,
 } from 'lucide-react';
 import type { Tables } from '@/integrations/supabase/types';
+import { Navbar } from '@/components/layout/Navbar';
+import { Footer } from '@/components/layout/Footer';
 
 type Contract = Tables<'contracts'>;
 
@@ -105,27 +107,18 @@ const Contracts = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <nav className="sticky top-0 z-50 bg-primary/95 backdrop-blur-sm border-b border-border/20">
-        <div className="container flex items-center justify-between h-14">
-          <Link to="/" className="flex items-center gap-2 text-primary-foreground/80 hover:text-accent transition-colors font-body text-sm">
-            <BackArrow className="w-4 h-4" />
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded bg-gradient-to-br from-accent to-accent/80 flex items-center justify-center">
-                <span className="font-heading font-black text-xs text-accent-foreground">ف</span>
-              </div>
-              <span className="font-heading font-bold text-primary-foreground">فنيين</span>
-            </div>
-          </Link>
+      <Navbar />
+
+      {/* Cover */}
+      <div className="bg-primary pt-24 pb-10">
+        <div className="container text-center">
+          <FileText className="w-10 h-10 text-accent mx-auto mb-3" />
+          <h1 className="font-heading font-bold text-3xl text-primary-foreground mb-2">{t('contracts.title')}</h1>
+          <p className="text-primary-foreground/60 font-body">{t('contracts.subtitle')}</p>
         </div>
-      </nav>
+      </div>
 
       <div className="container py-8">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="font-heading font-bold text-3xl text-foreground">{t('contracts.title')}</h1>
-            <p className="text-muted-foreground font-body mt-1">{t('contracts.subtitle')}</p>
-          </div>
-        </div>
 
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">{[1,2,3].map(i => <Skeleton key={i} className="h-32 rounded-xl" />)}</div>
@@ -167,6 +160,7 @@ const Contracts = () => {
           </Tabs>
         )}
       </div>
+      <Footer />
     </div>
   );
 };
