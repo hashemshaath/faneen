@@ -412,7 +412,13 @@ const DashboardMessages = () => {
           </div>
 
           {/* Chat Area */}
-          <div className={`flex-1 flex flex-col ${!selectedConversation ? 'hidden md:flex' : 'flex'}`}>
+          <div
+            className={`flex-1 flex flex-col relative ${!selectedConversation ? 'hidden md:flex' : 'flex'}`}
+            onDragEnter={selectedConversation ? handleDragEnter : undefined}
+            onDragLeave={selectedDragLeave}
+            onDragOver={selectedConversation ? handleDragOver : undefined}
+            onDrop={selectedConversation ? handleDrop : undefined}
+          >
             {!selectedConversation ? (
               <div className="flex-1 flex items-center justify-center text-muted-foreground">
                 <div className="text-center">
