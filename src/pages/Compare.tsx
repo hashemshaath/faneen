@@ -142,6 +142,7 @@ const Compare = () => {
             </CardContent>
           </Card>
         ) : (
+          <>
           <div className="flex justify-end mb-2">
             <Button
               size="sm"
