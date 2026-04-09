@@ -224,29 +224,39 @@ const Projects = () => {
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {projects.map((p: any) => (
+              {projects.map((p: any, index: number) => (
                 <Link key={p.id} to={`/projects/${p.id}`} className="block">
-                  <Card className="overflow-hidden border-border/50 hover:border-accent/30 transition-all hover:shadow-lg group cursor-pointer h-full">
-                    <div className="aspect-video bg-muted relative">
+                  <Card
+                    className="overflow-hidden border-border/50 hover:border-accent/40 transition-all duration-500 hover:shadow-xl hover:shadow-accent/5 group cursor-pointer h-full hover:-translate-y-1.5"
+                    style={{ animationDelay: `${index * 80}ms` }}
+                  >
+                    <div className="aspect-video bg-muted relative overflow-hidden">
                       {p.cover_image_url ? (
-                        <img src={p.cover_image_url} alt={p.title_ar} className="w-full h-full object-cover" loading="lazy" />
+                        <img
+                          src={p.cover_image_url}
+                          alt={p.title_ar}
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                          loading="lazy"
+                        />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <FolderOpen className="w-12 h-12 text-muted-foreground/30" />
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/50">
+                          <FolderOpen className="w-12 h-12 text-muted-foreground/20 transition-transform duration-500 group-hover:scale-110 group-hover:text-accent/30" />
                         </div>
                       )}
+                      {/* Gradient overlay on hover */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                       {p.is_featured && (
-                        <Badge className="absolute top-2 start-2 bg-accent text-accent-foreground text-[10px]">
+                        <Badge className="absolute top-2 start-2 bg-accent text-accent-foreground text-[10px] shadow-lg animate-pulse">
                           {isRTL ? 'مميز' : 'Featured'}
                         </Badge>
                       )}
-                      <div className="absolute bottom-2 end-2 bg-background/80 backdrop-blur-sm rounded-md px-2 py-1 flex items-center gap-1 text-xs text-foreground opacity-0 group-hover:opacity-100 transition-opacity">
-                        <ImageIcon className="w-3.5 h-3.5" />
+                      <div className="absolute bottom-3 end-3 bg-background/90 backdrop-blur-md rounded-lg px-3 py-1.5 flex items-center gap-1.5 text-xs font-medium text-foreground opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-2 group-hover:translate-y-0 shadow-lg">
+                        <ImageIcon className="w-3.5 h-3.5 text-accent" />
                         {isRTL ? 'عرض التفاصيل' : 'View Details'}
                       </div>
                     </div>
                     <CardContent className="p-4 space-y-3">
-                      <h3 className="font-heading font-bold text-lg">
+                      <h3 className="font-heading font-bold text-lg transition-colors duration-300 group-hover:text-accent">
                         {language === 'ar' ? p.title_ar : (p.title_en || p.title_ar)}
                       </h3>
                       {(p.description_ar || p.description_en) && (
@@ -256,27 +266,27 @@ const Projects = () => {
                       )}
                       <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
                         {p.project_cost && (
-                          <span className="flex items-center gap-1 bg-muted px-2 py-1 rounded-full">
+                          <span className="flex items-center gap-1 bg-muted px-2.5 py-1 rounded-full transition-colors duration-300 group-hover:bg-accent/10 group-hover:text-accent">
                             <DollarSign className="w-3 h-3" />{Number(p.project_cost).toLocaleString()} SAR
                           </span>
                         )}
                         {p.duration_days && (
-                          <span className="flex items-center gap-1 bg-muted px-2 py-1 rounded-full">
+                          <span className="flex items-center gap-1 bg-muted px-2.5 py-1 rounded-full transition-colors duration-300 group-hover:bg-accent/10 group-hover:text-accent">
                             <Clock className="w-3 h-3" />{p.duration_days} {isRTL ? 'يوم' : 'days'}
                           </span>
                         )}
                         {p.completion_date && (
-                          <span className="flex items-center gap-1 bg-muted px-2 py-1 rounded-full">
+                          <span className="flex items-center gap-1 bg-muted px-2.5 py-1 rounded-full transition-colors duration-300 group-hover:bg-accent/10 group-hover:text-accent">
                             <Calendar className="w-3 h-3" />{p.completion_date}
                           </span>
                         )}
                       </div>
                       {p.businesses && (
-                        <div className="flex items-center gap-2 pt-2 border-t border-border/30">
+                        <div className="flex items-center gap-2 pt-2 border-t border-border/30 transition-colors duration-300 group-hover:border-accent/20">
                           {p.businesses.logo_url ? (
-                            <img src={p.businesses.logo_url} alt="" className="w-7 h-7 rounded-full object-cover" />
+                            <img src={p.businesses.logo_url} alt="" className="w-7 h-7 rounded-full object-cover ring-2 ring-transparent transition-all duration-300 group-hover:ring-accent/30" />
                           ) : (
-                            <div className="w-7 h-7 rounded-full bg-accent/10 flex items-center justify-center">
+                            <div className="w-7 h-7 rounded-full bg-accent/10 flex items-center justify-center transition-colors duration-300 group-hover:bg-accent/20">
                               <Building2 className="w-3.5 h-3.5 text-accent" />
                             </div>
                           )}
