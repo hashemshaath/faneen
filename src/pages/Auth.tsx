@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { checkPasswordStrength, validatePhone, validateEmail, validateUsername } from '@/lib/password-strength';
 import { toast } from 'sonner';
 import { Eye, EyeOff, ArrowRight, ArrowLeft, Phone, Mail, Lock, User, Building2, Globe } from 'lucide-react';
+import { AuthLayout } from '@/components/auth/AuthLayout';
 
 type AuthMode = 'login' | 'register' | 'forgot-password' | 'email-sent';
 type RegisterType = 'individual' | 'business';
@@ -22,7 +23,6 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  // Form fields
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -89,12 +89,6 @@ const Auth = () => {
         },
       });
       if (error) throw error;
-
-      // If business account, create the business profile
-      if (registerType === 'business') {
-        // Business will be created after email verification via the profile
-      }
-
       setMode('email-sent');
       toast.success(isRTL ? 'تم إرسال رابط التحقق إلى بريدك الإلكتروني' : 'Verification link sent to your email');
     } catch (err: any) {
@@ -146,7 +140,6 @@ const Auth = () => {
     );
   };
 
-  // LOGIN MODE
   if (mode === 'login') {
     return (
       <AuthLayout>
@@ -154,63 +147,37 @@ const Auth = () => {
           <div className="text-center space-y-2">
             <h2 className="font-heading font-bold text-2xl text-foreground">{t('auth.login')}</h2>
           </div>
-
           <div className="space-y-4">
             <div className="space-y-2">
               <Label>{t('auth.email')}</Label>
               <div className="relative">
                 <Mail className="absolute top-3 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
-                <Input
-                  type="email"
-                  placeholder={isRTL ? 'example@email.com' : 'example@email.com'}
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  dir="ltr"
-                  style={{ paddingInlineStart: '40px' }}
-                />
+                <Input type="email" placeholder="example@email.com" value={email} onChange={(e) => setEmail(e.target.value)} dir="ltr" style={{ paddingInlineStart: '40px' }} />
               </div>
             </div>
-
             <div className="space-y-2">
               <Label>{t('auth.password')}</Label>
               <div className="relative">
                 <Lock className="absolute top-3 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
-                <Input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  style={{ paddingInlineStart: '40px', paddingInlineEnd: '40px' }}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute top-3 text-muted-foreground"
-                  style={{ [isRTL ? 'left' : 'right']: '12px' }}
-                >
+                <Input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} style={{ paddingInlineStart: '40px', paddingInlineEnd: '40px' }} />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute top-3 text-muted-foreground" style={{ [isRTL ? 'left' : 'right']: '12px' }}>
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
             </div>
-
             <Button onClick={handleEmailLogin} disabled={loading} className="w-full" variant="hero">
               {loading ? t('common.loading') : t('auth.login')}
             </Button>
           </div>
-
           <div className="flex items-center justify-between text-sm">
-            <button onClick={() => setMode('forgot-password')} className="text-gold hover:underline">
-              {t('auth.forgot')}
-            </button>
-            <button onClick={() => { setMode('register'); setRegisterStep('type'); }} className="text-gold hover:underline">
-              {t('auth.no_account')}
-            </button>
+            <button onClick={() => setMode('forgot-password')} className="text-gold hover:underline">{t('auth.forgot')}</button>
+            <button onClick={() => { setMode('register'); setRegisterStep('type'); }} className="text-gold hover:underline">{t('auth.no_account')}</button>
           </div>
         </div>
       </AuthLayout>
     );
   }
 
-  // EMAIL SENT CONFIRMATION
   if (mode === 'email-sent') {
     return (
       <AuthLayout>
@@ -228,7 +195,6 @@ const Auth = () => {
                 : `We sent a verification link to ${email}. Please open your email and click the link to confirm your account.`}
             </p>
           </div>
-
           <div className="space-y-3">
             <Button onClick={() => setMode('login')} className="w-full" variant="hero">
               {isRTL ? 'العودة لتسجيل الدخول' : 'Back to login'}
@@ -242,7 +208,6 @@ const Auth = () => {
     );
   }
 
-  // FORGOT PASSWORD
   if (mode === 'forgot-password') {
     return (
       <AuthLayout>
@@ -250,27 +215,18 @@ const Auth = () => {
           <div className="text-center space-y-2">
             <h2 className="font-heading font-bold text-2xl text-foreground">{t('auth.reset_password')}</h2>
           </div>
-
           <div className="space-y-4">
             <div className="space-y-2">
               <Label>{t('auth.email')}</Label>
               <div className="relative">
                 <Mail className="absolute top-3 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
-                <Input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  dir="ltr"
-                  style={{ paddingInlineStart: '40px' }}
-                />
+                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} dir="ltr" style={{ paddingInlineStart: '40px' }} />
               </div>
             </div>
-
             <Button onClick={handleForgotPassword} disabled={loading} className="w-full" variant="hero">
               {loading ? t('common.loading') : t('auth.reset_password')}
             </Button>
           </div>
-
           <button onClick={() => setMode('login')} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
             <BackArrow className="w-4 h-4" />
             {t('auth.back')}
@@ -290,27 +246,19 @@ const Auth = () => {
               <h2 className="font-heading font-bold text-2xl text-foreground">{t('auth.register')}</h2>
             </div>
             <div className="grid grid-cols-1 gap-4">
-              <button
-                onClick={() => { setRegisterType('individual'); setRegisterStep('details'); }}
-                className="p-6 rounded-xl border-2 border-border hover:border-gold/50 transition-all text-center group"
-              >
+              <button onClick={() => { setRegisterType('individual'); setRegisterStep('details'); }} className="p-6 rounded-xl border-2 border-border hover:border-gold/50 transition-all text-center group">
                 <User className="w-10 h-10 mx-auto mb-3 text-gold group-hover:scale-110 transition-transform" />
                 <h3 className="font-heading font-bold text-lg">{t('auth.register_individual')}</h3>
                 <p className="text-sm text-muted-foreground mt-1">{t('membership.individual.desc')}</p>
               </button>
-              <button
-                onClick={() => { setRegisterType('business'); setRegisterStep('details'); }}
-                className="p-6 rounded-xl border-2 border-gold/30 bg-gold/5 hover:border-gold transition-all text-center group"
-              >
+              <button onClick={() => { setRegisterType('business'); setRegisterStep('details'); }} className="p-6 rounded-xl border-2 border-gold/30 bg-gold/5 hover:border-gold transition-all text-center group">
                 <Building2 className="w-10 h-10 mx-auto mb-3 text-gold group-hover:scale-110 transition-transform" />
                 <h3 className="font-heading font-bold text-lg">{t('auth.register_business')}</h3>
                 <p className="text-sm text-muted-foreground mt-1">{t('membership.business.desc')}</p>
               </button>
             </div>
             <div className="text-center text-sm">
-              <button onClick={() => setMode('login')} className="text-gold hover:underline">
-                {t('auth.has_account')}
-              </button>
+              <button onClick={() => setMode('login')} className="text-gold hover:underline">{t('auth.has_account')}</button>
             </div>
           </>
         )}
@@ -328,70 +276,39 @@ const Auth = () => {
                   <Input value={fullName} onChange={(e) => setFullName(e.target.value)} style={{ paddingInlineStart: '40px' }} />
                 </div>
               </div>
-
               <div className="space-y-2">
                 <Label>{t('auth.email')} <span className="text-destructive">*</span></Label>
                 <div className="relative">
                   <Mail className="absolute top-3 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
-                  <Input
-                    type="email"
-                    placeholder="example@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    dir="ltr"
-                    style={{ paddingInlineStart: '40px' }}
-                  />
+                  <Input type="email" placeholder="example@email.com" value={email} onChange={(e) => setEmail(e.target.value)} dir="ltr" style={{ paddingInlineStart: '40px' }} />
                 </div>
               </div>
-
               <div className="space-y-2">
-                <Label>
-                  {t('auth.phone')}
-                  <span className="text-xs text-muted-foreground ms-1">({isRTL ? 'اختياري' : 'optional'})</span>
-                </Label>
+                <Label>{t('auth.phone')} <span className="text-xs text-muted-foreground ms-1">({isRTL ? 'اختياري' : 'optional'})</span></Label>
                 <div className="relative">
                   <Phone className="absolute top-3 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
                   <div className="absolute top-2.5 text-sm text-muted-foreground font-mono" style={{ [isRTL ? 'right' : 'left']: '36px' }}>+966</div>
-                  <Input
-                    type="tel"
-                    placeholder={t('auth.phone.placeholder')}
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 9))}
-                    dir="ltr"
-                    style={{ paddingInlineStart: '88px' }}
-                  />
+                  <Input type="tel" placeholder={t('auth.phone.placeholder')} value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 9))} dir="ltr" style={{ paddingInlineStart: '88px' }} />
                 </div>
               </div>
-
               <div className="space-y-2">
                 <Label>{t('auth.password')}</Label>
                 <div className="relative">
                   <Lock className="absolute top-3 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
-                  <Input
-                    type={showPassword ? 'text' : 'password'}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    style={{ paddingInlineStart: '40px', paddingInlineEnd: '40px' }}
-                  />
+                  <Input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} style={{ paddingInlineStart: '40px', paddingInlineEnd: '40px' }} />
                   <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute top-3 text-muted-foreground" style={{ [isRTL ? 'left' : 'right']: '12px' }}>
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
                 {renderPasswordStrength()}
               </div>
-
               <div className="space-y-2">
                 <Label>{t('auth.password.confirm')}</Label>
-                <Input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                />
+                <Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
                 {confirmPassword && password !== confirmPassword && (
                   <p className="text-xs text-destructive">{isRTL ? 'كلمة المرور غير متطابقة' : 'Passwords do not match'}</p>
                 )}
               </div>
-
               {registerType === 'business' ? (
                 <Button onClick={() => setRegisterStep('business-details')} disabled={!email || !fullName || passwordStrength.score < 2 || password !== confirmPassword} className="w-full" variant="hero">
                   {t('auth.next')}
@@ -402,7 +319,6 @@ const Auth = () => {
                 </Button>
               )}
             </div>
-
             <button onClick={() => setRegisterStep('type')} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
               <BackArrow className="w-4 h-4" />
               {t('auth.back')}
@@ -423,41 +339,21 @@ const Auth = () => {
                   <Input value={businessName} onChange={(e) => setBusinessName(e.target.value)} style={{ paddingInlineStart: '40px' }} />
                 </div>
               </div>
-
               <div className="space-y-2">
                 <Label>{t('auth.business_username')}</Label>
                 <div className="relative">
                   <Globe className="absolute top-3 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
-                  <Input
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ''))}
-                    placeholder="my-business"
-                    dir="ltr"
-                    style={{ paddingInlineStart: '40px' }}
-                  />
+                  <Input value={username} onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ''))} placeholder="my-business" dir="ltr" style={{ paddingInlineStart: '40px' }} />
                 </div>
-                {username && (
-                  <p className="text-xs text-muted-foreground">
-                    faneen.com/{username}
-                  </p>
-                )}
+                {username && <p className="text-xs text-muted-foreground">faneen.com/{username}</p>}
                 {username && !validateUsername(username) && (
-                  <p className="text-xs text-destructive">
-                    {isRTL ? 'اسم المستخدم غير صحيح (3-50 حرف)' : 'Invalid username (3-50 chars)'}
-                  </p>
+                  <p className="text-xs text-destructive">{isRTL ? 'اسم المستخدم غير صحيح (3-50 حرف)' : 'Invalid username (3-50 chars)'}</p>
                 )}
               </div>
-
-              <Button
-                onClick={handleRegister}
-                disabled={loading || !businessName || !validateUsername(username)}
-                className="w-full"
-                variant="hero"
-              >
+              <Button onClick={handleRegister} disabled={loading || !businessName || !validateUsername(username)} className="w-full" variant="hero">
                 {loading ? t('common.loading') : t('auth.submit')}
               </Button>
             </div>
-
             <button onClick={() => setRegisterStep('details')} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
               <BackArrow className="w-4 h-4" />
               {t('auth.back')}
@@ -466,44 +362,6 @@ const Auth = () => {
         )}
       </div>
     </AuthLayout>
-  );
-};
-
-const AuthLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { t, language, setLanguage } = useLanguage();
-
-  return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 rounded-xl bg-gradient-gold flex items-center justify-center">
-              <span className="font-heading font-black text-xl text-secondary-foreground">ف</span>
-            </div>
-            <div className="text-start">
-              <h1 className="font-heading font-bold text-xl text-foreground leading-none">فنيين</h1>
-              <span className="text-xs text-gold font-body">Faneen</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Card */}
-        <div className="bg-card rounded-2xl border border-border p-8 shadow-sm">
-          {children}
-        </div>
-
-        {/* Language toggle */}
-        <div className="text-center mt-4">
-          <button
-            onClick={() => setLanguage(language === 'ar' ? 'en' : 'ar')}
-            className="text-sm text-muted-foreground hover:text-gold transition-colors"
-          >
-            {t('nav.language')}
-          </button>
-        </div>
-      </div>
-    </div>
   );
 };
 
