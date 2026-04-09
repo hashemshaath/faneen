@@ -320,7 +320,7 @@ const AdminUsers = () => {
               const isCurrentUser = profile.user_id === user.id;
 
               return (
-                <Card key={profile.id} className={`transition-colors ${isCurrentUser ? 'border-gold/40' : ''}`}>
+                <Card key={profile.id} className={`transition-colors ${isCurrentUser ? 'border-gold/40' : ''} ${(profile as any).is_banned ? 'opacity-60 border-destructive/40' : ''}`}>
                   <CardContent className="p-4">
                     <div className="flex flex-col md:flex-row md:items-center gap-4">
                       <div className="flex items-center gap-3 flex-1 min-w-0">
