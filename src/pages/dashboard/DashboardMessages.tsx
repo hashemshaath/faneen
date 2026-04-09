@@ -13,7 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import {
   MessageSquare, Send, Search, Check, CheckCheck, ArrowLeft, ArrowRight,
-  Paperclip, Image as ImageIcon, FileText, X, Download, Loader2,
+  Paperclip, Image as ImageIcon, FileText, X, Download, Loader2, Eye, ExternalLink,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
