@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -9,14 +9,35 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { FolderOpen, Calendar, DollarSign, Clock, Building2, ChevronLeft, ChevronRight, X, ImageIcon } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { FolderOpen, Calendar, DollarSign, Clock, Building2, ChevronLeft, ChevronRight, X, ImageIcon, Search, Filter, MapPin, Tag } from 'lucide-react';
 
 const Projects = () => {
   const { isRTL, language } = useLanguage();
   const [selectedProject, setSelectedProject] = useState<any>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedCity, setSelectedCity] = useState('all');
 
-  const { data: projects = [], isLoading } = useQuery({
+  const { data: categories = [] } = useQuery({
+    queryKey: ['categories'],
+    queryFn: async () => {
+      const { data } = await supabase.from('categories').select('id, name_ar, name_en').eq('is_active', true).order('sort_order');
+      return data || [];
+    },
+  });
+
+  const { data: cities = [] } = useQuery({
+    queryKey: ['cities'],
+    queryFn: async () => {
+      const { data } = await supabase.from('cities').select('id, name_ar, name_en').eq('is_active', true);
+      return data || [];
+    },
+  });
+
+  const { data: allProjects = [], isLoading } = useQuery({
     queryKey: ['public-projects'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -28,6 +49,28 @@ const Projects = () => {
       return data;
     },
   });
+
+  const projects = useMemo(() => {
+    return allProjects.filter((p: any) => {
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        const match = p.title_ar?.toLowerCase().includes(q) ||
+          p.title_en?.toLowerCase().includes(q) ||
+          p.description_ar?.toLowerCase().includes(q) ||
+          p.description_en?.toLowerCase().includes(q) ||
+          p.client_name?.toLowerCase().includes(q) ||
+          p.businesses?.name_ar?.toLowerCase().includes(q) ||
+          p.businesses?.name_en?.toLowerCase().includes(q);
+        if (!match) return false;
+      }
+      if (selectedCategory !== 'all' && p.category_id !== selectedCategory) return false;
+      if (selectedCity !== 'all' && p.city_id !== selectedCity) return false;
+      return true;
+    });
+  }, [allProjects, searchQuery, selectedCategory, selectedCity]);
+
+  const hasActiveFilters = searchQuery || selectedCategory !== 'all' || selectedCity !== 'all';
+  const clearFilters = () => { setSearchQuery(''); setSelectedCategory('all'); setSelectedCity('all'); };
 
   const { data: projectImages = [] } = useQuery({
     queryKey: ['project-images', selectedProject?.id],
