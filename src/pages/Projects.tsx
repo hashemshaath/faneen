@@ -129,7 +129,7 @@ const Projects = () => {
                 ))}
               </SelectContent>
             </Select>
-            <Select value={selectedCity} onValueChange={setSelectedCity}>
+            <Select value={selectedCity} onValueChange={handleFilterChange(setSelectedCity)}>
               <SelectTrigger className="w-full sm:w-48">
                 <div className="flex items-center gap-2">
                   <MapPin className="w-4 h-4 text-muted-foreground" />
