@@ -46,7 +46,7 @@ export const LatestProjectsSection = () => {
             <div key={p.id} className="group rounded-2xl overflow-hidden border border-border hover:border-gold/40 bg-card transition-all duration-300 hover:shadow-lg">
               <div className="aspect-video bg-muted relative overflow-hidden">
                 {p.cover_image_url ? (
-                  <img src={p.cover_image_url} alt={p.title_ar} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <img src={p.cover_image_url} alt={p.title_ar} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
                     <FolderOpen className="w-12 h-12 text-muted-foreground/20" />
