@@ -110,8 +110,8 @@ export const DashboardSidebar: React.FC = () => {
                       <item.icon className="h-4 w-4 shrink-0" />
                       {!collapsed && <span className="ms-2">{
                         isRTL
-                          ? (item.titleKey === 'admin.api_settings' ? 'إعدادات API' : item.titleKey === 'admin.api_docs' ? 'توثيق API' : item.titleKey === 'admin.profile_systems' ? 'القطاعات' : 'المدونة')
-                          : (item.titleKey === 'admin.api_settings' ? 'API Settings' : item.titleKey === 'admin.api_docs' ? 'API Docs' : item.titleKey === 'admin.profile_systems' ? 'Profiles' : 'Blog')
+                          ? (item.titleKey === 'admin.api_settings' ? 'إعدادات API' : item.titleKey === 'admin.api_docs' ? 'توثيق API' : item.titleKey === 'admin.profile_systems' ? 'القطاعات' : item.titleKey === 'admin.users' ? 'المستخدمين' : 'المدونة')
+                          : (item.titleKey === 'admin.api_settings' ? 'API Settings' : item.titleKey === 'admin.api_docs' ? 'API Docs' : item.titleKey === 'admin.profile_systems' ? 'Profiles' : item.titleKey === 'admin.users' ? 'Users' : 'Blog')
                       }</span>}
                     </NavLink>
                   </SidebarMenuButton>
