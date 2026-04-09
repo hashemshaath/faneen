@@ -8,15 +8,14 @@ import { Footer } from '@/components/layout/Footer';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FolderOpen, Calendar, DollarSign, Clock, Building2, ChevronLeft, ChevronRight, X, ImageIcon, Search, Filter, MapPin, Tag } from 'lucide-react';
+import { FolderOpen, Calendar, DollarSign, Clock, Building2, X, ImageIcon, Search, MapPin, Tag } from 'lucide-react';
 
 const Projects = () => {
   const { isRTL, language } = useLanguage();
-  const [selectedProject, setSelectedProject] = useState<any>(null);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedCity, setSelectedCity] = useState('all');
