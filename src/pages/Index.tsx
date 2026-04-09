@@ -38,9 +38,14 @@ const Navbar = () => {
             {t('nav.language')}
           </button>
           {user ? (
-            <Button variant="ghost" className="text-primary-foreground/80 hover:text-gold hover:bg-gold/10 text-sm" onClick={signOut}>
-              {t('auth.logout')}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Link to="/dashboard">
+                <Button variant="hero" size="sm">{t('dashboard.overview')}</Button>
+              </Link>
+              <Button variant="ghost" className="text-primary-foreground/80 hover:text-gold hover:bg-gold/10 text-sm" onClick={signOut}>
+                {t('auth.logout')}
+              </Button>
+            </div>
           ) : (
             <>
               <Link to="/auth">
