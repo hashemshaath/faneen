@@ -266,6 +266,15 @@ export const translations = {
   'maintenance.rejected': { ar: 'مرفوض', en: 'Rejected' },
   'maintenance.no_requests': { ar: 'لا توجد طلبات صيانة', en: 'No maintenance requests' },
   'maintenance.submit': { ar: 'إرسال الطلب', en: 'Submit Request' },
+
+  // Dashboard
+  'dashboard.overview': { ar: 'نظرة عامة', en: 'Overview' },
+  'dashboard.services': { ar: 'الخدمات', en: 'Services' },
+  'dashboard.portfolio': { ar: 'معرض الأعمال', en: 'Portfolio' },
+  'dashboard.reviews': { ar: 'التقييمات', en: 'Reviews' },
+  'dashboard.contracts': { ar: 'العقود', en: 'Contracts' },
+  'dashboard.warranties': { ar: 'الضمانات', en: 'Warranties' },
+  'dashboard.settings': { ar: 'الإعدادات', en: 'Settings' },
 } as const;
 
 export type TranslationKey = keyof typeof translations;
