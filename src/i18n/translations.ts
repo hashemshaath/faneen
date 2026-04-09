@@ -281,6 +281,14 @@ export const translations = {
   'dashboard.promotions': { ar: 'الإعلانات والعروض', en: 'Promotions' },
   'dashboard.projects': { ar: 'المشاريع', en: 'Projects' },
   'dashboard.settings': { ar: 'الإعدادات', en: 'Settings' },
+
+  // Admin
+  'admin.users': { ar: 'المستخدمون', en: 'Users' },
+  'admin.profile_systems': { ar: 'أنظمة البروفايل', en: 'Profile Systems' },
+  'admin.blog': { ar: 'المدونة', en: 'Blog' },
+  'admin.api_settings': { ar: 'إعدادات API', en: 'API Settings' },
+  'admin.api_docs': { ar: 'توثيق API', en: 'API Docs' },
+  'admin.activity_log': { ar: 'سجل النشاط', en: 'Activity Log' },
 } as const;
 
 export type TranslationKey = keyof typeof translations;
