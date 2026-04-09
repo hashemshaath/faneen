@@ -16,7 +16,7 @@ import { NavLink } from '@/components/NavLink';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import {
-  LayoutDashboard, Wrench, Image, Star, FileText, Shield, Settings, LogOut, Home, Globe, CreditCard, Megaphone,
+  LayoutDashboard, Wrench, Image, Star, FileText, Shield, Settings, LogOut, Home, Globe, CreditCard, Megaphone, Key, Book,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -30,6 +30,11 @@ const menuItems = [
   { titleKey: 'dashboard.installments', url: '/dashboard/installments', icon: CreditCard },
   { titleKey: 'dashboard.promotions', url: '/dashboard/promotions', icon: Megaphone },
   { titleKey: 'dashboard.settings', url: '/dashboard/settings', icon: Settings },
+] as const;
+
+const adminItems = [
+  { titleKey: 'admin.api_settings', url: '/admin/api-settings', icon: Key },
+  { titleKey: 'admin.api_docs', url: '/admin/api-docs', icon: Book },
 ] as const;
 
 export const DashboardSidebar: React.FC = () => {
@@ -76,6 +81,29 @@ export const DashboardSidebar: React.FC = () => {
                     >
                       <item.icon className="h-4 w-4 shrink-0" />
                       {!collapsed && <span className="ms-2">{t(item.titleKey as any)}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Admin section */}
+        <SidebarGroup>
+          <SidebarGroupLabel>{!collapsed ? (isRTL ? 'الإدارة' : 'Admin') : ''}</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {adminItems.map((item) => (
+                <SidebarMenuItem key={item.url}>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to={item.url}
+                      className="hover:bg-muted/50"
+                      activeClassName="bg-gold/10 text-gold font-medium"
+                    >
+                      <item.icon className="h-4 w-4 shrink-0" />
+                      {!collapsed && <span className="ms-2">{isRTL ? (item.titleKey === 'admin.api_settings' ? 'إعدادات API' : 'توثيق API') : (item.titleKey === 'admin.api_settings' ? 'API Settings' : 'API Docs')}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

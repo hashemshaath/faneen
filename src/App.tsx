@@ -23,6 +23,8 @@ import DashboardSettings from "./pages/dashboard/DashboardSettings";
 import DashboardPromotions from "./pages/dashboard/DashboardPromotions";
 import Offers from "./pages/Offers";
 import Compare from "./pages/Compare";
+import AdminApiSettings from "./pages/admin/AdminApiSettings";
+import AdminApiDocs from "./pages/admin/AdminApiDocs";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -53,6 +55,8 @@ const App = () => (
               <Route path="/dashboard/promotions" element={<DashboardPromotions />} />
               <Route path="/offers" element={<Offers />} />
               <Route path="/compare" element={<Compare />} />
+              <Route path="/admin/api-settings" element={<AdminApiSettings />} />
+              <Route path="/admin/api-docs" element={<AdminApiDocs />} />
               <Route path="/:username" element={<BusinessProfile />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
