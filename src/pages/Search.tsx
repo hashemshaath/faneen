@@ -136,8 +136,8 @@ const SearchPage = () => {
       {/* Header */}
       <div className="bg-primary py-10">
         <div className="container text-center">
-          <h1 className="font-heading font-bold text-3xl text-primary-foreground mb-2">{t('search.title')}</h1>
-          <p className="text-primary-foreground/60 font-body">{t('search.subtitle')}</p>
+          <h1 className="font-heading font-bold text-3xl text-primary-foreground mb-2">{t('search.page_title')}</h1>
+          <p className="text-primary-foreground/60 font-body">{t('search.page_subtitle')}</p>
 
           {/* Search bar */}
           <div className="max-w-2xl mx-auto mt-6 relative">
