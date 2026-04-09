@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Upload, X, Loader2, ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { compressImage } from '@/lib/image-compress';
 
 interface ImageUploadProps {
   bucket: string;
@@ -49,7 +50,8 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
 
     setUploading(true);
     try {
-      const ext = file.name.split('.').pop() || 'jpg';
+      const compressed = await compressImage(file);
+      const ext = compressed.name.split('.').pop() || 'jpg';
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
       const path = folder
         ? `${user.id}/${folder}/${fileName}`
@@ -57,7 +59,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
 
       const { error: uploadError } = await supabase.storage
         .from(bucket)
-        .upload(path, file, { cacheControl: '3600', upsert: false });
+        .upload(path, compressed, { cacheControl: '3600', upsert: false });
 
       if (uploadError) throw uploadError;
 
