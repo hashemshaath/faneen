@@ -22,10 +22,13 @@ const Navbar = () => {
           </div>
         </div>
         <div className="hidden md:flex items-center gap-6 font-body text-sm text-primary-foreground/80">
+          <Link to="/search" className="hover:text-gold transition-colors flex items-center gap-1">
+            <Search className="w-4 h-4" />
+            {t('search.page_title')}
+          </Link>
           <a href="#categories" className="hover:text-gold transition-colors">{t('nav.sections')}</a>
           <a href="#features" className="hover:text-gold transition-colors">{t('nav.features')}</a>
           <a href="#providers" className="hover:text-gold transition-colors">{t('nav.providers')}</a>
-          <a href="#projects" className="hover:text-gold transition-colors">{t('nav.projects')}</a>
         </div>
         <div className="flex items-center gap-3">
           <button
@@ -80,10 +83,12 @@ const HeroSection = () => {
           {t('hero.desc')}
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
-          <Button variant="hero" size="lg" className="text-base px-10 py-6">
-            <Search className="w-5 h-5 ml-2" />
-            {t('hero.search')}
-          </Button>
+          <Link to="/search">
+            <Button variant="hero" size="lg" className="text-base px-10 py-6">
+              <Search className="w-5 h-5 ml-2" />
+              {t('hero.search')}
+            </Button>
+          </Link>
           <Link to="/auth">
             <Button variant="heroOutline" size="lg" className="text-base px-10 py-6">
               {t('hero.provider')}
