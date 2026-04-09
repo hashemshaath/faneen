@@ -405,6 +405,8 @@ const AdminUsers = () => {
                             </Button>
                           </>
                         )}
+
+                        {roles.length === 0 && (
                           <span className="text-xs text-muted-foreground">{isRTL ? 'بدون صلاحيات' : 'No roles'}</span>
                         )}
                         {roles.map(r => {
