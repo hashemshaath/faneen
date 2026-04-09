@@ -290,6 +290,7 @@ const Compare = () => {
               </tbody>
             </table>
           </div>
+          </>
         )}
       </div>
       <Footer />
