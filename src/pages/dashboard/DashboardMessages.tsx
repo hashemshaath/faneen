@@ -33,8 +33,10 @@ const formatFileSize = (bytes: number) => {
 };
 
 const AttachmentPreview = ({ url, type, name }: { url: string; type: string; name?: string }) => {
+  const [showPdf, setShowPdf] = React.useState(false);
   const isImage = IMAGE_TYPES.some(t => url.toLowerCase().includes(t.split('/')[1]) || type === t);
   const inferredImage = /\.(jpg|jpeg|png|gif|webp)(\?|$)/i.test(url);
+  const isPdf = /\.pdf(\?|$)/i.test(url) || type === 'application/pdf';
 
   if (isImage || inferredImage) {
     return (
@@ -46,6 +48,40 @@ const AttachmentPreview = ({ url, type, name }: { url: string; type: string; nam
           loading="lazy"
         />
       </a>
+    );
+  }
+
+  if (isPdf) {
+    return (
+      <div className="mt-1.5 max-w-[300px]">
+        {showPdf && (
+          <div className="mb-1.5 rounded-lg overflow-hidden border border-border/30 bg-background">
+            <iframe
+              src={`${url}#toolbar=0&navpanes=0`}
+              className="w-full h-[280px] rounded-lg"
+              title={name || 'PDF'}
+            />
+          </div>
+        )}
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => setShowPdf(!showPdf)}
+            className="flex items-center gap-1.5 p-2 rounded-lg bg-background/50 border border-border/30 hover:bg-muted/50 transition-colors flex-1 min-w-0"
+          >
+            <FileText className="w-5 h-5 text-red-500 shrink-0" />
+            <span className="text-xs truncate flex-1 text-start">{name || 'PDF'}</span>
+            <Eye className="w-4 h-4 text-muted-foreground shrink-0" />
+          </button>
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-2 rounded-lg bg-background/50 border border-border/30 hover:bg-muted/50 transition-colors shrink-0"
+          >
+            <ExternalLink className="w-4 h-4 text-muted-foreground" />
+          </a>
+        </div>
+      </div>
     );
   }
 
