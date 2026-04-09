@@ -50,7 +50,7 @@ const Projects = () => {
     },
   });
 
-  const projects = useMemo(() => {
+  const filtered = useMemo(() => {
     return allProjects.filter((p: any) => {
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
@@ -69,8 +69,20 @@ const Projects = () => {
     });
   }, [allProjects, searchQuery, selectedCategory, selectedCity]);
 
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const projects = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filtered.slice(start, start + ITEMS_PER_PAGE);
+  }, [filtered, currentPage]);
+
+  // Reset page when filters change
+  const handleFilterChange = (setter: (v: string) => void) => (val: string) => {
+    setter(val);
+    setCurrentPage(1);
+  };
+
   const hasActiveFilters = searchQuery || selectedCategory !== 'all' || selectedCity !== 'all';
-  const clearFilters = () => { setSearchQuery(''); setSelectedCategory('all'); setSelectedCity('all'); };
+  const clearFilters = () => { setSearchQuery(''); setSelectedCategory('all'); setSelectedCity('all'); setCurrentPage(1); };
 
   return (
     <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
