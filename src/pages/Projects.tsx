@@ -236,6 +236,50 @@ const Projects = () => {
               </Link>
             ))}
           </div>
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 mt-8">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage === 1}
+                onClick={() => { setCurrentPage(p => p - 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+              >
+                {isRTL ? 'السابق' : 'Previous'}
+              </Button>
+              <div className="flex items-center gap-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+                  .reduce<(number | string)[]>((acc, p, i, arr) => {
+                    if (i > 0 && p - (arr[i - 1] as number) > 1) acc.push('...');
+                    acc.push(p);
+                    return acc;
+                  }, [])
+                  .map((p, i) =>
+                    typeof p === 'string' ? (
+                      <span key={`dots-${i}`} className="px-1 text-muted-foreground">…</span>
+                    ) : (
+                      <Button
+                        key={p}
+                        variant={p === currentPage ? 'default' : 'outline'}
+                        size="sm"
+                        className="w-9 h-9"
+                        onClick={() => { setCurrentPage(p); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                      >
+                        {p}
+                      </Button>
+                    )
+                  )}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage === totalPages}
+                onClick={() => { setCurrentPage(p => p + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+              >
+                {isRTL ? 'التالي' : 'Next'}
+              </Button>
+            </div>
+          )}
         )}
       </div>
 
