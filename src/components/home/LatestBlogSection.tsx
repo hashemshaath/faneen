@@ -47,7 +47,7 @@ export const LatestBlogSection = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {posts.map((post: any, i: number) => (
             <Link key={post.id} to={`/blog/${post.slug}`} className="group">
-              <div className={`rounded-2xl overflow-hidden border border-border hover:border-gold/40 bg-card transition-all duration-500 hover:shadow-lg h-full hover-scale ${isVisible ? 'animate-fade-in' : 'opacity-0'}`} style={{ animationDelay: `${i * 100}ms`, animationFillMode: 'both' }}>
+              <div className={`rounded-2xl overflow-hidden border border-border hover:border-gold/40 bg-card transition-all duration-500 hover:shadow-lg h-full hover-scale ${isVisible ? 'animate-fade-in' : ''}`} style={{ animationDelay: `${i * 100}ms`, animationFillMode: 'both' }}>
                 {post.cover_image_url && (
                   <div className="aspect-video bg-muted overflow-hidden">
                     <img src={post.cover_image_url} alt={post.title_ar} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
