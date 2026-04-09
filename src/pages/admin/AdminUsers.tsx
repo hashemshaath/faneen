@@ -356,6 +356,10 @@ const AdminUsers = () => {
                   <SelectItem value="no_role">{isRTL ? 'بدون صلاحيات' : 'No Role'}</SelectItem>
                 </SelectContent>
               </Select>
+              <Button variant="outline" onClick={exportCSV} className="gap-2">
+                <Download className="w-4 h-4" />
+                {isRTL ? 'تصدير CSV' : 'Export CSV'}
+              </Button>
             </div>
           </CardContent>
         </Card>
