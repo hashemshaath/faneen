@@ -46,9 +46,23 @@ const RatingBar = ({ value, max = 10, label, icon: Icon }: { value: number; max?
 
 const ProfileSystems = () => {
   const { isRTL, language } = useLanguage();
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('all');
   const [minInsulation, setMinInsulation] = useState(0);
+  const [compareIds, setCompareIds] = useState<string[]>([]);
+
+  const toggleCompare = useCallback((id: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setCompareIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : prev.length < 4 ? [...prev, id] : prev);
+  }, []);
+
+  const goCompare = useCallback(() => {
+    if (compareIds.length >= 2) {
+      navigate(`/compare-profiles?ids=${compareIds.join(',')}`);
+    }
+  }, [compareIds, navigate]);
 
   const { data: profiles = [], isLoading } = useQuery({
     queryKey: ['public-profile-systems'],
