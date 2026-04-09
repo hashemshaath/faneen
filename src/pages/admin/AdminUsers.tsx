@@ -10,10 +10,12 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import {
   Users, Search, Shield, ShieldCheck, ShieldAlert, UserPlus, Trash2,
-  Mail, Phone, Calendar, Crown, Loader2,
+  Mail, Phone, Calendar, Crown, Loader2, Pencil,
 } from 'lucide-react';
 import type { Tables } from '@/integrations/supabase/types';
 
@@ -47,8 +49,9 @@ const AdminUsers = () => {
   const [filterRole, setFilterRole] = useState<string>('all');
   const [addingRoleFor, setAddingRoleFor] = useState<string | null>(null);
   const [selectedRole, setSelectedRole] = useState<string>('user');
+  const [editingProfile, setEditingProfile] = useState<Profile | null>(null);
+  const [editForm, setEditForm] = useState({ full_name: '', account_type: '', membership_tier: '', phone: '', email: '' });
 
-  // Fetch all profiles
   const { data: profiles = [], isLoading: loadingProfiles } = useQuery({
     queryKey: ['admin-profiles'],
     queryFn: async () => {
@@ -62,7 +65,6 @@ const AdminUsers = () => {
     enabled: !!user,
   });
 
-  // Fetch all roles
   const { data: userRoles = [], isLoading: loadingRoles } = useQuery({
     queryKey: ['admin-user-roles'],
     queryFn: async () => {
@@ -75,7 +77,6 @@ const AdminUsers = () => {
     enabled: !!user,
   });
 
-  // Add role
   const addRoleMutation = useMutation({
     mutationFn: async ({ userId, role }: { userId: string; role: string }) => {
       const { error } = await supabase.from('user_roles').insert({
@@ -98,7 +99,6 @@ const AdminUsers = () => {
     },
   });
 
-  // Remove role
   const removeRoleMutation = useMutation({
     mutationFn: async (roleId: string) => {
       const { error } = await supabase.from('user_roles').delete().eq('id', roleId);
@@ -113,7 +113,54 @@ const AdminUsers = () => {
     },
   });
 
-  // Build user-role map
+  const updateProfileMutation = useMutation({
+    mutationFn: async ({ profileId, data }: { profileId: string; data: Partial<Profile> }) => {
+      const { error } = await supabase
+        .from('profiles')
+        .update(data)
+        .eq('id', profileId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-profiles'] });
+      setEditingProfile(null);
+      toast.success(isRTL ? 'تم تحديث بيانات المستخدم بنجاح' : 'User profile updated successfully');
+    },
+    onError: () => {
+      toast.error(isRTL ? 'فشل تحديث البيانات' : 'Failed to update profile');
+    },
+  });
+
+  const openEditDialog = (profile: Profile) => {
+    setEditingProfile(profile);
+    setEditForm({
+      full_name: profile.full_name || '',
+      account_type: profile.account_type || 'individual',
+      membership_tier: profile.membership_tier || 'free',
+      phone: profile.phone || '',
+      email: profile.email || '',
+    });
+  };
+
+  const handleSaveProfile = () => {
+    if (!editingProfile) return;
+    const trimmedName = editForm.full_name.trim();
+    if (!trimmedName) {
+      toast.error(isRTL ? 'الاسم مطلوب' : 'Name is required');
+      return;
+    }
+    updateProfileMutation.mutate({
+      profileId: editingProfile.id,
+      data: {
+        full_name: trimmedName,
+        account_type: editForm.account_type as any,
+        membership_tier: editForm.membership_tier as any,
+        phone: editForm.phone.trim() || null,
+        email: editForm.email.trim() || null,
+      },
+    });
+  };
+
   const roleMap = new Map<string, UserRole[]>();
   userRoles.forEach(r => {
     const existing = roleMap.get(r.user_id) || [];
@@ -121,7 +168,6 @@ const AdminUsers = () => {
     roleMap.set(r.user_id, existing);
   });
 
-  // Filter profiles
   const filtered = profiles.filter(p => {
     const matchesSearch = !searchTerm ||
       p.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -136,7 +182,6 @@ const AdminUsers = () => {
     return matchesSearch && matchesRole;
   });
 
-  // Stats
   const totalUsers = profiles.length;
   const admins = userRoles.filter(r => r.role === 'admin').length;
   const moderators = userRoles.filter(r => r.role === 'moderator').length;
@@ -154,7 +199,6 @@ const AdminUsers = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Header */}
         <div>
           <h1 className="font-heading font-bold text-2xl text-foreground flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gold/10 flex items-center justify-center">
@@ -167,7 +211,6 @@ const AdminUsers = () => {
           </p>
         </div>
 
-        {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
             { label: isRTL ? 'إجمالي المستخدمين' : 'Total Users', value: totalUsers, icon: Users, color: 'text-blue-500' },
@@ -187,7 +230,6 @@ const AdminUsers = () => {
           ))}
         </div>
 
-        {/* Search & Filter */}
         <Card>
           <CardContent className="p-4">
             <div className="flex flex-col md:flex-row gap-3">
@@ -216,7 +258,6 @@ const AdminUsers = () => {
           </CardContent>
         </Card>
 
-        {/* Users List */}
         {(loadingProfiles || loadingRoles) ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="w-8 h-8 animate-spin text-gold" />
@@ -241,7 +282,6 @@ const AdminUsers = () => {
                 <Card key={profile.id} className={`transition-colors ${isCurrentUser ? 'border-gold/40' : ''}`}>
                   <CardContent className="p-4">
                     <div className="flex flex-col md:flex-row md:items-center gap-4">
-                      {/* Avatar & Info */}
                       <div className="flex items-center gap-3 flex-1 min-w-0">
                         <Avatar className="w-12 h-12 shrink-0">
                           <AvatarImage src={profile.avatar_url || undefined} />
@@ -284,8 +324,17 @@ const AdminUsers = () => {
                         </div>
                       </div>
 
-                      {/* Roles */}
                       <div className="flex items-center gap-2 flex-wrap">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 gap-1 text-xs"
+                          onClick={() => openEditDialog(profile)}
+                        >
+                          <Pencil className="w-3 h-3" />
+                          {isRTL ? 'تعديل' : 'Edit'}
+                        </Button>
+
                         {roles.length === 0 && (
                           <span className="text-xs text-muted-foreground">{isRTL ? 'بدون صلاحيات' : 'No roles'}</span>
                         )}
@@ -313,7 +362,6 @@ const AdminUsers = () => {
                           );
                         })}
 
-                        {/* Add role */}
                         {addingRoleFor === profile.user_id ? (
                           <div className="flex items-center gap-1.5">
                             <Select value={selectedRole} onValueChange={setSelectedRole}>
@@ -359,6 +407,82 @@ const AdminUsers = () => {
           </div>
         )}
       </div>
+
+      {/* Edit Profile Dialog */}
+      <Dialog open={!!editingProfile} onOpenChange={open => { if (!open) setEditingProfile(null); }}>
+        <DialogContent className="sm:max-w-md" dir={isRTL ? 'rtl' : 'ltr'}>
+          <DialogHeader>
+            <DialogTitle>{isRTL ? 'تعديل بيانات المستخدم' : 'Edit User Profile'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>{isRTL ? 'الاسم الكامل' : 'Full Name'}</Label>
+              <Input
+                value={editForm.full_name}
+                onChange={e => setEditForm(prev => ({ ...prev, full_name: e.target.value }))}
+                placeholder={isRTL ? 'أدخل الاسم' : 'Enter name'}
+                maxLength={100}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>{isRTL ? 'البريد الإلكتروني' : 'Email'}</Label>
+              <Input
+                type="email"
+                value={editForm.email}
+                onChange={e => setEditForm(prev => ({ ...prev, email: e.target.value }))}
+                placeholder={isRTL ? 'أدخل البريد' : 'Enter email'}
+                maxLength={255}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>{isRTL ? 'رقم الهاتف' : 'Phone'}</Label>
+              <Input
+                value={editForm.phone}
+                onChange={e => setEditForm(prev => ({ ...prev, phone: e.target.value }))}
+                placeholder={isRTL ? 'أدخل رقم الهاتف' : 'Enter phone'}
+                dir="ltr"
+                maxLength={20}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>{isRTL ? 'نوع الحساب' : 'Account Type'}</Label>
+              <Select value={editForm.account_type} onValueChange={val => setEditForm(prev => ({ ...prev, account_type: val }))}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="individual">{isRTL ? 'فرد' : 'Individual'}</SelectItem>
+                  <SelectItem value="business">{isRTL ? 'أعمال' : 'Business'}</SelectItem>
+                  <SelectItem value="company">{isRTL ? 'شركة' : 'Company'}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>{isRTL ? 'مستوى العضوية' : 'Membership Tier'}</Label>
+              <Select value={editForm.membership_tier} onValueChange={val => setEditForm(prev => ({ ...prev, membership_tier: val }))}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="free">{isRTL ? 'مجاني' : 'Free'}</SelectItem>
+                  <SelectItem value="basic">{isRTL ? 'أساسي' : 'Basic'}</SelectItem>
+                  <SelectItem value="premium">{isRTL ? 'مميز' : 'Premium'}</SelectItem>
+                  <SelectItem value="enterprise">{isRTL ? 'مؤسسات' : 'Enterprise'}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setEditingProfile(null)}>
+              {isRTL ? 'إلغاء' : 'Cancel'}
+            </Button>
+            <Button onClick={handleSaveProfile} disabled={updateProfileMutation.isPending}>
+              {updateProfileMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin me-2" /> : null}
+              {isRTL ? 'حفظ التغييرات' : 'Save Changes'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 };
