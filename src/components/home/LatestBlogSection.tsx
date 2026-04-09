@@ -30,7 +30,7 @@ export const LatestBlogSection = () => {
   return (
     <section ref={sectionRef} className="py-24 bg-muted/50">
       <div className="container">
-        <div className="flex items-center justify-between mb-12">
+        <div ref={headerRef} className="flex items-center justify-between mb-12">
           <div>
             <span className="text-sm font-body text-accent font-semibold">
               {isRTL ? 'المدونة' : 'Blog'}
