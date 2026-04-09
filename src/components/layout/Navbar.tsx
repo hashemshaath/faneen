@@ -86,9 +86,9 @@ export const Navbar = () => {
                 {link.label}
               </PrefetchLink>
             ))}
-            <a href="#categories" className="hover:text-gold transition-colors">{t('nav.sections')}</a>
-            <a href="#features" className="hover:text-gold transition-colors">{t('nav.features')}</a>
-            <a href="#providers" className="hover:text-gold transition-colors">{t('nav.providers')}</a>
+            <button onClick={() => scrollToSection('#categories')} className="hover:text-gold transition-colors">{t('nav.sections')}</button>
+            <button onClick={() => scrollToSection('#features')} className="hover:text-gold transition-colors">{t('nav.features')}</button>
+            <button onClick={() => scrollToSection('#providers')} className="hover:text-gold transition-colors">{t('nav.providers')}</button>
           </div>
           <div className="flex items-center gap-3">
             <button
