@@ -617,6 +617,51 @@ export type Database = {
           },
         ]
       }
+      platform_settings: {
+        Row: {
+          category: string
+          created_at: string
+          description_ar: string | null
+          description_en: string | null
+          id: string
+          is_active: boolean
+          is_secret: boolean
+          setting_key: string
+          setting_label_ar: string | null
+          setting_label_en: string | null
+          setting_value: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          id?: string
+          is_active?: boolean
+          is_secret?: boolean
+          setting_key: string
+          setting_label_ar?: string | null
+          setting_label_en?: string | null
+          setting_value?: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          id?: string
+          is_active?: boolean
+          is_secret?: boolean
+          setting_key?: string
+          setting_label_ar?: string | null
+          setting_label_en?: string | null
+          setting_value?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       portfolio_items: {
         Row: {
           business_id: string
