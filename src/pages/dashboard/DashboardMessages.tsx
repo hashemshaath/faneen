@@ -415,10 +415,24 @@ const DashboardMessages = () => {
           <div
             className={`flex-1 flex flex-col relative ${!selectedConversation ? 'hidden md:flex' : 'flex'}`}
             onDragEnter={selectedConversation ? handleDragEnter : undefined}
-            onDragLeave={selectedDragLeave}
+            onDragLeave={selectedConversation ? handleDragLeave : undefined}
             onDragOver={selectedConversation ? handleDragOver : undefined}
             onDrop={selectedConversation ? handleDrop : undefined}
           >
+            {/* Drag overlay */}
+            {isDragging && selectedConversation && (
+              <div className="absolute inset-0 z-50 bg-primary/10 border-2 border-dashed border-primary rounded-xl flex items-center justify-center backdrop-blur-sm">
+                <div className="text-center">
+                  <Upload className="w-12 h-12 text-primary mx-auto mb-2" />
+                  <p className="font-heading font-bold text-primary">
+                    {isRTL ? 'أفلت الملف هنا' : 'Drop file here'}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {isRTL ? 'الحد الأقصى 10 ميجابايت' : 'Max 10MB'}
+                  </p>
+                </div>
+              </div>
+            )}
             {!selectedConversation ? (
               <div className="flex-1 flex items-center justify-center text-muted-foreground">
                 <div className="text-center">
