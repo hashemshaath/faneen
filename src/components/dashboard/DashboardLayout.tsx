@@ -34,6 +34,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
           <header className="h-14 flex items-center border-b border-border bg-card px-4 gap-3 sticky top-0 z-10">
             <SidebarTrigger />
             <div className="flex-1" />
+            <NotificationBell />
           </header>
           <main className="flex-1 p-4 md:p-6 bg-background overflow-auto">
             {children}
