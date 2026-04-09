@@ -113,7 +113,7 @@ const Projects = () => {
                 className="ps-10"
               />
             </div>
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <Select value={selectedCategory} onValueChange={handleFilterChange(setSelectedCategory)}>
               <SelectTrigger className="w-full sm:w-48">
                 <div className="flex items-center gap-2">
                   <Tag className="w-4 h-4 text-muted-foreground" />
