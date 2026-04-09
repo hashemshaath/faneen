@@ -164,6 +164,15 @@ const AdminActivityLog = () => {
                   ))}
                 </SelectContent>
               </Select>
+              <Button
+                variant="outline"
+                onClick={exportToCSV}
+                disabled={!filteredLogs?.length}
+                className="gap-2"
+              >
+                <Download className="w-4 h-4" />
+                {isRTL ? 'تصدير CSV' : 'Export CSV'}
+              </Button>
             </div>
           </CardHeader>
           <CardContent>
