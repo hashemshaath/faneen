@@ -53,7 +53,7 @@ const useBusinesses = () =>
 // ---------- Main Page ----------
 
 const SearchPage = () => {
-  const { t, language, isRTL } = useLanguage();
+  const { t, language, setLanguage, isRTL } = useLanguage();
   const BackArrow = isRTL ? ArrowRight : ArrowLeft;
 
   const { data: categories } = useCategories();
@@ -130,6 +130,12 @@ const SearchPage = () => {
               <span className="font-heading font-bold text-primary-foreground">فنيين</span>
             </div>
           </Link>
+          <button
+            onClick={() => setLanguage(language === 'ar' ? 'en' : 'ar')}
+            className="text-xs text-primary-foreground/60 hover:text-gold transition-colors px-2 py-1 rounded border border-primary-foreground/20"
+          >
+            {t('nav.language')}
+          </button>
         </div>
       </nav>
 
