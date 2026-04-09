@@ -6,6 +6,7 @@ export const translations = {
   'nav.features': { ar: 'المميزات', en: 'Features' },
   'nav.providers': { ar: 'مزودي الخدمة', en: 'Providers' },
   'nav.projects': { ar: 'المشاريع', en: 'Projects' },
+  'nav.blog': { ar: 'المدونة', en: 'Blog' },
   'nav.login': { ar: 'دخول', en: 'Login' },
   'nav.register': { ar: 'سجل الآن', en: 'Register' },
   'nav.language': { ar: 'EN', en: 'عربي' },
