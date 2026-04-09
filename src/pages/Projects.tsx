@@ -160,6 +160,20 @@ const Projects = () => {
                 ))}
               </SelectContent>
             </Select>
+            <Select value={sortBy} onValueChange={handleFilterChange(setSortBy)}>
+              <SelectTrigger className="w-full sm:w-48">
+                <div className="flex items-center gap-2">
+                  <ArrowUpDown className="w-4 h-4 text-muted-foreground" />
+                  <SelectValue placeholder={isRTL ? 'الترتيب' : 'Sort'} />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">{isRTL ? 'الأحدث أولاً' : 'Newest First'}</SelectItem>
+                <SelectItem value="oldest">{isRTL ? 'الأقدم أولاً' : 'Oldest First'}</SelectItem>
+                <SelectItem value="cost_high">{isRTL ? 'الأعلى تكلفة' : 'Highest Cost'}</SelectItem>
+                <SelectItem value="cost_low">{isRTL ? 'الأقل تكلفة' : 'Lowest Cost'}</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
