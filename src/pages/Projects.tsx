@@ -54,7 +54,7 @@ const Projects = () => {
   });
 
   const filtered = useMemo(() => {
-    return allProjects.filter((p: any) => {
+    const result = allProjects.filter((p: any) => {
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
         const match = p.title_ar?.toLowerCase().includes(q) ||
@@ -73,7 +73,16 @@ const Projects = () => {
       if ((minCost || maxCost) && p.project_cost == null) return false;
       return true;
     });
-  }, [allProjects, searchQuery, selectedCategory, selectedCity, minCost, maxCost]);
+    if (sortBy === 'cost_high') {
+      result.sort((a: any, b: any) => (Number(b.project_cost) || 0) - (Number(a.project_cost) || 0));
+    } else if (sortBy === 'cost_low') {
+      result.sort((a: any, b: any) => (Number(a.project_cost) || 0) - (Number(b.project_cost) || 0));
+    } else if (sortBy === 'oldest') {
+      result.sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    }
+    // 'newest' is default from API order
+    return result;
+  }, [allProjects, searchQuery, selectedCategory, selectedCity, minCost, maxCost, sortBy]);
 
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
   const projects = useMemo(() => {
