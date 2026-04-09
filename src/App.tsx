@@ -25,6 +25,11 @@ import Offers from "./pages/Offers";
 import Compare from "./pages/Compare";
 import AdminApiSettings from "./pages/admin/AdminApiSettings";
 import AdminApiDocs from "./pages/admin/AdminApiDocs";
+import DashboardProjects from "./pages/dashboard/DashboardProjects";
+import DashboardBlog from "./pages/dashboard/DashboardBlog";
+import Projects from "./pages/Projects";
+import Blog from "./pages/Blog";
+import BlogPost from "./pages/BlogPost";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -53,7 +58,12 @@ const App = () => (
               <Route path="/dashboard/installments" element={<DashboardInstallments />} />
               <Route path="/dashboard/settings" element={<DashboardSettings />} />
               <Route path="/dashboard/promotions" element={<DashboardPromotions />} />
+              <Route path="/dashboard/projects" element={<DashboardProjects />} />
+              <Route path="/dashboard/blog" element={<DashboardBlog />} />
               <Route path="/offers" element={<Offers />} />
+              <Route path="/projects" element={<Projects />} />
+              <Route path="/blog" element={<Blog />} />
+              <Route path="/blog/:slug" element={<BlogPost />} />
               <Route path="/compare" element={<Compare />} />
               <Route path="/admin/api-settings" element={<AdminApiSettings />} />
               <Route path="/admin/api-docs" element={<AdminApiDocs />} />

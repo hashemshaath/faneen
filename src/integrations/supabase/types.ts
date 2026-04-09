@@ -14,6 +14,66 @@ export type Database = {
   }
   public: {
     Tables: {
+      blog_posts: {
+        Row: {
+          author_id: string
+          category: string
+          content_ar: string | null
+          content_en: string | null
+          cover_image_url: string | null
+          created_at: string
+          excerpt_ar: string | null
+          excerpt_en: string | null
+          id: string
+          published_at: string | null
+          slug: string
+          status: string
+          tags: string[] | null
+          title_ar: string
+          title_en: string | null
+          updated_at: string
+          views_count: number
+        }
+        Insert: {
+          author_id: string
+          category?: string
+          content_ar?: string | null
+          content_en?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          excerpt_ar?: string | null
+          excerpt_en?: string | null
+          id?: string
+          published_at?: string | null
+          slug: string
+          status?: string
+          tags?: string[] | null
+          title_ar: string
+          title_en?: string | null
+          updated_at?: string
+          views_count?: number
+        }
+        Update: {
+          author_id?: string
+          category?: string
+          content_ar?: string | null
+          content_en?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          excerpt_ar?: string | null
+          excerpt_en?: string | null
+          id?: string
+          published_at?: string | null
+          slug?: string
+          status?: string
+          tags?: string[] | null
+          title_ar?: string
+          title_en?: string | null
+          updated_at?: string
+          views_count?: number
+        }
+        Relationships: []
+      }
       business_services: {
         Row: {
           business_id: string
@@ -774,6 +834,132 @@ export type Database = {
             columns: ["country_id"]
             isOneToOne: false
             referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_images: {
+        Row: {
+          caption_ar: string | null
+          caption_en: string | null
+          created_at: string
+          id: string
+          image_url: string
+          project_id: string
+          sort_order: number
+        }
+        Insert: {
+          caption_ar?: string | null
+          caption_en?: string | null
+          created_at?: string
+          id?: string
+          image_url: string
+          project_id: string
+          sort_order?: number
+        }
+        Update: {
+          caption_ar?: string | null
+          caption_en?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string
+          project_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_images_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          business_id: string
+          category_id: string | null
+          city_id: string | null
+          client_name: string | null
+          completion_date: string | null
+          cover_image_url: string | null
+          created_at: string
+          currency_code: string
+          description_ar: string | null
+          description_en: string | null
+          duration_days: number | null
+          id: string
+          is_featured: boolean
+          project_cost: number | null
+          sort_order: number
+          status: string
+          title_ar: string
+          title_en: string | null
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          category_id?: string | null
+          city_id?: string | null
+          client_name?: string | null
+          completion_date?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          currency_code?: string
+          description_ar?: string | null
+          description_en?: string | null
+          duration_days?: number | null
+          id?: string
+          is_featured?: boolean
+          project_cost?: number | null
+          sort_order?: number
+          status?: string
+          title_ar: string
+          title_en?: string | null
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          category_id?: string | null
+          city_id?: string | null
+          client_name?: string | null
+          completion_date?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          currency_code?: string
+          description_ar?: string | null
+          description_en?: string | null
+          duration_days?: number | null
+          id?: string
+          is_featured?: boolean
+          project_cost?: number | null
+          sort_order?: number
+          status?: string
+          title_ar?: string
+          title_en?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projects_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
             referencedColumns: ["id"]
           },
         ]

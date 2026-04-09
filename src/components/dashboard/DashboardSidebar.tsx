@@ -16,7 +16,7 @@ import { NavLink } from '@/components/NavLink';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import {
-  LayoutDashboard, Wrench, Image, Star, FileText, Shield, Settings, LogOut, Home, Globe, CreditCard, Megaphone, Key, Book,
+  LayoutDashboard, Wrench, Image, Star, FileText, Shield, Settings, LogOut, Home, Globe, CreditCard, Megaphone, Key, Book, FolderOpen, PenSquare,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -29,10 +29,12 @@ const menuItems = [
   { titleKey: 'dashboard.warranties', url: '/dashboard/warranties', icon: Shield },
   { titleKey: 'dashboard.installments', url: '/dashboard/installments', icon: CreditCard },
   { titleKey: 'dashboard.promotions', url: '/dashboard/promotions', icon: Megaphone },
+  { titleKey: 'dashboard.projects', url: '/dashboard/projects', icon: FolderOpen },
   { titleKey: 'dashboard.settings', url: '/dashboard/settings', icon: Settings },
 ] as const;
 
 const adminItems = [
+  { titleKey: 'admin.blog', url: '/dashboard/blog', icon: PenSquare },
   { titleKey: 'admin.api_settings', url: '/admin/api-settings', icon: Key },
   { titleKey: 'admin.api_docs', url: '/admin/api-docs', icon: Book },
 ] as const;
@@ -103,7 +105,7 @@ export const DashboardSidebar: React.FC = () => {
                       activeClassName="bg-gold/10 text-gold font-medium"
                     >
                       <item.icon className="h-4 w-4 shrink-0" />
-                      {!collapsed && <span className="ms-2">{isRTL ? (item.titleKey === 'admin.api_settings' ? 'إعدادات API' : 'توثيق API') : (item.titleKey === 'admin.api_settings' ? 'API Settings' : 'API Docs')}</span>}
+                      {!collapsed && <span className="ms-2">{isRTL ? (item.titleKey === 'admin.api_settings' ? 'إعدادات API' : item.titleKey === 'admin.api_docs' ? 'توثيق API' : 'المدونة') : (item.titleKey === 'admin.api_settings' ? 'API Settings' : item.titleKey === 'admin.api_docs' ? 'API Docs' : 'Blog')}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
