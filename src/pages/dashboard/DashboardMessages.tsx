@@ -13,7 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import {
   MessageSquare, Send, Search, Check, CheckCheck, ArrowLeft, ArrowRight,
-  Paperclip, Image as ImageIcon, FileText, X, Download, Loader2, Eye, ExternalLink,
+  Paperclip, Image as ImageIcon, FileText, X, Download, Loader2, Eye, ExternalLink, Upload,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
@@ -109,8 +109,53 @@ const DashboardMessages = () => {
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
   const [attachedPreview, setAttachedPreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragCounter = useRef(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleDragFile = (file: File) => {
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error(isRTL ? 'حجم الملف يتجاوز 10 ميجابايت' : 'File size exceeds 10MB');
+      return;
+    }
+    setAttachedFile(file);
+    if (IMAGE_TYPES.includes(file.type)) {
+      const reader = new FileReader();
+      reader.onload = (ev) => setAttachedPreview(ev.target?.result as string);
+      reader.readAsDataURL(file);
+    } else {
+      setAttachedPreview(null);
+    }
+  };
+
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter.current++;
+    if (e.dataTransfer.types.includes('Files')) setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter.current--;
+    if (dragCounter.current === 0) setIsDragging(false);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    dragCounter.current = 0;
+    const file = e.dataTransfer.files?.[0];
+    if (file) handleDragFile(file);
+  };
 
   // Fetch conversations with participant profiles
   const { data: conversations = [] } = useQuery({
@@ -367,7 +412,27 @@ const DashboardMessages = () => {
           </div>
 
           {/* Chat Area */}
-          <div className={`flex-1 flex flex-col ${!selectedConversation ? 'hidden md:flex' : 'flex'}`}>
+          <div
+            className={`flex-1 flex flex-col relative ${!selectedConversation ? 'hidden md:flex' : 'flex'}`}
+            onDragEnter={selectedConversation ? handleDragEnter : undefined}
+            onDragLeave={selectedConversation ? handleDragLeave : undefined}
+            onDragOver={selectedConversation ? handleDragOver : undefined}
+            onDrop={selectedConversation ? handleDrop : undefined}
+          >
+            {/* Drag overlay */}
+            {isDragging && selectedConversation && (
+              <div className="absolute inset-0 z-50 bg-primary/10 border-2 border-dashed border-primary rounded-xl flex items-center justify-center backdrop-blur-sm">
+                <div className="text-center">
+                  <Upload className="w-12 h-12 text-primary mx-auto mb-2" />
+                  <p className="font-heading font-bold text-primary">
+                    {isRTL ? 'أفلت الملف هنا' : 'Drop file here'}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {isRTL ? 'الحد الأقصى 10 ميجابايت' : 'Max 10MB'}
+                  </p>
+                </div>
+              </div>
+            )}
             {!selectedConversation ? (
               <div className="flex-1 flex items-center justify-center text-muted-foreground">
                 <div className="text-center">
