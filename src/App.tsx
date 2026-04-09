@@ -41,6 +41,7 @@ const ProfileSystemDetail = lazy(() => import("./pages/ProfileSystemDetail"));
 const AdminApiSettings = lazy(() => import("./pages/admin/AdminApiSettings"));
 const AdminApiDocs = lazy(() => import("./pages/admin/AdminApiDocs"));
 const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
+const AdminActivityLog = lazy(() => import("./pages/admin/AdminActivityLog"));
 const Notifications = lazy(() => import("./pages/Notifications"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
@@ -104,6 +105,7 @@ const App = () => (
                 <Route path="/admin/api-settings" element={<AdminApiSettings />} />
                 <Route path="/admin/api-docs" element={<AdminApiDocs />} />
                 <Route path="/admin/users" element={<AdminUsers />} />
+                <Route path="/admin/activity-log" element={<AdminActivityLog />} />
                 <Route path="/:username" element={<BusinessProfile />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
