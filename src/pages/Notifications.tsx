@@ -17,7 +17,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Bell, Check, CheckCheck, FileText, CreditCard, Megaphone, Settings2,
   Trash2, ArrowLeft, ArrowRight, CalendarIcon, Search, Filter, MessageSquare,
-  Eye, X,
+  Eye, X, AlertTriangle,
 } from 'lucide-react';
 import { formatDistanceToNow, format, isAfter, isBefore, startOfDay, endOfDay } from 'date-fns';
 import { ar as arLocale, enUS } from 'date-fns/locale';
@@ -37,6 +37,16 @@ const typeColors: Record<string, string> = {
   promotion: 'bg-green-100 text-green-600',
   message: 'bg-purple-100 text-purple-600',
   system: 'bg-muted text-muted-foreground',
+};
+
+const getNotificationIcon = (n: any) => {
+  if (n.reference_type?.startsWith('overdue_')) return AlertTriangle;
+  return typeIcons[n.notification_type] || Bell;
+};
+
+const getNotificationColor = (n: any) => {
+  if (n.reference_type?.startsWith('overdue_')) return 'bg-red-100 text-red-600';
+  return typeColors[n.notification_type] || typeColors.system;
 };
 
 const typeLabels: Record<string, { ar: string; en: string }> = {
@@ -284,8 +294,8 @@ const Notifications = () => {
         ) : (
           <div className="space-y-2">
             {filtered.map((n: any) => {
-              const Icon = typeIcons[n.notification_type] || Bell;
-              const color = typeColors[n.notification_type] || typeColors.system;
+              const Icon = getNotificationIcon(n);
+              const color = getNotificationColor(n);
               const title = language === 'ar' ? n.title_ar : (n.title_en || n.title_ar);
               const body = language === 'ar' ? n.body_ar : (n.body_en || n.body_ar);
               const timeAgo = formatDistanceToNow(new Date(n.created_at), {
