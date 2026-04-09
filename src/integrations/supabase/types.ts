@@ -733,6 +733,86 @@ export type Database = {
           },
         ]
       }
+      promotions: {
+        Row: {
+          business_id: string
+          created_at: string
+          currency_code: string
+          description_ar: string | null
+          description_en: string | null
+          discount_amount: number | null
+          discount_percentage: number | null
+          end_date: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          offer_price: number | null
+          original_price: number | null
+          promotion_type: Database["public"]["Enums"]["promotion_type"]
+          sort_order: number
+          start_date: string
+          title_ar: string
+          title_en: string | null
+          updated_at: string
+          video_url: string | null
+          views_count: number
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          currency_code?: string
+          description_ar?: string | null
+          description_en?: string | null
+          discount_amount?: number | null
+          discount_percentage?: number | null
+          end_date?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          offer_price?: number | null
+          original_price?: number | null
+          promotion_type?: Database["public"]["Enums"]["promotion_type"]
+          sort_order?: number
+          start_date?: string
+          title_ar: string
+          title_en?: string | null
+          updated_at?: string
+          video_url?: string | null
+          views_count?: number
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          currency_code?: string
+          description_ar?: string | null
+          description_en?: string | null
+          discount_amount?: number | null
+          discount_percentage?: number | null
+          end_date?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          offer_price?: number | null
+          original_price?: number | null
+          promotion_type?: Database["public"]["Enums"]["promotion_type"]
+          sort_order?: number
+          start_date?: string
+          title_ar?: string
+          title_en?: string | null
+          updated_at?: string
+          video_url?: string | null
+          views_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promotions_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       provider_installment_settings: {
         Row: {
           business_id: string
@@ -933,6 +1013,7 @@ export type Database = {
         | "rejected"
       membership_tier: "free" | "basic" | "premium" | "enterprise"
       milestone_status: "pending" | "active" | "completed" | "disputed"
+      promotion_type: "ad" | "offer" | "video"
       warranty_status: "active" | "expired" | "claimed" | "void"
       warranty_type: "comprehensive" | "limited" | "extended"
     }
@@ -1082,6 +1163,7 @@ export const Constants = {
       ],
       membership_tier: ["free", "basic", "premium", "enterprise"],
       milestone_status: ["pending", "active", "completed", "disputed"],
+      promotion_type: ["ad", "offer", "video"],
       warranty_status: ["active", "expired", "claimed", "void"],
       warranty_type: ["comprehensive", "limited", "extended"],
     },
