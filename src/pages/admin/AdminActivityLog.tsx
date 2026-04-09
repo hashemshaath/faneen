@@ -102,6 +102,31 @@ const AdminActivityLog = () => {
     return name.includes(searchQuery.toLowerCase()) || action.includes(searchQuery.toLowerCase());
   });
 
+  const exportToCSV = () => {
+    if (!filteredLogs?.length) return;
+    const headers = ['Date', 'Admin', 'Action', 'Entity Type', 'Details'];
+    const rows = filteredLogs.map(log => [
+      format(new Date(log.created_at), 'yyyy-MM-dd HH:mm:ss'),
+      getProfileName(log.user_id),
+      getActionLabel(log.action),
+      getEntityLabel(log.entity_type),
+      log.details && typeof log.details === 'object' && Object.keys(log.details).length > 0
+        ? JSON.stringify(log.details)
+        : '',
+    ]);
+    const csvContent = [headers, ...rows]
+      .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+    const BOM = '\uFEFF';
+    const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `activity-log-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
