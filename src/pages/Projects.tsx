@@ -109,7 +109,7 @@ const Projects = () => {
               <Input
                 placeholder={isRTL ? 'ابحث عن مشروع...' : 'Search projects...'}
                 value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
+                onChange={e => { setSearchQuery(e.target.value); setCurrentPage(1); }}
                 className="ps-10"
               />
             </div>
