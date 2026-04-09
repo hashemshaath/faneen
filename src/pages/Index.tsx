@@ -1,14 +1,23 @@
+import { lazy, Suspense } from "react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { HeroSection } from "@/components/home/HeroSection";
 import { StatsSection } from "@/components/home/StatsSection";
-import { CategoriesSection } from "@/components/home/CategoriesSection";
-import { FeaturesSection } from "@/components/home/FeaturesSection";
-import { SearchSection } from "@/components/home/SearchSection";
-import { MembershipSection } from "@/components/home/MembershipSection";
-import { LatestProjectsSection } from "@/components/home/LatestProjectsSection";
-import { LatestBlogSection } from "@/components/home/LatestBlogSection";
-import { LatestOffersSection } from "@/components/home/LatestOffersSection";
+
+// Lazy load below-the-fold sections
+const CategoriesSection = lazy(() => import("@/components/home/CategoriesSection").then(m => ({ default: m.CategoriesSection })));
+const LatestProjectsSection = lazy(() => import("@/components/home/LatestProjectsSection").then(m => ({ default: m.LatestProjectsSection })));
+const LatestOffersSection = lazy(() => import("@/components/home/LatestOffersSection").then(m => ({ default: m.LatestOffersSection })));
+const FeaturesSection = lazy(() => import("@/components/home/FeaturesSection").then(m => ({ default: m.FeaturesSection })));
+const LatestBlogSection = lazy(() => import("@/components/home/LatestBlogSection").then(m => ({ default: m.LatestBlogSection })));
+const SearchSection = lazy(() => import("@/components/home/SearchSection").then(m => ({ default: m.SearchSection })));
+const MembershipSection = lazy(() => import("@/components/home/MembershipSection").then(m => ({ default: m.MembershipSection })));
+
+const SectionFallback = () => (
+  <div className="py-16 flex justify-center">
+    <div className="w-8 h-8 border-3 border-accent border-t-transparent rounded-full animate-spin" />
+  </div>
+);
 
 const Index = () => {
   return (
@@ -16,13 +25,15 @@ const Index = () => {
       <Navbar />
       <HeroSection />
       <StatsSection />
-      <CategoriesSection />
-      <LatestProjectsSection />
-      <LatestOffersSection />
-      <FeaturesSection />
-      <LatestBlogSection />
-      <SearchSection />
-      <MembershipSection />
+      <Suspense fallback={<SectionFallback />}>
+        <CategoriesSection />
+        <LatestProjectsSection />
+        <LatestOffersSection />
+        <FeaturesSection />
+        <LatestBlogSection />
+        <SearchSection />
+        <MembershipSection />
+      </Suspense>
       <Footer />
     </div>
   );
