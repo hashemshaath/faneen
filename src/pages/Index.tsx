@@ -1,4 +1,5 @@
-import { Search, Star, Shield, FileText, CreditCard, Users, Award, Video, Wrench, BarChart3, Building2, Layers, Megaphone, Scale, FolderOpen, BookOpen, ArrowLeft, ArrowRight, DollarSign, Clock, Calendar } from "lucide-react";
+import { Search, Star, Shield, FileText, CreditCard, Users, Award, Video, Wrench, BarChart3, Building2, Layers, Megaphone, Scale, FolderOpen, BookOpen, ArrowLeft, ArrowRight, DollarSign, Clock, Calendar, Menu, X } from "lucide-react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,6 +11,16 @@ import { useAuth } from "@/contexts/AuthContext";
 const Navbar = () => {
   const { t, language, setLanguage } = useLanguage();
   const { user, signOut } = useAuth();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const navLinks = [
+    { to: '/search', label: t('search.page_title'), icon: Search },
+    { to: '/offers', label: language === 'ar' ? 'العروض' : 'Offers', icon: Megaphone },
+    { to: '/compare', label: language === 'ar' ? 'المقارنة' : 'Compare', icon: Scale },
+    { to: '/profile-systems', label: language === 'ar' ? 'القطاعات' : 'Profiles', icon: Layers },
+    { to: '/projects', label: language === 'ar' ? 'المشاريع' : 'Projects', icon: FolderOpen },
+    { to: '/blog', label: language === 'ar' ? 'المدونة' : 'Blog', icon: BookOpen },
+  ];
 
   return (
     <nav className="fixed top-0 right-0 left-0 z-50 bg-primary/95 backdrop-blur-sm border-b border-gold/20">
@@ -24,32 +35,14 @@ const Navbar = () => {
           </div>
         </div>
         <div className="hidden md:flex items-center gap-6 font-body text-sm text-primary-foreground/80">
-          <Link to="/search" className="hover:text-gold transition-colors flex items-center gap-1">
-            <Search className="w-4 h-4" />
-            {t('search.page_title')}
-          </Link>
+          {navLinks.map((link) => (
+            <Link key={link.to} to={link.to} className="hover:text-gold transition-colors flex items-center gap-1">
+              <link.icon className="w-4 h-4" />
+              {link.label}
+            </Link>
+          ))}
           <a href="#categories" className="hover:text-gold transition-colors">{t('nav.sections')}</a>
           <a href="#features" className="hover:text-gold transition-colors">{t('nav.features')}</a>
-          <Link to="/offers" className="hover:text-gold transition-colors flex items-center gap-1">
-            <Megaphone className="w-4 h-4" />
-            {language === 'ar' ? 'العروض' : 'Offers'}
-          </Link>
-          <Link to="/compare" className="hover:text-gold transition-colors flex items-center gap-1">
-            <Scale className="w-4 h-4" />
-            {language === 'ar' ? 'المقارنة' : 'Compare'}
-          </Link>
-          <Link to="/profile-systems" className="hover:text-gold transition-colors flex items-center gap-1">
-            <Layers className="w-4 h-4" />
-            {language === 'ar' ? 'القطاعات' : 'Profiles'}
-          </Link>
-          <Link to="/projects" className="hover:text-gold transition-colors flex items-center gap-1">
-            <FolderOpen className="w-4 h-4" />
-            {language === 'ar' ? 'المشاريع' : 'Projects'}
-          </Link>
-          <Link to="/blog" className="hover:text-gold transition-colors flex items-center gap-1">
-            <BookOpen className="w-4 h-4" />
-            {language === 'ar' ? 'المدونة' : 'Blog'}
-          </Link>
           <a href="#providers" className="hover:text-gold transition-colors">{t('nav.providers')}</a>
         </div>
         <div className="flex items-center gap-3">
@@ -59,8 +52,16 @@ const Navbar = () => {
           >
             {t('nav.language')}
           </button>
+          {/* Mobile hamburger */}
+          <button
+            onClick={() => setMobileOpen(!mobileOpen)}
+            className="md:hidden text-primary-foreground/80 hover:text-gold transition-colors p-1"
+            aria-label="Toggle menu"
+          >
+            {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
           {user ? (
-            <div className="flex items-center gap-2">
+            <div className="hidden md:flex items-center gap-2">
               <Link to="/dashboard">
                 <Button variant="hero" size="sm">{t('dashboard.overview')}</Button>
               </Link>
@@ -69,7 +70,7 @@ const Navbar = () => {
               </Button>
             </div>
           ) : (
-            <>
+            <div className="hidden md:flex items-center gap-2">
               <Link to="/auth">
                 <Button variant="ghost" className="text-primary-foreground/80 hover:text-gold hover:bg-gold/10 text-sm">
                   {t('nav.login')}
@@ -80,10 +81,55 @@ const Navbar = () => {
                   {t('nav.register')}
                 </Button>
               </Link>
-            </>
+            </div>
           )}
         </div>
       </div>
+
+      {/* Mobile menu */}
+      {mobileOpen && (
+        <div className="md:hidden bg-primary/98 border-t border-gold/20 py-4 px-6 space-y-3 font-body text-sm animate-in slide-in-from-top-2 duration-200">
+          {navLinks.map((link) => (
+            <Link
+              key={link.to}
+              to={link.to}
+              onClick={() => setMobileOpen(false)}
+              className="flex items-center gap-3 text-primary-foreground/80 hover:text-gold transition-colors py-2 border-b border-primary-foreground/10"
+            >
+              <link.icon className="w-4 h-4" />
+              {link.label}
+            </Link>
+          ))}
+          <a href="#categories" onClick={() => setMobileOpen(false)} className="block text-primary-foreground/80 hover:text-gold transition-colors py-2 border-b border-primary-foreground/10">{t('nav.sections')}</a>
+          <a href="#features" onClick={() => setMobileOpen(false)} className="block text-primary-foreground/80 hover:text-gold transition-colors py-2 border-b border-primary-foreground/10">{t('nav.features')}</a>
+          <a href="#providers" onClick={() => setMobileOpen(false)} className="block text-primary-foreground/80 hover:text-gold transition-colors py-2 border-b border-primary-foreground/10">{t('nav.providers')}</a>
+          <div className="pt-3 flex flex-col gap-2">
+            {user ? (
+              <>
+                <Link to="/dashboard" onClick={() => setMobileOpen(false)}>
+                  <Button variant="hero" size="sm" className="w-full">{t('dashboard.overview')}</Button>
+                </Link>
+                <Button variant="ghost" className="text-primary-foreground/80 hover:text-gold hover:bg-gold/10 text-sm w-full" onClick={() => { signOut(); setMobileOpen(false); }}>
+                  {t('auth.logout')}
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link to="/auth" onClick={() => setMobileOpen(false)}>
+                  <Button variant="ghost" className="text-primary-foreground/80 hover:text-gold hover:bg-gold/10 text-sm w-full">
+                    {t('nav.login')}
+                  </Button>
+                </Link>
+                <Link to="/auth" onClick={() => setMobileOpen(false)}>
+                  <Button variant="hero" size="sm" className="w-full">
+                    {t('nav.register')}
+                  </Button>
+                </Link>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </nav>
   );
 };
