@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider';
 import {
   Layers, Search, Thermometer, Volume2, Shield, ArrowLeft, ArrowRight,
-  Eye, Star, Ruler, Building2, Filter,
+  Eye, Star, Ruler, Building2, Filter, Scale,
 } from 'lucide-react';
 
 const categoryOptions = [
@@ -77,15 +77,23 @@ const ProfileSystems = () => {
       {/* Header */}
       <div className="bg-gradient-to-b from-primary/5 to-background border-b border-border/50">
         <div className="container mx-auto px-4 py-8 max-w-6xl">
-          <div className="flex items-center gap-3 mb-6">
-            <Link to="/"><Button variant="ghost" size="icon"><BackIcon className="w-5 h-5" /></Button></Link>
-            <div>
-              <h1 className="font-heading font-bold text-2xl flex items-center gap-2">
-                <Layers className="w-6 h-6 text-gold" />
-                {isRTL ? 'دليل القطاعات والأنظمة' : 'Profile Systems Guide'}
-              </h1>
-              <p className="text-sm text-muted-foreground">{isRTL ? 'استكشف القطاعات بمواصفاتها الفنية وقارن بينها' : 'Explore profile systems with technical specifications and compare'}</p>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <Link to="/"><Button variant="ghost" size="icon"><BackIcon className="w-5 h-5" /></Button></Link>
+              <div>
+                <h1 className="font-heading font-bold text-2xl flex items-center gap-2">
+                  <Layers className="w-6 h-6 text-gold" />
+                  {isRTL ? 'دليل القطاعات والأنظمة' : 'Profile Systems Guide'}
+                </h1>
+                <p className="text-sm text-muted-foreground">{isRTL ? 'استكشف القطاعات بمواصفاتها الفنية وقارن بينها' : 'Explore profile systems with technical specifications and compare'}</p>
+              </div>
             </div>
+            <Link to="/compare-profiles">
+              <Button variant="outline" size="sm" className="gap-1">
+                <Scale className="w-4 h-4" />
+                {isRTL ? 'مقارنة القطاعات' : 'Compare'}
+              </Button>
+            </Link>
           </div>
 
           {/* Filters */}

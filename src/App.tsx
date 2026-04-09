@@ -32,6 +32,7 @@ import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import ProfileSystems from "./pages/ProfileSystems";
 import ProfileSystemDetail from "./pages/ProfileSystemDetail";
+import CompareProfiles from "./pages/CompareProfiles";
 import DashboardProfileSystems from "./pages/dashboard/DashboardProfileSystems";
 import DashboardMessages from "./pages/dashboard/DashboardMessages";
 import NotFound from "./pages/NotFound";
@@ -73,6 +74,7 @@ const App = () => (
               <Route path="/profile-systems" element={<ProfileSystems />} />
               <Route path="/profile-systems/:slug" element={<ProfileSystemDetail />} />
               <Route path="/compare" element={<Compare />} />
+              <Route path="/compare-profiles" element={<CompareProfiles />} />
               <Route path="/admin/api-settings" element={<AdminApiSettings />} />
               <Route path="/admin/api-docs" element={<AdminApiDocs />} />
               <Route path="/:username" element={<BusinessProfile />} />
