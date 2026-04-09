@@ -73,42 +73,76 @@ const Offers = () => {
               </div>
             ) : (
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {filtered.map((p: any) => {
+                {filtered.map((p: any, index: number) => {
                   const biz = p.businesses;
                   const embed = p.video_url ? getVideoEmbed(p.video_url) : null;
                   return (
-                    <Card key={p.id} className="overflow-hidden group hover:shadow-lg transition-shadow">
-                      {p.promotion_type === 'video' && embed ? (
-                        <div className="aspect-video"><iframe src={embed} className="w-full h-full" allowFullScreen frameBorder="0" /></div>
-                      ) : p.image_url ? (
-                        <div className="h-48 overflow-hidden"><img src={p.image_url} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" /></div>
-                      ) : (
-                        <div className="h-48 bg-gradient-to-br from-accent/20 to-accent/5 flex items-center justify-center">
-                          {p.promotion_type === 'video' ? <Play className="w-12 h-12 text-accent/50" /> : <Tag className="w-12 h-12 text-accent/50" />}
-                        </div>
-                      )}
-                      <CardContent className="p-4 space-y-3">
-                        {biz && (
-                          <Link to={`/${biz.username}`} className="flex items-center gap-2 hover:text-accent transition-colors">
-                            <div className="w-7 h-7 rounded-lg bg-muted overflow-hidden">
-                              {biz.logo_url ? <img src={biz.logo_url} className="w-full h-full object-cover" /> : <span className="flex items-center justify-center w-full h-full text-[10px] font-bold">{biz.name_ar[0]}</span>}
-                            </div>
-                            <span className="text-sm font-medium">{isRTL ? biz.name_ar : (biz.name_en || biz.name_ar)}</span>
-                            <Star className="w-3 h-3 fill-accent text-accent ms-auto" />
-                            <span className="text-xs">{Number(biz.rating_avg).toFixed(1)}</span>
-                          </Link>
-                        )}
-                        <h3 className="font-medium">{isRTL ? p.title_ar : (p.title_en || p.title_ar)}</h3>
-                        {p.description_ar && <p className="text-sm text-muted-foreground line-clamp-2">{isRTL ? p.description_ar : (p.description_en || p.description_ar)}</p>}
-                        {p.promotion_type === 'offer' && p.original_price && (
-                          <div className="flex items-center gap-2">
-                            <span className="line-through text-muted-foreground text-sm">{Number(p.original_price).toLocaleString()}</span>
-                            <span className="text-lg font-bold text-green-600">{Number(p.offer_price).toLocaleString()} {p.currency_code}</span>
-                            {p.discount_percentage && <Badge className="bg-red-500 text-white text-xs">-{p.discount_percentage}%</Badge>}
+                    <Card
+                      key={p.id}
+                      className="overflow-hidden group hover:shadow-xl hover:shadow-accent/5 hover:-translate-y-2 hover:border-accent/40 transition-all duration-500 border-border/50 animate-card-slide-up"
+                      style={{ animationDelay: `${index * 80}ms` }}
+                    >
+                      {/* Media */}
+                      <div className="relative overflow-hidden">
+                        {p.promotion_type === 'video' && embed ? (
+                          <div className="aspect-video"><iframe src={embed} className="w-full h-full" allowFullScreen frameBorder="0" /></div>
+                        ) : p.image_url ? (
+                          <div className="h-52 overflow-hidden">
+                            <img src={p.image_url} alt="" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                          </div>
+                        ) : (
+                          <div className="h-52 bg-gradient-to-br from-accent/20 to-accent/5 flex items-center justify-center">
+                            {p.promotion_type === 'video' ? <Play className="w-12 h-12 text-accent/40 transition-transform duration-500 group-hover:scale-125" /> : <Tag className="w-12 h-12 text-accent/40 transition-transform duration-500 group-hover:scale-125" />}
                           </div>
                         )}
-                        <div className="flex items-center text-xs text-muted-foreground">
-                          <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{new Date(p.start_date).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')}</span>
+                        {/* Hover gradient overlay (skip for video embeds) */}
+                        {!(p.promotion_type === 'video' && embed) && (
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                        )}
+                        {/* Discount badge */}
+                        {p.promotion_type === 'offer' && p.discount_percentage && (
+                          <Badge className="absolute top-3 start-3 bg-red-500 text-white text-xs shadow-lg animate-pulse">
+                            -{p.discount_percentage}%
+                          </Badge>
+                        )}
+                        {/* Type badge */}
+                        {p.promotion_type !== 'offer' && (
+                          <Badge className="absolute top-3 start-3 bg-accent text-accent-foreground text-[10px] shadow-lg">
+                            {p.promotion_type === 'video' ? (isRTL ? 'فيديو' : 'Video') : (isRTL ? 'إعلان' : 'Ad')}
+                          </Badge>
+                        )}
+                      </div>
+
+                      <CardContent className="p-5 space-y-3">
+                        {biz && (
+                          <Link to={`/${biz.username}`} className="flex items-center gap-2 group/biz">
+                            <div className="w-8 h-8 rounded-full bg-muted overflow-hidden ring-2 ring-transparent transition-all duration-300 group-hover/biz:ring-accent/30">
+                              {biz.logo_url ? <img src={biz.logo_url} className="w-full h-full object-cover" /> : <span className="flex items-center justify-center w-full h-full text-[10px] font-bold bg-accent/10 text-accent">{biz.name_ar[0]}</span>}
+                            </div>
+                            <span className="text-sm font-medium transition-colors duration-300 group-hover/biz:text-accent">{isRTL ? biz.name_ar : (biz.name_en || biz.name_ar)}</span>
+                            <Star className="w-3.5 h-3.5 fill-accent text-accent ms-auto" />
+                            <span className="text-xs font-medium">{Number(biz.rating_avg).toFixed(1)}</span>
+                          </Link>
+                        )}
+                        <h3 className="font-heading font-bold transition-colors duration-300 group-hover:text-accent">
+                          {isRTL ? p.title_ar : (p.title_en || p.title_ar)}
+                        </h3>
+                        {p.description_ar && (
+                          <p className="text-sm text-muted-foreground line-clamp-2">
+                            {isRTL ? p.description_ar : (p.description_en || p.description_ar)}
+                          </p>
+                        )}
+                        {p.promotion_type === 'offer' && p.original_price && (
+                          <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-2 transition-colors duration-300 group-hover:bg-accent/10">
+                            <span className="line-through text-muted-foreground text-sm">{Number(p.original_price).toLocaleString()}</span>
+                            <span className="text-lg font-bold text-green-600">{Number(p.offer_price).toLocaleString()} {p.currency_code}</span>
+                          </div>
+                        )}
+                        <div className="flex items-center text-xs text-muted-foreground pt-2 border-t border-border/30 transition-colors duration-300 group-hover:border-accent/20">
+                          <span className="flex items-center gap-1.5">
+                            <Calendar className="w-3.5 h-3.5" />
+                            {new Date(p.start_date).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')}
+                          </span>
                         </div>
                       </CardContent>
                     </Card>
