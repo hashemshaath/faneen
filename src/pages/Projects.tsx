@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FolderOpen, Calendar, DollarSign, Clock, Building2, X, ImageIcon, Search, MapPin, Tag } from 'lucide-react';
+import { FolderOpen, Calendar, DollarSign, Clock, Building2, X, ImageIcon, Search, MapPin, Tag, ArrowUpDown } from 'lucide-react';
 
 const ITEMS_PER_PAGE = 12;
 
@@ -22,6 +22,7 @@ const Projects = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [minCost, setMinCost] = useState('');
   const [maxCost, setMaxCost] = useState('');
+  const [sortBy, setSortBy] = useState('newest');
 
   const { data: categories = [] } = useQuery({
     queryKey: ['categories'],
@@ -53,7 +54,7 @@ const Projects = () => {
   });
 
   const filtered = useMemo(() => {
-    return allProjects.filter((p: any) => {
+    const result = allProjects.filter((p: any) => {
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
         const match = p.title_ar?.toLowerCase().includes(q) ||
@@ -72,7 +73,16 @@ const Projects = () => {
       if ((minCost || maxCost) && p.project_cost == null) return false;
       return true;
     });
-  }, [allProjects, searchQuery, selectedCategory, selectedCity, minCost, maxCost]);
+    if (sortBy === 'cost_high') {
+      result.sort((a: any, b: any) => (Number(b.project_cost) || 0) - (Number(a.project_cost) || 0));
+    } else if (sortBy === 'cost_low') {
+      result.sort((a: any, b: any) => (Number(a.project_cost) || 0) - (Number(b.project_cost) || 0));
+    } else if (sortBy === 'oldest') {
+      result.sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    }
+    // 'newest' is default from API order
+    return result;
+  }, [allProjects, searchQuery, selectedCategory, selectedCity, minCost, maxCost, sortBy]);
 
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
   const projects = useMemo(() => {
@@ -86,8 +96,8 @@ const Projects = () => {
     setCurrentPage(1);
   };
 
-  const hasActiveFilters = searchQuery || selectedCategory !== 'all' || selectedCity !== 'all' || minCost || maxCost;
-  const clearFilters = () => { setSearchQuery(''); setSelectedCategory('all'); setSelectedCity('all'); setMinCost(''); setMaxCost(''); setCurrentPage(1); };
+  const hasActiveFilters = searchQuery || selectedCategory !== 'all' || selectedCity !== 'all' || minCost || maxCost || sortBy !== 'newest';
+  const clearFilters = () => { setSearchQuery(''); setSelectedCategory('all'); setSelectedCity('all'); setMinCost(''); setMaxCost(''); setSortBy('newest'); setCurrentPage(1); };
 
   return (
     <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
@@ -148,6 +158,20 @@ const Projects = () => {
                     {language === 'ar' ? c.name_ar : c.name_en}
                   </SelectItem>
                 ))}
+              </SelectContent>
+            </Select>
+            <Select value={sortBy} onValueChange={handleFilterChange(setSortBy)}>
+              <SelectTrigger className="w-full sm:w-48">
+                <div className="flex items-center gap-2">
+                  <ArrowUpDown className="w-4 h-4 text-muted-foreground" />
+                  <SelectValue placeholder={isRTL ? 'الترتيب' : 'Sort'} />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">{isRTL ? 'الأحدث أولاً' : 'Newest First'}</SelectItem>
+                <SelectItem value="oldest">{isRTL ? 'الأقدم أولاً' : 'Oldest First'}</SelectItem>
+                <SelectItem value="cost_high">{isRTL ? 'الأعلى تكلفة' : 'Highest Cost'}</SelectItem>
+                <SelectItem value="cost_low">{isRTL ? 'الأقل تكلفة' : 'Lowest Cost'}</SelectItem>
               </SelectContent>
             </Select>
           </div>
