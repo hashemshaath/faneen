@@ -13,6 +13,7 @@ import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Plus, Edit, Trash2, Star } from 'lucide-react';
 import { toast } from 'sonner';
+import { ImageUpload } from '@/components/ui/image-upload';
 
 const DashboardPortfolio = () => {
   const { isRTL } = useLanguage();
@@ -102,8 +103,15 @@ const DashboardPortfolio = () => {
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <Label>{isRTL ? 'رابط الوسائط' : 'Media URL'} *</Label>
-                  <Input value={form.media_url} onChange={(e) => setForm({ ...form, media_url: e.target.value })} dir="ltr" placeholder="https://..." />
+                  <Label>{isRTL ? 'صورة العمل' : 'Work Image'} *</Label>
+                  <ImageUpload
+                    bucket="portfolio-images"
+                    value={form.media_url}
+                    onChange={(url) => setForm({ ...form, media_url: url })}
+                    onRemove={() => setForm({ ...form, media_url: '' })}
+                    aspectRatio="square"
+                    placeholder={isRTL ? 'اضغط لرفع صورة' : 'Click to upload image'}
+                  />
                 </div>
                 <div className="space-y-1">
                   <Label>{isRTL ? 'الوصف (عربي)' : 'Description (Arabic)'}</Label>

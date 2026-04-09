@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Plus, Edit, Trash2, FileText, Eye, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
+import { ImageUpload } from '@/components/ui/image-upload';
 
 const blogCategories = [
   { value: 'general', ar: 'عام', en: 'General' },
@@ -143,7 +144,16 @@ const DashboardBlog = () => {
                 <div><Label>{isRTL ? 'المقتطف (عربي)' : 'Excerpt (AR)'}</Label><Textarea value={form.excerpt_ar} onChange={e => setForm(f => ({ ...f, excerpt_ar: e.target.value }))} rows={2} /></div>
                 <div><Label>{isRTL ? 'المحتوى (عربي)' : 'Content (AR)'}</Label><Textarea value={form.content_ar} onChange={e => setForm(f => ({ ...f, content_ar: e.target.value }))} rows={6} /></div>
                 <div><Label>{isRTL ? 'المحتوى (إنجليزي)' : 'Content (EN)'}</Label><Textarea value={form.content_en} onChange={e => setForm(f => ({ ...f, content_en: e.target.value }))} rows={6} dir="ltr" /></div>
-                <div><Label>{isRTL ? 'رابط صورة الغلاف' : 'Cover Image URL'}</Label><Input value={form.cover_image_url} onChange={e => setForm(f => ({ ...f, cover_image_url: e.target.value }))} dir="ltr" /></div>
+                <div>
+                  <Label>{isRTL ? 'صورة الغلاف' : 'Cover Image'}</Label>
+                  <ImageUpload
+                    bucket="blog-images"
+                    value={form.cover_image_url}
+                    onChange={(url) => setForm(f => ({ ...f, cover_image_url: url }))}
+                    onRemove={() => setForm(f => ({ ...f, cover_image_url: '' }))}
+                    placeholder={isRTL ? 'اضغط لرفع صورة الغلاف' : 'Click to upload cover image'}
+                  />
+                </div>
                 <div className="grid grid-cols-3 gap-3">
                   <div>
                     <Label>{isRTL ? 'التصنيف' : 'Category'}</Label>
