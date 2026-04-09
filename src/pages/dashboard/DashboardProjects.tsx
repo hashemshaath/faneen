@@ -9,17 +9,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Edit, Trash2, FolderOpen, Calendar, DollarSign, Clock } from 'lucide-react';
+import { Plus, Edit, Trash2, FolderOpen, Calendar, DollarSign, Clock, Images } from 'lucide-react';
 import { toast } from 'sonner';
-import { ImageUpload } from '@/components/ui/image-upload';
+import { ImageUpload, MultiImageUpload } from '@/components/ui/image-upload';
 
 const DashboardProjects = () => {
   const { isRTL, language } = useLanguage();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [galleryProjectId, setGalleryProjectId] = useState<string | null>(null);
   const [editId, setEditId] = useState<string | null>(null);
 
   const [form, setForm] = useState({
@@ -54,6 +54,21 @@ const DashboardProjects = () => {
       return data;
     },
     enabled: !!business?.id,
+  });
+
+  // Fetch images for gallery project
+  const { data: galleryImages = [] } = useQuery({
+    queryKey: ['project-images', galleryProjectId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('project_images')
+        .select('*')
+        .eq('project_id', galleryProjectId!)
+        .order('sort_order');
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!galleryProjectId,
   });
 
   const saveMutation = useMutation({
@@ -99,6 +114,29 @@ const DashboardProjects = () => {
     },
   });
 
+  const handleGalleryChange = async (urls: string[]) => {
+    if (!galleryProjectId) return;
+
+    // Delete existing images
+    await supabase.from('project_images').delete().eq('project_id', galleryProjectId);
+
+    // Insert new images
+    if (urls.length > 0) {
+      const rows = urls.map((url, i) => ({
+        project_id: galleryProjectId,
+        image_url: url,
+        sort_order: i,
+      }));
+      const { error } = await supabase.from('project_images').insert(rows);
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+    }
+
+    queryClient.invalidateQueries({ queryKey: ['project-images', galleryProjectId] });
+  };
+
   const openEdit = (p: any) => {
     setForm({
       title_ar: p.title_ar, title_en: p.title_en || '', description_ar: p.description_ar || '',
@@ -110,6 +148,8 @@ const DashboardProjects = () => {
     setEditId(p.id);
     setDialogOpen(true);
   };
+
+  const galleryProject = projects.find((p: any) => p.id === galleryProjectId);
 
   return (
     <DashboardLayout>
@@ -163,6 +203,38 @@ const DashboardProjects = () => {
           </Dialog>
         </div>
 
+        {/* Gallery Dialog */}
+        <Dialog open={!!galleryProjectId} onOpenChange={(o) => { if (!o) setGalleryProjectId(null); }}>
+          <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Images className="w-5 h-5 text-gold" />
+                {isRTL ? 'معرض صور المشروع' : 'Project Gallery'}
+              </DialogTitle>
+              {galleryProject && (
+                <p className="text-sm text-muted-foreground">
+                  {language === 'ar' ? (galleryProject as any).title_ar : ((galleryProject as any).title_en || (galleryProject as any).title_ar)}
+                </p>
+              )}
+            </DialogHeader>
+            <div className="mt-2">
+              <MultiImageUpload
+                bucket="project-images"
+                images={galleryImages.map((img: any) => img.image_url)}
+                onChange={handleGalleryChange}
+                folder="gallery"
+                maxImages={20}
+                maxSizeMB={5}
+              />
+              <p className="text-xs text-muted-foreground mt-2">
+                {isRTL
+                  ? `${galleryImages.length} / 20 صورة • اسحب وأفلت أو اضغط لإضافة صور`
+                  : `${galleryImages.length} / 20 images • Drag & drop or click to add`}
+              </p>
+            </div>
+          </DialogContent>
+        </Dialog>
+
         {isLoading ? (
           <div className="flex justify-center py-12"><div className="w-8 h-8 border-4 border-gold border-t-transparent rounded-full animate-spin" /></div>
         ) : projects.length === 0 ? (
@@ -189,6 +261,10 @@ const DashboardProjects = () => {
                   </div>
                   <div className="flex gap-2 pt-2">
                     <Button size="sm" variant="outline" onClick={() => openEdit(p)}><Edit className="w-3.5 h-3.5" /></Button>
+                    <Button size="sm" variant="outline" onClick={() => setGalleryProjectId(p.id)}>
+                      <Images className="w-3.5 h-3.5 me-1" />
+                      {isRTL ? 'المعرض' : 'Gallery'}
+                    </Button>
                     <Button size="sm" variant="outline" className="text-destructive" onClick={() => deleteMutation.mutate(p.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
                   </div>
                 </CardContent>
