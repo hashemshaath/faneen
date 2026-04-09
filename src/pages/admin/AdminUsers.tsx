@@ -16,7 +16,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import {
   Users, Search, Shield, ShieldCheck, ShieldAlert, UserPlus, Trash2,
-  Mail, Phone, Calendar, Crown, Loader2, Pencil, Ban, UserX,
+  Mail, Phone, Calendar, Crown, Loader2, Pencil, Ban, UserX, Download,
 } from 'lucide-react';
 import type { Tables } from '@/integrations/supabase/types';
 
