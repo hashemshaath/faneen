@@ -258,6 +258,148 @@ export type Database = {
           },
         ]
       }
+      contract_milestones: {
+        Row: {
+          amount: number
+          completed_at: string | null
+          contract_id: string
+          created_at: string
+          description_ar: string | null
+          description_en: string | null
+          due_date: string | null
+          id: string
+          sort_order: number
+          status: Database["public"]["Enums"]["milestone_status"]
+          title_ar: string
+          title_en: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          completed_at?: string | null
+          contract_id: string
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          due_date?: string | null
+          id?: string
+          sort_order?: number
+          status?: Database["public"]["Enums"]["milestone_status"]
+          title_ar: string
+          title_en?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          completed_at?: string | null
+          contract_id?: string
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          due_date?: string | null
+          id?: string
+          sort_order?: number
+          status?: Database["public"]["Enums"]["milestone_status"]
+          title_ar?: string
+          title_en?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_milestones_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contracts: {
+        Row: {
+          business_id: string | null
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          client_accepted_at: string | null
+          client_id: string
+          completed_at: string | null
+          contract_number: string
+          created_at: string
+          currency_code: string
+          description_ar: string | null
+          description_en: string | null
+          end_date: string | null
+          id: string
+          provider_accepted_at: string | null
+          provider_id: string
+          start_date: string | null
+          status: Database["public"]["Enums"]["contract_status"]
+          terms_ar: string | null
+          terms_en: string | null
+          title_ar: string
+          title_en: string | null
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          business_id?: string | null
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          client_accepted_at?: string | null
+          client_id: string
+          completed_at?: string | null
+          contract_number?: string
+          created_at?: string
+          currency_code?: string
+          description_ar?: string | null
+          description_en?: string | null
+          end_date?: string | null
+          id?: string
+          provider_accepted_at?: string | null
+          provider_id: string
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["contract_status"]
+          terms_ar?: string | null
+          terms_en?: string | null
+          title_ar: string
+          title_en?: string | null
+          total_amount: number
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string | null
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          client_accepted_at?: string | null
+          client_id?: string
+          completed_at?: string | null
+          contract_number?: string
+          created_at?: string
+          currency_code?: string
+          description_ar?: string | null
+          description_en?: string | null
+          end_date?: string | null
+          id?: string
+          provider_accepted_at?: string | null
+          provider_id?: string
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["contract_status"]
+          terms_ar?: string | null
+          terms_en?: string | null
+          title_ar?: string
+          title_en?: string | null
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contracts_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       countries: {
         Row: {
           code: string
@@ -299,6 +441,81 @@ export type Database = {
           tax_rate?: number
         }
         Relationships: []
+      }
+      maintenance_requests: {
+        Row: {
+          client_id: string
+          completed_at: string | null
+          contract_id: string | null
+          created_at: string
+          description_ar: string | null
+          description_en: string | null
+          id: string
+          priority: Database["public"]["Enums"]["maintenance_priority"]
+          provider_id: string
+          request_number: string
+          resolution_notes: string | null
+          scheduled_date: string | null
+          status: Database["public"]["Enums"]["maintenance_status"]
+          title_ar: string
+          title_en: string | null
+          updated_at: string
+          warranty_id: string | null
+        }
+        Insert: {
+          client_id: string
+          completed_at?: string | null
+          contract_id?: string | null
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          id?: string
+          priority?: Database["public"]["Enums"]["maintenance_priority"]
+          provider_id: string
+          request_number?: string
+          resolution_notes?: string | null
+          scheduled_date?: string | null
+          status?: Database["public"]["Enums"]["maintenance_status"]
+          title_ar: string
+          title_en?: string | null
+          updated_at?: string
+          warranty_id?: string | null
+        }
+        Update: {
+          client_id?: string
+          completed_at?: string | null
+          contract_id?: string | null
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          id?: string
+          priority?: Database["public"]["Enums"]["maintenance_priority"]
+          provider_id?: string
+          request_number?: string
+          resolution_notes?: string | null
+          scheduled_date?: string | null
+          status?: Database["public"]["Enums"]["maintenance_status"]
+          title_ar?: string
+          title_en?: string | null
+          updated_at?: string
+          warranty_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_requests_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_requests_warranty_id_fkey"
+            columns: ["warranty_id"]
+            isOneToOne: false
+            referencedRelation: "warranties"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       portfolio_items: {
         Row: {
@@ -478,6 +695,65 @@ export type Database = {
         }
         Relationships: []
       }
+      warranties: {
+        Row: {
+          contract_id: string
+          coverage_ar: string | null
+          coverage_en: string | null
+          created_at: string
+          description_ar: string | null
+          description_en: string | null
+          end_date: string
+          id: string
+          start_date: string
+          status: Database["public"]["Enums"]["warranty_status"]
+          title_ar: string
+          title_en: string | null
+          updated_at: string
+          warranty_type: Database["public"]["Enums"]["warranty_type"]
+        }
+        Insert: {
+          contract_id: string
+          coverage_ar?: string | null
+          coverage_en?: string | null
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          end_date: string
+          id?: string
+          start_date: string
+          status?: Database["public"]["Enums"]["warranty_status"]
+          title_ar: string
+          title_en?: string | null
+          updated_at?: string
+          warranty_type?: Database["public"]["Enums"]["warranty_type"]
+        }
+        Update: {
+          contract_id?: string
+          coverage_ar?: string | null
+          coverage_en?: string | null
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          end_date?: string
+          id?: string
+          start_date?: string
+          status?: Database["public"]["Enums"]["warranty_status"]
+          title_ar?: string
+          title_en?: string | null
+          updated_at?: string
+          warranty_type?: Database["public"]["Enums"]["warranty_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "warranties_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -494,7 +770,24 @@ export type Database = {
     Enums: {
       account_type: "individual" | "business" | "company"
       app_role: "admin" | "moderator" | "user"
+      contract_status:
+        | "draft"
+        | "pending_approval"
+        | "active"
+        | "completed"
+        | "cancelled"
+        | "disputed"
+      maintenance_priority: "low" | "medium" | "high" | "urgent"
+      maintenance_status:
+        | "submitted"
+        | "under_review"
+        | "in_progress"
+        | "completed"
+        | "rejected"
       membership_tier: "free" | "basic" | "premium" | "enterprise"
+      milestone_status: "pending" | "active" | "completed" | "disputed"
+      warranty_status: "active" | "expired" | "claimed" | "void"
+      warranty_type: "comprehensive" | "limited" | "extended"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -624,7 +917,26 @@ export const Constants = {
     Enums: {
       account_type: ["individual", "business", "company"],
       app_role: ["admin", "moderator", "user"],
+      contract_status: [
+        "draft",
+        "pending_approval",
+        "active",
+        "completed",
+        "cancelled",
+        "disputed",
+      ],
+      maintenance_priority: ["low", "medium", "high", "urgent"],
+      maintenance_status: [
+        "submitted",
+        "under_review",
+        "in_progress",
+        "completed",
+        "rejected",
+      ],
       membership_tier: ["free", "basic", "premium", "enterprise"],
+      milestone_status: ["pending", "active", "completed", "disputed"],
+      warranty_status: ["active", "expired", "claimed", "void"],
+      warranty_type: ["comprehensive", "limited", "extended"],
     },
   },
 } as const
