@@ -39,6 +39,16 @@ const typeColors: Record<string, string> = {
   system: 'bg-muted text-muted-foreground',
 };
 
+const getNotificationIcon = (n: any) => {
+  if (n.reference_type?.startsWith('overdue_')) return AlertTriangle;
+  return typeIcons[n.notification_type] || Bell;
+};
+
+const getNotificationColor = (n: any) => {
+  if (n.reference_type?.startsWith('overdue_')) return 'bg-red-100 text-red-600';
+  return typeColors[n.notification_type] || typeColors.system;
+};
+
 const typeLabels: Record<string, { ar: string; en: string }> = {
   all: { ar: 'الكل', en: 'All' },
   contract: { ar: 'العقود', en: 'Contracts' },
