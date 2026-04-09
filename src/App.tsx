@@ -34,6 +34,7 @@ const Offers = lazy(() => import("./pages/Offers"));
 const Compare = lazy(() => import("./pages/Compare"));
 const CompareProfiles = lazy(() => import("./pages/CompareProfiles"));
 const Projects = lazy(() => import("./pages/Projects"));
+const ProjectDetail = lazy(() => import("./pages/ProjectDetail"));
 const Blog = lazy(() => import("./pages/Blog"));
 const BlogPost = lazy(() => import("./pages/BlogPost"));
 const ProfileSystems = lazy(() => import("./pages/ProfileSystems"));
@@ -96,6 +97,7 @@ const App = () => (
                 <Route path="/notifications" element={<Notifications />} />
                 <Route path="/offers" element={<Offers />} />
                 <Route path="/projects" element={<Projects />} />
+                <Route path="/projects/:id" element={<ProjectDetail />} />
                 <Route path="/blog" element={<Blog />} />
                 <Route path="/blog/:slug" element={<BlogPost />} />
                 <Route path="/profile-systems" element={<ProfileSystems />} />
