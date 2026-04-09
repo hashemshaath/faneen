@@ -33,6 +33,7 @@ import BlogPost from "./pages/BlogPost";
 import ProfileSystems from "./pages/ProfileSystems";
 import ProfileSystemDetail from "./pages/ProfileSystemDetail";
 import DashboardProfileSystems from "./pages/dashboard/DashboardProfileSystems";
+import DashboardMessages from "./pages/dashboard/DashboardMessages";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -64,6 +65,7 @@ const App = () => (
               <Route path="/dashboard/projects" element={<DashboardProjects />} />
               <Route path="/dashboard/blog" element={<DashboardBlog />} />
               <Route path="/dashboard/profile-systems" element={<DashboardProfileSystems />} />
+              <Route path="/dashboard/messages" element={<DashboardMessages />} />
               <Route path="/offers" element={<Offers />} />
               <Route path="/projects" element={<Projects />} />
               <Route path="/blog" element={<Blog />} />
