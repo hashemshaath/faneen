@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { PrefetchLink } from "@/components/PrefetchLink";
 import { Search, Megaphone, Scale, Layers, FolderOpen, BookOpen, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ export const Navbar = () => {
   const { user, signOut } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Close on route change
@@ -55,6 +56,16 @@ export const Navbar = () => {
 
   const closeMobile = useCallback(() => setMobileOpen(false), []);
 
+  const scrollToSection = useCallback((hash: string) => {
+    closeMobile();
+    if (location.pathname !== '/') {
+      navigate('/' + hash);
+    } else {
+      const el = document.querySelector(hash);
+      el?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [location.pathname, navigate, closeMobile]);
+
   return (
     <>
       <nav className="fixed top-0 right-0 left-0 z-50 bg-primary/95 backdrop-blur-sm border-b border-gold/20">
@@ -75,9 +86,9 @@ export const Navbar = () => {
                 {link.label}
               </PrefetchLink>
             ))}
-            <a href="#categories" className="hover:text-gold transition-colors">{t('nav.sections')}</a>
-            <a href="#features" className="hover:text-gold transition-colors">{t('nav.features')}</a>
-            <a href="#providers" className="hover:text-gold transition-colors">{t('nav.providers')}</a>
+            <button onClick={() => scrollToSection('#categories')} className="hover:text-gold transition-colors">{t('nav.sections')}</button>
+            <button onClick={() => scrollToSection('#features')} className="hover:text-gold transition-colors">{t('nav.features')}</button>
+            <button onClick={() => scrollToSection('#providers')} className="hover:text-gold transition-colors">{t('nav.providers')}</button>
           </div>
           <div className="flex items-center gap-3">
             <button
@@ -157,9 +168,9 @@ export const Navbar = () => {
           ))}
 
           <div className="border-t border-primary-foreground/10 pt-2 mt-2 space-y-1">
-            <a href="#categories" onClick={closeMobile} className="block text-primary-foreground/60 hover:text-gold transition-colors py-2 px-3 rounded-lg hover:bg-gold/5">{t('nav.sections')}</a>
-            <a href="#features" onClick={closeMobile} className="block text-primary-foreground/60 hover:text-gold transition-colors py-2 px-3 rounded-lg hover:bg-gold/5">{t('nav.features')}</a>
-            <a href="#providers" onClick={closeMobile} className="block text-primary-foreground/60 hover:text-gold transition-colors py-2 px-3 rounded-lg hover:bg-gold/5">{t('nav.providers')}</a>
+            <button onClick={() => scrollToSection('#categories')} className="block w-full text-start text-primary-foreground/60 hover:text-gold transition-colors py-2 px-3 rounded-lg hover:bg-gold/5">{t('nav.sections')}</button>
+            <button onClick={() => scrollToSection('#features')} className="block w-full text-start text-primary-foreground/60 hover:text-gold transition-colors py-2 px-3 rounded-lg hover:bg-gold/5">{t('nav.features')}</button>
+            <button onClick={() => scrollToSection('#providers')} className="block w-full text-start text-primary-foreground/60 hover:text-gold transition-colors py-2 px-3 rounded-lg hover:bg-gold/5">{t('nav.providers')}</button>
           </div>
 
           <div className="pt-3 border-t border-primary-foreground/10 flex flex-col gap-2">
