@@ -173,6 +173,27 @@ export const translations = {
   'profile.featured': { ar: 'مميز', en: 'Featured' },
   'profile.visit_website': { ar: 'زيارة الموقع', en: 'Visit Website' },
   'profile.send_email': { ar: 'إرسال بريد', en: 'Send Email' },
+
+  // Search
+  'search.title': { ar: 'البحث المتقدم', en: 'Advanced Search' },
+  'search.subtitle': { ar: 'ابحث عن أفضل مزودي الخدمة في منطقتك', en: 'Find the best service providers in your area' },
+  'search.placeholder': { ar: 'ابحث عن مزود خدمة...', en: 'Search for a provider...' },
+  'search.filters': { ar: 'تصفية', en: 'Filters' },
+  'search.category': { ar: 'القسم', en: 'Category' },
+  'search.city': { ar: 'المدينة', en: 'City' },
+  'search.rating': { ar: 'التقييم', en: 'Rating' },
+  'search.min_rating': { ar: 'الحد الأدنى للتقييم', en: 'Minimum Rating' },
+  'search.all_categories': { ar: 'جميع الأقسام', en: 'All Categories' },
+  'search.all_cities': { ar: 'جميع المدن', en: 'All Cities' },
+  'search.results': { ar: 'نتيجة', en: 'results' },
+  'search.clear_filters': { ar: 'مسح الفلاتر', en: 'Clear Filters' },
+  'search.no_results': { ar: 'لا توجد نتائج مطابقة', en: 'No matching results' },
+  'search.no_results_desc': { ar: 'حاول تغيير معايير البحث', en: 'Try changing your search criteria' },
+  'search.verified_only': { ar: 'الموثقين فقط', en: 'Verified only' },
+  'search.sort_by': { ar: 'ترتيب حسب', en: 'Sort by' },
+  'search.sort_rating': { ar: 'الأعلى تقييماً', en: 'Highest Rated' },
+  'search.sort_newest': { ar: 'الأحدث', en: 'Newest' },
+  'search.sort_name': { ar: 'الاسم', en: 'Name' },
 } as const;
 
 export type TranslationKey = keyof typeof translations;
