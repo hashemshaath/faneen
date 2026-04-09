@@ -98,8 +98,12 @@
     @apply border-border;
   }
 
-  html {
+  html[dir="rtl"] {
     direction: rtl;
+  }
+
+  html[dir="ltr"] {
+    direction: ltr;
   }
 
   body {
