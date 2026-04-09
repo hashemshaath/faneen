@@ -16,7 +16,7 @@ import { NavLink } from '@/components/NavLink';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import {
-  LayoutDashboard, Wrench, Image, Star, FileText, Shield, Settings, LogOut, Home, Globe, CreditCard, Megaphone, Key, Book, FolderOpen, PenSquare, Layers, MessageSquare, Users, Newspaper, Building2, Bell,
+  LayoutDashboard, Wrench, Image, Star, FileText, Shield, Settings, LogOut, Home, Globe, CreditCard, Megaphone, Key, Book, FolderOpen, PenSquare, Layers, MessageSquare, Users, Newspaper, Building2, Bell, Activity,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -43,6 +43,7 @@ const adminItems = [
   { titleKey: 'admin.blog', url: '/dashboard/blog', icon: PenSquare },
   { titleKey: 'admin.api_settings', url: '/admin/api-settings', icon: Key },
   { titleKey: 'admin.api_docs', url: '/admin/api-docs', icon: Book },
+  { titleKey: 'admin.activity_log', url: '/admin/activity-log', icon: Activity },
 ] as const;
 
 export const DashboardSidebar: React.FC = () => {
