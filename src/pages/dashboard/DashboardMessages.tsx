@@ -372,9 +372,48 @@ const DashboardMessages = () => {
             </div>
             <ScrollArea className="flex-1">
               {filteredConversations.length === 0 ? (
-                <div className="p-8 text-center text-muted-foreground text-sm">
-                  <MessageSquare className="w-10 h-10 mx-auto mb-2 opacity-20" />
-                  {isRTL ? 'لا توجد محادثات' : 'No conversations'}
+                <div className="p-6 text-center text-muted-foreground">
+                  <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                  <p className="font-heading font-bold text-sm mb-1">
+                    {isRTL ? 'لا توجد محادثات بعد' : 'No conversations yet'}
+                  </p>
+                  <p className="text-xs mb-4">
+                    {isRTL ? 'ابدأ التواصل مع مزودي الخدمة' : 'Start connecting with service providers'}
+                  </p>
+                  <div className="space-y-2 text-start bg-muted/50 rounded-lg p-3">
+                    <p className="text-xs font-medium text-foreground mb-2">
+                      {isRTL ? '💡 نصائح للبدء:' : '💡 Tips to get started:'}
+                    </p>
+                    <p className="text-xs">
+                      {isRTL
+                        ? '🔍 ابحث عن مزودي الخدمة من صفحة البحث المتقدم'
+                        : '🔍 Find providers from the advanced search page'}
+                    </p>
+                    <p className="text-xs">
+                      {isRTL
+                        ? '💬 اضغط "تواصل مع المزود" في صفحة أي مزود خدمة'
+                        : '💬 Click "Contact Provider" on any provider\'s page'}
+                    </p>
+                    <p className="text-xs">
+                      {isRTL
+                        ? '📎 يمكنك إرسال صور وملفات PDF في المحادثات'
+                        : '📎 You can send images and PDF files in chats'}
+                    </p>
+                    <p className="text-xs">
+                      {isRTL
+                        ? '📋 ستُرسل رسالة ترحيبية تلقائياً عند بدء محادثة جديدة'
+                        : '📋 A greeting message is sent automatically when starting a new chat'}
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-4 gap-1.5"
+                    onClick={() => navigate('/search')}
+                  >
+                    <Search className="w-3.5 h-3.5" />
+                    {isRTL ? 'ابحث عن مزود خدمة' : 'Find a provider'}
+                  </Button>
                 </div>
               ) : (
                 filteredConversations.map((conv: any) => {
