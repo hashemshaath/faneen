@@ -274,6 +274,7 @@ export const translations = {
   'dashboard.reviews': { ar: 'التقييمات', en: 'Reviews' },
   'dashboard.contracts': { ar: 'العقود', en: 'Contracts' },
   'dashboard.warranties': { ar: 'الضمانات', en: 'Warranties' },
+  'dashboard.installments': { ar: 'التقسيط', en: 'Installments' },
   'dashboard.settings': { ar: 'الإعدادات', en: 'Settings' },
 } as const;
 

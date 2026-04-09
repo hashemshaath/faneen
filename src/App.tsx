@@ -18,6 +18,7 @@ import DashboardPortfolio from "./pages/dashboard/DashboardPortfolio";
 import DashboardReviews from "./pages/dashboard/DashboardReviews";
 import DashboardContracts from "./pages/dashboard/DashboardContracts";
 import DashboardWarranties from "./pages/dashboard/DashboardWarranties";
+import DashboardInstallments from "./pages/dashboard/DashboardInstallments";
 import DashboardSettings from "./pages/dashboard/DashboardSettings";
 import NotFound from "./pages/NotFound";
 
@@ -44,6 +45,7 @@ const App = () => (
               <Route path="/dashboard/reviews" element={<DashboardReviews />} />
               <Route path="/dashboard/contracts" element={<DashboardContracts />} />
               <Route path="/dashboard/warranties" element={<DashboardWarranties />} />
+              <Route path="/dashboard/installments" element={<DashboardInstallments />} />
               <Route path="/dashboard/settings" element={<DashboardSettings />} />
               <Route path="/:username" element={<BusinessProfile />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

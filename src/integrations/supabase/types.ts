@@ -442,6 +442,106 @@ export type Database = {
         }
         Relationships: []
       }
+      installment_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          due_date: string
+          id: string
+          installment_number: number
+          notes: string | null
+          paid_at: string | null
+          payment_method: string | null
+          plan_id: string
+          status: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          due_date: string
+          id?: string
+          installment_number: number
+          notes?: string | null
+          paid_at?: string | null
+          payment_method?: string | null
+          plan_id: string
+          status?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          due_date?: string
+          id?: string
+          installment_number?: number
+          notes?: string | null
+          paid_at?: string | null
+          payment_method?: string | null
+          plan_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "installment_payments_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "installment_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      installment_plans: {
+        Row: {
+          contract_id: string
+          created_at: string
+          currency_code: string
+          down_payment: number
+          id: string
+          installment_amount: number
+          notes: string | null
+          number_of_installments: number
+          start_date: string
+          status: string
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          contract_id: string
+          created_at?: string
+          currency_code?: string
+          down_payment?: number
+          id?: string
+          installment_amount: number
+          notes?: string | null
+          number_of_installments?: number
+          start_date?: string
+          status?: string
+          total_amount: number
+          updated_at?: string
+        }
+        Update: {
+          contract_id?: string
+          created_at?: string
+          currency_code?: string
+          down_payment?: number
+          id?: string
+          installment_amount?: number
+          notes?: string | null
+          number_of_installments?: number
+          start_date?: string
+          status?: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "installment_plans_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       maintenance_requests: {
         Row: {
           client_id: string
@@ -629,6 +729,53 @@ export type Database = {
             columns: ["country_id"]
             isOneToOne: false
             referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      provider_installment_settings: {
+        Row: {
+          business_id: string
+          created_at: string
+          description_ar: string | null
+          description_en: string | null
+          down_payment_percentage: number | null
+          id: string
+          is_enabled: boolean
+          max_installments: number | null
+          min_amount: number | null
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          down_payment_percentage?: number | null
+          id?: string
+          is_enabled?: boolean
+          max_installments?: number | null
+          min_amount?: number | null
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          down_payment_percentage?: number | null
+          id?: string
+          is_enabled?: boolean
+          max_installments?: number | null
+          min_amount?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_installment_settings_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: true
+            referencedRelation: "businesses"
             referencedColumns: ["id"]
           },
         ]

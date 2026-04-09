@@ -16,7 +16,7 @@ import { NavLink } from '@/components/NavLink';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import {
-  LayoutDashboard, Wrench, Image, Star, FileText, Shield, Settings, LogOut, Home, Globe,
+  LayoutDashboard, Wrench, Image, Star, FileText, Shield, Settings, LogOut, Home, Globe, CreditCard,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -27,6 +27,7 @@ const menuItems = [
   { titleKey: 'dashboard.reviews', url: '/dashboard/reviews', icon: Star },
   { titleKey: 'dashboard.contracts', url: '/dashboard/contracts', icon: FileText },
   { titleKey: 'dashboard.warranties', url: '/dashboard/warranties', icon: Shield },
+  { titleKey: 'dashboard.installments', url: '/dashboard/installments', icon: CreditCard },
   { titleKey: 'dashboard.settings', url: '/dashboard/settings', icon: Settings },
 ] as const;
 
