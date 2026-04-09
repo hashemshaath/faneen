@@ -255,7 +255,36 @@ const AdminUsers = () => {
     return matchesSearch && matchesRole;
   });
 
-  const totalUsers = profiles.length;
+  const exportCSV = () => {
+    const headers = ['Name', 'Email', 'Phone', 'Account Type', 'Membership', 'Roles', 'Banned', 'Created At'];
+    const rows = filtered.map(p => {
+      const roles = (roleMap.get(p.user_id) || []).map(r => r.role).join(', ') || 'none';
+      const accType = accountTypeConfig[p.account_type as keyof typeof accountTypeConfig]?.labelEn || p.account_type;
+      const tier = tierConfig[p.membership_tier as keyof typeof tierConfig]?.labelEn || p.membership_tier;
+      return [
+        p.full_name || '',
+        p.email || '',
+        p.phone || '',
+        accType,
+        tier,
+        roles,
+        (p as any).is_banned ? 'Yes' : 'No',
+        new Date(p.created_at).toISOString().split('T')[0],
+      ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(',');
+    });
+    const bom = '\uFEFF';
+    const csv = bom + [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `users_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(isRTL ? 'تم تصدير القائمة بنجاح' : 'Users exported successfully');
+  };
+
+
   const admins = userRoles.filter(r => r.role === 'admin').length;
   const moderators = userRoles.filter(r => r.role === 'moderator').length;
 
