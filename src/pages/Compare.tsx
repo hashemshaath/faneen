@@ -9,7 +9,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Star, MapPin, BadgeCheck, Plus, X, ArrowRight, ArrowLeft, Scale, Search } from 'lucide-react';
+import { Star, MapPin, BadgeCheck, Plus, X, ArrowRight, ArrowLeft, Scale, Search, Download } from 'lucide-react';
+import { exportComparePDF } from '@/lib/compare-pdf-export';
 
 const Compare = () => {
   const { isRTL } = useLanguage();
@@ -141,6 +142,39 @@ const Compare = () => {
             </CardContent>
           </Card>
         ) : (
+          <>
+          <div className="flex justify-end mb-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                const businesses = selectedBusinesses.map((b: any) => ({
+                  name: isRTL ? b.name_ar : (b.name_en || b.name_ar),
+                  rating: Number(b.rating_avg).toFixed(1),
+                  ratingCount: b.rating_count,
+                  category: b.categories ? (isRTL ? b.categories.name_ar : b.categories.name_en) : '-',
+                  location: b.cities ? (isRTL ? b.cities.name_ar : b.cities.name_en) : '-',
+                  tier: b.membership_tier,
+                  installments: b.provider_installment_settings?.[0]?.is_enabled
+                    ? (isRTL ? `حتى ${b.provider_installment_settings[0].max_installments} أقساط` : `Up to ${b.provider_installment_settings[0].max_installments}`)
+                    : '-',
+                  services: (b.business_services ?? []).map((s: any) => {
+                    const name = isRTL ? s.name_ar : (s.name_en || s.name_ar);
+                    let price = '';
+                    if (s.price_from) price += Number(s.price_from).toLocaleString();
+                    if (s.price_to) price += ` - ${Number(s.price_to).toLocaleString()}`;
+                    if (s.price_from || s.price_to) price += ` ${s.currency_code}`;
+                    else price = isRTL ? 'متوفر' : 'Available';
+                    return { name, price };
+                  }),
+                }));
+                exportComparePDF({ businesses, allServices, isRTL });
+              }}
+            >
+              <Download className="w-4 h-4 me-1" />
+              {isRTL ? 'تصدير PDF' : 'Export PDF'}
+            </Button>
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full border-separate border-spacing-0">
               <thead>
@@ -256,6 +290,7 @@ const Compare = () => {
               </tbody>
             </table>
           </div>
+          </>
         )}
       </div>
       <Footer />
