@@ -56,6 +56,16 @@ export const Navbar = () => {
 
   const closeMobile = useCallback(() => setMobileOpen(false), []);
 
+  const scrollToSection = useCallback((hash: string) => {
+    closeMobile();
+    if (location.pathname !== '/') {
+      navigate('/' + hash);
+    } else {
+      const el = document.querySelector(hash);
+      el?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [location.pathname, navigate, closeMobile]);
+
   return (
     <>
       <nav className="fixed top-0 right-0 left-0 z-50 bg-primary/95 backdrop-blur-sm border-b border-gold/20">
