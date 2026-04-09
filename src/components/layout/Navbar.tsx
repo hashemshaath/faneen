@@ -11,6 +11,7 @@ export const Navbar = () => {
   const { user, signOut } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Close on route change
