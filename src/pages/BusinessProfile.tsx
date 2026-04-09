@@ -481,10 +481,13 @@ const BusinessProfile = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
-        <Skeleton className="h-64 w-full" />
-        <div className="container mt-8 space-y-6">
-          <Skeleton className="h-32 w-full rounded-xl" />
-          <Skeleton className="h-64 w-full rounded-xl" />
+        <Navbar />
+        <div className="pt-16">
+          <Skeleton className="h-64 w-full" />
+          <div className="container mt-8 space-y-6">
+            <Skeleton className="h-32 w-full rounded-xl" />
+            <Skeleton className="h-64 w-full rounded-xl" />
+          </div>
         </div>
       </div>
     );
