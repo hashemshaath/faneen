@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -8,10 +8,11 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from 'sonner';
 import {
   Star, MapPin, Phone, Mail, Globe, Shield, ArrowRight, ArrowLeft,
   Share2, Image, Video, ChevronLeft, ChevronRight, BadgeCheck, Clock,
-  MessageSquare, ExternalLink,
+  MessageSquare, ExternalLink, Loader2,
 } from 'lucide-react';
 
 // ---------- Data hooks ----------
