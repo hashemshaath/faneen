@@ -554,6 +554,31 @@ const AdminUsers = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete User Confirmation */}
+      <AlertDialog open={!!deletingUserId} onOpenChange={open => { if (!open) setDeletingUserId(null); }}>
+        <AlertDialogContent dir={isRTL ? 'rtl' : 'ltr'}>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{isRTL ? 'تأكيد حذف الحساب' : 'Confirm Account Deletion'}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {isRTL
+                ? 'هل أنت متأكد من حذف هذا الحساب؟ سيتم حذف جميع بيانات المستخدم نهائياً ولا يمكن التراجع عن هذا الإجراء.'
+                : 'Are you sure you want to delete this account? All user data will be permanently removed and this action cannot be undone.'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{isRTL ? 'إلغاء' : 'Cancel'}</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => deletingUserId && deleteUserMutation.mutate(deletingUserId)}
+              disabled={deleteUserMutation.isPending}
+            >
+              {deleteUserMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin me-2" /> : null}
+              {isRTL ? 'حذف نهائي' : 'Delete Permanently'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 };
