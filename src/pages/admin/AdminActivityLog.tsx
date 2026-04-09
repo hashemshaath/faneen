@@ -18,7 +18,13 @@ const actionLabels: Record<string, { ar: string; en: string; color: string }> = 
   delete: { ar: 'حذف', en: 'Delete', color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' },
   login: { ar: 'تسجيل دخول', en: 'Login', color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' },
   role_change: { ar: 'تغيير صلاحية', en: 'Role Change', color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' },
+  role_assigned: { ar: 'إضافة صلاحية', en: 'Role Assigned', color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' },
+  role_updated: { ar: 'تعديل صلاحية', en: 'Role Updated', color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' },
+  role_removed: { ar: 'إزالة صلاحية', en: 'Role Removed', color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' },
   settings: { ar: 'إعدادات', en: 'Settings', color: 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400' },
+  setting_created: { ar: 'إنشاء إعداد', en: 'Setting Created', color: 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400' },
+  setting_updated: { ar: 'تعديل إعداد', en: 'Setting Updated', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' },
+  setting_deleted: { ar: 'حذف إعداد', en: 'Setting Deleted', color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' },
 };
 
 const entityLabels: Record<string, { ar: string; en: string }> = {
@@ -28,7 +34,9 @@ const entityLabels: Record<string, { ar: string; en: string }> = {
   blog_post: { ar: 'مقال', en: 'Blog Post' },
   profile_system: { ar: 'نظام بروفايل', en: 'Profile System' },
   setting: { ar: 'إعداد', en: 'Setting' },
+  platform_setting: { ar: 'إعداد المنصة', en: 'Platform Setting' },
   role: { ar: 'صلاحية', en: 'Role' },
+  user_role: { ar: 'صلاحية مستخدم', en: 'User Role' },
 };
 
 const AdminActivityLog = () => {
