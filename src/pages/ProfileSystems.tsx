@@ -196,11 +196,36 @@ const ProfileSystems = () => {
                           <Eye className="w-3 h-3" />{p.views_count}
                         </span>
                       </div>
+                      <Button
+                        size="sm"
+                        variant={compareIds.includes(p.id) ? 'default' : 'outline'}
+                        className="w-full mt-2 text-xs"
+                        onClick={(e) => toggleCompare(p.id, e)}
+                      >
+                        <Scale className="w-3 h-3 me-1" />
+                        {compareIds.includes(p.id) ? (isRTL ? 'تم الاختيار ✓' : 'Selected ✓') : (isRTL ? 'أضف للمقارنة' : 'Add to Compare')}
+                      </Button>
                     </CardContent>
                   </Card>
                 </Link>
               );
             })}
+          </div>
+        )}
+
+        {/* Floating compare bar */}
+        {compareIds.length >= 2 && (
+          <div className="fixed bottom-6 start-1/2 -translate-x-1/2 z-50 bg-primary text-primary-foreground px-6 py-3 rounded-full shadow-lg flex items-center gap-3 animate-in slide-in-from-bottom-4">
+            <Scale className="w-5 h-5" />
+            <span className="font-medium text-sm">
+              {compareIds.length} {isRTL ? 'قطاعات محددة' : 'selected'}
+            </span>
+            <Button size="sm" variant="hero" onClick={goCompare}>
+              {isRTL ? 'قارن الآن' : 'Compare Now'}
+            </Button>
+            <button onClick={() => setCompareIds([])} className="text-primary-foreground/60 hover:text-primary-foreground ms-1">
+              <X className="w-4 h-4" />
+            </button>
           </div>
         )}
       </div>
