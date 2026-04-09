@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -13,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider';
 import {
   Layers, Search, Thermometer, Volume2, Shield,
-  Eye, Ruler, Filter, Scale,
+  Eye, Ruler, Filter, Scale, X,
 } from 'lucide-react';
 
 const categoryOptions = [
@@ -45,9 +46,23 @@ const RatingBar = ({ value, max = 10, label, icon: Icon }: { value: number; max?
 
 const ProfileSystems = () => {
   const { isRTL, language } = useLanguage();
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('all');
   const [minInsulation, setMinInsulation] = useState(0);
+  const [compareIds, setCompareIds] = useState<string[]>([]);
+
+  const toggleCompare = useCallback((id: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setCompareIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : prev.length < 4 ? [...prev, id] : prev);
+  }, []);
+
+  const goCompare = useCallback(() => {
+    if (compareIds.length >= 2) {
+      navigate(`/compare-profiles?ids=${compareIds.join(',')}`);
+    }
+  }, [compareIds, navigate]);
 
   const { data: profiles = [], isLoading } = useQuery({
     queryKey: ['public-profile-systems'],
@@ -181,11 +196,36 @@ const ProfileSystems = () => {
                           <Eye className="w-3 h-3" />{p.views_count}
                         </span>
                       </div>
+                      <Button
+                        size="sm"
+                        variant={compareIds.includes(p.id) ? 'default' : 'outline'}
+                        className="w-full mt-2 text-xs"
+                        onClick={(e) => toggleCompare(p.id, e)}
+                      >
+                        <Scale className="w-3 h-3 me-1" />
+                        {compareIds.includes(p.id) ? (isRTL ? 'تم الاختيار ✓' : 'Selected ✓') : (isRTL ? 'أضف للمقارنة' : 'Add to Compare')}
+                      </Button>
                     </CardContent>
                   </Card>
                 </Link>
               );
             })}
+          </div>
+        )}
+
+        {/* Floating compare bar */}
+        {compareIds.length >= 2 && (
+          <div className="fixed bottom-6 start-1/2 -translate-x-1/2 z-50 bg-primary text-primary-foreground px-6 py-3 rounded-full shadow-lg flex items-center gap-3 animate-in slide-in-from-bottom-4">
+            <Scale className="w-5 h-5" />
+            <span className="font-medium text-sm">
+              {compareIds.length} {isRTL ? 'قطاعات محددة' : 'selected'}
+            </span>
+            <Button size="sm" variant="hero" onClick={goCompare}>
+              {isRTL ? 'قارن الآن' : 'Compare Now'}
+            </Button>
+            <button onClick={() => setCompareIds([])} className="text-primary-foreground/60 hover:text-primary-foreground ms-1">
+              <X className="w-4 h-4" />
+            </button>
           </div>
         )}
       </div>
