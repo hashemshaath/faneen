@@ -116,12 +116,28 @@ const AdminUsers = () => {
   });
 
   const updateProfileMutation = useMutation({
-    mutationFn: async ({ profileId, data }: { profileId: string; data: Partial<Profile> }) => {
+    mutationFn: async ({ profileId, userId, data, oldData }: { profileId: string; userId: string; data: Partial<Profile>; oldData: Partial<Profile> }) => {
       const { error } = await supabase
         .from('profiles')
         .update(data)
         .eq('id', profileId);
       if (error) throw error;
+      // Log the change
+      const changes: Record<string, { old: any; new: any }> = {};
+      for (const key of Object.keys(data) as (keyof typeof data)[]) {
+        if (data[key] !== oldData[key]) {
+          changes[key] = { old: oldData[key], new: data[key] };
+        }
+      }
+      if (Object.keys(changes).length > 0) {
+        await supabase.from('admin_activity_log').insert({
+          user_id: user!.id,
+          action: 'update',
+          entity_type: 'user',
+          entity_id: userId,
+          details: { target_user_id: userId, changes },
+        });
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-profiles'] });
@@ -134,12 +150,19 @@ const AdminUsers = () => {
   });
 
   const toggleBanMutation = useMutation({
-    mutationFn: async ({ profileId, isBanned }: { profileId: string; isBanned: boolean }) => {
+    mutationFn: async ({ profileId, userId, isBanned }: { profileId: string; userId: string; isBanned: boolean }) => {
       const { error } = await supabase
         .from('profiles')
         .update({ is_banned: isBanned } as any)
         .eq('id', profileId);
       if (error) throw error;
+      await supabase.from('admin_activity_log').insert({
+        user_id: user!.id,
+        action: isBanned ? 'user_disabled' : 'user_enabled',
+        entity_type: 'user',
+        entity_id: userId,
+        details: { target_user_id: userId, is_banned: isBanned },
+      });
     },
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: ['admin-profiles'] });
