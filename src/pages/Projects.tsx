@@ -127,6 +127,64 @@ const Projects = () => {
       </div>
 
       <div className="container mx-auto px-4 py-8 max-w-6xl">
+        {/* Search & Filters */}
+        <div className="mb-6 space-y-3">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder={isRTL ? 'ابحث عن مشروع...' : 'Search projects...'}
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="ps-10"
+              />
+            </div>
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <SelectTrigger className="w-full sm:w-48">
+                <div className="flex items-center gap-2">
+                  <Tag className="w-4 h-4 text-muted-foreground" />
+                  <SelectValue placeholder={isRTL ? 'الفئة' : 'Category'} />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{isRTL ? 'جميع الفئات' : 'All Categories'}</SelectItem>
+                {categories.map((c: any) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {language === 'ar' ? c.name_ar : c.name_en}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={selectedCity} onValueChange={setSelectedCity}>
+              <SelectTrigger className="w-full sm:w-48">
+                <div className="flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-muted-foreground" />
+                  <SelectValue placeholder={isRTL ? 'المدينة' : 'City'} />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{isRTL ? 'جميع المدن' : 'All Cities'}</SelectItem>
+                {cities.map((c: any) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {language === 'ar' ? c.name_ar : c.name_en}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {hasActiveFilters && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">
+                {isRTL ? `${projects.length} نتيجة` : `${projects.length} results`}
+              </span>
+              <Button variant="ghost" size="sm" onClick={clearFilters} className="text-xs h-7">
+                <X className="w-3 h-3 me-1" />
+                {isRTL ? 'مسح الفلاتر' : 'Clear filters'}
+              </Button>
+            </div>
+          )}
+        </div>
+
         {isLoading ? (
           <div className="flex justify-center py-12">
             <div className="w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin" />
