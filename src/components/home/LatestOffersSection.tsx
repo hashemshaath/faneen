@@ -64,7 +64,7 @@ export const LatestOffersSection = () => {
                 <div className="rounded-2xl overflow-hidden border border-border hover:border-gold/40 bg-card transition-all duration-500 hover:shadow-lg hover-scale h-full relative">
                   {/* Discount badge */}
                   {hasDiscount && (
-                    <div className="absolute top-3 start-3 z-10 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-md">
+                    <div className="absolute top-3 start-3 z-10 bg-destructive text-destructive-foreground text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-md">
                       <Percent className="w-3 h-3" />
                       {offer.discount_percentage
                         ? `${offer.discount_percentage}%`
