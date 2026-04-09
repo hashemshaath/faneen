@@ -47,7 +47,7 @@ export const LatestBlogSection = () => {
               <div className="rounded-2xl overflow-hidden border border-border hover:border-gold/40 bg-card transition-all duration-300 hover:shadow-lg h-full">
                 {post.cover_image_url && (
                   <div className="aspect-video bg-muted overflow-hidden">
-                    <img src={post.cover_image_url} alt={post.title_ar} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <img src={post.cover_image_url} alt={post.title_ar} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   </div>
                 )}
                 <div className="p-4 space-y-2">
