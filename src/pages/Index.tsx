@@ -1,4 +1,4 @@
-import { Search, Star, Shield, FileText, CreditCard, Users, Award, Video, Wrench, BarChart3, Building2, Layers, Megaphone, Scale } from "lucide-react";
+import { Search, Star, Shield, FileText, CreditCard, Users, Award, Video, Wrench, BarChart3, Building2, Layers, Megaphone, Scale, FolderOpen, BookOpen } from "lucide-react";
 import { Link } from "react-router-dom";
 import heroBg from "@/assets/hero-bg.jpg";
 import { Button } from "@/components/ui/button";
@@ -35,6 +35,14 @@ const Navbar = () => {
           <Link to="/compare" className="hover:text-gold transition-colors flex items-center gap-1">
             <Scale className="w-4 h-4" />
             {language === 'ar' ? 'المقارنة' : 'Compare'}
+          </Link>
+          <Link to="/projects" className="hover:text-gold transition-colors flex items-center gap-1">
+            <FolderOpen className="w-4 h-4" />
+            {language === 'ar' ? 'المشاريع' : 'Projects'}
+          </Link>
+          <Link to="/blog" className="hover:text-gold transition-colors flex items-center gap-1">
+            <BookOpen className="w-4 h-4" />
+            {language === 'ar' ? 'المدونة' : 'Blog'}
           </Link>
           <a href="#providers" className="hover:text-gold transition-colors">{t('nav.providers')}</a>
         </div>
@@ -347,7 +355,7 @@ const StatsSection = () => {
 };
 
 const Footer = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   return (
     <footer className="bg-primary py-16">
@@ -377,10 +385,12 @@ const Footer = () => {
           <div>
             <h4 className="font-heading font-bold text-primary-foreground mb-4">{t('footer.services')}</h4>
             <ul className="space-y-2 font-body text-sm text-primary-foreground/50">
+              <li><Link to="/projects" className="hover:text-gold transition-colors">{language === 'ar' ? 'المشاريع' : 'Projects'}</Link></li>
+              <li><Link to="/blog" className="hover:text-gold transition-colors">{language === 'ar' ? 'المدونة' : 'Blog'}</Link></li>
+              <li><Link to="/offers" className="hover:text-gold transition-colors">{language === 'ar' ? 'العروض' : 'Offers'}</Link></li>
               <li><a href="#" className="hover:text-gold transition-colors">{t('footer.contracts')}</a></li>
               <li><a href="#" className="hover:text-gold transition-colors">{t('footer.installments')}</a></li>
               <li><a href="#" className="hover:text-gold transition-colors">{t('footer.warranties')}</a></li>
-              <li><a href="#" className="hover:text-gold transition-colors">{t('footer.ads')}</a></li>
             </ul>
           </div>
           <div>
