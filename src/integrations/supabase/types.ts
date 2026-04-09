@@ -677,6 +677,51 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          action_url: string | null
+          body_ar: string | null
+          body_en: string | null
+          created_at: string
+          id: string
+          is_read: boolean
+          notification_type: string
+          reference_id: string | null
+          reference_type: string | null
+          title_ar: string
+          title_en: string | null
+          user_id: string
+        }
+        Insert: {
+          action_url?: string | null
+          body_ar?: string | null
+          body_en?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          notification_type?: string
+          reference_id?: string | null
+          reference_type?: string | null
+          title_ar: string
+          title_en?: string | null
+          user_id: string
+        }
+        Update: {
+          action_url?: string | null
+          body_ar?: string | null
+          body_en?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          notification_type?: string
+          reference_id?: string | null
+          reference_type?: string | null
+          title_ar?: string
+          title_en?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       platform_settings: {
         Row: {
           category: string
@@ -1489,6 +1534,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_notification: {
+        Args: {
+          _action_url?: string
+          _body_ar: string
+          _body_en: string
+          _ref_id?: string
+          _ref_type?: string
+          _title_ar: string
+          _title_en: string
+          _type: string
+          _user_id: string
+        }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
