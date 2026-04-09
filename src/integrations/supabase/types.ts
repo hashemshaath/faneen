@@ -1613,7 +1613,43 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_profiles: {
+        Row: {
+          account_type: Database["public"]["Enums"]["account_type"] | null
+          avatar_url: string | null
+          created_at: string | null
+          full_name: string | null
+          id: string | null
+          is_verified: boolean | null
+          membership_tier: Database["public"]["Enums"]["membership_tier"] | null
+          user_id: string | null
+        }
+        Insert: {
+          account_type?: Database["public"]["Enums"]["account_type"] | null
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string | null
+          is_verified?: boolean | null
+          membership_tier?:
+            | Database["public"]["Enums"]["membership_tier"]
+            | null
+          user_id?: string | null
+        }
+        Update: {
+          account_type?: Database["public"]["Enums"]["account_type"] | null
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string | null
+          is_verified?: boolean | null
+          membership_tier?:
+            | Database["public"]["Enums"]["membership_tier"]
+            | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       create_notification: {
