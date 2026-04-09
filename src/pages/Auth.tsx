@@ -9,9 +9,9 @@ import { checkPasswordStrength, validatePhone, validateEmail, validateUsername }
 import { toast } from 'sonner';
 import { Eye, EyeOff, ArrowRight, ArrowLeft, Phone, Mail, Lock, User, Building2, Globe } from 'lucide-react';
 
-type AuthMode = 'login' | 'register' | 'verify-otp' | 'forgot-password';
+type AuthMode = 'login' | 'register' | 'forgot-password' | 'email-sent';
 type RegisterType = 'individual' | 'business';
-type RegisterStep = 'type' | 'phone' | 'otp' | 'details' | 'business-details';
+type RegisterStep = 'type' | 'details' | 'business-details';
 
 const Auth = () => {
   const { t, language, isRTL } = useLanguage();
@@ -24,7 +24,6 @@ const Auth = () => {
 
   // Form fields
   const [phone, setPhone] = useState('');
-  const [otpCode, setOtpCode] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -34,44 +33,6 @@ const Auth = () => {
 
   const passwordStrength = checkPasswordStrength(password);
   const BackArrow = isRTL ? ArrowRight : ArrowLeft;
-
-  const handlePhoneLogin = async () => {
-    if (!validatePhone(phone)) {
-      toast.error(isRTL ? 'رقم الجوال غير صحيح' : 'Invalid phone number');
-      return;
-    }
-    setLoading(true);
-    try {
-      const { error } = await supabase.auth.signInWithOtp({
-        phone: `+966${phone.replace(/^0/, '')}`,
-      });
-      if (error) throw error;
-      setMode('verify-otp');
-      toast.success(t('auth.otp_sent'));
-    } catch (err: any) {
-      toast.error(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVerifyOtp = async () => {
-    setLoading(true);
-    try {
-      const { error } = await supabase.auth.verifyOtp({
-        phone: `+966${phone.replace(/^0/, '')}`,
-        token: otpCode,
-        type: 'sms',
-      });
-      if (error) throw error;
-      toast.success(t('common.success'));
-      navigate('/');
-    } catch (err: any) {
-      toast.error(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleEmailLogin = async () => {
     if (!email || !password) {
@@ -92,12 +53,12 @@ const Auth = () => {
   };
 
   const handleRegister = async () => {
-    if (!validatePhone(phone)) {
-      toast.error(isRTL ? 'رقم الجوال غير صحيح' : 'Invalid phone number');
+    if (!email || !validateEmail(email)) {
+      toast.error(isRTL ? 'البريد الإلكتروني غير صحيح' : 'Invalid email');
       return;
     }
-    if (email && !validateEmail(email)) {
-      toast.error(isRTL ? 'البريد الإلكتروني غير صحيح' : 'Invalid email');
+    if (phone && !validatePhone(phone)) {
+      toast.error(isRTL ? 'رقم الجوال غير صحيح' : 'Invalid phone number');
       return;
     }
     if (passwordStrength.score < 2) {
@@ -116,19 +77,26 @@ const Auth = () => {
     setLoading(true);
     try {
       const { error } = await supabase.auth.signUp({
-        phone: `+966${phone.replace(/^0/, '')}`,
+        email,
         password,
         options: {
+          emailRedirectTo: window.location.origin,
           data: {
             full_name: fullName,
             account_type: registerType,
-            email,
+            phone: phone ? `+966${phone.replace(/^0/, '')}` : '',
           },
         },
       });
       if (error) throw error;
-      setRegisterStep('otp');
-      toast.success(t('auth.otp_sent'));
+
+      // If business account, create the business profile
+      if (registerType === 'business') {
+        // Business will be created after email verification via the profile
+      }
+
+      setMode('email-sent');
+      toast.success(isRTL ? 'تم إرسال رابط التحقق إلى بريدك الإلكتروني' : 'Verification link sent to your email');
     } catch (err: any) {
       toast.error(err.message);
     } finally {
@@ -189,18 +157,16 @@ const Auth = () => {
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>{t('auth.phone')}</Label>
+              <Label>{t('auth.email')}</Label>
               <div className="relative">
-                <Phone className="absolute top-3 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
-                <div className="absolute top-2.5 text-sm text-muted-foreground font-mono" style={{ [isRTL ? 'right' : 'left']: '36px' }}>+966</div>
+                <Mail className="absolute top-3 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
                 <Input
-                  type="tel"
-                  placeholder={t('auth.phone.placeholder')}
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 9))}
-                  className="text-left dir-ltr"
-                  style={{ paddingInlineStart: '88px' }}
+                  type="email"
+                  placeholder={isRTL ? 'example@email.com' : 'example@email.com'}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   dir="ltr"
+                  style={{ paddingInlineStart: '40px' }}
                 />
               </div>
             </div>
@@ -229,17 +195,6 @@ const Auth = () => {
             <Button onClick={handleEmailLogin} disabled={loading} className="w-full" variant="hero">
               {loading ? t('common.loading') : t('auth.login')}
             </Button>
-
-            <div className="flex items-center gap-2">
-              <div className="flex-1 h-px bg-border" />
-              <span className="text-xs text-muted-foreground">{isRTL ? 'أو' : 'or'}</span>
-              <div className="flex-1 h-px bg-border" />
-            </div>
-
-            <Button onClick={handlePhoneLogin} disabled={loading} variant="outline" className="w-full">
-              <Phone className="w-4 h-4" />
-              {isRTL ? 'دخول برمز الجوال' : 'Login with Phone OTP'}
-            </Button>
           </div>
 
           <div className="flex items-center justify-between text-sm">
@@ -255,40 +210,33 @@ const Auth = () => {
     );
   }
 
-  // VERIFY OTP MODE
-  if (mode === 'verify-otp' || registerStep === 'otp') {
+  // EMAIL SENT CONFIRMATION
+  if (mode === 'email-sent') {
     return (
       <AuthLayout>
         <div className="space-y-6">
-          <div className="text-center space-y-2">
-            <h2 className="font-heading font-bold text-2xl text-foreground">{t('auth.verify_phone')}</h2>
-            <p className="text-sm text-muted-foreground">{t('auth.otp_sent')} +966{phone}</p>
+          <div className="text-center space-y-3">
+            <div className="w-16 h-16 mx-auto rounded-full bg-gold/10 flex items-center justify-center">
+              <Mail className="w-8 h-8 text-gold" />
+            </div>
+            <h2 className="font-heading font-bold text-2xl text-foreground">
+              {isRTL ? 'تحقق من بريدك الإلكتروني' : 'Check your email'}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {isRTL
+                ? `أرسلنا رابط التحقق إلى ${email}. يرجى فتح بريدك والنقر على الرابط لتأكيد حسابك.`
+                : `We sent a verification link to ${email}. Please open your email and click the link to confirm your account.`}
+            </p>
           </div>
 
-          <div className="space-y-4">
-            <Input
-              type="text"
-              placeholder={t('auth.otp_code')}
-              value={otpCode}
-              onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-              className="text-center text-2xl tracking-[0.5em] font-mono"
-              dir="ltr"
-              maxLength={6}
-            />
-
-            <Button onClick={handleVerifyOtp} disabled={loading || otpCode.length !== 6} className="w-full" variant="hero">
-              {loading ? t('common.loading') : t('auth.verify')}
+          <div className="space-y-3">
+            <Button onClick={() => setMode('login')} className="w-full" variant="hero">
+              {isRTL ? 'العودة لتسجيل الدخول' : 'Back to login'}
             </Button>
-
-            <button className="text-sm text-gold hover:underline w-full text-center">
-              {t('auth.resend')}
-            </button>
+            <p className="text-xs text-center text-muted-foreground">
+              {isRTL ? 'لم يصلك البريد؟ تحقق من مجلد الرسائل غير المرغوب فيها' : "Didn't receive it? Check your spam folder"}
+            </p>
           </div>
-
-          <button onClick={() => { setMode('login'); setRegisterStep('type'); }} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-            <BackArrow className="w-4 h-4" />
-            {t('auth.back')}
-          </button>
         </div>
       </AuthLayout>
     );
@@ -343,7 +291,7 @@ const Auth = () => {
             </div>
             <div className="grid grid-cols-1 gap-4">
               <button
-                onClick={() => { setRegisterType('individual'); setRegisterStep('phone'); }}
+                onClick={() => { setRegisterType('individual'); setRegisterStep('details'); }}
                 className="p-6 rounded-xl border-2 border-border hover:border-gold/50 transition-all text-center group"
               >
                 <User className="w-10 h-10 mx-auto mb-3 text-gold group-hover:scale-110 transition-transform" />
@@ -351,7 +299,7 @@ const Auth = () => {
                 <p className="text-sm text-muted-foreground mt-1">{t('membership.individual.desc')}</p>
               </button>
               <button
-                onClick={() => { setRegisterType('business'); setRegisterStep('phone'); }}
+                onClick={() => { setRegisterType('business'); setRegisterStep('details'); }}
                 className="p-6 rounded-xl border-2 border-gold/30 bg-gold/5 hover:border-gold transition-all text-center group"
               >
                 <Building2 className="w-10 h-10 mx-auto mb-3 text-gold group-hover:scale-110 transition-transform" />
@@ -367,7 +315,7 @@ const Auth = () => {
           </>
         )}
 
-        {registerStep === 'phone' && (
+        {registerStep === 'details' && (
           <>
             <div className="text-center space-y-2">
               <h2 className="font-heading font-bold text-2xl text-foreground">{t('auth.register')}</h2>
@@ -382,7 +330,25 @@ const Auth = () => {
               </div>
 
               <div className="space-y-2">
-                <Label>{t('auth.phone')}</Label>
+                <Label>{t('auth.email')} <span className="text-destructive">*</span></Label>
+                <div className="relative">
+                  <Mail className="absolute top-3 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
+                  <Input
+                    type="email"
+                    placeholder="example@email.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    dir="ltr"
+                    style={{ paddingInlineStart: '40px' }}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>
+                  {t('auth.phone')}
+                  <span className="text-xs text-muted-foreground ms-1">({isRTL ? 'اختياري' : 'optional'})</span>
+                </Label>
                 <div className="relative">
                   <Phone className="absolute top-3 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
                   <div className="absolute top-2.5 text-sm text-muted-foreground font-mono" style={{ [isRTL ? 'right' : 'left']: '36px' }}>+966</div>
@@ -394,14 +360,6 @@ const Auth = () => {
                     dir="ltr"
                     style={{ paddingInlineStart: '88px' }}
                   />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>{t('auth.email')}</Label>
-                <div className="relative">
-                  <Mail className="absolute top-3 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
-                  <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} dir="ltr" style={{ paddingInlineStart: '40px' }} />
                 </div>
               </div>
 
@@ -435,11 +393,11 @@ const Auth = () => {
               </div>
 
               {registerType === 'business' ? (
-                <Button onClick={() => setRegisterStep('business-details')} disabled={!phone || !fullName || passwordStrength.score < 2 || password !== confirmPassword} className="w-full" variant="hero">
+                <Button onClick={() => setRegisterStep('business-details')} disabled={!email || !fullName || passwordStrength.score < 2 || password !== confirmPassword} className="w-full" variant="hero">
                   {t('auth.next')}
                 </Button>
               ) : (
-                <Button onClick={handleRegister} disabled={loading || !phone || !fullName || passwordStrength.score < 2 || password !== confirmPassword} className="w-full" variant="hero">
+                <Button onClick={handleRegister} disabled={loading || !email || !fullName || passwordStrength.score < 2 || password !== confirmPassword} className="w-full" variant="hero">
                   {loading ? t('common.loading') : t('auth.submit')}
                 </Button>
               )}
@@ -500,7 +458,7 @@ const Auth = () => {
               </Button>
             </div>
 
-            <button onClick={() => setRegisterStep('phone')} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+            <button onClick={() => setRegisterStep('details')} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
               <BackArrow className="w-4 h-4" />
               {t('auth.back')}
             </button>
