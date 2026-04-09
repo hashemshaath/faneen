@@ -380,7 +380,7 @@ const ContactTab: React.FC<{ business: any }> = ({ business }) => {
         )}
       </div>
 
-      {/* Location */}
+      {/* Location & Map */}
       <div className="p-6 rounded-xl bg-card border border-border">
         <h3 className="font-heading font-bold text-foreground mb-4 flex items-center gap-2">
           <MapPin className="w-5 h-5 text-gold" />
@@ -390,16 +390,34 @@ const ContactTab: React.FC<{ business: any }> = ({ business }) => {
           {business.address && <p>{business.address}</p>}
           {(cityName || countryName) && <p>{[cityName, countryName].filter(Boolean).join('، ')}</p>}
         </div>
-        {business.latitude && business.longitude && (
-          <a
-            href={`https://www.google.com/maps?q=${business.latitude},${business.longitude}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-4 inline-flex items-center gap-2 text-sm text-gold hover:underline font-body"
-          >
-            <MapPin className="w-4 h-4" />
-            {language === 'ar' ? 'عرض على الخريطة' : 'View on Map'}
-          </a>
+
+        {business.latitude && business.longitude ? (
+          <div className="mt-4 space-y-3">
+            <div className="rounded-xl overflow-hidden border border-border/50 aspect-[16/9]">
+              <iframe
+                title={language === 'ar' ? 'موقع المزود' : 'Provider location'}
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                src={`https://www.openstreetmap.org/export/embed.html?bbox=${Number(business.longitude) - 0.01},${Number(business.latitude) - 0.008},${Number(business.longitude) + 0.01},${Number(business.latitude) + 0.008}&layer=mapnik&marker=${business.latitude},${business.longitude}`}
+              />
+            </div>
+            <a
+              href={`https://www.google.com/maps?q=${business.latitude},${business.longitude}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-sm text-gold hover:underline font-body"
+            >
+              <ExternalLink className="w-4 h-4" />
+              {language === 'ar' ? 'فتح في خرائط Google' : 'Open in Google Maps'}
+            </a>
+          </div>
+        ) : (
+          <p className="mt-4 text-sm text-muted-foreground/60 font-body">
+            {language === 'ar' ? 'لم يتم تحديد الموقع على الخريطة' : 'Location not set on map'}
+          </p>
         )}
       </div>
     </div>
