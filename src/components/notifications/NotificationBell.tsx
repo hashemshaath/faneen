@@ -165,6 +165,14 @@ export const NotificationBell = () => {
             })
           )}
         </ScrollArea>
+        <div className="p-2 border-t border-border">
+          <Button
+            variant="ghost" size="sm" className="w-full text-xs"
+            onClick={() => { navigate('/notifications'); setOpen(false); }}
+          >
+            {isRTL ? 'عرض جميع الإشعارات' : 'View all notifications'}
+          </Button>
+        </div>
       </PopoverContent>
     </Popover>
   );
