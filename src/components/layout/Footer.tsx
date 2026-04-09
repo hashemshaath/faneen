@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { PrefetchLink } from "@/components/PrefetchLink";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Facebook, Twitter, Instagram, Youtube, Linkedin, Mail, Phone, MapPin, ArrowUp } from "lucide-react";
 
@@ -102,9 +102,9 @@ export const Footer = () => {
               {t('footer.services')}
             </h4>
             <ul className="space-y-3 font-body text-sm text-primary-foreground/50">
-              <li><Link to="/projects" className="hover:text-gold hover:ps-1 transition-all duration-200">{isRTL ? 'المشاريع' : 'Projects'}</Link></li>
-              <li><Link to="/blog" className="hover:text-gold hover:ps-1 transition-all duration-200">{isRTL ? 'المدونة' : 'Blog'}</Link></li>
-              <li><Link to="/offers" className="hover:text-gold hover:ps-1 transition-all duration-200">{isRTL ? 'العروض' : 'Offers'}</Link></li>
+              <li><PrefetchLink to="/projects" className="hover:text-gold hover:ps-1 transition-all duration-200">{isRTL ? 'المشاريع' : 'Projects'}</PrefetchLink></li>
+              <li><PrefetchLink to="/blog" className="hover:text-gold hover:ps-1 transition-all duration-200">{isRTL ? 'المدونة' : 'Blog'}</PrefetchLink></li>
+              <li><PrefetchLink to="/offers" className="hover:text-gold hover:ps-1 transition-all duration-200">{isRTL ? 'العروض' : 'Offers'}</PrefetchLink></li>
               <li><a href="#" className="hover:text-gold hover:ps-1 transition-all duration-200">{t('footer.contracts')}</a></li>
               <li><a href="#" className="hover:text-gold hover:ps-1 transition-all duration-200">{t('footer.installments')}</a></li>
               <li><a href="#" className="hover:text-gold hover:ps-1 transition-all duration-200">{t('footer.warranties')}</a></li>
