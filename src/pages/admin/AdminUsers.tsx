@@ -1,0 +1,366 @@
+import React, { useState } from 'react';
+import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
+import { useLanguage } from '@/i18n/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from 'sonner';
+import {
+  Users, Search, Shield, ShieldCheck, ShieldAlert, UserPlus, Trash2,
+  Mail, Phone, Calendar, Crown, Loader2,
+} from 'lucide-react';
+import type { Tables } from '@/integrations/supabase/types';
+
+type Profile = Tables<'profiles'>;
+type UserRole = Tables<'user_roles'>;
+
+const roleConfig = {
+  admin: { icon: Crown, color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400', labelAr: 'مشرف', labelEn: 'Admin' },
+  moderator: { icon: ShieldCheck, color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400', labelAr: 'مشرف محتوى', labelEn: 'Moderator' },
+  user: { icon: Users, color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400', labelAr: 'مستخدم', labelEn: 'User' },
+};
+
+const tierConfig = {
+  free: { labelAr: 'مجاني', labelEn: 'Free', color: 'bg-muted text-muted-foreground' },
+  basic: { labelAr: 'أساسي', labelEn: 'Basic', color: 'bg-blue-100 text-blue-700' },
+  premium: { labelAr: 'مميز', labelEn: 'Premium', color: 'bg-gold/20 text-gold' },
+  enterprise: { labelAr: 'مؤسسات', labelEn: 'Enterprise', color: 'bg-purple-100 text-purple-700' },
+};
+
+const accountTypeConfig = {
+  individual: { labelAr: 'فرد', labelEn: 'Individual' },
+  business: { labelAr: 'أعمال', labelEn: 'Business' },
+  company: { labelAr: 'شركة', labelEn: 'Company' },
+};
+
+const AdminUsers = () => {
+  const { isRTL, language } = useLanguage();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterRole, setFilterRole] = useState<string>('all');
+  const [addingRoleFor, setAddingRoleFor] = useState<string | null>(null);
+  const [selectedRole, setSelectedRole] = useState<string>('user');
+
+  // Fetch all profiles
+  const { data: profiles = [], isLoading: loadingProfiles } = useQuery({
+    queryKey: ['admin-profiles'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data as Profile[];
+    },
+    enabled: !!user,
+  });
+
+  // Fetch all roles
+  const { data: userRoles = [], isLoading: loadingRoles } = useQuery({
+    queryKey: ['admin-user-roles'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('*');
+      if (error) throw error;
+      return data as UserRole[];
+    },
+    enabled: !!user,
+  });
+
+  // Add role
+  const addRoleMutation = useMutation({
+    mutationFn: async ({ userId, role }: { userId: string; role: string }) => {
+      const { error } = await supabase.from('user_roles').insert({
+        user_id: userId,
+        role: role as any,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-user-roles'] });
+      setAddingRoleFor(null);
+      toast.success(isRTL ? 'تم إضافة الصلاحية بنجاح' : 'Role added successfully');
+    },
+    onError: (err: any) => {
+      if (err.message?.includes('duplicate')) {
+        toast.error(isRTL ? 'هذه الصلاحية موجودة بالفعل' : 'Role already exists');
+      } else {
+        toast.error(isRTL ? 'فشل إضافة الصلاحية' : 'Failed to add role');
+      }
+    },
+  });
+
+  // Remove role
+  const removeRoleMutation = useMutation({
+    mutationFn: async (roleId: string) => {
+      const { error } = await supabase.from('user_roles').delete().eq('id', roleId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-user-roles'] });
+      toast.success(isRTL ? 'تم إزالة الصلاحية' : 'Role removed');
+    },
+    onError: () => {
+      toast.error(isRTL ? 'فشل إزالة الصلاحية' : 'Failed to remove role');
+    },
+  });
+
+  // Build user-role map
+  const roleMap = new Map<string, UserRole[]>();
+  userRoles.forEach(r => {
+    const existing = roleMap.get(r.user_id) || [];
+    existing.push(r);
+    roleMap.set(r.user_id, existing);
+  });
+
+  // Filter profiles
+  const filtered = profiles.filter(p => {
+    const matchesSearch = !searchTerm ||
+      p.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.phone?.includes(searchTerm);
+
+    const roles = roleMap.get(p.user_id) || [];
+    const matchesRole = filterRole === 'all' ||
+      (filterRole === 'no_role' && roles.length === 0) ||
+      roles.some(r => r.role === filterRole);
+
+    return matchesSearch && matchesRole;
+  });
+
+  // Stats
+  const totalUsers = profiles.length;
+  const admins = userRoles.filter(r => r.role === 'admin').length;
+  const moderators = userRoles.filter(r => r.role === 'moderator').length;
+
+  if (!user) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-96">
+          <p className="text-muted-foreground">{isRTL ? 'يرجى تسجيل الدخول' : 'Please log in'}</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  return (
+    <DashboardLayout>
+      <div className="space-y-6">
+        {/* Header */}
+        <div>
+          <h1 className="font-heading font-bold text-2xl text-foreground flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gold/10 flex items-center justify-center">
+              <Users className="w-5 h-5 text-gold" />
+            </div>
+            {isRTL ? 'إدارة المستخدمين والصلاحيات' : 'Users & Roles Management'}
+          </h1>
+          <p className="text-muted-foreground font-body mt-1">
+            {isRTL ? 'عرض وإدارة المستخدمين وتعيين الصلاحيات' : 'View and manage users and assign roles'}
+          </p>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[
+            { label: isRTL ? 'إجمالي المستخدمين' : 'Total Users', value: totalUsers, icon: Users, color: 'text-blue-500' },
+            { label: isRTL ? 'المشرفين' : 'Admins', value: admins, icon: Crown, color: 'text-red-500' },
+            { label: isRTL ? 'مشرفي المحتوى' : 'Moderators', value: moderators, icon: ShieldCheck, color: 'text-amber-500' },
+            { label: isRTL ? 'بدون صلاحيات' : 'No Role', value: profiles.filter(p => !roleMap.has(p.user_id)).length, icon: Shield, color: 'text-muted-foreground' },
+          ].map((stat, i) => (
+            <Card key={i}>
+              <CardContent className="p-4 flex items-center gap-3">
+                <stat.icon className={`w-8 h-8 ${stat.color}`} />
+                <div>
+                  <p className="font-heading font-bold text-xl">{stat.value}</p>
+                  <p className="text-xs text-muted-foreground font-body">{stat.label}</p>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Search & Filter */}
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex flex-col md:flex-row gap-3">
+              <div className="relative flex-1">
+                <Search className="absolute top-2.5 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
+                <Input
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  placeholder={isRTL ? 'بحث بالاسم أو البريد أو الهاتف...' : 'Search by name, email, or phone...'}
+                  className="ps-10"
+                />
+              </div>
+              <Select value={filterRole} onValueChange={setFilterRole}>
+                <SelectTrigger className="w-full md:w-48">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{isRTL ? 'جميع المستخدمين' : 'All Users'}</SelectItem>
+                  <SelectItem value="admin">{isRTL ? 'المشرفين' : 'Admins'}</SelectItem>
+                  <SelectItem value="moderator">{isRTL ? 'مشرفي المحتوى' : 'Moderators'}</SelectItem>
+                  <SelectItem value="user">{isRTL ? 'مستخدم عادي' : 'Regular User'}</SelectItem>
+                  <SelectItem value="no_role">{isRTL ? 'بدون صلاحيات' : 'No Role'}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Users List */}
+        {(loadingProfiles || loadingRoles) ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="w-8 h-8 animate-spin text-gold" />
+          </div>
+        ) : filtered.length === 0 ? (
+          <Card>
+            <CardContent className="p-12 text-center">
+              <Users className="w-16 h-16 mx-auto text-muted-foreground/20 mb-4" />
+              <p className="text-muted-foreground font-body">{isRTL ? 'لا توجد نتائج' : 'No results'}</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-3">
+            {filtered.map(profile => {
+              const roles = roleMap.get(profile.user_id) || [];
+              const tier = tierConfig[profile.membership_tier as keyof typeof tierConfig] || tierConfig.free;
+              const accType = accountTypeConfig[profile.account_type as keyof typeof accountTypeConfig] || accountTypeConfig.individual;
+              const createdDate = new Date(profile.created_at).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en', { year: 'numeric', month: 'short', day: 'numeric' });
+              const isCurrentUser = profile.user_id === user.id;
+
+              return (
+                <Card key={profile.id} className={`transition-colors ${isCurrentUser ? 'border-gold/40' : ''}`}>
+                  <CardContent className="p-4">
+                    <div className="flex flex-col md:flex-row md:items-center gap-4">
+                      {/* Avatar & Info */}
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <Avatar className="w-12 h-12 shrink-0">
+                          <AvatarImage src={profile.avatar_url || undefined} />
+                          <AvatarFallback className="bg-gold/10 text-gold font-bold">
+                            {(profile.full_name || '?').charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="font-heading font-bold text-foreground truncate">
+                              {profile.full_name || (isRTL ? 'بدون اسم' : 'No name')}
+                            </h3>
+                            {isCurrentUser && (
+                              <Badge variant="outline" className="text-[10px] border-gold text-gold">
+                                {isRTL ? 'أنت' : 'You'}
+                              </Badge>
+                            )}
+                            <Badge className={`${tier.color} text-[10px]`}>
+                              {isRTL ? tier.labelAr : tier.labelEn}
+                            </Badge>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-3 mt-1 text-xs text-muted-foreground">
+                            {profile.email && (
+                              <span className="flex items-center gap-1">
+                                <Mail className="w-3 h-3" /> {profile.email}
+                              </span>
+                            )}
+                            {profile.phone && (
+                              <span className="flex items-center gap-1" dir="ltr">
+                                <Phone className="w-3 h-3" /> {profile.phone}
+                              </span>
+                            )}
+                            <span className="flex items-center gap-1">
+                              <Calendar className="w-3 h-3" /> {createdDate}
+                            </span>
+                            <Badge variant="outline" className="text-[10px]">
+                              {isRTL ? accType.labelAr : accType.labelEn}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Roles */}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {roles.length === 0 && (
+                          <span className="text-xs text-muted-foreground">{isRTL ? 'بدون صلاحيات' : 'No roles'}</span>
+                        )}
+                        {roles.map(r => {
+                          const cfg = roleConfig[r.role as keyof typeof roleConfig] || roleConfig.user;
+                          const RoleIcon = cfg.icon;
+                          return (
+                            <div key={r.id} className="flex items-center gap-1">
+                              <Badge className={`${cfg.color} gap-1 text-xs`}>
+                                <RoleIcon className="w-3 h-3" />
+                                {isRTL ? cfg.labelAr : cfg.labelEn}
+                              </Badge>
+                              {!isCurrentUser && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="w-6 h-6 text-destructive hover:text-destructive"
+                                  onClick={() => removeRoleMutation.mutate(r.id)}
+                                  disabled={removeRoleMutation.isPending}
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </Button>
+                              )}
+                            </div>
+                          );
+                        })}
+
+                        {/* Add role */}
+                        {addingRoleFor === profile.user_id ? (
+                          <div className="flex items-center gap-1.5">
+                            <Select value={selectedRole} onValueChange={setSelectedRole}>
+                              <SelectTrigger className="h-7 w-28 text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="admin">{isRTL ? 'مشرف' : 'Admin'}</SelectItem>
+                                <SelectItem value="moderator">{isRTL ? 'مشرف محتوى' : 'Moderator'}</SelectItem>
+                                <SelectItem value="user">{isRTL ? 'مستخدم' : 'User'}</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <Button
+                              variant="hero"
+                              size="sm"
+                              className="h-7 px-2 text-xs"
+                              onClick={() => addRoleMutation.mutate({ userId: profile.user_id, role: selectedRole })}
+                              disabled={addRoleMutation.isPending}
+                            >
+                              {addRoleMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : (isRTL ? 'إضافة' : 'Add')}
+                            </Button>
+                            <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => setAddingRoleFor(null)}>
+                              {isRTL ? 'إلغاء' : 'Cancel'}
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 gap-1 text-xs"
+                            onClick={() => { setAddingRoleFor(profile.user_id); setSelectedRole('user'); }}
+                          >
+                            <UserPlus className="w-3 h-3" />
+                            {isRTL ? 'صلاحية' : 'Role'}
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </DashboardLayout>
+  );
+};
+
+export default AdminUsers;
