@@ -116,12 +116,28 @@ const AdminUsers = () => {
   });
 
   const updateProfileMutation = useMutation({
-    mutationFn: async ({ profileId, data }: { profileId: string; data: Partial<Profile> }) => {
+    mutationFn: async ({ profileId, userId, data, oldData }: { profileId: string; userId: string; data: Partial<Profile>; oldData: Partial<Profile> }) => {
       const { error } = await supabase
         .from('profiles')
         .update(data)
         .eq('id', profileId);
       if (error) throw error;
+      // Log the change
+      const changes: Record<string, { old: any; new: any }> = {};
+      for (const key of Object.keys(data) as (keyof typeof data)[]) {
+        if (data[key] !== oldData[key]) {
+          changes[key] = { old: oldData[key], new: data[key] };
+        }
+      }
+      if (Object.keys(changes).length > 0) {
+        await supabase.from('admin_activity_log').insert({
+          user_id: user!.id,
+          action: 'update',
+          entity_type: 'user',
+          entity_id: userId,
+          details: { target_user_id: userId, changes },
+        });
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-profiles'] });
@@ -134,12 +150,19 @@ const AdminUsers = () => {
   });
 
   const toggleBanMutation = useMutation({
-    mutationFn: async ({ profileId, isBanned }: { profileId: string; isBanned: boolean }) => {
+    mutationFn: async ({ profileId, userId, isBanned }: { profileId: string; userId: string; isBanned: boolean }) => {
       const { error } = await supabase
         .from('profiles')
         .update({ is_banned: isBanned } as any)
         .eq('id', profileId);
       if (error) throw error;
+      await supabase.from('admin_activity_log').insert({
+        user_id: user!.id,
+        action: isBanned ? 'user_disabled' : 'user_enabled',
+        entity_type: 'user',
+        entity_id: userId,
+        details: { target_user_id: userId, is_banned: isBanned },
+      });
     },
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: ['admin-profiles'] });
@@ -190,14 +213,23 @@ const AdminUsers = () => {
       toast.error(isRTL ? 'الاسم مطلوب' : 'Name is required');
       return;
     }
+    const newData = {
+      full_name: trimmedName,
+      account_type: editForm.account_type as any,
+      membership_tier: editForm.membership_tier as any,
+      phone: editForm.phone.trim() || null,
+      email: editForm.email.trim() || null,
+    };
     updateProfileMutation.mutate({
       profileId: editingProfile.id,
-      data: {
-        full_name: trimmedName,
-        account_type: editForm.account_type as any,
-        membership_tier: editForm.membership_tier as any,
-        phone: editForm.phone.trim() || null,
-        email: editForm.email.trim() || null,
+      userId: editingProfile.user_id,
+      data: newData,
+      oldData: {
+        full_name: editingProfile.full_name,
+        account_type: editingProfile.account_type,
+        membership_tier: editingProfile.membership_tier,
+        phone: editingProfile.phone,
+        email: editingProfile.email,
       },
     });
   };
@@ -388,7 +420,7 @@ const AdminUsers = () => {
                               variant="outline"
                               size="sm"
                               className={`h-7 gap-1 text-xs ${(profile as any).is_banned ? 'text-green-600 hover:text-green-700' : 'text-amber-600 hover:text-amber-700'}`}
-                              onClick={() => toggleBanMutation.mutate({ profileId: profile.id, isBanned: !(profile as any).is_banned })}
+                              onClick={() => toggleBanMutation.mutate({ profileId: profile.id, userId: profile.user_id, isBanned: !(profile as any).is_banned })}
                               disabled={toggleBanMutation.isPending}
                             >
                               <Ban className="w-3 h-3" />
