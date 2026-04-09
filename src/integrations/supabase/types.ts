@@ -772,6 +772,278 @@ export type Database = {
           },
         ]
       }
+      profile_images: {
+        Row: {
+          caption_ar: string | null
+          caption_en: string | null
+          created_at: string
+          id: string
+          image_type: string
+          image_url: string
+          profile_id: string
+          sort_order: number
+        }
+        Insert: {
+          caption_ar?: string | null
+          caption_en?: string | null
+          created_at?: string
+          id?: string
+          image_type?: string
+          image_url: string
+          profile_id: string
+          sort_order?: number
+        }
+        Update: {
+          caption_ar?: string | null
+          caption_en?: string | null
+          created_at?: string
+          id?: string
+          image_type?: string
+          image_url?: string
+          profile_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_images_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profile_systems"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profile_reviews: {
+        Row: {
+          content: string | null
+          created_at: string
+          id: string
+          profile_id: string
+          rating: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          id?: string
+          profile_id: string
+          rating: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          id?: string
+          profile_id?: string
+          rating?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_reviews_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profile_systems"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profile_specifications: {
+        Row: {
+          created_at: string
+          id: string
+          profile_id: string
+          sort_order: number
+          spec_name_ar: string
+          spec_name_en: string | null
+          spec_unit: string | null
+          spec_value: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          profile_id: string
+          sort_order?: number
+          spec_name_ar: string
+          spec_name_en?: string | null
+          spec_unit?: string | null
+          spec_value: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          profile_id?: string
+          sort_order?: number
+          spec_name_ar?: string
+          spec_name_en?: string | null
+          spec_unit?: string | null
+          spec_value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_specifications_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profile_systems"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profile_suppliers: {
+        Row: {
+          business_id: string
+          created_at: string
+          currency_code: string
+          id: string
+          is_available: boolean
+          notes_ar: string | null
+          notes_en: string | null
+          price_range_from: number | null
+          price_range_to: number | null
+          profile_id: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          currency_code?: string
+          id?: string
+          is_available?: boolean
+          notes_ar?: string | null
+          notes_en?: string | null
+          price_range_from?: number | null
+          price_range_to?: number | null
+          profile_id: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          currency_code?: string
+          id?: string
+          is_available?: boolean
+          notes_ar?: string | null
+          notes_en?: string | null
+          price_range_from?: number | null
+          price_range_to?: number | null
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_suppliers_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profile_suppliers_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profile_systems"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profile_systems: {
+        Row: {
+          applications_ar: string | null
+          applications_en: string | null
+          available_colors: string[] | null
+          category: string
+          cover_image_url: string | null
+          created_at: string
+          description_ar: string | null
+          description_en: string | null
+          features_ar: string[] | null
+          features_en: string[] | null
+          id: string
+          logo_url: string | null
+          max_height_mm: number | null
+          max_width_mm: number | null
+          name_ar: string
+          name_en: string | null
+          origin_business_id: string | null
+          profile_type: string
+          recommendation_level: string
+          slug: string
+          sort_order: number
+          sound_insulation_rating: number | null
+          status: string
+          strength_rating: number | null
+          thermal_insulation_rating: number | null
+          updated_at: string
+          views_count: number
+        }
+        Insert: {
+          applications_ar?: string | null
+          applications_en?: string | null
+          available_colors?: string[] | null
+          category?: string
+          cover_image_url?: string | null
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          features_ar?: string[] | null
+          features_en?: string[] | null
+          id?: string
+          logo_url?: string | null
+          max_height_mm?: number | null
+          max_width_mm?: number | null
+          name_ar: string
+          name_en?: string | null
+          origin_business_id?: string | null
+          profile_type?: string
+          recommendation_level?: string
+          slug: string
+          sort_order?: number
+          sound_insulation_rating?: number | null
+          status?: string
+          strength_rating?: number | null
+          thermal_insulation_rating?: number | null
+          updated_at?: string
+          views_count?: number
+        }
+        Update: {
+          applications_ar?: string | null
+          applications_en?: string | null
+          available_colors?: string[] | null
+          category?: string
+          cover_image_url?: string | null
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          features_ar?: string[] | null
+          features_en?: string[] | null
+          id?: string
+          logo_url?: string | null
+          max_height_mm?: number | null
+          max_width_mm?: number | null
+          name_ar?: string
+          name_en?: string | null
+          origin_business_id?: string | null
+          profile_type?: string
+          recommendation_level?: string
+          slug?: string
+          sort_order?: number
+          sound_insulation_rating?: number | null
+          status?: string
+          strength_rating?: number | null
+          thermal_insulation_rating?: number | null
+          updated_at?: string
+          views_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_systems_origin_business_id_fkey"
+            columns: ["origin_business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           account_type: Database["public"]["Enums"]["account_type"]
