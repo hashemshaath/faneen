@@ -34,6 +34,7 @@ const menuItems = [
 ] as const;
 
 const adminItems = [
+  { titleKey: 'admin.blog', url: '/dashboard/blog', icon: PenSquare },
   { titleKey: 'admin.api_settings', url: '/admin/api-settings', icon: Key },
   { titleKey: 'admin.api_docs', url: '/admin/api-docs', icon: Book },
 ] as const;
