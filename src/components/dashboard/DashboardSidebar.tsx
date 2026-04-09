@@ -16,7 +16,7 @@ import { NavLink } from '@/components/NavLink';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import {
-  LayoutDashboard, Wrench, Image, Star, FileText, Shield, Settings, LogOut, Home, Globe, CreditCard, Megaphone,
+  LayoutDashboard, Wrench, Image, Star, FileText, Shield, Settings, LogOut, Home, Globe, CreditCard, Megaphone, Key, Book,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -30,6 +30,11 @@ const menuItems = [
   { titleKey: 'dashboard.installments', url: '/dashboard/installments', icon: CreditCard },
   { titleKey: 'dashboard.promotions', url: '/dashboard/promotions', icon: Megaphone },
   { titleKey: 'dashboard.settings', url: '/dashboard/settings', icon: Settings },
+] as const;
+
+const adminItems = [
+  { titleKey: 'admin.api_settings', url: '/admin/api-settings', icon: Key },
+  { titleKey: 'admin.api_docs', url: '/admin/api-docs', icon: Book },
 ] as const;
 
 export const DashboardSidebar: React.FC = () => {
