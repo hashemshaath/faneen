@@ -420,7 +420,7 @@ const AdminUsers = () => {
                               variant="outline"
                               size="sm"
                               className={`h-7 gap-1 text-xs ${(profile as any).is_banned ? 'text-green-600 hover:text-green-700' : 'text-amber-600 hover:text-amber-700'}`}
-                              onClick={() => toggleBanMutation.mutate({ profileId: profile.id, isBanned: !(profile as any).is_banned })}
+                              onClick={() => toggleBanMutation.mutate({ profileId: profile.id, userId: profile.user_id, isBanned: !(profile as any).is_banned })}
                               disabled={toggleBanMutation.isPending}
                             >
                               <Ban className="w-3 h-3" />
