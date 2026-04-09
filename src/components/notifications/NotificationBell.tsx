@@ -111,12 +111,14 @@ export const NotificationBell = () => {
       <PopoverContent className="w-80 p-0" align="end" side="bottom">
         <div className="flex items-center justify-between p-3 border-b border-border">
           <h4 className="font-heading font-bold text-sm">{isRTL ? 'الإشعارات' : 'Notifications'}</h4>
-          {unreadCount > 0 && (
-            <Button variant="ghost" size="sm" className="text-xs h-7 px-2" onClick={() => markAllRead.mutate()}>
-              <CheckCheck className="w-3.5 h-3.5 me-1" />
-              {isRTL ? 'قراءة الكل' : 'Mark all read'}
-            </Button>
-          )}
+          <div className="flex items-center gap-1">
+            {unreadCount > 0 && (
+              <Button variant="ghost" size="sm" className="text-xs h-7 px-2" onClick={() => markAllRead.mutate()}>
+                <CheckCheck className="w-3.5 h-3.5 me-1" />
+                {isRTL ? 'قراءة الكل' : 'Mark all read'}
+              </Button>
+            )}
+          </div>
         </div>
         <ScrollArea className="max-h-80">
           {notifications.length === 0 ? (
@@ -163,6 +165,14 @@ export const NotificationBell = () => {
             })
           )}
         </ScrollArea>
+        <div className="p-2 border-t border-border">
+          <Button
+            variant="ghost" size="sm" className="w-full text-xs"
+            onClick={() => { navigate('/notifications'); setOpen(false); }}
+          >
+            {isRTL ? 'عرض جميع الإشعارات' : 'View all notifications'}
+          </Button>
+        </div>
       </PopoverContent>
     </Popover>
   );

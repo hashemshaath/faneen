@@ -35,6 +35,7 @@ import ProfileSystemDetail from "./pages/ProfileSystemDetail";
 import CompareProfiles from "./pages/CompareProfiles";
 import DashboardProfileSystems from "./pages/dashboard/DashboardProfileSystems";
 import DashboardMessages from "./pages/dashboard/DashboardMessages";
+import Notifications from "./pages/Notifications";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -67,6 +68,7 @@ const App = () => (
               <Route path="/dashboard/blog" element={<DashboardBlog />} />
               <Route path="/dashboard/profile-systems" element={<DashboardProfileSystems />} />
               <Route path="/dashboard/messages" element={<DashboardMessages />} />
+              <Route path="/notifications" element={<Notifications />} />
               <Route path="/offers" element={<Offers />} />
               <Route path="/projects" element={<Projects />} />
               <Route path="/blog" element={<Blog />} />
