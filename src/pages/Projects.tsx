@@ -149,7 +149,7 @@ const Projects = () => {
           {hasActiveFilters && (
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">
-                {isRTL ? `${projects.length} نتيجة` : `${projects.length} results`}
+                {isRTL ? `${filtered.length} نتيجة` : `${filtered.length} results`}
               </span>
               <Button variant="ghost" size="sm" onClick={clearFilters} className="text-xs h-7">
                 <X className="w-3 h-3 me-1" />
