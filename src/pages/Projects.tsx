@@ -20,6 +20,8 @@ const Projects = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedCity, setSelectedCity] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
+  const [minCost, setMinCost] = useState('');
+  const [maxCost, setMaxCost] = useState('');
 
   const { data: categories = [] } = useQuery({
     queryKey: ['categories'],
@@ -65,9 +67,12 @@ const Projects = () => {
       }
       if (selectedCategory !== 'all' && p.category_id !== selectedCategory) return false;
       if (selectedCity !== 'all' && p.city_id !== selectedCity) return false;
+      if (minCost && p.project_cost != null && Number(p.project_cost) < Number(minCost)) return false;
+      if (maxCost && p.project_cost != null && Number(p.project_cost) > Number(maxCost)) return false;
+      if ((minCost || maxCost) && p.project_cost == null) return false;
       return true;
     });
-  }, [allProjects, searchQuery, selectedCategory, selectedCity]);
+  }, [allProjects, searchQuery, selectedCategory, selectedCity, minCost, maxCost]);
 
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
   const projects = useMemo(() => {
@@ -81,8 +86,8 @@ const Projects = () => {
     setCurrentPage(1);
   };
 
-  const hasActiveFilters = searchQuery || selectedCategory !== 'all' || selectedCity !== 'all';
-  const clearFilters = () => { setSearchQuery(''); setSelectedCategory('all'); setSelectedCity('all'); setCurrentPage(1); };
+  const hasActiveFilters = searchQuery || selectedCategory !== 'all' || selectedCity !== 'all' || minCost || maxCost;
+  const clearFilters = () => { setSearchQuery(''); setSelectedCategory('all'); setSelectedCity('all'); setMinCost(''); setMaxCost(''); setCurrentPage(1); };
 
   return (
     <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
@@ -145,6 +150,30 @@ const Projects = () => {
                 ))}
               </SelectContent>
             </Select>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1">
+              <DollarSign className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                type="number"
+                min={0}
+                placeholder={isRTL ? 'أقل تكلفة (ر.س)' : 'Min cost (SAR)'}
+                value={minCost}
+                onChange={e => { setMinCost(e.target.value); setCurrentPage(1); }}
+                className="ps-10"
+              />
+            </div>
+            <div className="relative flex-1">
+              <DollarSign className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                type="number"
+                min={0}
+                placeholder={isRTL ? 'أعلى تكلفة (ر.س)' : 'Max cost (SAR)'}
+                value={maxCost}
+                onChange={e => { setMaxCost(e.target.value); setCurrentPage(1); }}
+                className="ps-10"
+              />
+            </div>
           </div>
           {hasActiveFilters && (
             <div className="flex items-center gap-2">
