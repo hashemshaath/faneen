@@ -213,14 +213,23 @@ const AdminUsers = () => {
       toast.error(isRTL ? 'الاسم مطلوب' : 'Name is required');
       return;
     }
+    const newData = {
+      full_name: trimmedName,
+      account_type: editForm.account_type as any,
+      membership_tier: editForm.membership_tier as any,
+      phone: editForm.phone.trim() || null,
+      email: editForm.email.trim() || null,
+    };
     updateProfileMutation.mutate({
       profileId: editingProfile.id,
-      data: {
-        full_name: trimmedName,
-        account_type: editForm.account_type as any,
-        membership_tier: editForm.membership_tier as any,
-        phone: editForm.phone.trim() || null,
-        email: editForm.email.trim() || null,
+      userId: editingProfile.user_id,
+      data: newData,
+      oldData: {
+        full_name: editingProfile.full_name,
+        account_type: editingProfile.account_type,
+        membership_tier: editingProfile.membership_tier,
+        phone: editingProfile.phone,
+        email: editingProfile.email,
       },
     });
   };
