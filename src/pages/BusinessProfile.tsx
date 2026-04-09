@@ -93,7 +93,7 @@ const Stars: React.FC<{ rating: number; size?: string }> = ({ rating, size = 'w-
   </div>
 );
 
-const ProfileHeader: React.FC<{ business: any }> = ({ business }) => {
+const ProfileHeader: React.FC<{ business: any; onContact: () => void; isContacting: boolean }> = ({ business, onContact, isContacting }) => {
   const { t, language, isRTL } = useLanguage();
   const name = language === 'ar' ? business.name_ar : (business.name_en || business.name_ar);
   const desc = language === 'ar' ? business.description_ar : (business.description_en || business.description_ar);
@@ -165,9 +165,9 @@ const ProfileHeader: React.FC<{ business: any }> = ({ business }) => {
               </div>
 
               <div className="flex items-center gap-2 flex-shrink-0">
-                <Button variant="hero" className="gap-2">
-                  <MessageSquare className="w-4 h-4" />
-                  {t('profile.request_quote')}
+                <Button variant="hero" className="gap-2" onClick={onContact} disabled={isContacting}>
+                  {isContacting ? <Loader2 className="w-4 h-4 animate-spin" /> : <MessageSquare className="w-4 h-4" />}
+                  {language === 'ar' ? 'تواصل مع المزود' : 'Contact Provider'}
                 </Button>
                 <Button variant="outline" size="icon">
                   <Share2 className="w-4 h-4" />
