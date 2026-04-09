@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useParallax } from "@/hooks/useParallax";
+import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 
 const memberships = [
   {
@@ -41,16 +43,19 @@ const memberships = [
 export const MembershipSection = () => {
   const { t, language } = useLanguage();
 
+  const titleRef = useParallax<HTMLDivElement>(0.1);
+  const { ref: visRef, isVisible } = useScrollAnimation();
+
   return (
-    <section className="py-24 bg-background">
+    <section className="py-24 bg-background overflow-hidden">
       <div className="container">
-        <div className="text-center mb-16">
-          <span className="text-sm font-body text-gold font-semibold">{t('membership.label')}</span>
+        <div ref={titleRef} className="text-center mb-16 will-change-transform">
+          <span className="text-sm font-body text-accent font-semibold">{t('membership.label')}</span>
           <h2 className="font-heading font-bold text-3xl md:text-4xl text-foreground mt-3">{t('membership.title')}</h2>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        <div ref={visRef} className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
           {memberships.map(plan => (
-            <div key={plan.titleKey} className={`relative p-8 rounded-2xl border transition-all duration-300 ${plan.featured ? "bg-gradient-navy border-gold/40 scale-105 shadow-gold" : "bg-card border-border hover:border-gold/30"}`}>
+            <div key={plan.titleKey} className={`relative p-8 rounded-2xl border transition-all duration-500 ${plan.featured ? "bg-gradient-navy border-gold/40 scale-105 shadow-gold" : "bg-card border-border hover:border-gold/30 hover:-translate-y-1"} ${isVisible ? 'animate-card-slide-up' : 'opacity-0'}`} style={{ animationDelay: `${memberships.indexOf(plan) * 150}ms`, animationFillMode: 'both' }}>
               {plan.featured && (
                 <div className="absolute -top-4 right-1/2 translate-x-1/2 px-4 py-1 rounded-full bg-gradient-gold text-xs font-heading font-bold text-secondary-foreground">
                   {t('membership.popular')}
