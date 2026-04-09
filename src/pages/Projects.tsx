@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { Card, CardContent } from '@/components/ui/card';
@@ -197,10 +197,13 @@ const Projects = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {projects.map((p: any) => (
-              <Card
+              <Link
                 key={p.id}
-                className="overflow-hidden border-border/50 hover:border-accent/30 transition-all hover:shadow-lg group cursor-pointer"
-                onClick={() => openGallery(p)}
+                to={`/projects/${p.id}`}
+                className="block"
+              >
+              <Card
+                className="overflow-hidden border-border/50 hover:border-accent/30 transition-all hover:shadow-lg group cursor-pointer h-full"
               >
                 <div className="aspect-video bg-muted relative">
                   {p.cover_image_url ? (
@@ -248,10 +251,8 @@ const Projects = () => {
                     )}
                   </div>
                   {p.businesses && (
-                    <Link
-                      to={`/${p.businesses.username}`}
+                    <div
                       className="flex items-center gap-2 pt-2 border-t border-border/30"
-                      onClick={e => e.stopPropagation()}
                     >
                       {p.businesses.logo_url ? (
                         <img src={p.businesses.logo_url} alt="" className="w-7 h-7 rounded-full object-cover" />
@@ -263,10 +264,11 @@ const Projects = () => {
                       <span className="text-sm font-medium text-accent">
                         {language === 'ar' ? p.businesses.name_ar : (p.businesses.name_en || p.businesses.name_ar)}
                       </span>
-                    </Link>
+                    </div>
                   )}
                 </CardContent>
               </Card>
+              </Link>
             ))}
           </div>
         )}
