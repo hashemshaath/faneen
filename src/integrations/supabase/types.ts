@@ -14,16 +14,340 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      businesses: {
+        Row: {
+          address: string | null
+          category_id: string | null
+          city_id: string | null
+          country_id: string | null
+          cover_url: string | null
+          created_at: string
+          description_ar: string | null
+          description_en: string | null
+          email: string | null
+          id: string
+          is_active: boolean
+          is_verified: boolean
+          latitude: number | null
+          logo_url: string | null
+          longitude: number | null
+          membership_tier: Database["public"]["Enums"]["membership_tier"]
+          name_ar: string
+          name_en: string | null
+          phone: string | null
+          rating_avg: number
+          rating_count: number
+          updated_at: string
+          user_id: string
+          username: string
+          website: string | null
+        }
+        Insert: {
+          address?: string | null
+          category_id?: string | null
+          city_id?: string | null
+          country_id?: string | null
+          cover_url?: string | null
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          is_verified?: boolean
+          latitude?: number | null
+          logo_url?: string | null
+          longitude?: number | null
+          membership_tier?: Database["public"]["Enums"]["membership_tier"]
+          name_ar: string
+          name_en?: string | null
+          phone?: string | null
+          rating_avg?: number
+          rating_count?: number
+          updated_at?: string
+          user_id: string
+          username: string
+          website?: string | null
+        }
+        Update: {
+          address?: string | null
+          category_id?: string | null
+          city_id?: string | null
+          country_id?: string | null
+          cover_url?: string | null
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          is_verified?: boolean
+          latitude?: number | null
+          logo_url?: string | null
+          longitude?: number | null
+          membership_tier?: Database["public"]["Enums"]["membership_tier"]
+          name_ar?: string
+          name_en?: string | null
+          phone?: string | null
+          rating_avg?: number
+          rating_count?: number
+          updated_at?: string
+          user_id?: string
+          username?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "businesses_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "businesses_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "businesses_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      categories: {
+        Row: {
+          created_at: string
+          description_ar: string | null
+          description_en: string | null
+          icon: string | null
+          id: string
+          is_active: boolean
+          name_ar: string
+          name_en: string
+          parent_id: string | null
+          slug: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          name_ar: string
+          name_en: string
+          parent_id?: string | null
+          slug: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          name_ar?: string
+          name_en?: string
+          parent_id?: string | null
+          slug?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cities: {
+        Row: {
+          country_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          name_ar: string
+          name_en: string
+        }
+        Insert: {
+          country_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name_ar: string
+          name_en: string
+        }
+        Update: {
+          country_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name_ar?: string
+          name_en?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cities_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      countries: {
+        Row: {
+          code: string
+          created_at: string
+          currency_code: string
+          currency_name_ar: string
+          currency_name_en: string
+          id: string
+          is_active: boolean
+          name_ar: string
+          name_en: string
+          phone_code: string
+          tax_rate: number
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          currency_code?: string
+          currency_name_ar?: string
+          currency_name_en?: string
+          id?: string
+          is_active?: boolean
+          name_ar: string
+          name_en: string
+          phone_code?: string
+          tax_rate?: number
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          currency_code?: string
+          currency_name_ar?: string
+          currency_name_en?: string
+          id?: string
+          is_active?: boolean
+          name_ar?: string
+          name_en?: string
+          phone_code?: string
+          tax_rate?: number
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          account_type: Database["public"]["Enums"]["account_type"]
+          avatar_url: string | null
+          city_id: string | null
+          country_id: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          is_verified: boolean
+          membership_tier: Database["public"]["Enums"]["membership_tier"]
+          phone: string
+          preferred_language: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_type?: Database["public"]["Enums"]["account_type"]
+          avatar_url?: string | null
+          city_id?: string | null
+          country_id?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          is_verified?: boolean
+          membership_tier?: Database["public"]["Enums"]["membership_tier"]
+          phone: string
+          preferred_language?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_type?: Database["public"]["Enums"]["account_type"]
+          avatar_url?: string | null
+          city_id?: string | null
+          country_id?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          is_verified?: boolean
+          membership_tier?: Database["public"]["Enums"]["membership_tier"]
+          phone?: string
+          preferred_language?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      account_type: "individual" | "business" | "company"
+      app_role: "admin" | "moderator" | "user"
+      membership_tier: "free" | "basic" | "premium" | "enterprise"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +474,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      account_type: ["individual", "business", "company"],
+      app_role: ["admin", "moderator", "user"],
+      membership_tier: ["free", "basic", "premium", "enterprise"],
+    },
   },
 } as const
