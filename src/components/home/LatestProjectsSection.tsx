@@ -21,9 +21,9 @@ export const LatestProjectsSection = () => {
     },
   });
 
-  if (projects.length === 0) return null;
-
   const { ref: sectionRef, isVisible } = useScrollAnimation();
+
+  if (projects.length === 0) return null;
 
   return (
     <section ref={sectionRef} className="py-24 bg-background">

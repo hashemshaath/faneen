@@ -21,9 +21,9 @@ export const LatestBlogSection = () => {
     },
   });
 
-  if (posts.length === 0) return null;
-
   const { ref: sectionRef, isVisible } = useScrollAnimation();
+
+  if (posts.length === 0) return null;
 
   return (
     <section ref={sectionRef} className="py-24 bg-muted/50">
