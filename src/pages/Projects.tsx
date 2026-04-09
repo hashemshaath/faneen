@@ -12,11 +12,14 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FolderOpen, Calendar, DollarSign, Clock, Building2, X, ImageIcon, Search, MapPin, Tag } from 'lucide-react';
 
+const ITEMS_PER_PAGE = 12;
+
 const Projects = () => {
   const { isRTL, language } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedCity, setSelectedCity] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
 
   const { data: categories = [] } = useQuery({
     queryKey: ['categories'],
