@@ -63,7 +63,7 @@ export const DashboardSidebar: React.FC = () => {
   const { state, setOpenMobile, isMobile } = useSidebar();
   const collapsed = state === 'collapsed';
   const { t, language, setLanguage, isRTL } = useLanguage();
-  const { signOut } = useAuth();
+  const { signOut, isAdmin, isSuperAdmin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -114,29 +114,36 @@ export const DashboardSidebar: React.FC = () => {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Admin section */}
-        <SidebarGroup>
-          <SidebarGroupLabel>{!collapsed ? (isRTL ? 'الإدارة' : 'Admin') : ''}</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {adminItems.map((item) => (
-                <SidebarMenuItem key={item.url}>
-                  <SidebarMenuButton asChild>
-                    <NavLink
-                      to={item.url}
-                      className="hover:bg-sidebar-accent/60 rounded-lg transition-colors"
-                      activeClassName="bg-accent/15 text-accent font-medium dark:bg-accent/20"
-                      onClick={closeMobile}
-                    >
-                      <item.icon className="h-4 w-4 shrink-0" />
-                      {!collapsed && <span className="ms-2 truncate">{getAdminLabel(item.titleKey, isRTL)}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {/* Admin section - only visible to admins */}
+        {isAdmin && (
+          <SidebarGroup>
+            <SidebarGroupLabel>
+              {!collapsed ? (isRTL 
+                ? (isSuperAdmin ? '🛡️ الإدارة العليا' : 'الإدارة') 
+                : (isSuperAdmin ? '🛡️ Super Admin' : 'Admin')
+              ) : ''}
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {adminItems.map((item) => (
+                  <SidebarMenuItem key={item.url}>
+                    <SidebarMenuButton asChild>
+                      <NavLink
+                        to={item.url}
+                        className="hover:bg-sidebar-accent/60 rounded-lg transition-colors"
+                        activeClassName="bg-accent/15 text-accent font-medium dark:bg-accent/20"
+                        onClick={closeMobile}
+                      >
+                        <item.icon className="h-4 w-4 shrink-0" />
+                        {!collapsed && <span className="ms-2 truncate">{getAdminLabel(item.titleKey, isRTL)}</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border p-3 space-y-1">

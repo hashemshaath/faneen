@@ -19,7 +19,7 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    // Verify caller is admin
+    // Verify caller is admin or super_admin
     const callerClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
       global: { headers: { Authorization: authHeader } },
     });
@@ -29,14 +29,23 @@ Deno.serve(async (req) => {
     }
 
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
-    const { data: isAdmin } = await adminClient.rpc("has_role", { _user_id: caller.id, _role: "admin" });
-    if (!isAdmin) {
+    const { data: hasAccess } = await adminClient.rpc("has_admin_access", { _user_id: caller.id });
+    if (!hasAccess) {
       return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const { target_user_id } = await req.json();
     if (!target_user_id || target_user_id === caller.id) {
       return new Response(JSON.stringify({ error: "Invalid target" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // Check if target is super_admin - only super_admin can delete another super_admin
+    const { data: targetIsSuperAdmin } = await adminClient.rpc("is_super_admin", { _user_id: target_user_id });
+    if (targetIsSuperAdmin) {
+      const { data: callerIsSuperAdmin } = await adminClient.rpc("is_super_admin", { _user_id: caller.id });
+      if (!callerIsSuperAdmin) {
+        return new Response(JSON.stringify({ error: "Only super admins can delete other super admins" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
     }
 
     // Log the action

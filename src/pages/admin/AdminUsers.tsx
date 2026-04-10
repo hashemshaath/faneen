@@ -24,6 +24,7 @@ type Profile = Tables<'profiles'>;
 type UserRole = Tables<'user_roles'>;
 
 const roleConfig = {
+  super_admin: { icon: ShieldAlert, color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400', labelAr: 'مشرف أعلى', labelEn: 'Super Admin' },
   admin: { icon: Crown, color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400', labelAr: 'مشرف', labelEn: 'Admin' },
   moderator: { icon: ShieldCheck, color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400', labelAr: 'مشرف محتوى', labelEn: 'Moderator' },
   user: { icon: Users, color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400', labelAr: 'مستخدم', labelEn: 'User' },
@@ -44,7 +45,7 @@ const accountTypeConfig = {
 
 const AdminUsers = () => {
   const { isRTL, language } = useLanguage();
-  const { user } = useAuth();
+  const { user, isSuperAdmin } = useAuth();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState<string>('all');
@@ -285,6 +286,7 @@ const AdminUsers = () => {
   };
 
   const totalUsers = profiles.length;
+  const superAdmins = userRoles.filter(r => r.role === 'super_admin').length;
   const admins = userRoles.filter(r => r.role === 'admin').length;
   const moderators = userRoles.filter(r => r.role === 'moderator').length;
 
@@ -316,9 +318,9 @@ const AdminUsers = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
             { label: isRTL ? 'إجمالي المستخدمين' : 'Total Users', value: totalUsers, icon: Users, color: 'text-blue-500' },
+            { label: isRTL ? 'مشرف أعلى' : 'Super Admins', value: superAdmins, icon: ShieldAlert, color: 'text-purple-500' },
             { label: isRTL ? 'المشرفين' : 'Admins', value: admins, icon: Crown, color: 'text-red-500' },
             { label: isRTL ? 'مشرفي المحتوى' : 'Moderators', value: moderators, icon: ShieldCheck, color: 'text-amber-500' },
-            { label: isRTL ? 'بدون صلاحيات' : 'No Role', value: profiles.filter(p => !roleMap.has(p.user_id)).length, icon: Shield, color: 'text-muted-foreground' },
           ].map((stat, i) => (
             <Card key={i}>
               <CardContent className="p-4 flex items-center gap-3">
@@ -350,6 +352,7 @@ const AdminUsers = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">{isRTL ? 'جميع المستخدمين' : 'All Users'}</SelectItem>
+                  <SelectItem value="super_admin">{isRTL ? 'مشرف أعلى' : 'Super Admin'}</SelectItem>
                   <SelectItem value="admin">{isRTL ? 'المشرفين' : 'Admins'}</SelectItem>
                   <SelectItem value="moderator">{isRTL ? 'مشرفي المحتوى' : 'Moderators'}</SelectItem>
                   <SelectItem value="user">{isRTL ? 'مستخدم عادي' : 'Regular User'}</SelectItem>
@@ -447,29 +450,35 @@ const AdminUsers = () => {
                           {isRTL ? 'تعديل' : 'Edit'}
                         </Button>
 
-                        {!isCurrentUser && (
-                          <>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className={`h-7 gap-1 text-xs ${(profile as any).is_banned ? 'text-green-600 hover:text-green-700' : 'text-amber-600 hover:text-amber-700'}`}
-                              onClick={() => toggleBanMutation.mutate({ profileId: profile.id, userId: profile.user_id, isBanned: !(profile as any).is_banned })}
-                              disabled={toggleBanMutation.isPending}
-                            >
-                              <Ban className="w-3 h-3" />
-                              {(profile as any).is_banned ? (isRTL ? 'تفعيل' : 'Enable') : (isRTL ? 'تعطيل' : 'Disable')}
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-7 gap-1 text-xs text-destructive hover:text-destructive"
-                              onClick={() => setDeletingUserId(profile.user_id)}
-                            >
-                              <UserX className="w-3 h-3" />
-                              {isRTL ? 'حذف' : 'Delete'}
-                            </Button>
-                          </>
-                        )}
+                        {!isCurrentUser && (() => {
+                          const targetIsSuperAdmin = roles.some(r => r.role === 'super_admin');
+                          const targetIsAdmin = roles.some(r => r.role === 'admin' || r.role === 'super_admin');
+                          // Regular admins can't ban/delete super_admins or other admins
+                          const canManageUser = isSuperAdmin || (!targetIsSuperAdmin && !targetIsAdmin);
+                          return canManageUser ? (
+                            <>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className={`h-7 gap-1 text-xs ${(profile as any).is_banned ? 'text-green-600 hover:text-green-700' : 'text-amber-600 hover:text-amber-700'}`}
+                                onClick={() => toggleBanMutation.mutate({ profileId: profile.id, userId: profile.user_id, isBanned: !(profile as any).is_banned })}
+                                disabled={toggleBanMutation.isPending}
+                              >
+                                <Ban className="w-3 h-3" />
+                                {(profile as any).is_banned ? (isRTL ? 'تفعيل' : 'Enable') : (isRTL ? 'تعطيل' : 'Disable')}
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-7 gap-1 text-xs text-destructive hover:text-destructive"
+                                onClick={() => setDeletingUserId(profile.user_id)}
+                              >
+                                <UserX className="w-3 h-3" />
+                                {isRTL ? 'حذف' : 'Delete'}
+                              </Button>
+                            </>
+                          ) : null;
+                        })()}
 
                         {roles.length === 0 && (
                           <span className="text-xs text-muted-foreground">{isRTL ? 'بدون صلاحيات' : 'No roles'}</span>
@@ -483,7 +492,7 @@ const AdminUsers = () => {
                                 <RoleIcon className="w-3 h-3" />
                                 {isRTL ? cfg.labelAr : cfg.labelEn}
                               </Badge>
-                              {!isCurrentUser && (
+                              {!isCurrentUser && isSuperAdmin && (
                                 <Button
                                   variant="ghost"
                                   size="icon"
@@ -498,13 +507,14 @@ const AdminUsers = () => {
                           );
                         })}
 
-                        {addingRoleFor === profile.user_id ? (
+                        {isSuperAdmin && (addingRoleFor === profile.user_id ? (
                           <div className="flex items-center gap-1.5">
                             <Select value={selectedRole} onValueChange={setSelectedRole}>
-                              <SelectTrigger className="h-7 w-28 text-xs">
+                              <SelectTrigger className="h-7 w-32 text-xs">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
+                                <SelectItem value="super_admin">{isRTL ? 'مشرف أعلى' : 'Super Admin'}</SelectItem>
                                 <SelectItem value="admin">{isRTL ? 'مشرف' : 'Admin'}</SelectItem>
                                 <SelectItem value="moderator">{isRTL ? 'مشرف محتوى' : 'Moderator'}</SelectItem>
                                 <SelectItem value="user">{isRTL ? 'مستخدم' : 'User'}</SelectItem>
@@ -533,7 +543,7 @@ const AdminUsers = () => {
                             <UserPlus className="w-3 h-3" />
                             {isRTL ? 'صلاحية' : 'Role'}
                           </Button>
-                        )}
+                        ))}
                       </div>
                     </div>
                   </CardContent>
