@@ -202,6 +202,8 @@ const Blog = () => {
                           <div className="flex items-center gap-4 text-xs text-white/60">
                             <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" />{new Date(featuredPost.published_at || featuredPost.created_at).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US')}</span>
                             <span className="flex items-center gap-1"><Eye className="w-3.5 h-3.5" />{featuredPost.views_count} {isRTL ? 'مشاهدة' : 'views'}</span>
+                            <span className="flex items-center gap-1"><MessageCircle className="w-3.5 h-3.5" />{commentCounts[featuredPost.id] || 0}</span>
+                            <span className="flex items-center gap-1"><Heart className="w-3.5 h-3.5" />{bookmarkCounts[featuredPost.id] || 0}</span>
                             <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" />{estimateReadTime(featuredPost.content_ar)} {isRTL ? 'دقائق قراءة' : 'min read'}</span>
                           </div>
                         </div>
