@@ -30,6 +30,7 @@ const DashboardProjects = lazy(() => import("./pages/dashboard/DashboardProjects
 const DashboardBlog = lazy(() => import("./pages/dashboard/DashboardBlog"));
 const DashboardProfileSystems = lazy(() => import("./pages/dashboard/DashboardProfileSystems"));
 const DashboardMessages = lazy(() => import("./pages/dashboard/DashboardMessages"));
+const DashboardBookmarks = lazy(() => import("./pages/dashboard/DashboardBookmarks"));
 const Offers = lazy(() => import("./pages/Offers"));
 const Compare = lazy(() => import("./pages/Compare"));
 const CompareProfiles = lazy(() => import("./pages/CompareProfiles"));
@@ -94,6 +95,7 @@ const App = () => (
                 <Route path="/dashboard/blog" element={<DashboardBlog />} />
                 <Route path="/dashboard/profile-systems" element={<DashboardProfileSystems />} />
                 <Route path="/dashboard/messages" element={<DashboardMessages />} />
+                <Route path="/dashboard/bookmarks" element={<DashboardBookmarks />} />
                 <Route path="/notifications" element={<Notifications />} />
                 <Route path="/offers" element={<Offers />} />
                 <Route path="/projects" element={<Projects />} />
