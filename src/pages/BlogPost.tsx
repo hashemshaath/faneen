@@ -283,7 +283,130 @@ const BlogPost = () => {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // ── Loading state ──
+  // ── Article search highlighting ──
+  const highlightMatches = useCallback(() => {
+    const container = articleRef.current;
+    if (!container) return;
+
+    // Remove old highlights
+    container.querySelectorAll('mark[data-article-search]').forEach(mark => {
+      const parent = mark.parentNode;
+      if (parent) {
+        parent.replaceChild(document.createTextNode(mark.textContent || ''), mark);
+        parent.normalize();
+      }
+    });
+
+    if (!articleSearch.trim()) {
+      setTotalMatches(0);
+      setCurrentMatch(0);
+      return;
+    }
+
+    const query = articleSearch.trim().toLowerCase();
+    let matchCount = 0;
+
+    const walk = (node: Node) => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        const text = node.textContent || '';
+        const lower = text.toLowerCase();
+        const idx = lower.indexOf(query);
+        if (idx === -1) return;
+
+        const before = text.slice(0, idx);
+        const match = text.slice(idx, idx + query.length);
+        const after = text.slice(idx + query.length);
+
+        const mark = document.createElement('mark');
+        mark.setAttribute('data-article-search', '');
+        mark.setAttribute('data-match-index', String(matchCount));
+        mark.className = 'bg-accent/30 dark:bg-accent/40 text-foreground rounded-sm px-0.5 ring-1 ring-accent/20 transition-all';
+        mark.textContent = match;
+        matchCount++;
+
+        const parent = node.parentNode;
+        if (parent) {
+          const frag = document.createDocumentFragment();
+          if (before) frag.appendChild(document.createTextNode(before));
+          frag.appendChild(mark);
+          if (after) {
+            const afterNode = document.createTextNode(after);
+            frag.appendChild(afterNode);
+            // Continue walking the rest
+          }
+          parent.replaceChild(frag, node);
+        }
+      } else if (node.nodeType === Node.ELEMENT_NODE && !['SCRIPT', 'STYLE', 'MARK', 'CODE', 'PRE'].includes((node as Element).tagName)) {
+        // Copy children to array to avoid live collection issues
+        const children = Array.from(node.childNodes);
+        children.forEach(walk);
+      }
+    };
+
+    walk(container);
+    setTotalMatches(matchCount);
+    setCurrentMatch(matchCount > 0 ? 1 : 0);
+
+    // Scroll to first match
+    if (matchCount > 0) {
+      const first = container.querySelector('mark[data-match-index="0"]');
+      first?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [articleSearch]);
+
+  useEffect(() => {
+    const timer = setTimeout(highlightMatches, 300);
+    return () => clearTimeout(timer);
+  }, [highlightMatches]);
+
+  const navigateMatch = useCallback((direction: 'next' | 'prev') => {
+    if (totalMatches === 0) return;
+    const container = articleRef.current;
+    if (!container) return;
+
+    // Remove active highlight from current
+    container.querySelectorAll('mark[data-article-search]').forEach(m => {
+      (m as HTMLElement).className = 'bg-accent/30 dark:bg-accent/40 text-foreground rounded-sm px-0.5 ring-1 ring-accent/20 transition-all';
+    });
+
+    let next = direction === 'next' ? currentMatch + 1 : currentMatch - 1;
+    if (next > totalMatches) next = 1;
+    if (next < 1) next = totalMatches;
+    setCurrentMatch(next);
+
+    const mark = container.querySelector(`mark[data-match-index="${next - 1}"]`);
+    if (mark) {
+      (mark as HTMLElement).className = 'bg-accent text-accent-foreground rounded-sm px-0.5 ring-2 ring-accent shadow-md transition-all scale-105';
+      mark.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [currentMatch, totalMatches]);
+
+  const closeSearch = useCallback(() => {
+    setSearchOpen(false);
+    setArticleSearch('');
+  }, []);
+
+  // Keyboard shortcut: Ctrl/Cmd + F opens search
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault();
+        setSearchOpen(true);
+        setTimeout(() => {
+          document.getElementById('article-search-input')?.focus();
+        }, 100);
+      }
+      if (e.key === 'Escape' && searchOpen) {
+        closeSearch();
+      }
+      if (e.key === 'Enter' && searchOpen && totalMatches > 0) {
+        navigateMatch(e.shiftKey ? 'prev' : 'next');
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [searchOpen, closeSearch, navigateMatch, totalMatches]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
