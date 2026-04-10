@@ -53,7 +53,7 @@ export const SearchFilters = ({
   ].filter(Boolean).length + selectedTags.length;
 
   return (
-    <div className="lg:w-[280px] flex-shrink-0">
+    <div className="lg:w-[260px] xl:w-[280px] flex-shrink-0">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <button
@@ -83,7 +83,7 @@ export const SearchFilters = ({
       </div>
 
       {showFilters && (
-        <div className="space-y-1 animate-fade-in">
+        <div className="space-y-1.5 animate-fade-in">
           {/* Category */}
           <FilterCard icon={Tag} label={t('search.category')}>
             <CategoryTree
@@ -96,7 +96,7 @@ export const SearchFilters = ({
           {/* City */}
           <FilterCard icon={MapPin} label={t('search.city')}>
             <Select value={filters.cityId} onValueChange={v => onFilterChange('cityId', v)}>
-              <SelectTrigger className="w-full rounded-xl h-9 text-sm bg-muted/30 dark:bg-muted/20 border-border/30 dark:border-border/15">
+              <SelectTrigger className="w-full rounded-xl h-9 text-sm bg-muted/20 dark:bg-muted/10 border-border/20 dark:border-border/10">
                 <SelectValue placeholder={t('search.all_cities')} />
               </SelectTrigger>
               <SelectContent>
@@ -118,11 +118,11 @@ export const SearchFilters = ({
                   placeholder={isRTL ? 'من' : 'Min'}
                   value={filters.priceMin || ''}
                   onChange={e => onFilterChange('priceMin', Number(e.target.value) || 0)}
-                  className="rounded-xl text-sm h-9 ps-7 bg-muted/30 dark:bg-muted/20 border-border/30 dark:border-border/15"
+                  className="rounded-xl text-sm h-9 ps-7 bg-muted/20 dark:bg-muted/10 border-border/20 dark:border-border/10"
                 />
-                <DollarSign className="absolute start-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/50" />
+                <DollarSign className="absolute start-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/40" />
               </div>
-              <span className="text-muted-foreground/40 text-xs font-bold">—</span>
+              <span className="text-muted-foreground/30 text-xs font-bold">—</span>
               <div className="relative flex-1">
                 <Input
                   type="number"
@@ -130,9 +130,9 @@ export const SearchFilters = ({
                   placeholder={isRTL ? 'إلى' : 'Max'}
                   value={filters.priceMax || ''}
                   onChange={e => onFilterChange('priceMax', Number(e.target.value) || 0)}
-                  className="rounded-xl text-sm h-9 ps-7 bg-muted/30 dark:bg-muted/20 border-border/30 dark:border-border/15"
+                  className="rounded-xl text-sm h-9 ps-7 bg-muted/20 dark:bg-muted/10 border-border/20 dark:border-border/10"
                 />
-                <DollarSign className="absolute start-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/50" />
+                <DollarSign className="absolute start-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/40" />
               </div>
             </div>
           </FilterCard>
@@ -151,7 +151,7 @@ export const SearchFilters = ({
                 {Array.from({ length: 5 }).map((_, i) => (
                   <Star
                     key={i}
-                    className={`w-3.5 h-3.5 transition-colors ${i < filters.minRating ? 'text-accent fill-accent' : 'text-border dark:text-border/30'}`}
+                    className={`w-3.5 h-3.5 transition-colors ${i < filters.minRating ? 'text-accent fill-accent' : 'text-border dark:text-border/20'}`}
                   />
                 ))}
               </div>
@@ -159,7 +159,7 @@ export const SearchFilters = ({
           </FilterCard>
 
           {/* Verified */}
-          <div className="flex items-center gap-3 p-3 rounded-xl bg-card dark:bg-card/80 border border-border/30 dark:border-border/15 hover:border-accent/20 transition-colors">
+          <div className="flex items-center gap-3 p-3 rounded-xl bg-card dark:bg-card/60 border border-border/20 dark:border-border/10 hover:border-accent/20 transition-colors">
             <Checkbox
               id="verified"
               checked={filters.verifiedOnly}
@@ -174,7 +174,7 @@ export const SearchFilters = ({
           {/* Sort */}
           <FilterCard icon={ArrowUpDown} label={t('search.sort_by')}>
             <Select value={filters.sortBy} onValueChange={(v: any) => onFilterChange('sortBy', v)}>
-              <SelectTrigger className="w-full rounded-xl h-9 text-sm bg-muted/30 dark:bg-muted/20 border-border/30 dark:border-border/15">
+              <SelectTrigger className="w-full rounded-xl h-9 text-sm bg-muted/20 dark:bg-muted/10 border-border/20 dark:border-border/10">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -200,10 +200,10 @@ export const SearchFilters = ({
 };
 
 const FilterCard = ({ icon: Icon, label, children }: { icon: any; label: string; children: React.ReactNode }) => (
-  <div className="p-3 sm:p-3.5 rounded-xl bg-card dark:bg-card/80 border border-border/30 dark:border-border/15 space-y-2.5">
+  <div className="p-3 rounded-xl bg-card dark:bg-card/60 border border-border/20 dark:border-border/10 space-y-2.5 hover:border-accent/15 transition-colors">
     <div className="flex items-center gap-2">
-      <Icon className="w-3.5 h-3.5 text-accent/70" />
-      <span className="text-xs font-heading font-semibold text-foreground">{label}</span>
+      <Icon className="w-3.5 h-3.5 text-accent/60" />
+      <span className="text-xs font-heading font-semibold text-foreground/80">{label}</span>
     </div>
     {children}
   </div>
