@@ -28,7 +28,8 @@ export const FieldAiActions: React.FC<Props> = ({
 }) => {
   const [loading, setLoading] = useState<string | null>(null);
 
-  if (!value?.trim()) return null;
+  const isEmpty = !value?.trim();
+  if (isEmpty && !onTranslated && !onImproved) return null;
 
   const targetLang = lang === 'ar' ? 'en' : 'ar';
   const isPlainField = fieldType !== 'content';
