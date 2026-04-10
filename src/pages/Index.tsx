@@ -3,6 +3,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { HeroSection } from "@/components/home/HeroSection";
 import { StatsSection } from "@/components/home/StatsSection";
+import { ScrollToTop } from "@/components/ScrollToTop";
 
 // Lazy load below-the-fold sections
 const CategoriesSection = lazy(() => import("@/components/home/CategoriesSection").then(m => ({ default: m.CategoriesSection })));
