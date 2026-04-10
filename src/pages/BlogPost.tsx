@@ -269,6 +269,21 @@ const BlogPost = () => {
                 <Button variant="ghost" size="sm" onClick={handleCopyLink} className="h-8 w-8 p-0 text-muted-foreground hover:text-[hsl(var(--accent))]" title={isRTL ? 'نسخ الرابط' : 'Copy link'}>
                   {copied ? <CheckCheck className="w-4 h-4 text-accent" /> : <Copy className="w-4 h-4" />}
                 </Button>
+                {user && (
+                  <>
+                    <div className="w-px h-5 bg-border mx-1" />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => toggleBookmark.mutate()}
+                      disabled={toggleBookmark.isPending}
+                      className={`h-8 w-8 p-0 transition-colors ${isBookmarked ? 'text-accent' : 'text-muted-foreground hover:text-[hsl(var(--accent))]'}`}
+                      title={isRTL ? (isBookmarked ? 'إزالة من المحفوظات' : 'حفظ المقال') : (isBookmarked ? 'Remove bookmark' : 'Bookmark')}
+                    >
+                      {isBookmarked ? <BookmarkCheck className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
 
