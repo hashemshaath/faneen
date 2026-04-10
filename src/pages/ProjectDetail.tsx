@@ -159,7 +159,7 @@ const ProjectDetail = () => {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8 max-w-5xl">
+      <div className="container mx-auto px-4 sm:px-6 py-5 sm:py-8 max-w-5xl">
         {/* Image Gallery */}
         {allImages.length > 0 ? (
           <div className="mb-8">
