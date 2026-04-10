@@ -304,15 +304,27 @@ const DashboardContracts = () => {
               {isRTL ? 'إدارة ومتابعة جميع عقودك ومراحل التنفيذ' : 'Manage and track all contracts and milestones'}
             </p>
           </div>
-          <Button
-            variant="default"
-            size="sm"
-            className="gap-1.5 text-xs sm:text-sm shrink-0"
-            onClick={() => navigate('/contracts')}
-          >
-            <Eye className="w-3.5 h-3.5" />
-            {isRTL ? 'عرض الكل' : 'View All'}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 text-xs sm:text-sm shrink-0"
+              onClick={() => setShowTemplates(true)}
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+              {isRTL ? 'قوالب العقود' : 'Contract Templates'}
+              {templates.length > 0 && <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4">{templates.length}</Badge>}
+            </Button>
+            <Button
+              variant="default"
+              size="sm"
+              className="gap-1.5 text-xs sm:text-sm shrink-0"
+              onClick={() => navigate('/contracts')}
+            >
+              <Eye className="w-3.5 h-3.5" />
+              {isRTL ? 'عرض الكل' : 'View All'}
+            </Button>
+          </div>
         </div>
 
         {/* ── Stats Cards ── */}
