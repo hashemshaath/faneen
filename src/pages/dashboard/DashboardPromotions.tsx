@@ -563,7 +563,7 @@ const DashboardPromotions = () => {
                 {/* Image */}
                 <div className="space-y-1.5">
                   <Label className="text-xs font-medium">{rtl ? 'صورة العرض' : 'Image'}</Label>
-                  <ImageUpload bucket="business-assets" value={form.image_url} onChange={url => setForm(f => ({ ...f, image_url: url }))} onRemove={() => setForm(f => ({ ...f, image_url: '' }))} aspectRatio="video" placeholder={rtl ? 'اضغط لرفع صورة (16:9)' : 'Upload (16:9)'} />
+                  <ImageUpload bucket="business-assets" value={form.image_url} onChange={url => setForm(f => ({ ...f, image_url: url }))} onRemove={() => setForm(f => ({ ...f, image_url: '' }))} compact placeholder={rtl ? 'اضغط لرفع صورة (16:9)' : 'Upload (16:9)'} />
                 </div>
 
                 {/* Video */}
