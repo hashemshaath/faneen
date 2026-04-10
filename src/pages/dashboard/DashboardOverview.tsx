@@ -16,7 +16,7 @@ import {
   Activity, MessageSquare, Crown, Users, Building2, Newspaper,
   Bookmark, FolderOpen, Bell, Clock, CheckCircle2, AlertCircle,
   ShieldAlert, Zap, CalendarDays, Hash, PieChart as PieChartIcon,
-  TrendingDown, Percent, Target, Briefcase,
+  TrendingDown, Percent, Target, Briefcase, Megaphone,
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
