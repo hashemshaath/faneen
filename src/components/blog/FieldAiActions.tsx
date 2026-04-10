@@ -86,24 +86,24 @@ export const FieldAiActions: React.FC<Props> = ({
   return (
     <div className="flex items-center gap-1 flex-wrap">
       {onTranslated && (
-        <Button variant="outline" size="sm" className={btnClass} onClick={handleTranslate} disabled={!!loading}>
+        <Button variant="outline" size="sm" className={btnClass} onClick={handleTranslate} disabled={!!loading || isEmpty}>
           {loading === 'translate' ? <Loader2 className={`${iconSize} animate-spin`} /> : <Languages className={iconSize} />}
           {isRTL ? `→ ${targetLang.toUpperCase()}` : `→ ${targetLang.toUpperCase()}`}
         </Button>
       )}
       {onImproved && !showExcerpt && (
-        <Button variant="outline" size="sm" className={btnClass} onClick={handleImprove} disabled={!!loading}>
+        <Button variant="outline" size="sm" className={btnClass} onClick={handleImprove} disabled={!!loading || isEmpty}>
           {loading === 'improve' ? <Loader2 className={`${iconSize} animate-spin`} /> : <Sparkles className={iconSize} />}
           {isRTL ? 'تحسين' : 'Improve'}
         </Button>
       )}
       {onImproved && showExcerpt && (
         <>
-          <Button variant="outline" size="sm" className={btnClass} onClick={handleGenerateExcerpt} disabled={!!loading}>
+          <Button variant="outline" size="sm" className={btnClass} onClick={handleGenerateExcerpt} disabled={!!loading || isEmpty}>
             {loading === 'excerpt' ? <Loader2 className={`${iconSize} animate-spin`} /> : <Wand2 className={iconSize} />}
             {isRTL ? 'توليد' : 'Generate'}
           </Button>
-          <Button variant="outline" size="sm" className={btnClass} onClick={handleImprove} disabled={!!loading}>
+          <Button variant="outline" size="sm" className={btnClass} onClick={handleImprove} disabled={!!loading || isEmpty}>
             {loading === 'improve' ? <Loader2 className={`${iconSize} animate-spin`} /> : <Sparkles className={iconSize} />}
             {isRTL ? 'تحسين' : 'Improve'}
           </Button>
