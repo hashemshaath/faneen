@@ -1,14 +1,16 @@
 import React, { useMemo, useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft, ArrowRight, Calendar, Eye, FileText, Clock, BookOpen, List, Share2, Copy, CheckCheck } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Calendar, Eye, FileText, Clock, BookOpen, List, Share2, Copy, CheckCheck, Bookmark, BookmarkCheck } from 'lucide-react';
+import { toast } from 'sonner';
 
 const blogCategories: Record<string, { ar: string; en: string }> = {
   general: { ar: 'عام', en: 'General' },
@@ -52,6 +54,8 @@ const extractHeadings = (content: string): TocItem[] => {
 const BlogPost = () => {
   const { slug } = useParams();
   const { isRTL, language } = useLanguage();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [copied, setCopied] = useState(false);
   const [activeHeading, setActiveHeading] = useState('');
 
@@ -96,6 +100,38 @@ const BlogPost = () => {
       return data || [];
     },
     enabled: !!post,
+  });
+
+  // Bookmark state
+  const { data: isBookmarked = false } = useQuery({
+    queryKey: ['blog-bookmark', post?.id, user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('blog_bookmarks')
+        .select('id')
+        .eq('user_id', user!.id)
+        .eq('post_id', post!.id)
+        .maybeSingle();
+      return !!data;
+    },
+    enabled: !!post && !!user,
+  });
+
+  const toggleBookmark = useMutation({
+    mutationFn: async () => {
+      if (!user || !post) return;
+      if (isBookmarked) {
+        await supabase.from('blog_bookmarks').delete().eq('user_id', user.id).eq('post_id', post.id);
+      } else {
+        await supabase.from('blog_bookmarks').insert({ user_id: user.id, post_id: post.id });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['blog-bookmark', post?.id, user?.id] });
+      toast.success(isBookmarked
+        ? (isRTL ? 'تمت إزالة المقال من المحفوظات' : 'Removed from bookmarks')
+        : (isRTL ? 'تم حفظ المقال' : 'Article bookmarked'));
+    },
   });
 
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
@@ -233,6 +269,21 @@ const BlogPost = () => {
                 <Button variant="ghost" size="sm" onClick={handleCopyLink} className="h-8 w-8 p-0 text-muted-foreground hover:text-[hsl(var(--accent))]" title={isRTL ? 'نسخ الرابط' : 'Copy link'}>
                   {copied ? <CheckCheck className="w-4 h-4 text-accent" /> : <Copy className="w-4 h-4" />}
                 </Button>
+                {user && (
+                  <>
+                    <div className="w-px h-5 bg-border mx-1" />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => toggleBookmark.mutate()}
+                      disabled={toggleBookmark.isPending}
+                      className={`h-8 w-8 p-0 transition-colors ${isBookmarked ? 'text-accent' : 'text-muted-foreground hover:text-[hsl(var(--accent))]'}`}
+                      title={isRTL ? (isBookmarked ? 'إزالة من المحفوظات' : 'حفظ المقال') : (isBookmarked ? 'Remove bookmark' : 'Bookmark')}
+                    >
+                      {isBookmarked ? <BookmarkCheck className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
 
