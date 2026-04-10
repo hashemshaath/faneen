@@ -18,6 +18,7 @@ interface ImageUploadProps {
   className?: string;
   aspectRatio?: 'video' | 'square' | 'auto';
   placeholder?: string;
+  compact?: boolean;
 }
 
 export const ImageUpload: React.FC<ImageUploadProps> = ({
@@ -31,6 +32,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   className,
   aspectRatio = 'video',
   placeholder = 'اضغط لرفع صورة',
+  compact = false,
 }) => {
   const { user } = useAuth();
   const [uploading, setUploading] = useState(false);
@@ -106,42 +108,75 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     }
   };
 
-  const aspectClass = aspectRatio === 'video' ? 'aspect-video' : aspectRatio === 'square' ? 'aspect-square' : '';
+  const aspectClass = compact ? '' : aspectRatio === 'video' ? 'aspect-video' : aspectRatio === 'square' ? 'aspect-square' : '';
 
   if (value) {
+    if (compact) {
+      return (
+        <div className={cn('flex items-center gap-3 p-2 rounded-xl border border-border/50 bg-muted/30 group', className)}>
+          <div className="w-20 h-14 rounded-lg overflow-hidden bg-muted shrink-0 border border-border/30">
+            <img src={value} alt="" className="w-full h-full object-cover" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] text-muted-foreground truncate">{value.split('/').pop()}</p>
+            <div className="flex gap-1.5 mt-1">
+              <Button type="button" variant="outline" size="sm" className="h-6 text-[10px] px-2 rounded-lg" onClick={() => inputRef.current?.click()} disabled={uploading}>
+                <Upload className="w-2.5 h-2.5 me-1" />تغيير
+              </Button>
+              {onRemove && (
+                <Button type="button" variant="ghost" size="sm" className="h-6 text-[10px] px-2 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10" onClick={handleRemove}>
+                  <X className="w-2.5 h-2.5 me-1" />حذف
+                </Button>
+              )}
+            </div>
+          </div>
+          <input ref={inputRef} type="file" accept={accept} onChange={handleFileChange} className="hidden" />
+        </div>
+      );
+    }
     return (
       <div className={cn('relative rounded-lg overflow-hidden border border-border/50 group', aspectClass, className)}>
         <img src={value} alt="" className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            onClick={() => inputRef.current?.click()}
-            disabled={uploading}
-          >
-            <Upload className="w-4 h-4 me-1" />
-            تغيير
+          <Button type="button" variant="secondary" size="sm" onClick={() => inputRef.current?.click()} disabled={uploading}>
+            <Upload className="w-4 h-4 me-1" />تغيير
           </Button>
           {onRemove && (
-            <Button
-              type="button"
-              variant="destructive"
-              size="sm"
-              onClick={handleRemove}
-            >
-              <X className="w-4 h-4 me-1" />
-              حذف
+            <Button type="button" variant="destructive" size="sm" onClick={handleRemove}>
+              <X className="w-4 h-4 me-1" />حذف
             </Button>
           )}
         </div>
-        <input
-          ref={inputRef}
-          type="file"
-          accept={accept}
-          onChange={handleFileChange}
-          className="hidden"
-        />
+        <input ref={inputRef} type="file" accept={accept} onChange={handleFileChange} className="hidden" />
+      </div>
+    );
+  }
+
+  if (compact) {
+    return (
+      <div
+        className={cn(
+          'flex items-center gap-3 p-3 rounded-xl border-2 border-dashed transition-colors cursor-pointer',
+          dragOver ? 'border-primary bg-primary/5' : 'border-border/50 hover:border-primary/50',
+          className,
+        )}
+        onClick={() => !uploading && inputRef.current?.click()}
+        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={handleDrop}
+      >
+        {uploading ? (
+          <Loader2 className="w-5 h-5 text-primary animate-spin shrink-0" />
+        ) : (
+          <div className="w-10 h-10 rounded-lg bg-muted/50 flex items-center justify-center shrink-0">
+            <ImageIcon className="w-5 h-5 text-muted-foreground/40" />
+          </div>
+        )}
+        <div className="min-w-0">
+          <p className="text-xs text-muted-foreground">{uploading ? 'جاري الرفع...' : placeholder}</p>
+          <p className="text-[10px] text-muted-foreground/50">أقصى حجم: {maxSizeMB}MB</p>
+        </div>
+        <input ref={inputRef} type="file" accept={accept} onChange={handleFileChange} className="hidden" />
       </div>
     );
   }

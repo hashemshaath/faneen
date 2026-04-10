@@ -553,7 +553,7 @@ const DashboardProjects = () => {
                 {/* Cover Image */}
                 <div className="space-y-1.5">
                   <Label className="text-xs font-medium">{isRTL ? 'صورة الغلاف' : 'Cover Image'}</Label>
-                  <ImageUpload bucket="project-images" value={form.cover_image_url} onChange={url => setForm(f => ({ ...f, cover_image_url: url }))} onRemove={() => setForm(f => ({ ...f, cover_image_url: '' }))} aspectRatio="video" placeholder={isRTL ? 'اضغط لرفع صورة (يُفضل 16:9)' : 'Click to upload (16:9 recommended)'} />
+                  <ImageUpload bucket="project-images" value={form.cover_image_url} onChange={url => setForm(f => ({ ...f, cover_image_url: url }))} onRemove={() => setForm(f => ({ ...f, cover_image_url: '' }))} compact placeholder={isRTL ? 'اضغط لرفع صورة (يُفضل 16:9)' : 'Click to upload (16:9 recommended)'} />
                 </div>
 
                 {/* Descriptions */}
