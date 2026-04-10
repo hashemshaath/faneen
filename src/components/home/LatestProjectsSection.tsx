@@ -69,7 +69,7 @@ export const LatestProjectsSection = () => {
             Array.from({ length: 3 }).map((_, i) => <ProjectSkeleton key={i} />)
           ) : (
             projects.map((p: any, i: number) => (
-              <div key={p.id} className={`group rounded-2xl overflow-hidden border border-border hover:border-gold/40 bg-card transition-all duration-500 hover:shadow-lg hover-scale ${isVisible ? 'animate-fade-in' : ''}`} style={{ animationDelay: `${i * 100}ms`, animationFillMode: 'both' }}>
+              <Link key={p.id} to={`/projects/${p.id}`} className={`group rounded-2xl overflow-hidden border border-border hover:border-gold/40 bg-card transition-all duration-500 hover:shadow-lg hover-scale block ${isVisible ? 'animate-fade-in' : ''}`} style={{ animationDelay: `${i * 100}ms`, animationFillMode: 'both' }}>
                 <div className="aspect-video bg-muted relative overflow-hidden">
                   {p.cover_image_url ? (
                     <LazyImage src={p.cover_image_url} alt={p.title_ar} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" wrapperClassName="w-full h-full" />
@@ -106,7 +106,7 @@ export const LatestProjectsSection = () => {
                     )}
                   </div>
                   {p.businesses && (
-                    <Link to={`/${p.businesses.username}`} className="flex items-center gap-2 pt-2 border-t border-border/30">
+                    <div className="flex items-center gap-2 pt-2 border-t border-border/30">
                       {p.businesses.logo_url ? (
                         <img src={p.businesses.logo_url} alt="" className="w-6 h-6 rounded-full object-cover" />
                       ) : (
@@ -117,10 +117,10 @@ export const LatestProjectsSection = () => {
                       <span className="text-sm font-medium text-gold">
                         {language === 'ar' ? p.businesses.name_ar : (p.businesses.name_en || p.businesses.name_ar)}
                       </span>
-                    </Link>
+                    </div>
                   )}
                 </div>
-              </div>
+              </Link>
             ))
           )}
         </div>
