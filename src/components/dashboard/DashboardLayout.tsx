@@ -78,6 +78,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
 
   const [passwordDialog, setPasswordDialog] = useState(false);
   const [nameDialog, setNameDialog] = useState(false);
+  const [phoneDialog, setPhoneDialog] = useState(false);
   const [editName, setEditName] = useState('');
   const [nameLoading, setNameLoading] = useState(false);
   const [newPassword, setNewPassword] = useState('');
@@ -85,6 +86,15 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
   const [pwLoading, setPwLoading] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Phone OTP state
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [phoneCountryCode, setPhoneCountryCode] = useState('+966');
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [demoOtp, setDemoOtp] = useState<string | null>(null);
+  const [cooldown, setCooldown] = useState(0);
 
   const greeting = useMemo(() => getGreeting(isRTL), [isRTL]);
   const currentPage = breadcrumbMap[location.pathname];
