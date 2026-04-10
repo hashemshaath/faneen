@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_violation_log: {
+        Row: {
+          created_at: string
+          details: Json | null
+          id: string
+          ip_address: string | null
+          route: string | null
+          user_id: string | null
+          violation_type: string
+        }
+        Insert: {
+          created_at?: string
+          details?: Json | null
+          id?: string
+          ip_address?: string | null
+          route?: string | null
+          user_id?: string | null
+          violation_type?: string
+        }
+        Update: {
+          created_at?: string
+          details?: Json | null
+          id?: string
+          ip_address?: string | null
+          route?: string | null
+          user_id?: string | null
+          violation_type?: string
+        }
+        Relationships: []
+      }
       admin_activity_log: {
         Row: {
           action: string
