@@ -195,6 +195,10 @@ export const translations = {
   'search.sort_rating': { ar: 'الأعلى تقييماً', en: 'Highest Rated' },
   'search.sort_newest': { ar: 'الأحدث', en: 'Newest' },
   'search.sort_name': { ar: 'الاسم', en: 'Name' },
+  'search.price_range': { ar: 'نطاق الأسعار', en: 'Price Range' },
+  'search.price_min': { ar: 'من', en: 'Min' },
+  'search.price_max': { ar: 'إلى', en: 'Max' },
+  'search.price_hint': { ar: 'يتم التصفية حسب أسعار الخدمات المتاحة', en: 'Filtering by available service prices' },
 
   // Contracts
   'contracts.title': { ar: 'العقود', en: 'Contracts' },
