@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect, useState, useRef } from 'react';
+import React, { useMemo, useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,9 +9,11 @@ import { Footer } from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import {
   ArrowLeft, ArrowRight, Calendar, Eye, FileText, Clock, BookOpen,
   List, Share2, Copy, CheckCheck, Bookmark, BookmarkCheck, ChevronUp,
+  Search, X, ChevronDown,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { marked } from 'marked';
