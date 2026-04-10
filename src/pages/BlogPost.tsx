@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowLeft, ArrowRight, Calendar, Eye, FileText, Clock, BookOpen, List, Share2, Copy, CheckCheck, Bookmark, BookmarkCheck } from 'lucide-react';
 import { toast } from 'sonner';
+import { BlogComments } from '@/components/blog/BlogComments';
 
 const blogCategories: Record<string, { ar: string; en: string }> = {
   general: { ar: 'عام', en: 'General' },
