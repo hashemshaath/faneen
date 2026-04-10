@@ -450,29 +450,35 @@ const AdminUsers = () => {
                           {isRTL ? 'تعديل' : 'Edit'}
                         </Button>
 
-                        {!isCurrentUser && (
-                          <>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className={`h-7 gap-1 text-xs ${(profile as any).is_banned ? 'text-green-600 hover:text-green-700' : 'text-amber-600 hover:text-amber-700'}`}
-                              onClick={() => toggleBanMutation.mutate({ profileId: profile.id, userId: profile.user_id, isBanned: !(profile as any).is_banned })}
-                              disabled={toggleBanMutation.isPending}
-                            >
-                              <Ban className="w-3 h-3" />
-                              {(profile as any).is_banned ? (isRTL ? 'تفعيل' : 'Enable') : (isRTL ? 'تعطيل' : 'Disable')}
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-7 gap-1 text-xs text-destructive hover:text-destructive"
-                              onClick={() => setDeletingUserId(profile.user_id)}
-                            >
-                              <UserX className="w-3 h-3" />
-                              {isRTL ? 'حذف' : 'Delete'}
-                            </Button>
-                          </>
-                        )}
+                        {!isCurrentUser && (() => {
+                          const targetIsSuperAdmin = roles.some(r => r.role === 'super_admin');
+                          const targetIsAdmin = roles.some(r => r.role === 'admin' || r.role === 'super_admin');
+                          // Regular admins can't ban/delete super_admins or other admins
+                          const canManageUser = isSuperAdmin || (!targetIsSuperAdmin && !targetIsAdmin);
+                          return canManageUser ? (
+                            <>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className={`h-7 gap-1 text-xs ${(profile as any).is_banned ? 'text-green-600 hover:text-green-700' : 'text-amber-600 hover:text-amber-700'}`}
+                                onClick={() => toggleBanMutation.mutate({ profileId: profile.id, userId: profile.user_id, isBanned: !(profile as any).is_banned })}
+                                disabled={toggleBanMutation.isPending}
+                              >
+                                <Ban className="w-3 h-3" />
+                                {(profile as any).is_banned ? (isRTL ? 'تفعيل' : 'Enable') : (isRTL ? 'تعطيل' : 'Disable')}
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-7 gap-1 text-xs text-destructive hover:text-destructive"
+                                onClick={() => setDeletingUserId(profile.user_id)}
+                              >
+                                <UserX className="w-3 h-3" />
+                                {isRTL ? 'حذف' : 'Delete'}
+                              </Button>
+                            </>
+                          ) : null;
+                        })()}
 
                         {roles.length === 0 && (
                           <span className="text-xs text-muted-foreground">{isRTL ? 'بدون صلاحيات' : 'No roles'}</span>
@@ -486,7 +492,7 @@ const AdminUsers = () => {
                                 <RoleIcon className="w-3 h-3" />
                                 {isRTL ? cfg.labelAr : cfg.labelEn}
                               </Badge>
-                              {!isCurrentUser && (
+                              {!isCurrentUser && isSuperAdmin && (
                                 <Button
                                   variant="ghost"
                                   size="icon"
@@ -501,13 +507,14 @@ const AdminUsers = () => {
                           );
                         })}
 
-                        {addingRoleFor === profile.user_id ? (
+                        {isSuperAdmin && (addingRoleFor === profile.user_id ? (
                           <div className="flex items-center gap-1.5">
                             <Select value={selectedRole} onValueChange={setSelectedRole}>
-                              <SelectTrigger className="h-7 w-28 text-xs">
+                              <SelectTrigger className="h-7 w-32 text-xs">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
+                                <SelectItem value="super_admin">{isRTL ? 'مشرف أعلى' : 'Super Admin'}</SelectItem>
                                 <SelectItem value="admin">{isRTL ? 'مشرف' : 'Admin'}</SelectItem>
                                 <SelectItem value="moderator">{isRTL ? 'مشرف محتوى' : 'Moderator'}</SelectItem>
                                 <SelectItem value="user">{isRTL ? 'مستخدم' : 'User'}</SelectItem>
@@ -536,7 +543,7 @@ const AdminUsers = () => {
                             <UserPlus className="w-3 h-3" />
                             {isRTL ? 'صلاحية' : 'Role'}
                           </Button>
-                        )}
+                        ))}
                       </div>
                     </div>
                   </CardContent>
