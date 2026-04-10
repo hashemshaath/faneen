@@ -281,6 +281,7 @@ export const translations = {
   'dashboard.promotions': { ar: 'الإعلانات والعروض', en: 'Promotions' },
   'dashboard.projects': { ar: 'المشاريع', en: 'Projects' },
   'dashboard.settings': { ar: 'الإعدادات', en: 'Settings' },
+  'dashboard.bookmarks': { ar: 'المحفوظات', en: 'Bookmarks' },
 
   // Admin
   'admin.users': { ar: 'المستخدمون', en: 'Users' },
