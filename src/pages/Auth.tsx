@@ -48,8 +48,10 @@ const Auth = () => {
         return;
       }
       if (result.redirected) return;
+      // After Google login, check if profile is onboarded
+      // AuthContext will load profile, ProtectedRoute will redirect if needed
       toast.success(t('common.success'));
-      navigate('/');
+      navigate('/onboarding');
     } catch (err: any) {
       toast.error(err.message);
     } finally {
@@ -67,6 +69,7 @@ const Auth = () => {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
       toast.success(t('common.success'));
+      // AuthContext will load profile; if not onboarded, ProtectedRoute redirects
       navigate('/');
     } catch (err: any) {
       toast.error(err.message);

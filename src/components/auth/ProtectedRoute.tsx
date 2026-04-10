@@ -10,6 +10,7 @@ interface ProtectedRouteProps {
   requireAuth?: boolean;
   requireAdmin?: boolean;
   requireSuperAdmin?: boolean;
+  skipOnboarding?: boolean;
 }
 
 const logUnauthorizedAccess = async (
@@ -38,8 +39,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requireAuth = true,
   requireAdmin = false,
   requireSuperAdmin = false,
+  skipOnboarding = false,
 }) => {
-  const { user, loading, isAdmin, isSuperAdmin } = useAuth();
+  const { user, loading, isAdmin, isSuperAdmin, profile } = useAuth();
   const location = useLocation();
   const loggedRef = useRef(false);
 
@@ -68,6 +70,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   if (requireAuth && !user) {
     return <Navigate to="/auth" replace />;
+  }
+
+  // Redirect to onboarding if profile is not complete
+  if (user && profile && !profile.is_onboarded && !skipOnboarding && location.pathname !== '/onboarding') {
+    return <Navigate to="/onboarding" replace />;
   }
 
   if (requireSuperAdmin && !isSuperAdmin) {

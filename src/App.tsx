@@ -50,6 +50,7 @@ const AdminSystemSettings = lazy(() => import("./pages/admin/AdminSystemSettings
 const AdminActivityLog = lazy(() => import("./pages/admin/AdminActivityLog"));
 const Notifications = lazy(() => import("./pages/Notifications"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const Onboarding = lazy(() => import("./pages/Onboarding"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -84,6 +85,7 @@ const App = () => (
                   {/* Public pages */}
                   <Route path="/" element={<Index />} />
                   <Route path="/auth" element={<Auth />} />
+                  <Route path="/onboarding" element={<ProtectedRoute skipOnboarding><Onboarding /></ProtectedRoute>} />
                   <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/search" element={<Search />} />
                   <Route path="/offers" element={<Offers />} />
