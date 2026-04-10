@@ -19,13 +19,11 @@ const logUnauthorizedAccess = async (
 ) => {
   if (!userId) return;
   try {
-    await supabase.from('admin_activity_log').insert({
+    await supabase.from('access_violation_log' as any).insert({
       user_id: userId,
-      action: 'unauthorized_access',
-      entity_type: 'route',
-      entity_id: null,
+      route: path,
+      violation_type: 'unauthorized_route_access',
       details: {
-        attempted_path: path,
         required_role: requiredRole,
         timestamp: new Date().toISOString(),
       },
