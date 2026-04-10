@@ -336,12 +336,24 @@ const DashboardBlog = () => {
                     <TabsContent value="content" className="space-y-4 mt-4">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                          <Label>{isRTL ? 'العنوان (عربي)' : 'Title (AR)'} *</Label>
+                          <div className="flex items-center justify-between mb-1">
+                            <Label>{isRTL ? 'العنوان (عربي)' : 'Title (AR)'} *</Label>
+                            <FieldAiActions value={form.title_ar} lang="ar" isRTL={isRTL} fieldType="title"
+                              onTranslated={(v) => setField('title_en', v)}
+                              onImproved={(v) => setField('title_ar', v)}
+                              focusKeyword={form.focus_keyword} />
+                          </div>
                           <Input value={form.title_ar} onChange={e => setField('title_ar', e.target.value)} />
                           <span className="text-[10px] text-muted-foreground">{form.title_ar.length}/70</span>
                         </div>
                         <div>
-                          <Label>{isRTL ? 'العنوان (إنجليزي)' : 'Title (EN)'}</Label>
+                          <div className="flex items-center justify-between mb-1">
+                            <Label>{isRTL ? 'العنوان (إنجليزي)' : 'Title (EN)'}</Label>
+                            <FieldAiActions value={form.title_en} lang="en" isRTL={isRTL} fieldType="title"
+                              onTranslated={(v) => setField('title_ar', v)}
+                              onImproved={(v) => setField('title_en', v)}
+                              focusKeyword={form.focus_keyword} />
+                          </div>
                           <Input value={form.title_en} onChange={e => setField('title_en', e.target.value)} dir="ltr" />
                           <span className="text-[10px] text-muted-foreground">{form.title_en.length}/70</span>
                         </div>
@@ -349,18 +361,36 @@ const DashboardBlog = () => {
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                          <Label>{isRTL ? 'المقتطف (عربي)' : 'Excerpt (AR)'}</Label>
+                          <div className="flex items-center justify-between mb-1">
+                            <Label>{isRTL ? 'المقتطف (عربي)' : 'Excerpt (AR)'}</Label>
+                            <FieldAiActions value={form.excerpt_ar} lang="ar" isRTL={isRTL} fieldType="excerpt"
+                              onTranslated={(v) => setField('excerpt_en', v)}
+                              onImproved={(v) => setField('excerpt_ar', v)}
+                              focusKeyword={form.focus_keyword} />
+                          </div>
                           <Textarea value={form.excerpt_ar} onChange={e => setField('excerpt_ar', e.target.value)} rows={2} />
                           <span className="text-[10px] text-muted-foreground">{form.excerpt_ar.length}/200</span>
                         </div>
                         <div>
-                          <Label>{isRTL ? 'المقتطف (إنجليزي)' : 'Excerpt (EN)'}</Label>
+                          <div className="flex items-center justify-between mb-1">
+                            <Label>{isRTL ? 'المقتطف (إنجليزي)' : 'Excerpt (EN)'}</Label>
+                            <FieldAiActions value={form.excerpt_en} lang="en" isRTL={isRTL} fieldType="excerpt"
+                              onTranslated={(v) => setField('excerpt_ar', v)}
+                              onImproved={(v) => setField('excerpt_en', v)}
+                              focusKeyword={form.focus_keyword} />
+                          </div>
                           <Textarea value={form.excerpt_en} onChange={e => setField('excerpt_en', e.target.value)} rows={2} dir="ltr" />
                         </div>
                       </div>
 
                       <div>
-                        <Label className="mb-2 block">{isRTL ? 'المحتوى (عربي)' : 'Content (AR)'}</Label>
+                        <div className="flex items-center justify-between mb-2">
+                          <Label>{isRTL ? 'المحتوى (عربي)' : 'Content (AR)'}</Label>
+                          <FieldAiActions value={form.content_ar} lang="ar" isRTL={isRTL} fieldType="content"
+                            onTranslated={(v) => setField('content_en', v)}
+                            onImproved={(v) => setField('content_ar', v)}
+                            focusKeyword={form.focus_keyword} />
+                        </div>
                         <RichMarkdownEditor
                           value={form.content_ar}
                           onChange={(v) => setField('content_ar', v)}
@@ -371,7 +401,13 @@ const DashboardBlog = () => {
                       </div>
 
                       <div>
-                        <Label className="mb-2 block">{isRTL ? 'المحتوى (إنجليزي)' : 'Content (EN)'}</Label>
+                        <div className="flex items-center justify-between mb-2">
+                          <Label>{isRTL ? 'المحتوى (إنجليزي)' : 'Content (EN)'}</Label>
+                          <FieldAiActions value={form.content_en} lang="en" isRTL={isRTL} fieldType="content"
+                            onTranslated={(v) => setField('content_ar', v)}
+                            onImproved={(v) => setField('content_en', v)}
+                            focusKeyword={form.focus_keyword} />
+                        </div>
                         <RichMarkdownEditor
                           value={form.content_en}
                           onChange={(v) => setField('content_en', v)}
