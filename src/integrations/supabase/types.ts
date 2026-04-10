@@ -1725,6 +1725,8 @@ export type Database = {
       portfolio_items: {
         Row: {
           business_id: string
+          category: string
+          completion_date: string | null
           created_at: string
           description_ar: string | null
           description_en: string | null
@@ -1732,12 +1734,15 @@ export type Database = {
           is_featured: boolean
           media_type: string
           media_url: string
+          project_location: string | null
           sort_order: number
           title_ar: string
           title_en: string | null
         }
         Insert: {
           business_id: string
+          category?: string
+          completion_date?: string | null
           created_at?: string
           description_ar?: string | null
           description_en?: string | null
@@ -1745,12 +1750,15 @@ export type Database = {
           is_featured?: boolean
           media_type?: string
           media_url: string
+          project_location?: string | null
           sort_order?: number
           title_ar: string
           title_en?: string | null
         }
         Update: {
           business_id?: string
+          category?: string
+          completion_date?: string | null
           created_at?: string
           description_ar?: string | null
           description_en?: string | null
@@ -1758,6 +1766,7 @@ export type Database = {
           is_featured?: boolean
           media_type?: string
           media_url?: string
+          project_location?: string | null
           sort_order?: number
           title_ar?: string
           title_en?: string | null
