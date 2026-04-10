@@ -24,10 +24,10 @@ const tierIcons: Record<string, React.ElementType> = {
   free: Zap, basic: Star, premium: Crown, enterprise: Building2,
 };
 const tierGradients: Record<string, string> = {
-  free: 'from-slate-400 to-slate-500',
-  basic: 'from-blue-500 to-cyan-400',
+  free: 'from-muted-foreground/60 to-muted-foreground/40',
+  basic: 'from-primary to-primary/70',
   premium: 'from-accent to-accent/80',
-  enterprise: 'from-violet-600 to-purple-500',
+  enterprise: 'from-secondary-foreground/80 to-secondary-foreground/50',
 };
 const tierOrder = ['free', 'basic', 'premium', 'enterprise'];
 
