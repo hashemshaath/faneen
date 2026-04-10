@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight, Calendar, Eye, BookOpen } from "lucide-react";
+import { ArrowLeft, ArrowRight, Calendar, Eye, BookOpen, MessageCircle, Heart } from "lucide-react";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useParallax } from "@/hooks/useParallax";
 
@@ -19,6 +19,26 @@ export const LatestBlogSection = () => {
         .order('published_at', { ascending: false })
         .limit(4);
       return data || [];
+    },
+  });
+
+  const { data: commentCounts = {} } = useQuery({
+    queryKey: ['home-blog-comment-counts'],
+    queryFn: async () => {
+      const { data } = await supabase.from('blog_comments').select('post_id');
+      const counts: Record<string, number> = {};
+      data?.forEach((c: any) => { counts[c.post_id] = (counts[c.post_id] || 0) + 1; });
+      return counts;
+    },
+  });
+
+  const { data: bookmarkCounts = {} } = useQuery({
+    queryKey: ['home-blog-bookmark-counts'],
+    queryFn: async () => {
+      const { data } = await supabase.from('blog_bookmarks').select('post_id');
+      const counts: Record<string, number> = {};
+      data?.forEach((b: any) => { counts[b.post_id] = (counts[b.post_id] || 0) + 1; });
+      return counts;
     },
   });
 
@@ -98,12 +118,22 @@ export const LatestBlogSection = () => {
                         {new Date(post.published_at).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US')}
                       </span>
                     )}
-                    {post.views_count > 0 && (
+                    <div className="flex items-center gap-2.5">
                       <span className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Eye className="w-3.5 h-3.5" />
-                        {post.views_count.toLocaleString()}
+                        <MessageCircle className="w-3.5 h-3.5" />
+                        {commentCounts[post.id] || 0}
                       </span>
-                    )}
+                      <span className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Heart className="w-3.5 h-3.5" />
+                        {bookmarkCounts[post.id] || 0}
+                      </span>
+                      {post.views_count > 0 && (
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Eye className="w-3.5 h-3.5" />
+                          {post.views_count.toLocaleString()}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>

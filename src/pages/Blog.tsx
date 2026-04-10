@@ -9,7 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { FileText, Calendar, Eye, Search, BookOpen, Clock, ArrowLeft, ArrowRight, Tag, TrendingUp } from 'lucide-react';
+import { FileText, Calendar, Eye, Search, BookOpen, Clock, ArrowLeft, ArrowRight, Tag, TrendingUp, MessageCircle, Heart } from 'lucide-react';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 
 const blogCategories: Record<string, { ar: string; en: string; icon: string }> = {
@@ -44,6 +44,26 @@ const Blog = () => {
         .order('published_at', { ascending: false });
       if (error) throw error;
       return data;
+    },
+  });
+
+  const { data: commentCounts = {} } = useQuery({
+    queryKey: ['blog-comment-counts'],
+    queryFn: async () => {
+      const { data } = await supabase.from('blog_comments').select('post_id');
+      const counts: Record<string, number> = {};
+      data?.forEach((c: any) => { counts[c.post_id] = (counts[c.post_id] || 0) + 1; });
+      return counts;
+    },
+  });
+
+  const { data: bookmarkCounts = {} } = useQuery({
+    queryKey: ['blog-bookmark-counts'],
+    queryFn: async () => {
+      const { data } = await supabase.from('blog_bookmarks').select('post_id');
+      const counts: Record<string, number> = {};
+      data?.forEach((b: any) => { counts[b.post_id] = (counts[b.post_id] || 0) + 1; });
+      return counts;
     },
   });
 
@@ -182,6 +202,8 @@ const Blog = () => {
                           <div className="flex items-center gap-4 text-xs text-white/60">
                             <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" />{new Date(featuredPost.published_at || featuredPost.created_at).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US')}</span>
                             <span className="flex items-center gap-1"><Eye className="w-3.5 h-3.5" />{featuredPost.views_count} {isRTL ? 'مشاهدة' : 'views'}</span>
+                            <span className="flex items-center gap-1"><MessageCircle className="w-3.5 h-3.5" />{commentCounts[featuredPost.id] || 0}</span>
+                            <span className="flex items-center gap-1"><Heart className="w-3.5 h-3.5" />{bookmarkCounts[featuredPost.id] || 0}</span>
                             <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" />{estimateReadTime(featuredPost.content_ar)} {isRTL ? 'دقائق قراءة' : 'min read'}</span>
                           </div>
                         </div>
@@ -233,7 +255,11 @@ const Blog = () => {
                           </p>
                           <div className="flex items-center justify-between pt-2 border-t border-border/30 text-[11px] text-muted-foreground">
                             <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{new Date(post.published_at || post.created_at).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US')}</span>
-                            <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{post.views_count}</span>
+                            <div className="flex items-center gap-2.5">
+                              <span className="flex items-center gap-1"><MessageCircle className="w-3 h-3" />{commentCounts[post.id] || 0}</span>
+                              <span className="flex items-center gap-1"><Heart className="w-3 h-3" />{bookmarkCounts[post.id] || 0}</span>
+                              <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{post.views_count}</span>
+                            </div>
                           </div>
                         </div>
                       </CardContent>
