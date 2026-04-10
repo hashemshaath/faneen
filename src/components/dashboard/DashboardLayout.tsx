@@ -182,6 +182,28 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
     }
   };
 
+  const handleNameUpdate = async () => {
+    if (!editName.trim()) {
+      toast.error(isRTL ? 'الاسم مطلوب' : 'Name is required');
+      return;
+    }
+    setNameLoading(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ full_name: editName.trim() })
+        .eq('user_id', user.id);
+      if (error) throw error;
+      await refreshProfile();
+      toast.success(isRTL ? 'تم تحديث الاسم بنجاح' : 'Name updated successfully');
+      setNameDialog(false);
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setNameLoading(false);
+    }
+  };
+
   const handleLogout = async () => {
     await signOut();
     navigate('/');
