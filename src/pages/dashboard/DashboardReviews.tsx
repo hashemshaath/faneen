@@ -12,18 +12,34 @@ const DashboardReviews = () => {
   const { isRTL } = useLanguage();
   const { user } = useAuth();
 
-  const { data: reviews = [], isLoading } = useQuery({
-    queryKey: ['dashboard-reviews', user?.id],
+  // First get user's business
+  const { data: business } = useQuery({
+    queryKey: ['my-business-for-reviews', user?.id],
     queryFn: async () => {
-      if (!user) return [];
+      if (!user) return null;
+      const { data } = await supabase
+        .from('businesses')
+        .select('id')
+        .eq('user_id', user.id)
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const { data: reviews = [], isLoading } = useQuery({
+    queryKey: ['dashboard-reviews', business?.id],
+    queryFn: async () => {
+      if (!business?.id) return [];
       const { data } = await supabase
         .from('reviews')
         .select('*')
-        .eq('business_id', user.id)
+        .eq('business_id', business.id)
         .order('created_at', { ascending: false });
       return data ?? [];
     },
-    enabled: !!user,
+    enabled: !!business?.id,
   });
 
   const avgRating = reviews.length > 0
