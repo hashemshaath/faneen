@@ -17,7 +17,7 @@ import { Separator } from '@/components/ui/separator';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import {
-  LayoutDashboard, Wrench, Image, Star, FileText, Shield, Settings, LogOut, Home, Globe, CreditCard, Megaphone, Key, Book, FolderOpen, PenSquare, Layers, MessageSquare, Users, Newspaper, Building2, Bell, Activity, Bookmark, ShieldAlert,
+  LayoutDashboard, Wrench, Image, Star, FileText, Shield, Settings, LogOut, Home, Globe, CreditCard, Megaphone, Key, Book, FolderOpen, PenSquare, Layers, MessageSquare, Users, Newspaper, Building2, Bell, Activity, Bookmark, ShieldAlert, Crown,
 } from 'lucide-react';
 
 const menuItems = [
@@ -33,6 +33,8 @@ const menuItems = [
   { titleKey: 'dashboard.projects', url: '/dashboard/projects', icon: FolderOpen },
   { titleKey: 'nav.notifications', url: '/notifications', icon: Bell },
   { titleKey: 'dashboard.bookmarks', url: '/dashboard/bookmarks', icon: Bookmark },
+  { titleKey: 'dashboard.operations', url: '/dashboard/operations', icon: Activity },
+  { titleKey: 'dashboard.membership', url: '/membership', icon: Crown },
   { titleKey: 'nav.projects', url: '/projects', icon: Building2 },
   { titleKey: 'nav.blog', url: '/blog', icon: Newspaper },
   { titleKey: 'dashboard.settings', url: '/dashboard/settings', icon: Settings },

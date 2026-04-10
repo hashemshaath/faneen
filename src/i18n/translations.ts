@@ -286,6 +286,8 @@ export const translations = {
   'dashboard.projects': { ar: 'المشاريع', en: 'Projects' },
   'dashboard.settings': { ar: 'الإعدادات', en: 'Settings' },
   'dashboard.bookmarks': { ar: 'المحفوظات', en: 'Bookmarks' },
+  'dashboard.operations': { ar: 'سجل العمليات', en: 'Operations' },
+  'dashboard.membership': { ar: 'العضوية', en: 'Membership' },
 
   // Admin
   'admin.users': { ar: 'المستخدمون', en: 'Users' },

@@ -49,6 +49,8 @@ const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
 const AdminSystemSettings = lazy(() => import("./pages/admin/AdminSystemSettings"));
 const AdminActivityLog = lazy(() => import("./pages/admin/AdminActivityLog"));
 const Notifications = lazy(() => import("./pages/Notifications"));
+const Membership = lazy(() => import("./pages/Membership"));
+const DashboardOperations = lazy(() => import("./pages/dashboard/DashboardOperations"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
 
@@ -97,6 +99,7 @@ const App = () => (
                   <Route path="/profile-systems/:slug" element={<ProfileSystemDetail />} />
                   <Route path="/compare" element={<Compare />} />
                   <Route path="/compare-profiles" element={<CompareProfiles />} />
+                  <Route path="/membership" element={<Membership />} />
 
                   {/* Auth-protected pages */}
                   <Route path="/contracts" element={<ProtectedRoute><Contracts /></ProtectedRoute>} />
@@ -116,6 +119,7 @@ const App = () => (
                   <Route path="/dashboard/projects" element={<ProtectedRoute><DashboardProjects /></ProtectedRoute>} />
                   <Route path="/dashboard/messages" element={<ProtectedRoute><DashboardMessages /></ProtectedRoute>} />
                   <Route path="/dashboard/bookmarks" element={<ProtectedRoute><DashboardBookmarks /></ProtectedRoute>} />
+                  <Route path="/dashboard/operations" element={<ProtectedRoute><DashboardOperations /></ProtectedRoute>} />
 
                   {/* Admin pages - requires admin role */}
                   <Route path="/dashboard/blog" element={<ProtectedRoute requireAdmin><DashboardBlog /></ProtectedRoute>} />

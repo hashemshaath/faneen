@@ -15,6 +15,7 @@ interface UserProfile {
   avatar_url: string | null;
   account_number: number | null;
   ref_id: string | null;
+  membership_tier: string;
 }
 
 interface AuthContextType {
@@ -49,7 +50,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const fetchProfile = async (userId: string) => {
     const { data } = await supabase
       .from('profiles')
-      .select('id, user_id, full_name, phone, email, account_type, is_onboarded, phone_verified, country_code, avatar_url, account_number, ref_id')
+      .select('id, user_id, full_name, phone, email, account_type, is_onboarded, phone_verified, country_code, avatar_url, account_number, ref_id, membership_tier')
       .eq('user_id', userId)
       .single();
     setProfile(data as UserProfile | null);

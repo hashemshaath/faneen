@@ -14,10 +14,11 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import {
   MessageSquare, Send, Search, Check, CheckCheck, ArrowLeft, ArrowRight,
-  Paperclip, Image as ImageIcon, FileText, X, Download, Loader2, Eye, ExternalLink, Upload,
+  Paperclip, Image as ImageIcon, FileText, X, Download, Loader2, Eye, ExternalLink, Upload, Sparkles,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
+import { MessageTemplates } from '@/components/messages/MessageTemplates';
 
 const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -115,6 +116,7 @@ const DashboardMessages = () => {
   const dragCounter = useRef(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showTemplates, setShowTemplates] = useState(false);
 
   const handleDragFile = (file: File) => {
     if (file.size > MAX_FILE_SIZE) {
@@ -568,7 +570,13 @@ const DashboardMessages = () => {
                 )}
 
                 {/* Input */}
-                <div className="p-3 border-t border-border/50 bg-card">
+                <div className="p-3 border-t border-border/50 bg-card relative">
+                  {showTemplates && (
+                    <MessageTemplates
+                      onSelectTemplate={(content) => setMessageText(content)}
+                      onClose={() => setShowTemplates(false)}
+                    />
+                  )}
                   <div className="flex gap-2 items-end">
                     <input
                       ref={fileInputRef}
@@ -586,6 +594,15 @@ const DashboardMessages = () => {
                       title={isRTL ? 'إرفاق ملف' : 'Attach file'}
                     >
                       <Paperclip className="w-5 h-5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="shrink-0"
+                      onClick={() => setShowTemplates(!showTemplates)}
+                      title={isRTL ? 'قوالب الرسائل' : 'Message templates'}
+                    >
+                      <Sparkles className="w-5 h-5" />
                     </Button>
                     <Input
                       value={messageText}
