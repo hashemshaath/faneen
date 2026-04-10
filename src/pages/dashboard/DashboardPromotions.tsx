@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useRef, useTransition } from 'react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -12,21 +12,19 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   Megaphone, Plus, Trash2, Pencil, Eye, Video, Tag, Calendar, X,
-  Search, CheckCircle2, Percent, LayoutGrid, LayoutList,
+  Search, CheckCircle2, Percent, LayoutGrid, List,
   GripVertical, Power, PowerOff, DollarSign, Layers, Copy,
-  Maximize2, Loader2,
+  Maximize2, Loader2, Download, EyeOff, AlertCircle, Zap, BarChart3,
+  Clock, TrendingUp,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ImageUpload } from '@/components/ui/image-upload';
 import { FieldAiActions } from '@/components/blog/FieldAiActions';
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import {
   DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent,
 } from '@dnd-kit/core';
@@ -36,7 +34,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 
 type PromotionType = 'ad' | 'offer' | 'video';
-type FilterMode = 'all' | 'active' | 'expired';
+type FilterMode = 'all' | 'active' | 'expired' | 'inactive';
 type TypeFilter = 'all' | 'offer' | 'ad' | 'video';
 type ViewMode = 'grid' | 'list';
 
@@ -57,91 +55,99 @@ const emptyForm: PromotionForm = {
 
 const typeConfig: Record<string, { ar: string; en: string; icon: React.ElementType; color: string }> = {
   ad: { ar: 'إعلان', en: 'Ad', icon: Megaphone, color: 'text-blue-600 bg-blue-500/10' },
-  offer: { ar: 'عرض خاص', en: 'Offer', icon: Tag, color: 'text-emerald-600 bg-emerald-500/10' },
+  offer: { ar: 'عرض خاص', en: 'Offer', icon: Tag, color: 'text-primary bg-primary/10' },
   video: { ar: 'فيديو', en: 'Video', icon: Video, color: 'text-violet-600 bg-violet-500/10' },
 };
 
-/* ── Sortable Grid Card ── */
-const SortableGridCard = React.memo(({ promo: p, isRTL, onEdit, onDelete, onToggleActive, onDuplicate, onPreview }: any) => {
+/* ── Sortable Promo Card ── */
+const SortablePromoCard = React.memo(({ promo: p, rtl, viewMode, isSelected, onEdit, onDelete, onToggle, onDuplicate, onPreview, onSelect }: {
+  promo: any; rtl: boolean; viewMode: ViewMode; isSelected: boolean;
+  onEdit: (p: any) => void; onDelete: (id: string) => void; onToggle: (p: any) => void;
+  onDuplicate: (p: any) => void; onPreview: (url: string) => void; onSelect: (id: string) => void;
+}) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: p.id });
-  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1, zIndex: isDragging ? 50 : undefined };
+  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1, zIndex: isDragging ? 50 : undefined };
   const t = typeConfig[p.promotion_type];
   const isExpired = p.end_date && new Date(p.end_date) < new Date();
   const Icon = t?.icon || Tag;
-  const title = isRTL ? p.title_ar : (p.title_en || p.title_ar);
-  const desc = isRTL ? p.description_ar : (p.description_en || p.description_ar);
+  const title = rtl ? p.title_ar : (p.title_en || p.title_ar);
+  const desc = rtl ? p.description_ar : (p.description_en || p.description_ar);
+  const daysLeft = p.end_date ? Math.ceil((new Date(p.end_date).getTime() - Date.now()) / 86400000) : null;
+  const isEndingSoon = daysLeft !== null && daysLeft > 0 && daysLeft <= 3;
 
-  return (
-    <Card ref={setNodeRef} style={style} className={`overflow-hidden border-border/40 hover:border-primary/30 hover:shadow-md transition-all group ${isDragging ? 'ring-2 ring-primary shadow-xl' : ''} ${isExpired ? 'opacity-60' : ''}`}>
-      <div className="aspect-[16/11] bg-muted relative overflow-hidden">
-        {p.image_url ? (
-          <img src={p.image_url} alt={title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center"><Icon className="w-10 h-10 text-muted-foreground/20" /></div>
-        )}
-        <div className="absolute top-1.5 start-1.5 flex items-center gap-1 flex-wrap">
-          <Badge className={`text-[9px] border-0 shadow backdrop-blur-sm px-1.5 py-0 h-4 ${t?.color || ''}`}><Icon className="w-2.5 h-2.5 me-0.5" />{t?.[isRTL ? 'ar' : 'en']}</Badge>
-          {isExpired && <Badge variant="destructive" className="text-[9px] shadow backdrop-blur-sm px-1.5 py-0 h-4">{isRTL ? 'منتهي' : 'Expired'}</Badge>}
-          {!p.is_active && !isExpired && <Badge variant="outline" className="text-[9px] bg-background/80 backdrop-blur-sm px-1.5 py-0 h-4">{isRTL ? 'غير نشط' : 'Inactive'}</Badge>}
-        </div>
-        <button {...attributes} {...listeners} className="absolute top-1.5 end-1.5 bg-background/80 backdrop-blur-sm rounded-md p-1 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity shadow-sm touch-none">
-          <GripVertical className="w-3.5 h-3.5 text-foreground" />
-        </button>
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center gap-1.5 p-2">
-          {p.image_url && (
-            <Button size="sm" variant="secondary" className="bg-white/90 hover:bg-white text-black shadow-lg h-7 text-[11px] px-2" onClick={() => onPreview(p.image_url)}>
-              <Maximize2 className="w-3 h-3 me-1" />{isRTL ? 'عرض' : 'View'}
-            </Button>
-          )}
-          <Button size="sm" variant="secondary" className="bg-white/90 hover:bg-white text-black shadow-lg h-7 text-[11px] px-2" onClick={() => onEdit(p)}>
-            <Pencil className="w-3 h-3 me-1" />{isRTL ? 'تعديل' : 'Edit'}
-          </Button>
-          <Button size="sm" variant="secondary" className="bg-white/90 hover:bg-white text-black shadow-lg h-7 text-[11px] px-2" onClick={() => onToggleActive(p)}>
-            {p.is_active ? <PowerOff className="w-3 h-3" /> : <Power className="w-3 h-3" />}
-          </Button>
-          <Button size="sm" variant="secondary" className="bg-white/90 hover:bg-white text-black shadow-lg h-7 text-[11px] px-2" onClick={() => onDuplicate(p)}>
-            <Copy className="w-3 h-3" />
-          </Button>
-          <Button size="sm" variant="destructive" className="shadow-lg h-7 text-[11px] px-2" onClick={() => onDelete(p.id)}>
-            <Trash2 className="w-3 h-3" />
-          </Button>
+  if (viewMode === 'grid') {
+    return (
+      <div ref={setNodeRef} style={style} className="h-full">
+        <div className={`relative rounded-2xl border bg-card overflow-hidden h-full group transition-all duration-200 hover:shadow-lg hover:border-primary/20 ${isExpired ? 'opacity-50' : ''} ${isSelected ? 'ring-2 ring-primary border-primary/30' : 'border-border/40'}`}>
+          {/* Image */}
+          <div className="aspect-[16/10] bg-muted relative overflow-hidden">
+            {p.image_url ? (
+              <img src={p.image_url} alt={title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/50"><Icon className="w-10 h-10 text-muted-foreground/20" /></div>
+            )}
+            {/* Badges */}
+            <div className="absolute top-2 start-2 flex flex-col gap-1">
+              <Badge className={`text-[9px] border-0 shadow-sm backdrop-blur-sm px-1.5 py-0.5 ${t?.color || ''}`}>
+                <Icon className="w-2.5 h-2.5 me-0.5" />{t?.[rtl ? 'ar' : 'en']}
+              </Badge>
+              {isExpired && <Badge variant="destructive" className="text-[9px] shadow-sm px-1.5 py-0.5">{rtl ? 'منتهي' : 'Expired'}</Badge>}
+              {isEndingSoon && !isExpired && <Badge className="text-[9px] bg-amber-500 text-white shadow-sm px-1.5 py-0.5">{rtl ? `${daysLeft} أيام` : `${daysLeft}d left`}</Badge>}
+              {!p.is_active && !isExpired && <Badge variant="outline" className="text-[9px] bg-background/80 backdrop-blur-sm px-1.5 py-0.5">{rtl ? 'غير نشط' : 'Inactive'}</Badge>}
+            </div>
+            {/* Select + Grip */}
+            <div className="absolute top-2 end-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button onClick={(e) => { e.stopPropagation(); onSelect(p.id); }}
+                className={`w-5 h-5 rounded border-[1.5px] flex items-center justify-center bg-background/80 backdrop-blur-sm shadow-sm ${isSelected ? 'bg-primary border-primary' : 'border-muted-foreground/30'}`}>
+                {isSelected && <CheckCircle2 className="w-3 h-3 text-primary-foreground" />}
+              </button>
+            </div>
+            <button {...attributes} {...listeners} className="absolute bottom-2 end-2 bg-background/80 backdrop-blur-sm rounded-lg p-1 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity shadow-sm touch-none">
+              <GripVertical className="w-3.5 h-3.5 text-foreground" />
+            </button>
+            {/* Hover overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center gap-1 p-2">
+              {p.image_url && <Button size="sm" variant="secondary" className="h-7 text-[10px] px-2 shadow-lg" onClick={() => onPreview(p.image_url)}><Maximize2 className="w-3 h-3" /></Button>}
+              <Button size="sm" variant="secondary" className="h-7 text-[10px] px-2 shadow-lg" onClick={() => onEdit(p)}><Pencil className="w-3 h-3" /></Button>
+              <Button size="sm" variant="secondary" className="h-7 text-[10px] px-2 shadow-lg" onClick={() => onToggle(p)}>
+                {p.is_active ? <PowerOff className="w-3 h-3" /> : <Power className="w-3 h-3" />}
+              </Button>
+              <Button size="sm" variant="secondary" className="h-7 text-[10px] px-2 shadow-lg" onClick={() => onDuplicate(p)}><Copy className="w-3 h-3" /></Button>
+              <Button size="sm" variant="destructive" className="h-7 text-[10px] px-2 shadow-lg" onClick={() => onDelete(p.id)}><Trash2 className="w-3 h-3" /></Button>
+            </div>
+          </div>
+          <div className="p-3">
+            <h3 className="text-xs font-semibold truncate">{title}</h3>
+            {desc && <p className="text-[10px] text-muted-foreground line-clamp-2 mt-0.5 leading-relaxed">{desc}</p>}
+            {p.promotion_type === 'offer' && p.original_price && (
+              <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
+                <span className="line-through text-muted-foreground text-[10px]">{Number(p.original_price).toLocaleString()}</span>
+                {p.offer_price && <span className="text-xs font-bold text-primary">{Number(p.offer_price).toLocaleString()} <span className="text-[9px] font-normal text-muted-foreground">{p.currency_code}</span></span>}
+                {p.discount_percentage && <Badge className="bg-destructive text-destructive-foreground text-[8px] px-1 py-0 h-3.5">-{p.discount_percentage}%</Badge>}
+              </div>
+            )}
+            <div className="flex items-center gap-2 text-[9px] text-muted-foreground mt-1.5">
+              <span className="flex items-center gap-0.5"><Calendar className="w-2.5 h-2.5" />{new Date(p.start_date).toLocaleDateString(rtl ? 'ar-SA' : 'en-US', { month: 'short', day: 'numeric' })}</span>
+              {p.end_date && <span>→ {new Date(p.end_date).toLocaleDateString(rtl ? 'ar-SA' : 'en-US', { month: 'short', day: 'numeric' })}</span>}
+              <span className="flex items-center gap-0.5 ms-auto"><Eye className="w-2.5 h-2.5" />{p.views_count || 0}</span>
+            </div>
+          </div>
         </div>
       </div>
-      <CardContent className="p-2.5">
-        <h3 className="text-xs sm:text-sm font-semibold truncate">{title}</h3>
-        {desc && <p className="text-[10px] sm:text-[11px] text-muted-foreground line-clamp-2 mt-0.5">{desc}</p>}
-        {p.promotion_type === 'offer' && p.original_price && (
-          <div className="flex items-center gap-1.5 flex-wrap mt-1">
-            <span className="line-through text-muted-foreground text-[10px]">{Number(p.original_price).toLocaleString()} {p.currency_code}</span>
-            {p.offer_price && <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">{Number(p.offer_price).toLocaleString()} {p.currency_code}</span>}
-            {p.discount_percentage && <Badge className="bg-destructive text-destructive-foreground text-[9px] px-1.5 py-0 h-4">-{p.discount_percentage}%</Badge>}
-          </div>
-        )}
-        <div className="flex items-center gap-2 text-[9px] text-muted-foreground mt-1">
-          <span className="flex items-center gap-0.5"><Calendar className="w-2.5 h-2.5" />{new Date(p.start_date).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', { month: 'short', day: 'numeric' })}</span>
-          {p.end_date && <span>→ {new Date(p.end_date).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', { month: 'short', day: 'numeric' })}</span>}
-          <span className="flex items-center gap-0.5"><Eye className="w-2.5 h-2.5" />{p.views_count || 0}</span>
-        </div>
-      </CardContent>
-    </Card>
-  );
-});
-SortableGridCard.displayName = 'SortableGridCard';
+    );
+  }
 
-/* ── Sortable List Row ── */
-const SortableListRow = React.memo(({ promo: p, isRTL, onEdit, onDelete, onToggleActive, onDuplicate, onPreview }: any) => {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: p.id });
-  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1, zIndex: isDragging ? 50 : undefined };
-  const t = typeConfig[p.promotion_type];
-  const isExpired = p.end_date && new Date(p.end_date) < new Date();
-  const Icon = t?.icon || Tag;
-  const title = isRTL ? p.title_ar : (p.title_en || p.title_ar);
-
+  // List view
   return (
-    <Card ref={setNodeRef} style={style} className={`border-border/40 hover:border-primary/30 transition-all group ${isDragging ? 'ring-2 ring-primary shadow-xl' : ''} ${isExpired ? 'opacity-60' : ''}`}>
-      <div className="flex items-center gap-3 p-2.5 sm:p-3">
-        <button {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground shrink-0 touch-none"><GripVertical className="w-4 h-4" /></button>
-        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg overflow-hidden bg-muted shrink-0 cursor-pointer" onClick={() => p.image_url && onPreview(p.image_url)}>
+    <div ref={setNodeRef} style={style}>
+      <div className={`flex items-center gap-3 p-3 rounded-xl border bg-card transition-all duration-200 group hover:shadow-sm hover:border-primary/15 ${isExpired ? 'opacity-50' : ''} ${isSelected ? 'ring-2 ring-primary border-primary/30' : 'border-border/40'}`}>
+        <button onClick={() => onSelect(p.id)} className={`w-[18px] h-[18px] rounded border-[1.5px] transition-all flex items-center justify-center shrink-0 ${isSelected ? 'bg-primary border-primary' : 'border-muted-foreground/20 hover:border-primary/60'}`}>
+          {isSelected && <CheckCircle2 className="w-3 h-3 text-primary-foreground" />}
+        </button>
+        <button {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing text-muted-foreground/25 hover:text-muted-foreground shrink-0 touch-none opacity-0 group-hover:opacity-100 transition-opacity">
+          <GripVertical className="w-4 h-4" />
+        </button>
+        <div className="w-12 h-12 rounded-xl overflow-hidden bg-muted shrink-0 cursor-pointer border border-border/30" onClick={() => p.image_url && onPreview(p.image_url)}>
           {p.image_url ? (
             <img src={p.image_url} alt="" className="w-full h-full object-cover" loading="lazy" />
           ) : (
@@ -150,38 +156,42 @@ const SortableListRow = React.memo(({ promo: p, isRTL, onEdit, onDelete, onToggl
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 flex-wrap">
-            <p className="font-medium text-sm truncate">{title}</p>
-            <Badge className={`text-[9px] border-0 px-1.5 py-0 h-4 ${t?.color || ''}`}><Icon className="w-2.5 h-2.5 me-0.5" />{t?.[isRTL ? 'ar' : 'en']}</Badge>
-            {isExpired && <Badge variant="destructive" className="text-[9px] px-1.5 py-0 h-4">{isRTL ? 'منتهي' : 'Expired'}</Badge>}
-            {!p.is_active && !isExpired && <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4">{isRTL ? 'غير نشط' : 'Inactive'}</Badge>}
+            <h3 className="font-semibold text-sm truncate">{title}</h3>
+            <Badge className={`text-[8px] border-0 px-1 py-0 h-3.5 ${t?.color || ''}`}>{t?.[rtl ? 'ar' : 'en']}</Badge>
+            {isExpired && <Badge variant="destructive" className="text-[8px] px-1 py-0 h-3.5">{rtl ? 'منتهي' : 'Expired'}</Badge>}
+            {isEndingSoon && !isExpired && <Badge className="text-[8px] bg-amber-500 text-white px-1 py-0 h-3.5">{rtl ? `${daysLeft} أيام` : `${daysLeft}d`}</Badge>}
+            {!p.is_active && !isExpired && <Badge variant="outline" className="text-[8px] px-1 py-0 h-3.5">{rtl ? 'غير نشط' : 'Off'}</Badge>}
           </div>
           <div className="flex items-center gap-2 mt-0.5 flex-wrap">
             {p.promotion_type === 'offer' && p.offer_price && (
-              <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">{Number(p.offer_price).toLocaleString()} {p.currency_code}</span>
+              <span className="text-[10px] font-bold text-primary">{Number(p.offer_price).toLocaleString()} {p.currency_code}</span>
             )}
-            <span className="text-[9px] text-muted-foreground flex items-center gap-0.5"><Calendar className="w-2.5 h-2.5" />{new Date(p.start_date).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', { month: 'short', day: 'numeric' })}</span>
+            <span className="text-[9px] text-muted-foreground flex items-center gap-0.5"><Calendar className="w-2.5 h-2.5" />{new Date(p.start_date).toLocaleDateString(rtl ? 'ar-SA' : 'en-US', { month: 'short', day: 'numeric' })}</span>
             <span className="text-[9px] text-muted-foreground flex items-center gap-0.5"><Eye className="w-2.5 h-2.5" />{p.views_count || 0}</span>
           </div>
         </div>
-        <div className="flex items-center gap-0.5 shrink-0">
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onToggleActive(p)}>
-            {p.is_active ? <PowerOff className="w-3.5 h-3.5 text-amber-500" /> : <Power className="w-3.5 h-3.5 text-emerald-500" />}
+        <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => onToggle(p)}>
+            {p.is_active ? <PowerOff className="w-3.5 h-3.5 text-amber-500" /> : <Power className="w-3.5 h-3.5 text-primary" />}
           </Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onEdit(p)}><Pencil className="w-3.5 h-3.5" /></Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onDuplicate(p)}><Copy className="w-3.5 h-3.5" /></Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => onDelete(p.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => onEdit(p)}><Pencil className="w-3.5 h-3.5" /></Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => onDuplicate(p)}><Copy className="w-3.5 h-3.5" /></Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-destructive/60 hover:text-destructive hover:bg-destructive/10" onClick={() => onDelete(p.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
         </div>
       </div>
-    </Card>
+    </div>
   );
 });
-SortableListRow.displayName = 'SortableListRow';
+SortablePromoCard.displayName = 'SortablePromoCard';
 
-/* ── Main ── */
+/* ═══════════════════════════════════ */
 const DashboardPromotions = () => {
-  const { isRTL } = useLanguage();
+  const { isRTL: rtl } = useLanguage();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const formRef = useRef<HTMLDivElement>(null);
+  const [, startTransition] = useTransition();
+
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<PromotionForm>(emptyForm);
@@ -191,12 +201,14 @@ const DashboardPromotions = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
+  /* ─── Data ─── */
   const { data: businessId } = useQuery({
     queryKey: ['my-business-id', user?.id],
     queryFn: async () => {
@@ -204,6 +216,7 @@ const DashboardPromotions = () => {
       return data?.id ?? null;
     },
     enabled: !!user,
+    staleTime: 10 * 60 * 1000,
   });
 
   const { data: promotions = [], isLoading } = useQuery({
@@ -213,12 +226,26 @@ const DashboardPromotions = () => {
       return data ?? [];
     },
     enabled: !!businessId,
+    staleTime: 3 * 60 * 1000,
   });
 
+  /* ─── Derived ─── */
+  const stats = useMemo(() => {
+    const total = promotions.length;
+    const active = promotions.filter((p: any) => p.is_active && !(p.end_date && new Date(p.end_date) < new Date())).length;
+    const expired = promotions.filter((p: any) => p.end_date && new Date(p.end_date) < new Date()).length;
+    const inactive = promotions.filter((p: any) => !p.is_active && !(p.end_date && new Date(p.end_date) < new Date())).length;
+    const totalViews = promotions.reduce((s: number, p: any) => s + (p.views_count || 0), 0);
+    const complete = promotions.filter((p: any) => p.title_ar && p.description_ar && p.image_url).length;
+    const completeness = total > 0 ? Math.round((complete / total) * 100) : 0;
+    return { total, active, expired, inactive, totalViews, completeness };
+  }, [promotions]);
+
   const filteredPromotions = useMemo(() => {
-    let result = promotions;
+    let result = [...promotions];
     if (filterMode === 'active') result = result.filter((p: any) => p.is_active && !(p.end_date && new Date(p.end_date) < new Date()));
-    if (filterMode === 'expired') result = result.filter((p: any) => p.end_date && new Date(p.end_date) < new Date());
+    else if (filterMode === 'expired') result = result.filter((p: any) => p.end_date && new Date(p.end_date) < new Date());
+    else if (filterMode === 'inactive') result = result.filter((p: any) => !p.is_active && !(p.end_date && new Date(p.end_date) < new Date()));
     if (typeFilter !== 'all') result = result.filter((p: any) => p.promotion_type === typeFilter);
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -227,14 +254,8 @@ const DashboardPromotions = () => {
     return result;
   }, [promotions, filterMode, typeFilter, searchQuery]);
 
-  const stats = useMemo(() => ({
-    total: promotions.length,
-    active: promotions.filter((p: any) => p.is_active && !(p.end_date && new Date(p.end_date) < new Date())).length,
-    expired: promotions.filter((p: any) => p.end_date && new Date(p.end_date) < new Date()).length,
-    totalViews: promotions.reduce((s: number, p: any) => s + (p.views_count || 0), 0),
-  }), [promotions]);
-
-  const saveMutation = useMutation({
+  /* ─── Mutations ─── */
+  const saveMut = useMutation({
     mutationFn: async () => {
       if (!businessId) throw new Error('No business');
       const payload: any = {
@@ -258,92 +279,72 @@ const DashboardPromotions = () => {
         if (error) throw error;
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['my-promotions'] });
-      closeForm();
-      toast.success(editingId ? (isRTL ? 'تم التحديث' : 'Updated') : (isRTL ? 'تم الإضافة' : 'Added'));
-    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['my-promotions'] }); closeForm(); toast.success(editingId ? (rtl ? 'تم التحديث' : 'Updated') : (rtl ? 'تمت الإضافة' : 'Added')); },
     onError: (err: any) => toast.error(err.message),
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from('promotions').delete().eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['my-promotions'] });
-      setDeleteConfirm(null);
-      toast.success(isRTL ? 'تم الحذف' : 'Deleted');
-    },
+  const deleteMut = useMutation({
+    mutationFn: async (id: string) => { const { error } = await supabase.from('promotions').delete().eq('id', id); if (error) throw error; },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['my-promotions'] }); setDeleteConfirm(null); toast.success(rtl ? 'تم الحذف' : 'Deleted'); },
   });
 
-  const toggleActiveMutation = useMutation({
-    mutationFn: async (p: any) => {
-      const { error } = await supabase.from('promotions').update({ is_active: !p.is_active }).eq('id', p.id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['my-promotions'] });
-      toast.success(isRTL ? 'تم التحديث' : 'Updated');
-    },
+  const toggleMut = useMutation({
+    mutationFn: async (p: any) => { const { error } = await supabase.from('promotions').update({ is_active: !p.is_active }).eq('id', p.id); if (error) throw error; },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['my-promotions'] }); toast.success(rtl ? 'تم التحديث' : 'Updated'); },
   });
 
-  const duplicateMutation = useMutation({
+  const duplicateMut = useMutation({
     mutationFn: async (p: any) => {
       if (!businessId) throw new Error('No business');
       const { id, ref_id, created_at, updated_at, views_count, ...rest } = p;
-      const { error } = await supabase.from('promotions').insert({
-        ...rest, business_id: businessId,
-        title_ar: `${p.title_ar} (${isRTL ? 'نسخة' : 'copy'})`,
-        sort_order: promotions.length, views_count: 0,
-      });
+      const { error } = await supabase.from('promotions').insert({ ...rest, business_id: businessId, title_ar: `${p.title_ar} (${rtl ? 'نسخة' : 'copy'})`, sort_order: promotions.length, views_count: 0 });
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['my-promotions'] });
-      toast.success(isRTL ? 'تم النسخ' : 'Duplicated');
-    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['my-promotions'] }); toast.success(rtl ? 'تم النسخ' : 'Duplicated'); },
   });
 
-  const reorderMutation = useMutation({
-    mutationFn: async (reordered: any[]) => {
-      await Promise.all(reordered.map((item, idx) => supabase.from('promotions').update({ sort_order: idx }).eq('id', item.id)));
-    },
-    onError: () => {
-      queryClient.invalidateQueries({ queryKey: ['my-promotions'] });
-      toast.error(isRTL ? 'فشل حفظ الترتيب' : 'Failed to save order');
-    },
+  const reorderMut = useMutation({
+    mutationFn: async (reordered: any[]) => { await Promise.all(reordered.map((item, idx) => supabase.from('promotions').update({ sort_order: idx }).eq('id', item.id))); },
+    onError: () => { queryClient.invalidateQueries({ queryKey: ['my-promotions'] }); },
   });
 
+  const bulkDeleteMut = useMutation({
+    mutationFn: async () => { await Promise.all(Array.from(selectedIds).map(id => supabase.from('promotions').delete().eq('id', id))); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['my-promotions'] }); setSelectedIds(new Set()); toast.success(rtl ? 'تم الحذف' : 'Deleted'); },
+  });
+
+  const bulkToggleMut = useMutation({
+    mutationFn: async (activate: boolean) => { await Promise.all(Array.from(selectedIds).map(id => supabase.from('promotions').update({ is_active: activate }).eq('id', id))); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['my-promotions'] }); setSelectedIds(new Set()); toast.success(rtl ? 'تم التحديث' : 'Updated'); },
+  });
+
+  /* ─── Callbacks ─── */
   const closeForm = useCallback(() => { setShowForm(false); setEditingId(null); setForm(emptyForm); }, []);
+  const scrollToForm = useCallback(() => { requestAnimationFrame(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })); }, []);
 
   const openEdit = useCallback((p: any) => {
     setEditingId(p.id);
     setForm({
       title_ar: p.title_ar, title_en: p.title_en || '', description_ar: p.description_ar || '',
       description_en: p.description_en || '', promotion_type: p.promotion_type,
-      discount_percentage: p.discount_percentage?.toString() || '',
-      discount_amount: p.discount_amount?.toString() || '',
-      original_price: p.original_price?.toString() || '',
-      offer_price: p.offer_price?.toString() || '', image_url: p.image_url || '', video_url: p.video_url || '',
-      start_date: p.start_date, end_date: p.end_date || '', is_active: p.is_active,
-      currency_code: p.currency_code || 'SAR',
+      discount_percentage: p.discount_percentage?.toString() || '', discount_amount: p.discount_amount?.toString() || '',
+      original_price: p.original_price?.toString() || '', offer_price: p.offer_price?.toString() || '',
+      image_url: p.image_url || '', video_url: p.video_url || '', start_date: p.start_date,
+      end_date: p.end_date || '', is_active: p.is_active, currency_code: p.currency_code || 'SAR',
     });
-    setShowForm(true);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, []);
+    setShowForm(true); scrollToForm();
+  }, [scrollToForm]);
 
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
-    const oldIndex = filteredPromotions.findIndex((i: any) => i.id === active.id);
-    const newIndex = filteredPromotions.findIndex((i: any) => i.id === over.id);
-    if (oldIndex === -1 || newIndex === -1) return;
-    const reordered = arrayMove([...filteredPromotions], oldIndex, newIndex);
+    const oldIdx = filteredPromotions.findIndex((i: any) => i.id === active.id);
+    const newIdx = filteredPromotions.findIndex((i: any) => i.id === over.id);
+    if (oldIdx === -1 || newIdx === -1) return;
+    const reordered = arrayMove([...filteredPromotions], oldIdx, newIdx);
     queryClient.setQueryData(['my-promotions', businessId], reordered);
-    reorderMutation.mutate(reordered);
-  }, [filteredPromotions, businessId, queryClient, reorderMutation]);
+    reorderMut.mutate(reordered);
+  }, [filteredPromotions, businessId, queryClient, reorderMut]);
 
   const handleDiscountChange = useCallback((val: string) => {
     setForm(f => {
@@ -369,102 +370,108 @@ const DashboardPromotions = () => {
     });
   }, []);
 
+  const toggleSelect = useCallback((id: string) => setSelectedIds(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; }), []);
+  const toggleSelectAll = useCallback(() => {
+    setSelectedIds(prev => prev.size === filteredPromotions.length ? new Set() : new Set(filteredPromotions.map((p: any) => p.id)));
+  }, [filteredPromotions]);
+
+  const exportCSV = useCallback(() => {
+    const rows = [['Title AR', 'Title EN', 'Type', 'Original Price', 'Offer Price', 'Discount%', 'Start', 'End', 'Active', 'Views'].join(','),
+      ...promotions.map((p: any) => [`"${p.title_ar}"`, `"${p.title_en || ''}"`, p.promotion_type, p.original_price || '', p.offer_price || '', p.discount_percentage || '', p.start_date, p.end_date || '', p.is_active, p.views_count || 0].join(','))
+    ].join('\n');
+    const blob = new Blob(['\ufeff' + rows], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    Object.assign(document.createElement('a'), { href: url, download: `promotions_${new Date().toISOString().slice(0, 10)}.csv` }).click();
+    URL.revokeObjectURL(url);
+    toast.success(rtl ? 'تم التصدير' : 'Exported');
+  }, [promotions, rtl]);
+
+  const filterOptions = useMemo(() => [
+    { key: 'all' as const, label: rtl ? 'الكل' : 'All', count: stats.total, icon: Layers },
+    { key: 'active' as const, label: rtl ? 'نشطة' : 'Active', count: stats.active, icon: CheckCircle2 },
+    { key: 'inactive' as const, label: rtl ? 'غير نشطة' : 'Inactive', count: stats.inactive, icon: EyeOff },
+    { key: 'expired' as const, label: rtl ? 'منتهية' : 'Expired', count: stats.expired, icon: Clock },
+  ], [rtl, stats]);
+
   return (
     <DashboardLayout>
-      <div className="space-y-5">
-        {/* Header */}
+      <div className="space-y-6">
+        {/* ═══ Header ═══ */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div>
-            <h1 className="font-heading font-bold text-xl sm:text-2xl flex items-center gap-2">
-              <Layers className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
-              {isRTL ? 'الإعلانات والعروض' : 'Promotions & Offers'}
-            </h1>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-              {isRTL ? 'أنشئ إعلانات وعروض — اسحب لإعادة الترتيب' : 'Create ads & offers — drag to reorder'}
-            </p>
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center border border-primary/10">
+              <Megaphone className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <h1 className="font-heading font-bold text-xl">{rtl ? 'الإعلانات والعروض' : 'Promotions & Offers'}</h1>
+              <p className="text-xs text-muted-foreground mt-0.5">{rtl ? `${stats.total} عرض · ${stats.active} نشط · ${stats.totalViews} مشاهدة` : `${stats.total} promotions · ${stats.active} active · ${stats.totalViews} views`}</p>
+            </div>
           </div>
-          {!showForm && (
-            <Button variant="hero" size="sm" onClick={() => { closeForm(); setShowForm(true); }} className="shrink-0">
-              <Plus className="w-4 h-4 me-1" />{isRTL ? 'إضافة عرض' : 'Add Promotion'}
+          <div className="flex gap-2 flex-wrap">
+            {promotions.length > 0 && (
+              <Button variant="outline" size="sm" className="h-9 text-xs rounded-xl" onClick={exportCSV}>
+                <Download className="w-3.5 h-3.5 me-1.5" />{rtl ? 'تصدير' : 'Export'}
+              </Button>
+            )}
+            <Button variant="hero" size="sm" className="h-9 text-xs rounded-xl" onClick={() => { closeForm(); setShowForm(true); scrollToForm(); }}>
+              <Plus className="w-3.5 h-3.5 me-1.5" />{rtl ? 'إضافة عرض' : 'Add Promotion'}
             </Button>
-          )}
+          </div>
         </div>
 
-        {/* Stats */}
+        {/* ═══ Stats ═══ */}
         {promotions.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
             {[
-              { label: isRTL ? 'إجمالي' : 'Total', value: stats.total, icon: Megaphone, color: 'text-primary bg-primary/10' },
-              { label: isRTL ? 'نشطة' : 'Active', value: stats.active, icon: CheckCircle2, color: 'text-emerald-600 bg-emerald-500/10' },
-              { label: isRTL ? 'منتهية' : 'Expired', value: stats.expired, icon: Calendar, color: 'text-muted-foreground bg-muted' },
-              { label: isRTL ? 'مشاهدات' : 'Views', value: stats.totalViews, icon: Eye, color: 'text-amber-600 bg-amber-500/10' },
+              { l: rtl ? 'إجمالي' : 'Total', v: stats.total, icon: Megaphone, cls: 'text-primary bg-primary/10' },
+              { l: rtl ? 'نشطة' : 'Active', v: stats.active, icon: CheckCircle2, cls: 'text-primary bg-primary/10' },
+              { l: rtl ? 'غير نشطة' : 'Inactive', v: stats.inactive, icon: EyeOff, cls: 'text-muted-foreground bg-muted' },
+              { l: rtl ? 'منتهية' : 'Expired', v: stats.expired, icon: Clock, cls: 'text-amber-600 bg-amber-500/10' },
+              { l: rtl ? 'مشاهدات' : 'Views', v: stats.totalViews, icon: TrendingUp, cls: 'text-primary bg-primary/10' },
             ].map((s, i) => (
-              <Card key={i} className="border-border/40 bg-card/50">
-                <CardContent className="p-2.5 sm:p-3 flex items-center gap-2.5">
-                  <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center ${s.color}`}><s.icon className="w-4 h-4" /></div>
-                  <div><p className="text-lg sm:text-xl font-bold">{s.value}</p><p className="text-[10px] sm:text-xs text-muted-foreground">{s.label}</p></div>
-                </CardContent>
-              </Card>
+              <div key={i} className="flex items-center gap-2.5 p-3 rounded-2xl border border-border/30 bg-card/50 hover:bg-card transition-colors">
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${s.cls}`}>
+                  <s.icon className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="text-lg font-bold leading-none">{s.v}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">{s.l}</p>
+                </div>
+              </div>
             ))}
           </div>
         )}
 
-        {/* Toolbar */}
-        {promotions.length > 0 && (
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 items-stretch sm:items-center justify-between">
-            <div className="flex items-center gap-2 flex-1">
-              <div className="relative flex-1 sm:max-w-xs">
-                <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input placeholder={isRTL ? 'ابحث...' : 'Search...'} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="ps-9 h-9" />
+        {/* Completeness */}
+        {stats.completeness < 100 && stats.total > 0 && (
+          <div className="flex items-center gap-3 p-3 rounded-2xl bg-accent/30 border border-accent/50">
+            <Zap className="w-4 h-4 text-primary shrink-0" />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[11px] font-medium">{rtl ? 'اكتمال بيانات العروض' : 'Data completeness'}</span>
+                <span className="text-[11px] font-bold text-primary">{stats.completeness}%</span>
               </div>
-              <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as TypeFilter)}>
-                <SelectTrigger className="w-auto h-9 text-xs gap-1">
-                  <Tag className="w-3.5 h-3.5" /><SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{isRTL ? 'الكل' : 'All'}</SelectItem>
-                  <SelectItem value="offer">{isRTL ? 'عروض' : 'Offers'}</SelectItem>
-                  <SelectItem value="ad">{isRTL ? 'إعلانات' : 'Ads'}</SelectItem>
-                  <SelectItem value="video">{isRTL ? 'فيديو' : 'Videos'}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex items-center gap-2">
-              <Tabs value={filterMode} onValueChange={(v) => setFilterMode(v as FilterMode)}>
-                <TabsList className="h-9">
-                  <TabsTrigger value="all" className="text-xs px-2.5">{isRTL ? 'الكل' : 'All'}</TabsTrigger>
-                  <TabsTrigger value="active" className="text-xs px-2.5">{isRTL ? 'نشطة' : 'Active'}</TabsTrigger>
-                  <TabsTrigger value="expired" className="text-xs px-2.5">{isRTL ? 'منتهية' : 'Expired'}</TabsTrigger>
-                </TabsList>
-              </Tabs>
-              <div className="flex border border-border/40 rounded-lg overflow-hidden">
-                <button className={`p-1.5 ${viewMode === 'grid' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => setViewMode('grid')}>
-                  <LayoutGrid className="w-4 h-4" />
-                </button>
-                <button className={`p-1.5 ${viewMode === 'list' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => setViewMode('list')}>
-                  <LayoutList className="w-4 h-4" />
-                </button>
-              </div>
+              <Progress value={stats.completeness} className="h-1.5" />
             </div>
           </div>
         )}
 
-        {/* Add/Edit Form */}
+        {/* ═══ Add/Edit Form ═══ */}
         {showForm && (
-          <Card className="border-primary/20 bg-primary/[0.02] shadow-sm">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base sm:text-lg flex items-center gap-2">
-                  {editingId ? <Pencil className="w-4 h-4 text-primary" /> : <Plus className="w-4 h-4 text-primary" />}
-                  {editingId ? (isRTL ? 'تعديل العرض' : 'Edit Promotion') : (isRTL ? 'إضافة عرض جديد' : 'Add New Promotion')}
-                </CardTitle>
-                <Button variant="ghost" size="icon" onClick={closeForm}><X className="w-4 h-4" /></Button>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Type selector */}
-              <div className="space-y-2">
-                <Label className="text-xs sm:text-sm">{isRTL ? 'نوع العرض' : 'Type'}</Label>
+          <div ref={formRef}>
+            <Card className="border-primary/20 shadow-md animate-in fade-in-0 slide-in-from-top-2 duration-200 overflow-hidden rounded-2xl">
+              <div className="h-1 bg-gradient-to-r from-primary/60 via-primary/30 to-transparent" />
+              <CardHeader className="pb-3 pt-4">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    {editingId ? <Pencil className="w-4 h-4 text-primary" /> : <Plus className="w-4 h-4 text-primary" />}
+                    {editingId ? (rtl ? 'تعديل العرض' : 'Edit Promotion') : (rtl ? 'إضافة عرض جديد' : 'New Promotion')}
+                  </CardTitle>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={closeForm}><X className="w-4 h-4" /></Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4 pb-5">
+                {/* Type selector */}
                 <div className="grid grid-cols-3 gap-2">
                   {(['offer', 'ad', 'video'] as PromotionType[]).map(type => {
                     const cfg = typeConfig[type];
@@ -472,208 +479,251 @@ const DashboardPromotions = () => {
                     const isSelected = form.promotion_type === type;
                     return (
                       <button key={type} onClick={() => setForm(f => ({ ...f, promotion_type: type }))}
-                        className={`flex items-center gap-2 p-2.5 rounded-xl border-2 transition-all text-start ${isSelected ? 'border-primary bg-primary/5 shadow-sm' : 'border-border/40 hover:border-primary/30'}`}>
-                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${cfg.color}`}><TypeIcon className="w-3.5 h-3.5" /></div>
-                        <span className="text-xs font-medium">{isRTL ? cfg.ar : cfg.en}</span>
+                        className={`flex items-center gap-2 p-3 rounded-xl border-2 transition-all ${isSelected ? 'border-primary bg-primary/5 shadow-sm' : 'border-border/30 hover:border-primary/30'}`}>
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${cfg.color}`}><TypeIcon className="w-4 h-4" /></div>
+                        <span className="text-xs font-medium">{rtl ? cfg.ar : cfg.en}</span>
                       </button>
                     );
                   })}
                 </div>
-              </div>
 
-              {/* Titles */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between flex-wrap gap-1">
-                    <Label className="text-xs sm:text-sm">{isRTL ? 'العنوان (عربي)' : 'Title (Arabic)'} <span className="text-destructive">*</span></Label>
-                    <FieldAiActions value={form.title_ar} lang="ar" compact fieldType="title" isRTL={isRTL}
-                      onTranslated={(v) => setForm(f => ({ ...f, title_en: v }))}
-                      onImproved={(v) => setForm(f => ({ ...f, title_ar: v }))} />
-                  </div>
-                  <Input value={form.title_ar} onChange={(e) => setForm({ ...form, title_ar: e.target.value })} placeholder={isRTL ? 'مثال: خصم 30% على النوافذ' : 'e.g. 30% off windows'} />
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between flex-wrap gap-1">
-                    <Label className="text-xs sm:text-sm">{isRTL ? 'العنوان (إنجليزي)' : 'Title (English)'}</Label>
-                    <FieldAiActions value={form.title_en} lang="en" compact fieldType="title" isRTL={isRTL}
-                      onTranslated={(v) => setForm(f => ({ ...f, title_ar: v }))}
-                      onImproved={(v) => setForm(f => ({ ...f, title_en: v }))} />
-                  </div>
-                  <Input value={form.title_en} onChange={(e) => setForm({ ...form, title_en: e.target.value })} dir="ltr" placeholder="e.g. 30% off windows" />
-                </div>
-              </div>
-
-              {/* Descriptions */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between flex-wrap gap-1">
-                    <Label className="text-xs sm:text-sm">{isRTL ? 'الوصف (عربي)' : 'Description (Arabic)'}</Label>
-                    <FieldAiActions value={form.description_ar} lang="ar" compact fieldType="description" isRTL={isRTL}
-                      onTranslated={(v) => setForm(f => ({ ...f, description_en: v }))}
-                      onImproved={(v) => setForm(f => ({ ...f, description_ar: v }))} />
-                  </div>
-                  <Textarea value={form.description_ar} onChange={(e) => setForm({ ...form, description_ar: e.target.value })} rows={3} placeholder={isRTL ? 'تفاصيل العرض...' : 'Details...'} />
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between flex-wrap gap-1">
-                    <Label className="text-xs sm:text-sm">{isRTL ? 'الوصف (إنجليزي)' : 'Description (English)'}</Label>
-                    <FieldAiActions value={form.description_en} lang="en" compact fieldType="description" isRTL={isRTL}
-                      onTranslated={(v) => setForm(f => ({ ...f, description_ar: v }))}
-                      onImproved={(v) => setForm(f => ({ ...f, description_en: v }))} />
-                  </div>
-                  <Textarea value={form.description_en} onChange={(e) => setForm({ ...form, description_en: e.target.value })} rows={3} dir="ltr" placeholder="Details..." />
-                </div>
-              </div>
-
-              {/* Pricing */}
-              {form.promotion_type === 'offer' && (
-                <div className="p-3 rounded-xl border border-border/40 bg-muted/30 space-y-3">
-                  <h4 className="text-xs font-semibold flex items-center gap-1.5"><DollarSign className="w-3.5 h-3.5 text-primary" />{isRTL ? 'السعر والخصم' : 'Pricing'}</h4>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    <div className="space-y-1.5">
-                      <Label className="text-[10px]">{isRTL ? 'السعر الأصلي' : 'Original'}</Label>
-                      <Input type="number" value={form.original_price} onChange={(e) => handleOriginalPriceChange(e.target.value)} dir="ltr" className="h-9" />
+                {/* Titles */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs font-medium">{rtl ? 'العنوان (عربي)' : 'Title (Arabic)'} <span className="text-destructive">*</span></Label>
+                      <FieldAiActions value={form.title_ar} lang="ar" compact fieldType="title" isRTL={rtl}
+                        onTranslated={v => setForm(f => ({ ...f, title_en: v }))}
+                        onImproved={v => setForm(f => ({ ...f, title_ar: v }))} />
                     </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-[10px] flex items-center gap-0.5"><Percent className="w-2.5 h-2.5" />{isRTL ? 'الخصم' : 'Discount'}</Label>
-                      <Input type="number" value={form.discount_percentage} onChange={(e) => handleDiscountChange(e.target.value)} dir="ltr" max="100" className="h-9" />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-[10px]">{isRTL ? 'قيمة الخصم' : 'Amount'}</Label>
-                      <Input type="number" value={form.discount_amount} onChange={(e) => setForm({ ...form, discount_amount: e.target.value })} dir="ltr" className="h-9" />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-[10px]">{isRTL ? 'سعر العرض' : 'Offer Price'}</Label>
-                      <Input type="number" value={form.offer_price} onChange={(e) => setForm({ ...form, offer_price: e.target.value })} dir="ltr" className="h-9 font-bold" />
-                    </div>
+                    <Input value={form.title_ar} onChange={e => setForm(f => ({ ...f, title_ar: e.target.value }))} placeholder={rtl ? 'مثال: خصم 30% على النوافذ' : 'e.g. 30% off windows'} className="h-9" />
                   </div>
-                  <Select value={form.currency_code} onValueChange={(v) => setForm({ ...form, currency_code: v })}>
-                    <SelectTrigger className="w-[70px] h-8 text-xs"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {['SAR', 'USD', 'EUR', 'AED'].map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs font-medium">{rtl ? 'العنوان (إنجليزي)' : 'Title (English)'}</Label>
+                      <FieldAiActions value={form.title_en} lang="en" compact fieldType="title" isRTL={rtl}
+                        onTranslated={v => setForm(f => ({ ...f, title_ar: v }))}
+                        onImproved={v => setForm(f => ({ ...f, title_en: v }))} />
+                    </div>
+                    <Input value={form.title_en} onChange={e => setForm(f => ({ ...f, title_en: e.target.value }))} dir="ltr" placeholder="e.g. 30% off windows" className="h-9" />
+                  </div>
                 </div>
-              )}
 
-              {/* Image */}
-              <div className="space-y-2">
-                <Label className="text-xs sm:text-sm">{isRTL ? 'صورة العرض' : 'Image'}</Label>
-                <ImageUpload bucket="business-assets" value={form.image_url} onChange={(url) => setForm({ ...form, image_url: url })} onRemove={() => setForm({ ...form, image_url: '' })} aspectRatio="video" placeholder={isRTL ? 'اضغط لرفع صورة (16:9)' : 'Upload (16:9)'} />
-              </div>
-
-              {/* Video */}
-              {(form.promotion_type === 'video' || form.promotion_type === 'ad') && (
-                <div className="space-y-2">
-                  <Label className="text-xs sm:text-sm flex items-center gap-1"><Video className="w-3.5 h-3.5" />{isRTL ? 'رابط الفيديو' : 'Video URL'}</Label>
-                  <Input value={form.video_url} onChange={(e) => setForm({ ...form, video_url: e.target.value })} dir="ltr" placeholder="https://youtube.com/watch?v=..." className="h-9" />
+                {/* Descriptions */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs font-medium">{rtl ? 'الوصف (عربي)' : 'Description (Arabic)'}</Label>
+                      <FieldAiActions value={form.description_ar} lang="ar" compact fieldType="description" isRTL={rtl}
+                        onTranslated={v => setForm(f => ({ ...f, description_en: v }))}
+                        onImproved={v => setForm(f => ({ ...f, description_ar: v }))} />
+                    </div>
+                    <Textarea value={form.description_ar} onChange={e => setForm(f => ({ ...f, description_ar: e.target.value }))} rows={2} placeholder={rtl ? 'تفاصيل العرض...' : 'Details...'} className="resize-none text-sm" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs font-medium">{rtl ? 'الوصف (إنجليزي)' : 'Description (English)'}</Label>
+                      <FieldAiActions value={form.description_en} lang="en" compact fieldType="description" isRTL={rtl}
+                        onTranslated={v => setForm(f => ({ ...f, description_ar: v }))}
+                        onImproved={v => setForm(f => ({ ...f, description_en: v }))} />
+                    </div>
+                    <Textarea value={form.description_en} onChange={e => setForm(f => ({ ...f, description_en: e.target.value }))} rows={2} dir="ltr" placeholder="Details..." className="resize-none text-sm" />
+                  </div>
                 </div>
-              )}
 
-              {/* Dates */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label className="text-xs sm:text-sm flex items-center gap-1"><Calendar className="w-3.5 h-3.5" />{isRTL ? 'البداية' : 'Start'}</Label>
-                  <Input type="date" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} dir="ltr" className="h-9" />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs sm:text-sm flex items-center gap-1"><Calendar className="w-3.5 h-3.5" />{isRTL ? 'الانتهاء' : 'End'}</Label>
-                  <Input type="date" value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} dir="ltr" className="h-9" />
-                </div>
-              </div>
+                {/* Pricing */}
+                {form.promotion_type === 'offer' && (
+                  <div className="p-3 rounded-xl border border-border/30 bg-muted/20 space-y-3">
+                    <h4 className="text-xs font-semibold flex items-center gap-1.5"><DollarSign className="w-3.5 h-3.5 text-primary" />{rtl ? 'السعر والخصم' : 'Pricing'}</h4>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      <div className="space-y-1.5">
+                        <Label className="text-[10px]">{rtl ? 'السعر الأصلي' : 'Original'}</Label>
+                        <Input type="number" value={form.original_price} onChange={e => handleOriginalPriceChange(e.target.value)} dir="ltr" className="h-9" />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-[10px] flex items-center gap-0.5"><Percent className="w-2.5 h-2.5" />{rtl ? 'الخصم' : 'Discount'}</Label>
+                        <Input type="number" value={form.discount_percentage} onChange={e => handleDiscountChange(e.target.value)} dir="ltr" max="100" className="h-9" />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-[10px]">{rtl ? 'قيمة الخصم' : 'Amount'}</Label>
+                        <Input type="number" value={form.discount_amount} onChange={e => setForm(f => ({ ...f, discount_amount: e.target.value }))} dir="ltr" className="h-9" />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-[10px]">{rtl ? 'سعر العرض' : 'Offer Price'}</Label>
+                        <Input type="number" value={form.offer_price} onChange={e => setForm(f => ({ ...f, offer_price: e.target.value }))} dir="ltr" className="h-9 font-bold" />
+                      </div>
+                    </div>
+                    <Select value={form.currency_code} onValueChange={v => setForm(f => ({ ...f, currency_code: v }))}>
+                      <SelectTrigger className="w-[70px] h-8 text-xs"><SelectValue /></SelectTrigger>
+                      <SelectContent>{['SAR', 'USD', 'EUR', 'AED'].map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                )}
 
-              {/* Active */}
-              <div className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/50 border border-border/40">
-                <Switch checked={form.is_active} onCheckedChange={(v) => setForm({ ...form, is_active: v })} />
-                <div>
-                  <Label className="cursor-pointer text-xs sm:text-sm">{isRTL ? 'عرض نشط' : 'Active'}</Label>
-                  <p className="text-[10px] sm:text-xs text-muted-foreground">{isRTL ? 'يظهر للعملاء' : 'Visible to clients'}</p>
+                {/* Image */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium">{rtl ? 'صورة العرض' : 'Image'}</Label>
+                  <ImageUpload bucket="business-assets" value={form.image_url} onChange={url => setForm(f => ({ ...f, image_url: url }))} onRemove={() => setForm(f => ({ ...f, image_url: '' }))} aspectRatio="video" placeholder={rtl ? 'اضغط لرفع صورة (16:9)' : 'Upload (16:9)'} />
                 </div>
-              </div>
 
-              {/* Actions */}
-              <div className="flex gap-2 pt-1">
-                <Button onClick={() => saveMutation.mutate()} disabled={!form.title_ar || saveMutation.isPending} variant="hero" className="flex-1">
-                  {saveMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin me-2" /> : <CheckCircle2 className="w-4 h-4 me-2" />}
-                  {saveMutation.isPending ? (isRTL ? 'جاري الحفظ...' : 'Saving...') : editingId ? (isRTL ? 'تحديث' : 'Update') : (isRTL ? 'إضافة' : 'Add')}
-                </Button>
-                <Button variant="outline" onClick={closeForm}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
-              </div>
-            </CardContent>
-          </Card>
+                {/* Video */}
+                {(form.promotion_type === 'video' || form.promotion_type === 'ad') && (
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium flex items-center gap-1"><Video className="w-3.5 h-3.5" />{rtl ? 'رابط الفيديو' : 'Video URL'}</Label>
+                    <Input value={form.video_url} onChange={e => setForm(f => ({ ...f, video_url: e.target.value }))} dir="ltr" placeholder="https://youtube.com/watch?v=..." className="h-9" />
+                  </div>
+                )}
+
+                {/* Dates */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium flex items-center gap-1"><Calendar className="w-3.5 h-3.5" />{rtl ? 'البداية' : 'Start'}</Label>
+                    <Input type="date" value={form.start_date} onChange={e => setForm(f => ({ ...f, start_date: e.target.value }))} dir="ltr" className="h-9" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium flex items-center gap-1"><Calendar className="w-3.5 h-3.5" />{rtl ? 'الانتهاء' : 'End'}</Label>
+                    <Input type="date" value={form.end_date} onChange={e => setForm(f => ({ ...f, end_date: e.target.value }))} dir="ltr" className="h-9" />
+                  </div>
+                </div>
+
+                {/* Active */}
+                <div className="flex items-center gap-3 p-2.5 rounded-xl bg-muted/50 border border-border/30">
+                  <Switch checked={form.is_active} onCheckedChange={v => setForm(f => ({ ...f, is_active: v }))} />
+                  <div>
+                    <span className="text-xs font-medium">{rtl ? 'عرض نشط' : 'Active'}</span>
+                    <p className="text-[10px] text-muted-foreground">{rtl ? 'يظهر للعملاء' : 'Visible to clients'}</p>
+                  </div>
+                </div>
+
+                {/* Submit */}
+                <div className="flex gap-2 pt-1">
+                  <Button onClick={() => saveMut.mutate()} disabled={!form.title_ar || saveMut.isPending} variant="hero" className="flex-1 h-9 rounded-xl">
+                    {saveMut.isPending ? <Loader2 className="w-4 h-4 animate-spin me-1.5" /> : <CheckCircle2 className="w-4 h-4 me-1.5" />}
+                    {saveMut.isPending ? (rtl ? 'جاري الحفظ...' : 'Saving...') : editingId ? (rtl ? 'تحديث' : 'Update') : (rtl ? 'إضافة' : 'Add')}
+                  </Button>
+                  <Button variant="outline" className="h-9 rounded-xl" onClick={closeForm}>{rtl ? 'إلغاء' : 'Cancel'}</Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         )}
 
-        {/* List */}
+        {/* ═══ Toolbar ═══ */}
+        {promotions.length > 0 && (
+          <div className="space-y-2.5">
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1 max-w-sm">
+                <Search className="absolute start-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                <Input placeholder={rtl ? 'ابحث...' : 'Search...'} value={searchQuery}
+                  onChange={e => startTransition(() => setSearchQuery(e.target.value))}
+                  className="ps-8 h-8 text-xs rounded-xl" />
+              </div>
+              <Select value={typeFilter} onValueChange={v => setTypeFilter(v as TypeFilter)}>
+                <SelectTrigger className="w-auto h-8 gap-1 text-[11px] border-border/30 rounded-xl">
+                  <Tag className="w-3 h-3" /><SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{rtl ? 'كل الأنواع' : 'All Types'}</SelectItem>
+                  <SelectItem value="offer">{rtl ? 'عروض' : 'Offers'}</SelectItem>
+                  <SelectItem value="ad">{rtl ? 'إعلانات' : 'Ads'}</SelectItem>
+                  <SelectItem value="video">{rtl ? 'فيديو' : 'Videos'}</SelectItem>
+                </SelectContent>
+              </Select>
+              <div className="flex border border-border/30 rounded-xl overflow-hidden ms-auto">
+                <button className={`p-1.5 transition-colors ${viewMode === 'grid' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => setViewMode('grid')}><LayoutGrid className="w-3.5 h-3.5" /></button>
+                <button className={`p-1.5 transition-colors ${viewMode === 'list' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => setViewMode('list')}><List className="w-3.5 h-3.5" /></button>
+              </div>
+              <button onClick={toggleSelectAll} className="p-1.5 rounded-xl border border-border/30 hover:bg-muted/50 transition-colors" title={rtl ? 'تحديد الكل' : 'Select All'}>
+                <CheckCircle2 className={`w-3.5 h-3.5 ${selectedIds.size === filteredPromotions.length && filteredPromotions.length > 0 ? 'text-primary' : 'text-muted-foreground/30'}`} />
+              </button>
+            </div>
+
+            {/* Filter pills */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5">
+              {filterOptions.map(f => (
+                <button key={f.key} onClick={() => setFilterMode(f.key)}
+                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-medium whitespace-nowrap transition-all ${filterMode === f.key ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'}`}>
+                  <f.icon className="w-3 h-3" />
+                  {f.label}
+                  <span className={`text-[9px] px-1.5 py-px rounded-full ${filterMode === f.key ? 'bg-primary-foreground/20' : 'bg-background/60'}`}>{f.count}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Bulk Actions */}
+        {selectedIds.size > 0 && (
+          <div className="flex items-center gap-2 p-2.5 rounded-2xl bg-primary/5 border border-primary/15 animate-in fade-in-0 duration-150">
+            <Badge variant="outline" className="text-[10px] border-primary/30 text-primary">{selectedIds.size} {rtl ? 'محددة' : 'selected'}</Badge>
+            <Button size="sm" variant="outline" className="h-7 text-[10px] px-2.5 rounded-lg" onClick={() => bulkToggleMut.mutate(true)} disabled={bulkToggleMut.isPending}><Power className="w-3 h-3 me-0.5" />{rtl ? 'تفعيل' : 'Activate'}</Button>
+            <Button size="sm" variant="outline" className="h-7 text-[10px] px-2.5 rounded-lg" onClick={() => bulkToggleMut.mutate(false)} disabled={bulkToggleMut.isPending}><PowerOff className="w-3 h-3 me-0.5" />{rtl ? 'تعطيل' : 'Deactivate'}</Button>
+            <Button size="sm" variant="outline" className="h-7 text-[10px] px-2.5 rounded-lg text-destructive hover:text-destructive" onClick={() => bulkDeleteMut.mutate()} disabled={bulkDeleteMut.isPending}><Trash2 className="w-3 h-3 me-0.5" />{rtl ? 'حذف' : 'Delete'}</Button>
+            <button className="ms-auto text-muted-foreground hover:text-foreground transition-colors" onClick={() => setSelectedIds(new Set())}><X className="w-3.5 h-3.5" /></button>
+          </div>
+        )}
+
+        {/* Delete Confirmation (inline) */}
+        {deleteConfirm && (
+          <div className="flex items-center gap-3 p-3 rounded-2xl border border-destructive/30 bg-destructive/5 animate-in fade-in-0 slide-in-from-top-1 duration-150">
+            <AlertCircle className="w-5 h-5 text-destructive shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm font-medium">{rtl ? 'تأكيد الحذف' : 'Confirm Delete'}</p>
+              <p className="text-[11px] text-muted-foreground">{rtl ? 'لا يمكن التراجع عن هذا الإجراء' : 'This cannot be undone'}</p>
+            </div>
+            <Button variant="outline" size="sm" className="h-7 text-xs rounded-lg" onClick={() => setDeleteConfirm(null)}>{rtl ? 'إلغاء' : 'Cancel'}</Button>
+            <Button variant="destructive" size="sm" className="h-7 text-xs rounded-lg" onClick={() => deleteConfirm && deleteMut.mutate(deleteConfirm)} disabled={deleteMut.isPending}>
+              {deleteMut.isPending && <Loader2 className="w-3 h-3 animate-spin me-1" />}{rtl ? 'حذف' : 'Delete'}
+            </Button>
+          </div>
+        )}
+
+        {/* ═══ Content ═══ */}
         {isLoading ? (
           <div className={viewMode === 'grid' ? 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3' : 'space-y-2'}>
-            {[1, 2, 3, 4, 5, 6].map(i => viewMode === 'grid' ? <Skeleton key={i} className="aspect-[16/11] rounded-xl" /> : <Skeleton key={i} className="h-16 rounded-xl" />)}
+            {[1, 2, 3, 4, 5, 6].map(i => viewMode === 'grid' ? <Skeleton key={i} className="aspect-[16/10] rounded-2xl" /> : <Skeleton key={i} className="h-16 rounded-xl" />)}
           </div>
         ) : promotions.length === 0 && !showForm ? (
-          <Card className="border-dashed border-2">
-            <CardContent className="flex flex-col items-center py-14 text-center">
-              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4"><Megaphone className="w-8 h-8 text-primary" /></div>
-              <h3 className="text-base font-semibold mb-2">{isRTL ? 'لا توجد عروض بعد' : 'No promotions yet'}</h3>
-              <p className="text-sm text-muted-foreground max-w-sm mb-5">{isRTL ? 'أنشئ أول عرض لجذب العملاء' : 'Create your first promotion'}</p>
-              <Button variant="hero" onClick={() => setShowForm(true)}><Plus className="w-4 h-4 me-2" />{isRTL ? 'أضف أول عرض' : 'Add First'}</Button>
-            </CardContent>
-          </Card>
-        ) : filteredPromotions.length === 0 && promotions.length > 0 ? (
-          <Card className="border-dashed">
-            <CardContent className="flex flex-col items-center py-10 text-muted-foreground">
-              <Search className="w-8 h-8 mb-2" /><p className="font-medium">{isRTL ? 'لا توجد نتائج' : 'No results'}</p>
-            </CardContent>
-          </Card>
+          <div className="flex flex-col items-center py-16 text-center">
+            <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center mb-5 border border-primary/10">
+              <Megaphone className="w-8 h-8 text-primary/60" />
+            </div>
+            <h3 className="text-base font-semibold mb-1.5">{rtl ? 'لا توجد عروض بعد' : 'No promotions yet'}</h3>
+            <p className="text-sm text-muted-foreground max-w-xs mb-6">{rtl ? 'أنشئ أول عرض لجذب العملاء وزيادة المبيعات' : 'Create your first promotion to attract customers'}</p>
+            <Button variant="hero" size="sm" className="rounded-xl" onClick={() => setShowForm(true)}><Plus className="w-4 h-4 me-1" />{rtl ? 'أضف أول عرض' : 'Add First Promotion'}</Button>
+          </div>
+        ) : filteredPromotions.length === 0 ? (
+          <div className="flex flex-col items-center py-10 text-muted-foreground">
+            <Search className="w-7 h-7 mb-2 opacity-40" />
+            <p className="text-sm font-medium">{rtl ? 'لا توجد نتائج' : 'No results'}</p>
+            <button className="text-xs text-primary mt-1 hover:underline" onClick={() => { setSearchQuery(''); setFilterMode('all'); setTypeFilter('all'); }}>{rtl ? 'إعادة تعيين' : 'Reset filters'}</button>
+          </div>
         ) : (
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext items={filteredPromotions.map((p: any) => p.id)} strategy={viewMode === 'grid' ? rectSortingStrategy : verticalListSortingStrategy}>
-              {viewMode === 'grid' ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                  {filteredPromotions.map((p: any) => (
-                    <SortableGridCard key={p.id} promo={p} isRTL={isRTL}
-                      onEdit={openEdit} onDelete={(id: string) => setDeleteConfirm(id)}
-                      onToggleActive={(pr: any) => toggleActiveMutation.mutate(pr)}
-                      onDuplicate={(pr: any) => duplicateMutation.mutate(pr)}
-                      onPreview={(url: string) => setPreviewUrl(url)} />
-                  ))}
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {filteredPromotions.map((p: any) => (
-                    <SortableListRow key={p.id} promo={p} isRTL={isRTL}
-                      onEdit={openEdit} onDelete={(id: string) => setDeleteConfirm(id)}
-                      onToggleActive={(pr: any) => toggleActiveMutation.mutate(pr)}
-                      onDuplicate={(pr: any) => duplicateMutation.mutate(pr)}
-                      onPreview={(url: string) => setPreviewUrl(url)} />
-                  ))}
-                </div>
-              )}
+              <div className={viewMode === 'grid' ? 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3' : 'space-y-2'}>
+                {filteredPromotions.map((p: any) => (
+                  <SortablePromoCard key={p.id} promo={p} rtl={rtl} viewMode={viewMode}
+                    isSelected={selectedIds.has(p.id)}
+                    onEdit={openEdit} onDelete={id => setDeleteConfirm(id)}
+                    onToggle={pr => toggleMut.mutate(pr)}
+                    onDuplicate={pr => duplicateMut.mutate(pr)}
+                    onPreview={url => setPreviewUrl(url)}
+                    onSelect={toggleSelect} />
+                ))}
+              </div>
             </SortableContext>
           </DndContext>
         )}
       </div>
 
-      {/* Delete Confirmation */}
-      <AlertDialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{isRTL ? 'حذف العرض' : 'Delete Promotion'}</AlertDialogTitle>
-            <AlertDialogDescription>{isRTL ? 'هل أنت متأكد؟ لا يمكن التراجع.' : 'Are you sure? This cannot be undone.'}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{isRTL ? 'إلغاء' : 'Cancel'}</AlertDialogCancel>
-            <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => deleteConfirm && deleteMutation.mutate(deleteConfirm)}>{isRTL ? 'حذف' : 'Delete'}</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
       {/* Image Preview Lightbox */}
       {previewUrl && (
-        <div className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4 cursor-pointer" onClick={() => setPreviewUrl(null)}>
-          <Button variant="ghost" size="icon" className="absolute top-4 end-4 text-white hover:bg-white/10 z-10" onClick={() => setPreviewUrl(null)}>
+        <div className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4 cursor-pointer animate-in fade-in-0 duration-200" onClick={() => setPreviewUrl(null)}>
+          <Button variant="ghost" size="icon" className="absolute top-4 end-4 text-primary-foreground hover:bg-primary-foreground/10 z-10" onClick={() => setPreviewUrl(null)}>
             <X className="w-6 h-6" />
           </Button>
-          <img src={previewUrl} alt="Preview" className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl" onClick={(e) => e.stopPropagation()} />
+          <img src={previewUrl} alt="Preview" className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()} />
         </div>
       )}
     </DashboardLayout>
