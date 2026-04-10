@@ -899,6 +899,204 @@ const AdminBusinesses = () => {
                   )}
                 </TabsContent>
 
+                {/* ── Branches Tab ── */}
+                <TabsContent value="branches" className="space-y-4 mt-3">
+                  {/* Branch List */}
+                  <div className="space-y-2">
+                    {branches.map((br: any) => (
+                      <div key={br.id} className={`flex items-center gap-3 p-3 rounded-lg border border-border/40 ${!br.is_active ? 'opacity-50' : ''}`}>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <p className="text-sm font-medium truncate">{language === 'ar' ? br.name_ar : (br.name_en || br.name_ar)}</p>
+                            {br.is_main && <Badge className="text-[8px] h-4 bg-primary/10 text-primary border-0">{isRTL ? 'رئيسي' : 'Main'}</Badge>}
+                          </div>
+                          <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-0.5 flex-wrap">
+                            {br.phone && <span className="flex items-center gap-0.5"><Phone className="w-2.5 h-2.5" />{br.phone}</span>}
+                            {br.mobile && <span className="flex items-center gap-0.5"><Phone className="w-2.5 h-2.5" />{br.mobile}</span>}
+                            {br.unified_number && <span>{br.unified_number}</span>}
+                            {br.district && <span className="flex items-center gap-0.5"><MapPin className="w-2.5 h-2.5" />{br.district}</span>}
+                            {br.contact_person && <span className="flex items-center gap-0.5"><Users className="w-2.5 h-2.5" />{br.contact_person}</span>}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <Switch checked={br.is_active} onCheckedChange={v => toggleBranchMutation.mutate({ id: br.id, is_active: v })} />
+                          <Button variant="outline" size="sm" className="h-6 w-6 p-0" onClick={() => {
+                            setEditingBranchId(br.id);
+                            setBranchForm({
+                              name_ar: br.name_ar, name_en: br.name_en || '',
+                              is_main: br.is_main, is_active: br.is_active,
+                              contact_person: br.contact_person || '', phone: br.phone || '',
+                              mobile: br.mobile || '', unified_number: br.unified_number || '',
+                              customer_service_phone: br.customer_service_phone || '',
+                              email: br.email || '', website: br.website || '',
+                              country_id: br.country_id || '', city_id: br.city_id || '',
+                              region: br.region || '', district: br.district || '',
+                              street_name: br.street_name || '', building_number: br.building_number || '',
+                              national_id: br.national_id || '', additional_number: br.additional_number || '',
+                              address: br.address || '', latitude: br.latitude || '', longitude: br.longitude || '',
+                            });
+                          }}>
+                            <Edit className="w-3 h-3" />
+                          </Button>
+                          <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-destructive"
+                            onClick={() => { if (confirm(isRTL ? 'حذف هذا الفرع؟' : 'Delete this branch?')) deleteBranchMutation.mutate(br.id); }}>
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                    {branches.length === 0 && !branchForm && (
+                      <p className="text-center text-sm text-muted-foreground py-6">{isRTL ? 'لا توجد فروع مسجلة' : 'No branches registered'}</p>
+                    )}
+                  </div>
+
+                  {/* Add/Edit Branch Form */}
+                  {branchForm ? (
+                    <div className="space-y-3 p-4 rounded-lg border border-primary/30 bg-primary/5">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-bold text-primary flex items-center gap-1.5">
+                          {editingBranchId ? <Edit className="w-3 h-3" /> : <Plus className="w-3 h-3" />}
+                          {editingBranchId ? (isRTL ? 'تعديل الفرع' : 'Edit Branch') : (isRTL ? 'إضافة فرع جديد' : 'Add New Branch')}
+                        </p>
+                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => { setBranchForm(null); setEditingBranchId(null); }}>
+                          <X className="w-3 h-3" />
+                        </Button>
+                      </div>
+
+                      {/* Branch Name */}
+                      <div>
+                        <Label className="text-xs">{isRTL ? 'اسم الفرع (عربي)' : 'Branch Name (AR)'} *</Label>
+                        <Input value={branchForm.name_ar} onChange={e => setBranchForm((f: any) => ({ ...f, name_ar: e.target.value }))} className="mt-1" />
+                      </div>
+                      <div>
+                        <Label className="text-xs">{isRTL ? 'اسم الفرع (إنجليزي)' : 'Branch Name (EN)'}</Label>
+                        <Input value={branchForm.name_en} onChange={e => setBranchForm((f: any) => ({ ...f, name_en: e.target.value }))} dir="ltr" className="mt-1" />
+                      </div>
+
+                      {/* Contact Info */}
+                      <Separator />
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{isRTL ? 'بيانات التواصل' : 'Contact Info'}</p>
+                      <div>
+                        <Label className="text-xs">{isRTL ? 'اسم مسؤول التواصل' : 'Contact Person'}</Label>
+                        <Input value={branchForm.contact_person} onChange={e => setBranchForm((f: any) => ({ ...f, contact_person: e.target.value }))} className="mt-1" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label className="text-xs">{isRTL ? 'الهاتف' : 'Phone'}</Label>
+                          <Input value={branchForm.phone} onChange={e => setBranchForm((f: any) => ({ ...f, phone: e.target.value }))} dir="ltr" className="mt-1" />
+                        </div>
+                        <div>
+                          <Label className="text-xs">{isRTL ? 'الجوال' : 'Mobile'}</Label>
+                          <Input value={branchForm.mobile} onChange={e => setBranchForm((f: any) => ({ ...f, mobile: e.target.value }))} dir="ltr" className="mt-1" />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label className="text-xs">{isRTL ? 'الرقم الموحد' : 'Unified Number'}</Label>
+                          <Input value={branchForm.unified_number} onChange={e => setBranchForm((f: any) => ({ ...f, unified_number: e.target.value }))} dir="ltr" className="mt-1" placeholder="920xxxxxxx" />
+                        </div>
+                        <div>
+                          <Label className="text-xs">{isRTL ? 'خدمة العملاء' : 'Customer Service'}</Label>
+                          <Input value={branchForm.customer_service_phone} onChange={e => setBranchForm((f: any) => ({ ...f, customer_service_phone: e.target.value }))} dir="ltr" className="mt-1" />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label className="text-xs">{isRTL ? 'البريد الإلكتروني' : 'Email'}</Label>
+                          <Input value={branchForm.email} onChange={e => setBranchForm((f: any) => ({ ...f, email: e.target.value }))} dir="ltr" className="mt-1" />
+                        </div>
+                        <div>
+                          <Label className="text-xs">{isRTL ? 'الموقع الإلكتروني' : 'Website'}</Label>
+                          <Input value={branchForm.website} onChange={e => setBranchForm((f: any) => ({ ...f, website: e.target.value }))} dir="ltr" className="mt-1" />
+                        </div>
+                      </div>
+
+                      {/* Address */}
+                      <Separator />
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{isRTL ? 'العنوان' : 'Address'}</p>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label className="text-xs">{isRTL ? 'الدولة' : 'Country'}</Label>
+                          <Select value={branchForm.country_id} onValueChange={v => setBranchForm((f: any) => ({ ...f, country_id: v, city_id: '' }))}>
+                            <SelectTrigger className="mt-1"><SelectValue placeholder={isRTL ? 'اختر' : 'Select'} /></SelectTrigger>
+                            <SelectContent>
+                              {countries.map((c: any) => <SelectItem key={c.id} value={c.id}>{language === 'ar' ? c.name_ar : c.name_en}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label className="text-xs">{isRTL ? 'المدينة' : 'City'}</Label>
+                          <Select value={branchForm.city_id} onValueChange={v => setBranchForm((f: any) => ({ ...f, city_id: v }))}>
+                            <SelectTrigger className="mt-1"><SelectValue placeholder={isRTL ? 'اختر' : 'Select'} /></SelectTrigger>
+                            <SelectContent>
+                              {(branchForm.country_id ? cities.filter((c: any) => c.country_id === branchForm.country_id) : cities).map((c: any) => (
+                                <SelectItem key={c.id} value={c.id}>{language === 'ar' ? c.name_ar : c.name_en}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label className="text-xs">{isRTL ? 'المنطقة' : 'Region'}</Label>
+                          <Input value={branchForm.region} onChange={e => setBranchForm((f: any) => ({ ...f, region: e.target.value }))} className="mt-1" />
+                        </div>
+                        <div>
+                          <Label className="text-xs">{isRTL ? 'الحي' : 'District'}</Label>
+                          <Input value={branchForm.district} onChange={e => setBranchForm((f: any) => ({ ...f, district: e.target.value }))} className="mt-1" />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label className="text-xs">{isRTL ? 'اسم الشارع' : 'Street'}</Label>
+                          <Input value={branchForm.street_name} onChange={e => setBranchForm((f: any) => ({ ...f, street_name: e.target.value }))} className="mt-1" />
+                        </div>
+                        <div>
+                          <Label className="text-xs">{isRTL ? 'رقم المبنى' : 'Building No.'}</Label>
+                          <Input value={branchForm.building_number} onChange={e => setBranchForm((f: any) => ({ ...f, building_number: e.target.value }))} dir="ltr" className="mt-1" />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label className="text-xs">{isRTL ? 'الرقم الوطني' : 'National ID'}</Label>
+                          <Input value={branchForm.national_id} onChange={e => setBranchForm((f: any) => ({ ...f, national_id: e.target.value }))} dir="ltr" className="mt-1" />
+                        </div>
+                        <div>
+                          <Label className="text-xs">{isRTL ? 'الرقم الإضافي' : 'Additional No.'}</Label>
+                          <Input value={branchForm.additional_number} onChange={e => setBranchForm((f: any) => ({ ...f, additional_number: e.target.value }))} dir="ltr" className="mt-1" />
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="text-xs">{isRTL ? 'العنوان الكامل' : 'Full Address'}</Label>
+                        <Textarea value={branchForm.address} onChange={e => setBranchForm((f: any) => ({ ...f, address: e.target.value }))} rows={2} className="mt-1" />
+                      </div>
+
+                      {/* Options */}
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2">
+                          <Switch checked={branchForm.is_main} onCheckedChange={v => setBranchForm((f: any) => ({ ...f, is_main: v }))} />
+                          <span className="text-xs">{isRTL ? 'فرع رئيسي' : 'Main Branch'}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Switch checked={branchForm.is_active} onCheckedChange={v => setBranchForm((f: any) => ({ ...f, is_active: v }))} />
+                          <span className="text-xs">{isRTL ? 'مفعّل' : 'Active'}</span>
+                        </div>
+                      </div>
+
+                      <Button onClick={() => saveBranchMutation.mutate()} disabled={!branchForm.name_ar || saveBranchMutation.isPending}
+                        className="w-full gap-1.5">
+                        <Save className="w-3.5 h-3.5" />
+                        {saveBranchMutation.isPending ? '...' : (isRTL ? 'حفظ الفرع' : 'Save Branch')}
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button variant="outline" className="w-full gap-1.5" onClick={() => { setBranchForm(emptyBranch()); setEditingBranchId(null); }}>
+                      <Plus className="w-3.5 h-3.5" />
+                      {isRTL ? 'إضافة فرع جديد' : 'Add New Branch'}
+                    </Button>
+                  )}
+                </TabsContent>
+
                 {/* ── Controls Tab ── */}
                 <TabsContent value="controls" className="space-y-4 mt-3">
                   <div className="space-y-3">
