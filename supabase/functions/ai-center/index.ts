@@ -9,7 +9,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { action, text, sourceLang, targetLang, tone, model, context } = await req.json();
+    const { action, text, sourceLang, targetLang, tone, model, context, knowledgeContext, systemPromptOverride, responseStyle } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
@@ -20,6 +20,9 @@ serve(async (req) => {
     }
 
     const toneInstruction = tone ? `Use a ${tone} tone/style.` : "";
+    const styleInstruction = responseStyle === 'concise' ? 'Be very concise and brief.' 
+      : responseStyle === 'detailed' ? 'Be detailed and thorough in your response.' 
+      : '';
 
     let systemPrompt = "";
     let userPrompt = text;
@@ -30,15 +33,15 @@ serve(async (req) => {
         break;
 
       case "improve":
-        systemPrompt = `You are an expert content editor. Improve the given text for clarity, readability and engagement. ${toneInstruction} Maintain the original language. Return ONLY the improved text as plain text. No markdown symbols unless the text is a long article.`;
+        systemPrompt = `You are an expert content editor. Improve the given text for clarity, readability and engagement. ${toneInstruction} ${styleInstruction} Maintain the original language. Return ONLY the improved text as plain text. No markdown symbols unless the text is a long article.`;
         break;
 
       case "summarize":
-        systemPrompt = `You are a summarization expert. Summarize the given text concisely while preserving key information. ${toneInstruction} Return ONLY the summary as plain text. No markdown symbols.`;
+        systemPrompt = `You are a summarization expert. Summarize the given text concisely while preserving key information. ${toneInstruction} ${styleInstruction} Return ONLY the summary as plain text. No markdown symbols.`;
         break;
 
       case "expand":
-        systemPrompt = `You are a content writer. Expand the given text with more detail, examples, and depth while maintaining the same style. ${toneInstruction} Return ONLY the expanded text as plain text.`;
+        systemPrompt = `You are a content writer. Expand the given text with more detail, examples, and depth while maintaining the same style. ${toneInstruction} ${styleInstruction} Return ONLY the expanded text as plain text.`;
         break;
 
       case "proofread":
@@ -46,7 +49,7 @@ serve(async (req) => {
         break;
 
       case "rewrite":
-        systemPrompt = `You are an expert rewriter. Rewrite the given text in a completely different way while preserving the meaning. ${toneInstruction} Return ONLY the rewritten text as plain text. No markdown symbols.`;
+        systemPrompt = `You are an expert rewriter. Rewrite the given text in a completely different way while preserving the meaning. ${toneInstruction} ${styleInstruction} Return ONLY the rewritten text as plain text. No markdown symbols.`;
         break;
 
       case "bullet_points":
@@ -57,12 +60,27 @@ serve(async (req) => {
         systemPrompt = `You are a headline copywriter. Generate 5 compelling, attention-grabbing headlines for the given text. ${toneInstruction} Return ONLY the headlines, one per line, numbered 1-5. No markdown symbols.`;
         break;
 
-      case "chat":
-        systemPrompt = `You are a professional AI business assistant for a services marketplace platform called "فنيين" (Faneen). You help business owners manage their businesses, write content, optimize their profiles, and answer questions about running a service business. ${toneInstruction} Be helpful, concise, and practical. Respond in the same language as the user's message. Do NOT use markdown formatting symbols.`;
+      case "extract_from_url":
+        systemPrompt = `You are a content extraction expert. The user will give you a URL or website content. Extract the main useful content and summarize the key information from it. ${toneInstruction} ${styleInstruction} Return the extracted content as clean text.`;
+        break;
+
+      case "chat": {
+        let basePrompt = systemPromptOverride 
+          || `You are a professional AI business assistant for a services marketplace platform called "فنيين" (Faneen). You help business owners manage their businesses, write content, optimize their profiles, and answer questions about running a service business.`;
+        
+        basePrompt += ` ${toneInstruction} ${styleInstruction} Be helpful and practical. Respond in the same language as the user's message. Do NOT use markdown formatting symbols.`;
+        
+        if (knowledgeContext) {
+          basePrompt += `\n\nIMPORTANT - Use the following knowledge base as your primary reference when answering. Always prioritize this information:\n\n${knowledgeContext}`;
+        }
+        
+        systemPrompt = basePrompt;
+        
         if (context) {
           userPrompt = `Previous conversation:\n${context}\n\nUser: ${text}`;
         }
         break;
+      }
 
       default:
         throw new Error(`Unknown action: ${action}`);
