@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { FolderOpen, Building2, DollarSign, Clock, ArrowLeft, ArrowRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { LazyImage } from "@/components/ui/lazy-image";
 
 const ProjectSkeleton = () => (
   <div className="rounded-2xl overflow-hidden border border-border bg-card">
@@ -71,7 +72,7 @@ export const LatestProjectsSection = () => {
               <div key={p.id} className={`group rounded-2xl overflow-hidden border border-border hover:border-gold/40 bg-card transition-all duration-500 hover:shadow-lg hover-scale ${isVisible ? 'animate-fade-in' : ''}`} style={{ animationDelay: `${i * 100}ms`, animationFillMode: 'both' }}>
                 <div className="aspect-video bg-muted relative overflow-hidden">
                   {p.cover_image_url ? (
-                    <img src={p.cover_image_url} alt={p.title_ar} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <LazyImage src={p.cover_image_url} alt={p.title_ar} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" wrapperClassName="w-full h-full" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
                       <FolderOpen className="w-10 h-10 sm:w-12 sm:h-12 text-muted-foreground/20" />

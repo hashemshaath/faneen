@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight, Percent, Tag, Clock, Eye } from "lucide-react";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { Skeleton } from "@/components/ui/skeleton";
+import { LazyImage } from "@/components/ui/lazy-image";
 
 const OfferSkeleton = () => (
   <div className="rounded-2xl overflow-hidden border border-border bg-card">
@@ -94,11 +95,11 @@ export const LatestOffersSection = () => {
                     )}
                     <div className="aspect-video bg-muted overflow-hidden">
                       {offer.image_url ? (
-                        <img
+                        <LazyImage
                           src={offer.image_url}
                           alt={language === "ar" ? offer.title_ar : offer.title_en || offer.title_ar}
-                          loading="lazy"
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          wrapperClassName="w-full h-full"
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gold/10 to-gold/5 dark:from-gold/5 dark:to-gold/[0.02]">
