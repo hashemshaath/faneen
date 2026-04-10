@@ -56,6 +56,7 @@ export const BusinessCard = ({ business: b, viewMode }: BusinessCardProps) => {
   const serviceCount = Array.isArray((b as any).business_services) ? (b as any).business_services.filter((s: any) => s.is_active).length : 0;
   const rating = Number(b.rating_avg) || 0;
   const initial = name?.charAt(0) || 'ف';
+  const hasBnpl = Array.isArray((b as any).business_bnpl_providers) && (b as any).business_bnpl_providers.length > 0;
 
   const touchHandlers = {
     onTouchStart: () => setPressed(true),
