@@ -105,6 +105,7 @@ const Auth = () => {
       toast.error(isRTL ? 'أدخل رقم جوال صحيح' : 'Enter a valid phone number');
       return;
     }
+
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('send-login-otp', {
@@ -112,19 +113,21 @@ const Auth = () => {
       });
 
       if (error) throw error;
+
       if (!data?.success) {
         const msg = data?.error === 'no_account'
           ? (isRTL ? 'لم يتم العثور على حساب بهذا الرقم. يرجى التسجيل أولاً أو استخدام البريد الإلكتروني' : 'No account found with this number. Please register first or use email')
-          : (data?.error || 'Error');
+          : data?.message || (isRTL ? 'تعذر إرسال الرمز، حاول مرة أخرى' : 'Could not send code, please try again');
         toast.error(msg);
         return;
       }
 
-      if (data.demo_otp) setDemoOtp(data.demo_otp);
+      setDemoOtp(data.demo_otp ?? null);
+      setOtpCode('');
       setOtpStep(true);
       setCooldown(60);
       toast.success(isRTL ? 'تم إرسال رمز التحقق' : 'Verification code sent');
-    } catch (err: any) {
+    } catch {
       toast.error(isRTL ? 'حدث خطأ، حاول مرة أخرى' : 'An error occurred, try again');
     } finally {
       setLoading(false);
@@ -136,6 +139,7 @@ const Auth = () => {
       toast.error(isRTL ? 'أدخل رمز التحقق المكون من 6 أرقام' : 'Enter 6-digit code');
       return;
     }
+
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('verify-login-otp', {
@@ -143,25 +147,42 @@ const Auth = () => {
       });
 
       if (error) throw error;
+
       if (!data?.success) {
-        toast.error(data?.error || (isRTL ? 'رمز التحقق غير صحيح' : 'Invalid verification code'));
+        const msg = data?.error === 'otp_already_used'
+          ? (isRTL ? 'تم استخدام هذا الرمز من قبل، اطلب رمزًا جديدًا' : 'This code was already used. Request a new one.')
+          : data?.error === 'otp_expired'
+            ? (isRTL ? 'انتهت صلاحية الرمز، اطلب رمزًا جديدًا' : 'This code expired. Request a new one.')
+            : data?.error === 'too_many_attempts'
+              ? (isRTL ? 'تم تجاوز عدد المحاولات، اطلب رمزًا جديدًا' : 'Too many attempts. Request a new code.')
+              : data?.error === 'invalid_otp'
+                ? (isRTL ? 'رمز التحقق غير صحيح' : 'Invalid verification code')
+                : data?.message || (isRTL ? 'تعذر التحقق من الرمز' : 'Could not verify the code');
+        toast.error(msg);
         return;
       }
 
-      // Set the session returned from the edge function
       if (data.session) {
         const { error: sessionError } = await supabase.auth.setSession({
           access_token: data.session.access_token,
           refresh_token: data.session.refresh_token,
         });
         if (sessionError) throw sessionError;
-        toast.success(isRTL ? 'تم تسجيل الدخول بنجاح' : 'Signed in successfully');
-        navigate('/');
+      } else if (data.token_hash) {
+        const { error: verifyError } = await supabase.auth.verifyOtp({
+          token_hash: data.token_hash,
+          type: 'magiclink',
+        });
+        if (verifyError) throw verifyError;
       } else {
         toast.error(isRTL ? 'فشل تسجيل الدخول' : 'Login failed');
+        return;
       }
+
+      toast.success(isRTL ? 'تم تسجيل الدخول بنجاح' : 'Signed in successfully');
+      navigate('/');
     } catch (err: any) {
-      toast.error(err.message);
+      toast.error(err?.message || (isRTL ? 'تعذر تسجيل الدخول' : 'Could not sign in'));
     } finally {
       setLoading(false);
     }
