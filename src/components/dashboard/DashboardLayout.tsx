@@ -31,6 +31,7 @@ import { toast } from 'sonner';
 
 const breadcrumbMap: Record<string, { ar: string; en: string }> = {
   '/dashboard': { ar: 'لوحة التحكم', en: 'Dashboard' },
+  '/dashboard/notifications': { ar: 'الإشعارات', en: 'Notifications' },
   '/dashboard/services': { ar: 'الخدمات', en: 'Services' },
   '/dashboard/portfolio': { ar: 'معرض الأعمال', en: 'Portfolio' },
   '/dashboard/projects': { ar: 'المشاريع', en: 'Projects' },
@@ -49,6 +50,8 @@ const breadcrumbMap: Record<string, { ar: string; en: string }> = {
 
 const accountTypeLabels: Record<string, { ar: string; en: string }> = {
   individual: { ar: 'مستخدم', en: 'User' },
+  business: { ar: 'مزود خدمة', en: 'Provider' },
+  company: { ar: 'مزود خدمة', en: 'Provider' },
   provider: { ar: 'مزود خدمة', en: 'Provider' },
 };
 
@@ -72,7 +75,7 @@ interface DashboardLayoutProps {
 
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const { isRTL, language } = useLanguage();
-  const { user, loading, profile, isAdmin, isSuperAdmin, signOut, refreshProfile } = useAuth();
+  const { user, loading, profile, isAdmin, isSuperAdmin, isProvider, signOut, refreshProfile } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -124,9 +127,10 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
   }
 
   const initial = (profile?.full_name || user.email || '?').charAt(0).toUpperCase();
-  const isProvider = profile?.account_type === 'provider';
   const roleBadge = getRoleBadge(isSuperAdmin, isAdmin, isProvider, isRTL);
-  const accountLabel = accountTypeLabels[profile?.account_type || 'individual'];
+  const accountLabel = isProvider
+    ? accountTypeLabels.provider
+    : (accountTypeLabels[profile?.account_type || 'individual'] || accountTypeLabels.individual);
 
   const handlePasswordChange = async () => {
     if (newPassword.length < 8) {

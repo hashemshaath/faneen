@@ -82,7 +82,7 @@ const providerGroups: MenuGroup[] = [
     icon: Settings,
     items: [
       { label: { ar: 'العضوية', en: 'Membership' }, url: '/membership', icon: Crown },
-      { label: { ar: 'الإشعارات', en: 'Notifications' }, url: '/notifications', icon: Bell },
+      { label: { ar: 'الإشعارات', en: 'Notifications' }, url: '/dashboard/notifications', icon: Bell },
       { label: { ar: 'الإعدادات', en: 'Settings' }, url: '/dashboard/settings', icon: Settings },
     ],
   },
@@ -120,7 +120,7 @@ const userGroups: MenuGroup[] = [
     groupLabel: { ar: 'الحساب', en: 'Account' },
     icon: Settings,
     items: [
-      { label: { ar: 'الإشعارات', en: 'Notifications' }, url: '/notifications', icon: Bell },
+      { label: { ar: 'الإشعارات', en: 'Notifications' }, url: '/dashboard/notifications', icon: Bell },
       { label: { ar: 'الإعدادات', en: 'Settings' }, url: '/dashboard/settings', icon: Settings },
     ],
   },
@@ -179,7 +179,7 @@ const adminBaseGroups: MenuGroup[] = [
     groupLabel: { ar: 'الحساب', en: 'Account' },
     icon: Settings,
     items: [
-      { label: { ar: 'الإشعارات', en: 'Notifications' }, url: '/notifications', icon: Bell },
+      { label: { ar: 'الإشعارات', en: 'Notifications' }, url: '/dashboard/notifications', icon: Bell },
       { label: { ar: 'الإعدادات', en: 'Settings' }, url: '/dashboard/settings', icon: Settings },
     ],
   },
@@ -248,13 +248,11 @@ export const DashboardSidebar: React.FC = () => {
   const { state, setOpenMobile, isMobile } = useSidebar();
   const collapsed = state === 'collapsed';
   const { language, setLanguage, isRTL } = useLanguage();
-  const { signOut, isAdmin, isSuperAdmin, profile } = useAuth();
+  const { signOut, isAdmin, isSuperAdmin, isProvider } = useAuth();
   const navigate = useNavigate();
 
   const closeMobile = () => { if (isMobile) setOpenMobile(false); };
   const handleLogout = async () => { await signOut(); navigate('/'); };
-
-  const isProvider = profile?.account_type === 'provider';
 
   // Admin gets admin-specific base menu, not user/provider menu
   const baseGroups = isAdmin ? adminBaseGroups : (isProvider ? providerGroups : userGroups);

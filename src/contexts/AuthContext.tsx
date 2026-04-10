@@ -25,6 +25,7 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   isAdmin: boolean;
   isSuperAdmin: boolean;
+  isProvider: boolean;
   roles: string[];
   profile: UserProfile | null;
   refreshProfile: () => Promise<void>;
@@ -38,6 +39,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const [roles, setRoles] = useState<string[]>([]);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [providerAccess, setProviderAccess] = useState(false);
 
   const fetchRoles = useCallback(async (userId: string) => {
     const { data } = await supabase
@@ -59,6 +61,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return data;
   }, []);
 
+  const fetchProviderAccess = useCallback(async (userId: string) => {
+    try {
+      const [{ data: ownedBusiness }, { data: staffMembership }] = await Promise.all([
+        supabase
+          .from('businesses')
+          .select('id')
+          .eq('user_id', userId)
+          .limit(1)
+          .maybeSingle(),
+        supabase
+          .from('business_staff')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('is_active', true)
+          .limit(1)
+          .maybeSingle(),
+      ]);
+
+      const hasProviderAccess = Boolean(ownedBusiness?.id || staffMembership?.id);
+      setProviderAccess(hasProviderAccess);
+      return hasProviderAccess;
+    } catch {
+      setProviderAccess(false);
+      return false;
+    }
+  }, []);
+
   const refreshProfile = useCallback(async () => {
     if (user) {
       await fetchProfile(user.id);
@@ -67,13 +96,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loadUserData = useCallback(async (userId: string) => {
     try {
-      await Promise.all([fetchRoles(userId), fetchProfile(userId)]);
+      await Promise.all([fetchRoles(userId), fetchProfile(userId), fetchProviderAccess(userId)]);
     } catch {
       // silent fail
     } finally {
       setLoading(false);
     }
-  }, [fetchRoles, fetchProfile]);
+  }, [fetchProviderAccess, fetchRoles, fetchProfile]);
 
   useEffect(() => {
     let mounted = true;
@@ -88,6 +117,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         setRoles([]);
         setProfile(null);
+        setProviderAccess(false);
         setLoading(false);
       }
     });
@@ -99,6 +129,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (session?.user) {
         loadUserData(session.user.id);
       } else {
+        setProviderAccess(false);
         setLoading(false);
       }
     });
@@ -113,13 +144,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await supabase.auth.signOut();
     setRoles([]);
     setProfile(null);
+    setProviderAccess(false);
   };
 
   const isSuperAdmin = roles.includes('super_admin');
   const isAdmin = isSuperAdmin || roles.includes('admin');
+  const isProvider = providerAccess || ['business', 'company', 'provider'].includes(profile?.account_type ?? '');
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signOut, isAdmin, isSuperAdmin, roles, profile, refreshProfile }}>
+    <AuthContext.Provider value={{ user, session, loading, signOut, isAdmin, isSuperAdmin, isProvider, roles, profile, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );
