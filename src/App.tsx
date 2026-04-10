@@ -46,6 +46,7 @@ const ProfileSystemDetail = lazy(() => import("./pages/ProfileSystemDetail"));
 const AdminApiSettings = lazy(() => import("./pages/admin/AdminApiSettings"));
 const AdminApiDocs = lazy(() => import("./pages/admin/AdminApiDocs"));
 const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
+const AdminSystemSettings = lazy(() => import("./pages/admin/AdminSystemSettings"));
 const AdminActivityLog = lazy(() => import("./pages/admin/AdminActivityLog"));
 const Notifications = lazy(() => import("./pages/Notifications"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -121,8 +122,9 @@ const App = () => (
                   <Route path="/admin/api-docs" element={<ProtectedRoute requireAdmin><AdminApiDocs /></ProtectedRoute>} />
                   <Route path="/admin/activity-log" element={<ProtectedRoute requireAdmin><AdminActivityLog /></ProtectedRoute>} />
 
-                  {/* Super Admin only - user/role management */}
+                  {/* Super Admin only */}
                   <Route path="/admin/users" element={<ProtectedRoute requireSuperAdmin><AdminUsers /></ProtectedRoute>} />
+                  <Route path="/admin/system-settings" element={<ProtectedRoute requireSuperAdmin><AdminSystemSettings /></ProtectedRoute>} />
 
                   {/* Dynamic profile route (must be last) */}
                   <Route path="/:username" element={<BusinessProfile />} />

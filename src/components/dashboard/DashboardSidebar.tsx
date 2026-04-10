@@ -13,10 +13,11 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { NavLink } from '@/components/NavLink';
+import { Separator } from '@/components/ui/separator';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import {
-  LayoutDashboard, Wrench, Image, Star, FileText, Shield, Settings, LogOut, Home, Globe, CreditCard, Megaphone, Key, Book, FolderOpen, PenSquare, Layers, MessageSquare, Users, Newspaper, Building2, Bell, Activity, Bookmark,
+  LayoutDashboard, Wrench, Image, Star, FileText, Shield, Settings, LogOut, Home, Globe, CreditCard, Megaphone, Key, Book, FolderOpen, PenSquare, Layers, MessageSquare, Users, Newspaper, Building2, Bell, Activity, Bookmark, ShieldAlert,
 } from 'lucide-react';
 
 const menuItems = [
@@ -39,6 +40,7 @@ const menuItems = [
 
 const adminItems = [
   { titleKey: 'admin.users', url: '/admin/users', icon: Users, superAdminOnly: true },
+  { titleKey: 'admin.system_settings', url: '/admin/system-settings', icon: ShieldAlert, superAdminOnly: true },
   { titleKey: 'admin.profile_systems', url: '/dashboard/profile-systems', icon: Layers, superAdminOnly: false },
   { titleKey: 'admin.blog', url: '/dashboard/blog', icon: PenSquare, superAdminOnly: false },
   { titleKey: 'admin.api_settings', url: '/admin/api-settings', icon: Key, superAdminOnly: false },
@@ -54,6 +56,7 @@ const getAdminLabel = (titleKey: string, isRTL: boolean) => {
     'admin.users': { ar: 'المستخدمين', en: 'Users' },
     'admin.blog': { ar: 'المدونة', en: 'Blog' },
     'admin.activity_log': { ar: 'سجل النشاط', en: 'Activity Log' },
+    'admin.system_settings': { ar: 'إعدادات النظام', en: 'System Settings' },
   };
   const entry = map[titleKey];
   return entry ? (isRTL ? entry.ar : entry.en) : titleKey;
