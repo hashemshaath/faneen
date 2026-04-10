@@ -277,7 +277,7 @@ const BlogPost = () => {
 
       {/* ═══ Cover ═══ */}
       {post.cover_image_url ? (
-        <div className="w-full h-52 sm:h-72 md:h-[28rem] bg-muted relative mt-14 sm:mt-16 overflow-hidden">
+        <div className="w-full h-48 sm:h-72 md:h-[28rem] bg-muted relative mt-14 sm:mt-16 overflow-hidden">
           <img src={post.cover_image_url} alt={title} className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
         </div>
@@ -285,7 +285,7 @@ const BlogPost = () => {
         <div className="pt-14 sm:pt-16" />
       )}
 
-      <div className="container mx-auto px-3 sm:px-4 max-w-6xl" style={{ marginTop: post.cover_image_url ? '-4rem' : '1.5rem' }}>
+      <div className="container mx-auto px-4 sm:px-6 max-w-6xl" style={{ marginTop: post.cover_image_url ? '-4rem' : '1.5rem' }}>
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6 lg:gap-8 relative">
 
           {/* ═══════════ Main Content ═══════════ */}
@@ -303,13 +303,13 @@ const BlogPost = () => {
               {post.tags?.map((tag: string) => <Badge key={tag} variant="secondary" className="text-[9px] sm:text-[10px]">{tag}</Badge>)}
             </div>
 
-            <h1 className="font-heading font-bold text-xl sm:text-3xl md:text-4xl lg:text-[2.5rem] leading-snug sm:leading-tight mb-3 sm:mb-4 text-foreground">{title}</h1>
+            <h1 className="font-heading font-bold text-[1.4rem] sm:text-3xl md:text-4xl lg:text-[2.5rem] leading-[1.4] sm:leading-tight mb-4 sm:mb-5 text-foreground">{title}</h1>
 
             {/* Meta info bar */}
-            <div className="flex items-center gap-2 sm:gap-4 text-[11px] sm:text-sm text-muted-foreground mb-4 sm:mb-6 flex-wrap">
-              <span className="flex items-center gap-1"><Calendar className="w-3 h-3 sm:w-4 sm:h-4 text-accent" />{new Date(post.published_at || post.created_at).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
-              <span className="flex items-center gap-1"><Eye className="w-3 h-3 sm:w-4 sm:h-4 text-accent" />{post.views_count}</span>
-              <span className="flex items-center gap-1"><Clock className="w-3 h-3 sm:w-4 sm:h-4 text-accent" />{readTime} {isRTL ? 'د' : 'min'}</span>
+            <div className="flex items-center gap-3 sm:gap-4 text-xs sm:text-sm text-muted-foreground mb-5 sm:mb-6 flex-wrap">
+              <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-accent" />{new Date(post.published_at || post.created_at).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
+              <span className="flex items-center gap-1.5"><Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-accent" />{post.views_count}</span>
+              <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-accent" />{readTime} {isRTL ? 'د' : 'min'}</span>
             </div>
 
             {/* ── Mobile: inline share bar ── */}
@@ -384,23 +384,27 @@ const BlogPost = () => {
 
             {/* Excerpt */}
             {(post.excerpt_ar || post.excerpt_en) && (
-              <div className="bg-accent/5 border-s-4 border-accent rounded-e-xl p-3 sm:p-4 mb-6 sm:mb-8 text-sm sm:text-base text-muted-foreground italic font-body leading-relaxed">
+              <div className="bg-accent/5 border-s-4 border-accent rounded-e-xl p-4 sm:p-5 mb-7 sm:mb-8 text-[0.9rem] sm:text-base text-muted-foreground italic font-body leading-[1.8]">
                 {language === 'ar' ? post.excerpt_ar : (post.excerpt_en || post.excerpt_ar)}
               </div>
             )}
 
             {/* ═══ Article body ═══ */}
-            <article className="prose prose-sm sm:prose-base lg:prose-lg max-w-none dark:prose-invert mb-8 sm:mb-12
+            <article className="prose prose-base lg:prose-lg max-w-none dark:prose-invert mb-10 sm:mb-12
               prose-headings:font-heading prose-headings:text-foreground prose-headings:scroll-mt-20
-              prose-p:text-foreground/85 prose-p:leading-relaxed prose-p:font-body prose-p:text-sm prose-p:sm:text-base
-              prose-a:text-accent prose-a:no-underline hover:prose-a:underline
+              prose-h2:text-lg prose-h2:sm:text-xl prose-h2:lg:text-2xl prose-h2:mt-8 prose-h2:sm:mt-10 prose-h2:mb-4
+              prose-h3:text-base prose-h3:sm:text-lg prose-h3:mt-6 prose-h3:mb-3
+              prose-p:text-foreground/85 prose-p:leading-[1.85] prose-p:sm:leading-[1.8] prose-p:font-body prose-p:text-[0.925rem] prose-p:sm:text-base prose-p:mb-5
+              prose-a:text-accent prose-a:no-underline hover:prose-a:underline prose-a:font-medium
               prose-strong:text-foreground prose-strong:font-semibold
-              prose-blockquote:border-accent prose-blockquote:bg-accent/5 prose-blockquote:rounded-e-xl prose-blockquote:py-1 prose-blockquote:px-4
-              prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md prose-code:text-xs prose-code:sm:text-sm
-              prose-img:rounded-xl prose-img:shadow-lg
-              prose-li:text-foreground/85 prose-li:text-sm prose-li:sm:text-base
-              prose-table:border-border prose-th:bg-muted prose-th:p-2 prose-td:p-2 prose-td:border-border
-              prose-hr:border-border/50
+              prose-blockquote:border-accent prose-blockquote:bg-accent/5 prose-blockquote:rounded-e-xl prose-blockquote:py-2 prose-blockquote:px-4 prose-blockquote:my-6
+              prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md prose-code:text-[0.8rem] prose-code:sm:text-sm
+              prose-pre:bg-muted prose-pre:rounded-xl prose-pre:p-4 prose-pre:overflow-x-auto
+              prose-img:rounded-xl prose-img:shadow-lg prose-img:my-6
+              prose-li:text-foreground/85 prose-li:text-[0.925rem] prose-li:sm:text-base prose-li:leading-[1.8] prose-li:my-1
+              prose-ul:my-4 prose-ol:my-4
+              prose-table:border-border prose-th:bg-muted prose-th:p-2.5 prose-td:p-2.5 prose-td:border-border
+              prose-hr:border-border/50 prose-hr:my-8
               ">
               <div dangerouslySetInnerHTML={{ __html: renderedHTML }} />
             </article>
