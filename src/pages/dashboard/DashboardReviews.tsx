@@ -1,4 +1,5 @@
 import React from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -60,7 +61,7 @@ const DashboardReviews = () => {
         </div>
 
         {isLoading ? (
-          <div className="flex justify-center py-12"><div className="w-8 h-8 border-4 border-gold border-t-transparent rounded-full animate-spin" /></div>
+          <div className="space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-24 rounded-xl" />)}</div>
         ) : reviews.length === 0 ? (
           <Card className="border-dashed">
             <CardContent className="flex flex-col items-center py-12 text-muted-foreground">

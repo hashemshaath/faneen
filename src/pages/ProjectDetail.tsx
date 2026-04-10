@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -90,8 +91,10 @@ const ProjectDetail = () => {
     return (
       <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
         <Navbar />
-        <div className="flex justify-center py-32">
-          <div className="w-10 h-10 border-4 border-accent border-t-transparent rounded-full animate-spin" />
+        <div className="container py-24 space-y-6 px-4">
+          <Skeleton className="h-10 w-3/4 rounded-xl" />
+          <Skeleton className="h-72 w-full rounded-xl" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4"><Skeleton className="h-40 rounded-xl" /><Skeleton className="h-40 rounded-xl" /></div>
         </div>
         <Footer />
       </div>

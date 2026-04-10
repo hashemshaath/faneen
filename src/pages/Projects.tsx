@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -213,9 +214,7 @@ const Projects = () => {
         </div>
 
         {isLoading ? (
-          <div className="flex justify-center py-12">
-            <div className="w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin" />
-          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">{[1,2,3,4,5,6].map(i => <Skeleton key={i} className="h-72 rounded-xl" />)}</div>
         ) : projects.length === 0 ? (
           <div className="text-center py-20 text-muted-foreground">
             <FolderOpen className="w-16 h-16 mx-auto mb-4 opacity-30" />

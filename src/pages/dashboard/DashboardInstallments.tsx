@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -105,8 +106,9 @@ const DashboardInstallments = () => {
   if (loadingSettings) {
     return (
       <DashboardLayout>
-        <div className="flex justify-center py-12">
-          <div className="w-8 h-8 border-4 border-gold border-t-transparent rounded-full animate-spin" />
+        <div className="space-y-6">
+          <Skeleton className="h-8 w-48 rounded-lg" />
+          <div className="space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-32 rounded-xl" />)}</div>
         </div>
       </DashboardLayout>
     );

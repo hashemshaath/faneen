@@ -1,4 +1,5 @@
 import React, { useMemo, useEffect, useState, useRef, useCallback } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -411,8 +412,10 @@ const BlogPost = () => {
     return (
       <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
         <Navbar />
-        <div className="pt-24 flex justify-center items-center min-h-[60vh]">
-          <div className="w-10 h-10 border-4 border-accent border-t-transparent rounded-full animate-spin" />
+        <div className="container pt-24 space-y-6 px-4 max-w-3xl mx-auto">
+          <Skeleton className="h-10 w-3/4 rounded-xl" />
+          <Skeleton className="aspect-[2/1] w-full rounded-2xl" />
+          <div className="space-y-3"><Skeleton className="h-4 w-full" /><Skeleton className="h-4 w-5/6" /><Skeleton className="h-4 w-4/6" /></div>
         </div>
       </div>
     );
