@@ -2,6 +2,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useParallax } from "@/hooks/useParallax";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useCountUp } from "@/hooks/useCountUp";
+import { memo } from "react";
 
 const stats = [
   { end: 2500, suffix: "+", labelKey: 'stats.providers' as const },
@@ -10,7 +11,7 @@ const stats = [
   { end: 98, suffix: "%", labelKey: 'stats.satisfaction' as const },
 ];
 
-const StatItem = ({ end, suffix, labelKey, index, isVisible }: {
+const StatItem = memo(({ end, suffix, labelKey, index, isVisible }: {
   end: number; suffix: string; labelKey: string; index: number; isVisible: boolean;
 }) => {
   const { t } = useLanguage();
@@ -21,22 +22,24 @@ const StatItem = ({ end, suffix, labelKey, index, isVisible }: {
       className={`text-center transition-all duration-700 ${isVisible ? 'animate-card-slide-up' : 'opacity-0'}`}
       style={{ animationDelay: `${index * 120}ms`, animationFillMode: 'both' }}
     >
-      <div className="font-heading font-black text-3xl md:text-4xl text-gradient-gold mb-2">
+      <div className="font-heading font-black text-2xl sm:text-3xl md:text-4xl text-gradient-gold mb-1 sm:mb-2">
         {isVisible ? display + suffix : "0" + suffix}
       </div>
-      <div className="font-body text-sm text-muted-foreground">{t(labelKey as any)}</div>
+      <div className="font-body text-xs sm:text-sm text-muted-foreground">{t(labelKey as any)}</div>
     </div>
   );
-};
+});
+
+StatItem.displayName = 'StatItem';
 
 export const StatsSection = () => {
   const parallaxRef = useParallax<HTMLDivElement>(0.08);
   const { ref: visRef, isVisible } = useScrollAnimation();
 
   return (
-    <section className="py-16 bg-muted/50 overflow-hidden">
-      <div ref={visRef} className="container">
-        <div ref={parallaxRef} className="grid grid-cols-2 md:grid-cols-4 gap-8 will-change-transform">
+    <section className="py-10 sm:py-16 bg-muted/50 overflow-hidden">
+      <div ref={visRef} className="container px-4 sm:px-6">
+        <div ref={parallaxRef} className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 will-change-transform">
           {stats.map((stat, i) => (
             <StatItem key={stat.labelKey} {...stat} index={i} isVisible={isVisible} />
           ))}
