@@ -207,9 +207,21 @@ const BlogPost = () => {
   const readTime = estimateReadTime(content);
   const headings = useMemo(() => extractHeadings(content), [content]);
 
+  const articleRef = useRef<HTMLDivElement>(null);
+
   const renderedHTML = useMemo(() => {
     if (!content) return '';
-    marked.setOptions({ breaks: true, gfm: true });
+    marked.setOptions({
+      breaks: true,
+      gfm: true,
+      highlight: (code: string, lang: string) => {
+        if (lang && hljs.getLanguage(lang)) {
+          try { return hljs.highlight(code, { language: lang }).value; } catch {}
+        }
+        try { return hljs.highlightAuto(code).value; } catch {}
+        return code;
+      },
+    });
     const renderer = new marked.Renderer();
     let hIdx = 0;
     renderer.heading = ({ text, depth }: { text: string; depth: number }) => {
