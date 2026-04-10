@@ -11,6 +11,103 @@ const respond = (payload: Record<string, unknown>) =>
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 
+/** Try multiple phone formats to find a profile */
+async function findProfile(
+  adminClient: ReturnType<typeof createClient>,
+  phone: string,
+  countryCode: string
+) {
+  const clean = String(phone).replace(/^0/, "");
+  const candidates = [
+    `${countryCode}${clean}`,
+    `0${clean}`,
+    clean,
+    String(phone),
+  ];
+
+  for (const ph of candidates) {
+    const { data } = await adminClient
+      .from("profiles")
+      .select("user_id, email")
+      .eq("phone", ph)
+      .limit(1)
+      .maybeSingle();
+    if (data) return data;
+  }
+  return null;
+}
+
+/** Find a valid, unexpired OTP for the given user */
+async function findOtp(
+  adminClient: ReturnType<typeof createClient>,
+  userId: string,
+  phone: string,
+  countryCode: string,
+  graceIso: string
+) {
+  const clean = String(phone).replace(/^0/, "");
+  const candidates = [
+    `${countryCode}${clean}`,
+    `0${clean}`,
+    clean,
+    String(phone),
+  ];
+
+  // Try each phone format first
+  for (const ph of candidates) {
+    const { data } = await adminClient
+      .from("phone_otps")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("phone", ph)
+      .eq("verified", false)
+      .gt("expires_at", graceIso)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (data) return data;
+  }
+
+  // Fallback: any OTP for this user
+  const { data } = await adminClient
+    .from("phone_otps")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("verified", false)
+    .gt("expires_at", graceIso)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  return data;
+}
+
+/** Get email for the user – try auth.users first, then profile */
+async function resolveEmail(
+  adminClient: ReturnType<typeof createClient>,
+  userId: string,
+  profileEmail: string | null
+): Promise<string | null> {
+  try {
+    const { data, error } = await adminClient.auth.admin.getUserById(userId);
+    if (!error && data?.user?.email) return data.user.email;
+  } catch (e) {
+    console.warn("getUserById failed, falling back to profile email:", e);
+  }
+
+  // Fallback to profile email
+  if (profileEmail) return profileEmail;
+
+  // Last resort: fetch profile email from DB
+  const { data: prof } = await adminClient
+    .from("profiles")
+    .select("email")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  return prof?.email || null;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -37,67 +134,19 @@ Deno.serve(async (req) => {
       });
     }
 
-    const cleanPhone = String(phone).replace(/^0/, "");
-    const fullPhone = `${country_code}${cleanPhone}`;
-    const localPhone = `0${cleanPhone}`;
-    const otpGraceMs = 30 * 1000;
-    const validAfterIso = new Date(Date.now() - otpGraceMs).toISOString();
-
-    let profile: { user_id: string } | null = null;
-
-    for (const ph of [fullPhone, localPhone, cleanPhone, String(phone)]) {
-      const { data } = await adminClient
-        .from("profiles")
-        .select("user_id")
-        .eq("phone", ph)
-        .limit(1)
-        .maybeSingle();
-
-      if (data) {
-        profile = data;
-        break;
-      }
-    }
-
+    // 1. Find profile
+    const profile = await findProfile(adminClient, phone, country_code);
     if (!profile) {
       return respond({ success: false, error: "no_account", message: "No account found" });
     }
 
-    let otpRecord: any = null;
-
-    for (const ph of [fullPhone, localPhone, cleanPhone, String(phone)]) {
-      const { data } = await adminClient
-        .from("phone_otps")
-        .select("*")
-        .eq("user_id", profile.user_id)
-        .eq("phone", ph)
-        .eq("verified", false)
-        .gt("expires_at", validAfterIso)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (data) {
-        otpRecord = data;
-        break;
-      }
-    }
+    // 2. Find OTP
+    const otpGraceMs = 30 * 1000;
+    const graceIso = new Date(Date.now() - otpGraceMs).toISOString();
+    const otpRecord = await findOtp(adminClient, profile.user_id, phone, country_code, graceIso);
 
     if (!otpRecord) {
-      const { data } = await adminClient
-        .from("phone_otps")
-        .select("*")
-        .eq("user_id", profile.user_id)
-        .eq("verified", false)
-        .gt("expires_at", validAfterIso)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (data) otpRecord = data;
-    }
-
-    if (!otpRecord) {
+      // Check if latest OTP was already used or expired
       const { data: latestOtp } = await adminClient
         .from("phone_otps")
         .select("*")
@@ -113,7 +162,6 @@ Deno.serve(async (req) => {
           message: "This OTP has already been used. Request a new code.",
         });
       }
-
       if (latestOtp && new Date(latestOtp.expires_at).getTime() < Date.now() - otpGraceMs) {
         return respond({
           success: false,
@@ -121,7 +169,6 @@ Deno.serve(async (req) => {
           message: "OTP expired. Request a new code.",
         });
       }
-
       return respond({
         success: false,
         error: "otp_not_found",
@@ -129,6 +176,7 @@ Deno.serve(async (req) => {
       });
     }
 
+    // 3. Check attempts
     if (otpRecord.attempts >= 5) {
       return respond({
         success: false,
@@ -137,6 +185,7 @@ Deno.serve(async (req) => {
       });
     }
 
+    // 4. Verify code
     if (otpRecord.otp_code !== otp_code) {
       await adminClient
         .from("phone_otps")
@@ -151,18 +200,18 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { data: authUserData, error: authUserError } = await adminClient.auth.admin.getUserById(profile.user_id);
-    const authEmail = authUserData?.user?.email;
+    // 5. Resolve email (auth.users → profile fallback)
+    const authEmail = await resolveEmail(adminClient, profile.user_id, profile.email);
 
-    if (authUserError || !authEmail) {
-      console.error("Failed to load auth user:", authUserError);
+    if (!authEmail) {
       return respond({
         success: false,
         error: "no_email_linked",
-        message: "User has no email linked",
+        message: "No email linked to this account. Please contact support.",
       });
     }
 
+    // 6. Generate magic link
     const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
       type: "magiclink",
       email: authEmail,
@@ -186,14 +235,11 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { error: verifyMarkError } = await adminClient
+    // 7. Mark OTP as verified
+    await adminClient
       .from("phone_otps")
       .update({ verified: true })
       .eq("id", otpRecord.id);
-
-    if (verifyMarkError) {
-      console.error("Failed to mark OTP as verified:", verifyMarkError);
-    }
 
     return respond({
       success: true,
