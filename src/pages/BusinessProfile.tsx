@@ -9,13 +9,15 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import {
   Star, MapPin, Phone, Mail, Globe, Shield, ArrowRight, ArrowLeft,
   Share2, Video, ChevronLeft, ChevronRight, BadgeCheck, Clock,
   MessageSquare, ExternalLink, Loader2, Briefcase, Image as ImageIcon,
   Building2, Calendar, DollarSign, Award, Users, Bookmark, Eye,
-  Wrench, FolderOpen, CheckCircle2, Crown,
+  Wrench, FolderOpen, CheckCircle2, Crown, User, PhoneCall, Hash,
+  GitBranch, MapPinned,
 } from 'lucide-react';
 
 // ══════════ Data hooks ══════════
@@ -96,6 +98,22 @@ const useReviews = (businessId: string | undefined) =>
     enabled: !!businessId,
   });
 
+const useBranches = (businessId: string | undefined) =>
+  useQuery({
+    queryKey: ['branches', businessId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('business_branches')
+        .select('*, cities(name_ar, name_en), countries(name_ar, name_en)')
+        .eq('business_id', businessId!)
+        .eq('is_active', true)
+        .order('is_main', { ascending: false })
+        .order('sort_order');
+      return data ?? [];
+    },
+    enabled: !!businessId,
+  });
+
 // ══════════ Sub-components ══════════
 
 const Stars: React.FC<{ rating: number; size?: string }> = ({ rating, size = 'w-4 h-4' }) => (
@@ -112,10 +130,10 @@ const tierConfig: Record<string, { label: string; labelAr: string; color: string
 };
 
 // ── Profile Header ──
-const ProfileHeader: React.FC<{ business: any; onContact: () => void; isContacting: boolean; projectCount: number; serviceCount: number }> = ({ business, onContact, isContacting, projectCount, serviceCount }) => {
+const ProfileHeader: React.FC<{ business: any; onContact: () => void; isContacting: boolean; projectCount: number; serviceCount: number; branchCount: number }> = ({ business, onContact, isContacting, projectCount, serviceCount, branchCount }) => {
   const { t, language, isRTL } = useLanguage();
   const name = language === 'ar' ? business.name_ar : (business.name_en || business.name_ar);
-  const desc = language === 'ar' ? business.description_ar : (business.description_en || business.description_ar);
+  const shortDesc = language === 'ar' ? (business.short_description_ar || business.description_ar) : (business.short_description_en || business.description_en || business.short_description_ar || business.description_ar);
   const cityName = business.cities ? (language === 'ar' ? business.cities.name_ar : business.cities.name_en) : '';
   const categoryName = business.categories ? (language === 'ar' ? business.categories.name_ar : business.categories.name_en) : '';
   const memberDate = new Date(business.created_at).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US', { year: 'numeric', month: 'long' });
@@ -190,6 +208,12 @@ const ProfileHeader: React.FC<{ business: any; onContact: () => void; isContacti
                         <span>{cityName}</span>
                       </div>
                     )}
+                    {business.contact_person && (
+                      <div className="flex items-center gap-1">
+                        <User className="w-3.5 h-3.5 text-accent" />
+                        <span>{business.contact_person}</span>
+                      </div>
+                    )}
                     <div className="flex items-center gap-1">
                       <Star className="w-3.5 h-3.5 text-accent fill-accent" />
                       <span className="font-semibold text-foreground">{Number(business.rating_avg).toFixed(1)}</span>
@@ -213,17 +237,18 @@ const ProfileHeader: React.FC<{ business: any; onContact: () => void; isContacti
                 </div>
               </div>
 
-              {desc && (
-                <p className="mt-2.5 sm:mt-3 text-xs sm:text-sm text-muted-foreground font-body leading-relaxed line-clamp-3 sm:line-clamp-none max-w-2xl">{desc}</p>
+              {shortDesc && (
+                <p className="mt-2.5 sm:mt-3 text-xs sm:text-sm text-muted-foreground font-body leading-relaxed line-clamp-3 sm:line-clamp-none max-w-2xl">{shortDesc}</p>
               )}
             </div>
           </div>
 
           {/* Stats bar */}
-          <div className="grid grid-cols-3 gap-2 sm:gap-4 mt-4 pt-4 border-t border-border/30 dark:border-border/20">
+          <div className="grid grid-cols-4 gap-2 sm:gap-4 mt-4 pt-4 border-t border-border/30 dark:border-border/20">
             {[
               { icon: FolderOpen, value: projectCount, label: language === 'ar' ? 'مشروع' : 'Projects' },
               { icon: Wrench, value: serviceCount, label: language === 'ar' ? 'خدمة' : 'Services' },
+              { icon: GitBranch, value: branchCount, label: language === 'ar' ? 'فرع' : 'Branches' },
               { icon: Star, value: business.rating_count, label: language === 'ar' ? 'تقييم' : 'Reviews' },
             ].map((stat, i) => (
               <div key={i} className="flex items-center gap-2 sm:gap-3 justify-center">
@@ -244,43 +269,65 @@ const ProfileHeader: React.FC<{ business: any; onContact: () => void; isContacti
 };
 
 // ── Services Tab ──
-const ServicesTab: React.FC<{ businessId: string }> = ({ businessId }) => {
-  const { t, language, isRTL } = useLanguage();
+const ServicesTab: React.FC<{ businessId: string; businessName: string }> = ({ businessId, businessName }) => {
+  const { language, isRTL } = useLanguage();
   const { data: services, isLoading } = useServices(businessId);
 
-  if (isLoading) return <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">{[1,2,3].map(i => <Skeleton key={i} className="h-32 rounded-xl" />)}</div>;
+  if (isLoading) return <div className="space-y-4"><Skeleton className="h-32 rounded-xl" /><div className="grid grid-cols-1 sm:grid-cols-2 gap-3">{[1,2,3].map(i => <Skeleton key={i} className="h-32 rounded-xl" />)}</div></div>;
   if (!services?.length) return <EmptyState icon={Wrench} text={language === 'ar' ? 'لا توجد خدمات بعد' : 'No services yet'} />;
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-      {services.map((service, i) => {
-        const name = language === 'ar' ? service.name_ar : (service.name_en || service.name_ar);
-        const desc = language === 'ar' ? service.description_ar : (service.description_en || service.description_ar);
-        return (
-          <div key={service.id} className="p-4 sm:p-5 rounded-2xl bg-card dark:bg-card/80 border border-border/30 dark:border-border/15 hover:border-accent/30 transition-all duration-300 hover:shadow-lg hover:shadow-accent/5 group active:scale-[0.98] animate-fade-in" style={{ animationDelay: `${i * 60}ms`, animationFillMode: 'both' }}>
-            <div className="flex items-start gap-3">
-              <div className="w-11 h-11 rounded-xl bg-accent/10 dark:bg-accent/15 flex items-center justify-center shrink-0 group-hover:bg-accent group-hover:text-accent-foreground transition-colors">
-                <Wrench className="w-5 h-5 text-accent group-hover:text-accent-foreground" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-heading font-bold text-sm sm:text-base text-foreground mb-1 truncate">{name}</h3>
-                {desc && <p className="text-xs sm:text-sm text-muted-foreground font-body line-clamp-2 mb-3 leading-relaxed">{desc}</p>}
-                {(service.price_from || service.price_to) && (
-                  <div className="flex items-center gap-1.5 text-xs sm:text-sm font-body bg-accent/5 dark:bg-accent/10 rounded-lg px-2.5 py-1.5 w-fit">
-                    <DollarSign className="w-3.5 h-3.5 text-accent" />
-                    <span className="text-foreground font-semibold">
-                      {service.price_from && service.price_from.toLocaleString()}
-                      {service.price_from && service.price_to && ' - '}
-                      {service.price_to && service.price_to.toLocaleString()}
-                    </span>
-                    <span className="text-muted-foreground text-[10px]">{service.currency_code}</span>
-                  </div>
-                )}
+    <div className="space-y-5">
+      {/* Services Cover / Header */}
+      <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-primary via-primary/90 to-primary/80 p-5 sm:p-8">
+        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 70% 30%, hsl(var(--accent) / 0.5) 0%, transparent 50%)" }} />
+        <div className="relative z-10 flex items-center gap-4">
+          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-accent/20 flex items-center justify-center shrink-0">
+            <Wrench className="w-7 h-7 sm:w-8 sm:h-8 text-accent" />
+          </div>
+          <div>
+            <h2 className="font-heading font-bold text-lg sm:text-xl text-primary-foreground">
+              {language === 'ar' ? 'خدماتنا' : 'Our Services'}
+            </h2>
+            <p className="text-xs sm:text-sm text-primary-foreground/70 mt-0.5">
+              {language === 'ar'
+                ? `${services.length} خدمة متاحة من ${businessName}`
+                : `${services.length} services available from ${businessName}`}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+        {services.map((service, i) => {
+          const name = language === 'ar' ? service.name_ar : (service.name_en || service.name_ar);
+          const desc = language === 'ar' ? service.description_ar : (service.description_en || service.description_ar);
+          return (
+            <div key={service.id} className="p-4 sm:p-5 rounded-2xl bg-card dark:bg-card/80 border border-border/30 dark:border-border/15 hover:border-accent/30 transition-all duration-300 hover:shadow-lg hover:shadow-accent/5 group active:scale-[0.98] animate-fade-in" style={{ animationDelay: `${i * 60}ms`, animationFillMode: 'both' }}>
+              <div className="flex items-start gap-3">
+                <div className="w-11 h-11 rounded-xl bg-accent/10 dark:bg-accent/15 flex items-center justify-center shrink-0 group-hover:bg-accent group-hover:text-accent-foreground transition-colors">
+                  <Wrench className="w-5 h-5 text-accent group-hover:text-accent-foreground" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-heading font-bold text-sm sm:text-base text-foreground mb-1 truncate">{name}</h3>
+                  {desc && <p className="text-xs sm:text-sm text-muted-foreground font-body line-clamp-2 mb-3 leading-relaxed">{desc}</p>}
+                  {(service.price_from || service.price_to) && (
+                    <div className="flex items-center gap-1.5 text-xs sm:text-sm font-body bg-accent/5 dark:bg-accent/10 rounded-lg px-2.5 py-1.5 w-fit">
+                      <DollarSign className="w-3.5 h-3.5 text-accent" />
+                      <span className="text-foreground font-semibold" dir="ltr">
+                        {service.price_from && service.price_from.toLocaleString()}
+                        {service.price_from && service.price_to && ' - '}
+                        {service.price_to && service.price_to.toLocaleString()}
+                      </span>
+                      <span className="text-muted-foreground text-[10px]">{service.currency_code}</span>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
   );
 };
@@ -338,7 +385,7 @@ const ProjectsTab: React.FC<{ businessId: string }> = ({ businessId }) => {
                     )}
                   </div>
                   {project.project_cost && (
-                    <span className="font-semibold text-accent text-[11px] sm:text-xs">
+                    <span className="font-semibold text-accent text-[11px] sm:text-xs" dir="ltr">
                       {project.project_cost.toLocaleString()} {project.currency_code}
                     </span>
                   )}
@@ -354,7 +401,7 @@ const ProjectsTab: React.FC<{ businessId: string }> = ({ businessId }) => {
 
 // ── Portfolio Tab ──
 const PortfolioTab: React.FC<{ businessId: string }> = ({ businessId }) => {
-  const { t, language } = useLanguage();
+  const { language } = useLanguage();
   const { data: items, isLoading } = usePortfolio(businessId);
   const [filter, setFilter] = useState<'all' | 'image' | 'video'>('all');
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
@@ -423,7 +470,7 @@ const PortfolioTab: React.FC<{ businessId: string }> = ({ businessId }) => {
 
 // ── Reviews Tab ──
 const ReviewsTab: React.FC<{ business: any }> = ({ business }) => {
-  const { language, isRTL } = useLanguage();
+  const { language } = useLanguage();
   const { data: reviews, isLoading } = useReviews(business.id);
 
   const distribution = useMemo(() => {
@@ -502,34 +549,153 @@ const ReviewsTab: React.FC<{ business: any }> = ({ business }) => {
   );
 };
 
+// ── Branches Tab ──
+const BranchesTab: React.FC<{ businessId: string }> = ({ businessId }) => {
+  const { language, isRTL } = useLanguage();
+  const { data: branches, isLoading } = useBranches(businessId);
+
+  if (isLoading) return <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">{[1,2].map(i => <Skeleton key={i} className="h-56 rounded-xl" />)}</div>;
+  if (!branches?.length) return <EmptyState icon={GitBranch} text={language === 'ar' ? 'لا توجد فروع بعد' : 'No branches yet'} />;
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+      {branches.map((branch: any, i: number) => {
+        const name = language === 'ar' ? branch.name_ar : (branch.name_en || branch.name_ar);
+        const cityName = branch.cities ? (language === 'ar' ? branch.cities.name_ar : branch.cities.name_en) : '';
+        const countryName = branch.countries ? (language === 'ar' ? branch.countries.name_ar : branch.countries.name_en) : '';
+
+        const addressParts = [
+          branch.district,
+          branch.street_name,
+          branch.building_number && (language === 'ar' ? `مبنى ${branch.building_number}` : `Bldg ${branch.building_number}`),
+        ].filter(Boolean);
+
+        const contactItems = [
+          branch.contact_person && { icon: User, label: language === 'ar' ? 'مسؤول التواصل' : 'Contact Person', value: branch.contact_person },
+          branch.phone && { icon: Phone, label: language === 'ar' ? 'الهاتف' : 'Phone', value: branch.phone, dir: 'ltr' as const, href: `tel:${branch.phone}` },
+          branch.mobile && { icon: PhoneCall, label: language === 'ar' ? 'الجوال' : 'Mobile', value: branch.mobile, dir: 'ltr' as const, href: `tel:${branch.mobile}` },
+          branch.unified_number && { icon: Hash, label: language === 'ar' ? 'الرقم الموحد' : 'Unified Number', value: branch.unified_number, dir: 'ltr' as const, href: `tel:${branch.unified_number}` },
+          branch.customer_service_phone && { icon: PhoneCall, label: language === 'ar' ? 'خدمة العملاء' : 'Customer Service', value: branch.customer_service_phone, dir: 'ltr' as const, href: `tel:${branch.customer_service_phone}` },
+          branch.email && { icon: Mail, label: language === 'ar' ? 'البريد' : 'Email', value: branch.email, dir: 'ltr' as const, href: `mailto:${branch.email}` },
+          branch.website && { icon: Globe, label: language === 'ar' ? 'الموقع' : 'Website', value: branch.website?.replace(/^https?:\/\//, ''), dir: 'ltr' as const, href: branch.website, external: true },
+        ].filter(Boolean) as any[];
+
+        return (
+          <div key={branch.id} className="rounded-2xl bg-card dark:bg-card/80 border border-border/30 dark:border-border/15 overflow-hidden hover:border-accent/20 transition-all animate-fade-in" style={{ animationDelay: `${i * 80}ms`, animationFillMode: 'both' }}>
+            {/* Branch header */}
+            <div className="p-4 sm:p-5 border-b border-border/20 dark:border-border/10">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-accent/10 dark:bg-accent/15 flex items-center justify-center shrink-0">
+                  <MapPinned className="w-5 h-5 sm:w-6 sm:h-6 text-accent" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-heading font-bold text-sm sm:text-base text-foreground truncate">{name}</h3>
+                    {branch.is_main && (
+                      <Badge className="bg-accent/10 text-accent border-accent/30 text-[9px] sm:text-[10px] shrink-0">
+                        {language === 'ar' ? 'رئيسي' : 'Main'}
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
+                    {cityName && <span>{cityName}</span>}
+                    {cityName && countryName && <span>•</span>}
+                    {countryName && <span>{countryName}</span>}
+                  </div>
+                </div>
+              </div>
+
+              {/* Address */}
+              {addressParts.length > 0 && (
+                <div className="mt-3 flex items-start gap-2 text-xs text-muted-foreground">
+                  <MapPin className="w-3.5 h-3.5 mt-0.5 shrink-0 text-accent/50" />
+                  <span>{addressParts.join('، ')}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Contact details */}
+            {contactItems.length > 0 && (
+              <div className="p-4 sm:p-5 space-y-2.5">
+                {contactItems.map((item: any, ci: number) => {
+                  const Wrapper = item.href ? 'a' : 'div';
+                  const wrapperProps = item.href ? { href: item.href, ...(item.external ? { target: '_blank', rel: 'noopener noreferrer' } : {}) } : {};
+                  return (
+                    <Wrapper key={ci} {...wrapperProps} className="flex items-center gap-2.5 group hover:text-accent transition-colors">
+                      <div className="w-7 h-7 rounded-lg bg-accent/5 dark:bg-accent/10 flex items-center justify-center shrink-0">
+                        <item.icon className="w-3.5 h-3.5 text-accent/70" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[10px] text-muted-foreground/70">{item.label}</p>
+                        <p className="text-xs sm:text-sm text-foreground font-medium truncate" dir={item.dir || undefined}>{item.value}</p>
+                      </div>
+                      {item.external && <ExternalLink className="w-3 h-3 text-muted-foreground/40 shrink-0" />}
+                    </Wrapper>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Map link */}
+            {branch.latitude && branch.longitude && (
+              <div className="px-4 pb-4 sm:px-5 sm:pb-5">
+                <a href={`https://www.google.com/maps?q=${branch.latitude},${branch.longitude}`} target="_blank" rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-[10px] sm:text-xs text-accent hover:underline font-body">
+                  <ExternalLink className="w-3 h-3" />
+                  {language === 'ar' ? 'فتح في الخرائط' : 'Open in Maps'}
+                </a>
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
 // ── Contact Tab ──
 const ContactTab: React.FC<{ business: any }> = ({ business }) => {
-  const { t, language, isRTL } = useLanguage();
+  const { language, isRTL } = useLanguage();
   const cityName = business.cities ? (language === 'ar' ? business.cities.name_ar : business.cities.name_en) : '';
   const countryName = business.countries ? (language === 'ar' ? business.countries.name_ar : business.countries.name_en) : '';
 
   const contactItems = [
+    business.contact_person && { icon: User, label: language === 'ar' ? 'مسؤول التواصل' : 'Contact Person', value: business.contact_person },
     business.phone && { icon: Phone, label: language === 'ar' ? 'اتصل بنا' : 'Call us', value: business.phone, href: `tel:${business.phone}`, dir: 'ltr' as const },
+    business.mobile && { icon: PhoneCall, label: language === 'ar' ? 'الجوال' : 'Mobile', value: business.mobile, href: `tel:${business.mobile}`, dir: 'ltr' as const },
+    business.unified_number && { icon: Hash, label: language === 'ar' ? 'الرقم الموحد' : 'Unified Number', value: business.unified_number, href: `tel:${business.unified_number}`, dir: 'ltr' as const },
+    business.customer_service_phone && { icon: PhoneCall, label: language === 'ar' ? 'خدمة العملاء' : 'Customer Service', value: business.customer_service_phone, href: `tel:${business.customer_service_phone}`, dir: 'ltr' as const },
     business.email && { icon: Mail, label: language === 'ar' ? 'راسلنا' : 'Email us', value: business.email, href: `mailto:${business.email}`, dir: 'ltr' as const },
     business.website && { icon: Globe, label: language === 'ar' ? 'الموقع' : 'Website', value: business.website.replace(/^https?:\/\//, ''), href: business.website, dir: 'ltr' as const, external: true },
   ].filter(Boolean) as any[];
 
+  const addressParts = [
+    business.district,
+    business.street_name,
+    business.building_number && (language === 'ar' ? `مبنى ${business.building_number}` : `Bldg ${business.building_number}`),
+    business.region,
+  ].filter(Boolean);
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
       <div className="space-y-3">
-        {contactItems.map((item, i) => (
-          <a key={i} href={item.href} {...(item.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-            className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-2xl bg-card dark:bg-card/80 border border-border/30 dark:border-border/15 hover:border-accent/30 transition-all group active:scale-[0.98]">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-accent/10 dark:bg-accent/15 flex items-center justify-center group-hover:bg-accent transition-colors shrink-0">
-              <item.icon className="w-4 h-4 sm:w-5 sm:h-5 text-accent group-hover:text-accent-foreground" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[10px] sm:text-xs text-muted-foreground font-body">{item.label}</p>
-              <p className="font-body text-sm text-foreground font-medium truncate" dir={item.dir}>{item.value}</p>
-            </div>
-            {item.external && <ExternalLink className="w-4 h-4 text-muted-foreground shrink-0" />}
-          </a>
-        ))}
+        {contactItems.map((item: any, i: number) => {
+          const Wrapper = item.href ? 'a' : 'div';
+          const wrapperProps = item.href ? { href: item.href, ...(item.external ? { target: '_blank', rel: 'noopener noreferrer' } : {}) } : {};
+          return (
+            <Wrapper key={i} {...wrapperProps}
+              className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-2xl bg-card dark:bg-card/80 border border-border/30 dark:border-border/15 hover:border-accent/30 transition-all group active:scale-[0.98]">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-accent/10 dark:bg-accent/15 flex items-center justify-center group-hover:bg-accent transition-colors shrink-0">
+                <item.icon className="w-4 h-4 sm:w-5 sm:h-5 text-accent group-hover:text-accent-foreground" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] sm:text-xs text-muted-foreground font-body">{item.label}</p>
+                <p className="font-body text-sm text-foreground font-medium truncate" dir={item.dir || undefined}>{item.value}</p>
+              </div>
+              {item.external && <ExternalLink className="w-4 h-4 text-muted-foreground shrink-0" />}
+            </Wrapper>
+          );
+        })}
       </div>
 
       <div className="p-4 sm:p-5 rounded-2xl bg-card dark:bg-card/80 border border-border/30 dark:border-border/15">
@@ -538,8 +704,21 @@ const ContactTab: React.FC<{ business: any }> = ({ business }) => {
           {language === 'ar' ? 'الموقع' : 'Location'}
         </h3>
         <div className="space-y-2 font-body text-xs sm:text-sm text-muted-foreground mb-3">
+          {addressParts.length > 0 && <p>{addressParts.join('، ')}</p>}
           {business.address && <p>{business.address}</p>}
           {(cityName || countryName) && <p>{[cityName, countryName].filter(Boolean).join('، ')}</p>}
+          {business.national_id && (
+            <p className="flex items-center gap-1.5">
+              <span className="text-muted-foreground/60">{language === 'ar' ? 'الرقم الوطني:' : 'National ID:'}</span>
+              <span dir="ltr">{business.national_id}</span>
+            </p>
+          )}
+          {business.additional_number && (
+            <p className="flex items-center gap-1.5">
+              <span className="text-muted-foreground/60">{language === 'ar' ? 'الرقم الإضافي:' : 'Additional No:'}</span>
+              <span dir="ltr">{business.additional_number}</span>
+            </p>
+          )}
         </div>
 
         {business.latitude && business.longitude ? (
@@ -586,6 +765,7 @@ const BusinessProfile = () => {
   const { data: business, isLoading, error } = useBusinessByUsername(username || '');
   const { data: projects = [] } = useProjects(business?.id);
   const { data: services = [] } = useServices(business?.id);
+  const { data: branches = [] } = useBranches(business?.id);
   const BackArrow = isRTL ? ArrowRight : ArrowLeft;
 
   const contactMutation = useMutation({
@@ -693,7 +873,7 @@ const BusinessProfile = () => {
       </nav>
 
       <div className="pt-12 sm:pt-14">
-        <ProfileHeader business={business} onContact={() => contactMutation.mutate()} isContacting={contactMutation.isPending} projectCount={projects.length} serviceCount={services.length} />
+        <ProfileHeader business={business} onContact={() => contactMutation.mutate()} isContacting={contactMutation.isPending} projectCount={projects.length} serviceCount={services.length} branchCount={branches.length} />
 
         {/* ═══ Tabs ═══ */}
         <div className="container mt-5 sm:mt-8 pb-10 sm:pb-16 px-3 sm:px-4">
@@ -713,6 +893,11 @@ const BusinessProfile = () => {
                   <ImageIcon className="w-3.5 h-3.5" />
                   {language === 'ar' ? 'الأعمال' : 'Portfolio'}
                 </TabsTrigger>
+                <TabsTrigger value="branches" className="font-body rounded-lg data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-3 sm:px-5 py-2 text-xs sm:text-sm gap-1 sm:gap-1.5 shrink-0 whitespace-nowrap">
+                  <GitBranch className="w-3.5 h-3.5" />
+                  {language === 'ar' ? 'الفروع' : 'Branches'}
+                  {branches.length > 0 && <span className="text-[9px] bg-accent/20 px-1.5 rounded-full">{branches.length}</span>}
+                </TabsTrigger>
                 <TabsTrigger value="reviews" className="font-body rounded-lg data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-3 sm:px-5 py-2 text-xs sm:text-sm gap-1 sm:gap-1.5 shrink-0 whitespace-nowrap">
                   <Star className="w-3.5 h-3.5" />
                   {language === 'ar' ? 'التقييمات' : 'Reviews'}
@@ -726,9 +911,10 @@ const BusinessProfile = () => {
             </div>
 
             <div className="mt-4 sm:mt-6">
-              <TabsContent value="services"><ServicesTab businessId={business.id} /></TabsContent>
+              <TabsContent value="services"><ServicesTab businessId={business.id} businessName={businessName} /></TabsContent>
               <TabsContent value="projects"><ProjectsTab businessId={business.id} /></TabsContent>
               <TabsContent value="portfolio"><PortfolioTab businessId={business.id} /></TabsContent>
+              <TabsContent value="branches"><BranchesTab businessId={business.id} /></TabsContent>
               <TabsContent value="reviews"><ReviewsTab business={business} /></TabsContent>
               <TabsContent value="contact"><ContactTab business={business} /></TabsContent>
             </div>
