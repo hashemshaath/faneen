@@ -294,6 +294,37 @@ export const translations = {
   'admin.api_settings': { ar: 'إعدادات API', en: 'API Settings' },
   'admin.api_docs': { ar: 'توثيق API', en: 'API Docs' },
   'admin.activity_log': { ar: 'سجل النشاط', en: 'Activity Log' },
+
+  // Pagination
+  'pagination.prev': { ar: 'السابق', en: 'Previous' },
+  'pagination.next': { ar: 'التالي', en: 'Next' },
+  'pagination.page': { ar: 'صفحة', en: 'Page' },
+  'pagination.of': { ar: 'من', en: 'of' },
+  'pagination.showing': { ar: 'عرض', en: 'Showing' },
+  'pagination.to': { ar: 'إلى', en: 'to' },
+
+  // Dark mode
+  'theme.light': { ar: 'فاتح', en: 'Light' },
+  'theme.dark': { ar: 'داكن', en: 'Dark' },
+  'theme.system': { ar: 'تلقائي', en: 'System' },
+
+  // Quote request
+  'quote.request': { ar: 'طلب عرض سعر', en: 'Request Quote' },
+  'quote.name': { ar: 'الاسم الكامل', en: 'Full Name' },
+  'quote.phone': { ar: 'رقم الهاتف', en: 'Phone Number' },
+  'quote.email': { ar: 'البريد الإلكتروني', en: 'Email' },
+  'quote.details': { ar: 'تفاصيل الطلب', en: 'Request Details' },
+  'quote.send': { ar: 'إرسال الطلب', en: 'Send Request' },
+  'quote.success': { ar: 'تم إرسال طلبك بنجاح', en: 'Your request was sent successfully' },
+
+  // Dashboard advanced
+  'dashboard.total_revenue': { ar: 'إجمالي الإيرادات', en: 'Total Revenue' },
+  'dashboard.monthly_views': { ar: 'الزيارات الشهرية', en: 'Monthly Views' },
+  'dashboard.active_contracts': { ar: 'العقود النشطة', en: 'Active Contracts' },
+  'dashboard.avg_rating': { ar: 'متوسط التقييم', en: 'Avg Rating' },
+  'dashboard.recent_activity': { ar: 'آخر النشاطات', en: 'Recent Activity' },
+  'dashboard.performance': { ar: 'الأداء', en: 'Performance' },
+  'dashboard.quick_actions': { ar: 'إجراءات سريعة', en: 'Quick Actions' },
 } as const;
 
 export type TranslationKey = keyof typeof translations;
