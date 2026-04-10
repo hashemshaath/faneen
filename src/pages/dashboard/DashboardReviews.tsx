@@ -13,9 +13,9 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   Star, MessageCircle, Search, TrendingUp, TrendingDown,
-  ThumbsUp, ThumbsDown, BarChart3, Filter, ArrowUpDown,
-  CheckCircle2, Clock, Eye, EyeOff, ChevronDown, ChevronUp,
-  StarOff, Sparkles, AlertCircle, Loader2, LayoutGrid, LayoutList,
+  ThumbsUp, ThumbsDown, BarChart3, ArrowUpDown, X,
+  Clock, ChevronDown, ChevronUp,
+  Sparkles, LayoutGrid, LayoutList,
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
