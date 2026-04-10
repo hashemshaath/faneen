@@ -1,7 +1,9 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, lazy, Suspense } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+
+const Forbidden = lazy(() => import('@/pages/Forbidden'));
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -71,11 +73,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }
 
   if (requireSuperAdmin && !isSuperAdmin) {
-    return <Navigate to="/dashboard" replace />;
+    return <Suspense fallback={null}><Forbidden /></Suspense>;
   }
 
   if (requireAdmin && !isAdmin) {
-    return <Navigate to="/dashboard" replace />;
+    return <Suspense fallback={null}><Forbidden /></Suspense>;
   }
 
   return <>{children}</>;
