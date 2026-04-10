@@ -226,7 +226,6 @@ const BlogPost = () => {
   const readTime = estimateReadTime(content);
   const headings = useMemo(() => extractHeadings(content), [content]);
 
-  const articleRef = useRef<HTMLDivElement>(null);
 
   const renderedHTML = useMemo(() => {
     if (!content) return '';
