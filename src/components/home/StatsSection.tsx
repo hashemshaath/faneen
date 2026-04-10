@@ -22,10 +22,10 @@ const StatItem = memo(({ end, suffix, labelKey, index, isVisible }: {
       className={`text-center transition-all duration-700 ${isVisible ? 'animate-card-slide-up' : 'opacity-0'}`}
       style={{ animationDelay: `${index * 120}ms`, animationFillMode: 'both' }}
     >
-      <div className="font-heading font-black text-2xl sm:text-3xl md:text-4xl text-gradient-gold mb-1 sm:mb-2">
+      <div className="font-heading font-black text-xl sm:text-3xl md:text-4xl text-gradient-gold mb-0.5 sm:mb-2">
         {isVisible ? display + suffix : "0" + suffix}
       </div>
-      <div className="font-body text-xs sm:text-sm text-muted-foreground">{t(labelKey as any)}</div>
+      <div className="font-body text-[11px] sm:text-sm text-muted-foreground">{t(labelKey as any)}</div>
     </div>
   );
 });
@@ -37,9 +37,9 @@ export const StatsSection = () => {
   const { ref: visRef, isVisible } = useScrollAnimation();
 
   return (
-    <section className="py-10 sm:py-16 bg-muted/50 overflow-hidden">
+    <section className="py-8 sm:py-16 bg-muted/50 dark:bg-card/40 overflow-hidden">
       <div ref={visRef} className="container px-4 sm:px-6">
-        <div ref={parallaxRef} className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 will-change-transform">
+        <div ref={parallaxRef} className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-8 will-change-transform">
           {stats.map((stat, i) => (
             <StatItem key={stat.labelKey} {...stat} index={i} isVisible={isVisible} />
           ))}
