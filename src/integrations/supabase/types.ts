@@ -154,6 +154,7 @@ export type Database = {
       blog_posts: {
         Row: {
           author_id: string
+          canonical_url: string | null
           category: string
           content_ar: string | null
           content_en: string | null
@@ -161,9 +162,18 @@ export type Database = {
           created_at: string
           excerpt_ar: string | null
           excerpt_en: string | null
+          focus_keyword: string | null
           id: string
+          keywords: string[] | null
+          meta_description_ar: string | null
+          meta_description_en: string | null
+          meta_title_ar: string | null
+          meta_title_en: string | null
+          og_image_url: string | null
           published_at: string | null
+          reading_time_minutes: number | null
           ref_id: string | null
+          seo_score: number | null
           slug: string
           status: string
           tags: string[] | null
@@ -174,6 +184,7 @@ export type Database = {
         }
         Insert: {
           author_id: string
+          canonical_url?: string | null
           category?: string
           content_ar?: string | null
           content_en?: string | null
@@ -181,9 +192,18 @@ export type Database = {
           created_at?: string
           excerpt_ar?: string | null
           excerpt_en?: string | null
+          focus_keyword?: string | null
           id?: string
+          keywords?: string[] | null
+          meta_description_ar?: string | null
+          meta_description_en?: string | null
+          meta_title_ar?: string | null
+          meta_title_en?: string | null
+          og_image_url?: string | null
           published_at?: string | null
+          reading_time_minutes?: number | null
           ref_id?: string | null
+          seo_score?: number | null
           slug: string
           status?: string
           tags?: string[] | null
@@ -194,6 +214,7 @@ export type Database = {
         }
         Update: {
           author_id?: string
+          canonical_url?: string | null
           category?: string
           content_ar?: string | null
           content_en?: string | null
@@ -201,9 +222,18 @@ export type Database = {
           created_at?: string
           excerpt_ar?: string | null
           excerpt_en?: string | null
+          focus_keyword?: string | null
           id?: string
+          keywords?: string[] | null
+          meta_description_ar?: string | null
+          meta_description_en?: string | null
+          meta_title_ar?: string | null
+          meta_title_en?: string | null
+          og_image_url?: string | null
           published_at?: string | null
+          reading_time_minutes?: number | null
           ref_id?: string | null
+          seo_score?: number | null
           slug?: string
           status?: string
           tags?: string[] | null
