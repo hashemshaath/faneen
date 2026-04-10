@@ -116,10 +116,12 @@ const userGroups: MenuGroup[] = [
     ],
   },
   {
-    groupLabel: { ar: 'الأدوات', en: 'Tools' },
+    groupLabel: { ar: 'الأدوات والمزيد', en: 'Tools & More' },
     icon: Brain,
     items: [
       { label: { ar: 'مركز الذكاء', en: 'AI Center' }, url: '/dashboard/ai-center', icon: Brain },
+      { label: { ar: 'المفضلة', en: 'Bookmarks' }, url: '/dashboard/bookmarks', icon: Bookmark },
+      { label: { ar: 'العمليات', en: 'Operations' }, url: '/dashboard/operations', icon: Activity },
     ],
   },
   {
