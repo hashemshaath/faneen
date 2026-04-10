@@ -257,11 +257,9 @@ const DashboardProjects = () => {
                 <div className="space-y-2">
                   <Label>{isRTL ? 'الوصف (إنجليزي)' : 'Description (English)'}</Label>
                   <Textarea value={form.description_en} onChange={e => setForm(f => ({ ...f, description_en: e.target.value }))} rows={3} dir="ltr" placeholder="Detailed project description..." />
-                  {form.description_en && (
-                    <FieldAiActions value={form.description_en} lang="en" compact fieldType="description" isRTL={isRTL}
-                      onTranslated={(v) => setForm(f => ({ ...f, description_ar: v }))}
-                      onImproved={(v) => setForm(f => ({ ...f, description_en: v }))} />
-                  )}
+                  <FieldAiActions value={form.description_en} lang="en" compact fieldType="description" isRTL={isRTL}
+                    onTranslated={(v) => setForm(f => ({ ...f, description_ar: v }))}
+                    onImproved={(v) => setForm(f => ({ ...f, description_en: v }))} />
                 </div>
               </div>
 
