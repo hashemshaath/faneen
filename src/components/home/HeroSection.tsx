@@ -30,12 +30,12 @@ export const HeroSection = () => {
           <Star className="w-4 h-4 text-gold" />
           <span className="text-sm font-body text-gold">{t('hero.badge')}</span>
         </div>
-        <h2 className="font-heading font-black text-4xl md:text-6xl lg:text-7xl text-primary-foreground leading-tight mb-6">
+        <h2 className="font-heading font-black text-4xl md:text-6xl lg:text-7xl text-surface-nav-foreground leading-tight mb-6">
           {t('hero.title1')}
           <br />
           <span className="text-gradient-gold">{t('hero.title2')}</span>
         </h2>
-        <p className="font-body text-lg md:text-xl text-primary-foreground/70 max-w-2xl mx-auto mb-10 leading-relaxed">
+        <p className="font-body text-lg md:text-xl text-surface-nav-foreground/70 max-w-2xl mx-auto mb-10 leading-relaxed">
           {t('hero.desc')}
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
@@ -51,7 +51,7 @@ export const HeroSection = () => {
             </Button>
           </Link>
         </div>
-        <div className="flex flex-wrap items-center justify-center gap-8 text-primary-foreground/60 font-body text-sm">
+        <div className="flex flex-wrap items-center justify-center gap-8 text-surface-nav-foreground/60 font-body text-sm">
           <div className="flex items-center gap-2">
             <Building2 className="w-4 h-4 text-gold" />
             <span>{t('hero.providers_count')}</span>

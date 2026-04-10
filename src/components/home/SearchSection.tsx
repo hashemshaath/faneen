@@ -16,17 +16,17 @@ export const SearchSection = () => {
       <div className="container relative z-10">
         <div className="max-w-3xl mx-auto text-center">
           <div ref={titleRef}>
-            <h2 className="font-heading font-bold text-3xl md:text-4xl text-primary-foreground mb-6">{t('search.title')}</h2>
-            <p className="font-body text-primary-foreground/60 mb-10">{t('search.desc')}</p>
+            <h2 className="font-heading font-bold text-3xl md:text-4xl text-surface-nav-foreground mb-6">{t('search.title')}</h2>
+            <p className="font-body text-surface-nav-foreground/60 mb-10">{t('search.desc')}</p>
           </div>
           <div ref={formRef}>
             <div className="flex flex-col sm:flex-row gap-3 p-3 rounded-2xl bg-primary-foreground/10 border border-gold/20">
               <div className="flex-1 relative">
-                <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary-foreground/40" />
+                <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-surface-nav-foreground/40" />
                 <input
                   type="text"
                   placeholder={t('search.placeholder')}
-                  className="w-full pr-12 pl-4 py-4 rounded-xl bg-primary-foreground/10 text-primary-foreground placeholder:text-primary-foreground/30 font-body text-sm border-0 outline-none focus:ring-2 focus:ring-gold/50"
+                  className="w-full pr-12 pl-4 py-4 rounded-xl bg-primary-foreground/10 text-surface-nav-foreground placeholder:text-surface-nav-foreground/30 font-body text-sm border-0 outline-none focus:ring-2 focus:ring-gold/50"
                 />
               </div>
               <Button variant="hero" size="lg" className="px-8">
