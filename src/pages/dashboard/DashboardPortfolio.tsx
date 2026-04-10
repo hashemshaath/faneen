@@ -82,7 +82,6 @@ const SortableCard = ({
             <Star className="w-3 h-3" />{isRTL ? 'مميز' : 'Featured'}
           </span>
         )}
-        {/* Drag handle */}
         <button
           {...attributes}
           {...listeners}
@@ -120,25 +119,38 @@ const DashboardPortfolio = () => {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
-  const { data: items = [], isLoading } = useQuery({
-    queryKey: ['dashboard-portfolio', user?.id],
+  // Fetch user's business first
+  const { data: business } = useQuery({
+    queryKey: ['my-business', user?.id],
     queryFn: async () => {
-      if (!user) return [];
-      const { data } = await supabase
-        .from('portfolio_items')
-        .select('*')
-        .eq('business_id', user.id)
-        .order('sort_order');
-      return (data ?? []) as PortfolioItem[];
+      if (!user) return null;
+      const { data } = await supabase.from('businesses').select('id').eq('user_id', user.id).maybeSingle();
+      return data;
     },
     enabled: !!user,
   });
 
+  const businessId = business?.id;
+
+  const { data: items = [], isLoading } = useQuery({
+    queryKey: ['dashboard-portfolio', businessId],
+    queryFn: async () => {
+      if (!businessId) return [];
+      const { data } = await supabase
+        .from('portfolio_items')
+        .select('*')
+        .eq('business_id', businessId)
+        .order('sort_order');
+      return (data ?? []) as PortfolioItem[];
+    },
+    enabled: !!businessId,
+  });
+
   const saveMutation = useMutation({
     mutationFn: async () => {
-      if (!user) throw new Error('Not authenticated');
+      if (!businessId) throw new Error('No business found');
       const { error } = await supabase.from('portfolio_items').insert({
-        business_id: user.id,
+        business_id: businessId,
         title_ar: form.title_ar,
         title_en: form.title_en || null,
         description_ar: form.description_ar || null,
@@ -193,8 +205,7 @@ const DashboardPortfolio = () => {
     const newIndex = items.findIndex(i => i.id === over.id);
     const reordered = arrayMove(items, oldIndex, newIndex);
 
-    // Optimistic update
-    queryClient.setQueryData(['dashboard-portfolio', user?.id], reordered);
+    queryClient.setQueryData(['dashboard-portfolio', businessId], reordered);
     reorderMutation.mutate(reordered);
     toast.success(isRTL ? 'تم تحديث الترتيب' : 'Order updated');
   };
