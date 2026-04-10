@@ -2,7 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Search, Star, Shield, Building2, ChevronLeft, ChevronRight, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, memo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import heroBg1 from "@/assets/hero-bg.jpg";
@@ -36,14 +36,82 @@ const slides = [
   },
 ];
 
+// Preload next slide images in background
+const preloadImage = (src: string) => {
+  const img = new Image();
+  img.src = src;
+};
+
+const SearchBar = memo(({ categories, cities, language, isRTL, t, onSearch }: any) => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedCity, setSelectedCity] = useState('');
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const params = new URLSearchParams();
+    if (searchQuery) params.set('q', searchQuery);
+    if (selectedCategory) params.set('category', selectedCategory);
+    if (selectedCity) params.set('city', selectedCity);
+    onSearch(params.toString());
+  };
+
+  return (
+    <form onSubmit={handleSearch} className="mt-8 sm:mt-12 max-w-4xl mx-auto">
+      <div className="bg-white/10 backdrop-blur-xl border border-white/15 rounded-2xl sm:rounded-3xl p-2 sm:p-3 shadow-2xl shadow-black/20">
+        <div className="flex flex-col sm:flex-row gap-2">
+          <div className="flex-1 relative">
+            <Search className={`absolute ${isRTL ? 'right-4' : 'left-4'} top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-white/40`} />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder={t('search.placeholder')}
+              className={`w-full ${isRTL ? 'pr-11 pl-3' : 'pl-11 pr-3'} sm:${isRTL ? 'pr-12 pl-4' : 'pl-12 pr-4'} py-3 sm:py-4 rounded-xl sm:rounded-2xl bg-white/10 text-white placeholder:text-white/30 font-body text-sm border-0 outline-none focus:ring-2 focus:ring-gold/40 focus:bg-white/15 transition-all`}
+            />
+          </div>
+          <select
+            value={selectedCategory}
+            onChange={e => setSelectedCategory(e.target.value)}
+            className="sm:w-44 py-3 sm:py-4 px-3 sm:px-4 rounded-xl sm:rounded-2xl bg-white/10 text-white font-body text-sm border-0 outline-none focus:ring-2 focus:ring-gold/40 appearance-none cursor-pointer"
+          >
+            <option value="" className="bg-surface-nav text-surface-nav-foreground">{isRTL ? 'جميع الأقسام' : 'All Categories'}</option>
+            {categories.map((c: any) => (
+              <option key={c.id} value={c.id} className="bg-surface-nav text-surface-nav-foreground">
+                {language === 'ar' ? c.name_ar : c.name_en}
+              </option>
+            ))}
+          </select>
+          <select
+            value={selectedCity}
+            onChange={e => setSelectedCity(e.target.value)}
+            className="sm:w-40 py-3 sm:py-4 px-3 sm:px-4 rounded-xl sm:rounded-2xl bg-white/10 text-white font-body text-sm border-0 outline-none focus:ring-2 focus:ring-gold/40 appearance-none cursor-pointer hidden sm:block"
+          >
+            <option value="" className="bg-surface-nav text-surface-nav-foreground">{isRTL ? 'جميع المدن' : 'All Cities'}</option>
+            {cities.map((c: any) => (
+              <option key={c.id} value={c.id} className="bg-surface-nav text-surface-nav-foreground">
+                {language === 'ar' ? c.name_ar : c.name_en}
+              </option>
+            ))}
+          </select>
+          <Button type="submit" variant="hero" size="lg" className="px-8 sm:px-10 py-3 sm:py-4 rounded-xl sm:rounded-2xl active:scale-95 transition-transform shadow-lg shadow-gold/30 text-sm sm:text-base">
+            <Search className="w-4 h-4 sm:w-5 sm:h-5 me-2" />
+            {t('search.btn')}
+          </Button>
+        </div>
+      </div>
+    </form>
+  );
+});
+SearchBar.displayName = 'SearchBar';
+
 export const HeroSection = () => {
   const { t, language, isRTL } = useLanguage();
   const navigate = useNavigate();
   const [current, setCurrent] = useState(0);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedCity, setSelectedCity] = useState('');
   const timerRef = useRef<ReturnType<typeof setInterval>>();
+  const parallaxY = useRef(0);
+  const rafRef = useRef<number>();
   const imgRefs = useRef<(HTMLImageElement | null)[]>([]);
 
   const { data: categories = [] } = useQuery({
@@ -62,6 +130,16 @@ export const HeroSection = () => {
     },
   });
 
+  // Preload non-current slide images after initial render
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      slides.forEach((slide, i) => {
+        if (i !== 0) preloadImage(slide.image);
+      });
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, []);
+
   // Auto-play
   const resetTimer = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -73,51 +151,58 @@ export const HeroSection = () => {
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [resetTimer]);
 
-  // Parallax
+  // Optimized parallax with rAF throttle
   useEffect(() => {
     const handleScroll = () => {
-      const scrollY = window.scrollY;
-      imgRefs.current.forEach(img => {
-        if (img) img.style.transform = `translateY(${scrollY * 0.35}px) scale(1.15)`;
+      if (rafRef.current) return;
+      rafRef.current = requestAnimationFrame(() => {
+        const y = window.scrollY;
+        if (Math.abs(y - parallaxY.current) > 2) {
+          parallaxY.current = y;
+          imgRefs.current.forEach(img => {
+            if (img) img.style.transform = `translateY(${y * 0.35}px) scale(1.15)`;
+          });
+        }
+        rafRef.current = undefined;
       });
     };
     window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
   }, []);
 
-  const goTo = (idx: number) => { setCurrent(idx); resetTimer(); };
-  const prev = () => goTo((current - 1 + slides.length) % slides.length);
-  const next = () => goTo((current + 1) % slides.length);
+  const goTo = useCallback((idx: number) => { setCurrent(idx); resetTimer(); }, [resetTimer]);
+  const prev = useCallback(() => goTo((current - 1 + slides.length) % slides.length), [current, goTo]);
+  const next = useCallback(() => goTo((current + 1) % slides.length), [current, goTo]);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    const params = new URLSearchParams();
-    if (searchQuery) params.set('q', searchQuery);
-    if (selectedCategory) params.set('category', selectedCategory);
-    if (selectedCity) params.set('city', selectedCity);
-    navigate(`/search?${params.toString()}`);
-  };
-
-  const getSlideContent = (slide: typeof slides[0], key: string) => {
-    if ('titleKey1' in slide && slide.titleKey1) return t(slide[key as keyof typeof slide] as any);
-    const langKey = key.replace('Key', language === 'ar' ? 'Ar' : 'En');
-    return (slide as any)[langKey] || '';
-  };
+  const handleSearch = useCallback((params: string) => {
+    navigate(`/search?${params}`);
+  }, [navigate]);
 
   return (
     <section className="relative min-h-[85vh] sm:min-h-screen flex flex-col items-center justify-center overflow-hidden">
-      {/* Slides */}
+      {/* Slides — only first image is eager, others lazy */}
       {slides.map((slide, i) => (
         <img
           key={i}
           ref={el => { imgRefs.current[i] = el; }}
-          src={slide.image}
+          src={i === 0 ? slide.image : (current === i ? slide.image : undefined)}
+          data-src={slide.image}
           alt=""
           className={`absolute inset-0 w-full h-full object-cover will-change-transform scale-115 transition-opacity duration-1000 ${i === current ? 'opacity-100' : 'opacity-0'}`}
           width={1920}
           height={1080}
           fetchPriority={i === 0 ? "high" : undefined}
-          decoding="async"
+          decoding={i === 0 ? "sync" : "async"}
+          loading={i === 0 ? "eager" : "lazy"}
+          onError={(e) => {
+            // Fallback: load from data-src if src was undefined
+            const img = e.currentTarget;
+            const dataSrc = img.getAttribute('data-src');
+            if (dataSrc && img.src !== dataSrc) img.src = dataSrc;
+          }}
         />
       ))}
 
@@ -153,71 +238,29 @@ export const HeroSection = () => {
           ))}
         </div>
 
-        {/* Search Bar */}
-        <form onSubmit={handleSearch} className="mt-8 sm:mt-12 max-w-4xl mx-auto">
-          <div className="bg-white/10 backdrop-blur-xl border border-white/15 rounded-2xl sm:rounded-3xl p-2 sm:p-3 shadow-2xl shadow-black/20">
-            <div className="flex flex-col sm:flex-row gap-2">
-              {/* Search input */}
-              <div className="flex-1 relative">
-                <Search className={`absolute ${isRTL ? 'right-4' : 'left-4'} top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-white/40`} />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  placeholder={t('search.placeholder')}
-                  className={`w-full ${isRTL ? 'pr-11 pl-3' : 'pl-11 pr-3'} sm:${isRTL ? 'pr-12 pl-4' : 'pl-12 pr-4'} py-3 sm:py-4 rounded-xl sm:rounded-2xl bg-white/10 text-white placeholder:text-white/30 font-body text-sm border-0 outline-none focus:ring-2 focus:ring-gold/40 focus:bg-white/15 transition-all`}
-                />
-              </div>
+        {/* Memoized Search Bar */}
+        <SearchBar
+          categories={categories}
+          cities={cities}
+          language={language}
+          isRTL={isRTL}
+          t={t}
+          onSearch={handleSearch}
+        />
 
-              {/* Category select */}
-              <select
-                value={selectedCategory}
-                onChange={e => setSelectedCategory(e.target.value)}
-                className="sm:w-44 py-3 sm:py-4 px-3 sm:px-4 rounded-xl sm:rounded-2xl bg-white/10 text-white font-body text-sm border-0 outline-none focus:ring-2 focus:ring-gold/40 appearance-none cursor-pointer"
-              >
-                <option value="" className="bg-surface-nav text-surface-nav-foreground">{isRTL ? 'جميع الأقسام' : 'All Categories'}</option>
-                {categories.map((c: any) => (
-                  <option key={c.id} value={c.id} className="bg-surface-nav text-surface-nav-foreground">
-                    {language === 'ar' ? c.name_ar : c.name_en}
-                  </option>
-                ))}
-              </select>
-
-              {/* City select */}
-              <select
-                value={selectedCity}
-                onChange={e => setSelectedCity(e.target.value)}
-                className="sm:w-40 py-3 sm:py-4 px-3 sm:px-4 rounded-xl sm:rounded-2xl bg-white/10 text-white font-body text-sm border-0 outline-none focus:ring-2 focus:ring-gold/40 appearance-none cursor-pointer hidden sm:block"
-              >
-                <option value="" className="bg-surface-nav text-surface-nav-foreground">{isRTL ? 'جميع المدن' : 'All Cities'}</option>
-                {cities.map((c: any) => (
-                  <option key={c.id} value={c.id} className="bg-surface-nav text-surface-nav-foreground">
-                    {language === 'ar' ? c.name_ar : c.name_en}
-                  </option>
-                ))}
-              </select>
-
-              <Button type="submit" variant="hero" size="lg" className="px-8 sm:px-10 py-3 sm:py-4 rounded-xl sm:rounded-2xl active:scale-95 transition-transform shadow-lg shadow-gold/30 text-sm sm:text-base">
-                <Search className="w-4 h-4 sm:w-5 sm:h-5 me-2" />
-                {t('search.btn')}
-              </Button>
-            </div>
-          </div>
-
-          {/* Quick tags */}
-          <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 mt-4 sm:mt-6">
-            {categories.slice(0, 5).map((cat: any) => (
-              <button
-                key={cat.id}
-                type="button"
-                onClick={() => navigate(`/search?category=${cat.id}`)}
-                className="px-3 sm:px-4 py-1.5 rounded-full text-[10px] sm:text-xs font-body text-white/60 border border-white/15 hover:bg-gold/15 hover:text-gold hover:border-gold/30 active:scale-95 cursor-pointer transition-all duration-300"
-              >
-                {language === 'ar' ? cat.name_ar : cat.name_en}
-              </button>
-            ))}
-          </div>
-        </form>
+        {/* Quick tags */}
+        <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 mt-4 sm:mt-6">
+          {categories.slice(0, 5).map((cat: any) => (
+            <button
+              key={cat.id}
+              type="button"
+              onClick={() => navigate(`/search?category=${cat.id}`)}
+              className="px-3 sm:px-4 py-1.5 rounded-full text-[10px] sm:text-xs font-body text-white/60 border border-white/15 hover:bg-gold/15 hover:text-gold hover:border-gold/30 active:scale-95 cursor-pointer transition-all duration-300"
+            >
+              {language === 'ar' ? cat.name_ar : cat.name_en}
+            </button>
+          ))}
+        </div>
 
         {/* Slide controls */}
         <div className="flex items-center justify-center gap-3 mt-8 sm:mt-10">
