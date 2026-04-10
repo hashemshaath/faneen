@@ -24,6 +24,7 @@ type Profile = Tables<'profiles'>;
 type UserRole = Tables<'user_roles'>;
 
 const roleConfig = {
+  super_admin: { icon: ShieldAlert, color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400', labelAr: 'مشرف أعلى', labelEn: 'Super Admin' },
   admin: { icon: Crown, color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400', labelAr: 'مشرف', labelEn: 'Admin' },
   moderator: { icon: ShieldCheck, color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400', labelAr: 'مشرف محتوى', labelEn: 'Moderator' },
   user: { icon: Users, color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400', labelAr: 'مستخدم', labelEn: 'User' },
@@ -44,7 +45,7 @@ const accountTypeConfig = {
 
 const AdminUsers = () => {
   const { isRTL, language } = useLanguage();
-  const { user } = useAuth();
+  const { user, isSuperAdmin } = useAuth();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState<string>('all');
@@ -285,6 +286,7 @@ const AdminUsers = () => {
   };
 
   const totalUsers = profiles.length;
+  const superAdmins = userRoles.filter(r => r.role === 'super_admin').length;
   const admins = userRoles.filter(r => r.role === 'admin').length;
   const moderators = userRoles.filter(r => r.role === 'moderator').length;
 
@@ -316,9 +318,9 @@ const AdminUsers = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
             { label: isRTL ? 'إجمالي المستخدمين' : 'Total Users', value: totalUsers, icon: Users, color: 'text-blue-500' },
+            { label: isRTL ? 'مشرف أعلى' : 'Super Admins', value: superAdmins, icon: ShieldAlert, color: 'text-purple-500' },
             { label: isRTL ? 'المشرفين' : 'Admins', value: admins, icon: Crown, color: 'text-red-500' },
             { label: isRTL ? 'مشرفي المحتوى' : 'Moderators', value: moderators, icon: ShieldCheck, color: 'text-amber-500' },
-            { label: isRTL ? 'بدون صلاحيات' : 'No Role', value: profiles.filter(p => !roleMap.has(p.user_id)).length, icon: Shield, color: 'text-muted-foreground' },
           ].map((stat, i) => (
             <Card key={i}>
               <CardContent className="p-4 flex items-center gap-3">
