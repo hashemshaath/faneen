@@ -20,7 +20,27 @@ import {
   Shield, DollarSign, Calendar, TrendingUp, Users, ListChecks,
   StickyNote, Paperclip, Upload, Send, MessageSquare, Phone, Mail,
   User, ChevronDown, ChevronUp, BarChart3, Activity, Filter,
+  BookTemplate, Sparkles, X, Layers, Hammer, Wrench, Home, Factory,
+  Flame, Car, TreePine, GlassWater, Grid3X3, PanelTop, BookOpen,
 } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+} from '@/components/ui/dialog';
+
+/* ──────────────── Template Category Config ──────────────── */
+const templateCategoryConfig: Record<string, { ar: string; en: string; icon: React.ElementType; color: string }> = {
+  aluminum_doors_windows: { ar: 'ألمنيوم أبواب وشبابيك', en: 'Aluminum Doors & Windows', icon: PanelTop, color: 'text-blue-600 bg-blue-500/10' },
+  iron_doors_windows: { ar: 'حديد أبواب وشبابيك', en: 'Iron Doors & Windows', icon: Hammer, color: 'text-slate-600 bg-slate-500/10' },
+  fire_doors: { ar: 'أبواب مقاومة للحريق', en: 'Fire-Rated Doors', icon: Flame, color: 'text-red-600 bg-red-500/10' },
+  gates_structures: { ar: 'بوابات ومظلات وهناجر', en: 'Gates & Structures', icon: Factory, color: 'text-amber-600 bg-amber-500/10' },
+  wood_doors: { ar: 'أبواب خشبية', en: 'Wood Doors', icon: TreePine, color: 'text-emerald-700 bg-emerald-500/10' },
+  kitchens: { ar: 'مطابخ', en: 'Kitchens', icon: Grid3X3, color: 'text-violet-600 bg-violet-500/10' },
+  facades: { ar: 'واجهات', en: 'Facades', icon: Home, color: 'text-cyan-600 bg-cyan-500/10' },
+  wardrobes_closets: { ar: 'خزائن ودواليب', en: 'Wardrobes & Closets', icon: Layers, color: 'text-pink-600 bg-pink-500/10' },
+  upvc: { ar: 'UPVC أبواب وشبابيك', en: 'UPVC Doors & Windows', icon: Wrench, color: 'text-teal-600 bg-teal-500/10' },
+  glass_securit: { ar: 'زجاج وسيكوريت', en: 'Glass & Securit', icon: GlassWater, color: 'text-sky-600 bg-sky-500/10' },
+};
 
 /* ──────────────── Status Config ──────────────── */
 const statusConfig: Record<string, { icon: React.ElementType; color: string; label_ar: string; label_en: string }> = {
@@ -41,6 +61,9 @@ const DashboardContracts = () => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [noteText, setNoteText] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
+  const [templatePreview, setTemplatePreview] = useState<any>(null);
 
   /* ──────────── Data Queries ──────────── */
   const { data: contracts = [], isLoading } = useQuery({
