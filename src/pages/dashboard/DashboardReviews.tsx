@@ -370,7 +370,4 @@ const DashboardReviews = () => {
   );
 };
 
-// Need X icon import
-import { X } from 'lucide-react';
-
 export default DashboardReviews;
