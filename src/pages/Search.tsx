@@ -28,11 +28,11 @@ const useCities = () =>
 
 const useBusinesses = () =>
   useQuery({
-    queryKey: ['businesses-all'],
+    queryKey: ['businesses-all-with-services'],
     queryFn: async () => {
       const { data } = await supabase
         .from('businesses')
-        .select('*, categories(*), cities(*)')
+        .select('*, categories(*), cities(*), business_services(price_from, price_to, is_active)')
         .eq('is_active', true)
         .order('rating_avg', { ascending: false });
       return data ?? [];
@@ -47,7 +47,6 @@ const SearchPage = () => {
   const { data: cities } = useCities();
   const { data: businesses, isLoading } = useBusinesses();
 
-  // State with URL params sync
   const [query, setQuery] = useState(searchParams.get('q') || '');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(true);
@@ -58,6 +57,8 @@ const SearchPage = () => {
     minRating: Number(searchParams.get('rating')) || 0,
     verifiedOnly: searchParams.get('verified') === 'true',
     sortBy: (searchParams.get('sort') as SearchFilterValues['sortBy']) || 'rating',
+    priceMin: Number(searchParams.get('price_min')) || 0,
+    priceMax: Number(searchParams.get('price_max')) || 0,
   });
 
   const handleQueryChange = useCallback((q: string) => {
@@ -70,9 +71,15 @@ const SearchPage = () => {
   const handleFilterChange = useCallback(<K extends keyof SearchFilterValues>(key: K, value: SearchFilterValues[K]) => {
     setFilters(prev => ({ ...prev, [key]: value }));
     const params = new URLSearchParams(searchParams);
-    const paramMap: Record<string, string> = { categoryId: 'category', cityId: 'city', minRating: 'rating', verifiedOnly: 'verified', sortBy: 'sort' };
+    const paramMap: Record<string, string> = {
+      categoryId: 'category', cityId: 'city', minRating: 'rating',
+      verifiedOnly: 'verified', sortBy: 'sort', priceMin: 'price_min', priceMax: 'price_max',
+    };
     const paramKey = paramMap[key];
-    const defaultVals: Record<string, any> = { categoryId: 'all', cityId: 'all', minRating: 0, verifiedOnly: false, sortBy: 'rating' };
+    const defaultVals: Record<string, any> = {
+      categoryId: 'all', cityId: 'all', minRating: 0,
+      verifiedOnly: false, sortBy: 'rating', priceMin: 0, priceMax: 0,
+    };
     if (value === defaultVals[key]) params.delete(paramKey); else params.set(paramKey, String(value));
     setSearchParams(params, { replace: true });
   }, [searchParams, setSearchParams]);
@@ -81,10 +88,10 @@ const SearchPage = () => {
     handleFilterChange('categoryId', filters.categoryId === id ? 'all' : id);
   }, [filters.categoryId, handleFilterChange]);
 
-  const hasActiveFilters = filters.categoryId !== 'all' || filters.cityId !== 'all' || filters.minRating > 0 || filters.verifiedOnly;
+  const hasActiveFilters = filters.categoryId !== 'all' || filters.cityId !== 'all' || filters.minRating > 0 || filters.verifiedOnly || filters.priceMin > 0 || filters.priceMax > 0;
 
   const clearFilters = useCallback(() => {
-    setFilters({ categoryId: 'all', cityId: 'all', minRating: 0, verifiedOnly: false, sortBy: 'rating' });
+    setFilters({ categoryId: 'all', cityId: 'all', minRating: 0, verifiedOnly: false, sortBy: 'rating', priceMin: 0, priceMax: 0 });
     setQuery('');
     setSearchParams({}, { replace: true });
   }, [setSearchParams]);
@@ -104,6 +111,24 @@ const SearchPage = () => {
     if (filters.cityId !== 'all') results = results.filter(b => b.city_id === filters.cityId);
     if (filters.minRating > 0) results = results.filter(b => Number(b.rating_avg) >= filters.minRating);
     if (filters.verifiedOnly) results = results.filter(b => b.is_verified);
+
+    // Price range filter: check if any active service falls within the range
+    if (filters.priceMin > 0 || filters.priceMax > 0) {
+      results = results.filter(b => {
+        const services = (b as any).business_services;
+        if (!services || !Array.isArray(services) || services.length === 0) return false;
+        return services.some((s: any) => {
+          if (!s.is_active) return false;
+          const from = Number(s.price_from) || 0;
+          const to = Number(s.price_to) || from;
+          const serviceMax = Math.max(from, to);
+          const serviceMin = Math.min(from, to) || 0;
+          if (filters.priceMin > 0 && serviceMax < filters.priceMin) return false;
+          if (filters.priceMax > 0 && serviceMin > filters.priceMax) return false;
+          return true;
+        });
+      });
+    }
 
     results.sort((a, b) => {
       if (filters.sortBy === 'rating') return Number(b.rating_avg) - Number(a.rating_avg);
