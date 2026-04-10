@@ -352,6 +352,7 @@ const AdminUsers = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">{isRTL ? 'جميع المستخدمين' : 'All Users'}</SelectItem>
+                  <SelectItem value="super_admin">{isRTL ? 'مشرف أعلى' : 'Super Admin'}</SelectItem>
                   <SelectItem value="admin">{isRTL ? 'المشرفين' : 'Admins'}</SelectItem>
                   <SelectItem value="moderator">{isRTL ? 'مشرفي المحتوى' : 'Moderators'}</SelectItem>
                   <SelectItem value="user">{isRTL ? 'مستخدم عادي' : 'Regular User'}</SelectItem>
