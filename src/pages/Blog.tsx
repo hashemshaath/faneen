@@ -79,7 +79,7 @@ const Blog = () => {
 
   const featuredPost = posts.length > 0 ? posts[0] : null;
   const regularPosts = filteredPosts.filter((p: any) => p.id !== featuredPost?.id);
-  const showFeatured = featuredPost && activeCategory === 'all' && !searchQuery;
+  const showFeatured = featuredPost && activeCategory === 'all' && !searchQuery && posts.length > 1;
   const displayPosts = showFeatured ? regularPosts : filteredPosts;
 
   const popularPosts = useMemo(() => {
@@ -182,18 +182,18 @@ const Blog = () => {
                           </div>
                         )}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                        <div className="absolute top-3 sm:top-4 start-3 sm:start-4">
+                        <div className="absolute top-3 start-3">
                           <Badge className="bg-accent text-accent-foreground shadow-lg text-[10px] sm:text-xs">
-                            {isRTL ? '⭐ مقال مميز' : '⭐ Featured'}
+                            {isRTL ? '⭐ مميز' : '⭐ Featured'}
+                          </Badge>
+                        </div>
+                        <div className="absolute top-3 end-3">
+                          <Badge variant="outline" className="text-[9px] sm:text-[11px] border-white/30 text-white/90 bg-white/10 backdrop-blur-sm">
+                            {blogCategories[featuredPost.category]?.[language] || featuredPost.category}
                           </Badge>
                         </div>
                         <div className="absolute bottom-0 start-0 end-0 p-3 sm:p-6 text-white">
-                          <div className="flex items-center gap-2 mb-1.5 sm:mb-2">
-                            <Badge variant="outline" className="text-[9px] sm:text-[11px] border-white/30 text-white/90 bg-white/10 backdrop-blur-sm">
-                              {blogCategories[featuredPost.category]?.[language] || featuredPost.category}
-                            </Badge>
-                          </div>
-                          <h2 className="font-heading font-bold text-base sm:text-xl md:text-2xl mb-1 sm:mb-2 group-hover:text-accent transition-colors line-clamp-2">
+                          <h2 className="font-heading font-bold text-sm sm:text-xl md:text-2xl mb-1 sm:mb-2 group-hover:text-accent transition-colors line-clamp-2">
                             {language === 'ar' ? featuredPost.title_ar : (featuredPost.title_en || featuredPost.title_ar)}
                           </h2>
                           <p className="text-xs sm:text-sm text-white/70 line-clamp-2 mb-2 sm:mb-3 hidden sm:block">
