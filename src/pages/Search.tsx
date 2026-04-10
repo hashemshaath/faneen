@@ -188,8 +188,8 @@ const SearchPage = () => {
         businesses={businesses}
       />
 
-      <div className="container py-5 sm:py-8 px-3 sm:px-4">
-        <div className="flex flex-col lg:flex-row gap-5 sm:gap-8">
+      <div className="container py-6 sm:py-10 px-3 sm:px-6">
+        <div className="flex flex-col lg:flex-row gap-5 sm:gap-6">
           <SearchFilters
             filters={filters}
             onFilterChange={handleFilterChange}
