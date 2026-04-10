@@ -399,7 +399,9 @@ export type Database = {
       }
       businesses: {
         Row: {
+          additional_number: string | null
           address: string | null
+          building_number: string | null
           business_number: number
           category_id: string | null
           city_id: string | null
@@ -408,6 +410,7 @@ export type Database = {
           created_at: string
           description_ar: string | null
           description_en: string | null
+          district: string | null
           email: string | null
           id: string
           is_active: boolean
@@ -418,17 +421,24 @@ export type Database = {
           membership_tier: Database["public"]["Enums"]["membership_tier"]
           name_ar: string
           name_en: string | null
+          national_id: string | null
           phone: string | null
           rating_avg: number
           rating_count: number
           ref_id: string
+          region: string | null
+          short_description_ar: string | null
+          short_description_en: string | null
+          street_name: string | null
           updated_at: string
           user_id: string
           username: string
           website: string | null
         }
         Insert: {
+          additional_number?: string | null
           address?: string | null
+          building_number?: string | null
           business_number: number
           category_id?: string | null
           city_id?: string | null
@@ -437,6 +447,7 @@ export type Database = {
           created_at?: string
           description_ar?: string | null
           description_en?: string | null
+          district?: string | null
           email?: string | null
           id?: string
           is_active?: boolean
@@ -447,17 +458,24 @@ export type Database = {
           membership_tier?: Database["public"]["Enums"]["membership_tier"]
           name_ar: string
           name_en?: string | null
+          national_id?: string | null
           phone?: string | null
           rating_avg?: number
           rating_count?: number
           ref_id?: string
+          region?: string | null
+          short_description_ar?: string | null
+          short_description_en?: string | null
+          street_name?: string | null
           updated_at?: string
           user_id: string
           username: string
           website?: string | null
         }
         Update: {
+          additional_number?: string | null
           address?: string | null
+          building_number?: string | null
           business_number?: number
           category_id?: string | null
           city_id?: string | null
@@ -466,6 +484,7 @@ export type Database = {
           created_at?: string
           description_ar?: string | null
           description_en?: string | null
+          district?: string | null
           email?: string | null
           id?: string
           is_active?: boolean
@@ -476,10 +495,15 @@ export type Database = {
           membership_tier?: Database["public"]["Enums"]["membership_tier"]
           name_ar?: string
           name_en?: string | null
+          national_id?: string | null
           phone?: string | null
           rating_avg?: number
           rating_count?: number
           ref_id?: string
+          region?: string | null
+          short_description_ar?: string | null
+          short_description_en?: string | null
+          street_name?: string | null
           updated_at?: string
           user_id?: string
           username?: string
