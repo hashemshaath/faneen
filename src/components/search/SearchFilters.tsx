@@ -7,7 +7,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import {
-  Star, BadgeCheck, SlidersHorizontal, RotateCcw, DollarSign, ChevronDown, MapPin, ArrowUpDown, Tag,
+  Star, BadgeCheck, SlidersHorizontal, RotateCcw, DollarSign, ChevronRight, ChevronLeft, MapPin, ArrowUpDown, Tag,
 } from 'lucide-react';
 import { CategoryTree } from './CategoryTree';
 import { TagsFilter } from './TagsFilter';
@@ -52,26 +52,31 @@ export const SearchFilters = ({
     filters.priceMax > 0,
   ].filter(Boolean).length + selectedTags.length;
 
+  const CollapseIcon = isRTL
+    ? (showFilters ? ChevronRight : ChevronLeft)
+    : (showFilters ? ChevronLeft : ChevronRight);
+
   return (
-    <div className="lg:w-[260px] xl:w-[280px] flex-shrink-0">
-      {/* Header */}
+    <div className={`flex-shrink-0 transition-all duration-300 ${showFilters ? 'lg:w-[260px] xl:w-[280px]' : 'lg:w-[48px]'}`}>
+      {/* Header / Toggle */}
       <div className="flex items-center justify-between mb-3">
         <button
           onClick={onToggleFilters}
           className="flex items-center gap-2 font-heading font-bold text-foreground hover:text-accent transition-colors"
+          title={showFilters ? (isRTL ? 'طي التصفية' : 'Collapse filters') : (isRTL ? 'عرض التصفية' : 'Show filters')}
         >
           <div className="w-8 h-8 rounded-lg bg-accent/10 dark:bg-accent/15 flex items-center justify-center">
             <SlidersHorizontal className="w-4 h-4 text-accent" />
           </div>
-          <span>{t('search.filters')}</span>
+          {showFilters && <span>{t('search.filters')}</span>}
           {activeCount > 0 && (
             <Badge variant="secondary" className="bg-accent text-accent-foreground text-[10px] px-1.5 py-0 min-w-[18px] h-[18px] flex items-center justify-center rounded-full">
               {activeCount}
             </Badge>
           )}
-          <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform lg:hidden ${showFilters ? 'rotate-180' : ''}`} />
+          <CollapseIcon className="w-4 h-4 text-muted-foreground" />
         </button>
-        {hasActiveFilters && (
+        {hasActiveFilters && showFilters && (
           <button
             onClick={onClearFilters}
             className="text-[11px] text-destructive font-body hover:underline flex items-center gap-1 transition-colors"
