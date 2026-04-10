@@ -67,13 +67,13 @@ export const DashboardSidebar: React.FC = () => {
       <SidebarContent>
         {/* Logo */}
         <div className="p-4 flex items-center gap-2 border-b border-border">
-          <div className="w-9 h-9 rounded-xl bg-gold flex items-center justify-center text-primary-foreground font-bold text-lg shrink-0">
+          <div className="w-9 h-9 rounded-xl bg-accent flex items-center justify-center text-accent-foreground font-bold text-lg shrink-0">
             ف
           </div>
           {!collapsed && (
             <div>
               <h1 className="font-heading font-bold text-lg leading-none">فنيين</h1>
-              <span className="text-[10px] text-gold font-medium">Faneen</span>
+              <span className="text-[10px] text-accent font-medium">Faneen</span>
             </div>
           )}
         </div>
