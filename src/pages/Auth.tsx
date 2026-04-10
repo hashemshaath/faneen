@@ -107,38 +107,25 @@ const Auth = () => {
     }
     setLoading(true);
     try {
-      // First, we need to find the user by phone and send OTP
-      // For now, use signInWithOtp via phone (Supabase phone auth)
-      // Since we're using custom OTP, we'll look up the user by phone first
-      const fullPhone = `${countryCode}${phone.replace(/^0/, '')}`;
-      
-      // Check if a profile with this phone exists
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('user_id, email')
-        .eq('phone', fullPhone)
-        .eq('phone_verified', true)
-        .limit(1)
-        .single();
-      
-      if (!profileData) {
-        toast.error(isRTL ? 'لم يتم العثور على حساب بهذا الرقم. يرجى التسجيل أولاً أو استخدام البريد الإلكتروني' : 'No account found with this number. Please register first or use email');
-        setLoading(false);
+      const { data, error } = await supabase.functions.invoke('send-login-otp', {
+        body: { phone: phone.replace(/^0/, ''), country_code: countryCode },
+      });
+
+      if (error) throw error;
+      if (!data?.success) {
+        const msg = data?.error === 'no_account'
+          ? (isRTL ? 'لم يتم العثور على حساب بهذا الرقم. يرجى التسجيل أولاً أو استخدام البريد الإلكتروني' : 'No account found with this number. Please register first or use email')
+          : (data?.error || 'Error');
+        toast.error(msg);
         return;
       }
 
-      // We found the user, now we need their email to login
-      // Store it temporarily for OTP verification
-      setEmail(profileData.email || '');
-      
-      // Generate a simple OTP and show it (demo mode)
-      const otp = String(Math.floor(100000 + Math.random() * 900000));
-      setDemoOtp(otp);
+      if (data.demo_otp) setDemoOtp(data.demo_otp);
       setOtpStep(true);
       setCooldown(60);
       toast.success(isRTL ? 'تم إرسال رمز التحقق' : 'Verification code sent');
     } catch (err: any) {
-      toast.error(isRTL ? 'لم يتم العثور على حساب بهذا الرقم' : 'No account found with this number');
+      toast.error(isRTL ? 'حدث خطأ، حاول مرة أخرى' : 'An error occurred, try again');
     } finally {
       setLoading(false);
     }
@@ -149,19 +136,30 @@ const Auth = () => {
       toast.error(isRTL ? 'أدخل رمز التحقق المكون من 6 أرقام' : 'Enter 6-digit code');
       return;
     }
-    if (demoOtp && otpCode !== demoOtp) {
-      toast.error(isRTL ? 'رمز التحقق غير صحيح' : 'Invalid verification code');
-      return;
-    }
     setLoading(true);
     try {
-      // In demo mode, we'll ask for password to login via email
-      // In production, this would use a passwordless flow
-      toast.success(isRTL ? 'تم التحقق! أدخل كلمة المرور لإكمال تسجيل الدخول' : 'Verified! Enter password to complete login');
-      setLoginMethod('email');
-      setOtpStep(false);
-      setDemoOtp(null);
-      setOtpCode('');
+      const { data, error } = await supabase.functions.invoke('verify-login-otp', {
+        body: { phone: phone.replace(/^0/, ''), country_code: countryCode, otp_code: otpCode },
+      });
+
+      if (error) throw error;
+      if (!data?.success) {
+        toast.error(data?.error || (isRTL ? 'رمز التحقق غير صحيح' : 'Invalid verification code'));
+        return;
+      }
+
+      // Use the token_hash to sign in via magic link verification
+      if (data.token_hash) {
+        const { error: verifyError } = await supabase.auth.verifyOtp({
+          token_hash: data.token_hash,
+          type: 'magiclink',
+        });
+        if (verifyError) throw verifyError;
+        toast.success(isRTL ? 'تم تسجيل الدخول بنجاح' : 'Signed in successfully');
+        navigate('/');
+      } else {
+        toast.error(isRTL ? 'فشل تسجيل الدخول' : 'Login failed');
+      }
     } catch (err: any) {
       toast.error(err.message);
     } finally {
