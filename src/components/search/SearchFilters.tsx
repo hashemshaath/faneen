@@ -185,6 +185,15 @@ export const SearchFilters = ({
               </SelectContent>
             </Select>
           </FilterSection>
+
+          {/* Tags */}
+          {onToggleTag && onClearTags && (
+            <TagsFilter
+              selectedTags={selectedTags}
+              onToggleTag={onToggleTag}
+              onClearTags={onClearTags}
+            />
+          )}
         </div>
       )}
     </div>
