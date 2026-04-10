@@ -160,7 +160,7 @@ const Onboarding = () => {
             user_id: user!.id,
             name_ar: businessName,
             username: username,
-          });
+          } as any);
         if (bizError && !bizError.message.includes('duplicate')) throw bizError;
       }
 
