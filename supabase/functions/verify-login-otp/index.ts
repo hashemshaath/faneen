@@ -117,12 +117,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Mark OTP as verified
-    await adminClient
-      .from("phone_otps")
-      .update({ verified: true })
-      .eq("id", otpRecord.id);
-
     if (!profile.email) {
       return new Response(
         JSON.stringify({ error: "User has no email linked" }),
@@ -130,7 +124,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Generate a temporary random password, set it, sign in, then restore
+    // Generate a temporary random password, set it, sign in
     const tempPassword = crypto.randomUUID() + "!Aa1";
 
     // Set temporary password
@@ -147,7 +141,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Sign in with the temp password using a separate anon client
+    // Sign in with the temp password
     const anonClient = createClient(supabaseUrl, anonKey);
     const { data: signInData, error: signInError } = await anonClient.auth.signInWithPassword({
       email: profile.email,
@@ -161,6 +155,12 @@ Deno.serve(async (req) => {
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    // Mark OTP as verified only AFTER successful sign-in
+    await adminClient
+      .from("phone_otps")
+      .update({ verified: true })
+      .eq("id", otpRecord.id);
 
     return new Response(
       JSON.stringify({
