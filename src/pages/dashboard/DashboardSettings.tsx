@@ -165,11 +165,8 @@ const DashboardSettings = () => {
                       }`}
                     >
                       <div
-                        className="w-8 h-8 sm:w-10 sm:h-10 rounded-full ring-2 ring-offset-2 ring-offset-background transition-all"
-                        style={{
-                          backgroundColor: `hsl(${p.hsl})`,
-                          ringColor: accent === p.key ? `hsl(${p.hsl})` : 'transparent',
-                        }}
+                        className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full ring-2 ring-offset-2 ring-offset-background transition-all ${accent === p.key ? 'ring-foreground/30' : 'ring-transparent'}`}
+                        style={{ backgroundColor: `hsl(${p.hsl})` }}
                       >
                         {accent === p.key && (
                           <div className="w-full h-full flex items-center justify-center">
