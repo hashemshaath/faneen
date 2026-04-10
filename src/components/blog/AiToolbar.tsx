@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2, Languages, Sparkles, Search, FileText, Wand2, Bot } from 'lucide-react';
+import { Loader2, Languages, Sparkles, Search, FileText, Wand2, Bot, Trophy } from 'lucide-react';
 
 interface Props {
   isRTL: boolean;
@@ -10,12 +10,13 @@ interface Props {
   onAnalyzeSeo: () => void;
   onGenerateExcerpt: (lang: 'ar' | 'en') => void;
   onImproveContent: (lang: 'ar' | 'en') => void;
+  onCompetitorAnalysis?: () => void;
   loading: string | null;
 }
 
 export const AiToolbar: React.FC<Props> = ({
   isRTL, onTranslate, onGenerateKeywords, onGenerateMeta,
-  onAnalyzeSeo, onGenerateExcerpt, onImproveContent, loading,
+  onAnalyzeSeo, onGenerateExcerpt, onImproveContent, onCompetitorAnalysis, loading,
 }) => {
   const btnClass = "text-[10px] gap-1 h-7 px-2 border-dashed hover:border-primary/40 hover:bg-primary/5 transition-colors";
   const iconSize = "w-3 h-3";
@@ -34,18 +35,16 @@ export const AiToolbar: React.FC<Props> = ({
         <span className="text-[10px] font-bold text-primary uppercase tracking-wider">{isRTL ? 'أدوات الذكاء الاصطناعي' : 'AI Tools'}</span>
       </div>
       <div className="flex flex-wrap gap-1.5">
-        {/* Translation */}
-        <div className="flex gap-1 items-center">
-          <Btn k="translate-ar-en" icon={<Languages className={iconSize} />} ar="AR → EN" en="AR → EN" onClick={() => onTranslate('ar-en')} />
-          <Btn k="translate-en-ar" icon={<Languages className={iconSize} />} ar="EN → AR" en="EN → AR" onClick={() => onTranslate('en-ar')} />
-        </div>
+        <Btn k="translate-ar-en" icon={<Languages className={iconSize} />} ar="AR → EN" en="AR → EN" onClick={() => onTranslate('ar-en')} />
+        <Btn k="translate-en-ar" icon={<Languages className={iconSize} />} ar="EN → AR" en="EN → AR" onClick={() => onTranslate('en-ar')} />
         <div className="w-px h-5 bg-border/60 mx-0.5" />
-        {/* SEO */}
         <Btn k="keywords" icon={<Search className={iconSize} />} ar="كلمات مفتاحية" en="Keywords" onClick={onGenerateKeywords} />
         <Btn k="meta" icon={<FileText className={iconSize} />} ar="ميتا SEO" en="SEO Meta" onClick={onGenerateMeta} />
         <Btn k="analyze" icon={<Search className={iconSize} />} ar="تحليل SEO" en="SEO Analysis" onClick={onAnalyzeSeo} />
+        {onCompetitorAnalysis && (
+          <Btn k="competitor" icon={<Trophy className={iconSize} />} ar="تحليل المنافسين" en="Competitors" onClick={onCompetitorAnalysis} />
+        )}
         <div className="w-px h-5 bg-border/60 mx-0.5" />
-        {/* Content */}
         <Btn k="excerpt-ar" icon={<Wand2 className={iconSize} />} ar="مقتطف AR" en="Excerpt AR" onClick={() => onGenerateExcerpt('ar')} />
         <Btn k="excerpt-en" icon={<Wand2 className={iconSize} />} ar="مقتطف EN" en="Excerpt EN" onClick={() => onGenerateExcerpt('en')} />
         <Btn k="improve-ar" icon={<Sparkles className={iconSize} />} ar="تحسين AR" en="Improve AR" onClick={() => onImproveContent('ar')} />
