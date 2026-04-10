@@ -28,6 +28,7 @@ const actionLabels: Record<string, { ar: string; en: string; color: string }> = 
   setting_deleted: { ar: 'حذف إعداد', en: 'Setting Deleted', color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' },
   user_disabled: { ar: 'تعطيل حساب', en: 'Account Disabled', color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' },
   user_enabled: { ar: 'تفعيل حساب', en: 'Account Enabled', color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' },
+  unauthorized_access: { ar: 'وصول غير مصرح', en: 'Unauthorized Access', color: 'bg-red-200 text-red-800 dark:bg-red-900/40 dark:text-red-300' },
 };
 
 const entityLabels: Record<string, { ar: string; en: string }> = {
@@ -40,6 +41,7 @@ const entityLabels: Record<string, { ar: string; en: string }> = {
   platform_setting: { ar: 'إعداد المنصة', en: 'Platform Setting' },
   role: { ar: 'صلاحية', en: 'Role' },
   user_role: { ar: 'صلاحية مستخدم', en: 'User Role' },
+  route: { ar: 'مسار', en: 'Route' },
 };
 
 const AdminActivityLog = () => {
