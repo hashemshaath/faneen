@@ -108,7 +108,7 @@ export const Footer = () => {
                 </div>
                 <Button
                   type="submit"
-                  disabled={subscribed}
+                  disabled={subscribed || loading}
                   className={`h-11 px-5 gap-2 font-bold transition-all duration-500 ${
                     subscribed
                       ? 'bg-green-500 hover:bg-green-500 text-white scale-105'
