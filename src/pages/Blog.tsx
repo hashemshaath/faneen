@@ -277,7 +277,7 @@ const Blog = () => {
             </div>
 
             {/* ═══ Sidebar ═══ */}
-            <aside className="space-y-4 sm:space-y-6">
+            <aside className="hidden lg:block space-y-4 sm:space-y-6">
               {/* Popular Posts */}
               <Card className="border-border/50">
                 <CardContent className="p-4 sm:p-5">
