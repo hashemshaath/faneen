@@ -555,8 +555,54 @@ const BlogPost = () => {
               </div>
             )}
 
+            {/* ═══ Article Search Bar ═══ */}
+            <div className={`mb-4 sm:mb-6 transition-all duration-300 ${searchOpen ? 'opacity-100 max-h-20' : 'opacity-0 max-h-0 overflow-hidden'}`}>
+              <div className="flex items-center gap-2 p-2 sm:p-2.5 rounded-xl border border-accent/30 bg-card dark:bg-card/90 shadow-lg shadow-accent/5">
+                <Search className="w-4 h-4 text-accent shrink-0" />
+                <Input
+                  id="article-search-input"
+                  placeholder={isRTL ? 'ابحث في المقال...' : 'Search in article...'}
+                  value={articleSearch}
+                  onChange={(e) => setArticleSearch(e.target.value)}
+                  className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 h-8 text-sm px-1"
+                />
+                {totalMatches > 0 && (
+                  <div className="flex items-center gap-1 shrink-0">
+                    <span className="text-[11px] text-muted-foreground font-mono whitespace-nowrap">
+                      {currentMatch}/{totalMatches}
+                    </span>
+                    <button onClick={() => navigateMatch('prev')} className="p-1 rounded hover:bg-muted transition-colors" title={isRTL ? 'السابق' : 'Previous'}>
+                      <ChevronUp className="w-3.5 h-3.5 text-muted-foreground" />
+                    </button>
+                    <button onClick={() => navigateMatch('next')} className="p-1 rounded hover:bg-muted transition-colors" title={isRTL ? 'التالي' : 'Next'}>
+                      <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                    </button>
+                  </div>
+                )}
+                {articleSearch && totalMatches === 0 && (
+                  <span className="text-[11px] text-muted-foreground shrink-0">{isRTL ? 'لا نتائج' : 'No matches'}</span>
+                )}
+                <button onClick={closeSearch} className="p-1 rounded hover:bg-muted transition-colors shrink-0">
+                  <X className="w-4 h-4 text-muted-foreground" />
+                </button>
+              </div>
+            </div>
+
+            {/* Search toggle button */}
+            {!searchOpen && (
+              <button
+                onClick={() => { setSearchOpen(true); setTimeout(() => document.getElementById('article-search-input')?.focus(), 100); }}
+                className="mb-4 sm:mb-6 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/50 dark:bg-muted/30 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+                title="Ctrl+F"
+              >
+                <Search className="w-3.5 h-3.5" />
+                {isRTL ? 'بحث في المقال' : 'Search in article'}
+                <kbd className="hidden sm:inline text-[9px] bg-background dark:bg-muted/50 border border-border rounded px-1 py-0.5 ms-1 font-mono">⌘F</kbd>
+              </button>
+            )}
+
             {/* ═══ Article body ═══ */}
-            <article className="prose prose-base lg:prose-lg max-w-none dark:prose-invert mb-10 sm:mb-12
+            <article ref={articleRef} className="prose prose-base lg:prose-lg max-w-none dark:prose-invert mb-10 sm:mb-12
               prose-headings:font-heading prose-headings:text-foreground prose-headings:scroll-mt-20
               prose-h2:text-lg prose-h2:sm:text-xl prose-h2:lg:text-2xl prose-h2:mt-8 prose-h2:sm:mt-10 prose-h2:mb-4
               prose-h3:text-base prose-h3:sm:text-lg prose-h3:mt-6 prose-h3:mb-3
