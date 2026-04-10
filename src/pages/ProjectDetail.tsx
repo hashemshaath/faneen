@@ -128,27 +128,27 @@ const ProjectDetail = () => {
       <Navbar />
 
       {/* Header */}
-      <div className="bg-primary pt-24 pb-8">
-        <div className="container max-w-5xl">
-          <Link to="/projects" className="inline-flex items-center gap-1.5 text-primary-foreground/60 hover:text-primary-foreground text-sm mb-4 transition-colors">
-            <BackIcon className="w-4 h-4" />
+      <div className="bg-primary pt-20 sm:pt-24 pb-5 sm:pb-8">
+        <div className="container max-w-5xl px-4 sm:px-6">
+          <Link to="/projects" className="inline-flex items-center gap-1.5 text-primary-foreground/60 hover:text-primary-foreground text-xs sm:text-sm mb-3 sm:mb-4 transition-colors">
+            <BackIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             {isRTL ? 'جميع المشاريع' : 'All Projects'}
           </Link>
           <div className="flex items-start gap-3">
-            <div className="flex-1">
-              <h1 className="font-heading font-bold text-2xl md:text-3xl text-primary-foreground mb-2">{title}</h1>
-              <div className="flex flex-wrap gap-2">
+            <div className="flex-1 min-w-0">
+              <h1 className="font-heading font-bold text-xl sm:text-2xl md:text-3xl text-primary-foreground mb-2 leading-snug">{title}</h1>
+              <div className="flex flex-wrap gap-1.5 sm:gap-2">
                 {project.is_featured && (
-                  <Badge className="bg-accent text-accent-foreground text-xs">{isRTL ? 'مميز' : 'Featured'}</Badge>
+                  <Badge className="bg-accent text-accent-foreground text-[10px] sm:text-xs">{isRTL ? 'مميز' : 'Featured'}</Badge>
                 )}
                 {category && (
-                  <Badge variant="secondary" className="text-xs gap-1">
+                  <Badge variant="secondary" className="text-[10px] sm:text-xs gap-1">
                     <Tag className="w-3 h-3" />
                     {language === 'ar' ? category.name_ar : category.name_en}
                   </Badge>
                 )}
                 {city && (
-                  <Badge variant="secondary" className="text-xs gap-1">
+                  <Badge variant="secondary" className="text-[10px] sm:text-xs gap-1">
                     <MapPin className="w-3 h-3" />
                     {language === 'ar' ? city.name_ar : city.name_en}
                   </Badge>
