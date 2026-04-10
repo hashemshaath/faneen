@@ -8,6 +8,8 @@ import { SearchHeader } from '@/components/search/SearchHeader';
 import { SearchFilters, type SearchFilterValues } from '@/components/search/SearchFilters';
 import { SearchResults, type ViewMode } from '@/components/search/SearchResults';
 
+const ITEMS_PER_PAGE = 12;
+
 const useCategories = () =>
   useQuery({
     queryKey: ['categories'],
@@ -50,6 +52,7 @@ const SearchPage = () => {
   const [query, setQuery] = useState(searchParams.get('q') || '');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [showFilters, setShowFilters] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const [filters, setFilters] = useState<SearchFilterValues>({
     categoryId: searchParams.get('category') || 'all',
@@ -63,6 +66,7 @@ const SearchPage = () => {
 
   const handleQueryChange = useCallback((q: string) => {
     setQuery(q);
+    setCurrentPage(1);
     const params = new URLSearchParams(searchParams);
     if (q) params.set('q', q); else params.delete('q');
     setSearchParams(params, { replace: true });
@@ -70,6 +74,7 @@ const SearchPage = () => {
 
   const handleFilterChange = useCallback(<K extends keyof SearchFilterValues>(key: K, value: SearchFilterValues[K]) => {
     setFilters(prev => ({ ...prev, [key]: value }));
+    setCurrentPage(1);
     const params = new URLSearchParams(searchParams);
     const paramMap: Record<string, string> = {
       categoryId: 'category', cityId: 'city', minRating: 'rating',
@@ -93,6 +98,7 @@ const SearchPage = () => {
   const clearFilters = useCallback(() => {
     setFilters({ categoryId: 'all', cityId: 'all', minRating: 0, verifiedOnly: false, sortBy: 'rating', priceMin: 0, priceMax: 0 });
     setQuery('');
+    setCurrentPage(1);
     setSearchParams({}, { replace: true });
   }, [setSearchParams]);
 
@@ -112,7 +118,6 @@ const SearchPage = () => {
     if (filters.minRating > 0) results = results.filter(b => Number(b.rating_avg) >= filters.minRating);
     if (filters.verifiedOnly) results = results.filter(b => b.is_verified);
 
-    // Price range filter: check if any active service falls within the range
     if (filters.priceMin > 0 || filters.priceMax > 0) {
       results = results.filter(b => {
         const services = (b as any).business_services;
@@ -141,6 +146,18 @@ const SearchPage = () => {
     return results;
   }, [businesses, query, filters, language]);
 
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const paginatedResults = useMemo(() => {
+    if (viewMode === 'map' || viewMode === 'split') return filtered;
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filtered.slice(start, start + ITEMS_PER_PAGE);
+  }, [filtered, currentPage, viewMode]);
+
+  const handlePageChange = useCallback((page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 400, behavior: 'smooth' });
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
       <SearchHeader
@@ -149,6 +166,7 @@ const SearchPage = () => {
         totalResults={filtered.length}
         categories={categories}
         onCategoryClick={handleCategoryClick}
+        businesses={businesses}
       />
 
       <div className="container py-8">
@@ -164,12 +182,16 @@ const SearchPage = () => {
             onToggleFilters={() => setShowFilters(!showFilters)}
           />
           <SearchResults
-            businesses={filtered}
+            businesses={paginatedResults}
             isLoading={isLoading}
             viewMode={viewMode}
             onViewModeChange={setViewMode}
             totalCount={filtered.length}
             onClearFilters={clearFilters}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            itemsPerPage={ITEMS_PER_PAGE}
+            onPageChange={handlePageChange}
           />
         </div>
       </div>
