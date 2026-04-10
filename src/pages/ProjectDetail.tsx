@@ -308,86 +308,80 @@ const ProjectDetail = () => {
         </div>
       </div>
 
-      {/* Lightbox Dialog */}
-      <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
-        <DialogContent className="max-w-5xl p-0 overflow-hidden bg-black/95 border-none sm:rounded-2xl" dir={isRTL ? 'rtl' : 'ltr'}>
-          <div className="relative flex flex-col h-[85vh]">
-            {/* Close */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute top-3 end-3 z-10 text-white hover:bg-white/20 rounded-full"
-              onClick={() => setLightboxOpen(false)}
-            >
-              <X className="w-5 h-5" />
-            </Button>
+      {/* Fullscreen Lightbox */}
+      {lightboxOpen && (
+        <div className="fixed inset-0 z-50 bg-black/95 flex flex-col" dir={isRTL ? 'rtl' : 'ltr'}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-3 end-3 z-10 text-white hover:bg-white/20 rounded-full"
+            onClick={() => setLightboxOpen(false)}
+          >
+            <X className="w-5 h-5" />
+          </Button>
 
-            {/* Main image */}
-            <div className="flex-1 flex items-center justify-center p-4 relative">
-              {allImages.length > 0 && (
-                <img
-                  src={allImages[currentImageIndex]?.image_url}
-                  alt=""
-                  className="max-w-full max-h-full object-contain rounded-lg"
-                />
-              )}
+          <div className="flex-1 flex items-center justify-center p-4 relative">
+            {allImages.length > 0 && (
+              <img
+                src={allImages[currentImageIndex]?.image_url}
+                alt=""
+                className="max-w-full max-h-full object-contain rounded-lg"
+              />
+            )}
 
-              {allImages.length > 1 && (
-                <>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute start-2 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 rounded-full w-10 h-10"
-                    onClick={isRTL ? goNext : goPrev}
-                  >
-                    {isRTL ? <ChevronRight className="w-6 h-6" /> : <ChevronLeft className="w-6 h-6" />}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute end-2 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 rounded-full w-10 h-10"
-                    onClick={isRTL ? goPrev : goNext}
-                  >
-                    {isRTL ? <ChevronLeft className="w-6 h-6" /> : <ChevronRight className="w-6 h-6" />}
-                  </Button>
-                </>
-              )}
-            </div>
-
-            {/* Caption + counter */}
-            <div className="text-center pb-3 px-4">
-              {allImages[currentImageIndex] &&
-                (allImages[currentImageIndex].caption_ar || allImages[currentImageIndex].caption_en) && (
-                  <p className="text-white/80 text-sm mb-1">
-                    {language === 'ar'
-                      ? allImages[currentImageIndex].caption_ar
-                      : (allImages[currentImageIndex].caption_en || allImages[currentImageIndex].caption_ar)}
-                  </p>
-                )}
-              {allImages.length > 1 && (
-                <p className="text-white/50 text-xs">{currentImageIndex + 1} / {allImages.length}</p>
-              )}
-            </div>
-
-            {/* Thumbnails */}
             {allImages.length > 1 && (
-              <div className="flex gap-1.5 overflow-x-auto px-4 pb-4 justify-center">
-                {allImages.map((img, idx) => (
-                  <button
-                    key={img.id}
-                    onClick={() => setCurrentImageIndex(idx)}
-                    className={`shrink-0 w-14 h-14 rounded-lg overflow-hidden border-2 transition-all ${
-                      idx === currentImageIndex ? 'border-accent ring-1 ring-accent' : 'border-transparent opacity-50 hover:opacity-80'
-                    }`}
-                  >
-                    <img src={img.image_url} alt="" className="w-full h-full object-cover" />
-                  </button>
-                ))}
-              </div>
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute start-2 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 rounded-full w-10 h-10"
+                  onClick={isRTL ? goNext : goPrev}
+                >
+                  {isRTL ? <ChevronRight className="w-6 h-6" /> : <ChevronLeft className="w-6 h-6" />}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute end-2 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 rounded-full w-10 h-10"
+                  onClick={isRTL ? goPrev : goNext}
+                >
+                  {isRTL ? <ChevronLeft className="w-6 h-6" /> : <ChevronRight className="w-6 h-6" />}
+                </Button>
+              </>
             )}
           </div>
-        </DialogContent>
-      </Dialog>
+
+          <div className="text-center pb-3 px-4">
+            {allImages[currentImageIndex] &&
+              (allImages[currentImageIndex].caption_ar || allImages[currentImageIndex].caption_en) && (
+                <p className="text-white/80 text-sm mb-1">
+                  {language === 'ar'
+                    ? allImages[currentImageIndex].caption_ar
+                    : (allImages[currentImageIndex].caption_en || allImages[currentImageIndex].caption_ar)}
+                </p>
+              )}
+            {allImages.length > 1 && (
+              <p className="text-white/50 text-xs">{currentImageIndex + 1} / {allImages.length}</p>
+            )}
+          </div>
+
+          {allImages.length > 1 && (
+            <div className="flex gap-1.5 overflow-x-auto px-4 pb-4 justify-center">
+              {allImages.map((img, idx) => (
+                <button
+                  key={img.id}
+                  onClick={() => setCurrentImageIndex(idx)}
+                  className={`shrink-0 w-14 h-14 rounded-lg overflow-hidden border-2 transition-all ${
+                    idx === currentImageIndex ? 'border-accent ring-1 ring-accent' : 'border-transparent opacity-50 hover:opacity-80'
+                  }`}
+                >
+                  <img src={img.image_url} alt="" className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <Footer />
     </div>
