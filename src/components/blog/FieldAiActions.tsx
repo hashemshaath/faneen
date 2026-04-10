@@ -17,19 +17,20 @@ interface Props {
   focusKeyword?: string;
   /** Is the interface RTL */
   isRTL?: boolean;
-  /** Field type for context */
-  fieldType?: 'title' | 'excerpt' | 'content' | 'meta_title' | 'meta_description';
+  /** Field type for context - controls markdown stripping and excerpt generation */
+  fieldType?: 'title' | 'excerpt' | 'content' | 'meta_title' | 'meta_description' | 'description' | 'short_text';
+  /** Compact mode - smaller buttons */
+  compact?: boolean;
 }
 
 export const FieldAiActions: React.FC<Props> = ({
-  value, lang, onTranslated, onImproved, focusKeyword, isRTL = true, fieldType = 'content'
+  value, lang, onTranslated, onImproved, focusKeyword, isRTL = true, fieldType = 'content', compact = false,
 }) => {
   const [loading, setLoading] = useState<string | null>(null);
 
   if (!value?.trim()) return null;
 
   const targetLang = lang === 'ar' ? 'en' : 'ar';
-
   const isPlainField = fieldType !== 'content';
   const clean = (text: string) => isPlainField ? stripMarkdown(text) : text.trim();
 
@@ -74,28 +75,38 @@ export const FieldAiActions: React.FC<Props> = ({
     } catch {} finally { setLoading(null); }
   };
 
-  const btnClass = "h-6 px-2 text-[10px] gap-1 border-dashed hover:border-primary/40 hover:bg-primary/5";
-  const iconSize = "w-3 h-3";
+  const btnClass = compact
+    ? "h-5 px-1.5 text-[9px] gap-0.5 border-dashed hover:border-primary/40 hover:bg-primary/5"
+    : "h-6 px-2 text-[10px] gap-1 border-dashed hover:border-primary/40 hover:bg-primary/5";
+  const iconSize = compact ? "w-2.5 h-2.5" : "w-3 h-3";
+
+  const showExcerpt = fieldType === 'excerpt' || fieldType === 'description';
 
   return (
     <div className="flex items-center gap-1 flex-wrap">
       {onTranslated && (
         <Button variant="outline" size="sm" className={btnClass} onClick={handleTranslate} disabled={!!loading}>
           {loading === 'translate' ? <Loader2 className={`${iconSize} animate-spin`} /> : <Languages className={iconSize} />}
-          {isRTL ? `ترجم → ${targetLang.toUpperCase()}` : `Translate → ${targetLang.toUpperCase()}`}
+          {isRTL ? `→ ${targetLang.toUpperCase()}` : `→ ${targetLang.toUpperCase()}`}
         </Button>
       )}
-      {onImproved && fieldType !== 'excerpt' && (
+      {onImproved && !showExcerpt && (
         <Button variant="outline" size="sm" className={btnClass} onClick={handleImprove} disabled={!!loading}>
           {loading === 'improve' ? <Loader2 className={`${iconSize} animate-spin`} /> : <Sparkles className={iconSize} />}
           {isRTL ? 'تحسين' : 'Improve'}
         </Button>
       )}
-      {onImproved && fieldType === 'excerpt' && (
-        <Button variant="outline" size="sm" className={btnClass} onClick={handleGenerateExcerpt} disabled={!!loading}>
-          {loading === 'excerpt' ? <Loader2 className={`${iconSize} animate-spin`} /> : <Wand2 className={iconSize} />}
-          {isRTL ? 'توليد تلقائي' : 'Auto-generate'}
-        </Button>
+      {onImproved && showExcerpt && (
+        <>
+          <Button variant="outline" size="sm" className={btnClass} onClick={handleGenerateExcerpt} disabled={!!loading}>
+            {loading === 'excerpt' ? <Loader2 className={`${iconSize} animate-spin`} /> : <Wand2 className={iconSize} />}
+            {isRTL ? 'توليد' : 'Generate'}
+          </Button>
+          <Button variant="outline" size="sm" className={btnClass} onClick={handleImprove} disabled={!!loading}>
+            {loading === 'improve' ? <Loader2 className={`${iconSize} animate-spin`} /> : <Sparkles className={iconSize} />}
+            {isRTL ? 'تحسين' : 'Improve'}
+          </Button>
+        </>
       )}
     </div>
   );
