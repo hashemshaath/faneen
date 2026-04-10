@@ -69,56 +69,58 @@ const PageLoader = () => (
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <LanguageProvider>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Suspense fallback={<PageLoader />}>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/search" element={<Search />} />
-                <Route path="/contracts" element={<Contracts />} />
-                <Route path="/contracts/:id" element={<ContractDetail />} />
-                <Route path="/dashboard" element={<DashboardOverview />} />
-                <Route path="/dashboard/services" element={<DashboardServices />} />
-                <Route path="/dashboard/portfolio" element={<DashboardPortfolio />} />
-                <Route path="/dashboard/reviews" element={<DashboardReviews />} />
-                <Route path="/dashboard/contracts" element={<DashboardContracts />} />
-                <Route path="/dashboard/warranties" element={<DashboardWarranties />} />
-                <Route path="/dashboard/installments" element={<DashboardInstallments />} />
-                <Route path="/dashboard/settings" element={<DashboardSettings />} />
-                <Route path="/dashboard/promotions" element={<DashboardPromotions />} />
-                <Route path="/dashboard/projects" element={<DashboardProjects />} />
-                <Route path="/dashboard/blog" element={<DashboardBlog />} />
-                <Route path="/dashboard/profile-systems" element={<DashboardProfileSystems />} />
-                <Route path="/dashboard/messages" element={<DashboardMessages />} />
-                <Route path="/dashboard/bookmarks" element={<DashboardBookmarks />} />
-                <Route path="/notifications" element={<Notifications />} />
-                <Route path="/offers" element={<Offers />} />
-                <Route path="/projects" element={<Projects />} />
-                <Route path="/projects/:id" element={<ProjectDetail />} />
-                <Route path="/blog" element={<Blog />} />
-                <Route path="/blog/:slug" element={<BlogPost />} />
-                <Route path="/profile-systems" element={<ProfileSystems />} />
-                <Route path="/profile-systems/:slug" element={<ProfileSystemDetail />} />
-                <Route path="/compare" element={<Compare />} />
-                <Route path="/compare-profiles" element={<CompareProfiles />} />
-                <Route path="/admin/api-settings" element={<AdminApiSettings />} />
-                <Route path="/admin/api-docs" element={<AdminApiDocs />} />
-                <Route path="/admin/users" element={<AdminUsers />} />
-                <Route path="/admin/activity-log" element={<AdminActivityLog />} />
-                <Route path="/:username" element={<BusinessProfile />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-          </BrowserRouter>
-        </TooltipProvider>
-      </AuthProvider>
-    </LanguageProvider>
+    <ThemeProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route path="/search" element={<Search />} />
+                  <Route path="/contracts" element={<Contracts />} />
+                  <Route path="/contracts/:id" element={<ContractDetail />} />
+                  <Route path="/dashboard" element={<DashboardOverview />} />
+                  <Route path="/dashboard/services" element={<DashboardServices />} />
+                  <Route path="/dashboard/portfolio" element={<DashboardPortfolio />} />
+                  <Route path="/dashboard/reviews" element={<DashboardReviews />} />
+                  <Route path="/dashboard/contracts" element={<DashboardContracts />} />
+                  <Route path="/dashboard/warranties" element={<DashboardWarranties />} />
+                  <Route path="/dashboard/installments" element={<DashboardInstallments />} />
+                  <Route path="/dashboard/settings" element={<DashboardSettings />} />
+                  <Route path="/dashboard/promotions" element={<DashboardPromotions />} />
+                  <Route path="/dashboard/projects" element={<DashboardProjects />} />
+                  <Route path="/dashboard/blog" element={<DashboardBlog />} />
+                  <Route path="/dashboard/profile-systems" element={<DashboardProfileSystems />} />
+                  <Route path="/dashboard/messages" element={<DashboardMessages />} />
+                  <Route path="/dashboard/bookmarks" element={<DashboardBookmarks />} />
+                  <Route path="/notifications" element={<Notifications />} />
+                  <Route path="/offers" element={<Offers />} />
+                  <Route path="/projects" element={<Projects />} />
+                  <Route path="/projects/:id" element={<ProjectDetail />} />
+                  <Route path="/blog" element={<Blog />} />
+                  <Route path="/blog/:slug" element={<BlogPost />} />
+                  <Route path="/profile-systems" element={<ProfileSystems />} />
+                  <Route path="/profile-systems/:slug" element={<ProfileSystemDetail />} />
+                  <Route path="/compare" element={<Compare />} />
+                  <Route path="/compare-profiles" element={<CompareProfiles />} />
+                  <Route path="/admin/api-settings" element={<AdminApiSettings />} />
+                  <Route path="/admin/api-docs" element={<AdminApiDocs />} />
+                  <Route path="/admin/users" element={<AdminUsers />} />
+                  <Route path="/admin/activity-log" element={<AdminActivityLog />} />
+                  <Route path="/:username" element={<BusinessProfile />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Suspense>
+            </BrowserRouter>
+          </TooltipProvider>
+        </AuthProvider>
+      </LanguageProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 
