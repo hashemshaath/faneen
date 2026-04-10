@@ -513,7 +513,7 @@ const DashboardPortfolio = () => {
                 {/* Image Upload */}
                 <div className="space-y-1.5">
                   <Label className="text-xs font-medium">{isRTL ? 'صورة العمل' : 'Work Image'} <span className="text-destructive">*</span></Label>
-                  <ImageUpload bucket="portfolio-images" value={form.media_url} onChange={url => setForm(p => ({ ...p, media_url: url }))} onRemove={() => setForm(p => ({ ...p, media_url: '' }))} aspectRatio="video" placeholder={isRTL ? 'اضغط لرفع صورة (يُفضل 16:9)' : 'Click to upload (16:9 recommended)'} />
+                  <ImageUpload bucket="portfolio-images" value={form.media_url} onChange={url => setForm(p => ({ ...p, media_url: url }))} onRemove={() => setForm(p => ({ ...p, media_url: '' }))} compact placeholder={isRTL ? 'اضغط لرفع صورة (يُفضل 16:9)' : 'Click to upload (16:9 recommended)'} />
                 </div>
 
                 {/* Descriptions */}
