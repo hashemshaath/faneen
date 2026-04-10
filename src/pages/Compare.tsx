@@ -142,6 +142,30 @@ const Compare = () => {
               <p className="text-sm">{isRTL ? 'ابحث وأضف مزودي خدمة للمقارنة بينهم' : 'Search and add providers to compare them'}</p>
             </CardContent>
           </Card>
+        ) : isLoadingSelected ? (
+          <Card>
+            <CardContent className="p-4 sm:p-6 space-y-4">
+              <div className="flex gap-4 sm:gap-6 justify-center">
+                {selectedIds.map((_, i) => (
+                  <div key={i} className="flex flex-col items-center gap-2 min-w-[180px]">
+                    <Skeleton className="w-14 h-14 rounded-xl" />
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-5 w-16 rounded-full" />
+                  </div>
+                ))}
+              </div>
+              <div className="space-y-3 pt-4 border-t border-border/30">
+                {[1, 2, 3, 4, 5].map(i => (
+                  <div key={i} className="flex items-center gap-4">
+                    <Skeleton className="h-4 w-24 shrink-0" />
+                    {selectedIds.map((_, j) => (
+                      <Skeleton key={j} className="h-4 flex-1" />
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         ) : (
           <>
           <div className="flex justify-end mb-2">
