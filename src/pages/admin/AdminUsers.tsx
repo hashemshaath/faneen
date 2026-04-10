@@ -368,9 +368,7 @@ const AdminUsers = () => {
         </Card>
 
         {(loadingProfiles || loadingRoles) ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="w-8 h-8 animate-spin text-gold" />
-          </div>
+          <div className="space-y-3">{[1,2,3,4,5].map(i => <Skeleton key={i} className="h-20 rounded-xl" />)}</div>
         ) : filtered.length === 0 ? (
           <Card>
             <CardContent className="p-12 text-center">

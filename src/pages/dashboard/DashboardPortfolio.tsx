@@ -255,7 +255,7 @@ const DashboardPortfolio = () => {
         </div>
 
         {isLoading ? (
-          <div className="flex justify-center py-12"><div className="w-8 h-8 border-4 border-gold border-t-transparent rounded-full animate-spin" /></div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">{[1,2,3,4,5,6].map(i => <Skeleton key={i} className="aspect-square rounded-xl" />)}</div>
         ) : items.length === 0 ? (
           <Card className="border-dashed">
             <CardContent className="flex flex-col items-center py-12 text-muted-foreground">

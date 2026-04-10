@@ -185,9 +185,7 @@ const ProfileSystems = () => {
         </p>
 
         {isLoading ? (
-          <div className="flex justify-center py-12">
-            <div className="w-8 h-8 border-4 border-gold border-t-transparent rounded-full animate-spin" />
-          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">{[1,2,3,4,5,6].map(i => <Skeleton key={i} className="h-64 rounded-xl" />)}</div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-14 sm:py-20 text-muted-foreground">
             <Layers className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 opacity-30" />

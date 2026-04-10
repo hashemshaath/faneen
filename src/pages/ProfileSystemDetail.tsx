@@ -262,11 +262,10 @@ const ProfileSystemDetail = () => {
   if (isLoading) return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <div className="flex justify-center items-center min-h-[60vh]">
-        <div className="text-center">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 border-4 border-gold border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground text-sm">{isRTL ? 'جاري التحميل...' : 'Loading...'}</p>
-        </div>
+      <div className="container py-24 space-y-6 px-4">
+        <Skeleton className="h-10 w-2/3 rounded-xl" />
+        <Skeleton className="h-64 w-full rounded-xl" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">{[1,2,3].map(i => <Skeleton key={i} className="h-32 rounded-xl" />)}</div>
       </div>
       <Footer />
     </div>

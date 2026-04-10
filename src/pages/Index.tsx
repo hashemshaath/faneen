@@ -15,8 +15,9 @@ const SearchSection = lazy(() => import("@/components/home/SearchSection").then(
 const MembershipSection = lazy(() => import("@/components/home/MembershipSection").then(m => ({ default: m.MembershipSection })));
 
 const SectionFallback = () => (
-  <div className="py-16 flex justify-center">
-    <div className="w-8 h-8 border-3 border-accent border-t-transparent rounded-full animate-spin" />
+  <div className="py-16 px-4 container space-y-4">
+    <div className="h-8 w-48 bg-muted animate-pulse rounded-lg mx-auto" />
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">{[1,2,3].map(i => <div key={i} className="h-40 bg-muted animate-pulse rounded-xl" />)}</div>
   </div>
 );
 

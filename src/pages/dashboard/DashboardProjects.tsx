@@ -236,7 +236,7 @@ const DashboardProjects = () => {
         </Dialog>
 
         {isLoading ? (
-          <div className="flex justify-center py-12"><div className="w-8 h-8 border-4 border-gold border-t-transparent rounded-full animate-spin" /></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">{[1,2,3,4].map(i => <Skeleton key={i} className="h-48 rounded-xl" />)}</div>
         ) : projects.length === 0 ? (
           <Card className="border-dashed"><CardContent className="p-12 text-center text-muted-foreground">
             <FolderOpen className="w-12 h-12 mx-auto mb-3 opacity-30" />
