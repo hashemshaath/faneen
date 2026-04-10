@@ -2,7 +2,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { Search, Star, Shield, Building2, ChevronLeft, ChevronRight, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { useEffect, useRef, useState, useCallback, memo } from "react";
+import { useEffect, useRef, useState, useCallback, memo, useMemo } from "react";
+import { useTypingAnimation } from "@/hooks/useTypingAnimation";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { HeroParticles } from "./HeroParticles";
@@ -10,7 +11,7 @@ import heroBg1 from "@/assets/hero-bg.jpg";
 import heroBg2 from "@/assets/hero-slide-2.jpg";
 import heroBg3 from "@/assets/hero-slide-3.jpg";
 
-const slides = [
+const slidesData = [
   {
     image: heroBg1,
     titleKey1: 'hero.title1',
@@ -36,6 +37,7 @@ const slides = [
     descEn: 'Luxury kitchens, cabinets, iron railings, and modern door designs',
   },
 ];
+const slides = slidesData;
 
 // Preload next slide images in background
 const preloadImage = (src: string) => {
@@ -105,6 +107,44 @@ const SearchBar = memo(({ categories, cities, language, isRTL, t, onSearch }: an
   );
 });
 SearchBar.displayName = 'SearchBar';
+
+const HeroTitle = memo(({ slides, current, language, t }: { slides: typeof slidesData; current: number; language: string; t: any }) => {
+  const slide = slides[current];
+  const line1 = 'titleKey1' in slide && slide.titleKey1
+    ? t(slide.titleKey1 as any)
+    : (slide as any)[`title1${language === 'ar' ? 'Ar' : 'En'}`];
+  const line2 = 'titleKey2' in slide && slide.titleKey2
+    ? t(slide.titleKey2 as any)
+    : (slide as any)[`title2${language === 'ar' ? 'Ar' : 'En'}`];
+  const desc = 'descKey' in slide && slide.descKey
+    ? t(slide.descKey as any)
+    : (slide as any)[`desc${language === 'ar' ? 'Ar' : 'En'}`];
+
+  const { displayedText: typedLine1, isComplete: line1Done } = useTypingAnimation({ text: line1, speed: 40, delay: 200 });
+  const { displayedText: typedLine2 } = useTypingAnimation({ text: line2, speed: 40, delay: 0, enabled: line1Done });
+
+  return (
+    <div className="min-h-[120px] sm:min-h-[180px] flex flex-col items-center justify-center">
+      <div className="animate-fade-in">
+        <h2 className="font-heading font-black text-[1.7rem] leading-[1.25] sm:text-4xl md:text-5xl lg:text-6xl text-white sm:leading-tight mb-3 sm:mb-5">
+          <span>{typedLine1}</span>
+          <span className="inline-block w-[3px] h-[0.9em] bg-gold/80 align-middle animate-pulse ms-1" style={{ opacity: line1Done ? 0 : 1, transition: 'opacity 0.3s' }} />
+          {line1Done && (
+            <>
+              <br />
+              <span className="text-gradient-gold">{typedLine2}</span>
+              <span className="inline-block w-[3px] h-[0.9em] bg-gold/80 align-middle animate-pulse ms-1" />
+            </>
+          )}
+        </h2>
+        <p className={`font-body text-sm sm:text-lg text-white/60 max-w-2xl mx-auto leading-relaxed px-2 transition-opacity duration-700 ${line1Done ? 'opacity-100' : 'opacity-0'}`}>
+          {desc}
+        </p>
+      </div>
+    </div>
+  );
+});
+HeroTitle.displayName = 'HeroTitle';
 
 export const HeroSection = () => {
   const { t, language, isRTL } = useLanguage();
@@ -222,25 +262,8 @@ export const HeroSection = () => {
           <span className="text-[11px] sm:text-sm font-body text-gold">{t('hero.badge')}</span>
         </div>
 
-        {/* Title with slide transition */}
-        <div className="min-h-[120px] sm:min-h-[180px] flex flex-col items-center justify-center">
-          {slides.map((slide, i) => (
-            <div key={i} className={`transition-all duration-700 absolute ${i === current ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-              <h2 className="font-heading font-black text-[1.7rem] leading-[1.25] sm:text-4xl md:text-5xl lg:text-6xl text-white sm:leading-tight mb-3 sm:mb-5">
-                {'titleKey1' in slide && slide.titleKey1
-                  ? <>{t(slide.titleKey1 as any)}<br /><span className="text-gradient-gold">{t(slide.titleKey2 as any)}</span></>
-                  : <>{(slide as any)[`title1${language === 'ar' ? 'Ar' : 'En'}`]}<br /><span className="text-gradient-gold">{(slide as any)[`title2${language === 'ar' ? 'Ar' : 'En'}`]}</span></>
-                }
-              </h2>
-              <p className="font-body text-sm sm:text-lg text-white/60 max-w-2xl mx-auto leading-relaxed px-2">
-                {'descKey' in slide && slide.descKey
-                  ? t(slide.descKey as any)
-                  : (slide as any)[`desc${language === 'ar' ? 'Ar' : 'En'}`]
-                }
-              </p>
-            </div>
-          ))}
-        </div>
+        {/* Title with slide transition + typing animation */}
+        <HeroTitle slides={slides} current={current} language={language} t={t} />
 
         {/* Memoized Search Bar */}
         <SearchBar
