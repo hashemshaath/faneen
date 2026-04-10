@@ -129,7 +129,7 @@ export const ProviderDashboard: React.FC = () => {
     enabled: !!user,
   });
 
-  const { ref: statsRef, isVisible: statsVisible } = useScrollAnimation({ threshold: 0.1 });
+  const { ref: statsRef, isVisible: statsVisible } = useScrollAnimation(0.1);
 
   const animatedRevenue = useCountUp(stats?.totalRevenue ?? 0, statsVisible, 1500);
   const animatedContracts = useCountUp(stats?.totalContracts ?? 0, statsVisible, 1200);
