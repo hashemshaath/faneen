@@ -350,7 +350,7 @@ const DashboardBlog = () => {
     setAiLoading(`excerpt-${lang}`);
     try {
       const raw = await callBlogAi({ action: 'generate_excerpt', title: lang === 'ar' ? form.title_ar : form.title_en, content: lang === 'ar' ? form.content_ar : form.content_en, keywords: [form.focus_keyword] });
-      setField(lang === 'ar' ? 'excerpt_ar' : 'excerpt_en', raw.trim());
+      setField(lang === 'ar' ? 'excerpt_ar' : 'excerpt_en', stripMarkdown(raw));
       toast.success(isRTL ? 'تم توليد المقتطف' : 'Excerpt generated');
     } catch {} finally { setAiLoading(null); }
   };
