@@ -102,7 +102,38 @@ const BlogPost = () => {
     enabled: !!post,
   });
 
-  const BackIcon = isRTL ? ArrowRight : ArrowLeft;
+  // Bookmark state
+  const { data: isBookmarked = false } = useQuery({
+    queryKey: ['blog-bookmark', post?.id, user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('blog_bookmarks')
+        .select('id')
+        .eq('user_id', user!.id)
+        .eq('post_id', post!.id)
+        .maybeSingle();
+      return !!data;
+    },
+    enabled: !!post && !!user,
+  });
+
+  const toggleBookmark = useMutation({
+    mutationFn: async () => {
+      if (!user || !post) return;
+      if (isBookmarked) {
+        await supabase.from('blog_bookmarks').delete().eq('user_id', user.id).eq('post_id', post.id);
+      } else {
+        await supabase.from('blog_bookmarks').insert({ user_id: user.id, post_id: post.id });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['blog-bookmark', post?.id, user?.id] });
+      toast.success(isBookmarked
+        ? (isRTL ? 'تمت إزالة المقال من المحفوظات' : 'Removed from bookmarks')
+        : (isRTL ? 'تم حفظ المقال' : 'Article bookmarked'));
+    },
+  });
+
   const title = post ? (language === 'ar' ? post.title_ar : (post.title_en || post.title_ar)) : '';
   const content = post ? (language === 'ar' ? (post.content_ar || '') : (post.content_en || post.content_ar || '')) : '';
   const readTime = estimateReadTime(content);
