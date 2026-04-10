@@ -48,12 +48,14 @@ const adminItems = [
 ] as const;
 
 export const DashboardSidebar: React.FC = () => {
-  const { state } = useSidebar();
+  const { state, setOpenMobile, isMobile } = useSidebar();
   const collapsed = state === 'collapsed';
   const { t, language, setLanguage, isRTL } = useLanguage();
   const { signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
+  const closeMobile = () => { if (isMobile) setOpenMobile(false); };
 
   const handleLogout = async () => {
     await signOut();
