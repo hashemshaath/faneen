@@ -2,13 +2,13 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import {
-  Star, BadgeCheck, SlidersHorizontal, X, RotateCcw,
+  Star, BadgeCheck, SlidersHorizontal, X, RotateCcw, DollarSign,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
 export interface SearchFilterValues {
   categoryId: string;
@@ -16,6 +16,8 @@ export interface SearchFilterValues {
   minRating: number;
   verifiedOnly: boolean;
   sortBy: 'rating' | 'newest' | 'name';
+  priceMin: number;
+  priceMax: number;
 }
 
 interface SearchFiltersProps {
@@ -40,6 +42,8 @@ export const SearchFilters = ({
     filters.cityId !== 'all',
     filters.minRating > 0,
     filters.verifiedOnly,
+    filters.priceMin > 0,
+    filters.priceMax > 0,
   ].filter(Boolean).length;
 
   return (
@@ -94,6 +98,40 @@ export const SearchFilters = ({
                 ))}
               </SelectContent>
             </Select>
+          </FilterSection>
+
+          {/* Price Range */}
+          <FilterSection label={t('search.price_range')}>
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <Input
+                  type="number"
+                  min={0}
+                  placeholder={t('search.price_min')}
+                  value={filters.priceMin || ''}
+                  onChange={e => onFilterChange('priceMin', Number(e.target.value) || 0)}
+                  className="rounded-xl text-sm h-9 ps-8"
+                />
+                <DollarSign className="absolute start-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+              </div>
+              <span className="text-muted-foreground text-xs">—</span>
+              <div className="relative flex-1">
+                <Input
+                  type="number"
+                  min={0}
+                  placeholder={t('search.price_max')}
+                  value={filters.priceMax || ''}
+                  onChange={e => onFilterChange('priceMax', Number(e.target.value) || 0)}
+                  className="rounded-xl text-sm h-9 ps-8"
+                />
+                <DollarSign className="absolute start-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+              </div>
+            </div>
+            {(filters.priceMin > 0 || filters.priceMax > 0) && (
+              <p className="text-[11px] text-muted-foreground mt-1.5 font-body">
+                {t('search.price_hint')}
+              </p>
+            )}
           </FilterSection>
 
           {/* Rating */}
