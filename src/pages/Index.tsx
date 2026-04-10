@@ -48,6 +48,7 @@ const Index = () => {
         <MembershipSection />
       </Suspense>
       <Footer />
+      <ScrollToTop />
     </div>
   );
 };
