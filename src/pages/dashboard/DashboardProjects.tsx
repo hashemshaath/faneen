@@ -233,11 +233,9 @@ const DashboardProjects = () => {
                 <div className="space-y-2">
                   <Label>{isRTL ? 'عنوان المشروع (إنجليزي)' : 'Project Title (English)'}</Label>
                   <Input value={form.title_en} onChange={e => setForm(f => ({ ...f, title_en: e.target.value }))} dir="ltr" placeholder="e.g. Commercial building glass facade" />
-                  {form.title_en && (
-                    <FieldAiActions value={form.title_en} lang="en" compact fieldType="title" isRTL={isRTL}
-                      onTranslated={(v) => setForm(f => ({ ...f, title_ar: v }))}
-                      onImproved={(v) => setForm(f => ({ ...f, title_en: v }))} />
-                  )}
+                  <FieldAiActions value={form.title_en} lang="en" compact fieldType="title" isRTL={isRTL}
+                    onTranslated={(v) => setForm(f => ({ ...f, title_ar: v }))}
+                    onImproved={(v) => setForm(f => ({ ...f, title_en: v }))} />
                 </div>
               </div>
 
@@ -252,20 +250,16 @@ const DashboardProjects = () => {
                 <div className="space-y-2">
                   <Label>{isRTL ? 'الوصف (عربي)' : 'Description (Arabic)'}</Label>
                   <Textarea value={form.description_ar} onChange={e => setForm(f => ({ ...f, description_ar: e.target.value }))} rows={3} placeholder={isRTL ? 'وصف تفصيلي للمشروع...' : 'Detailed project description...'} />
-                  {form.description_ar && (
-                    <FieldAiActions value={form.description_ar} lang="ar" compact fieldType="description" isRTL={isRTL}
-                      onTranslated={(v) => setForm(f => ({ ...f, description_en: v }))}
-                      onImproved={(v) => setForm(f => ({ ...f, description_ar: v }))} />
-                  )}
+                  <FieldAiActions value={form.description_ar} lang="ar" compact fieldType="description" isRTL={isRTL}
+                    onTranslated={(v) => setForm(f => ({ ...f, description_en: v }))}
+                    onImproved={(v) => setForm(f => ({ ...f, description_ar: v }))} />
                 </div>
                 <div className="space-y-2">
                   <Label>{isRTL ? 'الوصف (إنجليزي)' : 'Description (English)'}</Label>
                   <Textarea value={form.description_en} onChange={e => setForm(f => ({ ...f, description_en: e.target.value }))} rows={3} dir="ltr" placeholder="Detailed project description..." />
-                  {form.description_en && (
-                    <FieldAiActions value={form.description_en} lang="en" compact fieldType="description" isRTL={isRTL}
-                      onTranslated={(v) => setForm(f => ({ ...f, description_ar: v }))}
-                      onImproved={(v) => setForm(f => ({ ...f, description_en: v }))} />
-                  )}
+                  <FieldAiActions value={form.description_en} lang="en" compact fieldType="description" isRTL={isRTL}
+                    onTranslated={(v) => setForm(f => ({ ...f, description_ar: v }))}
+                    onImproved={(v) => setForm(f => ({ ...f, description_en: v }))} />
                 </div>
               </div>
 

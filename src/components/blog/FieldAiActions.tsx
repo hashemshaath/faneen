@@ -28,7 +28,8 @@ export const FieldAiActions: React.FC<Props> = ({
 }) => {
   const [loading, setLoading] = useState<string | null>(null);
 
-  if (!value?.trim()) return null;
+  const isEmpty = !value?.trim();
+  if (isEmpty && !onTranslated && !onImproved) return null;
 
   const targetLang = lang === 'ar' ? 'en' : 'ar';
   const isPlainField = fieldType !== 'content';
@@ -76,33 +77,33 @@ export const FieldAiActions: React.FC<Props> = ({
   };
 
   const btnClass = compact
-    ? "h-5 px-1.5 text-[9px] gap-0.5 border-dashed hover:border-primary/40 hover:bg-primary/5"
-    : "h-6 px-2 text-[10px] gap-1 border-dashed hover:border-primary/40 hover:bg-primary/5";
-  const iconSize = compact ? "w-2.5 h-2.5" : "w-3 h-3";
+    ? "h-6 px-2 text-[10px] gap-1 border-dashed hover:border-primary/40 hover:bg-primary/5"
+    : "h-7 px-2.5 text-[11px] gap-1 border-dashed hover:border-primary/40 hover:bg-primary/5";
+  const iconSize = compact ? "w-3 h-3" : "w-3.5 h-3.5";
 
   const showExcerpt = fieldType === 'excerpt' || fieldType === 'description';
 
   return (
     <div className="flex items-center gap-1 flex-wrap">
       {onTranslated && (
-        <Button variant="outline" size="sm" className={btnClass} onClick={handleTranslate} disabled={!!loading}>
+        <Button variant="outline" size="sm" className={btnClass} onClick={handleTranslate} disabled={!!loading || isEmpty}>
           {loading === 'translate' ? <Loader2 className={`${iconSize} animate-spin`} /> : <Languages className={iconSize} />}
           {isRTL ? `→ ${targetLang.toUpperCase()}` : `→ ${targetLang.toUpperCase()}`}
         </Button>
       )}
       {onImproved && !showExcerpt && (
-        <Button variant="outline" size="sm" className={btnClass} onClick={handleImprove} disabled={!!loading}>
+        <Button variant="outline" size="sm" className={btnClass} onClick={handleImprove} disabled={!!loading || isEmpty}>
           {loading === 'improve' ? <Loader2 className={`${iconSize} animate-spin`} /> : <Sparkles className={iconSize} />}
           {isRTL ? 'تحسين' : 'Improve'}
         </Button>
       )}
       {onImproved && showExcerpt && (
         <>
-          <Button variant="outline" size="sm" className={btnClass} onClick={handleGenerateExcerpt} disabled={!!loading}>
+          <Button variant="outline" size="sm" className={btnClass} onClick={handleGenerateExcerpt} disabled={!!loading || isEmpty}>
             {loading === 'excerpt' ? <Loader2 className={`${iconSize} animate-spin`} /> : <Wand2 className={iconSize} />}
             {isRTL ? 'توليد' : 'Generate'}
           </Button>
-          <Button variant="outline" size="sm" className={btnClass} onClick={handleImprove} disabled={!!loading}>
+          <Button variant="outline" size="sm" className={btnClass} onClick={handleImprove} disabled={!!loading || isEmpty}>
             {loading === 'improve' ? <Loader2 className={`${iconSize} animate-spin`} /> : <Sparkles className={iconSize} />}
             {isRTL ? 'تحسين' : 'Improve'}
           </Button>
