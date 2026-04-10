@@ -31,7 +31,7 @@ import { SeoScorePanel } from '@/components/blog/SeoScorePanel';
 import { RichMarkdownEditor } from '@/components/blog/RichMarkdownEditor';
 import { ArticlePreview } from '@/components/blog/ArticlePreview';
 import { DraftVersions } from '@/components/blog/DraftVersions';
-import { callBlogAi, parseJsonResponse, calculateReadingTime, calculateLocalSeoScore } from '@/lib/blog-ai-utils';
+import { callBlogAi, parseJsonResponse, calculateReadingTime, calculateLocalSeoScore, stripMarkdown } from '@/lib/blog-ai-utils';
 
 const blogCategories = [
   { value: 'general', ar: 'عام', en: 'General' },
