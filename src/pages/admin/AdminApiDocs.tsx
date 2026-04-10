@@ -22,7 +22,7 @@ const CodeBlock = ({ code, lang = 'typescript' }: { code: string; lang?: string 
     </pre>
     <button
       onClick={() => copyToClipboard(code)}
-      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-background border border-border rounded p-1.5"
+      className="absolute top-2 end-2 opacity-0 group-hover:opacity-100 transition-opacity bg-background border border-border rounded p-1.5"
     >
       <Copy className="w-3.5 h-3.5" />
     </button>

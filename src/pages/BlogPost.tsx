@@ -440,7 +440,7 @@ const BlogPost = () => {
       <Navbar />
 
       {/* ═══ Reading Progress Bar ═══ */}
-      <div className="fixed top-0 left-0 right-0 z-50 h-0.5 sm:h-1 bg-transparent">
+      <div className="fixed top-0 start-0 end-0 z-50 h-0.5 sm:h-1 bg-transparent">
         <div className="h-full bg-accent transition-all duration-150 ease-out rounded-full" style={{ width: `${progress}%` }} />
       </div>
 

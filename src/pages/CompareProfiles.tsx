@@ -172,7 +172,7 @@ const CompareProfiles = () => {
             {selectedIds.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-3">
                 {selectedProfiles.map((p: any) => (
-                  <Badge key={p.id} variant="secondary" className="gap-1 pr-1">
+                  <Badge key={p.id} variant="secondary" className="gap-1 pe-1">
                     {getName(p)}
                     <button onClick={() => removeProfile(p.id)} className="rounded-full hover:bg-destructive/20 p-0.5">
                       <X className="w-3 h-3" />

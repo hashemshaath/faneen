@@ -117,7 +117,7 @@ export const BlogComments = ({ postId }: BlogCommentsProps) => {
     const isOwn = user?.id === comment.user_id;
 
     return (
-      <div className={`${depth > 0 ? (isRTL ? 'border-r-2' : 'border-l-2') + ' border-accent/20 pr-4 pl-0 rtl:pl-4 rtl:pr-0' : ''}`}>
+      <div className={`${depth > 0 ? (isRTL ? 'border-e-2' : 'border-s-2') + ' border-accent/20 pe-4 ps-0 rtl:ps-4 rtl:pe-0' : ''}`}>
         <div className="flex gap-3 py-3">
           <Avatar className="h-8 w-8 shrink-0">
             <AvatarImage src={comment.profile?.avatar_url || ''} />
@@ -194,7 +194,7 @@ export const BlogComments = ({ postId }: BlogCommentsProps) => {
 
         {/* Replies */}
         {comment.replies && comment.replies.length > 0 && (
-          <div className={depth > 0 ? '' : (isRTL ? 'mr-6' : 'ml-6')}>
+          <div className={depth > 0 ? '' : (isRTL ? 'me-6' : 'ms-6')}>
             {comment.replies.map(reply => (
               <CommentItem key={reply.id} comment={reply} depth={depth + 1} />
             ))}
