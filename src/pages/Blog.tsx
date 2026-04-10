@@ -218,7 +218,7 @@ const Blog = () => {
                   {displayPosts.map((post: any, i: number) => (
                     <Link key={post.id} to={`/blog/${post.slug}`} className="group block">
                       <Card
-                        className={`overflow-hidden h-full border-border/50 hover:border-accent/30 transition-all duration-500 sm:hover:shadow-xl sm:hover:-translate-y-1 active:scale-[0.98] ${gridVisible ? 'animate-fade-in' : 'opacity-0'}`}
+                        className="overflow-hidden h-full border-border/50 hover:border-accent/30 transition-all duration-500 sm:hover:shadow-xl sm:hover:-translate-y-1 active:scale-[0.98] animate-fade-in"
                         style={{ animationDelay: `${i * 80}ms`, animationFillMode: 'both' }}
                       >
                         <CardContent className="p-0 flex flex-col h-full">
