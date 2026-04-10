@@ -101,7 +101,7 @@ export const BusinessCard = ({ business: b, viewMode }: BusinessCardProps) => {
             {cityName && <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground"><MapPin className="w-3 h-3" />{cityName}</span>}
             {serviceCount > 0 && <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground"><Briefcase className="w-3 h-3" />{serviceCount}</span>}
             {hasBnpl && <Badge variant="secondary" className="text-[8px] px-1.5 py-0 h-4 gap-0.5 bg-primary/10 text-primary"><CreditCard className="w-2.5 h-2.5" />{isRTL ? 'تقسيط' : 'BNPL'}</Badge>}
-        </div>
+          </div>
 
         <Arrow className={`w-4 h-4 text-muted-foreground/30 group-hover:text-accent shrink-0 transition-all ${pressed ? 'text-accent' : ''}`} />
       </Link>
