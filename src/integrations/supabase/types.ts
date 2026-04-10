@@ -881,6 +881,81 @@ export type Database = {
           },
         ]
       }
+      contract_templates: {
+        Row: {
+          category: string
+          created_at: string
+          description_ar: string | null
+          description_en: string | null
+          id: string
+          is_active: boolean
+          name_ar: string
+          name_en: string | null
+          notes_ar: string | null
+          notes_en: string | null
+          payment_terms_ar: string | null
+          payment_terms_en: string | null
+          penalties_ar: string | null
+          penalties_en: string | null
+          scope_of_work_ar: string | null
+          scope_of_work_en: string | null
+          sort_order: number
+          terms_ar: string
+          terms_en: string | null
+          updated_at: string
+          warranty_terms_ar: string | null
+          warranty_terms_en: string | null
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          id?: string
+          is_active?: boolean
+          name_ar: string
+          name_en?: string | null
+          notes_ar?: string | null
+          notes_en?: string | null
+          payment_terms_ar?: string | null
+          payment_terms_en?: string | null
+          penalties_ar?: string | null
+          penalties_en?: string | null
+          scope_of_work_ar?: string | null
+          scope_of_work_en?: string | null
+          sort_order?: number
+          terms_ar: string
+          terms_en?: string | null
+          updated_at?: string
+          warranty_terms_ar?: string | null
+          warranty_terms_en?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          id?: string
+          is_active?: boolean
+          name_ar?: string
+          name_en?: string | null
+          notes_ar?: string | null
+          notes_en?: string | null
+          payment_terms_ar?: string | null
+          payment_terms_en?: string | null
+          penalties_ar?: string | null
+          penalties_en?: string | null
+          scope_of_work_ar?: string | null
+          scope_of_work_en?: string | null
+          sort_order?: number
+          terms_ar?: string
+          terms_en?: string | null
+          updated_at?: string
+          warranty_terms_ar?: string | null
+          warranty_terms_en?: string | null
+        }
+        Relationships: []
+      }
       contracts: {
         Row: {
           business_id: string | null
