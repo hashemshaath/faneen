@@ -235,7 +235,7 @@ const AdminMemberships = () => {
 
   const cancelSubMutation = useMutation({
     mutationFn: async (subId: string) => {
-      const { error } = await supabase.rpc('cancel_subscription', { _subscription_id: subId });
+      const { error } = await supabase.rpc('cancel_subscription' as any, { _subscription_id: subId });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -262,7 +262,7 @@ const AdminMemberships = () => {
   const handleRenew = useCallback(async (sub: any) => {
     if (!sub.plan_id || !sub.business_id) return;
     try {
-      const { error } = await supabase.rpc('subscribe_to_plan', {
+      const { error } = await supabase.rpc('subscribe_to_plan' as any, {
         _user_id: sub.user_id,
         _plan_id: sub.plan_id,
         _business_id: sub.business_id,

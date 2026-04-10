@@ -77,7 +77,7 @@ const Membership = () => {
   const subscribeMutation = useMutation({
     mutationFn: async (planId: string) => {
       if (!user || !myBusiness) throw new Error(isRTL ? 'يجب تسجيل الدخول وإنشاء نشاط تجاري أولاً' : 'Login and create a business first');
-      const { error } = await supabase.rpc('subscribe_to_plan', {
+      const { error } = await supabase.rpc('subscribe_to_plan' as any, {
         _user_id: user.id,
         _plan_id: planId,
         _business_id: myBusiness.id,
@@ -98,7 +98,7 @@ const Membership = () => {
   const cancelMutation = useMutation({
     mutationFn: async () => {
       if (!mySubscription) throw new Error('No active subscription');
-      const { error } = await supabase.rpc('cancel_subscription', { _subscription_id: mySubscription.id });
+      const { error } = await supabase.rpc('cancel_subscription' as any, { _subscription_id: mySubscription.id });
       if (error) throw error;
     },
     onSuccess: () => {
