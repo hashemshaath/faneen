@@ -303,6 +303,118 @@ export type Database = {
         }
         Relationships: []
       }
+      business_branches: {
+        Row: {
+          additional_number: string | null
+          address: string | null
+          building_number: string | null
+          business_id: string
+          city_id: string | null
+          contact_person: string | null
+          country_id: string | null
+          created_at: string
+          customer_service_phone: string | null
+          district: string | null
+          email: string | null
+          id: string
+          is_active: boolean
+          is_main: boolean
+          latitude: number | null
+          longitude: number | null
+          mobile: string | null
+          name_ar: string
+          name_en: string | null
+          national_id: string | null
+          phone: string | null
+          region: string | null
+          sort_order: number
+          street_name: string | null
+          unified_number: string | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          additional_number?: string | null
+          address?: string | null
+          building_number?: string | null
+          business_id: string
+          city_id?: string | null
+          contact_person?: string | null
+          country_id?: string | null
+          created_at?: string
+          customer_service_phone?: string | null
+          district?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          is_main?: boolean
+          latitude?: number | null
+          longitude?: number | null
+          mobile?: string | null
+          name_ar: string
+          name_en?: string | null
+          national_id?: string | null
+          phone?: string | null
+          region?: string | null
+          sort_order?: number
+          street_name?: string | null
+          unified_number?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          additional_number?: string | null
+          address?: string | null
+          building_number?: string | null
+          business_id?: string
+          city_id?: string | null
+          contact_person?: string | null
+          country_id?: string | null
+          created_at?: string
+          customer_service_phone?: string | null
+          district?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          is_main?: boolean
+          latitude?: number | null
+          longitude?: number | null
+          mobile?: string | null
+          name_ar?: string
+          name_en?: string | null
+          national_id?: string | null
+          phone?: string | null
+          region?: string | null
+          sort_order?: number
+          street_name?: string | null
+          unified_number?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_branches_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_branches_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_branches_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_services: {
         Row: {
           business_id: string
