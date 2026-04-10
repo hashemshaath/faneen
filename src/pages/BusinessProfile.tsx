@@ -130,25 +130,24 @@ const ProfileHeader: React.FC<{ business: any; onContact: () => void; isContacti
   return (
     <div className="relative">
       {/* Cover */}
-      <div className="h-44 sm:h-56 md:h-72 bg-gradient-navy relative overflow-hidden">
+      <div className="h-40 sm:h-56 md:h-72 bg-gradient-navy relative overflow-hidden">
         {business.cover_url ? (
-          <img src={business.cover_url} alt="" className="w-full h-full object-cover" loading="lazy" />
+          <img src={business.cover_url} alt="" className="w-full h-full object-cover" loading="eager" />
         ) : (
           <>
             <div className="absolute inset-0 opacity-20" style={{ backgroundImage: "radial-gradient(circle at 30% 50%, hsl(var(--accent) / 0.4) 0%, transparent 60%)" }} />
             <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 80% 20%, hsl(var(--accent) / 0.3) 0%, transparent 50%)" }} />
           </>
         )}
-        {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
       </div>
 
       {/* Info card */}
-      <div className="container relative -mt-20 sm:-mt-24 z-10 px-3 sm:px-4">
-        <div className="bg-card/80 backdrop-blur-xl rounded-2xl border border-border/50 p-4 sm:p-6 shadow-xl">
-          <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-start">
+      <div className="container relative -mt-16 sm:-mt-24 z-10 px-3 sm:px-4">
+        <div className="bg-card/90 dark:bg-card/80 backdrop-blur-xl rounded-2xl border border-border/50 dark:border-border/30 p-4 sm:p-6 shadow-xl dark:shadow-2xl dark:shadow-black/20">
+          <div className="flex flex-col sm:flex-row gap-3.5 sm:gap-6 items-start">
             {/* Logo */}
-            <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-2xl border-3 border-accent/20 bg-background shadow-lg flex items-center justify-center overflow-hidden shrink-0">
+            <div className="w-18 h-18 sm:w-28 sm:h-28 rounded-2xl border-2 border-accent/20 dark:border-accent/30 bg-background shadow-lg flex items-center justify-center overflow-hidden shrink-0">
               {business.logo_url ? (
                 <img src={business.logo_url} alt={name} className="w-full h-full object-cover" />
               ) : (
@@ -156,13 +155,13 @@ const ProfileHeader: React.FC<{ business: any; onContact: () => void; isContacti
               )}
             </div>
 
-            <div className="flex-1 min-w-0">
-              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+            <div className="flex-1 min-w-0 w-full">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2.5 sm:gap-3">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 sm:gap-3 mb-1 flex-wrap">
-                    <h1 className="font-heading font-bold text-xl sm:text-2xl md:text-3xl text-foreground truncate">{name}</h1>
+                    <h1 className="font-heading font-bold text-lg sm:text-2xl md:text-3xl text-foreground truncate">{name}</h1>
                     {business.is_verified && (
-                      <Badge className="bg-accent/10 text-accent border-accent/30 gap-1 shrink-0 text-[10px] sm:text-xs">
+                      <Badge className="bg-accent/10 dark:bg-accent/20 text-accent border-accent/30 gap-1 shrink-0 text-[10px] sm:text-xs">
                         <BadgeCheck className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                         {t('profile.verified')}
                       </Badge>
@@ -173,7 +172,7 @@ const ProfileHeader: React.FC<{ business: any; onContact: () => void; isContacti
                     <span className="text-xs sm:text-sm text-accent font-body font-medium">{categoryName}</span>
                   )}
 
-                  <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-2 sm:mt-3 text-xs sm:text-sm text-muted-foreground font-body">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 mt-2 sm:mt-3 text-xs sm:text-sm text-muted-foreground font-body">
                     {cityName && (
                       <div className="flex items-center gap-1">
                         <MapPin className="w-3.5 h-3.5 text-accent" />
@@ -197,27 +196,27 @@ const ProfileHeader: React.FC<{ business: any; onContact: () => void; isContacti
                     {isContacting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <MessageSquare className="w-3.5 h-3.5" />}
                     {language === 'ar' ? 'تواصل' : 'Contact'}
                   </Button>
-                  <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={handleShare}>
+                  <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 dark:border-border/40" onClick={handleShare}>
                     <Share2 className="w-3.5 h-3.5" />
                   </Button>
                 </div>
               </div>
 
               {desc && (
-                <p className="mt-3 text-xs sm:text-sm text-muted-foreground font-body leading-relaxed line-clamp-3 sm:line-clamp-none max-w-2xl">{desc}</p>
+                <p className="mt-2.5 sm:mt-3 text-xs sm:text-sm text-muted-foreground font-body leading-relaxed line-clamp-3 sm:line-clamp-none max-w-2xl">{desc}</p>
               )}
             </div>
           </div>
 
           {/* Stats bar */}
-          <div className="grid grid-cols-3 gap-2 sm:gap-4 mt-4 pt-4 border-t border-border/30">
+          <div className="grid grid-cols-3 gap-2 sm:gap-4 mt-4 pt-4 border-t border-border/30 dark:border-border/20">
             {[
               { icon: FolderOpen, value: projectCount, label: language === 'ar' ? 'مشروع' : 'Projects' },
               { icon: Wrench, value: serviceCount, label: language === 'ar' ? 'خدمة' : 'Services' },
               { icon: Star, value: business.rating_count, label: language === 'ar' ? 'تقييم' : 'Reviews' },
             ].map((stat, i) => (
               <div key={i} className="flex items-center gap-2 sm:gap-3 justify-center">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-accent/10 flex items-center justify-center">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-accent/10 dark:bg-accent/20 flex items-center justify-center">
                   <stat.icon className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />
                 </div>
                 <div>
@@ -247,9 +246,9 @@ const ServicesTab: React.FC<{ businessId: string }> = ({ businessId }) => {
         const name = language === 'ar' ? service.name_ar : (service.name_en || service.name_ar);
         const desc = language === 'ar' ? service.description_ar : (service.description_en || service.description_ar);
         return (
-          <div key={service.id} className="p-4 sm:p-5 rounded-xl bg-card border border-border hover:border-accent/30 transition-all duration-300 hover:shadow-lg hover:shadow-accent/5 group animate-fade-in" style={{ animationDelay: `${i * 60}ms`, animationFillMode: 'both' }}>
+          <div key={service.id} className="p-4 sm:p-5 rounded-xl bg-card dark:bg-card/80 border border-border/50 dark:border-border/30 hover:border-accent/30 transition-all duration-300 hover:shadow-lg hover:shadow-accent/5 dark:hover:shadow-black/20 group active:scale-[0.98] animate-fade-in" style={{ animationDelay: `${i * 60}ms`, animationFillMode: 'both' }}>
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center shrink-0 group-hover:bg-accent group-hover:text-accent-foreground transition-colors">
+              <div className="w-10 h-10 rounded-xl bg-accent/10 dark:bg-accent/20 flex items-center justify-center shrink-0 group-hover:bg-accent group-hover:text-accent-foreground transition-colors">
                 <Wrench className="w-5 h-5 text-accent group-hover:text-accent-foreground" />
               </div>
               <div className="flex-1 min-w-0">
@@ -273,7 +272,7 @@ const ServicesTab: React.FC<{ businessId: string }> = ({ businessId }) => {
   );
 };
 
-// ── Projects Tab (NEW) ──
+// ── Projects Tab ──
 const ProjectsTab: React.FC<{ businessId: string }> = ({ businessId }) => {
   const { language, isRTL } = useLanguage();
   const { data: projects, isLoading } = useProjects(businessId);
@@ -291,8 +290,7 @@ const ProjectsTab: React.FC<{ businessId: string }> = ({ businessId }) => {
 
         return (
           <Link key={project.id} to={`/projects/${project.id}`} className="group block">
-            <div className="rounded-xl overflow-hidden border border-border hover:border-accent/30 transition-all duration-500 hover:shadow-xl hover:shadow-accent/5 bg-card animate-fade-in" style={{ animationDelay: `${i * 80}ms`, animationFillMode: 'both' }}>
-              {/* Image */}
+            <div className="rounded-xl overflow-hidden border border-border/50 dark:border-border/30 hover:border-accent/30 transition-all duration-500 hover:shadow-xl hover:shadow-accent/5 dark:hover:shadow-black/20 bg-card dark:bg-card/80 active:scale-[0.98] animate-fade-in" style={{ animationDelay: `${i * 80}ms`, animationFillMode: 'both' }}>
               <div className="relative aspect-video bg-muted overflow-hidden">
                 {project.cover_image_url ? (
                   <img src={project.cover_image_url} alt={title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" />
@@ -308,17 +306,16 @@ const ProjectsTab: React.FC<{ businessId: string }> = ({ businessId }) => {
                   </Badge>
                 )}
                 {catName && (
-                  <Badge variant="outline" className="absolute top-2 end-2 text-[9px] sm:text-[10px] bg-background/80 backdrop-blur-sm border-border/50">
+                  <Badge variant="outline" className="absolute top-2 end-2 text-[9px] sm:text-[10px] bg-background/80 dark:bg-background/60 backdrop-blur-sm border-border/50">
                     {catName}
                   </Badge>
                 )}
               </div>
 
-              {/* Content */}
               <div className="p-3 sm:p-4 space-y-2">
                 <h3 className="font-heading font-bold text-xs sm:text-sm line-clamp-2 group-hover:text-accent transition-colors">{title}</h3>
                 {desc && <p className="text-[10px] sm:text-xs text-muted-foreground line-clamp-2">{desc}</p>}
-                <div className="flex items-center justify-between pt-2 border-t border-border/30 text-[10px] sm:text-[11px] text-muted-foreground">
+                <div className="flex items-center justify-between pt-2 border-t border-border/30 dark:border-border/20 text-[10px] sm:text-[11px] text-muted-foreground">
                   <div className="flex items-center gap-2 flex-wrap">
                     {cityName && (
                       <span className="flex items-center gap-0.5"><MapPin className="w-2.5 h-2.5" />{cityName}</span>
@@ -359,8 +356,8 @@ const PortfolioTab: React.FC<{ businessId: string }> = ({ businessId }) => {
       <div className="flex items-center gap-1.5 sm:gap-2 mb-4 sm:mb-6">
         {(['all', 'image', 'video'] as const).map(f => (
           <button key={f} onClick={() => setFilter(f)}
-            className={`px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-body transition-all ${
-              filter === f ? 'bg-accent text-accent-foreground shadow-md shadow-accent/20' : 'bg-muted text-muted-foreground hover:bg-muted/80'
+            className={`px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-body transition-all active:scale-95 ${
+              filter === f ? 'bg-accent text-accent-foreground shadow-md shadow-accent/20' : 'bg-muted dark:bg-muted/50 text-muted-foreground hover:bg-muted/80'
             }`}>
             {f === 'all' ? (language === 'ar' ? 'الكل' : 'All') : f === 'image' ? (language === 'ar' ? 'صور' : 'Images') : (language === 'ar' ? 'فيديو' : 'Videos')}
           </button>
@@ -371,17 +368,21 @@ const PortfolioTab: React.FC<{ businessId: string }> = ({ businessId }) => {
         {filtered.map((item, idx) => {
           const title = language === 'ar' ? item.title_ar : (item.title_en || item.title_ar);
           return (
-            <div key={item.id} className="group relative aspect-square rounded-xl overflow-hidden cursor-pointer border border-border hover:border-accent/40 transition-all animate-fade-in" style={{ animationDelay: `${idx * 50}ms`, animationFillMode: 'both' }} onClick={() => setSelectedIndex(idx)}>
+            <div key={item.id} className="group relative aspect-square rounded-xl overflow-hidden cursor-pointer border border-border/50 dark:border-border/30 hover:border-accent/40 transition-all active:scale-[0.97] animate-fade-in" style={{ animationDelay: `${idx * 50}ms`, animationFillMode: 'both' }} onClick={() => setSelectedIndex(idx)}>
               {item.media_type === 'image' ? (
                 <img src={item.media_url} alt={title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
               ) : (
-                <div className="w-full h-full bg-muted flex items-center justify-center"><Video className="w-10 h-10 text-accent" /></div>
+                <div className="w-full h-full bg-muted dark:bg-muted/50 flex items-center justify-center"><Video className="w-10 h-10 text-accent" /></div>
               )}
               {item.is_featured && (
                 <div className="absolute top-2 start-2 px-2 py-0.5 rounded-full bg-accent text-[9px] sm:text-xs font-body text-accent-foreground">{language === 'ar' ? 'مميز' : 'Featured'}</div>
               )}
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-2 sm:p-3 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-2 sm:p-3 opacity-0 group-hover:opacity-100 sm:transition-opacity">
                 <p className="text-[10px] sm:text-xs text-white font-body truncate">{title}</p>
+              </div>
+              {/* Mobile: always show title */}
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-2 sm:hidden">
+                <p className="text-[9px] text-white/90 font-body truncate">{title}</p>
               </div>
             </div>
           );
@@ -390,15 +391,19 @@ const PortfolioTab: React.FC<{ businessId: string }> = ({ businessId }) => {
 
       {/* Lightbox */}
       {selectedIndex !== null && (
-        <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4" onClick={() => setSelectedIndex(null)}>
-          <button className="absolute top-4 end-4 text-white/70 hover:text-white text-2xl font-bold z-10">✕</button>
-          <button className="absolute start-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white z-10" onClick={(e) => { e.stopPropagation(); setSelectedIndex(Math.max(0, selectedIndex - 1)); }}>
-            <ChevronLeft className="w-8 h-8" />
+        <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-3 sm:p-4" onClick={() => setSelectedIndex(null)}>
+          <button className="absolute top-4 end-4 text-white/70 hover:text-white text-2xl font-bold z-10 w-10 h-10 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-sm">✕</button>
+          <button className="absolute start-2 sm:start-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white z-10 w-10 h-10 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-sm" onClick={(e) => { e.stopPropagation(); setSelectedIndex(Math.max(0, selectedIndex - 1)); }}>
+            <ChevronLeft className="w-6 h-6" />
           </button>
-          <button className="absolute end-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white z-10" onClick={(e) => { e.stopPropagation(); setSelectedIndex(Math.min(filtered.length - 1, selectedIndex + 1)); }}>
-            <ChevronRight className="w-8 h-8" />
+          <button className="absolute end-2 sm:end-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white z-10 w-10 h-10 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-sm" onClick={(e) => { e.stopPropagation(); setSelectedIndex(Math.min(filtered.length - 1, selectedIndex + 1)); }}>
+            <ChevronRight className="w-6 h-6" />
           </button>
           <img src={filtered[selectedIndex]?.media_url} alt="" className="max-w-full max-h-[85vh] rounded-lg object-contain" onClick={e => e.stopPropagation()} />
+          {/* Counter */}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/60 text-xs bg-black/50 backdrop-blur-sm px-3 py-1 rounded-full">
+            {selectedIndex + 1} / {filtered.length}
+          </div>
         </div>
       )}
     </div>
@@ -410,7 +415,6 @@ const ReviewsTab: React.FC<{ business: any }> = ({ business }) => {
   const { language } = useLanguage();
   const { data: reviews, isLoading } = useReviews(business.id);
 
-  // Rating distribution
   const distribution = useMemo(() => {
     if (!reviews?.length) return [0,0,0,0,0];
     const counts = [0,0,0,0,0];
@@ -426,7 +430,7 @@ const ReviewsTab: React.FC<{ business: any }> = ({ business }) => {
   return (
     <div className="space-y-6">
       {/* Rating Summary */}
-      <div className="p-4 sm:p-6 rounded-xl bg-card border border-border">
+      <div className="p-4 sm:p-6 rounded-xl bg-card dark:bg-card/80 border border-border/50 dark:border-border/30">
         <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8">
           <div className="text-center">
             <div className="font-heading font-black text-4xl sm:text-5xl text-foreground">{Number(business.rating_avg).toFixed(1)}</div>
@@ -438,7 +442,7 @@ const ReviewsTab: React.FC<{ business: any }> = ({ business }) => {
               <div key={star} className="flex items-center gap-2 text-xs sm:text-sm">
                 <span className="w-3 text-muted-foreground">{star}</span>
                 <Star className="w-3 h-3 text-accent fill-accent" />
-                <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                <div className="flex-1 h-2 bg-muted dark:bg-muted/50 rounded-full overflow-hidden">
                   <div className="h-full bg-accent rounded-full transition-all duration-500" style={{ width: `${(distribution[star-1] / maxCount) * 100}%` }} />
                 </div>
                 <span className="w-5 text-end text-muted-foreground text-[10px]">{distribution[star-1]}</span>
@@ -454,10 +458,10 @@ const ReviewsTab: React.FC<{ business: any }> = ({ business }) => {
           const profile = review.profiles as any;
           const date = new Date(review.created_at).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' });
           return (
-            <div key={review.id} className="p-4 sm:p-5 rounded-xl bg-card border border-border hover:border-accent/20 transition-colors">
+            <div key={review.id} className="p-4 sm:p-5 rounded-xl bg-card dark:bg-card/80 border border-border/50 dark:border-border/30 hover:border-accent/20 transition-colors">
               <div className="flex items-start justify-between mb-2 sm:mb-3">
                 <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-accent/10 dark:bg-accent/20 flex items-center justify-center shrink-0">
                     {profile?.avatar_url ? (
                       <img src={profile.avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
                     ) : (
@@ -498,8 +502,8 @@ const ContactTab: React.FC<{ business: any }> = ({ business }) => {
       <div className="space-y-3">
         {contactItems.map((item, i) => (
           <a key={i} href={item.href} {...(item.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-            className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl bg-card border border-border hover:border-accent/30 transition-all group">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-accent/10 flex items-center justify-center group-hover:bg-accent transition-colors shrink-0">
+            className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl bg-card dark:bg-card/80 border border-border/50 dark:border-border/30 hover:border-accent/30 transition-all group active:scale-[0.98]">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-accent/10 dark:bg-accent/20 flex items-center justify-center group-hover:bg-accent transition-colors shrink-0">
               <item.icon className="w-4 h-4 sm:w-5 sm:h-5 text-accent group-hover:text-accent-foreground" />
             </div>
             <div className="flex-1 min-w-0">
@@ -511,8 +515,7 @@ const ContactTab: React.FC<{ business: any }> = ({ business }) => {
         ))}
       </div>
 
-      {/* Map */}
-      <div className="p-4 sm:p-5 rounded-xl bg-card border border-border">
+      <div className="p-4 sm:p-5 rounded-xl bg-card dark:bg-card/80 border border-border/50 dark:border-border/30">
         <h3 className="font-heading font-bold text-sm sm:text-base text-foreground mb-3 flex items-center gap-2">
           <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />
           {language === 'ar' ? 'الموقع' : 'Location'}
@@ -524,7 +527,7 @@ const ContactTab: React.FC<{ business: any }> = ({ business }) => {
 
         {business.latitude && business.longitude ? (
           <div className="space-y-2">
-            <div className="rounded-xl overflow-hidden border border-border/50 aspect-video sm:aspect-[16/9]">
+            <div className="rounded-xl overflow-hidden border border-border/50 dark:border-border/30 aspect-video sm:aspect-[16/9]">
               <iframe
                 title={language === 'ar' ? 'موقع المزود' : 'Provider location'}
                 width="100%" height="100%" style={{ border: 0 }} loading="lazy"
@@ -549,7 +552,9 @@ const ContactTab: React.FC<{ business: any }> = ({ business }) => {
 // ── Empty State ──
 const EmptyState: React.FC<{ icon: any; text: string }> = ({ icon: Icon, text }) => (
   <div className="text-center py-12 sm:py-16">
-    <Icon className="w-12 h-12 sm:w-14 sm:h-14 mx-auto text-muted-foreground/20 mb-3" />
+    <div className="w-16 h-16 mx-auto rounded-2xl bg-muted/50 dark:bg-muted/30 flex items-center justify-center mb-3">
+      <Icon className="w-8 h-8 text-muted-foreground/30" />
+    </div>
     <p className="text-sm text-muted-foreground font-body">{text}</p>
   </div>
 );
@@ -614,7 +619,7 @@ const BusinessProfile = () => {
     return (
       <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
         <div className="pt-14">
-          <Skeleton className="h-56 w-full" />
+          <Skeleton className="h-40 sm:h-56 w-full" />
           <div className="container mt-8 space-y-4 px-3 sm:px-4">
             <Skeleton className="h-40 w-full rounded-xl" />
             <Skeleton className="h-64 w-full rounded-xl" />
@@ -628,7 +633,7 @@ const BusinessProfile = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center" dir={isRTL ? 'rtl' : 'ltr'}>
         <div className="text-center space-y-4 px-4">
-          <div className="w-20 h-20 mx-auto rounded-2xl bg-accent/10 flex items-center justify-center">
+          <div className="w-20 h-20 mx-auto rounded-2xl bg-accent/10 dark:bg-accent/20 flex items-center justify-center">
             <Shield className="w-10 h-10 text-accent" />
           </div>
           <h2 className="font-heading font-bold text-xl sm:text-2xl text-foreground">{t('profile.not_found')}</h2>
@@ -649,19 +654,19 @@ const BusinessProfile = () => {
   return (
     <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* ═══ Sticky Top Nav ═══ */}
-      <nav className="fixed top-0 inset-x-0 z-50 bg-primary/95 backdrop-blur-md border-b border-accent/20">
+      <nav className="fixed top-0 inset-x-0 z-50 bg-primary/95 dark:bg-card/95 backdrop-blur-md border-b border-accent/20 dark:border-border/30">
         <div className="container flex items-center justify-between h-12 sm:h-14 px-3 sm:px-4">
-          <Link to="/" className="flex items-center gap-1.5 sm:gap-2 text-primary-foreground/80 hover:text-accent transition-colors font-body text-xs sm:text-sm">
+          <Link to="/" className="flex items-center gap-1.5 sm:gap-2 text-primary-foreground/80 dark:text-foreground/80 hover:text-accent transition-colors font-body text-xs sm:text-sm">
             <BackArrow className="w-4 h-4" />
             <div className="flex items-center gap-1.5">
               <div className="w-6 h-6 sm:w-7 sm:h-7 rounded bg-gradient-gold flex items-center justify-center">
                 <span className="font-heading font-black text-[10px] sm:text-xs text-secondary-foreground">ف</span>
               </div>
-              <span className="font-heading font-bold text-sm text-primary-foreground hidden sm:inline">فنيين</span>
+              <span className="font-heading font-bold text-sm text-primary-foreground dark:text-foreground hidden sm:inline">فنيين</span>
             </div>
           </Link>
           <div className="flex items-center gap-2">
-            <span className="text-xs sm:text-sm font-heading font-semibold text-primary-foreground truncate max-w-[120px] sm:max-w-none">{businessName}</span>
+            <span className="text-xs sm:text-sm font-heading font-semibold text-primary-foreground dark:text-foreground truncate max-w-[120px] sm:max-w-none">{businessName}</span>
             <Button variant="hero" size="sm" className="gap-1 text-[10px] sm:text-xs h-7 sm:h-8 px-2 sm:px-3" onClick={() => contactMutation.mutate()} disabled={contactMutation.isPending}>
               {contactMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <MessageSquare className="w-3 h-3" />}
               <span className="hidden sm:inline">{language === 'ar' ? 'تواصل' : 'Contact'}</span>
@@ -676,30 +681,32 @@ const BusinessProfile = () => {
         {/* ═══ Tabs ═══ */}
         <div className="container mt-5 sm:mt-8 pb-10 sm:pb-16 px-3 sm:px-4">
           <Tabs defaultValue="services" className="w-full">
-            <TabsList className="w-full justify-start bg-muted/50 rounded-xl p-1 h-auto overflow-x-auto no-scrollbar">
-              <TabsTrigger value="services" className="font-body rounded-lg data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-3 sm:px-5 py-2 text-xs sm:text-sm gap-1 sm:gap-1.5 shrink-0">
-                <Wrench className="w-3.5 h-3.5" />
-                {language === 'ar' ? 'الخدمات' : 'Services'}
-              </TabsTrigger>
-              <TabsTrigger value="projects" className="font-body rounded-lg data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-3 sm:px-5 py-2 text-xs sm:text-sm gap-1 sm:gap-1.5 shrink-0">
-                <FolderOpen className="w-3.5 h-3.5" />
-                {language === 'ar' ? 'المشاريع' : 'Projects'}
-                {projects.length > 0 && <span className="text-[9px] bg-accent/20 px-1.5 rounded-full">{projects.length}</span>}
-              </TabsTrigger>
-              <TabsTrigger value="portfolio" className="font-body rounded-lg data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-3 sm:px-5 py-2 text-xs sm:text-sm gap-1 sm:gap-1.5 shrink-0">
-                <ImageIcon className="w-3.5 h-3.5" />
-                {language === 'ar' ? 'الأعمال' : 'Portfolio'}
-              </TabsTrigger>
-              <TabsTrigger value="reviews" className="font-body rounded-lg data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-3 sm:px-5 py-2 text-xs sm:text-sm gap-1 sm:gap-1.5 shrink-0">
-                <Star className="w-3.5 h-3.5" />
-                {language === 'ar' ? 'التقييمات' : 'Reviews'}
-                <span className="text-[9px] bg-accent/20 px-1.5 rounded-full">{business.rating_count}</span>
-              </TabsTrigger>
-              <TabsTrigger value="contact" className="font-body rounded-lg data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-3 sm:px-5 py-2 text-xs sm:text-sm gap-1 sm:gap-1.5 shrink-0">
-                <Phone className="w-3.5 h-3.5" />
-                {language === 'ar' ? 'التواصل' : 'Contact'}
-              </TabsTrigger>
-            </TabsList>
+            <div className="overflow-x-auto no-scrollbar -mx-3 px-3 sm:mx-0 sm:px-0">
+              <TabsList className="w-auto inline-flex justify-start bg-muted/50 dark:bg-muted/30 rounded-xl p-1 h-auto">
+                <TabsTrigger value="services" className="font-body rounded-lg data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-3 sm:px-5 py-2 text-xs sm:text-sm gap-1 sm:gap-1.5 shrink-0 whitespace-nowrap">
+                  <Wrench className="w-3.5 h-3.5" />
+                  {language === 'ar' ? 'الخدمات' : 'Services'}
+                </TabsTrigger>
+                <TabsTrigger value="projects" className="font-body rounded-lg data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-3 sm:px-5 py-2 text-xs sm:text-sm gap-1 sm:gap-1.5 shrink-0 whitespace-nowrap">
+                  <FolderOpen className="w-3.5 h-3.5" />
+                  {language === 'ar' ? 'المشاريع' : 'Projects'}
+                  {projects.length > 0 && <span className="text-[9px] bg-accent/20 px-1.5 rounded-full">{projects.length}</span>}
+                </TabsTrigger>
+                <TabsTrigger value="portfolio" className="font-body rounded-lg data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-3 sm:px-5 py-2 text-xs sm:text-sm gap-1 sm:gap-1.5 shrink-0 whitespace-nowrap">
+                  <ImageIcon className="w-3.5 h-3.5" />
+                  {language === 'ar' ? 'الأعمال' : 'Portfolio'}
+                </TabsTrigger>
+                <TabsTrigger value="reviews" className="font-body rounded-lg data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-3 sm:px-5 py-2 text-xs sm:text-sm gap-1 sm:gap-1.5 shrink-0 whitespace-nowrap">
+                  <Star className="w-3.5 h-3.5" />
+                  {language === 'ar' ? 'التقييمات' : 'Reviews'}
+                  <span className="text-[9px] bg-accent/20 px-1.5 rounded-full">{business.rating_count}</span>
+                </TabsTrigger>
+                <TabsTrigger value="contact" className="font-body rounded-lg data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-3 sm:px-5 py-2 text-xs sm:text-sm gap-1 sm:gap-1.5 shrink-0 whitespace-nowrap">
+                  <Phone className="w-3.5 h-3.5" />
+                  {language === 'ar' ? 'التواصل' : 'Contact'}
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
             <div className="mt-4 sm:mt-6">
               <TabsContent value="services"><ServicesTab businessId={business.id} /></TabsContent>

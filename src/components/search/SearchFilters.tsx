@@ -3,12 +3,14 @@ import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import {
-  Star, BadgeCheck, SlidersHorizontal, X, RotateCcw, DollarSign,
+  Star, BadgeCheck, SlidersHorizontal, X, RotateCcw, DollarSign, ChevronDown,
 } from 'lucide-react';
+import { useState } from 'react';
 
 export interface SearchFilterValues {
   categoryId: string;
@@ -48,7 +50,8 @@ export const SearchFilters = ({
 
   return (
     <div className="lg:w-72 flex-shrink-0">
-      <div className="flex items-center justify-between mb-4">
+      {/* Mobile: toggle button */}
+      <div className="flex items-center justify-between mb-3 sm:mb-4">
         <button
           onClick={onToggleFilters}
           className="flex items-center gap-2 font-heading font-bold text-foreground hover:text-accent transition-colors"
@@ -60,6 +63,7 @@ export const SearchFilters = ({
               {activeCount}
             </Badge>
           )}
+          <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform lg:hidden ${showFilters ? 'rotate-180' : ''}`} />
         </button>
         {hasActiveFilters && (
           <button
@@ -73,11 +77,11 @@ export const SearchFilters = ({
       </div>
 
       {showFilters && (
-        <div className="space-y-5 p-5 rounded-2xl bg-card border border-border shadow-sm transition-all animate-fade-in">
+        <div className="space-y-4 sm:space-y-5 p-4 sm:p-5 rounded-2xl bg-card dark:bg-card/80 border border-border/50 dark:border-border/30 shadow-sm transition-all animate-fade-in">
           {/* Category */}
           <FilterSection label={t('search.category')}>
             <Select value={filters.categoryId} onValueChange={v => onFilterChange('categoryId', v)}>
-              <SelectTrigger className="w-full rounded-xl"><SelectValue placeholder={t('search.all_categories')} /></SelectTrigger>
+              <SelectTrigger className="w-full rounded-xl dark:bg-muted/30 dark:border-border/30"><SelectValue placeholder={t('search.all_categories')} /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">{t('search.all_categories')}</SelectItem>
                 {categories?.map(c => (
@@ -90,7 +94,7 @@ export const SearchFilters = ({
           {/* City */}
           <FilterSection label={t('search.city')}>
             <Select value={filters.cityId} onValueChange={v => onFilterChange('cityId', v)}>
-              <SelectTrigger className="w-full rounded-xl"><SelectValue placeholder={t('search.all_cities')} /></SelectTrigger>
+              <SelectTrigger className="w-full rounded-xl dark:bg-muted/30 dark:border-border/30"><SelectValue placeholder={t('search.all_cities')} /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">{t('search.all_cities')}</SelectItem>
                 {cities?.map(c => (
@@ -110,7 +114,7 @@ export const SearchFilters = ({
                   placeholder={t('search.price_min')}
                   value={filters.priceMin || ''}
                   onChange={e => onFilterChange('priceMin', Number(e.target.value) || 0)}
-                  className="rounded-xl text-sm h-9 ps-8"
+                  className="rounded-xl text-sm h-9 ps-8 dark:bg-muted/30 dark:border-border/30"
                 />
                 <DollarSign className="absolute start-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
               </div>
@@ -122,7 +126,7 @@ export const SearchFilters = ({
                   placeholder={t('search.price_max')}
                   value={filters.priceMax || ''}
                   onChange={e => onFilterChange('priceMax', Number(e.target.value) || 0)}
-                  className="rounded-xl text-sm h-9 ps-8"
+                  className="rounded-xl text-sm h-9 ps-8 dark:bg-muted/30 dark:border-border/30"
                 />
                 <DollarSign className="absolute start-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
               </div>
@@ -148,7 +152,7 @@ export const SearchFilters = ({
                 {Array.from({ length: 5 }).map((_, i) => (
                   <Star
                     key={i}
-                    className={`w-3.5 h-3.5 transition-colors ${i < filters.minRating ? 'text-accent fill-accent' : 'text-border'}`}
+                    className={`w-3.5 h-3.5 transition-colors ${i < filters.minRating ? 'text-accent fill-accent' : 'text-border dark:text-border/50'}`}
                   />
                 ))}
               </div>
@@ -156,7 +160,7 @@ export const SearchFilters = ({
           </FilterSection>
 
           {/* Verified */}
-          <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors">
+          <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 dark:bg-muted/30 hover:bg-muted dark:hover:bg-muted/40 transition-colors">
             <Checkbox
               id="verified"
               checked={filters.verifiedOnly}
@@ -171,7 +175,7 @@ export const SearchFilters = ({
           {/* Sort */}
           <FilterSection label={t('search.sort_by')}>
             <Select value={filters.sortBy} onValueChange={(v: any) => onFilterChange('sortBy', v)}>
-              <SelectTrigger className="w-full rounded-xl"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-full rounded-xl dark:bg-muted/30 dark:border-border/30"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="rating">{t('search.sort_rating')}</SelectItem>
                 <SelectItem value="newest">{t('search.sort_newest')}</SelectItem>
@@ -187,7 +191,7 @@ export const SearchFilters = ({
 
 const FilterSection = ({ label, children }: { label: string; children: React.ReactNode }) => (
   <div>
-    <label className="text-sm font-heading font-semibold text-foreground mb-2 block">{label}</label>
+    <label className="text-xs sm:text-sm font-heading font-semibold text-foreground mb-2 block">{label}</label>
     {children}
   </div>
 );
