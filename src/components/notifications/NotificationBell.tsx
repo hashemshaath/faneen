@@ -55,7 +55,7 @@ export const NotificationBell = () => {
     const channel = supabase
       .channel('user-notifications')
       .on('postgres_changes', {
-        event: 'INSERT',
+        event: '*',
         schema: 'public',
         table: 'notifications',
         filter: `user_id=eq.${user.id}`,
