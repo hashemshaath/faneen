@@ -77,7 +77,7 @@ export const Navbar = () => {
 
   return (
     <>
-      <nav className={`fixed top-0 right-0 left-0 z-50 transition-all duration-500 ${
+      <nav className={`fixed top-0 end-0 start-0 z-50 transition-all duration-500 ${
         scrolled
           ? 'bg-surface-nav/98 backdrop-blur-xl shadow-xl shadow-black/10 border-b border-gold/10'
           : isHome
@@ -231,7 +231,7 @@ export const Navbar = () => {
       {/* Mobile menu */}
       <div
         ref={menuRef}
-        className={`fixed top-16 sm:top-[4.5rem] right-0 left-0 z-50 lg:hidden bg-surface-nav/98 backdrop-blur-xl border-t border-gold/10 shadow-2xl shadow-black/20 transition-all duration-400 ease-out ${
+        className={`fixed top-16 sm:top-[4.5rem] end-0 start-0 z-50 lg:hidden bg-surface-nav/98 backdrop-blur-xl border-t border-gold/10 shadow-2xl shadow-black/20 transition-all duration-400 ease-out ${
           mobileOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-3 pointer-events-none'
         }`}
       >

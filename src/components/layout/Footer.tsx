@@ -65,8 +65,8 @@ export const Footer = () => {
     <footer ref={footerRef} className="relative bg-surface-nav overflow-hidden">
       {/* Decorative elements */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-gold/[0.02] rounded-full blur-[120px]" />
-        <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-gold/[0.03] rounded-full blur-[100px]" />
+        <div className="absolute top-0 start-1/4 w-[500px] h-[500px] bg-gold/[0.02] rounded-full blur-[120px]" />
+        <div className="absolute bottom-0 end-1/4 w-[400px] h-[400px] bg-gold/[0.03] rounded-full blur-[100px]" />
       </div>
 
       {/* Top accent line */}

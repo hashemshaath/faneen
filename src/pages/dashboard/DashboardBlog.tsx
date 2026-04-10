@@ -721,7 +721,7 @@ const DashboardBlog = () => {
                             <Label className="text-xs flex items-center gap-1"><CalendarClock className="w-3 h-3" /> {isRTL ? 'تاريخ النشر' : 'Publish Date'}</Label>
                             <Popover>
                               <PopoverTrigger asChild>
-                                <Button variant="outline" className={cn("w-full mt-1 justify-start text-left text-xs font-normal", !scheduledDate && "text-muted-foreground")}>
+                                <Button variant="outline" className={cn("w-full mt-1 justify-start text-start text-xs font-normal", !scheduledDate && "text-muted-foreground")}>
                                   <CalendarIcon className="w-3.5 h-3.5 me-1.5" />
                                   {scheduledDate ? format(scheduledDate, 'PPP') : (isRTL ? 'اختر التاريخ' : 'Pick date')}
                                 </Button>

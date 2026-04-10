@@ -22,11 +22,11 @@ export const SearchSection = () => {
           <div ref={formRef}>
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-primary-foreground/10 border border-gold/20 backdrop-blur-sm">
               <div className="flex-1 relative">
-                <Search className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-surface-nav-foreground/40" />
+                <Search className="absolute end-3 sm:end-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-surface-nav-foreground/40" />
                 <input
                   type="text"
                   placeholder={t('search.placeholder')}
-                  className="w-full pr-10 sm:pr-12 pl-3 sm:pl-4 py-3 sm:py-4 rounded-lg sm:rounded-xl bg-primary-foreground/10 text-surface-nav-foreground placeholder:text-surface-nav-foreground/30 font-body text-sm border-0 outline-none focus:ring-2 focus:ring-gold/50"
+                  className="w-full pe-10 sm:pe-12 ps-3 sm:ps-4 py-3 sm:py-4 rounded-lg sm:rounded-xl bg-primary-foreground/10 text-surface-nav-foreground placeholder:text-surface-nav-foreground/30 font-body text-sm border-0 outline-none focus:ring-2 focus:ring-gold/50"
                 />
               </div>
               <Button variant="hero" size="lg" className="px-6 sm:px-8 py-3 sm:py-0 active:scale-95 transition-transform">
