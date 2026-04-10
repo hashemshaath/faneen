@@ -107,6 +107,44 @@ const SearchBar = memo(({ categories, cities, language, isRTL, t, onSearch }: an
 });
 SearchBar.displayName = 'SearchBar';
 
+const HeroTitle = memo(({ slides, current, language, t }: { slides: typeof slidesData; current: number; language: string; t: any }) => {
+  const slide = slides[current];
+  const line1 = 'titleKey1' in slide && slide.titleKey1
+    ? t(slide.titleKey1 as any)
+    : (slide as any)[`title1${language === 'ar' ? 'Ar' : 'En'}`];
+  const line2 = 'titleKey2' in slide && slide.titleKey2
+    ? t(slide.titleKey2 as any)
+    : (slide as any)[`title2${language === 'ar' ? 'Ar' : 'En'}`];
+  const desc = 'descKey' in slide && slide.descKey
+    ? t(slide.descKey as any)
+    : (slide as any)[`desc${language === 'ar' ? 'Ar' : 'En'}`];
+
+  const { displayedText: typedLine1, isComplete: line1Done } = useTypingAnimation({ text: line1, speed: 40, delay: 200 });
+  const { displayedText: typedLine2 } = useTypingAnimation({ text: line2, speed: 40, delay: 0, enabled: line1Done });
+
+  return (
+    <div className="min-h-[120px] sm:min-h-[180px] flex flex-col items-center justify-center">
+      <div className="animate-fade-in">
+        <h2 className="font-heading font-black text-[1.7rem] leading-[1.25] sm:text-4xl md:text-5xl lg:text-6xl text-white sm:leading-tight mb-3 sm:mb-5">
+          <span>{typedLine1}</span>
+          <span className="inline-block w-[3px] h-[0.9em] bg-gold/80 align-middle animate-pulse ms-1" style={{ opacity: line1Done ? 0 : 1, transition: 'opacity 0.3s' }} />
+          {line1Done && (
+            <>
+              <br />
+              <span className="text-gradient-gold">{typedLine2}</span>
+              <span className="inline-block w-[3px] h-[0.9em] bg-gold/80 align-middle animate-pulse ms-1" />
+            </>
+          )}
+        </h2>
+        <p className={`font-body text-sm sm:text-lg text-white/60 max-w-2xl mx-auto leading-relaxed px-2 transition-opacity duration-700 ${line1Done ? 'opacity-100' : 'opacity-0'}`}>
+          {desc}
+        </p>
+      </div>
+    </div>
+  );
+});
+HeroTitle.displayName = 'HeroTitle';
+
 export const HeroSection = () => {
   const { t, language, isRTL } = useLanguage();
   const navigate = useNavigate();
