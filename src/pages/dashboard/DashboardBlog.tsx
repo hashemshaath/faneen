@@ -285,9 +285,9 @@ const DashboardBlog = () => {
       const [sLang, tLang] = dir === 'ar-en' ? ['ar', 'en'] : ['en', 'ar'];
       const src = dir === 'ar-en' ? { t: form.title_ar, c: form.content_ar, e: form.excerpt_ar } : { t: form.title_en, c: form.content_en, e: form.excerpt_en };
       const tgt = dir === 'ar-en' ? { t: 'title_en', c: 'content_en', e: 'excerpt_en' } : { t: 'title_ar', c: 'content_ar', e: 'excerpt_ar' };
-      if (src.t) { const r = await callBlogAi({ action: 'translate', text: src.t, sourceLang: sLang, targetLang: tLang }); setField(tgt.t, r.trim()); }
+      if (src.t) { const r = await callBlogAi({ action: 'translate', text: src.t, sourceLang: sLang, targetLang: tLang }); setField(tgt.t, stripMarkdown(r)); }
       if (src.c) { const r = await callBlogAi({ action: 'translate', text: src.c, sourceLang: sLang, targetLang: tLang }); setField(tgt.c, r.trim()); }
-      if (src.e) { const r = await callBlogAi({ action: 'translate', text: src.e, sourceLang: sLang, targetLang: tLang }); setField(tgt.e, r.trim()); }
+      if (src.e) { const r = await callBlogAi({ action: 'translate', text: src.e, sourceLang: sLang, targetLang: tLang }); setField(tgt.e, stripMarkdown(r)); }
       toast.success(isRTL ? 'تمت الترجمة' : 'Translation done');
     } catch {} finally { setAiLoading(null); }
   };
