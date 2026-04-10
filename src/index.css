@@ -196,3 +196,43 @@
 .animate-card-slide-up {
   animation: cardSlideUp 0.5s ease-out both;
 }
+
+/* Mobile sidebar staggered menu animations */
+@keyframes sidebarItemSlide {
+  from { opacity: 0; transform: translateX(12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+[dir="rtl"] .sidebar-mobile-content [data-sidebar="menu-item"] {
+  animation: none;
+}
+
+@keyframes sidebarItemSlideRTL {
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.sidebar-mobile-content [data-sidebar="menu-item"] {
+  opacity: 0;
+  animation: sidebarItemSlide 0.3s ease-out forwards;
+}
+
+[dir="rtl"] .sidebar-mobile-content [data-sidebar="menu-item"] {
+  animation: sidebarItemSlideRTL 0.3s ease-out forwards;
+}
+
+.sidebar-mobile-content [data-sidebar="menu-item"]:nth-child(1) { animation-delay: 0.04s; }
+.sidebar-mobile-content [data-sidebar="menu-item"]:nth-child(2) { animation-delay: 0.07s; }
+.sidebar-mobile-content [data-sidebar="menu-item"]:nth-child(3) { animation-delay: 0.10s; }
+.sidebar-mobile-content [data-sidebar="menu-item"]:nth-child(4) { animation-delay: 0.13s; }
+.sidebar-mobile-content [data-sidebar="menu-item"]:nth-child(5) { animation-delay: 0.16s; }
+.sidebar-mobile-content [data-sidebar="menu-item"]:nth-child(6) { animation-delay: 0.19s; }
+.sidebar-mobile-content [data-sidebar="menu-item"]:nth-child(7) { animation-delay: 0.22s; }
+.sidebar-mobile-content [data-sidebar="menu-item"]:nth-child(8) { animation-delay: 0.25s; }
+.sidebar-mobile-content [data-sidebar="menu-item"]:nth-child(9) { animation-delay: 0.28s; }
+.sidebar-mobile-content [data-sidebar="menu-item"]:nth-child(10) { animation-delay: 0.31s; }
+.sidebar-mobile-content [data-sidebar="menu-item"]:nth-child(11) { animation-delay: 0.34s; }
+.sidebar-mobile-content [data-sidebar="menu-item"]:nth-child(12) { animation-delay: 0.37s; }
+.sidebar-mobile-content [data-sidebar="menu-item"]:nth-child(13) { animation-delay: 0.40s; }
+.sidebar-mobile-content [data-sidebar="menu-item"]:nth-child(14) { animation-delay: 0.43s; }
+.sidebar-mobile-content [data-sidebar="menu-item"]:nth-child(15) { animation-delay: 0.46s; }
