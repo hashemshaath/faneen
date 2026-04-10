@@ -15,7 +15,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ImageUpload } from '@/components/ui/image-upload';
 import { FieldAiActions } from '@/components/blog/FieldAiActions';
@@ -44,7 +43,7 @@ const AdminBusinesses = () => {
   const [filterTier, setFilterTier] = useState('all');
   const [editingBiz, setEditingBiz] = useState<any>(null);
   const [editForm, setEditForm] = useState<any>({});
-  const [servicesDialog, setServicesDialog] = useState<string | null>(null);
+  const [servicesPanel, setServicesPanel] = useState<string | null>(null);
   const [newService, setNewService] = useState({ name_ar: '', name_en: '', description_ar: '', description_en: '', price_from: '', price_to: '', is_active: true });
 
   const setField = useCallback((key: string, value: any) => {
@@ -90,13 +89,13 @@ const AdminBusinesses = () => {
   });
 
   const { data: services = [], refetch: refetchServices } = useQuery({
-    queryKey: ['admin-services', servicesDialog],
+    queryKey: ['admin-services', servicesPanel],
     queryFn: async () => {
-      if (!servicesDialog) return [];
-      const { data } = await supabase.from('business_services').select('*').eq('business_id', servicesDialog).order('sort_order');
+      if (!servicesPanel) return [];
+      const { data } = await supabase.from('business_services').select('*').eq('business_id', servicesPanel).order('sort_order');
       return data || [];
     },
-    enabled: !!servicesDialog,
+    enabled: !!servicesPanel,
   });
 
   /* ─── Mutations ─── */
@@ -167,7 +166,7 @@ const AdminBusinesses = () => {
   const addServiceMutation = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from('business_services').insert({
-        business_id: servicesDialog!,
+        business_id: servicesPanel!,
         name_ar: newService.name_ar,
         name_en: newService.name_en || null,
         description_ar: newService.description_ar || null,
@@ -206,6 +205,7 @@ const AdminBusinesses = () => {
 
   /* ─── Edit Open ─── */
   const openEdit = (biz: any) => {
+    setServicesPanel(null);
     setEditForm({
       name_ar: biz.name_ar, name_en: biz.name_en || '',
       description_ar: biz.description_ar || '', description_en: biz.description_en || '',
@@ -217,6 +217,11 @@ const AdminBusinesses = () => {
       membership_tier: biz.membership_tier,
     });
     setEditingBiz(biz);
+  };
+
+  const openServices = (bizId: string) => {
+    setEditingBiz(null);
+    setServicesPanel(bizId);
   };
 
   /* ─── Filters ─── */
@@ -310,17 +315,19 @@ const AdminBusinesses = () => {
           </CardContent>
         </Card>
 
-        {/* ─── Edit Dialog ─── */}
+        {/* ─── Inline Edit Panel ─── */}
         {editingBiz && (
-          <Dialog open={!!editingBiz} onOpenChange={(open) => { if (!open) setEditingBiz(null); }}>
-            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
+          <Card className="border-primary/30 bg-primary/5">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base flex items-center gap-2">
                   <Edit className="w-4 h-4 text-primary" />
                   {isRTL ? 'تعديل العمل' : 'Edit Business'}: {editingBiz.name_ar}
-                </DialogTitle>
-              </DialogHeader>
-
+                </CardTitle>
+                <Button variant="ghost" size="icon" onClick={() => setEditingBiz(null)}><X className="w-4 h-4" /></Button>
+              </div>
+            </CardHeader>
+            <CardContent>
               <Tabs defaultValue="info" className="w-full">
                 <TabsList className="w-full grid grid-cols-4 h-9">
                   <TabsTrigger value="info" className="text-xs">{isRTL ? 'المعلومات' : 'Info'}</TabsTrigger>
@@ -479,7 +486,6 @@ const AdminBusinesses = () => {
                     </div>
                   </div>
 
-                  {/* Business Meta */}
                   <Separator />
                   <div className="p-3 rounded-lg bg-muted/20 border border-border/30 text-[10px] space-y-1 text-muted-foreground font-mono">
                     <p>ID: {editingBiz.id}</p>
@@ -492,29 +498,31 @@ const AdminBusinesses = () => {
                 </TabsContent>
               </Tabs>
 
-              <div className="flex gap-2 pt-3 border-t">
+              <div className="flex gap-2 pt-3 border-t mt-4">
                 <Button onClick={() => updateBizMutation.mutate()} disabled={!editForm.name_ar || updateBizMutation.isPending} className="flex-1 gap-1.5">
                   <Save className="w-3.5 h-3.5" />
                   {updateBizMutation.isPending ? '...' : (isRTL ? 'حفظ التعديلات' : 'Save Changes')}
                 </Button>
                 <Button variant="outline" onClick={() => setEditingBiz(null)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
               </div>
-            </DialogContent>
-          </Dialog>
+            </CardContent>
+          </Card>
         )}
 
-        {/* ─── Services Dialog ─── */}
-        {servicesDialog && (
-          <Dialog open={!!servicesDialog} onOpenChange={(open) => { if (!open) setServicesDialog(null); }}>
-            <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
+        {/* ─── Inline Services Panel ─── */}
+        {servicesPanel && (
+          <Card className="border-primary/30 bg-primary/5">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base flex items-center gap-2">
                   <Package className="w-4 h-4 text-primary" />
                   {isRTL ? 'إدارة الخدمات' : 'Manage Services'}
                   <Badge variant="secondary" className="text-[10px]">{services.length}</Badge>
-                </DialogTitle>
-              </DialogHeader>
-
+                </CardTitle>
+                <Button variant="ghost" size="icon" onClick={() => setServicesPanel(null)}><X className="w-4 h-4" /></Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
               {/* Existing Services */}
               <div className="space-y-2">
                 {services.map((svc: any) => (
@@ -605,8 +613,8 @@ const AdminBusinesses = () => {
                   {addServiceMutation.isPending ? '...' : (isRTL ? 'إضافة الخدمة' : 'Add Service')}
                 </Button>
               </div>
-            </DialogContent>
-          </Dialog>
+            </CardContent>
+          </Card>
         )}
 
         {/* ─── Business List ─── */}
@@ -627,7 +635,6 @@ const AdminBusinesses = () => {
                 <Card key={biz.id} className={`border-border/40 hover:border-primary/20 transition-all group ${!biz.is_active ? 'opacity-60 border-destructive/20' : ''}`}>
                   <CardContent className="p-3">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                      {/* Avatar & Info */}
                       <div className="flex items-center gap-3 flex-1 min-w-0">
                         <Avatar className="w-11 h-11 shrink-0 border border-border/50">
                           <AvatarImage src={biz.logo_url || undefined} />
@@ -658,9 +665,7 @@ const AdminBusinesses = () => {
                         </div>
                       </div>
 
-                      {/* Actions */}
                       <div className="flex items-center gap-1.5 flex-wrap shrink-0">
-                        {/* Tier quick change */}
                         <Select value={biz.membership_tier} onValueChange={tier => tierMutation.mutate({ id: biz.id, tier })}>
                           <SelectTrigger className="h-7 text-[10px] w-24 border-dashed"><SelectValue /></SelectTrigger>
                           <SelectContent>
@@ -681,7 +686,7 @@ const AdminBusinesses = () => {
                         </Button>
 
                         <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1 px-2"
-                          onClick={() => setServicesDialog(biz.id)}>
+                          onClick={() => openServices(biz.id)}>
                           <Package className="w-3 h-3" />
                           {isRTL ? 'خدمات' : 'Services'}
                         </Button>
@@ -702,7 +707,6 @@ const AdminBusinesses = () => {
           </div>
         )}
 
-        {/* Results count */}
         {!isLoading && filtered.length > 0 && (
           <p className="text-[10px] text-muted-foreground text-center">
             {isRTL ? `عرض ${filtered.length} من ${businesses.length}` : `Showing ${filtered.length} of ${businesses.length}`}
