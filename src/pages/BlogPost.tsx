@@ -361,9 +361,10 @@ const BlogPost = () => {
                 </div>
               </div>
             )}
+            {/* Comments Section */}
+            {post && <BlogComments postId={post.id} />}
           </div>
 
-          {/* Sidebar */}
           <aside className="hidden lg:block">
             <div className="sticky top-24 space-y-5">
               {/* Table of Contents */}
