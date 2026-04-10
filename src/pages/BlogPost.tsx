@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect, useState } from 'react';
+import React, { useMemo, useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,6 +14,7 @@ import {
   List, Share2, Copy, CheckCheck, Bookmark, BookmarkCheck, ChevronUp,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { marked } from 'marked';
 import { BlogComments } from '@/components/blog/BlogComments';
 
 const blogCategories: Record<string, { ar: string; en: string }> = {
@@ -249,6 +250,32 @@ const BlogPost = () => {
   }
 
   const paragraphs = content.split('\n').filter((p) => p.trim());
+
+  // ── Parse Markdown to HTML ──
+  const renderedHTML = useMemo(() => {
+    if (!content) return '';
+    // Configure marked
+    marked.setOptions({
+      breaks: true,
+      gfm: true,
+    });
+    // Custom renderer for headings with IDs
+    const renderer = new marked.Renderer();
+    let headingCounter = 0;
+    renderer.heading = ({ text, depth }: { text: string; depth: number }) => {
+      const matchingHeading = headings[headingCounter];
+      const id = matchingHeading?.id || `heading-auto-${headingCounter}`;
+      headingCounter++;
+      const tag = `h${depth}`;
+      return `<${tag} id="${id}" class="scroll-mt-20">${text}</${tag}>`;
+    };
+    try {
+      return marked.parse(content, { renderer }) as string;
+    } catch {
+      // Fallback: render as paragraphs
+      return content.split('\n').filter(p => p.trim()).map(p => `<p>${p}</p>`).join('');
+    }
+  }, [content, headings]);
 
   return (
     <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
