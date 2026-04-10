@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -13,7 +13,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Edit, Trash2, FileText, Eye, Calendar, X, Search, Tag, Globe, BarChart3 } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import {
+  Plus, Edit, Trash2, FileText, Eye, Calendar, X, Search, Tag, Globe,
+  BarChart3, ArrowRight, Clock, Hash, Zap, ExternalLink,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { ImageUpload } from '@/components/ui/image-upload';
 import { AiToolbar } from '@/components/blog/AiToolbar';
@@ -38,6 +42,24 @@ const defaultForm = {
   focus_keyword: '', keywords: '', canonical_url: '', og_image_url: '',
 };
 
+/* ─── helpers ─── */
+function countInText(text: string, keyword: string): number {
+  if (!text || !keyword) return 0;
+  const re = new RegExp(keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+  return (text.match(re) || []).length;
+}
+
+function analyzeContent(text: string) {
+  if (!text) return { words: 0, headings: 0, images: 0, links: 0, paragraphs: 0 };
+  const words = text.trim().split(/\s+/).filter(Boolean).length;
+  const headings = (text.match(/^#{1,6}\s/gm) || []).length;
+  const images = (text.match(/!\[.*?\]\(.*?\)/g) || []).length + (text.match(/<img\s/gi) || []).length;
+  const links = (text.match(/\[.*?\]\(.*?\)/g) || []).length;
+  const paragraphs = text.split(/\n\s*\n/).filter(p => p.trim()).length;
+  return { words, headings, images, links, paragraphs };
+}
+
+/* ─── Component ─── */
 const DashboardBlog = () => {
   const { isRTL, language } = useLanguage();
   const { user } = useAuth();
@@ -60,7 +82,36 @@ const DashboardBlog = () => {
     setForm(f => ({ ...f, [key]: value }));
   }, []);
 
+  /* ─── Content stats ─── */
+  const contentStats = useMemo(() => {
+    const ar = analyzeContent(form.content_ar);
+    const en = analyzeContent(form.content_en);
+    const totalWords = ar.words + en.words;
+    const keywordCount = form.focus_keyword
+      ? countInText(form.content_ar + ' ' + form.content_en, form.focus_keyword)
+      : 0;
+    const keywordDensity = totalWords > 0 ? (keywordCount / totalWords) * 100 : 0;
+    return {
+      wordCountAr: ar.words,
+      wordCountEn: en.words,
+      headingsCount: ar.headings + en.headings,
+      imagesCount: ar.images + en.images,
+      linksCount: ar.links + en.links,
+      keywordDensity,
+      readingTime: calculateReadingTime(form.content_ar || form.content_en),
+      paragraphCount: ar.paragraphs + en.paragraphs,
+    };
+  }, [form.content_ar, form.content_en, form.focus_keyword]);
+
   const localScore = calculateLocalSeoScore(form);
+
+  /* ─── Auto-slug on title change ─── */
+  const handleTitleChange = useCallback((key: string, value: string) => {
+    setField(key, value);
+    if (key === 'title_en' && !editId) {
+      setField('slug', generateSlug(value));
+    }
+  }, [setField, editId]);
 
   // Fetch posts
   const { data: posts = [], isLoading } = useQuery({
@@ -147,7 +198,6 @@ const DashboardBlog = () => {
       const sourceTitle = dir === 'ar-en' ? form.title_ar : form.title_en;
       const sourceContent = dir === 'ar-en' ? form.content_ar : form.content_en;
       const sourceExcerpt = dir === 'ar-en' ? form.excerpt_ar : form.excerpt_en;
-
       if (sourceTitle) {
         const t = await callBlogAi({ action: 'translate', text: sourceTitle, sourceLang: sLang, targetLang: tLang });
         setField(dir === 'ar-en' ? 'title_en' : 'title_ar', t.trim());
@@ -167,11 +217,7 @@ const DashboardBlog = () => {
   const handleGenerateKeywords = async () => {
     setAiLoading('keywords');
     try {
-      const raw = await callBlogAi({
-        action: 'generate_keywords',
-        title: form.title_ar || form.title_en,
-        content: form.content_ar || form.content_en,
-      });
+      const raw = await callBlogAi({ action: 'generate_keywords', title: form.title_ar || form.title_en, content: form.content_ar || form.content_en });
       const parsed = parseJsonResponse(raw);
       if (Array.isArray(parsed)) {
         setField('keywords', parsed.join(', '));
@@ -185,8 +231,7 @@ const DashboardBlog = () => {
     setAiLoading('meta');
     try {
       const raw = await callBlogAi({
-        action: 'generate_meta',
-        title: form.title_ar,
+        action: 'generate_meta', title: form.title_ar,
         content: form.content_ar || form.content_en,
         keywords: form.keywords ? form.keywords.split(',').map(s => s.trim()) : [],
       });
@@ -207,10 +252,8 @@ const DashboardBlog = () => {
     setAiLoading('analyze');
     try {
       const raw = await callBlogAi({
-        action: 'seo_analysis',
-        title: form.title_ar,
-        content: form.content_ar || form.content_en,
-        text: form.meta_description_ar,
+        action: 'seo_analysis', title: form.title_ar,
+        content: form.content_ar || form.content_en, text: form.meta_description_ar,
         keywords: [form.focus_keyword, form.cover_image_url ? 'has_image' : ''],
       });
       const parsed = parseJsonResponse(raw);
@@ -261,42 +304,54 @@ const DashboardBlog = () => {
     published: posts.filter((p: any) => p.status === 'published').length,
     draft: posts.filter((p: any) => p.status === 'draft').length,
     totalViews: posts.reduce((s: number, p: any) => s + (p.views_count || 0), 0),
+    avgSeo: posts.length > 0 ? Math.round(posts.reduce((s: number, p: any) => s + (p.seo_score || 0), 0) / posts.length) : 0,
+  };
+
+  /* ─── char count helpers ─── */
+  const charHint = (len: number, max: number) => {
+    const pct = len / max;
+    if (pct > 1) return 'text-destructive';
+    if (pct > 0.85) return 'text-yellow-600';
+    return 'text-muted-foreground';
   };
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        {/* Header */}
+      <div className="space-y-5">
+        {/* ═══ Header ═══ */}
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
             <h1 className="font-heading font-bold text-2xl flex items-center gap-2">
               <FileText className="w-6 h-6 text-primary" />
               {isRTL ? 'إدارة المدونة' : 'Blog Management'}
             </h1>
-            <p className="text-sm text-muted-foreground">{isRTL ? 'إنشاء وإدارة وتحسين مقالات المنصة لمحركات البحث' : 'Create, manage & optimize platform articles for SEO'}</p>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              {isRTL ? 'إنشاء وإدارة وتحسين المقالات لمحركات البحث العالمية' : 'Create, manage & optimize articles for global search engines'}
+            </p>
           </div>
           {!showForm && (
-            <Button variant="default" size="sm" onClick={() => { resetForm(); setShowForm(true); }}>
-              <Plus className="w-4 h-4 me-1" />{isRTL ? 'مقال جديد' : 'New Article'}
+            <Button size="sm" onClick={() => { resetForm(); setShowForm(true); }} className="gap-1.5">
+              <Plus className="w-4 h-4" />{isRTL ? 'مقال جديد' : 'New Article'}
             </Button>
           )}
         </div>
 
-        {/* Stats */}
+        {/* ═══ Stats ═══ */}
         {!showForm && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
             {[
-              { label: isRTL ? 'الإجمالي' : 'Total', value: stats.total, icon: FileText },
-              { label: isRTL ? 'منشور' : 'Published', value: stats.published, icon: Globe },
-              { label: isRTL ? 'مسودة' : 'Drafts', value: stats.draft, icon: Edit },
-              { label: isRTL ? 'المشاهدات' : 'Views', value: stats.totalViews, icon: Eye },
+              { label: isRTL ? 'الإجمالي' : 'Total', value: stats.total, icon: FileText, color: 'bg-primary/10 text-primary' },
+              { label: isRTL ? 'منشور' : 'Published', value: stats.published, icon: Globe, color: 'bg-green-500/10 text-green-600' },
+              { label: isRTL ? 'مسودة' : 'Drafts', value: stats.draft, icon: Edit, color: 'bg-yellow-500/10 text-yellow-600' },
+              { label: isRTL ? 'المشاهدات' : 'Views', value: stats.totalViews, icon: Eye, color: 'bg-blue-500/10 text-blue-600' },
+              { label: isRTL ? 'متوسط SEO' : 'Avg SEO', value: `${stats.avgSeo}%`, icon: BarChart3, color: 'bg-purple-500/10 text-purple-600' },
             ].map((s, i) => (
-              <Card key={i} className="border-border/50">
-                <CardContent className="p-3 flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-primary/10"><s.icon className="w-4 h-4 text-primary" /></div>
+              <Card key={i} className="border-border/40">
+                <CardContent className="p-3 flex items-center gap-2.5">
+                  <div className={`p-1.5 rounded-lg ${s.color}`}><s.icon className="w-3.5 h-3.5" /></div>
                   <div>
-                    <p className="text-lg font-bold">{s.value}</p>
-                    <p className="text-[11px] text-muted-foreground">{s.label}</p>
+                    <p className="text-base font-bold leading-tight">{s.value}</p>
+                    <p className="text-[10px] text-muted-foreground">{s.label}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -304,250 +359,293 @@ const DashboardBlog = () => {
           </div>
         )}
 
-        {/* Form */}
+        {/* ═══ Editor Form ═══ */}
         {showForm && (
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-            {/* Main form - 3 cols */}
+            {/* Main – 3 cols */}
             <div className="lg:col-span-3 space-y-4">
-              <Card className="border-accent/30">
-                <CardHeader className="pb-3">
+              <Card className="border-primary/10">
+                <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-base">{editId ? (isRTL ? 'تعديل المقال' : 'Edit Article') : (isRTL ? 'مقال جديد' : 'New Article')}</CardTitle>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      {editId ? (isRTL ? 'تعديل المقال' : 'Edit Article') : (isRTL ? 'مقال جديد' : 'New Article')}
+                      {form.status === 'published' && <Badge variant="default" className="text-[9px]">{isRTL ? 'منشور' : 'Published'}</Badge>}
+                    </CardTitle>
                     <Button variant="ghost" size="icon" onClick={closeForm}><X className="w-4 h-4" /></Button>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {/* AI Tools */}
+                  {/* AI Toolbar */}
                   <AiToolbar isRTL={isRTL} loading={aiLoading}
                     onTranslate={handleTranslate} onGenerateKeywords={handleGenerateKeywords}
                     onGenerateMeta={handleGenerateMeta} onAnalyzeSeo={handleAnalyzeSeo}
                     onGenerateExcerpt={handleGenerateExcerpt} onImproveContent={handleImproveContent} />
 
                   <Tabs defaultValue="content" className="w-full">
-                    <TabsList className="w-full grid grid-cols-3">
-                      <TabsTrigger value="content">{isRTL ? 'المحتوى' : 'Content'}</TabsTrigger>
-                      <TabsTrigger value="seo" className="flex items-center gap-1">
-                        <Search className="w-3 h-3" /> SEO
-                      </TabsTrigger>
-                      <TabsTrigger value="settings">{isRTL ? 'الإعدادات' : 'Settings'}</TabsTrigger>
+                    <TabsList className="w-full grid grid-cols-4 h-9">
+                      <TabsTrigger value="content" className="text-xs">{isRTL ? 'المحتوى' : 'Content'}</TabsTrigger>
+                      <TabsTrigger value="seo" className="text-xs gap-1"><Search className="w-3 h-3" /> SEO</TabsTrigger>
+                      <TabsTrigger value="media" className="text-xs">{isRTL ? 'الوسائط' : 'Media'}</TabsTrigger>
+                      <TabsTrigger value="settings" className="text-xs">{isRTL ? 'الإعدادات' : 'Settings'}</TabsTrigger>
                     </TabsList>
 
-                    {/* Content Tab */}
-                    <TabsContent value="content" className="space-y-4 mt-4">
+                    {/* ─── Content Tab ─── */}
+                    <TabsContent value="content" className="space-y-4 mt-3">
+                      {/* Titles */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                           <div className="flex items-center justify-between mb-1">
-                            <Label>{isRTL ? 'العنوان (عربي)' : 'Title (AR)'} *</Label>
+                            <Label className="text-xs">{isRTL ? 'العنوان (عربي)' : 'Title (AR)'} *</Label>
                             <FieldAiActions value={form.title_ar} lang="ar" isRTL={isRTL} fieldType="title"
                               onTranslated={(v) => setField('title_en', v)}
                               onImproved={(v) => setField('title_ar', v)}
                               focusKeyword={form.focus_keyword} />
                           </div>
-                          <Input value={form.title_ar} onChange={e => setField('title_ar', e.target.value)} />
-                          <span className="text-[10px] text-muted-foreground">{form.title_ar.length}/70</span>
+                          <Input value={form.title_ar} onChange={e => handleTitleChange('title_ar', e.target.value)} placeholder={isRTL ? 'عنوان جذاب يتضمن الكلمة المفتاحية' : 'Compelling title with keyword'} />
+                          <span className={`text-[10px] ${charHint(form.title_ar.length, 70)}`}>{form.title_ar.length}/70</span>
                         </div>
                         <div>
                           <div className="flex items-center justify-between mb-1">
-                            <Label>{isRTL ? 'العنوان (إنجليزي)' : 'Title (EN)'}</Label>
+                            <Label className="text-xs">{isRTL ? 'العنوان (إنجليزي)' : 'Title (EN)'}</Label>
                             <FieldAiActions value={form.title_en} lang="en" isRTL={isRTL} fieldType="title"
                               onTranslated={(v) => setField('title_ar', v)}
                               onImproved={(v) => setField('title_en', v)}
                               focusKeyword={form.focus_keyword} />
                           </div>
-                          <Input value={form.title_en} onChange={e => setField('title_en', e.target.value)} dir="ltr" />
-                          <span className="text-[10px] text-muted-foreground">{form.title_en.length}/70</span>
+                          <Input value={form.title_en} onChange={e => handleTitleChange('title_en', e.target.value)} dir="ltr" placeholder="SEO-friendly English title" />
+                          <span className={`text-[10px] ${charHint(form.title_en.length, 70)}`}>{form.title_en.length}/70</span>
                         </div>
                       </div>
 
+                      {/* Excerpts */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                           <div className="flex items-center justify-between mb-1">
-                            <Label>{isRTL ? 'المقتطف (عربي)' : 'Excerpt (AR)'}</Label>
-                            <FieldAiActions value={form.excerpt_ar} lang="ar" isRTL={isRTL} fieldType="excerpt"
+                            <Label className="text-xs">{isRTL ? 'المقتطف (عربي)' : 'Excerpt (AR)'}</Label>
+                            <FieldAiActions value={form.excerpt_ar || form.content_ar} lang="ar" isRTL={isRTL} fieldType="excerpt"
                               onTranslated={(v) => setField('excerpt_en', v)}
                               onImproved={(v) => setField('excerpt_ar', v)}
                               focusKeyword={form.focus_keyword} />
                           </div>
-                          <Textarea value={form.excerpt_ar} onChange={e => setField('excerpt_ar', e.target.value)} rows={2} />
-                          <span className="text-[10px] text-muted-foreground">{form.excerpt_ar.length}/200</span>
+                          <Textarea value={form.excerpt_ar} onChange={e => setField('excerpt_ar', e.target.value)} rows={2} placeholder={isRTL ? 'ملخص جذاب يشجع على القراءة' : 'Compelling summary'} />
+                          <span className={`text-[10px] ${charHint(form.excerpt_ar.length, 200)}`}>{form.excerpt_ar.length}/200</span>
                         </div>
                         <div>
                           <div className="flex items-center justify-between mb-1">
-                            <Label>{isRTL ? 'المقتطف (إنجليزي)' : 'Excerpt (EN)'}</Label>
-                            <FieldAiActions value={form.excerpt_en} lang="en" isRTL={isRTL} fieldType="excerpt"
+                            <Label className="text-xs">{isRTL ? 'المقتطف (إنجليزي)' : 'Excerpt (EN)'}</Label>
+                            <FieldAiActions value={form.excerpt_en || form.content_en} lang="en" isRTL={isRTL} fieldType="excerpt"
                               onTranslated={(v) => setField('excerpt_ar', v)}
                               onImproved={(v) => setField('excerpt_en', v)}
                               focusKeyword={form.focus_keyword} />
                           </div>
-                          <Textarea value={form.excerpt_en} onChange={e => setField('excerpt_en', e.target.value)} rows={2} dir="ltr" />
+                          <Textarea value={form.excerpt_en} onChange={e => setField('excerpt_en', e.target.value)} rows={2} dir="ltr" placeholder="Engaging excerpt for readers" />
                         </div>
                       </div>
 
+                      <Separator />
+
+                      {/* Content AR */}
                       <div>
-                        <div className="flex items-center justify-between mb-2">
-                          <Label>{isRTL ? 'المحتوى (عربي)' : 'Content (AR)'}</Label>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <Label className="text-xs font-semibold">{isRTL ? 'المحتوى (عربي)' : 'Content (AR)'}</Label>
                           <FieldAiActions value={form.content_ar} lang="ar" isRTL={isRTL} fieldType="content"
                             onTranslated={(v) => setField('content_en', v)}
                             onImproved={(v) => setField('content_ar', v)}
                             focusKeyword={form.focus_keyword} />
                         </div>
-                        <RichMarkdownEditor
-                          value={form.content_ar}
-                          onChange={(v) => setField('content_ar', v)}
-                          dir="rtl"
-                          isRTL={true}
-                          minHeight="350px"
-                        />
+                        <RichMarkdownEditor value={form.content_ar} onChange={(v) => setField('content_ar', v)} dir="rtl" isRTL={true} minHeight="300px" />
                       </div>
 
+                      {/* Content EN */}
                       <div>
-                        <div className="flex items-center justify-between mb-2">
-                          <Label>{isRTL ? 'المحتوى (إنجليزي)' : 'Content (EN)'}</Label>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <Label className="text-xs font-semibold">{isRTL ? 'المحتوى (إنجليزي)' : 'Content (EN)'}</Label>
                           <FieldAiActions value={form.content_en} lang="en" isRTL={isRTL} fieldType="content"
                             onTranslated={(v) => setField('content_ar', v)}
                             onImproved={(v) => setField('content_en', v)}
                             focusKeyword={form.focus_keyword} />
                         </div>
-                        <RichMarkdownEditor
-                          value={form.content_en}
-                          onChange={(v) => setField('content_en', v)}
-                          dir="ltr"
-                          isRTL={false}
-                          minHeight="350px"
-                        />
+                        <RichMarkdownEditor value={form.content_en} onChange={(v) => setField('content_en', v)} dir="ltr" isRTL={false} minHeight="300px" />
                       </div>
                     </TabsContent>
 
-                    {/* SEO Tab */}
-                    <TabsContent value="seo" className="space-y-4 mt-4">
+                    {/* ─── SEO Tab ─── */}
+                    <TabsContent value="seo" className="space-y-4 mt-3">
+                      {/* Focus keyword – prominent */}
+                      <div className="p-3 rounded-lg bg-primary/5 border border-primary/10">
+                        <Label className="text-xs font-semibold flex items-center gap-1.5 mb-1.5">
+                          <Hash className="w-3.5 h-3.5 text-primary" />
+                          {isRTL ? 'الكلمة المفتاحية الرئيسية' : 'Focus Keyword'}
+                        </Label>
+                        <Input value={form.focus_keyword} onChange={e => setField('focus_keyword', e.target.value)}
+                          placeholder={isRTL ? 'الكلمة المفتاحية الأساسية للمقال' : 'Primary keyword for this article'}
+                          className="bg-background" />
+                        {form.focus_keyword && (
+                          <p className="text-[10px] text-muted-foreground mt-1">
+                            {isRTL ? 'الكثافة:' : 'Density:'} {contentStats.keywordDensity.toFixed(1)}% •
+                            {isRTL ? ' التكرار:' : ' Count:'} {countInText(form.content_ar + ' ' + form.content_en, form.focus_keyword)}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Meta titles */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                           <div className="flex items-center justify-between mb-1">
-                            <Label>Meta Title (AR)</Label>
+                            <Label className="text-xs">Meta Title (AR)</Label>
                             <FieldAiActions value={form.meta_title_ar} lang="ar" isRTL={isRTL} fieldType="meta_title"
                               onTranslated={(v) => setField('meta_title_en', v)}
                               onImproved={(v) => setField('meta_title_ar', v)}
                               focusKeyword={form.focus_keyword} />
                           </div>
                           <Input value={form.meta_title_ar} onChange={e => setField('meta_title_ar', e.target.value)} />
-                          <span className={`text-[10px] ${form.meta_title_ar.length > 60 ? 'text-destructive' : 'text-muted-foreground'}`}>
-                            {form.meta_title_ar.length}/60
-                          </span>
+                          <span className={`text-[10px] ${charHint(form.meta_title_ar.length, 60)}`}>{form.meta_title_ar.length}/60</span>
                         </div>
                         <div>
                           <div className="flex items-center justify-between mb-1">
-                            <Label>Meta Title (EN)</Label>
+                            <Label className="text-xs">Meta Title (EN)</Label>
                             <FieldAiActions value={form.meta_title_en} lang="en" isRTL={isRTL} fieldType="meta_title"
                               onTranslated={(v) => setField('meta_title_ar', v)}
                               onImproved={(v) => setField('meta_title_en', v)}
                               focusKeyword={form.focus_keyword} />
                           </div>
                           <Input value={form.meta_title_en} onChange={e => setField('meta_title_en', e.target.value)} dir="ltr" />
-                          <span className={`text-[10px] ${form.meta_title_en.length > 60 ? 'text-destructive' : 'text-muted-foreground'}`}>
-                            {form.meta_title_en.length}/60
-                          </span>
+                          <span className={`text-[10px] ${charHint(form.meta_title_en.length, 60)}`}>{form.meta_title_en.length}/60</span>
                         </div>
                       </div>
 
+                      {/* Meta descriptions */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                           <div className="flex items-center justify-between mb-1">
-                            <Label>Meta Description (AR)</Label>
+                            <Label className="text-xs">Meta Description (AR)</Label>
                             <FieldAiActions value={form.meta_description_ar} lang="ar" isRTL={isRTL} fieldType="meta_description"
                               onTranslated={(v) => setField('meta_description_en', v)}
                               onImproved={(v) => setField('meta_description_ar', v)}
                               focusKeyword={form.focus_keyword} />
                           </div>
                           <Textarea value={form.meta_description_ar} onChange={e => setField('meta_description_ar', e.target.value)} rows={2} />
-                          <span className={`text-[10px] ${form.meta_description_ar.length > 160 ? 'text-destructive' : 'text-muted-foreground'}`}>
-                            {form.meta_description_ar.length}/160
-                          </span>
+                          <span className={`text-[10px] ${charHint(form.meta_description_ar.length, 160)}`}>{form.meta_description_ar.length}/160</span>
                         </div>
                         <div>
                           <div className="flex items-center justify-between mb-1">
-                            <Label>Meta Description (EN)</Label>
+                            <Label className="text-xs">Meta Description (EN)</Label>
                             <FieldAiActions value={form.meta_description_en} lang="en" isRTL={isRTL} fieldType="meta_description"
                               onTranslated={(v) => setField('meta_description_ar', v)}
                               onImproved={(v) => setField('meta_description_en', v)}
                               focusKeyword={form.focus_keyword} />
                           </div>
                           <Textarea value={form.meta_description_en} onChange={e => setField('meta_description_en', e.target.value)} rows={2} dir="ltr" />
-                          <span className={`text-[10px] ${form.meta_description_en.length > 160 ? 'text-destructive' : 'text-muted-foreground'}`}>
-                            {form.meta_description_en.length}/160
-                          </span>
+                          <span className={`text-[10px] ${charHint(form.meta_description_en.length, 160)}`}>{form.meta_description_en.length}/160</span>
                         </div>
                       </div>
 
-                      {/* Google Preview */}
-                      <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
-                        <p className="text-[10px] text-muted-foreground mb-2 font-semibold">{isRTL ? 'معاينة Google' : 'Google Preview'}</p>
-                        <div className="space-y-0.5" dir="ltr">
-                          <p className="text-primary text-sm font-medium truncate">
-                            {form.meta_title_en || form.title_en || form.meta_title_ar || form.title_ar || 'Page Title'}
-                          </p>
-                          <p className="text-[11px] text-green-600 truncate">
-                            faneen.lovable.app/blog/{form.slug || 'your-post-slug'}
-                          </p>
-                          <p className="text-xs text-muted-foreground line-clamp-2">
-                            {form.meta_description_en || form.meta_description_ar || form.excerpt_en || form.excerpt_ar || 'Your meta description will appear here...'}
-                          </p>
-                        </div>
-                      </div>
-
+                      {/* Google Previews – both languages */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
-                          <Label className="flex items-center gap-1"><Tag className="w-3 h-3" /> {isRTL ? 'الكلمة المفتاحية الرئيسية' : 'Focus Keyword'}</Label>
-                          <Input value={form.focus_keyword} onChange={e => setField('focus_keyword', e.target.value)} placeholder={isRTL ? 'الكلمة المفتاحية الأساسية' : 'Primary keyword'} />
+                        <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
+                          <p className="text-[9px] text-muted-foreground mb-1.5 font-bold uppercase tracking-wider flex items-center gap-1">
+                            <Globe className="w-3 h-3" /> Google AR
+                          </p>
+                          <div className="space-y-0.5" dir="rtl">
+                            <p className="text-primary text-sm font-medium truncate">{form.meta_title_ar || form.title_ar || 'عنوان الصفحة'}</p>
+                            <p className="text-[10px] text-green-600 truncate">faneen.lovable.app/blog/{form.slug || 'your-post-slug'}</p>
+                            <p className="text-[11px] text-muted-foreground line-clamp-2">{form.meta_description_ar || form.excerpt_ar || 'سيظهر الوصف هنا...'}</p>
+                          </div>
                         </div>
-                        <div>
-                          <Label>Canonical URL</Label>
-                          <Input value={form.canonical_url} onChange={e => setField('canonical_url', e.target.value)} dir="ltr" placeholder="https://..." />
+                        <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
+                          <p className="text-[9px] text-muted-foreground mb-1.5 font-bold uppercase tracking-wider flex items-center gap-1">
+                            <Globe className="w-3 h-3" /> Google EN
+                          </p>
+                          <div className="space-y-0.5" dir="ltr">
+                            <p className="text-primary text-sm font-medium truncate">{form.meta_title_en || form.title_en || 'Page Title'}</p>
+                            <p className="text-[10px] text-green-600 truncate">faneen.lovable.app/blog/{form.slug || 'your-post-slug'}</p>
+                            <p className="text-[11px] text-muted-foreground line-clamp-2">{form.meta_description_en || form.excerpt_en || 'Your meta description will appear here...'}</p>
+                          </div>
                         </div>
                       </div>
 
+                      {/* Keywords */}
                       <div>
-                        <Label className="flex items-center gap-1"><Search className="w-3 h-3" /> {isRTL ? 'الكلمات المفتاحية (SEO)' : 'SEO Keywords'}</Label>
-                        <Input value={form.keywords} onChange={e => setField('keywords', e.target.value)} dir="ltr" placeholder="keyword1, keyword2, keyword3" />
+                        <Label className="text-xs flex items-center gap-1"><Tag className="w-3 h-3" /> {isRTL ? 'الكلمات المفتاحية (SEO)' : 'SEO Keywords'}</Label>
+                        <Input value={form.keywords} onChange={e => setField('keywords', e.target.value)} dir="ltr" placeholder="keyword1, keyword2, keyword3" className="mt-1" />
                         {form.keywords && (
                           <div className="flex flex-wrap gap-1 mt-1.5">
                             {form.keywords.split(',').map((k, i) => k.trim() && (
-                              <Badge key={i} variant="secondary" className="text-[10px]">{k.trim()}</Badge>
+                              <Badge key={i} variant="secondary" className="text-[10px] gap-0.5">
+                                <Hash className="w-2.5 h-2.5" />{k.trim()}
+                              </Badge>
                             ))}
                           </div>
                         )}
                       </div>
 
-                      <div>
-                        <Label>OG Image URL</Label>
-                        <Input value={form.og_image_url} onChange={e => setField('og_image_url', e.target.value)} dir="ltr" placeholder={isRTL ? 'صورة المشاركة على وسائل التواصل' : 'Social share image URL'} />
+                      {/* Canonical & OG */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <Label className="text-xs flex items-center gap-1"><ExternalLink className="w-3 h-3" /> Canonical URL</Label>
+                          <Input value={form.canonical_url} onChange={e => setField('canonical_url', e.target.value)} dir="ltr" placeholder="https://..." className="mt-1" />
+                        </div>
+                        <div>
+                          <Label className="text-xs">OG Image URL</Label>
+                          <Input value={form.og_image_url} onChange={e => setField('og_image_url', e.target.value)} dir="ltr" placeholder={isRTL ? 'صورة المشاركة الاجتماعية' : 'Social share image'} className="mt-1" />
+                        </div>
                       </div>
                     </TabsContent>
 
-                    {/* Settings Tab */}
-                    <TabsContent value="settings" className="space-y-4 mt-4">
+                    {/* ─── Media Tab ─── */}
+                    <TabsContent value="media" className="space-y-4 mt-3">
                       <div>
-                        <Label>Slug</Label>
-                        <Input value={form.slug} onChange={e => setField('slug', e.target.value)} dir="ltr" placeholder="auto-generated-from-title" />
-                      </div>
-                      <div>
-                        <Label>{isRTL ? 'صورة الغلاف' : 'Cover Image'}</Label>
+                        <Label className="text-xs font-semibold mb-2 block">{isRTL ? 'صورة الغلاف' : 'Cover Image'}</Label>
                         <ImageUpload bucket="blog-images" value={form.cover_image_url}
-                          onChange={(url) => setField('cover_image_url', url)}
+                          onChange={(url) => { setField('cover_image_url', url); if (!form.og_image_url) setField('og_image_url', url); }}
                           onRemove={() => setField('cover_image_url', '')}
-                          placeholder={isRTL ? 'اضغط لرفع صورة الغلاف' : 'Click to upload cover image'} />
+                          placeholder={isRTL ? 'اضغط لرفع صورة الغلاف (1200×630 موصى به)' : 'Click to upload cover (1200×630 recommended)'} />
+                        <p className="text-[10px] text-muted-foreground mt-1">
+                          {isRTL ? 'الأبعاد المثالية: 1200×630 بكسل • نسبة 1.91:1 • حجم أقل من 200KB' : 'Ideal: 1200×630px • 1.91:1 ratio • Under 200KB'}
+                        </p>
                       </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+
+                      {form.cover_image_url && (
+                        <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
+                          <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
+                            {isRTL ? 'معاينة بطاقة المشاركة' : 'Social Card Preview'}
+                          </p>
+                          <div className="rounded-lg overflow-hidden border border-border/50 max-w-sm">
+                            <img src={form.og_image_url || form.cover_image_url} alt="" className="w-full aspect-[1.91/1] object-cover" />
+                            <div className="p-2 bg-background">
+                              <p className="text-[10px] text-muted-foreground">faneen.lovable.app</p>
+                              <p className="text-xs font-medium truncate">{form.meta_title_en || form.title_en || form.title_ar}</p>
+                              <p className="text-[10px] text-muted-foreground truncate">{form.meta_description_en || form.excerpt_en || ''}</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </TabsContent>
+
+                    {/* ─── Settings Tab ─── */}
+                    <TabsContent value="settings" className="space-y-4 mt-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                          <Label>{isRTL ? 'التصنيف' : 'Category'}</Label>
+                          <Label className="text-xs">Slug (URL)</Label>
+                          <div className="flex items-center gap-1 mt-1">
+                            <span className="text-[10px] text-muted-foreground shrink-0">/blog/</span>
+                            <Input value={form.slug} onChange={e => setField('slug', e.target.value)} dir="ltr" placeholder="auto-generated" className="flex-1" />
+                          </div>
+                        </div>
+                        <div>
+                          <Label className="text-xs">{isRTL ? 'التصنيف' : 'Category'}</Label>
                           <Select value={form.category} onValueChange={v => setField('category', v)}>
-                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                             <SelectContent>{blogCategories.map(c => <SelectItem key={c.value} value={c.value}>{language === 'ar' ? c.ar : c.en}</SelectItem>)}</SelectContent>
                           </Select>
                         </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                          <Label>{isRTL ? 'الحالة' : 'Status'}</Label>
+                          <Label className="text-xs">{isRTL ? 'الحالة' : 'Status'}</Label>
                           <Select value={form.status} onValueChange={v => setField('status', v)}>
-                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="draft">{isRTL ? 'مسودة' : 'Draft'}</SelectItem>
                               <SelectItem value="published">{isRTL ? 'منشور' : 'Published'}</SelectItem>
@@ -555,17 +653,44 @@ const DashboardBlog = () => {
                           </Select>
                         </div>
                         <div>
-                          <Label>{isRTL ? 'الوسوم' : 'Tags'}</Label>
-                          <Input value={form.tags} onChange={e => setField('tags', e.target.value)} placeholder="tag1, tag2" dir="ltr" />
+                          <Label className="text-xs">{isRTL ? 'الوسوم' : 'Tags'}</Label>
+                          <Input value={form.tags} onChange={e => setField('tags', e.target.value)} placeholder="tag1, tag2" dir="ltr" className="mt-1" />
+                          {form.tags && (
+                            <div className="flex flex-wrap gap-1 mt-1.5">
+                              {form.tags.split(',').map((t, i) => t.trim() && (
+                                <Badge key={i} variant="outline" className="text-[10px]">{t.trim()}</Badge>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Schema.org hints */}
+                      <div className="p-3 rounded-lg bg-muted/20 border border-border/30">
+                        <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5 flex items-center gap-1">
+                          <Zap className="w-3 h-3" /> {isRTL ? 'بيانات منظمة (Schema.org)' : 'Structured Data (Schema.org)'}
+                        </p>
+                        <div className="text-[10px] text-muted-foreground space-y-0.5 font-mono">
+                          <p>@type: "BlogPosting"</p>
+                          <p>headline: "{form.meta_title_en || form.title_en || form.title_ar || '...'}"</p>
+                          <p>datePublished: "{new Date().toISOString().split('T')[0]}"</p>
+                          <p>image: "{form.og_image_url || form.cover_image_url || 'none'}"</p>
+                          <p>wordCount: {contentStats.wordCountAr + contentStats.wordCountEn}</p>
+                          <p>keywords: "{form.focus_keyword || '...'}"</p>
                         </div>
                       </div>
                     </TabsContent>
                   </Tabs>
 
                   {/* Actions */}
-                  <div className="flex gap-2 pt-2 border-t">
-                    <Button onClick={() => saveMutation.mutate()} disabled={!form.title_ar || saveMutation.isPending} className="flex-1">
-                      {saveMutation.isPending ? '...' : (editId ? (isRTL ? 'تحديث' : 'Update') : (isRTL ? 'نشر' : 'Publish'))}
+                  <div className="flex gap-2 pt-3 border-t">
+                    <Button onClick={() => saveMutation.mutate()} disabled={!form.title_ar || saveMutation.isPending} className="flex-1 gap-1.5">
+                      {saveMutation.isPending ? '...' : (
+                        <>
+                          {editId ? (isRTL ? 'تحديث' : 'Update') : (isRTL ? 'نشر' : 'Publish')}
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </>
+                      )}
                     </Button>
                     <Button variant="outline" onClick={closeForm}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
                   </div>
@@ -573,49 +698,33 @@ const DashboardBlog = () => {
               </Card>
             </div>
 
-            {/* SEO Sidebar - 1 col */}
-            <div className="space-y-4">
+            {/* ═══ Sidebar – 1 col ═══ */}
+            <div className="space-y-3">
               <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm flex items-center gap-1.5">
-                    <BarChart3 className="w-4 h-4 text-primary" />
+                <CardHeader className="pb-2 px-3 pt-3">
+                  <CardTitle className="text-xs flex items-center gap-1.5">
+                    <BarChart3 className="w-3.5 h-3.5 text-primary" />
                     {isRTL ? 'تقييم SEO' : 'SEO Score'}
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <SeoScorePanel isRTL={isRTL} analysis={seoAnalysis} localScore={localScore} isAnalyzing={aiLoading === 'analyze'} />
-                </CardContent>
-              </Card>
-
-              {/* Quick Info */}
-              <Card>
-                <CardContent className="p-3 space-y-2 text-xs">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">{isRTL ? 'وقت القراءة' : 'Reading Time'}</span>
-                    <span className="font-medium">{calculateReadingTime(form.content_ar || form.content_en)} {isRTL ? 'د' : 'min'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">{isRTL ? 'كلمات AR' : 'Words AR'}</span>
-                    <span className="font-medium">{form.content_ar.split(/\s+/).filter(Boolean).length}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">{isRTL ? 'كلمات EN' : 'Words EN'}</span>
-                    <span className="font-medium">{form.content_en.split(/\s+/).filter(Boolean).length}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">{isRTL ? 'كلمات مفتاحية' : 'Keywords'}</span>
-                    <span className="font-medium">{form.keywords.split(',').filter(k => k.trim()).length}</span>
-                  </div>
+                <CardContent className="px-3 pb-3">
+                  <SeoScorePanel
+                    isRTL={isRTL}
+                    analysis={seoAnalysis}
+                    localScore={localScore}
+                    isAnalyzing={aiLoading === 'analyze'}
+                    contentStats={contentStats}
+                    focusKeyword={form.focus_keyword}
+                  />
                 </CardContent>
               </Card>
             </div>
           </div>
         )}
 
-        {/* Posts List */}
+        {/* ═══ Posts List ═══ */}
         {!showForm && (
           <>
-            {/* Filters */}
             <div className="flex items-center gap-3 flex-wrap">
               <div className="relative flex-1 min-w-[200px]">
                 <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -623,7 +732,7 @@ const DashboardBlog = () => {
                   value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
               </div>
               <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="w-[130px]"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">{isRTL ? 'الكل' : 'All'}</SelectItem>
                   <SelectItem value="published">{isRTL ? 'منشور' : 'Published'}</SelectItem>
@@ -633,49 +742,46 @@ const DashboardBlog = () => {
             </div>
 
             {isLoading ? (
-              <div className="space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-28 rounded-xl" />)}</div>
+              <div className="space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-24 rounded-xl" />)}</div>
             ) : filteredPosts.length === 0 ? (
               <Card className="border-dashed"><CardContent className="p-12 text-center text-muted-foreground">
                 <FileText className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                <p>{isRTL ? 'لا توجد مقالات' : 'No articles found'}</p>
+                <p className="font-medium">{isRTL ? 'لا توجد مقالات' : 'No articles found'}</p>
+                <p className="text-xs mt-1">{isRTL ? 'ابدأ بإنشاء مقالك الأول' : 'Start by creating your first article'}</p>
               </CardContent></Card>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {filteredPosts.map((p: any) => (
-                  <Card key={p.id} className="border-border/50 hover:border-primary/20 transition-colors">
-                    <CardContent className="p-4 flex items-center gap-4">
+                  <Card key={p.id} className="border-border/40 hover:border-primary/20 transition-all group">
+                    <CardContent className="p-3 flex items-center gap-3">
                       {p.cover_image_url && (
-                        <div className="w-20 h-14 rounded-lg overflow-hidden bg-muted shrink-0">
-                          <img src={p.cover_image_url} alt="" className="w-full h-full object-cover" />
+                        <div className="w-16 h-12 rounded-lg overflow-hidden bg-muted shrink-0">
+                          <img src={p.cover_image_url} alt={p.title_ar} className="w-full h-full object-cover" />
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-heading font-bold truncate">{language === 'ar' ? p.title_ar : (p.title_en || p.title_ar)}</h3>
-                          <Badge variant={p.status === 'published' ? 'default' : 'outline'} className="text-[10px] shrink-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <h3 className="font-heading font-bold text-sm truncate">{language === 'ar' ? p.title_ar : (p.title_en || p.title_ar)}</h3>
+                          <Badge variant={p.status === 'published' ? 'default' : 'outline'} className="text-[9px] shrink-0">
                             {p.status === 'published' ? (isRTL ? 'منشور' : 'Published') : (isRTL ? 'مسودة' : 'Draft')}
                           </Badge>
                           {p.seo_score > 0 && (
-                            <Badge variant="secondary" className="text-[10px] shrink-0">
-                              SEO: {p.seo_score}%
+                            <Badge variant="secondary" className={`text-[9px] shrink-0 ${p.seo_score >= 80 ? 'bg-green-500/10 text-green-600' : p.seo_score >= 50 ? 'bg-yellow-500/10 text-yellow-600' : 'bg-red-500/10 text-red-600'}`}>
+                              SEO {p.seo_score}%
                             </Badge>
                           )}
                         </div>
-                        <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
-                          <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{p.views_count}</span>
-                          <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{new Date(p.created_at).toLocaleDateString()}</span>
-                          <Badge variant="outline" className="text-[10px]">{blogCategories.find(c => c.value === p.category)?.[language] || p.category}</Badge>
-                          {p.focus_keyword && (
-                            <span className="flex items-center gap-1"><Tag className="w-3 h-3" />{p.focus_keyword}</span>
-                          )}
-                          {p.reading_time_minutes > 0 && (
-                            <span>{p.reading_time_minutes} {isRTL ? 'د' : 'min'}</span>
-                          )}
+                        <div className="flex items-center gap-2.5 text-[10px] text-muted-foreground flex-wrap">
+                          <span className="flex items-center gap-0.5"><Eye className="w-3 h-3" />{p.views_count}</span>
+                          <span className="flex items-center gap-0.5"><Calendar className="w-3 h-3" />{new Date(p.created_at).toLocaleDateString()}</span>
+                          <Badge variant="outline" className="text-[9px] h-4">{blogCategories.find(c => c.value === p.category)?.[language] || p.category}</Badge>
+                          {p.focus_keyword && <span className="flex items-center gap-0.5"><Hash className="w-2.5 h-2.5" />{p.focus_keyword}</span>}
+                          {p.reading_time_minutes > 0 && <span className="flex items-center gap-0.5"><Clock className="w-2.5 h-2.5" />{p.reading_time_minutes}{isRTL ? 'د' : 'm'}</span>}
                         </div>
                       </div>
-                      <div className="flex gap-2 shrink-0">
-                        <Button size="sm" variant="outline" onClick={() => openEdit(p)}><Edit className="w-3.5 h-3.5" /></Button>
-                        <Button size="sm" variant="outline" className="text-destructive" onClick={() => deleteMutation.mutate(p.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
+                      <div className="flex gap-1.5 shrink-0 opacity-60 group-hover:opacity-100 transition-opacity">
+                        <Button size="sm" variant="outline" className="h-7 w-7 p-0" onClick={() => openEdit(p)}><Edit className="w-3 h-3" /></Button>
+                        <Button size="sm" variant="outline" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => deleteMutation.mutate(p.id)}><Trash2 className="w-3 h-3" /></Button>
                       </div>
                     </CardContent>
                   </Card>
