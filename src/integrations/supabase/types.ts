@@ -405,9 +405,11 @@ export type Database = {
           business_number: number
           category_id: string | null
           city_id: string | null
+          contact_person: string | null
           country_id: string | null
           cover_url: string | null
           created_at: string
+          customer_service_phone: string | null
           description_ar: string | null
           description_en: string | null
           district: string | null
@@ -419,6 +421,7 @@ export type Database = {
           logo_url: string | null
           longitude: number | null
           membership_tier: Database["public"]["Enums"]["membership_tier"]
+          mobile: string | null
           name_ar: string
           name_en: string | null
           national_id: string | null
@@ -430,6 +433,7 @@ export type Database = {
           short_description_ar: string | null
           short_description_en: string | null
           street_name: string | null
+          unified_number: string | null
           updated_at: string
           user_id: string
           username: string
@@ -442,9 +446,11 @@ export type Database = {
           business_number: number
           category_id?: string | null
           city_id?: string | null
+          contact_person?: string | null
           country_id?: string | null
           cover_url?: string | null
           created_at?: string
+          customer_service_phone?: string | null
           description_ar?: string | null
           description_en?: string | null
           district?: string | null
@@ -456,6 +462,7 @@ export type Database = {
           logo_url?: string | null
           longitude?: number | null
           membership_tier?: Database["public"]["Enums"]["membership_tier"]
+          mobile?: string | null
           name_ar: string
           name_en?: string | null
           national_id?: string | null
@@ -467,6 +474,7 @@ export type Database = {
           short_description_ar?: string | null
           short_description_en?: string | null
           street_name?: string | null
+          unified_number?: string | null
           updated_at?: string
           user_id: string
           username: string
@@ -479,9 +487,11 @@ export type Database = {
           business_number?: number
           category_id?: string | null
           city_id?: string | null
+          contact_person?: string | null
           country_id?: string | null
           cover_url?: string | null
           created_at?: string
+          customer_service_phone?: string | null
           description_ar?: string | null
           description_en?: string | null
           district?: string | null
@@ -493,6 +503,7 @@ export type Database = {
           logo_url?: string | null
           longitude?: number | null
           membership_tier?: Database["public"]["Enums"]["membership_tier"]
+          mobile?: string | null
           name_ar?: string
           name_en?: string | null
           national_id?: string | null
@@ -504,6 +515,7 @@ export type Database = {
           short_description_ar?: string | null
           short_description_en?: string | null
           street_name?: string | null
+          unified_number?: string | null
           updated_at?: string
           user_id?: string
           username?: string

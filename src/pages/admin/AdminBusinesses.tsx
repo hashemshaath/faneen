@@ -253,6 +253,10 @@ const AdminBusinesses = () => {
         city_id: editForm.city_id || null,
         logo_url: editForm.logo_url || null,
         cover_url: editForm.cover_url || null,
+        unified_number: editForm.unified_number || null,
+        contact_person: editForm.contact_person || null,
+        mobile: editForm.mobile || null,
+        customer_service_phone: editForm.customer_service_phone || null,
         is_active: editForm.is_active,
         is_verified: editForm.is_verified,
         membership_tier: editForm.membership_tier,
@@ -361,6 +365,8 @@ const AdminBusinesses = () => {
       region: biz.region || '', district: biz.district || '',
       street_name: biz.street_name || '', building_number: biz.building_number || '',
       latitude: biz.latitude || '', longitude: biz.longitude || '',
+      unified_number: biz.unified_number || '', contact_person: biz.contact_person || '',
+      mobile: biz.mobile || '', customer_service_phone: biz.customer_service_phone || '',
       is_active: biz.is_active, is_verified: biz.is_verified,
       membership_tier: biz.membership_tier,
     });
@@ -746,8 +752,29 @@ const AdminBusinesses = () => {
                 {/* ── Contact Tab ── */}
                 <TabsContent value="contact" className="space-y-4 mt-3">
                   <div>
-                    <Label className="text-xs flex items-center gap-1"><Phone className="w-3 h-3" /> {isRTL ? 'رقم الهاتف' : 'Phone Number'}</Label>
-                    <Input value={editForm.phone} onChange={e => setField('phone', e.target.value)} dir="ltr" className="mt-1" />
+                    <Label className="text-xs flex items-center gap-1"><Users className="w-3 h-3" /> {isRTL ? 'اسم مسؤول التواصل' : 'Contact Person'}</Label>
+                    <Input value={editForm.contact_person} onChange={e => setField('contact_person', e.target.value)} className="mt-1" />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <Label className="text-xs flex items-center gap-1"><Phone className="w-3 h-3" /> {isRTL ? 'رقم الهاتف' : 'Phone'}</Label>
+                      <Input value={editForm.phone} onChange={e => setField('phone', e.target.value)} dir="ltr" className="mt-1" />
+                    </div>
+                    <div>
+                      <Label className="text-xs flex items-center gap-1"><Phone className="w-3 h-3" /> {isRTL ? 'رقم الجوال' : 'Mobile'}</Label>
+                      <Input value={editForm.mobile} onChange={e => setField('mobile', e.target.value)} dir="ltr" className="mt-1" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <Label className="text-xs flex items-center gap-1"><Phone className="w-3 h-3" /> {isRTL ? 'الرقم الموحد' : 'Unified Number'}</Label>
+                      <Input value={editForm.unified_number} onChange={e => setField('unified_number', e.target.value)} dir="ltr" className="mt-1"
+                        placeholder={isRTL ? '920xxxxxxx' : '920xxxxxxx'} />
+                    </div>
+                    <div>
+                      <Label className="text-xs flex items-center gap-1"><Phone className="w-3 h-3" /> {isRTL ? 'خدمة العملاء' : 'Customer Service'}</Label>
+                      <Input value={editForm.customer_service_phone} onChange={e => setField('customer_service_phone', e.target.value)} dir="ltr" className="mt-1" />
+                    </div>
                   </div>
                   <div>
                     <Label className="text-xs flex items-center gap-1"><Mail className="w-3 h-3" /> {isRTL ? 'البريد الإلكتروني' : 'Email'}</Label>
