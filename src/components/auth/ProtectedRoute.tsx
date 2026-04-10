@@ -10,6 +10,7 @@ interface ProtectedRouteProps {
   requireAuth?: boolean;
   requireAdmin?: boolean;
   requireSuperAdmin?: boolean;
+  requireProvider?: boolean;
   skipOnboarding?: boolean;
 }
 
@@ -39,24 +40,29 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requireAuth = true,
   requireAdmin = false,
   requireSuperAdmin = false,
+  requireProvider = false,
   skipOnboarding = false,
 }) => {
   const { user, loading, isAdmin, isSuperAdmin, profile } = useAuth();
   const location = useLocation();
   const loggedRef = useRef(false);
 
+  const isProvider = profile?.account_type === 'provider';
+
   const shouldDeny =
     !loading &&
     user &&
-    ((requireSuperAdmin && !isSuperAdmin) || (requireAdmin && !isAdmin));
+    ((requireSuperAdmin && !isSuperAdmin) ||
+     (requireAdmin && !isAdmin) ||
+     (requireProvider && !isProvider && !isAdmin));
 
   useEffect(() => {
     if (shouldDeny && !loggedRef.current) {
       loggedRef.current = true;
-      const role = requireSuperAdmin ? 'super_admin' : 'admin';
+      const role = requireSuperAdmin ? 'super_admin' : requireAdmin ? 'admin' : 'provider';
       logUnauthorizedAccess(user?.id, location.pathname, role);
     }
-  }, [shouldDeny, user?.id, location.pathname, requireSuperAdmin]);
+  }, [shouldDeny, user?.id, location.pathname, requireSuperAdmin, requireAdmin]);
 
   if (loading) {
     return (
@@ -82,6 +88,10 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }
 
   if (requireAdmin && !isAdmin) {
+    return <Suspense fallback={null}><Forbidden /></Suspense>;
+  }
+
+  if (requireProvider && !isProvider && !isAdmin) {
     return <Suspense fallback={null}><Forbidden /></Suspense>;
   }
 
