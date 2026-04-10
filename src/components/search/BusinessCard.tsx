@@ -3,9 +3,11 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { Badge } from '@/components/ui/badge';
 import {
   Star, MapPin, BadgeCheck, Phone, Building2, Crown, Globe, ChevronRight, ChevronLeft,
-  Briefcase,
+  Briefcase, CreditCard,
 } from 'lucide-react';
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 interface BusinessCardProps {
   business: any;
