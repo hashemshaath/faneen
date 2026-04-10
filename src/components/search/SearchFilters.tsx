@@ -84,17 +84,13 @@ export const SearchFilters = ({
 
       {showFilters && (
         <div className="space-y-4 sm:space-y-5 p-4 sm:p-5 rounded-2xl bg-card dark:bg-card/80 border border-border/50 dark:border-border/30 shadow-sm transition-all animate-fade-in">
-          {/* Category */}
+          {/* Category Tree */}
           <FilterSection label={t('search.category')}>
-            <Select value={filters.categoryId} onValueChange={v => onFilterChange('categoryId', v)}>
-              <SelectTrigger className="w-full rounded-xl dark:bg-muted/30 dark:border-border/30"><SelectValue placeholder={t('search.all_categories')} /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('search.all_categories')}</SelectItem>
-                {categories?.map(c => (
-                  <SelectItem key={c.id} value={c.id}>{language === 'ar' ? c.name_ar : c.name_en}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <CategoryTree
+              categories={(categories || []) as any}
+              selectedId={filters.categoryId}
+              onSelect={v => onFilterChange('categoryId', v)}
+            />
           </FilterSection>
 
           {/* City */}
