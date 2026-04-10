@@ -255,7 +255,11 @@ const Blog = () => {
                           </p>
                           <div className="flex items-center justify-between pt-2 border-t border-border/30 text-[11px] text-muted-foreground">
                             <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{new Date(post.published_at || post.created_at).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US')}</span>
-                            <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{post.views_count}</span>
+                            <div className="flex items-center gap-2.5">
+                              <span className="flex items-center gap-1"><MessageCircle className="w-3 h-3" />{commentCounts[post.id] || 0}</span>
+                              <span className="flex items-center gap-1"><Heart className="w-3 h-3" />{bookmarkCounts[post.id] || 0}</span>
+                              <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{post.views_count}</span>
+                            </div>
                           </div>
                         </div>
                       </CardContent>
