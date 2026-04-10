@@ -129,6 +129,7 @@ const BlogPost = () => {
       linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${url}`,
     };
     window.open(urls[platform], '_blank', 'noopener,noreferrer,width=600,height=400');
+  };
 
   // Scroll progress
   const [progress, setProgress] = useState(0);
