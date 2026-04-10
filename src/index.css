@@ -124,6 +124,9 @@
 }
 
 @layer utilities {
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
   .text-gradient-gold {
     background: linear-gradient(135deg, hsl(42 85% 55%), hsl(42 90% 70%));
     -webkit-background-clip: text;
