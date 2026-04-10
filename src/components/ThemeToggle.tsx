@@ -1,37 +1,61 @@
-import { useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react';
 import { Sun, Moon, Monitor } from 'lucide-react';
 
 type Theme = 'light' | 'dark' | 'system';
 
+interface ThemeContextType {
+  theme: Theme;
+  setTheme: (theme: Theme) => void;
+  isDark: boolean;
+}
+
+const ThemeContext = createContext<ThemeContextType>({ theme: 'system', setTheme: () => {}, isDark: false });
+
+export const useThemeMode = () => useContext(ThemeContext);
+
 const getStoredTheme = (): Theme => {
-  if (typeof window === 'undefined') return 'system';
-  return (localStorage.getItem('faneen-theme') as Theme) || 'system';
+  try {
+    const stored = localStorage.getItem('faneen-theme');
+    if (stored === 'light' || stored === 'dark' || stored === 'system') return stored;
+  } catch {}
+  return 'system';
 };
 
-const applyTheme = (theme: Theme) => {
-  const root = document.documentElement;
-  const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-  root.classList.toggle('dark', isDark);
-};
+const resolveIsDark = (theme: Theme) =>
+  theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
-export const ThemeToggle = ({ variant = 'navbar' }: { variant?: 'navbar' | 'dropdown' }) => {
-  const [theme, setTheme] = useState<Theme>(getStoredTheme);
+export const ThemeProvider = ({ children }: { children: ReactNode }) => {
+  const [theme, setThemeState] = useState<Theme>(getStoredTheme);
+  const [isDark, setIsDark] = useState(() => resolveIsDark(getStoredTheme()));
 
-  useEffect(() => {
-    applyTheme(theme);
-    localStorage.setItem('faneen-theme', theme);
-  }, [theme]);
+  const setTheme = useCallback((newTheme: Theme) => {
+    setThemeState(newTheme);
+    setIsDark(resolveIsDark(newTheme));
+    try { localStorage.setItem('faneen-theme', newTheme); } catch {}
+  }, []);
 
   useEffect(() => {
     if (theme !== 'system') return;
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    const handler = () => applyTheme('system');
+    const handler = () => setIsDark(resolveIsDark('system'));
     mq.addEventListener('change', handler);
     return () => mq.removeEventListener('change', handler);
   }, [theme]);
 
+  return (
+    <ThemeContext.Provider value={{ theme, setTheme, isDark }}>
+      <div className={isDark ? 'dark bg-background text-foreground' : ''} style={{ minHeight: '100vh' }}>
+        {children}
+      </div>
+    </ThemeContext.Provider>
+  );
+};
+
+export const ThemeToggle = ({ variant = 'navbar' }: { variant?: 'navbar' | 'dropdown' }) => {
+  const { theme, setTheme } = useThemeMode();
+
   const cycle = () => {
-    setTheme(prev => prev === 'light' ? 'dark' : prev === 'dark' ? 'system' : 'light');
+    setTheme(theme === 'light' ? 'dark' : theme === 'dark' ? 'system' : 'light');
   };
 
   const Icon = theme === 'dark' ? Moon : theme === 'light' ? Sun : Monitor;
@@ -42,6 +66,7 @@ export const ThemeToggle = ({ variant = 'navbar' }: { variant?: 'navbar' | 'drop
         onClick={cycle}
         className="p-1.5 rounded-lg text-primary-foreground/60 hover:text-accent transition-colors"
         title={theme}
+        aria-label={`Theme: ${theme}`}
       >
         <Icon className="w-4 h-4" />
       </button>
@@ -55,6 +80,7 @@ export const ThemeToggle = ({ variant = 'navbar' }: { variant?: 'navbar' | 'drop
           key={t}
           onClick={() => setTheme(t)}
           className={`p-2 rounded-lg transition-all ${theme === t ? 'bg-card shadow-sm text-accent' : 'text-muted-foreground hover:text-foreground'}`}
+          aria-label={`Theme: ${t}`}
         >
           <I className="w-4 h-4" />
         </button>
@@ -62,6 +88,3 @@ export const ThemeToggle = ({ variant = 'navbar' }: { variant?: 'navbar' | 'drop
     </div>
   );
 };
-
-// Initialize theme on load
-applyTheme(getStoredTheme());
