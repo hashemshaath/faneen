@@ -525,25 +525,27 @@ const BlogPost = () => {
               )}
             </div>
 
-            {/* ── Mobile TOC (collapsible) ── */}
+            {/* ── Mobile TOC (collapsible, sticky-capable) ── */}
             {headings.length > 0 && (
-              <div className="lg:hidden mb-5 sm:mb-6 rounded-xl border border-border bg-card overflow-hidden">
-                <button onClick={() => setTocOpen(!tocOpen)} className="flex items-center justify-between w-full p-3 sm:p-4 text-start">
-                  <span className="font-heading font-bold text-xs sm:text-sm flex items-center gap-2">
+              <div className="lg:hidden mb-5 sm:mb-6 rounded-xl border border-border/60 bg-card/95 backdrop-blur-sm overflow-hidden shadow-sm">
+                <button onClick={() => setTocOpen(!tocOpen)} className="flex items-center justify-between w-full px-4 py-3 text-start active:bg-muted/30 transition-colors">
+                  <span className="font-heading font-bold text-sm flex items-center gap-2">
                     <List className="w-4 h-4 text-accent" />
                     {isRTL ? 'جدول المحتويات' : 'Table of Contents'}
+                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">{headings.length}</Badge>
                   </span>
-                  <ChevronUp className={`w-4 h-4 text-muted-foreground transition-transform ${tocOpen ? '' : 'rotate-180'}`} />
+                  <ChevronUp className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${tocOpen ? '' : 'rotate-180'}`} />
                 </button>
                 {tocOpen && (
-                  <nav className="px-3 sm:px-4 pb-3 sm:pb-4 space-y-0.5 animate-fade-in">
-                    {headings.map((h) => (
+                  <nav className="px-3 pb-3 space-y-0.5 animate-fade-in max-h-[50vh] overflow-y-auto">
+                    {headings.map((h, idx) => (
                       <a key={h.id} href={`#${h.id}`}
                         onClick={(e) => { e.preventDefault(); document.getElementById(h.id)?.scrollIntoView({ behavior: 'smooth' }); setActiveHeading(h.id); setTocOpen(false); }}
-                        className={`block text-xs py-1.5 px-2 rounded-md transition-colors hover:bg-accent/10 hover:text-accent ${
+                        className={`flex items-center gap-2 text-xs py-2 px-2.5 rounded-lg transition-colors hover:bg-accent/10 hover:text-accent ${
                           activeHeading === h.id ? 'bg-accent/10 text-accent font-medium' : 'text-muted-foreground'
-                        } ${h.level === 2 ? 'ps-5' : ''}`}>
-                        {h.text}
+                        } ${h.level === 2 ? 'ps-6' : ''}`}>
+                        <span className="w-5 h-5 rounded-md bg-muted flex items-center justify-center text-[10px] font-mono text-muted-foreground shrink-0">{idx + 1}</span>
+                        <span className="line-clamp-1">{h.text}</span>
                       </a>
                     ))}
                   </nav>
