@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   Sidebar,
   SidebarContent,
@@ -13,80 +13,115 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { NavLink } from '@/components/NavLink';
-import { Separator } from '@/components/ui/separator';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   LayoutDashboard, Wrench, Image, Star, FileText, Shield, Settings, LogOut, Home, Globe, CreditCard, Megaphone, Key, Book, FolderOpen, PenSquare, Layers, MessageSquare, Users, Newspaper, Building2, Bell, Activity, Bookmark, ShieldAlert, Crown, FolderTree, Tags,
 } from 'lucide-react';
 
-const menuItems = [
-  { titleKey: 'dashboard.overview', url: '/dashboard', icon: LayoutDashboard },
-  { titleKey: 'dashboard.services', url: '/dashboard/services', icon: Wrench },
-  { titleKey: 'dashboard.portfolio', url: '/dashboard/portfolio', icon: Image },
-  { titleKey: 'dashboard.reviews', url: '/dashboard/reviews', icon: Star },
-  { titleKey: 'dashboard.contracts', url: '/dashboard/contracts', icon: FileText },
-  { titleKey: 'dashboard.warranties', url: '/dashboard/warranties', icon: Shield },
-  { titleKey: 'dashboard.installments', url: '/dashboard/installments', icon: CreditCard },
-  { titleKey: 'dashboard.messages', url: '/dashboard/messages', icon: MessageSquare },
-  { titleKey: 'dashboard.promotions', url: '/dashboard/promotions', icon: Megaphone },
-  { titleKey: 'dashboard.projects', url: '/dashboard/projects', icon: FolderOpen },
-  { titleKey: 'nav.notifications', url: '/notifications', icon: Bell },
-  { titleKey: 'dashboard.bookmarks', url: '/dashboard/bookmarks', icon: Bookmark },
-  { titleKey: 'dashboard.operations', url: '/dashboard/operations', icon: Activity },
-  { titleKey: 'dashboard.membership', url: '/membership', icon: Crown },
-  { titleKey: 'nav.projects', url: '/projects', icon: Building2 },
-  { titleKey: 'nav.blog', url: '/blog', icon: Newspaper },
-  { titleKey: 'dashboard.settings', url: '/dashboard/settings', icon: Settings },
-] as const;
+interface MenuItem {
+  label: { ar: string; en: string };
+  url: string;
+  icon: React.ElementType;
+  end?: boolean;
+}
 
-const adminItems = [
-  { titleKey: 'admin.users', url: '/admin/users', icon: Users, superAdminOnly: true },
-  { titleKey: 'admin.system_settings', url: '/admin/system-settings', icon: ShieldAlert, superAdminOnly: true },
-  { titleKey: 'admin.conversations', url: '/dashboard/messages', icon: MessageSquare, superAdminOnly: true },
-  { titleKey: 'admin.businesses', url: '/admin/businesses', icon: Building2, superAdminOnly: false },
-  { titleKey: 'admin.categories', url: '/admin/categories', icon: FolderTree, superAdminOnly: false },
-  { titleKey: 'admin.tags', url: '/admin/tags', icon: Tags, superAdminOnly: false },
-  { titleKey: 'admin.memberships', url: '/admin/memberships', icon: Crown, superAdminOnly: false },
-  { titleKey: 'admin.profile_systems', url: '/dashboard/profile-systems', icon: Layers, superAdminOnly: false },
-  { titleKey: 'admin.blog', url: '/dashboard/blog', icon: PenSquare, superAdminOnly: false },
-  { titleKey: 'admin.api_settings', url: '/admin/api-settings', icon: Key, superAdminOnly: false },
-  { titleKey: 'admin.api_docs', url: '/admin/api-docs', icon: Book, superAdminOnly: false },
-  { titleKey: 'admin.activity_log', url: '/admin/activity-log', icon: Activity, superAdminOnly: false },
-] as const;
+// ── Shared items ──
+const sharedTop: MenuItem[] = [
+  { label: { ar: 'نظرة عامة', en: 'Overview' }, url: '/dashboard', icon: LayoutDashboard, end: true },
+];
 
-const getAdminLabel = (titleKey: string, isRTL: boolean) => {
-  const map: Record<string, { ar: string; en: string }> = {
-    'admin.api_settings': { ar: 'إعدادات API', en: 'API Settings' },
-    'admin.api_docs': { ar: 'توثيق API', en: 'API Docs' },
-    'admin.profile_systems': { ar: 'القطاعات', en: 'Profiles' },
-    'admin.users': { ar: 'المستخدمين', en: 'Users' },
-    'admin.blog': { ar: 'المدونة', en: 'Blog' },
-    'admin.activity_log': { ar: 'سجل النشاط', en: 'Activity Log' },
-    'admin.system_settings': { ar: 'إعدادات النظام', en: 'System Settings' },
-    'admin.businesses': { ar: 'الأعمال', en: 'Businesses' },
-    'admin.categories': { ar: 'التصنيفات', en: 'Categories' },
-    'admin.tags': { ar: 'الوسوم', en: 'Tags' },
-    'admin.memberships': { ar: 'العضويات', en: 'Memberships' },
-  };
-  const entry = map[titleKey];
-  return entry ? (isRTL ? entry.ar : entry.en) : titleKey;
-};
+const sharedBottom: MenuItem[] = [
+  { label: { ar: 'الإشعارات', en: 'Notifications' }, url: '/notifications', icon: Bell },
+  { label: { ar: 'الإعدادات', en: 'Settings' }, url: '/dashboard/settings', icon: Settings },
+];
+
+// ── Provider-only items ──
+const providerItems: MenuItem[] = [
+  { label: { ar: 'الخدمات', en: 'Services' }, url: '/dashboard/services', icon: Wrench },
+  { label: { ar: 'معرض الأعمال', en: 'Portfolio' }, url: '/dashboard/portfolio', icon: Image },
+  { label: { ar: 'التقييمات', en: 'Reviews' }, url: '/dashboard/reviews', icon: Star },
+  { label: { ar: 'العقود', en: 'Contracts' }, url: '/dashboard/contracts', icon: FileText },
+  { label: { ar: 'الضمانات', en: 'Warranties' }, url: '/dashboard/warranties', icon: Shield },
+  { label: { ar: 'الأقساط', en: 'Installments' }, url: '/dashboard/installments', icon: CreditCard },
+  { label: { ar: 'الرسائل', en: 'Messages' }, url: '/dashboard/messages', icon: MessageSquare },
+  { label: { ar: 'العروض', en: 'Promotions' }, url: '/dashboard/promotions', icon: Megaphone },
+  { label: { ar: 'المشاريع', en: 'Projects' }, url: '/dashboard/projects', icon: FolderOpen },
+  { label: { ar: 'العمليات', en: 'Operations' }, url: '/dashboard/operations', icon: Activity },
+  { label: { ar: 'العضوية', en: 'Membership' }, url: '/membership', icon: Crown },
+];
+
+// ── Regular user items ──
+const userItems: MenuItem[] = [
+  { label: { ar: 'العقود', en: 'Contracts' }, url: '/dashboard/contracts', icon: FileText },
+  { label: { ar: 'الرسائل', en: 'Messages' }, url: '/dashboard/messages', icon: MessageSquare },
+  { label: { ar: 'المفضلة', en: 'Bookmarks' }, url: '/dashboard/bookmarks', icon: Bookmark },
+  { label: { ar: 'المشاريع', en: 'Projects' }, url: '/projects', icon: Building2 },
+  { label: { ar: 'المدونة', en: 'Blog' }, url: '/blog', icon: Newspaper },
+];
+
+// ── Admin section ──
+interface AdminMenuItem extends MenuItem {
+  superAdminOnly?: boolean;
+}
+
+const adminItems: AdminMenuItem[] = [
+  { label: { ar: 'المستخدمين', en: 'Users' }, url: '/admin/users', icon: Users, superAdminOnly: true },
+  { label: { ar: 'إعدادات النظام', en: 'System Settings' }, url: '/admin/system-settings', icon: ShieldAlert, superAdminOnly: true },
+  { label: { ar: 'كل المحادثات', en: 'All Conversations' }, url: '/dashboard/messages', icon: MessageSquare, superAdminOnly: true },
+  { label: { ar: 'المنشآت', en: 'Businesses' }, url: '/admin/businesses', icon: Building2 },
+  { label: { ar: 'التصنيفات', en: 'Categories' }, url: '/admin/categories', icon: FolderTree },
+  { label: { ar: 'الوسوم', en: 'Tags' }, url: '/admin/tags', icon: Tags },
+  { label: { ar: 'العضويات', en: 'Memberships' }, url: '/admin/memberships', icon: Crown },
+  { label: { ar: 'القطاعات', en: 'Profiles' }, url: '/dashboard/profile-systems', icon: Layers },
+  { label: { ar: 'المدونة', en: 'Blog' }, url: '/dashboard/blog', icon: PenSquare },
+  { label: { ar: 'إعدادات API', en: 'API Settings' }, url: '/admin/api-settings', icon: Key },
+  { label: { ar: 'توثيق API', en: 'API Docs' }, url: '/admin/api-docs', icon: Book },
+  { label: { ar: 'سجل النشاط', en: 'Activity Log' }, url: '/admin/activity-log', icon: Activity },
+];
+
+const RenderMenu: React.FC<{ items: MenuItem[]; collapsed: boolean; isRTL: boolean; closeMobile: () => void }> = ({ items, collapsed, isRTL, closeMobile }) => (
+  <SidebarMenu>
+    {items.map((item) => (
+      <SidebarMenuItem key={item.url + item.label.en}>
+        <SidebarMenuButton asChild>
+          <NavLink
+            to={item.url}
+            end={item.end}
+            className="hover:bg-sidebar-accent/60 rounded-lg transition-colors"
+            activeClassName="bg-accent/15 text-accent font-medium dark:bg-accent/20"
+            onClick={closeMobile}
+          >
+            <item.icon className="h-4 w-4 shrink-0" />
+            {!collapsed && <span className="ms-2 truncate">{isRTL ? item.label.ar : item.label.en}</span>}
+          </NavLink>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    ))}
+  </SidebarMenu>
+);
 
 export const DashboardSidebar: React.FC = () => {
   const { state, setOpenMobile, isMobile } = useSidebar();
   const collapsed = state === 'collapsed';
-  const { t, language, setLanguage, isRTL } = useLanguage();
-  const { signOut, isAdmin, isSuperAdmin } = useAuth();
+  const { language, setLanguage, isRTL } = useLanguage();
+  const { signOut, isAdmin, isSuperAdmin, profile } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
 
   const closeMobile = () => { if (isMobile) setOpenMobile(false); };
+  const handleLogout = async () => { await signOut(); navigate('/'); };
 
-  const handleLogout = async () => {
-    await signOut();
-    navigate('/');
-  };
+  const isProvider = profile?.account_type === 'provider';
+
+  // Build main menu based on role
+  const mainMenu: MenuItem[] = [
+    ...sharedTop,
+    ...(isAdmin ? [...providerItems, ...userItems.filter(u => !providerItems.some(p => p.url === u.url))] : isProvider ? providerItems : userItems),
+    ...sharedBottom,
+  ];
+
+  // Filter admin items
+  const visibleAdminItems = adminItems.filter(item => !item.superAdminOnly || isSuperAdmin);
 
   return (
     <Sidebar collapsible="icon" side={isRTL ? 'right' : 'left'}>
@@ -104,57 +139,27 @@ export const DashboardSidebar: React.FC = () => {
           )}
         </div>
 
+        {/* Main menu */}
         <SidebarGroup>
-          <SidebarGroupLabel>{!collapsed ? (isRTL ? 'القائمة الرئيسية' : 'Main Menu') : ''}</SidebarGroupLabel>
+          <SidebarGroupLabel>
+            {!collapsed ? (isRTL ? 'القائمة الرئيسية' : 'Main Menu') : ''}
+          </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
-              {menuItems.map((item) => (
-                <SidebarMenuItem key={item.url}>
-                  <SidebarMenuButton asChild>
-                    <NavLink
-                      to={item.url}
-                      end={item.url === '/dashboard'}
-                      className="hover:bg-sidebar-accent/60 rounded-lg transition-colors"
-                      activeClassName="bg-accent/15 text-accent font-medium dark:bg-accent/20"
-                      onClick={closeMobile}
-                    >
-                      <item.icon className="h-4 w-4 shrink-0" />
-                      {!collapsed && <span className="ms-2 truncate">{t(item.titleKey as any)}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
+            <RenderMenu items={mainMenu} collapsed={collapsed} isRTL={isRTL} closeMobile={closeMobile} />
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Admin section - only visible to admins */}
+        {/* Admin section */}
         {isAdmin && (
           <SidebarGroup>
             <SidebarGroupLabel>
-              {!collapsed ? (isRTL 
-                ? (isSuperAdmin ? '🛡️ الإدارة العليا' : 'الإدارة') 
+              {!collapsed ? (isRTL
+                ? (isSuperAdmin ? '🛡️ الإدارة العليا' : 'الإدارة')
                 : (isSuperAdmin ? '🛡️ Super Admin' : 'Admin')
               ) : ''}
             </SidebarGroupLabel>
             <SidebarGroupContent>
-              <SidebarMenu>
-                {adminItems.filter(item => !item.superAdminOnly || isSuperAdmin).map((item) => (
-                  <SidebarMenuItem key={item.url}>
-                    <SidebarMenuButton asChild>
-                      <NavLink
-                        to={item.url}
-                        className="hover:bg-sidebar-accent/60 rounded-lg transition-colors"
-                        activeClassName="bg-accent/15 text-accent font-medium dark:bg-accent/20"
-                        onClick={closeMobile}
-                      >
-                        <item.icon className="h-4 w-4 shrink-0" />
-                        {!collapsed && <span className="ms-2 truncate">{getAdminLabel(item.titleKey, isRTL)}</span>}
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
+              <RenderMenu items={visibleAdminItems} collapsed={collapsed} isRTL={isRTL} closeMobile={closeMobile} />
             </SidebarGroupContent>
           </SidebarGroup>
         )}
@@ -179,7 +184,7 @@ export const DashboardSidebar: React.FC = () => {
           <SidebarMenuItem>
             <SidebarMenuButton onClick={handleLogout} className="text-destructive hover:text-destructive hover:bg-destructive/10 dark:hover:bg-destructive/20 rounded-lg">
               <LogOut className="h-4 w-4 shrink-0" />
-              {!collapsed && <span className="ms-2">{t('auth.logout')}</span>}
+              {!collapsed && <span className="ms-2">{isRTL ? 'تسجيل الخروج' : 'Logout'}</span>}
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
