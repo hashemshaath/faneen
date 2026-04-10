@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -8,25 +8,24 @@ import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-
+import { Separator } from '@/components/ui/separator';
+import { ProjectImageGallery } from '@/components/project/ProjectImageGallery';
+import { ProjectSidebar } from '@/components/project/ProjectSidebar';
+import { RelatedProjects } from '@/components/project/RelatedProjects';
 import {
-  FolderOpen, Calendar, DollarSign, Clock, Building2,
-  ChevronLeft, ChevronRight, ArrowRight, ArrowLeft,
-  ImageIcon, X, ZoomIn, MapPin, Tag
+  FolderOpen, ArrowRight, ArrowLeft, Tag, MapPin, Building2, Share2, Bookmark
 } from 'lucide-react';
 
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { isRTL, language } = useLanguage();
-  const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const { data: project, isLoading } = useQuery({
     queryKey: ['project-detail', id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('projects')
-        .select('*, businesses(username, name_ar, name_en, logo_url, description_ar, description_en)')
+        .select('*, businesses(username, name_ar, name_en, logo_url, description_ar, description_en, short_description_ar, short_description_en, phone, email, website, is_verified)')
         .eq('id', id!)
         .eq('status', 'published')
         .single();
@@ -77,24 +76,25 @@ const ProjectDetail = () => {
       ]
     : [];
 
-  const openLightbox = (idx: number) => {
-    setCurrentImageIndex(idx);
-    setLightboxOpen(true);
-  };
-
-  const goNext = () => setCurrentImageIndex(prev => (prev + 1) % allImages.length);
-  const goPrev = () => setCurrentImageIndex(prev => (prev - 1 + allImages.length) % allImages.length);
-
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
         <Navbar />
-        <div className="container py-24 space-y-6 px-4">
+        <div className="container py-24 space-y-6 px-4 max-w-6xl">
           <Skeleton className="h-10 w-3/4 rounded-xl" />
-          <Skeleton className="h-72 w-full rounded-xl" />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4"><Skeleton className="h-40 rounded-xl" /><Skeleton className="h-40 rounded-xl" /></div>
+          <Skeleton className="h-80 w-full rounded-xl" />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 space-y-4">
+              <Skeleton className="h-6 w-1/2 rounded-lg" />
+              <Skeleton className="h-32 w-full rounded-xl" />
+            </div>
+            <div className="space-y-4">
+              <Skeleton className="h-48 rounded-xl" />
+              <Skeleton className="h-36 rounded-xl" />
+            </div>
+          </div>
         </div>
         <Footer />
       </div>
@@ -122,22 +122,51 @@ const ProjectDetail = () => {
 
   const title = language === 'ar' ? project.title_ar : (project.title_en || project.title_ar);
   const description = language === 'ar' ? project.description_ar : (project.description_en || project.description_ar);
+  const bizName = project.businesses
+    ? (language === 'ar' ? project.businesses.name_ar : (project.businesses.name_en || project.businesses.name_ar))
+    : null;
 
   return (
     <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
       <Navbar />
 
-      {/* Header */}
+      {/* Header with logo */}
       <div className="bg-primary pt-20 sm:pt-24 pb-5 sm:pb-8">
-        <div className="container max-w-5xl px-4 sm:px-6">
+        <div className="container max-w-6xl px-4 sm:px-6">
           <Link to="/projects" className="inline-flex items-center gap-1.5 text-primary-foreground/60 hover:text-primary-foreground text-xs sm:text-sm mb-3 sm:mb-4 transition-colors">
             <BackIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             {isRTL ? 'جميع المشاريع' : 'All Projects'}
           </Link>
-          <div className="flex items-start gap-3">
+
+          <div className="flex items-start gap-4">
+            {/* Business Logo */}
+            {project.businesses?.logo_url ? (
+              <Link to={`/${project.businesses.username}`} className="shrink-0 hidden sm:block">
+                <img
+                  src={project.businesses.logo_url}
+                  alt={bizName || ''}
+                  className="w-14 h-14 md:w-16 md:h-16 rounded-xl object-cover border-2 border-primary-foreground/20 hover:border-primary-foreground/40 transition-colors"
+                />
+              </Link>
+            ) : project.businesses ? (
+              <Link to={`/${project.businesses.username}`} className="shrink-0 hidden sm:block">
+                <div className="w-14 h-14 md:w-16 md:h-16 rounded-xl bg-primary-foreground/10 flex items-center justify-center border-2 border-primary-foreground/20">
+                  <Building2 className="w-7 h-7 text-primary-foreground/60" />
+                </div>
+              </Link>
+            ) : null}
+
             <div className="flex-1 min-w-0">
-              <h1 className="font-heading font-bold text-xl sm:text-2xl md:text-3xl text-primary-foreground mb-2 leading-snug">{title}</h1>
-              <div className="flex flex-wrap gap-1.5 sm:gap-2">
+              <h1 className="font-heading font-bold text-xl sm:text-2xl md:text-3xl text-primary-foreground mb-1.5 leading-snug">{title}</h1>
+
+              {/* Provider name on mobile */}
+              {bizName && (
+                <Link to={`/${project.businesses!.username}`} className="text-primary-foreground/70 hover:text-primary-foreground text-xs sm:text-sm transition-colors mb-2 inline-block">
+                  {isRTL ? 'بواسطة' : 'by'} <span className="font-semibold">{bizName}</span>
+                </Link>
+              )}
+
+              <div className="flex flex-wrap gap-1.5 sm:gap-2 mt-1">
                 {project.is_featured && (
                   <Badge className="bg-accent text-accent-foreground text-[10px] sm:text-xs">{isRTL ? 'مميز' : 'Featured'}</Badge>
                 )}
@@ -155,233 +184,77 @@ const ProjectDetail = () => {
                 )}
               </div>
             </div>
+
+            {/* Action buttons */}
+            <div className="hidden sm:flex items-center gap-2 shrink-0">
+              <Button variant="ghost" size="icon" className="text-primary-foreground/60 hover:text-primary-foreground hover:bg-primary-foreground/10 rounded-full">
+                <Bookmark className="w-5 h-5" />
+              </Button>
+              <Button variant="ghost" size="icon" className="text-primary-foreground/60 hover:text-primary-foreground hover:bg-primary-foreground/10 rounded-full" onClick={() => navigator.share?.({ title, url: window.location.href }).catch(() => {})}>
+                <Share2 className="w-5 h-5" />
+              </Button>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 sm:px-6 py-5 sm:py-8 max-w-5xl">
+      <div className="container mx-auto px-4 sm:px-6 py-5 sm:py-8 max-w-6xl">
         {/* Image Gallery */}
-        {allImages.length > 0 ? (
-          <div className="mb-8">
-            {/* Main image */}
-            <div
-              className="relative rounded-xl overflow-hidden bg-muted cursor-pointer group mb-3"
-              onClick={() => openLightbox(0)}
-            >
-              <div className="aspect-[16/9] md:aspect-[2/1]">
-                <img
-                  src={allImages[0].image_url}
-                  alt={title}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-              </div>
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 backdrop-blur-sm rounded-full p-3">
-                  <ZoomIn className="w-6 h-6" />
-                </div>
-              </div>
-              {allImages.length > 1 && (
-                <div className="absolute bottom-3 end-3 bg-background/80 backdrop-blur-sm rounded-lg px-3 py-1.5 flex items-center gap-1.5 text-sm font-medium">
-                  <ImageIcon className="w-4 h-4" />
-                  {allImages.length} {isRTL ? 'صورة' : 'photos'}
-                </div>
-              )}
-            </div>
-
-            {/* Thumbnail grid */}
-            {allImages.length > 1 && (
-              <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2">
-                {allImages.slice(1, 7).map((img, idx) => (
-                  <button
-                    key={img.id}
-                    onClick={() => openLightbox(idx + 1)}
-                    className="relative aspect-square rounded-lg overflow-hidden bg-muted group"
-                  >
-                    <img src={img.image_url} alt="" className="w-full h-full object-cover transition-transform group-hover:scale-110" />
-                    {idx === 5 && allImages.length > 7 && (
-                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white font-bold text-lg">
-                        +{allImages.length - 7}
-                      </div>
-                    )}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="aspect-[16/9] bg-muted rounded-xl flex flex-col items-center justify-center text-muted-foreground mb-8">
-            <ImageIcon className="w-16 h-16 mb-3 opacity-30" />
-            <p>{isRTL ? 'لا توجد صور لهذا المشروع' : 'No images for this project'}</p>
-          </div>
-        )}
+        <ProjectImageGallery images={allImages} title={title} />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-8">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-8">
             {/* Description */}
             {description && (
               <div>
-                <h2 className="font-heading font-bold text-xl mb-3">{isRTL ? 'وصف المشروع' : 'Project Description'}</h2>
-                <p className="text-muted-foreground leading-relaxed whitespace-pre-line">{description}</p>
+                <h2 className="font-heading font-bold text-lg sm:text-xl mb-3 flex items-center gap-2">
+                  <span className="w-1 h-6 rounded-full bg-accent shrink-0" />
+                  {isRTL ? 'وصف المشروع' : 'Project Description'}
+                </h2>
+                <div className="bg-card rounded-xl border border-border/50 dark:border-border/30 p-4 sm:p-6">
+                  <p className="text-muted-foreground leading-[1.85] whitespace-pre-line text-sm sm:text-base">{description}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Project highlights */}
+            {(project.project_cost || project.duration_days || project.completion_date) && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 lg:hidden">
+                {project.project_cost && (
+                  <div className="bg-card rounded-xl border border-border/50 dark:border-border/30 p-4 text-center">
+                    <p className="text-xs text-muted-foreground mb-1">{isRTL ? 'التكلفة' : 'Cost'}</p>
+                    <p className="font-bold text-accent text-sm">{Number(project.project_cost).toLocaleString()} {project.currency_code}</p>
+                  </div>
+                )}
+                {project.duration_days && (
+                  <div className="bg-card rounded-xl border border-border/50 dark:border-border/30 p-4 text-center">
+                    <p className="text-xs text-muted-foreground mb-1">{isRTL ? 'المدة' : 'Duration'}</p>
+                    <p className="font-bold text-sm">{project.duration_days} {isRTL ? 'يوم' : 'days'}</p>
+                  </div>
+                )}
+                {project.completion_date && (
+                  <div className="bg-card rounded-xl border border-border/50 dark:border-border/30 p-4 text-center">
+                    <p className="text-xs text-muted-foreground mb-1">{isRTL ? 'الإنجاز' : 'Completed'}</p>
+                    <p className="font-bold text-sm">{project.completion_date}</p>
+                  </div>
+                )}
               </div>
             )}
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-5">
-            {/* Project Info Card */}
-            <div className="rounded-xl border border-border/50 dark:border-border/30 bg-card dark:bg-card/80 p-4 sm:p-5 space-y-3 sm:space-y-4">
-              <h3 className="font-heading font-bold text-base sm:text-lg">{isRTL ? 'تفاصيل المشروع' : 'Project Details'}</h3>
-              <div className="space-y-3">
-                {project.project_cost && (
-                  <div className="flex items-center gap-2.5 sm:gap-3">
-                    <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-accent/10 dark:bg-accent/15 flex items-center justify-center shrink-0">
-                      <DollarSign className="w-4 h-4 text-accent" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">{isRTL ? 'تكلفة المشروع' : 'Project Cost'}</p>
-                      <p className="font-semibold">{Number(project.project_cost).toLocaleString()} {project.currency_code}</p>
-                    </div>
-                  </div>
-                )}
-                {project.duration_days && (
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
-                      <Clock className="w-4 h-4 text-accent" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">{isRTL ? 'مدة التنفيذ' : 'Duration'}</p>
-                      <p className="font-semibold">{project.duration_days} {isRTL ? 'يوم' : 'days'}</p>
-                    </div>
-                  </div>
-                )}
-                {project.completion_date && (
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
-                      <Calendar className="w-4 h-4 text-accent" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">{isRTL ? 'تاريخ الإنجاز' : 'Completion Date'}</p>
-                      <p className="font-semibold">{project.completion_date}</p>
-                    </div>
-                  </div>
-                )}
-                {project.client_name && (
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
-                      <Building2 className="w-4 h-4 text-accent" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">{isRTL ? 'العميل' : 'Client'}</p>
-                      <p className="font-semibold">{project.client_name}</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Business Card */}
-            {project.businesses && (
-              <Link
-                to={`/${project.businesses.username}`}
-                className="block rounded-xl border border-border/50 bg-card p-5 hover:border-accent/30 transition-all hover:shadow-md group"
-              >
-                <h3 className="font-heading font-bold text-lg mb-3">{isRTL ? 'مزود الخدمة' : 'Service Provider'}</h3>
-                <div className="flex items-center gap-3">
-                  {project.businesses.logo_url ? (
-                    <img src={project.businesses.logo_url} alt="" className="w-12 h-12 rounded-full object-cover" />
-                  ) : (
-                    <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center">
-                      <Building2 className="w-6 h-6 text-accent" />
-                    </div>
-                  )}
-                  <div>
-                    <p className="font-semibold text-accent group-hover:underline">
-                      {language === 'ar' ? project.businesses.name_ar : (project.businesses.name_en || project.businesses.name_ar)}
-                    </p>
-                    <p className="text-xs text-muted-foreground">{isRTL ? 'عرض الملف التجاري' : 'View business profile'}</p>
-                  </div>
-                </div>
-              </Link>
-            )}
-          </div>
+          <ProjectSidebar project={project} category={category} city={city} />
         </div>
+
+        {/* Related Projects */}
+        <RelatedProjects
+          projectId={id!}
+          businessId={project.business_id}
+          categoryId={project.category_id}
+          cityId={project.city_id}
+        />
       </div>
-
-      {/* Fullscreen Lightbox */}
-      {lightboxOpen && (
-        <div className="fixed inset-0 z-50 bg-black/95 flex flex-col" dir={isRTL ? 'rtl' : 'ltr'}>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute top-3 end-3 z-10 text-white hover:bg-white/20 rounded-full"
-            onClick={() => setLightboxOpen(false)}
-          >
-            <X className="w-5 h-5" />
-          </Button>
-
-          <div className="flex-1 flex items-center justify-center p-4 relative">
-            {allImages.length > 0 && (
-              <img
-                src={allImages[currentImageIndex]?.image_url}
-                alt=""
-                className="max-w-full max-h-full object-contain rounded-lg"
-              />
-            )}
-
-            {allImages.length > 1 && (
-              <>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute start-2 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 rounded-full w-10 h-10"
-                  onClick={isRTL ? goNext : goPrev}
-                >
-                  {isRTL ? <ChevronRight className="w-6 h-6" /> : <ChevronLeft className="w-6 h-6" />}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute end-2 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 rounded-full w-10 h-10"
-                  onClick={isRTL ? goPrev : goNext}
-                >
-                  {isRTL ? <ChevronLeft className="w-6 h-6" /> : <ChevronRight className="w-6 h-6" />}
-                </Button>
-              </>
-            )}
-          </div>
-
-          <div className="text-center pb-3 px-4">
-            {allImages[currentImageIndex] &&
-              (allImages[currentImageIndex].caption_ar || allImages[currentImageIndex].caption_en) && (
-                <p className="text-white/80 text-sm mb-1">
-                  {language === 'ar'
-                    ? allImages[currentImageIndex].caption_ar
-                    : (allImages[currentImageIndex].caption_en || allImages[currentImageIndex].caption_ar)}
-                </p>
-              )}
-            {allImages.length > 1 && (
-              <p className="text-white/50 text-xs">{currentImageIndex + 1} / {allImages.length}</p>
-            )}
-          </div>
-
-          {allImages.length > 1 && (
-            <div className="flex gap-1.5 overflow-x-auto px-4 pb-4 justify-center">
-              {allImages.map((img, idx) => (
-                <button
-                  key={img.id}
-                  onClick={() => setCurrentImageIndex(idx)}
-                  className={`shrink-0 w-14 h-14 rounded-lg overflow-hidden border-2 transition-all ${
-                    idx === currentImageIndex ? 'border-accent ring-1 ring-accent' : 'border-transparent opacity-50 hover:opacity-80'
-                  }`}
-                >
-                  <img src={img.image_url} alt="" className="w-full h-full object-cover" />
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
 
       <Footer />
     </div>
