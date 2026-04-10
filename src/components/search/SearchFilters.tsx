@@ -11,6 +11,8 @@ import {
   Star, BadgeCheck, SlidersHorizontal, X, RotateCcw, DollarSign, ChevronDown,
 } from 'lucide-react';
 import { useState } from 'react';
+import { CategoryTree } from './CategoryTree';
+import { TagsFilter } from './TagsFilter';
 
 export interface SearchFilterValues {
   categoryId: string;
@@ -26,16 +28,20 @@ interface SearchFiltersProps {
   filters: SearchFilterValues;
   onFilterChange: <K extends keyof SearchFilterValues>(key: K, value: SearchFilterValues[K]) => void;
   onClearFilters: () => void;
-  categories?: { id: string; name_ar: string; name_en: string }[];
+  categories?: { id: string; name_ar: string; name_en: string; parent_id?: string | null; slug?: string }[];
   cities?: { id: string; name_ar: string; name_en: string }[];
   hasActiveFilters: boolean;
   showFilters: boolean;
   onToggleFilters: () => void;
+  selectedTags?: string[];
+  onToggleTag?: (tagId: string) => void;
+  onClearTags?: () => void;
 }
 
 export const SearchFilters = ({
   filters, onFilterChange, onClearFilters, categories, cities,
   hasActiveFilters, showFilters, onToggleFilters,
+  selectedTags = [], onToggleTag, onClearTags,
 }: SearchFiltersProps) => {
   const { t, language } = useLanguage();
 
