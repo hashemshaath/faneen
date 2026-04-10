@@ -13,60 +13,29 @@ import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Switch } from '@/components/ui/switch';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   Languages, Sparkles, Wand2, Bot, Send, Copy, RotateCcw, ArrowLeftRight,
   Loader2, CheckCircle2, Zap, Brain, MessageSquare, FileText, Type,
-  Palette, Settings2, BookOpen, HelpCircle, Lightbulb,
+  Palette, Settings2, BookOpen, Lightbulb,
   Volume2, Shield, ChevronDown, ChevronUp, Star, Download, Trash2,
   Clock, Hash, BarChart3, ArrowRight, ArrowLeft,
   Upload, Globe, Plus, X, Database, GraduationCap, Eye, EyeOff,
-  Link, FilePlus, BookMarked, Sliders, Save, AlertCircle,
+  FilePlus, BookMarked, Sliders, Save, AlertCircle,
+  PenTool, Newspaper, Target, TrendingUp, Award, Puzzle, RefreshCw,
+  Search, ListChecks, Layers, Link2, Rocket, Briefcase, Users,
 } from 'lucide-react';
 
 /* ═══════════════════ Types ═══════════════════ */
 type ToneType = 'formal' | 'casual' | 'marketing' | 'academic' | 'creative' | 'technical';
 type AiModel = 'google/gemini-3-flash-preview' | 'google/gemini-2.5-flash' | 'google/gemini-2.5-pro' | 'openai/gpt-5-mini' | 'openai/gpt-5';
 
-interface ChatMessage {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: Date;
-}
-
-interface HistoryEntry {
-  id: string;
-  action: string;
-  input: string;
-  output: string;
-  timestamp: Date;
-  model: string;
-  tone: string;
-}
-
-interface KnowledgeEntry {
-  id: string;
-  title: string;
-  content: string;
-  source_type: string;
-  source_name: string | null;
-  tags: string[];
-  is_active: boolean;
-  char_count: number;
-  created_at: string;
-}
-
-interface AssistantSettings {
-  system_prompt: string;
-  response_style: string;
-  language_preference: string;
-  include_knowledge: boolean;
-  max_knowledge_entries: number;
-}
+interface ChatMessage { id: string; role: 'user' | 'assistant'; content: string; timestamp: Date; }
+interface HistoryEntry { id: string; action: string; input: string; output: string; timestamp: Date; model: string; tone: string; }
+interface KnowledgeEntry { id: string; title: string; content: string; source_type: string; source_name: string | null; tags: string[]; is_active: boolean; char_count: number; created_at: string; }
+interface AssistantSettings { system_prompt: string; response_style: string; language_preference: string; include_knowledge: boolean; max_knowledge_entries: number; }
 
 /* ═══════════════════ Constants ═══════════════════ */
 const TONES: { key: ToneType; ar: string; en: string; icon: React.ElementType; desc_ar: string; desc_en: string }[] = [
@@ -102,12 +71,36 @@ const TIER_COLORS: Record<string, string> = {
 };
 
 const DEFAULT_SETTINGS: AssistantSettings = {
-  system_prompt: '',
-  response_style: 'balanced',
-  language_preference: 'auto',
-  include_knowledge: true,
-  max_knowledge_entries: 5,
+  system_prompt: '', response_style: 'balanced', language_preference: 'auto',
+  include_knowledge: true, max_knowledge_entries: 5,
 };
+
+const BLOG_TOOLS = [
+  { key: 'blog_title', ar: 'عناوين مقالات', en: 'Blog Titles', icon: Newspaper, desc_ar: 'ولّد عناوين مقالات جذابة للمدونة', desc_en: 'Generate engaging blog post titles' },
+  { key: 'blog_outline', ar: 'هيكل مقال', en: 'Article Outline', icon: ListChecks, desc_ar: 'أنشئ هيكل مقال منظم', desc_en: 'Create organized article structure' },
+  { key: 'blog_intro', ar: 'مقدمة مقال', en: 'Article Intro', icon: PenTool, desc_ar: 'اكتب مقدمة جذابة للمقال', desc_en: 'Write compelling article intro' },
+  { key: 'seo_keywords', ar: 'كلمات مفتاحية SEO', en: 'SEO Keywords', icon: Search, desc_ar: 'استخرج كلمات مفتاحية لتحسين SEO', desc_en: 'Extract SEO keywords' },
+  { key: 'meta_description', ar: 'وصف ميتا', en: 'Meta Description', icon: Target, desc_ar: 'أنشئ وصف ميتا احترافي', desc_en: 'Generate professional meta description' },
+  { key: 'social_post', ar: 'منشور تسويقي', en: 'Social Post', icon: TrendingUp, desc_ar: 'حوّل المحتوى لمنشور تسويقي', desc_en: 'Convert content to social post' },
+];
+
+const TRAINING_PRESETS = [
+  { key: 'customer_service', ar: 'خدمة العملاء', en: 'Customer Service', icon: Users, prompt_ar: 'أنت مساعد خدمة عملاء محترف. أجب بلطف ووضوح، واحل مشاكل العملاء بكفاءة. استخدم لغة مهذبة ومحترمة.', prompt_en: 'You are a professional customer service assistant. Answer politely and clearly, solve problems efficiently.', desc_ar: 'تدريب على أسلوب خدمة العملاء المحترف', desc_en: 'Train for professional customer service style' },
+  { key: 'sales_expert', ar: 'خبير مبيعات', en: 'Sales Expert', icon: Briefcase, prompt_ar: 'أنت خبير مبيعات محترف. ساعد في كتابة عروض مقنعة وردود على استفسارات العملاء بأسلوب تسويقي جذاب.', prompt_en: 'You are a professional sales expert. Help write persuasive offers and respond to inquiries.', desc_ar: 'تدريب على أسلوب البيع الاحترافي', desc_en: 'Train for professional sales approach' },
+  { key: 'content_writer', ar: 'كاتب محتوى', en: 'Content Writer', icon: PenTool, prompt_ar: 'أنت كاتب محتوى محترف. اكتب محتوى جذاب ومحسّن لمحركات البحث. اهتم بالعناوين والتنسيق والكلمات المفتاحية.', prompt_en: 'You are a professional content writer. Write engaging SEO-optimized content.', desc_ar: 'تدريب على كتابة المحتوى الاحترافي', desc_en: 'Train for professional content writing' },
+  { key: 'technical_support', ar: 'دعم فني', en: 'Tech Support', icon: Settings2, prompt_ar: 'أنت فني دعم متخصص. اشرح الحلول التقنية بلغة بسيطة. قدم خطوات واضحة ومرقمة لحل المشاكل.', prompt_en: 'You are a technical support specialist. Explain solutions simply with clear steps.', desc_ar: 'تدريب على أسلوب الدعم الفني', desc_en: 'Train for technical support style' },
+  { key: 'project_manager', ar: 'مدير مشاريع', en: 'Project Manager', icon: Layers, prompt_ar: 'أنت مدير مشاريع خبير. ساعد في التخطيط وتنظيم المهام وكتابة تقارير المشاريع والعقود بأسلوب مهني.', prompt_en: 'You are an expert project manager. Help plan, organize, and write professional reports.', desc_ar: 'تدريب على إدارة المشاريع', desc_en: 'Train for project management' },
+  { key: 'marketing_guru', ar: 'خبير تسويق', en: 'Marketing Guru', icon: Rocket, prompt_ar: 'أنت خبير تسويق رقمي. ساعد في إنشاء حملات تسويقية وكتابة محتوى إعلاني جذاب ومقنع.', prompt_en: 'You are a digital marketing expert. Help create campaigns and write engaging ad copy.', desc_ar: 'تدريب على التسويق الرقمي', desc_en: 'Train for digital marketing' },
+];
+
+const SMART_SUGGESTIONS = [
+  { ar: 'حلل محتوى منافسيّ وقدم توصيات', en: 'Analyze competitor content and give recommendations', icon: Target },
+  { ar: 'اكتب خطة محتوى شهرية للمدونة', en: 'Write a monthly blog content plan', icon: Newspaper },
+  { ar: 'حسّن وصف خدماتي للظهور في البحث', en: 'Optimize my service descriptions for search', icon: Search },
+  { ar: 'اقترح عناوين مشاريع احترافية', en: 'Suggest professional project titles', icon: Award },
+  { ar: 'اكتب رسالة متابعة للعميل', en: 'Write a client follow-up message', icon: MessageSquare },
+  { ar: 'ساعدني بكتابة عرض سعر احترافي', en: 'Help me write a professional quote', icon: Briefcase },
+];
 
 /* ═══════════════════ Helpers ═══════════════════ */
 const uid = () => crypto.randomUUID?.() || Math.random().toString(36).slice(2);
@@ -128,9 +121,7 @@ async function callAiCenter(params: Record<string, any>): Promise<string> {
 /* ═══════════════════ Sub-components ═══════════════════ */
 const StatPill: React.FC<{ icon: React.ElementType; value: string | number; label: string }> = ({ icon: Icon, value, label }) => (
   <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-    <Icon className="w-3 h-3" />
-    <span className="font-medium tabular-nums tech-content">{value}</span>
-    <span>{label}</span>
+    <Icon className="w-3 h-3" /><span className="font-medium tabular-nums tech-content">{value}</span><span>{label}</span>
   </div>
 );
 
@@ -160,6 +151,13 @@ const DashboardAiCenter: React.FC = () => {
   const [toolLoading, setToolLoading] = useState<string | null>(null);
   const [lastToolUsed, setLastToolUsed] = useState<string | null>(null);
 
+  // Blog tools
+  const [blogInput, setBlogInput] = useState('');
+  const [blogResult, setBlogResult] = useState('');
+  const [blogLoading, setBlogLoading] = useState<string | null>(null);
+  const [lastBlogTool, setLastBlogTool] = useState<string | null>(null);
+  const [reverseTranslateLoading, setReverseTranslateLoading] = useState(false);
+
   // Chat
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState('');
@@ -168,7 +166,6 @@ const DashboardAiCenter: React.FC = () => {
 
   // Knowledge Base
   const [knowledgeEntries, setKnowledgeEntries] = useState<KnowledgeEntry[]>([]);
-  const [knowledgeLoading, setKnowledgeLoading] = useState(false);
   const [showAddKnowledge, setShowAddKnowledge] = useState(false);
   const [addSourceType, setAddSourceType] = useState<'text' | 'file' | 'url'>('text');
   const [addTitle, setAddTitle] = useState('');
@@ -181,25 +178,16 @@ const DashboardAiCenter: React.FC = () => {
   // Assistant Settings
   const [assistantSettings, setAssistantSettings] = useState<AssistantSettings>(DEFAULT_SETTINGS);
   const [settingsLoading, setSettingsLoading] = useState(false);
-  const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
 
   // Memos
   const activeTone = useMemo(() => TONES.find(tt => tt.key === selectedTone)!, [selectedTone]);
   const activeModel = useMemo(() => MODELS.find(m => m.key === selectedModel)!, [selectedModel]);
-
   const activeKnowledgeCount = useMemo(() => knowledgeEntries.filter(k => k.is_active).length, [knowledgeEntries]);
   const totalKnowledgeChars = useMemo(() => knowledgeEntries.filter(k => k.is_active).reduce((s, k) => s + k.char_count, 0), [knowledgeEntries]);
 
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chatMessages, chatLoading]);
+  useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [chatMessages, chatLoading]);
 
-  // Load knowledge & settings
-  useEffect(() => {
-    if (!user) return;
-    loadKnowledge();
-    loadSettings();
-  }, [user]);
+  useEffect(() => { if (!user) return; loadKnowledge(); loadSettings(); }, [user]);
 
   const loadKnowledge = async () => {
     const { data } = await supabase.from('ai_knowledge_entries').select('*').order('created_at', { ascending: false });
@@ -209,10 +197,8 @@ const DashboardAiCenter: React.FC = () => {
   const loadSettings = async () => {
     const { data } = await supabase.from('ai_assistant_settings').select('*').maybeSingle();
     if (data) setAssistantSettings({
-      system_prompt: data.system_prompt || '',
-      response_style: data.response_style || 'balanced',
-      language_preference: data.language_preference || 'auto',
-      include_knowledge: data.include_knowledge ?? true,
+      system_prompt: data.system_prompt || '', response_style: data.response_style || 'balanced',
+      language_preference: data.language_preference || 'auto', include_knowledge: data.include_knowledge ?? true,
       max_knowledge_entries: data.max_knowledge_entries ?? 5,
     });
   };
@@ -221,10 +207,7 @@ const DashboardAiCenter: React.FC = () => {
     if (!user) return;
     setSettingsLoading(true);
     try {
-      const { error } = await supabase.from('ai_assistant_settings').upsert({
-        user_id: user.id,
-        ...assistantSettings,
-      }, { onConflict: 'user_id' });
+      const { error } = await supabase.from('ai_assistant_settings').upsert({ user_id: user.id, ...assistantSettings }, { onConflict: 'user_id' });
       if (error) throw error;
       toast.success(t('تم حفظ الإعدادات', 'Settings saved'));
     } catch { toast.error(t('فشل الحفظ', 'Save failed')); }
@@ -232,63 +215,37 @@ const DashboardAiCenter: React.FC = () => {
   };
 
   const addHistory = useCallback((action: string, input: string, output: string) => {
-    setHistory(prev => [{
-      id: uid(), action, input: input.slice(0, 100), output: output.slice(0, 100),
-      timestamp: new Date(), model: selectedModel, tone: selectedTone,
-    }, ...prev].slice(0, 50));
+    setHistory(prev => [{ id: uid(), action, input: input.slice(0, 100), output: output.slice(0, 100), timestamp: new Date(), model: selectedModel, tone: selectedTone }, ...prev].slice(0, 50));
   }, [selectedModel, selectedTone]);
 
-  const copyText = useCallback((text: string) => {
-    navigator.clipboard.writeText(text);
-    toast.success(t('تم النسخ', 'Copied'));
-  }, [t]);
-
+  const copyText = useCallback((text: string) => { navigator.clipboard.writeText(text); toast.success(t('تم النسخ', 'Copied')); }, [t]);
   const exportText = useCallback((text: string, filename: string) => {
     const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = filename; a.click();
-    URL.revokeObjectURL(url);
-    toast.success(t('تم التصدير', 'Exported'));
+    const a = document.createElement('a'); a.href = url; a.download = filename; a.click();
+    URL.revokeObjectURL(url); toast.success(t('تم التصدير', 'Exported'));
   }, [t]);
 
   /* ─── Knowledge CRUD ─── */
   const handleAddKnowledge = async () => {
     if (!user || !addTitle.trim()) return;
     let content = addContent;
-
     if (addSourceType === 'url' && addUrl.trim()) {
       setAddLoading(true);
-      try {
-        content = await callAiCenter({
-          action: 'extract_from_url',
-          text: `Extract content from: ${addUrl}`,
-          model: selectedModel,
-        });
-      } catch { setAddLoading(false); return; }
+      try { content = await callAiCenter({ action: 'extract_from_url', text: `Extract content from: ${addUrl}`, model: selectedModel }); }
+      catch { setAddLoading(false); return; }
     }
-
-    if (!content.trim()) {
-      toast.error(t('المحتوى مطلوب', 'Content is required'));
-      return;
-    }
-
+    if (!content.trim()) { toast.error(t('المحتوى مطلوب', 'Content is required')); return; }
     setAddLoading(true);
     try {
       const { error } = await supabase.from('ai_knowledge_entries').insert({
-        user_id: user.id,
-        title: addTitle,
-        content,
-        source_type: addSourceType,
+        user_id: user.id, title: addTitle, content, source_type: addSourceType,
         source_name: addSourceType === 'url' ? addUrl : addSourceType === 'file' ? 'uploaded file' : null,
-        tags: addTags ? addTags.split(',').map(t => t.trim()).filter(Boolean) : [],
-        char_count: content.length,
+        tags: addTags ? addTags.split(',').map(t => t.trim()).filter(Boolean) : [], char_count: content.length,
       });
       if (error) throw error;
       toast.success(t('تمت الإضافة', 'Added successfully'));
-      setAddTitle(''); setAddContent(''); setAddUrl(''); setAddTags('');
-      setShowAddKnowledge(false);
-      loadKnowledge();
+      setAddTitle(''); setAddContent(''); setAddUrl(''); setAddTags(''); setShowAddKnowledge(false); loadKnowledge();
     } catch { toast.error(t('فشلت الإضافة', 'Failed to add')); }
     finally { setAddLoading(false); }
   };
@@ -307,20 +264,12 @@ const DashboardAiCenter: React.FC = () => {
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error(t('الحد الأقصى 2MB', 'Max 2MB'));
-      return;
-    }
+    if (file.size > 2 * 1024 * 1024) { toast.error(t('الحد الأقصى 2MB', 'Max 2MB')); return; }
     const reader = new FileReader();
-    reader.onload = (ev) => {
-      const text = ev.target?.result as string;
-      setAddContent(text);
-      if (!addTitle) setAddTitle(file.name.replace(/\.[^.]+$/, ''));
-    };
+    reader.onload = (ev) => { const text = ev.target?.result as string; setAddContent(text); if (!addTitle) setAddTitle(file.name.replace(/\.[^.]+$/, '')); };
     reader.readAsText(file);
   };
 
-  /* ─── Build knowledge context ─── */
   const getKnowledgeContext = useCallback(() => {
     if (!assistantSettings.include_knowledge) return '';
     const active = knowledgeEntries.filter(k => k.is_active).slice(0, assistantSettings.max_knowledge_entries);
@@ -333,61 +282,83 @@ const DashboardAiCenter: React.FC = () => {
     if (!transSource.trim()) return;
     setTransLoading(true);
     try {
-      const result = await callAiCenter({
-        action: 'translate', text: transSource,
-        sourceLang: transDir === 'ar2en' ? 'ar' : 'en',
-        targetLang: transDir === 'ar2en' ? 'en' : 'ar',
-        tone: selectedTone, model: selectedModel,
-      });
-      setTransResult(result);
-      addHistory('translate', transSource, result);
+      const result = await callAiCenter({ action: 'translate', text: transSource, sourceLang: transDir === 'ar2en' ? 'ar' : 'en', targetLang: transDir === 'ar2en' ? 'en' : 'ar', tone: selectedTone, model: selectedModel });
+      setTransResult(result); addHistory('translate', transSource, result);
     } catch {} finally { setTransLoading(false); }
   }, [transSource, transDir, selectedTone, selectedModel, addHistory]);
 
   const swapTranslation = useCallback(() => {
-    setTransDir(d => d === 'ar2en' ? 'en2ar' : 'ar2en');
-    setTransSource(transResult);
-    setTransResult(transSource);
+    setTransDir(d => d === 'ar2en' ? 'en2ar' : 'ar2en'); setTransSource(transResult); setTransResult(transSource);
   }, [transSource, transResult]);
 
   /* ─── Tools ─── */
   const handleTool = useCallback(async (toolKey: string) => {
     if (!toolInput.trim()) return;
-    setToolLoading(toolKey);
-    setLastToolUsed(toolKey);
+    setToolLoading(toolKey); setLastToolUsed(toolKey);
     try {
-      const result = await callAiCenter({
-        action: toolKey === 'improve' ? 'improve' : toolKey,
-        text: toolInput, tone: selectedTone, model: selectedModel,
-        responseStyle: assistantSettings.response_style,
-      });
-      setToolResult(result);
-      addHistory(toolKey, toolInput, result);
+      const result = await callAiCenter({ action: toolKey === 'improve' ? 'improve' : toolKey, text: toolInput, tone: selectedTone, model: selectedModel, responseStyle: assistantSettings.response_style });
+      setToolResult(result); addHistory(toolKey, toolInput, result);
     } catch {} finally { setToolLoading(null); }
   }, [toolInput, selectedTone, selectedModel, addHistory, assistantSettings.response_style]);
+
+  /* ─── Blog Tools ─── */
+  const handleBlogTool = useCallback(async (toolKey: string) => {
+    if (!blogInput.trim()) return;
+    setBlogLoading(toolKey); setLastBlogTool(toolKey);
+    const prompts: Record<string, string> = {
+      blog_title: `Generate 5 compelling, SEO-optimized blog post titles for this topic/content. Return titles numbered 1-5, each on its own line. No markdown. Topic:\n${blogInput}`,
+      blog_outline: `Create a detailed article outline/structure with main headings and sub-headings for this topic. Use clear hierarchy with numbers and letters. Topic:\n${blogInput}`,
+      blog_intro: `Write a compelling, engaging introduction paragraph (150-200 words) for a blog post about this topic. Make it hook the reader. Topic:\n${blogInput}`,
+      seo_keywords: `Extract 10-15 SEO keywords and key phrases from this content. Return them as a comma-separated list. Content:\n${blogInput}`,
+      meta_description: `Write a professional SEO meta description (150-160 characters) for this content. Make it compelling and include a call-to-action. Content:\n${blogInput}`,
+      social_post: `Convert this content into an engaging social media post (280 characters max for Twitter, then a longer version for Instagram/LinkedIn). Include relevant hashtags. Content:\n${blogInput}`,
+    };
+    try {
+      const result = await callAiCenter({ action: 'chat', text: prompts[toolKey] || blogInput, tone: selectedTone, model: selectedModel, responseStyle: assistantSettings.response_style });
+      setBlogResult(result); addHistory(`blog:${toolKey}`, blogInput, result);
+    } catch {} finally { setBlogLoading(null); }
+  }, [blogInput, selectedTone, selectedModel, addHistory, assistantSettings.response_style]);
+
+  const handleReverseTranslate = useCallback(async () => {
+    if (!blogResult.trim()) return;
+    setReverseTranslateLoading(true);
+    try {
+      const detectLang = /[\u0600-\u06FF]/.test(blogResult) ? 'ar' : 'en';
+      const result = await callAiCenter({
+        action: 'translate', text: blogResult,
+        sourceLang: detectLang, targetLang: detectLang === 'ar' ? 'en' : 'ar',
+        tone: selectedTone, model: selectedModel,
+      });
+      setBlogResult(prev => prev + '\n\n---\n\n' + result);
+      addHistory('reverse_translate', blogResult.slice(0, 100), result);
+      toast.success(t('تمت الترجمة العكسية', 'Reverse translated'));
+    } catch {} finally { setReverseTranslateLoading(false); }
+  }, [blogResult, selectedTone, selectedModel, addHistory, t]);
 
   /* ─── Chat ─── */
   const handleChat = useCallback(async () => {
     if (!chatInput.trim()) return;
     const userMsg: ChatMessage = { id: uid(), role: 'user', content: chatInput, timestamp: new Date() };
-    setChatMessages(prev => [...prev, userMsg]);
-    setChatInput('');
-    setChatLoading(true);
+    setChatMessages(prev => [...prev, userMsg]); setChatInput(''); setChatLoading(true);
     try {
       const knowledgeCtx = getKnowledgeContext();
       const result = await callAiCenter({
-        action: 'chat', text: chatInput, model: selectedModel,
-        tone: selectedTone,
+        action: 'chat', text: chatInput, model: selectedModel, tone: selectedTone,
         context: chatMessages.slice(-10).map(m => `${m.role}: ${m.content}`).join('\n'),
         knowledgeContext: knowledgeCtx || undefined,
-        systemPromptOverride: assistantSettings.system_prompt || undefined,
-        responseStyle: assistantSettings.response_style,
+        systemPromptOverride: assistantSettings.system_prompt || undefined, responseStyle: assistantSettings.response_style,
       });
       setChatMessages(prev => [...prev, { id: uid(), role: 'assistant', content: result, timestamp: new Date() }]);
     } catch {
       setChatMessages(prev => [...prev, { id: uid(), role: 'assistant', content: t('حدث خطأ، حاول مرة أخرى.', 'An error occurred.'), timestamp: new Date() }]);
     } finally { setChatLoading(false); }
   }, [chatInput, selectedModel, selectedTone, chatMessages, t, getKnowledgeContext, assistantSettings]);
+
+  /* ─── Apply Training Preset ─── */
+  const applyPreset = useCallback((preset: typeof TRAINING_PRESETS[0]) => {
+    setAssistantSettings(s => ({ ...s, system_prompt: isRTL ? preset.prompt_ar : preset.prompt_en }));
+    toast.success(t(`تم تطبيق "${preset.ar}"`, `Applied "${preset.en}"`));
+  }, [isRTL, t]);
 
   /* ═══════════════════ Render ═══════════════════ */
   const ArrowIcon = isRTL ? ArrowLeft : ArrowRight;
@@ -408,28 +379,23 @@ const DashboardAiCenter: React.FC = () => {
             </div>
             <div>
               <h1 className="text-xl font-bold text-foreground">{t('مركز الذكاء الاصطناعي', 'AI Center')}</h1>
-              <p className="text-xs text-muted-foreground mt-0.5">{t('أدوات ذكية مع قاعدة معرفة وإعدادات متقدمة', 'Smart tools with knowledge base & advanced settings')}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{t('أدوات ذكية متكاملة مع المدونة والمحتوى والتدريب الاحترافي', 'Smart tools integrated with blog, content & professional training')}</p>
             </div>
           </div>
-
           <div className="flex items-center gap-2 flex-wrap">
             <Badge variant="secondary" className="text-[10px] gap-1 rounded-lg h-7 px-2.5">
-              <Zap className="w-3 h-3" />
-              <span className="tech-content">{activeModel.label}</span>
+              <Zap className="w-3 h-3" /><span className="tech-content">{activeModel.label}</span>
             </Badge>
             <Badge variant="secondary" className="text-[10px] gap-1 rounded-lg h-7 px-2.5">
-              <activeTone.icon className="w-3 h-3" />
-              {t(activeTone.ar, activeTone.en)}
+              <activeTone.icon className="w-3 h-3" />{t(activeTone.ar, activeTone.en)}
             </Badge>
             {activeKnowledgeCount > 0 && (
               <Badge variant="outline" className="text-[10px] gap-1 rounded-lg h-7 px-2.5 border-emerald-500/50 text-emerald-600">
-                <Database className="w-3 h-3" />
-                {activeKnowledgeCount} {t('مصادر', 'sources')}
+                <Database className="w-3 h-3" />{activeKnowledgeCount} {t('مصادر', 'sources')}
               </Badge>
             )}
             <Button variant="outline" size="sm" className="h-7 text-[11px] gap-1 rounded-lg" onClick={() => setShowSettings(s => !s)}>
-              <Settings2 className="w-3.5 h-3.5" />
-              {t('ضبط', 'Config')}
+              <Settings2 className="w-3.5 h-3.5" />{t('ضبط', 'Config')}
               {showSettings ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
             </Button>
           </div>
@@ -440,18 +406,12 @@ const DashboardAiCenter: React.FC = () => {
           <Card className="border-primary/20 bg-card/80 backdrop-blur-sm rounded-2xl animate-in slide-in-from-top-2 duration-200">
             <CardContent className="p-4 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {/* Model */}
                 <div className="space-y-2.5">
-                  <Label className="text-xs font-semibold flex items-center gap-1.5">
-                    <Zap className="w-3.5 h-3.5 text-primary" />
-                    {t('النموذج', 'Model')}
-                  </Label>
+                  <Label className="text-xs font-semibold flex items-center gap-1.5"><Zap className="w-3.5 h-3.5 text-primary" />{t('النموذج', 'Model')}</Label>
                   <div className="space-y-1.5">
                     {MODELS.map(m => (
                       <button key={m.key} onClick={() => setSelectedModel(m.key)}
-                        className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-start transition-all border ${
-                          selectedModel === m.key ? 'bg-primary/8 border-primary/30 shadow-sm ring-1 ring-primary/10' : 'bg-card border-border/40 hover:border-primary/20'
-                        }`}>
+                        className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-start transition-all border ${selectedModel === m.key ? 'bg-primary/8 border-primary/30 shadow-sm ring-1 ring-primary/10' : 'bg-card border-border/40 hover:border-primary/20'}`}>
                         <Badge variant="outline" className={`text-[9px] px-1.5 py-0 shrink-0 ${TIER_COLORS[m.tier]}`}>{m.tier}</Badge>
                         <div className="min-w-0">
                           <span className="text-xs font-medium tech-content">{m.label}</span>
@@ -462,19 +422,12 @@ const DashboardAiCenter: React.FC = () => {
                     ))}
                   </div>
                 </div>
-
-                {/* Tone */}
                 <div className="space-y-2.5">
-                  <Label className="text-xs font-semibold flex items-center gap-1.5">
-                    <Volume2 className="w-3.5 h-3.5 text-primary" />
-                    {t('اللهجة / الأسلوب', 'Tone / Style')}
-                  </Label>
+                  <Label className="text-xs font-semibold flex items-center gap-1.5"><Volume2 className="w-3.5 h-3.5 text-primary" />{t('اللهجة / الأسلوب', 'Tone / Style')}</Label>
                   <div className="grid grid-cols-2 gap-1.5">
                     {TONES.map(tt => (
                       <button key={tt.key} onClick={() => setSelectedTone(tt.key)}
-                        className={`flex flex-col items-start gap-0.5 px-3 py-2.5 rounded-xl text-start transition-all border ${
-                          selectedTone === tt.key ? 'bg-primary/8 border-primary/30 shadow-sm ring-1 ring-primary/10' : 'bg-card border-border/40 hover:border-primary/20'
-                        }`}>
+                        className={`flex flex-col items-start gap-0.5 px-3 py-2.5 rounded-xl text-start transition-all border ${selectedTone === tt.key ? 'bg-primary/8 border-primary/30 shadow-sm ring-1 ring-primary/10' : 'bg-card border-border/40 hover:border-primary/20'}`}>
                         <div className="flex items-center gap-1.5 w-full">
                           <tt.icon className="w-3.5 h-3.5 shrink-0" />
                           <span className="text-[11px] font-medium">{t(tt.ar, tt.en)}</span>
@@ -492,30 +445,32 @@ const DashboardAiCenter: React.FC = () => {
 
         {/* ═══ Main Tabs ═══ */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-3">
-          <TabsList className="bg-muted/50 rounded-xl h-10 p-1 w-full sm:w-auto flex-wrap">
+          <TabsList className="bg-muted/50 rounded-xl h-auto p-1 w-full flex flex-wrap gap-0.5">
             <TabsTrigger value="translate" className="rounded-lg text-xs gap-1.5 data-[state=active]:shadow-sm">
               <Languages className="w-3.5 h-3.5" />{t('الترجمة', 'Translate')}
             </TabsTrigger>
             <TabsTrigger value="tools" className="rounded-lg text-xs gap-1.5 data-[state=active]:shadow-sm">
               <Wand2 className="w-3.5 h-3.5" />{t('أدوات النصوص', 'Text Tools')}
             </TabsTrigger>
+            <TabsTrigger value="blog" className="rounded-lg text-xs gap-1.5 data-[state=active]:shadow-sm">
+              <Newspaper className="w-3.5 h-3.5" />{t('المدونة والمحتوى', 'Blog & Content')}
+            </TabsTrigger>
             <TabsTrigger value="assistant" className="rounded-lg text-xs gap-1.5 data-[state=active]:shadow-sm">
               <Bot className="w-3.5 h-3.5" />{t('المساعد', 'Assistant')}
             </TabsTrigger>
+            <TabsTrigger value="training" className="rounded-lg text-xs gap-1.5 data-[state=active]:shadow-sm">
+              <GraduationCap className="w-3.5 h-3.5" />{t('التدريب', 'Training')}
+            </TabsTrigger>
             <TabsTrigger value="knowledge" className="rounded-lg text-xs gap-1.5 data-[state=active]:shadow-sm">
-              <GraduationCap className="w-3.5 h-3.5" />{t('قاعدة المعرفة', 'Knowledge')}
-              {activeKnowledgeCount > 0 && (
-                <span className="text-[9px] bg-emerald-500/15 text-emerald-600 px-1 rounded-full tech-content">{activeKnowledgeCount}</span>
-              )}
+              <Database className="w-3.5 h-3.5" />{t('المعرفة', 'Knowledge')}
+              {activeKnowledgeCount > 0 && <span className="text-[9px] bg-emerald-500/15 text-emerald-600 px-1 rounded-full tech-content">{activeKnowledgeCount}</span>}
             </TabsTrigger>
             <TabsTrigger value="advanced" className="rounded-lg text-xs gap-1.5 data-[state=active]:shadow-sm">
-              <Sliders className="w-3.5 h-3.5" />{t('إعدادات متقدمة', 'Advanced')}
+              <Sliders className="w-3.5 h-3.5" />{t('متقدم', 'Advanced')}
             </TabsTrigger>
             <TabsTrigger value="history" className="rounded-lg text-xs gap-1.5 data-[state=active]:shadow-sm">
               <Clock className="w-3.5 h-3.5" />{t('السجل', 'History')}
-              {history.length > 0 && (
-                <span className="text-[9px] bg-primary/15 text-primary px-1 rounded-full tech-content">{history.length}</span>
-              )}
+              {history.length > 0 && <span className="text-[9px] bg-primary/15 text-primary px-1 rounded-full tech-content">{history.length}</span>}
             </TabsTrigger>
           </TabsList>
 
@@ -661,6 +616,127 @@ const DashboardAiCenter: React.FC = () => {
             </Card>
           </TabsContent>
 
+          {/* ═══════ Blog & Content ═══════ */}
+          <TabsContent value="blog" className="mt-0 space-y-3">
+            <Card className="rounded-2xl border-border/50 overflow-hidden">
+              <div className="p-3 bg-gradient-to-r from-primary/5 via-accent/5 to-primary/5 border-b border-border/40">
+                <div className="flex items-center gap-2 mb-2.5">
+                  <Newspaper className="w-4 h-4 text-primary" />
+                  <span className="text-xs font-bold text-primary">{t('أدوات المدونة والمحتوى', 'Blog & Content Tools')}</span>
+                </div>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {BLOG_TOOLS.map(tool => (
+                    <Tooltip key={tool.key}><TooltipTrigger asChild>
+                      <Button variant={lastBlogTool === tool.key ? 'default' : 'outline'} size="sm"
+                        className={`h-8 text-[11px] gap-1.5 rounded-xl ${lastBlogTool !== tool.key ? 'hover:bg-primary/5 hover:border-primary/30' : ''}`}
+                        onClick={() => handleBlogTool(tool.key)} disabled={!!blogLoading || !blogInput.trim()}>
+                        {blogLoading === tool.key ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <tool.icon className="w-3.5 h-3.5" />}
+                        {t(tool.ar, tool.en)}
+                      </Button>
+                    </TooltipTrigger><TooltipContent side="bottom" className="text-[10px]">{t(tool.desc_ar, tool.desc_en)}</TooltipContent></Tooltip>
+                  ))}
+                </div>
+              </div>
+              <CardContent className="p-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs text-muted-foreground">{t('الموضوع أو المحتوى', 'Topic or Content')}</Label>
+                      <div className="flex items-center gap-3">
+                        <StatPill icon={BarChart3} value={wordCount(blogInput)} label={t('كلمة', 'words')} />
+                        <StatPill icon={Hash} value={blogInput.length} label={t('حرف', 'chars')} />
+                      </div>
+                    </div>
+                    <Textarea value={blogInput} onChange={e => setBlogInput(e.target.value)}
+                      placeholder={t('أدخل موضوع المقال أو المحتوى المراد معالجته...', 'Enter article topic or content to process...')}
+                      className="min-h-[240px] rounded-xl resize-none text-sm leading-relaxed" dir="auto" />
+                    <div className="flex items-center gap-1.5">
+                      {blogInput && <Button variant="ghost" size="sm" className="h-6 text-[10px] text-muted-foreground" onClick={() => setBlogInput('')}>
+                        <Trash2 className="w-2.5 h-2.5 me-1" />{t('مسح', 'Clear')}
+                      </Button>}
+                      {toolResult && (
+                        <Button variant="ghost" size="sm" className="h-6 text-[10px] text-muted-foreground" onClick={() => setBlogInput(toolResult)}>
+                          <Link2 className="w-2.5 h-2.5 me-1" />{t('استيراد من أدوات النصوص', 'Import from Text Tools')}
+                        </Button>
+                      )}
+                      {transResult && (
+                        <Button variant="ghost" size="sm" className="h-6 text-[10px] text-muted-foreground" onClick={() => setBlogInput(transResult)}>
+                          <Link2 className="w-2.5 h-2.5 me-1" />{t('استيراد من الترجمة', 'Import from Translation')}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Label className="text-xs text-muted-foreground">{t('النتيجة', 'Result')}</Label>
+                        {lastBlogTool && <Badge variant="outline" className="text-[9px] px-1.5 py-0 rounded-md">
+                          {t(BLOG_TOOLS.find(b => b.key === lastBlogTool)?.ar || '', BLOG_TOOLS.find(b => b.key === lastBlogTool)?.en || '')}
+                        </Badge>}
+                      </div>
+                      {blogResult && <StatPill icon={BarChart3} value={wordCount(blogResult)} label={t('كلمة', 'words')} />}
+                    </div>
+                    <div className="relative">
+                      <Textarea value={blogResult} onChange={e => setBlogResult(e.target.value)}
+                        placeholder={t('ستظهر النتيجة هنا...', 'Result will appear here...')}
+                        className="min-h-[240px] rounded-xl resize-none text-sm leading-relaxed" dir="auto" />
+                      {blogResult && (
+                        <div className={`absolute top-2 ${isRTL ? 'left-2' : 'right-2'} flex gap-1`}>
+                          <Tooltip><TooltipTrigger asChild>
+                            <Button variant="secondary" size="sm" className="h-7 w-7 rounded-lg" onClick={() => copyText(blogResult)}><Copy className="w-3 h-3" /></Button>
+                          </TooltipTrigger><TooltipContent>{t('نسخ', 'Copy')}</TooltipContent></Tooltip>
+                          <Tooltip><TooltipTrigger asChild>
+                            <Button variant="secondary" size="sm" className="h-7 w-7 rounded-lg" onClick={() => exportText(blogResult, 'blog-content.txt')}><Download className="w-3 h-3" /></Button>
+                          </TooltipTrigger><TooltipContent>{t('تصدير', 'Export')}</TooltipContent></Tooltip>
+                        </div>
+                      )}
+                    </div>
+                    {/* Reverse Translate & Improve Actions */}
+                    {blogResult && (
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1.5 rounded-xl hover:bg-primary/5" onClick={handleReverseTranslate} disabled={reverseTranslateLoading}>
+                          {reverseTranslateLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+                          {t('ترجمة عكسية', 'Reverse Translate')}
+                        </Button>
+                        <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1.5 rounded-xl hover:bg-primary/5"
+                          onClick={() => { setBlogInput(blogResult); setBlogResult(''); }}>
+                          <RotateCcw className="w-3 h-3" />{t('استخدم كمدخل', 'Use as input')}
+                        </Button>
+                        <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1.5 rounded-xl hover:bg-primary/5"
+                          onClick={() => { setToolInput(blogResult); setActiveTab('tools'); }}>
+                          <Wand2 className="w-3 h-3" />{t('تحسين في أدوات النصوص', 'Improve in Text Tools')}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Smart Recommendations */}
+            <Card className="rounded-2xl border-border/50">
+              <CardHeader className="p-3 border-b border-border/40">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Lightbulb className="w-4 h-4 text-amber-500" />
+                  {t('توصيات ذكية', 'Smart Recommendations')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                  {SMART_SUGGESTIONS.map((s, i) => (
+                    <button key={i} onClick={() => { setChatInput(t(s.ar, s.en)); setActiveTab('assistant'); }}
+                      className="flex items-center gap-2.5 p-3 rounded-xl bg-card border border-border/40 hover:border-primary/30 hover:bg-primary/5 transition-all text-start group">
+                      <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center shrink-0 group-hover:bg-primary/10 transition-colors">
+                        <s.icon className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                      </div>
+                      <span className="text-[11px] text-muted-foreground group-hover:text-foreground transition-colors leading-snug">{t(s.ar, s.en)}</span>
+                    </button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           {/* ═══════ Smart Assistant ═══════ */}
           <TabsContent value="assistant" className="mt-0">
             <Card className="rounded-2xl border-border/50 overflow-hidden flex flex-col" style={{ height: 520 }}>
@@ -705,15 +781,10 @@ const DashboardAiCenter: React.FC = () => {
                       </p>
                     </div>
                     <div className="flex flex-wrap gap-1.5 justify-center max-w-md">
-                      {[
-                        { ar: 'اكتب وصفاً لمنشأتي', en: 'Write a business description' },
-                        { ar: 'اقترح محتوى تسويقي', en: 'Suggest marketing content' },
-                        { ar: 'ساعدني بكتابة عرض', en: 'Help me write a proposal' },
-                        { ar: 'كيف أحسن ملفي الشخصي', en: 'How to improve my profile' },
-                      ].map(s => (
-                        <button key={s.en} onClick={() => setChatInput(t(s.ar, s.en))}
-                          className="px-3 py-1.5 rounded-xl bg-card border border-border/50 text-[11px] text-muted-foreground hover:bg-primary/5 hover:border-primary/30 transition-colors">
-                          {t(s.ar, s.en)}
+                      {SMART_SUGGESTIONS.slice(0, 4).map((s, i) => (
+                        <button key={i} onClick={() => setChatInput(t(s.ar, s.en))}
+                          className="px-3 py-1.5 rounded-xl bg-card border border-border/50 text-[11px] text-muted-foreground hover:bg-primary/5 hover:border-primary/30 transition-colors flex items-center gap-1.5">
+                          <s.icon className="w-3 h-3" />{t(s.ar, s.en)}
                         </button>
                       ))}
                     </div>
@@ -733,8 +804,7 @@ const DashboardAiCenter: React.FC = () => {
                           {msg.timestamp.toLocaleTimeString(isRTL ? 'ar-SA' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
                         </span>
                         {msg.role === 'assistant' && (
-                          <Button variant="ghost" size="sm" className="h-5 w-5 rounded opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={() => copyText(msg.content)}>
+                          <Button variant="ghost" size="sm" className="h-5 w-5 rounded opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => copyText(msg.content)}>
                             <Copy className="w-2.5 h-2.5" />
                           </Button>
                         )}
@@ -776,9 +846,94 @@ const DashboardAiCenter: React.FC = () => {
             </Card>
           </TabsContent>
 
+          {/* ═══════ Training Presets ═══════ */}
+          <TabsContent value="training" className="mt-0 space-y-3">
+            <Card className="rounded-2xl border-border/50">
+              <CardHeader className="p-3 border-b border-border/40">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <GraduationCap className="w-4 h-4 text-primary" />
+                  {t('قوالب التدريب الاحترافي', 'Professional Training Presets')}
+                </CardTitle>
+                <p className="text-[10px] text-muted-foreground mt-1">{t('اختر قالباً جاهزاً لتدريب المساعد الذكي على أسلوب محدد', 'Choose a preset to train the AI assistant on a specific style')}</p>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {TRAINING_PRESETS.map(preset => {
+                    const isActive = assistantSettings.system_prompt === (isRTL ? preset.prompt_ar : preset.prompt_en);
+                    return (
+                      <div key={preset.key} className={`relative p-4 rounded-xl border transition-all cursor-pointer group ${isActive ? 'bg-primary/8 border-primary/30 ring-1 ring-primary/10' : 'bg-card border-border/40 hover:border-primary/20 hover:shadow-sm'}`}
+                        onClick={() => applyPreset(preset)}>
+                        {isActive && (
+                          <div className={`absolute top-2 ${isRTL ? 'left-2' : 'right-2'}`}>
+                            <CheckCircle2 className="w-4 h-4 text-primary" />
+                          </div>
+                        )}
+                        <div className="flex items-center gap-2.5 mb-2">
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors ${isActive ? 'bg-primary/15' : 'bg-muted/50 group-hover:bg-primary/10'}`}>
+                            <preset.icon className={`w-5 h-5 ${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-primary'} transition-colors`} />
+                          </div>
+                          <div>
+                            <h4 className="text-xs font-semibold text-foreground">{t(preset.ar, preset.en)}</h4>
+                            <p className="text-[10px] text-muted-foreground">{t(preset.desc_ar, preset.desc_en)}</p>
+                          </div>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground/70 leading-relaxed line-clamp-2" dir="auto">
+                          {isRTL ? preset.prompt_ar : preset.prompt_en}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Custom Training */}
+            <Card className="rounded-2xl border-border/50">
+              <CardHeader className="p-3 border-b border-border/40">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Puzzle className="w-4 h-4 text-primary" />
+                  {t('تدريب مخصص', 'Custom Training')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 space-y-3">
+                <p className="text-[11px] text-muted-foreground">{t('أنشئ تدريباً مخصصاً لمجال عملك الخاص', 'Create custom training for your specific field')}</p>
+                <Textarea value={assistantSettings.system_prompt}
+                  onChange={e => setAssistantSettings(s => ({ ...s, system_prompt: e.target.value }))}
+                  placeholder={t('اكتب توجيهات مخصصة للمساعد: مجال التخصص، أسلوب الرد، القيود...', 'Write custom instructions: specialization, response style, constraints...')}
+                  className="min-h-[120px] rounded-xl resize-none text-sm" dir="auto" />
+                <div className="flex items-center gap-2 justify-between">
+                  <div className="flex items-center gap-2">
+                    <StatPill icon={Hash} value={assistantSettings.system_prompt.length} label={t('حرف', 'chars')} />
+                  </div>
+                  <Button onClick={saveSettings} disabled={settingsLoading} size="sm" className="rounded-xl gap-1.5">
+                    {settingsLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                    {t('حفظ التدريب', 'Save Training')}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Tips */}
+            <Card className="rounded-2xl border-border/30 bg-muted/15">
+              <CardContent className="p-3">
+                <div className="flex items-start gap-2.5">
+                  <Award className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
+                  <div className="space-y-1">
+                    <p className="text-[11px] font-medium text-foreground">{t('نصائح للتدريب الاحترافي', 'Professional Training Tips')}</p>
+                    <ul className="text-[10px] text-muted-foreground space-y-0.5 list-disc list-inside" dir="auto">
+                      <li>{t('كن محدداً في مجال التخصص - مثلاً "أنت خبير في تكييف سبليت"', 'Be specific about specialization')}</li>
+                      <li>{t('حدد أسلوب الرد المطلوب - رسمي، ودي، مباشر', 'Define response style - formal, friendly, direct')}</li>
+                      <li>{t('أضف قيوداً واضحة - مثلاً "لا تتحدث عن أسعار المنافسين"', 'Add clear constraints about what to avoid')}</li>
+                      <li>{t('أضف مصادر معرفة في تبويب المعرفة لتعزيز دقة الإجابات', 'Add knowledge sources to improve answer accuracy')}</li>
+                    </ul>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           {/* ═══════ Knowledge Base ═══════ */}
           <TabsContent value="knowledge" className="mt-0 space-y-3">
-            {/* Stats */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
                 { icon: Database, value: knowledgeEntries.length, label: t('إجمالي المصادر', 'Total Sources'), color: 'text-blue-600' },
@@ -788,7 +943,7 @@ const DashboardAiCenter: React.FC = () => {
               ].map((s, i) => (
                 <Card key={i} className="rounded-xl border-border/40">
                   <CardContent className="p-3 flex items-center gap-2.5">
-                    <div className={`w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center shrink-0`}>
+                    <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center shrink-0">
                       <s.icon className={`w-4 h-4 ${s.color}`} />
                     </div>
                     <div className="min-w-0">
@@ -800,22 +955,18 @@ const DashboardAiCenter: React.FC = () => {
               ))}
             </div>
 
-            {/* Add Knowledge Card */}
             <Card className="rounded-2xl border-border/50">
               <CardHeader className="p-3 border-b border-border/40 flex flex-row items-center justify-between">
                 <CardTitle className="text-sm flex items-center gap-2">
-                  <BookMarked className="w-4 h-4 text-primary" />
-                  {t('مصادر المعرفة', 'Knowledge Sources')}
+                  <BookMarked className="w-4 h-4 text-primary" />{t('مصادر المعرفة', 'Knowledge Sources')}
                 </CardTitle>
                 <Button size="sm" className="h-8 text-[11px] gap-1.5 rounded-xl" onClick={() => setShowAddKnowledge(true)}>
                   <Plus className="w-3.5 h-3.5" />{t('إضافة مصدر', 'Add Source')}
                 </Button>
               </CardHeader>
 
-              {/* Add Form */}
               {showAddKnowledge && (
                 <div className="p-4 bg-muted/20 border-b border-border/30 space-y-3 animate-in slide-in-from-top-2 duration-200">
-                  {/* Source Type Selector */}
                   <div className="flex gap-2">
                     {([
                       { key: 'text' as const, icon: FileText, ar: 'نص مباشر', en: 'Direct Text' },
@@ -823,25 +974,18 @@ const DashboardAiCenter: React.FC = () => {
                       { key: 'url' as const, icon: Globe, ar: 'رابط موقع', en: 'Website URL' },
                     ]).map(st => (
                       <button key={st.key} onClick={() => setAddSourceType(st.key)}
-                        className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs border transition-all ${
-                          addSourceType === st.key ? 'bg-primary/10 border-primary/30 text-primary font-medium' : 'bg-card border-border/40 hover:border-primary/20'
-                        }`}>
+                        className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs border transition-all ${addSourceType === st.key ? 'bg-primary/10 border-primary/30 text-primary font-medium' : 'bg-card border-border/40 hover:border-primary/20'}`}>
                         <st.icon className="w-3.5 h-3.5" />{t(st.ar, st.en)}
                       </button>
                     ))}
                   </div>
-
-                  <Input value={addTitle} onChange={e => setAddTitle(e.target.value)}
-                    placeholder={t('عنوان المصدر...', 'Source title...')} className="rounded-xl text-sm" dir="auto" />
-
+                  <Input value={addTitle} onChange={e => setAddTitle(e.target.value)} placeholder={t('عنوان المصدر...', 'Source title...')} className="rounded-xl text-sm" dir="auto" />
                   {addSourceType === 'url' ? (
-                    <Input value={addUrl} onChange={e => setAddUrl(e.target.value)}
-                      placeholder="https://example.com" className="rounded-xl text-sm" dir="ltr" />
+                    <Input value={addUrl} onChange={e => setAddUrl(e.target.value)} placeholder="https://example.com" className="rounded-xl text-sm" dir="ltr" />
                   ) : addSourceType === 'file' ? (
                     <div className="space-y-2">
                       <input ref={fileInputRef} type="file" accept=".txt,.md,.csv,.json,.xml" onChange={handleFileUpload} className="hidden" />
-                      <Button variant="outline" className="w-full rounded-xl h-20 border-dashed gap-2 flex-col"
-                        onClick={() => fileInputRef.current?.click()}>
+                      <Button variant="outline" className="w-full rounded-xl h-20 border-dashed gap-2 flex-col" onClick={() => fileInputRef.current?.click()}>
                         <Upload className="w-5 h-5 text-muted-foreground" />
                         <span className="text-xs text-muted-foreground">{t('اختر ملف (.txt, .md, .csv, .json)', 'Choose file (.txt, .md, .csv, .json)')}</span>
                       </Button>
@@ -849,14 +993,11 @@ const DashboardAiCenter: React.FC = () => {
                     </div>
                   ) : (
                     <Textarea value={addContent} onChange={e => setAddContent(e.target.value)}
-                      placeholder={t('ألصق المحتوى هنا... (معلومات عن المنشأة، خدمات، أسئلة شائعة، إلخ)', 'Paste content here... (business info, services, FAQ, etc.)')}
+                      placeholder={t('ألصق المحتوى هنا... (معلومات عن المنشأة، خدمات، أسئلة شائعة، إلخ)', 'Paste content here...')}
                       className="min-h-[120px] rounded-xl resize-none text-sm" dir="auto" />
                   )}
-
                   <Input value={addTags} onChange={e => setAddTags(e.target.value)}
-                    placeholder={t('وسوم (اختياري، مفصولة بفاصلة): خدمات, أسعار, ...', 'Tags (optional, comma-separated): services, prices, ...')}
-                    className="rounded-xl text-sm" dir="auto" />
-
+                    placeholder={t('وسوم (اختياري): خدمات, أسعار, ...', 'Tags (optional): services, prices, ...')} className="rounded-xl text-sm" dir="auto" />
                   <div className="flex items-center gap-2 justify-end">
                     <Button variant="ghost" size="sm" className="rounded-xl text-[11px]" onClick={() => { setShowAddKnowledge(false); setAddTitle(''); setAddContent(''); setAddUrl(''); setAddTags(''); }}>
                       {t('إلغاء', 'Cancel')}
@@ -870,16 +1011,13 @@ const DashboardAiCenter: React.FC = () => {
                 </div>
               )}
 
-              {/* Entries List */}
               <CardContent className="p-0">
                 {knowledgeEntries.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground">
                     <GraduationCap className="w-12 h-12 opacity-20" />
                     <div className="text-center space-y-1">
                       <p className="text-sm font-medium">{t('لا توجد مصادر معرفة بعد', 'No knowledge sources yet')}</p>
-                      <p className="text-[11px] text-muted-foreground/70 max-w-sm">
-                        {t('أضف محتوى من نصوص أو ملفات أو مواقع لتغذية المساعد الذكي بمعلومات عن أعمالك', 'Add content from text, files, or websites to feed the AI assistant with your business info')}
-                      </p>
+                      <p className="text-[11px] text-muted-foreground/70 max-w-sm">{t('أضف محتوى لتغذية المساعد الذكي بمعلومات عن أعمالك', 'Add content to feed the AI assistant with your business info')}</p>
                     </div>
                   </div>
                 ) : (
@@ -914,8 +1052,7 @@ const DashboardAiCenter: React.FC = () => {
                                 </Button>
                               </TooltipTrigger><TooltipContent>{entry.is_active ? t('إيقاف', 'Disable') : t('تفعيل', 'Enable')}</TooltipContent></Tooltip>
                               <Tooltip><TooltipTrigger asChild>
-                                <Button variant="ghost" size="sm" className="h-7 w-7 rounded-lg text-destructive hover:text-destructive"
-                                  onClick={() => deleteKnowledge(entry.id)}>
+                                <Button variant="ghost" size="sm" className="h-7 w-7 rounded-lg text-destructive hover:text-destructive" onClick={() => deleteKnowledge(entry.id)}>
                                   <Trash2 className="w-3.5 h-3.5" />
                                 </Button>
                               </TooltipTrigger><TooltipContent>{t('حذف', 'Delete')}</TooltipContent></Tooltip>
@@ -935,29 +1072,24 @@ const DashboardAiCenter: React.FC = () => {
             <Card className="rounded-2xl border-border/50">
               <CardHeader className="p-3 border-b border-border/40">
                 <CardTitle className="text-sm flex items-center gap-2">
-                  <Sliders className="w-4 h-4 text-primary" />
-                  {t('إعدادات المساعد المتقدمة', 'Advanced Assistant Settings')}
+                  <Sliders className="w-4 h-4 text-primary" />{t('إعدادات المساعد المتقدمة', 'Advanced Assistant Settings')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-4 space-y-5">
-                {/* System Prompt */}
                 <div className="space-y-2">
                   <Label className="text-xs font-semibold flex items-center gap-1.5">
-                    <MessageSquare className="w-3.5 h-3.5 text-primary" />
-                    {t('أمر النظام (System Prompt)', 'System Prompt')}
+                    <MessageSquare className="w-3.5 h-3.5 text-primary" />{t('أمر النظام (System Prompt)', 'System Prompt')}
                   </Label>
                   <p className="text-[10px] text-muted-foreground">{t('حدد شخصية المساعد وتوجيهاته الأساسية', 'Define the assistant personality and base instructions')}</p>
                   <Textarea value={assistantSettings.system_prompt}
                     onChange={e => setAssistantSettings(s => ({ ...s, system_prompt: e.target.value }))}
-                    placeholder={t('مثال: أنت مساعد متخصص في مجال السباكة والتكييف. أجب بلغة بسيطة ومباشرة...', 'Example: You are an assistant specialized in plumbing and AC. Answer in simple direct language...')}
+                    placeholder={t('مثال: أنت مساعد متخصص في مجال السباكة والتكييف...', 'Example: You are an assistant specialized in plumbing and AC...')}
                     className="min-h-[100px] rounded-xl resize-none text-sm" dir="auto" />
                 </div>
 
-                {/* Response Style */}
                 <div className="space-y-2">
                   <Label className="text-xs font-semibold flex items-center gap-1.5">
-                    <Type className="w-3.5 h-3.5 text-primary" />
-                    {t('أسلوب الرد', 'Response Style')}
+                    <Type className="w-3.5 h-3.5 text-primary" />{t('أسلوب الرد', 'Response Style')}
                   </Label>
                   <div className="grid grid-cols-3 gap-2">
                     {[
@@ -966,9 +1098,7 @@ const DashboardAiCenter: React.FC = () => {
                       { key: 'detailed', ar: 'مفصّل', en: 'Detailed', desc_ar: 'شرح مفصل مع أمثلة', desc_en: 'Detailed explanation with examples' },
                     ].map(s => (
                       <button key={s.key} onClick={() => setAssistantSettings(st => ({ ...st, response_style: s.key }))}
-                        className={`flex flex-col items-start gap-0.5 px-3 py-2.5 rounded-xl text-start transition-all border ${
-                          assistantSettings.response_style === s.key ? 'bg-primary/8 border-primary/30 ring-1 ring-primary/10' : 'bg-card border-border/40 hover:border-primary/20'
-                        }`}>
+                        className={`flex flex-col items-start gap-0.5 px-3 py-2.5 rounded-xl text-start transition-all border ${assistantSettings.response_style === s.key ? 'bg-primary/8 border-primary/30 ring-1 ring-primary/10' : 'bg-card border-border/40 hover:border-primary/20'}`}>
                         <span className="text-[11px] font-medium">{t(s.ar, s.en)}</span>
                         <span className="text-[9px] text-muted-foreground">{t(s.desc_ar, s.desc_en)}</span>
                       </button>
@@ -976,11 +1106,9 @@ const DashboardAiCenter: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Language Preference */}
                 <div className="space-y-2">
                   <Label className="text-xs font-semibold flex items-center gap-1.5">
-                    <Languages className="w-3.5 h-3.5 text-primary" />
-                    {t('لغة الرد المفضلة', 'Preferred Response Language')}
+                    <Languages className="w-3.5 h-3.5 text-primary" />{t('لغة الرد المفضلة', 'Preferred Response Language')}
                   </Label>
                   <Select value={assistantSettings.language_preference} onValueChange={v => setAssistantSettings(s => ({ ...s, language_preference: v }))}>
                     <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
@@ -994,26 +1122,20 @@ const DashboardAiCenter: React.FC = () => {
 
                 <Separator />
 
-                {/* Knowledge Integration */}
                 <div className="space-y-3">
                   <Label className="text-xs font-semibold flex items-center gap-1.5">
-                    <Database className="w-3.5 h-3.5 text-primary" />
-                    {t('ربط قاعدة المعرفة', 'Knowledge Base Integration')}
+                    <Database className="w-3.5 h-3.5 text-primary" />{t('ربط قاعدة المعرفة', 'Knowledge Base Integration')}
                   </Label>
-
                   <div className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border/40">
                     <div className="space-y-0.5">
                       <p className="text-xs font-medium">{t('تضمين المعرفة في المحادثات', 'Include knowledge in conversations')}</p>
-                      <p className="text-[10px] text-muted-foreground">{t('يستخدم المساعد مصادر المعرفة النشطة كمرجع أساسي', 'Assistant uses active knowledge sources as primary reference')}</p>
+                      <p className="text-[10px] text-muted-foreground">{t('يستخدم المساعد مصادر المعرفة النشطة كمرجع أساسي', 'Uses active knowledge sources as primary reference')}</p>
                     </div>
-                    <Switch checked={assistantSettings.include_knowledge}
-                      onCheckedChange={v => setAssistantSettings(s => ({ ...s, include_knowledge: v }))} />
+                    <Switch checked={assistantSettings.include_knowledge} onCheckedChange={v => setAssistantSettings(s => ({ ...s, include_knowledge: v }))} />
                   </div>
-
                   <div className="space-y-1.5">
                     <Label className="text-[11px] text-muted-foreground">{t('الحد الأقصى للمصادر في كل محادثة', 'Max sources per conversation')}</Label>
-                    <Select value={String(assistantSettings.max_knowledge_entries)}
-                      onValueChange={v => setAssistantSettings(s => ({ ...s, max_knowledge_entries: parseInt(v) }))}>
+                    <Select value={String(assistantSettings.max_knowledge_entries)} onValueChange={v => setAssistantSettings(s => ({ ...s, max_knowledge_entries: parseInt(v) }))}>
                       <SelectTrigger className="rounded-xl w-full"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {[3, 5, 8, 10, 15].map(n => (
@@ -1033,7 +1155,6 @@ const DashboardAiCenter: React.FC = () => {
               </CardContent>
             </Card>
 
-            {/* Tips */}
             <Card className="rounded-2xl border-border/30 bg-muted/15">
               <CardContent className="p-3">
                 <div className="flex items-start gap-2.5">
@@ -1041,9 +1162,9 @@ const DashboardAiCenter: React.FC = () => {
                   <div className="space-y-1">
                     <p className="text-[11px] font-medium text-foreground">{t('نصائح للإعدادات المتقدمة', 'Advanced Settings Tips')}</p>
                     <ul className="text-[10px] text-muted-foreground space-y-0.5 list-disc list-inside" dir="auto">
-                      <li>{t('أمر النظام يحدد شخصية المساعد - اكتب توجيهات واضحة عن مجال عملك', 'System prompt defines assistant personality - write clear instructions about your field')}</li>
-                      <li>{t('كلما زادت المصادر النشطة كلما كانت الإجابات أدق لكن أبطأ قليلاً', 'More active sources = more accurate but slightly slower answers')}</li>
-                      <li>{t('استخدم الوسوم لتنظيم مصادر المعرفة حسب الموضوع', 'Use tags to organize knowledge sources by topic')}</li>
+                      <li>{t('أمر النظام يحدد شخصية المساعد - اكتب توجيهات واضحة', 'System prompt defines personality - write clear instructions')}</li>
+                      <li>{t('كلما زادت المصادر النشطة كلما كانت الإجابات أدق', 'More active sources = more accurate answers')}</li>
+                      <li>{t('استخدم قوالب التدريب كنقطة بداية ثم خصصها', 'Use training presets as starting points then customize')}</li>
                     </ul>
                   </div>
                 </div>
@@ -1056,8 +1177,7 @@ const DashboardAiCenter: React.FC = () => {
             <Card className="rounded-2xl border-border/50">
               <CardHeader className="p-3 border-b border-border/40 flex flex-row items-center justify-between">
                 <CardTitle className="text-sm flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-primary" />
-                  {t('سجل العمليات', 'Operations History')}
+                  <Clock className="w-4 h-4 text-primary" />{t('سجل العمليات', 'Operations History')}
                   <Badge variant="secondary" className="text-[9px] tech-content">{history.length}</Badge>
                 </CardTitle>
                 {history.length > 0 && (
