@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2, Languages, Sparkles, Search, FileText, Wand2 } from 'lucide-react';
+import { Loader2, Languages, Sparkles, Search, FileText, Wand2, Bot } from 'lucide-react';
 
 interface Props {
   isRTL: boolean;
@@ -17,30 +17,40 @@ export const AiToolbar: React.FC<Props> = ({
   isRTL, onTranslate, onGenerateKeywords, onGenerateMeta,
   onAnalyzeSeo, onGenerateExcerpt, onImproveContent, loading,
 }) => {
-  const btn = (key: string, icon: React.ReactNode, labelAr: string, labelEn: string, onClick: () => void) => (
-    <Button key={key} variant="outline" size="sm" onClick={onClick} disabled={!!loading}
-      className="text-xs gap-1.5 h-8 border-dashed hover:border-primary/50 hover:bg-primary/5">
-      {loading === key ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : icon}
-      {isRTL ? labelAr : labelEn}
+  const btnClass = "text-[10px] gap-1 h-7 px-2 border-dashed hover:border-primary/40 hover:bg-primary/5 transition-colors";
+  const iconSize = "w-3 h-3";
+
+  const Btn = ({ k, icon, ar, en, onClick }: { k: string; icon: React.ReactNode; ar: string; en: string; onClick: () => void }) => (
+    <Button variant="outline" size="sm" onClick={onClick} disabled={!!loading} className={btnClass}>
+      {loading === k ? <Loader2 className={`${iconSize} animate-spin`} /> : icon}
+      {isRTL ? ar : en}
     </Button>
   );
 
   return (
-    <div className="flex flex-wrap gap-2 p-3 rounded-lg bg-gradient-to-r from-primary/5 to-accent/5 border border-dashed border-primary/20">
-      <div className="w-full flex items-center gap-2 mb-1">
-        <Sparkles className="w-4 h-4 text-primary" />
-        <span className="text-xs font-semibold text-primary">{isRTL ? 'أدوات الذكاء الاصطناعي' : 'AI Tools'}</span>
+    <div className="p-2.5 rounded-lg bg-gradient-to-r from-primary/5 via-accent/5 to-primary/5 border border-dashed border-primary/20">
+      <div className="flex items-center gap-1.5 mb-2">
+        <Bot className="w-3.5 h-3.5 text-primary" />
+        <span className="text-[10px] font-bold text-primary uppercase tracking-wider">{isRTL ? 'أدوات الذكاء الاصطناعي' : 'AI Tools'}</span>
       </div>
-
-      {btn('translate-ar-en', <Languages className="w-3.5 h-3.5" />, 'ترجمة → EN', 'Translate → EN', () => onTranslate('ar-en'))}
-      {btn('translate-en-ar', <Languages className="w-3.5 h-3.5" />, 'ترجمة → AR', 'Translate → AR', () => onTranslate('en-ar'))}
-      {btn('keywords', <Search className="w-3.5 h-3.5" />, 'استخراج كلمات مفتاحية', 'Extract Keywords', onGenerateKeywords)}
-      {btn('meta', <FileText className="w-3.5 h-3.5" />, 'توليد ميتا SEO', 'Generate SEO Meta', onGenerateMeta)}
-      {btn('analyze', <Search className="w-3.5 h-3.5" />, 'تحليل SEO', 'Analyze SEO', onAnalyzeSeo)}
-      {btn('excerpt-ar', <Wand2 className="w-3.5 h-3.5" />, 'توليد مقتطف AR', 'Generate Excerpt AR', () => onGenerateExcerpt('ar'))}
-      {btn('excerpt-en', <Wand2 className="w-3.5 h-3.5" />, 'توليد مقتطف EN', 'Generate Excerpt EN', () => onGenerateExcerpt('en'))}
-      {btn('improve-ar', <Sparkles className="w-3.5 h-3.5" />, 'تحسين المحتوى AR', 'Improve Content AR', () => onImproveContent('ar'))}
-      {btn('improve-en', <Sparkles className="w-3.5 h-3.5" />, 'تحسين المحتوى EN', 'Improve Content EN', () => onImproveContent('en'))}
+      <div className="flex flex-wrap gap-1.5">
+        {/* Translation */}
+        <div className="flex gap-1 items-center">
+          <Btn k="translate-ar-en" icon={<Languages className={iconSize} />} ar="AR → EN" en="AR → EN" onClick={() => onTranslate('ar-en')} />
+          <Btn k="translate-en-ar" icon={<Languages className={iconSize} />} ar="EN → AR" en="EN → AR" onClick={() => onTranslate('en-ar')} />
+        </div>
+        <div className="w-px h-5 bg-border/60 mx-0.5" />
+        {/* SEO */}
+        <Btn k="keywords" icon={<Search className={iconSize} />} ar="كلمات مفتاحية" en="Keywords" onClick={onGenerateKeywords} />
+        <Btn k="meta" icon={<FileText className={iconSize} />} ar="ميتا SEO" en="SEO Meta" onClick={onGenerateMeta} />
+        <Btn k="analyze" icon={<Search className={iconSize} />} ar="تحليل SEO" en="SEO Analysis" onClick={onAnalyzeSeo} />
+        <div className="w-px h-5 bg-border/60 mx-0.5" />
+        {/* Content */}
+        <Btn k="excerpt-ar" icon={<Wand2 className={iconSize} />} ar="مقتطف AR" en="Excerpt AR" onClick={() => onGenerateExcerpt('ar')} />
+        <Btn k="excerpt-en" icon={<Wand2 className={iconSize} />} ar="مقتطف EN" en="Excerpt EN" onClick={() => onGenerateExcerpt('en')} />
+        <Btn k="improve-ar" icon={<Sparkles className={iconSize} />} ar="تحسين AR" en="Improve AR" onClick={() => onImproveContent('ar')} />
+        <Btn k="improve-en" icon={<Sparkles className={iconSize} />} ar="تحسين EN" en="Improve EN" onClick={() => onImproveContent('en')} />
+      </div>
     </div>
   );
 };
