@@ -43,6 +43,7 @@ const menuItems = [
 const adminItems = [
   { titleKey: 'admin.users', url: '/admin/users', icon: Users, superAdminOnly: true },
   { titleKey: 'admin.system_settings', url: '/admin/system-settings', icon: ShieldAlert, superAdminOnly: true },
+  { titleKey: 'admin.conversations', url: '/dashboard/messages', icon: MessageSquare, superAdminOnly: true },
   { titleKey: 'admin.businesses', url: '/admin/businesses', icon: Building2, superAdminOnly: false },
   { titleKey: 'admin.categories', url: '/admin/categories', icon: FolderTree, superAdminOnly: false },
   { titleKey: 'admin.tags', url: '/admin/tags', icon: Tags, superAdminOnly: false },
