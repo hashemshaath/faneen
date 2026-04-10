@@ -965,6 +965,39 @@ export type Database = {
         }
         Relationships: []
       }
+      phone_otps: {
+        Row: {
+          attempts: number
+          created_at: string
+          expires_at: string
+          id: string
+          otp_code: string
+          phone: string
+          user_id: string
+          verified: boolean
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          expires_at?: string
+          id?: string
+          otp_code: string
+          phone: string
+          user_id: string
+          verified?: boolean
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          expires_at?: string
+          id?: string
+          otp_code?: string
+          phone?: string
+          user_id?: string
+          verified?: boolean
+        }
+        Relationships: []
+      }
       platform_settings: {
         Row: {
           category: string
@@ -1337,15 +1370,18 @@ export type Database = {
           account_type: Database["public"]["Enums"]["account_type"]
           avatar_url: string | null
           city_id: string | null
+          country_code: string
           country_id: string | null
           created_at: string
           email: string | null
           full_name: string | null
           id: string
           is_banned: boolean
+          is_onboarded: boolean
           is_verified: boolean
           membership_tier: Database["public"]["Enums"]["membership_tier"]
           phone: string | null
+          phone_verified: boolean
           preferred_language: string
           updated_at: string
           user_id: string
@@ -1354,15 +1390,18 @@ export type Database = {
           account_type?: Database["public"]["Enums"]["account_type"]
           avatar_url?: string | null
           city_id?: string | null
+          country_code?: string
           country_id?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id?: string
           is_banned?: boolean
+          is_onboarded?: boolean
           is_verified?: boolean
           membership_tier?: Database["public"]["Enums"]["membership_tier"]
           phone?: string | null
+          phone_verified?: boolean
           preferred_language?: string
           updated_at?: string
           user_id: string
@@ -1371,15 +1410,18 @@ export type Database = {
           account_type?: Database["public"]["Enums"]["account_type"]
           avatar_url?: string | null
           city_id?: string | null
+          country_code?: string
           country_id?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id?: string
           is_banned?: boolean
+          is_onboarded?: boolean
           is_verified?: boolean
           membership_tier?: Database["public"]["Enums"]["membership_tier"]
           phone?: string | null
+          phone_verified?: boolean
           preferred_language?: string
           updated_at?: string
           user_id?: string
@@ -1780,6 +1822,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_expired_otps: { Args: never; Returns: undefined }
       create_notification: {
         Args: {
           _action_url?: string
