@@ -41,6 +41,15 @@ const useBusinesses = () =>
     },
   });
 
+const useEntityTags = () =>
+  useQuery({
+    queryKey: ['entity-tags-businesses'],
+    queryFn: async () => {
+      const { data } = await supabase.from('entity_tags').select('entity_id, tag_id').eq('entity_type', 'business');
+      return data ?? [];
+    },
+  });
+
 const SearchPage = () => {
   const { language } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -48,11 +57,13 @@ const SearchPage = () => {
   const { data: categories } = useCategories();
   const { data: cities } = useCities();
   const { data: businesses, isLoading } = useBusinesses();
+  const { data: entityTags } = useEntityTags();
 
   const [query, setQuery] = useState(searchParams.get('q') || '');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   const [filters, setFilters] = useState<SearchFilterValues>({
     categoryId: searchParams.get('category') || 'all',
