@@ -137,6 +137,18 @@ export const NotificationBell = () => {
         <div className="flex items-center justify-between p-3 border-b border-border">
           <h4 className="font-heading font-bold text-sm">{isRTL ? 'الإشعارات' : 'Notifications'}</h4>
           <div className="flex items-center gap-1">
+            {isSupported && browserPermission !== 'granted' && (
+              <Button
+                variant="ghost" size="sm" className="text-xs h-7 px-2"
+                onClick={async () => {
+                  const p = await requestPermission();
+                  setBrowserPermission(p);
+                }}
+              >
+                <BellRing className="w-3.5 h-3.5 me-1" />
+                {isRTL ? 'تفعيل التنبيهات' : 'Enable alerts'}
+              </Button>
+            )}
             {unreadCount > 0 && (
               <Button variant="ghost" size="sm" className="text-xs h-7 px-2" onClick={() => markAllRead.mutate()}>
                 <CheckCheck className="w-3.5 h-3.5 me-1" />
