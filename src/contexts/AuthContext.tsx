@@ -15,6 +15,7 @@ interface UserProfile {
   avatar_url: string | null;
   account_number: number | null;
   ref_id: string | null;
+  membership_tier: string;
 }
 
 interface AuthContextType {
