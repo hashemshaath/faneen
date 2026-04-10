@@ -18,6 +18,7 @@ import { toast } from 'sonner';
 import {
   Users, Search, Shield, ShieldCheck, ShieldAlert, UserPlus, Trash2,
   Mail, Phone, Calendar, Crown, Loader2, Pencil, Ban, UserX, Download,
+  KeyRound, Send, Lock, Eye, EyeOff,
 } from 'lucide-react';
 import type { Tables } from '@/integrations/supabase/types';
 
@@ -55,6 +56,9 @@ const AdminUsers = () => {
   const [editingProfile, setEditingProfile] = useState<Profile | null>(null);
   const [editForm, setEditForm] = useState({ full_name: '', account_type: '', membership_tier: '', phone: '', email: '' });
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
+  const [passwordUserId, setPasswordUserId] = useState<string | null>(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
 
   const { data: profiles = [], isLoading: loadingProfiles } = useQuery({
     queryKey: ['admin-profiles'],
@@ -174,6 +178,40 @@ const AdminUsers = () => {
     },
     onError: () => {
       toast.error(isRTL ? 'فشل تحديث حالة الحساب' : 'Failed to update account status');
+    },
+  });
+
+  const changePasswordMutation = useMutation({
+    mutationFn: async ({ targetUserId, password }: { targetUserId: string; password: string }) => {
+      const res = await supabase.functions.invoke('admin-reset-password', {
+        body: { target_user_id: targetUserId, action: 'change_password', new_password: password },
+      });
+      if (res.error) throw res.error;
+      if (res.data?.error) throw new Error(res.data.error);
+    },
+    onSuccess: () => {
+      setPasswordUserId(null);
+      setNewPassword('');
+      toast.success(isRTL ? 'تم تغيير كلمة المرور بنجاح' : 'Password changed successfully');
+    },
+    onError: (err: any) => {
+      toast.error(err.message || (isRTL ? 'فشل تغيير كلمة المرور' : 'Failed to change password'));
+    },
+  });
+
+  const sendResetLinkMutation = useMutation({
+    mutationFn: async (targetUserId: string) => {
+      const res = await supabase.functions.invoke('admin-reset-password', {
+        body: { target_user_id: targetUserId, action: 'send_reset_link' },
+      });
+      if (res.error) throw res.error;
+      if (res.data?.error) throw new Error(res.data.error);
+    },
+    onSuccess: () => {
+      toast.success(isRTL ? 'تم إرسال رابط إعادة تعيين كلمة المرور' : 'Password reset link sent');
+    },
+    onError: (err: any) => {
+      toast.error(err.message || (isRTL ? 'فشل إرسال الرابط' : 'Failed to send reset link'));
     },
   });
 
