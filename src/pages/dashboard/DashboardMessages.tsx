@@ -473,13 +473,12 @@ const DashboardMessages = () => {
                           <h4 className="font-medium text-sm truncate">{conv.other_profile?.full_name || (isRTL ? 'مستخدم' : 'User')}</h4>
                           <span className="text-[10px] text-muted-foreground shrink-0">{timeAgo}</span>
                         </div>
-                        <p className="text-xs text-muted-foreground truncate mt-0.5">
-                          {isSuperAdmin && conv.participant_1_name && conv.participant_2_name ? (
-                            <p className="text-[10px] text-muted-foreground truncate">
+                          {isSuperAdmin && conv.participant_1_name && conv.participant_2_name && (
+                            <span className="text-[10px] text-muted-foreground truncate block">
                               {conv.participant_1_name} ↔ {conv.participant_2_name}
-                            </p>
-                          ) : null}
-                          <p className="text-xs text-muted-foreground truncate">
+                            </span>
+                          )}
+                          <p className="text-xs text-muted-foreground truncate mt-0.5">
                             {conv.last_message_text || (isRTL ? 'ابدأ المحادثة...' : 'Start chatting...')}
                           </p>
                         </div>
