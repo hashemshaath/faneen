@@ -11,6 +11,9 @@ const routeImports: Record<string, () => Promise<any>> = {
   "/blog": () => import("@/pages/Blog"),
   "/auth": () => import("@/pages/Auth"),
   "/dashboard": () => import("@/pages/dashboard/DashboardOverview"),
+  "/contracts": () => import("@/pages/Contracts"),
+  "/notifications": () => import("@/pages/Notifications"),
+  "/compare-profiles": () => import("@/pages/CompareProfiles"),
 };
 
 const prefetched = new Set<string>();
