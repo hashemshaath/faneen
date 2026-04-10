@@ -5,7 +5,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -28,25 +28,38 @@ const DashboardServices = () => {
     price_from: '', price_to: '', is_active: true,
   });
 
-  const { data: services = [], isLoading } = useQuery({
-    queryKey: ['dashboard-services', user?.id],
+  // Fetch user's business first
+  const { data: business } = useQuery({
+    queryKey: ['my-business', user?.id],
     queryFn: async () => {
-      if (!user) return [];
-      const { data } = await supabase
-        .from('business_services')
-        .select('*')
-        .eq('business_id', user.id)
-        .order('sort_order');
-      return data ?? [];
+      if (!user) return null;
+      const { data } = await supabase.from('businesses').select('id').eq('user_id', user.id).maybeSingle();
+      return data;
     },
     enabled: !!user,
   });
 
+  const businessId = business?.id;
+
+  const { data: services = [], isLoading } = useQuery({
+    queryKey: ['dashboard-services', businessId],
+    queryFn: async () => {
+      if (!businessId) return [];
+      const { data } = await supabase
+        .from('business_services')
+        .select('*')
+        .eq('business_id', businessId)
+        .order('sort_order');
+      return data ?? [];
+    },
+    enabled: !!businessId,
+  });
+
   const saveMutation = useMutation({
     mutationFn: async () => {
-      if (!user) throw new Error('Not authenticated');
+      if (!businessId) throw new Error('No business found');
       const payload = {
-        business_id: user.id,
+        business_id: businessId,
         name_ar: form.name_ar,
         name_en: form.name_en || null,
         description_ar: form.description_ar || null,
