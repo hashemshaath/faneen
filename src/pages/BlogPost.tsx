@@ -205,7 +205,7 @@ const BlogPost = () => {
                   <Share2 className="w-4 h-4" />
                 </Button>
                 <Button variant="ghost" size="sm" onClick={handleCopyLink} className="h-8 w-8 p-0">
-                  {copied ? <CheckCheck className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                  {copied ? <CheckCheck className="w-4 h-4 text-accent" /> : <Copy className="w-4 h-4" />}
                 </Button>
               </div>
             </div>
