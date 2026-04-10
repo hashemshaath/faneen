@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -18,6 +18,7 @@ import {
   Plus, Trash2, Pencil, FolderOpen, Calendar, DollarSign, Clock,
   Images, X, Search, CheckCircle2, Eye, LayoutGrid, LayoutList,
   Star, StarOff, MapPin, Tag, Building2, Layers, GripVertical,
+  Copy, Maximize2, Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ImageUpload, MultiImageUpload } from '@/components/ui/image-upload';
@@ -38,97 +39,121 @@ type ViewMode = 'grid' | 'list';
 type StatusFilter = 'all' | 'published' | 'draft';
 
 /* ── Sortable Project Card (Grid) ── */
-const SortableGridCard = ({ project: p, isRTL, language, onEdit, onGallery, onDelete, onToggleFeatured }: any) => {
+const SortableGridCard = React.memo(({ project: p, isRTL, language, onEdit, onGallery, onDelete, onToggleFeatured, onDuplicate, onPreview }: any) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: p.id });
-  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
+  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1, zIndex: isDragging ? 50 : undefined };
   const catName = p.categories ? (language === 'ar' ? p.categories.name_ar : p.categories.name_en) : null;
   const cityName = p.cities ? (language === 'ar' ? p.cities.name_ar : p.cities.name_en) : null;
+  const title = language === 'ar' ? p.title_ar : (p.title_en || p.title_ar);
+  const desc = language === 'ar' ? p.description_ar : (p.description_en || p.description_ar);
 
   return (
     <Card ref={setNodeRef} style={style} className={`overflow-hidden border-border/40 hover:border-primary/30 hover:shadow-md transition-all group ${isDragging ? 'ring-2 ring-primary shadow-xl' : ''}`}>
-      <div className="aspect-video bg-muted relative overflow-hidden">
+      {/* Smaller aspect ratio: 16/11 */}
+      <div className="aspect-[16/11] bg-muted relative overflow-hidden">
         {p.cover_image_url ? (
-          <img src={p.cover_image_url} alt={isRTL ? p.title_ar : (p.title_en || p.title_ar)} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+          <img src={p.cover_image_url} alt={title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
         ) : (
-          <div className="w-full h-full flex items-center justify-center"><FolderOpen className="w-12 h-12 text-muted-foreground/30" /></div>
+          <div className="w-full h-full flex items-center justify-center"><FolderOpen className="w-10 h-10 text-muted-foreground/30" /></div>
         )}
-        {p.is_featured && <Badge className="absolute top-2 start-2 bg-amber-500/90 hover:bg-amber-500 border-0 shadow-lg backdrop-blur-sm"><Star className="w-3 h-3 me-1 fill-current" />{isRTL ? 'مميز' : 'Featured'}</Badge>}
-        <Badge variant={p.status === 'published' ? 'default' : 'secondary'} className="absolute top-2 end-10 text-[10px] shadow backdrop-blur-sm">
+        {p.is_featured && (
+          <Badge className="absolute top-1.5 start-1.5 bg-amber-500/90 hover:bg-amber-500 border-0 shadow-lg backdrop-blur-sm text-[9px] px-1.5 py-0 h-4">
+            <Star className="w-2.5 h-2.5 me-0.5 fill-current" />{isRTL ? 'مميز' : 'Featured'}
+          </Badge>
+        )}
+        <Badge variant={p.status === 'published' ? 'default' : 'secondary'} className="absolute top-1.5 end-8 text-[9px] shadow backdrop-blur-sm px-1.5 py-0 h-4">
           {p.status === 'published' ? (isRTL ? 'منشور' : 'Published') : (isRTL ? 'مسودة' : 'Draft')}
         </Badge>
-        <button {...attributes} {...listeners} className="absolute top-2 end-2 bg-background/80 backdrop-blur-sm rounded-lg p-1.5 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity shadow-sm">
-          <GripVertical className="w-4 h-4 text-foreground" />
+        <button {...attributes} {...listeners} className="absolute top-1.5 end-1.5 bg-background/80 backdrop-blur-sm rounded-md p-1 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity shadow-sm touch-none">
+          <GripVertical className="w-3.5 h-3.5 text-foreground" />
         </button>
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3 gap-2">
-          <Button size="sm" variant="secondary" className="bg-white/90 hover:bg-white shadow-lg" onClick={() => onEdit(p)}><Pencil className="w-3.5 h-3.5 me-1" />{isRTL ? 'تعديل' : 'Edit'}</Button>
-          <Button size="sm" variant="secondary" className="bg-white/90 hover:bg-white shadow-lg" onClick={() => onGallery(p.id)}><Images className="w-3.5 h-3.5 me-1" />{isRTL ? 'المعرض' : 'Gallery'}</Button>
-          <Button size="sm" variant="secondary" className="bg-white/90 hover:bg-white shadow-lg" onClick={() => onToggleFeatured(p)}>
-            {p.is_featured ? <StarOff className="w-3.5 h-3.5" /> : <Star className="w-3.5 h-3.5" />}
+        {/* Hover overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center gap-1.5 p-2">
+          {p.cover_image_url && (
+            <Button size="sm" variant="secondary" className="bg-white/90 hover:bg-white text-black shadow-lg h-7 text-[11px] px-2" onClick={() => onPreview(p.cover_image_url)}>
+              <Maximize2 className="w-3 h-3 me-1" />{isRTL ? 'عرض' : 'View'}
+            </Button>
+          )}
+          <Button size="sm" variant="secondary" className="bg-white/90 hover:bg-white text-black shadow-lg h-7 text-[11px] px-2" onClick={() => onEdit(p)}>
+            <Pencil className="w-3 h-3 me-1" />{isRTL ? 'تعديل' : 'Edit'}
           </Button>
-          <Button size="sm" variant="destructive" className="shadow-lg" onClick={() => onDelete(p.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
+          <Button size="sm" variant="secondary" className="bg-white/90 hover:bg-white text-black shadow-lg h-7 text-[11px] px-2" onClick={() => onGallery(p.id)}>
+            <Images className="w-3 h-3" />
+          </Button>
+          <Button size="sm" variant="secondary" className="bg-white/90 hover:bg-white text-black shadow-lg h-7 text-[11px] px-2" onClick={() => onDuplicate(p)}>
+            <Copy className="w-3 h-3" />
+          </Button>
+          <Button size="sm" variant="secondary" className="bg-white/90 hover:bg-white text-black shadow-lg h-7 text-[11px] px-2" onClick={() => onToggleFeatured(p)}>
+            {p.is_featured ? <StarOff className="w-3 h-3 text-amber-500" /> : <Star className="w-3 h-3" />}
+          </Button>
+          <Button size="sm" variant="destructive" className="shadow-lg h-7 text-[11px] px-2" onClick={() => onDelete(p.id)}>
+            <Trash2 className="w-3 h-3" />
+          </Button>
         </div>
       </div>
-      <CardContent className="p-4 space-y-2">
-        <h3 className="font-heading font-semibold truncate">{language === 'ar' ? p.title_ar : (p.title_en || p.title_ar)}</h3>
-        {(language === 'ar' ? p.description_ar : (p.description_en || p.description_ar)) && (
-          <p className="text-sm text-muted-foreground line-clamp-2">{language === 'ar' ? p.description_ar : (p.description_en || p.description_ar)}</p>
-        )}
-        <div className="flex flex-wrap gap-1.5 pt-1">
-          {catName && <Badge variant="outline" className="text-[10px]"><Tag className="w-3 h-3 me-0.5" />{catName}</Badge>}
-          {cityName && <Badge variant="outline" className="text-[10px]"><MapPin className="w-3 h-3 me-0.5" />{cityName}</Badge>}
-          {p.project_cost && <Badge variant="secondary" className="text-[10px]"><DollarSign className="w-3 h-3 me-0.5" />{Number(p.project_cost).toLocaleString()}</Badge>}
-          {p.duration_days && <Badge variant="secondary" className="text-[10px]"><Clock className="w-3 h-3 me-0.5" />{p.duration_days} {isRTL ? 'يوم' : 'days'}</Badge>}
-          {p.completion_date && <Badge variant="secondary" className="text-[10px]"><Calendar className="w-3 h-3 me-0.5" />{new Date(p.completion_date).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', { year: 'numeric', month: 'short' })}</Badge>}
+      <CardContent className="p-2.5">
+        <h3 className="text-xs sm:text-sm font-semibold truncate">{title}</h3>
+        {desc && <p className="text-[10px] sm:text-[11px] text-muted-foreground line-clamp-2 mt-0.5">{desc}</p>}
+        <div className="flex flex-wrap gap-1 mt-1.5">
+          {catName && <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4"><Tag className="w-2.5 h-2.5 me-0.5" />{catName}</Badge>}
+          {cityName && <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4"><MapPin className="w-2.5 h-2.5 me-0.5" />{cityName}</Badge>}
+          {p.project_cost && <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4"><DollarSign className="w-2.5 h-2.5 me-0.5" />{Number(p.project_cost).toLocaleString()}</Badge>}
+          {p.duration_days && <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4"><Clock className="w-2.5 h-2.5 me-0.5" />{p.duration_days} {isRTL ? 'ي' : 'd'}</Badge>}
+          {p.completion_date && <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4"><Calendar className="w-2.5 h-2.5 me-0.5" />{new Date(p.completion_date).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', { year: 'numeric', month: 'short' })}</Badge>}
         </div>
       </CardContent>
     </Card>
   );
-};
+});
+SortableGridCard.displayName = 'SortableGridCard';
 
 /* ── Sortable List Row ── */
-const SortableListRow = ({ project: p, isRTL, language, onEdit, onGallery, onDelete, onToggleFeatured }: any) => {
+const SortableListRow = React.memo(({ project: p, isRTL, language, onEdit, onGallery, onDelete, onToggleFeatured, onDuplicate, onPreview }: any) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: p.id });
-  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
+  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1, zIndex: isDragging ? 50 : undefined };
   const catName = p.categories ? (language === 'ar' ? p.categories.name_ar : p.categories.name_en) : null;
+  const title = isRTL ? p.title_ar : (p.title_en || p.title_ar);
 
   return (
     <Card ref={setNodeRef} style={style} className={`border-border/40 hover:border-primary/30 transition-all group ${isDragging ? 'ring-2 ring-primary shadow-xl' : ''}`}>
-      <CardContent className="p-3 flex items-center gap-3">
-        <button {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground shrink-0"><GripVertical className="w-4 h-4" /></button>
-        <div className="w-14 h-14 rounded-lg overflow-hidden bg-muted shrink-0">
+      <div className="flex items-center gap-3 p-2.5 sm:p-3">
+        <button {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground shrink-0 touch-none"><GripVertical className="w-4 h-4" /></button>
+        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg overflow-hidden bg-muted shrink-0 cursor-pointer" onClick={() => p.cover_image_url && onPreview(p.cover_image_url)}>
           {p.cover_image_url ? (
             <img src={p.cover_image_url} alt="" className="w-full h-full object-cover" loading="lazy" />
           ) : (
-            <div className="w-full h-full flex items-center justify-center"><FolderOpen className="w-6 h-6 text-muted-foreground/30" /></div>
+            <div className="w-full h-full flex items-center justify-center"><FolderOpen className="w-5 h-5 text-muted-foreground/30" /></div>
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <p className="font-medium truncate">{isRTL ? p.title_ar : (p.title_en || p.title_ar)}</p>
-            {p.is_featured && <Badge variant="secondary" className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 shrink-0"><Star className="w-3 h-3 me-1" />{isRTL ? 'مميز' : 'Featured'}</Badge>}
-            <Badge variant={p.status === 'published' ? 'default' : 'secondary'} className="text-[10px] shrink-0">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <p className="font-medium text-sm truncate">{title}</p>
+            {p.is_featured && <Badge variant="secondary" className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 text-[9px] px-1.5 py-0 h-4 shrink-0"><Star className="w-2.5 h-2.5 me-0.5 fill-current" />{isRTL ? 'مميز' : 'Featured'}</Badge>}
+            <Badge variant={p.status === 'published' ? 'default' : 'secondary'} className="text-[9px] px-1.5 py-0 h-4 shrink-0">
               {p.status === 'published' ? (isRTL ? 'منشور' : 'Published') : (isRTL ? 'مسودة' : 'Draft')}
             </Badge>
           </div>
-          <div className="flex items-center gap-3 mt-1 flex-wrap">
-            {catName && <span className="text-[10px] text-muted-foreground flex items-center gap-0.5"><Tag className="w-3 h-3" />{catName}</span>}
-            {p.project_cost && <span className="text-[10px] text-muted-foreground flex items-center gap-0.5"><DollarSign className="w-3 h-3" />{Number(p.project_cost).toLocaleString()}</span>}
-            {p.duration_days && <span className="text-[10px] text-muted-foreground flex items-center gap-0.5"><Clock className="w-3 h-3" />{p.duration_days} {isRTL ? 'يوم' : 'days'}</span>}
-            {p.client_name && <span className="text-[10px] text-muted-foreground flex items-center gap-0.5"><Building2 className="w-3 h-3" />{p.client_name}</span>}
+          <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+            {catName && <span className="text-[9px] text-muted-foreground flex items-center gap-0.5"><Tag className="w-2.5 h-2.5" />{catName}</span>}
+            {p.project_cost && <span className="text-[9px] text-muted-foreground flex items-center gap-0.5"><DollarSign className="w-2.5 h-2.5" />{Number(p.project_cost).toLocaleString()}</span>}
+            {p.duration_days && <span className="text-[9px] text-muted-foreground flex items-center gap-0.5"><Clock className="w-2.5 h-2.5" />{p.duration_days} {isRTL ? 'يوم' : 'days'}</span>}
+            {p.client_name && <span className="text-[9px] text-muted-foreground flex items-center gap-0.5"><Building2 className="w-2.5 h-2.5" />{p.client_name}</span>}
           </div>
         </div>
-        <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onToggleFeatured(p)}>
-            {p.is_featured ? <StarOff className="w-4 h-4 text-amber-500" /> : <Star className="w-4 h-4" />}
+        <div className="flex items-center gap-0.5 shrink-0">
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onToggleFeatured(p)}>
+            {p.is_featured ? <StarOff className="w-3.5 h-3.5 text-amber-500" /> : <Star className="w-3.5 h-3.5" />}
           </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onGallery(p.id)}><Images className="w-4 h-4" /></Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(p)}><Pencil className="w-4 h-4" /></Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => onDelete(p.id)}><Trash2 className="w-4 h-4" /></Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onGallery(p.id)}><Images className="w-3.5 h-3.5" /></Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onEdit(p)}><Pencil className="w-3.5 h-3.5" /></Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onDuplicate(p)}><Copy className="w-3.5 h-3.5" /></Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => onDelete(p.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
         </div>
-      </CardContent>
+      </div>
     </Card>
   );
-};
+});
+SortableListRow.displayName = 'SortableListRow';
 
 /* ── Main Component ── */
 const DashboardProjects = () => {
@@ -143,6 +168,7 @@ const DashboardProjects = () => {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const emptyForm = {
     title_ar: '', title_en: '', description_ar: '', description_en: '',
@@ -157,7 +183,7 @@ const DashboardProjects = () => {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
-  const closeForm = () => { setShowForm(false); setEditId(null); setForm(emptyForm); };
+  const closeForm = useCallback(() => { setShowForm(false); setEditId(null); setForm(emptyForm); }, []);
 
   const { data: business } = useQuery({
     queryKey: ['my-business', user?.id],
@@ -230,7 +256,6 @@ const DashboardProjects = () => {
     totalCost: projects.reduce((sum: number, p: any) => sum + (Number(p.project_cost) || 0), 0),
   }), [projects]);
 
-  // Unique categories used
   const usedCategoryIds = useMemo(() => [...new Set(projects.map((p: any) => p.category_id).filter(Boolean))], [projects]);
   const usedCategories = categories.filter((c: any) => usedCategoryIds.includes(c.id));
 
@@ -257,7 +282,7 @@ const DashboardProjects = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-projects'] });
-      toast.success(editId ? (isRTL ? 'تم تحديث المشروع بنجاح' : 'Project updated') : (isRTL ? 'تم إضافة المشروع بنجاح' : 'Project added'));
+      toast.success(editId ? (isRTL ? 'تم تحديث المشروع' : 'Project updated') : (isRTL ? 'تم إضافة المشروع' : 'Project added'));
       closeForm();
     },
     onError: (err: any) => toast.error(err.message),
@@ -288,10 +313,7 @@ const DashboardProjects = () => {
 
   const reorderMutation = useMutation({
     mutationFn: async (reordered: any[]) => {
-      const updates = reordered.map((item, idx) => supabase.from('projects').update({ sort_order: idx }).eq('id', item.id));
-      const results = await Promise.all(updates);
-      const failed = results.find(r => r.error);
-      if (failed?.error) throw failed.error;
+      await Promise.all(reordered.map((item, idx) => supabase.from('projects').update({ sort_order: idx }).eq('id', item.id)));
     },
     onError: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-projects'] });
@@ -299,7 +321,7 @@ const DashboardProjects = () => {
     },
   });
 
-  const handleGalleryChange = async (urls: string[]) => {
+  const handleGalleryChange = useCallback(async (urls: string[]) => {
     if (!galleryProjectId) return;
     await supabase.from('project_images').delete().eq('project_id', galleryProjectId);
     if (urls.length > 0) {
@@ -308,9 +330,9 @@ const DashboardProjects = () => {
       if (error) { toast.error(error.message); return; }
     }
     queryClient.invalidateQueries({ queryKey: ['project-images', galleryProjectId] });
-  };
+  }, [galleryProjectId, queryClient]);
 
-  const openEdit = (p: any) => {
+  const openEdit = useCallback((p: any) => {
     setForm({
       title_ar: p.title_ar, title_en: p.title_en || '', description_ar: p.description_ar || '',
       description_en: p.description_en || '', cover_image_url: p.cover_image_url || '',
@@ -322,54 +344,71 @@ const DashboardProjects = () => {
     setEditId(p.id);
     setShowForm(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  }, []);
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const duplicateProject = useCallback((p: any) => {
+    setEditId(null);
+    setForm({
+      title_ar: p.title_ar + (isRTL ? ' (نسخة)' : ' (copy)'),
+      title_en: p.title_en ? p.title_en + ' (copy)' : '',
+      description_ar: p.description_ar || '', description_en: p.description_en || '',
+      cover_image_url: p.cover_image_url || '', client_name: p.client_name || '',
+      project_cost: p.project_cost?.toString() || '', duration_days: p.duration_days?.toString() || '',
+      completion_date: p.completion_date || '', status: 'draft',
+      category_id: p.category_id || '', city_id: p.city_id || '',
+      is_featured: false, currency_code: p.currency_code || 'SAR',
+    });
+    setShowForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [isRTL]);
+
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
     const oldIndex = filteredProjects.findIndex((i: any) => i.id === active.id);
     const newIndex = filteredProjects.findIndex((i: any) => i.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
     const reordered = arrayMove([...filteredProjects], oldIndex, newIndex);
     queryClient.setQueryData(['dashboard-projects', businessId], reordered);
     reorderMutation.mutate(reordered);
-  };
+  }, [filteredProjects, businessId, queryClient, reorderMutation]);
 
   const galleryProject = projects.find((p: any) => p.id === galleryProjectId);
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-5">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h1 className="font-heading font-bold text-2xl flex items-center gap-2">
-              <Layers className="w-6 h-6 text-primary" />
+            <h1 className="font-heading font-bold text-xl sm:text-2xl flex items-center gap-2">
+              <Layers className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
               {isRTL ? 'المشاريع المنجزة' : 'Completed Projects'}
             </h1>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
               {isRTL ? 'اعرض مشاريعك المنجزة — اسحب لإعادة الترتيب' : 'Showcase your projects — drag to reorder'}
             </p>
           </div>
           {!showForm && (
-            <Button variant="hero" onClick={() => { closeForm(); setShowForm(true); }} className="shrink-0">
-              <Plus className="w-4 h-4 me-2" />{isRTL ? 'إضافة مشروع' : 'Add Project'}
+            <Button variant="hero" size="sm" onClick={() => { closeForm(); setShowForm(true); }} className="shrink-0">
+              <Plus className="w-4 h-4 me-1" />{isRTL ? 'إضافة مشروع' : 'Add Project'}
             </Button>
           )}
         </div>
 
         {/* Stats */}
         {projects.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
             {[
-              { label: isRTL ? 'إجمالي المشاريع' : 'Total', value: stats.total, icon: FolderOpen, color: 'text-primary bg-primary/10' },
+              { label: isRTL ? 'إجمالي' : 'Total', value: stats.total, icon: FolderOpen, color: 'text-primary bg-primary/10' },
               { label: isRTL ? 'منشور' : 'Published', value: stats.published, icon: Eye, color: 'text-emerald-500 bg-emerald-500/10' },
               { label: isRTL ? 'مميز' : 'Featured', value: stats.featured, icon: Star, color: 'text-amber-500 bg-amber-500/10' },
               { label: isRTL ? 'إجمالي التكاليف' : 'Total Cost', value: stats.totalCost > 0 ? `${(stats.totalCost / 1000).toFixed(0)}K` : '—', icon: DollarSign, color: 'text-violet-500 bg-violet-500/10' },
             ].map((s, i) => (
               <Card key={i} className="border-border/40 bg-card/50">
-                <CardContent className="p-4 flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${s.color}`}><s.icon className="w-5 h-5" /></div>
-                  <div><p className="text-2xl font-bold">{s.value}</p><p className="text-xs text-muted-foreground">{s.label}</p></div>
+                <CardContent className="p-2.5 sm:p-3 flex items-center gap-2.5">
+                  <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center ${s.color}`}><s.icon className="w-4 h-4" /></div>
+                  <div><p className="text-lg sm:text-xl font-bold">{s.value}</p><p className="text-[10px] sm:text-xs text-muted-foreground">{s.label}</p></div>
                 </CardContent>
               </Card>
             ))}
@@ -378,19 +417,19 @@ const DashboardProjects = () => {
 
         {/* Toolbar */}
         {projects.length > 0 && (
-          <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-            <div className="flex items-center gap-2 flex-1 w-full sm:w-auto">
-              <div className="relative flex-1 sm:max-w-72">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 items-stretch sm:items-center justify-between">
+            <div className="flex items-center gap-2 flex-1">
+              <div className="relative flex-1 sm:max-w-xs">
                 <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input placeholder={isRTL ? 'ابحث في المشاريع...' : 'Search projects...'} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="ps-9" />
+                <Input placeholder={isRTL ? 'ابحث...' : 'Search...'} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="ps-9 h-9" />
               </div>
               {usedCategories.length > 1 && (
                 <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                  <SelectTrigger className="w-40 h-9 text-xs">
-                    <Tag className="w-3.5 h-3.5 me-1" /><SelectValue />
+                  <SelectTrigger className="w-auto h-9 text-xs gap-1">
+                    <Tag className="w-3.5 h-3.5" /><SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">{isRTL ? 'كل التصنيفات' : 'All Categories'}</SelectItem>
+                    <SelectItem value="all">{isRTL ? 'الكل' : 'All'}</SelectItem>
                     {usedCategories.map((c: any) => (
                       <SelectItem key={c.id} value={c.id}>{language === 'ar' ? c.name_ar : c.name_en}</SelectItem>
                     ))}
@@ -401,14 +440,18 @@ const DashboardProjects = () => {
             <div className="flex items-center gap-2">
               <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
                 <TabsList className="h-9">
-                  <TabsTrigger value="all" className="text-xs px-3">{isRTL ? 'الكل' : 'All'} ({stats.total})</TabsTrigger>
-                  <TabsTrigger value="published" className="text-xs px-3">{isRTL ? 'منشور' : 'Published'}</TabsTrigger>
-                  <TabsTrigger value="draft" className="text-xs px-3">{isRTL ? 'مسودة' : 'Draft'}</TabsTrigger>
+                  <TabsTrigger value="all" className="text-xs px-2.5">{isRTL ? 'الكل' : 'All'} ({stats.total})</TabsTrigger>
+                  <TabsTrigger value="published" className="text-xs px-2.5">{isRTL ? 'منشور' : 'Published'}</TabsTrigger>
+                  <TabsTrigger value="draft" className="text-xs px-2.5">{isRTL ? 'مسودة' : 'Draft'}</TabsTrigger>
                 </TabsList>
               </Tabs>
-              <div className="flex border border-border rounded-lg overflow-hidden">
-                <Button variant={viewMode === 'grid' ? 'default' : 'ghost'} size="icon" className="h-9 w-9 rounded-none" onClick={() => setViewMode('grid')}><LayoutGrid className="w-4 h-4" /></Button>
-                <Button variant={viewMode === 'list' ? 'default' : 'ghost'} size="icon" className="h-9 w-9 rounded-none" onClick={() => setViewMode('list')}><LayoutList className="w-4 h-4" /></Button>
+              <div className="flex border border-border/40 rounded-lg overflow-hidden">
+                <button className={`p-1.5 ${viewMode === 'grid' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => setViewMode('grid')}>
+                  <LayoutGrid className="w-4 h-4" />
+                </button>
+                <button className={`p-1.5 ${viewMode === 'list' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => setViewMode('list')}>
+                  <LayoutList className="w-4 h-4" />
+                </button>
               </div>
             </div>
           </div>
@@ -419,28 +462,28 @@ const DashboardProjects = () => {
           <Card className="border-primary/20 bg-primary/[0.02] shadow-sm">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-lg flex items-center gap-2">
+                <CardTitle className="text-base sm:text-lg flex items-center gap-2">
                   {editId ? <Pencil className="w-4 h-4 text-primary" /> : <Plus className="w-4 h-4 text-primary" />}
                   {editId ? (isRTL ? 'تعديل المشروع' : 'Edit Project') : (isRTL ? 'إضافة مشروع جديد' : 'Add New Project')}
                 </CardTitle>
                 <Button variant="ghost" size="icon" onClick={closeForm}><X className="w-4 h-4" /></Button>
               </div>
             </CardHeader>
-            <CardContent className="space-y-5">
+            <CardContent className="space-y-4">
               {/* Titles with AI */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between flex-wrap gap-1">
-                    <Label>{isRTL ? 'عنوان المشروع (عربي)' : 'Project Title (Arabic)'} <span className="text-destructive">*</span></Label>
+                    <Label className="text-xs sm:text-sm">{isRTL ? 'العنوان (عربي)' : 'Title (Arabic)'} <span className="text-destructive">*</span></Label>
                     <FieldAiActions value={form.title_ar} lang="ar" compact fieldType="title" isRTL={isRTL}
                       onTranslated={(v) => setForm(f => ({ ...f, title_en: v }))}
                       onImproved={(v) => setForm(f => ({ ...f, title_ar: v }))} />
                   </div>
-                  <Input value={form.title_ar} onChange={e => setForm(f => ({ ...f, title_ar: e.target.value }))} placeholder={isRTL ? 'مثال: تركيب واجهات زجاجية لمبنى تجاري' : 'e.g. Glass facade installation'} />
+                  <Input value={form.title_ar} onChange={e => setForm(f => ({ ...f, title_ar: e.target.value }))} placeholder={isRTL ? 'مثال: تركيب واجهات زجاجية' : 'e.g. Glass facade installation'} />
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between flex-wrap gap-1">
-                    <Label>{isRTL ? 'عنوان المشروع (إنجليزي)' : 'Project Title (English)'}</Label>
+                    <Label className="text-xs sm:text-sm">{isRTL ? 'العنوان (إنجليزي)' : 'Title (English)'}</Label>
                     <FieldAiActions value={form.title_en} lang="en" compact fieldType="title" isRTL={isRTL}
                       onTranslated={(v) => setForm(f => ({ ...f, title_ar: v }))}
                       onImproved={(v) => setForm(f => ({ ...f, title_en: v }))} />
@@ -449,26 +492,24 @@ const DashboardProjects = () => {
                 </div>
               </div>
 
-              {/* Category, City, Status Row */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {/* Category, City, Status */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="space-y-2">
-                  <Label className="flex items-center gap-1"><Tag className="w-3.5 h-3.5" />{isRTL ? 'التصنيف' : 'Category'}</Label>
+                  <Label className="text-xs sm:text-sm flex items-center gap-1"><Tag className="w-3.5 h-3.5" />{isRTL ? 'التصنيف' : 'Category'}</Label>
                   <Select value={form.category_id || 'none'} onValueChange={(v) => setForm(f => ({ ...f, category_id: v === 'none' ? '' : v }))}>
-                    <SelectTrigger><SelectValue placeholder={isRTL ? 'اختر التصنيف' : 'Select category'} /></SelectTrigger>
+                    <SelectTrigger className="h-9"><SelectValue placeholder={isRTL ? 'اختر التصنيف' : 'Select category'} /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">{isRTL ? 'بدون تصنيف' : 'No category'}</SelectItem>
                       {categories.map((c: any) => (
-                        <SelectItem key={c.id} value={c.id}>
-                          {c.parent_id ? '  └ ' : ''}{language === 'ar' ? c.name_ar : c.name_en}
-                        </SelectItem>
+                        <SelectItem key={c.id} value={c.id}>{c.parent_id ? '  └ ' : ''}{language === 'ar' ? c.name_ar : c.name_en}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" />{isRTL ? 'المدينة' : 'City'}</Label>
+                  <Label className="text-xs sm:text-sm flex items-center gap-1"><MapPin className="w-3.5 h-3.5" />{isRTL ? 'المدينة' : 'City'}</Label>
                   <Select value={form.city_id || 'none'} onValueChange={(v) => setForm(f => ({ ...f, city_id: v === 'none' ? '' : v }))}>
-                    <SelectTrigger><SelectValue placeholder={isRTL ? 'اختر المدينة' : 'Select city'} /></SelectTrigger>
+                    <SelectTrigger className="h-9"><SelectValue placeholder={isRTL ? 'اختر المدينة' : 'Select city'} /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">{isRTL ? 'بدون مدينة' : 'No city'}</SelectItem>
                       {cities.map((c: any) => (
@@ -478,9 +519,9 @@ const DashboardProjects = () => {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>{isRTL ? 'الحالة' : 'Status'}</Label>
+                  <Label className="text-xs sm:text-sm">{isRTL ? 'الحالة' : 'Status'}</Label>
                   <Select value={form.status} onValueChange={(v) => setForm(f => ({ ...f, status: v }))}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="published">{isRTL ? 'منشور' : 'Published'}</SelectItem>
                       <SelectItem value="draft">{isRTL ? 'مسودة' : 'Draft'}</SelectItem>
@@ -491,77 +532,74 @@ const DashboardProjects = () => {
 
               {/* Cover Image */}
               <div className="space-y-2">
-                <Label>{isRTL ? 'صورة الغلاف' : 'Cover Image'}</Label>
-                <ImageUpload bucket="project-images" value={form.cover_image_url} onChange={(url) => setForm(f => ({ ...f, cover_image_url: url }))} onRemove={() => setForm(f => ({ ...f, cover_image_url: '' }))} aspectRatio="video" placeholder={isRTL ? 'اضغط لرفع صورة الغلاف (يُفضل 16:9)' : 'Click to upload cover image (16:9 recommended)'} />
+                <Label className="text-xs sm:text-sm">{isRTL ? 'صورة الغلاف' : 'Cover Image'}</Label>
+                <ImageUpload bucket="project-images" value={form.cover_image_url} onChange={(url) => setForm(f => ({ ...f, cover_image_url: url }))} onRemove={() => setForm(f => ({ ...f, cover_image_url: '' }))} aspectRatio="video" placeholder={isRTL ? 'اضغط لرفع صورة (يُفضل 16:9)' : 'Click to upload (16:9 recommended)'} />
               </div>
 
               {/* Descriptions with AI */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between flex-wrap gap-1">
-                    <Label>{isRTL ? 'الوصف (عربي)' : 'Description (Arabic)'}</Label>
+                    <Label className="text-xs sm:text-sm">{isRTL ? 'الوصف (عربي)' : 'Description (Arabic)'}</Label>
                     <FieldAiActions value={form.description_ar} lang="ar" compact fieldType="description" isRTL={isRTL}
                       onTranslated={(v) => setForm(f => ({ ...f, description_en: v }))}
                       onImproved={(v) => setForm(f => ({ ...f, description_ar: v }))} />
                   </div>
-                  <Textarea value={form.description_ar} onChange={e => setForm(f => ({ ...f, description_ar: e.target.value }))} rows={4} placeholder={isRTL ? 'وصف تفصيلي للمشروع...' : 'Detailed project description...'} />
+                  <Textarea value={form.description_ar} onChange={e => setForm(f => ({ ...f, description_ar: e.target.value }))} rows={3} placeholder={isRTL ? 'وصف المشروع...' : 'Project description...'} />
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between flex-wrap gap-1">
-                    <Label>{isRTL ? 'الوصف (إنجليزي)' : 'Description (English)'}</Label>
+                    <Label className="text-xs sm:text-sm">{isRTL ? 'الوصف (إنجليزي)' : 'Description (English)'}</Label>
                     <FieldAiActions value={form.description_en} lang="en" compact fieldType="description" isRTL={isRTL}
                       onTranslated={(v) => setForm(f => ({ ...f, description_ar: v }))}
                       onImproved={(v) => setForm(f => ({ ...f, description_en: v }))} />
                   </div>
-                  <Textarea value={form.description_en} onChange={e => setForm(f => ({ ...f, description_en: e.target.value }))} rows={4} dir="ltr" placeholder="Detailed project description..." />
+                  <Textarea value={form.description_en} onChange={e => setForm(f => ({ ...f, description_en: e.target.value }))} rows={3} dir="ltr" placeholder="Project description..." />
                 </div>
               </div>
 
               {/* Project details */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <div className="space-y-2">
-                  <Label className="flex items-center gap-1"><Building2 className="w-3.5 h-3.5" />{isRTL ? 'اسم العميل' : 'Client Name'}</Label>
-                  <Input value={form.client_name} onChange={e => setForm(f => ({ ...f, client_name: e.target.value }))} placeholder={isRTL ? 'مثال: شركة البناء' : 'e.g. ABC Corp'} />
+                  <Label className="text-xs sm:text-sm flex items-center gap-1"><Building2 className="w-3.5 h-3.5" />{isRTL ? 'العميل' : 'Client'}</Label>
+                  <Input value={form.client_name} onChange={e => setForm(f => ({ ...f, client_name: e.target.value }))} placeholder={isRTL ? 'اسم العميل' : 'Client name'} className="h-9" />
                 </div>
                 <div className="space-y-2">
-                  <Label className="flex items-center gap-1"><DollarSign className="w-3.5 h-3.5" />{isRTL ? 'التكلفة' : 'Cost'}</Label>
+                  <Label className="text-xs sm:text-sm flex items-center gap-1"><DollarSign className="w-3.5 h-3.5" />{isRTL ? 'التكلفة' : 'Cost'}</Label>
                   <div className="flex gap-1">
-                    <Input type="number" value={form.project_cost} onChange={e => setForm(f => ({ ...f, project_cost: e.target.value }))} dir="ltr" className="flex-1" />
+                    <Input type="number" value={form.project_cost} onChange={e => setForm(f => ({ ...f, project_cost: e.target.value }))} dir="ltr" className="flex-1 h-9" />
                     <Select value={form.currency_code} onValueChange={(v) => setForm(f => ({ ...f, currency_code: v }))}>
-                      <SelectTrigger className="w-20"><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="w-[70px] h-9 text-xs"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="SAR">SAR</SelectItem>
-                        <SelectItem value="USD">USD</SelectItem>
-                        <SelectItem value="EUR">EUR</SelectItem>
-                        <SelectItem value="AED">AED</SelectItem>
+                        {['SAR', 'USD', 'EUR', 'AED'].map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" />{isRTL ? 'المدة (أيام)' : 'Duration (days)'}</Label>
-                  <Input type="number" value={form.duration_days} onChange={e => setForm(f => ({ ...f, duration_days: e.target.value }))} dir="ltr" />
+                  <Label className="text-xs sm:text-sm flex items-center gap-1"><Clock className="w-3.5 h-3.5" />{isRTL ? 'المدة (أيام)' : 'Duration'}</Label>
+                  <Input type="number" value={form.duration_days} onChange={e => setForm(f => ({ ...f, duration_days: e.target.value }))} dir="ltr" className="h-9" />
                 </div>
                 <div className="space-y-2">
-                  <Label className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" />{isRTL ? 'تاريخ الإنجاز' : 'Completion Date'}</Label>
-                  <Input type="date" value={form.completion_date} onChange={e => setForm(f => ({ ...f, completion_date: e.target.value }))} dir="ltr" />
+                  <Label className="text-xs sm:text-sm flex items-center gap-1"><Calendar className="w-3.5 h-3.5" />{isRTL ? 'تاريخ الإنجاز' : 'Date'}</Label>
+                  <Input type="date" value={form.completion_date} onChange={e => setForm(f => ({ ...f, completion_date: e.target.value }))} dir="ltr" className="h-9" />
                 </div>
               </div>
 
               {/* Featured toggle */}
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border border-border/40">
+              <div className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/50 border border-border/40">
                 <Switch checked={form.is_featured} onCheckedChange={(v) => setForm(f => ({ ...f, is_featured: v }))} />
                 <div>
-                  <Label className="cursor-pointer">{isRTL ? 'مشروع مميز' : 'Featured Project'}</Label>
-                  <p className="text-xs text-muted-foreground">{isRTL ? 'يظهر بشكل بارز في ملفك التجاري وأعلى القائمة' : 'Displayed prominently on your profile and at the top'}</p>
+                  <Label className="cursor-pointer text-xs sm:text-sm">{isRTL ? 'مشروع مميز' : 'Featured Project'}</Label>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">{isRTL ? 'يظهر بشكل بارز' : 'Displayed prominently'}</p>
                 </div>
               </div>
 
               {/* Actions */}
-              <div className="flex gap-2 pt-2">
+              <div className="flex gap-2 pt-1">
                 <Button onClick={() => saveMutation.mutate()} disabled={!form.title_ar || saveMutation.isPending} variant="hero" className="flex-1">
-                  {saveMutation.isPending ? (isRTL ? 'جاري الحفظ...' : 'Saving...') : editId ? (isRTL ? 'تحديث المشروع' : 'Update Project') : (isRTL ? 'إضافة المشروع' : 'Add Project')}
-                  {!saveMutation.isPending && <CheckCircle2 className="w-4 h-4 ms-2" />}
+                  {saveMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin me-2" /> : <CheckCircle2 className="w-4 h-4 me-2" />}
+                  {saveMutation.isPending ? (isRTL ? 'جاري الحفظ...' : 'Saving...') : editId ? (isRTL ? 'تحديث' : 'Update') : (isRTL ? 'إضافة' : 'Add')}
                 </Button>
                 <Button variant="outline" onClick={closeForm}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
               </div>
@@ -574,60 +612,53 @@ const DashboardProjects = () => {
           <Card className="border-primary/20 bg-primary/[0.02]">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Images className="w-5 h-5 text-primary" />
-                  {isRTL ? 'معرض صور المشروع' : 'Project Gallery'}
+                <CardTitle className="text-sm sm:text-base flex items-center gap-2">
+                  <Images className="w-4 h-4 text-primary" />
+                  {isRTL ? 'معرض الصور' : 'Gallery'}
                 </CardTitle>
                 <Button variant="ghost" size="icon" onClick={() => setGalleryProjectId(null)}><X className="w-4 h-4" /></Button>
               </div>
-              {galleryProject && <p className="text-sm text-muted-foreground">{language === 'ar' ? (galleryProject as any).title_ar : ((galleryProject as any).title_en || (galleryProject as any).title_ar)}</p>}
+              {galleryProject && <p className="text-xs text-muted-foreground">{language === 'ar' ? (galleryProject as any).title_ar : ((galleryProject as any).title_en || (galleryProject as any).title_ar)}</p>}
             </CardHeader>
             <CardContent>
               <MultiImageUpload bucket="project-images" images={galleryImages.map((img: any) => img.image_url)} onChange={handleGalleryChange} folder="gallery" maxImages={20} maxSizeMB={5} />
-              <p className="text-xs text-muted-foreground mt-2">
-                {isRTL ? `${galleryImages.length} / 20 صورة` : `${galleryImages.length} / 20 images`}
-              </p>
+              <p className="text-[10px] text-muted-foreground mt-2">{isRTL ? `${galleryImages.length} / 20 صورة` : `${galleryImages.length} / 20 images`}</p>
             </CardContent>
           </Card>
         )}
 
         {/* Projects List */}
         {isLoading ? (
-          <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-3'}>
-            {[1,2,3,4,5,6].map(i => <Skeleton key={i} className={viewMode === 'grid' ? 'h-72 rounded-xl' : 'h-20 rounded-xl'} />)}
+          <div className={viewMode === 'grid' ? 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3' : 'space-y-2'}>
+            {[1, 2, 3, 4, 5, 6].map(i => viewMode === 'grid' ? <Skeleton key={i} className="aspect-[16/11] rounded-xl" /> : <Skeleton key={i} className="h-16 rounded-xl" />)}
           </div>
         ) : projects.length === 0 && !showForm ? (
           <Card className="border-dashed border-2">
-            <CardContent className="flex flex-col items-center py-16 text-center">
-              <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
-                <FolderOpen className="w-10 h-10 text-primary" />
-              </div>
-              <h3 className="text-lg font-semibold mb-2">{isRTL ? 'لا توجد مشاريع بعد' : 'No projects yet'}</h3>
-              <p className="text-sm text-muted-foreground max-w-sm mb-6">
-                {isRTL ? 'أضف مشاريعك المنجزة لعرضها للعملاء المحتملين' : 'Add your completed projects to showcase to potential clients'}
-              </p>
-              <Button variant="hero" onClick={() => setShowForm(true)}>
-                <Plus className="w-4 h-4 me-2" />{isRTL ? 'أضف أول مشروع' : 'Add First Project'}
-              </Button>
+            <CardContent className="flex flex-col items-center py-14 text-center">
+              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4"><FolderOpen className="w-8 h-8 text-primary" /></div>
+              <h3 className="text-base font-semibold mb-2">{isRTL ? 'لا توجد مشاريع بعد' : 'No projects yet'}</h3>
+              <p className="text-sm text-muted-foreground max-w-sm mb-5">{isRTL ? 'أضف مشاريعك المنجزة لعرضها للعملاء' : 'Add your completed projects to showcase to clients'}</p>
+              <Button variant="hero" onClick={() => setShowForm(true)}><Plus className="w-4 h-4 me-2" />{isRTL ? 'أضف أول مشروع' : 'Add First Project'}</Button>
             </CardContent>
           </Card>
         ) : filteredProjects.length === 0 && projects.length > 0 ? (
           <Card className="border-dashed">
             <CardContent className="flex flex-col items-center py-10 text-muted-foreground">
               <Search className="w-8 h-8 mb-2" /><p className="font-medium">{isRTL ? 'لا توجد نتائج' : 'No results'}</p>
-              <p className="text-sm">{isRTL ? 'جرّب تغيير الفلتر أو كلمة البحث' : 'Try changing filters'}</p>
             </CardContent>
           </Card>
         ) : (
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext items={filteredProjects.map((p: any) => p.id)} strategy={viewMode === 'grid' ? rectSortingStrategy : verticalListSortingStrategy}>
               {viewMode === 'grid' ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                   {filteredProjects.map((p: any) => (
                     <SortableGridCard key={p.id} project={p} isRTL={isRTL} language={language}
                       onEdit={openEdit} onGallery={setGalleryProjectId}
                       onDelete={(id: string) => setDeleteConfirm(id)}
-                      onToggleFeatured={(proj: any) => toggleFeaturedMutation.mutate(proj)} />
+                      onToggleFeatured={(proj: any) => toggleFeaturedMutation.mutate(proj)}
+                      onDuplicate={duplicateProject}
+                      onPreview={(url: string) => setPreviewUrl(url)} />
                   ))}
                 </div>
               ) : (
@@ -636,7 +667,9 @@ const DashboardProjects = () => {
                     <SortableListRow key={p.id} project={p} isRTL={isRTL} language={language}
                       onEdit={openEdit} onGallery={setGalleryProjectId}
                       onDelete={(id: string) => setDeleteConfirm(id)}
-                      onToggleFeatured={(proj: any) => toggleFeaturedMutation.mutate(proj)} />
+                      onToggleFeatured={(proj: any) => toggleFeaturedMutation.mutate(proj)}
+                      onDuplicate={duplicateProject}
+                      onPreview={(url: string) => setPreviewUrl(url)} />
                   ))}
                 </div>
               )}
@@ -650,19 +683,25 @@ const DashboardProjects = () => {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{isRTL ? 'حذف المشروع' : 'Delete Project'}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {isRTL ? 'هل أنت متأكد من حذف هذا المشروع؟ سيتم حذف جميع الصور المرتبطة به.' : 'Are you sure? All associated images will also be deleted.'}
-            </AlertDialogDescription>
+            <AlertDialogDescription>{isRTL ? 'هل أنت متأكد؟ سيتم حذف جميع الصور المرتبطة.' : 'Are you sure? All images will also be deleted.'}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{isRTL ? 'إلغاء' : 'Cancel'}</AlertDialogCancel>
             <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => deleteConfirm && deleteMutation.mutate(deleteConfirm)}>
-              {isRTL ? 'حذف' : 'Delete'}
-            </AlertDialogAction>
+              onClick={() => deleteConfirm && deleteMutation.mutate(deleteConfirm)}>{isRTL ? 'حذف' : 'Delete'}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Image Preview Lightbox */}
+      {previewUrl && (
+        <div className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4 cursor-pointer" onClick={() => setPreviewUrl(null)}>
+          <Button variant="ghost" size="icon" className="absolute top-4 end-4 text-white hover:bg-white/10 z-10" onClick={() => setPreviewUrl(null)}>
+            <X className="w-6 h-6" />
+          </Button>
+          <img src={previewUrl} alt="Preview" className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl" onClick={(e) => e.stopPropagation()} />
+        </div>
+      )}
     </DashboardLayout>
   );
 };
