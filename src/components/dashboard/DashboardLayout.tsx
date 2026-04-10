@@ -77,6 +77,9 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
   const navigate = useNavigate();
 
   const [passwordDialog, setPasswordDialog] = useState(false);
+  const [nameDialog, setNameDialog] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [nameLoading, setNameLoading] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [pwLoading, setPwLoading] = useState(false);
