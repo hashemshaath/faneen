@@ -5,13 +5,12 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Edit, Trash2, FolderOpen, Calendar, DollarSign, Clock, Images } from 'lucide-react';
+import { Plus, Edit, Trash2, FolderOpen, Calendar, DollarSign, Clock, Images, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { ImageUpload, MultiImageUpload } from '@/components/ui/image-upload';
 
@@ -19,7 +18,7 @@ const DashboardProjects = () => {
   const { isRTL, language } = useLanguage();
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const [galleryProjectId, setGalleryProjectId] = useState<string | null>(null);
   const [editId, setEditId] = useState<string | null>(null);
 
@@ -34,6 +33,8 @@ const DashboardProjects = () => {
     setEditId(null);
   };
 
+  const closeForm = () => { setShowForm(false); resetForm(); };
+
   const { data: business } = useQuery({
     queryKey: ['my-business', user?.id],
     queryFn: async () => {
@@ -46,26 +47,17 @@ const DashboardProjects = () => {
   const { data: projects = [], isLoading } = useQuery({
     queryKey: ['dashboard-projects', business?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('business_id', business!.id)
-        .order('sort_order');
+      const { data, error } = await supabase.from('projects').select('*').eq('business_id', business!.id).order('sort_order');
       if (error) throw error;
       return data;
     },
     enabled: !!business?.id,
   });
 
-  // Fetch images for gallery project
   const { data: galleryImages = [] } = useQuery({
     queryKey: ['project-images', galleryProjectId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('project_images')
-        .select('*')
-        .eq('project_id', galleryProjectId!)
-        .order('sort_order');
+      const { data, error } = await supabase.from('project_images').select('*').eq('project_id', galleryProjectId!).order('sort_order');
       if (error) throw error;
       return data;
     },
@@ -75,17 +67,12 @@ const DashboardProjects = () => {
   const saveMutation = useMutation({
     mutationFn: async () => {
       const payload = {
-        business_id: business!.id,
-        title_ar: form.title_ar,
-        title_en: form.title_en || null,
-        description_ar: form.description_ar || null,
-        description_en: form.description_en || null,
-        cover_image_url: form.cover_image_url || null,
-        client_name: form.client_name || null,
+        business_id: business!.id, title_ar: form.title_ar, title_en: form.title_en || null,
+        description_ar: form.description_ar || null, description_en: form.description_en || null,
+        cover_image_url: form.cover_image_url || null, client_name: form.client_name || null,
         project_cost: form.project_cost ? Number(form.project_cost) : null,
         duration_days: form.duration_days ? Number(form.duration_days) : null,
-        completion_date: form.completion_date || null,
-        status: form.status,
+        completion_date: form.completion_date || null, status: form.status,
       };
       if (editId) {
         const { error } = await supabase.from('projects').update(payload).eq('id', editId);
@@ -98,8 +85,7 @@ const DashboardProjects = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-projects'] });
       toast.success(isRTL ? 'تم الحفظ بنجاح' : 'Saved successfully');
-      setDialogOpen(false);
-      resetForm();
+      closeForm();
     },
     onError: (err: any) => toast.error(err.message),
   });
@@ -117,24 +103,12 @@ const DashboardProjects = () => {
 
   const handleGalleryChange = async (urls: string[]) => {
     if (!galleryProjectId) return;
-
-    // Delete existing images
     await supabase.from('project_images').delete().eq('project_id', galleryProjectId);
-
-    // Insert new images
     if (urls.length > 0) {
-      const rows = urls.map((url, i) => ({
-        project_id: galleryProjectId,
-        image_url: url,
-        sort_order: i,
-      }));
+      const rows = urls.map((url, i) => ({ project_id: galleryProjectId, image_url: url, sort_order: i }));
       const { error } = await supabase.from('project_images').insert(rows);
-      if (error) {
-        toast.error(error.message);
-        return;
-      }
+      if (error) { toast.error(error.message); return; }
     }
-
     queryClient.invalidateQueries({ queryKey: ['project-images', galleryProjectId] });
   };
 
@@ -143,11 +117,10 @@ const DashboardProjects = () => {
       title_ar: p.title_ar, title_en: p.title_en || '', description_ar: p.description_ar || '',
       description_en: p.description_en || '', cover_image_url: p.cover_image_url || '',
       client_name: p.client_name || '', project_cost: p.project_cost?.toString() || '',
-      duration_days: p.duration_days?.toString() || '', completion_date: p.completion_date || '',
-      status: p.status,
+      duration_days: p.duration_days?.toString() || '', completion_date: p.completion_date || '', status: p.status,
     });
     setEditId(p.id);
-    setDialogOpen(true);
+    setShowForm(true);
   };
 
   const galleryProject = projects.find((p: any) => p.id === galleryProjectId);
@@ -163,82 +136,75 @@ const DashboardProjects = () => {
             </h1>
             <p className="text-sm text-muted-foreground">{isRTL ? 'اعرض مشاريعك المنجزة للعملاء' : 'Showcase your completed projects'}</p>
           </div>
-          <Dialog open={dialogOpen} onOpenChange={(o) => { setDialogOpen(o); if (!o) resetForm(); }}>
-            <DialogTrigger asChild>
-              <Button variant="hero" size="sm"><Plus className="w-4 h-4 me-1" />{isRTL ? 'إضافة مشروع' : 'Add Project'}</Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>{editId ? (isRTL ? 'تعديل المشروع' : 'Edit Project') : (isRTL ? 'إضافة مشروع جديد' : 'Add New Project')}</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-3 mt-2">
-                <div className="grid grid-cols-2 gap-3">
-                  <div><Label>{isRTL ? 'العنوان (عربي)' : 'Title (AR)'} *</Label><Input value={form.title_ar} onChange={e => setForm(f => ({ ...f, title_ar: e.target.value }))} /></div>
-                  <div><Label>{isRTL ? 'العنوان (إنجليزي)' : 'Title (EN)'}</Label><Input value={form.title_en} onChange={e => setForm(f => ({ ...f, title_en: e.target.value }))} dir="ltr" /></div>
-                </div>
-                <div><Label>{isRTL ? 'الوصف (عربي)' : 'Description (AR)'}</Label><Textarea value={form.description_ar} onChange={e => setForm(f => ({ ...f, description_ar: e.target.value }))} rows={3} /></div>
-                <div><Label>{isRTL ? 'الوصف (إنجليزي)' : 'Description (EN)'}</Label><Textarea value={form.description_en} onChange={e => setForm(f => ({ ...f, description_en: e.target.value }))} rows={3} dir="ltr" /></div>
-                <div>
-                  <Label>{isRTL ? 'صورة الغلاف' : 'Cover Image'}</Label>
-                  <ImageUpload
-                    bucket="project-images"
-                    value={form.cover_image_url}
-                    onChange={(url) => setForm(f => ({ ...f, cover_image_url: url }))}
-                    onRemove={() => setForm(f => ({ ...f, cover_image_url: '' }))}
-                    placeholder={isRTL ? 'اضغط لرفع صورة الغلاف' : 'Click to upload cover image'}
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div><Label>{isRTL ? 'اسم العميل' : 'Client Name'}</Label><Input value={form.client_name} onChange={e => setForm(f => ({ ...f, client_name: e.target.value }))} /></div>
-                  <div><Label>{isRTL ? 'التكلفة (ر.س)' : 'Cost (SAR)'}</Label><Input type="number" value={form.project_cost} onChange={e => setForm(f => ({ ...f, project_cost: e.target.value }))} dir="ltr" /></div>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div><Label>{isRTL ? 'المدة (أيام)' : 'Duration (days)'}</Label><Input type="number" value={form.duration_days} onChange={e => setForm(f => ({ ...f, duration_days: e.target.value }))} dir="ltr" /></div>
-                  <div><Label>{isRTL ? 'تاريخ الإنجاز' : 'Completion Date'}</Label><Input type="date" value={form.completion_date} onChange={e => setForm(f => ({ ...f, completion_date: e.target.value }))} dir="ltr" /></div>
-                </div>
-                <Button onClick={() => saveMutation.mutate()} disabled={!form.title_ar || saveMutation.isPending} className="w-full" variant="hero">
-                  {saveMutation.isPending ? '...' : (editId ? (isRTL ? 'تحديث' : 'Update') : (isRTL ? 'إضافة' : 'Add'))}
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+          {!showForm && (
+            <Button variant="hero" size="sm" onClick={() => { resetForm(); setShowForm(true); }}>
+              <Plus className="w-4 h-4 me-1" />{isRTL ? 'إضافة مشروع' : 'Add Project'}
+            </Button>
+          )}
         </div>
 
-        {/* Gallery Dialog */}
-        <Dialog open={!!galleryProjectId} onOpenChange={(o) => { if (!o) setGalleryProjectId(null); }}>
-          <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Images className="w-5 h-5 text-gold" />
-                {isRTL ? 'معرض صور المشروع' : 'Project Gallery'}
-              </DialogTitle>
-              {galleryProject && (
-                <p className="text-sm text-muted-foreground">
-                  {language === 'ar' ? (galleryProject as any).title_ar : ((galleryProject as any).title_en || (galleryProject as any).title_ar)}
-                </p>
-              )}
-            </DialogHeader>
-            <div className="mt-2">
-              <MultiImageUpload
-                bucket="project-images"
-                images={galleryImages.map((img: any) => img.image_url)}
-                onChange={handleGalleryChange}
-                folder="gallery"
-                maxImages={20}
-                maxSizeMB={5}
-              />
+        {showForm && (
+          <Card className="border-accent/30 bg-accent/5">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base">{editId ? (isRTL ? 'تعديل المشروع' : 'Edit Project') : (isRTL ? 'إضافة مشروع جديد' : 'Add New Project')}</CardTitle>
+                <Button variant="ghost" size="icon" onClick={closeForm}><X className="w-4 h-4" /></Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div><Label>{isRTL ? 'العنوان (عربي)' : 'Title (AR)'} *</Label><Input value={form.title_ar} onChange={e => setForm(f => ({ ...f, title_ar: e.target.value }))} /></div>
+                <div><Label>{isRTL ? 'العنوان (إنجليزي)' : 'Title (EN)'}</Label><Input value={form.title_en} onChange={e => setForm(f => ({ ...f, title_en: e.target.value }))} dir="ltr" /></div>
+              </div>
+              <div><Label>{isRTL ? 'الوصف (عربي)' : 'Description (AR)'}</Label><Textarea value={form.description_ar} onChange={e => setForm(f => ({ ...f, description_ar: e.target.value }))} rows={3} /></div>
+              <div><Label>{isRTL ? 'الوصف (إنجليزي)' : 'Description (EN)'}</Label><Textarea value={form.description_en} onChange={e => setForm(f => ({ ...f, description_en: e.target.value }))} rows={3} dir="ltr" /></div>
+              <div>
+                <Label>{isRTL ? 'صورة الغلاف' : 'Cover Image'}</Label>
+                <ImageUpload bucket="project-images" value={form.cover_image_url} onChange={(url) => setForm(f => ({ ...f, cover_image_url: url }))} onRemove={() => setForm(f => ({ ...f, cover_image_url: '' }))} placeholder={isRTL ? 'اضغط لرفع صورة الغلاف' : 'Click to upload cover image'} />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div><Label>{isRTL ? 'اسم العميل' : 'Client Name'}</Label><Input value={form.client_name} onChange={e => setForm(f => ({ ...f, client_name: e.target.value }))} /></div>
+                <div><Label>{isRTL ? 'التكلفة (ر.س)' : 'Cost (SAR)'}</Label><Input type="number" value={form.project_cost} onChange={e => setForm(f => ({ ...f, project_cost: e.target.value }))} dir="ltr" /></div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div><Label>{isRTL ? 'المدة (أيام)' : 'Duration (days)'}</Label><Input type="number" value={form.duration_days} onChange={e => setForm(f => ({ ...f, duration_days: e.target.value }))} dir="ltr" /></div>
+                <div><Label>{isRTL ? 'تاريخ الإنجاز' : 'Completion Date'}</Label><Input type="date" value={form.completion_date} onChange={e => setForm(f => ({ ...f, completion_date: e.target.value }))} dir="ltr" /></div>
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={() => saveMutation.mutate()} disabled={!form.title_ar || saveMutation.isPending} variant="hero" className="flex-1">
+                  {saveMutation.isPending ? '...' : (editId ? (isRTL ? 'تحديث' : 'Update') : (isRTL ? 'إضافة' : 'Add'))}
+                </Button>
+                <Button variant="outline" onClick={closeForm}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Gallery Section - inline */}
+        {galleryProjectId && (
+          <Card className="border-accent/30 bg-accent/5">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Images className="w-5 h-5 text-gold" />
+                  {isRTL ? 'معرض صور المشروع' : 'Project Gallery'}
+                </CardTitle>
+                <Button variant="ghost" size="icon" onClick={() => setGalleryProjectId(null)}><X className="w-4 h-4" /></Button>
+              </div>
+              {galleryProject && <p className="text-sm text-muted-foreground">{language === 'ar' ? (galleryProject as any).title_ar : ((galleryProject as any).title_en || (galleryProject as any).title_ar)}</p>}
+            </CardHeader>
+            <CardContent>
+              <MultiImageUpload bucket="project-images" images={galleryImages.map((img: any) => img.image_url)} onChange={handleGalleryChange} folder="gallery" maxImages={20} maxSizeMB={5} />
               <p className="text-xs text-muted-foreground mt-2">
-                {isRTL
-                  ? `${galleryImages.length} / 20 صورة • اسحب وأفلت أو اضغط لإضافة صور`
-                  : `${galleryImages.length} / 20 images • Drag & drop or click to add`}
+                {isRTL ? `${galleryImages.length} / 20 صورة • اسحب وأفلت أو اضغط لإضافة صور` : `${galleryImages.length} / 20 images • Drag & drop or click to add`}
               </p>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </CardContent>
+          </Card>
+        )}
 
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">{[1,2,3,4].map(i => <Skeleton key={i} className="h-48 rounded-xl" />)}</div>
-        ) : projects.length === 0 ? (
+        ) : projects.length === 0 && !showForm ? (
           <Card className="border-dashed"><CardContent className="p-12 text-center text-muted-foreground">
             <FolderOpen className="w-12 h-12 mx-auto mb-3 opacity-30" />
             <p>{isRTL ? 'لا توجد مشاريع بعد' : 'No projects yet'}</p>
@@ -263,8 +229,7 @@ const DashboardProjects = () => {
                   <div className="flex gap-2 pt-2">
                     <Button size="sm" variant="outline" onClick={() => openEdit(p)}><Edit className="w-3.5 h-3.5" /></Button>
                     <Button size="sm" variant="outline" onClick={() => setGalleryProjectId(p.id)}>
-                      <Images className="w-3.5 h-3.5 me-1" />
-                      {isRTL ? 'المعرض' : 'Gallery'}
+                      <Images className="w-3.5 h-3.5 me-1" />{isRTL ? 'المعرض' : 'Gallery'}
                     </Button>
                     <Button size="sm" variant="outline" className="text-destructive" onClick={() => deleteMutation.mutate(p.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
                   </div>

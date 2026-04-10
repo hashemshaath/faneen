@@ -5,14 +5,13 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Edit, Trash2, GripVertical } from 'lucide-react';
+import { Plus, Edit, Trash2, GripVertical, X } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Tables } from '@/integrations/supabase/types';
 
@@ -20,7 +19,7 @@ const DashboardServices = () => {
   const { isRTL } = useLanguage();
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Tables<'business_services'> | null>(null);
 
   const [form, setForm] = useState({
@@ -28,7 +27,6 @@ const DashboardServices = () => {
     price_from: '', price_to: '', is_active: true,
   });
 
-  // Fetch user's business first
   const { data: business } = useQuery({
     queryKey: ['my-business', user?.id],
     queryFn: async () => {
@@ -45,11 +43,7 @@ const DashboardServices = () => {
     queryKey: ['dashboard-services', businessId],
     queryFn: async () => {
       if (!businessId) return [];
-      const { data } = await supabase
-        .from('business_services')
-        .select('*')
-        .eq('business_id', businessId)
-        .order('sort_order');
+      const { data } = await supabase.from('business_services').select('*').eq('business_id', businessId).order('sort_order');
       return data ?? [];
     },
     enabled: !!businessId,
@@ -68,24 +62,17 @@ const DashboardServices = () => {
         price_to: form.price_to ? Number(form.price_to) : null,
         is_active: form.is_active,
       };
-
       if (editing) {
-        const { error } = await supabase
-          .from('business_services')
-          .update(payload)
-          .eq('id', editing.id);
+        const { error } = await supabase.from('business_services').update(payload).eq('id', editing.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase
-          .from('business_services')
-          .insert(payload);
+        const { error } = await supabase.from('business_services').insert(payload);
         if (error) throw error;
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-services'] });
-      setDialogOpen(false);
-      resetForm();
+      closeForm();
       toast.success(isRTL ? 'تم الحفظ بنجاح' : 'Saved successfully');
     },
     onError: (err: any) => toast.error(err.message),
@@ -102,9 +89,10 @@ const DashboardServices = () => {
     },
   });
 
-  const resetForm = () => {
-    setForm({ name_ar: '', name_en: '', description_ar: '', description_en: '', price_from: '', price_to: '', is_active: true });
+  const closeForm = () => {
+    setShowForm(false);
     setEditing(null);
+    setForm({ name_ar: '', name_en: '', description_ar: '', description_en: '', price_from: '', price_to: '', is_active: true });
   };
 
   const openEdit = (s: Tables<'business_services'>) => {
@@ -114,7 +102,7 @@ const DashboardServices = () => {
       description_en: s.description_en || '', price_from: s.price_from?.toString() || '',
       price_to: s.price_to?.toString() || '', is_active: s.is_active,
     });
-    setDialogOpen(true);
+    setShowForm(true);
   };
 
   return (
@@ -125,58 +113,69 @@ const DashboardServices = () => {
             <h1 className="font-heading font-bold text-2xl">{isRTL ? 'إدارة الخدمات' : 'Manage Services'}</h1>
             <p className="text-sm text-muted-foreground">{isRTL ? 'أضف وعدّل خدماتك المقدمة' : 'Add and edit your offered services'}</p>
           </div>
-          <Dialog open={dialogOpen} onOpenChange={(o) => { setDialogOpen(o); if (!o) resetForm(); }}>
-            <DialogTrigger asChild>
-              <Button variant="hero" size="sm"><Plus className="w-4 h-4 me-1" />{isRTL ? 'خدمة جديدة' : 'New Service'}</Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-lg">
-              <DialogHeader>
-                <DialogTitle>{editing ? (isRTL ? 'تعديل الخدمة' : 'Edit Service') : (isRTL ? 'خدمة جديدة' : 'New Service')}</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <Label>{isRTL ? 'الاسم (عربي)' : 'Name (Arabic)'} *</Label>
-                    <Input value={form.name_ar} onChange={(e) => setForm({ ...form, name_ar: e.target.value })} />
-                  </div>
-                  <div className="space-y-1">
-                    <Label>{isRTL ? 'الاسم (إنجليزي)' : 'Name (English)'}</Label>
-                    <Input value={form.name_en} onChange={(e) => setForm({ ...form, name_en: e.target.value })} dir="ltr" />
-                  </div>
+          {!showForm && (
+            <Button variant="hero" size="sm" onClick={() => { closeForm(); setShowForm(true); }}>
+              <Plus className="w-4 h-4 me-1" />{isRTL ? 'خدمة جديدة' : 'New Service'}
+            </Button>
+          )}
+        </div>
+
+        {showForm && (
+          <Card className="border-accent/30 bg-accent/5">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base">
+                  {editing ? (isRTL ? 'تعديل الخدمة' : 'Edit Service') : (isRTL ? 'خدمة جديدة' : 'New Service')}
+                </CardTitle>
+                <Button variant="ghost" size="icon" onClick={closeForm}><X className="w-4 h-4" /></Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <Label>{isRTL ? 'الاسم (عربي)' : 'Name (Arabic)'} *</Label>
+                  <Input value={form.name_ar} onChange={(e) => setForm({ ...form, name_ar: e.target.value })} />
                 </div>
                 <div className="space-y-1">
-                  <Label>{isRTL ? 'الوصف (عربي)' : 'Description (Arabic)'}</Label>
-                  <Textarea value={form.description_ar} onChange={(e) => setForm({ ...form, description_ar: e.target.value })} rows={3} />
+                  <Label>{isRTL ? 'الاسم (إنجليزي)' : 'Name (English)'}</Label>
+                  <Input value={form.name_en} onChange={(e) => setForm({ ...form, name_en: e.target.value })} dir="ltr" />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <Label>{isRTL ? 'الوصف (عربي)' : 'Description (Arabic)'}</Label>
+                <Textarea value={form.description_ar} onChange={(e) => setForm({ ...form, description_ar: e.target.value })} rows={3} />
+              </div>
+              <div className="space-y-1">
+                <Label>{isRTL ? 'الوصف (إنجليزي)' : 'Description (English)'}</Label>
+                <Textarea value={form.description_en} onChange={(e) => setForm({ ...form, description_en: e.target.value })} rows={3} dir="ltr" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <Label>{isRTL ? 'السعر من' : 'Price From'}</Label>
+                  <Input type="number" value={form.price_from} onChange={(e) => setForm({ ...form, price_from: e.target.value })} dir="ltr" />
                 </div>
                 <div className="space-y-1">
-                  <Label>{isRTL ? 'الوصف (إنجليزي)' : 'Description (English)'}</Label>
-                  <Textarea value={form.description_en} onChange={(e) => setForm({ ...form, description_en: e.target.value })} rows={3} dir="ltr" />
+                  <Label>{isRTL ? 'السعر إلى' : 'Price To'}</Label>
+                  <Input type="number" value={form.price_to} onChange={(e) => setForm({ ...form, price_to: e.target.value })} dir="ltr" />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <Label>{isRTL ? 'السعر من' : 'Price From'}</Label>
-                    <Input type="number" value={form.price_from} onChange={(e) => setForm({ ...form, price_from: e.target.value })} dir="ltr" />
-                  </div>
-                  <div className="space-y-1">
-                    <Label>{isRTL ? 'السعر إلى' : 'Price To'}</Label>
-                    <Input type="number" value={form.price_to} onChange={(e) => setForm({ ...form, price_to: e.target.value })} dir="ltr" />
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Switch checked={form.is_active} onCheckedChange={(v) => setForm({ ...form, is_active: v })} />
-                  <Label>{isRTL ? 'خدمة مفعلة' : 'Active Service'}</Label>
-                </div>
-                <Button onClick={() => saveMutation.mutate()} disabled={!form.name_ar || saveMutation.isPending} className="w-full" variant="hero">
+              </div>
+              <div className="flex items-center gap-3">
+                <Switch checked={form.is_active} onCheckedChange={(v) => setForm({ ...form, is_active: v })} />
+                <Label>{isRTL ? 'خدمة مفعلة' : 'Active Service'}</Label>
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={() => saveMutation.mutate()} disabled={!form.name_ar || saveMutation.isPending} variant="hero" className="flex-1">
                   {saveMutation.isPending ? (isRTL ? 'جاري الحفظ...' : 'Saving...') : (isRTL ? 'حفظ' : 'Save')}
                 </Button>
+                <Button variant="outline" onClick={closeForm}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
               </div>
-            </DialogContent>
-          </Dialog>
-        </div>
+            </CardContent>
+          </Card>
+        )}
 
         {isLoading ? (
           <div className="space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-20 rounded-xl" />)}</div>
-        ) : services.length === 0 ? (
+        ) : services.length === 0 && !showForm ? (
           <Card className="border-dashed">
             <CardContent className="flex flex-col items-center py-12 text-muted-foreground">
               <p className="text-lg font-medium">{isRTL ? 'لا توجد خدمات بعد' : 'No services yet'}</p>

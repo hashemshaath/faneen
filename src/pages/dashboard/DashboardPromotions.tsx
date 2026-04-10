@@ -12,26 +12,16 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Megaphone, Plus, Trash2, Edit, Eye, Video, Tag, Calendar } from 'lucide-react';
+import { Megaphone, Plus, Trash2, Edit, Eye, Video, Tag, Calendar, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 type PromotionType = 'ad' | 'offer' | 'video';
 
 interface PromotionForm {
-  title_ar: string;
-  title_en: string;
-  description_ar: string;
-  description_en: string;
-  promotion_type: PromotionType;
-  discount_percentage: string;
-  original_price: string;
-  offer_price: string;
-  image_url: string;
-  video_url: string;
-  start_date: string;
-  end_date: string;
-  is_active: boolean;
+  title_ar: string; title_en: string; description_ar: string; description_en: string;
+  promotion_type: PromotionType; discount_percentage: string; original_price: string;
+  offer_price: string; image_url: string; video_url: string; start_date: string;
+  end_date: string; is_active: boolean;
 }
 
 const emptyForm: PromotionForm = {
@@ -45,7 +35,7 @@ const DashboardPromotions = () => {
   const { isRTL } = useLanguage();
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<PromotionForm>(emptyForm);
 
@@ -61,11 +51,7 @@ const DashboardPromotions = () => {
   const { data: promotions = [], isLoading } = useQuery({
     queryKey: ['my-promotions', businessId],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('promotions')
-        .select('*')
-        .eq('business_id', businessId!)
-        .order('created_at', { ascending: false });
+      const { data } = await supabase.from('promotions').select('*').eq('business_id', businessId!).order('created_at', { ascending: false });
       return data ?? [];
     },
     enabled: !!businessId,
@@ -75,20 +61,14 @@ const DashboardPromotions = () => {
     mutationFn: async () => {
       if (!businessId) throw new Error('No business');
       const payload: any = {
-        business_id: businessId,
-        title_ar: form.title_ar,
-        title_en: form.title_en || null,
-        description_ar: form.description_ar || null,
-        description_en: form.description_en || null,
+        business_id: businessId, title_ar: form.title_ar, title_en: form.title_en || null,
+        description_ar: form.description_ar || null, description_en: form.description_en || null,
         promotion_type: form.promotion_type,
         discount_percentage: form.discount_percentage ? Number(form.discount_percentage) : null,
         original_price: form.original_price ? Number(form.original_price) : null,
         offer_price: form.offer_price ? Number(form.offer_price) : null,
-        image_url: form.image_url || null,
-        video_url: form.video_url || null,
-        start_date: form.start_date,
-        end_date: form.end_date || null,
-        is_active: form.is_active,
+        image_url: form.image_url || null, video_url: form.video_url || null,
+        start_date: form.start_date, end_date: form.end_date || null, is_active: form.is_active,
       };
       if (editingId) {
         const { error } = await supabase.from('promotions').update(payload).eq('id', editingId);
@@ -100,9 +80,7 @@ const DashboardPromotions = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-promotions'] });
-      setDialogOpen(false);
-      setEditingId(null);
-      setForm(emptyForm);
+      closeForm();
       toast.success(isRTL ? 'تم الحفظ بنجاح' : 'Saved successfully');
     },
     onError: (err: any) => toast.error(err.message),
@@ -119,6 +97,8 @@ const DashboardPromotions = () => {
     },
   });
 
+  const closeForm = () => { setShowForm(false); setEditingId(null); setForm(emptyForm); };
+
   const openEdit = (p: any) => {
     setEditingId(p.id);
     setForm({
@@ -128,7 +108,7 @@ const DashboardPromotions = () => {
       offer_price: p.offer_price?.toString() || '', image_url: p.image_url || '', video_url: p.video_url || '',
       start_date: p.start_date, end_date: p.end_date || '', is_active: p.is_active,
     });
-    setDialogOpen(true);
+    setShowForm(true);
   };
 
   const typeLabels: Record<string, { ar: string; en: string; icon: React.ReactNode }> = {
@@ -145,104 +125,73 @@ const DashboardPromotions = () => {
             <h1 className="font-heading font-bold text-2xl">{isRTL ? 'الإعلانات والعروض' : 'Promotions & Offers'}</h1>
             <p className="text-sm text-muted-foreground">{isRTL ? 'أنشئ إعلانات وعروض خاصة وفيديوهات ترويجية' : 'Create ads, special offers, and promotional videos'}</p>
           </div>
+          {!showForm && (
+            <Button variant="hero" onClick={() => { closeForm(); setShowForm(true); }}>
+              <Plus className="w-4 h-4 me-1" />{isRTL ? 'إضافة' : 'Add'}
+            </Button>
+          )}
+        </div>
 
-          <Dialog open={dialogOpen} onOpenChange={(v) => { setDialogOpen(v); if (!v) { setEditingId(null); setForm(emptyForm); } }}>
-            <DialogTrigger asChild>
-              <Button variant="hero"><Plus className="w-4 h-4 me-1" />{isRTL ? 'إضافة' : 'Add'}</Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>{editingId ? (isRTL ? 'تعديل' : 'Edit') : (isRTL ? 'إضافة جديد' : 'Add New')}</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 pt-2">
-                <div className="space-y-1">
-                  <Label>{isRTL ? 'النوع' : 'Type'}</Label>
-                  <Select value={form.promotion_type} onValueChange={(v: PromotionType) => setForm({ ...form, promotion_type: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="offer">{isRTL ? 'عرض خاص' : 'Special Offer'}</SelectItem>
-                      <SelectItem value="ad">{isRTL ? 'إعلان' : 'Advertisement'}</SelectItem>
-                      <SelectItem value="video">{isRTL ? 'فيديو ترويجي' : 'Promotional Video'}</SelectItem>
-                    </SelectContent>
-                  </Select>
+        {showForm && (
+          <Card className="border-accent/30 bg-accent/5">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base">{editingId ? (isRTL ? 'تعديل' : 'Edit') : (isRTL ? 'إضافة جديد' : 'Add New')}</CardTitle>
+                <Button variant="ghost" size="icon" onClick={closeForm}><X className="w-4 h-4" /></Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-1">
+                <Label>{isRTL ? 'النوع' : 'Type'}</Label>
+                <Select value={form.promotion_type} onValueChange={(v: PromotionType) => setForm({ ...form, promotion_type: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="offer">{isRTL ? 'عرض خاص' : 'Special Offer'}</SelectItem>
+                    <SelectItem value="ad">{isRTL ? 'إعلان' : 'Advertisement'}</SelectItem>
+                    <SelectItem value="video">{isRTL ? 'فيديو ترويجي' : 'Promotional Video'}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1"><Label>{isRTL ? 'العنوان (عربي)' : 'Title (Arabic)'} *</Label><Input value={form.title_ar} onChange={(e) => setForm({ ...form, title_ar: e.target.value })} /></div>
+                <div className="space-y-1"><Label>{isRTL ? 'العنوان (إنجليزي)' : 'Title (English)'}</Label><Input value={form.title_en} onChange={(e) => setForm({ ...form, title_en: e.target.value })} dir="ltr" /></div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1"><Label>{isRTL ? 'الوصف (عربي)' : 'Description (Arabic)'}</Label><Textarea value={form.description_ar} onChange={(e) => setForm({ ...form, description_ar: e.target.value })} rows={2} /></div>
+                <div className="space-y-1"><Label>{isRTL ? 'الوصف (إنجليزي)' : 'Description (English)'}</Label><Textarea value={form.description_en} onChange={(e) => setForm({ ...form, description_en: e.target.value })} rows={2} dir="ltr" /></div>
+              </div>
+              {form.promotion_type === 'offer' && (
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="space-y-1"><Label>{isRTL ? 'نسبة الخصم %' : 'Discount %'}</Label><Input type="number" value={form.discount_percentage} onChange={(e) => setForm({ ...form, discount_percentage: e.target.value })} dir="ltr" /></div>
+                  <div className="space-y-1"><Label>{isRTL ? 'السعر الأصلي' : 'Original Price'}</Label><Input type="number" value={form.original_price} onChange={(e) => setForm({ ...form, original_price: e.target.value })} dir="ltr" /></div>
+                  <div className="space-y-1"><Label>{isRTL ? 'سعر العرض' : 'Offer Price'}</Label><Input type="number" value={form.offer_price} onChange={(e) => setForm({ ...form, offer_price: e.target.value })} dir="ltr" /></div>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <Label>{isRTL ? 'العنوان (عربي)' : 'Title (Arabic)'} *</Label>
-                    <Input value={form.title_ar} onChange={(e) => setForm({ ...form, title_ar: e.target.value })} />
-                  </div>
-                  <div className="space-y-1">
-                    <Label>{isRTL ? 'العنوان (إنجليزي)' : 'Title (English)'}</Label>
-                    <Input value={form.title_en} onChange={(e) => setForm({ ...form, title_en: e.target.value })} dir="ltr" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <Label>{isRTL ? 'الوصف (عربي)' : 'Description (Arabic)'}</Label>
-                    <Textarea value={form.description_ar} onChange={(e) => setForm({ ...form, description_ar: e.target.value })} rows={2} />
-                  </div>
-                  <div className="space-y-1">
-                    <Label>{isRTL ? 'الوصف (إنجليزي)' : 'Description (English)'}</Label>
-                    <Textarea value={form.description_en} onChange={(e) => setForm({ ...form, description_en: e.target.value })} rows={2} dir="ltr" />
-                  </div>
-                </div>
-
-                {form.promotion_type === 'offer' && (
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="space-y-1">
-                      <Label>{isRTL ? 'نسبة الخصم %' : 'Discount %'}</Label>
-                      <Input type="number" value={form.discount_percentage} onChange={(e) => setForm({ ...form, discount_percentage: e.target.value })} dir="ltr" />
-                    </div>
-                    <div className="space-y-1">
-                      <Label>{isRTL ? 'السعر الأصلي' : 'Original Price'}</Label>
-                      <Input type="number" value={form.original_price} onChange={(e) => setForm({ ...form, original_price: e.target.value })} dir="ltr" />
-                    </div>
-                    <div className="space-y-1">
-                      <Label>{isRTL ? 'سعر العرض' : 'Offer Price'}</Label>
-                      <Input type="number" value={form.offer_price} onChange={(e) => setForm({ ...form, offer_price: e.target.value })} dir="ltr" />
-                    </div>
-                  </div>
-                )}
-
-                <div className="space-y-1">
-                  <Label>{isRTL ? 'رابط الصورة' : 'Image URL'}</Label>
-                  <Input value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} dir="ltr" placeholder="https://..." />
-                </div>
-
-                {(form.promotion_type === 'video' || form.promotion_type === 'ad') && (
-                  <div className="space-y-1">
-                    <Label>{isRTL ? 'رابط الفيديو (YouTube/Vimeo)' : 'Video URL (YouTube/Vimeo)'}</Label>
-                    <Input value={form.video_url} onChange={(e) => setForm({ ...form, video_url: e.target.value })} dir="ltr" placeholder="https://youtube.com/..." />
-                  </div>
-                )}
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <Label>{isRTL ? 'تاريخ البداية' : 'Start Date'}</Label>
-                    <Input type="date" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} dir="ltr" />
-                  </div>
-                  <div className="space-y-1">
-                    <Label>{isRTL ? 'تاريخ الانتهاء' : 'End Date'}</Label>
-                    <Input type="date" value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} dir="ltr" />
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <Label>{isRTL ? 'نشط' : 'Active'}</Label>
-                  <Switch checked={form.is_active} onCheckedChange={(v) => setForm({ ...form, is_active: v })} />
-                </div>
-
-                <Button onClick={() => saveMutation.mutate()} disabled={!form.title_ar || saveMutation.isPending} className="w-full" variant="hero">
+              )}
+              <div className="space-y-1"><Label>{isRTL ? 'رابط الصورة' : 'Image URL'}</Label><Input value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} dir="ltr" placeholder="https://..." /></div>
+              {(form.promotion_type === 'video' || form.promotion_type === 'ad') && (
+                <div className="space-y-1"><Label>{isRTL ? 'رابط الفيديو' : 'Video URL'}</Label><Input value={form.video_url} onChange={(e) => setForm({ ...form, video_url: e.target.value })} dir="ltr" placeholder="https://youtube.com/..." /></div>
+              )}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1"><Label>{isRTL ? 'تاريخ البداية' : 'Start Date'}</Label><Input type="date" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} dir="ltr" /></div>
+                <div className="space-y-1"><Label>{isRTL ? 'تاريخ الانتهاء' : 'End Date'}</Label><Input type="date" value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} dir="ltr" /></div>
+              </div>
+              <div className="flex items-center justify-between">
+                <Label>{isRTL ? 'نشط' : 'Active'}</Label>
+                <Switch checked={form.is_active} onCheckedChange={(v) => setForm({ ...form, is_active: v })} />
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={() => saveMutation.mutate()} disabled={!form.title_ar || saveMutation.isPending} variant="hero" className="flex-1">
                   {saveMutation.isPending ? (isRTL ? 'جاري الحفظ...' : 'Saving...') : (isRTL ? 'حفظ' : 'Save')}
                 </Button>
+                <Button variant="outline" onClick={closeForm}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
               </div>
-            </DialogContent>
-          </Dialog>
-        </div>
+            </CardContent>
+          </Card>
+        )}
 
         {isLoading ? (
           <div className="grid gap-4 md:grid-cols-2">{[1,2].map(i => <Card key={i}><CardContent className="p-6"><div className="h-32 bg-muted animate-pulse rounded" /></CardContent></Card>)}</div>
-        ) : promotions.length === 0 ? (
+        ) : promotions.length === 0 && !showForm ? (
           <Card className="border-dashed">
             <CardContent className="flex flex-col items-center py-12 text-muted-foreground">
               <Megaphone className="w-12 h-12 mb-3 opacity-40" />
@@ -257,18 +206,12 @@ const DashboardPromotions = () => {
               const isExpired = p.end_date && new Date(p.end_date) < new Date();
               return (
                 <Card key={p.id} className={`border-border/50 ${isExpired ? 'opacity-60' : ''}`}>
-                  {p.image_url && (
-                    <div className="h-40 overflow-hidden rounded-t-lg">
-                      <img src={p.image_url} alt="" className="w-full h-full object-cover" />
-                    </div>
-                  )}
+                  {p.image_url && <div className="h-40 overflow-hidden rounded-t-lg"><img src={p.image_url} alt="" className="w-full h-full object-cover" /></div>}
                   <CardContent className="p-4 space-y-3">
                     <div className="flex items-start justify-between">
                       <div>
                         <div className="flex items-center gap-2 mb-1">
-                          <Badge variant="secondary" className="text-xs flex items-center gap-1">
-                            {t?.icon} {t?.[isRTL ? 'ar' : 'en']}
-                          </Badge>
+                          <Badge variant="secondary" className="text-xs flex items-center gap-1">{t?.icon} {t?.[isRTL ? 'ar' : 'en']}</Badge>
                           {isExpired && <Badge variant="destructive" className="text-xs">{isRTL ? 'منتهي' : 'Expired'}</Badge>}
                           {!p.is_active && <Badge variant="outline" className="text-xs">{isRTL ? 'غير نشط' : 'Inactive'}</Badge>}
                         </div>
@@ -279,7 +222,6 @@ const DashboardPromotions = () => {
                         <Button size="icon" variant="ghost" className="text-destructive" onClick={() => deleteMutation.mutate(p.id)}><Trash2 className="w-4 h-4" /></Button>
                       </div>
                     </div>
-
                     {p.promotion_type === 'offer' && p.original_price && (
                       <div className="flex items-center gap-3">
                         <span className="line-through text-muted-foreground text-sm">{Number(p.original_price).toLocaleString()} {p.currency_code}</span>
@@ -287,7 +229,6 @@ const DashboardPromotions = () => {
                         {p.discount_percentage && <Badge className="bg-red-500 text-white">-{p.discount_percentage}%</Badge>}
                       </div>
                     )}
-
                     <div className="flex items-center gap-4 text-xs text-muted-foreground">
                       <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{new Date(p.start_date).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')}</span>
                       {p.end_date && <span>→ {new Date(p.end_date).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')}</span>}
