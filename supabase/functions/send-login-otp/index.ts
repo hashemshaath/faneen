@@ -2,9 +2,14 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.103.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+const respond = (payload: Record<string, unknown>) =>
+  new Response(JSON.stringify(payload), {
+    status: 200,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -16,29 +21,36 @@ Deno.serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const adminClient = createClient(supabaseUrl, serviceKey);
 
-    const { phone, country_code } = await req.json();
-    if (!phone || !country_code) {
-      return new Response(
-        JSON.stringify({ error: "phone and country_code required" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    let body: { phone?: string; country_code?: string };
+    try {
+      body = await req.json();
+    } catch {
+      return respond({ success: false, error: "invalid_request", message: "Invalid request body" });
     }
 
-    const cleanPhone = phone.replace(/^0/, "");
+    const { phone, country_code } = body;
+    if (!phone || !country_code) {
+      return respond({
+        success: false,
+        error: "missing_fields",
+        message: "phone and country_code required",
+      });
+    }
+
+    const cleanPhone = String(phone).replace(/^0/, "");
     const fullPhone = `${country_code}${cleanPhone}`;
-    // Also try with leading zero for local format
     const localPhone = `0${cleanPhone}`;
 
-    // Find user by phone (try multiple formats)
-    let profile: { user_id: string; email: string } | null = null;
+    let profile: { user_id: string } | null = null;
 
-    for (const ph of [fullPhone, localPhone, cleanPhone, phone]) {
+    for (const ph of [fullPhone, localPhone, cleanPhone, String(phone)]) {
       const { data } = await adminClient
         .from("profiles")
-        .select("user_id, email")
+        .select("user_id")
         .eq("phone", ph)
         .limit(1)
-        .single();
+        .maybeSingle();
+
       if (data) {
         profile = data;
         break;
@@ -46,40 +58,30 @@ Deno.serve(async (req) => {
     }
 
     if (!profile) {
-      return new Response(
-        JSON.stringify({ error: "no_account", message: "No account found with this phone number" }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return respond({
+        success: false,
+        error: "no_account",
+        message: "No account found with this phone number",
+      });
     }
 
-    // Generate 6-digit OTP
     const otp = String(Math.floor(100000 + Math.random() * 900000));
+    const otpLifetimeMs = 10 * 60 * 1000;
 
-    // Delete previous OTPs for this user/phone
-    await adminClient
-      .from("phone_otps")
-      .delete()
-      .eq("user_id", profile.user_id)
-      .eq("phone", fullPhone);
+    await adminClient.from("phone_otps").delete().eq("user_id", profile.user_id);
 
-    // Insert new OTP (expires in 5 min)
-    const { error: insertError } = await adminClient
-      .from("phone_otps")
-      .insert({
-        user_id: profile.user_id,
-        phone: fullPhone,
-        otp_code: otp,
-        expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
-      });
+    const { error: insertError } = await adminClient.from("phone_otps").insert({
+      user_id: profile.user_id,
+      phone: fullPhone,
+      otp_code: otp,
+      expires_at: new Date(Date.now() + otpLifetimeMs).toISOString(),
+    });
 
     if (insertError) {
-      return new Response(
-        JSON.stringify({ error: "Failed to create OTP" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      console.error("Failed to create OTP:", insertError);
+      return respond({ success: false, error: "otp_create_failed", message: "Failed to create OTP" });
     }
 
-    // Try to send via Twilio if configured
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const TWILIO_API_KEY = Deno.env.get("TWILIO_API_KEY");
     const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER");
@@ -88,8 +90,8 @@ Deno.serve(async (req) => {
 
     if (LOVABLE_API_KEY && TWILIO_API_KEY && TWILIO_PHONE_NUMBER) {
       try {
-        const GATEWAY_URL = "https://connector-gateway.lovable.dev/twilio";
-        const response = await fetch(`${GATEWAY_URL}/Messages.json`, {
+        const gatewayUrl = "https://connector-gateway.lovable.dev/twilio";
+        const response = await fetch(`${gatewayUrl}/Messages.json`, {
           method: "POST",
           headers: {
             Authorization: `Bearer ${LOVABLE_API_KEY}`,
@@ -102,24 +104,21 @@ Deno.serve(async (req) => {
             Body: `رمز الدخول لحسابك في فنيين: ${otp}\nYour Faneen login code: ${otp}`,
           }),
         });
-        if (response.ok) smsSent = true;
-      } catch {
-        // Twilio failed, continue
+
+        smsSent = response.ok;
+      } catch (twilioError) {
+        console.error("Twilio send failed:", twilioError);
       }
     }
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        sms_sent: smsSent,
-        ...(smsSent ? {} : { demo_otp: otp }),
-      }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
-  } catch (err) {
-    return new Response(JSON.stringify({ error: String(err) }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    return respond({
+      success: true,
+      sms_sent: smsSent,
+      expires_in_seconds: otpLifetimeMs / 1000,
+      ...(smsSent ? {} : { demo_otp: otp }),
     });
+  } catch (err) {
+    console.error("send-login-otp error:", err);
+    return respond({ success: false, error: "internal_error", message: String(err) });
   }
 });
