@@ -446,9 +446,9 @@ const BlogPost = () => {
 
       {/* ═══ Cover ═══ */}
       {post.cover_image_url ? (
-        <div className="w-full h-48 sm:h-72 md:h-[28rem] bg-muted relative mt-14 sm:mt-16 overflow-hidden">
-          <img src={post.cover_image_url} alt={title} className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
+        <div className="w-full aspect-[16/10] sm:aspect-[2/1] md:aspect-[5/2] max-h-[28rem] bg-muted relative mt-14 sm:mt-16 overflow-hidden">
+          <img src={post.cover_image_url} alt={title} className="w-full h-full object-cover" loading="eager" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
         </div>
       ) : (
         <div className="pt-14 sm:pt-16" />
