@@ -1,0 +1,155 @@
+import { useLanguage } from '@/i18n/LanguageContext';
+import { Slider } from '@/components/ui/slider';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
+import {
+  Star, BadgeCheck, SlidersHorizontal, X, RotateCcw,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+
+export interface SearchFilterValues {
+  categoryId: string;
+  cityId: string;
+  minRating: number;
+  verifiedOnly: boolean;
+  sortBy: 'rating' | 'newest' | 'name';
+}
+
+interface SearchFiltersProps {
+  filters: SearchFilterValues;
+  onFilterChange: <K extends keyof SearchFilterValues>(key: K, value: SearchFilterValues[K]) => void;
+  onClearFilters: () => void;
+  categories?: { id: string; name_ar: string; name_en: string }[];
+  cities?: { id: string; name_ar: string; name_en: string }[];
+  hasActiveFilters: boolean;
+  showFilters: boolean;
+  onToggleFilters: () => void;
+}
+
+export const SearchFilters = ({
+  filters, onFilterChange, onClearFilters, categories, cities,
+  hasActiveFilters, showFilters, onToggleFilters,
+}: SearchFiltersProps) => {
+  const { t, language } = useLanguage();
+
+  const activeCount = [
+    filters.categoryId !== 'all',
+    filters.cityId !== 'all',
+    filters.minRating > 0,
+    filters.verifiedOnly,
+  ].filter(Boolean).length;
+
+  return (
+    <div className="lg:w-72 flex-shrink-0">
+      <div className="flex items-center justify-between mb-4">
+        <button
+          onClick={onToggleFilters}
+          className="flex items-center gap-2 font-heading font-bold text-foreground hover:text-accent transition-colors"
+        >
+          <SlidersHorizontal className="w-5 h-5 text-accent" />
+          {t('search.filters')}
+          {activeCount > 0 && (
+            <Badge variant="secondary" className="bg-accent text-accent-foreground text-[10px] px-1.5 py-0 min-w-[18px] h-[18px] flex items-center justify-center rounded-full">
+              {activeCount}
+            </Badge>
+          )}
+        </button>
+        {hasActiveFilters && (
+          <button
+            onClick={onClearFilters}
+            className="text-xs text-destructive font-body hover:underline flex items-center gap-1 transition-colors"
+          >
+            <RotateCcw className="w-3 h-3" />
+            {t('search.clear_filters')}
+          </button>
+        )}
+      </div>
+
+      {showFilters && (
+        <div className="space-y-5 p-5 rounded-2xl bg-card border border-border shadow-sm transition-all animate-fade-in">
+          {/* Category */}
+          <FilterSection label={t('search.category')}>
+            <Select value={filters.categoryId} onValueChange={v => onFilterChange('categoryId', v)}>
+              <SelectTrigger className="w-full rounded-xl"><SelectValue placeholder={t('search.all_categories')} /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('search.all_categories')}</SelectItem>
+                {categories?.map(c => (
+                  <SelectItem key={c.id} value={c.id}>{language === 'ar' ? c.name_ar : c.name_en}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </FilterSection>
+
+          {/* City */}
+          <FilterSection label={t('search.city')}>
+            <Select value={filters.cityId} onValueChange={v => onFilterChange('cityId', v)}>
+              <SelectTrigger className="w-full rounded-xl"><SelectValue placeholder={t('search.all_cities')} /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('search.all_cities')}</SelectItem>
+                {cities?.map(c => (
+                  <SelectItem key={c.id} value={c.id}>{language === 'ar' ? c.name_ar : c.name_en}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </FilterSection>
+
+          {/* Rating */}
+          <FilterSection label={`${t('search.min_rating')}: ${filters.minRating > 0 ? `${filters.minRating}+` : t('profile.all')}`}>
+            <div className="flex items-center gap-3 px-1">
+              <Slider
+                value={[filters.minRating]}
+                onValueChange={([v]) => onFilterChange('minRating', v)}
+                max={5}
+                step={1}
+                className="flex-1"
+              />
+              <div className="flex items-center gap-0.5">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Star
+                    key={i}
+                    className={`w-3.5 h-3.5 transition-colors ${i < filters.minRating ? 'text-accent fill-accent' : 'text-border'}`}
+                  />
+                ))}
+              </div>
+            </div>
+          </FilterSection>
+
+          {/* Verified */}
+          <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors">
+            <Checkbox
+              id="verified"
+              checked={filters.verifiedOnly}
+              onCheckedChange={c => onFilterChange('verifiedOnly', c === true)}
+            />
+            <label htmlFor="verified" className="text-sm font-body text-foreground cursor-pointer flex items-center gap-1.5 flex-1">
+              <BadgeCheck className="w-4 h-4 text-accent" />
+              {t('search.verified_only')}
+            </label>
+          </div>
+
+          {/* Sort */}
+          <FilterSection label={t('search.sort_by')}>
+            <Select value={filters.sortBy} onValueChange={(v: any) => onFilterChange('sortBy', v)}>
+              <SelectTrigger className="w-full rounded-xl"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="rating">{t('search.sort_rating')}</SelectItem>
+                <SelectItem value="newest">{t('search.sort_newest')}</SelectItem>
+                <SelectItem value="name">{t('search.sort_name')}</SelectItem>
+              </SelectContent>
+            </Select>
+          </FilterSection>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const FilterSection = ({ label, children }: { label: string; children: React.ReactNode }) => (
+  <div>
+    <label className="text-sm font-heading font-semibold text-foreground mb-2 block">{label}</label>
+    {children}
+  </div>
+);
