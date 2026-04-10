@@ -9,7 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { FileText, Calendar, Eye, Search, BookOpen, Clock, ArrowLeft, ArrowRight, Tag, TrendingUp } from 'lucide-react';
+import { FileText, Calendar, Eye, Search, BookOpen, Clock, ArrowLeft, ArrowRight, Tag, TrendingUp, MessageCircle, Heart } from 'lucide-react';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 
 const blogCategories: Record<string, { ar: string; en: string; icon: string }> = {
