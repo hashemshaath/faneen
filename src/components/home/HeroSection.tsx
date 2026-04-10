@@ -64,13 +64,13 @@ const SearchBar = memo(({ categories, cities, language, isRTL, t, onSearch }: an
       <div className="bg-white/10 backdrop-blur-xl border border-white/15 rounded-2xl sm:rounded-3xl p-2 sm:p-3 shadow-2xl shadow-black/20">
         <div className="flex flex-col sm:flex-row gap-2">
           <div className="flex-1 relative">
-            <Search className={`absolute ${isRTL ? 'end-4' : 'start-4'} top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-white/40`} />
+            <Search className="absolute end-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-white/40" />
             <input
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder={t('search.placeholder')}
-              className={`w-full ${isRTL ? 'pe-11 ps-3' : 'ps-11 pe-3'} sm:${isRTL ? 'pe-12 ps-4' : 'ps-12 pe-4'} py-3 sm:py-4 rounded-xl sm:rounded-2xl bg-white/10 text-white placeholder:text-white/30 font-body text-sm border-0 outline-none focus:ring-2 focus:ring-gold/40 focus:bg-white/15 transition-all`}
+              className="w-full pe-11 ps-3 sm:pe-12 sm:ps-4 py-3 sm:py-4 rounded-xl sm:rounded-2xl bg-white/10 text-white placeholder:text-white/30 font-body text-sm border-0 outline-none focus:ring-2 focus:ring-gold/40 focus:bg-white/15 transition-all"
             />
           </div>
           <select
