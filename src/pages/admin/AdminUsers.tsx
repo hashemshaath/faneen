@@ -490,10 +490,32 @@ const AdminUsers = () => {
                         {!isCurrentUser && (() => {
                           const targetIsSuperAdmin = roles.some(r => r.role === 'super_admin');
                           const targetIsAdmin = roles.some(r => r.role === 'admin' || r.role === 'super_admin');
-                          // Regular admins can't ban/delete super_admins or other admins
                           const canManageUser = isSuperAdmin || (!targetIsSuperAdmin && !targetIsAdmin);
                           return canManageUser ? (
                             <>
+                              {isSuperAdmin && (
+                                <>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-7 gap-1 text-xs"
+                                    onClick={() => { setPasswordUserId(profile.user_id); setNewPassword(''); }}
+                                  >
+                                    <KeyRound className="w-3 h-3" />
+                                    {isRTL ? 'كلمة المرور' : 'Password'}
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-7 gap-1 text-xs"
+                                    onClick={() => sendResetLinkMutation.mutate(profile.user_id)}
+                                    disabled={sendResetLinkMutation.isPending}
+                                  >
+                                    <Send className="w-3 h-3" />
+                                    {isRTL ? 'رابط إعادة تعيين' : 'Reset Link'}
+                                  </Button>
+                                </>
+                              )}
                               <Button
                                 variant="outline"
                                 size="sm"
