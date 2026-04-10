@@ -14,6 +14,7 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const adminClient = createClient(supabaseUrl, serviceKey);
 
     const { phone, country_code, otp_code } = await req.json();
@@ -101,7 +102,6 @@ Deno.serve(async (req) => {
       .update({ verified: true })
       .eq("id", otpRecord.id);
 
-    // Generate a magic link for the user to sign in
     if (!profile.email) {
       return new Response(
         JSON.stringify({ error: "User has no email linked" }),
@@ -109,31 +109,48 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
-      type: "magiclink",
-      email: profile.email,
-    });
+    // Generate a temporary random password, set it, sign in, then restore
+    const tempPassword = crypto.randomUUID() + "!Aa1";
 
-    if (linkError || !linkData) {
+    // Set temporary password
+    const { error: updateError } = await adminClient.auth.admin.updateUserById(
+      profile.user_id,
+      { password: tempPassword }
+    );
+
+    if (updateError) {
+      console.error("Failed to set temp password:", updateError);
       return new Response(
-        JSON.stringify({ error: "Failed to generate login link" }),
+        JSON.stringify({ error: "Failed to prepare login" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Extract token_hash from the generated link properties
-    const tokenHash = linkData.properties?.hashed_token;
+    // Sign in with the temp password using a separate anon client
+    const anonClient = createClient(supabaseUrl, anonKey);
+    const { data: signInData, error: signInError } = await anonClient.auth.signInWithPassword({
+      email: profile.email,
+      password: tempPassword,
+    });
+
+    if (signInError || !signInData.session) {
+      console.error("Sign in failed:", signInError);
+      return new Response(
+        JSON.stringify({ error: "Failed to sign in" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     return new Response(
       JSON.stringify({
         success: true,
         verified: true,
-        email: profile.email,
-        token_hash: tokenHash,
+        session: signInData.session,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
+    console.error("verify-login-otp error:", err);
     return new Response(JSON.stringify({ error: String(err) }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

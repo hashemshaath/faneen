@@ -148,13 +148,13 @@ const Auth = () => {
         return;
       }
 
-      // Use the token_hash to sign in via magic link verification
-      if (data.token_hash) {
-        const { error: verifyError } = await supabase.auth.verifyOtp({
-          token_hash: data.token_hash,
-          type: 'magiclink',
+      // Set the session returned from the edge function
+      if (data.session) {
+        const { error: sessionError } = await supabase.auth.setSession({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
         });
-        if (verifyError) throw verifyError;
+        if (sessionError) throw sessionError;
         toast.success(isRTL ? 'تم تسجيل الدخول بنجاح' : 'Signed in successfully');
         navigate('/');
       } else {
