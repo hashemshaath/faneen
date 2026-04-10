@@ -21,7 +21,7 @@ import {
   Home, Globe, CreditCard, Megaphone, Key, Book, FolderOpen, PenSquare,
   Layers, MessageSquare, Users, Newspaper, Building2, Bell, Activity,
   Bookmark, ShieldAlert, Crown, FolderTree, Tags, UserCog, Database,
-  BarChart3, Cog,
+  BarChart3, Cog, Eye, TrendingUp, AlertTriangle, Server,
 } from 'lucide-react';
 
 interface MenuItem {
@@ -29,6 +29,7 @@ interface MenuItem {
   url: string;
   icon: React.ElementType;
   end?: boolean;
+  superAdminOnly?: boolean;
 }
 
 interface MenuGroup {
@@ -126,48 +127,60 @@ const userGroups: MenuGroup[] = [
 ];
 
 // ══════════════════════════════════════════
-//  المشرف — Admin Menu (appended after role menu)
+//  المشرف — Admin-Only Base Menu
+//  (replaces user/provider base when admin)
 // ══════════════════════════════════════════
-interface AdminMenuGroup extends MenuGroup {
-  superAdminOnly?: boolean;
-  items: (MenuItem & { superAdminOnly?: boolean })[];
-}
-
-const adminGroups: AdminMenuGroup[] = [
+const adminBaseGroups: MenuGroup[] = [
   {
-    groupLabel: { ar: 'المستخدمين', en: 'Users' },
+    groupLabel: { ar: 'لوحة المراقبة', en: 'Dashboard' },
+    icon: LayoutDashboard,
+    items: [
+      { label: { ar: 'نظرة عامة', en: 'Overview' }, url: '/dashboard', icon: LayoutDashboard, end: true },
+      { label: { ar: 'سجل النشاط', en: 'Activity Log' }, url: '/admin/activity-log', icon: BarChart3 },
+    ],
+  },
+  {
+    groupLabel: { ar: 'إدارة المستخدمين', en: 'User Management' },
     icon: UserCog,
     items: [
       { label: { ar: 'المستخدمين', en: 'Users' }, url: '/admin/users', icon: Users, superAdminOnly: true },
       { label: { ar: 'المنشآت', en: 'Businesses' }, url: '/admin/businesses', icon: Building2 },
+      { label: { ar: 'كل المحادثات', en: 'All Conversations' }, url: '/dashboard/messages', icon: MessageSquare, superAdminOnly: true },
     ],
   },
   {
-    groupLabel: { ar: 'المحتوى', en: 'Content' },
+    groupLabel: { ar: 'إدارة المحتوى', en: 'Content Management' },
     icon: Database,
     items: [
       { label: { ar: 'التصنيفات', en: 'Categories' }, url: '/admin/categories', icon: FolderTree },
       { label: { ar: 'الوسوم', en: 'Tags' }, url: '/admin/tags', icon: Tags },
-      { label: { ar: 'المدونة', en: 'Blog' }, url: '/dashboard/blog', icon: PenSquare },
-      { label: { ar: 'القطاعات', en: 'Profiles' }, url: '/dashboard/profile-systems', icon: Layers },
+      { label: { ar: 'المدونة', en: 'Blog Editor' }, url: '/dashboard/blog', icon: PenSquare },
+      { label: { ar: 'القطاعات', en: 'Profile Systems' }, url: '/dashboard/profile-systems', icon: Layers },
     ],
   },
   {
-    groupLabel: { ar: 'المالية', en: 'Finance' },
+    groupLabel: { ar: 'المالية والاشتراكات', en: 'Finance & Subscriptions' },
     icon: Crown,
     items: [
       { label: { ar: 'العضويات', en: 'Memberships' }, url: '/admin/memberships', icon: Crown },
+      { label: { ar: 'العقود', en: 'Contracts' }, url: '/dashboard/contracts', icon: FileText },
     ],
   },
   {
-    groupLabel: { ar: 'النظام', en: 'System' },
+    groupLabel: { ar: 'النظام والأمان', en: 'System & Security' },
     icon: Cog,
     items: [
       { label: { ar: 'إعدادات النظام', en: 'System Settings' }, url: '/admin/system-settings', icon: ShieldAlert, superAdminOnly: true },
       { label: { ar: 'إعدادات API', en: 'API Settings' }, url: '/admin/api-settings', icon: Key },
       { label: { ar: 'توثيق API', en: 'API Docs' }, url: '/admin/api-docs', icon: Book },
-      { label: { ar: 'سجل النشاط', en: 'Activity Log' }, url: '/admin/activity-log', icon: BarChart3 },
-      { label: { ar: 'كل المحادثات', en: 'All Conversations' }, url: '/dashboard/messages', icon: MessageSquare, superAdminOnly: true },
+    ],
+  },
+  {
+    groupLabel: { ar: 'الحساب', en: 'Account' },
+    icon: Settings,
+    items: [
+      { label: { ar: 'الإشعارات', en: 'Notifications' }, url: '/notifications', icon: Bell },
+      { label: { ar: 'الإعدادات', en: 'Settings' }, url: '/dashboard/settings', icon: Settings },
     ],
   },
 ];
@@ -206,23 +219,28 @@ const RenderGroups: React.FC<{
   collapsed: boolean;
   isRTL: boolean;
   closeMobile: () => void;
-}> = ({ groups, collapsed, isRTL, closeMobile }) => (
+  isSuperAdmin?: boolean;
+}> = ({ groups, collapsed, isRTL, closeMobile, isSuperAdmin = false }) => (
   <>
-    {groups.map((group) => (
-      <SidebarGroup key={group.groupLabel.en}>
-        <SidebarGroupLabel>
-          {!collapsed ? (
-            <span className="flex items-center gap-1.5">
-              <group.icon className="w-3 h-3 opacity-60" />
-              {isRTL ? group.groupLabel.ar : group.groupLabel.en}
-            </span>
-          ) : ''}
-        </SidebarGroupLabel>
-        <SidebarGroupContent>
-          <RenderMenu items={group.items} collapsed={collapsed} isRTL={isRTL} closeMobile={closeMobile} />
-        </SidebarGroupContent>
-      </SidebarGroup>
-    ))}
+    {groups.map((group) => {
+      const visibleItems = group.items.filter(item => !item.superAdminOnly || isSuperAdmin);
+      if (visibleItems.length === 0) return null;
+      return (
+        <SidebarGroup key={group.groupLabel.en}>
+          <SidebarGroupLabel>
+            {!collapsed ? (
+              <span className="flex items-center gap-1.5">
+                <group.icon className="w-3 h-3 opacity-60" />
+                {isRTL ? group.groupLabel.ar : group.groupLabel.en}
+              </span>
+            ) : ''}
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <RenderMenu items={visibleItems} collapsed={collapsed} isRTL={isRTL} closeMobile={closeMobile} />
+          </SidebarGroupContent>
+        </SidebarGroup>
+      );
+    })}
   </>
 );
 
@@ -238,16 +256,8 @@ export const DashboardSidebar: React.FC = () => {
 
   const isProvider = profile?.account_type === 'provider';
 
-  // Pick base menu by role
-  const baseGroups = isProvider ? providerGroups : userGroups;
-
-  // Filter admin groups by super_admin visibility
-  const filteredAdminGroups = adminGroups
-    .map(group => ({
-      ...group,
-      items: group.items.filter(item => !item.superAdminOnly || isSuperAdmin),
-    }))
-    .filter(group => group.items.length > 0);
+  // Admin gets admin-specific base menu, not user/provider menu
+  const baseGroups = isAdmin ? adminBaseGroups : (isProvider ? providerGroups : userGroups);
 
   return (
     <Sidebar collapsible="icon" side={isRTL ? 'right' : 'left'}>
@@ -265,32 +275,25 @@ export const DashboardSidebar: React.FC = () => {
           )}
         </div>
 
-        {/* ─── Base role menu ─── */}
-        <RenderGroups groups={baseGroups} collapsed={collapsed} isRTL={isRTL} closeMobile={closeMobile} />
-
-        {/* ─── Admin section ─── */}
-        {isAdmin && (
-          <>
-            <Separator className="mx-3 my-1 w-auto opacity-50" />
-
-            <div className="px-3 pt-2 pb-1">
-              {!collapsed ? (
-                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5 px-2">
-                  <ShieldAlert className="w-3 h-3" />
-                  {isRTL
-                    ? (isSuperAdmin ? 'لوحة الإدارة العليا' : 'لوحة الإدارة')
-                    : (isSuperAdmin ? 'Super Admin Panel' : 'Admin Panel')}
-                </p>
-              ) : (
-                <div className="flex justify-center">
-                  <ShieldAlert className="w-4 h-4 text-muted-foreground" />
-                </div>
-              )}
-            </div>
-
-            <RenderGroups groups={filteredAdminGroups} collapsed={collapsed} isRTL={isRTL} closeMobile={closeMobile} />
-          </>
+        {/* Admin badge */}
+        {isAdmin && !collapsed && (
+          <div className="mx-3 mt-2 mb-1 px-3 py-1.5 rounded-lg bg-accent/10 dark:bg-accent/15 border border-accent/20">
+            <p className="text-[10px] font-bold text-accent flex items-center gap-1.5">
+              <ShieldAlert className="w-3 h-3" />
+              {isRTL
+                ? (isSuperAdmin ? 'لوحة الإدارة العليا' : 'لوحة الإدارة')
+                : (isSuperAdmin ? 'Super Admin Panel' : 'Admin Panel')}
+            </p>
+          </div>
         )}
+        {isAdmin && collapsed && (
+          <div className="flex justify-center mt-2 mb-1">
+            <ShieldAlert className="w-4 h-4 text-accent" />
+          </div>
+        )}
+
+        {/* ─── Role-based menu ─── */}
+        <RenderGroups groups={baseGroups} collapsed={collapsed} isRTL={isRTL} closeMobile={closeMobile} isSuperAdmin={isSuperAdmin} />
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border p-3 space-y-1">
