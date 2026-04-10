@@ -33,6 +33,17 @@ export const NotificationBell = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
+  const { isSupported, requestPermission, showNotification } = useBrowserNotifications();
+  const [browserPermission, setBrowserPermission] = useState<string>(
+    typeof Notification !== 'undefined' ? Notification.permission : 'denied'
+  );
+
+  // Request permission on mount
+  useEffect(() => {
+    if (user && isSupported && Notification.permission === 'default') {
+      requestPermission().then(setBrowserPermission);
+    }
+  }, [user, isSupported, requestPermission]);
 
   const { data: notifications = [] } = useQuery({
     queryKey: ['notifications', user?.id],
@@ -50,11 +61,24 @@ export const NotificationBell = () => {
     refetchInterval: 30000,
   });
 
-  // Realtime subscription
+  // Realtime subscription + browser notification
   useEffect(() => {
     if (!user) return;
     const channel = supabase
       .channel('user-notifications')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'notifications',
+        filter: `user_id=eq.${user.id}`,
+      }, (payload) => {
+        queryClient.invalidateQueries({ queryKey: ['notifications', user.id] });
+        // Show browser notification for new inserts
+        const n = payload.new as any;
+        const title = language === 'ar' ? n.title_ar : (n.title_en || n.title_ar);
+        const body = language === 'ar' ? n.body_ar : (n.body_en || n.body_ar);
+        showNotification(title, { body: body || undefined, tag: n.id });
+      })
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
@@ -65,7 +89,7 @@ export const NotificationBell = () => {
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [user?.id, queryClient]);
+  }, [user?.id, queryClient, language, showNotification]);
 
   const unreadCount = notifications.filter((n: any) => !n.is_read).length;
 
