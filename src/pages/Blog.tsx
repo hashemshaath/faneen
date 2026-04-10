@@ -47,6 +47,26 @@ const Blog = () => {
     },
   });
 
+  const { data: commentCounts = {} } = useQuery({
+    queryKey: ['blog-comment-counts'],
+    queryFn: async () => {
+      const { data } = await supabase.from('blog_comments').select('post_id');
+      const counts: Record<string, number> = {};
+      data?.forEach((c: any) => { counts[c.post_id] = (counts[c.post_id] || 0) + 1; });
+      return counts;
+    },
+  });
+
+  const { data: bookmarkCounts = {} } = useQuery({
+    queryKey: ['blog-bookmark-counts'],
+    queryFn: async () => {
+      const { data } = await supabase.from('blog_bookmarks').select('post_id');
+      const counts: Record<string, number> = {};
+      data?.forEach((b: any) => { counts[b.post_id] = (counts[b.post_id] || 0) + 1; });
+      return counts;
+    },
+  });
+
   const filteredPosts = useMemo(() => {
     return posts.filter((post: any) => {
       const matchCategory = activeCategory === 'all' || post.category === activeCategory;
