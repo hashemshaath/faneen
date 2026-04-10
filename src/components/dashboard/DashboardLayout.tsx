@@ -412,6 +412,36 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Name Edit Dialog */}
+      <Dialog open={nameDialog} onOpenChange={setNameDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{isRTL ? 'تعديل الاسم' : 'Edit Name'}</DialogTitle>
+            <DialogDescription>
+              {isRTL ? 'أدخل الاسم الجديد' : 'Enter your new name'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="space-y-1.5">
+              <Label className="text-sm">{isRTL ? 'الاسم الكامل' : 'Full Name'}</Label>
+              <Input
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                placeholder={isRTL ? 'أدخل اسمك' : 'Enter your name'}
+              />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setNameDialog(false)}>
+                {isRTL ? 'إلغاء' : 'Cancel'}
+              </Button>
+              <Button onClick={handleNameUpdate} disabled={nameLoading}>
+                {nameLoading ? (isRTL ? 'جاري الحفظ...' : 'Saving...') : (isRTL ? 'حفظ' : 'Save')}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </SidebarProvider>
   );
 };
