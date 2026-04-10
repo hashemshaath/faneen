@@ -89,6 +89,11 @@
     --border: 220 25% 20%;
     --input: 220 25% 20%;
     --ring: 42 85% 55%;
+
+    /* Nav surface stays dark but slightly lighter than background */
+    --surface-nav: 220 30% 10%;
+    --surface-nav-foreground: 42 20% 92%;
+
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
