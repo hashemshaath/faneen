@@ -7,6 +7,7 @@ import { ArrowLeft, ArrowRight, Calendar, Eye, BookOpen, MessageCircle, Heart } 
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useParallax } from "@/hooks/useParallax";
 import { Skeleton } from "@/components/ui/skeleton";
+import { LazyImage } from "@/components/ui/lazy-image";
 
 const BlogSkeleton = () => (
   <div className="rounded-2xl overflow-hidden border border-border bg-card">
@@ -34,25 +35,25 @@ export const LatestBlogSection = () => {
     },
   });
 
-  const { data: commentCounts = {} } = useQuery({
-    queryKey: ['home-blog-comment-counts'],
+  // Combine both counts into a single query to reduce network requests
+  const { data: engagementCounts = { comments: {}, bookmarks: {} } } = useQuery({
+    queryKey: ['home-blog-engagement'],
     queryFn: async () => {
-      const { data } = await supabase.from('blog_comments').select('post_id');
-      const counts: Record<string, number> = {};
-      data?.forEach((c: any) => { counts[c.post_id] = (counts[c.post_id] || 0) + 1; });
-      return counts;
+      const [commentsRes, bookmarksRes] = await Promise.all([
+        supabase.from('blog_comments').select('post_id'),
+        supabase.from('blog_bookmarks').select('post_id'),
+      ]);
+      const comments: Record<string, number> = {};
+      commentsRes.data?.forEach((c: any) => { comments[c.post_id] = (comments[c.post_id] || 0) + 1; });
+      const bookmarks: Record<string, number> = {};
+      bookmarksRes.data?.forEach((b: any) => { bookmarks[b.post_id] = (bookmarks[b.post_id] || 0) + 1; });
+      return { comments, bookmarks };
     },
+    staleTime: 10 * 60 * 1000, // 10 min — these counts don't change often
   });
 
-  const { data: bookmarkCounts = {} } = useQuery({
-    queryKey: ['home-blog-bookmark-counts'],
-    queryFn: async () => {
-      const { data } = await supabase.from('blog_bookmarks').select('post_id');
-      const counts: Record<string, number> = {};
-      data?.forEach((b: any) => { counts[b.post_id] = (counts[b.post_id] || 0) + 1; });
-      return counts;
-    },
-  });
+  const commentCounts = engagementCounts.comments;
+  const bookmarkCounts = engagementCounts.bookmarks;
 
   const { ref: sectionRef, isVisible } = useScrollAnimation();
   const headerRef = useParallax<HTMLDivElement>(0.07);
@@ -90,11 +91,11 @@ export const LatestBlogSection = () => {
                 >
                   <div className="aspect-video bg-muted relative overflow-hidden">
                     {post.cover_image_url ? (
-                      <img
+                      <LazyImage
                         src={post.cover_image_url}
                         alt={post.title_ar}
-                        loading="lazy"
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        wrapperClassName="w-full h-full"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/50">
