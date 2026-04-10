@@ -15,9 +15,8 @@ import {
   Share2, Video, ChevronLeft, ChevronRight, BadgeCheck, Clock,
   MessageSquare, ExternalLink, Loader2, Briefcase, Image as ImageIcon,
   Building2, Calendar, DollarSign, Award, Users, Bookmark, Eye,
-  Wrench, FolderOpen, CheckCircle2,
+  Wrench, FolderOpen, CheckCircle2, Crown,
 } from 'lucide-react';
-import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 
 // ══════════ Data hooks ══════════
 
@@ -102,10 +101,15 @@ const useReviews = (businessId: string | undefined) =>
 const Stars: React.FC<{ rating: number; size?: string }> = ({ rating, size = 'w-4 h-4' }) => (
   <div className="flex items-center gap-0.5">
     {[1, 2, 3, 4, 5].map(i => (
-      <Star key={i} className={`${size} ${i <= rating ? 'text-accent fill-accent' : 'text-muted-foreground/30'}`} />
+      <Star key={i} className={`${size} ${i <= rating ? 'text-accent fill-accent' : 'text-muted-foreground/20'}`} />
     ))}
   </div>
 );
+
+const tierConfig: Record<string, { label: string; labelAr: string; color: string }> = {
+  enterprise: { label: 'Enterprise', labelAr: 'مؤسسي', color: 'bg-accent text-accent-foreground' },
+  premium: { label: 'Premium', labelAr: 'مميز', color: 'bg-accent/80 text-accent-foreground' },
+};
 
 // ── Profile Header ──
 const ProfileHeader: React.FC<{ business: any; onContact: () => void; isContacting: boolean; projectCount: number; serviceCount: number }> = ({ business, onContact, isContacting, projectCount, serviceCount }) => {
@@ -115,6 +119,7 @@ const ProfileHeader: React.FC<{ business: any; onContact: () => void; isContacti
   const cityName = business.cities ? (language === 'ar' ? business.cities.name_ar : business.cities.name_en) : '';
   const categoryName = business.categories ? (language === 'ar' ? business.categories.name_ar : business.categories.name_en) : '';
   const memberDate = new Date(business.created_at).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US', { year: 'numeric', month: 'long' });
+  const tier = tierConfig[business.membership_tier];
 
   const handleShare = async () => {
     try {
@@ -164,6 +169,12 @@ const ProfileHeader: React.FC<{ business: any; onContact: () => void; isContacti
                       <Badge className="bg-accent/10 dark:bg-accent/20 text-accent border-accent/30 gap-1 shrink-0 text-[10px] sm:text-xs">
                         <BadgeCheck className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                         {t('profile.verified')}
+                      </Badge>
+                    )}
+                    {tier && (
+                      <Badge className={`${tier.color} gap-1 shrink-0 text-[10px] sm:text-xs`}>
+                        <Crown className="w-3 h-3" />
+                        {language === 'ar' ? tier.labelAr : tier.label}
                       </Badge>
                     )}
                   </div>
@@ -234,33 +245,35 @@ const ProfileHeader: React.FC<{ business: any; onContact: () => void; isContacti
 
 // ── Services Tab ──
 const ServicesTab: React.FC<{ businessId: string }> = ({ businessId }) => {
-  const { t, language } = useLanguage();
+  const { t, language, isRTL } = useLanguage();
   const { data: services, isLoading } = useServices(businessId);
 
   if (isLoading) return <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">{[1,2,3].map(i => <Skeleton key={i} className="h-32 rounded-xl" />)}</div>;
   if (!services?.length) return <EmptyState icon={Wrench} text={language === 'ar' ? 'لا توجد خدمات بعد' : 'No services yet'} />;
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
       {services.map((service, i) => {
         const name = language === 'ar' ? service.name_ar : (service.name_en || service.name_ar);
         const desc = language === 'ar' ? service.description_ar : (service.description_en || service.description_ar);
         return (
-          <div key={service.id} className="p-4 sm:p-5 rounded-xl bg-card dark:bg-card/80 border border-border/50 dark:border-border/30 hover:border-accent/30 transition-all duration-300 hover:shadow-lg hover:shadow-accent/5 dark:hover:shadow-black/20 group active:scale-[0.98] animate-fade-in" style={{ animationDelay: `${i * 60}ms`, animationFillMode: 'both' }}>
+          <div key={service.id} className="p-4 sm:p-5 rounded-2xl bg-card dark:bg-card/80 border border-border/30 dark:border-border/15 hover:border-accent/30 transition-all duration-300 hover:shadow-lg hover:shadow-accent/5 group active:scale-[0.98] animate-fade-in" style={{ animationDelay: `${i * 60}ms`, animationFillMode: 'both' }}>
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl bg-accent/10 dark:bg-accent/20 flex items-center justify-center shrink-0 group-hover:bg-accent group-hover:text-accent-foreground transition-colors">
+              <div className="w-11 h-11 rounded-xl bg-accent/10 dark:bg-accent/15 flex items-center justify-center shrink-0 group-hover:bg-accent group-hover:text-accent-foreground transition-colors">
                 <Wrench className="w-5 h-5 text-accent group-hover:text-accent-foreground" />
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-heading font-bold text-sm sm:text-base text-foreground mb-1 truncate">{name}</h3>
-                {desc && <p className="text-xs sm:text-sm text-muted-foreground font-body line-clamp-2 mb-2">{desc}</p>}
+                {desc && <p className="text-xs sm:text-sm text-muted-foreground font-body line-clamp-2 mb-3 leading-relaxed">{desc}</p>}
                 {(service.price_from || service.price_to) && (
-                  <div className="flex items-center gap-1.5 text-xs sm:text-sm font-body">
+                  <div className="flex items-center gap-1.5 text-xs sm:text-sm font-body bg-accent/5 dark:bg-accent/10 rounded-lg px-2.5 py-1.5 w-fit">
                     <DollarSign className="w-3.5 h-3.5 text-accent" />
-                    {service.price_from && <span className="text-accent font-semibold">{service.price_from.toLocaleString()}</span>}
-                    {service.price_from && service.price_to && <span className="text-muted-foreground">-</span>}
-                    {service.price_to && <span className="text-accent font-semibold">{service.price_to.toLocaleString()}</span>}
-                    <span className="text-muted-foreground">{service.currency_code}</span>
+                    <span className="text-foreground font-semibold">
+                      {service.price_from && service.price_from.toLocaleString()}
+                      {service.price_from && service.price_to && ' - '}
+                      {service.price_to && service.price_to.toLocaleString()}
+                    </span>
+                    <span className="text-muted-foreground text-[10px]">{service.currency_code}</span>
                   </div>
                 )}
               </div>
@@ -281,7 +294,7 @@ const ProjectsTab: React.FC<{ businessId: string }> = ({ businessId }) => {
   if (!projects?.length) return <EmptyState icon={FolderOpen} text={language === 'ar' ? 'لا توجد مشاريع بعد' : 'No projects yet'} />;
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-5">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
       {projects.map((project: any, i: number) => {
         const title = language === 'ar' ? project.title_ar : (project.title_en || project.title_ar);
         const desc = language === 'ar' ? project.description_ar : (project.description_en || project.description_ar);
@@ -290,12 +303,12 @@ const ProjectsTab: React.FC<{ businessId: string }> = ({ businessId }) => {
 
         return (
           <Link key={project.id} to={`/projects/${project.id}`} className="group block">
-            <div className="rounded-xl overflow-hidden border border-border/50 dark:border-border/30 hover:border-accent/30 transition-all duration-500 hover:shadow-xl hover:shadow-accent/5 dark:hover:shadow-black/20 bg-card dark:bg-card/80 active:scale-[0.98] animate-fade-in" style={{ animationDelay: `${i * 80}ms`, animationFillMode: 'both' }}>
+            <div className="rounded-2xl overflow-hidden border border-border/30 dark:border-border/15 hover:border-accent/30 transition-all duration-500 hover:shadow-xl hover:shadow-accent/5 bg-card dark:bg-card/80 active:scale-[0.98] animate-fade-in" style={{ animationDelay: `${i * 80}ms`, animationFillMode: 'both' }}>
               <div className="relative aspect-video bg-muted overflow-hidden">
                 {project.cover_image_url ? (
                   <img src={project.cover_image_url} alt={title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/50">
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-accent/5 to-muted">
                     <Building2 className="w-10 h-10 text-muted-foreground/15" />
                   </div>
                 )}
@@ -314,14 +327,14 @@ const ProjectsTab: React.FC<{ businessId: string }> = ({ businessId }) => {
 
               <div className="p-3 sm:p-4 space-y-2">
                 <h3 className="font-heading font-bold text-xs sm:text-sm line-clamp-2 group-hover:text-accent transition-colors">{title}</h3>
-                {desc && <p className="text-[10px] sm:text-xs text-muted-foreground line-clamp-2">{desc}</p>}
-                <div className="flex items-center justify-between pt-2 border-t border-border/30 dark:border-border/20 text-[10px] sm:text-[11px] text-muted-foreground">
+                {desc && <p className="text-[10px] sm:text-xs text-muted-foreground line-clamp-2 leading-relaxed">{desc}</p>}
+                <div className="flex items-center justify-between pt-2 border-t border-border/20 dark:border-border/10 text-[10px] sm:text-[11px] text-muted-foreground">
                   <div className="flex items-center gap-2 flex-wrap">
                     {cityName && (
-                      <span className="flex items-center gap-0.5"><MapPin className="w-2.5 h-2.5" />{cityName}</span>
+                      <span className="flex items-center gap-0.5"><MapPin className="w-2.5 h-2.5 text-accent/50" />{cityName}</span>
                     )}
                     {project.duration_days && (
-                      <span className="flex items-center gap-0.5"><Calendar className="w-2.5 h-2.5" />{project.duration_days} {isRTL ? 'يوم' : 'days'}</span>
+                      <span className="flex items-center gap-0.5"><Calendar className="w-2.5 h-2.5 text-accent/50" />{project.duration_days} {isRTL ? 'يوم' : 'days'}</span>
                     )}
                   </div>
                   {project.project_cost && (
@@ -368,7 +381,7 @@ const PortfolioTab: React.FC<{ businessId: string }> = ({ businessId }) => {
         {filtered.map((item, idx) => {
           const title = language === 'ar' ? item.title_ar : (item.title_en || item.title_ar);
           return (
-            <div key={item.id} className="group relative aspect-square rounded-xl overflow-hidden cursor-pointer border border-border/50 dark:border-border/30 hover:border-accent/40 transition-all active:scale-[0.97] animate-fade-in" style={{ animationDelay: `${idx * 50}ms`, animationFillMode: 'both' }} onClick={() => setSelectedIndex(idx)}>
+            <div key={item.id} className="group relative aspect-square rounded-xl overflow-hidden cursor-pointer border border-border/30 dark:border-border/15 hover:border-accent/30 transition-all active:scale-[0.97] animate-fade-in" style={{ animationDelay: `${idx * 50}ms`, animationFillMode: 'both' }} onClick={() => setSelectedIndex(idx)}>
               {item.media_type === 'image' ? (
                 <img src={item.media_url} alt={title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
               ) : (
@@ -380,7 +393,6 @@ const PortfolioTab: React.FC<{ businessId: string }> = ({ businessId }) => {
               <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-2 sm:p-3 opacity-0 group-hover:opacity-100 sm:transition-opacity">
                 <p className="text-[10px] sm:text-xs text-white font-body truncate">{title}</p>
               </div>
-              {/* Mobile: always show title */}
               <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-2 sm:hidden">
                 <p className="text-[9px] text-white/90 font-body truncate">{title}</p>
               </div>
@@ -400,7 +412,6 @@ const PortfolioTab: React.FC<{ businessId: string }> = ({ businessId }) => {
             <ChevronRight className="w-6 h-6" />
           </button>
           <img src={filtered[selectedIndex]?.media_url} alt="" className="max-w-full max-h-[85vh] rounded-lg object-contain" onClick={e => e.stopPropagation()} />
-          {/* Counter */}
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/60 text-xs bg-black/50 backdrop-blur-sm px-3 py-1 rounded-full">
             {selectedIndex + 1} / {filtered.length}
           </div>
@@ -412,7 +423,7 @@ const PortfolioTab: React.FC<{ businessId: string }> = ({ businessId }) => {
 
 // ── Reviews Tab ──
 const ReviewsTab: React.FC<{ business: any }> = ({ business }) => {
-  const { language } = useLanguage();
+  const { language, isRTL } = useLanguage();
   const { data: reviews, isLoading } = useReviews(business.id);
 
   const distribution = useMemo(() => {
@@ -430,9 +441,9 @@ const ReviewsTab: React.FC<{ business: any }> = ({ business }) => {
   return (
     <div className="space-y-6">
       {/* Rating Summary */}
-      <div className="p-4 sm:p-6 rounded-xl bg-card dark:bg-card/80 border border-border/50 dark:border-border/30">
+      <div className="p-4 sm:p-6 rounded-2xl bg-card dark:bg-card/80 border border-border/30 dark:border-border/15">
         <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8">
-          <div className="text-center">
+          <div className="text-center shrink-0">
             <div className="font-heading font-black text-4xl sm:text-5xl text-foreground">{Number(business.rating_avg).toFixed(1)}</div>
             <Stars rating={Math.round(business.rating_avg)} size="w-4 h-4 sm:w-5 sm:h-5" />
             <p className="text-xs sm:text-sm text-muted-foreground mt-1">{business.rating_count} {language === 'ar' ? 'تقييم' : 'reviews'}</p>
@@ -440,12 +451,12 @@ const ReviewsTab: React.FC<{ business: any }> = ({ business }) => {
           <div className="flex-1 w-full space-y-1.5">
             {[5,4,3,2,1].map(star => (
               <div key={star} className="flex items-center gap-2 text-xs sm:text-sm">
-                <span className="w-3 text-muted-foreground">{star}</span>
+                <span className="w-3 text-muted-foreground font-mono">{star}</span>
                 <Star className="w-3 h-3 text-accent fill-accent" />
-                <div className="flex-1 h-2 bg-muted dark:bg-muted/50 rounded-full overflow-hidden">
-                  <div className="h-full bg-accent rounded-full transition-all duration-500" style={{ width: `${(distribution[star-1] / maxCount) * 100}%` }} />
+                <div className="flex-1 h-2.5 bg-muted/50 dark:bg-muted/30 rounded-full overflow-hidden">
+                  <div className="h-full bg-accent rounded-full transition-all duration-700" style={{ width: `${(distribution[star-1] / maxCount) * 100}%` }} />
                 </div>
-                <span className="w-5 text-end text-muted-foreground text-[10px]">{distribution[star-1]}</span>
+                <span className="w-5 text-end text-muted-foreground text-[10px] font-mono">{distribution[star-1]}</span>
               </div>
             ))}
           </div>
@@ -454,26 +465,32 @@ const ReviewsTab: React.FC<{ business: any }> = ({ business }) => {
 
       {/* Review list */}
       <div className="space-y-3 sm:space-y-4">
-        {reviews.map((review: any) => {
+        {reviews.map((review: any, idx: number) => {
           const profile = review.profiles as any;
+          const reviewerName = profile?.full_name || (language === 'ar' ? 'مستخدم' : 'User');
           const date = new Date(review.created_at).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+          const initial = reviewerName.charAt(0);
+          
           return (
-            <div key={review.id} className="p-4 sm:p-5 rounded-xl bg-card dark:bg-card/80 border border-border/50 dark:border-border/30 hover:border-accent/20 transition-colors">
-              <div className="flex items-start justify-between mb-2 sm:mb-3">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-accent/10 dark:bg-accent/20 flex items-center justify-center shrink-0">
+            <div key={review.id} className="p-4 sm:p-5 rounded-2xl bg-card dark:bg-card/80 border border-border/30 dark:border-border/15 hover:border-accent/15 transition-colors animate-fade-in" style={{ animationDelay: `${idx * 50}ms`, animationFillMode: 'both' }}>
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-gradient-to-br from-accent/20 to-accent/5 flex items-center justify-center shrink-0 ring-2 ring-accent/10">
                     {profile?.avatar_url ? (
                       <img src={profile.avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
                     ) : (
-                      <span className="text-xs sm:text-sm font-bold text-accent">{(profile?.full_name || '?').charAt(0)}</span>
+                      <span className="text-sm font-bold text-accent">{initial}</span>
                     )}
                   </div>
                   <div>
-                    <p className="font-heading font-semibold text-xs sm:text-sm text-foreground">{profile?.full_name || (language === 'ar' ? 'مستخدم' : 'User')}</p>
+                    <p className="font-heading font-semibold text-sm text-foreground">{reviewerName}</p>
                     <p className="text-[10px] sm:text-xs text-muted-foreground">{date}</p>
                   </div>
                 </div>
-                <Stars rating={review.rating} size="w-3 h-3 sm:w-4 sm:h-4" />
+                <div className="flex items-center gap-1.5">
+                  <Stars rating={review.rating} size="w-3.5 h-3.5" />
+                  <span className="text-xs font-bold text-foreground">{review.rating}</span>
+                </div>
               </div>
               {review.title && <h4 className="font-heading font-semibold text-sm text-foreground mb-1">{review.title}</h4>}
               {review.content && <p className="text-xs sm:text-sm text-muted-foreground font-body leading-relaxed">{review.content}</p>}
@@ -502,8 +519,8 @@ const ContactTab: React.FC<{ business: any }> = ({ business }) => {
       <div className="space-y-3">
         {contactItems.map((item, i) => (
           <a key={i} href={item.href} {...(item.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-            className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl bg-card dark:bg-card/80 border border-border/50 dark:border-border/30 hover:border-accent/30 transition-all group active:scale-[0.98]">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-accent/10 dark:bg-accent/20 flex items-center justify-center group-hover:bg-accent transition-colors shrink-0">
+            className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-2xl bg-card dark:bg-card/80 border border-border/30 dark:border-border/15 hover:border-accent/30 transition-all group active:scale-[0.98]">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-accent/10 dark:bg-accent/15 flex items-center justify-center group-hover:bg-accent transition-colors shrink-0">
               <item.icon className="w-4 h-4 sm:w-5 sm:h-5 text-accent group-hover:text-accent-foreground" />
             </div>
             <div className="flex-1 min-w-0">
@@ -515,7 +532,7 @@ const ContactTab: React.FC<{ business: any }> = ({ business }) => {
         ))}
       </div>
 
-      <div className="p-4 sm:p-5 rounded-xl bg-card dark:bg-card/80 border border-border/50 dark:border-border/30">
+      <div className="p-4 sm:p-5 rounded-2xl bg-card dark:bg-card/80 border border-border/30 dark:border-border/15">
         <h3 className="font-heading font-bold text-sm sm:text-base text-foreground mb-3 flex items-center gap-2">
           <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />
           {language === 'ar' ? 'الموقع' : 'Location'}
@@ -527,7 +544,7 @@ const ContactTab: React.FC<{ business: any }> = ({ business }) => {
 
         {business.latitude && business.longitude ? (
           <div className="space-y-2">
-            <div className="rounded-xl overflow-hidden border border-border/50 dark:border-border/30 aspect-video sm:aspect-[16/9]">
+            <div className="rounded-xl overflow-hidden border border-border/30 dark:border-border/15 aspect-video sm:aspect-[16/9]">
               <iframe
                 title={language === 'ar' ? 'موقع المزود' : 'Provider location'}
                 width="100%" height="100%" style={{ border: 0 }} loading="lazy"
@@ -552,8 +569,8 @@ const ContactTab: React.FC<{ business: any }> = ({ business }) => {
 // ── Empty State ──
 const EmptyState: React.FC<{ icon: any; text: string }> = ({ icon: Icon, text }) => (
   <div className="text-center py-12 sm:py-16">
-    <div className="w-16 h-16 mx-auto rounded-2xl bg-muted/50 dark:bg-muted/30 flex items-center justify-center mb-3">
-      <Icon className="w-8 h-8 text-muted-foreground/30" />
+    <div className="w-16 h-16 mx-auto rounded-2xl bg-muted/30 dark:bg-muted/15 flex items-center justify-center mb-3">
+      <Icon className="w-8 h-8 text-muted-foreground/20" />
     </div>
     <p className="text-sm text-muted-foreground font-body">{text}</p>
   </div>
@@ -682,7 +699,7 @@ const BusinessProfile = () => {
         <div className="container mt-5 sm:mt-8 pb-10 sm:pb-16 px-3 sm:px-4">
           <Tabs defaultValue="services" className="w-full">
             <div className="overflow-x-auto no-scrollbar -mx-3 px-3 sm:mx-0 sm:px-0">
-              <TabsList className="w-auto inline-flex justify-start bg-muted/50 dark:bg-muted/30 rounded-xl p-1 h-auto">
+              <TabsList className="w-auto inline-flex justify-start bg-muted/40 dark:bg-muted/20 rounded-xl p-1 h-auto">
                 <TabsTrigger value="services" className="font-body rounded-lg data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-3 sm:px-5 py-2 text-xs sm:text-sm gap-1 sm:gap-1.5 shrink-0 whitespace-nowrap">
                   <Wrench className="w-3.5 h-3.5" />
                   {language === 'ar' ? 'الخدمات' : 'Services'}
