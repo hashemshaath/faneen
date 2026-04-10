@@ -48,12 +48,14 @@ const adminItems = [
 ] as const;
 
 export const DashboardSidebar: React.FC = () => {
-  const { state } = useSidebar();
+  const { state, setOpenMobile, isMobile } = useSidebar();
   const collapsed = state === 'collapsed';
   const { t, language, setLanguage, isRTL } = useLanguage();
   const { signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
+  const closeMobile = () => { if (isMobile) setOpenMobile(false); };
 
   const handleLogout = async () => {
     await signOut();
@@ -65,13 +67,13 @@ export const DashboardSidebar: React.FC = () => {
       <SidebarContent>
         {/* Logo */}
         <div className="p-4 flex items-center gap-2 border-b border-border">
-          <div className="w-9 h-9 rounded-xl bg-gold flex items-center justify-center text-primary-foreground font-bold text-lg shrink-0">
+          <div className="w-9 h-9 rounded-xl bg-accent flex items-center justify-center text-accent-foreground font-bold text-lg shrink-0">
             ف
           </div>
           {!collapsed && (
             <div>
               <h1 className="font-heading font-bold text-lg leading-none">فنيين</h1>
-              <span className="text-[10px] text-gold font-medium">Faneen</span>
+              <span className="text-[10px] text-accent font-medium">Faneen</span>
             </div>
           )}
         </div>
@@ -87,7 +89,8 @@ export const DashboardSidebar: React.FC = () => {
                       to={item.url}
                       end={item.url === '/dashboard'}
                       className="hover:bg-muted/50"
-                      activeClassName="bg-gold/10 text-gold font-medium"
+                      activeClassName="bg-accent/10 text-accent font-medium"
+                      onClick={closeMobile}
                     >
                       <item.icon className="h-4 w-4 shrink-0" />
                       {!collapsed && <span className="ms-2">{t(item.titleKey as any)}</span>}
@@ -110,7 +113,8 @@ export const DashboardSidebar: React.FC = () => {
                     <NavLink
                       to={item.url}
                       className="hover:bg-muted/50"
-                      activeClassName="bg-gold/10 text-gold font-medium"
+                      activeClassName="bg-accent/10 text-accent font-medium"
+                      onClick={closeMobile}
                     >
                       <item.icon className="h-4 w-4 shrink-0" />
                       {!collapsed && <span className="ms-2">{
@@ -131,7 +135,7 @@ export const DashboardSidebar: React.FC = () => {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
-              <NavLink to="/" className="hover:bg-muted/50" activeClassName="">
+              <NavLink to="/" className="hover:bg-muted/50" activeClassName="" onClick={closeMobile}>
                 <Home className="h-4 w-4 shrink-0" />
                 {!collapsed && <span className="ms-2">{isRTL ? 'الرئيسية' : 'Home'}</span>}
               </NavLink>
