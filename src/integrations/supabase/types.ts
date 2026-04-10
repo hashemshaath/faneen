@@ -647,11 +647,53 @@ export type Database = {
           },
         ]
       }
+      conversation_members: {
+        Row: {
+          conversation_id: string
+          id: string
+          is_active: boolean
+          joined_at: string
+          left_at: string | null
+          role: string
+          user_id: string
+        }
+        Insert: {
+          conversation_id: string
+          id?: string
+          is_active?: boolean
+          joined_at?: string
+          left_at?: string | null
+          role?: string
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string
+          id?: string
+          is_active?: boolean
+          joined_at?: string
+          left_at?: string | null
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_members_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversations: {
         Row: {
           contract_id: string | null
           created_at: string
+          created_by: string | null
+          group_avatar_url: string | null
+          group_name: string | null
           id: string
+          is_group: boolean
           last_message_at: string | null
           last_message_text: string | null
           participant_1: string
@@ -662,7 +704,11 @@ export type Database = {
         Insert: {
           contract_id?: string | null
           created_at?: string
+          created_by?: string | null
+          group_avatar_url?: string | null
+          group_name?: string | null
           id?: string
+          is_group?: boolean
           last_message_at?: string | null
           last_message_text?: string | null
           participant_1: string
@@ -673,7 +719,11 @@ export type Database = {
         Update: {
           contract_id?: string | null
           created_at?: string
+          created_by?: string | null
+          group_avatar_url?: string | null
+          group_name?: string | null
           id?: string
+          is_group?: boolean
           last_message_at?: string | null
           last_message_text?: string | null
           participant_1?: string
@@ -732,6 +782,38 @@ export type Database = {
           tax_rate?: number
         }
         Relationships: []
+      }
+      entity_tags: {
+        Row: {
+          created_at: string
+          entity_id: string
+          entity_type: string
+          id: string
+          tag_id: string
+        }
+        Insert: {
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          id?: string
+          tag_id: string
+        }
+        Update: {
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entity_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       installment_payments: {
         Row: {
@@ -911,6 +993,176 @@ export type Database = {
           },
         ]
       }
+      membership_plans: {
+        Row: {
+          created_at: string
+          currency_code: string
+          description_ar: string | null
+          description_en: string | null
+          features: Json
+          id: string
+          is_active: boolean
+          limits: Json
+          name_ar: string
+          name_en: string
+          price_monthly: number
+          price_yearly: number
+          sort_order: number
+          tier: Database["public"]["Enums"]["membership_tier"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          currency_code?: string
+          description_ar?: string | null
+          description_en?: string | null
+          features?: Json
+          id?: string
+          is_active?: boolean
+          limits?: Json
+          name_ar: string
+          name_en: string
+          price_monthly?: number
+          price_yearly?: number
+          sort_order?: number
+          tier: Database["public"]["Enums"]["membership_tier"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          currency_code?: string
+          description_ar?: string | null
+          description_en?: string | null
+          features?: Json
+          id?: string
+          is_active?: boolean
+          limits?: Json
+          name_ar?: string
+          name_en?: string
+          price_monthly?: number
+          price_yearly?: number
+          sort_order?: number
+          tier?: Database["public"]["Enums"]["membership_tier"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      membership_subscriptions: {
+        Row: {
+          billing_cycle: string
+          business_id: string | null
+          cancelled_at: string | null
+          created_at: string
+          expires_at: string | null
+          external_subscription_id: string | null
+          id: string
+          payment_method: string | null
+          plan_id: string
+          ref_id: string
+          starts_at: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          billing_cycle?: string
+          business_id?: string | null
+          cancelled_at?: string | null
+          created_at?: string
+          expires_at?: string | null
+          external_subscription_id?: string | null
+          id?: string
+          payment_method?: string | null
+          plan_id: string
+          ref_id?: string
+          starts_at?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          billing_cycle?: string
+          business_id?: string | null
+          cancelled_at?: string | null
+          created_at?: string
+          expires_at?: string | null
+          external_subscription_id?: string | null
+          id?: string
+          payment_method?: string | null
+          plan_id?: string
+          ref_id?: string
+          starts_at?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "membership_subscriptions_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "membership_subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "membership_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      message_templates: {
+        Row: {
+          business_id: string | null
+          category: string
+          content_ar: string
+          content_en: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          is_global: boolean
+          sort_order: number
+          title_ar: string
+          title_en: string | null
+        }
+        Insert: {
+          business_id?: string | null
+          category?: string
+          content_ar: string
+          content_en?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_global?: boolean
+          sort_order?: number
+          title_ar: string
+          title_en?: string | null
+        }
+        Update: {
+          business_id?: string | null
+          category?: string
+          content_ar?: string
+          content_en?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_global?: boolean
+          sort_order?: number
+          title_ar?: string
+          title_en?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_templates_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           attachment_url: string | null
@@ -1015,6 +1267,48 @@ export type Database = {
           notification_type?: string
           reference_id?: string | null
           reference_type?: string | null
+          title_ar?: string
+          title_en?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      operations_log: {
+        Row: {
+          created_at: string
+          details: Json | null
+          entity_id: string | null
+          entity_type: string
+          id: string
+          operation_type: string
+          ref_id: string
+          status: string
+          title_ar: string
+          title_en: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          operation_type: string
+          ref_id?: string
+          status?: string
+          title_ar: string
+          title_en?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          operation_type?: string
+          ref_id?: string
+          status?: string
           title_ar?: string
           title_en?: string | null
           user_id?: string
@@ -1807,6 +2101,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      tags: {
+        Row: {
+          color: string | null
+          created_at: string
+          icon: string | null
+          id: string
+          is_active: boolean
+          name_ar: string
+          name_en: string
+          slug: string
+          sort_order: number
+          tag_group: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          name_ar: string
+          name_en: string
+          slug: string
+          sort_order?: number
+          tag_group?: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          name_ar?: string
+          name_en?: string
+          slug?: string
+          sort_order?: number
+          tag_group?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
