@@ -3,6 +3,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { BusinessCard } from './BusinessCard';
 import { SearchMap } from './SearchMap';
+import { SearchPagination } from './SearchPagination';
 import {
   Search as SearchIcon, LayoutGrid, List, Map, Columns,
 } from 'lucide-react';
@@ -16,10 +17,15 @@ interface SearchResultsProps {
   onViewModeChange: (mode: ViewMode) => void;
   totalCount: number;
   onClearFilters: () => void;
+  currentPage: number;
+  totalPages: number;
+  itemsPerPage: number;
+  onPageChange: (page: number) => void;
 }
 
 export const SearchResults = ({
   businesses, isLoading, viewMode, onViewModeChange, totalCount, onClearFilters,
+  currentPage, totalPages, itemsPerPage, onPageChange,
 }: SearchResultsProps) => {
   const { t } = useLanguage();
 
@@ -31,7 +37,6 @@ export const SearchResults = ({
   ];
 
   const isSplit = viewMode === 'split';
-  const listMode = isSplit ? 'list' : viewMode;
 
   return (
     <div className="flex-1">
@@ -91,11 +96,22 @@ export const SearchResults = ({
       ) : viewMode === 'map' ? (
         <SearchMap businesses={businesses} className="h-[600px]" />
       ) : (
-        <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 gap-4' : 'space-y-3'}>
-          {businesses.map(b => (
-            <BusinessCard key={b.id} business={b} viewMode={viewMode} />
-          ))}
-        </div>
+        <>
+          <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 gap-4' : 'space-y-3'}>
+            {businesses.map((b, i) => (
+              <div key={b.id} className="animate-card-slide-up" style={{ animationDelay: `${i * 50}ms` }}>
+                <BusinessCard business={b} viewMode={viewMode} />
+              </div>
+            ))}
+          </div>
+          <SearchPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={totalCount}
+            itemsPerPage={itemsPerPage}
+            onPageChange={onPageChange}
+          />
+        </>
       )}
     </div>
   );
