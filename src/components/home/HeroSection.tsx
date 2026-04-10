@@ -37,6 +37,7 @@ const slidesData = [
     descEn: 'Luxury kitchens, cabinets, iron railings, and modern door designs',
   },
 ];
+const slides = slidesData;
 
 // Preload next slide images in background
 const preloadImage = (src: string) => {
