@@ -2,15 +2,18 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { BusinessCard } from './BusinessCard';
+import { SearchMap } from './SearchMap';
 import {
-  Search as SearchIcon, LayoutGrid, List,
+  Search as SearchIcon, LayoutGrid, List, Map,
 } from 'lucide-react';
+
+export type ViewMode = 'grid' | 'list' | 'map';
 
 interface SearchResultsProps {
   businesses: any[];
   isLoading: boolean;
-  viewMode: 'grid' | 'list';
-  onViewModeChange: (mode: 'grid' | 'list') => void;
+  viewMode: ViewMode;
+  onViewModeChange: (mode: ViewMode) => void;
   totalCount: number;
   onClearFilters: () => void;
 }
@@ -19,6 +22,12 @@ export const SearchResults = ({
   businesses, isLoading, viewMode, onViewModeChange, totalCount, onClearFilters,
 }: SearchResultsProps) => {
   const { t } = useLanguage();
+
+  const viewButtons: { mode: ViewMode; icon: typeof LayoutGrid }[] = [
+    { mode: 'grid', icon: LayoutGrid },
+    { mode: 'list', icon: List },
+    { mode: 'map', icon: Map },
+  ];
 
   return (
     <div className="flex-1">
@@ -29,27 +38,29 @@ export const SearchResults = ({
           {t('search.results')}
         </p>
         <div className="flex items-center gap-1 p-1 rounded-xl bg-muted">
-          <button
-            onClick={() => onViewModeChange('grid')}
-            className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-card shadow-sm text-accent' : 'text-muted-foreground hover:text-foreground'}`}
-          >
-            <LayoutGrid className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => onViewModeChange('list')}
-            className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-card shadow-sm text-accent' : 'text-muted-foreground hover:text-foreground'}`}
-          >
-            <List className="w-4 h-4" />
-          </button>
+          {viewButtons.map(({ mode, icon: Icon }) => (
+            <button
+              key={mode}
+              onClick={() => onViewModeChange(mode)}
+              className={`p-2 rounded-lg transition-all ${viewMode === mode ? 'bg-card shadow-sm text-accent' : 'text-muted-foreground hover:text-foreground'}`}
+              title={mode}
+            >
+              <Icon className="w-4 h-4" />
+            </button>
+          ))}
         </div>
       </div>
 
       {/* Content */}
       {isLoading ? (
-        <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 gap-4' : 'space-y-4'}>
-          {[1, 2, 3, 4, 5, 6].map(i => (
-            <Skeleton key={i} className={`rounded-2xl ${viewMode === 'list' ? 'h-24' : 'h-56'}`} />
-          ))}
+        <div className={viewMode === 'map' ? '' : viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 gap-4' : 'space-y-4'}>
+          {viewMode === 'map' ? (
+            <Skeleton className="rounded-2xl h-[500px]" />
+          ) : (
+            [1, 2, 3, 4, 5, 6].map(i => (
+              <Skeleton key={i} className={`rounded-2xl ${viewMode === 'list' ? 'h-24' : 'h-56'}`} />
+            ))
+          )}
         </div>
       ) : businesses.length === 0 ? (
         <div className="text-center py-24">
@@ -62,6 +73,8 @@ export const SearchResults = ({
             {t('search.clear_filters')}
           </Button>
         </div>
+      ) : viewMode === 'map' ? (
+        <SearchMap businesses={businesses} className="h-[600px]" />
       ) : (
         <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 gap-4' : 'space-y-3'}>
           {businesses.map(b => (
