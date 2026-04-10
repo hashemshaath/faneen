@@ -17,7 +17,7 @@ import { Separator } from '@/components/ui/separator';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import {
-  LayoutDashboard, Wrench, Image, Star, FileText, Shield, Settings, LogOut, Home, Globe, CreditCard, Megaphone, Key, Book, FolderOpen, PenSquare, Layers, MessageSquare, Users, Newspaper, Building2, Bell, Activity, Bookmark, ShieldAlert, Crown,
+  LayoutDashboard, Wrench, Image, Star, FileText, Shield, Settings, LogOut, Home, Globe, CreditCard, Megaphone, Key, Book, FolderOpen, PenSquare, Layers, MessageSquare, Users, Newspaper, Building2, Bell, Activity, Bookmark, ShieldAlert, Crown, FolderTree, Tags,
 } from 'lucide-react';
 
 const menuItems = [
@@ -43,6 +43,10 @@ const menuItems = [
 const adminItems = [
   { titleKey: 'admin.users', url: '/admin/users', icon: Users, superAdminOnly: true },
   { titleKey: 'admin.system_settings', url: '/admin/system-settings', icon: ShieldAlert, superAdminOnly: true },
+  { titleKey: 'admin.businesses', url: '/admin/businesses', icon: Building2, superAdminOnly: false },
+  { titleKey: 'admin.categories', url: '/admin/categories', icon: FolderTree, superAdminOnly: false },
+  { titleKey: 'admin.tags', url: '/admin/tags', icon: Tags, superAdminOnly: false },
+  { titleKey: 'admin.memberships', url: '/admin/memberships', icon: Crown, superAdminOnly: false },
   { titleKey: 'admin.profile_systems', url: '/dashboard/profile-systems', icon: Layers, superAdminOnly: false },
   { titleKey: 'admin.blog', url: '/dashboard/blog', icon: PenSquare, superAdminOnly: false },
   { titleKey: 'admin.api_settings', url: '/admin/api-settings', icon: Key, superAdminOnly: false },
@@ -59,6 +63,10 @@ const getAdminLabel = (titleKey: string, isRTL: boolean) => {
     'admin.blog': { ar: 'المدونة', en: 'Blog' },
     'admin.activity_log': { ar: 'سجل النشاط', en: 'Activity Log' },
     'admin.system_settings': { ar: 'إعدادات النظام', en: 'System Settings' },
+    'admin.businesses': { ar: 'الأعمال', en: 'Businesses' },
+    'admin.categories': { ar: 'التصنيفات', en: 'Categories' },
+    'admin.tags': { ar: 'الوسوم', en: 'Tags' },
+    'admin.memberships': { ar: 'العضويات', en: 'Memberships' },
   };
   const entry = map[titleKey];
   return entry ? (isRTL ? entry.ar : entry.en) : titleKey;
