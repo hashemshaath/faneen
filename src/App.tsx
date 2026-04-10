@@ -48,6 +48,10 @@ const AdminApiDocs = lazy(() => import("./pages/admin/AdminApiDocs"));
 const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
 const AdminSystemSettings = lazy(() => import("./pages/admin/AdminSystemSettings"));
 const AdminActivityLog = lazy(() => import("./pages/admin/AdminActivityLog"));
+const AdminCategories = lazy(() => import("./pages/admin/AdminCategories"));
+const AdminTags = lazy(() => import("./pages/admin/AdminTags"));
+const AdminBusinesses = lazy(() => import("./pages/admin/AdminBusinesses"));
+const AdminMemberships = lazy(() => import("./pages/admin/AdminMemberships"));
 const Notifications = lazy(() => import("./pages/Notifications"));
 const Membership = lazy(() => import("./pages/Membership"));
 const DashboardOperations = lazy(() => import("./pages/dashboard/DashboardOperations"));
@@ -127,6 +131,10 @@ const App = () => (
                   <Route path="/admin/api-settings" element={<ProtectedRoute requireAdmin><AdminApiSettings /></ProtectedRoute>} />
                   <Route path="/admin/api-docs" element={<ProtectedRoute requireAdmin><AdminApiDocs /></ProtectedRoute>} />
                   <Route path="/admin/activity-log" element={<ProtectedRoute requireAdmin><AdminActivityLog /></ProtectedRoute>} />
+                  <Route path="/admin/categories" element={<ProtectedRoute requireAdmin><AdminCategories /></ProtectedRoute>} />
+                  <Route path="/admin/tags" element={<ProtectedRoute requireAdmin><AdminTags /></ProtectedRoute>} />
+                  <Route path="/admin/businesses" element={<ProtectedRoute requireAdmin><AdminBusinesses /></ProtectedRoute>} />
+                  <Route path="/admin/memberships" element={<ProtectedRoute requireAdmin><AdminMemberships /></ProtectedRoute>} />
 
                   {/* Super Admin only */}
                   <Route path="/admin/users" element={<ProtectedRoute requireSuperAdmin><AdminUsers /></ProtectedRoute>} />
