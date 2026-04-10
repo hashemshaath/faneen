@@ -1,5 +1,6 @@
 import React from 'react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
+import { ProviderDashboard } from '@/components/dashboard/ProviderDashboard';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
