@@ -9,7 +9,8 @@ import { Footer } from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft, ArrowRight, Calendar, Eye, FileText, Clock, BookOpen, List, Share2, Copy, CheckCheck } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Calendar, Eye, FileText, Clock, BookOpen, List, Share2, Copy, CheckCheck, Bookmark, BookmarkCheck } from 'lucide-react';
+import { toast } from 'sonner';
 
 const blogCategories: Record<string, { ar: string; en: string }> = {
   general: { ar: 'عام', en: 'General' },
