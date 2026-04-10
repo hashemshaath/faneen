@@ -272,6 +272,11 @@ const DashboardContracts = () => {
                             <StatusIcon className="w-3 h-3" />
                             {isRTL ? cfg.label_ar : cfg.label_en}
                           </Badge>
+                          <Badge variant="outline" className="text-[9px] gap-1">
+                            {isProvider
+                              ? (isRTL ? '🔧 مزود الخدمة' : '🔧 Provider')
+                              : (isRTL ? '👤 عميل' : '👤 Client')}
+                          </Badge>
                         </div>
                         <p className="tech-content text-[10px] text-muted-foreground">{c.contract_number}</p>
                       </div>
