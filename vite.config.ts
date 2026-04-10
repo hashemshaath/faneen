@@ -13,6 +13,31 @@ export default defineConfig(({ mode }) => ({
       overlay: false,
     },
   },
+  build: {
+    target: 'es2020',
+    cssMinify: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-query': ['@tanstack/react-query'],
+          'vendor-supabase': ['@supabase/supabase-js'],
+          'vendor-ui': [
+            '@radix-ui/react-dialog',
+            '@radix-ui/react-dropdown-menu',
+            '@radix-ui/react-tabs',
+            '@radix-ui/react-tooltip',
+            '@radix-ui/react-popover',
+            '@radix-ui/react-select',
+          ],
+          'vendor-markdown': ['marked', 'marked-highlight', 'highlight.js'],
+          'vendor-charts': ['recharts'],
+          'vendor-map': ['leaflet'],
+          'vendor-pdf': ['jspdf', 'jspdf-autotable'],
+        },
+      },
+    },
+  },
   plugins: [
     react(),
     mode === "development" && componentTagger(),

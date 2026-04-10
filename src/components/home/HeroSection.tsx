@@ -22,7 +22,7 @@ export const HeroSection = () => {
 
   return (
     <section className="relative min-h-[85vh] sm:min-h-[90vh] flex items-center justify-center overflow-hidden">
-      <img ref={imgRef} src={heroBg} alt="أعمال الألمنيوم والحديد والزجاج والخشب" className="absolute inset-0 w-full h-full object-cover will-change-transform scale-110" width={1920} height={1080} />
+      <img ref={imgRef} src={heroBg} alt="أعمال الألمنيوم والحديد والزجاج والخشب" className="absolute inset-0 w-full h-full object-cover will-change-transform scale-110" width={1920} height={1080} fetchPriority="high" decoding="async" />
       <div className="absolute inset-0 bg-gradient-navy opacity-85" />
       <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, hsl(220 35% 10% / 0.3) 0%, hsl(220 35% 10% / 0.9) 100%)" }} />
       <div className="relative z-10 container text-center px-4 sm:px-6 animate-fade-up pt-16 sm:pt-0">
