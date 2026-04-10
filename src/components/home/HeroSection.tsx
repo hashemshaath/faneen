@@ -11,7 +11,7 @@ import heroBg1 from "@/assets/hero-bg.jpg";
 import heroBg2 from "@/assets/hero-slide-2.jpg";
 import heroBg3 from "@/assets/hero-slide-3.jpg";
 
-const slides = [
+const slidesData = [
   {
     image: heroBg1,
     titleKey1: 'hero.title1',
