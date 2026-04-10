@@ -215,7 +215,7 @@ const ProjectDetail = () => {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Description */}
@@ -230,12 +230,12 @@ const ProjectDetail = () => {
           {/* Sidebar */}
           <div className="space-y-5">
             {/* Project Info Card */}
-            <div className="rounded-xl border border-border/50 bg-card p-5 space-y-4">
-              <h3 className="font-heading font-bold text-lg">{isRTL ? 'تفاصيل المشروع' : 'Project Details'}</h3>
+            <div className="rounded-xl border border-border/50 dark:border-border/30 bg-card dark:bg-card/80 p-4 sm:p-5 space-y-3 sm:space-y-4">
+              <h3 className="font-heading font-bold text-base sm:text-lg">{isRTL ? 'تفاصيل المشروع' : 'Project Details'}</h3>
               <div className="space-y-3">
                 {project.project_cost && (
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
+                  <div className="flex items-center gap-2.5 sm:gap-3">
+                    <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-accent/10 dark:bg-accent/15 flex items-center justify-center shrink-0">
                       <DollarSign className="w-4 h-4 text-accent" />
                     </div>
                     <div>
@@ -310,7 +310,7 @@ const ProjectDetail = () => {
 
       {/* Lightbox Dialog */}
       <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
-        <DialogContent className="max-w-5xl p-0 overflow-hidden bg-black/95 border-none" dir={isRTL ? 'rtl' : 'ltr'}>
+        <DialogContent className="max-w-5xl p-0 overflow-hidden bg-black/95 border-none sm:rounded-2xl" dir={isRTL ? 'rtl' : 'ltr'}>
           <div className="relative flex flex-col h-[85vh]">
             {/* Close */}
             <Button
