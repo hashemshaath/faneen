@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -16,16 +16,27 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ImageUpload } from '@/components/ui/image-upload';
+import { ImageUpload, MultiImageUpload } from '@/components/ui/image-upload';
 import { FieldAiActions } from '@/components/blog/FieldAiActions';
 import { toast } from 'sonner';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import {
   Building2, Search, CheckCircle, XCircle, Star, Loader2, Eye, Ban,
   Edit, Trash2, Plus, X, Globe, Phone, Mail, MapPin, Settings,
   Shield, Crown, BarChart3, Package, DollarSign, ExternalLink,
-  GripVertical, ToggleLeft, ToggleRight, Save,
+  GripVertical, ToggleLeft, ToggleRight, Save, Image, MapPinned,
+  FileText, Users, Locate, Navigation,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+
+// Fix leaflet icons
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+});
 
 const tiers = [
   { value: 'free', label_ar: 'مجاني', label_en: 'Free', color: 'bg-muted text-muted-foreground' },
@@ -33,6 +44,62 @@ const tiers = [
   { value: 'premium', label_ar: 'مميز', label_en: 'Premium', color: 'bg-yellow-500/10 text-yellow-600' },
   { value: 'enterprise', label_ar: 'مؤسسات', label_en: 'Enterprise', color: 'bg-purple-500/10 text-purple-600' },
 ];
+
+/* ─── Location Map Picker ─── */
+const LocationPicker = ({ lat, lng, onPick, isRTL }: { lat: number; lng: number; onPick: (lat: number, lng: number) => void; isRTL: boolean }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<L.Map | null>(null);
+  const markerRef = useRef<L.Marker | null>(null);
+
+  useEffect(() => {
+    if (!containerRef.current || mapRef.current) return;
+    const map = L.map(containerRef.current, { center: [lat || 24.7136, lng || 46.6753], zoom: lat ? 15 : 6, scrollWheelZoom: true });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap',
+    }).addTo(map);
+
+    if (lat && lng) {
+      markerRef.current = L.marker([lat, lng], { draggable: true }).addTo(map);
+      markerRef.current.on('dragend', () => {
+        const pos = markerRef.current!.getLatLng();
+        onPick(pos.lat, pos.lng);
+      });
+    }
+
+    map.on('click', (e: L.LeafletMouseEvent) => {
+      if (markerRef.current) markerRef.current.setLatLng(e.latlng);
+      else {
+        markerRef.current = L.marker(e.latlng, { draggable: true }).addTo(map);
+        markerRef.current.on('dragend', () => {
+          const pos = markerRef.current!.getLatLng();
+          onPick(pos.lat, pos.lng);
+        });
+      }
+      onPick(e.latlng.lat, e.latlng.lng);
+    });
+
+    mapRef.current = map;
+    return () => { map.remove(); mapRef.current = null; };
+  }, []);
+
+  return <div ref={containerRef} className="w-full h-[250px] rounded-lg border border-border/50" />;
+};
+
+/* ─── Reverse Geocode ─── */
+const reverseGeocode = async (lat: number, lng: number) => {
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=ar&addressdetails=1`);
+    const data = await res.json();
+    const a = data.address || {};
+    return {
+      region: a.state || a.county || '',
+      district: a.suburb || a.neighbourhood || a.quarter || '',
+      street_name: a.road || a.pedestrian || '',
+      building_number: a.house_number || '',
+      address: data.display_name || '',
+    };
+  } catch { return null; }
+};
 
 const AdminBusinesses = () => {
   const { isRTL, language } = useLanguage();
@@ -44,7 +111,9 @@ const AdminBusinesses = () => {
   const [editingBiz, setEditingBiz] = useState<any>(null);
   const [editForm, setEditForm] = useState<any>({});
   const [servicesPanel, setServicesPanel] = useState<string | null>(null);
+  const [portfolioImages, setPortfolioImages] = useState<string[]>([]);
   const [newService, setNewService] = useState({ name_ar: '', name_en: '', description_ar: '', description_en: '', price_from: '', price_to: '', is_active: true });
+  const [geocoding, setGeocoding] = useState(false);
 
   const setField = useCallback((key: string, value: any) => {
     setEditForm((f: any) => ({ ...f, [key]: value }));
@@ -98,6 +167,33 @@ const AdminBusinesses = () => {
     enabled: !!servicesPanel,
   });
 
+  const { data: allServices = [] } = useQuery({
+    queryKey: ['all-business-services'],
+    queryFn: async () => {
+      const { data } = await supabase.from('business_services').select('id, name_ar, name_en, business_id');
+      return data || [];
+    },
+  });
+
+  const { data: portfolioData = [], refetch: refetchPortfolio } = useQuery({
+    queryKey: ['admin-portfolio', editingBiz?.id],
+    queryFn: async () => {
+      if (!editingBiz?.id) return [];
+      const { data } = await supabase.from('portfolio_items').select('*').eq('business_id', editingBiz.id).order('sort_order');
+      return data || [];
+    },
+    enabled: !!editingBiz?.id,
+  });
+
+  // Sync with contracts - get businesses involved in contracts
+  const { data: contractBusinessIds = [] } = useQuery({
+    queryKey: ['contract-business-ids'],
+    queryFn: async () => {
+      const { data } = await supabase.from('contracts').select('business_id').not('business_id', 'is', null);
+      return [...new Set((data || []).map((c: any) => c.business_id).filter(Boolean))];
+    },
+  });
+
   /* ─── Mutations ─── */
   const logAction = async (action: string, entityId: string, details: any) => {
     await supabase.from('admin_activity_log').insert({
@@ -136,12 +232,22 @@ const AdminBusinesses = () => {
       const payload: any = {
         name_ar: editForm.name_ar,
         name_en: editForm.name_en || null,
+        short_description_ar: editForm.short_description_ar || null,
+        short_description_en: editForm.short_description_en || null,
         description_ar: editForm.description_ar || null,
         description_en: editForm.description_en || null,
         phone: editForm.phone || null,
         email: editForm.email || null,
         website: editForm.website || null,
         address: editForm.address || null,
+        national_id: editForm.national_id || null,
+        additional_number: editForm.additional_number || null,
+        region: editForm.region || null,
+        district: editForm.district || null,
+        street_name: editForm.street_name || null,
+        building_number: editForm.building_number || null,
+        latitude: editForm.latitude || null,
+        longitude: editForm.longitude || null,
         category_id: editForm.category_id || null,
         country_id: editForm.country_id || null,
         city_id: editForm.city_id || null,
@@ -203,16 +309,58 @@ const AdminBusinesses = () => {
     },
   });
 
+  const addPortfolioMutation = useMutation({
+    mutationFn: async (url: string) => {
+      const { error } = await supabase.from('portfolio_items').insert({
+        business_id: editingBiz.id,
+        title_ar: 'صورة',
+        media_url: url,
+        media_type: 'image',
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => refetchPortfolio(),
+  });
+
+  const deletePortfolioMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('portfolio_items').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => refetchPortfolio(),
+  });
+
+  /* ─── Map Pick Handler ─── */
+  const handleMapPick = async (lat: number, lng: number) => {
+    setField('latitude', lat);
+    setField('longitude', lng);
+    setGeocoding(true);
+    const geo = await reverseGeocode(lat, lng);
+    setGeocoding(false);
+    if (geo) {
+      setField('region', geo.region);
+      setField('district', geo.district);
+      setField('street_name', geo.street_name);
+      setField('building_number', geo.building_number);
+      setField('address', geo.address);
+    }
+  };
+
   /* ─── Edit Open ─── */
   const openEdit = (biz: any) => {
     setServicesPanel(null);
     setEditForm({
       name_ar: biz.name_ar, name_en: biz.name_en || '',
+      short_description_ar: biz.short_description_ar || '', short_description_en: biz.short_description_en || '',
       description_ar: biz.description_ar || '', description_en: biz.description_en || '',
       phone: biz.phone || '', email: biz.email || '', website: biz.website || '',
       address: biz.address || '', category_id: biz.category_id || '',
       country_id: biz.country_id || '', city_id: biz.city_id || '',
       logo_url: biz.logo_url || '', cover_url: biz.cover_url || '',
+      national_id: biz.national_id || '', additional_number: biz.additional_number || '',
+      region: biz.region || '', district: biz.district || '',
+      street_name: biz.street_name || '', building_number: biz.building_number || '',
+      latitude: biz.latitude || '', longitude: biz.longitude || '',
       is_active: biz.is_active, is_verified: biz.is_verified,
       membership_tier: biz.membership_tier,
     });
@@ -233,7 +381,8 @@ const AdminBusinesses = () => {
     const matchStatus = filterStatus === 'all' ||
       (filterStatus === 'verified' && b.is_verified) ||
       (filterStatus === 'unverified' && !b.is_verified) ||
-      (filterStatus === 'inactive' && !b.is_active);
+      (filterStatus === 'inactive' && !b.is_active) ||
+      (filterStatus === 'contract' && contractBusinessIds.includes(b.id));
     const matchTier = filterTier === 'all' || b.membership_tier === filterTier;
     return matchSearch && matchStatus && matchTier;
   });
@@ -242,7 +391,7 @@ const AdminBusinesses = () => {
     total: businesses.length,
     verified: businesses.filter((b: any) => b.is_verified).length,
     active: businesses.filter((b: any) => b.is_active).length,
-    premium: businesses.filter((b: any) => b.membership_tier !== 'free').length,
+    contracts: contractBusinessIds.length,
   };
 
   const filteredCities = editForm.country_id
@@ -273,7 +422,7 @@ const AdminBusinesses = () => {
             { label: isRTL ? 'الإجمالي' : 'Total', value: stats.total, icon: Building2, color: 'bg-primary/10 text-primary' },
             { label: isRTL ? 'نشط' : 'Active', value: stats.active, icon: CheckCircle, color: 'bg-green-500/10 text-green-600' },
             { label: isRTL ? 'موثق' : 'Verified', value: stats.verified, icon: Shield, color: 'bg-blue-500/10 text-blue-600' },
-            { label: isRTL ? 'مدفوع' : 'Paid', value: stats.premium, icon: Crown, color: 'bg-yellow-500/10 text-yellow-600' },
+            { label: isRTL ? 'مرتبط بعقود' : 'With Contracts', value: stats.contracts, icon: FileText, color: 'bg-yellow-500/10 text-yellow-600' },
           ].map((s, i) => (
             <Card key={i} className="border-border/40">
               <CardContent className="p-2.5 flex items-center gap-2">
@@ -297,12 +446,13 @@ const AdminBusinesses = () => {
                 className="ps-9" />
             </div>
             <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-full sm:w-36"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-full sm:w-40"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">{isRTL ? 'كل الحالات' : 'All Status'}</SelectItem>
                 <SelectItem value="verified">{isRTL ? 'موثق' : 'Verified'}</SelectItem>
                 <SelectItem value="unverified">{isRTL ? 'غير موثق' : 'Unverified'}</SelectItem>
                 <SelectItem value="inactive">{isRTL ? 'معطل' : 'Inactive'}</SelectItem>
+                <SelectItem value="contract">{isRTL ? 'مرتبط بعقود' : 'With Contracts'}</SelectItem>
               </SelectContent>
             </Select>
             <Select value={filterTier} onValueChange={setFilterTier}>
@@ -323,65 +473,116 @@ const AdminBusinesses = () => {
                 <CardTitle className="text-base flex items-center gap-2">
                   <Edit className="w-4 h-4 text-primary" />
                   {isRTL ? 'تعديل العمل' : 'Edit Business'}: {editingBiz.name_ar}
+                  {contractBusinessIds.includes(editingBiz.id) && (
+                    <Badge variant="outline" className="text-[9px] gap-1"><FileText className="w-2.5 h-2.5" />{isRTL ? 'مرتبط بعقود' : 'Has Contracts'}</Badge>
+                  )}
                 </CardTitle>
                 <Button variant="ghost" size="icon" onClick={() => setEditingBiz(null)}><X className="w-4 h-4" /></Button>
               </div>
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="info" className="w-full">
-                <TabsList className="w-full grid grid-cols-4 h-9">
-                  <TabsTrigger value="info" className="text-xs">{isRTL ? 'المعلومات' : 'Info'}</TabsTrigger>
-                  <TabsTrigger value="content" className="text-xs">{isRTL ? 'المحتوى' : 'Content'}</TabsTrigger>
-                  <TabsTrigger value="media" className="text-xs">{isRTL ? 'الوسائط' : 'Media'}</TabsTrigger>
-                  <TabsTrigger value="controls" className="text-xs">{isRTL ? 'التحكم' : 'Controls'}</TabsTrigger>
+                <TabsList className="w-full grid grid-cols-6 h-9">
+                  <TabsTrigger value="info" className="text-[10px]">{isRTL ? 'المعلومات' : 'Info'}</TabsTrigger>
+                  <TabsTrigger value="address" className="text-[10px]">{isRTL ? 'العنوان' : 'Address'}</TabsTrigger>
+                  <TabsTrigger value="content" className="text-[10px]">{isRTL ? 'المحتوى' : 'Content'}</TabsTrigger>
+                  <TabsTrigger value="media" className="text-[10px]">{isRTL ? 'الوسائط' : 'Media'}</TabsTrigger>
+                  <TabsTrigger value="contact" className="text-[10px]">{isRTL ? 'التواصل' : 'Contact'}</TabsTrigger>
+                  <TabsTrigger value="controls" className="text-[10px]">{isRTL ? 'التحكم' : 'Controls'}</TabsTrigger>
                 </TabsList>
 
-                {/* Info Tab */}
+                {/* ── Info Tab ── */}
                 <TabsContent value="info" className="space-y-4 mt-3">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <Label className="text-xs">{isRTL ? 'الاسم (عربي)' : 'Name (AR)'} *</Label>
-                        <FieldAiActions compact value={editForm.name_ar} lang="ar" isRTL={isRTL} fieldType="title"
-                          onTranslated={(v) => setField('name_en', v)} onImproved={(v) => setField('name_ar', v)} />
-                      </div>
-                      <Input value={editForm.name_ar} onChange={e => setField('name_ar', e.target.value)} />
+                  {/* Arabic name first */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <Label className="text-xs">{isRTL ? 'الاسم (عربي)' : 'Name (AR)'} *</Label>
+                      <FieldAiActions compact value={editForm.name_ar} lang="ar" isRTL={isRTL} fieldType="title"
+                        onTranslated={(v) => setField('name_en', v)} onImproved={(v) => setField('name_ar', v)} />
                     </div>
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <Label className="text-xs">{isRTL ? 'الاسم (إنجليزي)' : 'Name (EN)'}</Label>
-                        <FieldAiActions compact value={editForm.name_en} lang="en" isRTL={isRTL} fieldType="title"
-                          onTranslated={(v) => setField('name_ar', v)} onImproved={(v) => setField('name_en', v)} />
+                    <Input value={editForm.name_ar} onChange={e => setField('name_ar', e.target.value)} />
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <Label className="text-xs">{isRTL ? 'الاسم (إنجليزي)' : 'Name (EN)'}</Label>
+                      <FieldAiActions compact value={editForm.name_en} lang="en" isRTL={isRTL} fieldType="title"
+                        onTranslated={(v) => setField('name_ar', v)} onImproved={(v) => setField('name_en', v)} />
+                    </div>
+                    <Input value={editForm.name_en} onChange={e => setField('name_en', e.target.value)} dir="ltr" />
+                  </div>
+
+                  <div>
+                    <Label className="text-xs">{isRTL ? 'التصنيف' : 'Category'}</Label>
+                    <Select value={editForm.category_id} onValueChange={v => setField('category_id', v)}>
+                      <SelectTrigger className="mt-1"><SelectValue placeholder={isRTL ? 'اختر' : 'Select'} /></SelectTrigger>
+                      <SelectContent>
+                        {categories.map((c: any) => <SelectItem key={c.id} value={c.id}>{language === 'ar' ? c.name_ar : c.name_en}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <Separator />
+                  <div className="p-3 rounded-lg bg-muted/20 border border-border/30 text-[10px] space-y-1 text-muted-foreground font-mono">
+                    <p>ID: {editingBiz.id}</p>
+                    <p>Ref: {editingBiz.ref_id}</p>
+                    <p>Username: @{editingBiz.username}</p>
+                    <p>Owner: {editingBiz.user_id}</p>
+                    <p>Created: {new Date(editingBiz.created_at).toLocaleDateString()}</p>
+                    <p>Rating: {editingBiz.rating_avg} ({editingBiz.rating_count} reviews)</p>
+                  </div>
+                </TabsContent>
+
+                {/* ── Address Tab ── */}
+                <TabsContent value="address" className="space-y-4 mt-3">
+                  {/* Map */}
+                  <div>
+                    <Label className="text-xs font-semibold mb-2 flex items-center gap-1">
+                      <MapPinned className="w-3 h-3" />
+                      {isRTL ? 'تحديد الموقع على الخريطة' : 'Pick Location on Map'}
+                    </Label>
+                    <p className="text-[10px] text-muted-foreground mb-2">
+                      {isRTL ? 'انقر على الخريطة لتحديد الموقع وتعبئة حقول العنوان تلقائياً' : 'Click on map to pick location and auto-fill address fields'}
+                    </p>
+                    <LocationPicker
+                      lat={parseFloat(editForm.latitude) || 0}
+                      lng={parseFloat(editForm.longitude) || 0}
+                      onPick={handleMapPick}
+                      isRTL={isRTL}
+                    />
+                    {geocoding && (
+                      <div className="flex items-center gap-2 mt-2 text-xs text-primary">
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        {isRTL ? 'جاري استخراج بيانات العنوان...' : 'Extracting address data...'}
                       </div>
-                      <Input value={editForm.name_en} onChange={e => setField('name_en', e.target.value)} dir="ltr" />
+                    )}
+                    <div className="grid grid-cols-2 gap-2 mt-2">
+                      <div>
+                        <Label className="text-[10px]">{isRTL ? 'خط العرض' : 'Latitude'}</Label>
+                        <Input value={editForm.latitude} onChange={e => setField('latitude', e.target.value)} dir="ltr" className="h-8 text-xs" />
+                      </div>
+                      <div>
+                        <Label className="text-[10px]">{isRTL ? 'خط الطول' : 'Longitude'}</Label>
+                        <Input value={editForm.longitude} onChange={e => setField('longitude', e.target.value)} dir="ltr" className="h-8 text-xs" />
+                      </div>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <Separator />
+
+                  {/* National IDs */}
+                  <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <Label className="text-xs flex items-center gap-1"><Phone className="w-3 h-3" /> {isRTL ? 'الهاتف' : 'Phone'}</Label>
-                      <Input value={editForm.phone} onChange={e => setField('phone', e.target.value)} dir="ltr" className="mt-1" />
+                      <Label className="text-xs">{isRTL ? 'الرقم الوطني' : 'National ID'}</Label>
+                      <Input value={editForm.national_id} onChange={e => setField('national_id', e.target.value)} dir="ltr" className="mt-1" />
                     </div>
                     <div>
-                      <Label className="text-xs flex items-center gap-1"><Mail className="w-3 h-3" /> {isRTL ? 'البريد' : 'Email'}</Label>
-                      <Input value={editForm.email} onChange={e => setField('email', e.target.value)} dir="ltr" className="mt-1" />
-                    </div>
-                    <div>
-                      <Label className="text-xs flex items-center gap-1"><Globe className="w-3 h-3" /> {isRTL ? 'الموقع' : 'Website'}</Label>
-                      <Input value={editForm.website} onChange={e => setField('website', e.target.value)} dir="ltr" className="mt-1" />
+                      <Label className="text-xs">{isRTL ? 'الرقم الإضافي' : 'Additional Number'}</Label>
+                      <Input value={editForm.additional_number} onChange={e => setField('additional_number', e.target.value)} dir="ltr" className="mt-1" />
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div>
-                      <Label className="text-xs">{isRTL ? 'التصنيف' : 'Category'}</Label>
-                      <Select value={editForm.category_id} onValueChange={v => setField('category_id', v)}>
-                        <SelectTrigger className="mt-1"><SelectValue placeholder={isRTL ? 'اختر' : 'Select'} /></SelectTrigger>
-                        <SelectContent>
-                          {categories.map((c: any) => <SelectItem key={c.id} value={c.id}>{language === 'ar' ? c.name_ar : c.name_en}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                  {/* Country / City */}
+                  <div className="grid grid-cols-2 gap-3">
                     <div>
                       <Label className="text-xs">{isRTL ? 'الدولة' : 'Country'}</Label>
                       <Select value={editForm.country_id} onValueChange={v => { setField('country_id', v); setField('city_id', ''); }}>
@@ -402,57 +603,192 @@ const AdminBusinesses = () => {
                     </div>
                   </div>
 
+                  {/* Region / District */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label className="text-xs">{isRTL ? 'المنطقة' : 'Region'}</Label>
+                      <Input value={editForm.region} onChange={e => setField('region', e.target.value)} className="mt-1" />
+                    </div>
+                    <div>
+                      <Label className="text-xs">{isRTL ? 'الحي' : 'District'}</Label>
+                      <Input value={editForm.district} onChange={e => setField('district', e.target.value)} className="mt-1" />
+                    </div>
+                  </div>
+
+                  {/* Street / Building */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label className="text-xs">{isRTL ? 'اسم الشارع' : 'Street Name'}</Label>
+                      <Input value={editForm.street_name} onChange={e => setField('street_name', e.target.value)} className="mt-1" />
+                    </div>
+                    <div>
+                      <Label className="text-xs">{isRTL ? 'رقم المبنى' : 'Building Number'}</Label>
+                      <Input value={editForm.building_number} onChange={e => setField('building_number', e.target.value)} dir="ltr" className="mt-1" />
+                    </div>
+                  </div>
+
+                  {/* Full address */}
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <Label className="text-xs flex items-center gap-1"><MapPin className="w-3 h-3" /> {isRTL ? 'العنوان' : 'Address'}</Label>
+                      <Label className="text-xs flex items-center gap-1"><MapPin className="w-3 h-3" /> {isRTL ? 'العنوان الكامل' : 'Full Address'}</Label>
                       <FieldAiActions compact value={editForm.address} lang="ar" isRTL={isRTL} fieldType="short_text"
                         onTranslated={() => {}} onImproved={(v) => setField('address', v)} />
                     </div>
-                    <Input value={editForm.address} onChange={e => setField('address', e.target.value)} />
+                    <Textarea value={editForm.address} onChange={e => setField('address', e.target.value)} rows={2} />
                   </div>
                 </TabsContent>
 
-                {/* Content Tab */}
+                {/* ── Content Tab ── */}
                 <TabsContent value="content" className="space-y-4 mt-3">
+                  {/* Short description AR */}
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <Label className="text-xs font-semibold">{isRTL ? 'الوصف (عربي)' : 'Description (AR)'}</Label>
+                      <Label className="text-xs font-semibold">{isRTL ? 'نبذة قصيرة (عربي)' : 'Short Description (AR)'}</Label>
+                      <FieldAiActions compact value={editForm.short_description_ar} lang="ar" isRTL={isRTL} fieldType="excerpt"
+                        onTranslated={(v) => setField('short_description_en', v)} onImproved={(v) => setField('short_description_ar', v)} />
+                    </div>
+                    <Textarea value={editForm.short_description_ar} onChange={e => setField('short_description_ar', e.target.value)} rows={2}
+                      placeholder={isRTL ? 'وصف مختصر للنشاط (150 حرف)' : 'Short business description (150 chars)'} />
+                    <span className="text-[10px] text-muted-foreground">{editForm.short_description_ar?.length || 0}/150</span>
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <Label className="text-xs font-semibold">{isRTL ? 'نبذة قصيرة (إنجليزي)' : 'Short Description (EN)'}</Label>
+                      <FieldAiActions compact value={editForm.short_description_en} lang="en" isRTL={isRTL} fieldType="excerpt"
+                        onTranslated={(v) => setField('short_description_ar', v)} onImproved={(v) => setField('short_description_en', v)} />
+                    </div>
+                    <Textarea value={editForm.short_description_en} onChange={e => setField('short_description_en', e.target.value)} rows={2} dir="ltr" />
+                    <span className="text-[10px] text-muted-foreground">{editForm.short_description_en?.length || 0}/150</span>
+                  </div>
+
+                  <Separator />
+
+                  {/* Long description AR */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <Label className="text-xs font-semibold">{isRTL ? 'الوصف التفصيلي (عربي)' : 'Full Description (AR)'}</Label>
                       <FieldAiActions compact value={editForm.description_ar} lang="ar" isRTL={isRTL} fieldType="description"
                         onTranslated={(v) => setField('description_en', v)} onImproved={(v) => setField('description_ar', v)} />
                     </div>
-                    <Textarea value={editForm.description_ar} onChange={e => setField('description_ar', e.target.value)} rows={4} />
+                    <Textarea value={editForm.description_ar} onChange={e => setField('description_ar', e.target.value)} rows={5} />
                     <span className="text-[10px] text-muted-foreground">{editForm.description_ar?.length || 0} {isRTL ? 'حرف' : 'chars'}</span>
                   </div>
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <Label className="text-xs font-semibold">{isRTL ? 'الوصف (إنجليزي)' : 'Description (EN)'}</Label>
+                      <Label className="text-xs font-semibold">{isRTL ? 'الوصف التفصيلي (إنجليزي)' : 'Full Description (EN)'}</Label>
                       <FieldAiActions compact value={editForm.description_en} lang="en" isRTL={isRTL} fieldType="description"
                         onTranslated={(v) => setField('description_ar', v)} onImproved={(v) => setField('description_en', v)} />
                     </div>
-                    <Textarea value={editForm.description_en} onChange={e => setField('description_en', e.target.value)} rows={4} dir="ltr" />
+                    <Textarea value={editForm.description_en} onChange={e => setField('description_en', e.target.value)} rows={5} dir="ltr" />
                     <span className="text-[10px] text-muted-foreground">{editForm.description_en?.length || 0} {isRTL ? 'حرف' : 'chars'}</span>
                   </div>
                 </TabsContent>
 
-                {/* Media Tab */}
+                {/* ── Media Tab ── */}
                 <TabsContent value="media" className="space-y-4 mt-3">
-                  <div>
-                    <Label className="text-xs font-semibold mb-2 block">{isRTL ? 'الشعار' : 'Logo'}</Label>
-                    <ImageUpload bucket="business-assets" value={editForm.logo_url}
-                      onChange={(url) => setField('logo_url', url)}
-                      onRemove={() => setField('logo_url', '')}
-                      placeholder={isRTL ? 'رفع الشعار' : 'Upload logo'} />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-xs font-semibold mb-2 block">{isRTL ? 'الشعار' : 'Logo'}</Label>
+                      <ImageUpload bucket="business-assets" value={editForm.logo_url}
+                        onChange={(url) => setField('logo_url', url)}
+                        onRemove={() => setField('logo_url', '')}
+                        aspectRatio="square"
+                        placeholder={isRTL ? 'رفع الشعار' : 'Upload logo'} />
+                    </div>
+                    <div>
+                      <Label className="text-xs font-semibold mb-2 block">{isRTL ? 'صورة الغلاف' : 'Cover Image'}</Label>
+                      <ImageUpload bucket="business-assets" value={editForm.cover_url}
+                        onChange={(url) => setField('cover_url', url)}
+                        onRemove={() => setField('cover_url', '')}
+                        placeholder={isRTL ? 'رفع صورة الغلاف' : 'Upload cover'} />
+                    </div>
                   </div>
+
+                  <Separator />
+
+                  {/* Portfolio / Work Images */}
                   <div>
-                    <Label className="text-xs font-semibold mb-2 block">{isRTL ? 'صورة الغلاف' : 'Cover Image'}</Label>
-                    <ImageUpload bucket="business-assets" value={editForm.cover_url}
-                      onChange={(url) => setField('cover_url', url)}
-                      onRemove={() => setField('cover_url', '')}
-                      placeholder={isRTL ? 'رفع صورة الغلاف (1200×400 موصى)' : 'Upload cover (1200×400 recommended)'} />
+                    <Label className="text-xs font-semibold mb-2 flex items-center gap-1">
+                      <Image className="w-3 h-3" />
+                      {isRTL ? 'معرض صور الأعمال' : 'Work Gallery'}
+                      <Badge variant="secondary" className="text-[9px] ms-1">{portfolioData.length}</Badge>
+                    </Label>
+                    <p className="text-[10px] text-muted-foreground mb-2">
+                      {isRTL ? 'أضف صور أعمال ومشاريع النشاط التجاري' : 'Add work and project images for this business'}
+                    </p>
+
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                      {portfolioData.map((item: any) => (
+                        <div key={item.id} className="relative aspect-square rounded-lg overflow-hidden border border-border/50 group">
+                          <img src={item.media_url} alt="" className="w-full h-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => { if (confirm(isRTL ? 'حذف هذه الصورة؟' : 'Delete this image?')) deletePortfolioMutation.mutate(item.id); }}
+                            className="absolute top-1 end-1 bg-destructive text-destructive-foreground rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ))}
+                      <div className="aspect-square">
+                        <ImageUpload
+                          bucket="portfolio-images"
+                          folder="admin"
+                          aspectRatio="square"
+                          onChange={(url) => addPortfolioMutation.mutate(url)}
+                          placeholder={isRTL ? 'إضافة صورة' : 'Add image'}
+                        />
+                      </div>
+                    </div>
                   </div>
                 </TabsContent>
 
-                {/* Controls Tab */}
+                {/* ── Contact Tab ── */}
+                <TabsContent value="contact" className="space-y-4 mt-3">
+                  <div>
+                    <Label className="text-xs flex items-center gap-1"><Phone className="w-3 h-3" /> {isRTL ? 'رقم الهاتف' : 'Phone Number'}</Label>
+                    <Input value={editForm.phone} onChange={e => setField('phone', e.target.value)} dir="ltr" className="mt-1" />
+                  </div>
+                  <div>
+                    <Label className="text-xs flex items-center gap-1"><Mail className="w-3 h-3" /> {isRTL ? 'البريد الإلكتروني' : 'Email'}</Label>
+                    <Input value={editForm.email} onChange={e => setField('email', e.target.value)} dir="ltr" className="mt-1" />
+                  </div>
+                  <div>
+                    <Label className="text-xs flex items-center gap-1"><Globe className="w-3 h-3" /> {isRTL ? 'الموقع الإلكتروني' : 'Website'}</Label>
+                    <Input value={editForm.email} onChange={e => setField('website', e.target.value)} dir="ltr" className="mt-1"
+                      placeholder="https://" />
+                  </div>
+
+                  {/* Services summary for this business */}
+                  {editingBiz && (
+                    <div className="mt-4">
+                      <Separator className="mb-3" />
+                      <div className="flex items-center justify-between mb-2">
+                        <Label className="text-xs font-semibold flex items-center gap-1">
+                          <Package className="w-3 h-3" />
+                          {isRTL ? 'الخدمات المسجلة' : 'Registered Services'}
+                        </Label>
+                        <Button variant="outline" size="sm" className="h-6 text-[10px] gap-1" onClick={() => { setEditingBiz(null); openServices(editingBiz.id); }}>
+                          <Settings className="w-3 h-3" />
+                          {isRTL ? 'إدارة' : 'Manage'}
+                        </Button>
+                      </div>
+                      {allServices.filter((s: any) => s.business_id === editingBiz.id).length === 0 ? (
+                        <p className="text-[10px] text-muted-foreground">{isRTL ? 'لا توجد خدمات مسجلة' : 'No registered services'}</p>
+                      ) : (
+                        <div className="flex flex-wrap gap-1.5">
+                          {allServices.filter((s: any) => s.business_id === editingBiz.id).map((s: any) => (
+                            <Badge key={s.id} variant="outline" className="text-[9px]">
+                              {language === 'ar' ? s.name_ar : (s.name_en || s.name_ar)}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </TabsContent>
+
+                {/* ── Controls Tab ── */}
                 <TabsContent value="controls" className="space-y-4 mt-3">
                   <div className="space-y-3">
                     <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
@@ -484,16 +820,6 @@ const AdminBusinesses = () => {
                         </SelectContent>
                       </Select>
                     </div>
-                  </div>
-
-                  <Separator />
-                  <div className="p-3 rounded-lg bg-muted/20 border border-border/30 text-[10px] space-y-1 text-muted-foreground font-mono">
-                    <p>ID: {editingBiz.id}</p>
-                    <p>Ref: {editingBiz.ref_id}</p>
-                    <p>Username: @{editingBiz.username}</p>
-                    <p>Owner: {editingBiz.user_id}</p>
-                    <p>Created: {new Date(editingBiz.created_at).toLocaleDateString()}</p>
-                    <p>Rating: {editingBiz.rating_avg} ({editingBiz.rating_count} reviews)</p>
                   </div>
                 </TabsContent>
               </Tabs>
@@ -550,46 +876,42 @@ const AdminBusinesses = () => {
 
               <Separator />
 
-              {/* Add New Service */}
+              {/* Add New Service - Arabic fields first */}
               <div className="space-y-3">
                 <p className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
                   <Plus className="w-3 h-3" /> {isRTL ? 'إضافة خدمة جديدة' : 'Add New Service'}
                 </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <Label className="text-xs">{isRTL ? 'اسم الخدمة (عربي)' : 'Service Name (AR)'} *</Label>
-                      <FieldAiActions compact value={newService.name_ar} lang="ar" isRTL={isRTL} fieldType="title"
-                        onTranslated={(v) => setServiceField('name_en', v)} onImproved={(v) => setServiceField('name_ar', v)} />
-                    </div>
-                    <Input value={newService.name_ar} onChange={e => setServiceField('name_ar', e.target.value)} />
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <Label className="text-xs">{isRTL ? 'اسم الخدمة (عربي)' : 'Service Name (AR)'} *</Label>
+                    <FieldAiActions compact value={newService.name_ar} lang="ar" isRTL={isRTL} fieldType="title"
+                      onTranslated={(v) => setServiceField('name_en', v)} onImproved={(v) => setServiceField('name_ar', v)} />
                   </div>
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <Label className="text-xs">{isRTL ? 'اسم الخدمة (إنجليزي)' : 'Service Name (EN)'}</Label>
-                      <FieldAiActions compact value={newService.name_en} lang="en" isRTL={isRTL} fieldType="title"
-                        onTranslated={(v) => setServiceField('name_ar', v)} onImproved={(v) => setServiceField('name_en', v)} />
-                    </div>
-                    <Input value={newService.name_en} onChange={e => setServiceField('name_en', e.target.value)} dir="ltr" />
-                  </div>
+                  <Input value={newService.name_ar} onChange={e => setServiceField('name_ar', e.target.value)} />
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <Label className="text-xs">{isRTL ? 'الوصف (عربي)' : 'Description (AR)'}</Label>
-                      <FieldAiActions compact value={newService.description_ar} lang="ar" isRTL={isRTL} fieldType="description"
-                        onTranslated={(v) => setServiceField('description_en', v)} onImproved={(v) => setServiceField('description_ar', v)} />
-                    </div>
-                    <Textarea value={newService.description_ar} onChange={e => setServiceField('description_ar', e.target.value)} rows={2} />
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <Label className="text-xs">{isRTL ? 'اسم الخدمة (إنجليزي)' : 'Service Name (EN)'}</Label>
+                    <FieldAiActions compact value={newService.name_en} lang="en" isRTL={isRTL} fieldType="title"
+                      onTranslated={(v) => setServiceField('name_ar', v)} onImproved={(v) => setServiceField('name_en', v)} />
                   </div>
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <Label className="text-xs">{isRTL ? 'الوصف (إنجليزي)' : 'Description (EN)'}</Label>
-                      <FieldAiActions compact value={newService.description_en} lang="en" isRTL={isRTL} fieldType="description"
-                        onTranslated={(v) => setServiceField('description_ar', v)} onImproved={(v) => setServiceField('description_en', v)} />
-                    </div>
-                    <Textarea value={newService.description_en} onChange={e => setServiceField('description_en', e.target.value)} rows={2} dir="ltr" />
+                  <Input value={newService.name_en} onChange={e => setServiceField('name_en', e.target.value)} dir="ltr" />
+                </div>
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <Label className="text-xs">{isRTL ? 'الوصف (عربي)' : 'Description (AR)'}</Label>
+                    <FieldAiActions compact value={newService.description_ar} lang="ar" isRTL={isRTL} fieldType="description"
+                      onTranslated={(v) => setServiceField('description_en', v)} onImproved={(v) => setServiceField('description_ar', v)} />
                   </div>
+                  <Textarea value={newService.description_ar} onChange={e => setServiceField('description_ar', e.target.value)} rows={2} />
+                </div>
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <Label className="text-xs">{isRTL ? 'الوصف (إنجليزي)' : 'Description (EN)'}</Label>
+                    <FieldAiActions compact value={newService.description_en} lang="en" isRTL={isRTL} fieldType="description"
+                      onTranslated={(v) => setServiceField('description_ar', v)} onImproved={(v) => setServiceField('description_en', v)} />
+                  </div>
+                  <Textarea value={newService.description_en} onChange={e => setServiceField('description_en', e.target.value)} rows={2} dir="ltr" />
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   <div>
@@ -631,6 +953,7 @@ const AdminBusinesses = () => {
           <div className="space-y-2">
             {filtered.map((biz: any) => {
               const tierInfo = tiers.find(t => t.value === biz.membership_tier) || tiers[0];
+              const hasContract = contractBusinessIds.includes(biz.id);
               return (
                 <Card key={biz.id} className={`border-border/40 hover:border-primary/20 transition-all group ${!biz.is_active ? 'opacity-60 border-destructive/20' : ''}`}>
                   <CardContent className="p-3">
@@ -649,6 +972,7 @@ const AdminBusinesses = () => {
                             </h3>
                             {biz.is_verified && <CheckCircle className="w-3.5 h-3.5 text-blue-500 shrink-0" />}
                             {!biz.is_active && <Badge variant="destructive" className="text-[8px] h-4">{isRTL ? 'معطل' : 'Disabled'}</Badge>}
+                            {hasContract && <Badge variant="outline" className="text-[8px] h-4 gap-0.5"><FileText className="w-2 h-2" />{isRTL ? 'عقود' : 'Contracts'}</Badge>}
                           </div>
                           <div className="flex items-center gap-2 text-[10px] text-muted-foreground flex-wrap">
                             <span>@{biz.username}</span>
