@@ -1,7 +1,17 @@
-import { useEffect, useState, useCallback } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react';
 import { Sun, Moon, Monitor } from 'lucide-react';
 
 type Theme = 'light' | 'dark' | 'system';
+
+interface ThemeContextType {
+  theme: Theme;
+  setTheme: (theme: Theme) => void;
+  isDark: boolean;
+}
+
+const ThemeContext = createContext<ThemeContextType>({ theme: 'system', setTheme: () => {}, isDark: false });
+
+export const useThemeMode = () => useContext(ThemeContext);
 
 const getStoredTheme = (): Theme => {
   try {
@@ -11,47 +21,41 @@ const getStoredTheme = (): Theme => {
   return 'system';
 };
 
-const applyTheme = (theme: Theme) => {
-  const isDark =
-    theme === 'dark' ||
-    (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+const resolveIsDark = (theme: Theme) =>
+  theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
-  // Apply to both html and body for maximum compatibility
-  [document.documentElement, document.body].forEach(el => {
-    if (isDark) {
-      el.classList.add('dark');
-    } else {
-      el.classList.remove('dark');
-    }
-  });
-};
+export const ThemeProvider = ({ children }: { children: ReactNode }) => {
+  const [theme, setThemeState] = useState<Theme>(getStoredTheme);
+  const [isDark, setIsDark] = useState(() => resolveIsDark(getStoredTheme()));
 
-export const ThemeToggle = ({ variant = 'navbar' }: { variant?: 'navbar' | 'dropdown' }) => {
-  const [theme, setTheme] = useState<Theme>(getStoredTheme);
-
-  const handleSetTheme = useCallback((newTheme: Theme) => {
-    setTheme(newTheme);
-    applyTheme(newTheme);
-    try {
-      localStorage.setItem('faneen-theme', newTheme);
-    } catch {}
-  }, []);
-
-  useEffect(() => {
-    applyTheme(theme);
+  const setTheme = useCallback((newTheme: Theme) => {
+    setThemeState(newTheme);
+    setIsDark(resolveIsDark(newTheme));
+    try { localStorage.setItem('faneen-theme', newTheme); } catch {}
   }, []);
 
   useEffect(() => {
     if (theme !== 'system') return;
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    const handler = () => applyTheme('system');
+    const handler = () => setIsDark(resolveIsDark('system'));
     mq.addEventListener('change', handler);
     return () => mq.removeEventListener('change', handler);
   }, [theme]);
 
+  return (
+    <ThemeContext.Provider value={{ theme, setTheme, isDark }}>
+      <div className={isDark ? 'dark' : ''} style={{ minHeight: '100vh' }}>
+        {children}
+      </div>
+    </ThemeContext.Provider>
+  );
+};
+
+export const ThemeToggle = ({ variant = 'navbar' }: { variant?: 'navbar' | 'dropdown' }) => {
+  const { theme, setTheme } = useThemeMode();
+
   const cycle = () => {
-    const next: Theme = theme === 'light' ? 'dark' : theme === 'dark' ? 'system' : 'light';
-    handleSetTheme(next);
+    setTheme(theme === 'light' ? 'dark' : theme === 'dark' ? 'system' : 'light');
   };
 
   const Icon = theme === 'dark' ? Moon : theme === 'light' ? Sun : Monitor;
@@ -74,7 +78,7 @@ export const ThemeToggle = ({ variant = 'navbar' }: { variant?: 'navbar' | 'drop
       {([['light', Sun], ['system', Monitor], ['dark', Moon]] as const).map(([t, I]) => (
         <button
           key={t}
-          onClick={() => handleSetTheme(t)}
+          onClick={() => setTheme(t)}
           className={`p-2 rounded-lg transition-all ${theme === t ? 'bg-card shadow-sm text-accent' : 'text-muted-foreground hover:text-foreground'}`}
           aria-label={`Theme: ${t}`}
         >
@@ -84,8 +88,3 @@ export const ThemeToggle = ({ variant = 'navbar' }: { variant?: 'navbar' | 'drop
     </div>
   );
 };
-
-// Initialize theme on load
-try {
-  applyTheme(getStoredTheme());
-} catch {}
