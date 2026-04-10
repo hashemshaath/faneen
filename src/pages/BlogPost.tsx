@@ -646,9 +646,9 @@ const BlogPost = () => {
                   <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />
                   {isRTL ? 'مقالات ذات صلة' : 'Related Articles'}
                 </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                <div className="flex gap-3 sm:gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-2 sm:pb-0 -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-3 sm:overflow-visible">
                   {relatedPosts.map((rp: any) => (
-                    <Link key={rp.id} to={`/blog/${rp.slug}`} className="group">
+                    <Link key={rp.id} to={`/blog/${rp.slug}`} className="group snap-start shrink-0 w-[72vw] sm:w-auto">
                       <Card className="overflow-hidden h-full border-border/50 hover:border-accent/30 hover:shadow-lg hover:-translate-y-1 transition-all duration-400 active:scale-[0.98]">
                         <CardContent className="p-0 flex flex-col h-full">
                           <div className="aspect-video bg-muted relative overflow-hidden">
