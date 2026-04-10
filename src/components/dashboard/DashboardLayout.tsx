@@ -30,7 +30,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 const breadcrumbMap: Record<string, { ar: string; en: string }> = {
-  '/dashboard': { ar: 'نظرة عامة', en: 'Overview' },
+  '/dashboard': { ar: 'لوحة التحكم', en: 'Dashboard' },
   '/dashboard/services': { ar: 'الخدمات', en: 'Services' },
   '/dashboard/portfolio': { ar: 'معرض الأعمال', en: 'Portfolio' },
   '/dashboard/projects': { ar: 'المشاريع', en: 'Projects' },
