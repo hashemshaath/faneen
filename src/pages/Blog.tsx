@@ -9,9 +9,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   FileText, Calendar, Eye, Search, BookOpen, Clock, Tag, TrendingUp,
   MessageCircle, Heart, X, SlidersHorizontal, ArrowUpDown, ChevronDown,
+  ChevronUp, Sparkles,
 } from 'lucide-react';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 
@@ -31,6 +33,28 @@ const estimateReadTime = (content: string | null): number => {
   return Math.max(1, Math.ceil(content.trim().split(/\s+/).length / 200));
 };
 
+const CardSkeleton = () => (
+  <div className="rounded-2xl overflow-hidden border border-border bg-card">
+    <Skeleton className="aspect-[16/10] w-full" />
+    <div className="p-4 space-y-2.5">
+      <Skeleton className="h-4 w-3/4" />
+      <Skeleton className="h-3 w-full" />
+      <Skeleton className="h-3 w-1/2" />
+    </div>
+  </div>
+);
+
+const MobileCardSkeleton = () => (
+  <div className="flex gap-3 p-3 rounded-xl border border-border bg-card">
+    <Skeleton className="w-24 h-24 rounded-lg shrink-0" />
+    <div className="flex-1 space-y-2 py-0.5">
+      <Skeleton className="h-4 w-3/4" />
+      <Skeleton className="h-3 w-full" />
+      <Skeleton className="h-3 w-1/3" />
+    </div>
+  </div>
+);
+
 const Blog = () => {
   const { isRTL, language } = useLanguage();
   const [activeCategory, setActiveCategory] = useState('all');
@@ -38,6 +62,7 @@ const Blog = () => {
   const [sortBy, setSortBy] = useState<SortOption>('newest');
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const { ref: heroRef, isVisible: heroVisible } = useScrollAnimation();
 
   const { data: posts = [], isLoading } = useQuery({
@@ -103,7 +128,6 @@ const Blog = () => {
       return matchCategory && matchTags && (title.includes(q) || excerpt.includes(q));
     });
 
-    // Sort
     switch (sortBy) {
       case 'oldest':
         result = [...result].sort((a, b) => new Date(a.published_at || a.created_at).getTime() - new Date(b.published_at || b.created_at).getTime());
@@ -114,7 +138,7 @@ const Blog = () => {
       case 'most_comments':
         result = [...result].sort((a, b) => (commentCounts[b.id] || 0) - (commentCounts[a.id] || 0));
         break;
-      default: // newest - already sorted
+      default:
         break;
     }
     return result;
@@ -135,6 +159,85 @@ const Blog = () => {
     popular: { ar: 'الأكثر مشاهدة', en: 'Most Viewed' },
     most_comments: { ar: 'الأكثر تعليقاً', en: 'Most Comments' },
   };
+
+  const SidebarContent = () => (
+    <div className="space-y-4 sm:space-y-5">
+      {/* Popular Posts */}
+      <Card className="border-border/50 dark:border-border/30 dark:bg-card/80">
+        <CardContent className="p-4 sm:p-5">
+          <h3 className="font-heading font-bold text-sm flex items-center gap-2 mb-3 sm:mb-4">
+            <TrendingUp className="w-4 h-4 text-accent" />
+            {isRTL ? 'الأكثر قراءة' : 'Most Read'}
+          </h3>
+          <div className="space-y-2.5 sm:space-y-3">
+            {popularPosts.map((post: any, i: number) => (
+              <Link key={post.id} to={`/blog/${post.slug}`} className="group flex items-start gap-2.5 sm:gap-3">
+                <span className="shrink-0 w-7 h-7 rounded-lg bg-accent/10 dark:bg-accent/15 text-accent font-bold text-sm flex items-center justify-center group-hover:bg-accent group-hover:text-accent-foreground transition-all duration-300 group-hover:scale-110">
+                  {i + 1}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-xs font-medium line-clamp-2 group-hover:text-accent transition-colors">
+                    {language === 'ar' ? post.title_ar : (post.title_en || post.title_ar)}
+                  </h4>
+                  <span className="text-[10px] text-muted-foreground flex items-center gap-1 mt-0.5">
+                    <Eye className="w-3 h-3" />{post.views_count}
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Tags Cloud */}
+      {allTags.length > 0 && (
+        <Card className="border-border/50 dark:border-border/30 dark:bg-card/80">
+          <CardContent className="p-4 sm:p-5">
+            <h3 className="font-heading font-bold text-sm flex items-center gap-2 mb-3 sm:mb-4">
+              <Tag className="w-4 h-4 text-accent" />
+              {isRTL ? 'الوسوم' : 'Tags'}
+            </h3>
+            <div className="flex flex-wrap gap-1.5 sm:gap-2">
+              {allTags.map((tag) => (
+                <button
+                  key={tag}
+                  onClick={() => toggleTag(tag)}
+                  className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-medium transition-all duration-200 ${
+                    selectedTags.includes(tag)
+                      ? 'bg-accent text-accent-foreground shadow-sm scale-105'
+                      : 'bg-muted/60 dark:bg-muted/30 text-muted-foreground hover:bg-accent/10 hover:text-accent active:scale-95'
+                  }`}
+                >
+                  #{tag}
+                </button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Stats */}
+      <Card className="border-border/50 dark:border-border/30 bg-gradient-to-br from-primary/5 to-accent/5 dark:from-primary/10 dark:to-accent/10">
+        <CardContent className="p-4 sm:p-5 text-center space-y-2 sm:space-y-3">
+          <FileText className="w-7 h-7 sm:w-8 sm:h-8 text-accent mx-auto" />
+          <div>
+            <div className="font-heading font-bold text-xl sm:text-2xl text-foreground">{posts.length}</div>
+            <div className="text-[11px] sm:text-xs text-muted-foreground">{isRTL ? 'مقال منشور' : 'Published Articles'}</div>
+          </div>
+          <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/30">
+            <div>
+              <div className="font-bold text-base sm:text-lg text-foreground">{Object.keys(blogCategories).length - 1}</div>
+              <div className="text-[10px] sm:text-[11px] text-muted-foreground">{isRTL ? 'تصنيفات' : 'Categories'}</div>
+            </div>
+            <div>
+              <div className="font-bold text-base sm:text-lg text-foreground">{allTags.length}</div>
+              <div className="text-[10px] sm:text-[11px] text-muted-foreground">{isRTL ? 'وسوم' : 'Tags'}</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
 
   return (
     <div className="bg-background min-h-screen" dir={isRTL ? 'rtl' : 'ltr'}>
@@ -178,7 +281,7 @@ const Blog = () => {
       </div>
 
       {/* ═══ Category Filter + Sort ═══ */}
-      <div className="sticky top-14 sm:top-16 z-30 bg-background/95 backdrop-blur-md border-b border-border/50 shadow-sm">
+      <div className="sticky top-14 sm:top-16 z-30 bg-background/95 backdrop-blur-md border-b border-border/50 dark:border-border/30 shadow-sm">
         <div className="container px-4 sm:px-6 py-2.5 sm:py-3">
           {/* Categories row */}
           <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar pb-1">
@@ -189,7 +292,7 @@ const Blog = () => {
                 className={`shrink-0 inline-flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all duration-300 ${
                   activeCategory === key
                     ? 'bg-accent text-accent-foreground shadow-md shadow-accent/20 scale-[1.02]'
-                    : 'bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground active:scale-95'
+                    : 'bg-muted/60 dark:bg-muted/30 text-muted-foreground hover:bg-muted hover:text-foreground active:scale-95'
                 }`}
               >
                 <span className="text-xs sm:text-sm">{cat.icon}</span>
@@ -198,26 +301,25 @@ const Blog = () => {
             ))}
           </div>
 
-          {/* Sort + Tags row (mobile) */}
+          {/* Sort + Tags row */}
           <div className="flex items-center gap-2 mt-2 overflow-x-auto no-scrollbar">
-            {/* Sort button */}
             <div className="relative shrink-0">
               <button
                 onClick={() => setShowSortMenu(!showSortMenu)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/50 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/50 dark:bg-muted/30 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
                 <ArrowUpDown className="w-3.5 h-3.5" />
                 {sortLabels[sortBy][language === 'ar' ? 'ar' : 'en']}
                 <ChevronDown className={`w-3 h-3 transition-transform ${showSortMenu ? 'rotate-180' : ''}`} />
               </button>
               {showSortMenu && (
-                <div className="absolute top-full mt-1 start-0 z-40 bg-card border border-border rounded-xl shadow-xl p-1 min-w-[160px] animate-fade-in">
+                <div className="absolute top-full mt-1 start-0 z-40 bg-card dark:bg-card/95 border border-border dark:border-border/50 rounded-xl shadow-xl p-1 min-w-[160px] animate-fade-in backdrop-blur-md">
                   {(Object.keys(sortLabels) as SortOption[]).map(opt => (
                     <button
                       key={opt}
                       onClick={() => { setSortBy(opt); setShowSortMenu(false); }}
                       className={`w-full text-start px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
-                        sortBy === opt ? 'bg-accent/10 text-accent' : 'text-foreground hover:bg-muted'
+                        sortBy === opt ? 'bg-accent/10 dark:bg-accent/15 text-accent' : 'text-foreground hover:bg-muted dark:hover:bg-muted/50'
                       }`}
                     >
                       {sortLabels[opt][language === 'ar' ? 'ar' : 'en']}
@@ -227,7 +329,6 @@ const Blog = () => {
               )}
             </div>
 
-            {/* Quick tag filters */}
             {allTags.slice(0, 6).map(tag => (
               <button
                 key={tag}
@@ -235,7 +336,7 @@ const Blog = () => {
                 className={`shrink-0 px-2.5 py-1 rounded-full text-[11px] font-medium transition-all duration-200 ${
                   selectedTags.includes(tag)
                     ? 'bg-accent text-accent-foreground shadow-sm'
-                    : 'bg-muted/40 text-muted-foreground hover:bg-muted active:scale-95'
+                    : 'bg-muted/40 dark:bg-muted/25 text-muted-foreground hover:bg-muted active:scale-95'
                 }`}
               >
                 #{tag}
@@ -243,7 +344,7 @@ const Blog = () => {
             ))}
           </div>
 
-          {/* Active filters indicator */}
+          {/* Active filters */}
           {hasActiveFilters && (
             <div className="flex items-center gap-2 mt-2 pt-1.5 border-t border-border/30">
               <SlidersHorizontal className="w-3 h-3 text-accent shrink-0" />
@@ -256,16 +357,22 @@ const Blog = () => {
         </div>
       </div>
 
-      {/* Close sort menu on outside click */}
       {showSortMenu && <div className="fixed inset-0 z-20" onClick={() => setShowSortMenu(false)} />}
 
       {/* ═══ Content ═══ */}
       <div className="container mx-auto px-4 sm:px-6 py-5 sm:py-10">
         {isLoading ? (
-          <div className="flex justify-center py-16 sm:py-20">
-            <div className="flex flex-col items-center gap-3">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 border-4 border-accent border-t-transparent rounded-full animate-spin" />
-              <span className="text-xs sm:text-sm text-muted-foreground">{isRTL ? 'جارِ التحميل...' : 'Loading...'}</span>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-8">
+            <div className="lg:col-span-2 space-y-5">
+              <Skeleton className="aspect-[2/1] w-full rounded-2xl" />
+              {/* Mobile: horizontal skeletons */}
+              <div className="sm:hidden space-y-3">
+                {[1, 2, 3].map(i => <MobileCardSkeleton key={i} />)}
+              </div>
+              {/* Desktop: grid skeletons */}
+              <div className="hidden sm:grid grid-cols-2 gap-5">
+                {[1, 2, 3, 4].map(i => <CardSkeleton key={i} />)}
+              </div>
             </div>
           </div>
         ) : posts.length === 0 ? (
@@ -280,20 +387,21 @@ const Blog = () => {
               {/* Featured Post */}
               {showFeatured && featuredPost && (
                 <Link to={`/blog/${featuredPost.slug}`} className="group block">
-                  <Card className="overflow-hidden border-border/50 hover:border-accent/40 transition-all duration-500 hover:shadow-2xl hover:shadow-accent/10 active:scale-[0.99]">
+                  <Card className="overflow-hidden border-border/50 dark:border-border/30 hover:border-accent/40 transition-all duration-500 hover:shadow-2xl hover:shadow-accent/10 active:scale-[0.99] dark:bg-card/80">
                     <CardContent className="p-0">
                       <div className="relative aspect-[16/10] sm:aspect-[2/1] bg-muted overflow-hidden">
                         {featuredPost.cover_image_url ? (
                           <img src={featuredPost.cover_image_url} alt={featuredPost.title_ar} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/5 to-accent/5">
+                          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/5 to-accent/5 dark:from-primary/10 dark:to-accent/10">
                             <BookOpen className="w-12 h-12 sm:w-16 sm:h-16 text-muted-foreground/20" />
                           </div>
                         )}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
                         <div className="absolute top-3 start-3 flex gap-1.5">
-                          <Badge className="bg-accent text-accent-foreground shadow-lg text-[10px] sm:text-xs">
-                            {isRTL ? '⭐ مميز' : '⭐ Featured'}
+                          <Badge className="bg-accent text-accent-foreground shadow-lg text-[10px] sm:text-xs gap-1">
+                            <Sparkles className="w-3 h-3" />
+                            {isRTL ? 'مميز' : 'Featured'}
                           </Badge>
                           <Badge variant="outline" className="text-[9px] sm:text-[11px] border-white/30 text-white/90 bg-white/10 backdrop-blur-sm">
                             {blogCategories[featuredPost.category]?.[language] || featuredPost.category}
@@ -303,7 +411,7 @@ const Blog = () => {
                           <h2 className="font-heading font-bold text-base sm:text-xl md:text-2xl mb-1.5 sm:mb-2 group-hover:text-accent transition-colors line-clamp-2 leading-snug">
                             {language === 'ar' ? featuredPost.title_ar : (featuredPost.title_en || featuredPost.title_ar)}
                           </h2>
-                          <p className="text-xs sm:text-sm text-white/70 line-clamp-2 mb-2.5 sm:mb-3 leading-relaxed">
+                          <p className="text-xs sm:text-sm text-white/70 line-clamp-2 mb-2.5 sm:mb-3 leading-relaxed hidden sm:block">
                             {language === 'ar' ? (featuredPost.excerpt_ar || featuredPost.content_ar) : (featuredPost.excerpt_en || featuredPost.content_en || featuredPost.excerpt_ar || featuredPost.content_ar)}
                           </p>
                           <div className="flex items-center gap-3 sm:gap-4 text-[11px] sm:text-xs text-white/60 flex-wrap">
@@ -319,85 +427,120 @@ const Blog = () => {
                 </Link>
               )}
 
-              {/* Articles Grid */}
+              {/* Articles */}
               {displayPosts.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-                  {displayPosts.map((post: any, i: number) => (
-                    <Link key={post.id} to={`/blog/${post.slug}`} className="group block">
-                      <Card
-                        className="overflow-hidden h-full border-border/50 hover:border-accent/30 transition-all duration-500 sm:hover:shadow-xl sm:hover:-translate-y-1 active:scale-[0.98]"
-                        style={{ animationDelay: `${i * 60}ms`, animationFillMode: 'both' }}
-                      >
-                        <CardContent className="p-0 flex flex-col h-full">
-                          {/* Image with overlay details */}
-                          <div className="relative aspect-[16/10] bg-muted overflow-hidden">
+                <>
+                  {/* Mobile: horizontal compact cards */}
+                  <div className="sm:hidden space-y-2.5">
+                    {displayPosts.map((post: any, i: number) => (
+                      <Link key={post.id} to={`/blog/${post.slug}`} className="group block">
+                        <div
+                          className="flex gap-3 p-3 rounded-xl border border-border/50 dark:border-border/30 bg-card dark:bg-card/80 hover:border-accent/30 transition-all duration-300 hover:shadow-md active:scale-[0.98]"
+                          style={{ animationDelay: `${i * 40}ms` }}
+                        >
+                          {/* Thumbnail */}
+                          <div className="w-24 h-24 rounded-lg overflow-hidden bg-muted shrink-0 relative">
                             {post.cover_image_url ? (
-                              <img src={post.cover_image_url} alt={post.title_ar} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" />
+                              <img src={post.cover_image_url} alt="" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-accent/5">
-                                <BookOpen className="w-8 h-8 sm:w-10 sm:h-10 text-muted-foreground/15" />
+                              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-accent/5 dark:from-muted/80 dark:to-accent/10">
+                                <BookOpen className="w-6 h-6 text-muted-foreground/15" />
                               </div>
                             )}
-                            {/* Subtle hover overlay */}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                            
-                            {/* Category badge */}
-                            <span className="absolute top-2.5 start-2.5 text-[10px] sm:text-[11px] font-bold text-accent-foreground bg-accent px-2.5 py-0.5 rounded-full shadow-lg">
-                              {blogCategories[post.category]?.[language] || post.category}
+                            <span className="absolute top-1.5 start-1.5 text-[8px] font-bold text-accent-foreground bg-accent px-1.5 py-0.5 rounded-full">
+                              {blogCategories[post.category]?.[language]?.slice(0, 4) || post.category}
                             </span>
-                            
-                            {/* Read time pill */}
-                            <div className="absolute bottom-2.5 end-2.5 flex items-center gap-1 bg-background/85 backdrop-blur-sm rounded-full px-2 py-1 text-[10px] sm:text-[11px] text-muted-foreground font-medium">
-                              <Clock className="w-3 h-3" />
-                              {estimateReadTime(post.content_ar)} {isRTL ? 'د' : 'min'}
-                            </div>
                           </div>
 
-                          {/* Content section */}
-                          <div className="p-3.5 sm:p-4 flex-1 flex flex-col gap-2">
-                            {/* Tags */}
-                            {post.tags?.length > 0 && (
-                              <div className="flex items-center gap-1 flex-wrap">
-                                {post.tags.slice(0, 3).map((tag: string) => (
-                                  <Badge key={tag} variant="secondary" className="text-[9px] sm:text-[10px] px-1.5 py-0 font-normal">#{tag}</Badge>
-                                ))}
-                              </div>
-                            )}
-
-                            {/* Title */}
-                            <h3 className="font-heading font-bold text-sm sm:text-[0.95rem] leading-snug line-clamp-2 group-hover:text-accent transition-colors duration-300">
-                              {language === 'ar' ? post.title_ar : (post.title_en || post.title_ar)}
-                            </h3>
-
-                            {/* Excerpt */}
-                            <p className="text-[0.8rem] sm:text-xs text-muted-foreground line-clamp-2 leading-relaxed flex-1">
-                              {language === 'ar' ? (post.excerpt_ar || post.content_ar) : (post.excerpt_en || post.content_en || post.excerpt_ar || post.content_ar)}
-                            </p>
-
-                            {/* Footer meta */}
-                            <div className="flex items-center justify-between pt-2.5 border-t border-border/30 text-[11px] sm:text-xs text-muted-foreground">
-                              <span className="flex items-center gap-1.5">
-                                <Calendar className="w-3 h-3" />
+                          {/* Content */}
+                          <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
+                            <div>
+                              <h3 className="font-heading font-bold text-[13px] leading-snug line-clamp-2 group-hover:text-accent transition-colors">
+                                {language === 'ar' ? post.title_ar : (post.title_en || post.title_ar)}
+                              </h3>
+                              {post.excerpt_ar && (
+                                <p className="text-[11px] text-muted-foreground line-clamp-1 mt-0.5 leading-relaxed">
+                                  {language === 'ar' ? post.excerpt_ar : (post.excerpt_en || post.excerpt_ar)}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2.5 text-[10px] text-muted-foreground mt-1">
+                              <span className="flex items-center gap-0.5">
+                                <Calendar className="w-2.5 h-2.5" />
                                 {new Date(post.published_at || post.created_at).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US', { month: 'short', day: 'numeric' })}
                               </span>
-                              <div className="flex items-center gap-2.5">
-                                <span className="flex items-center gap-1" title={isRTL ? 'تعليقات' : 'Comments'}>
-                                  <MessageCircle className="w-3 h-3" />{commentCounts[post.id] || 0}
-                                </span>
-                                <span className="flex items-center gap-1" title={isRTL ? 'حفظ' : 'Saves'}>
-                                  <Heart className="w-3 h-3" />{bookmarkCounts[post.id] || 0}
-                                </span>
-                                <span className="flex items-center gap-1" title={isRTL ? 'مشاهدات' : 'Views'}>
-                                  <Eye className="w-3 h-3" />{post.views_count}
-                                </span>
-                              </div>
+                              <span className="flex items-center gap-0.5"><MessageCircle className="w-2.5 h-2.5" />{commentCounts[post.id] || 0}</span>
+                              <span className="flex items-center gap-0.5"><Heart className="w-2.5 h-2.5" />{bookmarkCounts[post.id] || 0}</span>
+                              <span className="flex items-center gap-0.5"><Eye className="w-2.5 h-2.5" />{post.views_count}</span>
                             </div>
                           </div>
-                        </CardContent>
-                      </Card>
-                    </Link>
-                  ))}
-                </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+
+                  {/* Desktop: grid cards */}
+                  <div className="hidden sm:grid grid-cols-2 gap-4 sm:gap-5">
+                    {displayPosts.map((post: any, i: number) => (
+                      <Link key={post.id} to={`/blog/${post.slug}`} className="group block">
+                        <Card
+                          className="overflow-hidden h-full border-border/50 dark:border-border/30 hover:border-accent/30 transition-all duration-500 hover:shadow-xl hover:-translate-y-1 dark:bg-card/80"
+                          style={{ animationDelay: `${i * 60}ms`, animationFillMode: 'both' }}
+                        >
+                          <CardContent className="p-0 flex flex-col h-full">
+                            <div className="relative aspect-[16/10] bg-muted overflow-hidden">
+                              {post.cover_image_url ? (
+                                <img src={post.cover_image_url} alt={post.title_ar} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-accent/5 dark:from-muted/80 dark:to-accent/10">
+                                  <BookOpen className="w-8 h-8 sm:w-10 sm:h-10 text-muted-foreground/15 group-hover:text-accent/20 transition-colors" />
+                                </div>
+                              )}
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                              <span className="absolute top-2.5 start-2.5 text-[10px] sm:text-[11px] font-bold text-accent-foreground bg-accent px-2.5 py-0.5 rounded-full shadow-lg">
+                                {blogCategories[post.category]?.[language] || post.category}
+                              </span>
+                              <div className="absolute bottom-2.5 end-2.5 flex items-center gap-1 bg-background/85 dark:bg-background/90 backdrop-blur-sm rounded-full px-2 py-1 text-[10px] sm:text-[11px] text-muted-foreground font-medium">
+                                <Clock className="w-3 h-3" />
+                                {estimateReadTime(post.content_ar)} {isRTL ? 'د' : 'min'}
+                              </div>
+                            </div>
+
+                            <div className="p-3.5 sm:p-4 flex-1 flex flex-col gap-2">
+                              {post.tags?.length > 0 && (
+                                <div className="flex items-center gap-1 flex-wrap">
+                                  {post.tags.slice(0, 3).map((tag: string) => (
+                                    <Badge key={tag} variant="secondary" className="text-[9px] sm:text-[10px] px-1.5 py-0 font-normal dark:bg-muted/50">#{tag}</Badge>
+                                  ))}
+                                </div>
+                              )}
+
+                              <h3 className="font-heading font-bold text-sm sm:text-[0.95rem] leading-snug line-clamp-2 group-hover:text-accent transition-colors duration-300">
+                                {language === 'ar' ? post.title_ar : (post.title_en || post.title_ar)}
+                              </h3>
+
+                              <p className="text-[0.8rem] sm:text-xs text-muted-foreground line-clamp-2 leading-relaxed flex-1">
+                                {language === 'ar' ? (post.excerpt_ar || post.content_ar) : (post.excerpt_en || post.content_en || post.excerpt_ar || post.content_ar)}
+                              </p>
+
+                              <div className="flex items-center justify-between pt-2.5 border-t border-border/30 dark:border-border/20 text-[11px] sm:text-xs text-muted-foreground">
+                                <span className="flex items-center gap-1.5">
+                                  <Calendar className="w-3 h-3" />
+                                  {new Date(post.published_at || post.created_at).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US', { month: 'short', day: 'numeric' })}
+                                </span>
+                                <div className="flex items-center gap-2.5">
+                                  <span className="flex items-center gap-1" title={isRTL ? 'تعليقات' : 'Comments'}><MessageCircle className="w-3 h-3" />{commentCounts[post.id] || 0}</span>
+                                  <span className="flex items-center gap-1" title={isRTL ? 'حفظ' : 'Saves'}><Heart className="w-3 h-3" />{bookmarkCounts[post.id] || 0}</span>
+                                  <span className="flex items-center gap-1" title={isRTL ? 'مشاهدات' : 'Views'}><Eye className="w-3 h-3" />{post.views_count}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </Link>
+                    ))}
+                  </div>
+                </>
               ) : !isLoading && (
                 <div className="text-center py-12 sm:py-16 text-muted-foreground">
                   <Search className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3 opacity-20" />
@@ -411,83 +554,27 @@ const Blog = () => {
               )}
             </div>
 
-            {/* ═══ Sidebar ═══ */}
-            <aside className="hidden lg:block space-y-5">
-              {/* Popular Posts */}
-              <Card className="border-border/50">
-                <CardContent className="p-5">
-                  <h3 className="font-heading font-bold text-sm flex items-center gap-2 mb-4">
-                    <TrendingUp className="w-4 h-4 text-accent" />
-                    {isRTL ? 'الأكثر قراءة' : 'Most Read'}
-                  </h3>
-                  <div className="space-y-3">
-                    {popularPosts.map((post: any, i: number) => (
-                      <Link key={post.id} to={`/blog/${post.slug}`} className="group flex items-start gap-3">
-                        <span className="shrink-0 w-7 h-7 rounded-lg bg-accent/10 text-accent font-bold text-sm flex items-center justify-center group-hover:bg-accent group-hover:text-accent-foreground transition-colors">
-                          {i + 1}
-                        </span>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="text-xs font-medium line-clamp-2 group-hover:text-accent transition-colors">
-                            {language === 'ar' ? post.title_ar : (post.title_en || post.title_ar)}
-                          </h4>
-                          <span className="text-[10px] text-muted-foreground flex items-center gap-1 mt-0.5">
-                            <Eye className="w-3 h-3" />{post.views_count}
-                          </span>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Tags Cloud */}
-              {allTags.length > 0 && (
-                <Card className="border-border/50">
-                  <CardContent className="p-5">
-                    <h3 className="font-heading font-bold text-sm flex items-center gap-2 mb-4">
-                      <Tag className="w-4 h-4 text-accent" />
-                      {isRTL ? 'الوسوم' : 'Tags'}
-                    </h3>
-                    <div className="flex flex-wrap gap-2">
-                      {allTags.map((tag) => (
-                        <button
-                          key={tag}
-                          onClick={() => toggleTag(tag)}
-                          className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 ${
-                            selectedTags.includes(tag)
-                              ? 'bg-accent text-accent-foreground shadow-sm'
-                              : 'bg-muted/60 text-muted-foreground hover:bg-accent/10 hover:text-accent'
-                          }`}
-                        >
-                          #{tag}
-                        </button>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Stats */}
-              <Card className="border-border/50 bg-gradient-to-br from-primary/5 to-accent/5">
-                <CardContent className="p-5 text-center space-y-3">
-                  <FileText className="w-8 h-8 text-accent mx-auto" />
-                  <div>
-                    <div className="font-heading font-bold text-2xl text-foreground">{posts.length}</div>
-                    <div className="text-xs text-muted-foreground">{isRTL ? 'مقال منشور' : 'Published Articles'}</div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/30">
-                    <div>
-                      <div className="font-bold text-lg text-foreground">{Object.keys(blogCategories).length - 1}</div>
-                      <div className="text-[11px] text-muted-foreground">{isRTL ? 'تصنيفات' : 'Categories'}</div>
-                    </div>
-                    <div>
-                      <div className="font-bold text-lg text-foreground">{allTags.length}</div>
-                      <div className="text-[11px] text-muted-foreground">{isRTL ? 'وسوم' : 'Tags'}</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+            {/* ═══ Sidebar - Desktop ═══ */}
+            <aside className="hidden lg:block">
+              <SidebarContent />
             </aside>
+
+            {/* ═══ Sidebar - Mobile toggle ═══ */}
+            <div className="lg:hidden">
+              <button
+                onClick={() => setShowMobileSidebar(!showMobileSidebar)}
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-border/50 dark:border-border/30 bg-card dark:bg-card/80 text-sm font-medium text-muted-foreground hover:text-foreground hover:border-accent/30 transition-all"
+              >
+                <TrendingUp className="w-4 h-4 text-accent" />
+                {isRTL ? 'المزيد: الأكثر قراءة والوسوم' : 'More: Most Read & Tags'}
+                {showMobileSidebar ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </button>
+              {showMobileSidebar && (
+                <div className="mt-3 animate-fade-in">
+                  <SidebarContent />
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
