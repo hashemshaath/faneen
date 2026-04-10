@@ -129,6 +129,14 @@ const SearchPage = () => {
     if (filters.minRating > 0) results = results.filter(b => Number(b.rating_avg) >= filters.minRating);
     if (filters.verifiedOnly) results = results.filter(b => b.is_verified);
 
+    // Filter by selected tags
+    if (selectedTags.length > 0 && entityTags) {
+      const bizIdsWithTags = new Set(
+        entityTags.filter(et => selectedTags.includes(et.tag_id)).map(et => et.entity_id)
+      );
+      results = results.filter(b => bizIdsWithTags.has(b.id));
+    }
+
     if (filters.priceMin > 0 || filters.priceMax > 0) {
       results = results.filter(b => {
         const services = (b as any).business_services;
@@ -155,7 +163,7 @@ const SearchPage = () => {
     });
 
     return results;
-  }, [businesses, query, filters, language]);
+  }, [businesses, query, filters, language, selectedTags, entityTags]);
 
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
   const paginatedResults = useMemo(() => {
@@ -191,6 +199,12 @@ const SearchPage = () => {
             hasActiveFilters={hasActiveFilters}
             showFilters={showFilters}
             onToggleFilters={() => setShowFilters(!showFilters)}
+            selectedTags={selectedTags}
+            onToggleTag={(tagId) => {
+              setSelectedTags(prev => prev.includes(tagId) ? prev.filter(t => t !== tagId) : [...prev, tagId]);
+              setCurrentPage(1);
+            }}
+            onClearTags={() => { setSelectedTags([]); setCurrentPage(1); }}
           />
           <SearchResults
             businesses={paginatedResults}
