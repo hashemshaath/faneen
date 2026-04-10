@@ -6,7 +6,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { Footer } from '@/components/layout/Footer';
 import { SearchHeader } from '@/components/search/SearchHeader';
 import { SearchFilters, type SearchFilterValues } from '@/components/search/SearchFilters';
-import { SearchResults } from '@/components/search/SearchResults';
+import { SearchResults, type ViewMode } from '@/components/search/SearchResults';
 
 const useCategories = () =>
   useQuery({
@@ -48,7 +48,7 @@ const SearchPage = () => {
   const { data: businesses, isLoading } = useBusinesses();
 
   const [query, setQuery] = useState(searchParams.get('q') || '');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [showFilters, setShowFilters] = useState(true);
 
   const [filters, setFilters] = useState<SearchFilterValues>({
