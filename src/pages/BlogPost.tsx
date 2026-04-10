@@ -134,6 +134,7 @@ const BlogPost = () => {
     },
   });
 
+  const BackIcon = isRTL ? ArrowRight : ArrowLeft;
   const title = post ? (language === 'ar' ? post.title_ar : (post.title_en || post.title_ar)) : '';
   const content = post ? (language === 'ar' ? (post.content_ar || '') : (post.content_en || post.content_ar || '')) : '';
   const readTime = estimateReadTime(content);
