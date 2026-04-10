@@ -21,18 +21,18 @@ import {
 
 const statusConfig: Record<string, { icon: React.ElementType; color: string }> = {
   draft: { icon: FileText, color: 'bg-muted text-muted-foreground' },
-  pending_approval: { icon: Clock, color: 'bg-amber-100 text-amber-700' },
-  active: { icon: CheckCircle2, color: 'bg-emerald-100 text-emerald-700' },
-  completed: { icon: Shield, color: 'bg-blue-100 text-blue-700' },
-  cancelled: { icon: XCircle, color: 'bg-red-100 text-red-700' },
-  disputed: { icon: AlertTriangle, color: 'bg-orange-100 text-orange-700' },
+  pending_approval: { icon: Clock, color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' },
+  active: { icon: CheckCircle2, color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' },
+  completed: { icon: Shield, color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' },
+  cancelled: { icon: XCircle, color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' },
+  disputed: { icon: AlertTriangle, color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' },
 };
 
 const priorityColors: Record<string, string> = {
-  low: 'bg-gray-100 text-gray-700',
-  medium: 'bg-blue-100 text-blue-700',
-  high: 'bg-orange-100 text-orange-700',
-  urgent: 'bg-red-100 text-red-700',
+  low: 'bg-gray-100 text-gray-700 dark:bg-gray-800/50 dark:text-gray-300',
+  medium: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+  high: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+  urgent: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
 };
 
 const ContractDetail = () => {
@@ -50,11 +50,7 @@ const ContractDetail = () => {
   const { data: contract, isLoading } = useQuery({
     queryKey: ['contract', id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('contracts')
-        .select('*')
-        .eq('id', id!)
-        .maybeSingle();
+      const { data, error } = await supabase.from('contracts').select('*').eq('id', id!).maybeSingle();
       if (error) throw error;
       return data;
     },
@@ -111,11 +107,9 @@ const ContractDetail = () => {
       const isClient = user?.id === contract?.client_id;
       const updateField = isClient ? 'client_accepted_at' : 'provider_accepted_at';
       const update: any = { [updateField]: new Date().toISOString() };
-
       const otherAccepted = isClient ? contract?.provider_accepted_at : contract?.client_accepted_at;
       if (otherAccepted) update.status = 'active';
       else if (contract?.status === 'draft') update.status = 'pending_approval';
-
       await supabase.from('contracts').update(update).eq('id', id!);
     },
     onSuccess: () => {
@@ -148,9 +142,11 @@ const ContractDetail = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="container py-20 space-y-6">
-          <Skeleton className="h-12 w-1/2 rounded-xl" />
-          <Skeleton className="h-64 w-full rounded-xl" />
+        <Navbar />
+        <div className="container py-24 sm:py-28 space-y-4 sm:space-y-6 px-4 sm:px-6">
+          <Skeleton className="h-10 sm:h-12 w-3/4 rounded-xl" />
+          <Skeleton className="h-48 sm:h-64 w-full rounded-xl" />
+          <Skeleton className="h-32 sm:h-48 w-full rounded-xl" />
         </div>
       </div>
     );
@@ -159,8 +155,9 @@ const ContractDetail = () => {
   if (!contract) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <FileText className="w-16 h-16 mx-auto text-muted-foreground/30" />
+        <Navbar />
+        <div className="text-center space-y-4 px-4">
+          <FileText className="w-14 h-14 sm:w-16 sm:h-16 mx-auto text-muted-foreground/30" />
           <p className="font-body text-muted-foreground">{t('profile.not_found')}</p>
           <Link to="/contracts"><Button variant="hero">{t('profile.back_home')}</Button></Link>
         </div>
@@ -186,83 +183,78 @@ const ContractDetail = () => {
       <Navbar />
 
       {/* Cover */}
-      <div className="bg-primary pt-24 pb-6">
-        <div className="container flex items-center justify-between">
-          <div>
-            <h1 className="font-heading font-bold text-2xl text-primary-foreground">{title}</h1>
-            <p className="text-primary-foreground/60 text-xs font-body" dir="ltr">{contract.contract_number}</p>
+      <div className="bg-primary pt-20 sm:pt-24 pb-4 sm:pb-6">
+        <div className="container px-4 sm:px-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="font-heading font-bold text-lg sm:text-2xl text-primary-foreground truncate">{title}</h1>
+            <p className="text-primary-foreground/60 text-[10px] sm:text-xs font-body mt-0.5" dir="ltr">{contract.contract_number}</p>
           </div>
           {canAccept && contract.status !== 'completed' && contract.status !== 'cancelled' && (
-            <Button variant="hero" size="sm" onClick={() => acceptMutation.mutate()} disabled={acceptMutation.isPending}>
+            <Button variant="hero" size="sm" className="text-xs sm:text-sm shrink-0" onClick={() => acceptMutation.mutate()} disabled={acceptMutation.isPending}>
               {t('contracts.accept')}
             </Button>
           )}
         </div>
       </div>
 
-      <div className="container py-8">
-        {/* Header */}
-        <div className="p-6 rounded-xl bg-card border border-border mb-6">
-          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-3 mb-2">
-                <h1 className="font-heading font-bold text-2xl text-foreground">{title}</h1>
-                <Badge className={`${cfg.color} gap-1`}>
-                  <StatusIcon className="w-3.5 h-3.5" />
+      <div className="container py-4 sm:py-8 px-4 sm:px-6">
+        {/* Header Card */}
+        <div className="p-4 sm:p-6 rounded-xl bg-card border border-border mb-4 sm:mb-6">
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 sm:gap-4">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 sm:gap-3 mb-1.5 sm:mb-2 flex-wrap">
+                <h1 className="font-heading font-bold text-lg sm:text-2xl text-foreground">{title}</h1>
+                <Badge className={`${cfg.color} gap-1 text-[10px] sm:text-xs`}>
+                  <StatusIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                   {t(`status.${contract.status}` as any)}
                 </Badge>
               </div>
-              <p className="text-xs text-muted-foreground font-body" dir="ltr">{contract.contract_number}</p>
-              {desc && <p className="text-sm text-muted-foreground font-body mt-3 leading-relaxed">{desc}</p>}
+              <p className="text-[10px] sm:text-xs text-muted-foreground font-body" dir="ltr">{contract.contract_number}</p>
+              {desc && <p className="text-xs sm:text-sm text-muted-foreground font-body mt-2 sm:mt-3 leading-relaxed">{desc}</p>}
             </div>
 
-            <div className="flex flex-col items-end gap-1 flex-shrink-0">
-              <span className="font-heading font-bold text-2xl text-accent">
+            <div className="flex flex-col items-start sm:items-end gap-0.5 sm:gap-1 flex-shrink-0">
+              <span className="font-heading font-bold text-xl sm:text-2xl text-accent">
                 {Number(contract.total_amount).toLocaleString()} {contract.currency_code}
               </span>
-              <span className="text-xs text-muted-foreground font-body">{t('contracts.total_amount')}</span>
+              <span className="text-[10px] sm:text-xs text-muted-foreground font-body">{t('contracts.total_amount')}</span>
             </div>
           </div>
 
           {/* Info grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-6 border-t border-border">
-            <div>
-              <p className="text-xs text-muted-foreground font-body mb-1">{t('contracts.client')}</p>
-              <p className="text-sm font-heading font-semibold text-foreground">{clientProfile?.full_name || '-'}</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground font-body mb-1">{t('contracts.provider')}</p>
-              <p className="text-sm font-heading font-semibold text-foreground">{providerProfile?.full_name || '-'}</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground font-body mb-1">{t('contracts.start_date')}</p>
-              <p className="text-sm font-body text-foreground">{formatDate(contract.start_date)}</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground font-body mb-1">{t('contracts.end_date')}</p>
-              <p className="text-sm font-body text-foreground">{formatDate(contract.end_date)}</p>
-            </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-border">
+            {[
+              { label: t('contracts.client'), value: clientProfile?.full_name || '-' },
+              { label: t('contracts.provider'), value: providerProfile?.full_name || '-' },
+              { label: t('contracts.start_date'), value: formatDate(contract.start_date) },
+              { label: t('contracts.end_date'), value: formatDate(contract.end_date) },
+            ].map((item, i) => (
+              <div key={i}>
+                <p className="text-[10px] sm:text-xs text-muted-foreground font-body mb-0.5 sm:mb-1">{item.label}</p>
+                <p className="text-xs sm:text-sm font-heading font-semibold text-foreground truncate">{item.value}</p>
+              </div>
+            ))}
           </div>
         </div>
 
         {/* Tabs */}
         <Tabs defaultValue="milestones">
-          <TabsList className="w-full justify-start bg-muted/50 rounded-xl p-1 h-auto flex-wrap mb-6">
-            <TabsTrigger value="milestones" className="font-body rounded-lg data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-5 py-2.5 gap-2">
-              <ListChecks className="w-4 h-4" />
+          <TabsList className="w-full justify-start bg-muted/50 rounded-xl p-1 h-auto flex-wrap mb-4 sm:mb-6 gap-1">
+            <TabsTrigger value="milestones" className="font-body rounded-lg data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-3 sm:px-5 py-2 sm:py-2.5 gap-1.5 sm:gap-2 text-xs sm:text-sm">
+              <ListChecks className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               {t('contracts.milestones')} ({totalMilestones})
             </TabsTrigger>
-            <TabsTrigger value="warranty" className="font-body rounded-lg data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-5 py-2.5 gap-2">
-              <Shield className="w-4 h-4" />
+            <TabsTrigger value="warranty" className="font-body rounded-lg data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-3 sm:px-5 py-2 sm:py-2.5 gap-1.5 sm:gap-2 text-xs sm:text-sm">
+              <Shield className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               {t('contracts.warranty')}
             </TabsTrigger>
-            <TabsTrigger value="maintenance" className="font-body rounded-lg data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-5 py-2.5 gap-2">
-              <Wrench className="w-4 h-4" />
+            <TabsTrigger value="maintenance" className="font-body rounded-lg data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-3 sm:px-5 py-2 sm:py-2.5 gap-1.5 sm:gap-2 text-xs sm:text-sm">
+              <Wrench className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               {t('contracts.maintenance')} ({maintenanceReqs?.length || 0})
             </TabsTrigger>
             {terms && (
-              <TabsTrigger value="terms" className="font-body rounded-lg data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-5 py-2.5 gap-2">
-                <FileText className="w-4 h-4" />
+              <TabsTrigger value="terms" className="font-body rounded-lg data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-3 sm:px-5 py-2 sm:py-2.5 gap-1.5 sm:gap-2 text-xs sm:text-sm">
+                <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 {t('contracts.terms')}
               </TabsTrigger>
             )}
@@ -270,12 +262,11 @@ const ContractDetail = () => {
 
           {/* Milestones */}
           <TabsContent value="milestones">
-            {/* Progress bar */}
             {totalMilestones > 0 && (
-              <div className="p-4 rounded-xl bg-card border border-border mb-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-body text-muted-foreground">{completedMilestones}/{totalMilestones} {t('contracts.milestones')}</span>
-                  <span className="text-sm font-body text-accent font-semibold">{milestonePaid.toLocaleString()} / {Number(contract.total_amount).toLocaleString()} {contract.currency_code}</span>
+              <div className="p-3 sm:p-4 rounded-xl bg-card border border-border mb-3 sm:mb-4">
+                <div className="flex items-center justify-between mb-2 flex-wrap gap-1">
+                  <span className="text-xs sm:text-sm font-body text-muted-foreground">{completedMilestones}/{totalMilestones} {t('contracts.milestones')}</span>
+                  <span className="text-xs sm:text-sm font-body text-accent font-semibold">{milestonePaid.toLocaleString()} / {Number(contract.total_amount).toLocaleString()} {contract.currency_code}</span>
                 </div>
                 <div className="w-full h-2 rounded-full bg-muted overflow-hidden">
                   <div className="h-full bg-accent rounded-full transition-all" style={{ width: `${totalMilestones > 0 ? (completedMilestones / totalMilestones) * 100 : 0}%` }} />
@@ -283,34 +274,34 @@ const ContractDetail = () => {
               </div>
             )}
 
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               {milestones?.map((m, idx) => {
                 const mTitle = language === 'ar' ? m.title_ar : (m.title_en || m.title_ar);
                 const mDesc = language === 'ar' ? m.description_ar : (m.description_en || m.description_ar);
                 const mCfg = statusConfig[m.status] || statusConfig.draft;
                 return (
-                  <div key={m.id} className="p-5 rounded-xl bg-card border border-border">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start gap-3">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${m.status === 'completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-muted text-muted-foreground'}`}>
-                          {m.status === 'completed' ? <CheckCircle2 className="w-4 h-4" /> : idx + 1}
+                  <div key={m.id} className="p-3 sm:p-5 rounded-xl bg-card border border-border">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-start gap-2 sm:gap-3 min-w-0">
+                        <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-bold shrink-0 ${m.status === 'completed' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-muted text-muted-foreground'}`}>
+                          {m.status === 'completed' ? <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : idx + 1}
                         </div>
-                        <div>
-                          <h4 className="font-heading font-semibold text-foreground">{mTitle}</h4>
-                          {mDesc && <p className="text-sm text-muted-foreground font-body mt-1">{mDesc}</p>}
-                          <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground font-body">
+                        <div className="min-w-0">
+                          <h4 className="font-heading font-semibold text-xs sm:text-base text-foreground truncate">{mTitle}</h4>
+                          {mDesc && <p className="text-[10px] sm:text-sm text-muted-foreground font-body mt-0.5 sm:mt-1 line-clamp-2">{mDesc}</p>}
+                          <div className="flex items-center gap-2 sm:gap-3 mt-1.5 sm:mt-2 text-[10px] sm:text-xs text-muted-foreground font-body flex-wrap">
                             <span className="flex items-center gap-1"><DollarSign className="w-3 h-3" />{Number(m.amount).toLocaleString()} {contract.currency_code}</span>
                             {m.due_date && <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{formatDate(m.due_date)}</span>}
                           </div>
                         </div>
                       </div>
-                      <Badge className={`${mCfg.color} text-xs`}>{t(`milestone.${m.status}` as any)}</Badge>
+                      <Badge className={`${mCfg.color} text-[9px] sm:text-xs shrink-0`}>{t(`milestone.${m.status}` as any)}</Badge>
                     </div>
                   </div>
                 );
               })}
               {(!milestones || milestones.length === 0) && (
-                <p className="text-center py-12 text-muted-foreground font-body">{t('common.no_results')}</p>
+                <p className="text-center py-10 sm:py-12 text-muted-foreground font-body text-sm">{t('common.no_results')}</p>
               )}
             </div>
           </TabsContent>
@@ -318,35 +309,35 @@ const ContractDetail = () => {
           {/* Warranty */}
           <TabsContent value="warranty">
             {warranties && warranties.length > 0 ? (
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {warranties.map(w => {
                   const wTitle = language === 'ar' ? w.title_ar : (w.title_en || w.title_ar);
                   const wDesc = language === 'ar' ? w.description_ar : (w.description_en || w.description_ar);
                   const wCoverage = language === 'ar' ? w.coverage_ar : (w.coverage_en || w.coverage_ar);
                   return (
-                    <div key={w.id} className="p-6 rounded-xl bg-card border border-border">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 rounded-lg bg-accent/10 flex items-center justify-center">
-                            <Shield className="w-6 h-6 text-accent" />
+                    <div key={w.id} className="p-4 sm:p-6 rounded-xl bg-card border border-border">
+                      <div className="flex flex-col sm:flex-row items-start justify-between mb-3 sm:mb-4 gap-2">
+                        <div className="flex items-center gap-2 sm:gap-3">
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-accent/10 dark:bg-accent/15 flex items-center justify-center shrink-0">
+                            <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-accent" />
                           </div>
                           <div>
-                            <h3 className="font-heading font-bold text-foreground">{wTitle}</h3>
-                            <Badge className="mt-1 text-xs">{t(`warranty.${w.warranty_type}` as any)}</Badge>
+                            <h3 className="font-heading font-bold text-sm sm:text-base text-foreground">{wTitle}</h3>
+                            <Badge className="mt-0.5 sm:mt-1 text-[10px] sm:text-xs">{t(`warranty.${w.warranty_type}` as any)}</Badge>
                           </div>
                         </div>
-                        <Badge className={w.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-muted text-muted-foreground'}>
+                        <Badge className={`text-[10px] sm:text-xs shrink-0 ${w.status === 'active' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-muted text-muted-foreground'}`}>
                           {t(`warranty.${w.status}` as any)}
                         </Badge>
                       </div>
-                      {wDesc && <p className="text-sm text-muted-foreground font-body mb-3">{wDesc}</p>}
+                      {wDesc && <p className="text-xs sm:text-sm text-muted-foreground font-body mb-2 sm:mb-3">{wDesc}</p>}
                       {wCoverage && (
-                        <div className="p-3 rounded-lg bg-muted/50">
-                          <p className="text-xs font-heading font-semibold text-foreground mb-1">{t('warranty.coverage')}</p>
-                          <p className="text-sm text-muted-foreground font-body">{wCoverage}</p>
+                        <div className="p-2.5 sm:p-3 rounded-lg bg-muted/50 dark:bg-muted/30">
+                          <p className="text-[10px] sm:text-xs font-heading font-semibold text-foreground mb-0.5 sm:mb-1">{t('warranty.coverage')}</p>
+                          <p className="text-xs sm:text-sm text-muted-foreground font-body">{wCoverage}</p>
                         </div>
                       )}
-                      <div className="flex items-center gap-4 mt-4 text-xs text-muted-foreground font-body">
+                      <div className="flex items-center gap-3 sm:gap-4 mt-3 sm:mt-4 text-[10px] sm:text-xs text-muted-foreground font-body">
                         <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{formatDate(w.start_date)} - {formatDate(w.end_date)}</span>
                       </div>
                     </div>
@@ -354,9 +345,9 @@ const ContractDetail = () => {
                 })}
               </div>
             ) : (
-              <div className="text-center py-12">
-                <Shield className="w-12 h-12 mx-auto text-muted-foreground/30 mb-3" />
-                <p className="text-muted-foreground font-body">{t('warranty.no_warranty')}</p>
+              <div className="text-center py-10 sm:py-12">
+                <Shield className="w-10 h-10 sm:w-12 sm:h-12 mx-auto text-muted-foreground/30 mb-3" />
+                <p className="text-muted-foreground font-body text-sm">{t('warranty.no_warranty')}</p>
               </div>
             )}
           </TabsContent>
@@ -364,55 +355,56 @@ const ContractDetail = () => {
           {/* Maintenance */}
           <TabsContent value="maintenance">
             {isClient && (
-              <div className="mb-6">
+              <div className="mb-4 sm:mb-6">
                 {showMaintForm ? (
-                  <div className="p-6 rounded-xl bg-card border border-border space-y-4">
-                    <h3 className="font-heading font-bold text-foreground">{t('maintenance.new')}</h3>
-                    <Input placeholder={t('maintenance.title')} value={maintTitle} onChange={e => setMaintTitle(e.target.value)} />
-                    <Textarea placeholder={t('maintenance.description')} value={maintDesc} onChange={e => setMaintDesc(e.target.value)} rows={4} />
+                  <div className="p-4 sm:p-6 rounded-xl bg-card border border-border space-y-3 sm:space-y-4">
+                    <h3 className="font-heading font-bold text-sm sm:text-base text-foreground">{t('maintenance.new')}</h3>
+                    <Input placeholder={isRTL ? 'عنوان الطلب' : 'Request title'} value={maintTitle} onChange={e => setMaintTitle(e.target.value)} className="text-sm" />
+                    <Textarea placeholder={isRTL ? 'وصف المشكلة' : 'Describe the issue'} value={maintDesc} onChange={e => setMaintDesc(e.target.value)} rows={3} className="text-sm" />
                     <Select value={maintPriority} onValueChange={setMaintPriority}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="low">{t('maintenance.low')}</SelectItem>
-                        <SelectItem value="medium">{t('maintenance.medium')}</SelectItem>
-                        <SelectItem value="high">{t('maintenance.high')}</SelectItem>
-                        <SelectItem value="urgent">{t('maintenance.urgent')}</SelectItem>
+                        <SelectItem value="low">{isRTL ? 'منخفض' : 'Low'}</SelectItem>
+                        <SelectItem value="medium">{isRTL ? 'متوسط' : 'Medium'}</SelectItem>
+                        <SelectItem value="high">{isRTL ? 'عالي' : 'High'}</SelectItem>
+                        <SelectItem value="urgent">{isRTL ? 'عاجل' : 'Urgent'}</SelectItem>
                       </SelectContent>
                     </Select>
                     <div className="flex gap-2">
-                      <Button variant="hero" onClick={() => submitMaintenance.mutate()} disabled={!maintTitle || submitMaintenance.isPending} className="gap-2">
-                        <Send className="w-4 h-4" />{t('maintenance.submit')}
+                      <Button variant="hero" size="sm" className="gap-1.5 text-xs sm:text-sm" onClick={() => submitMaintenance.mutate()} disabled={!maintTitle.trim() || submitMaintenance.isPending}>
+                        <Send className="w-3.5 h-3.5" />{t('maintenance.submit')}
                       </Button>
-                      <Button variant="outline" onClick={() => setShowMaintForm(false)}>{t('contracts.cancel')}</Button>
+                      <Button variant="outline" size="sm" className="text-xs sm:text-sm" onClick={() => setShowMaintForm(false)}>{t('common.cancel')}</Button>
                     </div>
                   </div>
                 ) : (
-                  <Button variant="outline" onClick={() => setShowMaintForm(true)} className="gap-2">
-                    <Plus className="w-4 h-4" />{t('maintenance.new')}
+                  <Button variant="outline" className="gap-1.5 text-xs sm:text-sm" onClick={() => setShowMaintForm(true)}>
+                    <Plus className="w-3.5 h-3.5" />{t('maintenance.new')}
                   </Button>
                 )}
               </div>
             )}
 
             {maintenanceReqs && maintenanceReqs.length > 0 ? (
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 {maintenanceReqs.map(req => {
                   const rTitle = language === 'ar' ? req.title_ar : (req.title_en || req.title_ar);
                   const rDesc = language === 'ar' ? req.description_ar : (req.description_en || req.description_ar);
+                  const rCfg = statusConfig[req.status] || statusConfig.draft;
                   return (
-                    <div key={req.id} className="p-5 rounded-xl bg-card border border-border">
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <h4 className="font-heading font-semibold text-foreground">{rTitle}</h4>
-                          <p className="text-xs text-muted-foreground font-body mt-0.5" dir="ltr">{req.request_number}</p>
+                    <div key={req.id} className="p-3 sm:p-5 rounded-xl bg-card border border-border">
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <div className="min-w-0">
+                          <h4 className="font-heading font-semibold text-xs sm:text-base text-foreground truncate">{rTitle}</h4>
+                          <p className="text-[10px] sm:text-xs text-muted-foreground font-body mt-0.5" dir="ltr">{req.request_number}</p>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Badge className={priorityColors[req.priority] || ''} >{t(`maintenance.${req.priority}` as any)}</Badge>
-                          <Badge variant="outline">{t(`maintenance.${req.status}` as any)}</Badge>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <Badge className={`${priorityColors[req.priority] || ''} text-[9px] sm:text-xs`}>{req.priority}</Badge>
+                          <Badge className={`${rCfg.color} text-[9px] sm:text-xs`}>{t(`maintenance.${req.status}` as any)}</Badge>
                         </div>
                       </div>
-                      {rDesc && <p className="text-sm text-muted-foreground font-body mt-2">{rDesc}</p>}
-                      <div className="flex items-center gap-3 mt-3 text-xs text-muted-foreground font-body">
+                      {rDesc && <p className="text-[10px] sm:text-sm text-muted-foreground font-body line-clamp-2">{rDesc}</p>}
+                      <div className="flex items-center gap-3 mt-2 text-[10px] sm:text-xs text-muted-foreground font-body">
                         <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{formatDate(req.created_at)}</span>
                         {req.scheduled_date && <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{formatDate(req.scheduled_date)}</span>}
                       </div>
@@ -421,9 +413,9 @@ const ContractDetail = () => {
                 })}
               </div>
             ) : (
-              <div className="text-center py-12">
-                <Wrench className="w-12 h-12 mx-auto text-muted-foreground/30 mb-3" />
-                <p className="text-muted-foreground font-body">{t('maintenance.no_requests')}</p>
+              <div className="text-center py-10 sm:py-12">
+                <Wrench className="w-10 h-10 sm:w-12 sm:h-12 mx-auto text-muted-foreground/30 mb-3" />
+                <p className="text-muted-foreground font-body text-sm">{t('common.no_results')}</p>
               </div>
             )}
           </TabsContent>
@@ -431,14 +423,15 @@ const ContractDetail = () => {
           {/* Terms */}
           {terms && (
             <TabsContent value="terms">
-              <div className="p-6 rounded-xl bg-card border border-border">
-                <h3 className="font-heading font-bold text-foreground mb-4">{t('contracts.terms')}</h3>
-                <div className="prose prose-sm max-w-none font-body text-muted-foreground whitespace-pre-wrap">{terms}</div>
+              <div className="p-4 sm:p-6 rounded-xl bg-card border border-border">
+                <p className="text-xs sm:text-sm text-muted-foreground font-body leading-relaxed whitespace-pre-wrap">{terms}</p>
               </div>
             </TabsContent>
           )}
         </Tabs>
       </div>
+
+      <Footer />
     </div>
   );
 };
