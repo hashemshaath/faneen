@@ -7,7 +7,7 @@ import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ShieldAlert, Shield, Crown, Settings, LogOut, Mail, Lock, Camera, User, ChevronDown } from 'lucide-react';
+import { ShieldAlert, Shield, Crown, Settings, LogOut, Mail, Lock, Camera, User, ChevronDown, Pencil } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -77,6 +77,9 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
   const navigate = useNavigate();
 
   const [passwordDialog, setPasswordDialog] = useState(false);
+  const [nameDialog, setNameDialog] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [nameLoading, setNameLoading] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [pwLoading, setPwLoading] = useState(false);
@@ -176,6 +179,28 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
       toast.error(err.message);
     } finally {
       setAvatarUploading(false);
+    }
+  };
+
+  const handleNameUpdate = async () => {
+    if (!editName.trim()) {
+      toast.error(isRTL ? 'الاسم مطلوب' : 'Name is required');
+      return;
+    }
+    setNameLoading(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ full_name: editName.trim() })
+        .eq('user_id', user.id);
+      if (error) throw error;
+      await refreshProfile();
+      toast.success(isRTL ? 'تم تحديث الاسم بنجاح' : 'Name updated successfully');
+      setNameDialog(false);
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setNameLoading(false);
     }
   };
 
@@ -289,11 +314,11 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
                     {/* Menu items */}
                     <div className="p-1.5">
                       <DropdownMenuItem
-                        onClick={() => navigate('/dashboard/settings')}
+                        onClick={() => { setEditName(profile?.full_name || ''); setNameDialog(true); }}
                         className="gap-2.5 py-2.5 rounded-lg cursor-pointer"
                       >
-                        <Settings className="w-4 h-4 text-muted-foreground" />
-                        <span>{isRTL ? 'الإعدادات' : 'Settings'}</span>
+                        <Pencil className="w-4 h-4 text-muted-foreground" />
+                        <span>{isRTL ? 'تعديل الاسم' : 'Edit Name'}</span>
                       </DropdownMenuItem>
 
                       <DropdownMenuItem
@@ -310,6 +335,18 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
                       >
                         <Camera className="w-4 h-4 text-muted-foreground" />
                         <span>{isRTL ? 'تغيير الصورة الشخصية' : 'Change Avatar'}</span>
+                      </DropdownMenuItem>
+                    </div>
+
+                    <DropdownMenuSeparator className="my-0" />
+
+                    <div className="p-1.5">
+                      <DropdownMenuItem
+                        onClick={() => navigate('/dashboard/settings')}
+                        className="gap-2.5 py-2.5 rounded-lg cursor-pointer"
+                      >
+                        <Settings className="w-4 h-4 text-muted-foreground" />
+                        <span>{isRTL ? 'الإعدادات' : 'Settings'}</span>
                       </DropdownMenuItem>
                     </div>
 
@@ -370,6 +407,36 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
               </Button>
               <Button onClick={handlePasswordChange} disabled={pwLoading}>
                 {pwLoading ? (isRTL ? 'جاري التحديث...' : 'Updating...') : (isRTL ? 'تحديث' : 'Update')}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Name Edit Dialog */}
+      <Dialog open={nameDialog} onOpenChange={setNameDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{isRTL ? 'تعديل الاسم' : 'Edit Name'}</DialogTitle>
+            <DialogDescription>
+              {isRTL ? 'أدخل الاسم الجديد' : 'Enter your new name'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="space-y-1.5">
+              <Label className="text-sm">{isRTL ? 'الاسم الكامل' : 'Full Name'}</Label>
+              <Input
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                placeholder={isRTL ? 'أدخل اسمك' : 'Enter your name'}
+              />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setNameDialog(false)}>
+                {isRTL ? 'إلغاء' : 'Cancel'}
+              </Button>
+              <Button onClick={handleNameUpdate} disabled={nameLoading}>
+                {nameLoading ? (isRTL ? 'جاري الحفظ...' : 'Saving...') : (isRTL ? 'حفظ' : 'Save')}
               </Button>
             </div>
           </div>
