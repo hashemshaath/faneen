@@ -5,6 +5,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useEffect, useRef, useState, useCallback, memo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { HeroParticles } from "./HeroParticles";
 import heroBg1 from "@/assets/hero-bg.jpg";
 import heroBg2 from "@/assets/hero-slide-2.jpg";
 import heroBg3 from "@/assets/hero-slide-3.jpg";
@@ -209,6 +210,9 @@ export const HeroSection = () => {
       {/* Overlays */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/80" />
       <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at 50% 30%, transparent 20%, hsl(220 35% 8% / 0.6) 70%)" }} />
+
+      {/* Particles */}
+      <HeroParticles />
 
       {/* Content */}
       <div className="relative z-10 container text-center px-4 sm:px-6 pt-24 sm:pt-28 pb-8">
