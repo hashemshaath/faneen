@@ -571,12 +571,13 @@ const AdminBusinesses = () => {
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="info" className="w-full">
-                <TabsList className="w-full grid grid-cols-6 h-9">
+                <TabsList className="w-full grid grid-cols-7 h-9">
                   <TabsTrigger value="info" className="text-[10px]">{isRTL ? 'المعلومات' : 'Info'}</TabsTrigger>
                   <TabsTrigger value="address" className="text-[10px]">{isRTL ? 'العنوان' : 'Address'}</TabsTrigger>
                   <TabsTrigger value="content" className="text-[10px]">{isRTL ? 'المحتوى' : 'Content'}</TabsTrigger>
                   <TabsTrigger value="media" className="text-[10px]">{isRTL ? 'الوسائط' : 'Media'}</TabsTrigger>
                   <TabsTrigger value="contact" className="text-[10px]">{isRTL ? 'التواصل' : 'Contact'}</TabsTrigger>
+                  <TabsTrigger value="branches" className="text-[10px]">{isRTL ? 'الفروع' : 'Branches'} <Badge variant="secondary" className="text-[8px] ms-0.5 h-4 px-1">{branches.length}</Badge></TabsTrigger>
                   <TabsTrigger value="controls" className="text-[10px]">{isRTL ? 'التحكم' : 'Controls'}</TabsTrigger>
                 </TabsList>
 
