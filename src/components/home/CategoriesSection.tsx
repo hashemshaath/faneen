@@ -1,15 +1,22 @@
-import { Layers, Shield, Building2, Wrench, Users, ArrowRight, ArrowLeft } from "lucide-react";
+import { ArrowRight, ArrowLeft } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { Link } from "react-router-dom";
 
+import catAluminum from "@/assets/cat-aluminum.jpg";
+import catIron from "@/assets/cat-iron.jpg";
+import catGlass from "@/assets/cat-glass.jpg";
+import catWood from "@/assets/cat-wood.jpg";
+import catAccessories from "@/assets/cat-accessories.jpg";
+import catDesigners from "@/assets/cat-designers.jpg";
+
 const categories = [
-  { icon: Layers, titleKey: 'cat.aluminum' as const, descKey: 'cat.aluminum.desc' as const, gradient: "from-blue-500 to-cyan-400", bgGlow: "bg-blue-500/10 dark:bg-blue-400/10" },
-  { icon: Shield, titleKey: 'cat.iron' as const, descKey: 'cat.iron.desc' as const, gradient: "from-slate-600 to-slate-400", bgGlow: "bg-slate-500/10 dark:bg-slate-400/10" },
-  { icon: Layers, titleKey: 'cat.glass' as const, descKey: 'cat.glass.desc' as const, gradient: "from-cyan-500 to-teal-400", bgGlow: "bg-cyan-500/10 dark:bg-cyan-400/10" },
-  { icon: Building2, titleKey: 'cat.wood' as const, descKey: 'cat.wood.desc' as const, gradient: "from-amber-600 to-amber-400", bgGlow: "bg-amber-500/10 dark:bg-amber-400/10" },
-  { icon: Wrench, titleKey: 'cat.accessories' as const, descKey: 'cat.accessories.desc' as const, gradient: "from-rose-500 to-pink-400", bgGlow: "bg-rose-500/10 dark:bg-rose-400/10" },
-  { icon: Users, titleKey: 'cat.designers' as const, descKey: 'cat.designers.desc' as const, gradient: "from-violet-500 to-purple-400", bgGlow: "bg-violet-500/10 dark:bg-violet-400/10" },
+  { image: catAluminum, titleKey: 'cat.aluminum' as const, descKey: 'cat.aluminum.desc' as const, gradient: "from-blue-900/80 to-cyan-900/60" },
+  { image: catIron, titleKey: 'cat.iron' as const, descKey: 'cat.iron.desc' as const, gradient: "from-slate-900/80 to-slate-800/60" },
+  { image: catGlass, titleKey: 'cat.glass' as const, descKey: 'cat.glass.desc' as const, gradient: "from-cyan-900/80 to-teal-900/60" },
+  { image: catWood, titleKey: 'cat.wood' as const, descKey: 'cat.wood.desc' as const, gradient: "from-amber-900/80 to-amber-800/60" },
+  { image: catAccessories, titleKey: 'cat.accessories' as const, descKey: 'cat.accessories.desc' as const, gradient: "from-rose-900/80 to-pink-900/60" },
+  { image: catDesigners, titleKey: 'cat.designers' as const, descKey: 'cat.designers.desc' as const, gradient: "from-violet-900/80 to-purple-900/60" },
 ];
 
 export const CategoriesSection = () => {
@@ -36,17 +43,29 @@ export const CategoriesSection = () => {
             <Link
               to="/search"
               key={cat.titleKey}
-              className={`group relative p-5 sm:p-8 rounded-2xl bg-card dark:bg-card/60 border border-border/50 dark:border-border/30 hover:border-accent/40 active:scale-[0.97] sm:hover:-translate-y-2 transition-all duration-500 cursor-pointer overflow-hidden ${isVisible ? 'animate-card-slide-up' : 'opacity-0'}`}
+              className={`group relative rounded-2xl overflow-hidden border border-border/30 hover:border-accent/40 active:scale-[0.97] sm:hover:-translate-y-2 transition-all duration-500 cursor-pointer aspect-[4/3] sm:aspect-[5/3] ${isVisible ? 'animate-card-slide-up' : 'opacity-0'}`}
               style={{ animationDelay: `${i * 100}ms`, animationFillMode: 'both' }}
             >
-              <div className={`absolute inset-0 ${cat.bgGlow} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
-              <div className="relative z-10">
-                <div className={`w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br ${cat.gradient} flex items-center justify-center mb-3 sm:mb-5 group-hover:scale-110 group-hover:shadow-lg transition-all duration-300`}>
-                  <cat.icon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
-                </div>
-                <h3 className="font-heading font-bold text-sm sm:text-xl text-card-foreground mb-1.5 sm:mb-2.5 group-hover:text-accent transition-colors duration-300">{t(cat.titleKey)}</h3>
-                <p className="font-body text-muted-foreground text-[11px] sm:text-sm line-clamp-2 mb-3 sm:mb-4">{t(cat.descKey)}</p>
-                <div className="flex items-center gap-1 text-accent/60 group-hover:text-accent text-xs sm:text-sm font-medium transition-colors">
+              {/* Cover Image */}
+              <img
+                src={cat.image}
+                alt={t(cat.titleKey)}
+                loading="lazy"
+                width={640}
+                height={512}
+                className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+              />
+              {/* Gradient Overlay */}
+              <div className={`absolute inset-0 bg-gradient-to-t ${cat.gradient} to-transparent`} />
+              {/* Content */}
+              <div className="absolute inset-0 flex flex-col justify-end p-4 sm:p-6 z-10">
+                <h3 className="font-heading font-bold text-sm sm:text-xl text-white mb-1 sm:mb-2 group-hover:text-accent transition-colors duration-300 drop-shadow-md">
+                  {t(cat.titleKey)}
+                </h3>
+                <p className="font-body text-white/70 text-[10px] sm:text-sm line-clamp-2 mb-2 sm:mb-3 drop-shadow-sm">
+                  {t(cat.descKey)}
+                </p>
+                <div className="flex items-center gap-1 text-white/60 group-hover:text-accent text-xs sm:text-sm font-medium transition-colors">
                   <span>{isRTL ? 'استكشف' : 'Explore'}</span>
                   <ArrowIcon className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1 rtl:group-hover:-translate-x-1" />
                 </div>
