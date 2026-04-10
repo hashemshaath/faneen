@@ -1774,7 +1774,7 @@ export type Database = {
     }
     Enums: {
       account_type: "individual" | "business" | "company"
-      app_role: "admin" | "moderator" | "user"
+      app_role: "admin" | "moderator" | "user" | "super_admin"
       contract_status:
         | "draft"
         | "pending_approval"
@@ -1922,7 +1922,7 @@ export const Constants = {
   public: {
     Enums: {
       account_type: ["individual", "business", "company"],
-      app_role: ["admin", "moderator", "user"],
+      app_role: ["admin", "moderator", "user", "super_admin"],
       contract_status: [
         "draft",
         "pending_approval",
