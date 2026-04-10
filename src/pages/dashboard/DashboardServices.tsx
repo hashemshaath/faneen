@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -13,10 +13,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Plus, Trash2, Pencil, X, Search, CheckCircle2, Wrench,
   DollarSign, ChevronDown, ChevronRight, Send, Package,
-  Star, Globe, MapPin, Sparkles,
+  Star, Globe, MapPin, Sparkles, Copy, GripVertical,
+  ArrowUpDown, LayoutGrid, List, Eye, EyeOff, Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { FieldAiActions } from '@/components/blog/FieldAiActions';
@@ -26,9 +28,121 @@ import {
 } from '@/components/ui/alert-dialog';
 import type { Tables } from '@/integrations/supabase/types';
 import { serviceCatalog, type ServiceItem, type ServiceGroup } from '@/components/dashboard/services-catalog';
+import {
+  DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 type FilterMode = 'all' | 'active' | 'inactive';
+type SortMode = 'custom' | 'name' | 'price' | 'date';
+type ViewMode = 'list' | 'grid';
 
+/* ─── Sortable Service Card ─── */
+const SortableServiceCard = React.memo(({
+  s, isRTL, viewMode, onEdit, onToggle, onDuplicate, onDelete,
+}: {
+  s: Tables<'business_services'>;
+  isRTL: boolean;
+  viewMode: ViewMode;
+  onEdit: (s: Tables<'business_services'>) => void;
+  onToggle: (s: Tables<'business_services'>) => void;
+  onDuplicate: (s: Tables<'business_services'>) => void;
+  onDelete: (id: string) => void;
+}) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: s.id });
+  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1, zIndex: isDragging ? 50 : undefined };
+  const name = isRTL ? s.name_ar : (s.name_en || s.name_ar);
+  const desc = isRTL ? s.description_ar : (s.description_en || s.description_ar);
+  const hasPrice = s.price_from || s.price_to;
+
+  if (viewMode === 'grid') {
+    return (
+      <div ref={setNodeRef} style={style}>
+        <Card className={`border-border/40 hover:border-primary/30 transition-all h-full ${!s.is_active ? 'opacity-60' : ''}`}>
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-start justify-between gap-2">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${s.is_active ? 'bg-primary/10' : 'bg-muted'}`}>
+                <Wrench className={`w-5 h-5 ${s.is_active ? 'text-primary' : 'text-muted-foreground'}`} />
+              </div>
+              <div className="flex items-center gap-1">
+                <button {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-1 text-muted-foreground hover:text-foreground">
+                  <GripVertical className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+            <div>
+              <h3 className="font-medium text-sm line-clamp-1">{name}</h3>
+              {desc && <p className="text-[11px] text-muted-foreground line-clamp-2 mt-1">{desc}</p>}
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              {hasPrice ? (
+                <span className="text-xs text-primary font-semibold">
+                  {s.price_from ? Number(s.price_from).toLocaleString() : ''}{s.price_from && s.price_to ? ' - ' : ''}{s.price_to ? Number(s.price_to).toLocaleString() : ''} {s.currency_code}
+                </span>
+              ) : <span className="text-[10px] text-muted-foreground">{isRTL ? 'بدون تسعير' : 'No pricing'}</span>}
+              <Badge variant={s.is_active ? 'default' : 'secondary'} className={`text-[9px] px-1.5 py-0 h-4 ${s.is_active ? 'bg-emerald-500/10 text-emerald-600' : ''}`}>
+                {s.is_active ? (isRTL ? 'نشط' : 'Active') : (isRTL ? 'معطل' : 'Off')}
+              </Badge>
+            </div>
+            <div className="flex items-center gap-1 pt-1 border-t border-border/30">
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onToggle(s)} title={s.is_active ? 'Deactivate' : 'Activate'}>
+                {s.is_active ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+              </Button>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onEdit(s)}><Pencil className="w-3.5 h-3.5" /></Button>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onDuplicate(s)}><Copy className="w-3.5 h-3.5" /></Button>
+              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => onDelete(s.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <Card className={`border-border/40 hover:border-primary/30 transition-all ${!s.is_active ? 'opacity-60' : ''}`}>
+        <CardContent className="p-3 sm:p-4 flex items-center gap-3">
+          <button {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-1 text-muted-foreground hover:text-foreground shrink-0 touch-none">
+            <GripVertical className="w-4 h-4" />
+          </button>
+          <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${s.is_active ? 'bg-primary/10' : 'bg-muted'}`}>
+            <Wrench className={`w-5 h-5 ${s.is_active ? 'text-primary' : 'text-muted-foreground'}`} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="font-medium truncate text-sm">{name}</h3>
+              <Badge variant={s.is_active ? 'default' : 'secondary'} className={`text-[9px] px-1.5 py-0 h-4 ${s.is_active ? 'bg-emerald-500/10 text-emerald-600' : ''}`}>
+                {s.is_active ? (isRTL ? 'نشط' : 'Active') : (isRTL ? 'معطل' : 'Off')}
+              </Badge>
+            </div>
+            {desc && <p className="text-[11px] text-muted-foreground truncate mt-0.5">{desc}</p>}
+            {hasPrice && (
+              <p className="text-xs text-primary font-semibold mt-1">
+                {s.price_from ? Number(s.price_from).toLocaleString() : ''}{s.price_from && s.price_to ? ' - ' : ''}{s.price_to ? Number(s.price_to).toLocaleString() : ''} {s.currency_code}
+              </p>
+            )}
+          </div>
+          <div className="flex items-center gap-1 shrink-0">
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onToggle(s)}>
+              {s.is_active ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(s)}><Pencil className="w-4 h-4" /></Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onDuplicate(s)}><Copy className="w-4 h-4" /></Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => onDelete(s.id)}><Trash2 className="w-4 h-4" /></Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+});
+SortableServiceCard.displayName = 'SortableServiceCard';
+
+/* ─── Main Component ─── */
 const DashboardServices = () => {
   const { isRTL } = useLanguage();
   const { user } = useAuth();
@@ -37,18 +151,23 @@ const DashboardServices = () => {
   const [editing, setEditing] = useState<Tables<'business_services'> | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterMode, setFilterMode] = useState<FilterMode>('all');
+  const [sortMode, setSortMode] = useState<SortMode>('custom');
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [showRequestForm, setShowRequestForm] = useState(false);
   const [requestText, setRequestText] = useState('');
   const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
   const [showBrands, setShowBrands] = useState<string | null>(null);
   const [catalogSearch, setCatalogSearch] = useState('');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-  const emptyForm = {
-    name_ar: '', name_en: '', description_ar: '', description_en: '',
-    price_from: '', price_to: '', is_active: true,
-  };
+  const emptyForm = { name_ar: '', name_en: '', description_ar: '', description_en: '', price_from: '', price_to: '', is_active: true, currency_code: 'SAR' };
   const [form, setForm] = useState(emptyForm);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
 
   const { data: business } = useQuery({
     queryKey: ['my-business', user?.id],
@@ -72,15 +191,18 @@ const DashboardServices = () => {
   });
 
   const filteredServices = useMemo(() => {
-    let result = services;
+    let result = [...services];
     if (filterMode === 'active') result = result.filter(s => s.is_active);
     if (filterMode === 'inactive') result = result.filter(s => !s.is_active);
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter(s => s.name_ar.toLowerCase().includes(q) || (s.name_en || '').toLowerCase().includes(q));
     }
+    if (sortMode === 'name') result.sort((a, b) => a.name_ar.localeCompare(b.name_ar, 'ar'));
+    else if (sortMode === 'price') result.sort((a, b) => (Number(a.price_from) || 0) - (Number(b.price_from) || 0));
+    else if (sortMode === 'date') result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     return result;
-  }, [services, filterMode, searchQuery]);
+  }, [services, filterMode, searchQuery, sortMode]);
 
   const stats = useMemo(() => ({
     total: services.length,
@@ -89,17 +211,23 @@ const DashboardServices = () => {
     withPricing: services.filter(s => s.price_from || s.price_to).length,
   }), [services]);
 
-  // Filter catalog by search
   const filteredCatalog = useMemo(() => {
     if (!catalogSearch.trim()) return serviceCatalog;
     const q = catalogSearch.toLowerCase();
     return serviceCatalog.map(group => ({
       ...group,
-      services: group.services.filter(s =>
-        s.name_ar.toLowerCase().includes(q) || s.name_en.toLowerCase().includes(q)
-      ),
+      services: group.services.filter(s => s.name_ar.toLowerCase().includes(q) || s.name_en.toLowerCase().includes(q)),
     })).filter(g => g.services.length > 0);
   }, [catalogSearch]);
+
+  const reorderMutation = useMutation({
+    mutationFn: async (items: { id: string; sort_order: number }[]) => {
+      await Promise.all(items.map(item =>
+        supabase.from('business_services').update({ sort_order: item.sort_order }).eq('id', item.id)
+      ));
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['dashboard-services'] }),
+  });
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -113,6 +241,7 @@ const DashboardServices = () => {
         price_from: form.price_from ? Number(form.price_from) : null,
         price_to: form.price_to ? Number(form.price_to) : null,
         is_active: form.is_active,
+        currency_code: form.currency_code,
       };
       if (editing) {
         const { error } = await supabase.from('business_services').update(payload).eq('id', editing.id);
@@ -125,7 +254,7 @@ const DashboardServices = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-services'] });
       closeForm();
-      toast.success(editing ? (isRTL ? 'تم تحديث الخدمة بنجاح' : 'Service updated') : (isRTL ? 'تم إضافة الخدمة بنجاح' : 'Service added'));
+      toast.success(editing ? (isRTL ? 'تم تحديث الخدمة' : 'Service updated') : (isRTL ? 'تم إضافة الخدمة' : 'Service added'));
     },
     onError: (err: any) => toast.error(err.message),
   });
@@ -153,51 +282,120 @@ const DashboardServices = () => {
     },
   });
 
-  const closeForm = () => { setShowForm(false); setEditing(null); setForm(emptyForm); };
+  const bulkToggleMutation = useMutation({
+    mutationFn: async (activate: boolean) => {
+      const ids = Array.from(selectedIds);
+      await Promise.all(ids.map(id =>
+        supabase.from('business_services').update({ is_active: activate }).eq('id', id)
+      ));
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard-services'] });
+      setSelectedIds(new Set());
+      toast.success(isRTL ? 'تم التحديث' : 'Updated');
+    },
+  });
 
-  const openEdit = (s: Tables<'business_services'>) => {
+  const bulkDeleteMutation = useMutation({
+    mutationFn: async () => {
+      const ids = Array.from(selectedIds);
+      await Promise.all(ids.map(id =>
+        supabase.from('business_services').delete().eq('id', id)
+      ));
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard-services'] });
+      setSelectedIds(new Set());
+      toast.success(isRTL ? 'تم الحذف' : 'Deleted');
+    },
+  });
+
+  const closeForm = useCallback(() => { setShowForm(false); setEditing(null); setForm(emptyForm); }, []);
+
+  const openEdit = useCallback((s: Tables<'business_services'>) => {
     setEditing(s);
     setForm({
       name_ar: s.name_ar, name_en: s.name_en || '', description_ar: s.description_ar || '',
       description_en: s.description_en || '', price_from: s.price_from?.toString() || '',
-      price_to: s.price_to?.toString() || '', is_active: s.is_active,
+      price_to: s.price_to?.toString() || '', is_active: s.is_active, currency_code: s.currency_code || 'SAR',
     });
     setShowForm(true);
-  };
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
 
-  const quickAddFromCatalog = (item: ServiceItem) => {
+  const duplicateService = useCallback((s: Tables<'business_services'>) => {
+    setEditing(null);
+    setForm({
+      name_ar: s.name_ar + (isRTL ? ' (نسخة)' : ' (copy)'),
+      name_en: s.name_en ? s.name_en + ' (copy)' : '',
+      description_ar: s.description_ar || '', description_en: s.description_en || '',
+      price_from: s.price_from?.toString() || '', price_to: s.price_to?.toString() || '',
+      is_active: s.is_active, currency_code: s.currency_code || 'SAR',
+    });
+    setShowForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [isRTL]);
+
+  const quickAddFromCatalog = useCallback((item: ServiceItem) => {
     setForm({ ...emptyForm, name_ar: item.name_ar, name_en: item.name_en, description_ar: item.description_ar, description_en: item.description_en });
     setShowForm(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  }, []);
 
-  const toggleGroup = (id: string) => {
+  const toggleGroup = useCallback((id: string) => {
     setExpandedGroups(prev => prev.includes(id) ? prev.filter(g => g !== id) : [...prev, id]);
-  };
+  }, []);
 
-  const isServiceAdded = (name_ar: string) => services.some(s => s.name_ar === name_ar);
+  const isServiceAdded = useCallback((name_ar: string) => services.some(s => s.name_ar === name_ar), [services]);
+
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = filteredServices.findIndex(s => s.id === active.id);
+    const newIndex = filteredServices.findIndex(s => s.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+    const reordered = arrayMove(filteredServices, oldIndex, newIndex);
+    const updates = reordered.map((s, i) => ({ id: s.id, sort_order: i }));
+    reorderMutation.mutate(updates);
+  }, [filteredServices, reorderMutation]);
+
+  const toggleSelectAll = useCallback(() => {
+    if (selectedIds.size === filteredServices.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredServices.map(s => s.id)));
+    }
+  }, [selectedIds, filteredServices]);
+
+  const toggleSelect = useCallback((id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }, []);
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-5">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h1 className="font-heading font-bold text-2xl flex items-center gap-2">
-              <Wrench className="w-6 h-6 text-primary" />
+            <h1 className="font-heading font-bold text-xl sm:text-2xl flex items-center gap-2">
+              <Wrench className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
               {isRTL ? 'إدارة الخدمات والتخصصات' : 'Services & Specializations'}
             </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              {isRTL ? 'اختر من كتالوج الخدمات المتاح أو أضف خدمات مخصصة لعملائك' : 'Select from our service catalog or add custom services for your clients'}
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+              {isRTL ? 'اختر من الكتالوج أو أضف خدمات مخصصة مع السحب والإفلات لإعادة الترتيب' : 'Pick from catalog or add custom services. Drag & drop to reorder.'}
             </p>
           </div>
           {!showForm && (
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={() => setShowRequestForm(!showRequestForm)}>
-                <Send className="w-4 h-4 me-1" />{isRTL ? 'طلب إضافة' : 'Request New'}
+                <Send className="w-4 h-4 me-1" />{isRTL ? 'طلب إضافة' : 'Request'}
               </Button>
-              <Button variant="hero" onClick={() => { closeForm(); setShowForm(true); }}>
-                <Plus className="w-4 h-4 me-2" />{isRTL ? 'إضافة خدمة' : 'Add Service'}
+              <Button variant="hero" size="sm" onClick={() => { closeForm(); setShowForm(true); }}>
+                <Plus className="w-4 h-4 me-1" />{isRTL ? 'إضافة خدمة' : 'Add Service'}
               </Button>
             </div>
           )}
@@ -205,17 +403,17 @@ const DashboardServices = () => {
 
         {/* Stats */}
         {services.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
             {[
-              { label: isRTL ? 'إجمالي الخدمات' : 'Total Services', value: stats.total, icon: Package, color: 'text-primary bg-primary/10' },
-              { label: isRTL ? 'خدمات نشطة' : 'Active', value: stats.active, icon: CheckCircle2, color: 'text-emerald-600 bg-emerald-500/10' },
-              { label: isRTL ? 'خدمات معطلة' : 'Inactive', value: stats.inactive, icon: X, color: 'text-muted-foreground bg-muted' },
-              { label: isRTL ? 'مع تسعير' : 'With Pricing', value: stats.withPricing, icon: DollarSign, color: 'text-amber-600 bg-amber-500/10' },
+              { label: isRTL ? 'إجمالي' : 'Total', value: stats.total, icon: Package, color: 'text-primary bg-primary/10' },
+              { label: isRTL ? 'نشطة' : 'Active', value: stats.active, icon: CheckCircle2, color: 'text-emerald-600 bg-emerald-500/10' },
+              { label: isRTL ? 'معطلة' : 'Inactive', value: stats.inactive, icon: X, color: 'text-muted-foreground bg-muted' },
+              { label: isRTL ? 'مسعّرة' : 'Priced', value: stats.withPricing, icon: DollarSign, color: 'text-amber-600 bg-amber-500/10' },
             ].map((stat, i) => (
               <Card key={i} className="border-border/40 bg-card/50">
-                <CardContent className="p-3 flex items-center gap-3">
-                  <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${stat.color}`}><stat.icon className="w-4 h-4" /></div>
-                  <div><p className="text-xl font-bold">{stat.value}</p><p className="text-[11px] text-muted-foreground">{stat.label}</p></div>
+                <CardContent className="p-2.5 sm:p-3 flex items-center gap-2.5">
+                  <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center ${stat.color}`}><stat.icon className="w-4 h-4" /></div>
+                  <div><p className="text-lg sm:text-xl font-bold">{stat.value}</p><p className="text-[10px] sm:text-[11px] text-muted-foreground">{stat.label}</p></div>
                 </CardContent>
               </Card>
             ))}
@@ -227,22 +425,17 @@ const DashboardServices = () => {
           <Card className="border-amber-500/30 bg-amber-500/5">
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <Send className="w-4 h-4 text-amber-500" />
-                  {isRTL ? 'طلب إضافة خدمة جديدة للنظام' : 'Request a new service to be added'}
-                </CardTitle>
+                <CardTitle className="text-sm flex items-center gap-2"><Send className="w-4 h-4 text-amber-500" />{isRTL ? 'طلب إضافة خدمة جديدة' : 'Request a new service'}</CardTitle>
                 <Button variant="ghost" size="icon" onClick={() => setShowRequestForm(false)}><X className="w-4 h-4" /></Button>
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
               <Textarea value={requestText} onChange={(e) => setRequestText(e.target.value)} rows={3}
-                placeholder={isRTL ? 'اكتب اسم الخدمة والتخصص المطلوب إضافته...' : 'Describe the service you want added...'} />
+                placeholder={isRTL ? 'اكتب اسم الخدمة والتخصص المطلوب...' : 'Describe the service you want added...'} />
               <Button size="sm" variant="hero" disabled={!requestText.trim()} onClick={() => {
-                toast.success(isRTL ? 'تم إرسال الطلب، سيتم مراجعته قريباً' : 'Request submitted for review');
+                toast.success(isRTL ? 'تم إرسال الطلب' : 'Request submitted');
                 setRequestText(''); setShowRequestForm(false);
-              }}>
-                <Send className="w-4 h-4 me-1" />{isRTL ? 'إرسال الطلب' : 'Submit'}
-              </Button>
+              }}><Send className="w-4 h-4 me-1" />{isRTL ? 'إرسال' : 'Submit'}</Button>
             </CardContent>
           </Card>
         )}
@@ -252,18 +445,18 @@ const DashboardServices = () => {
           <Card className="border-primary/20 bg-primary/[0.02] shadow-sm">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-lg flex items-center gap-2">
+                <CardTitle className="text-base sm:text-lg flex items-center gap-2">
                   {editing ? <Pencil className="w-4 h-4 text-primary" /> : <Plus className="w-4 h-4 text-primary" />}
                   {editing ? (isRTL ? 'تعديل الخدمة' : 'Edit Service') : (isRTL ? 'إضافة خدمة جديدة' : 'Add New Service')}
                 </CardTitle>
                 <Button variant="ghost" size="icon" onClick={closeForm}><X className="w-4 h-4" /></Button>
               </div>
             </CardHeader>
-            <CardContent className="space-y-5">
+            <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between flex-wrap gap-1">
-                    <Label>{isRTL ? 'اسم الخدمة (عربي)' : 'Service Name (Arabic)'} <span className="text-destructive">*</span></Label>
+                    <Label className="text-xs sm:text-sm">{isRTL ? 'اسم الخدمة (عربي)' : 'Service Name (Arabic)'} <span className="text-destructive">*</span></Label>
                     <FieldAiActions value={form.name_ar} lang="ar" compact fieldType="title" isRTL={isRTL}
                       onTranslated={(v) => setForm(prev => ({ ...prev, name_en: v }))}
                       onImproved={(v) => setForm(prev => ({ ...prev, name_ar: v }))} />
@@ -272,7 +465,7 @@ const DashboardServices = () => {
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between flex-wrap gap-1">
-                    <Label>{isRTL ? 'اسم الخدمة (إنجليزي)' : 'Service Name (English)'}</Label>
+                    <Label className="text-xs sm:text-sm">{isRTL ? 'اسم الخدمة (إنجليزي)' : 'Service Name (English)'}</Label>
                     <FieldAiActions value={form.name_en} lang="en" compact fieldType="title" isRTL={isRTL}
                       onTranslated={(v) => setForm(prev => ({ ...prev, name_ar: v }))}
                       onImproved={(v) => setForm(prev => ({ ...prev, name_en: v }))} />
@@ -283,7 +476,7 @@ const DashboardServices = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between flex-wrap gap-1">
-                    <Label>{isRTL ? 'الوصف (عربي)' : 'Description (Arabic)'}</Label>
+                    <Label className="text-xs sm:text-sm">{isRTL ? 'الوصف (عربي)' : 'Description (Arabic)'}</Label>
                     <FieldAiActions value={form.description_ar} lang="ar" compact fieldType="description" isRTL={isRTL}
                       onTranslated={(v) => setForm(prev => ({ ...prev, description_en: v }))}
                       onImproved={(v) => setForm(prev => ({ ...prev, description_ar: v }))} />
@@ -292,7 +485,7 @@ const DashboardServices = () => {
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between flex-wrap gap-1">
-                    <Label>{isRTL ? 'الوصف (إنجليزي)' : 'Description (English)'}</Label>
+                    <Label className="text-xs sm:text-sm">{isRTL ? 'الوصف (إنجليزي)' : 'Description (English)'}</Label>
                     <FieldAiActions value={form.description_en} lang="en" compact fieldType="description" isRTL={isRTL}
                       onTranslated={(v) => setForm(prev => ({ ...prev, description_ar: v }))}
                       onImproved={(v) => setForm(prev => ({ ...prev, description_en: v }))} />
@@ -300,27 +493,43 @@ const DashboardServices = () => {
                   <Textarea value={form.description_en} onChange={(e) => setForm({ ...form, description_en: e.target.value })} rows={3} dir="ltr" placeholder="Brief description..." />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-3">
                 <div className="space-y-2">
-                  <Label className="flex items-center gap-1"><DollarSign className="w-3.5 h-3.5" />{isRTL ? 'السعر من (ر.س)' : 'Price From (SAR)'}</Label>
+                  <Label className="text-xs sm:text-sm flex items-center gap-1"><DollarSign className="w-3.5 h-3.5" />{isRTL ? 'السعر من' : 'Price From'}</Label>
                   <Input type="number" value={form.price_from} onChange={(e) => setForm({ ...form, price_from: e.target.value })} dir="ltr" placeholder="0" />
                 </div>
                 <div className="space-y-2">
-                  <Label className="flex items-center gap-1"><DollarSign className="w-3.5 h-3.5" />{isRTL ? 'السعر إلى (ر.س)' : 'Price To (SAR)'}</Label>
+                  <Label className="text-xs sm:text-sm flex items-center gap-1"><DollarSign className="w-3.5 h-3.5" />{isRTL ? 'السعر إلى' : 'Price To'}</Label>
                   <Input type="number" value={form.price_to} onChange={(e) => setForm({ ...form, price_to: e.target.value })} dir="ltr" placeholder="0" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs sm:text-sm">{isRTL ? 'العملة' : 'Currency'}</Label>
+                  <Select value={form.currency_code} onValueChange={(v) => setForm({ ...form, currency_code: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="SAR">SAR</SelectItem>
+                      <SelectItem value="AED">AED</SelectItem>
+                      <SelectItem value="KWD">KWD</SelectItem>
+                      <SelectItem value="QAR">QAR</SelectItem>
+                      <SelectItem value="BHD">BHD</SelectItem>
+                      <SelectItem value="OMR">OMR</SelectItem>
+                      <SelectItem value="USD">USD</SelectItem>
+                      <SelectItem value="EUR">EUR</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border border-border/40">
                 <Switch checked={form.is_active} onCheckedChange={(v) => setForm({ ...form, is_active: v })} />
                 <div>
-                  <Label className="cursor-pointer">{isRTL ? 'خدمة مفعلة' : 'Active Service'}</Label>
-                  <p className="text-xs text-muted-foreground">{isRTL ? 'الخدمات المفعلة تظهر في ملفك التجاري' : 'Active services appear on your profile'}</p>
+                  <Label className="cursor-pointer text-xs sm:text-sm">{isRTL ? 'خدمة مفعلة' : 'Active Service'}</Label>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">{isRTL ? 'الخدمات المفعلة تظهر في ملفك التجاري' : 'Active services appear on your profile'}</p>
                 </div>
               </div>
-              <div className="flex gap-2 pt-2">
+              <div className="flex gap-2 pt-1">
                 <Button onClick={() => saveMutation.mutate()} disabled={!form.name_ar || saveMutation.isPending} variant="hero" className="flex-1">
-                  {saveMutation.isPending ? (isRTL ? 'جاري الحفظ...' : 'Saving...') : editing ? (isRTL ? 'تحديث الخدمة' : 'Update') : (isRTL ? 'إضافة الخدمة' : 'Add Service')}
-                  {!saveMutation.isPending && <CheckCircle2 className="w-4 h-4 ms-2" />}
+                  {saveMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin me-2" /> : <CheckCircle2 className="w-4 h-4 me-2" />}
+                  {saveMutation.isPending ? (isRTL ? 'جاري الحفظ...' : 'Saving...') : editing ? (isRTL ? 'تحديث' : 'Update') : (isRTL ? 'إضافة' : 'Add')}
                 </Button>
                 <Button variant="outline" onClick={closeForm}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
               </div>
@@ -330,33 +539,76 @@ const DashboardServices = () => {
 
         {/* Toolbar */}
         {services.length > 0 && (
-          <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-            <div className="relative w-full sm:w-72">
-              <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input placeholder={isRTL ? 'ابحث في خدماتك...' : 'Search your services...'} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="ps-9" />
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 items-stretch sm:items-center justify-between">
+            <div className="flex items-center gap-2 flex-1">
+              <div className="relative flex-1 sm:max-w-xs">
+                <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input placeholder={isRTL ? 'ابحث...' : 'Search...'} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="ps-9 h-9" />
+              </div>
+              <Select value={sortMode} onValueChange={(v) => setSortMode(v as SortMode)}>
+                <SelectTrigger className="w-auto h-9 gap-1 text-xs">
+                  <ArrowUpDown className="w-3.5 h-3.5" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="custom">{isRTL ? 'ترتيب يدوي' : 'Custom'}</SelectItem>
+                  <SelectItem value="name">{isRTL ? 'الاسم' : 'Name'}</SelectItem>
+                  <SelectItem value="price">{isRTL ? 'السعر' : 'Price'}</SelectItem>
+                  <SelectItem value="date">{isRTL ? 'الأحدث' : 'Newest'}</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <Tabs value={filterMode} onValueChange={(v) => setFilterMode(v as FilterMode)}>
-              <TabsList className="h-9">
-                <TabsTrigger value="all" className="text-xs px-3">{isRTL ? 'الكل' : 'All'} ({stats.total})</TabsTrigger>
-                <TabsTrigger value="active" className="text-xs px-3">{isRTL ? 'نشطة' : 'Active'}</TabsTrigger>
-                <TabsTrigger value="inactive" className="text-xs px-3">{isRTL ? 'معطلة' : 'Inactive'}</TabsTrigger>
-              </TabsList>
-            </Tabs>
+            <div className="flex items-center gap-2">
+              <Tabs value={filterMode} onValueChange={(v) => setFilterMode(v as FilterMode)}>
+                <TabsList className="h-9">
+                  <TabsTrigger value="all" className="text-xs px-2.5">{isRTL ? 'الكل' : 'All'} ({stats.total})</TabsTrigger>
+                  <TabsTrigger value="active" className="text-xs px-2.5">{isRTL ? 'نشطة' : 'Active'}</TabsTrigger>
+                  <TabsTrigger value="inactive" className="text-xs px-2.5">{isRTL ? 'معطلة' : 'Off'}</TabsTrigger>
+                </TabsList>
+              </Tabs>
+              <div className="flex border border-border/40 rounded-lg overflow-hidden">
+                <button className={`p-1.5 ${viewMode === 'list' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => setViewMode('list')}>
+                  <List className="w-4 h-4" />
+                </button>
+                <button className={`p-1.5 ${viewMode === 'grid' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => setViewMode('grid')}>
+                  <LayoutGrid className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Bulk Actions */}
+        {selectedIds.size > 0 && (
+          <div className="flex items-center gap-2 p-2.5 rounded-xl bg-primary/5 border border-primary/20">
+            <Badge className="bg-primary/10 text-primary text-xs">{selectedIds.size} {isRTL ? 'محددة' : 'selected'}</Badge>
+            <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => bulkToggleMutation.mutate(true)}>
+              <Eye className="w-3 h-3 me-1" />{isRTL ? 'تفعيل' : 'Activate'}
+            </Button>
+            <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => bulkToggleMutation.mutate(false)}>
+              <EyeOff className="w-3 h-3 me-1" />{isRTL ? 'تعطيل' : 'Deactivate'}
+            </Button>
+            <Button size="sm" variant="outline" className="h-7 text-xs text-destructive hover:text-destructive" onClick={() => bulkDeleteMutation.mutate()}>
+              <Trash2 className="w-3 h-3 me-1" />{isRTL ? 'حذف' : 'Delete'}
+            </Button>
+            <Button size="sm" variant="ghost" className="h-7 text-xs ms-auto" onClick={() => setSelectedIds(new Set())}>
+              <X className="w-3 h-3 me-1" />{isRTL ? 'إلغاء' : 'Clear'}
+            </Button>
           </div>
         )}
 
         {/* Services List */}
         {isLoading ? (
-          <div className="space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-20 rounded-xl" />)}</div>
+          <div className="space-y-3">{[1, 2, 3].map(i => <Skeleton key={i} className="h-20 rounded-xl" />)}</div>
         ) : services.length === 0 && !showForm ? (
           <Card className="border-dashed border-2">
-            <CardContent className="flex flex-col items-center py-16 text-center">
-              <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
-                <Wrench className="w-10 h-10 text-primary" />
+            <CardContent className="flex flex-col items-center py-14 text-center">
+              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
+                <Wrench className="w-8 h-8 text-primary" />
               </div>
-              <h3 className="text-lg font-semibold mb-2">{isRTL ? 'لا توجد خدمات بعد' : 'No services yet'}</h3>
-              <p className="text-sm text-muted-foreground max-w-sm mb-6">
-                {isRTL ? 'اختر من كتالوج الخدمات أدناه أو أضف خدمات مخصصة' : 'Pick from the catalog below or add custom services'}
+              <h3 className="text-base font-semibold mb-2">{isRTL ? 'لا توجد خدمات بعد' : 'No services yet'}</h3>
+              <p className="text-sm text-muted-foreground max-w-sm mb-5">
+                {isRTL ? 'اختر من الكتالوج أدناه أو أضف خدمات مخصصة' : 'Pick from the catalog below or add custom services'}
               </p>
               <Button variant="hero" onClick={() => setShowForm(true)}>
                 <Plus className="w-4 h-4 me-2" />{isRTL ? 'أضف أول خدمة' : 'Add First Service'}
@@ -370,59 +622,42 @@ const DashboardServices = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-2">
-            {filteredServices.map((s) => (
-              <Card key={s.id} className="border-border/40 hover:border-primary/30 transition-all group">
-                <CardContent className="p-4 flex items-center gap-4">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${s.is_active ? 'bg-primary/10' : 'bg-muted'}`}>
-                    <Wrench className={`w-5 h-5 ${s.is_active ? 'text-primary' : 'text-muted-foreground'}`} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-medium truncate">{isRTL ? s.name_ar : (s.name_en || s.name_ar)}</h3>
-                      {!s.is_active && <Badge variant="secondary" className="text-xs">{isRTL ? 'معطلة' : 'Inactive'}</Badge>}
-                    </div>
-                    {(isRTL ? s.description_ar : (s.description_en || s.description_ar)) && (
-                      <p className="text-xs text-muted-foreground truncate mt-0.5">{isRTL ? s.description_ar : (s.description_en || s.description_ar)}</p>
-                    )}
-                    {(s.price_from || s.price_to) && (
-                      <p className="text-xs text-primary font-medium mt-1">
-                        {s.price_from ? Number(s.price_from).toLocaleString() : ''}{s.price_from && s.price_to ? ' - ' : ''}{s.price_to ? Number(s.price_to).toLocaleString() : ''} {s.currency_code}
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggleActiveMutation.mutate(s)}>
-                      <Switch checked={s.is_active} className="pointer-events-none scale-75" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(s)}><Pencil className="w-4 h-4" /></Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setDeleteConfirm(s.id)}><Trash2 className="w-4 h-4" /></Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={filteredServices.map(s => s.id)} strategy={verticalListSortingStrategy}>
+              <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3' : 'space-y-2'}>
+                {filteredServices.map(s => (
+                  <SortableServiceCard
+                    key={s.id}
+                    s={s}
+                    isRTL={isRTL}
+                    viewMode={viewMode}
+                    onEdit={openEdit}
+                    onToggle={(s) => toggleActiveMutation.mutate(s)}
+                    onDuplicate={duplicateService}
+                    onDelete={(id) => setDeleteConfirm(id)}
+                  />
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
         )}
 
         {/* Service Catalog */}
         {!showForm && (
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="font-heading font-bold text-lg flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-primary" />
-                  {isRTL ? 'كتالوج الخدمات والتخصصات' : 'Service & Specialization Catalog'}
-                </h2>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {isRTL ? 'اضغط على أي خدمة لإضافتها مباشرة إلى ملفك التجاري' : 'Click any service to add it directly to your profile'}
-                </p>
-              </div>
+            <div>
+              <h2 className="font-heading font-bold text-base sm:text-lg flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-primary" />
+                {isRTL ? 'كتالوج الخدمات والتخصصات' : 'Service Catalog'}
+              </h2>
+              <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">
+                {isRTL ? 'اضغط على أي خدمة لإضافتها مباشرة' : 'Click any service to add it directly'}
+              </p>
             </div>
 
-            {/* Catalog search */}
             <div className="relative max-w-md">
               <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input placeholder={isRTL ? 'ابحث في الكتالوج...' : 'Search catalog...'} value={catalogSearch} onChange={(e) => setCatalogSearch(e.target.value)} className="ps-9" />
+              <Input placeholder={isRTL ? 'ابحث في الكتالوج...' : 'Search catalog...'} value={catalogSearch} onChange={(e) => setCatalogSearch(e.target.value)} className="ps-9 h-9" />
             </div>
 
             {filteredCatalog.map((group) => {
@@ -431,82 +666,60 @@ const DashboardServices = () => {
 
               return (
                 <Card key={group.id} className="border-border/40 overflow-hidden">
-                  {/* Group Header */}
-                  <button
-                    className="w-full flex items-center gap-3 p-4 hover:bg-muted/30 transition-colors text-start"
-                    onClick={() => toggleGroup(group.id)}
-                  >
-                    <span className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg ${group.color}`}>
-                      {group.icon}
-                    </span>
+                  <button className="w-full flex items-center gap-3 p-3 sm:p-4 hover:bg-muted/30 transition-colors text-start" onClick={() => toggleGroup(group.id)}>
+                    <span className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center text-base sm:text-lg ${group.color}`}>{group.icon}</span>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-heading font-bold">{isRTL ? group.name_ar : group.name_en}</h3>
-                        <Badge variant="outline" className="text-[10px]">{group.services.length} {isRTL ? 'خدمة' : 'services'}</Badge>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="font-heading font-bold text-sm sm:text-base">{isRTL ? group.name_ar : group.name_en}</h3>
+                        <Badge variant="outline" className="text-[10px]">{group.services.length}</Badge>
                         {addedCount > 0 && (
                           <Badge className="text-[10px] bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
-                            <CheckCircle2 className="w-3 h-3 me-0.5" />{addedCount} {isRTL ? 'مضافة' : 'added'}
+                            <CheckCircle2 className="w-3 h-3 me-0.5" />{addedCount}
                           </Badge>
                         )}
                       </div>
                       {group.brands && group.brands.length > 0 && (
-                        <p className="text-[11px] text-muted-foreground mt-0.5">
-                          {isRTL ? `${group.brands.length} ماركة محلية وعالمية` : `${group.brands.length} local & international brands`}
-                        </p>
+                        <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5">{group.brands.length} {isRTL ? 'ماركة' : 'brands'}</p>
                       )}
                     </div>
                     {isExpanded ? <ChevronDown className="w-5 h-5 text-muted-foreground shrink-0" /> : (isRTL ? <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0 rotate-180" /> : <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />)}
                   </button>
 
-                  {/* Expanded Content */}
                   {isExpanded && (
                     <div className="border-t border-border/40">
-                      {/* Services Grid */}
-                      <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                      <div className="p-3 sm:p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                         {group.services.map((item, idx) => {
                           const added = isServiceAdded(item.name_ar);
                           return (
-                            <button
-                              key={idx}
-                              disabled={added}
-                              onClick={() => quickAddFromCatalog(item)}
-                              className={`p-3 rounded-xl border text-start transition-all ${
-                                added
-                                  ? 'bg-emerald-500/5 border-emerald-500/20 cursor-default'
-                                  : 'border-border/40 hover:border-primary/40 hover:bg-primary/5 cursor-pointer'
-                              }`}
-                            >
+                            <button key={idx} disabled={added} onClick={() => quickAddFromCatalog(item)}
+                              className={`p-2.5 sm:p-3 rounded-xl border text-start transition-all ${added ? 'bg-emerald-500/5 border-emerald-500/20 cursor-default' : 'border-border/40 hover:border-primary/40 hover:bg-primary/5 cursor-pointer'}`}>
                               <div className="flex items-center gap-2">
                                 {added ? <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" /> : <Plus className="w-4 h-4 text-primary shrink-0" />}
-                                <span className="font-medium text-sm truncate">{isRTL ? item.name_ar : item.name_en}</span>
+                                <span className="font-medium text-xs sm:text-sm truncate">{isRTL ? item.name_ar : item.name_en}</span>
                               </div>
-                              <p className="text-[11px] text-muted-foreground mt-1 line-clamp-2">{isRTL ? item.description_ar : item.description_en}</p>
+                              <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-1 line-clamp-2">{isRTL ? item.description_ar : item.description_en}</p>
                             </button>
                           );
                         })}
                       </div>
-
-                      {/* Brands Section */}
                       {group.brands && group.brands.length > 0 && (
-                        <div className="border-t border-border/40 p-4">
-                          <button
-                            className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mb-3"
-                            onClick={() => setShowBrands(showBrands === group.id ? null : group.id)}
-                          >
+                        <div className="border-t border-border/40 p-3 sm:p-4">
+                          <button className="flex items-center gap-2 text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mb-3"
+                            onClick={() => setShowBrands(showBrands === group.id ? null : group.id)}>
                             <Star className="w-4 h-4" />
-                            {isRTL ? 'أشهر الماركات والعلامات التجارية' : 'Popular Brands & Labels'}
+                            {isRTL ? 'أشهر الماركات' : 'Popular Brands'}
                             {showBrands === group.id ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />}
                           </button>
                           {showBrands === group.id && (
                             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
                               {group.brands.map((brand, bi) => (
-                                <div key={bi} className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/30 border border-border/30">
-                                  <div className={`w-7 h-7 rounded-md flex items-center justify-center text-xs font-bold ${brand.type === 'international' ? 'bg-blue-500/10 text-blue-600' : 'bg-emerald-500/10 text-emerald-600'}`}>
-                                    {brand.type === 'international' ? <Globe className="w-3.5 h-3.5" /> : <MapPin className="w-3.5 h-3.5" />}
+                                <div key={bi} className="flex items-center gap-2 p-2 sm:p-2.5 rounded-lg bg-muted/30 border border-border/30">
+                                  <div className={`w-6 h-6 sm:w-7 sm:h-7 rounded-md flex items-center justify-center text-xs font-bold ${brand.type === 'international' ? 'bg-blue-500/10 text-blue-600' : 'bg-emerald-500/10 text-emerald-600'}`}>
+                                    {brand.type === 'international' ? <Globe className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> : <MapPin className="w-3 h-3 sm:w-3.5 sm:h-3.5" />}
                                   </div>
                                   <div className="min-w-0">
-                                    <p className="text-xs font-medium truncate">{brand.name}</p>
-                                    <p className="text-[10px] text-muted-foreground">{isRTL ? brand.origin_ar : brand.origin_en}</p>
+                                    <p className="text-[11px] sm:text-xs font-medium truncate">{brand.name}</p>
+                                    <p className="text-[9px] sm:text-[10px] text-muted-foreground">{isRTL ? brand.origin_ar : brand.origin_en}</p>
                                   </div>
                                 </div>
                               ))}
