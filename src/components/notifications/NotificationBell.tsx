@@ -135,7 +135,7 @@ export const NotificationBell = () => {
           )}
         </Button>
       </SheetTrigger>
-      <SheetContent side={isRTL ? 'right' : 'left'} className="w-full sm:w-96 p-0 flex flex-col">
+      <SheetContent side={isRTL ? 'left' : 'right'} className="w-full sm:w-96 p-0 flex flex-col">
         {/* Header */}
         <SheetHeader className="p-4 border-b border-border shrink-0">
           <div className="flex items-center justify-between">
@@ -223,7 +223,7 @@ export const NotificationBell = () => {
         <div className="p-3 border-t border-border shrink-0">
           <Button
             variant="outline" size="sm" className="w-full text-xs"
-            onClick={() => { navigate('/notifications'); setOpen(false); }}
+            onClick={() => { navigate('/dashboard/notifications'); setOpen(false); }}
           >
             {isRTL ? 'عرض جميع الإشعارات' : 'View all notifications'}
           </Button>

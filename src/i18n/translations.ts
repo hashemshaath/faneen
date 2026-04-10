@@ -274,7 +274,7 @@ export const translations = {
   'maintenance.submit': { ar: 'إرسال الطلب', en: 'Submit Request' },
 
   // Dashboard
-  'dashboard.overview': { ar: 'نظرة عامة', en: 'Overview' },
+  'dashboard.overview': { ar: 'لوحة التحكم', en: 'Dashboard' },
   'dashboard.services': { ar: 'الخدمات', en: 'Services' },
   'dashboard.portfolio': { ar: 'معرض الأعمال', en: 'Portfolio' },
   'dashboard.reviews': { ar: 'التقييمات', en: 'Reviews' },

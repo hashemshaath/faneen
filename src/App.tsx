@@ -32,6 +32,7 @@ const DashboardBlog = lazy(() => import("./pages/dashboard/DashboardBlog"));
 const DashboardProfileSystems = lazy(() => import("./pages/dashboard/DashboardProfileSystems"));
 const DashboardMessages = lazy(() => import("./pages/dashboard/DashboardMessages"));
 const DashboardBookmarks = lazy(() => import("./pages/dashboard/DashboardBookmarks"));
+const DashboardNotifications = lazy(() => import("./pages/dashboard/DashboardNotifications"));
 const Offers = lazy(() => import("./pages/Offers"));
 const Compare = lazy(() => import("./pages/Compare"));
 const CompareProfiles = lazy(() => import("./pages/CompareProfiles"));
@@ -104,16 +105,17 @@ const AppRoutes = () => (
           <Route path="/dashboard/contracts" element={<ProtectedRoute><DashboardContracts /></ProtectedRoute>} />
           <Route path="/dashboard/messages" element={<ProtectedRoute><DashboardMessages /></ProtectedRoute>} />
           <Route path="/dashboard/bookmarks" element={<ProtectedRoute><DashboardBookmarks /></ProtectedRoute>} />
+          <Route path="/dashboard/notifications" element={<ProtectedRoute><DashboardNotifications /></ProtectedRoute>} />
           <Route path="/dashboard/settings" element={<ProtectedRoute><DashboardSettings /></ProtectedRoute>} />
 
           <Route path="/dashboard/services" element={<ProtectedRoute requireProvider><DashboardServices /></ProtectedRoute>} />
           <Route path="/dashboard/portfolio" element={<ProtectedRoute requireProvider><DashboardPortfolio /></ProtectedRoute>} />
           <Route path="/dashboard/reviews" element={<ProtectedRoute requireProvider><DashboardReviews /></ProtectedRoute>} />
           <Route path="/dashboard/warranties" element={<ProtectedRoute requireProvider><DashboardWarranties /></ProtectedRoute>} />
-          <Route path="/dashboard/installments" element={<ProtectedRoute requireProvider><DashboardInstallments /></ProtectedRoute>} />
+          <Route path="/dashboard/installments" element={<ProtectedRoute><DashboardInstallments /></ProtectedRoute>} />
           <Route path="/dashboard/promotions" element={<ProtectedRoute requireProvider><DashboardPromotions /></ProtectedRoute>} />
           <Route path="/dashboard/projects" element={<ProtectedRoute requireProvider><DashboardProjects /></ProtectedRoute>} />
-          <Route path="/dashboard/operations" element={<ProtectedRoute requireProvider><DashboardOperations /></ProtectedRoute>} />
+          <Route path="/dashboard/operations" element={<ProtectedRoute><DashboardOperations /></ProtectedRoute>} />
 
           <Route path="/dashboard/blog" element={<ProtectedRoute requireAdmin><DashboardBlog /></ProtectedRoute>} />
           <Route path="/dashboard/profile-systems" element={<ProtectedRoute requireAdmin><DashboardProfileSystems /></ProtectedRoute>} />

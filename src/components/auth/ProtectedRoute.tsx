@@ -43,11 +43,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requireProvider = false,
   skipOnboarding = false,
 }) => {
-  const { user, loading, isAdmin, isSuperAdmin, profile } = useAuth();
+  const { user, loading, isAdmin, isSuperAdmin, isProvider, profile } = useAuth();
   const location = useLocation();
   const loggedRef = useRef(false);
-
-  const isProvider = profile?.account_type === 'provider';
 
   const shouldDeny =
     !loading &&

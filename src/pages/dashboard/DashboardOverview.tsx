@@ -13,7 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Wrench, Image, Star, FileText, Shield, TrendingUp, Eye,
   DollarSign, Plus, Send, BarChart3, ArrowUpRight, ArrowDown, ArrowUp,
-  Activity, MessageSquare, Crown, Users, Building2, Newspaper,
+  Activity, MessageSquare, Crown, Users, Building2, Newspaper, CreditCard,
   Bookmark, FolderOpen, Bell, Clock, CheckCircle2, AlertCircle,
   ShieldAlert, Zap, CalendarDays, Hash, PieChart as PieChartIcon,
   TrendingDown, Percent, Target, Briefcase, Megaphone,
@@ -341,7 +341,7 @@ const AdminDashboardView = ({ isRTL }: { isRTL: boolean }) => {
                     <p className="text-[10px] text-muted-foreground truncate">{u.email}</p>
                   </div>
                   <Badge variant="outline" className="text-[9px] shrink-0">
-                    {u.account_type === 'provider' ? (isRTL ? 'مزود' : 'Provider') : (isRTL ? 'مستخدم' : 'User')}
+                    {['business', 'company', 'provider'].includes(u.account_type) ? (isRTL ? 'مزود' : 'Provider') : (isRTL ? 'مستخدم' : 'User')}
                   </Badge>
                 </div>
               ))}
@@ -972,7 +972,7 @@ const UserDashboardView = ({ isRTL, user, profile }: { isRTL: boolean; user: any
               <Bell className="w-4 h-4 text-orange-500" />
               {isRTL ? 'آخر الإشعارات' : 'Recent Notifications'}
             </CardTitle>
-            <Link to="/notifications">
+            <Link to="/dashboard/notifications">
               <Button variant="ghost" size="sm" className="text-xs text-accent h-7">{isRTL ? 'الكل' : 'All'}</Button>
             </Link>
           </CardHeader>
@@ -980,7 +980,7 @@ const UserDashboardView = ({ isRTL, user, profile }: { isRTL: boolean; user: any
             {recentNotifications && recentNotifications.length > 0 ? (
               <div className="space-y-2">
                 {recentNotifications.map(n => (
-                  <Link key={n.id} to={n.action_url || '/notifications'}>
+                  <Link key={n.id} to={n.action_url || '/dashboard/notifications'}>
                     <div className={`flex items-start gap-3 p-2.5 rounded-xl hover:bg-muted/50 transition-colors ${!n.is_read ? 'bg-accent/5' : ''}`}>
                       <div className={`w-8 h-8 rounded-lg shrink-0 flex items-center justify-center ${!n.is_read ? 'bg-accent/15' : 'bg-muted/50'}`}>
                         <Bell className={`w-3.5 h-3.5 ${!n.is_read ? 'text-accent' : 'text-muted-foreground'}`} />
@@ -1058,8 +1058,8 @@ const UserDashboardView = ({ isRTL, user, profile }: { isRTL: boolean; user: any
                 { icon: FileText, label: isRTL ? 'العقود' : 'Contracts', to: '/dashboard/contracts' },
                 { icon: MessageSquare, label: isRTL ? 'الرسائل' : 'Messages', to: '/dashboard/messages' },
                 { icon: Bookmark, label: isRTL ? 'المفضلة' : 'Bookmarks', to: '/dashboard/bookmarks' },
-                { icon: FolderOpen, label: isRTL ? 'المشاريع' : 'Projects', to: '/projects' },
-                { icon: Newspaper, label: isRTL ? 'المدونة' : 'Blog', to: '/blog' },
+                  { icon: CreditCard, label: isRTL ? 'الأقساط' : 'Installments', to: '/dashboard/installments' },
+                  { icon: Bell, label: isRTL ? 'الإشعارات' : 'Notifications', to: '/dashboard/notifications' },
                 { icon: TrendingUp, label: isRTL ? 'البحث' : 'Find Providers', to: '/search' },
               ].map(link => (
                 <Link key={link.to} to={link.to}>
@@ -1084,8 +1084,7 @@ const UserDashboardView = ({ isRTL, user, profile }: { isRTL: boolean; user: any
    ═══════════════════════════════════════════════════ */
 const DashboardOverview = () => {
   const { isRTL } = useLanguage();
-  const { user, profile, isAdmin } = useAuth();
-  const isProvider = profile?.account_type === 'provider';
+  const { user, profile, isAdmin, isProvider } = useAuth();
 
   return (
     <DashboardLayout>
