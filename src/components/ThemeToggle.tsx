@@ -75,7 +75,7 @@ export const ThemeToggle = ({ variant = 'navbar' }: { variant?: 'navbar' | 'drop
     return (
       <button
         onClick={cycle}
-        className="p-1.5 rounded-lg text-primary-foreground/60 hover:text-accent transition-colors"
+        className="p-1.5 rounded-lg text-surface-nav-foreground/60 hover:text-accent transition-colors"
         title={theme}
         aria-label={`Theme: ${theme}`}
       >

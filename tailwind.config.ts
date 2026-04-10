@@ -61,6 +61,10 @@ export default {
           light: "hsl(var(--navy-light))",
         },
         cream: "hsl(var(--cream))",
+        "surface-nav": {
+          DEFAULT: "hsl(var(--surface-nav))",
+          foreground: "hsl(var(--surface-nav-foreground))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",

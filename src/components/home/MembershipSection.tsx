@@ -79,13 +79,13 @@ export const MembershipSection = () => {
                   {t('membership.popular')}
                 </div>
               )}
-              <h3 className={`font-heading font-bold text-2xl mb-2 transition-colors duration-300 ${plan.featured ? "text-primary-foreground" : "text-foreground group-hover:text-gold"}`}>{t(plan.titleKey)}</h3>
-              <p className={`font-body text-sm mb-6 ${plan.featured ? "text-primary-foreground/60" : "text-muted-foreground"}`}>{t(plan.descKey)}</p>
+              <h3 className={`font-heading font-bold text-2xl mb-2 transition-colors duration-300 ${plan.featured ? "text-surface-nav-foreground" : "text-foreground group-hover:text-gold"}`}>{t(plan.titleKey)}</h3>
+              <p className={`font-body text-sm mb-6 ${plan.featured ? "text-surface-nav-foreground/60" : "text-muted-foreground"}`}>{t(plan.descKey)}</p>
               <ul className="space-y-3 mb-8">
                 {plan.features.map((f, fi) => (
                   <li
                     key={f.en}
-                    className={`flex items-center gap-2 font-body text-sm transition-all duration-300 ${plan.featured ? "text-primary-foreground/80" : "text-muted-foreground group-hover:text-foreground"}`}
+                    className={`flex items-center gap-2 font-body text-sm transition-all duration-300 ${plan.featured ? "text-surface-nav-foreground/80" : "text-muted-foreground group-hover:text-foreground"}`}
                     style={{ transitionDelay: `${fi * 50}ms` }}
                   >
                     <div className={`w-1.5 h-1.5 rounded-full bg-gold transition-transform duration-300 group-hover:scale-150`} />

@@ -63,7 +63,7 @@ export const Footer = () => {
   const { ref: gridRef, visible: gridVisible } = useInView();
 
   return (
-    <footer className="relative bg-primary overflow-hidden">
+    <footer className="relative bg-surface-nav overflow-hidden">
       {/* Decorative background elements */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute -top-32 -right-32 w-64 h-64 bg-gold/[0.03] rounded-full blur-3xl" />
@@ -84,10 +84,10 @@ export const Footer = () => {
 
             <div className="flex flex-col lg:flex-row items-center gap-8">
               <div className="text-center lg:text-start flex-1">
-                <h3 className="font-heading font-bold text-xl md:text-2xl text-primary-foreground">
+                <h3 className="font-heading font-bold text-xl md:text-2xl text-surface-nav-foreground">
                   {isRTL ? '📬 اشترك في نشرتنا البريدية' : '📬 Subscribe to our newsletter'}
                 </h3>
-                <p className="font-body text-sm text-primary-foreground/50 mt-2 max-w-md">
+                <p className="font-body text-sm text-surface-nav-foreground/50 mt-2 max-w-md">
                   {isRTL
                     ? 'احصل على آخر الأخبار والعروض والنصائح مباشرة في بريدك الإلكتروني'
                     : 'Get the latest news, offers, and tips delivered directly to your inbox'}
@@ -96,13 +96,13 @@ export const Footer = () => {
 
               <form onSubmit={handleSubscribe} className="flex w-full lg:w-auto max-w-md gap-2">
                 <div className="relative flex-1">
-                  <Mail className="absolute top-1/2 -translate-y-1/2 start-3 w-4 h-4 text-primary-foreground/30 pointer-events-none" />
+                  <Mail className="absolute top-1/2 -translate-y-1/2 start-3 w-4 h-4 text-surface-nav-foreground/30 pointer-events-none" />
                   <Input
                     type="email"
                     value={email}
                     onChange={e => setEmail(e.target.value)}
                     placeholder={isRTL ? "بريدك الإلكتروني..." : "Your email..."}
-                    className="ps-10 bg-primary-foreground/5 border-primary-foreground/15 text-primary-foreground placeholder:text-primary-foreground/30 focus:border-gold/50 focus:ring-gold/20 h-11"
+                    className="ps-10 bg-surface-nav-foreground/5 border-primary-foreground/15 text-surface-nav-foreground placeholder:text-surface-nav-foreground/30 focus:border-gold/50 focus:ring-gold/20 h-11"
                     dir="ltr"
                   />
                 </div>
@@ -133,7 +133,7 @@ export const Footer = () => {
       {/* Social links bar */}
       <div className="border-b border-primary-foreground/10">
         <div className={`container py-6 flex flex-col sm:flex-row items-center justify-between gap-4 transition-all duration-700 delay-200 ${nlVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-          <p className="font-body text-sm text-primary-foreground/50">
+          <p className="font-body text-sm text-surface-nav-foreground/50">
             {isRTL ? 'تابعنا على وسائل التواصل الاجتماعي' : 'Follow us on social media'}
           </p>
           <div className="flex items-center gap-2">
@@ -144,7 +144,7 @@ export const Footer = () => {
                 aria-label={s.label}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`w-10 h-10 rounded-full border border-primary-foreground/15 flex items-center justify-center text-primary-foreground/50 ${s.color} hover:text-white hover:border-transparent hover:scale-110 transition-all duration-300`}
+                className={`w-10 h-10 rounded-full border border-primary-foreground/15 flex items-center justify-center text-surface-nav-foreground/50 ${s.color} hover:text-white hover:border-transparent hover:scale-110 transition-all duration-300`}
                 style={{ animationDelay: `${i * 80}ms` }}
               >
                 <s.icon className="w-4 h-4" />
@@ -164,14 +164,14 @@ export const Footer = () => {
                 <span className="font-heading font-black text-lg text-secondary-foreground">ف</span>
               </div>
               <div>
-                <h3 className="font-heading font-bold text-lg text-primary-foreground">فنيين</h3>
+                <h3 className="font-heading font-bold text-lg text-surface-nav-foreground">فنيين</h3>
                 <span className="text-xs text-gold font-body">Faneen.com</span>
               </div>
             </div>
-            <p className="font-body text-sm text-primary-foreground/50 leading-relaxed">
+            <p className="font-body text-sm text-surface-nav-foreground/50 leading-relaxed">
               {t('footer.desc')}
             </p>
-            <div className="space-y-3 text-sm text-primary-foreground/50">
+            <div className="space-y-3 text-sm text-surface-nav-foreground/50">
               <a href="mailto:info@faneen.com" className="flex items-center gap-2 hover:text-gold transition-colors group/link">
                 <Mail className="w-4 h-4 text-gold/70 group-hover/link:scale-110 transition-transform" />
                 info@faneen.com
@@ -189,11 +189,11 @@ export const Footer = () => {
 
           {/* Sections */}
           <div className={`transition-all duration-700 delay-100 ${gridVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
-            <h4 className="font-heading font-bold text-primary-foreground mb-5 flex items-center gap-2">
+            <h4 className="font-heading font-bold text-surface-nav-foreground mb-5 flex items-center gap-2">
               <span className="w-5 h-0.5 bg-gold rounded-full" />
               {t('footer.sections')}
             </h4>
-            <ul className="space-y-3 font-body text-sm text-primary-foreground/50">
+            <ul className="space-y-3 font-body text-sm text-surface-nav-foreground/50">
               <li><a href="#" className="hover:text-gold hover:ps-1 transition-all duration-200">{t('cat.aluminum')}</a></li>
               <li><a href="#" className="hover:text-gold hover:ps-1 transition-all duration-200">{t('cat.iron')}</a></li>
               <li><a href="#" className="hover:text-gold hover:ps-1 transition-all duration-200">{t('cat.glass')}</a></li>
@@ -203,11 +203,11 @@ export const Footer = () => {
 
           {/* Services */}
           <div className={`transition-all duration-700 delay-200 ${gridVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
-            <h4 className="font-heading font-bold text-primary-foreground mb-5 flex items-center gap-2">
+            <h4 className="font-heading font-bold text-surface-nav-foreground mb-5 flex items-center gap-2">
               <span className="w-5 h-0.5 bg-gold rounded-full" />
               {t('footer.services')}
             </h4>
-            <ul className="space-y-3 font-body text-sm text-primary-foreground/50">
+            <ul className="space-y-3 font-body text-sm text-surface-nav-foreground/50">
               <li><PrefetchLink to="/projects" className="hover:text-gold hover:ps-1 transition-all duration-200">{isRTL ? 'المشاريع' : 'Projects'}</PrefetchLink></li>
               <li><PrefetchLink to="/blog" className="hover:text-gold hover:ps-1 transition-all duration-200">{isRTL ? 'المدونة' : 'Blog'}</PrefetchLink></li>
               <li><PrefetchLink to="/offers" className="hover:text-gold hover:ps-1 transition-all duration-200">{isRTL ? 'العروض' : 'Offers'}</PrefetchLink></li>
@@ -219,11 +219,11 @@ export const Footer = () => {
 
           {/* Contact & Legal */}
           <div className={`transition-all duration-700 delay-300 ${gridVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
-            <h4 className="font-heading font-bold text-primary-foreground mb-5 flex items-center gap-2">
+            <h4 className="font-heading font-bold text-surface-nav-foreground mb-5 flex items-center gap-2">
               <span className="w-5 h-0.5 bg-gold rounded-full" />
               {t('footer.contact')}
             </h4>
-            <ul className="space-y-3 font-body text-sm text-primary-foreground/50">
+            <ul className="space-y-3 font-body text-sm text-surface-nav-foreground/50">
               <li><a href="#" className="hover:text-gold hover:ps-1 transition-all duration-200">{t('footer.support')}</a></li>
               <li><a href="#" className="hover:text-gold hover:ps-1 transition-all duration-200">{t('footer.partnerships')}</a></li>
               <li><a href="#" className="hover:text-gold hover:ps-1 transition-all duration-200">{t('footer.privacy')}</a></li>
@@ -236,13 +236,13 @@ export const Footer = () => {
       {/* Bottom bar */}
       <div className="border-t border-primary-foreground/10">
         <div className="container py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="font-body text-xs text-primary-foreground/30">
+          <p className="font-body text-xs text-surface-nav-foreground/30">
             {t('footer.rights')}
           </p>
           <button
             onClick={scrollToTop}
             aria-label="Scroll to top"
-            className="w-10 h-10 rounded-full border border-primary-foreground/15 flex items-center justify-center text-primary-foreground/40 hover:bg-gold hover:text-secondary-foreground hover:border-gold hover:scale-110 hover:-translate-y-1 transition-all duration-300"
+            className="w-10 h-10 rounded-full border border-primary-foreground/15 flex items-center justify-center text-surface-nav-foreground/40 hover:bg-gold hover:text-secondary-foreground hover:border-gold hover:scale-110 hover:-translate-y-1 transition-all duration-300"
           >
             <ArrowUp className="w-4 h-4" />
           </button>

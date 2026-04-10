@@ -47,6 +47,10 @@
     --slate-warm: 220 10% 45%;
     --cream: 42 40% 96%;
 
+    /* Surface tokens for Navbar/Footer - stays dark in both modes */
+    --surface-nav: 220 35% 15%;
+    --surface-nav-foreground: 42 100% 95%;
+
     --gradient-gold: linear-gradient(135deg, hsl(42 85% 55%), hsl(42 90% 70%));
     --gradient-navy: linear-gradient(135deg, hsl(220 35% 15%), hsl(220 25% 25%));
     --gradient-hero: linear-gradient(180deg, hsl(220 35% 10% / 0.85), hsl(220 35% 15% / 0.7));
@@ -85,6 +89,11 @@
     --border: 220 25% 20%;
     --input: 220 25% 20%;
     --ring: 42 85% 55%;
+
+    /* Nav surface stays dark but slightly lighter than background */
+    --surface-nav: 220 30% 10%;
+    --surface-nav-foreground: 42 20% 92%;
+
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -127,7 +136,7 @@
   }
 
   .bg-gradient-navy {
-    background: linear-gradient(135deg, hsl(220 35% 15%), hsl(220 25% 25%));
+    background: linear-gradient(135deg, hsl(var(--surface-nav)), hsl(var(--surface-nav) / 0.85));
   }
 
   .shadow-gold {

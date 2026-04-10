@@ -69,18 +69,18 @@ export const Navbar = () => {
 
   return (
     <>
-      <nav className="fixed top-0 right-0 left-0 z-50 bg-primary/95 backdrop-blur-sm border-b border-gold/20">
+      <nav className="fixed top-0 right-0 left-0 z-50 bg-surface-nav/95 backdrop-blur-sm border-b border-gold/20">
         <div className="container flex items-center justify-between h-16">
           <Link to="/" className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-gradient-gold flex items-center justify-center">
               <span className="font-heading font-black text-lg text-secondary-foreground">ف</span>
             </div>
             <div>
-              <h1 className="font-heading font-bold text-lg text-primary-foreground leading-none">فنيين</h1>
+              <h1 className="font-heading font-bold text-lg text-surface-nav-foreground leading-none">فنيين</h1>
               <span className="text-xs text-gold font-body">Faneen</span>
             </div>
           </Link>
-          <div className="hidden md:flex items-center gap-6 font-body text-sm text-primary-foreground/80">
+          <div className="hidden md:flex items-center gap-6 font-body text-sm text-surface-nav-foreground/80">
             {navLinks.map((link) => (
               <PrefetchLink key={link.to} to={link.to} className="hover:text-gold transition-colors flex items-center gap-1">
                 <link.icon className="w-4 h-4" />
@@ -95,13 +95,13 @@ export const Navbar = () => {
             <ThemeToggle variant="navbar" />
             <button
               onClick={() => setLanguage(language === 'ar' ? 'en' : 'ar')}
-              className="text-xs text-primary-foreground/60 hover:text-accent transition-colors px-2 py-1 rounded border border-primary-foreground/20"
+              className="text-xs text-surface-nav-foreground/60 hover:text-accent transition-colors px-2 py-1 rounded border border-surface-nav-foreground/20"
             >
               {t('nav.language')}
             </button>
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="md:hidden text-primary-foreground/80 hover:text-gold transition-colors p-1"
+              className="md:hidden text-surface-nav-foreground/80 hover:text-gold transition-colors p-1"
               aria-label="Toggle menu"
             >
               <div className="relative w-6 h-6">
@@ -114,14 +114,14 @@ export const Navbar = () => {
                 <PrefetchLink to="/dashboard">
                   <Button variant="hero" size="sm">{t('dashboard.overview')}</Button>
                 </PrefetchLink>
-                <Button variant="ghost" className="text-primary-foreground/80 hover:text-gold hover:bg-gold/10 text-sm" onClick={signOut}>
+                <Button variant="ghost" className="text-surface-nav-foreground/80 hover:text-gold hover:bg-gold/10 text-sm" onClick={signOut}>
                   {t('auth.logout')}
                 </Button>
               </div>
             ) : (
               <div className="hidden md:flex items-center gap-2">
                 <PrefetchLink to="/auth">
-                  <Button variant="ghost" className="text-primary-foreground/80 hover:text-gold hover:bg-gold/10 text-sm">
+                  <Button variant="ghost" className="text-surface-nav-foreground/80 hover:text-gold hover:bg-gold/10 text-sm">
                     {t('nav.login')}
                   </Button>
                 </PrefetchLink>
@@ -147,7 +147,7 @@ export const Navbar = () => {
       {/* Mobile menu */}
       <div
         ref={menuRef}
-        className={`fixed top-16 right-0 left-0 z-50 md:hidden bg-primary border-t border-gold/20 shadow-2xl transition-all duration-300 ease-out ${
+        className={`fixed top-16 right-0 left-0 z-50 md:hidden bg-surface-nav border-t border-gold/20 shadow-2xl transition-all duration-300 ease-out ${
           mobileOpen
             ? 'opacity-100 translate-y-0'
             : 'opacity-0 -translate-y-4 pointer-events-none'
@@ -159,7 +159,7 @@ export const Navbar = () => {
               key={link.to}
               to={link.to}
               onClick={closeMobile}
-              className="flex items-center gap-3 text-primary-foreground/80 hover:text-gold hover:bg-gold/5 transition-all py-3 px-3 rounded-lg border-b border-primary-foreground/5"
+              className="flex items-center gap-3 text-surface-nav-foreground/80 hover:text-gold hover:bg-gold/5 transition-all py-3 px-3 rounded-lg border-b border-surface-nav-foreground/5"
               style={{ animationDelay: `${idx * 40}ms` }}
             >
               <div className="w-8 h-8 rounded-lg bg-gold/10 flex items-center justify-center shrink-0">
@@ -169,26 +169,26 @@ export const Navbar = () => {
             </Link>
           ))}
 
-          <div className="border-t border-primary-foreground/10 pt-2 mt-2 space-y-1">
-            <button onClick={() => scrollToSection('#categories')} className="block w-full text-start text-primary-foreground/60 hover:text-gold transition-colors py-2 px-3 rounded-lg hover:bg-gold/5">{t('nav.sections')}</button>
-            <button onClick={() => scrollToSection('#features')} className="block w-full text-start text-primary-foreground/60 hover:text-gold transition-colors py-2 px-3 rounded-lg hover:bg-gold/5">{t('nav.features')}</button>
-            <button onClick={() => scrollToSection('#providers')} className="block w-full text-start text-primary-foreground/60 hover:text-gold transition-colors py-2 px-3 rounded-lg hover:bg-gold/5">{t('nav.providers')}</button>
+          <div className="border-t border-surface-nav-foreground/10 pt-2 mt-2 space-y-1">
+            <button onClick={() => scrollToSection('#categories')} className="block w-full text-start text-surface-nav-foreground/60 hover:text-gold transition-colors py-2 px-3 rounded-lg hover:bg-gold/5">{t('nav.sections')}</button>
+            <button onClick={() => scrollToSection('#features')} className="block w-full text-start text-surface-nav-foreground/60 hover:text-gold transition-colors py-2 px-3 rounded-lg hover:bg-gold/5">{t('nav.features')}</button>
+            <button onClick={() => scrollToSection('#providers')} className="block w-full text-start text-surface-nav-foreground/60 hover:text-gold transition-colors py-2 px-3 rounded-lg hover:bg-gold/5">{t('nav.providers')}</button>
           </div>
 
-          <div className="pt-3 border-t border-primary-foreground/10 flex flex-col gap-2">
+          <div className="pt-3 border-t border-surface-nav-foreground/10 flex flex-col gap-2">
             {user ? (
               <>
                 <Link to="/dashboard" onClick={closeMobile}>
                   <Button variant="hero" size="sm" className="w-full">{t('dashboard.overview')}</Button>
                 </Link>
-                <Button variant="ghost" className="text-primary-foreground/80 hover:text-gold hover:bg-gold/10 text-sm w-full" onClick={() => { signOut(); closeMobile(); }}>
+                <Button variant="ghost" className="text-surface-nav-foreground/80 hover:text-gold hover:bg-gold/10 text-sm w-full" onClick={() => { signOut(); closeMobile(); }}>
                   {t('auth.logout')}
                 </Button>
               </>
             ) : (
               <>
                 <Link to="/auth" onClick={closeMobile}>
-                  <Button variant="ghost" className="text-primary-foreground/80 hover:text-gold hover:bg-gold/10 text-sm w-full">
+                  <Button variant="ghost" className="text-surface-nav-foreground/80 hover:text-gold hover:bg-gold/10 text-sm w-full">
                     {t('nav.login')}
                   </Button>
                 </Link>
