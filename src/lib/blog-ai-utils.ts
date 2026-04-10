@@ -1,7 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-type AiAction = 'translate' | 'generate_keywords' | 'generate_meta' | 'seo_analysis' | 'improve_content' | 'generate_excerpt';
+type AiAction = 'translate' | 'generate_keywords' | 'generate_meta' | 'seo_analysis' | 'improve_content' | 'generate_excerpt' | 'competitor_analysis';
 
 interface AiRequest {
   action: AiAction;
