@@ -24,8 +24,19 @@ const mockMonthlyData = [
 ];
 
 const DashboardOverview = () => {
-  const { t, isRTL } = useLanguage();
-  const { user } = useAuth();
+const { t, isRTL } = useLanguage();
+  const { user, profile } = useAuth();
+
+  const isProvider = profile?.account_type === 'business' || profile?.account_type === 'company';
+
+  // If provider, render ProviderDashboard
+  if (isProvider) {
+    return (
+      <DashboardLayout>
+        <ProviderDashboard />
+      </DashboardLayout>
+    );
+  }
 
   const { data: stats } = useQuery({
     queryKey: ['dashboard-stats', user?.id],
