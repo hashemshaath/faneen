@@ -422,14 +422,26 @@ const DashboardBlog = () => {
                     <TabsContent value="seo" className="space-y-4 mt-4">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                          <Label>Meta Title (AR)</Label>
+                          <div className="flex items-center justify-between mb-1">
+                            <Label>Meta Title (AR)</Label>
+                            <FieldAiActions value={form.meta_title_ar} lang="ar" isRTL={isRTL} fieldType="meta_title"
+                              onTranslated={(v) => setField('meta_title_en', v)}
+                              onImproved={(v) => setField('meta_title_ar', v)}
+                              focusKeyword={form.focus_keyword} />
+                          </div>
                           <Input value={form.meta_title_ar} onChange={e => setField('meta_title_ar', e.target.value)} />
                           <span className={`text-[10px] ${form.meta_title_ar.length > 60 ? 'text-destructive' : 'text-muted-foreground'}`}>
                             {form.meta_title_ar.length}/60
                           </span>
                         </div>
                         <div>
-                          <Label>Meta Title (EN)</Label>
+                          <div className="flex items-center justify-between mb-1">
+                            <Label>Meta Title (EN)</Label>
+                            <FieldAiActions value={form.meta_title_en} lang="en" isRTL={isRTL} fieldType="meta_title"
+                              onTranslated={(v) => setField('meta_title_ar', v)}
+                              onImproved={(v) => setField('meta_title_en', v)}
+                              focusKeyword={form.focus_keyword} />
+                          </div>
                           <Input value={form.meta_title_en} onChange={e => setField('meta_title_en', e.target.value)} dir="ltr" />
                           <span className={`text-[10px] ${form.meta_title_en.length > 60 ? 'text-destructive' : 'text-muted-foreground'}`}>
                             {form.meta_title_en.length}/60
@@ -439,14 +451,26 @@ const DashboardBlog = () => {
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                          <Label>Meta Description (AR)</Label>
+                          <div className="flex items-center justify-between mb-1">
+                            <Label>Meta Description (AR)</Label>
+                            <FieldAiActions value={form.meta_description_ar} lang="ar" isRTL={isRTL} fieldType="meta_description"
+                              onTranslated={(v) => setField('meta_description_en', v)}
+                              onImproved={(v) => setField('meta_description_ar', v)}
+                              focusKeyword={form.focus_keyword} />
+                          </div>
                           <Textarea value={form.meta_description_ar} onChange={e => setField('meta_description_ar', e.target.value)} rows={2} />
                           <span className={`text-[10px] ${form.meta_description_ar.length > 160 ? 'text-destructive' : 'text-muted-foreground'}`}>
                             {form.meta_description_ar.length}/160
                           </span>
                         </div>
                         <div>
-                          <Label>Meta Description (EN)</Label>
+                          <div className="flex items-center justify-between mb-1">
+                            <Label>Meta Description (EN)</Label>
+                            <FieldAiActions value={form.meta_description_en} lang="en" isRTL={isRTL} fieldType="meta_description"
+                              onTranslated={(v) => setField('meta_description_ar', v)}
+                              onImproved={(v) => setField('meta_description_en', v)}
+                              focusKeyword={form.focus_keyword} />
+                          </div>
                           <Textarea value={form.meta_description_en} onChange={e => setField('meta_description_en', e.target.value)} rows={2} dir="ltr" />
                           <span className={`text-[10px] ${form.meta_description_en.length > 160 ? 'text-destructive' : 'text-muted-foreground'}`}>
                             {form.meta_description_en.length}/160
