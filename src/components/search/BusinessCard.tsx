@@ -12,10 +12,10 @@ interface BusinessCardProps {
   viewMode: 'grid' | 'list';
 }
 
-const tierConfig: Record<string, { label: string; labelAr: string; color: string }> = {
-  enterprise: { label: 'Enterprise', labelAr: 'مؤسسي', color: 'bg-accent text-accent-foreground' },
-  premium: { label: 'Premium', labelAr: 'مميز', color: 'bg-accent/80 text-accent-foreground' },
-  basic: { label: 'Basic', labelAr: 'أساسي', color: 'bg-muted text-foreground' },
+const tierConfig: Record<string, { label: string; labelAr: string; color: string; icon: string }> = {
+  enterprise: { label: 'Enterprise', labelAr: 'مؤسسي', color: 'bg-accent text-accent-foreground', icon: '🏢' },
+  premium: { label: 'Premium', labelAr: 'مميز', color: 'bg-accent/80 text-accent-foreground', icon: '⭐' },
+  basic: { label: 'Basic', labelAr: 'أساسي', color: 'bg-muted text-foreground', icon: '' },
 };
 
 const RatingStars = ({ rating, size = 'sm' }: { rating: number; size?: 'sm' | 'xs' }) => {
@@ -27,6 +27,18 @@ const RatingStars = ({ rating, size = 'sm' }: { rating: number; size?: 'sm' | 'x
       ))}
     </div>
   );
+};
+
+// Generate a consistent color for logo placeholder based on business name
+const getPlaceholderGradient = (name: string) => {
+  const hash = name.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+  const gradients = [
+    'from-accent/20 to-accent/5',
+    'from-primary/20 to-primary/5',
+    'from-accent/15 via-muted to-accent/10',
+    'from-muted to-accent/10',
+  ];
+  return gradients[hash % gradients.length];
 };
 
 export const BusinessCard = ({ business: b, viewMode }: BusinessCardProps) => {
@@ -41,6 +53,7 @@ export const BusinessCard = ({ business: b, viewMode }: BusinessCardProps) => {
   const tier = tierConfig[b.membership_tier];
   const serviceCount = Array.isArray((b as any).business_services) ? (b as any).business_services.filter((s: any) => s.is_active).length : 0;
   const rating = Number(b.rating_avg) || 0;
+  const initial = name?.charAt(0) || 'ف';
 
   const touchHandlers = {
     onTouchStart: () => setPressed(true),
@@ -53,14 +66,14 @@ export const BusinessCard = ({ business: b, viewMode }: BusinessCardProps) => {
       <Link
         to={`/${b.username}`}
         {...touchHandlers}
-        className={`group flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-2xl bg-card dark:bg-card/80 border border-border/40 dark:border-border/20 hover:border-accent/30 transition-all duration-300 active:scale-[0.98] ${pressed ? 'scale-[0.98] shadow-lg' : 'hover:shadow-md dark:hover:shadow-black/10'}`}
+        className={`group flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-2xl bg-card dark:bg-card/80 border border-border/30 dark:border-border/15 hover:border-accent/30 transition-all duration-300 active:scale-[0.98] ${pressed ? 'scale-[0.98] shadow-lg' : 'hover:shadow-md dark:hover:shadow-accent/5'}`}
       >
         {/* Logo */}
-        <div className={`w-14 h-14 sm:w-[72px] sm:h-[72px] rounded-xl bg-muted/50 dark:bg-muted/30 flex items-center justify-center flex-shrink-0 overflow-hidden border border-border/30 dark:border-border/15 group-hover:border-accent/20 transition-all ${pressed ? 'border-accent/30' : ''}`}>
+        <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden border border-border/20 dark:border-border/10 group-hover:border-accent/20 transition-all ${b.logo_url ? '' : `bg-gradient-to-br ${getPlaceholderGradient(name)}`}`}>
           {b.logo_url ? (
             <img src={b.logo_url} alt={name} className="w-full h-full object-cover" loading="lazy" />
           ) : (
-            <Building2 className="w-6 h-6 sm:w-7 sm:h-7 text-muted-foreground/40" />
+            <span className="text-xl font-heading font-bold text-accent/60">{initial}</span>
           )}
         </div>
 
@@ -68,13 +81,13 @@ export const BusinessCard = ({ business: b, viewMode }: BusinessCardProps) => {
           <div className="flex items-center gap-1.5 sm:gap-2 mb-0.5 flex-wrap">
             <h3 className="font-heading font-bold text-sm sm:text-base text-foreground group-hover:text-accent transition-colors truncate">{name}</h3>
             {b.is_verified && <BadgeCheck className="w-4 h-4 text-accent flex-shrink-0" />}
-            {tier && (
+            {tier && tier.label !== 'Basic' && (
               <Badge className={`${tier.color} text-[9px] px-1.5 py-0 h-4 gap-0.5`}>
                 <Crown className="w-2.5 h-2.5" />{language === 'ar' ? tier.labelAr : tier.label}
               </Badge>
             )}
           </div>
-          {catName && <p className="text-[10px] sm:text-xs text-accent/80 font-body">{catName}</p>}
+          {catName && <p className="text-[10px] sm:text-xs text-accent/70 font-body">{catName}</p>}
           {desc && <p className="text-xs text-muted-foreground font-body mt-0.5 line-clamp-1">{desc}</p>}
           <div className="flex items-center gap-2.5 mt-1.5 flex-wrap">
             <div className="flex items-center gap-1">
@@ -87,41 +100,41 @@ export const BusinessCard = ({ business: b, viewMode }: BusinessCardProps) => {
           </div>
         </div>
 
-        <Arrow className={`w-4 h-4 text-muted-foreground/30 group-hover:text-accent shrink-0 transition-all sm:block ${pressed ? 'text-accent' : ''}`} />
+        <Arrow className={`w-4 h-4 text-muted-foreground/30 group-hover:text-accent shrink-0 transition-all ${pressed ? 'text-accent' : ''}`} />
       </Link>
     );
   }
 
-  // Grid view — professional card with cover + logo
+  // Grid view
   return (
     <Link
       to={`/${b.username}`}
       {...touchHandlers}
-      className={`group relative rounded-2xl bg-card dark:bg-card/80 border border-border/40 dark:border-border/20 hover:border-accent/30 transition-all duration-300 flex flex-col overflow-hidden active:scale-[0.97] ${pressed ? 'scale-[0.97] shadow-xl' : 'hover:shadow-lg dark:hover:shadow-black/10'}`}
+      className={`group relative rounded-2xl bg-card dark:bg-card/80 border border-border/30 dark:border-border/15 hover:border-accent/25 transition-all duration-300 flex flex-col overflow-hidden active:scale-[0.97] ${pressed ? 'scale-[0.97] shadow-xl' : 'hover:shadow-lg hover:shadow-accent/5 dark:hover:shadow-accent/5'}`}
     >
       {/* Cover area */}
-      <div className="relative h-20 sm:h-24 bg-gradient-to-br from-accent/10 via-muted/60 to-accent/5 dark:from-accent/5 dark:via-muted/30 dark:to-accent/10 overflow-hidden">
-        {b.cover_url && (
-          <img src={b.cover_url} alt="" className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity duration-500" loading="lazy" />
+      <div className="relative h-24 sm:h-28 bg-gradient-to-br from-accent/8 via-muted/40 to-accent/5 dark:from-accent/5 dark:via-muted/20 dark:to-accent/8 overflow-hidden">
+        {b.cover_url ? (
+          <img src={b.cover_url} alt="" className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-70 group-hover:scale-105 transition-all duration-700" loading="lazy" />
+        ) : (
+          <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'repeating-linear-gradient(45deg, currentColor 0, currentColor 1px, transparent 0, transparent 50%)', backgroundSize: '12px 12px' }} />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-card via-card/50 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-card via-card/40 to-transparent" />
         {/* Tier badge */}
-        {tier && (
-          <Badge className={`${tier.color} text-[9px] sm:text-[10px] px-1.5 py-0 h-4 sm:h-5 absolute top-2.5 end-2.5 gap-0.5 z-10`}>
-            <Crown className="w-2.5 h-2.5 sm:w-3 sm:h-3" />{language === 'ar' ? tier.labelAr : tier.label}
+        {tier && tier.label !== 'Basic' && (
+          <Badge className={`${tier.color} text-[9px] sm:text-[10px] px-2 py-0 h-5 absolute top-3 end-3 gap-0.5 z-10 shadow-sm`}>
+            <Crown className="w-3 h-3" />{language === 'ar' ? tier.labelAr : tier.label}
           </Badge>
         )}
       </div>
 
       {/* Logo overlapping cover */}
-      <div className="px-4 sm:px-5 -mt-8 sm:-mt-10 relative z-10">
-        <div className={`w-14 h-14 sm:w-[68px] sm:h-[68px] rounded-xl bg-card dark:bg-card border-2 border-card shadow-md flex items-center justify-center overflow-hidden group-hover:shadow-lg transition-shadow ${pressed ? 'shadow-lg' : ''}`}>
+      <div className="px-4 sm:px-5 -mt-9 sm:-mt-10 relative z-10">
+        <div className={`w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-xl border-[3px] border-card shadow-lg flex items-center justify-center overflow-hidden group-hover:shadow-xl transition-shadow ${b.logo_url ? 'bg-card' : `bg-gradient-to-br ${getPlaceholderGradient(name)}`}`}>
           {b.logo_url ? (
             <img src={b.logo_url} alt={name} className="w-full h-full object-cover" loading="lazy" />
           ) : (
-            <div className="w-full h-full bg-muted/50 dark:bg-muted/30 flex items-center justify-center">
-              <Building2 className="w-6 h-6 sm:w-7 sm:h-7 text-muted-foreground/40" />
-            </div>
+            <span className="text-2xl font-heading font-bold text-accent/50">{initial}</span>
           )}
         </div>
       </div>
@@ -129,12 +142,12 @@ export const BusinessCard = ({ business: b, viewMode }: BusinessCardProps) => {
       {/* Content */}
       <div className="px-4 sm:px-5 pt-2.5 sm:pt-3 pb-4 sm:pb-5 flex flex-col flex-1">
         <div className="flex items-center gap-1.5 mb-0.5">
-          <h3 className="font-heading font-bold text-sm sm:text-base text-foreground group-hover:text-accent transition-colors truncate">{name}</h3>
-          {b.is_verified && <BadgeCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-accent flex-shrink-0" />}
+          <h3 className="font-heading font-bold text-sm sm:text-[15px] text-foreground group-hover:text-accent transition-colors truncate">{name}</h3>
+          {b.is_verified && <BadgeCheck className="w-4 h-4 text-accent flex-shrink-0" />}
         </div>
-        {catName && <span className="text-[10px] sm:text-xs text-accent/80 font-body">{catName}</span>}
+        {catName && <span className="text-[10px] sm:text-xs text-accent/70 font-body">{catName}</span>}
 
-        {desc && <p className="text-xs sm:text-sm text-muted-foreground font-body mt-2 line-clamp-2">{desc}</p>}
+        {desc && <p className="text-xs text-muted-foreground font-body mt-2 line-clamp-2 leading-relaxed">{desc}</p>}
 
         {/* Rating */}
         <div className="flex items-center gap-2 mt-3">
@@ -144,11 +157,11 @@ export const BusinessCard = ({ business: b, viewMode }: BusinessCardProps) => {
         </div>
 
         {/* Meta footer */}
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-auto pt-3 text-[10px] sm:text-xs text-muted-foreground font-body border-t border-border/30 dark:border-border/15">
-          {cityName && <span className="flex items-center gap-0.5"><MapPin className="w-3 h-3 sm:w-3.5 sm:h-3.5" />{cityName}</span>}
-          {serviceCount > 0 && <span className="flex items-center gap-0.5"><Briefcase className="w-3 h-3 sm:w-3.5 sm:h-3.5" />{serviceCount} {isRTL ? 'خدمة' : 'services'}</span>}
-          {b.phone && <span className="flex items-center gap-0.5"><Phone className="w-3 h-3 sm:w-3.5 sm:h-3.5" /><span dir="ltr">{b.phone}</span></span>}
-          {b.website && <span className="flex items-center gap-0.5"><Globe className="w-3 h-3 sm:w-3.5 sm:h-3.5" /></span>}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-auto pt-3 text-[10px] sm:text-xs text-muted-foreground font-body border-t border-border/20 dark:border-border/10">
+          {cityName && <span className="flex items-center gap-1"><MapPin className="w-3 h-3 text-accent/50" />{cityName}</span>}
+          {serviceCount > 0 && <span className="flex items-center gap-1"><Briefcase className="w-3 h-3 text-accent/50" />{serviceCount} {isRTL ? 'خدمة' : 'services'}</span>}
+          {b.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3 text-accent/50" /><span dir="ltr">{b.phone}</span></span>}
+          {b.website && <span className="flex items-center gap-1"><Globe className="w-3 h-3 text-accent/50" /></span>}
         </div>
       </div>
     </Link>

@@ -7,6 +7,7 @@ import { Footer } from '@/components/layout/Footer';
 import { SearchHeader } from '@/components/search/SearchHeader';
 import { SearchFilters, type SearchFilterValues } from '@/components/search/SearchFilters';
 import { SearchResults, type ViewMode } from '@/components/search/SearchResults';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const ITEMS_PER_PAGE = 12;
 
@@ -53,6 +54,7 @@ const useEntityTags = () =>
 const SearchPage = () => {
   const { language } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
+  const isMobile = useIsMobile();
 
   const { data: categories } = useCategories();
   const { data: cities } = useCities();
@@ -61,7 +63,7 @@ const SearchPage = () => {
 
   const [query, setQuery] = useState(searchParams.get('q') || '');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilters, setShowFilters] = useState(!isMobile);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
@@ -129,7 +131,6 @@ const SearchPage = () => {
     if (filters.minRating > 0) results = results.filter(b => Number(b.rating_avg) >= filters.minRating);
     if (filters.verifiedOnly) results = results.filter(b => b.is_verified);
 
-    // Filter by selected tags
     if (selectedTags.length > 0 && entityTags) {
       const bizIdsWithTags = new Set(
         entityTags.filter(et => selectedTags.includes(et.tag_id)).map(et => et.entity_id)
@@ -188,7 +189,7 @@ const SearchPage = () => {
         businesses={businesses}
       />
 
-      <div className="container py-6 sm:py-10 px-3 sm:px-6">
+      <div className="container py-6 sm:py-8 px-3 sm:px-6">
         <div className="flex flex-col lg:flex-row gap-5 sm:gap-6">
           <SearchFilters
             filters={filters}
