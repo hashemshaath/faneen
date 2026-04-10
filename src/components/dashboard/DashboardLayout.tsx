@@ -314,11 +314,11 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
                     {/* Menu items */}
                     <div className="p-1.5">
                       <DropdownMenuItem
-                        onClick={() => navigate('/dashboard/settings')}
+                        onClick={() => { setEditName(profile?.full_name || ''); setNameDialog(true); }}
                         className="gap-2.5 py-2.5 rounded-lg cursor-pointer"
                       >
-                        <Settings className="w-4 h-4 text-muted-foreground" />
-                        <span>{isRTL ? 'الإعدادات' : 'Settings'}</span>
+                        <Pencil className="w-4 h-4 text-muted-foreground" />
+                        <span>{isRTL ? 'تعديل الاسم' : 'Edit Name'}</span>
                       </DropdownMenuItem>
 
                       <DropdownMenuItem
@@ -335,6 +335,18 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
                       >
                         <Camera className="w-4 h-4 text-muted-foreground" />
                         <span>{isRTL ? 'تغيير الصورة الشخصية' : 'Change Avatar'}</span>
+                      </DropdownMenuItem>
+                    </div>
+
+                    <DropdownMenuSeparator className="my-0" />
+
+                    <div className="p-1.5">
+                      <DropdownMenuItem
+                        onClick={() => navigate('/dashboard/settings')}
+                        className="gap-2.5 py-2.5 rounded-lg cursor-pointer"
+                      >
+                        <Settings className="w-4 h-4 text-muted-foreground" />
+                        <span>{isRTL ? 'الإعدادات' : 'Settings'}</span>
                       </DropdownMenuItem>
                     </div>
 
