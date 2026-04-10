@@ -689,6 +689,55 @@ const AdminUsers = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Change Password Dialog */}
+      <Dialog open={!!passwordUserId} onOpenChange={open => { if (!open) { setPasswordUserId(null); setNewPassword(''); } }}>
+        <DialogContent className="sm:max-w-md" dir={isRTL ? 'rtl' : 'ltr'}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Lock className="w-5 h-5 text-gold" />
+              {isRTL ? 'تغيير كلمة المرور' : 'Change Password'}
+            </DialogTitle>
+            <DialogDescription>
+              {isRTL ? 'أدخل كلمة المرور الجديدة للمستخدم' : 'Enter the new password for this user'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>{isRTL ? 'كلمة المرور الجديدة' : 'New Password'}</Label>
+              <div className="relative">
+                <Input
+                  type={showNewPassword ? 'text' : 'password'}
+                  value={newPassword}
+                  onChange={e => setNewPassword(e.target.value)}
+                  placeholder={isRTL ? 'أدخل كلمة المرور الجديدة (8 أحرف على الأقل)' : 'Enter new password (min 8 chars)'}
+                  minLength={8}
+                  className="pe-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  className="absolute top-2.5 text-muted-foreground"
+                  style={{ [isRTL ? 'left' : 'right']: '10px' }}
+                >
+                  {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => { setPasswordUserId(null); setNewPassword(''); }}>
+              {isRTL ? 'إلغاء' : 'Cancel'}
+            </Button>
+            <Button
+              onClick={() => passwordUserId && changePasswordMutation.mutate({ targetUserId: passwordUserId, password: newPassword })}
+              disabled={changePasswordMutation.isPending || newPassword.length < 8}
+            >
+              {changePasswordMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin me-2" /> : null}
+              {isRTL ? 'تغيير كلمة المرور' : 'Change Password'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       {/* Delete User Confirmation */}
       <AlertDialog open={!!deletingUserId} onOpenChange={open => { if (!open) setDeletingUserId(null); }}>
         <AlertDialogContent dir={isRTL ? 'rtl' : 'ltr'}>
