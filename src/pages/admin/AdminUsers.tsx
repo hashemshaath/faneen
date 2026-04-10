@@ -18,6 +18,7 @@ import { toast } from 'sonner';
 import {
   Users, Search, Shield, ShieldCheck, ShieldAlert, UserPlus, Trash2,
   Mail, Phone, Calendar, Crown, Loader2, Pencil, Ban, UserX, Download,
+  KeyRound, Send, Lock, Eye, EyeOff,
 } from 'lucide-react';
 import type { Tables } from '@/integrations/supabase/types';
 
@@ -55,6 +56,9 @@ const AdminUsers = () => {
   const [editingProfile, setEditingProfile] = useState<Profile | null>(null);
   const [editForm, setEditForm] = useState({ full_name: '', account_type: '', membership_tier: '', phone: '', email: '' });
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
+  const [passwordUserId, setPasswordUserId] = useState<string | null>(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
 
   const { data: profiles = [], isLoading: loadingProfiles } = useQuery({
     queryKey: ['admin-profiles'],
@@ -174,6 +178,40 @@ const AdminUsers = () => {
     },
     onError: () => {
       toast.error(isRTL ? 'فشل تحديث حالة الحساب' : 'Failed to update account status');
+    },
+  });
+
+  const changePasswordMutation = useMutation({
+    mutationFn: async ({ targetUserId, password }: { targetUserId: string; password: string }) => {
+      const res = await supabase.functions.invoke('admin-reset-password', {
+        body: { target_user_id: targetUserId, action: 'change_password', new_password: password },
+      });
+      if (res.error) throw res.error;
+      if (res.data?.error) throw new Error(res.data.error);
+    },
+    onSuccess: () => {
+      setPasswordUserId(null);
+      setNewPassword('');
+      toast.success(isRTL ? 'تم تغيير كلمة المرور بنجاح' : 'Password changed successfully');
+    },
+    onError: (err: any) => {
+      toast.error(err.message || (isRTL ? 'فشل تغيير كلمة المرور' : 'Failed to change password'));
+    },
+  });
+
+  const sendResetLinkMutation = useMutation({
+    mutationFn: async (targetUserId: string) => {
+      const res = await supabase.functions.invoke('admin-reset-password', {
+        body: { target_user_id: targetUserId, action: 'send_reset_link' },
+      });
+      if (res.error) throw res.error;
+      if (res.data?.error) throw new Error(res.data.error);
+    },
+    onSuccess: () => {
+      toast.success(isRTL ? 'تم إرسال رابط إعادة تعيين كلمة المرور' : 'Password reset link sent');
+    },
+    onError: (err: any) => {
+      toast.error(err.message || (isRTL ? 'فشل إرسال الرابط' : 'Failed to send reset link'));
     },
   });
 
@@ -452,10 +490,32 @@ const AdminUsers = () => {
                         {!isCurrentUser && (() => {
                           const targetIsSuperAdmin = roles.some(r => r.role === 'super_admin');
                           const targetIsAdmin = roles.some(r => r.role === 'admin' || r.role === 'super_admin');
-                          // Regular admins can't ban/delete super_admins or other admins
                           const canManageUser = isSuperAdmin || (!targetIsSuperAdmin && !targetIsAdmin);
                           return canManageUser ? (
                             <>
+                              {isSuperAdmin && (
+                                <>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-7 gap-1 text-xs"
+                                    onClick={() => { setPasswordUserId(profile.user_id); setNewPassword(''); }}
+                                  >
+                                    <KeyRound className="w-3 h-3" />
+                                    {isRTL ? 'كلمة المرور' : 'Password'}
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-7 gap-1 text-xs"
+                                    onClick={() => sendResetLinkMutation.mutate(profile.user_id)}
+                                    disabled={sendResetLinkMutation.isPending}
+                                  >
+                                    <Send className="w-3 h-3" />
+                                    {isRTL ? 'رابط إعادة تعيين' : 'Reset Link'}
+                                  </Button>
+                                </>
+                              )}
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -629,6 +689,55 @@ const AdminUsers = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Change Password Dialog */}
+      <Dialog open={!!passwordUserId} onOpenChange={open => { if (!open) { setPasswordUserId(null); setNewPassword(''); } }}>
+        <DialogContent className="sm:max-w-md" dir={isRTL ? 'rtl' : 'ltr'}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Lock className="w-5 h-5 text-gold" />
+              {isRTL ? 'تغيير كلمة المرور' : 'Change Password'}
+            </DialogTitle>
+            <DialogDescription>
+              {isRTL ? 'أدخل كلمة المرور الجديدة للمستخدم' : 'Enter the new password for this user'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>{isRTL ? 'كلمة المرور الجديدة' : 'New Password'}</Label>
+              <div className="relative">
+                <Input
+                  type={showNewPassword ? 'text' : 'password'}
+                  value={newPassword}
+                  onChange={e => setNewPassword(e.target.value)}
+                  placeholder={isRTL ? 'أدخل كلمة المرور الجديدة (8 أحرف على الأقل)' : 'Enter new password (min 8 chars)'}
+                  minLength={8}
+                  className="pe-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  className="absolute top-2.5 text-muted-foreground"
+                  style={{ [isRTL ? 'left' : 'right']: '10px' }}
+                >
+                  {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => { setPasswordUserId(null); setNewPassword(''); }}>
+              {isRTL ? 'إلغاء' : 'Cancel'}
+            </Button>
+            <Button
+              onClick={() => passwordUserId && changePasswordMutation.mutate({ targetUserId: passwordUserId, password: newPassword })}
+              disabled={changePasswordMutation.isPending || newPassword.length < 8}
+            >
+              {changePasswordMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin me-2" /> : null}
+              {isRTL ? 'تغيير كلمة المرور' : 'Change Password'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       {/* Delete User Confirmation */}
       <AlertDialog open={!!deletingUserId} onOpenChange={open => { if (!open) setDeletingUserId(null); }}>
         <AlertDialogContent dir={isRTL ? 'rtl' : 'ltr'}>

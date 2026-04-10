@@ -296,6 +296,7 @@ export const translations = {
   'admin.api_settings': { ar: 'إعدادات API', en: 'API Settings' },
   'admin.api_docs': { ar: 'توثيق API', en: 'API Docs' },
   'admin.activity_log': { ar: 'سجل النشاط', en: 'Activity Log' },
+  'admin.conversations': { ar: 'جميع المحادثات', en: 'All Conversations' },
 
   // Pagination
   'pagination.prev': { ar: 'السابق', en: 'Previous' },

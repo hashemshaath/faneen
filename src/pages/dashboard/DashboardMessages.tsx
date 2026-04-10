@@ -103,7 +103,7 @@ const AttachmentPreview = ({ url, type, name }: { url: string; type: string; nam
 
 const DashboardMessages = () => {
   const { isRTL, language } = useLanguage();
-  const { user } = useAuth();
+  const { user, isSuperAdmin } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
@@ -163,30 +163,60 @@ const DashboardMessages = () => {
 
   // Fetch conversations with participant profiles
   const { data: conversations = [] } = useQuery({
-    queryKey: ['conversations', user?.id],
+    queryKey: ['conversations', user?.id, isSuperAdmin],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('conversations')
-        .select('*')
-        .or(`participant_1.eq.${user!.id},participant_2.eq.${user!.id}`)
-        .order('last_message_at', { ascending: false });
+      let query = supabase.from('conversations').select('*');
+      
+      if (!isSuperAdmin) {
+        query = query.or(`participant_1.eq.${user!.id},participant_2.eq.${user!.id}`);
+      }
+      
+      const { data, error } = await query.order('last_message_at', { ascending: false });
       if (error) throw error;
 
-      const otherIds = data.map((c: any) =>
-        c.participant_1 === user!.id ? c.participant_2 : c.participant_1
-      );
-      const uniqueIds = [...new Set(otherIds)];
+      // Collect all participant IDs for profile lookup
+      const allIds = new Set<string>();
+      data.forEach((c: any) => {
+        if (c.participant_1) allIds.add(c.participant_1);
+        if (c.participant_2) allIds.add(c.participant_2);
+      });
+      allIds.delete(user!.id);
 
-      if (uniqueIds.length > 0) {
+      if (allIds.size > 0) {
         const { data: profiles } = await supabase
           .from('profiles')
           .select('user_id, full_name, avatar_url')
-          .in('user_id', uniqueIds);
+          .in('user_id', Array.from(allIds));
 
         const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
+        
+        // For super admin, also get the current user's profile for display
+        const { data: allProfiles } = isSuperAdmin ? await supabase
+          .from('profiles')
+          .select('user_id, full_name, avatar_url')
+          .in('user_id', Array.from(new Set(data.flatMap((c: any) => [c.participant_1, c.participant_2])))) : { data: [] };
+        
+        const allProfileMap = new Map((allProfiles || []).map((p: any) => [p.user_id, p]));
+        // Merge maps
+        allProfileMap.forEach((v, k) => { if (!profileMap.has(k)) profileMap.set(k, v); });
+        
         return data.map((c: any) => {
           const otherId = c.participant_1 === user!.id ? c.participant_2 : c.participant_1;
-          return { ...c, other_profile: profileMap.get(otherId) || { full_name: isRTL ? 'مستخدم' : 'User' } };
+          const otherProfile = profileMap.get(otherId) || { full_name: isRTL ? 'مستخدم' : 'User' };
+          
+          if (isSuperAdmin) {
+            // Show both participants for admin view
+            const p1 = profileMap.get(c.participant_1) || allProfileMap.get(c.participant_1);
+            const p2 = profileMap.get(c.participant_2) || allProfileMap.get(c.participant_2);
+            return {
+              ...c,
+              other_profile: otherProfile,
+              participant_1_name: p1?.full_name || (isRTL ? 'مستخدم' : 'User'),
+              participant_2_name: p2?.full_name || (isRTL ? 'مستخدم' : 'User'),
+            };
+          }
+          
+          return { ...c, other_profile: otherProfile };
         });
       }
       return data.map((c: any) => ({ ...c, other_profile: { full_name: isRTL ? 'مستخدم' : 'User' } }));
@@ -443,13 +473,18 @@ const DashboardMessages = () => {
                           <h4 className="font-medium text-sm truncate">{conv.other_profile?.full_name || (isRTL ? 'مستخدم' : 'User')}</h4>
                           <span className="text-[10px] text-muted-foreground shrink-0">{timeAgo}</span>
                         </div>
-                        <p className="text-xs text-muted-foreground truncate mt-0.5">
-                          {conv.last_message_text || (isRTL ? 'ابدأ المحادثة...' : 'Start chatting...')}
-                        </p>
+                          {isSuperAdmin && conv.participant_1_name && conv.participant_2_name && (
+                            <span className="text-[10px] text-muted-foreground truncate block">
+                              {conv.participant_1_name} ↔ {conv.participant_2_name}
+                            </span>
+                          )}
+                          <p className="text-xs text-muted-foreground truncate mt-0.5">
+                            {conv.last_message_text || (isRTL ? 'ابدأ المحادثة...' : 'Start chatting...')}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  );
-                })
+                    );
+                  })
               )}
             </ScrollArea>
           </div>
