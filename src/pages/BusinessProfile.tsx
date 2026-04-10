@@ -1,6 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
+  CreditCard,
   FolderOpen,
   GitBranch,
   Image as ImageIcon,
@@ -38,6 +39,7 @@ import {
   useProjects,
   useServices,
 } from "@/components/business-profile/business-profile.data";
+import { BnplBadges } from "@/components/bnpl/BnplBadges";
 
 const BusinessProfile = () => {
   const { username } = useParams<{ username: string }>();
@@ -243,6 +245,10 @@ const BusinessProfile = () => {
                 </TabsContent>
                 <TabsContent value="contact" className="mt-0">
                   <ContactTab business={business} />
+                  {/* BNPL section */}
+                  <div className="mt-6">
+                    <BnplBadges businessId={business.id} />
+                  </div>
                 </TabsContent>
               </div>
             </Tabs>

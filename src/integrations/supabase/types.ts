@@ -303,6 +303,120 @@ export type Database = {
         }
         Relationships: []
       }
+      bnpl_providers: {
+        Row: {
+          color_hex: string | null
+          created_at: string
+          currency_code: string
+          description_ar: string | null
+          description_en: string | null
+          id: string
+          installments_count: number
+          interest_rate: number
+          is_active: boolean
+          logo_url: string | null
+          max_amount: number
+          min_amount: number
+          name_ar: string
+          name_en: string
+          slug: string
+          sort_order: number
+          updated_at: string
+          website_url: string | null
+        }
+        Insert: {
+          color_hex?: string | null
+          created_at?: string
+          currency_code?: string
+          description_ar?: string | null
+          description_en?: string | null
+          id?: string
+          installments_count?: number
+          interest_rate?: number
+          is_active?: boolean
+          logo_url?: string | null
+          max_amount?: number
+          min_amount?: number
+          name_ar: string
+          name_en: string
+          slug: string
+          sort_order?: number
+          updated_at?: string
+          website_url?: string | null
+        }
+        Update: {
+          color_hex?: string | null
+          created_at?: string
+          currency_code?: string
+          description_ar?: string | null
+          description_en?: string | null
+          id?: string
+          installments_count?: number
+          interest_rate?: number
+          is_active?: boolean
+          logo_url?: string | null
+          max_amount?: number
+          min_amount?: number
+          name_ar?: string
+          name_en?: string
+          slug?: string
+          sort_order?: number
+          updated_at?: string
+          website_url?: string | null
+        }
+        Relationships: []
+      }
+      business_bnpl_providers: {
+        Row: {
+          bnpl_provider_id: string
+          business_id: string
+          created_at: string
+          credit_limit: number | null
+          id: string
+          is_active: boolean
+          merchant_code: string | null
+          notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          bnpl_provider_id: string
+          business_id: string
+          created_at?: string
+          credit_limit?: number | null
+          id?: string
+          is_active?: boolean
+          merchant_code?: string | null
+          notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bnpl_provider_id?: string
+          business_id?: string
+          created_at?: string
+          credit_limit?: number | null
+          id?: string
+          is_active?: boolean
+          merchant_code?: string | null
+          notes?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_bnpl_providers_bnpl_provider_id_fkey"
+            columns: ["bnpl_provider_id"]
+            isOneToOne: false
+            referencedRelation: "bnpl_providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_bnpl_providers_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_branches: {
         Row: {
           additional_number: string | null

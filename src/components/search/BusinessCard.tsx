@@ -3,9 +3,11 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { Badge } from '@/components/ui/badge';
 import {
   Star, MapPin, BadgeCheck, Phone, Building2, Crown, Globe, ChevronRight, ChevronLeft,
-  Briefcase,
+  Briefcase, CreditCard,
 } from 'lucide-react';
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 interface BusinessCardProps {
   business: any;
@@ -54,6 +56,7 @@ export const BusinessCard = ({ business: b, viewMode }: BusinessCardProps) => {
   const serviceCount = Array.isArray((b as any).business_services) ? (b as any).business_services.filter((s: any) => s.is_active).length : 0;
   const rating = Number(b.rating_avg) || 0;
   const initial = name?.charAt(0) || 'ف';
+  const hasBnpl = Array.isArray((b as any).business_bnpl_providers) && (b as any).business_bnpl_providers.length > 0;
 
   const touchHandlers = {
     onTouchStart: () => setPressed(true),
@@ -97,6 +100,7 @@ export const BusinessCard = ({ business: b, viewMode }: BusinessCardProps) => {
             </div>
             {cityName && <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground"><MapPin className="w-3 h-3" />{cityName}</span>}
             {serviceCount > 0 && <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground"><Briefcase className="w-3 h-3" />{serviceCount}</span>}
+            {hasBnpl && <Badge variant="secondary" className="text-[8px] px-1.5 py-0 h-4 gap-0.5 bg-primary/10 text-primary"><CreditCard className="w-2.5 h-2.5" />{isRTL ? 'تقسيط' : 'BNPL'}</Badge>}
           </div>
         </div>
 
@@ -162,6 +166,7 @@ export const BusinessCard = ({ business: b, viewMode }: BusinessCardProps) => {
           {serviceCount > 0 && <span className="flex items-center gap-1"><Briefcase className="w-3 h-3 text-accent/50" />{serviceCount} {isRTL ? 'خدمة' : 'services'}</span>}
           {b.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3 text-accent/50" /><span dir="ltr">{b.phone}</span></span>}
           {b.website && <span className="flex items-center gap-1"><Globe className="w-3 h-3 text-accent/50" /></span>}
+          {hasBnpl && <Badge variant="secondary" className="text-[8px] px-1.5 py-0 h-4 gap-0.5 bg-primary/10 text-primary"><CreditCard className="w-2.5 h-2.5" />{isRTL ? 'تقسيط' : 'BNPL'}</Badge>}
         </div>
       </div>
     </Link>

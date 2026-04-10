@@ -9,17 +9,29 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { User, Lock, Bell, Palette, Sun, Moon, Monitor, Check } from 'lucide-react';
+import { User, Lock, Bell, Palette, Sun, Moon, Monitor, Check, CreditCard } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { BnplProvidersManager } from '@/components/bnpl/BnplProvidersManager';
 import { useThemeMode } from '@/components/ThemeToggle';
 import { accentPresets, getStoredAccent, applyAccent } from '@/lib/accent-colors';
 
 const DashboardSettings = () => {
   const { isRTL, language } = useLanguage();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { theme, setTheme } = useThemeMode();
   const [newPassword, setNewPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [accent, setAccentState] = useState(getStoredAccent);
+
+  const { data: business } = useQuery({
+    queryKey: ['my-business-for-bnpl'],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data } = await supabase.from('businesses').select('id').eq('user_id', user.id).maybeSingle();
+      return data;
+    },
+    enabled: !!user,
+  });
 
   const handleUpdatePassword = async () => {
     if (newPassword.length < 8) {
@@ -79,6 +91,12 @@ const DashboardSettings = () => {
                 <Bell className="w-3.5 h-3.5" />
                 {isRTL ? 'الإشعارات' : 'Notifications'}
               </TabsTrigger>
+              {business && (
+                <TabsTrigger value="bnpl" className="font-body rounded-lg data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-3 sm:px-4 py-2 gap-1.5 text-xs whitespace-nowrap">
+                  <CreditCard className="w-3.5 h-3.5" />
+                  {isRTL ? 'التقسيط' : 'BNPL'}
+                </TabsTrigger>
+              )}
             </TabsList>
           </div>
 
@@ -225,6 +243,16 @@ const DashboardSettings = () => {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {business && (
+            <TabsContent value="bnpl" className="mt-4">
+              <Card className="border-border/40 dark:border-border/20 dark:bg-card/80">
+                <CardContent className="p-4 sm:p-6">
+                  <BnplProvidersManager businessId={business.id} />
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
         </Tabs>
       </div>
     </DashboardLayout>
