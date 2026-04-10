@@ -223,25 +223,8 @@ export const HeroSection = () => {
           <span className="text-[11px] sm:text-sm font-body text-gold">{t('hero.badge')}</span>
         </div>
 
-        {/* Title with slide transition */}
-        <div className="min-h-[120px] sm:min-h-[180px] flex flex-col items-center justify-center">
-          {slides.map((slide, i) => (
-            <div key={i} className={`transition-all duration-700 absolute ${i === current ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-              <h2 className="font-heading font-black text-[1.7rem] leading-[1.25] sm:text-4xl md:text-5xl lg:text-6xl text-white sm:leading-tight mb-3 sm:mb-5">
-                {'titleKey1' in slide && slide.titleKey1
-                  ? <>{t(slide.titleKey1 as any)}<br /><span className="text-gradient-gold">{t(slide.titleKey2 as any)}</span></>
-                  : <>{(slide as any)[`title1${language === 'ar' ? 'Ar' : 'En'}`]}<br /><span className="text-gradient-gold">{(slide as any)[`title2${language === 'ar' ? 'Ar' : 'En'}`]}</span></>
-                }
-              </h2>
-              <p className="font-body text-sm sm:text-lg text-white/60 max-w-2xl mx-auto leading-relaxed px-2">
-                {'descKey' in slide && slide.descKey
-                  ? t(slide.descKey as any)
-                  : (slide as any)[`desc${language === 'ar' ? 'Ar' : 'En'}`]
-                }
-              </p>
-            </div>
-          ))}
-        </div>
+        {/* Title with slide transition + typing animation */}
+        <HeroTitle slides={slides} current={current} language={language} t={t} />
 
         {/* Memoized Search Bar */}
         <SearchBar
