@@ -14,6 +14,7 @@ interface UserProfile {
   country_code: string;
   avatar_url: string | null;
   account_number: number | null;
+  ref_id: string | null;
 }
 
 interface AuthContextType {
