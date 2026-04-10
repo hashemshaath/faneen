@@ -69,6 +69,7 @@ const Auth = () => {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
       toast.success(t('common.success'));
+      // AuthContext will load profile; if not onboarded, ProtectedRoute redirects
       navigate('/');
     } catch (err: any) {
       toast.error(err.message);
