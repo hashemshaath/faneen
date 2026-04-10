@@ -5,6 +5,7 @@ import { Facebook, Twitter, Instagram, Youtube, Linkedin, Mail, Phone, MapPin, A
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const useInView = (threshold = 0.15) => {
   const ref = useRef<HTMLDivElement>(null);
@@ -23,19 +24,31 @@ export const Footer = () => {
   const { t, language, isRTL } = useLanguage();
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
-  const handleSubscribe = (e: React.FormEvent) => {
+  const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       toast.error(isRTL ? "يرجى إدخال بريد إلكتروني صالح" : "Please enter a valid email");
       return;
     }
-    setSubscribed(true);
-    toast.success(isRTL ? "تم الاشتراك بنجاح! 🎉" : "Subscribed successfully! 🎉");
-    setEmail("");
-    setTimeout(() => setSubscribed(false), 4000);
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('newsletter_subscribers')
+        .upsert({ email: email.trim().toLowerCase(), is_active: true, unsubscribed_at: null }, { onConflict: 'email' });
+      if (error) throw error;
+      setSubscribed(true);
+      toast.success(isRTL ? "تم الاشتراك بنجاح! 🎉" : "Subscribed successfully! 🎉");
+      setEmail("");
+      setTimeout(() => setSubscribed(false), 4000);
+    } catch (err: any) {
+      toast.error(isRTL ? "حدث خطأ، حاول مجدداً" : "Something went wrong, try again");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const socialLinks = [
@@ -95,7 +108,7 @@ export const Footer = () => {
                 </div>
                 <Button
                   type="submit"
-                  disabled={subscribed}
+                  disabled={subscribed || loading}
                   className={`h-11 px-5 gap-2 font-bold transition-all duration-500 ${
                     subscribed
                       ? 'bg-green-500 hover:bg-green-500 text-white scale-105'
