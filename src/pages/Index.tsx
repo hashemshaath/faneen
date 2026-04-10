@@ -11,7 +11,6 @@ const LatestProjectsSection = lazy(() => import("@/components/home/LatestProject
 const LatestOffersSection = lazy(() => import("@/components/home/LatestOffersSection").then(m => ({ default: m.LatestOffersSection })));
 const FeaturesSection = lazy(() => import("@/components/home/FeaturesSection").then(m => ({ default: m.FeaturesSection })));
 const LatestBlogSection = lazy(() => import("@/components/home/LatestBlogSection").then(m => ({ default: m.LatestBlogSection })));
-const SearchSection = lazy(() => import("@/components/home/SearchSection").then(m => ({ default: m.SearchSection })));
 const MembershipSection = lazy(() => import("@/components/home/MembershipSection").then(m => ({ default: m.MembershipSection })));
 
 const SectionFallback = () => (
@@ -41,9 +40,6 @@ const Index = () => {
       </Suspense>
       <Suspense fallback={<SectionFallback />}>
         <LatestBlogSection />
-      </Suspense>
-      <Suspense fallback={<SectionFallback />}>
-        <SearchSection />
       </Suspense>
       <Suspense fallback={<SectionFallback />}>
         <MembershipSection />
