@@ -33,7 +33,7 @@ const Compare = () => {
     },
   });
 
-  const { data: selectedBusinesses = [] } = useQuery({
+  const { data: selectedBusinesses = [], isLoading: isLoadingSelected } = useQuery({
     queryKey: ['compare-businesses', selectedIds],
     queryFn: async () => {
       if (!selectedIds.length) return [];
