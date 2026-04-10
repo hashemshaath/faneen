@@ -11,9 +11,8 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
-import { Tags, Plus, Pencil, Trash2, Loader2, Search, X } from 'lucide-react';
+import { Tags, Plus, Pencil, Trash2, Loader2, Search, X, AlertTriangle } from 'lucide-react';
 
 interface TagForm {
   name_ar: string; name_en: string; slug: string; tag_group: string;
@@ -94,6 +93,7 @@ const AdminTags = () => {
     setEditingId(tag.id);
     setForm({ name_ar: tag.name_ar, name_en: tag.name_en, slug: tag.slug, tag_group: tag.tag_group, icon: tag.icon || '', color: tag.color || '', is_active: tag.is_active, sort_order: tag.sort_order });
     setShowForm(true);
+    setDeletingId(null);
   };
 
   const filtered = tags.filter(t =>
@@ -161,6 +161,30 @@ const AdminTags = () => {
           </Card>
         )}
 
+        {/* Inline Delete Confirmation */}
+        {deletingId && (
+          <Card className="border-destructive/40 bg-destructive/5">
+            <CardContent className="p-4 flex flex-col sm:flex-row items-center gap-4">
+              <div className="flex items-center gap-3 flex-1">
+                <div className="p-2 rounded-full bg-destructive/10">
+                  <AlertTriangle className="w-5 h-5 text-destructive" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold">{isRTL ? 'تأكيد الحذف' : 'Confirm Delete'}</p>
+                  <p className="text-xs text-muted-foreground">{isRTL ? 'هل أنت متأكد من حذف هذا الوسم؟ لا يمكن التراجع.' : 'Are you sure you want to delete this tag? This cannot be undone.'}</p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="destructive" size="sm" onClick={() => deleteMutation.mutate(deletingId)} disabled={deleteMutation.isPending}>
+                  {deleteMutation.isPending && <Loader2 className="w-3 h-3 animate-spin me-1" />}
+                  {isRTL ? 'حذف' : 'Delete'}
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => setDeletingId(null)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <Card>
           <CardContent className="p-4 flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
@@ -205,19 +229,6 @@ const AdminTags = () => {
             {filtered.length === 0 && <Card className="col-span-full"><CardContent className="p-12 text-center text-muted-foreground">{isRTL ? 'لا توجد وسوم' : 'No tags'}</CardContent></Card>}
           </div>
         )}
-
-        <AlertDialog open={!!deletingId} onOpenChange={() => setDeletingId(null)}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>{isRTL ? 'تأكيد الحذف' : 'Confirm Delete'}</AlertDialogTitle>
-              <AlertDialogDescription>{isRTL ? 'هل أنت متأكد من حذف هذا الوسم؟' : 'Delete this tag?'}</AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>{isRTL ? 'إلغاء' : 'Cancel'}</AlertDialogCancel>
-              <AlertDialogAction onClick={() => deletingId && deleteMutation.mutate(deletingId)} className="bg-destructive text-destructive-foreground">{isRTL ? 'حذف' : 'Delete'}</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
       </div>
     </DashboardLayout>
   );
