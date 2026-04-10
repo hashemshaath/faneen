@@ -50,6 +50,7 @@ const AdminSystemSettings = lazy(() => import("./pages/admin/AdminSystemSettings
 const AdminActivityLog = lazy(() => import("./pages/admin/AdminActivityLog"));
 const Notifications = lazy(() => import("./pages/Notifications"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const Onboarding = lazy(() => import("./pages/Onboarding"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
