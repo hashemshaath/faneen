@@ -8,7 +8,7 @@ import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+
 import {
   FolderOpen, Calendar, DollarSign, Clock, Building2,
   ChevronLeft, ChevronRight, ArrowRight, ArrowLeft,
