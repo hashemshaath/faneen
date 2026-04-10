@@ -114,6 +114,8 @@ const AdminBusinesses = () => {
   const [portfolioImages, setPortfolioImages] = useState<string[]>([]);
   const [newService, setNewService] = useState({ name_ar: '', name_en: '', description_ar: '', description_en: '', price_from: '', price_to: '', is_active: true });
   const [geocoding, setGeocoding] = useState(false);
+  const [branchForm, setBranchForm] = useState<any>(null);
+  const [editingBranchId, setEditingBranchId] = useState<string | null>(null);
 
   const setField = useCallback((key: string, value: any) => {
     setEditForm((f: any) => ({ ...f, [key]: value }));
