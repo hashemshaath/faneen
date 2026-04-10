@@ -47,20 +47,20 @@ export const MembershipSection = () => {
   const { ref: visRef, isVisible } = useScrollAnimation();
 
   return (
-    <section className="py-16 sm:py-24 bg-background overflow-hidden">
+    <section className="py-12 sm:py-24 bg-background overflow-hidden">
       <div className="container px-4 sm:px-6">
-        <div ref={titleRef} className="text-center mb-10 sm:mb-16 will-change-transform">
-          <span className="text-sm font-body text-accent font-semibold">{t('membership.label')}</span>
-          <h2 className="font-heading font-bold text-2xl sm:text-3xl md:text-4xl text-foreground mt-2 sm:mt-3">{t('membership.title')}</h2>
+        <div ref={titleRef} className="text-center mb-8 sm:mb-16 will-change-transform">
+          <span className="text-xs sm:text-sm font-body text-accent font-semibold">{t('membership.label')}</span>
+          <h2 className="font-heading font-bold text-xl sm:text-3xl md:text-4xl text-foreground mt-1.5 sm:mt-3">{t('membership.title')}</h2>
         </div>
-        <div ref={visRef} className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-8 max-w-5xl mx-auto">
+        <div ref={visRef} className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-8 max-w-5xl mx-auto">
           {memberships.map((plan, idx) => (
             <div
               key={plan.titleKey}
-              className={`group relative p-6 sm:p-8 rounded-2xl border transition-all duration-500 ${
+              className={`group relative p-5 sm:p-8 rounded-2xl border transition-all duration-500 ${
                 plan.featured
                   ? "bg-gradient-navy border-gold/40 md:scale-105 shadow-gold hover:shadow-[0_20px_60px_-10px_hsl(var(--gold)/0.4)] md:hover:scale-[1.08]"
-                  : "bg-card border-border hover:border-gold/30 hover:-translate-y-2 sm:hover:-translate-y-3 hover:shadow-xl hover:shadow-accent/10"
+                  : "bg-card dark:bg-card/80 border-border dark:border-border/40 hover:border-gold/30 active:scale-[0.97] sm:hover:-translate-y-3 hover:shadow-xl hover:shadow-accent/10"
               } ${isVisible ? 'animate-card-slide-up' : 'opacity-0'}`}
               style={{ animationDelay: `${idx * 150}ms`, animationFillMode: 'both' }}
             >
@@ -77,9 +77,9 @@ export const MembershipSection = () => {
                   {t('membership.popular')}
                 </div>
               )}
-              <h3 className={`font-heading font-bold text-xl sm:text-2xl mb-2 transition-colors duration-300 ${plan.featured ? "text-surface-nav-foreground" : "text-foreground group-hover:text-gold"}`}>{t(plan.titleKey)}</h3>
-              <p className={`font-body text-xs sm:text-sm mb-5 sm:mb-6 ${plan.featured ? "text-surface-nav-foreground/60" : "text-muted-foreground"}`}>{t(plan.descKey)}</p>
-              <ul className="space-y-2.5 sm:space-y-3 mb-6 sm:mb-8">
+              <h3 className={`font-heading font-bold text-lg sm:text-2xl mb-1.5 sm:mb-2 transition-colors duration-300 ${plan.featured ? "text-surface-nav-foreground" : "text-foreground group-hover:text-gold"}`}>{t(plan.titleKey)}</h3>
+              <p className={`font-body text-xs sm:text-sm mb-4 sm:mb-6 ${plan.featured ? "text-surface-nav-foreground/60" : "text-muted-foreground"}`}>{t(plan.descKey)}</p>
+              <ul className="space-y-2 sm:space-y-3 mb-5 sm:mb-8">
                 {plan.features.map((f, fi) => (
                   <li
                     key={f.en}
@@ -92,7 +92,7 @@ export const MembershipSection = () => {
                 ))}
               </ul>
               <Link to="/auth">
-                <Button variant={plan.featured ? "hero" : "outline"} className={`w-full transition-all duration-300 ${!plan.featured ? "group-hover:bg-gold group-hover:text-secondary-foreground group-hover:border-gold" : ""}`}>
+                <Button variant={plan.featured ? "hero" : "outline"} className={`w-full transition-all duration-300 active:scale-95 ${!plan.featured ? "group-hover:bg-gold group-hover:text-secondary-foreground group-hover:border-gold" : ""}`}>
                   {t('membership.start')}
                 </Button>
               </Link>
