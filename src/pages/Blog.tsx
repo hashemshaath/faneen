@@ -93,7 +93,7 @@ const Blog = () => {
   }, [posts]);
 
   return (
-    <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen flex flex-col bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
       <Navbar />
 
       {/* ═══ Hero Header ═══ */}
