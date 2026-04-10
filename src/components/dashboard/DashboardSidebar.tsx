@@ -21,7 +21,7 @@ import {
   Home, Globe, CreditCard, Megaphone, Key, Book, FolderOpen, PenSquare,
   Layers, MessageSquare, Users, Newspaper, Building2, Bell, Activity,
   Bookmark, ShieldAlert, Crown, FolderTree, Tags, UserCog, Database,
-  BarChart3, Cog, Eye, TrendingUp, AlertTriangle, Server,
+  BarChart3, Cog, Eye, TrendingUp, AlertTriangle, Server, Brain,
 } from 'lucide-react';
 
 interface MenuItem {
@@ -78,6 +78,13 @@ const providerGroups: MenuGroup[] = [
     ],
   },
   {
+    groupLabel: { ar: 'الأدوات', en: 'Tools' },
+    icon: Brain,
+    items: [
+      { label: { ar: 'مركز الذكاء', en: 'AI Center' }, url: '/dashboard/ai-center', icon: Brain },
+    ],
+  },
+  {
     groupLabel: { ar: 'الحساب', en: 'Account' },
     icon: Settings,
     items: [
@@ -109,9 +116,10 @@ const userGroups: MenuGroup[] = [
     ],
   },
   {
-    groupLabel: { ar: 'المزيد', en: 'More' },
-    icon: Activity,
+    groupLabel: { ar: 'الأدوات والمزيد', en: 'Tools & More' },
+    icon: Brain,
     items: [
+      { label: { ar: 'مركز الذكاء', en: 'AI Center' }, url: '/dashboard/ai-center', icon: Brain },
       { label: { ar: 'المفضلة', en: 'Bookmarks' }, url: '/dashboard/bookmarks', icon: Bookmark },
       { label: { ar: 'العمليات', en: 'Operations' }, url: '/dashboard/operations', icon: Activity },
     ],
