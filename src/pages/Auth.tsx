@@ -169,9 +169,10 @@ const Auth = () => {
         });
         if (sessionError) throw sessionError;
       } else if (data.token_hash) {
+        const otpType = data.token_type || 'magiclink';
         const { error: verifyError } = await supabase.auth.verifyOtp({
           token_hash: data.token_hash,
-          type: 'magiclink',
+          type: otpType,
         });
         if (verifyError) throw verifyError;
       } else {

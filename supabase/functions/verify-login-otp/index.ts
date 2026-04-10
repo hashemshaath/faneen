@@ -53,7 +53,6 @@ async function findOtp(
     String(phone),
   ];
 
-  // Try each phone format first
   for (const ph of candidates) {
     const { data } = await adminClient
       .from("phone_otps")
@@ -95,10 +94,8 @@ async function resolveEmail(
     console.warn("getUserById failed, falling back to profile email:", e);
   }
 
-  // Fallback to profile email
   if (profileEmail) return profileEmail;
 
-  // Last resort: fetch profile email from DB
   const { data: prof } = await adminClient
     .from("profiles")
     .select("email")
@@ -146,7 +143,6 @@ Deno.serve(async (req) => {
     const otpRecord = await findOtp(adminClient, profile.user_id, phone, country_code, graceIso);
 
     if (!otpRecord) {
-      // Check if latest OTP was already used or expired
       const { data: latestOtp } = await adminClient
         .from("phone_otps")
         .select("*")
@@ -200,7 +196,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // 5. Resolve email (auth.users → profile fallback)
+    // 5. Resolve email
     const authEmail = await resolveEmail(adminClient, profile.user_id, profile.email);
 
     if (!authEmail) {
@@ -211,14 +207,16 @@ Deno.serve(async (req) => {
       });
     }
 
-    // 6. Generate magic link
+    // 6. Generate magic link and extract session directly
+    //    Use "recovery" type which is more reliable than "magiclink"
+    //    for corrupted auth records, then verify server-side to get session
     const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
-      type: "magiclink",
+      type: "recovery",
       email: authEmail,
     });
 
     if (linkError) {
-      console.error("Failed to generate magic link:", linkError);
+      console.error("Failed to generate link:", linkError);
       return respond({
         success: false,
         error: "login_link_failed",
@@ -235,7 +233,45 @@ Deno.serve(async (req) => {
       });
     }
 
-    // 7. Mark OTP as verified
+    // Verify the token server-side to get a session immediately
+    // This avoids the client-side verifyOtp call that can fail with corrupted users
+    const verifyUrl = `${supabaseUrl}/auth/v1/verify`;
+    const verifyRes = await fetch(verifyUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "apikey": serviceKey,
+        "Authorization": `Bearer ${serviceKey}`,
+      },
+      body: JSON.stringify({
+        token_hash: tokenHash,
+        type: "recovery",
+      }),
+    });
+
+    if (verifyRes.ok) {
+      const sessionData = await verifyRes.json();
+      // Mark OTP as verified
+      await adminClient
+        .from("phone_otps")
+        .update({ verified: true })
+        .eq("id", otpRecord.id);
+
+      return respond({
+        success: true,
+        verified: true,
+        email: authEmail,
+        session: {
+          access_token: sessionData.access_token,
+          refresh_token: sessionData.refresh_token,
+        },
+      });
+    }
+
+    // Fallback: return token_hash for client-side verification
+    console.warn("Server-side verify failed, falling back to token_hash:", await verifyRes.text());
+
+    // Mark OTP as verified
     await adminClient
       .from("phone_otps")
       .update({ verified: true })
@@ -246,6 +282,7 @@ Deno.serve(async (req) => {
       verified: true,
       email: authEmail,
       token_hash: tokenHash,
+      token_type: "recovery",
     });
   } catch (err) {
     console.error("verify-login-otp error:", err);
