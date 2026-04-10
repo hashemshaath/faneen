@@ -77,6 +77,84 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_assistant_settings: {
+        Row: {
+          created_at: string | null
+          id: string
+          include_knowledge: boolean | null
+          language_preference: string | null
+          max_knowledge_entries: number | null
+          response_style: string | null
+          system_prompt: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          include_knowledge?: boolean | null
+          language_preference?: string | null
+          max_knowledge_entries?: number | null
+          response_style?: string | null
+          system_prompt?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          include_knowledge?: boolean | null
+          language_preference?: string | null
+          max_knowledge_entries?: number | null
+          response_style?: string | null
+          system_prompt?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ai_knowledge_entries: {
+        Row: {
+          char_count: number | null
+          content: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          source_name: string | null
+          source_type: string
+          tags: string[] | null
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          char_count?: number | null
+          content: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          source_name?: string | null
+          source_type?: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          char_count?: number | null
+          content?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          source_name?: string | null
+          source_type?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       blog_bookmarks: {
         Row: {
           created_at: string
