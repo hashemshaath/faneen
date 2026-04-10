@@ -9,6 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Layers, Search, Thermometer, Volume2, Shield, Plus, X, Scale,
   ArrowLeft, ArrowRight, Ruler, Eye, CheckCircle2, XCircle,
@@ -58,7 +59,7 @@ const CompareProfiles = () => {
   });
 
   // Fetch selected profiles with specs and suppliers
-  const { data: selectedProfiles = [] } = useQuery({
+  const { data: selectedProfiles = [], isLoading: isLoadingSelected } = useQuery({
     queryKey: ['compare-profiles', selectedIds],
     queryFn: async () => {
       if (!selectedIds.length) return [];
@@ -189,6 +190,30 @@ const CompareProfiles = () => {
               <Scale className="w-16 h-16 mb-4 opacity-30" />
               <p className="text-xl font-medium">{isRTL ? 'ابدأ المقارنة' : 'Start Comparing'}</p>
               <p className="text-sm">{isRTL ? 'ابحث وأضف قطاعات للمقارنة بينها' : 'Search and add profiles to compare'}</p>
+            </CardContent>
+          </Card>
+        ) : isLoadingSelected ? (
+          <Card>
+            <CardContent className="p-4 sm:p-6 space-y-4">
+              <div className="flex gap-4 sm:gap-6 justify-center">
+                {selectedIds.map((_, i) => (
+                  <div key={i} className="flex flex-col items-center gap-2 min-w-[160px]">
+                    <Skeleton className="w-16 h-16 rounded-xl" />
+                    <Skeleton className="h-4 w-20" />
+                    <Skeleton className="h-5 w-14 rounded-full" />
+                  </div>
+                ))}
+              </div>
+              <div className="space-y-3 pt-4 border-t border-border/30">
+                {[1, 2, 3, 4, 5, 6].map(i => (
+                  <div key={i} className="flex items-center gap-4">
+                    <Skeleton className="h-4 w-28 shrink-0" />
+                    {selectedIds.map((_, j) => (
+                      <Skeleton key={j} className="h-4 flex-1" />
+                    ))}
+                  </div>
+                ))}
+              </div>
             </CardContent>
           </Card>
         ) : (
