@@ -5,16 +5,15 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Slider } from '@/components/ui/slider';
-import { Plus, Edit, Trash2, Layers, Thermometer, Volume2, Shield } from 'lucide-react';
+import { Plus, Edit, Trash2, Layers, Thermometer, Volume2, Shield, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 const categoryOptions = [
@@ -30,7 +29,7 @@ const DashboardProfileSystems = () => {
   const { isRTL, language } = useLanguage();
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
 
   const initialForm = {
@@ -43,7 +42,7 @@ const DashboardProfileSystems = () => {
   };
   const [form, setForm] = useState(initialForm);
 
-  const resetForm = () => { setForm(initialForm); setEditId(null); };
+  const closeForm = () => { setShowForm(false); setForm(initialForm); setEditId(null); };
 
   const generateSlug = (name: string) =>
     name.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').trim() || `profile-${Date.now()}`;
@@ -89,7 +88,7 @@ const DashboardProfileSystems = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-profile-systems'] });
       toast.success(isRTL ? 'تم الحفظ بنجاح' : 'Saved successfully');
-      setDialogOpen(false); resetForm();
+      closeForm();
     },
     onError: (err: any) => toast.error(err.message),
   });
@@ -120,7 +119,8 @@ const DashboardProfileSystems = () => {
       recommendation_level: p.recommendation_level, applications_ar: p.applications_ar || '',
       applications_en: p.applications_en || '', status: p.status,
     });
-    setEditId(p.id); setDialogOpen(true);
+    setEditId(p.id);
+    setShowForm(true);
   };
 
   const RatingSlider = ({ label, icon: Icon, value, onChange }: { label: string; icon: React.ElementType; value: number; onChange: (v: number) => void }) => (
@@ -144,80 +144,89 @@ const DashboardProfileSystems = () => {
             </h1>
             <p className="text-sm text-muted-foreground">{isRTL ? 'إضافة وإدارة قطاعات الألمنيوم والمواد' : 'Add and manage aluminum and material profiles'}</p>
           </div>
-          <Dialog open={dialogOpen} onOpenChange={o => { setDialogOpen(o); if (!o) resetForm(); }}>
-            <DialogTrigger asChild>
-              <Button variant="hero" size="sm"><Plus className="w-4 h-4 me-1" />{isRTL ? 'إضافة قطاع' : 'Add Profile'}</Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>{editId ? (isRTL ? 'تعديل القطاع' : 'Edit Profile') : (isRTL ? 'إضافة قطاع جديد' : 'Add New Profile')}</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 mt-2">
-                <div className="grid grid-cols-2 gap-3">
-                  <div><Label>{isRTL ? 'الاسم (عربي)' : 'Name (AR)'} *</Label><Input value={form.name_ar} onChange={e => setForm(f => ({ ...f, name_ar: e.target.value }))} /></div>
-                  <div><Label>{isRTL ? 'الاسم (إنجليزي)' : 'Name (EN)'}</Label><Input value={form.name_en} onChange={e => setForm(f => ({ ...f, name_en: e.target.value }))} dir="ltr" /></div>
-                </div>
-                <div><Label>Slug</Label><Input value={form.slug} onChange={e => setForm(f => ({ ...f, slug: e.target.value }))} dir="ltr" placeholder="auto-generated" /></div>
-                <div className="grid grid-cols-3 gap-3">
-                  <div>
-                    <Label>{isRTL ? 'الفئة' : 'Category'}</Label>
-                    <Select value={form.category} onValueChange={v => setForm(f => ({ ...f, category: v }))}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>{categoryOptions.map(c => <SelectItem key={c.value} value={c.value}>{language === 'ar' ? c.ar : c.en}</SelectItem>)}</SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>{isRTL ? 'النوع' : 'Type'}</Label>
-                    <Select value={form.profile_type} onValueChange={v => setForm(f => ({ ...f, profile_type: v }))}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="market">{isRTL ? 'قطاع سوق' : 'Market'}</SelectItem>
-                        <SelectItem value="custom">{isRTL ? 'تصميم خاص' : 'Custom'}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>{isRTL ? 'التوصية' : 'Recommendation'}</Label>
-                    <Select value={form.recommendation_level} onValueChange={v => setForm(f => ({ ...f, recommendation_level: v }))}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="standard">{isRTL ? 'قياسي' : 'Standard'}</SelectItem>
-                        <SelectItem value="recommended">{isRTL ? 'موصى به' : 'Recommended'}</SelectItem>
-                        <SelectItem value="premium">{isRTL ? 'احترافي' : 'Premium'}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div><Label>{isRTL ? 'الوصف (عربي)' : 'Description (AR)'}</Label><Textarea value={form.description_ar} onChange={e => setForm(f => ({ ...f, description_ar: e.target.value }))} rows={3} /></div>
-                <div><Label>{isRTL ? 'صورة الغلاف' : 'Cover Image URL'}</Label><Input value={form.cover_image_url} onChange={e => setForm(f => ({ ...f, cover_image_url: e.target.value }))} dir="ltr" /></div>
-                <div><Label>{isRTL ? 'الشعار' : 'Logo URL'}</Label><Input value={form.logo_url} onChange={e => setForm(f => ({ ...f, logo_url: e.target.value }))} dir="ltr" /></div>
+          {!showForm && (
+            <Button variant="hero" size="sm" onClick={() => { closeForm(); setShowForm(true); }}>
+              <Plus className="w-4 h-4 me-1" />{isRTL ? 'إضافة قطاع' : 'Add Profile'}
+            </Button>
+          )}
+        </div>
 
-                <div className="p-4 rounded-xl bg-muted/30 space-y-3">
-                  <h4 className="font-heading font-bold text-sm">{isRTL ? 'التقييمات الفنية' : 'Technical Ratings'}</h4>
-                  <RatingSlider label={isRTL ? 'العزل الحراري' : 'Thermal'} icon={Thermometer} value={form.thermal_insulation_rating} onChange={v => setForm(f => ({ ...f, thermal_insulation_rating: v }))} />
-                  <RatingSlider label={isRTL ? 'العزل الصوتي' : 'Sound'} icon={Volume2} value={form.sound_insulation_rating} onChange={v => setForm(f => ({ ...f, sound_insulation_rating: v }))} />
-                  <RatingSlider label={isRTL ? 'التحمل' : 'Strength'} icon={Shield} value={form.strength_rating} onChange={v => setForm(f => ({ ...f, strength_rating: v }))} />
+        {showForm && (
+          <Card className="border-accent/30 bg-accent/5">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base">{editId ? (isRTL ? 'تعديل القطاع' : 'Edit Profile') : (isRTL ? 'إضافة قطاع جديد' : 'Add New Profile')}</CardTitle>
+                <Button variant="ghost" size="icon" onClick={closeForm}><X className="w-4 h-4" /></Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div><Label>{isRTL ? 'الاسم (عربي)' : 'Name (AR)'} *</Label><Input value={form.name_ar} onChange={e => setForm(f => ({ ...f, name_ar: e.target.value }))} /></div>
+                <div><Label>{isRTL ? 'الاسم (إنجليزي)' : 'Name (EN)'}</Label><Input value={form.name_en} onChange={e => setForm(f => ({ ...f, name_en: e.target.value }))} dir="ltr" /></div>
+              </div>
+              <div><Label>Slug</Label><Input value={form.slug} onChange={e => setForm(f => ({ ...f, slug: e.target.value }))} dir="ltr" placeholder="auto-generated" /></div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <Label>{isRTL ? 'الفئة' : 'Category'}</Label>
+                  <Select value={form.category} onValueChange={v => setForm(f => ({ ...f, category: v }))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>{categoryOptions.map(c => <SelectItem key={c.value} value={c.value}>{language === 'ar' ? c.ar : c.en}</SelectItem>)}</SelectContent>
+                  </Select>
                 </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div><Label>{isRTL ? 'أقصى ارتفاع (mm)' : 'Max Height (mm)'}</Label><Input type="number" value={form.max_height_mm} onChange={e => setForm(f => ({ ...f, max_height_mm: e.target.value }))} dir="ltr" /></div>
-                  <div><Label>{isRTL ? 'أقصى عرض (mm)' : 'Max Width (mm)'}</Label><Input type="number" value={form.max_width_mm} onChange={e => setForm(f => ({ ...f, max_width_mm: e.target.value }))} dir="ltr" /></div>
+                <div>
+                  <Label>{isRTL ? 'النوع' : 'Type'}</Label>
+                  <Select value={form.profile_type} onValueChange={v => setForm(f => ({ ...f, profile_type: v }))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="market">{isRTL ? 'قطاع سوق' : 'Market'}</SelectItem>
+                      <SelectItem value="custom">{isRTL ? 'تصميم خاص' : 'Custom'}</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-                <div><Label>{isRTL ? 'الألوان (مفصولة بفاصلة)' : 'Colors (comma-separated)'}</Label><Input value={form.available_colors} onChange={e => setForm(f => ({ ...f, available_colors: e.target.value }))} placeholder="أبيض, رمادي, أسود, بني" /></div>
-                <div><Label>{isRTL ? 'المميزات (سطر لكل ميزة)' : 'Features (one per line)'}</Label><Textarea value={form.features_ar} onChange={e => setForm(f => ({ ...f, features_ar: e.target.value }))} rows={4} placeholder={isRTL ? 'عزل حراري ممتاز\nمقاوم للتآكل\nصديق للبيئة' : ''} /></div>
-                <div><Label>{isRTL ? 'الاستخدامات' : 'Applications'}</Label><Textarea value={form.applications_ar} onChange={e => setForm(f => ({ ...f, applications_ar: e.target.value }))} rows={2} /></div>
+                <div>
+                  <Label>{isRTL ? 'التوصية' : 'Recommendation'}</Label>
+                  <Select value={form.recommendation_level} onValueChange={v => setForm(f => ({ ...f, recommendation_level: v }))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="standard">{isRTL ? 'قياسي' : 'Standard'}</SelectItem>
+                      <SelectItem value="recommended">{isRTL ? 'موصى به' : 'Recommended'}</SelectItem>
+                      <SelectItem value="premium">{isRTL ? 'احترافي' : 'Premium'}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div><Label>{isRTL ? 'الوصف (عربي)' : 'Description (AR)'}</Label><Textarea value={form.description_ar} onChange={e => setForm(f => ({ ...f, description_ar: e.target.value }))} rows={3} /></div>
+              <div><Label>{isRTL ? 'صورة الغلاف' : 'Cover Image URL'}</Label><Input value={form.cover_image_url} onChange={e => setForm(f => ({ ...f, cover_image_url: e.target.value }))} dir="ltr" /></div>
+              <div><Label>{isRTL ? 'الشعار' : 'Logo URL'}</Label><Input value={form.logo_url} onChange={e => setForm(f => ({ ...f, logo_url: e.target.value }))} dir="ltr" /></div>
 
-                <Button onClick={() => saveMutation.mutate()} disabled={!form.name_ar || saveMutation.isPending} className="w-full" variant="hero">
+              <div className="p-4 rounded-xl bg-muted/30 space-y-3">
+                <h4 className="font-heading font-bold text-sm">{isRTL ? 'التقييمات الفنية' : 'Technical Ratings'}</h4>
+                <RatingSlider label={isRTL ? 'العزل الحراري' : 'Thermal'} icon={Thermometer} value={form.thermal_insulation_rating} onChange={v => setForm(f => ({ ...f, thermal_insulation_rating: v }))} />
+                <RatingSlider label={isRTL ? 'العزل الصوتي' : 'Sound'} icon={Volume2} value={form.sound_insulation_rating} onChange={v => setForm(f => ({ ...f, sound_insulation_rating: v }))} />
+                <RatingSlider label={isRTL ? 'التحمل' : 'Strength'} icon={Shield} value={form.strength_rating} onChange={v => setForm(f => ({ ...f, strength_rating: v }))} />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div><Label>{isRTL ? 'أقصى ارتفاع (mm)' : 'Max Height (mm)'}</Label><Input type="number" value={form.max_height_mm} onChange={e => setForm(f => ({ ...f, max_height_mm: e.target.value }))} dir="ltr" /></div>
+                <div><Label>{isRTL ? 'أقصى عرض (mm)' : 'Max Width (mm)'}</Label><Input type="number" value={form.max_width_mm} onChange={e => setForm(f => ({ ...f, max_width_mm: e.target.value }))} dir="ltr" /></div>
+              </div>
+              <div><Label>{isRTL ? 'الألوان (مفصولة بفاصلة)' : 'Colors (comma-separated)'}</Label><Input value={form.available_colors} onChange={e => setForm(f => ({ ...f, available_colors: e.target.value }))} placeholder="أبيض, رمادي, أسود, بني" /></div>
+              <div><Label>{isRTL ? 'المميزات (سطر لكل ميزة)' : 'Features (one per line)'}</Label><Textarea value={form.features_ar} onChange={e => setForm(f => ({ ...f, features_ar: e.target.value }))} rows={4} placeholder={isRTL ? 'عزل حراري ممتاز\nمقاوم للتآكل\nصديق للبيئة' : ''} /></div>
+              <div><Label>{isRTL ? 'الاستخدامات' : 'Applications'}</Label><Textarea value={form.applications_ar} onChange={e => setForm(f => ({ ...f, applications_ar: e.target.value }))} rows={2} /></div>
+
+              <div className="flex gap-2">
+                <Button onClick={() => saveMutation.mutate()} disabled={!form.name_ar || saveMutation.isPending} variant="hero" className="flex-1">
                   {saveMutation.isPending ? '...' : (editId ? (isRTL ? 'تحديث' : 'Update') : (isRTL ? 'إضافة' : 'Add'))}
                 </Button>
+                <Button variant="outline" onClick={closeForm}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
               </div>
-            </DialogContent>
-          </Dialog>
-        </div>
+            </CardContent>
+          </Card>
+        )}
 
         {isLoading ? (
           <div className="space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-24 rounded-xl" />)}</div>
-        ) : profiles.length === 0 ? (
+        ) : profiles.length === 0 && !showForm ? (
           <Card className="border-dashed"><CardContent className="p-12 text-center text-muted-foreground">
             <Layers className="w-12 h-12 mx-auto mb-3 opacity-30" />
             <p>{isRTL ? 'لا توجد قطاعات بعد' : 'No profiles yet'}</p>

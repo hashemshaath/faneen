@@ -5,15 +5,14 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Edit, Trash2, FileText, Eye, Calendar } from 'lucide-react';
+import { Plus, Edit, Trash2, FileText, Eye, Calendar, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { ImageUpload } from '@/components/ui/image-upload';
 
@@ -29,7 +28,7 @@ const DashboardBlog = () => {
   const { isRTL, language } = useLanguage();
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
 
   const [form, setForm] = useState({
@@ -43,16 +42,15 @@ const DashboardBlog = () => {
     setEditId(null);
   };
 
+  const closeForm = () => { setShowForm(false); resetForm(); };
+
   const generateSlug = (title: string) =>
     title.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').trim() || `post-${Date.now()}`;
 
   const { data: posts = [], isLoading } = useQuery({
     queryKey: ['dashboard-blog'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('blog_posts')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const { data, error } = await supabase.from('blog_posts').select('*').order('created_at', { ascending: false });
       if (error) throw error;
       return data;
     },
@@ -64,19 +62,11 @@ const DashboardBlog = () => {
       const slug = form.slug || generateSlug(form.title_en || form.title_ar);
       const tagsArr = form.tags ? form.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
       const payload = {
-        author_id: user!.id,
-        slug,
-        title_ar: form.title_ar,
-        title_en: form.title_en || null,
-        content_ar: form.content_ar || null,
-        content_en: form.content_en || null,
-        excerpt_ar: form.excerpt_ar || null,
-        excerpt_en: form.excerpt_en || null,
-        cover_image_url: form.cover_image_url || null,
-        category: form.category,
-        tags: tagsArr,
-        status: form.status,
-        published_at: form.status === 'published' ? new Date().toISOString() : null,
+        author_id: user!.id, slug, title_ar: form.title_ar, title_en: form.title_en || null,
+        content_ar: form.content_ar || null, content_en: form.content_en || null,
+        excerpt_ar: form.excerpt_ar || null, excerpt_en: form.excerpt_en || null,
+        cover_image_url: form.cover_image_url || null, category: form.category, tags: tagsArr,
+        status: form.status, published_at: form.status === 'published' ? new Date().toISOString() : null,
       };
       if (editId) {
         const { error } = await supabase.from('blog_posts').update(payload).eq('id', editId);
@@ -89,8 +79,7 @@ const DashboardBlog = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-blog'] });
       toast.success(isRTL ? 'تم الحفظ بنجاح' : 'Saved successfully');
-      setDialogOpen(false);
-      resetForm();
+      closeForm();
     },
     onError: (err: any) => toast.error(err.message),
   });
@@ -114,7 +103,7 @@ const DashboardBlog = () => {
       status: p.status, slug: p.slug,
     });
     setEditId(p.id);
-    setDialogOpen(true);
+    setShowForm(true);
   };
 
   return (
@@ -128,66 +117,67 @@ const DashboardBlog = () => {
             </h1>
             <p className="text-sm text-muted-foreground">{isRTL ? 'إنشاء وإدارة مقالات المنصة' : 'Create and manage platform articles'}</p>
           </div>
-          <Dialog open={dialogOpen} onOpenChange={(o) => { setDialogOpen(o); if (!o) resetForm(); }}>
-            <DialogTrigger asChild>
-              <Button variant="hero" size="sm"><Plus className="w-4 h-4 me-1" />{isRTL ? 'مقال جديد' : 'New Article'}</Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>{editId ? (isRTL ? 'تعديل المقال' : 'Edit Article') : (isRTL ? 'مقال جديد' : 'New Article')}</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-3 mt-2">
-                <div className="grid grid-cols-2 gap-3">
-                  <div><Label>{isRTL ? 'العنوان (عربي)' : 'Title (AR)'} *</Label><Input value={form.title_ar} onChange={e => setForm(f => ({ ...f, title_ar: e.target.value }))} /></div>
-                  <div><Label>{isRTL ? 'العنوان (إنجليزي)' : 'Title (EN)'}</Label><Input value={form.title_en} onChange={e => setForm(f => ({ ...f, title_en: e.target.value }))} dir="ltr" /></div>
-                </div>
-                <div><Label>Slug</Label><Input value={form.slug} onChange={e => setForm(f => ({ ...f, slug: e.target.value }))} dir="ltr" placeholder="auto-generated-from-title" /></div>
-                <div><Label>{isRTL ? 'المقتطف (عربي)' : 'Excerpt (AR)'}</Label><Textarea value={form.excerpt_ar} onChange={e => setForm(f => ({ ...f, excerpt_ar: e.target.value }))} rows={2} /></div>
-                <div><Label>{isRTL ? 'المحتوى (عربي)' : 'Content (AR)'}</Label><Textarea value={form.content_ar} onChange={e => setForm(f => ({ ...f, content_ar: e.target.value }))} rows={6} /></div>
-                <div><Label>{isRTL ? 'المحتوى (إنجليزي)' : 'Content (EN)'}</Label><Textarea value={form.content_en} onChange={e => setForm(f => ({ ...f, content_en: e.target.value }))} rows={6} dir="ltr" /></div>
+          {!showForm && (
+            <Button variant="hero" size="sm" onClick={() => { resetForm(); setShowForm(true); }}>
+              <Plus className="w-4 h-4 me-1" />{isRTL ? 'مقال جديد' : 'New Article'}
+            </Button>
+          )}
+        </div>
+
+        {showForm && (
+          <Card className="border-accent/30 bg-accent/5">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base">{editId ? (isRTL ? 'تعديل المقال' : 'Edit Article') : (isRTL ? 'مقال جديد' : 'New Article')}</CardTitle>
+                <Button variant="ghost" size="icon" onClick={closeForm}><X className="w-4 h-4" /></Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div><Label>{isRTL ? 'العنوان (عربي)' : 'Title (AR)'} *</Label><Input value={form.title_ar} onChange={e => setForm(f => ({ ...f, title_ar: e.target.value }))} /></div>
+                <div><Label>{isRTL ? 'العنوان (إنجليزي)' : 'Title (EN)'}</Label><Input value={form.title_en} onChange={e => setForm(f => ({ ...f, title_en: e.target.value }))} dir="ltr" /></div>
+              </div>
+              <div><Label>Slug</Label><Input value={form.slug} onChange={e => setForm(f => ({ ...f, slug: e.target.value }))} dir="ltr" placeholder="auto-generated-from-title" /></div>
+              <div><Label>{isRTL ? 'المقتطف (عربي)' : 'Excerpt (AR)'}</Label><Textarea value={form.excerpt_ar} onChange={e => setForm(f => ({ ...f, excerpt_ar: e.target.value }))} rows={2} /></div>
+              <div><Label>{isRTL ? 'المحتوى (عربي)' : 'Content (AR)'}</Label><Textarea value={form.content_ar} onChange={e => setForm(f => ({ ...f, content_ar: e.target.value }))} rows={6} /></div>
+              <div><Label>{isRTL ? 'المحتوى (إنجليزي)' : 'Content (EN)'}</Label><Textarea value={form.content_en} onChange={e => setForm(f => ({ ...f, content_en: e.target.value }))} rows={6} dir="ltr" /></div>
+              <div>
+                <Label>{isRTL ? 'صورة الغلاف' : 'Cover Image'}</Label>
+                <ImageUpload bucket="blog-images" value={form.cover_image_url} onChange={(url) => setForm(f => ({ ...f, cover_image_url: url }))} onRemove={() => setForm(f => ({ ...f, cover_image_url: '' }))} placeholder={isRTL ? 'اضغط لرفع صورة الغلاف' : 'Click to upload cover image'} />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                  <Label>{isRTL ? 'صورة الغلاف' : 'Cover Image'}</Label>
-                  <ImageUpload
-                    bucket="blog-images"
-                    value={form.cover_image_url}
-                    onChange={(url) => setForm(f => ({ ...f, cover_image_url: url }))}
-                    onRemove={() => setForm(f => ({ ...f, cover_image_url: '' }))}
-                    placeholder={isRTL ? 'اضغط لرفع صورة الغلاف' : 'Click to upload cover image'}
-                  />
+                  <Label>{isRTL ? 'التصنيف' : 'Category'}</Label>
+                  <Select value={form.category} onValueChange={v => setForm(f => ({ ...f, category: v }))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>{blogCategories.map(c => <SelectItem key={c.value} value={c.value}>{language === 'ar' ? c.ar : c.en}</SelectItem>)}</SelectContent>
+                  </Select>
                 </div>
-                <div className="grid grid-cols-3 gap-3">
-                  <div>
-                    <Label>{isRTL ? 'التصنيف' : 'Category'}</Label>
-                    <Select value={form.category} onValueChange={v => setForm(f => ({ ...f, category: v }))}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {blogCategories.map(c => <SelectItem key={c.value} value={c.value}>{language === 'ar' ? c.ar : c.en}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>{isRTL ? 'الحالة' : 'Status'}</Label>
-                    <Select value={form.status} onValueChange={v => setForm(f => ({ ...f, status: v }))}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="draft">{isRTL ? 'مسودة' : 'Draft'}</SelectItem>
-                        <SelectItem value="published">{isRTL ? 'منشور' : 'Published'}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div><Label>{isRTL ? 'الوسوم' : 'Tags'}</Label><Input value={form.tags} onChange={e => setForm(f => ({ ...f, tags: e.target.value }))} placeholder="tag1, tag2" dir="ltr" /></div>
+                <div>
+                  <Label>{isRTL ? 'الحالة' : 'Status'}</Label>
+                  <Select value={form.status} onValueChange={v => setForm(f => ({ ...f, status: v }))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="draft">{isRTL ? 'مسودة' : 'Draft'}</SelectItem>
+                      <SelectItem value="published">{isRTL ? 'منشور' : 'Published'}</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-                <Button onClick={() => saveMutation.mutate()} disabled={!form.title_ar || saveMutation.isPending} className="w-full" variant="hero">
+                <div><Label>{isRTL ? 'الوسوم' : 'Tags'}</Label><Input value={form.tags} onChange={e => setForm(f => ({ ...f, tags: e.target.value }))} placeholder="tag1, tag2" dir="ltr" /></div>
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={() => saveMutation.mutate()} disabled={!form.title_ar || saveMutation.isPending} variant="hero" className="flex-1">
                   {saveMutation.isPending ? '...' : (editId ? (isRTL ? 'تحديث' : 'Update') : (isRTL ? 'نشر' : 'Publish'))}
                 </Button>
+                <Button variant="outline" onClick={closeForm}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
               </div>
-            </DialogContent>
-          </Dialog>
-        </div>
+            </CardContent>
+          </Card>
+        )}
 
         {isLoading ? (
           <div className="space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-28 rounded-xl" />)}</div>
-        ) : posts.length === 0 ? (
+        ) : posts.length === 0 && !showForm ? (
           <Card className="border-dashed"><CardContent className="p-12 text-center text-muted-foreground">
             <FileText className="w-12 h-12 mx-auto mb-3 opacity-30" />
             <p>{isRTL ? 'لا توجد مقالات بعد' : 'No articles yet'}</p>
@@ -197,11 +187,7 @@ const DashboardBlog = () => {
             {posts.map((p: any) => (
               <Card key={p.id} className="border-border/50">
                 <CardContent className="p-4 flex items-center gap-4">
-                  {p.cover_image_url && (
-                    <div className="w-20 h-14 rounded-lg overflow-hidden bg-muted shrink-0">
-                      <img src={p.cover_image_url} alt="" className="w-full h-full object-cover" />
-                    </div>
-                  )}
+                  {p.cover_image_url && <div className="w-20 h-14 rounded-lg overflow-hidden bg-muted shrink-0"><img src={p.cover_image_url} alt="" className="w-full h-full object-cover" /></div>}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-heading font-bold truncate">{language === 'ar' ? p.title_ar : (p.title_en || p.title_ar)}</h3>

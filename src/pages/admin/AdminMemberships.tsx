@@ -10,11 +10,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { Crown, Plus, Pencil, Loader2, Users, CreditCard } from 'lucide-react';
+import { Crown, Pencil, Loader2, Users, CreditCard, X } from 'lucide-react';
 
 const tierColors: Record<string, string> = {
   free: 'bg-muted text-muted-foreground',
@@ -25,7 +24,7 @@ const tierColors: Record<string, string> = {
 
 const AdminMemberships = () => {
   const { isRTL } = useLanguage();
-  const { isAdmin, user } = useAuth();
+  const { isAdmin } = useAuth();
   const queryClient = useQueryClient();
   const [editingPlan, setEditingPlan] = useState<any>(null);
   const [form, setForm] = useState({
@@ -55,13 +54,9 @@ const AdminMemberships = () => {
     mutationFn: async () => {
       if (!editingPlan) return;
       const { error } = await supabase.from('membership_plans').update({
-        name_ar: form.name_ar,
-        name_en: form.name_en,
-        description_ar: form.description_ar || null,
-        description_en: form.description_en || null,
-        price_monthly: form.price_monthly,
-        price_yearly: form.price_yearly,
-        is_active: form.is_active,
+        name_ar: form.name_ar, name_en: form.name_en,
+        description_ar: form.description_ar || null, description_en: form.description_en || null,
+        price_monthly: form.price_monthly, price_yearly: form.price_yearly, is_active: form.is_active,
       }).eq('id', editingPlan.id);
       if (error) throw error;
     },
@@ -78,8 +73,7 @@ const AdminMemberships = () => {
     setForm({
       name_ar: plan.name_ar, name_en: plan.name_en,
       description_ar: plan.description_ar || '', description_en: plan.description_en || '',
-      price_monthly: plan.price_monthly, price_yearly: plan.price_yearly,
-      is_active: plan.is_active,
+      price_monthly: plan.price_monthly, price_yearly: plan.price_yearly, is_active: plan.is_active,
     });
   };
 
@@ -90,23 +84,46 @@ const AdminMemberships = () => {
       <div className="space-y-6">
         <div>
           <h1 className="font-heading font-bold text-2xl flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gold/10 flex items-center justify-center">
-              <Crown className="w-5 h-5 text-gold" />
-            </div>
+            <div className="w-10 h-10 rounded-xl bg-gold/10 flex items-center justify-center"><Crown className="w-5 h-5 text-gold" /></div>
             {isRTL ? 'إدارة العضويات' : 'Membership Management'}
           </h1>
         </div>
 
+        {/* Inline Edit Form */}
+        {editingPlan && (
+          <Card className="border-accent/30 bg-accent/5">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base">{isRTL ? 'تعديل الخطة' : 'Edit Plan'}</CardTitle>
+                <Button variant="ghost" size="icon" onClick={() => setEditingPlan(null)}><X className="w-4 h-4" /></Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div><Label>{isRTL ? 'الاسم (عربي)' : 'Name (AR)'}</Label><Input value={form.name_ar} onChange={e => setForm(f => ({ ...f, name_ar: e.target.value }))} /></div>
+                <div><Label>{isRTL ? 'الاسم (إنجليزي)' : 'Name (EN)'}</Label><Input value={form.name_en} onChange={e => setForm(f => ({ ...f, name_en: e.target.value }))} /></div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><Label>{isRTL ? 'السعر الشهري' : 'Monthly Price'}</Label><Input type="number" value={form.price_monthly} onChange={e => setForm(f => ({ ...f, price_monthly: parseFloat(e.target.value) || 0 }))} /></div>
+                <div><Label>{isRTL ? 'السعر السنوي' : 'Yearly Price'}</Label><Input type="number" value={form.price_yearly} onChange={e => setForm(f => ({ ...f, price_yearly: parseFloat(e.target.value) || 0 }))} /></div>
+              </div>
+              <div><Label>{isRTL ? 'الوصف (عربي)' : 'Description (AR)'}</Label><Textarea value={form.description_ar} onChange={e => setForm(f => ({ ...f, description_ar: e.target.value }))} rows={2} /></div>
+              <div><Label>{isRTL ? 'الوصف (إنجليزي)' : 'Description (EN)'}</Label><Textarea value={form.description_en} onChange={e => setForm(f => ({ ...f, description_en: e.target.value }))} rows={2} /></div>
+              <div className="flex items-center gap-2"><Switch checked={form.is_active} onCheckedChange={v => setForm(f => ({ ...f, is_active: v }))} /><Label>{isRTL ? 'مفعّل' : 'Active'}</Label></div>
+              <div className="flex gap-2">
+                <Button onClick={() => updatePlanMutation.mutate()} disabled={updatePlanMutation.isPending} className="flex-1">
+                  {updatePlanMutation.isPending && <Loader2 className="w-4 h-4 animate-spin me-2" />}{isRTL ? 'حفظ' : 'Save'}
+                </Button>
+                <Button variant="outline" onClick={() => setEditingPlan(null)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <Tabs defaultValue="plans">
           <TabsList>
-            <TabsTrigger value="plans" className="gap-1.5">
-              <CreditCard className="w-4 h-4" />
-              {isRTL ? 'الخطط' : 'Plans'}
-            </TabsTrigger>
-            <TabsTrigger value="subscriptions" className="gap-1.5">
-              <Users className="w-4 h-4" />
-              {isRTL ? 'الاشتراكات' : 'Subscriptions'}
-            </TabsTrigger>
+            <TabsTrigger value="plans" className="gap-1.5"><CreditCard className="w-4 h-4" />{isRTL ? 'الخطط' : 'Plans'}</TabsTrigger>
+            <TabsTrigger value="subscriptions" className="gap-1.5"><Users className="w-4 h-4" />{isRTL ? 'الاشتراكات' : 'Subscriptions'}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="plans" className="space-y-4 mt-4">
@@ -122,24 +139,14 @@ const AdminMemberships = () => {
                           <Badge className={tierColors[plan.tier] || 'bg-muted'}>{plan.tier}</Badge>
                           <CardTitle className="text-base">{isRTL ? plan.name_ar : plan.name_en}</CardTitle>
                         </div>
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(plan)}>
-                          <Pencil className="w-4 h-4" />
-                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(plan)}><Pencil className="w-4 h-4" /></Button>
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-sm text-muted-foreground mb-3">
-                        {isRTL ? plan.description_ar : plan.description_en}
-                      </p>
+                      <p className="text-sm text-muted-foreground mb-3">{isRTL ? plan.description_ar : plan.description_en}</p>
                       <div className="flex items-center gap-4 text-sm">
-                        <div>
-                          <span className="font-bold text-lg">{plan.price_monthly}</span>
-                          <span className="text-muted-foreground text-xs"> {plan.currency_code}/{isRTL ? 'شهر' : 'mo'}</span>
-                        </div>
-                        <div>
-                          <span className="font-bold text-lg">{plan.price_yearly}</span>
-                          <span className="text-muted-foreground text-xs"> {plan.currency_code}/{isRTL ? 'سنة' : 'yr'}</span>
-                        </div>
+                        <div><span className="font-bold text-lg">{plan.price_monthly}</span><span className="text-muted-foreground text-xs"> {plan.currency_code}/{isRTL ? 'شهر' : 'mo'}</span></div>
+                        <div><span className="font-bold text-lg">{plan.price_yearly}</span><span className="text-muted-foreground text-xs"> {plan.currency_code}/{isRTL ? 'سنة' : 'yr'}</span></div>
                       </div>
                     </CardContent>
                   </Card>
@@ -152,9 +159,7 @@ const AdminMemberships = () => {
             {loadingSubs ? (
               <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-muted-foreground" /></div>
             ) : subscriptions.length === 0 ? (
-              <Card><CardContent className="p-12 text-center text-muted-foreground">
-                {isRTL ? 'لا توجد اشتراكات' : 'No subscriptions'}
-              </CardContent></Card>
+              <Card><CardContent className="p-12 text-center text-muted-foreground">{isRTL ? 'لا توجد اشتراكات' : 'No subscriptions'}</CardContent></Card>
             ) : (
               subscriptions.map(sub => (
                 <Card key={sub.id}>
@@ -162,14 +167,10 @@ const AdminMemberships = () => {
                     <div>
                       <div className="flex items-center gap-2">
                         <Badge variant="outline" className="text-[10px]">{sub.ref_id}</Badge>
-                        <Badge className={sub.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-muted text-muted-foreground'}>
-                          {sub.status}
-                        </Badge>
+                        <Badge className={sub.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-muted text-muted-foreground'}>{sub.status}</Badge>
                         <Badge variant="outline">{sub.billing_cycle}</Badge>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {new Date(sub.starts_at).toLocaleDateString()} → {sub.expires_at ? new Date(sub.expires_at).toLocaleDateString() : '∞'}
-                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">{new Date(sub.starts_at).toLocaleDateString()} → {sub.expires_at ? new Date(sub.expires_at).toLocaleDateString() : '∞'}</p>
                     </div>
                   </CardContent>
                 </Card>
@@ -177,44 +178,6 @@ const AdminMemberships = () => {
             )}
           </TabsContent>
         </Tabs>
-
-        {/* Edit Plan Dialog */}
-        <Dialog open={!!editingPlan} onOpenChange={() => setEditingPlan(null)}>
-          <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle>{isRTL ? 'تعديل الخطة' : 'Edit Plan'}</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div><Label>{isRTL ? 'الاسم (عربي)' : 'Name (AR)'}</Label>
-                  <Input value={form.name_ar} onChange={e => setForm(f => ({ ...f, name_ar: e.target.value }))} /></div>
-                <div><Label>{isRTL ? 'الاسم (إنجليزي)' : 'Name (EN)'}</Label>
-                  <Input value={form.name_en} onChange={e => setForm(f => ({ ...f, name_en: e.target.value }))} /></div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div><Label>{isRTL ? 'السعر الشهري' : 'Monthly Price'}</Label>
-                  <Input type="number" value={form.price_monthly} onChange={e => setForm(f => ({ ...f, price_monthly: parseFloat(e.target.value) || 0 }))} /></div>
-                <div><Label>{isRTL ? 'السعر السنوي' : 'Yearly Price'}</Label>
-                  <Input type="number" value={form.price_yearly} onChange={e => setForm(f => ({ ...f, price_yearly: parseFloat(e.target.value) || 0 }))} /></div>
-              </div>
-              <div><Label>{isRTL ? 'الوصف (عربي)' : 'Description (AR)'}</Label>
-                <Textarea value={form.description_ar} onChange={e => setForm(f => ({ ...f, description_ar: e.target.value }))} rows={2} /></div>
-              <div><Label>{isRTL ? 'الوصف (إنجليزي)' : 'Description (EN)'}</Label>
-                <Textarea value={form.description_en} onChange={e => setForm(f => ({ ...f, description_en: e.target.value }))} rows={2} /></div>
-              <div className="flex items-center gap-2">
-                <Switch checked={form.is_active} onCheckedChange={v => setForm(f => ({ ...f, is_active: v }))} />
-                <Label>{isRTL ? 'مفعّل' : 'Active'}</Label>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setEditingPlan(null)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
-              <Button onClick={() => updatePlanMutation.mutate()} disabled={updatePlanMutation.isPending}>
-                {updatePlanMutation.isPending && <Loader2 className="w-4 h-4 animate-spin me-2" />}
-                {isRTL ? 'حفظ' : 'Save'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </div>
     </DashboardLayout>
   );
