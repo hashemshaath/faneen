@@ -151,6 +151,62 @@ export type Database = {
           },
         ]
       }
+      blog_drafts: {
+        Row: {
+          auto_saved: boolean
+          content_ar: string | null
+          content_en: string | null
+          created_at: string
+          excerpt_ar: string | null
+          excerpt_en: string | null
+          form_snapshot: Json | null
+          id: string
+          post_id: string
+          title_ar: string
+          title_en: string | null
+          user_id: string
+          version_number: number
+        }
+        Insert: {
+          auto_saved?: boolean
+          content_ar?: string | null
+          content_en?: string | null
+          created_at?: string
+          excerpt_ar?: string | null
+          excerpt_en?: string | null
+          form_snapshot?: Json | null
+          id?: string
+          post_id: string
+          title_ar?: string
+          title_en?: string | null
+          user_id: string
+          version_number?: number
+        }
+        Update: {
+          auto_saved?: boolean
+          content_ar?: string | null
+          content_en?: string | null
+          created_at?: string
+          excerpt_ar?: string | null
+          excerpt_en?: string | null
+          form_snapshot?: Json | null
+          id?: string
+          post_id?: string
+          title_ar?: string
+          title_en?: string | null
+          user_id?: string
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_drafts_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       blog_posts: {
         Row: {
           author_id: string
@@ -173,6 +229,7 @@ export type Database = {
           published_at: string | null
           reading_time_minutes: number | null
           ref_id: string | null
+          scheduled_at: string | null
           seo_score: number | null
           slug: string
           status: string
@@ -203,6 +260,7 @@ export type Database = {
           published_at?: string | null
           reading_time_minutes?: number | null
           ref_id?: string | null
+          scheduled_at?: string | null
           seo_score?: number | null
           slug: string
           status?: string
@@ -233,6 +291,7 @@ export type Database = {
           published_at?: string | null
           reading_time_minutes?: number | null
           ref_id?: string | null
+          scheduled_at?: string | null
           seo_score?: number | null
           slug?: string
           status?: string
