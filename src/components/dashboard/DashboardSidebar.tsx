@@ -104,13 +104,13 @@ const userGroups: MenuGroup[] = [
     icon: FileText,
     items: [
       { label: { ar: 'العقود', en: 'Contracts' }, url: '/dashboard/contracts', icon: FileText },
+      { label: { ar: 'الأقساط', en: 'Installments' }, url: '/dashboard/installments', icon: CreditCard },
       { label: { ar: 'الرسائل', en: 'Messages' }, url: '/dashboard/messages', icon: MessageSquare },
-      { label: { ar: 'المفضلة', en: 'Bookmarks' }, url: '/dashboard/bookmarks', icon: Bookmark },
     ],
   },
   {
     groupLabel: { ar: 'المزيد', en: 'More' },
-    icon: Building2,
+    icon: Activity,
     items: [
       { label: { ar: 'المفضلة', en: 'Bookmarks' }, url: '/dashboard/bookmarks', icon: Bookmark },
       { label: { ar: 'العمليات', en: 'Operations' }, url: '/dashboard/operations', icon: Activity },
