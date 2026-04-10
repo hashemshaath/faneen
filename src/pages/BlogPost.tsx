@@ -162,6 +162,11 @@ const BlogPost = () => {
   const [copied, setCopied] = useState(false);
   const [activeHeading, setActiveHeading] = useState('');
   const [tocOpen, setTocOpen] = useState(false);
+  const [articleSearch, setArticleSearch] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [currentMatch, setCurrentMatch] = useState(0);
+  const [totalMatches, setTotalMatches] = useState(0);
+  const articleRef = useRef<HTMLDivElement>(null);
 
   const { data: post, isLoading } = useQuery({
     queryKey: ['blog-post', slug],
