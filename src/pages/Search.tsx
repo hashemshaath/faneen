@@ -51,7 +51,7 @@ const SearchPage = () => {
 
   const [query, setQuery] = useState(searchParams.get('q') || '');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
-  const [showFilters, setShowFilters] = useState(true);
+  const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
   const [filters, setFilters] = useState<SearchFilterValues>({
@@ -169,8 +169,8 @@ const SearchPage = () => {
         businesses={businesses}
       />
 
-      <div className="container py-8">
-        <div className="flex flex-col lg:flex-row gap-8">
+      <div className="container py-5 sm:py-8 px-3 sm:px-4">
+        <div className="flex flex-col lg:flex-row gap-4 sm:gap-8">
           <SearchFilters
             filters={filters}
             onFilterChange={handleFilterChange}

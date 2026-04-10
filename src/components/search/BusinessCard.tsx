@@ -39,10 +39,10 @@ export const BusinessCard = ({ business: b, viewMode }: BusinessCardProps) => {
       <Link
         to={`/${b.username}`}
         {...touchHandlers}
-        className={`group flex items-center gap-3 sm:gap-5 p-3 sm:p-5 rounded-2xl bg-card border border-border hover:border-accent/40 transition-all duration-300 active:scale-[0.98] ${pressed ? 'scale-[0.98] border-accent/40 shadow-lg shadow-accent/10' : ''}`}
+        className={`group flex items-center gap-3 sm:gap-5 p-3 sm:p-5 rounded-2xl bg-card dark:bg-card/80 border border-border/50 dark:border-border/30 hover:border-accent/40 transition-all duration-300 active:scale-[0.98] ${pressed ? 'scale-[0.98] border-accent/40 shadow-lg shadow-accent/10' : ''}`}
       >
         {/* Logo */}
-        <div className={`w-14 h-14 sm:w-20 sm:h-20 rounded-2xl bg-accent/10 flex items-center justify-center flex-shrink-0 overflow-hidden ring-2 ring-border group-hover:ring-accent/30 transition-all duration-300 ${pressed ? 'ring-accent/40' : ''}`}>
+        <div className={`w-14 h-14 sm:w-20 sm:h-20 rounded-2xl bg-accent/10 dark:bg-accent/15 flex items-center justify-center flex-shrink-0 overflow-hidden ring-2 ring-border dark:ring-border/30 group-hover:ring-accent/30 transition-all duration-300 ${pressed ? 'ring-accent/40' : ''}`}>
           {b.logo_url ? (
             <img src={b.logo_url} alt={name} className="w-full h-full object-cover" loading="lazy" />
           ) : (
@@ -68,7 +68,7 @@ export const BusinessCard = ({ business: b, viewMode }: BusinessCardProps) => {
 
           {/* Mobile inline stats */}
           <div className="flex items-center gap-2 mt-1.5 sm:hidden">
-            <div className="flex items-center gap-1 bg-accent/10 px-2 py-0.5 rounded-lg">
+            <div className="flex items-center gap-1 bg-accent/10 dark:bg-accent/15 px-2 py-0.5 rounded-lg">
               <Star className="w-3 h-3 text-accent fill-accent" />
               <span className="font-heading font-bold text-xs text-foreground">{Number(b.rating_avg).toFixed(1)}</span>
               <span className="text-[10px] text-muted-foreground">({b.rating_count})</span>
@@ -83,7 +83,7 @@ export const BusinessCard = ({ business: b, viewMode }: BusinessCardProps) => {
 
         {/* Desktop stats */}
         <div className="hidden sm:flex flex-col items-end gap-2 flex-shrink-0">
-          <div className="flex items-center gap-1.5 bg-accent/10 px-3 py-1.5 rounded-xl">
+          <div className="flex items-center gap-1.5 bg-accent/10 dark:bg-accent/15 px-3 py-1.5 rounded-xl">
             <Star className="w-4 h-4 text-accent fill-accent" />
             <span className="font-heading font-bold text-foreground">{Number(b.rating_avg).toFixed(1)}</span>
             <span className="text-xs text-muted-foreground">({b.rating_count})</span>
@@ -95,7 +95,6 @@ export const BusinessCard = ({ business: b, viewMode }: BusinessCardProps) => {
           )}
         </div>
 
-        {/* Arrow indicator */}
         <Arrow className={`w-4 h-4 text-muted-foreground/40 group-hover:text-accent shrink-0 transition-all duration-300 ${pressed ? 'text-accent translate-x-0.5' : ''} sm:hidden`} />
       </Link>
     );
@@ -106,7 +105,7 @@ export const BusinessCard = ({ business: b, viewMode }: BusinessCardProps) => {
     <Link
       to={`/${b.username}`}
       {...touchHandlers}
-      className={`group relative p-4 sm:p-5 rounded-2xl bg-card border border-border hover:border-accent/40 transition-all duration-300 flex flex-col active:scale-[0.97] ${pressed ? 'scale-[0.97] border-accent/40 shadow-xl shadow-accent/10' : 'hover:shadow-xl'}`}
+      className={`group relative p-4 sm:p-5 rounded-2xl bg-card dark:bg-card/80 border border-border/50 dark:border-border/30 hover:border-accent/40 transition-all duration-300 flex flex-col active:scale-[0.97] ${pressed ? 'scale-[0.97] border-accent/40 shadow-xl shadow-accent/10' : 'hover:shadow-xl dark:hover:shadow-black/20'}`}
     >
       {/* Tier badge */}
       {tier && (
@@ -117,7 +116,7 @@ export const BusinessCard = ({ business: b, viewMode }: BusinessCardProps) => {
 
       <div className="flex items-start gap-3 sm:gap-4">
         {/* Logo */}
-        <div className={`w-13 h-13 sm:w-16 sm:h-16 rounded-2xl bg-accent/10 flex items-center justify-center flex-shrink-0 overflow-hidden ring-2 ring-border group-hover:ring-accent/30 transition-all duration-300 ${pressed ? 'ring-accent/40 scale-105' : ''}`}>
+        <div className={`w-13 h-13 sm:w-16 sm:h-16 rounded-2xl bg-accent/10 dark:bg-accent/15 flex items-center justify-center flex-shrink-0 overflow-hidden ring-2 ring-border dark:ring-border/30 group-hover:ring-accent/30 transition-all duration-300 ${pressed ? 'ring-accent/40 scale-105' : ''}`}>
           {b.logo_url ? (
             <img src={b.logo_url} alt={name} className="w-full h-full object-cover" loading="lazy" />
           ) : (
@@ -139,8 +138,8 @@ export const BusinessCard = ({ business: b, viewMode }: BusinessCardProps) => {
       {desc && <p className="text-xs sm:text-sm text-muted-foreground font-body mt-2 sm:mt-3 line-clamp-2">{desc}</p>}
 
       {/* Footer meta */}
-      <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-auto pt-3 sm:pt-4 text-[10px] sm:text-xs text-muted-foreground font-body border-t border-border/50">
-        <div className="flex items-center gap-1 bg-accent/10 px-2 py-0.5 sm:py-1 rounded-lg">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-auto pt-3 sm:pt-4 text-[10px] sm:text-xs text-muted-foreground font-body border-t border-border/40 dark:border-border/20">
+        <div className="flex items-center gap-1 bg-accent/10 dark:bg-accent/15 px-2 py-0.5 sm:py-1 rounded-lg">
           <Star className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-accent fill-accent" />
           <span className="font-semibold text-foreground">{Number(b.rating_avg).toFixed(1)}</span>
           <span>({b.rating_count})</span>
