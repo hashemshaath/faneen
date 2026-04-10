@@ -79,6 +79,34 @@ Make titles compelling with power words. Include focus keyword naturally in desc
         userPrompt = `Focus keyword: ${keywords?.[0] || ''}\nTitle: ${title}\nContent: ${content?.substring(0, 800)}`;
         break;
 
+      case "competitor_analysis":
+        systemPrompt = `You are a senior SEO strategist. Analyze the given article against best practices for ranking on the provided focus keyword. Return ONLY valid JSON:
+{
+  "keyword_difficulty": "low|medium|high",
+  "estimated_position": "1-10|11-20|21-50|50+",
+  "strengths_ar": ["نقطة قوة 1", "نقطة قوة 2"],
+  "strengths_en": ["Strength 1", "Strength 2"],
+  "weaknesses_ar": ["نقطة ضعف 1", "نقطة ضعف 2"],
+  "weaknesses_en": ["Weakness 1", "Weakness 2"],
+  "recommendations_ar": ["توصية 1", "توصية 2", "توصية 3"],
+  "recommendations_en": ["Recommendation 1", "Recommendation 2", "Recommendation 3"],
+  "content_gap_ar": ["فجوة 1", "فجوة 2"],
+  "content_gap_en": ["Gap 1", "Gap 2"],
+  "competitive_score": 75
+}
+Analyze: title length, keyword placement, content depth, heading structure, readability, internal linking potential, and content uniqueness.`;
+        userPrompt = JSON.stringify({
+          focus_keyword: keywords?.[0] || '',
+          title: title,
+          content_length: content?.split(/\s+/).length || 0,
+          content_excerpt: content?.substring(0, 1000),
+          has_headings: (content?.match(/^#{1,6}\s/gm) || []).length,
+          has_images: (content?.match(/!\[/g) || []).length,
+          has_links: (content?.match(/\[.*?\]\(/g) || []).length,
+          meta_description: text || '',
+        });
+        break;
+
       default:
         throw new Error(`Unknown action: ${action}`);
     }
