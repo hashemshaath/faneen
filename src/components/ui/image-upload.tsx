@@ -18,6 +18,7 @@ interface ImageUploadProps {
   className?: string;
   aspectRatio?: 'video' | 'square' | 'auto';
   placeholder?: string;
+  compact?: boolean;
 }
 
 export const ImageUpload: React.FC<ImageUploadProps> = ({
