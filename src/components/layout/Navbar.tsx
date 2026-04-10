@@ -5,6 +5,7 @@ import { Search, Megaphone, Scale, Layers, FolderOpen, BookOpen, Menu, X } from 
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export const Navbar = () => {
   const { t, language, setLanguage } = useLanguage();
@@ -91,9 +92,10 @@ export const Navbar = () => {
             <button onClick={() => scrollToSection('#providers')} className="hover:text-gold transition-colors">{t('nav.providers')}</button>
           </div>
           <div className="flex items-center gap-3">
+            <ThemeToggle variant="navbar" />
             <button
               onClick={() => setLanguage(language === 'ar' ? 'en' : 'ar')}
-              className="text-xs text-primary-foreground/60 hover:text-gold transition-colors px-2 py-1 rounded border border-primary-foreground/20"
+              className="text-xs text-primary-foreground/60 hover:text-accent transition-colors px-2 py-1 rounded border border-primary-foreground/20"
             >
               {t('nav.language')}
             </button>
