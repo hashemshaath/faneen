@@ -555,7 +555,7 @@ export type Database = {
           additional_number?: string | null
           address?: string | null
           building_number?: string | null
-          business_number: number
+          business_number?: number
           category_id?: string | null
           city_id?: string | null
           contact_person?: string | null
