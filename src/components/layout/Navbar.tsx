@@ -199,6 +199,18 @@ export const Navbar = () => {
           <div className="pt-3 pb-2 border-t border-surface-nav-foreground/10 flex flex-col gap-2">
             {user ? (
               <>
+                {(isAdmin || isSuperAdmin) && (
+                  <div className="flex justify-center mb-1">
+                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${
+                      isSuperAdmin
+                        ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
+                        : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                    }`}>
+                      {isSuperAdmin ? <ShieldAlert className="w-3.5 h-3.5" /> : <Shield className="w-3.5 h-3.5" />}
+                      {isSuperAdmin ? 'Super Admin' : 'Admin'}
+                    </span>
+                  </div>
+                )}
                 <Link to="/dashboard" onClick={closeMobile}>
                   <Button variant="hero" size="sm" className="w-full gap-1.5">
                     <User className="w-3.5 h-3.5" />
