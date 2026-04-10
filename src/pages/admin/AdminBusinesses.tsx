@@ -177,7 +177,17 @@ const AdminBusinesses = () => {
     },
   });
 
-  const { data: portfolioData = [], refetch: refetchPortfolio } = useQuery({
+  const { data: branches = [], refetch: refetchBranches } = useQuery({
+    queryKey: ['admin-branches', editingBiz?.id],
+    queryFn: async () => {
+      if (!editingBiz?.id) return [];
+      const { data } = await supabase.from('business_branches').select('*').eq('business_id', editingBiz.id).order('sort_order');
+      return data || [];
+    },
+    enabled: !!editingBiz?.id,
+  });
+
+
     queryKey: ['admin-portfolio', editingBiz?.id],
     queryFn: async () => {
       if (!editingBiz?.id) return [];
