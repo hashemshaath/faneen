@@ -52,19 +52,40 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Find valid OTP
-    const { data: otpRecord, error: fetchError } = await adminClient
-      .from("phone_otps")
-      .select("*")
-      .eq("user_id", profile.user_id)
-      .eq("phone", fullPhone)
-      .eq("verified", false)
-      .gt("expires_at", new Date().toISOString())
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .single();
+    // Find valid OTP - try multiple phone formats
+    let otpRecord: any = null;
+    for (const ph of [fullPhone, localPhone, cleanPhone, phone]) {
+      const { data } = await adminClient
+        .from("phone_otps")
+        .select("*")
+        .eq("user_id", profile.user_id)
+        .eq("phone", ph)
+        .eq("verified", false)
+        .gt("expires_at", new Date().toISOString())
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+      if (data) {
+        otpRecord = data;
+        break;
+      }
+    }
 
-    if (fetchError || !otpRecord) {
+    // If not found with format matching, try without phone filter
+    if (!otpRecord) {
+      const { data } = await adminClient
+        .from("phone_otps")
+        .select("*")
+        .eq("user_id", profile.user_id)
+        .eq("verified", false)
+        .gt("expires_at", new Date().toISOString())
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+      if (data) otpRecord = data;
+    }
+
+    if (!otpRecord) {
       return new Response(
         JSON.stringify({ error: "OTP expired or not found" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
