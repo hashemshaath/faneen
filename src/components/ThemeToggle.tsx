@@ -44,7 +44,7 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <ThemeContext.Provider value={{ theme, setTheme, isDark }}>
-      <div className={isDark ? 'dark' : ''} style={{ minHeight: '100vh' }}>
+      <div className={isDark ? 'dark bg-background text-foreground' : ''} style={{ minHeight: '100vh' }}>
         {children}
       </div>
     </ThemeContext.Provider>
