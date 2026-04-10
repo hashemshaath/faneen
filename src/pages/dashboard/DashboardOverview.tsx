@@ -52,7 +52,7 @@ const DashboardOverview = () => {
       ]);
 
       const allContracts = [...(contractsProvider.data || []), ...(contractsClient.data || [])];
-      const activeContracts = allContracts.filter(c => c.status === 'active' || c.status === 'in_progress');
+      const activeContracts = allContracts.filter(c => c.status === 'pending_approval' || c.status === 'draft');
       const totalRevenue = allContracts.filter(c => c.status === 'completed').reduce((sum, c) => sum + Number(c.total_amount || 0), 0);
       
       const reviewsData = (reviews as any).data || [];
