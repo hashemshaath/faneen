@@ -611,17 +611,18 @@ const BlogPost = () => {
               prose-headings:font-heading prose-headings:text-foreground prose-headings:scroll-mt-20
               prose-h2:text-lg prose-h2:sm:text-xl prose-h2:lg:text-2xl prose-h2:mt-8 prose-h2:sm:mt-10 prose-h2:mb-4
               prose-h3:text-base prose-h3:sm:text-lg prose-h3:mt-6 prose-h3:mb-3
-              prose-p:text-foreground/85 prose-p:leading-[1.85] prose-p:sm:leading-[1.8] prose-p:font-body prose-p:text-[0.925rem] prose-p:sm:text-base prose-p:mb-5
+              prose-p:text-foreground/85 prose-p:leading-[1.9] prose-p:sm:leading-[1.8] prose-p:font-body prose-p:text-[0.9rem] prose-p:sm:text-base prose-p:mb-5
               prose-a:text-accent prose-a:no-underline hover:prose-a:underline prose-a:font-medium
               prose-strong:text-foreground prose-strong:font-semibold
               prose-blockquote:border-accent prose-blockquote:bg-accent/5 prose-blockquote:rounded-e-xl prose-blockquote:py-2 prose-blockquote:px-4 prose-blockquote:my-6
               prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md prose-code:text-[0.8rem] prose-code:sm:text-sm
-              prose-pre:bg-muted prose-pre:rounded-xl prose-pre:p-4 prose-pre:overflow-x-auto
-              prose-img:rounded-xl prose-img:shadow-lg prose-img:my-6
-              prose-li:text-foreground/85 prose-li:text-[0.925rem] prose-li:sm:text-base prose-li:leading-[1.8] prose-li:my-1
+              prose-pre:bg-muted prose-pre:rounded-xl prose-pre:p-3 prose-pre:sm:p-4 prose-pre:overflow-x-auto prose-pre:text-[0.78rem] prose-pre:sm:text-sm prose-pre:-mx-4 prose-pre:sm:mx-0 prose-pre:rounded-none prose-pre:sm:rounded-xl
+              prose-img:rounded-xl prose-img:sm:rounded-2xl prose-img:shadow-lg prose-img:my-6 prose-img:sm:my-8 prose-img:w-full prose-img:max-w-full prose-img:-mx-4 prose-img:sm:mx-0 prose-img:w-[calc(100%+2rem)] prose-img:sm:w-full
+              prose-li:text-foreground/85 prose-li:text-[0.9rem] prose-li:sm:text-base prose-li:leading-[1.8] prose-li:my-1
               prose-ul:my-4 prose-ol:my-4
-              prose-table:border-border prose-th:bg-muted prose-th:p-2.5 prose-td:p-2.5 prose-td:border-border
+              prose-table:border-border prose-table:text-xs prose-table:sm:text-sm prose-th:bg-muted prose-th:p-2 prose-th:sm:p-2.5 prose-td:p-2 prose-td:sm:p-2.5 prose-td:border-border
               prose-hr:border-border/50 prose-hr:my-8
+              [&_table]:block [&_table]:overflow-x-auto [&_table]:max-w-full
               ">
               <div dangerouslySetInnerHTML={{ __html: renderedHTML }} />
             </article>
