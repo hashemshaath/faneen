@@ -29,9 +29,20 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const [isDark, setIsDark] = useState(() => resolveIsDark(getStoredTheme()));
 
   const setTheme = useCallback((newTheme: Theme) => {
+    // Disable CSS transitions briefly to avoid flash, then re-enable for smooth transition
+    const root = document.documentElement;
+    root.style.setProperty('--theme-transition', 'none');
+    // Force reflow
+    void root.offsetHeight;
     setThemeState(newTheme);
     setIsDark(resolveIsDark(newTheme));
     try { localStorage.setItem('faneen-theme', newTheme); } catch {}
+    // Re-enable transitions after a frame
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        root.style.removeProperty('--theme-transition');
+      });
+    });
   }, []);
 
   useEffect(() => {
