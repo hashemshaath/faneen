@@ -54,6 +54,8 @@ const extractHeadings = (content: string): TocItem[] => {
 const BlogPost = () => {
   const { slug } = useParams();
   const { isRTL, language } = useLanguage();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [copied, setCopied] = useState(false);
   const [activeHeading, setActiveHeading] = useState('');
 
