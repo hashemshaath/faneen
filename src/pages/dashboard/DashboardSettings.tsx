@@ -323,7 +323,7 @@ const DashboardSettings = () => {
                         <div className="space-y-1.5">
                           <div className="flex items-center gap-1.5">
                             <p className="font-heading font-bold text-sm">{profile?.full_name || (isRTL ? 'بدون اسم' : 'No name')}</p>
-                            {profile?.is_verified && <Badge className="bg-emerald-500/10 text-emerald-600 text-[7px] px-1 py-0 h-3.5 gap-0.5"><CheckCircle className="w-2 h-2" />{isRTL ? 'موثق' : 'Verified'}</Badge>}
+                            {profile?.phone_verified && <Badge className="bg-emerald-500/10 text-emerald-600 text-[7px] px-1 py-0 h-3.5 gap-0.5"><CheckCircle className="w-2 h-2" />{isRTL ? 'موثق' : 'Verified'}</Badge>}
                           </div>
                           <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
                             <Mail className="w-3 h-3" /><span className="tech-content">{user?.email || '-'}</span>
@@ -361,7 +361,7 @@ const DashboardSettings = () => {
                 </div>
                 {[
                   { icon: Hash, label: isRTL ? 'رقم الحساب' : 'Account #', value: profile?.account_number, tech: true },
-                  { icon: Globe, label: isRTL ? 'اللغة المفضلة' : 'Language', value: profile?.preferred_language === 'ar' ? 'العربية' : 'English' },
+                  { icon: Globe, label: isRTL ? 'اللغة المفضلة' : 'Language', value: language === 'ar' ? 'العربية' : 'English' },
                   { icon: Mail, label: isRTL ? 'البريد' : 'Email', value: user?.email, tech: true },
                   { icon: Fingerprint, label: isRTL ? 'المعرف' : 'Ref ID', value: profile?.ref_id, tech: true },
                 ].map((item, i) => (
