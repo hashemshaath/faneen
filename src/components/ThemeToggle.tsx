@@ -12,16 +12,18 @@ const getStoredTheme = (): Theme => {
 };
 
 const applyTheme = (theme: Theme) => {
-  const root = document.documentElement;
   const isDark =
     theme === 'dark' ||
     (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
-  if (isDark) {
-    root.classList.add('dark');
-  } else {
-    root.classList.remove('dark');
-  }
+  // Apply to both html and body for maximum compatibility
+  [document.documentElement, document.body].forEach(el => {
+    if (isDark) {
+      el.classList.add('dark');
+    } else {
+      el.classList.remove('dark');
+    }
+  });
 };
 
 export const ThemeToggle = ({ variant = 'navbar' }: { variant?: 'navbar' | 'dropdown' }) => {
