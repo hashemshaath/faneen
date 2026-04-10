@@ -24,19 +24,10 @@ const mockMonthlyData = [
 ];
 
 const DashboardOverview = () => {
-const { t, isRTL } = useLanguage();
+  const { t, isRTL } = useLanguage();
   const { user, profile } = useAuth();
 
   const isProvider = profile?.account_type === 'business' || profile?.account_type === 'company';
-
-  // If provider, render ProviderDashboard
-  if (isProvider) {
-    return (
-      <DashboardLayout>
-        <ProviderDashboard />
-      </DashboardLayout>
-    );
-  }
 
   const { data: stats } = useQuery({
     queryKey: ['dashboard-stats', user?.id],
@@ -57,8 +48,17 @@ const { t, isRTL } = useLanguage();
         warranties: 0,
       };
     },
-    enabled: !!user,
+    enabled: !!user && !isProvider,
   });
+
+  // Provider gets a completely different dashboard
+  if (isProvider) {
+    return (
+      <DashboardLayout>
+        <ProviderDashboard />
+      </DashboardLayout>
+    );
+  }
 
   const mainCards = [
     {
@@ -93,7 +93,6 @@ const { t, isRTL } = useLanguage();
   return (
     <DashboardLayout>
       <div className="space-y-4 sm:space-y-6">
-        {/* Header with greeting */}
         <div>
           <h1 className="font-heading font-bold text-xl sm:text-2xl text-foreground">
             {t('dashboard.overview')}
@@ -103,7 +102,6 @@ const { t, isRTL } = useLanguage();
           </p>
         </div>
 
-        {/* Main Stats Cards — swipeable on mobile */}
         <div className="flex gap-3 overflow-x-auto pb-1 no-scrollbar sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:gap-4 sm:overflow-visible sm:pb-0">
           {mainCards.map((card, idx) => (
             <Card
@@ -134,7 +132,6 @@ const { t, isRTL } = useLanguage();
           ))}
         </div>
 
-        {/* Charts Row */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
           <Card className="border-border/40 dark:border-border/20 dark:bg-card/80 backdrop-blur-sm">
             <CardHeader className="pb-2 px-3 sm:px-6 pt-3 sm:pt-6">
@@ -205,7 +202,6 @@ const { t, isRTL } = useLanguage();
           </Card>
         </div>
 
-        {/* Quick Actions */}
         <Card className="border-border/40 dark:border-border/20 dark:bg-card/80 backdrop-blur-sm">
           <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6">
             <CardTitle className="text-sm sm:text-base">{isRTL ? 'إجراءات سريعة' : 'Quick Actions'}</CardTitle>
@@ -229,7 +225,6 @@ const { t, isRTL } = useLanguage();
           </CardContent>
         </Card>
 
-        {/* Service Stats */}
         <div className="flex gap-3 overflow-x-auto pb-1 no-scrollbar sm:grid sm:grid-cols-3 md:grid-cols-5 sm:gap-4 sm:overflow-visible sm:pb-0">
           {[
             { icon: Wrench, label: isRTL ? 'الخدمات' : 'Services', value: stats?.services ?? 0, color: 'text-blue-500 dark:text-blue-400', bg: 'bg-blue-500/10 dark:bg-blue-500/20' },
