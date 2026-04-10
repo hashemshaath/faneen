@@ -18,7 +18,7 @@ const getStoredTheme = (): Theme => {
     const stored = localStorage.getItem('faneen-theme');
     if (stored === 'light' || stored === 'dark' || stored === 'system') return stored;
   } catch {}
-  return 'system';
+  return 'light';
 };
 
 const resolveIsDark = (theme: Theme) =>
