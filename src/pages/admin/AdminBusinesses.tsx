@@ -346,7 +346,78 @@ const AdminBusinesses = () => {
     onSuccess: () => refetchPortfolio(),
   });
 
-  /* ─── Map Pick Handler ─── */
+  const emptyBranch = () => ({
+    name_ar: '', name_en: '', is_main: false, is_active: true,
+    contact_person: '', phone: '', mobile: '', unified_number: '', customer_service_phone: '',
+    email: '', website: '',
+    country_id: '', city_id: '', region: '', district: '', street_name: '',
+    building_number: '', national_id: '', additional_number: '', address: '',
+    latitude: '', longitude: '',
+  });
+
+  const saveBranchMutation = useMutation({
+    mutationFn: async () => {
+      if (!branchForm || !editingBiz) return;
+      const payload: any = {
+        business_id: editingBiz.id,
+        name_ar: branchForm.name_ar,
+        name_en: branchForm.name_en || null,
+        is_main: branchForm.is_main,
+        is_active: branchForm.is_active,
+        contact_person: branchForm.contact_person || null,
+        phone: branchForm.phone || null,
+        mobile: branchForm.mobile || null,
+        unified_number: branchForm.unified_number || null,
+        customer_service_phone: branchForm.customer_service_phone || null,
+        email: branchForm.email || null,
+        website: branchForm.website || null,
+        country_id: branchForm.country_id || null,
+        city_id: branchForm.city_id || null,
+        region: branchForm.region || null,
+        district: branchForm.district || null,
+        street_name: branchForm.street_name || null,
+        building_number: branchForm.building_number || null,
+        national_id: branchForm.national_id || null,
+        additional_number: branchForm.additional_number || null,
+        address: branchForm.address || null,
+        latitude: branchForm.latitude || null,
+        longitude: branchForm.longitude || null,
+      };
+      if (editingBranchId) {
+        const { error } = await supabase.from('business_branches').update(payload).eq('id', editingBranchId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from('business_branches').insert(payload);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      refetchBranches();
+      setBranchForm(null);
+      setEditingBranchId(null);
+      toast.success(isRTL ? 'تم حفظ الفرع' : 'Branch saved');
+    },
+    onError: (err: any) => toast.error(err.message),
+  });
+
+  const deleteBranchMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('business_branches').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      refetchBranches();
+      toast.success(isRTL ? 'تم حذف الفرع' : 'Branch deleted');
+    },
+  });
+
+  const toggleBranchMutation = useMutation({
+    mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
+      const { error } = await supabase.from('business_branches').update({ is_active }).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => refetchBranches(),
+  });
   const handleMapPick = async (lat: number, lng: number) => {
     setField('latitude', lat);
     setField('longitude', lng);
