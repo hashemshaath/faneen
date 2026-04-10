@@ -365,6 +365,8 @@ const AdminBusinesses = () => {
       region: biz.region || '', district: biz.district || '',
       street_name: biz.street_name || '', building_number: biz.building_number || '',
       latitude: biz.latitude || '', longitude: biz.longitude || '',
+      unified_number: biz.unified_number || '', contact_person: biz.contact_person || '',
+      mobile: biz.mobile || '', customer_service_phone: biz.customer_service_phone || '',
       is_active: biz.is_active, is_verified: biz.is_verified,
       membership_tier: biz.membership_tier,
     });
