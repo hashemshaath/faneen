@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useNavigate } from 'react-router-dom';
-import { Bell, Check, CheckCheck, FileText, CreditCard, Megaphone, Settings2, Trash2, AlertTriangle } from 'lucide-react';
+import { Bell, BellRing, Check, CheckCheck, FileText, CreditCard, Megaphone, Settings2, Trash2, AlertTriangle } from 'lucide-react';
+import { useBrowserNotifications } from '@/hooks/useBrowserNotifications';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
