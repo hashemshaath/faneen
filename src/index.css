@@ -47,6 +47,10 @@
     --slate-warm: 220 10% 45%;
     --cream: 42 40% 96%;
 
+    /* Surface tokens for Navbar/Footer - stays dark in both modes */
+    --surface-nav: 220 35% 15%;
+    --surface-nav-foreground: 42 100% 95%;
+
     --gradient-gold: linear-gradient(135deg, hsl(42 85% 55%), hsl(42 90% 70%));
     --gradient-navy: linear-gradient(135deg, hsl(220 35% 15%), hsl(220 25% 25%));
     --gradient-hero: linear-gradient(180deg, hsl(220 35% 10% / 0.85), hsl(220 35% 15% / 0.7));
