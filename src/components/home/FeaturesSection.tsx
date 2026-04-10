@@ -20,24 +20,24 @@ export const FeaturesSection = () => {
   const { ref: visRef, isVisible } = useScrollAnimation();
 
   return (
-    <section id="features" className="py-24 bg-muted/50 overflow-hidden">
-      <div className="container">
-        <div ref={titleRef} className="text-center mb-16 will-change-transform">
+    <section id="features" className="py-16 sm:py-24 bg-muted/50 overflow-hidden">
+      <div className="container px-4 sm:px-6">
+        <div ref={titleRef} className="text-center mb-10 sm:mb-16 will-change-transform">
           <span className="text-sm font-body text-accent font-semibold">{t('features.label')}</span>
-          <h2 className="font-heading font-bold text-3xl md:text-4xl text-foreground mt-3">{t('features.title')}</h2>
+          <h2 className="font-heading font-bold text-2xl sm:text-3xl md:text-4xl text-foreground mt-2 sm:mt-3">{t('features.title')}</h2>
         </div>
-        <div ref={visRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div ref={visRef} className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
           {features.map((feat, i) => (
             <div
               key={feat.titleKey}
-              className={`p-6 rounded-xl bg-card border border-border hover:shadow-lg hover:border-accent/30 hover:-translate-y-1 transition-all duration-500 group ${isVisible ? 'animate-card-slide-up' : 'opacity-0'}`}
+              className={`p-4 sm:p-6 rounded-xl bg-card border border-border hover:shadow-lg hover:border-accent/30 hover:-translate-y-1 transition-all duration-500 group ${isVisible ? 'animate-card-slide-up' : 'opacity-0'}`}
               style={{ animationDelay: `${i * 80}ms`, animationFillMode: 'both' }}
             >
-              <div className="w-12 h-12 rounded-lg bg-accent/10 flex items-center justify-center mb-4 group-hover:bg-gradient-gold transition-all duration-300">
-                <feat.icon className="w-6 h-6 text-accent group-hover:text-secondary-foreground transition-colors duration-300" />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-accent/10 dark:bg-accent/15 flex items-center justify-center mb-3 sm:mb-4 group-hover:bg-gradient-gold transition-all duration-300">
+                <feat.icon className="w-5 h-5 sm:w-6 sm:h-6 text-accent group-hover:text-secondary-foreground transition-colors duration-300" />
               </div>
-              <h3 className="font-heading font-bold text-foreground mb-2 transition-colors duration-300 group-hover:text-accent">{t(feat.titleKey)}</h3>
-              <p className="font-body text-sm text-muted-foreground leading-relaxed">{t(feat.descKey)}</p>
+              <h3 className="font-heading font-bold text-sm sm:text-base text-foreground mb-1 sm:mb-2 transition-colors duration-300 group-hover:text-accent">{t(feat.titleKey)}</h3>
+              <p className="font-body text-xs sm:text-sm text-muted-foreground leading-relaxed line-clamp-3">{t(feat.descKey)}</p>
             </div>
           ))}
         </div>

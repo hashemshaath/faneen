@@ -52,22 +52,22 @@ const DashboardOverview = () => {
     {
       icon: Eye, label: isRTL ? 'الزيارات الشهرية' : 'Monthly Views',
       value: '450', change: '+18%', positive: true,
-      color: 'bg-blue-500/10 text-blue-500',
+      color: 'bg-blue-500/10 text-blue-500 dark:bg-blue-500/20',
     },
     {
       icon: FileText, label: isRTL ? 'العقود النشطة' : 'Active Contracts',
       value: String(stats?.contracts ?? 0), change: '+2', positive: true,
-      color: 'bg-purple-500/10 text-purple-500',
+      color: 'bg-purple-500/10 text-purple-500 dark:bg-purple-500/20',
     },
     {
       icon: Star, label: isRTL ? 'متوسط التقييم' : 'Avg Rating',
       value: '5.0', change: '+0.2', positive: true,
-      color: 'bg-accent/10 text-accent',
+      color: 'bg-accent/10 text-accent dark:bg-accent/20',
     },
     {
       icon: DollarSign, label: isRTL ? 'إجمالي الإيرادات' : 'Total Revenue',
       value: isRTL ? '٠ ر.س' : '0 SAR', change: '', positive: true,
-      color: 'bg-green-500/10 text-green-500',
+      color: 'bg-green-500/10 text-green-500 dark:bg-green-500/20',
     },
   ];
 
@@ -80,50 +80,50 @@ const DashboardOverview = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         <div>
-          <h1 className="font-heading font-bold text-2xl text-foreground">
+          <h1 className="font-heading font-bold text-xl sm:text-2xl text-foreground">
             {t('dashboard.overview')}
           </h1>
-          <p className="text-muted-foreground text-sm mt-1">
+          <p className="text-muted-foreground text-xs sm:text-sm mt-1">
             {isRTL ? 'نظرة عامة على حسابك وأنشطتك' : 'Overview of your account and activities'}
           </p>
         </div>
 
         {/* Main Stats Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {mainCards.map((card) => (
             <Card key={card.label} className="border-border/50 hover:shadow-md transition-shadow">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <div className={`w-10 h-10 rounded-xl ${card.color} flex items-center justify-center`}>
-                    <card.icon className="w-5 h-5" />
+              <CardContent className="p-3 sm:p-4">
+                <div className="flex items-center justify-between mb-2 sm:mb-3">
+                  <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl ${card.color} flex items-center justify-center`}>
+                    <card.icon className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
                   {card.change && (
-                    <span className={`text-xs font-semibold flex items-center gap-0.5 ${card.positive ? 'text-green-500' : 'text-red-500'}`}>
+                    <span className={`text-[10px] sm:text-xs font-semibold flex items-center gap-0.5 ${card.positive ? 'text-green-500' : 'text-red-500'}`}>
                       {card.positive ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
                       {card.change}
                     </span>
                   )}
                 </div>
-                <p className="text-2xl font-bold text-foreground">{card.value}</p>
-                <p className="text-xs text-muted-foreground mt-1">{card.label}</p>
+                <p className="text-xl sm:text-2xl font-bold text-foreground">{card.value}</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1 truncate">{card.label}</p>
               </CardContent>
             </Card>
           ))}
         </div>
 
         {/* Charts Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
           <Card className="border-border/50">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
+            <CardHeader className="pb-2 px-3 sm:px-6 pt-3 sm:pt-6">
+              <CardTitle className="text-sm sm:text-base flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-accent" />
                 {isRTL ? 'الزيارات الشهرية' : 'Monthly Views'}
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="h-[220px]">
+            <CardContent className="px-2 sm:px-6 pb-3 sm:pb-6">
+              <div className="h-[180px] sm:h-[220px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={mockMonthlyData}>
                     <defs>
@@ -132,9 +132,9 @@ const DashboardOverview = () => {
                         <stop offset="95%" stopColor="hsl(42 85% 55%)" stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <XAxis dataKey="month" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-                    <Tooltip contentStyle={{ borderRadius: 12, fontSize: 12, border: '1px solid hsl(220 15% 88%)' }} />
+                    <XAxis dataKey="month" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} width={30} />
+                    <Tooltip contentStyle={{ borderRadius: 12, fontSize: 11, border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }} />
                     <Area type="monotone" dataKey="views" stroke="hsl(42 85% 55%)" fill="url(#colorViews)" strokeWidth={2} />
                   </AreaChart>
                 </ResponsiveContainer>
@@ -143,19 +143,19 @@ const DashboardOverview = () => {
           </Card>
 
           <Card className="border-border/50">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
+            <CardHeader className="pb-2 px-3 sm:px-6 pt-3 sm:pt-6">
+              <CardTitle className="text-sm sm:text-base flex items-center gap-2">
                 <FileText className="w-4 h-4 text-purple-500" />
                 {isRTL ? 'العقود' : 'Contracts'}
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="h-[220px]">
+            <CardContent className="px-2 sm:px-6 pb-3 sm:pb-6">
+              <div className="h-[180px] sm:h-[220px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={mockMonthlyData}>
-                    <XAxis dataKey="month" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-                    <Tooltip contentStyle={{ borderRadius: 12, fontSize: 12, border: '1px solid hsl(220 15% 88%)' }} />
+                    <XAxis dataKey="month" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} width={30} />
+                    <Tooltip contentStyle={{ borderRadius: 12, fontSize: 11, border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }} />
                     <Bar dataKey="contracts" fill="hsl(270 50% 60%)" radius={[6, 6, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
@@ -166,16 +166,16 @@ const DashboardOverview = () => {
 
         {/* Quick Actions */}
         <Card className="border-border/50">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">{isRTL ? 'إجراءات سريعة' : 'Quick Actions'}</CardTitle>
+          <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6">
+            <CardTitle className="text-sm sm:text-base">{isRTL ? 'إجراءات سريعة' : 'Quick Actions'}</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
               {quickActions.map(action => (
                 <Link key={action.to} to={action.to}>
-                  <Button variant="outline" className="w-full h-auto py-4 flex flex-col gap-2 rounded-xl hover:border-accent/50 hover:bg-accent/5 transition-all">
-                    <action.icon className="w-5 h-5 text-accent" />
-                    <span className="text-xs font-body">{action.label}</span>
+                  <Button variant="outline" className="w-full h-auto py-3 sm:py-4 flex flex-col gap-1.5 sm:gap-2 rounded-xl hover:border-accent/50 hover:bg-accent/5 transition-all">
+                    <action.icon className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />
+                    <span className="text-[10px] sm:text-xs font-body">{action.label}</span>
                   </Button>
                 </Link>
               ))}
@@ -184,7 +184,7 @@ const DashboardOverview = () => {
         </Card>
 
         {/* Service Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4">
           {[
             { icon: Wrench, label: isRTL ? 'الخدمات' : 'Services', value: stats?.services ?? 0, color: 'text-blue-500' },
             { icon: Image, label: isRTL ? 'معرض الأعمال' : 'Portfolio', value: stats?.portfolio ?? 0, color: 'text-green-500' },
@@ -193,10 +193,10 @@ const DashboardOverview = () => {
             { icon: Shield, label: isRTL ? 'الضمانات' : 'Warranties', value: stats?.warranties ?? 0, color: 'text-teal-500' },
           ].map((card) => (
             <Card key={card.label} className="border-border/50">
-              <CardContent className="p-4 flex flex-col items-center text-center gap-2">
-                <card.icon className={`w-7 h-7 ${card.color}`} />
-                <span className="text-2xl font-bold text-foreground">{card.value}</span>
-                <span className="text-xs text-muted-foreground">{card.label}</span>
+              <CardContent className="p-3 sm:p-4 flex flex-col items-center text-center gap-1.5 sm:gap-2">
+                <card.icon className={`w-5 h-5 sm:w-7 sm:h-7 ${card.color}`} />
+                <span className="text-xl sm:text-2xl font-bold text-foreground">{card.value}</span>
+                <span className="text-[10px] sm:text-xs text-muted-foreground">{card.label}</span>
               </CardContent>
             </Card>
           ))}
