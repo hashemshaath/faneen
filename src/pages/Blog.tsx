@@ -93,7 +93,7 @@ const Blog = () => {
   }, [posts]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
       <Navbar />
 
       {/* ═══ Hero Header ═══ */}
@@ -151,7 +151,7 @@ const Blog = () => {
       </div>
 
       {/* ═══ Content ═══ */}
-      <div className="container mx-auto px-3 sm:px-4 py-5 sm:py-10 flex-1">
+      <div className="container mx-auto px-3 sm:px-4 py-5 sm:py-10">
         {isLoading ? (
           <div className="flex justify-center py-16 sm:py-20">
             <div className="flex flex-col items-center gap-3">
