@@ -233,11 +233,9 @@ const DashboardProjects = () => {
                 <div className="space-y-2">
                   <Label>{isRTL ? 'عنوان المشروع (إنجليزي)' : 'Project Title (English)'}</Label>
                   <Input value={form.title_en} onChange={e => setForm(f => ({ ...f, title_en: e.target.value }))} dir="ltr" placeholder="e.g. Commercial building glass facade" />
-                  {form.title_en && (
-                    <FieldAiActions value={form.title_en} lang="en" compact fieldType="title" isRTL={isRTL}
-                      onTranslated={(v) => setForm(f => ({ ...f, title_ar: v }))}
-                      onImproved={(v) => setForm(f => ({ ...f, title_en: v }))} />
-                  )}
+                  <FieldAiActions value={form.title_en} lang="en" compact fieldType="title" isRTL={isRTL}
+                    onTranslated={(v) => setForm(f => ({ ...f, title_ar: v }))}
+                    onImproved={(v) => setForm(f => ({ ...f, title_en: v }))} />
                 </div>
               </div>
 
