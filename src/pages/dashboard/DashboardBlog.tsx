@@ -18,6 +18,7 @@ import { toast } from 'sonner';
 import { ImageUpload } from '@/components/ui/image-upload';
 import { AiToolbar } from '@/components/blog/AiToolbar';
 import { SeoScorePanel } from '@/components/blog/SeoScorePanel';
+import { RichMarkdownEditor } from '@/components/blog/RichMarkdownEditor';
 import { callBlogAi, parseJsonResponse, calculateReadingTime, calculateLocalSeoScore } from '@/lib/blog-ai-utils';
 
 const blogCategories = [
@@ -358,21 +359,25 @@ const DashboardBlog = () => {
                       </div>
 
                       <div>
-                        <Label>{isRTL ? 'المحتوى (عربي)' : 'Content (AR)'}</Label>
-                        <Textarea value={form.content_ar} onChange={e => setField('content_ar', e.target.value)} rows={8} className="font-mono text-sm" />
-                        <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
-                          <span>{form.content_ar.split(/\s+/).filter(Boolean).length} {isRTL ? 'كلمة' : 'words'}</span>
-                          <span>{calculateReadingTime(form.content_ar)} {isRTL ? 'دقيقة قراءة' : 'min read'}</span>
-                        </div>
+                        <Label className="mb-2 block">{isRTL ? 'المحتوى (عربي)' : 'Content (AR)'}</Label>
+                        <RichMarkdownEditor
+                          value={form.content_ar}
+                          onChange={(v) => setField('content_ar', v)}
+                          dir="rtl"
+                          isRTL={true}
+                          minHeight="350px"
+                        />
                       </div>
 
                       <div>
-                        <Label>{isRTL ? 'المحتوى (إنجليزي)' : 'Content (EN)'}</Label>
-                        <Textarea value={form.content_en} onChange={e => setField('content_en', e.target.value)} rows={8} dir="ltr" className="font-mono text-sm" />
-                        <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
-                          <span>{form.content_en.split(/\s+/).filter(Boolean).length} {isRTL ? 'كلمة' : 'words'}</span>
-                          <span>{calculateReadingTime(form.content_en)} {isRTL ? 'دقيقة قراءة' : 'min read'}</span>
-                        </div>
+                        <Label className="mb-2 block">{isRTL ? 'المحتوى (إنجليزي)' : 'Content (EN)'}</Label>
+                        <RichMarkdownEditor
+                          value={form.content_en}
+                          onChange={(v) => setField('content_en', v)}
+                          dir="ltr"
+                          isRTL={false}
+                          minHeight="350px"
+                        />
                       </div>
                     </TabsContent>
 
