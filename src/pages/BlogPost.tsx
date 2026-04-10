@@ -118,6 +118,18 @@ const BlogPost = () => {
     }
   };
 
+  const shareToSocial = (platform: string) => {
+    const url = encodeURIComponent(window.location.href);
+    const text = encodeURIComponent(title);
+    const urls: Record<string, string> = {
+      whatsapp: `https://wa.me/?text=${text}%20${url}`,
+      x: `https://x.com/intent/tweet?text=${text}&url=${url}`,
+      facebook: `https://www.facebook.com/sharer/sharer.php?u=${url}`,
+      telegram: `https://t.me/share/url?url=${url}&text=${text}`,
+      linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${url}`,
+    };
+    window.open(urls[platform], '_blank', 'noopener,noreferrer,width=600,height=400');
+
   // Scroll progress
   const [progress, setProgress] = useState(0);
   useEffect(() => {
