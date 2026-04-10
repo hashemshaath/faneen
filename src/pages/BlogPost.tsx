@@ -381,20 +381,10 @@ const BlogPost = () => {
               prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md prose-code:text-xs prose-code:sm:text-sm
               prose-img:rounded-xl prose-img:shadow-lg
               prose-li:text-foreground/85 prose-li:text-sm prose-li:sm:text-base
+              prose-table:border-border prose-th:bg-muted prose-th:p-2 prose-td:p-2 prose-td:border-border
+              prose-hr:border-border/50
               ">
-              {paragraphs.map((paragraph, i) => {
-                const trimmed = paragraph.trim();
-                const isHeading = trimmed.startsWith('#') || (trimmed.length < 60 && trimmed.endsWith(':'));
-                const headingIndex = headings.findIndex(h => h.text === trimmed.replace(/^#+\s*/, '').replace(/:$/, ''));
-                if (isHeading && headingIndex >= 0) {
-                  return (
-                    <h2 key={i} id={headings[headingIndex].id} className="text-lg sm:text-xl font-bold mt-6 sm:mt-8 mb-3 sm:mb-4">
-                      {headings[headingIndex].text}
-                    </h2>
-                  );
-                }
-                return <p key={i}>{trimmed}</p>;
-              })}
+              <div dangerouslySetInnerHTML={{ __html: renderedHTML }} />
             </article>
 
             {/* Tags footer */}
