@@ -38,12 +38,12 @@ const menuItems = [
 ] as const;
 
 const adminItems = [
-  { titleKey: 'admin.users', url: '/admin/users', icon: Users },
-  { titleKey: 'admin.profile_systems', url: '/dashboard/profile-systems', icon: Layers },
-  { titleKey: 'admin.blog', url: '/dashboard/blog', icon: PenSquare },
-  { titleKey: 'admin.api_settings', url: '/admin/api-settings', icon: Key },
-  { titleKey: 'admin.api_docs', url: '/admin/api-docs', icon: Book },
-  { titleKey: 'admin.activity_log', url: '/admin/activity-log', icon: Activity },
+  { titleKey: 'admin.users', url: '/admin/users', icon: Users, superAdminOnly: true },
+  { titleKey: 'admin.profile_systems', url: '/dashboard/profile-systems', icon: Layers, superAdminOnly: false },
+  { titleKey: 'admin.blog', url: '/dashboard/blog', icon: PenSquare, superAdminOnly: false },
+  { titleKey: 'admin.api_settings', url: '/admin/api-settings', icon: Key, superAdminOnly: false },
+  { titleKey: 'admin.api_docs', url: '/admin/api-docs', icon: Book, superAdminOnly: false },
+  { titleKey: 'admin.activity_log', url: '/admin/activity-log', icon: Activity, superAdminOnly: false },
 ] as const;
 
 const getAdminLabel = (titleKey: string, isRTL: boolean) => {
@@ -125,7 +125,7 @@ export const DashboardSidebar: React.FC = () => {
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {adminItems.map((item) => (
+                {adminItems.filter(item => !item.superAdminOnly || isSuperAdmin).map((item) => (
                   <SidebarMenuItem key={item.url}>
                     <SidebarMenuButton asChild>
                       <NavLink
