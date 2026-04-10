@@ -264,9 +264,51 @@ export type Database = {
           },
         ]
       }
+      business_staff: {
+        Row: {
+          business_id: string
+          created_at: string
+          id: string
+          invited_by: string | null
+          is_active: boolean
+          role: Database["public"]["Enums"]["business_staff_role"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          id?: string
+          invited_by?: string | null
+          is_active?: boolean
+          role?: Database["public"]["Enums"]["business_staff_role"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          id?: string
+          invited_by?: string | null
+          is_active?: boolean
+          role?: Database["public"]["Enums"]["business_staff_role"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_staff_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       businesses: {
         Row: {
           address: string | null
+          business_number: number
           category_id: string | null
           city_id: string | null
           country_id: string | null
@@ -294,6 +336,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          business_number?: number
           category_id?: string | null
           city_id?: string | null
           country_id?: string | null
@@ -321,6 +364,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          business_number?: number
           category_id?: string | null
           city_id?: string | null
           country_id?: string | null
@@ -1367,6 +1411,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          account_number: number
           account_type: Database["public"]["Enums"]["account_type"]
           avatar_url: string | null
           city_id: string | null
@@ -1387,6 +1432,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          account_number?: number
           account_type?: Database["public"]["Enums"]["account_type"]
           avatar_url?: string | null
           city_id?: string | null
@@ -1407,6 +1453,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          account_number?: number
           account_type?: Database["public"]["Enums"]["account_type"]
           avatar_url?: string | null
           city_id?: string | null
@@ -1838,6 +1885,14 @@ export type Database = {
         Returns: string
       }
       has_admin_access: { Args: { _user_id: string }; Returns: boolean }
+      has_business_role: {
+        Args: {
+          _business_id: string
+          _roles: Database["public"]["Enums"]["business_staff_role"][]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1850,6 +1905,7 @@ export type Database = {
     Enums: {
       account_type: "individual" | "business" | "company"
       app_role: "admin" | "moderator" | "user" | "super_admin"
+      business_staff_role: "owner" | "manager" | "editor" | "viewer"
       contract_status:
         | "draft"
         | "pending_approval"
@@ -1998,6 +2054,7 @@ export const Constants = {
     Enums: {
       account_type: ["individual", "business", "company"],
       app_role: ["admin", "moderator", "user", "super_admin"],
+      business_staff_role: ["owner", "manager", "editor", "viewer"],
       contract_status: [
         "draft",
         "pending_approval",
