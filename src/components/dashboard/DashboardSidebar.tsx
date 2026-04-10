@@ -78,6 +78,13 @@ const providerGroups: MenuGroup[] = [
     ],
   },
   {
+    groupLabel: { ar: 'الأدوات', en: 'Tools' },
+    icon: Brain,
+    items: [
+      { label: { ar: 'مركز الذكاء', en: 'AI Center' }, url: '/dashboard/ai-center', icon: Brain },
+    ],
+  },
+  {
     groupLabel: { ar: 'الحساب', en: 'Account' },
     icon: Settings,
     items: [
@@ -109,11 +116,10 @@ const userGroups: MenuGroup[] = [
     ],
   },
   {
-    groupLabel: { ar: 'المزيد', en: 'More' },
-    icon: Activity,
+    groupLabel: { ar: 'الأدوات', en: 'Tools' },
+    icon: Brain,
     items: [
-      { label: { ar: 'المفضلة', en: 'Bookmarks' }, url: '/dashboard/bookmarks', icon: Bookmark },
-      { label: { ar: 'العمليات', en: 'Operations' }, url: '/dashboard/operations', icon: Activity },
+      { label: { ar: 'مركز الذكاء', en: 'AI Center' }, url: '/dashboard/ai-center', icon: Brain },
     ],
   },
   {
