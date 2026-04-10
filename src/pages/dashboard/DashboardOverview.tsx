@@ -171,21 +171,29 @@ const AdminDashboardView = ({ isRTL }: { isRTL: boolean }) => {
 
   return (
     <div className="space-y-6" ref={ref}>
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-heading font-bold text-2xl text-foreground flex items-center gap-2">
-            <ShieldAlert className="w-6 h-6 text-accent" />
-            {isRTL ? 'لوحة الإدارة' : 'Admin Dashboard'}
-          </h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            {isRTL ? 'نظرة شاملة على النظام' : 'System overview at a glance'}
-          </p>
+      {/* Welcome Banner */}
+      <div className="rounded-2xl border border-border/40 bg-gradient-to-br from-card via-card to-accent/5 p-5 sm:p-6 dark:from-card/80 dark:to-accent/10">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <div className="w-10 h-10 rounded-xl bg-accent/15 flex items-center justify-center">
+                <ShieldAlert className="w-5 h-5 text-accent" />
+              </div>
+              <div>
+                <h1 className="font-heading font-bold text-lg sm:text-xl text-foreground">
+                  {isRTL ? 'لوحة الإدارة' : 'Admin Dashboard'}
+                </h1>
+                <p className="text-xs text-muted-foreground">
+                  {isRTL ? 'نظرة شاملة على النظام — مراقبة مباشرة' : 'System overview — live monitoring'}
+                </p>
+              </div>
+            </div>
+          </div>
+          <Badge variant="outline" className="text-xs gap-1 bg-green-500/10 border-green-500/30 text-green-600">
+            <Zap className="w-3 h-3" />
+            {isRTL ? 'مباشر' : 'Live'}
+          </Badge>
         </div>
-        <Badge variant="outline" className="text-xs gap-1">
-          <Zap className="w-3 h-3" />
-          {isRTL ? 'مباشر' : 'Live'}
-        </Badge>
       </div>
 
       {/* Stats Grid */}
@@ -200,7 +208,7 @@ const AdminDashboardView = ({ isRTL }: { isRTL: boolean }) => {
                   </div>
                   <ArrowUpRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
-                <p className="text-2xl font-bold">{card.value}</p>
+                <p className="text-2xl font-bold"><span className="tech-content">{card.value}</span></p>
                 {card.sub && <p className="text-[10px] text-muted-foreground">{card.sub}</p>}
                 <p className="text-xs text-muted-foreground mt-1">{card.label}</p>
               </CardContent>
@@ -385,7 +393,7 @@ const AdminDashboardView = ({ isRTL }: { isRTL: boolean }) => {
               <div className={`w-9 h-9 rounded-xl ${card.bg} flex items-center justify-center`}>
                 <card.icon className={`w-4 h-4 ${card.color}`} />
               </div>
-              <span className="text-xl font-bold">{card.value}</span>
+              <span className="tech-content text-xl font-bold">{card.value}</span>
               <span className="text-[10px] text-muted-foreground">{card.label}</span>
             </CardContent>
           </Card>
@@ -513,23 +521,33 @@ const ProviderDashboardView = ({ isRTL, user, profile }: { isRTL: boolean; user:
 
   return (
     <div className="space-y-6" ref={ref}>
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-        <div>
-          <h1 className="font-heading font-bold text-xl sm:text-2xl text-foreground flex items-center gap-2">
-            {isRTL ? 'لوحة مزود الخدمة' : 'Provider Dashboard'}
+      {/* Welcome Banner */}
+      <div className="rounded-2xl border border-border/40 bg-gradient-to-br from-card via-card to-accent/5 p-5 sm:p-6 dark:from-card/80 dark:to-accent/10">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-accent/15 flex items-center justify-center shrink-0">
+              {business?.logo_url ? (
+                <img src={business.logo_url} alt="" className="w-full h-full rounded-2xl object-cover" />
+              ) : (
+                <Building2 className="w-6 h-6 text-accent" />
+              )}
+            </div>
+            <div>
+              <h1 className="font-heading font-bold text-lg sm:text-xl text-foreground flex items-center gap-2">
+                {isRTL ? 'لوحة مزود الخدمة' : 'Provider Dashboard'}
             {business?.is_verified && (
               <Badge variant="secondary" className="text-[10px] bg-green-500/10 text-green-600 border-0">
                 <CheckCircle2 className="w-3 h-3 me-1" />{isRTL ? 'موثق' : 'Verified'}
               </Badge>
             )}
           </h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            {isRTL ? `مرحباً ${profile?.full_name || ''}` : `Welcome ${profile?.full_name || ''}`}
-            {business && <> — {isRTL ? business.name_ar : (business.name_en || business.name_ar)}</>}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
+              <p className="text-xs text-muted-foreground">
+                {isRTL ? `مرحباً ${profile?.full_name || ''}` : `Welcome ${profile?.full_name || ''}`}
+                {business && <> — {isRTL ? business.name_ar : (business.name_en || business.name_ar)}</>}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
           {profile?.ref_id && <Badge variant="outline" className="text-xs">{profile.ref_id}</Badge>}
           {business?.membership_tier && (
             <Badge className="bg-accent/10 text-accent border-accent/30">
@@ -538,6 +556,7 @@ const ProviderDashboardView = ({ isRTL, user, profile }: { isRTL: boolean; user:
                business.membership_tier === 'premium' ? (isRTL ? 'بريميوم' : 'Premium') : (isRTL ? 'مؤسسات' : 'Enterprise')}
             </Badge>
           )}
+          </div>
         </div>
       </div>
 
@@ -554,7 +573,7 @@ const ProviderDashboardView = ({ isRTL, user, profile }: { isRTL: boolean; user:
               <div className={`w-10 h-10 rounded-xl ${card.color} flex items-center justify-center mb-2.5`}>
                 <card.icon className="w-5 h-5" />
               </div>
-              <p className="text-xl sm:text-2xl font-bold leading-none">{card.value}</p>
+              <p className="text-xl sm:text-2xl font-bold leading-none"><span className="tech-content">{card.value}</span></p>
               {card.sub && <p className="text-[10px] text-muted-foreground mt-0.5">{card.sub}</p>}
               <p className="text-xs text-muted-foreground mt-1">{card.label}</p>
             </CardContent>
@@ -616,7 +635,7 @@ const ProviderDashboardView = ({ isRTL, user, profile }: { isRTL: boolean; user:
             })}
             <Separator className="my-2" />
             <div className="text-center">
-              <span className="text-3xl font-bold text-accent">{stats?.avgRating ?? '0.0'}</span>
+              <span className="tech-content text-3xl font-bold text-accent">{stats?.avgRating ?? '0.0'}</span>
               <p className="text-[10px] text-muted-foreground">{stats?.reviews ?? 0} {isRTL ? 'تقييم' : 'reviews'}</p>
             </div>
           </CardContent>
@@ -682,13 +701,13 @@ const ProviderDashboardView = ({ isRTL, user, profile }: { isRTL: boolean; user:
                     <div className="flex items-center justify-between p-2.5 rounded-xl hover:bg-muted/50 transition-colors">
                       <div className="min-w-0 flex-1">
                         <p className="text-xs font-medium truncate">{isRTL ? c.title_ar : (c.title_en || c.title_ar)}</p>
-                        <p className="text-[10px] text-muted-foreground">{c.contract_number}</p>
+                        <p className="tech-content text-[10px] text-muted-foreground">{c.contract_number}</p>
                       </div>
                       <div className="flex items-center gap-2">
                         <Badge variant="outline" className={`text-[9px] ${getStatusColor(c.status)}`}>
                           {getStatusLabel(c.status, isRTL)}
                         </Badge>
-                        <span className="text-xs font-semibold whitespace-nowrap">
+                        <span className="tech-content text-xs font-semibold whitespace-nowrap">
                           {Number(c.total_amount).toLocaleString()} {c.currency_code}
                         </span>
                       </div>
@@ -789,7 +808,7 @@ const ProviderDashboardView = ({ isRTL, user, profile }: { isRTL: boolean; user:
               <div className={`w-8 h-8 rounded-lg ${card.bg} flex items-center justify-center`}>
                 <card.icon className={`w-4 h-4 ${card.color}`} />
               </div>
-              <span className="text-lg font-bold">{card.value}</span>
+              <span className="tech-content text-lg font-bold">{card.value}</span>
               <span className="text-[10px] text-muted-foreground">{card.label}</span>
             </CardContent>
           </Card>
@@ -860,17 +879,19 @@ const UserDashboardView = ({ isRTL, user, profile }: { isRTL: boolean; user: any
 
   return (
     <div className="space-y-6" ref={ref}>
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-heading font-bold text-xl sm:text-2xl">
-            {isRTL ? `مرحباً ${profile?.full_name || ''}` : `Welcome ${profile?.full_name || ''}`}
-          </h1>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-            {isRTL ? 'لوحة التحكم الخاصة بك' : 'Your personal dashboard'}
-          </p>
+      {/* Welcome Banner */}
+      <div className="rounded-2xl border border-border/40 bg-gradient-to-br from-card via-card to-accent/5 p-5 sm:p-6 dark:from-card/80 dark:to-accent/10">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="font-heading font-bold text-lg sm:text-xl text-foreground">
+              {isRTL ? `مرحباً ${profile?.full_name || ''}` : `Welcome ${profile?.full_name || ''}`}
+            </h1>
+            <p className="text-xs text-muted-foreground mt-1">
+              {isRTL ? 'لوحة التحكم الخاصة بك — تتبع عقودك ورسائلك' : 'Your personal dashboard — track contracts & messages'}
+            </p>
+          </div>
+          {profile?.ref_id && <Badge variant="outline" className="tech-content text-xs">{profile.ref_id}</Badge>}
         </div>
-        {profile?.ref_id && <Badge variant="outline" className="text-xs">{profile.ref_id}</Badge>}
       </div>
 
       {/* Main Stats */}
@@ -886,7 +907,7 @@ const UserDashboardView = ({ isRTL, user, profile }: { isRTL: boolean; user: any
               <div className={`w-10 h-10 rounded-xl ${card.color} flex items-center justify-center mb-2.5`}>
                 <card.icon className="w-5 h-5" />
               </div>
-              <p className="text-xl sm:text-2xl font-bold leading-none">{card.value}</p>
+              <p className="text-xl sm:text-2xl font-bold leading-none"><span className="tech-content">{card.value}</span></p>
               {card.sub && <p className="text-[10px] text-muted-foreground mt-0.5">{card.sub}</p>}
               <p className="text-xs text-muted-foreground mt-1">{card.label}</p>
             </CardContent>
@@ -915,13 +936,13 @@ const UserDashboardView = ({ isRTL, user, profile }: { isRTL: boolean; user: any
                     <div className="flex items-center justify-between p-2.5 rounded-xl hover:bg-muted/50 transition-colors">
                       <div className="min-w-0 flex-1">
                         <p className="text-xs font-medium truncate">{isRTL ? c.title_ar : (c.title_en || c.title_ar)}</p>
-                        <p className="text-[10px] text-muted-foreground">{c.contract_number}</p>
+                        <p className="tech-content text-[10px] text-muted-foreground">{c.contract_number}</p>
                       </div>
                       <div className="flex items-center gap-2">
                         <Badge variant="outline" className={`text-[9px] ${getStatusColor(c.status)}`}>
                           {getStatusLabel(c.status, isRTL)}
                         </Badge>
-                        <span className="text-xs font-semibold whitespace-nowrap">
+                        <span className="tech-content text-xs font-semibold whitespace-nowrap">
                           {Number(c.total_amount).toLocaleString()} {c.currency_code}
                         </span>
                       </div>
