@@ -7,11 +7,14 @@ import { ScrollToTop } from "@/components/ScrollToTop";
 
 // Lazy load below-the-fold sections
 const CategoriesSection = lazy(() => import("@/components/home/CategoriesSection").then(m => ({ default: m.CategoriesSection })));
+const HowItWorksSection = lazy(() => import("@/components/home/HowItWorksSection").then(m => ({ default: m.HowItWorksSection })));
+const TopProvidersSection = lazy(() => import("@/components/home/TopProvidersSection").then(m => ({ default: m.TopProvidersSection })));
 const LatestProjectsSection = lazy(() => import("@/components/home/LatestProjectsSection").then(m => ({ default: m.LatestProjectsSection })));
 const LatestOffersSection = lazy(() => import("@/components/home/LatestOffersSection").then(m => ({ default: m.LatestOffersSection })));
 const FeaturesSection = lazy(() => import("@/components/home/FeaturesSection").then(m => ({ default: m.FeaturesSection })));
 const LatestBlogSection = lazy(() => import("@/components/home/LatestBlogSection").then(m => ({ default: m.LatestBlogSection })));
 const MembershipSection = lazy(() => import("@/components/home/MembershipSection").then(m => ({ default: m.MembershipSection })));
+const CTASection = lazy(() => import("@/components/home/CTASection").then(m => ({ default: m.CTASection })));
 
 const SectionFallback = () => (
   <div className="py-16 px-4 container space-y-4">
@@ -30,6 +33,12 @@ const Index = () => {
         <CategoriesSection />
       </Suspense>
       <Suspense fallback={<SectionFallback />}>
+        <HowItWorksSection />
+      </Suspense>
+      <Suspense fallback={<SectionFallback />}>
+        <TopProvidersSection />
+      </Suspense>
+      <Suspense fallback={<SectionFallback />}>
         <LatestProjectsSection />
       </Suspense>
       <Suspense fallback={<SectionFallback />}>
@@ -43,6 +52,9 @@ const Index = () => {
       </Suspense>
       <Suspense fallback={<SectionFallback />}>
         <MembershipSection />
+      </Suspense>
+      <Suspense fallback={<SectionFallback />}>
+        <CTASection />
       </Suspense>
       <Footer />
       <ScrollToTop />
