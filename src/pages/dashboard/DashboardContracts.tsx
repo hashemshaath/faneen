@@ -20,7 +20,27 @@ import {
   Shield, DollarSign, Calendar, TrendingUp, Users, ListChecks,
   StickyNote, Paperclip, Upload, Send, MessageSquare, Phone, Mail,
   User, ChevronDown, ChevronUp, BarChart3, Activity, Filter,
+  BookTemplate, Sparkles, X, Layers, Hammer, Wrench, Home, Factory,
+  Flame, Car, TreePine, GlassWater, Grid3X3, PanelTop, BookOpen,
 } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+} from '@/components/ui/dialog';
+
+/* ──────────────── Template Category Config ──────────────── */
+const templateCategoryConfig: Record<string, { ar: string; en: string; icon: React.ElementType; color: string }> = {
+  aluminum_doors_windows: { ar: 'ألمنيوم أبواب وشبابيك', en: 'Aluminum Doors & Windows', icon: PanelTop, color: 'text-blue-600 bg-blue-500/10' },
+  iron_doors_windows: { ar: 'حديد أبواب وشبابيك', en: 'Iron Doors & Windows', icon: Hammer, color: 'text-slate-600 bg-slate-500/10' },
+  fire_doors: { ar: 'أبواب مقاومة للحريق', en: 'Fire-Rated Doors', icon: Flame, color: 'text-red-600 bg-red-500/10' },
+  gates_structures: { ar: 'بوابات ومظلات وهناجر', en: 'Gates & Structures', icon: Factory, color: 'text-amber-600 bg-amber-500/10' },
+  wood_doors: { ar: 'أبواب خشبية', en: 'Wood Doors', icon: TreePine, color: 'text-emerald-700 bg-emerald-500/10' },
+  kitchens: { ar: 'مطابخ', en: 'Kitchens', icon: Grid3X3, color: 'text-violet-600 bg-violet-500/10' },
+  facades: { ar: 'واجهات', en: 'Facades', icon: Home, color: 'text-cyan-600 bg-cyan-500/10' },
+  wardrobes_closets: { ar: 'خزائن ودواليب', en: 'Wardrobes & Closets', icon: Layers, color: 'text-pink-600 bg-pink-500/10' },
+  upvc: { ar: 'UPVC أبواب وشبابيك', en: 'UPVC Doors & Windows', icon: Wrench, color: 'text-teal-600 bg-teal-500/10' },
+  glass_securit: { ar: 'زجاج وسيكوريت', en: 'Glass & Securit', icon: GlassWater, color: 'text-sky-600 bg-sky-500/10' },
+};
 
 /* ──────────────── Status Config ──────────────── */
 const statusConfig: Record<string, { icon: React.ElementType; color: string; label_ar: string; label_en: string }> = {
@@ -41,6 +61,9 @@ const DashboardContracts = () => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [noteText, setNoteText] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
+  const [templatePreview, setTemplatePreview] = useState<any>(null);
 
   /* ──────────── Data Queries ──────────── */
   const { data: contracts = [], isLoading } = useQuery({
@@ -105,6 +128,20 @@ const DashboardContracts = () => {
 
   const getProfile = (uid: string) => profiles.find(p => p.user_id === uid);
 
+  /* ──────────── Contract Templates ──────────── */
+  const { data: templates = [] } = useQuery({
+    queryKey: ['contract-templates'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('contract_templates')
+        .select('*')
+        .eq('is_active', true)
+        .order('sort_order');
+      return data ?? [];
+    },
+    enabled: !!user,
+  });
+
   /* ──────────── Add Note Mutation ──────────── */
   const addNoteMutation = useMutation({
     mutationFn: async ({ contractId, content }: { contractId: string; content: string }) => {
@@ -147,6 +184,114 @@ const DashboardContracts = () => {
 
   return (
     <DashboardLayout>
+      {/* ── Contract Templates Dialog ── */}
+      <Dialog open={showTemplates} onOpenChange={setShowTemplates}>
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-lg">
+              <BookOpen className="w-5 h-5 text-primary" />
+              {isRTL ? 'قوالب العقود الاحترافية' : 'Professional Contract Templates'}
+            </DialogTitle>
+          </DialogHeader>
+
+          {templatePreview ? (
+            /* ── Template Preview ── */
+            <ScrollArea className="flex-1 max-h-[65vh]">
+              <div className="space-y-4 p-1">
+                <Button variant="ghost" size="sm" onClick={() => setTemplatePreview(null)} className="gap-1 text-xs mb-2">
+                  <ChevronUp className="w-3.5 h-3.5 rotate-[-90deg]" />
+                  {isRTL ? 'رجوع للقائمة' : 'Back to list'}
+                </Button>
+
+                <div className="flex items-center gap-3 mb-4">
+                  {(() => { const cfg = templateCategoryConfig[templatePreview.category]; const Icon = cfg?.icon || FileText; return (
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${cfg?.color || 'bg-muted text-muted-foreground'}`}><Icon className="w-5 h-5" /></div>
+                  ); })()}
+                  <div>
+                    <h3 className="font-heading font-bold text-base">{isRTL ? templatePreview.name_ar : (templatePreview.name_en || templatePreview.name_ar)}</h3>
+                    <p className="text-xs text-muted-foreground">{templateCategoryConfig[templatePreview.category]?.[isRTL ? 'ar' : 'en'] || templatePreview.category}</p>
+                  </div>
+                </div>
+
+                {[
+                  { key: 'terms', label: isRTL ? 'الشروط والالتزامات' : 'Terms & Conditions', content: isRTL ? templatePreview.terms_ar : (templatePreview.terms_en || templatePreview.terms_ar) },
+                  { key: 'scope', label: isRTL ? 'نطاق العمل' : 'Scope of Work', content: isRTL ? templatePreview.scope_of_work_ar : (templatePreview.scope_of_work_en || templatePreview.scope_of_work_ar) },
+                  { key: 'warranty', label: isRTL ? 'شروط الضمان' : 'Warranty Terms', content: isRTL ? templatePreview.warranty_terms_ar : (templatePreview.warranty_terms_en || templatePreview.warranty_terms_ar) },
+                  { key: 'payment', label: isRTL ? 'شروط الدفع' : 'Payment Terms', content: isRTL ? templatePreview.payment_terms_ar : (templatePreview.payment_terms_en || templatePreview.payment_terms_ar) },
+                  { key: 'penalties', label: isRTL ? 'الغرامات والجزاءات' : 'Penalties', content: isRTL ? templatePreview.penalties_ar : (templatePreview.penalties_en || templatePreview.penalties_ar) },
+                  { key: 'notes', label: isRTL ? 'ملاحظات مهمة' : 'Important Notes', content: isRTL ? templatePreview.notes_ar : (templatePreview.notes_en || templatePreview.notes_ar) },
+                ].filter(s => s.content).map(section => (
+                  <div key={section.key} className="p-4 rounded-xl border border-border/40 bg-muted/20">
+                    <h4 className="font-heading font-semibold text-sm mb-2 flex items-center gap-1.5 text-foreground">
+                      <FileText className="w-3.5 h-3.5 text-primary" />{section.label}
+                    </h4>
+                    <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{section.content}</p>
+                  </div>
+                ))}
+
+                <div className="flex gap-2 pt-2 sticky bottom-0 bg-background pb-2">
+                  <Button variant="default" className="flex-1 gap-1.5" onClick={() => {
+                    setSelectedTemplate(templatePreview);
+                    setShowTemplates(false);
+                    setTemplatePreview(null);
+                    toast({ title: isRTL ? 'تم اختيار القالب — يمكنك نسخ البنود عند إنشاء عقد جديد' : 'Template selected — copy terms when creating a new contract' });
+                  }}>
+                    <CheckCircle2 className="w-4 h-4" />
+                    {isRTL ? 'اختيار هذا القالب' : 'Use This Template'}
+                  </Button>
+                </div>
+              </div>
+            </ScrollArea>
+          ) : (
+            /* ── Templates Grid ── */
+            <ScrollArea className="flex-1 max-h-[65vh]">
+              <div className="grid gap-3 sm:grid-cols-2 p-1">
+                {templates.map((tmpl: any) => {
+                  const cfg = templateCategoryConfig[tmpl.category];
+                  const Icon = cfg?.icon || FileText;
+                  return (
+                    <Card key={tmpl.id} className="border-border/40 hover:border-primary/30 hover:shadow-md transition-all cursor-pointer group"
+                      onClick={() => setTemplatePreview(tmpl)}>
+                      <CardContent className="p-4">
+                        <div className="flex items-start gap-3">
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${cfg?.color || 'bg-muted text-muted-foreground'}`}>
+                            <Icon className="w-5 h-5" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <h4 className="font-heading font-semibold text-sm truncate group-hover:text-primary transition-colors">
+                              {isRTL ? tmpl.name_ar : (tmpl.name_en || tmpl.name_ar)}
+                            </h4>
+                            <p className="text-[10px] text-muted-foreground mt-0.5">
+                              {cfg?.[isRTL ? 'ar' : 'en'] || tmpl.category}
+                            </p>
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              {[
+                                tmpl.scope_of_work_ar && (isRTL ? 'نطاق العمل' : 'Scope'),
+                                tmpl.warranty_terms_ar && (isRTL ? 'ضمان' : 'Warranty'),
+                                tmpl.payment_terms_ar && (isRTL ? 'دفع' : 'Payment'),
+                                tmpl.penalties_ar && (isRTL ? 'غرامات' : 'Penalties'),
+                              ].filter(Boolean).map((tag, i) => (
+                                <Badge key={i} variant="secondary" className="text-[8px] px-1.5 py-0">{tag}</Badge>
+                              ))}
+                            </div>
+                          </div>
+                          <Eye className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0 mt-1" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+              {templates.length === 0 && (
+                <div className="text-center py-12 text-muted-foreground">
+                  <BookOpen className="w-10 h-10 mx-auto mb-2 opacity-30" />
+                  <p>{isRTL ? 'لا توجد قوالب متاحة' : 'No templates available'}</p>
+                </div>
+              )}
+            </ScrollArea>
+          )}
+        </DialogContent>
+      </Dialog>
       <div className="space-y-5 sm:space-y-6">
         {/* ── Page Header ── */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -159,15 +304,27 @@ const DashboardContracts = () => {
               {isRTL ? 'إدارة ومتابعة جميع عقودك ومراحل التنفيذ' : 'Manage and track all contracts and milestones'}
             </p>
           </div>
-          <Button
-            variant="default"
-            size="sm"
-            className="gap-1.5 text-xs sm:text-sm shrink-0"
-            onClick={() => navigate('/contracts')}
-          >
-            <Eye className="w-3.5 h-3.5" />
-            {isRTL ? 'عرض الكل' : 'View All'}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 text-xs sm:text-sm shrink-0"
+              onClick={() => setShowTemplates(true)}
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+              {isRTL ? 'قوالب العقود' : 'Contract Templates'}
+              {templates.length > 0 && <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4">{templates.length}</Badge>}
+            </Button>
+            <Button
+              variant="default"
+              size="sm"
+              className="gap-1.5 text-xs sm:text-sm shrink-0"
+              onClick={() => navigate('/contracts')}
+            >
+              <Eye className="w-3.5 h-3.5" />
+              {isRTL ? 'عرض الكل' : 'View All'}
+            </Button>
+          </div>
         </div>
 
         {/* ── Stats Cards ── */}
