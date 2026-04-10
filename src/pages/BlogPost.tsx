@@ -184,6 +184,24 @@ const BlogPost = () => {
   const readTime = estimateReadTime(content);
   const headings = useMemo(() => extractHeadings(content), [content]);
 
+  const renderedHTML = useMemo(() => {
+    if (!content) return '';
+    marked.setOptions({ breaks: true, gfm: true });
+    const renderer = new marked.Renderer();
+    let hIdx = 0;
+    renderer.heading = ({ text, depth }: { text: string; depth: number }) => {
+      const h = headings[hIdx];
+      const id = h?.id || `heading-auto-${hIdx}`;
+      hIdx++;
+      return `<h${depth} id="${id}" class="scroll-mt-20">${text}</h${depth}>`;
+    };
+    try {
+      return marked.parse(content, { renderer }) as string;
+    } catch {
+      return content.split('\n').filter(p => p.trim()).map(p => `<p>${p}</p>`).join('');
+    }
+  }, [content, headings]);
+
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href);
     setCopied(true);
