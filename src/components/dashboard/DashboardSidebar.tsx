@@ -21,7 +21,7 @@ import {
   Home, Globe, CreditCard, Megaphone, Key, Book, FolderOpen, PenSquare,
   Layers, MessageSquare, Users, Newspaper, Building2, Bell, Activity,
   Bookmark, ShieldAlert, Crown, FolderTree, Tags, UserCog, Database,
-  BarChart3, Cog, Eye, TrendingUp, AlertTriangle, Server,
+  BarChart3, Cog, Eye, TrendingUp, AlertTriangle, Server, Brain,
 } from 'lucide-react';
 
 interface MenuItem {

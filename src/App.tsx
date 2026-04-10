@@ -54,6 +54,7 @@ const AdminMemberships = lazy(() => import("./pages/admin/AdminMemberships"));
 const Notifications = lazy(() => import("./pages/Notifications"));
 const Membership = lazy(() => import("./pages/Membership"));
 const DashboardOperations = lazy(() => import("./pages/dashboard/DashboardOperations"));
+const DashboardAiCenter = lazy(() => import("./pages/dashboard/DashboardAiCenter"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
 
@@ -116,6 +117,7 @@ const AppRoutes = () => (
           <Route path="/dashboard/promotions" element={<ProtectedRoute requireProvider><DashboardPromotions /></ProtectedRoute>} />
           <Route path="/dashboard/projects" element={<ProtectedRoute requireProvider><DashboardProjects /></ProtectedRoute>} />
           <Route path="/dashboard/operations" element={<ProtectedRoute><DashboardOperations /></ProtectedRoute>} />
+          <Route path="/dashboard/ai-center" element={<ProtectedRoute><DashboardAiCenter /></ProtectedRoute>} />
 
           <Route path="/dashboard/blog" element={<ProtectedRoute requireAdmin><DashboardBlog /></ProtectedRoute>} />
           <Route path="/dashboard/profile-systems" element={<ProtectedRoute requireAdmin><DashboardProfileSystems /></ProtectedRoute>} />
