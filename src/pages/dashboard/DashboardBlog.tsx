@@ -31,7 +31,7 @@ import { SeoScorePanel } from '@/components/blog/SeoScorePanel';
 import { RichMarkdownEditor } from '@/components/blog/RichMarkdownEditor';
 import { ArticlePreview } from '@/components/blog/ArticlePreview';
 import { DraftVersions } from '@/components/blog/DraftVersions';
-import { callBlogAi, parseJsonResponse, calculateReadingTime, calculateLocalSeoScore } from '@/lib/blog-ai-utils';
+import { callBlogAi, parseJsonResponse, calculateReadingTime, calculateLocalSeoScore, stripMarkdown } from '@/lib/blog-ai-utils';
 
 const blogCategories = [
   { value: 'general', ar: 'عام', en: 'General' },
@@ -285,9 +285,9 @@ const DashboardBlog = () => {
       const [sLang, tLang] = dir === 'ar-en' ? ['ar', 'en'] : ['en', 'ar'];
       const src = dir === 'ar-en' ? { t: form.title_ar, c: form.content_ar, e: form.excerpt_ar } : { t: form.title_en, c: form.content_en, e: form.excerpt_en };
       const tgt = dir === 'ar-en' ? { t: 'title_en', c: 'content_en', e: 'excerpt_en' } : { t: 'title_ar', c: 'content_ar', e: 'excerpt_ar' };
-      if (src.t) { const r = await callBlogAi({ action: 'translate', text: src.t, sourceLang: sLang, targetLang: tLang }); setField(tgt.t, r.trim()); }
+      if (src.t) { const r = await callBlogAi({ action: 'translate', text: src.t, sourceLang: sLang, targetLang: tLang }); setField(tgt.t, stripMarkdown(r)); }
       if (src.c) { const r = await callBlogAi({ action: 'translate', text: src.c, sourceLang: sLang, targetLang: tLang }); setField(tgt.c, r.trim()); }
-      if (src.e) { const r = await callBlogAi({ action: 'translate', text: src.e, sourceLang: sLang, targetLang: tLang }); setField(tgt.e, r.trim()); }
+      if (src.e) { const r = await callBlogAi({ action: 'translate', text: src.e, sourceLang: sLang, targetLang: tLang }); setField(tgt.e, stripMarkdown(r)); }
       toast.success(isRTL ? 'تمت الترجمة' : 'Translation done');
     } catch {} finally { setAiLoading(null); }
   };
@@ -350,7 +350,7 @@ const DashboardBlog = () => {
     setAiLoading(`excerpt-${lang}`);
     try {
       const raw = await callBlogAi({ action: 'generate_excerpt', title: lang === 'ar' ? form.title_ar : form.title_en, content: lang === 'ar' ? form.content_ar : form.content_en, keywords: [form.focus_keyword] });
-      setField(lang === 'ar' ? 'excerpt_ar' : 'excerpt_en', raw.trim());
+      setField(lang === 'ar' ? 'excerpt_ar' : 'excerpt_en', stripMarkdown(raw));
       toast.success(isRTL ? 'تم توليد المقتطف' : 'Excerpt generated');
     } catch {} finally { setAiLoading(null); }
   };

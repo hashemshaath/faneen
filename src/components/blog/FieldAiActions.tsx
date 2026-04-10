@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Languages, Sparkles, Wand2, Loader2 } from 'lucide-react';
-import { callBlogAi } from '@/lib/blog-ai-utils';
+import { callBlogAi, stripMarkdown } from '@/lib/blog-ai-utils';
 import { toast } from 'sonner';
 
 interface Props {
@@ -30,6 +30,9 @@ export const FieldAiActions: React.FC<Props> = ({
 
   const targetLang = lang === 'ar' ? 'en' : 'ar';
 
+  const isPlainField = fieldType !== 'content';
+  const clean = (text: string) => isPlainField ? stripMarkdown(text) : text.trim();
+
   const handleTranslate = async () => {
     setLoading('translate');
     try {
@@ -39,7 +42,7 @@ export const FieldAiActions: React.FC<Props> = ({
         sourceLang: lang,
         targetLang,
       });
-      onTranslated?.(result.trim());
+      onTranslated?.(clean(result));
       toast.success(isRTL ? 'تمت الترجمة' : 'Translated');
     } catch {} finally { setLoading(null); }
   };
@@ -52,7 +55,7 @@ export const FieldAiActions: React.FC<Props> = ({
         text: value,
         keywords: focusKeyword ? [focusKeyword] : [],
       });
-      onImproved?.(result.trim());
+      onImproved?.(clean(result));
       toast.success(isRTL ? 'تم التحسين' : 'Improved');
     } catch {} finally { setLoading(null); }
   };
@@ -66,7 +69,7 @@ export const FieldAiActions: React.FC<Props> = ({
         content: value,
         keywords: focusKeyword ? [focusKeyword] : [],
       });
-      onImproved?.(result.trim());
+      onImproved?.(clean(result));
       toast.success(isRTL ? 'تم التوليد' : 'Generated');
     } catch {} finally { setLoading(null); }
   };

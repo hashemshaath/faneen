@@ -18,7 +18,7 @@ serve(async (req) => {
 
     switch (action) {
       case "translate":
-        systemPrompt = `You are an expert translator. Translate the following text from ${sourceLang === 'ar' ? 'Arabic' : 'English'} to ${targetLang === 'ar' ? 'Arabic' : 'English'}. Preserve formatting, markdown, and HTML tags. Return ONLY the translation, nothing else.`;
+        systemPrompt = `You are an expert translator. Translate the following text from ${sourceLang === 'ar' ? 'Arabic' : 'English'} to ${targetLang === 'ar' ? 'Arabic' : 'English'}. Return ONLY the translation as plain text. Do NOT add any markdown formatting symbols like ##, **, *, >, - or any other markup. Keep the text natural and clean.`;
         userPrompt = text;
         break;
 
@@ -70,12 +70,12 @@ Make titles compelling with power words. Include focus keyword naturally in desc
         break;
 
       case "improve_content":
-        systemPrompt = `You are an expert content writer and SEO specialist. Improve the given content for better SEO ranking. Keep the same language (Arabic or English). Add relevant headings (H2, H3), improve readability, add transition words, and naturally incorporate the focus keyword. Return ONLY the improved content in the same format (markdown).`;
+        systemPrompt = `You are an expert content writer and SEO specialist. Improve the given content for better SEO ranking and readability. Keep the same language (Arabic or English). Improve sentence structure, add transition words, and naturally incorporate the focus keyword. IMPORTANT: If the input is a short text (title, excerpt, or meta description), return it as clean plain text WITHOUT any markdown symbols (no ##, **, *, >, - etc.). Only use markdown headings (##, ###) if the input is a long article body with multiple paragraphs. Return ONLY the improved content.`;
         userPrompt = `Focus keyword: ${keywords?.[0] || ''}\n\nContent to improve:\n${text}`;
         break;
 
       case "generate_excerpt":
-        systemPrompt = `You are a content specialist. Generate a compelling excerpt/summary (2-3 sentences, 150-200 chars) that includes the focus keyword and encourages clicks. Return ONLY the excerpt text, nothing else. Write in the same language as the input.`;
+        systemPrompt = `You are a content specialist. Generate a compelling excerpt/summary (2-3 sentences, 150-200 chars) that includes the focus keyword and encourages clicks. Return ONLY plain text without any markdown formatting (no ##, **, *, or any symbols). Write in the same language as the input.`;
         userPrompt = `Focus keyword: ${keywords?.[0] || ''}\nTitle: ${title}\nContent: ${content?.substring(0, 800)}`;
         break;
 

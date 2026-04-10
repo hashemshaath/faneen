@@ -35,6 +35,28 @@ export function parseJsonResponse(raw: string): any {
   }
 }
 
+/** Strip markdown formatting symbols from plain-text fields (titles, excerpts, meta) */
+export function stripMarkdown(text: string): string {
+  if (!text) return '';
+  return text
+    .replace(/^#{1,6}\s+/gm, '')       // headings ## 
+    .replace(/\*\*\*(.*?)\*\*\*/g, '$1') // ***bold italic***
+    .replace(/\*\*(.*?)\*\*/g, '$1')     // **bold**
+    .replace(/\*(.*?)\*/g, '$1')         // *italic*
+    .replace(/__(.*?)__/g, '$1')         // __underline__
+    .replace(/~~(.*?)~~/g, '$1')         // ~~strikethrough~~
+    .replace(/`([^`]+)`/g, '$1')         // `code`
+    .replace(/```[\s\S]*?```/g, '')      // code blocks
+    .replace(/^\s*[-*+]\s+/gm, '')       // bullet lists
+    .replace(/^\s*\d+\.\s+/gm, '')       // numbered lists
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // [link](url) → link
+    .replace(/!\[([^\]]*)\]\([^)]+\)/g, '') // images
+    .replace(/^>\s+/gm, '')             // blockquotes
+    .replace(/---+/g, '')               // horizontal rules
+    .replace(/\n{3,}/g, '\n\n')         // excess newlines
+    .trim();
+}
+
 export function calculateReadingTime(text: string): number {
   if (!text) return 0;
   const words = text.trim().split(/\s+/).length;
