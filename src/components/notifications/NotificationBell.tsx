@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useNavigate } from 'react-router-dom';
-import { Bell, Check, CheckCheck, FileText, CreditCard, Megaphone, Settings2, Trash2, AlertTriangle } from 'lucide-react';
+import { Bell, BellRing, Check, CheckCheck, FileText, CreditCard, Megaphone, Settings2, Trash2, AlertTriangle } from 'lucide-react';
+import { useBrowserNotifications } from '@/hooks/useBrowserNotifications';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -32,6 +33,17 @@ export const NotificationBell = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
+  const { isSupported, requestPermission, showNotification } = useBrowserNotifications();
+  const [browserPermission, setBrowserPermission] = useState<string>(
+    typeof Notification !== 'undefined' ? Notification.permission : 'denied'
+  );
+
+  // Request permission on mount
+  useEffect(() => {
+    if (user && isSupported && Notification.permission === 'default') {
+      requestPermission().then(setBrowserPermission);
+    }
+  }, [user, isSupported, requestPermission]);
 
   const { data: notifications = [] } = useQuery({
     queryKey: ['notifications', user?.id],
@@ -49,11 +61,24 @@ export const NotificationBell = () => {
     refetchInterval: 30000,
   });
 
-  // Realtime subscription
+  // Realtime subscription + browser notification
   useEffect(() => {
     if (!user) return;
     const channel = supabase
       .channel('user-notifications')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'notifications',
+        filter: `user_id=eq.${user.id}`,
+      }, (payload) => {
+        queryClient.invalidateQueries({ queryKey: ['notifications', user.id] });
+        // Show browser notification for new inserts
+        const n = payload.new as any;
+        const title = language === 'ar' ? n.title_ar : (n.title_en || n.title_ar);
+        const body = language === 'ar' ? n.body_ar : (n.body_en || n.body_ar);
+        showNotification(title, { body: body || undefined, tag: n.id });
+      })
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
@@ -64,7 +89,7 @@ export const NotificationBell = () => {
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [user?.id, queryClient]);
+  }, [user?.id, queryClient, language, showNotification]);
 
   const unreadCount = notifications.filter((n: any) => !n.is_read).length;
 
@@ -112,6 +137,18 @@ export const NotificationBell = () => {
         <div className="flex items-center justify-between p-3 border-b border-border">
           <h4 className="font-heading font-bold text-sm">{isRTL ? 'الإشعارات' : 'Notifications'}</h4>
           <div className="flex items-center gap-1">
+            {isSupported && browserPermission !== 'granted' && (
+              <Button
+                variant="ghost" size="sm" className="text-xs h-7 px-2"
+                onClick={async () => {
+                  const p = await requestPermission();
+                  setBrowserPermission(p);
+                }}
+              >
+                <BellRing className="w-3.5 h-3.5 me-1" />
+                {isRTL ? 'تفعيل التنبيهات' : 'Enable alerts'}
+              </Button>
+            )}
             {unreadCount > 0 && (
               <Button variant="ghost" size="sm" className="text-xs h-7 px-2" onClick={() => markAllRead.mutate()}>
                 <CheckCheck className="w-3.5 h-3.5 me-1" />
