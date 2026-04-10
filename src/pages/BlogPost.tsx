@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect, useState, useRef } from 'react';
+import React, { useMemo, useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,9 +9,11 @@ import { Footer } from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import {
   ArrowLeft, ArrowRight, Calendar, Eye, FileText, Clock, BookOpen,
   List, Share2, Copy, CheckCheck, Bookmark, BookmarkCheck, ChevronUp,
+  Search, X, ChevronDown,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { marked } from 'marked';
@@ -160,6 +162,11 @@ const BlogPost = () => {
   const [copied, setCopied] = useState(false);
   const [activeHeading, setActiveHeading] = useState('');
   const [tocOpen, setTocOpen] = useState(false);
+  const [articleSearch, setArticleSearch] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [currentMatch, setCurrentMatch] = useState(0);
+  const [totalMatches, setTotalMatches] = useState(0);
+  const articleRef = useRef<HTMLDivElement>(null);
 
   const { data: post, isLoading } = useQuery({
     queryKey: ['blog-post', slug],
@@ -219,7 +226,6 @@ const BlogPost = () => {
   const readTime = estimateReadTime(content);
   const headings = useMemo(() => extractHeadings(content), [content]);
 
-  const articleRef = useRef<HTMLDivElement>(null);
 
   const renderedHTML = useMemo(() => {
     if (!content) return '';
@@ -277,7 +283,130 @@ const BlogPost = () => {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // ── Loading state ──
+  // ── Article search highlighting ──
+  const highlightMatches = useCallback(() => {
+    const container = articleRef.current;
+    if (!container) return;
+
+    // Remove old highlights
+    container.querySelectorAll('mark[data-article-search]').forEach(mark => {
+      const parent = mark.parentNode;
+      if (parent) {
+        parent.replaceChild(document.createTextNode(mark.textContent || ''), mark);
+        parent.normalize();
+      }
+    });
+
+    if (!articleSearch.trim()) {
+      setTotalMatches(0);
+      setCurrentMatch(0);
+      return;
+    }
+
+    const query = articleSearch.trim().toLowerCase();
+    let matchCount = 0;
+
+    const walk = (node: Node) => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        const text = node.textContent || '';
+        const lower = text.toLowerCase();
+        const idx = lower.indexOf(query);
+        if (idx === -1) return;
+
+        const before = text.slice(0, idx);
+        const match = text.slice(idx, idx + query.length);
+        const after = text.slice(idx + query.length);
+
+        const mark = document.createElement('mark');
+        mark.setAttribute('data-article-search', '');
+        mark.setAttribute('data-match-index', String(matchCount));
+        mark.className = 'bg-accent/30 dark:bg-accent/40 text-foreground rounded-sm px-0.5 ring-1 ring-accent/20 transition-all';
+        mark.textContent = match;
+        matchCount++;
+
+        const parent = node.parentNode;
+        if (parent) {
+          const frag = document.createDocumentFragment();
+          if (before) frag.appendChild(document.createTextNode(before));
+          frag.appendChild(mark);
+          if (after) {
+            const afterNode = document.createTextNode(after);
+            frag.appendChild(afterNode);
+            // Continue walking the rest
+          }
+          parent.replaceChild(frag, node);
+        }
+      } else if (node.nodeType === Node.ELEMENT_NODE && !['SCRIPT', 'STYLE', 'MARK', 'CODE', 'PRE'].includes((node as Element).tagName)) {
+        // Copy children to array to avoid live collection issues
+        const children = Array.from(node.childNodes);
+        children.forEach(walk);
+      }
+    };
+
+    walk(container);
+    setTotalMatches(matchCount);
+    setCurrentMatch(matchCount > 0 ? 1 : 0);
+
+    // Scroll to first match
+    if (matchCount > 0) {
+      const first = container.querySelector('mark[data-match-index="0"]');
+      first?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [articleSearch]);
+
+  useEffect(() => {
+    const timer = setTimeout(highlightMatches, 300);
+    return () => clearTimeout(timer);
+  }, [highlightMatches]);
+
+  const navigateMatch = useCallback((direction: 'next' | 'prev') => {
+    if (totalMatches === 0) return;
+    const container = articleRef.current;
+    if (!container) return;
+
+    // Remove active highlight from current
+    container.querySelectorAll('mark[data-article-search]').forEach(m => {
+      (m as HTMLElement).className = 'bg-accent/30 dark:bg-accent/40 text-foreground rounded-sm px-0.5 ring-1 ring-accent/20 transition-all';
+    });
+
+    let next = direction === 'next' ? currentMatch + 1 : currentMatch - 1;
+    if (next > totalMatches) next = 1;
+    if (next < 1) next = totalMatches;
+    setCurrentMatch(next);
+
+    const mark = container.querySelector(`mark[data-match-index="${next - 1}"]`);
+    if (mark) {
+      (mark as HTMLElement).className = 'bg-accent text-accent-foreground rounded-sm px-0.5 ring-2 ring-accent shadow-md transition-all scale-105';
+      mark.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [currentMatch, totalMatches]);
+
+  const closeSearch = useCallback(() => {
+    setSearchOpen(false);
+    setArticleSearch('');
+  }, []);
+
+  // Keyboard shortcut: Ctrl/Cmd + F opens search
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault();
+        setSearchOpen(true);
+        setTimeout(() => {
+          document.getElementById('article-search-input')?.focus();
+        }, 100);
+      }
+      if (e.key === 'Escape' && searchOpen) {
+        closeSearch();
+      }
+      if (e.key === 'Enter' && searchOpen && totalMatches > 0) {
+        navigateMatch(e.shiftKey ? 'prev' : 'next');
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [searchOpen, closeSearch, navigateMatch, totalMatches]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
@@ -426,8 +555,54 @@ const BlogPost = () => {
               </div>
             )}
 
+            {/* ═══ Article Search Bar ═══ */}
+            <div className={`mb-4 sm:mb-6 transition-all duration-300 ${searchOpen ? 'opacity-100 max-h-20' : 'opacity-0 max-h-0 overflow-hidden'}`}>
+              <div className="flex items-center gap-2 p-2 sm:p-2.5 rounded-xl border border-accent/30 bg-card dark:bg-card/90 shadow-lg shadow-accent/5">
+                <Search className="w-4 h-4 text-accent shrink-0" />
+                <Input
+                  id="article-search-input"
+                  placeholder={isRTL ? 'ابحث في المقال...' : 'Search in article...'}
+                  value={articleSearch}
+                  onChange={(e) => setArticleSearch(e.target.value)}
+                  className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 h-8 text-sm px-1"
+                />
+                {totalMatches > 0 && (
+                  <div className="flex items-center gap-1 shrink-0">
+                    <span className="text-[11px] text-muted-foreground font-mono whitespace-nowrap">
+                      {currentMatch}/{totalMatches}
+                    </span>
+                    <button onClick={() => navigateMatch('prev')} className="p-1 rounded hover:bg-muted transition-colors" title={isRTL ? 'السابق' : 'Previous'}>
+                      <ChevronUp className="w-3.5 h-3.5 text-muted-foreground" />
+                    </button>
+                    <button onClick={() => navigateMatch('next')} className="p-1 rounded hover:bg-muted transition-colors" title={isRTL ? 'التالي' : 'Next'}>
+                      <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                    </button>
+                  </div>
+                )}
+                {articleSearch && totalMatches === 0 && (
+                  <span className="text-[11px] text-muted-foreground shrink-0">{isRTL ? 'لا نتائج' : 'No matches'}</span>
+                )}
+                <button onClick={closeSearch} className="p-1 rounded hover:bg-muted transition-colors shrink-0">
+                  <X className="w-4 h-4 text-muted-foreground" />
+                </button>
+              </div>
+            </div>
+
+            {/* Search toggle button */}
+            {!searchOpen && (
+              <button
+                onClick={() => { setSearchOpen(true); setTimeout(() => document.getElementById('article-search-input')?.focus(), 100); }}
+                className="mb-4 sm:mb-6 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/50 dark:bg-muted/30 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+                title="Ctrl+F"
+              >
+                <Search className="w-3.5 h-3.5" />
+                {isRTL ? 'بحث في المقال' : 'Search in article'}
+                <kbd className="hidden sm:inline text-[9px] bg-background dark:bg-muted/50 border border-border rounded px-1 py-0.5 ms-1 font-mono">⌘F</kbd>
+              </button>
+            )}
+
             {/* ═══ Article body ═══ */}
-            <article className="prose prose-base lg:prose-lg max-w-none dark:prose-invert mb-10 sm:mb-12
+            <article ref={articleRef} className="prose prose-base lg:prose-lg max-w-none dark:prose-invert mb-10 sm:mb-12
               prose-headings:font-heading prose-headings:text-foreground prose-headings:scroll-mt-20
               prose-h2:text-lg prose-h2:sm:text-xl prose-h2:lg:text-2xl prose-h2:mt-8 prose-h2:sm:mt-10 prose-h2:mb-4
               prose-h3:text-base prose-h3:sm:text-lg prose-h3:mt-6 prose-h3:mb-3
