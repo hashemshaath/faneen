@@ -187,7 +187,7 @@ const AdminBusinesses = () => {
     enabled: !!editingBiz?.id,
   });
 
-
+  const { data: portfolioData = [], refetch: refetchPortfolio } = useQuery({
     queryKey: ['admin-portfolio', editingBiz?.id],
     queryFn: async () => {
       if (!editingBiz?.id) return [];
