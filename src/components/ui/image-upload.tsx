@@ -32,6 +32,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   className,
   aspectRatio = 'video',
   placeholder = 'اضغط لرفع صورة',
+  compact = false,
 }) => {
   const { user } = useAuth();
   const [uploading, setUploading] = useState(false);
