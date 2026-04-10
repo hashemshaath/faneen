@@ -125,7 +125,7 @@ export const DashboardSidebar: React.FC = () => {
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {adminItems.map((item) => (
+                {adminItems.filter(item => !item.superAdminOnly || isSuperAdmin).map((item) => (
                   <SidebarMenuItem key={item.url}>
                     <SidebarMenuButton asChild>
                       <NavLink
