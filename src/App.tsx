@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import "@/lib/accent-colors"; // Initialize accent color on app load
+import "@/lib/accent-colors";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -8,6 +8,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { LanguageProvider } from "@/i18n/LanguageContext";
 import { ThemeProvider } from "@/components/ThemeToggle";
 import { AuthProvider } from "@/contexts/AuthContext";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 // Only Index is eagerly loaded for fast first paint
 import Index from "./pages/Index";
@@ -52,8 +53,8 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      gcTime: 10 * 60 * 1000, // 10 minutes (was cacheTime)
+      staleTime: 5 * 60 * 1000,
+      gcTime: 10 * 60 * 1000,
       refetchOnWindowFocus: false,
       retry: 1,
     },
@@ -79,27 +80,11 @@ const App = () => (
             <BrowserRouter>
               <Suspense fallback={<PageLoader />}>
                 <Routes>
+                  {/* Public pages */}
                   <Route path="/" element={<Index />} />
                   <Route path="/auth" element={<Auth />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/search" element={<Search />} />
-                  <Route path="/contracts" element={<Contracts />} />
-                  <Route path="/contracts/:id" element={<ContractDetail />} />
-                  <Route path="/dashboard" element={<DashboardOverview />} />
-                  <Route path="/dashboard/services" element={<DashboardServices />} />
-                  <Route path="/dashboard/portfolio" element={<DashboardPortfolio />} />
-                  <Route path="/dashboard/reviews" element={<DashboardReviews />} />
-                  <Route path="/dashboard/contracts" element={<DashboardContracts />} />
-                  <Route path="/dashboard/warranties" element={<DashboardWarranties />} />
-                  <Route path="/dashboard/installments" element={<DashboardInstallments />} />
-                  <Route path="/dashboard/settings" element={<DashboardSettings />} />
-                  <Route path="/dashboard/promotions" element={<DashboardPromotions />} />
-                  <Route path="/dashboard/projects" element={<DashboardProjects />} />
-                  <Route path="/dashboard/blog" element={<DashboardBlog />} />
-                  <Route path="/dashboard/profile-systems" element={<DashboardProfileSystems />} />
-                  <Route path="/dashboard/messages" element={<DashboardMessages />} />
-                  <Route path="/dashboard/bookmarks" element={<DashboardBookmarks />} />
-                  <Route path="/notifications" element={<Notifications />} />
                   <Route path="/offers" element={<Offers />} />
                   <Route path="/projects" element={<Projects />} />
                   <Route path="/projects/:id" element={<ProjectDetail />} />
@@ -109,10 +94,37 @@ const App = () => (
                   <Route path="/profile-systems/:slug" element={<ProfileSystemDetail />} />
                   <Route path="/compare" element={<Compare />} />
                   <Route path="/compare-profiles" element={<CompareProfiles />} />
-                  <Route path="/admin/api-settings" element={<AdminApiSettings />} />
-                  <Route path="/admin/api-docs" element={<AdminApiDocs />} />
-                  <Route path="/admin/users" element={<AdminUsers />} />
-                  <Route path="/admin/activity-log" element={<AdminActivityLog />} />
+
+                  {/* Auth-protected pages */}
+                  <Route path="/contracts" element={<ProtectedRoute><Contracts /></ProtectedRoute>} />
+                  <Route path="/contracts/:id" element={<ProtectedRoute><ContractDetail /></ProtectedRoute>} />
+                  <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+
+                  {/* Dashboard - requires auth */}
+                  <Route path="/dashboard" element={<ProtectedRoute><DashboardOverview /></ProtectedRoute>} />
+                  <Route path="/dashboard/services" element={<ProtectedRoute><DashboardServices /></ProtectedRoute>} />
+                  <Route path="/dashboard/portfolio" element={<ProtectedRoute><DashboardPortfolio /></ProtectedRoute>} />
+                  <Route path="/dashboard/reviews" element={<ProtectedRoute><DashboardReviews /></ProtectedRoute>} />
+                  <Route path="/dashboard/contracts" element={<ProtectedRoute><DashboardContracts /></ProtectedRoute>} />
+                  <Route path="/dashboard/warranties" element={<ProtectedRoute><DashboardWarranties /></ProtectedRoute>} />
+                  <Route path="/dashboard/installments" element={<ProtectedRoute><DashboardInstallments /></ProtectedRoute>} />
+                  <Route path="/dashboard/settings" element={<ProtectedRoute><DashboardSettings /></ProtectedRoute>} />
+                  <Route path="/dashboard/promotions" element={<ProtectedRoute><DashboardPromotions /></ProtectedRoute>} />
+                  <Route path="/dashboard/projects" element={<ProtectedRoute><DashboardProjects /></ProtectedRoute>} />
+                  <Route path="/dashboard/messages" element={<ProtectedRoute><DashboardMessages /></ProtectedRoute>} />
+                  <Route path="/dashboard/bookmarks" element={<ProtectedRoute><DashboardBookmarks /></ProtectedRoute>} />
+
+                  {/* Admin pages - requires admin role */}
+                  <Route path="/dashboard/blog" element={<ProtectedRoute requireAdmin><DashboardBlog /></ProtectedRoute>} />
+                  <Route path="/dashboard/profile-systems" element={<ProtectedRoute requireAdmin><DashboardProfileSystems /></ProtectedRoute>} />
+                  <Route path="/admin/api-settings" element={<ProtectedRoute requireAdmin><AdminApiSettings /></ProtectedRoute>} />
+                  <Route path="/admin/api-docs" element={<ProtectedRoute requireAdmin><AdminApiDocs /></ProtectedRoute>} />
+                  <Route path="/admin/activity-log" element={<ProtectedRoute requireAdmin><AdminActivityLog /></ProtectedRoute>} />
+
+                  {/* Super Admin only - user/role management */}
+                  <Route path="/admin/users" element={<ProtectedRoute requireSuperAdmin><AdminUsers /></ProtectedRoute>} />
+
+                  {/* Dynamic profile route (must be last) */}
                   <Route path="/:username" element={<BusinessProfile />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
