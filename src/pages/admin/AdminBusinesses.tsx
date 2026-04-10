@@ -755,7 +755,7 @@ const AdminBusinesses = () => {
                   </div>
                   <div>
                     <Label className="text-xs flex items-center gap-1"><Globe className="w-3 h-3" /> {isRTL ? 'الموقع الإلكتروني' : 'Website'}</Label>
-                    <Input value={editForm.email} onChange={e => setField('website', e.target.value)} dir="ltr" className="mt-1"
+                    <Input value={editForm.website} onChange={e => setField('website', e.target.value)} dir="ltr" className="mt-1"
                       placeholder="https://" />
                   </div>
 
