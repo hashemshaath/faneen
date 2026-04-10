@@ -14,8 +14,9 @@ import {
   List, Share2, Copy, CheckCheck, Bookmark, BookmarkCheck, ChevronUp,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { marked, Renderer } from 'marked';
+import { marked } from 'marked';
 import { markedHighlight } from 'marked-highlight';
+import hljs from 'highlight.js/lib/core';
 import javascript from 'highlight.js/lib/languages/javascript';
 import typescript from 'highlight.js/lib/languages/typescript';
 import xml from 'highlight.js/lib/languages/xml';
@@ -39,6 +40,17 @@ hljs.registerLanguage('bash', bash);
 hljs.registerLanguage('sh', bash);
 hljs.registerLanguage('python', python);
 hljs.registerLanguage('sql', sql);
+
+marked.use(markedHighlight({
+  langPrefix: 'hljs language-',
+  highlight(code: string, lang: string) {
+    if (lang && hljs.getLanguage(lang)) {
+      try { return hljs.highlight(code, { language: lang }).value; } catch {}
+    }
+    try { return hljs.highlightAuto(code).value; } catch {}
+    return code;
+  },
+}));
 
 const blogCategories: Record<string, { ar: string; en: string }> = {
   general: { ar: 'عام', en: 'General' },
