@@ -742,6 +742,54 @@ export type Database = {
           },
         ]
       }
+      contract_attachments: {
+        Row: {
+          contract_id: string
+          created_at: string
+          file_name: string
+          file_type: string
+          file_url: string
+          id: string
+          milestone_id: string | null
+          user_id: string
+        }
+        Insert: {
+          contract_id: string
+          created_at?: string
+          file_name: string
+          file_type?: string
+          file_url: string
+          id?: string
+          milestone_id?: string | null
+          user_id: string
+        }
+        Update: {
+          contract_id?: string
+          created_at?: string
+          file_name?: string
+          file_type?: string
+          file_url?: string
+          id?: string
+          milestone_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_attachments_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_attachments_milestone_id_fkey"
+            columns: ["milestone_id"]
+            isOneToOne: false
+            referencedRelation: "contract_milestones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contract_milestones: {
         Row: {
           amount: number
@@ -798,6 +846,41 @@ export type Database = {
           },
         ]
       }
+      contract_notes: {
+        Row: {
+          content: string
+          contract_id: string
+          created_at: string
+          id: string
+          note_type: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          contract_id: string
+          created_at?: string
+          id?: string
+          note_type?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          contract_id?: string
+          created_at?: string
+          id?: string
+          note_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_notes_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contracts: {
         Row: {
           business_id: string | null
@@ -817,6 +900,9 @@ export type Database = {
           provider_id: string
           start_date: string | null
           status: Database["public"]["Enums"]["contract_status"]
+          supervisor_email: string | null
+          supervisor_name: string | null
+          supervisor_phone: string | null
           terms_ar: string | null
           terms_en: string | null
           title_ar: string
@@ -842,6 +928,9 @@ export type Database = {
           provider_id: string
           start_date?: string | null
           status?: Database["public"]["Enums"]["contract_status"]
+          supervisor_email?: string | null
+          supervisor_name?: string | null
+          supervisor_phone?: string | null
           terms_ar?: string | null
           terms_en?: string | null
           title_ar: string
@@ -867,6 +956,9 @@ export type Database = {
           provider_id?: string
           start_date?: string | null
           status?: Database["public"]["Enums"]["contract_status"]
+          supervisor_email?: string | null
+          supervisor_name?: string | null
+          supervisor_phone?: string | null
           terms_ar?: string | null
           terms_en?: string | null
           title_ar?: string
