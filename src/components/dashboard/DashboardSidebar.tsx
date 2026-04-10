@@ -15,8 +15,13 @@ import {
 import { NavLink } from '@/components/NavLink';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { Separator } from '@/components/ui/separator';
 import {
-  LayoutDashboard, Wrench, Image, Star, FileText, Shield, Settings, LogOut, Home, Globe, CreditCard, Megaphone, Key, Book, FolderOpen, PenSquare, Layers, MessageSquare, Users, Newspaper, Building2, Bell, Activity, Bookmark, ShieldAlert, Crown, FolderTree, Tags,
+  LayoutDashboard, Wrench, Image, Star, FileText, Shield, Settings, LogOut,
+  Home, Globe, CreditCard, Megaphone, Key, Book, FolderOpen, PenSquare,
+  Layers, MessageSquare, Users, Newspaper, Building2, Bell, Activity,
+  Bookmark, ShieldAlert, Crown, FolderTree, Tags, UserCog, Database,
+  BarChart3, Cog,
 } from 'lucide-react';
 
 interface MenuItem {
@@ -26,7 +31,15 @@ interface MenuItem {
   end?: boolean;
 }
 
-// ── Shared items ──
+interface AdminMenuGroup {
+  groupLabel: { ar: string; en: string };
+  icon: React.ElementType;
+  items: (MenuItem & { superAdminOnly?: boolean })[];
+}
+
+// ══════════════════════════════════════════
+//  Shared items (all roles)
+// ══════════════════════════════════════════
 const sharedTop: MenuItem[] = [
   { label: { ar: 'نظرة عامة', en: 'Overview' }, url: '/dashboard', icon: LayoutDashboard, end: true },
 ];
@@ -36,7 +49,9 @@ const sharedBottom: MenuItem[] = [
   { label: { ar: 'الإعدادات', en: 'Settings' }, url: '/dashboard/settings', icon: Settings },
 ];
 
-// ── Provider-only items ──
+// ══════════════════════════════════════════
+//  Provider items
+// ══════════════════════════════════════════
 const providerItems: MenuItem[] = [
   { label: { ar: 'الخدمات', en: 'Services' }, url: '/dashboard/services', icon: Wrench },
   { label: { ar: 'معرض الأعمال', en: 'Portfolio' }, url: '/dashboard/portfolio', icon: Image },
@@ -51,7 +66,9 @@ const providerItems: MenuItem[] = [
   { label: { ar: 'العضوية', en: 'Membership' }, url: '/membership', icon: Crown },
 ];
 
-// ── Regular user items ──
+// ══════════════════════════════════════════
+//  Regular user items
+// ══════════════════════════════════════════
 const userItems: MenuItem[] = [
   { label: { ar: 'العقود', en: 'Contracts' }, url: '/dashboard/contracts', icon: FileText },
   { label: { ar: 'الرسائل', en: 'Messages' }, url: '/dashboard/messages', icon: MessageSquare },
@@ -60,27 +77,57 @@ const userItems: MenuItem[] = [
   { label: { ar: 'المدونة', en: 'Blog' }, url: '/blog', icon: Newspaper },
 ];
 
-// ── Admin section ──
-interface AdminMenuItem extends MenuItem {
-  superAdminOnly?: boolean;
-}
-
-const adminItems: AdminMenuItem[] = [
-  { label: { ar: 'المستخدمين', en: 'Users' }, url: '/admin/users', icon: Users, superAdminOnly: true },
-  { label: { ar: 'إعدادات النظام', en: 'System Settings' }, url: '/admin/system-settings', icon: ShieldAlert, superAdminOnly: true },
-  { label: { ar: 'كل المحادثات', en: 'All Conversations' }, url: '/dashboard/messages', icon: MessageSquare, superAdminOnly: true },
-  { label: { ar: 'المنشآت', en: 'Businesses' }, url: '/admin/businesses', icon: Building2 },
-  { label: { ar: 'التصنيفات', en: 'Categories' }, url: '/admin/categories', icon: FolderTree },
-  { label: { ar: 'الوسوم', en: 'Tags' }, url: '/admin/tags', icon: Tags },
-  { label: { ar: 'العضويات', en: 'Memberships' }, url: '/admin/memberships', icon: Crown },
-  { label: { ar: 'القطاعات', en: 'Profiles' }, url: '/dashboard/profile-systems', icon: Layers },
-  { label: { ar: 'المدونة', en: 'Blog' }, url: '/dashboard/blog', icon: PenSquare },
-  { label: { ar: 'إعدادات API', en: 'API Settings' }, url: '/admin/api-settings', icon: Key },
-  { label: { ar: 'توثيق API', en: 'API Docs' }, url: '/admin/api-docs', icon: Book },
-  { label: { ar: 'سجل النشاط', en: 'Activity Log' }, url: '/admin/activity-log', icon: Activity },
+// ══════════════════════════════════════════
+//  Admin section — Organized into groups
+// ══════════════════════════════════════════
+const adminGroups: AdminMenuGroup[] = [
+  {
+    groupLabel: { ar: 'المستخدمين والمنشآت', en: 'Users & Businesses' },
+    icon: UserCog,
+    items: [
+      { label: { ar: 'المستخدمين', en: 'Users' }, url: '/admin/users', icon: Users, superAdminOnly: true },
+      { label: { ar: 'المنشآت', en: 'Businesses' }, url: '/admin/businesses', icon: Building2 },
+      { label: { ar: 'كل المحادثات', en: 'All Conversations' }, url: '/dashboard/messages', icon: MessageSquare, superAdminOnly: true },
+    ],
+  },
+  {
+    groupLabel: { ar: 'المحتوى', en: 'Content' },
+    icon: Database,
+    items: [
+      { label: { ar: 'التصنيفات', en: 'Categories' }, url: '/admin/categories', icon: FolderTree },
+      { label: { ar: 'الوسوم', en: 'Tags' }, url: '/admin/tags', icon: Tags },
+      { label: { ar: 'المدونة', en: 'Blog' }, url: '/dashboard/blog', icon: PenSquare },
+      { label: { ar: 'القطاعات', en: 'Profiles' }, url: '/dashboard/profile-systems', icon: Layers },
+    ],
+  },
+  {
+    groupLabel: { ar: 'العضويات والمالية', en: 'Memberships & Finance' },
+    icon: Crown,
+    items: [
+      { label: { ar: 'العضويات', en: 'Memberships' }, url: '/admin/memberships', icon: Crown },
+    ],
+  },
+  {
+    groupLabel: { ar: 'النظام والتطوير', en: 'System & Dev' },
+    icon: Cog,
+    items: [
+      { label: { ar: 'إعدادات النظام', en: 'System Settings' }, url: '/admin/system-settings', icon: ShieldAlert, superAdminOnly: true },
+      { label: { ar: 'إعدادات API', en: 'API Settings' }, url: '/admin/api-settings', icon: Key },
+      { label: { ar: 'توثيق API', en: 'API Docs' }, url: '/admin/api-docs', icon: Book },
+      { label: { ar: 'سجل النشاط', en: 'Activity Log' }, url: '/admin/activity-log', icon: BarChart3 },
+    ],
+  },
 ];
 
-const RenderMenu: React.FC<{ items: MenuItem[]; collapsed: boolean; isRTL: boolean; closeMobile: () => void }> = ({ items, collapsed, isRTL, closeMobile }) => (
+// ══════════════════════════════════════════
+//  Render helpers
+// ══════════════════════════════════════════
+const RenderMenu: React.FC<{
+  items: MenuItem[];
+  collapsed: boolean;
+  isRTL: boolean;
+  closeMobile: () => void;
+}> = ({ items, collapsed, isRTL, closeMobile }) => (
   <SidebarMenu>
     {items.map((item) => (
       <SidebarMenuItem key={item.url + item.label.en}>
@@ -116,12 +163,13 @@ export const DashboardSidebar: React.FC = () => {
   // Build main menu based on role
   const mainMenu: MenuItem[] = [
     ...sharedTop,
-    ...(isAdmin ? [...providerItems, ...userItems.filter(u => !providerItems.some(p => p.url === u.url))] : isProvider ? providerItems : userItems),
+    ...(isAdmin
+      ? [...providerItems, ...userItems.filter(u => !providerItems.some(p => p.url === u.url))]
+      : isProvider
+        ? providerItems
+        : userItems),
     ...sharedBottom,
   ];
-
-  // Filter admin items
-  const visibleAdminItems = adminItems.filter(item => !item.superAdminOnly || isSuperAdmin);
 
   return (
     <Sidebar collapsible="icon" side={isRTL ? 'right' : 'left'}>
@@ -149,19 +197,55 @@ export const DashboardSidebar: React.FC = () => {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Admin section */}
+        {/* Admin grouped sections */}
         {isAdmin && (
-          <SidebarGroup>
-            <SidebarGroupLabel>
-              {!collapsed ? (isRTL
-                ? (isSuperAdmin ? '🛡️ الإدارة العليا' : 'الإدارة')
-                : (isSuperAdmin ? '🛡️ Super Admin' : 'Admin')
-              ) : ''}
-            </SidebarGroupLabel>
-            <SidebarGroupContent>
-              <RenderMenu items={visibleAdminItems} collapsed={collapsed} isRTL={isRTL} closeMobile={closeMobile} />
-            </SidebarGroupContent>
-          </SidebarGroup>
+          <>
+            <Separator className="mx-3 my-1 w-auto opacity-50" />
+
+            <div className="px-3 pt-2 pb-1">
+              {!collapsed && (
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5 px-2">
+                  <ShieldAlert className="w-3 h-3" />
+                  {isRTL
+                    ? (isSuperAdmin ? 'لوحة الإدارة العليا' : 'لوحة الإدارة')
+                    : (isSuperAdmin ? 'Super Admin Panel' : 'Admin Panel')}
+                </p>
+              )}
+              {collapsed && (
+                <div className="flex justify-center">
+                  <ShieldAlert className="w-4 h-4 text-muted-foreground" />
+                </div>
+              )}
+            </div>
+
+            {adminGroups.map((group) => {
+              const visibleItems = group.items.filter(
+                item => !item.superAdminOnly || isSuperAdmin
+              );
+              if (visibleItems.length === 0) return null;
+
+              return (
+                <SidebarGroup key={group.groupLabel.en}>
+                  <SidebarGroupLabel>
+                    {!collapsed ? (
+                      <span className="flex items-center gap-1.5">
+                        <group.icon className="w-3 h-3 opacity-60" />
+                        {isRTL ? group.groupLabel.ar : group.groupLabel.en}
+                      </span>
+                    ) : ''}
+                  </SidebarGroupLabel>
+                  <SidebarGroupContent>
+                    <RenderMenu
+                      items={visibleItems}
+                      collapsed={collapsed}
+                      isRTL={isRTL}
+                      closeMobile={closeMobile}
+                    />
+                  </SidebarGroupContent>
+                </SidebarGroup>
+              );
+            })}
+          </>
         )}
       </SidebarContent>
 
