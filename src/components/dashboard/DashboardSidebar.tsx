@@ -89,7 +89,8 @@ export const DashboardSidebar: React.FC = () => {
                       to={item.url}
                       end={item.url === '/dashboard'}
                       className="hover:bg-muted/50"
-                      activeClassName="bg-gold/10 text-gold font-medium"
+                      activeClassName="bg-accent/10 text-accent font-medium"
+                      onClick={closeMobile}
                     >
                       <item.icon className="h-4 w-4 shrink-0" />
                       {!collapsed && <span className="ms-2">{t(item.titleKey as any)}</span>}
@@ -112,7 +113,8 @@ export const DashboardSidebar: React.FC = () => {
                     <NavLink
                       to={item.url}
                       className="hover:bg-muted/50"
-                      activeClassName="bg-gold/10 text-gold font-medium"
+                      activeClassName="bg-accent/10 text-accent font-medium"
+                      onClick={closeMobile}
                     >
                       <item.icon className="h-4 w-4 shrink-0" />
                       {!collapsed && <span className="ms-2">{
@@ -133,7 +135,7 @@ export const DashboardSidebar: React.FC = () => {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
-              <NavLink to="/" className="hover:bg-muted/50" activeClassName="">
+              <NavLink to="/" className="hover:bg-muted/50" activeClassName="" onClick={closeMobile}>
                 <Home className="h-4 w-4 shrink-0" />
                 {!collapsed && <span className="ms-2">{isRTL ? 'الرئيسية' : 'Home'}</span>}
               </NavLink>
