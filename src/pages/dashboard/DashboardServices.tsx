@@ -12,11 +12,11 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Plus, Trash2, Pencil, X, Search, CheckCircle2, Wrench,
-  DollarSign, ListFilter, ChevronRight, Send, Package,
+  DollarSign, ChevronDown, ChevronRight, Send, Package,
+  Star, Globe, MapPin, Sparkles,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { FieldAiActions } from '@/components/blog/FieldAiActions';
@@ -25,6 +25,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import type { Tables } from '@/integrations/supabase/types';
+import { serviceCatalog, type ServiceItem, type ServiceGroup } from '@/components/dashboard/services-catalog';
 
 type FilterMode = 'all' | 'active' | 'inactive';
 
@@ -39,14 +40,16 @@ const DashboardServices = () => {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [showRequestForm, setShowRequestForm] = useState(false);
   const [requestText, setRequestText] = useState('');
+  const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
+  const [showBrands, setShowBrands] = useState<string | null>(null);
+  const [catalogSearch, setCatalogSearch] = useState('');
 
   const emptyForm = {
     name_ar: '', name_en: '', description_ar: '', description_en: '',
-    price_from: '', price_to: '', is_active: true, category_id: '',
+    price_from: '', price_to: '', is_active: true,
   };
   const [form, setForm] = useState(emptyForm);
 
-  // Fetch business
   const { data: business } = useQuery({
     queryKey: ['my-business', user?.id],
     queryFn: async () => {
@@ -58,25 +61,6 @@ const DashboardServices = () => {
   });
   const businessId = business?.id;
 
-  // Fetch categories for the service picker
-  const { data: categories = [] } = useQuery({
-    queryKey: ['categories-tree'],
-    queryFn: async () => {
-      const { data } = await supabase.from('categories').select('*').eq('is_active', true).order('sort_order');
-      return data ?? [];
-    },
-  });
-
-  // Group categories: parents and children
-  const categoryTree = useMemo(() => {
-    const parents = categories.filter(c => !c.parent_id);
-    return parents.map(p => ({
-      ...p,
-      children: categories.filter(c => c.parent_id === p.id),
-    }));
-  }, [categories]);
-
-  // Fetch services
   const { data: services = [], isLoading } = useQuery({
     queryKey: ['dashboard-services', businessId],
     queryFn: async () => {
@@ -87,22 +71,17 @@ const DashboardServices = () => {
     enabled: !!businessId,
   });
 
-  // Filtered services
   const filteredServices = useMemo(() => {
     let result = services;
     if (filterMode === 'active') result = result.filter(s => s.is_active);
     if (filterMode === 'inactive') result = result.filter(s => !s.is_active);
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      result = result.filter(s =>
-        s.name_ar.toLowerCase().includes(q) ||
-        (s.name_en || '').toLowerCase().includes(q)
-      );
+      result = result.filter(s => s.name_ar.toLowerCase().includes(q) || (s.name_en || '').toLowerCase().includes(q));
     }
     return result;
   }, [services, filterMode, searchQuery]);
 
-  // Stats
   const stats = useMemo(() => ({
     total: services.length,
     active: services.filter(s => s.is_active).length,
@@ -110,7 +89,18 @@ const DashboardServices = () => {
     withPricing: services.filter(s => s.price_from || s.price_to).length,
   }), [services]);
 
-  // Save mutation
+  // Filter catalog by search
+  const filteredCatalog = useMemo(() => {
+    if (!catalogSearch.trim()) return serviceCatalog;
+    const q = catalogSearch.toLowerCase();
+    return serviceCatalog.map(group => ({
+      ...group,
+      services: group.services.filter(s =>
+        s.name_ar.toLowerCase().includes(q) || s.name_en.toLowerCase().includes(q)
+      ),
+    })).filter(g => g.services.length > 0);
+  }, [catalogSearch]);
+
   const saveMutation = useMutation({
     mutationFn: async () => {
       if (!businessId) throw new Error('No business found');
@@ -135,14 +125,11 @@ const DashboardServices = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-services'] });
       closeForm();
-      toast.success(editing
-        ? (isRTL ? 'تم تحديث الخدمة بنجاح' : 'Service updated successfully')
-        : (isRTL ? 'تم إضافة الخدمة بنجاح' : 'Service added successfully'));
+      toast.success(editing ? (isRTL ? 'تم تحديث الخدمة بنجاح' : 'Service updated') : (isRTL ? 'تم إضافة الخدمة بنجاح' : 'Service added'));
     },
     onError: (err: any) => toast.error(err.message),
   });
 
-  // Delete mutation
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from('business_services').delete().eq('id', id);
@@ -151,11 +138,10 @@ const DashboardServices = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-services'] });
       setDeleteConfirm(null);
-      toast.success(isRTL ? 'تم حذف الخدمة بنجاح' : 'Service deleted successfully');
+      toast.success(isRTL ? 'تم حذف الخدمة' : 'Service deleted');
     },
   });
 
-  // Toggle active
   const toggleActiveMutation = useMutation({
     mutationFn: async (s: Tables<'business_services'>) => {
       const { error } = await supabase.from('business_services').update({ is_active: !s.is_active }).eq('id', s.id);
@@ -167,33 +153,29 @@ const DashboardServices = () => {
     },
   });
 
-  const closeForm = () => {
-    setShowForm(false);
-    setEditing(null);
-    setForm(emptyForm);
-  };
+  const closeForm = () => { setShowForm(false); setEditing(null); setForm(emptyForm); };
 
   const openEdit = (s: Tables<'business_services'>) => {
     setEditing(s);
     setForm({
       name_ar: s.name_ar, name_en: s.name_en || '', description_ar: s.description_ar || '',
       description_en: s.description_en || '', price_from: s.price_from?.toString() || '',
-      price_to: s.price_to?.toString() || '', is_active: s.is_active, category_id: '',
+      price_to: s.price_to?.toString() || '', is_active: s.is_active,
     });
     setShowForm(true);
   };
 
-  // Quick add from category child
-  const quickAddFromCategory = (cat: any) => {
-    setForm({
-      ...emptyForm,
-      name_ar: cat.name_ar,
-      name_en: cat.name_en || '',
-      description_ar: cat.description_ar || '',
-      description_en: cat.description_en || '',
-    });
+  const quickAddFromCatalog = (item: ServiceItem) => {
+    setForm({ ...emptyForm, name_ar: item.name_ar, name_en: item.name_en, description_ar: item.description_ar, description_en: item.description_en });
     setShowForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  const toggleGroup = (id: string) => {
+    setExpandedGroups(prev => prev.includes(id) ? prev.filter(g => g !== id) : [...prev, id]);
+  };
+
+  const isServiceAdded = (name_ar: string) => services.some(s => s.name_ar === name_ar);
 
   return (
     <DashboardLayout>
@@ -201,15 +183,18 @@ const DashboardServices = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="font-heading font-bold text-2xl">{isRTL ? 'إدارة الخدمات' : 'Manage Services'}</h1>
+            <h1 className="font-heading font-bold text-2xl flex items-center gap-2">
+              <Wrench className="w-6 h-6 text-primary" />
+              {isRTL ? 'إدارة الخدمات والتخصصات' : 'Services & Specializations'}
+            </h1>
             <p className="text-sm text-muted-foreground mt-1">
-              {isRTL ? 'اختر من التخصصات المتاحة أو أضف خدمات مخصصة' : 'Select from available specializations or add custom services'}
+              {isRTL ? 'اختر من كتالوج الخدمات المتاح أو أضف خدمات مخصصة لعملائك' : 'Select from our service catalog or add custom services for your clients'}
             </p>
           </div>
           {!showForm && (
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={() => setShowRequestForm(!showRequestForm)}>
-                <Send className="w-4 h-4 me-1" />{isRTL ? 'طلب إضافة خدمة' : 'Request Service'}
+                <Send className="w-4 h-4 me-1" />{isRTL ? 'طلب إضافة' : 'Request New'}
               </Button>
               <Button variant="hero" onClick={() => { closeForm(); setShowForm(true); }}>
                 <Plus className="w-4 h-4 me-2" />{isRTL ? 'إضافة خدمة' : 'Add Service'}
@@ -222,27 +207,22 @@ const DashboardServices = () => {
         {services.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
-              { label: isRTL ? 'إجمالي الخدمات' : 'Total', value: stats.total, icon: Package, color: 'text-primary bg-primary/10' },
-              { label: isRTL ? 'نشطة' : 'Active', value: stats.active, icon: CheckCircle2, color: 'text-emerald-600 bg-emerald-500/10' },
-              { label: isRTL ? 'معطلة' : 'Inactive', value: stats.inactive, icon: X, color: 'text-muted-foreground bg-muted' },
-              { label: isRTL ? 'بتسعير' : 'With Pricing', value: stats.withPricing, icon: DollarSign, color: 'text-amber-600 bg-amber-500/10' },
+              { label: isRTL ? 'إجمالي الخدمات' : 'Total Services', value: stats.total, icon: Package, color: 'text-primary bg-primary/10' },
+              { label: isRTL ? 'خدمات نشطة' : 'Active', value: stats.active, icon: CheckCircle2, color: 'text-emerald-600 bg-emerald-500/10' },
+              { label: isRTL ? 'خدمات معطلة' : 'Inactive', value: stats.inactive, icon: X, color: 'text-muted-foreground bg-muted' },
+              { label: isRTL ? 'مع تسعير' : 'With Pricing', value: stats.withPricing, icon: DollarSign, color: 'text-amber-600 bg-amber-500/10' },
             ].map((stat, i) => (
               <Card key={i} className="border-border/40 bg-card/50">
                 <CardContent className="p-3 flex items-center gap-3">
-                  <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${stat.color}`}>
-                    <stat.icon className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <p className="text-xl font-bold">{stat.value}</p>
-                    <p className="text-[11px] text-muted-foreground">{stat.label}</p>
-                  </div>
+                  <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${stat.color}`}><stat.icon className="w-4 h-4" /></div>
+                  <div><p className="text-xl font-bold">{stat.value}</p><p className="text-[11px] text-muted-foreground">{stat.label}</p></div>
                 </CardContent>
               </Card>
             ))}
           </div>
         )}
 
-        {/* Request new service form */}
+        {/* Request form */}
         {showRequestForm && (
           <Card className="border-amber-500/30 bg-amber-500/5">
             <CardHeader className="pb-2">
@@ -255,94 +235,16 @@ const DashboardServices = () => {
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Textarea
-                value={requestText}
-                onChange={(e) => setRequestText(e.target.value)}
-                rows={3}
-                placeholder={isRTL ? 'اكتب اسم الخدمة والتخصص المطلوب إضافته...' : 'Describe the service and specialization you want added...'}
-              />
-              <Button
-                size="sm"
-                variant="hero"
-                disabled={!requestText.trim()}
-                onClick={() => {
-                  toast.success(isRTL ? 'تم إرسال الطلب بنجاح، سيتم مراجعته وإضافته قريباً' : 'Request submitted. It will be reviewed and added soon.');
-                  setRequestText('');
-                  setShowRequestForm(false);
-                }}
-              >
-                <Send className="w-4 h-4 me-1" />{isRTL ? 'إرسال الطلب' : 'Submit Request'}
+              <Textarea value={requestText} onChange={(e) => setRequestText(e.target.value)} rows={3}
+                placeholder={isRTL ? 'اكتب اسم الخدمة والتخصص المطلوب إضافته...' : 'Describe the service you want added...'} />
+              <Button size="sm" variant="hero" disabled={!requestText.trim()} onClick={() => {
+                toast.success(isRTL ? 'تم إرسال الطلب، سيتم مراجعته قريباً' : 'Request submitted for review');
+                setRequestText(''); setShowRequestForm(false);
+              }}>
+                <Send className="w-4 h-4 me-1" />{isRTL ? 'إرسال الطلب' : 'Submit'}
               </Button>
             </CardContent>
           </Card>
-        )}
-
-        {/* Category Picker - Quick Add */}
-        {!showForm && categoryTree.length > 0 && (
-          <Card className="border-border/40">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <ListFilter className="w-4 h-4 text-primary" />
-                {isRTL ? 'اختر من التخصصات المتاحة' : 'Select from available specializations'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {categoryTree.map(parent => (
-                  <div key={parent.id}>
-                    <p className="text-xs font-semibold text-muted-foreground mb-1.5 flex items-center gap-1">
-                      {parent.icon && <span>{parent.icon}</span>}
-                      {isRTL ? parent.name_ar : parent.name_en}
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {parent.children.map(child => {
-                        const alreadyAdded = services.some(s => s.name_ar === child.name_ar);
-                        return (
-                          <Button
-                            key={child.id}
-                            variant={alreadyAdded ? 'secondary' : 'outline'}
-                            size="sm"
-                            className="text-xs h-8"
-                            disabled={alreadyAdded}
-                            onClick={() => quickAddFromCategory(child)}
-                          >
-                            {alreadyAdded && <CheckCircle2 className="w-3 h-3 me-1 text-emerald-500" />}
-                            {isRTL ? child.name_ar : child.name_en}
-                            {!alreadyAdded && <Plus className="w-3 h-3 ms-1" />}
-                          </Button>
-                        );
-                      })}
-                      {parent.children.length === 0 && (
-                        <p className="text-xs text-muted-foreground">{isRTL ? 'لا توجد تخصصات فرعية' : 'No sub-specializations'}</p>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Toolbar */}
-        {services.length > 0 && (
-          <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-            <div className="relative w-full sm:w-72">
-              <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder={isRTL ? 'ابحث في الخدمات...' : 'Search services...'}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="ps-9"
-              />
-            </div>
-            <Tabs value={filterMode} onValueChange={(v) => setFilterMode(v as FilterMode)}>
-              <TabsList className="h-9">
-                <TabsTrigger value="all" className="text-xs px-3">{isRTL ? 'الكل' : 'All'} ({stats.total})</TabsTrigger>
-                <TabsTrigger value="active" className="text-xs px-3">{isRTL ? 'نشطة' : 'Active'}</TabsTrigger>
-                <TabsTrigger value="inactive" className="text-xs px-3">{isRTL ? 'معطلة' : 'Inactive'}</TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </div>
         )}
 
         {/* Add/Edit Form */}
@@ -358,7 +260,6 @@ const DashboardServices = () => {
               </div>
             </CardHeader>
             <CardContent className="space-y-5">
-              {/* Name fields with AI */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between flex-wrap gap-1">
@@ -379,8 +280,6 @@ const DashboardServices = () => {
                   <Input value={form.name_en} onChange={(e) => setForm({ ...form, name_en: e.target.value })} dir="ltr" placeholder="e.g. Aluminum window installation" />
                 </div>
               </div>
-
-              {/* Description with AI */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between flex-wrap gap-1">
@@ -389,7 +288,7 @@ const DashboardServices = () => {
                       onTranslated={(v) => setForm(prev => ({ ...prev, description_en: v }))}
                       onImproved={(v) => setForm(prev => ({ ...prev, description_ar: v }))} />
                   </div>
-                  <Textarea value={form.description_ar} onChange={(e) => setForm({ ...form, description_ar: e.target.value })} rows={3} placeholder={isRTL ? 'وصف مختصر للخدمة...' : 'Brief service description...'} />
+                  <Textarea value={form.description_ar} onChange={(e) => setForm({ ...form, description_ar: e.target.value })} rows={3} placeholder={isRTL ? 'وصف مختصر...' : 'Brief description...'} />
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between flex-wrap gap-1">
@@ -398,11 +297,9 @@ const DashboardServices = () => {
                       onTranslated={(v) => setForm(prev => ({ ...prev, description_ar: v }))}
                       onImproved={(v) => setForm(prev => ({ ...prev, description_en: v }))} />
                   </div>
-                  <Textarea value={form.description_en} onChange={(e) => setForm({ ...form, description_en: e.target.value })} rows={3} dir="ltr" placeholder="Brief service description..." />
+                  <Textarea value={form.description_en} onChange={(e) => setForm({ ...form, description_en: e.target.value })} rows={3} dir="ltr" placeholder="Brief description..." />
                 </div>
               </div>
-
-              {/* Pricing */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="flex items-center gap-1"><DollarSign className="w-3.5 h-3.5" />{isRTL ? 'السعر من (ر.س)' : 'Price From (SAR)'}</Label>
@@ -413,30 +310,39 @@ const DashboardServices = () => {
                   <Input type="number" value={form.price_to} onChange={(e) => setForm({ ...form, price_to: e.target.value })} dir="ltr" placeholder="0" />
                 </div>
               </div>
-
-              {/* Active toggle */}
               <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border border-border/40">
                 <Switch checked={form.is_active} onCheckedChange={(v) => setForm({ ...form, is_active: v })} />
                 <div>
                   <Label className="cursor-pointer">{isRTL ? 'خدمة مفعلة' : 'Active Service'}</Label>
-                  <p className="text-xs text-muted-foreground">{isRTL ? 'الخدمات المفعلة تظهر في صفحة الملف التجاري' : 'Active services appear on your business profile'}</p>
+                  <p className="text-xs text-muted-foreground">{isRTL ? 'الخدمات المفعلة تظهر في ملفك التجاري' : 'Active services appear on your profile'}</p>
                 </div>
               </div>
-
-              {/* Actions */}
               <div className="flex gap-2 pt-2">
                 <Button onClick={() => saveMutation.mutate()} disabled={!form.name_ar || saveMutation.isPending} variant="hero" className="flex-1">
-                  {saveMutation.isPending
-                    ? (isRTL ? 'جاري الحفظ...' : 'Saving...')
-                    : editing
-                      ? (isRTL ? 'تحديث الخدمة' : 'Update Service')
-                      : (isRTL ? 'إضافة الخدمة' : 'Add Service')}
+                  {saveMutation.isPending ? (isRTL ? 'جاري الحفظ...' : 'Saving...') : editing ? (isRTL ? 'تحديث الخدمة' : 'Update') : (isRTL ? 'إضافة الخدمة' : 'Add Service')}
                   {!saveMutation.isPending && <CheckCircle2 className="w-4 h-4 ms-2" />}
                 </Button>
                 <Button variant="outline" onClick={closeForm}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
               </div>
             </CardContent>
           </Card>
+        )}
+
+        {/* Toolbar */}
+        {services.length > 0 && (
+          <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+            <div className="relative w-full sm:w-72">
+              <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input placeholder={isRTL ? 'ابحث في خدماتك...' : 'Search your services...'} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="ps-9" />
+            </div>
+            <Tabs value={filterMode} onValueChange={(v) => setFilterMode(v as FilterMode)}>
+              <TabsList className="h-9">
+                <TabsTrigger value="all" className="text-xs px-3">{isRTL ? 'الكل' : 'All'} ({stats.total})</TabsTrigger>
+                <TabsTrigger value="active" className="text-xs px-3">{isRTL ? 'نشطة' : 'Active'}</TabsTrigger>
+                <TabsTrigger value="inactive" className="text-xs px-3">{isRTL ? 'معطلة' : 'Inactive'}</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
         )}
 
         {/* Services List */}
@@ -450,7 +356,7 @@ const DashboardServices = () => {
               </div>
               <h3 className="text-lg font-semibold mb-2">{isRTL ? 'لا توجد خدمات بعد' : 'No services yet'}</h3>
               <p className="text-sm text-muted-foreground max-w-sm mb-6">
-                {isRTL ? 'اختر من التخصصات أعلاه أو أضف خدمات مخصصة لعرضها للعملاء' : 'Select from specializations above or add custom services to display to clients'}
+                {isRTL ? 'اختر من كتالوج الخدمات أدناه أو أضف خدمات مخصصة' : 'Pick from the catalog below or add custom services'}
               </p>
               <Button variant="hero" onClick={() => setShowForm(true)}>
                 <Plus className="w-4 h-4 me-2" />{isRTL ? 'أضف أول خدمة' : 'Add First Service'}
@@ -460,8 +366,7 @@ const DashboardServices = () => {
         ) : filteredServices.length === 0 && services.length > 0 ? (
           <Card className="border-dashed">
             <CardContent className="flex flex-col items-center py-10 text-muted-foreground">
-              <Search className="w-8 h-8 mb-2" />
-              <p className="font-medium">{isRTL ? 'لا توجد نتائج' : 'No results found'}</p>
+              <Search className="w-8 h-8 mb-2" /><p className="font-medium">{isRTL ? 'لا توجد نتائج' : 'No results'}</p>
             </CardContent>
           </Card>
         ) : (
@@ -475,39 +380,145 @@ const DashboardServices = () => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <h3 className="font-medium truncate">{isRTL ? s.name_ar : (s.name_en || s.name_ar)}</h3>
-                      {!s.is_active && (
-                        <Badge variant="secondary" className="text-xs">{isRTL ? 'معطلة' : 'Inactive'}</Badge>
-                      )}
+                      {!s.is_active && <Badge variant="secondary" className="text-xs">{isRTL ? 'معطلة' : 'Inactive'}</Badge>}
                     </div>
                     {(isRTL ? s.description_ar : (s.description_en || s.description_ar)) && (
-                      <p className="text-xs text-muted-foreground truncate mt-0.5">
-                        {isRTL ? s.description_ar : (s.description_en || s.description_ar)}
-                      </p>
+                      <p className="text-xs text-muted-foreground truncate mt-0.5">{isRTL ? s.description_ar : (s.description_en || s.description_ar)}</p>
                     )}
                     {(s.price_from || s.price_to) && (
                       <p className="text-xs text-primary font-medium mt-1">
-                        {s.price_from ? `${Number(s.price_from).toLocaleString()}` : ''}
-                        {s.price_from && s.price_to ? ' - ' : ''}
-                        {s.price_to ? `${Number(s.price_to).toLocaleString()}` : ''}
-                        {' '}{s.currency_code}
+                        {s.price_from ? Number(s.price_from).toLocaleString() : ''}{s.price_from && s.price_to ? ' - ' : ''}{s.price_to ? Number(s.price_to).toLocaleString() : ''} {s.currency_code}
                       </p>
                     )}
                   </div>
                   <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggleActiveMutation.mutate(s)}
-                      title={s.is_active ? (isRTL ? 'تعطيل' : 'Deactivate') : (isRTL ? 'تفعيل' : 'Activate')}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggleActiveMutation.mutate(s)}>
                       <Switch checked={s.is_active} className="pointer-events-none scale-75" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(s)}>
-                      <Pencil className="w-4 h-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setDeleteConfirm(s.id)}>
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(s)}><Pencil className="w-4 h-4" /></Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setDeleteConfirm(s.id)}><Trash2 className="w-4 h-4" /></Button>
                   </div>
                 </CardContent>
               </Card>
             ))}
+          </div>
+        )}
+
+        {/* Service Catalog */}
+        {!showForm && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="font-heading font-bold text-lg flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-primary" />
+                  {isRTL ? 'كتالوج الخدمات والتخصصات' : 'Service & Specialization Catalog'}
+                </h2>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {isRTL ? 'اضغط على أي خدمة لإضافتها مباشرة إلى ملفك التجاري' : 'Click any service to add it directly to your profile'}
+                </p>
+              </div>
+            </div>
+
+            {/* Catalog search */}
+            <div className="relative max-w-md">
+              <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input placeholder={isRTL ? 'ابحث في الكتالوج...' : 'Search catalog...'} value={catalogSearch} onChange={(e) => setCatalogSearch(e.target.value)} className="ps-9" />
+            </div>
+
+            {filteredCatalog.map((group) => {
+              const isExpanded = expandedGroups.includes(group.id) || !!catalogSearch.trim();
+              const addedCount = group.services.filter(s => isServiceAdded(s.name_ar)).length;
+
+              return (
+                <Card key={group.id} className="border-border/40 overflow-hidden">
+                  {/* Group Header */}
+                  <button
+                    className="w-full flex items-center gap-3 p-4 hover:bg-muted/30 transition-colors text-start"
+                    onClick={() => toggleGroup(group.id)}
+                  >
+                    <span className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg ${group.color}`}>
+                      {group.icon}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-heading font-bold">{isRTL ? group.name_ar : group.name_en}</h3>
+                        <Badge variant="outline" className="text-[10px]">{group.services.length} {isRTL ? 'خدمة' : 'services'}</Badge>
+                        {addedCount > 0 && (
+                          <Badge className="text-[10px] bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
+                            <CheckCircle2 className="w-3 h-3 me-0.5" />{addedCount} {isRTL ? 'مضافة' : 'added'}
+                          </Badge>
+                        )}
+                      </div>
+                      {group.brands && group.brands.length > 0 && (
+                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                          {isRTL ? `${group.brands.length} ماركة محلية وعالمية` : `${group.brands.length} local & international brands`}
+                        </p>
+                      )}
+                    </div>
+                    {isExpanded ? <ChevronDown className="w-5 h-5 text-muted-foreground shrink-0" /> : (isRTL ? <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0 rotate-180" /> : <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />)}
+                  </button>
+
+                  {/* Expanded Content */}
+                  {isExpanded && (
+                    <div className="border-t border-border/40">
+                      {/* Services Grid */}
+                      <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                        {group.services.map((item, idx) => {
+                          const added = isServiceAdded(item.name_ar);
+                          return (
+                            <button
+                              key={idx}
+                              disabled={added}
+                              onClick={() => quickAddFromCatalog(item)}
+                              className={`p-3 rounded-xl border text-start transition-all ${
+                                added
+                                  ? 'bg-emerald-500/5 border-emerald-500/20 cursor-default'
+                                  : 'border-border/40 hover:border-primary/40 hover:bg-primary/5 cursor-pointer'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2">
+                                {added ? <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" /> : <Plus className="w-4 h-4 text-primary shrink-0" />}
+                                <span className="font-medium text-sm truncate">{isRTL ? item.name_ar : item.name_en}</span>
+                              </div>
+                              <p className="text-[11px] text-muted-foreground mt-1 line-clamp-2">{isRTL ? item.description_ar : item.description_en}</p>
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {/* Brands Section */}
+                      {group.brands && group.brands.length > 0 && (
+                        <div className="border-t border-border/40 p-4">
+                          <button
+                            className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mb-3"
+                            onClick={() => setShowBrands(showBrands === group.id ? null : group.id)}
+                          >
+                            <Star className="w-4 h-4" />
+                            {isRTL ? 'أشهر الماركات والعلامات التجارية' : 'Popular Brands & Labels'}
+                            {showBrands === group.id ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />}
+                          </button>
+                          {showBrands === group.id && (
+                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                              {group.brands.map((brand, bi) => (
+                                <div key={bi} className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/30 border border-border/30">
+                                  <div className={`w-7 h-7 rounded-md flex items-center justify-center text-xs font-bold ${brand.type === 'international' ? 'bg-blue-500/10 text-blue-600' : 'bg-emerald-500/10 text-emerald-600'}`}>
+                                    {brand.type === 'international' ? <Globe className="w-3.5 h-3.5" /> : <MapPin className="w-3.5 h-3.5" />}
+                                  </div>
+                                  <div className="min-w-0">
+                                    <p className="text-xs font-medium truncate">{brand.name}</p>
+                                    <p className="text-[10px] text-muted-foreground">{isRTL ? brand.origin_ar : brand.origin_en}</p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </Card>
+              );
+            })}
           </div>
         )}
       </div>
@@ -517,16 +528,12 @@ const DashboardServices = () => {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{isRTL ? 'حذف الخدمة' : 'Delete Service'}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {isRTL ? 'هل أنت متأكد من حذف هذه الخدمة؟ لا يمكن التراجع عن هذا الإجراء.' : 'Are you sure you want to delete this service? This cannot be undone.'}
-            </AlertDialogDescription>
+            <AlertDialogDescription>{isRTL ? 'هل أنت متأكد؟ لا يمكن التراجع.' : 'Are you sure? This cannot be undone.'}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{isRTL ? 'إلغاء' : 'Cancel'}</AlertDialogCancel>
             <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => deleteConfirm && deleteMutation.mutate(deleteConfirm)}>
-              {isRTL ? 'حذف' : 'Delete'}
-            </AlertDialogAction>
+              onClick={() => deleteConfirm && deleteMutation.mutate(deleteConfirm)}>{isRTL ? 'حذف' : 'Delete'}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
