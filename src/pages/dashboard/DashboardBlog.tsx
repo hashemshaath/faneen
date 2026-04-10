@@ -17,6 +17,7 @@ import { Plus, Edit, Trash2, FileText, Eye, Calendar, X, Search, Tag, Globe, Bar
 import { toast } from 'sonner';
 import { ImageUpload } from '@/components/ui/image-upload';
 import { AiToolbar } from '@/components/blog/AiToolbar';
+import { FieldAiActions } from '@/components/blog/FieldAiActions';
 import { SeoScorePanel } from '@/components/blog/SeoScorePanel';
 import { RichMarkdownEditor } from '@/components/blog/RichMarkdownEditor';
 import { callBlogAi, parseJsonResponse, calculateReadingTime, calculateLocalSeoScore } from '@/lib/blog-ai-utils';
