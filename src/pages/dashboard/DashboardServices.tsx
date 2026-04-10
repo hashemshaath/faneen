@@ -361,36 +361,44 @@ const DashboardServices = () => {
               {/* Name fields with AI */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>{isRTL ? 'اسم الخدمة (عربي)' : 'Service Name (Arabic)'} <span className="text-destructive">*</span></Label>
+                  <div className="flex items-center justify-between flex-wrap gap-1">
+                    <Label>{isRTL ? 'اسم الخدمة (عربي)' : 'Service Name (Arabic)'} <span className="text-destructive">*</span></Label>
+                    <FieldAiActions value={form.name_ar} lang="ar" compact fieldType="title" isRTL={isRTL}
+                      onTranslated={(v) => setForm(prev => ({ ...prev, name_en: v }))}
+                      onImproved={(v) => setForm(prev => ({ ...prev, name_ar: v }))} />
+                  </div>
                   <Input value={form.name_ar} onChange={(e) => setForm({ ...form, name_ar: e.target.value })} placeholder={isRTL ? 'مثال: تركيب نوافذ ألمنيوم' : 'e.g. Aluminum window installation'} />
-                  <FieldAiActions value={form.name_ar} lang="ar" compact fieldType="title" isRTL={isRTL}
-                    onTranslated={(v) => setForm(prev => ({ ...prev, name_en: v }))}
-                    onImproved={(v) => setForm(prev => ({ ...prev, name_ar: v }))} />
                 </div>
                 <div className="space-y-2">
-                  <Label>{isRTL ? 'اسم الخدمة (إنجليزي)' : 'Service Name (English)'}</Label>
+                  <div className="flex items-center justify-between flex-wrap gap-1">
+                    <Label>{isRTL ? 'اسم الخدمة (إنجليزي)' : 'Service Name (English)'}</Label>
+                    <FieldAiActions value={form.name_en} lang="en" compact fieldType="title" isRTL={isRTL}
+                      onTranslated={(v) => setForm(prev => ({ ...prev, name_ar: v }))}
+                      onImproved={(v) => setForm(prev => ({ ...prev, name_en: v }))} />
+                  </div>
                   <Input value={form.name_en} onChange={(e) => setForm({ ...form, name_en: e.target.value })} dir="ltr" placeholder="e.g. Aluminum window installation" />
-                  <FieldAiActions value={form.name_en} lang="en" compact fieldType="title" isRTL={isRTL}
-                    onTranslated={(v) => setForm(prev => ({ ...prev, name_ar: v }))}
-                    onImproved={(v) => setForm(prev => ({ ...prev, name_en: v }))} />
                 </div>
               </div>
 
               {/* Description with AI */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>{isRTL ? 'الوصف (عربي)' : 'Description (Arabic)'}</Label>
+                  <div className="flex items-center justify-between flex-wrap gap-1">
+                    <Label>{isRTL ? 'الوصف (عربي)' : 'Description (Arabic)'}</Label>
+                    <FieldAiActions value={form.description_ar} lang="ar" compact fieldType="description" isRTL={isRTL}
+                      onTranslated={(v) => setForm(prev => ({ ...prev, description_en: v }))}
+                      onImproved={(v) => setForm(prev => ({ ...prev, description_ar: v }))} />
+                  </div>
                   <Textarea value={form.description_ar} onChange={(e) => setForm({ ...form, description_ar: e.target.value })} rows={3} placeholder={isRTL ? 'وصف مختصر للخدمة...' : 'Brief service description...'} />
-                  <FieldAiActions value={form.description_ar} lang="ar" compact fieldType="description" isRTL={isRTL}
-                    onTranslated={(v) => setForm(prev => ({ ...prev, description_en: v }))}
-                    onImproved={(v) => setForm(prev => ({ ...prev, description_ar: v }))} />
                 </div>
                 <div className="space-y-2">
-                  <Label>{isRTL ? 'الوصف (إنجليزي)' : 'Description (English)'}</Label>
+                  <div className="flex items-center justify-between flex-wrap gap-1">
+                    <Label>{isRTL ? 'الوصف (إنجليزي)' : 'Description (English)'}</Label>
+                    <FieldAiActions value={form.description_en} lang="en" compact fieldType="description" isRTL={isRTL}
+                      onTranslated={(v) => setForm(prev => ({ ...prev, description_ar: v }))}
+                      onImproved={(v) => setForm(prev => ({ ...prev, description_en: v }))} />
+                  </div>
                   <Textarea value={form.description_en} onChange={(e) => setForm({ ...form, description_en: e.target.value })} rows={3} dir="ltr" placeholder="Brief service description..." />
-                  <FieldAiActions value={form.description_en} lang="en" compact fieldType="description" isRTL={isRTL}
-                    onTranslated={(v) => setForm(prev => ({ ...prev, description_ar: v }))}
-                    onImproved={(v) => setForm(prev => ({ ...prev, description_en: v }))} />
                 </div>
               </div>
 

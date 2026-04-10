@@ -402,24 +402,22 @@ const DashboardPortfolio = () => {
               {/* Title fields with AI */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="flex items-center justify-between">
-                    <span>{isRTL ? 'العنوان (عربي)' : 'Title (Arabic)'} <span className="text-destructive">*</span></span>
-                  </Label>
+                  <div className="flex items-center justify-between flex-wrap gap-1">
+                    <Label>{isRTL ? 'العنوان (عربي)' : 'Title (Arabic)'} <span className="text-destructive">*</span></Label>
+                    <FieldAiActions value={form.title_ar} lang="ar" compact fieldType="title" isRTL={isRTL}
+                      onTranslated={(v) => setForm(prev => ({ ...prev, title_en: v }))}
+                      onImproved={(v) => setForm(prev => ({ ...prev, title_ar: v }))} />
+                  </div>
                   <Input value={form.title_ar} onChange={(e) => setForm({ ...form, title_ar: e.target.value })} placeholder={isRTL ? 'مثال: تركيب واجهات زجاجية' : 'e.g. Glass facade installation'} />
-                  <FieldAiActions
-                    value={form.title_ar} lang="ar" compact
-                    fieldType="title"
-                    isRTL={isRTL}
-                    onTranslated={(v) => setForm(prev => ({ ...prev, title_en: v }))}
-                    onImproved={(v) => setForm(prev => ({ ...prev, title_ar: v }))}
-                  />
                 </div>
                 <div className="space-y-2">
-                  <Label>{isRTL ? 'العنوان (إنجليزي)' : 'Title (English)'}</Label>
+                  <div className="flex items-center justify-between flex-wrap gap-1">
+                    <Label>{isRTL ? 'العنوان (إنجليزي)' : 'Title (English)'}</Label>
+                    <FieldAiActions value={form.title_en} lang="en" compact fieldType="title" isRTL={isRTL}
+                      onTranslated={(v) => setForm(prev => ({ ...prev, title_ar: v }))}
+                      onImproved={(v) => setForm(prev => ({ ...prev, title_en: v }))} />
+                  </div>
                   <Input value={form.title_en} onChange={(e) => setForm({ ...form, title_en: e.target.value })} dir="ltr" placeholder="e.g. Glass facade installation" />
-                  <FieldAiActions value={form.title_en} lang="en" compact fieldType="title" isRTL={isRTL}
-                    onTranslated={(v) => setForm(prev => ({ ...prev, title_ar: v }))}
-                    onImproved={(v) => setForm(prev => ({ ...prev, title_en: v }))} />
                 </div>
               </div>
 
@@ -439,18 +437,22 @@ const DashboardPortfolio = () => {
               {/* Description fields with AI */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>{isRTL ? 'الوصف (عربي)' : 'Description (Arabic)'}</Label>
+                  <div className="flex items-center justify-between flex-wrap gap-1">
+                    <Label>{isRTL ? 'الوصف (عربي)' : 'Description (Arabic)'}</Label>
+                    <FieldAiActions value={form.description_ar} lang="ar" compact fieldType="description" isRTL={isRTL}
+                      onTranslated={(v) => setForm(prev => ({ ...prev, description_en: v }))}
+                      onImproved={(v) => setForm(prev => ({ ...prev, description_ar: v }))} />
+                  </div>
                   <Textarea value={form.description_ar} onChange={(e) => setForm({ ...form, description_ar: e.target.value })} rows={3} placeholder={isRTL ? 'اكتب وصفاً مختصراً للعمل...' : 'Write a brief description...'} />
-                  <FieldAiActions value={form.description_ar} lang="ar" compact fieldType="description" isRTL={isRTL}
-                    onTranslated={(v) => setForm(prev => ({ ...prev, description_en: v }))}
-                    onImproved={(v) => setForm(prev => ({ ...prev, description_ar: v }))} />
                 </div>
                 <div className="space-y-2">
-                  <Label>{isRTL ? 'الوصف (إنجليزي)' : 'Description (English)'}</Label>
+                  <div className="flex items-center justify-between flex-wrap gap-1">
+                    <Label>{isRTL ? 'الوصف (إنجليزي)' : 'Description (English)'}</Label>
+                    <FieldAiActions value={form.description_en} lang="en" compact fieldType="description" isRTL={isRTL}
+                      onTranslated={(v) => setForm(prev => ({ ...prev, description_ar: v }))}
+                      onImproved={(v) => setForm(prev => ({ ...prev, description_en: v }))} />
+                  </div>
                   <Textarea value={form.description_en} onChange={(e) => setForm({ ...form, description_en: e.target.value })} rows={3} dir="ltr" placeholder="Write a brief description..." />
-                  <FieldAiActions value={form.description_en} lang="en" compact fieldType="description" isRTL={isRTL}
-                    onTranslated={(v) => setForm(prev => ({ ...prev, description_ar: v }))}
-                    onImproved={(v) => setForm(prev => ({ ...prev, description_en: v }))} />
                 </div>
               </div>
 
