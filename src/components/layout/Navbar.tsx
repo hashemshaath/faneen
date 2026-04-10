@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { PrefetchLink } from "@/components/PrefetchLink";
-import { Search, Megaphone, Scale, Layers, FolderOpen, BookOpen, Menu, X, User, LogOut } from "lucide-react";
+import { Search, Megaphone, Scale, Layers, FolderOpen, BookOpen, Menu, X, User, LogOut, ShieldAlert, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,7 +9,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 
 export const Navbar = () => {
   const { t, language, setLanguage } = useLanguage();
-  const { user, signOut } = useAuth();
+  const { user, signOut, isAdmin, isSuperAdmin } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
@@ -118,6 +118,16 @@ export const Navbar = () => {
             </button>
             {user ? (
               <div className="hidden lg:flex items-center gap-2">
+                {(isAdmin || isSuperAdmin) && (
+                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                    isSuperAdmin
+                      ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
+                      : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                  }`}>
+                    {isSuperAdmin ? <ShieldAlert className="w-3 h-3" /> : <Shield className="w-3 h-3" />}
+                    {isSuperAdmin ? 'Super Admin' : 'Admin'}
+                  </span>
+                )}
                 <PrefetchLink to="/dashboard">
                   <Button variant="hero" size="sm" className="gap-1.5">
                     <User className="w-3.5 h-3.5" />
