@@ -163,6 +163,7 @@ export type Database = {
           excerpt_en: string | null
           id: string
           published_at: string | null
+          ref_id: string | null
           slug: string
           status: string
           tags: string[] | null
@@ -182,6 +183,7 @@ export type Database = {
           excerpt_en?: string | null
           id?: string
           published_at?: string | null
+          ref_id?: string | null
           slug: string
           status?: string
           tags?: string[] | null
@@ -201,6 +203,7 @@ export type Database = {
           excerpt_en?: string | null
           id?: string
           published_at?: string | null
+          ref_id?: string | null
           slug?: string
           status?: string
           tags?: string[] | null
@@ -329,6 +332,7 @@ export type Database = {
           phone: string | null
           rating_avg: number
           rating_count: number
+          ref_id: string
           updated_at: string
           user_id: string
           username: string
@@ -336,7 +340,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
-          business_number?: number
+          business_number: number
           category_id?: string | null
           city_id?: string | null
           country_id?: string | null
@@ -357,6 +361,7 @@ export type Database = {
           phone?: string | null
           rating_avg?: number
           rating_count?: number
+          ref_id?: string
           updated_at?: string
           user_id: string
           username: string
@@ -385,6 +390,7 @@ export type Database = {
           phone?: string | null
           rating_avg?: number
           rating_count?: number
+          ref_id?: string
           updated_at?: string
           user_id?: string
           username?: string
@@ -650,6 +656,7 @@ export type Database = {
           last_message_text: string | null
           participant_1: string
           participant_2: string
+          ref_id: string | null
           updated_at: string
         }
         Insert: {
@@ -660,6 +667,7 @@ export type Database = {
           last_message_text?: string | null
           participant_1: string
           participant_2: string
+          ref_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -670,6 +678,7 @@ export type Database = {
           last_message_text?: string | null
           participant_1?: string
           participant_2?: string
+          ref_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -781,6 +790,7 @@ export type Database = {
           installment_amount: number
           notes: string | null
           number_of_installments: number
+          ref_id: string | null
           start_date: string
           status: string
           total_amount: number
@@ -795,6 +805,7 @@ export type Database = {
           installment_amount: number
           notes?: string | null
           number_of_installments?: number
+          ref_id?: string | null
           start_date?: string
           status?: string
           total_amount: number
@@ -809,6 +820,7 @@ export type Database = {
           installment_amount?: number
           notes?: string | null
           number_of_installments?: number
+          ref_id?: string | null
           start_date?: string
           status?: string
           total_amount?: number
@@ -1428,11 +1440,12 @@ export type Database = {
           phone: string | null
           phone_verified: boolean
           preferred_language: string
+          ref_id: string
           updated_at: string
           user_id: string
         }
         Insert: {
-          account_number?: number
+          account_number: number
           account_type?: Database["public"]["Enums"]["account_type"]
           avatar_url?: string | null
           city_id?: string | null
@@ -1449,6 +1462,7 @@ export type Database = {
           phone?: string | null
           phone_verified?: boolean
           preferred_language?: string
+          ref_id?: string
           updated_at?: string
           user_id: string
         }
@@ -1470,6 +1484,7 @@ export type Database = {
           phone?: string | null
           phone_verified?: boolean
           preferred_language?: string
+          ref_id?: string
           updated_at?: string
           user_id?: string
         }
@@ -1544,6 +1559,7 @@ export type Database = {
           id: string
           is_featured: boolean
           project_cost: number | null
+          ref_id: string | null
           sort_order: number
           status: string
           title_ar: string
@@ -1565,6 +1581,7 @@ export type Database = {
           id?: string
           is_featured?: boolean
           project_cost?: number | null
+          ref_id?: string | null
           sort_order?: number
           status?: string
           title_ar: string
@@ -1586,6 +1603,7 @@ export type Database = {
           id?: string
           is_featured?: boolean
           project_cost?: number | null
+          ref_id?: string | null
           sort_order?: number
           status?: string
           title_ar?: string
@@ -1632,6 +1650,7 @@ export type Database = {
           offer_price: number | null
           original_price: number | null
           promotion_type: Database["public"]["Enums"]["promotion_type"]
+          ref_id: string | null
           sort_order: number
           start_date: string
           title_ar: string
@@ -1655,6 +1674,7 @@ export type Database = {
           offer_price?: number | null
           original_price?: number | null
           promotion_type?: Database["public"]["Enums"]["promotion_type"]
+          ref_id?: string | null
           sort_order?: number
           start_date?: string
           title_ar: string
@@ -1678,6 +1698,7 @@ export type Database = {
           offer_price?: number | null
           original_price?: number | null
           promotion_type?: Database["public"]["Enums"]["promotion_type"]
+          ref_id?: string | null
           sort_order?: number
           start_date?: string
           title_ar?: string
@@ -1815,6 +1836,7 @@ export type Database = {
           description_en: string | null
           end_date: string
           id: string
+          ref_id: string | null
           start_date: string
           status: Database["public"]["Enums"]["warranty_status"]
           title_ar: string
@@ -1831,6 +1853,7 @@ export type Database = {
           description_en?: string | null
           end_date: string
           id?: string
+          ref_id?: string | null
           start_date: string
           status?: Database["public"]["Enums"]["warranty_status"]
           title_ar: string
@@ -1847,6 +1870,7 @@ export type Database = {
           description_en?: string | null
           end_date?: string
           id?: string
+          ref_id?: string | null
           start_date?: string
           status?: Database["public"]["Enums"]["warranty_status"]
           title_ar?: string
@@ -1882,6 +1906,10 @@ export type Database = {
           _type: string
           _user_id: string
         }
+        Returns: string
+      }
+      generate_ref_id: {
+        Args: { _prefix: string; _seq_name: string }
         Returns: string
       }
       has_admin_access: { Args: { _user_id: string }; Returns: boolean }
