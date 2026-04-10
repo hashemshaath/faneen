@@ -7,7 +7,7 @@ import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ShieldAlert, Shield, Crown, Settings, LogOut, Mail, Lock, Camera, User, ChevronDown, Pencil } from 'lucide-react';
+import { ShieldAlert, Shield, Crown, Settings, LogOut, Mail, Lock, Camera, User, ChevronDown, Pencil, Phone, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -78,6 +78,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
 
   const [passwordDialog, setPasswordDialog] = useState(false);
   const [nameDialog, setNameDialog] = useState(false);
+  const [phoneDialog, setPhoneDialog] = useState(false);
   const [editName, setEditName] = useState('');
   const [nameLoading, setNameLoading] = useState(false);
   const [newPassword, setNewPassword] = useState('');
@@ -85,6 +86,15 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
   const [pwLoading, setPwLoading] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Phone OTP state
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [phoneCountryCode, setPhoneCountryCode] = useState('+966');
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [demoOtp, setDemoOtp] = useState<string | null>(null);
+  const [cooldown, setCooldown] = useState(0);
 
   const greeting = useMemo(() => getGreeting(isRTL), [isRTL]);
   const currentPage = breadcrumbMap[location.pathname];
@@ -204,10 +214,81 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
     }
   };
 
+  const handleSendOtp = async () => {
+    if (!phoneNumber || phoneNumber.length < 7) {
+      toast.error(isRTL ? 'أدخل رقم جوال صحيح' : 'Enter a valid phone number');
+      return;
+    }
+    setOtpLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await supabase.functions.invoke('send-otp', {
+        body: { phone: phoneNumber, country_code: phoneCountryCode },
+        headers: { Authorization: `Bearer ${session?.access_token}` },
+      });
+      if (res.error) throw new Error(res.error.message);
+      const result = res.data;
+      if (result.demo_otp) {
+        setDemoOtp(result.demo_otp);
+      }
+      setOtpSent(true);
+      setCooldown(60);
+      const timer = setInterval(() => {
+        setCooldown(prev => {
+          if (prev <= 1) { clearInterval(timer); return 0; }
+          return prev - 1;
+        });
+      }, 1000);
+      toast.success(isRTL ? 'تم إرسال رمز التحقق' : 'OTP sent');
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (otpCode.length !== 6) {
+      toast.error(isRTL ? 'أدخل رمز التحقق المكون من 6 أرقام' : 'Enter 6-digit OTP');
+      return;
+    }
+    setOtpLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await supabase.functions.invoke('verify-otp', {
+        body: { phone: phoneNumber, country_code: phoneCountryCode, otp_code: otpCode },
+        headers: { Authorization: `Bearer ${session?.access_token}` },
+      });
+      if (res.error) throw new Error(res.error.message);
+      if (res.data?.error) throw new Error(res.data.error);
+      await refreshProfile();
+      toast.success(isRTL ? 'تم التحقق من رقم الجوال بنجاح' : 'Phone verified successfully');
+      setPhoneDialog(false);
+      setOtpSent(false);
+      setOtpCode('');
+      setDemoOtp(null);
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
   const handleLogout = async () => {
     await signOut();
     navigate('/');
   };
+
+  const countryCodes = [
+    { code: '+966', flag: '🇸🇦' },
+    { code: '+971', flag: '🇦🇪' },
+    { code: '+965', flag: '🇰🇼' },
+    { code: '+973', flag: '🇧🇭' },
+    { code: '+968', flag: '🇴🇲' },
+    { code: '+974', flag: '🇶🇦' },
+    { code: '+962', flag: '🇯🇴' },
+    { code: '+20', flag: '🇪🇬' },
+  ];
 
   return (
     <SidebarProvider>
@@ -249,8 +330,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
                             {initial}
                           </AvatarFallback>
                         </Avatar>
-                        {/* Online indicator */}
-                        <span className="absolute -bottom-0.5 -end-0.5 w-2.5 h-2.5 bg-green-500 border-2 border-card rounded-full" />
+                        <span className="absolute -bottom-0.5 -end-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-card rounded-full" />
                       </div>
                       <div className="hidden sm:flex flex-col items-start min-w-0">
                         <span className="text-xs font-medium text-foreground truncate max-w-[120px] leading-tight">
@@ -264,7 +344,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
                     </button>
                   </DropdownMenuTrigger>
 
-                  <DropdownMenuContent align={isRTL ? 'start' : 'end'} className="w-72 p-0" sideOffset={8}>
+                  <DropdownMenuContent align={isRTL ? 'start' : 'end'} className="w-80 p-0" sideOffset={8}>
                     {/* Profile header */}
                     <div className="p-4 border-b border-border/40">
                       <div className="flex items-center gap-3">
@@ -291,35 +371,76 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
                           />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="font-medium text-sm text-foreground truncate">
-                            {profile?.full_name || (isRTL ? 'مستخدم' : 'User')}
-                          </p>
-                          <p className="text-xs text-muted-foreground truncate" dir="ltr">
-                            {user.email}
-                          </p>
-                          <div className={`inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium ${roleBadge.color}`}>
+                          {/* Name with inline edit */}
+                          <div className="flex items-center gap-1.5">
+                            <p className="font-medium text-sm text-foreground truncate">
+                              {profile?.full_name || (isRTL ? 'مستخدم' : 'User')}
+                            </p>
+                            <button
+                              onClick={() => { setEditName(profile?.full_name || ''); setNameDialog(true); }}
+                              className="p-0.5 rounded hover:bg-muted/60 transition-colors shrink-0"
+                              title={isRTL ? 'تعديل الاسم' : 'Edit Name'}
+                            >
+                              <Pencil className="w-3 h-3 text-muted-foreground hover:text-accent" />
+                            </button>
+                          </div>
+                          <div className={`inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${roleBadge.color}`}>
                             <roleBadge.icon className="w-2.5 h-2.5" />
                             {roleBadge.label}
                           </div>
                         </div>
                       </div>
-                      {profile?.ref_id && (
-                        <div className="mt-2 px-2 py-1 rounded bg-muted/40 dark:bg-muted/20">
-                          <span className="text-[10px] text-muted-foreground">{isRTL ? 'رقم العضوية:' : 'Member ID:'} </span>
-                          <span className="text-[10px] font-mono font-medium tech-content">{profile.ref_id}</span>
+
+                      {/* User details */}
+                      <div className="mt-3 space-y-1.5">
+                        {/* Email */}
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Mail className="w-3.5 h-3.5 shrink-0" />
+                          <span className="truncate tech-content" dir="ltr">{user.email}</span>
                         </div>
-                      )}
+                        {/* Phone */}
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Phone className="w-3.5 h-3.5 shrink-0" />
+                          {profile?.phone ? (
+                            <div className="flex items-center gap-1.5">
+                              <span className="tech-content" dir="ltr">{profile.phone}</span>
+                              {profile.phone_verified ? (
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                              ) : (
+                                <XCircle className="w-3.5 h-3.5 text-destructive shrink-0" />
+                              )}
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => { setPhoneDialog(true); setOtpSent(false); setPhoneNumber(''); setOtpCode(''); setDemoOtp(null); }}
+                              className="text-accent hover:underline text-xs"
+                            >
+                              {isRTL ? 'إضافة رقم الجوال' : 'Add phone number'}
+                            </button>
+                          )}
+                        </div>
+                        {/* Member ID */}
+                        {profile?.ref_id && (
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <User className="w-3.5 h-3.5 shrink-0" />
+                            <span className="text-[10px]">{isRTL ? 'رقم العضوية:' : 'ID:'} </span>
+                            <span className="text-[10px] font-mono font-medium tech-content">{profile.ref_id}</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                     {/* Menu items */}
                     <div className="p-1.5">
-                      <DropdownMenuItem
-                        onClick={() => { setEditName(profile?.full_name || ''); setNameDialog(true); }}
-                        className="gap-2.5 py-2.5 rounded-lg cursor-pointer"
-                      >
-                        <Pencil className="w-4 h-4 text-muted-foreground" />
-                        <span>{isRTL ? 'تعديل الاسم' : 'Edit Name'}</span>
-                      </DropdownMenuItem>
+                      {!profile?.phone_verified && profile?.phone && (
+                        <DropdownMenuItem
+                          onClick={() => { setPhoneDialog(true); setOtpSent(false); setPhoneNumber(profile.phone?.replace(profile.country_code, '') || ''); setPhoneCountryCode(profile.country_code || '+966'); setOtpCode(''); setDemoOtp(null); }}
+                          className="gap-2.5 py-2.5 rounded-lg cursor-pointer text-amber-600"
+                        >
+                          <Phone className="w-4 h-4" />
+                          <span>{isRTL ? 'تأكيد رقم الجوال' : 'Verify Phone'}</span>
+                        </DropdownMenuItem>
+                      )}
 
                       <DropdownMenuItem
                         onClick={() => setPasswordDialog(true)}
@@ -439,6 +560,99 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
                 {nameLoading ? (isRTL ? 'جاري الحفظ...' : 'Saving...') : (isRTL ? 'حفظ' : 'Save')}
               </Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Phone Verification Dialog */}
+      <Dialog open={phoneDialog} onOpenChange={setPhoneDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{isRTL ? 'تحقق من رقم الجوال' : 'Verify Phone Number'}</DialogTitle>
+            <DialogDescription>
+              {isRTL ? 'أدخل رقم الجوال وسنرسل لك رمز التحقق' : 'Enter your phone number and we will send a verification code'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            {!otpSent ? (
+              <>
+                <div className="space-y-1.5">
+                  <Label className="text-sm">{isRTL ? 'رقم الجوال' : 'Phone Number'}</Label>
+                  <div className="flex gap-2" dir="ltr">
+                    <select
+                      value={phoneCountryCode}
+                      onChange={(e) => setPhoneCountryCode(e.target.value)}
+                      className="w-24 rounded-md border border-input bg-background px-2 py-2 text-sm"
+                    >
+                      {countryCodes.map(c => (
+                        <option key={c.code} value={c.code}>{c.flag} {c.code}</option>
+                      ))}
+                    </select>
+                    <Input
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
+                      placeholder="5XXXXXXXX"
+                      dir="ltr"
+                      className="flex-1"
+                    />
+                  </div>
+                </div>
+                <Button onClick={handleSendOtp} disabled={otpLoading} className="w-full">
+                  {otpLoading ? <Loader2 className="w-4 h-4 animate-spin me-2" /> : null}
+                  {isRTL ? 'إرسال رمز التحقق' : 'Send OTP'}
+                </Button>
+              </>
+            ) : (
+              <>
+                <div className="space-y-1.5">
+                  <Label className="text-sm">{isRTL ? 'رمز التحقق' : 'Verification Code'}</Label>
+                  <Input
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    placeholder="000000"
+                    dir="ltr"
+                    className="text-center text-lg tracking-[0.5em] font-mono"
+                    maxLength={6}
+                  />
+                </div>
+
+                {/* Demo OTP display (temp until SMS is activated) */}
+                {demoOtp && (
+                  <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
+                    <p className="text-xs text-amber-700 dark:text-amber-400 mb-1">
+                      {isRTL ? '⚠️ الكود المؤقت (لحين تفعيل الرسائل النصية):' : '⚠️ Temp code (until SMS is activated):'}
+                    </p>
+                    <p className="text-center text-2xl font-mono font-bold text-amber-600 dark:text-amber-300 tracking-[0.3em]">
+                      {demoOtp}
+                    </p>
+                  </div>
+                )}
+
+                <Button onClick={handleVerifyOtp} disabled={otpLoading || otpCode.length !== 6} className="w-full">
+                  {otpLoading ? <Loader2 className="w-4 h-4 animate-spin me-2" /> : null}
+                  {isRTL ? 'تحقق' : 'Verify'}
+                </Button>
+
+                <div className="flex items-center justify-between">
+                  <button
+                    onClick={() => setOtpSent(false)}
+                    className="text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    {isRTL ? '← تغيير الرقم' : '← Change number'}
+                  </button>
+                  <button
+                    onClick={handleSendOtp}
+                    disabled={cooldown > 0 || otpLoading}
+                    className="text-xs text-accent hover:underline disabled:opacity-50 disabled:no-underline"
+                  >
+                    {cooldown > 0
+                      ? (isRTL ? `إعادة الإرسال (${cooldown}ث)` : `Resend (${cooldown}s)`)
+                      : (isRTL ? 'إعادة إرسال الرمز' : 'Resend code')
+                    }
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </DialogContent>
       </Dialog>
