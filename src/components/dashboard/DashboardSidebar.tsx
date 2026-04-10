@@ -18,7 +18,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import {
   LayoutDashboard, Wrench, Image, Star, FileText, Shield, Settings, LogOut, Home, Globe, CreditCard, Megaphone, Key, Book, FolderOpen, PenSquare, Layers, MessageSquare, Users, Newspaper, Building2, Bell, Activity, Bookmark,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
 const menuItems = [
   { titleKey: 'dashboard.overview', url: '/dashboard', icon: LayoutDashboard },
@@ -47,6 +46,19 @@ const adminItems = [
   { titleKey: 'admin.activity_log', url: '/admin/activity-log', icon: Activity },
 ] as const;
 
+const getAdminLabel = (titleKey: string, isRTL: boolean) => {
+  const map: Record<string, { ar: string; en: string }> = {
+    'admin.api_settings': { ar: 'إعدادات API', en: 'API Settings' },
+    'admin.api_docs': { ar: 'توثيق API', en: 'API Docs' },
+    'admin.profile_systems': { ar: 'القطاعات', en: 'Profiles' },
+    'admin.users': { ar: 'المستخدمين', en: 'Users' },
+    'admin.blog': { ar: 'المدونة', en: 'Blog' },
+    'admin.activity_log': { ar: 'سجل النشاط', en: 'Activity Log' },
+  };
+  const entry = map[titleKey];
+  return entry ? (isRTL ? entry.ar : entry.en) : titleKey;
+};
+
 export const DashboardSidebar: React.FC = () => {
   const { state, setOpenMobile, isMobile } = useSidebar();
   const collapsed = state === 'collapsed';
@@ -66,13 +78,13 @@ export const DashboardSidebar: React.FC = () => {
     <Sidebar collapsible="icon" side={isRTL ? 'right' : 'left'}>
       <SidebarContent>
         {/* Logo */}
-        <div className="p-4 flex items-center gap-2 border-b border-border">
-          <div className="w-9 h-9 rounded-xl bg-accent flex items-center justify-center text-accent-foreground font-bold text-lg shrink-0">
+        <div className="p-4 flex items-center gap-2.5 border-b border-sidebar-border">
+          <div className="w-9 h-9 rounded-xl bg-accent flex items-center justify-center text-accent-foreground font-bold text-lg shrink-0 shadow-sm">
             ف
           </div>
           {!collapsed && (
-            <div>
-              <h1 className="font-heading font-bold text-lg leading-none">فنيين</h1>
+            <div className="min-w-0">
+              <h1 className="font-heading font-bold text-lg leading-none text-sidebar-foreground">فنيين</h1>
               <span className="text-[10px] text-accent font-medium">Faneen</span>
             </div>
           )}
@@ -88,12 +100,12 @@ export const DashboardSidebar: React.FC = () => {
                     <NavLink
                       to={item.url}
                       end={item.url === '/dashboard'}
-                      className="hover:bg-muted/50"
-                      activeClassName="bg-accent/10 text-accent font-medium"
+                      className="hover:bg-sidebar-accent/60 rounded-lg transition-colors"
+                      activeClassName="bg-accent/15 text-accent font-medium dark:bg-accent/20"
                       onClick={closeMobile}
                     >
                       <item.icon className="h-4 w-4 shrink-0" />
-                      {!collapsed && <span className="ms-2">{t(item.titleKey as any)}</span>}
+                      {!collapsed && <span className="ms-2 truncate">{t(item.titleKey as any)}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -112,16 +124,12 @@ export const DashboardSidebar: React.FC = () => {
                   <SidebarMenuButton asChild>
                     <NavLink
                       to={item.url}
-                      className="hover:bg-muted/50"
-                      activeClassName="bg-accent/10 text-accent font-medium"
+                      className="hover:bg-sidebar-accent/60 rounded-lg transition-colors"
+                      activeClassName="bg-accent/15 text-accent font-medium dark:bg-accent/20"
                       onClick={closeMobile}
                     >
                       <item.icon className="h-4 w-4 shrink-0" />
-                      {!collapsed && <span className="ms-2">{
-                        isRTL
-                          ? (item.titleKey === 'admin.api_settings' ? 'إعدادات API' : item.titleKey === 'admin.api_docs' ? 'توثيق API' : item.titleKey === 'admin.profile_systems' ? 'القطاعات' : item.titleKey === 'admin.users' ? 'المستخدمين' : 'المدونة')
-                          : (item.titleKey === 'admin.api_settings' ? 'API Settings' : item.titleKey === 'admin.api_docs' ? 'API Docs' : item.titleKey === 'admin.profile_systems' ? 'Profiles' : item.titleKey === 'admin.users' ? 'Users' : 'Blog')
-                      }</span>}
+                      {!collapsed && <span className="ms-2 truncate">{getAdminLabel(item.titleKey, isRTL)}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -131,24 +139,24 @@ export const DashboardSidebar: React.FC = () => {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-border p-3 space-y-2">
+      <SidebarFooter className="border-t border-sidebar-border p-3 space-y-1">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
-              <NavLink to="/" className="hover:bg-muted/50" activeClassName="" onClick={closeMobile}>
+              <NavLink to="/" className="hover:bg-sidebar-accent/60 rounded-lg" activeClassName="" onClick={closeMobile}>
                 <Home className="h-4 w-4 shrink-0" />
                 {!collapsed && <span className="ms-2">{isRTL ? 'الرئيسية' : 'Home'}</span>}
               </NavLink>
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton onClick={() => setLanguage(language === 'ar' ? 'en' : 'ar')}>
+            <SidebarMenuButton onClick={() => setLanguage(language === 'ar' ? 'en' : 'ar')} className="hover:bg-sidebar-accent/60 rounded-lg">
               <Globe className="h-4 w-4 shrink-0" />
               {!collapsed && <span className="ms-2">{language === 'ar' ? 'EN' : 'عربي'}</span>}
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton onClick={handleLogout} className="text-destructive hover:text-destructive">
+            <SidebarMenuButton onClick={handleLogout} className="text-destructive hover:text-destructive hover:bg-destructive/10 dark:hover:bg-destructive/20 rounded-lg">
               <LogOut className="h-4 w-4 shrink-0" />
               {!collapsed && <span className="ms-2">{t('auth.logout')}</span>}
             </SidebarMenuButton>
