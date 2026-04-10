@@ -14,8 +14,8 @@ import {
   List, Share2, Copy, CheckCheck, Bookmark, BookmarkCheck, ChevronUp,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { marked } from 'marked';
-import hljs from 'highlight.js/lib/core';
+import { marked, Renderer } from 'marked';
+import { markedHighlight } from 'marked-highlight';
 import javascript from 'highlight.js/lib/languages/javascript';
 import typescript from 'highlight.js/lib/languages/typescript';
 import xml from 'highlight.js/lib/languages/xml';
