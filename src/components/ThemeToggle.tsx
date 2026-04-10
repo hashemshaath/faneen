@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react';
 import { Sun, Moon, Monitor } from 'lucide-react';
 
 type Theme = 'light' | 'dark' | 'system';
@@ -62,40 +62,44 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-export const ThemeToggle = ({ variant = 'navbar' }: { variant?: 'navbar' | 'dropdown' }) => {
-  const { theme, setTheme } = useThemeMode();
+export const ThemeToggle = React.forwardRef<HTMLButtonElement, { variant?: 'navbar' | 'dropdown' }>(
+  ({ variant = 'navbar' }, ref) => {
+    const { theme, setTheme } = useThemeMode();
 
-  const cycle = () => {
-    setTheme(theme === 'light' ? 'dark' : theme === 'dark' ? 'system' : 'light');
-  };
+    const cycle = () => {
+      setTheme(theme === 'light' ? 'dark' : theme === 'dark' ? 'system' : 'light');
+    };
 
-  const Icon = theme === 'dark' ? Moon : theme === 'light' ? Sun : Monitor;
+    const Icon = theme === 'dark' ? Moon : theme === 'light' ? Sun : Monitor;
 
-  if (variant === 'navbar') {
+    if (variant === 'navbar') {
+      return (
+        <button
+          ref={ref}
+          onClick={cycle}
+          className="p-1.5 rounded-lg text-surface-nav-foreground/60 hover:text-accent transition-colors"
+          title={theme}
+          aria-label={`Theme: ${theme}`}
+        >
+          <Icon className="w-4 h-4" />
+        </button>
+      );
+    }
+
     return (
-      <button
-        onClick={cycle}
-        className="p-1.5 rounded-lg text-surface-nav-foreground/60 hover:text-accent transition-colors"
-        title={theme}
-        aria-label={`Theme: ${theme}`}
-      >
-        <Icon className="w-4 h-4" />
-      </button>
+      <div className="flex items-center gap-1 p-1 rounded-xl bg-muted">
+        {([['light', Sun], ['system', Monitor], ['dark', Moon]] as const).map(([t, I]) => (
+          <button
+            key={t}
+            onClick={() => setTheme(t)}
+            className={`p-2 rounded-lg transition-all ${theme === t ? 'bg-card shadow-sm text-accent' : 'text-muted-foreground hover:text-foreground'}`}
+            aria-label={`Theme: ${t}`}
+          >
+            <I className="w-4 h-4" />
+          </button>
+        ))}
+      </div>
     );
   }
-
-  return (
-    <div className="flex items-center gap-1 p-1 rounded-xl bg-muted">
-      {([['light', Sun], ['system', Monitor], ['dark', Moon]] as const).map(([t, I]) => (
-        <button
-          key={t}
-          onClick={() => setTheme(t)}
-          className={`p-2 rounded-lg transition-all ${theme === t ? 'bg-card shadow-sm text-accent' : 'text-muted-foreground hover:text-foreground'}`}
-          aria-label={`Theme: ${t}`}
-        >
-          <I className="w-4 h-4" />
-        </button>
-      ))}
-    </div>
-  );
-};
+);
+ThemeToggle.displayName = 'ThemeToggle';

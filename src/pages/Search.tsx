@@ -41,6 +41,15 @@ const useBusinesses = () =>
     },
   });
 
+const useEntityTags = () =>
+  useQuery({
+    queryKey: ['entity-tags-businesses'],
+    queryFn: async () => {
+      const { data } = await supabase.from('entity_tags').select('entity_id, tag_id').eq('entity_type', 'business');
+      return data ?? [];
+    },
+  });
+
 const SearchPage = () => {
   const { language } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -48,11 +57,13 @@ const SearchPage = () => {
   const { data: categories } = useCategories();
   const { data: cities } = useCities();
   const { data: businesses, isLoading } = useBusinesses();
+  const { data: entityTags } = useEntityTags();
 
   const [query, setQuery] = useState(searchParams.get('q') || '');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   const [filters, setFilters] = useState<SearchFilterValues>({
     categoryId: searchParams.get('category') || 'all',
@@ -118,6 +129,14 @@ const SearchPage = () => {
     if (filters.minRating > 0) results = results.filter(b => Number(b.rating_avg) >= filters.minRating);
     if (filters.verifiedOnly) results = results.filter(b => b.is_verified);
 
+    // Filter by selected tags
+    if (selectedTags.length > 0 && entityTags) {
+      const bizIdsWithTags = new Set(
+        entityTags.filter(et => selectedTags.includes(et.tag_id)).map(et => et.entity_id)
+      );
+      results = results.filter(b => bizIdsWithTags.has(b.id));
+    }
+
     if (filters.priceMin > 0 || filters.priceMax > 0) {
       results = results.filter(b => {
         const services = (b as any).business_services;
@@ -144,7 +163,7 @@ const SearchPage = () => {
     });
 
     return results;
-  }, [businesses, query, filters, language]);
+  }, [businesses, query, filters, language, selectedTags, entityTags]);
 
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
   const paginatedResults = useMemo(() => {
@@ -180,6 +199,12 @@ const SearchPage = () => {
             hasActiveFilters={hasActiveFilters}
             showFilters={showFilters}
             onToggleFilters={() => setShowFilters(!showFilters)}
+            selectedTags={selectedTags}
+            onToggleTag={(tagId) => {
+              setSelectedTags(prev => prev.includes(tagId) ? prev.filter(t => t !== tagId) : [...prev, tagId]);
+              setCurrentPage(1);
+            }}
+            onClearTags={() => { setSelectedTags([]); setCurrentPage(1); }}
           />
           <SearchResults
             businesses={paginatedResults}
