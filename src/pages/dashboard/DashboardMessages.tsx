@@ -474,12 +474,18 @@ const DashboardMessages = () => {
                           <span className="text-[10px] text-muted-foreground shrink-0">{timeAgo}</span>
                         </div>
                         <p className="text-xs text-muted-foreground truncate mt-0.5">
-                          {conv.last_message_text || (isRTL ? 'ابدأ المحادثة...' : 'Start chatting...')}
-                        </p>
+                          {isSuperAdmin && conv.participant_1_name && conv.participant_2_name ? (
+                            <p className="text-[10px] text-muted-foreground truncate">
+                              {conv.participant_1_name} ↔ {conv.participant_2_name}
+                            </p>
+                          ) : null}
+                          <p className="text-xs text-muted-foreground truncate">
+                            {conv.last_message_text || (isRTL ? 'ابدأ المحادثة...' : 'Start chatting...')}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  );
-                })
+                    );
+                  })
               )}
             </ScrollArea>
           </div>
