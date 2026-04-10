@@ -88,7 +88,7 @@ const useReviews = (businessId: string | undefined) =>
     queryFn: async () => {
       const { data } = await supabase
         .from('reviews')
-        .select('*, profiles!reviews_user_id_fkey(full_name, avatar_url)')
+        .select('*, profiles(full_name, avatar_url)')
         .eq('business_id', businessId!)
         .order('created_at', { ascending: false });
       return data ?? [];
