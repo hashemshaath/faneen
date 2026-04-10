@@ -395,7 +395,7 @@ const DashboardContracts = () => {
                                   const mTitle = isRTL ? m.title_ar : (m.title_en || m.title_ar);
                                   const mDesc = isRTL ? m.description_ar : (m.description_en || m.description_ar);
                                   const isCompleted = m.status === 'completed';
-                                  const isInProgress = m.status === 'in_progress';
+                                  const isInProgress = (m.status as string) === 'in_progress';
                                   return (
                                     <div key={m.id} className={`relative ${isRTL ? 'pr-9' : 'pl-9'}`}>
                                       {/* Timeline dot */}
