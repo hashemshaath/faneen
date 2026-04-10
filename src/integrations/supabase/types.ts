@@ -2498,6 +2498,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_promotion_views: {
+        Args: { _promotion_id: string }
+        Returns: undefined
+      }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
