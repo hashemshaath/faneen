@@ -26,17 +26,26 @@ Deno.serve(async (req) => {
 
     const cleanPhone = phone.replace(/^0/, "");
     const fullPhone = `${country_code}${cleanPhone}`;
+    // Also try with leading zero for local format
+    const localPhone = `0${cleanPhone}`;
 
-    // Find user by verified phone
-    const { data: profile, error: profileError } = await adminClient
-      .from("profiles")
-      .select("user_id, email")
-      .eq("phone", fullPhone)
-      .eq("phone_verified", true)
-      .limit(1)
-      .single();
+    // Find user by phone (try multiple formats)
+    let profile: { user_id: string; email: string } | null = null;
 
-    if (profileError || !profile) {
+    for (const ph of [fullPhone, localPhone, cleanPhone, phone]) {
+      const { data } = await adminClient
+        .from("profiles")
+        .select("user_id, email")
+        .eq("phone", ph)
+        .limit(1)
+        .single();
+      if (data) {
+        profile = data;
+        break;
+      }
+    }
+
+    if (!profile) {
       return new Response(
         JSON.stringify({ error: "no_account", message: "No account found with this phone number" }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }

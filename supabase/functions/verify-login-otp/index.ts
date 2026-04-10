@@ -26,15 +26,23 @@ Deno.serve(async (req) => {
 
     const cleanPhone = phone.replace(/^0/, "");
     const fullPhone = `${country_code}${cleanPhone}`;
+    const localPhone = `0${cleanPhone}`;
 
-    // Find the user profile by phone
-    const { data: profile } = await adminClient
-      .from("profiles")
-      .select("user_id, email")
-      .eq("phone", fullPhone)
-      .eq("phone_verified", true)
-      .limit(1)
-      .single();
+    // Find the user profile by phone (try multiple formats)
+    let profile: { user_id: string; email: string } | null = null;
+
+    for (const ph of [fullPhone, localPhone, cleanPhone, phone]) {
+      const { data } = await adminClient
+        .from("profiles")
+        .select("user_id, email")
+        .eq("phone", ph)
+        .limit(1)
+        .single();
+      if (data) {
+        profile = data;
+        break;
+      }
+    }
 
     if (!profile) {
       return new Response(
