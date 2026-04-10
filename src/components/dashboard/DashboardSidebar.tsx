@@ -46,7 +46,7 @@ const providerGroups: MenuGroup[] = [
     groupLabel: { ar: 'الرئيسية', en: 'Main' },
     icon: LayoutDashboard,
     items: [
-      { label: { ar: 'نظرة عامة', en: 'Overview' }, url: '/dashboard', icon: LayoutDashboard, end: true },
+      { label: { ar: 'لوحة التحكم', en: 'Dashboard' }, url: '/dashboard', icon: LayoutDashboard, end: true },
     ],
   },
   {
@@ -96,7 +96,7 @@ const userGroups: MenuGroup[] = [
     groupLabel: { ar: 'الرئيسية', en: 'Main' },
     icon: LayoutDashboard,
     items: [
-      { label: { ar: 'نظرة عامة', en: 'Overview' }, url: '/dashboard', icon: LayoutDashboard, end: true },
+      { label: { ar: 'لوحة التحكم', en: 'Dashboard' }, url: '/dashboard', icon: LayoutDashboard, end: true },
     ],
   },
   {
@@ -104,16 +104,16 @@ const userGroups: MenuGroup[] = [
     icon: FileText,
     items: [
       { label: { ar: 'العقود', en: 'Contracts' }, url: '/dashboard/contracts', icon: FileText },
+      { label: { ar: 'الأقساط', en: 'Installments' }, url: '/dashboard/installments', icon: CreditCard },
       { label: { ar: 'الرسائل', en: 'Messages' }, url: '/dashboard/messages', icon: MessageSquare },
-      { label: { ar: 'المفضلة', en: 'Bookmarks' }, url: '/dashboard/bookmarks', icon: Bookmark },
     ],
   },
   {
-    groupLabel: { ar: 'استكشاف', en: 'Explore' },
-    icon: Building2,
+    groupLabel: { ar: 'المزيد', en: 'More' },
+    icon: Activity,
     items: [
-      { label: { ar: 'المشاريع', en: 'Projects' }, url: '/projects', icon: Building2 },
-      { label: { ar: 'المدونة', en: 'Blog' }, url: '/blog', icon: Newspaper },
+      { label: { ar: 'المفضلة', en: 'Bookmarks' }, url: '/dashboard/bookmarks', icon: Bookmark },
+      { label: { ar: 'العمليات', en: 'Operations' }, url: '/dashboard/operations', icon: Activity },
     ],
   },
   {
@@ -135,7 +135,7 @@ const adminBaseGroups: MenuGroup[] = [
     groupLabel: { ar: 'لوحة المراقبة', en: 'Dashboard' },
     icon: LayoutDashboard,
     items: [
-      { label: { ar: 'نظرة عامة', en: 'Overview' }, url: '/dashboard', icon: LayoutDashboard, end: true },
+      { label: { ar: 'لوحة التحكم', en: 'Dashboard' }, url: '/dashboard', icon: LayoutDashboard, end: true },
       { label: { ar: 'سجل النشاط', en: 'Activity Log' }, url: '/admin/activity-log', icon: BarChart3 },
     ],
   },
