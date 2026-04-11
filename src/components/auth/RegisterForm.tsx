@@ -4,13 +4,15 @@ import { authService } from '@/services/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { checkPasswordStrength, validateEmail, validatePhone, validateUsername } from '@/lib/password-strength';
+import { checkPasswordStrength, validateUsername } from '@/lib/password-strength';
 import { toast } from 'sonner';
-import { User, Building2, Mail, Globe, Loader2, ArrowLeft, ArrowRight } from 'lucide-react';
+import { User, Building2, Mail, Globe, Loader2, ArrowLeft, ArrowRight, CheckCircle } from 'lucide-react';
 import { PhoneInput } from './PhoneInput';
 import { PasswordField } from './PasswordField';
 import { GoogleAuthButton } from './GoogleAuthButton';
 import { AuthDivider } from './AuthDivider';
+import { FieldError } from './FieldError';
+import { useFieldValidation } from '@/hooks/useFieldValidation';
 import type { RegisterStep, RegisterType } from '@/services/auth/types';
 
 interface RegisterFormProps {
@@ -26,6 +28,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [emailExists, setEmailExists] = useState(false);
 
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -38,18 +41,27 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
 
   const passwordStrength = checkPasswordStrength(password);
   const BackArrow = isRTL ? ArrowRight : ArrowLeft;
+  const { errors, validateEmailField, validatePhoneField, clearError } = useFieldValidation(isRTL);
+
+  const handleEmailBlur = () => {
+    if (!email) return;
+    const valid = validateEmailField(email);
+    if (valid) {
+      setEmailExists(false);
+    }
+  };
 
   const handleRegister = async () => {
-    // Validation
+    // Validate all fields
     if (!fullName.trim()) {
       toast.error(isRTL ? 'يرجى إدخال الاسم الكامل' : 'Please enter your full name');
       return;
     }
-    if (!email || !validateEmail(email)) {
+    if (!email || !validateEmailField(email)) {
       toast.error(isRTL ? 'البريد الإلكتروني غير صحيح' : 'Invalid email');
       return;
     }
-    if (phone && !validatePhone(phone)) {
+    if (phone && !validatePhoneField(phone)) {
       toast.error(isRTL ? 'رقم الجوال غير صحيح' : 'Invalid phone number');
       return;
     }
@@ -78,7 +90,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
     } catch (err: any) {
       const msg = err.message || '';
       if (msg.includes('already registered')) {
-        toast.error(isRTL ? 'هذا البريد مسجل بالفعل' : 'This email is already registered');
+        setEmailExists(true);
+        toast.error(isRTL ? 'هذا البريد مسجل بالفعل. يمكنك تسجيل الدخول أو استعادة كلمة المرور' : 'This email is already registered. You can login or reset your password');
       } else {
         toast.error(msg);
       }
@@ -91,7 +104,6 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
     setGoogleLoading(true);
     try {
       await authService.signInWithGoogle();
-      // OAuth redirect handles the rest
     } catch (err: any) {
       toast.error(err.message);
     } finally {
@@ -149,6 +161,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
 
   // ─── Step: Details ───
   if (step === 'details') {
+    const isFormValid = email && fullName.trim() && passwordStrength.score >= 2 && password === confirmPassword && !errors.email && !errors.phone && !emailExists;
+
     return (
       <div className="space-y-6">
         <div className="space-y-2">
@@ -165,15 +179,43 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
               <Input value={fullName} onChange={(e) => setFullName(e.target.value)} style={{ paddingInlineStart: '40px' }} />
             </div>
           </div>
+
           <div className="space-y-2">
             <Label>{t('auth.email')} <span className="text-destructive">*</span></Label>
             <div className="relative">
               <Mail className="absolute top-3 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
-              <Input type="email" placeholder="example@email.com" value={email} onChange={(e) => setEmail(e.target.value)} dir="ltr" style={{ paddingInlineStart: '40px' }} />
+              <Input
+                type="email" placeholder="example@email.com" value={email}
+                onChange={(e) => { setEmail(e.target.value); clearError('email'); setEmailExists(false); }}
+                onBlur={handleEmailBlur}
+                dir="ltr" style={{ paddingInlineStart: '40px' }}
+                className={errors.email || emailExists ? 'border-destructive focus-visible:ring-destructive' : ''}
+              />
             </div>
+            <FieldError message={errors.email} />
+            {emailExists && (
+              <p className="flex items-center gap-1 text-xs text-destructive mt-1 animate-fade-in">
+                {isRTL ? 'هذا البريد مسجل بالفعل.' : 'This email is already registered.'}{' '}
+                <button onClick={onSwitchToLogin} className="underline font-medium">
+                  {isRTL ? 'تسجيل الدخول' : 'Login'}
+                </button>
+              </p>
+            )}
+            {email && !errors.email && !emailExists && (
+              <p className="flex items-center gap-1 text-xs text-accent mt-1">
+                <CheckCircle className="w-3 h-3" />
+                {isRTL ? 'صيغة البريد صحيحة' : 'Valid email format'}
+              </p>
+            )}
           </div>
 
-          <PhoneInput phone={phone} countryCode={countryCode} onPhoneChange={setPhone} onCountryCodeChange={setCountryCode} isRTL={isRTL} optional />
+          <PhoneInput
+            phone={phone} countryCode={countryCode}
+            onPhoneChange={(v) => { setPhone(v); clearError('phone'); }}
+            onCountryCodeChange={setCountryCode} isRTL={isRTL} optional
+            error={errors.phone}
+            onBlur={() => phone && validatePhoneField(phone)}
+          />
 
           <PasswordField
             password={password} onChange={setPassword} label={t('auth.password')}
@@ -190,11 +232,11 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
           </div>
 
           {registerType === 'business' ? (
-            <Button onClick={() => setStep('business-details')} disabled={!email || !fullName.trim() || passwordStrength.score < 2 || password !== confirmPassword} className="w-full h-11" variant="hero">
+            <Button onClick={() => setStep('business-details')} disabled={!isFormValid} className="w-full h-11" variant="hero">
               {t('auth.next')}
             </Button>
           ) : (
-            <Button onClick={handleRegister} disabled={loading || !email || !fullName.trim() || passwordStrength.score < 2 || password !== confirmPassword} className="w-full h-11" variant="hero">
+            <Button onClick={handleRegister} disabled={loading || !isFormValid} className="w-full h-11" variant="hero">
               {loading && <Loader2 className="w-4 h-4 animate-spin me-2" />}
               {loading ? t('common.loading') : t('auth.submit')}
             </Button>

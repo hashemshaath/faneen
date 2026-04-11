@@ -4,9 +4,10 @@ import { authService } from '@/services/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { validateEmail } from '@/lib/password-strength';
 import { toast } from 'sonner';
 import { Mail, Loader2, ArrowLeft, ArrowRight, CheckCircle } from 'lucide-react';
+import { FieldError as FieldErrorDisplay } from './FieldError';
+import { useFieldValidation } from '@/hooks/useFieldValidation';
 
 interface ForgotPasswordFormProps {
   onBack: () => void;
@@ -18,10 +19,10 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const BackArrow = isRTL ? ArrowRight : ArrowLeft;
+  const { errors, validateEmailField, clearError } = useFieldValidation(isRTL);
 
   const handleSubmit = async () => {
-    if (!email || !validateEmail(email)) {
-      toast.error(isRTL ? 'يرجى إدخال بريد إلكتروني صحيح' : 'Please enter a valid email');
+    if (!email || !validateEmailField(email)) {
       return;
     }
     setLoading(true);
@@ -85,15 +86,18 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
             <Input
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => { setEmail(e.target.value); clearError('email'); }}
+              onBlur={() => email && validateEmailField(email)}
               dir="ltr"
               style={{ paddingInlineStart: '40px' }}
+              className={errors.email ? 'border-destructive focus-visible:ring-destructive' : ''}
               onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
               autoComplete="email"
             />
           </div>
+          <FieldErrorDisplay message={errors.email} />
         </div>
-        <Button onClick={handleSubmit} disabled={loading} className="w-full h-11" variant="hero">
+        <Button onClick={handleSubmit} disabled={loading || !!errors.email} className="w-full h-11" variant="hero">
           {loading && <Loader2 className="w-4 h-4 animate-spin me-2" />}
           {loading ? t('common.loading') : t('auth.reset_password')}
         </Button>

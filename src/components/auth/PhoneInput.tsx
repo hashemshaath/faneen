@@ -3,6 +3,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ChevronDown } from 'lucide-react';
 import { countryCodes, PHONE_MAX_LENGTH } from '@/services/auth/constants';
+import { FieldError } from './FieldError';
 
 interface PhoneInputProps {
   phone: string;
@@ -12,11 +13,13 @@ interface PhoneInputProps {
   isRTL: boolean;
   label?: string;
   optional?: boolean;
+  error?: string;
+  onBlur?: () => void;
 }
 
 export const PhoneInput: React.FC<PhoneInputProps> = ({
   phone, countryCode, onPhoneChange, onCountryCodeChange,
-  isRTL, label, optional = false,
+  isRTL, label, optional = false, error, onBlur,
 }) => (
   <div className="space-y-2">
     <Label>
@@ -40,10 +43,12 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
         type="tel"
         value={phone}
         onChange={(e) => onPhoneChange(e.target.value.replace(/\D/g, '').slice(0, PHONE_MAX_LENGTH))}
+        onBlur={onBlur}
         placeholder="5XXXXXXXX"
         dir="ltr"
-        className="flex-1"
+        className={`flex-1 ${error ? 'border-destructive focus-visible:ring-destructive' : ''}`}
       />
     </div>
+    <FieldError message={error} />
   </div>
 );
