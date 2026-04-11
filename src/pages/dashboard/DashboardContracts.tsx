@@ -763,11 +763,11 @@ const DashboardContracts = () => {
             <div className="flex flex-col sm:flex-row gap-2 sm:items-center justify-between">
               <div className="flex flex-wrap gap-1.5">
                 {[
-                  { key: 'all', label: isRTL ? 'الكل' : 'All', count: contracts.length },
+                  { key: 'all', label: isRTL ? 'الكل' : 'All', count: stats.total },
                   { key: 'active', label: isRTL ? 'نشط' : 'Active', count: stats.active },
-                  { key: 'pending_approval', label: isRTL ? 'بانتظار' : 'Pending', count: stats.pending },
+                  { key: 'pending_approval', label: isRTL ? 'بانتظار' : 'Pending', count: stats.pendingApproval },
                   { key: 'completed', label: isRTL ? 'مكتمل' : 'Completed', count: stats.completed },
-                  { key: 'draft', label: isRTL ? 'مسودة' : 'Draft', count: contracts.filter((c: any) => c.status === 'draft').length },
+                  { key: 'draft', label: isRTL ? 'مسودة' : 'Draft', count: stats.draft },
                 ].map(f => (
                   <Button key={f.key} variant={statusFilter === f.key ? 'default' : 'outline'} size="sm" className="text-[10px] gap-0.5 h-7 px-2" onClick={() => setStatusFilter(f.key)}>
                     {f.label}<Badge variant="secondary" className="text-[8px] px-1 py-0 h-3.5 ms-0.5">{f.count}</Badge>
