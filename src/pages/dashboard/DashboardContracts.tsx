@@ -197,6 +197,7 @@ const DashboardContracts = () => {
   const queryClient = useQueryClient();
 
   const [statusFilter, setStatusFilter] = useState('all');
+  const [roleFilter, setRoleFilter] = useState<'all' | 'provider' | 'client'>('all');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [noteText, setNoteText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -209,8 +210,8 @@ const DashboardContracts = () => {
   const [sendConfirm, setSendConfirm] = useState<any>(null);
   const [isExporting, setIsExporting] = useState(false);
 
-  /* ── Data ── */
-  const { data: contracts = [], isLoading } = useQuery({
+  /* ── Data: fetch ALL contracts where user is client OR provider ── */
+  const { data: providerContracts = [], isLoading: loadingProvider } = useQuery({
     queryKey: ['dashboard-contracts', 'provider', user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -218,12 +219,40 @@ const DashboardContracts = () => {
         .select('*')
         .eq('provider_id', user!.id)
         .order('created_at', { ascending: false });
-
       if (error) throw error;
       return data ?? [];
     },
     enabled: !!user,
   });
+
+  const { data: clientContracts = [], isLoading: loadingClient } = useQuery({
+    queryKey: ['dashboard-contracts', 'client', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('contracts')
+        .select('*')
+        .eq('client_id', user!.id)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!user,
+  });
+
+  const isLoading = loadingProvider || loadingClient;
+
+  /* Deduplicate & tag role */
+  const contracts = useMemo(() => {
+    const seen = new Set<string>();
+    const result: any[] = [];
+    providerContracts.forEach((c: any) => {
+      if (!seen.has(c.id)) { seen.add(c.id); result.push({ ...c, _role: 'provider' as const }); }
+    });
+    clientContracts.forEach((c: any) => {
+      if (!seen.has(c.id)) { seen.add(c.id); result.push({ ...c, _role: 'client' as const }); }
+    });
+    return result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  }, [providerContracts, clientContracts]);
 
   const contractIds = useMemo(() => contracts.map((c: any) => c.id), [contracts]);
 
@@ -385,24 +414,31 @@ const DashboardContracts = () => {
   });
 
   /* ── Helpers ── */
-  const stats = useMemo(() => ({
-    total: contracts.length,
-    active: contracts.filter((c: any) => c.status === 'active').length,
-    completed: contracts.filter((c: any) => c.status === 'completed').length,
-    pendingApproval: contracts.filter((c: any) => c.status === 'pending_approval').length,
-    draft: contracts.filter((c: any) => c.status === 'draft').length,
-    totalAmount: contracts.reduce((s: number, c: any) => s + Number(c.total_amount), 0),
-  }), [contracts]);
+  const stats = useMemo(() => {
+    const src = roleFilter === 'provider' ? providerContracts : roleFilter === 'client' ? clientContracts : contracts;
+    return {
+      total: src.length,
+      active: src.filter((c: any) => c.status === 'active').length,
+      completed: src.filter((c: any) => c.status === 'completed').length,
+      pendingApproval: src.filter((c: any) => c.status === 'pending_approval').length,
+      draft: src.filter((c: any) => c.status === 'draft').length,
+      totalAmount: src.reduce((s: number, c: any) => s + Number(c.total_amount), 0),
+      asProvider: providerContracts.length,
+      asClient: clientContracts.length,
+    };
+  }, [contracts, providerContracts, clientContracts, roleFilter]);
 
   const filtered = useMemo(() => {
-    let result = contracts;
+    let result = roleFilter === 'provider' ? providerContracts.map((c: any) => ({ ...c, _role: 'provider' }))
+      : roleFilter === 'client' ? clientContracts.map((c: any) => ({ ...c, _role: 'client' }))
+      : contracts;
     if (statusFilter !== 'all') result = result.filter((c: any) => c.status === statusFilter);
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter((c: any) => c.title_ar.toLowerCase().includes(q) || (c.title_en || '').toLowerCase().includes(q) || c.contract_number.toLowerCase().includes(q));
     }
     return result;
-  }, [contracts, statusFilter, searchQuery]);
+  }, [contracts, providerContracts, clientContracts, roleFilter, statusFilter, searchQuery]);
 
   const formatDate = (d: string | null) => d ? new Date(d).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '-';
 
@@ -759,7 +795,30 @@ const DashboardContracts = () => {
         {/* ═══ Contracts List ═══ */}
         {viewSection === 'list' && (
           <>
-            {/* Filters */}
+            {/* Role Tabs */}
+            <div className="flex items-center gap-1.5 p-1 bg-muted/50 dark:bg-muted/30 rounded-xl w-fit">
+              {[
+                { key: 'all' as const, label: isRTL ? 'جميع العقود' : 'All Contracts', icon: FileText, count: providerContracts.length + clientContracts.length },
+                { key: 'provider' as const, label: isRTL ? 'كمزود خدمة' : 'As Provider', icon: Wrench, count: stats.asProvider },
+                { key: 'client' as const, label: isRTL ? 'كعميل' : 'As Client', icon: User, count: stats.asClient },
+              ].map(tab => (
+                <button
+                  key={tab.key}
+                  onClick={() => { setRoleFilter(tab.key); setStatusFilter('all'); }}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                    roleFilter === tab.key
+                      ? 'bg-accent text-accent-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                  }`}
+                >
+                  <tab.icon className="w-3.5 h-3.5" />
+                  {tab.label}
+                  <Badge variant="secondary" className="text-[8px] px-1 py-0 h-3.5">{tab.count}</Badge>
+                </button>
+              ))}
+            </div>
+
+            {/* Status Filters */}
             <div className="flex flex-col sm:flex-row gap-2 sm:items-center justify-between">
               <div className="flex flex-wrap gap-1.5">
                 {[
