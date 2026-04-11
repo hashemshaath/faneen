@@ -594,7 +594,7 @@ const ContractDetail = () => {
             <div className="flex items-center gap-1 mb-3">
               {milestones?.map((m, i) => {
                 const isComp = m.status === 'completed';
-                const isActive = m.status === 'in_progress';
+                const isActive = (m.status as string) === 'in_progress';
                 return (
                   <React.Fragment key={m.id}>
                     <div className={`flex-1 h-3 rounded-full transition-all relative group cursor-default ${isComp ? 'bg-emerald-500' : isActive ? 'bg-accent/60 animate-pulse' : 'bg-muted'}`}>
