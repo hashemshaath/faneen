@@ -40,26 +40,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [roles, setRoles] = useState<string[]>([]);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [providerAccess, setProviderAccess] = useState(false);
+  const [dataLoaded, setDataLoaded] = useState(false);
   const initRef = useRef(false);
+  const loadingRef = useRef(false);
 
   const fetchRoles = useCallback(async (userId: string) => {
-    const { data } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', userId);
-    const fetchedRoles = data?.map(r => r.role) || [];
-    setRoles(fetchedRoles);
-    return fetchedRoles;
+    try {
+      const { data } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId);
+      const fetchedRoles = data?.map(r => r.role) || [];
+      setRoles(fetchedRoles);
+      return fetchedRoles;
+    } catch {
+      setRoles([]);
+      return [];
+    }
   }, []);
 
   const fetchProfile = useCallback(async (userId: string) => {
-    const { data } = await supabase
-      .from('profiles')
-      .select('id, user_id, full_name, phone, email, account_type, is_onboarded, phone_verified, country_code, avatar_url, account_number, ref_id, membership_tier')
-      .eq('user_id', userId)
-      .single();
-    setProfile(data as UserProfile | null);
-    return data;
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('id, user_id, full_name, phone, email, account_type, is_onboarded, phone_verified, country_code, avatar_url, account_number, ref_id, membership_tier')
+        .eq('user_id', userId)
+        .single();
+      setProfile(data as UserProfile | null);
+      return data;
+    } catch {
+      setProfile(null);
+      return null;
+    }
   }, []);
 
   const fetchProviderAccess = useCallback(async (userId: string) => {
@@ -86,44 +98,55 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [user, fetchProfile, fetchRoles, fetchProviderAccess]);
 
   const loadUserData = useCallback(async (userId: string) => {
+    if (loadingRef.current) return;
+    loadingRef.current = true;
     try {
       await Promise.all([fetchRoles(userId), fetchProfile(userId), fetchProviderAccess(userId)]);
+      setDataLoaded(true);
     } catch {
-      // silent fail
+      // Individual fetchers handle their own errors
+      setDataLoaded(true);
     } finally {
       setLoading(false);
+      loadingRef.current = false;
     }
   }, [fetchProviderAccess, fetchRoles, fetchProfile]);
 
   useEffect(() => {
     let mounted = true;
 
-    // Get initial session first, then subscribe
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // Set up auth listener FIRST, then get initial session
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
       if (!mounted) return;
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        loadUserData(session.user.id);
-      } else {
-        setLoading(false);
-      }
-      initRef.current = true;
-    });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!mounted) return;
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        // Reload user data on sign in or token refresh
-        loadUserData(session.user.id);
+      setSession(newSession);
+      setUser(newSession?.user ?? null);
+
+      if (newSession?.user) {
+        // Use setTimeout to avoid Supabase deadlock with parallel requests during auth state change
+        setTimeout(() => {
+          if (mounted) loadUserData(newSession.user.id);
+        }, 0);
       } else {
         setRoles([]);
         setProfile(null);
         setProviderAccess(false);
+        setDataLoaded(false);
         if (initRef.current) setLoading(false);
       }
+    });
+
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
+      if (!mounted) return;
+      setSession(initialSession);
+      setUser(initialSession?.user ?? null);
+      if (initialSession?.user) {
+        loadUserData(initialSession.user.id);
+      } else {
+        setLoading(false);
+      }
+      initRef.current = true;
     });
 
     return () => {
@@ -132,12 +155,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, [loadUserData]);
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
     setRoles([]);
     setProfile(null);
     setProviderAccess(false);
+    setDataLoaded(false);
     await supabase.auth.signOut();
-  };
+  }, []);
 
   const isSuperAdmin = roles.includes('super_admin');
   const isAdmin = isSuperAdmin || roles.includes('admin');

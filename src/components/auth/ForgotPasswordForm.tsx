@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { validateEmail } from '@/lib/password-strength';
 import { toast } from 'sonner';
-import { Mail, Loader2, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Mail, Loader2, ArrowLeft, ArrowRight, CheckCircle } from 'lucide-react';
 
 interface ForgotPasswordFormProps {
   onBack: () => void;
@@ -16,6 +16,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
   const { t, isRTL } = useLanguage();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
+  const [sent, setSent] = useState(false);
   const BackArrow = isRTL ? ArrowRight : ArrowLeft;
 
   const handleSubmit = async () => {
@@ -26,13 +27,47 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
     setLoading(true);
     try {
       await authService.resetPassword(email);
-      toast.success(t('auth.reset_sent'));
+      setSent(true);
+      toast.success(isRTL ? 'تم إرسال رابط إعادة التعيين' : 'Reset link sent');
     } catch (err: any) {
-      toast.error(err.message);
+      // Don't reveal if email exists or not (security)
+      setSent(true);
+      toast.success(isRTL ? 'إذا كان الحساب موجوداً، سيتم إرسال رابط إعادة التعيين' : 'If an account exists, a reset link will be sent');
     } finally {
       setLoading(false);
     }
   };
+
+  if (sent) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center space-y-4">
+          <div className="w-16 h-16 mx-auto rounded-full bg-accent/10 flex items-center justify-center">
+            <CheckCircle className="w-8 h-8 text-accent" />
+          </div>
+          <h2 className="font-heading font-bold text-2xl text-foreground">
+            {isRTL ? 'تم الإرسال' : 'Email Sent'}
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            {isRTL
+              ? `إذا كان الحساب مرتبطاً بـ ${email}، ستصلك رسالة تحتوي على رابط إعادة تعيين كلمة المرور`
+              : `If an account is associated with ${email}, you'll receive a password reset link`
+            }
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {isRTL ? 'لم تصلك الرسالة؟ تحقق من مجلد الرسائل غير المرغوب فيها' : "Didn't receive it? Check your spam folder"}
+          </p>
+        </div>
+        <Button onClick={() => { setSent(false); setEmail(''); }} variant="outline" className="w-full">
+          {isRTL ? 'إعادة المحاولة' : 'Try again'}
+        </Button>
+        <button onClick={onBack} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <BackArrow className="w-4 h-4" />
+          {t('auth.back')}
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -47,7 +82,15 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
           <Label>{t('auth.email')}</Label>
           <div className="relative">
             <Mail className="absolute top-3 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
-            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} dir="ltr" style={{ paddingInlineStart: '40px' }} />
+            <Input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              dir="ltr"
+              style={{ paddingInlineStart: '40px' }}
+              onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+              autoComplete="email"
+            />
           </div>
         </div>
         <Button onClick={handleSubmit} disabled={loading} className="w-full h-11" variant="hero">

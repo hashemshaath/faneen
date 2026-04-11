@@ -28,10 +28,11 @@ const logUnauthorizedAccess = async (
       details: {
         required_role: requiredRole,
         timestamp: new Date().toISOString(),
+        user_agent: navigator.userAgent?.substring(0, 200),
       },
     });
   } catch {
-    // silent fail
+    // silent fail - security logging should never break the app
   }
 };
 
@@ -47,11 +48,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   const location = useLocation();
   const loggedRef = useRef(false);
 
-  // Wait until roles are actually loaded (not just user)
-  const rolesLoaded = !loading && (user ? roles.length > 0 || profile !== null : true);
+  // Wait for full data load: loading must be false AND if user exists, profile must be loaded
+  const fullyLoaded = !loading && (!user || profile !== null);
 
   const shouldDeny =
-    rolesLoaded &&
+    fullyLoaded &&
     user &&
     ((requireSuperAdmin && !isSuperAdmin) ||
      (requireAdmin && !isAdmin) ||
@@ -65,7 +66,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     }
   }, [shouldDeny, user?.id, location.pathname, requireSuperAdmin, requireAdmin]);
 
-  if (loading || !rolesLoaded) {
+  // Show loading spinner while auth state is being resolved
+  if (!fullyLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="w-10 h-10 rounded-xl bg-gradient-gold flex items-center justify-center animate-pulse">
@@ -75,6 +77,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     );
   }
 
+  // Redirect unauthenticated users
   if (requireAuth && !user) {
     return <Navigate to="/auth" state={{ from: location.pathname }} replace />;
   }
@@ -84,14 +87,13 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <Navigate to="/onboarding" replace />;
   }
 
+  // Access denied
   if (requireSuperAdmin && !isSuperAdmin) {
     return <Suspense fallback={null}><Forbidden /></Suspense>;
   }
-
   if (requireAdmin && !isAdmin) {
     return <Suspense fallback={null}><Forbidden /></Suspense>;
   }
-
   if (requireProvider && !isProvider && !isAdmin) {
     return <Suspense fallback={null}><Forbidden /></Suspense>;
   }
