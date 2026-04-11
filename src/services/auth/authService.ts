@@ -103,7 +103,7 @@ export const authService = {
   // ─── Profile & Business ──────────────────────────────
   async updateProfile(userId: string, profileData: {
     full_name?: string;
-    account_type?: string;
+    account_type?: 'individual' | 'business' | 'company';
     is_onboarded?: boolean;
     phone?: string;
     country_code?: string;
