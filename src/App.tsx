@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, ComponentType } from "react";
 import "@/lib/accent-colors";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
@@ -12,51 +12,66 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { AppDirectionShell } from "@/components/ui/app-direction-shell";
 import Index from "./pages/Index";
 
-const Auth = lazy(() => import("./pages/Auth"));
-const ResetPassword = lazy(() => import("./pages/ResetPassword"));
-const BusinessProfile = lazy(() => import("./pages/BusinessProfile"));
-const Search = lazy(() => import("./pages/Search"));
-const Contracts = lazy(() => import("./pages/Contracts"));
-const ContractDetail = lazy(() => import("./pages/ContractDetail"));
-const DashboardOverview = lazy(() => import("./pages/dashboard/DashboardOverview"));
-const DashboardServices = lazy(() => import("./pages/dashboard/DashboardServices"));
-const DashboardPortfolio = lazy(() => import("./pages/dashboard/DashboardPortfolio"));
-const DashboardReviews = lazy(() => import("./pages/dashboard/DashboardReviews"));
-const DashboardContracts = lazy(() => import("./pages/dashboard/DashboardContracts"));
-const DashboardWarranties = lazy(() => import("./pages/dashboard/DashboardWarranties"));
-const DashboardInstallments = lazy(() => import("./pages/dashboard/DashboardInstallments"));
-const DashboardSettings = lazy(() => import("./pages/dashboard/DashboardSettings"));
-const DashboardPromotions = lazy(() => import("./pages/dashboard/DashboardPromotions"));
-const DashboardProjects = lazy(() => import("./pages/dashboard/DashboardProjects"));
-const DashboardBlog = lazy(() => import("./pages/dashboard/DashboardBlog"));
-const DashboardProfileSystems = lazy(() => import("./pages/dashboard/DashboardProfileSystems"));
-const DashboardMessages = lazy(() => import("./pages/dashboard/DashboardMessages"));
-const DashboardBookmarks = lazy(() => import("./pages/dashboard/DashboardBookmarks"));
-const DashboardNotifications = lazy(() => import("./pages/dashboard/DashboardNotifications"));
-const Offers = lazy(() => import("./pages/Offers"));
-const Compare = lazy(() => import("./pages/Compare"));
-const CompareProfiles = lazy(() => import("./pages/CompareProfiles"));
-const Projects = lazy(() => import("./pages/Projects"));
-const ProjectDetail = lazy(() => import("./pages/ProjectDetail"));
-const Blog = lazy(() => import("./pages/Blog"));
-const BlogPost = lazy(() => import("./pages/BlogPost"));
-const ProfileSystems = lazy(() => import("./pages/ProfileSystems"));
-const ProfileSystemDetail = lazy(() => import("./pages/ProfileSystemDetail"));
-const AdminApiSettings = lazy(() => import("./pages/admin/AdminApiSettings"));
-const AdminApiDocs = lazy(() => import("./pages/admin/AdminApiDocs"));
-const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
-const AdminSystemSettings = lazy(() => import("./pages/admin/AdminSystemSettings"));
-const AdminActivityLog = lazy(() => import("./pages/admin/AdminActivityLog"));
-const AdminCategories = lazy(() => import("./pages/admin/AdminCategories"));
-const AdminTags = lazy(() => import("./pages/admin/AdminTags"));
-const AdminBusinesses = lazy(() => import("./pages/admin/AdminBusinesses"));
-const AdminMemberships = lazy(() => import("./pages/admin/AdminMemberships"));
-const Notifications = lazy(() => import("./pages/Notifications"));
-const Membership = lazy(() => import("./pages/Membership"));
-const DashboardOperations = lazy(() => import("./pages/dashboard/DashboardOperations"));
-const DashboardAiCenter = lazy(() => import("./pages/dashboard/DashboardAiCenter"));
-const NotFound = lazy(() => import("./pages/NotFound"));
-const Onboarding = lazy(() => import("./pages/Onboarding"));
+function lazyRetry<T extends ComponentType<any>>(
+  factory: () => Promise<{ default: T }>,
+): React.LazyExoticComponent<T> {
+  return lazy(() =>
+    factory().catch(() => {
+      const key = 'lazy-retry-reloaded';
+      if (!sessionStorage.getItem(key)) {
+        sessionStorage.setItem(key, '1');
+        window.location.reload();
+      }
+      return factory();
+    })
+  );
+}
+
+const Auth = lazyRetry(() => import("./pages/Auth"));
+const ResetPassword = lazyRetry(() => import("./pages/ResetPassword"));
+const BusinessProfile = lazyRetry(() => import("./pages/BusinessProfile"));
+const Search = lazyRetry(() => import("./pages/Search"));
+const Contracts = lazyRetry(() => import("./pages/Contracts"));
+const ContractDetail = lazyRetry(() => import("./pages/ContractDetail"));
+const DashboardOverview = lazyRetry(() => import("./pages/dashboard/DashboardOverview"));
+const DashboardServices = lazyRetry(() => import("./pages/dashboard/DashboardServices"));
+const DashboardPortfolio = lazyRetry(() => import("./pages/dashboard/DashboardPortfolio"));
+const DashboardReviews = lazyRetry(() => import("./pages/dashboard/DashboardReviews"));
+const DashboardContracts = lazyRetry(() => import("./pages/dashboard/DashboardContracts"));
+const DashboardWarranties = lazyRetry(() => import("./pages/dashboard/DashboardWarranties"));
+const DashboardInstallments = lazyRetry(() => import("./pages/dashboard/DashboardInstallments"));
+const DashboardSettings = lazyRetry(() => import("./pages/dashboard/DashboardSettings"));
+const DashboardPromotions = lazyRetry(() => import("./pages/dashboard/DashboardPromotions"));
+const DashboardProjects = lazyRetry(() => import("./pages/dashboard/DashboardProjects"));
+const DashboardBlog = lazyRetry(() => import("./pages/dashboard/DashboardBlog"));
+const DashboardProfileSystems = lazyRetry(() => import("./pages/dashboard/DashboardProfileSystems"));
+const DashboardMessages = lazyRetry(() => import("./pages/dashboard/DashboardMessages"));
+const DashboardBookmarks = lazyRetry(() => import("./pages/dashboard/DashboardBookmarks"));
+const DashboardNotifications = lazyRetry(() => import("./pages/dashboard/DashboardNotifications"));
+const Offers = lazyRetry(() => import("./pages/Offers"));
+const Compare = lazyRetry(() => import("./pages/Compare"));
+const CompareProfiles = lazyRetry(() => import("./pages/CompareProfiles"));
+const Projects = lazyRetry(() => import("./pages/Projects"));
+const ProjectDetail = lazyRetry(() => import("./pages/ProjectDetail"));
+const Blog = lazyRetry(() => import("./pages/Blog"));
+const BlogPost = lazyRetry(() => import("./pages/BlogPost"));
+const ProfileSystems = lazyRetry(() => import("./pages/ProfileSystems"));
+const ProfileSystemDetail = lazyRetry(() => import("./pages/ProfileSystemDetail"));
+const AdminApiSettings = lazyRetry(() => import("./pages/admin/AdminApiSettings"));
+const AdminApiDocs = lazyRetry(() => import("./pages/admin/AdminApiDocs"));
+const AdminUsers = lazyRetry(() => import("./pages/admin/AdminUsers"));
+const AdminSystemSettings = lazyRetry(() => import("./pages/admin/AdminSystemSettings"));
+const AdminActivityLog = lazyRetry(() => import("./pages/admin/AdminActivityLog"));
+const AdminCategories = lazyRetry(() => import("./pages/admin/AdminCategories"));
+const AdminTags = lazyRetry(() => import("./pages/admin/AdminTags"));
+const AdminBusinesses = lazyRetry(() => import("./pages/admin/AdminBusinesses"));
+const AdminMemberships = lazyRetry(() => import("./pages/admin/AdminMemberships"));
+const Notifications = lazyRetry(() => import("./pages/Notifications"));
+const Membership = lazyRetry(() => import("./pages/Membership"));
+const DashboardOperations = lazyRetry(() => import("./pages/dashboard/DashboardOperations"));
+const DashboardAiCenter = lazyRetry(() => import("./pages/dashboard/DashboardAiCenter"));
+const NotFound = lazyRetry(() => import("./pages/NotFound"));
+const Onboarding = lazyRetry(() => import("./pages/Onboarding"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
