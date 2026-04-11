@@ -1024,6 +1024,83 @@ export type Database = {
           },
         ]
       }
+      contract_measurements: {
+        Row: {
+          area_sqm: number | null
+          contract_id: string
+          created_at: string
+          currency_code: string
+          floor_label: string | null
+          id: string
+          length_mm: number | null
+          location_ar: string | null
+          location_en: string | null
+          name_ar: string
+          name_en: string | null
+          notes: string | null
+          piece_number: string
+          quantity: number
+          sort_order: number
+          status: string
+          total_cost: number | null
+          unit_price: number
+          updated_at: string
+          width_mm: number | null
+        }
+        Insert: {
+          area_sqm?: number | null
+          contract_id: string
+          created_at?: string
+          currency_code?: string
+          floor_label?: string | null
+          id?: string
+          length_mm?: number | null
+          location_ar?: string | null
+          location_en?: string | null
+          name_ar?: string
+          name_en?: string | null
+          notes?: string | null
+          piece_number?: string
+          quantity?: number
+          sort_order?: number
+          status?: string
+          total_cost?: number | null
+          unit_price?: number
+          updated_at?: string
+          width_mm?: number | null
+        }
+        Update: {
+          area_sqm?: number | null
+          contract_id?: string
+          created_at?: string
+          currency_code?: string
+          floor_label?: string | null
+          id?: string
+          length_mm?: number | null
+          location_ar?: string | null
+          location_en?: string | null
+          name_ar?: string
+          name_en?: string | null
+          notes?: string | null
+          piece_number?: string
+          quantity?: number
+          sort_order?: number
+          status?: string
+          total_cost?: number | null
+          unit_price?: number
+          updated_at?: string
+          width_mm?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_measurements_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contract_milestones: {
         Row: {
           amount: number
