@@ -795,7 +795,30 @@ const DashboardContracts = () => {
         {/* ═══ Contracts List ═══ */}
         {viewSection === 'list' && (
           <>
-            {/* Filters */}
+            {/* Role Tabs */}
+            <div className="flex items-center gap-1.5 p-1 bg-muted/50 dark:bg-muted/30 rounded-xl w-fit">
+              {[
+                { key: 'all' as const, label: isRTL ? 'جميع العقود' : 'All Contracts', icon: FileText, count: providerContracts.length + clientContracts.length },
+                { key: 'provider' as const, label: isRTL ? 'كمزود خدمة' : 'As Provider', icon: Wrench, count: stats.asProvider },
+                { key: 'client' as const, label: isRTL ? 'كعميل' : 'As Client', icon: User, count: stats.asClient },
+              ].map(tab => (
+                <button
+                  key={tab.key}
+                  onClick={() => { setRoleFilter(tab.key); setStatusFilter('all'); }}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                    roleFilter === tab.key
+                      ? 'bg-accent text-accent-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                  }`}
+                >
+                  <tab.icon className="w-3.5 h-3.5" />
+                  {tab.label}
+                  <Badge variant="secondary" className="text-[8px] px-1 py-0 h-3.5">{tab.count}</Badge>
+                </button>
+              ))}
+            </div>
+
+            {/* Status Filters */}
             <div className="flex flex-col sm:flex-row gap-2 sm:items-center justify-between">
               <div className="flex flex-wrap gap-1.5">
                 {[
