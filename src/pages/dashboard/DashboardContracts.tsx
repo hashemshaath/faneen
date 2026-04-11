@@ -211,21 +211,28 @@ const DashboardContracts = () => {
 
   /* ── Data ── */
   const { data: contracts = [], isLoading } = useQuery({
-    queryKey: ['dashboard-contracts', user?.id],
+    queryKey: ['dashboard-contracts', 'provider', user?.id],
     queryFn: async () => {
-      const { data } = await supabase.from('contracts').select('*').or(`client_id.eq.${user!.id},provider_id.eq.${user!.id}`).order('created_at', { ascending: false });
+      const { data, error } = await supabase
+        .from('contracts')
+        .select('*')
+        .eq('provider_id', user!.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
       return data ?? [];
     },
     enabled: !!user,
   });
 
-  const contractIds = contracts.map((c: any) => c.id);
+  const contractIds = useMemo(() => contracts.map((c: any) => c.id), [contracts]);
 
   const { data: allMilestones = [] } = useQuery({
     queryKey: ['dashboard-milestones', contractIds],
     queryFn: async () => {
       if (contractIds.length === 0) return [];
-      const { data } = await supabase.from('contract_milestones').select('*').in('contract_id', contractIds).order('sort_order');
+      const { data, error } = await supabase.from('contract_milestones').select('*').in('contract_id', contractIds).order('sort_order');
+      if (error) throw error;
       return data ?? [];
     },
     enabled: contractIds.length > 0,
@@ -235,19 +242,24 @@ const DashboardContracts = () => {
     queryKey: ['dashboard-contract-notes', contractIds],
     queryFn: async () => {
       if (contractIds.length === 0) return [];
-      const { data } = await supabase.from('contract_notes').select('*').in('contract_id', contractIds).order('created_at', { ascending: false }).limit(100);
+      const { data, error } = await supabase.from('contract_notes').select('*').in('contract_id', contractIds).order('created_at', { ascending: false }).limit(100);
+      if (error) throw error;
       return data ?? [];
     },
     enabled: contractIds.length > 0,
   });
 
   const { data: profiles = [] } = useQuery({
-    queryKey: ['contract-profiles', contracts],
+    queryKey: ['contract-profiles', contractIds],
     queryFn: async () => {
       const userIds = new Set<string>();
-      contracts.forEach((c: any) => { userIds.add(c.client_id); userIds.add(c.provider_id); });
+      contracts.forEach((c: any) => {
+        userIds.add(c.client_id);
+        userIds.add(c.provider_id);
+      });
       if (userIds.size === 0) return [];
-      const { data } = await supabase.from('profiles').select('user_id, full_name, avatar_url, phone').in('user_id', Array.from(userIds));
+      const { data, error } = await supabase.from('profiles').select('user_id, full_name, avatar_url, phone').in('user_id', Array.from(userIds));
+      if (error) throw error;
       return data ?? [];
     },
     enabled: contracts.length > 0,
@@ -256,7 +268,8 @@ const DashboardContracts = () => {
   const { data: templates = [] } = useQuery({
     queryKey: ['contract-templates'],
     queryFn: async () => {
-      const { data } = await supabase.from('contract_templates').select('*').eq('is_active', true).order('sort_order');
+      const { data, error } = await supabase.from('contract_templates').select('*').eq('is_active', true).order('sort_order');
+      if (error) throw error;
       return data ?? [];
     },
     enabled: !!user,
@@ -265,7 +278,15 @@ const DashboardContracts = () => {
   const { data: businessId } = useQuery({
     queryKey: ['my-business-id-contracts', user?.id],
     queryFn: async () => {
-      const { data } = await supabase.from('businesses').select('id').eq('user_id', user!.id).maybeSingle();
+      const { data, error } = await supabase
+        .from('businesses')
+        .select('id')
+        .eq('user_id', user!.id)
+        .order('created_at', { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
       return data?.id ?? null;
     },
     enabled: !!user,
@@ -282,8 +303,8 @@ const DashboardContracts = () => {
 
   const createContractMutation = useMutation({
     mutationFn: async () => {
-      // Find client by email
-      const { data: clientProfile } = await supabase.from('profiles').select('user_id').eq('email', form.client_email.trim()).maybeSingle();
+      const { data: clientProfile, error: clientProfileError } = await supabase.from('profiles').select('user_id').eq('email', form.client_email.trim()).maybeSingle();
+      if (clientProfileError) throw clientProfileError;
       if (!clientProfile) throw new Error(isRTL ? 'لم يتم العثور على العميل بهذا البريد الإلكتروني' : 'Client not found with this email');
 
       const payload: any = {
@@ -346,7 +367,6 @@ const DashboardContracts = () => {
     mutationFn: async (contract: any) => {
       const { error } = await supabase.from('contracts').update({ status: 'pending_approval' }).eq('id', contract.id);
       if (error) throw error;
-      // Create notification for client
       await supabase.from('notifications').insert({
         user_id: contract.client_id,
         title_ar: `عقد جديد بانتظار مراجعتك: ${contract.title_ar}`,
@@ -364,40 +384,25 @@ const DashboardContracts = () => {
     },
   });
 
-  /* ── Deduplicate contracts (user could be both client & provider) ── */
-  const uniqueContracts = useMemo(() => {
-    const seen = new Set<string>();
-    return contracts.filter((c: any) => {
-      if (seen.has(c.id)) return false;
-      seen.add(c.id);
-      return true;
-    });
-  }, [contracts]);
-
   /* ── Helpers ── */
-  const stats = useMemo(() => {
-    const asProvider = uniqueContracts.filter((c: any) => c.provider_id === user?.id);
-    const asClient = uniqueContracts.filter((c: any) => c.client_id === user?.id);
-    return {
-      total: uniqueContracts.length,
-      active: uniqueContracts.filter((c: any) => c.status === 'active').length,
-      completed: uniqueContracts.filter((c: any) => c.status === 'completed').length,
-      pending: uniqueContracts.filter((c: any) => c.status === 'pending_approval' || c.status === 'draft').length,
-      totalAmount: asProvider.reduce((s: number, c: any) => s + Number(c.total_amount), 0),
-      asProvider: asProvider.length,
-      asClient: asClient.length,
-    };
-  }, [uniqueContracts, user?.id]);
+  const stats = useMemo(() => ({
+    total: contracts.length,
+    active: contracts.filter((c: any) => c.status === 'active').length,
+    completed: contracts.filter((c: any) => c.status === 'completed').length,
+    pendingApproval: contracts.filter((c: any) => c.status === 'pending_approval').length,
+    draft: contracts.filter((c: any) => c.status === 'draft').length,
+    totalAmount: contracts.reduce((s: number, c: any) => s + Number(c.total_amount), 0),
+  }), [contracts]);
 
   const filtered = useMemo(() => {
-    let result = uniqueContracts;
+    let result = contracts;
     if (statusFilter !== 'all') result = result.filter((c: any) => c.status === statusFilter);
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter((c: any) => c.title_ar.toLowerCase().includes(q) || (c.title_en || '').toLowerCase().includes(q) || c.contract_number.toLowerCase().includes(q));
     }
     return result;
-  }, [uniqueContracts, statusFilter, searchQuery]);
+  }, [contracts, statusFilter, searchQuery]);
 
   const formatDate = (d: string | null) => d ? new Date(d).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '-';
 
@@ -758,11 +763,11 @@ const DashboardContracts = () => {
             <div className="flex flex-col sm:flex-row gap-2 sm:items-center justify-between">
               <div className="flex flex-wrap gap-1.5">
                 {[
-                  { key: 'all', label: isRTL ? 'الكل' : 'All', count: contracts.length },
+                  { key: 'all', label: isRTL ? 'الكل' : 'All', count: stats.total },
                   { key: 'active', label: isRTL ? 'نشط' : 'Active', count: stats.active },
-                  { key: 'pending_approval', label: isRTL ? 'بانتظار' : 'Pending', count: stats.pending },
+                  { key: 'pending_approval', label: isRTL ? 'بانتظار' : 'Pending', count: stats.pendingApproval },
                   { key: 'completed', label: isRTL ? 'مكتمل' : 'Completed', count: stats.completed },
-                  { key: 'draft', label: isRTL ? 'مسودة' : 'Draft', count: contracts.filter((c: any) => c.status === 'draft').length },
+                  { key: 'draft', label: isRTL ? 'مسودة' : 'Draft', count: stats.draft },
                 ].map(f => (
                   <Button key={f.key} variant={statusFilter === f.key ? 'default' : 'outline'} size="sm" className="text-[10px] gap-0.5 h-7 px-2" onClick={() => setStatusFilter(f.key)}>
                     {f.label}<Badge variant="secondary" className="text-[8px] px-1 py-0 h-3.5 ms-0.5">{f.count}</Badge>
