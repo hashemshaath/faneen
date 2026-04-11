@@ -27,6 +27,7 @@ import {
   PenTool, StickyNote, Trash2, FileImage, ShieldCheck, ShieldX,
   Package, CircleDot, Timer, BadgeCheck, ReceiptText,
   ChevronDown, ChevronUp, Info, Percent, CreditCard,
+  Ruler, Grid3X3, Layers, ArrowRight,
 } from 'lucide-react';
 
 /* ─── Status config ─── */
@@ -49,6 +50,13 @@ const priorityColors: Record<string, string> = {
   medium: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
   high: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
   urgent: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+};
+
+const measurementStatusConfig: Record<string, { label_ar: string; label_en: string; bg: string }> = {
+  pending: { label_ar: 'معلق', label_en: 'Pending', bg: 'bg-muted text-muted-foreground' },
+  in_progress: { label_ar: 'قيد التنفيذ', label_en: 'In Progress', bg: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' },
+  completed: { label_ar: 'مكتمل', label_en: 'Completed', bg: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' },
+  cancelled: { label_ar: 'ملغي', label_en: 'Cancelled', bg: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' },
 };
 
 /* ─── InfoRow helper ─── */
@@ -204,6 +212,15 @@ const ContractDetail = () => {
     enabled: !!installmentPlans && installmentPlans.length > 0,
   });
 
+  const { data: measurements } = useQuery({
+    queryKey: ['contract-measurements', id],
+    queryFn: async () => {
+      const { data } = await supabase.from('contract_measurements').select('*').eq('contract_id', id!).order('sort_order');
+      return data ?? [];
+    },
+    enabled: !!id && !!user,
+  });
+
   /* ─── Mutations ─── */
   const acceptMutation = useMutation({
     mutationFn: async () => {
@@ -286,6 +303,16 @@ const ContractDetail = () => {
 
   const bizName = business ? (language === 'ar' ? business.name_ar : (business.name_en || business.name_ar)) : '';
 
+  // Default 3 payments calculation
+  const defaultPayments = useMemo(() => {
+    if (totalAmount <= 0) return [];
+    return [
+      { number: 1, label_ar: 'الدفعة الأولى (عند التعاقد)', label_en: 'First Payment (On Contract)', pct: 30, amount: Math.round(totalAmount * 0.3) },
+      { number: 2, label_ar: 'الدفعة الثانية (أثناء التنفيذ)', label_en: 'Second Payment (During Execution)', pct: 40, amount: Math.round(totalAmount * 0.4) },
+      { number: 3, label_ar: 'الدفعة الثالثة (عند التسليم)', label_en: 'Third Payment (On Delivery)', pct: 30, amount: totalAmount - Math.round(totalAmount * 0.3) - Math.round(totalAmount * 0.4) },
+    ];
+  }, [totalAmount]);
+
   const copyContractNumber = () => {
     if (contract?.contract_number) {
       navigator.clipboard.writeText(contract.contract_number);
@@ -297,7 +324,6 @@ const ContractDetail = () => {
   const getCountryName = (p: any) => p?.countries ? (language === 'ar' ? p.countries.name_ar : p.countries.name_en) : null;
   const getCityName = (p: any) => p?.cities ? (language === 'ar' ? p.cities.name_ar : p.cities.name_en) : null;
 
-  // Warranty duration calculator
   const getWarrantyDuration = (start: string, end: string) => {
     const s = new Date(start);
     const e = new Date(end);
@@ -312,7 +338,6 @@ const ContractDetail = () => {
     return isRTL ? `${months} ${months === 1 ? 'شهر' : 'أشهر'}` : `${months} month${months > 1 ? 's' : ''}`;
   };
 
-  // Warranty remaining days
   const getWarrantyRemaining = (end: string) => {
     const days = Math.ceil((new Date(end).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
     if (days <= 0) return isRTL ? 'منتهي' : 'Expired';
@@ -327,6 +352,14 @@ const ContractDetail = () => {
     if (now <= s) return 0;
     return Math.round(((now - s) / (e - s)) * 100);
   };
+
+  // Measurements totals
+  const measurementsTotals = useMemo(() => {
+    if (!measurements || measurements.length === 0) return { totalArea: 0, totalCost: 0, count: 0 };
+    const totalArea = measurements.reduce((s, m) => s + Number(m.area_sqm || 0), 0);
+    const totalCost = measurements.reduce((s, m) => s + Number(m.total_cost || 0), 0);
+    return { totalArea: Math.round(totalArea * 1000) / 1000, totalCost: Math.round(totalCost * 100) / 100, count: measurements.length };
+  }, [measurements]);
 
   const handleExportPDF = () => {
     if (!contract) return;
@@ -430,6 +463,9 @@ const ContractDetail = () => {
     </div>
   );
 
+  /* ─── Build site address from business data ─── */
+  const siteAddress = business ? [business.district, business.street_name, business.building_number ? `${isRTL ? 'مبنى' : 'Bldg'} ${business.building_number}` : null, business.region].filter(Boolean).join(' — ') : null;
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -485,6 +521,35 @@ const ContractDetail = () => {
             <span className="text-xs text-muted-foreground font-body">{contract.currency_code}</span>
           </div>
         </div>
+
+        {/* ─── Site / Building Address ─── */}
+        {(business?.address || business?.district || business?.street_name || business?.building_number) && (
+          <div className="rounded-xl border border-border bg-card p-4 sm:p-5 mb-5 sm:mb-6">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center"><Home className="w-4 h-4 text-accent" /></div>
+              <div>
+                <h3 className="font-heading font-bold text-sm">{isRTL ? 'موقع المشروع / عنوان المبنى' : 'Project Site / Building Address'}</h3>
+                <p className="text-[10px] text-muted-foreground font-body">{isRTL ? 'العنوان التفصيلي للموقع المعني بالخدمة' : 'Detailed address of the service location'}</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1">
+              <InfoRow icon={Globe} label={isRTL ? 'الدولة' : 'Country'} value={business?.country_id ? (getCountryName(providerProfile)) : null} />
+              <InfoRow icon={MapPin} label={isRTL ? 'المنطقة' : 'Region'} value={business?.region} />
+              <InfoRow icon={MapPin} label={isRTL ? 'المدينة' : 'City'} value={business?.city_id ? (getCityName(providerProfile)) : null} />
+              <InfoRow icon={MapPin} label={isRTL ? 'الحي' : 'District'} value={business?.district} />
+              <InfoRow icon={MapPin} label={isRTL ? 'اسم الشارع' : 'Street Name'} value={business?.street_name} />
+              <InfoRow icon={Building2} label={isRTL ? 'رقم المبنى' : 'Building No.'} value={business?.building_number} dir="ltr" />
+              <InfoRow icon={Hash} label={isRTL ? 'الرقم الإضافي' : 'Additional No.'} value={business?.additional_number} dir="ltr" />
+              <InfoRow icon={MapPin} label={isRTL ? 'العنوان الوطني المختصر' : 'Short National Address'} value={business?.address} />
+            </div>
+            {siteAddress && (
+              <div className="mt-3 pt-3 border-t border-border">
+                <p className="text-[10px] text-muted-foreground font-body mb-1">{isRTL ? 'العنوان المختصر' : 'Summary Address'}</p>
+                <p className="text-xs font-heading font-medium text-foreground">{siteAddress}</p>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* ─── Parties ─── */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 mb-5 sm:mb-6">
@@ -552,28 +617,89 @@ const ContractDetail = () => {
                   <Progress value={totalAmount > 0 ? (milestonePaid / totalAmount) * 100 : 0} className="h-1.5" />
                 </div>
               )}
-              {/* Payment split info */}
-              {totalMilestones > 0 && (
-                <div className="pt-1">
-                  <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-body">
-                    <CreditCard className="w-3 h-3" />
-                    {isRTL ? `مقسّم على ${totalMilestones} دفعات` : `Split into ${totalMilestones} payments`}
-                  </div>
-                  <div className="flex gap-1 mt-1.5">
-                    {milestones?.map((m, i) => {
-                      const pct = totalAmount > 0 ? Math.round((Number(m.amount) / totalAmount) * 100) : 0;
-                      const isComp = m.status === 'completed';
-                      return (
-                        <div key={m.id} className="flex-1 text-center">
-                          <div className={`h-2 rounded-full ${isComp ? 'bg-emerald-500' : 'bg-muted'}`} />
-                          <span className="text-[9px] text-muted-foreground font-body mt-0.5 block">{pct}%</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
             </div>
+          </div>
+        </div>
+
+        {/* ─── Default 3 Payments Pipeline ─── */}
+        <div className="rounded-xl border border-border bg-card p-4 sm:p-5 mb-5 sm:mb-6">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center"><CreditCard className="w-4 h-4 text-accent" /></div>
+            <div>
+              <h3 className="font-heading font-bold text-sm">{isRTL ? 'مسار الدفعات (3 دفعات)' : 'Payment Pipeline (3 Payments)'}</h3>
+              <p className="text-[10px] text-muted-foreground font-body">{isRTL ? 'التقسيم الافتراضي لقيمة العقد' : 'Default split of contract value'}</p>
+            </div>
+          </div>
+
+          {/* Visual Pipeline */}
+          <div className="flex items-center gap-2 mb-4">
+            {defaultPayments.map((dp, i) => {
+              const matchedMilestone = milestones?.[i];
+              const isPaid = matchedMilestone?.status === 'completed';
+              const isActive = matchedMilestone && (matchedMilestone.status as string) === 'in_progress';
+              return (
+                <React.Fragment key={dp.number}>
+                  <div className="flex-1">
+                    <div className={`h-3 rounded-full transition-all ${isPaid ? 'bg-emerald-500' : isActive ? 'bg-accent/60 animate-pulse' : 'bg-muted'}`} />
+                    <div className="text-center mt-1.5">
+                      <p className="text-[10px] font-heading font-bold text-foreground">{dp.pct}%</p>
+                      <p className="text-[9px] text-muted-foreground font-body">{dp.amount.toLocaleString()}</p>
+                    </div>
+                  </div>
+                  {i < defaultPayments.length - 1 && (
+                    <ArrowRight className={`w-4 h-4 shrink-0 mt-[-12px] ${isPaid ? 'text-emerald-500' : 'text-muted-foreground/30'}`} />
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </div>
+
+          {/* Payment Details Table */}
+          <div className="border border-border rounded-lg overflow-hidden">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="bg-muted/50">
+                  <th className="p-2.5 text-start font-heading font-semibold">#</th>
+                  <th className="p-2.5 text-start font-heading font-semibold">{isRTL ? 'الدفعة' : 'Payment'}</th>
+                  <th className="p-2.5 text-start font-heading font-semibold">{isRTL ? 'النسبة' : 'Ratio'}</th>
+                  <th className="p-2.5 text-start font-heading font-semibold">{isRTL ? 'المبلغ' : 'Amount'}</th>
+                  <th className="p-2.5 text-start font-heading font-semibold">{isRTL ? 'الحالة' : 'Status'}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {defaultPayments.map((dp, i) => {
+                  const matchedMilestone = milestones?.[i];
+                  const isPaid = matchedMilestone?.status === 'completed';
+                  return (
+                    <tr key={dp.number} className={`border-t border-border ${isPaid ? 'bg-emerald-50/30 dark:bg-emerald-950/10' : ''}`}>
+                      <td className="p-2.5 font-heading font-semibold">{dp.number}</td>
+                      <td className="p-2.5 font-body">{isRTL ? dp.label_ar : dp.label_en}</td>
+                      <td className="p-2.5">
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-12 h-1.5 rounded-full bg-muted overflow-hidden">
+                            <div className={`h-full rounded-full ${isPaid ? 'bg-emerald-500' : 'bg-accent/50'}`} style={{ width: `${dp.pct}%` }} />
+                          </div>
+                          <span className="text-[10px] text-muted-foreground">{dp.pct}%</span>
+                        </div>
+                      </td>
+                      <td className="p-2.5 font-heading font-semibold">{dp.amount.toLocaleString()} {contract.currency_code}</td>
+                      <td className="p-2.5">
+                        <Badge className={`text-[9px] ${isPaid ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-muted text-muted-foreground'}`}>
+                          {isPaid ? (isRTL ? 'مسدد' : 'Paid') : (isRTL ? 'معلق' : 'Pending')}
+                        </Badge>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+              <tfoot>
+                <tr className="border-t-2 border-border bg-muted/30">
+                  <td colSpan={3} className="p-2.5 font-heading font-bold text-xs">{isRTL ? 'الإجمالي' : 'Total'}</td>
+                  <td className="p-2.5 font-heading font-bold text-xs text-accent">{totalAmount.toLocaleString()} {contract.currency_code}</td>
+                  <td className="p-2.5"><Badge variant="outline" className="text-[9px]">100%</Badge></td>
+                </tr>
+              </tfoot>
+            </table>
           </div>
         </div>
 
@@ -590,7 +716,6 @@ const ContractDetail = () => {
               </div>
               <span className="font-heading font-bold text-sm text-accent">{progressPct}%</span>
             </div>
-            {/* Visual pipeline */}
             <div className="flex items-center gap-1 mb-3">
               {milestones?.map((m, i) => {
                 const isComp = m.status === 'completed';
@@ -635,7 +760,6 @@ const ContractDetail = () => {
                     </Badge>
                     <span className="text-[10px] text-muted-foreground font-body">{isRTL ? `${plan.number_of_installments} دفعات` : `${plan.number_of_installments} installments`} · {isRTL ? `دفعة مقدمة: ${Number(plan.down_payment).toLocaleString()}` : `Down: ${Number(plan.down_payment).toLocaleString()}`} {plan.currency_code}</span>
                   </div>
-                  {/* Payments grid */}
                   <div className="border border-border rounded-lg overflow-hidden">
                     <table className="w-full text-xs">
                       <thead>
@@ -804,6 +928,9 @@ const ContractDetail = () => {
             <TabsTrigger value="milestones" className="font-body rounded-lg data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-3 sm:px-4 py-2 gap-1.5 text-xs sm:text-sm">
               <ListChecks className="w-3.5 h-3.5" />{t('contracts.milestones')} ({totalMilestones})
             </TabsTrigger>
+            <TabsTrigger value="measurements" className="font-body rounded-lg data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-3 sm:px-4 py-2 gap-1.5 text-xs sm:text-sm">
+              <Ruler className="w-3.5 h-3.5" />{isRTL ? 'المقاسات' : 'Measurements'} ({measurements?.length || 0})
+            </TabsTrigger>
             <TabsTrigger value="warranty" className="font-body rounded-lg data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-3 sm:px-4 py-2 gap-1.5 text-xs sm:text-sm">
               <Shield className="w-3.5 h-3.5" />{t('contracts.warranty')} ({warranties?.length || 0})
             </TabsTrigger>
@@ -844,12 +971,10 @@ const ContractDetail = () => {
                             {m.due_date && <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{formatDate(m.due_date)}</span>}
                             {m.completed_at && <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400"><CheckCircle2 className="w-3 h-3" />{formatDate(m.completed_at)}</span>}
                           </div>
-                          {/* Linked payment info */}
                           <div className="mt-2 flex items-center gap-1.5 text-[10px] text-muted-foreground/60 font-body">
                             <CreditCard className="w-3 h-3" />
                             {isRTL ? `الدفعة ${idx + 1} من ${totalMilestones} — ${pct}% من إجمالي العقد` : `Payment ${idx + 1} of ${totalMilestones} — ${pct}% of total`}
                           </div>
-                          {/* Milestone attachments */}
                           {milestoneAtts.length > 0 && (
                             <div className="mt-2 flex items-center gap-2 flex-wrap">
                               {milestoneAtts.map(a => (
@@ -872,7 +997,111 @@ const ContractDetail = () => {
             </div>
           </TabsContent>
 
-          {/* ── Warranty (Enhanced) ── */}
+          {/* ── Measurements Tab ── */}
+          <TabsContent value="measurements">
+            {measurements && measurements.length > 0 ? (
+              <div className="space-y-4">
+                {/* Summary cards */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div className="rounded-xl border border-border bg-card p-3 text-center">
+                    <Grid3X3 className="w-4 h-4 text-accent mx-auto mb-1" />
+                    <p className="text-[10px] text-muted-foreground font-body">{isRTL ? 'عدد القطع' : 'Total Pieces'}</p>
+                    <p className="font-heading font-bold text-lg text-foreground">{measurementsTotals.count}</p>
+                  </div>
+                  <div className="rounded-xl border border-border bg-card p-3 text-center">
+                    <Ruler className="w-4 h-4 text-accent mx-auto mb-1" />
+                    <p className="text-[10px] text-muted-foreground font-body">{isRTL ? 'إجمالي المساحة' : 'Total Area'}</p>
+                    <p className="font-heading font-bold text-lg text-foreground">{measurementsTotals.totalArea} <span className="text-[10px] text-muted-foreground">م²</span></p>
+                  </div>
+                  <div className="rounded-xl border border-border bg-card p-3 text-center">
+                    <Banknote className="w-4 h-4 text-accent mx-auto mb-1" />
+                    <p className="text-[10px] text-muted-foreground font-body">{isRTL ? 'إجمالي التكلفة' : 'Total Cost'}</p>
+                    <p className="font-heading font-bold text-lg text-accent">{measurementsTotals.totalCost.toLocaleString()}</p>
+                  </div>
+                  <div className="rounded-xl border border-border bg-card p-3 text-center">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500 mx-auto mb-1" />
+                    <p className="text-[10px] text-muted-foreground font-body">{isRTL ? 'مكتمل' : 'Completed'}</p>
+                    <p className="font-heading font-bold text-lg text-foreground">{measurements.filter(m => m.status === 'completed').length}/{measurements.length}</p>
+                  </div>
+                </div>
+
+                {/* Measurements table */}
+                <div className="border border-border rounded-xl overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="bg-muted/50">
+                          <th className="p-2.5 text-start font-heading font-semibold whitespace-nowrap">{isRTL ? 'رقم القطعة' : 'Piece #'}</th>
+                          <th className="p-2.5 text-start font-heading font-semibold whitespace-nowrap">{isRTL ? 'اسم القطعة' : 'Name'}</th>
+                          <th className="p-2.5 text-start font-heading font-semibold whitespace-nowrap">{isRTL ? 'الموقع' : 'Location'}</th>
+                          <th className="p-2.5 text-start font-heading font-semibold whitespace-nowrap">{isRTL ? 'الدور' : 'Floor'}</th>
+                          <th className="p-2.5 text-start font-heading font-semibold whitespace-nowrap">{isRTL ? 'الطول (مم)' : 'L (mm)'}</th>
+                          <th className="p-2.5 text-start font-heading font-semibold whitespace-nowrap">{isRTL ? 'العرض (مم)' : 'W (mm)'}</th>
+                          <th className="p-2.5 text-start font-heading font-semibold whitespace-nowrap">{isRTL ? 'المساحة م²' : 'Area m²'}</th>
+                          <th className="p-2.5 text-start font-heading font-semibold whitespace-nowrap">{isRTL ? 'سعر المتر' : 'Price/m²'}</th>
+                          <th className="p-2.5 text-start font-heading font-semibold whitespace-nowrap">{isRTL ? 'التكلفة' : 'Cost'}</th>
+                          <th className="p-2.5 text-start font-heading font-semibold whitespace-nowrap">{isRTL ? 'الحالة' : 'Status'}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {measurements.map((m, idx) => {
+                          const mName = language === 'ar' ? m.name_ar : (m.name_en || m.name_ar);
+                          const mLoc = language === 'ar' ? m.location_ar : (m.location_en || m.location_ar);
+                          const sCfg = measurementStatusConfig[m.status] || measurementStatusConfig.pending;
+                          const isComp = m.status === 'completed';
+                          return (
+                            <tr key={m.id} className={`border-t border-border ${isComp ? 'bg-emerald-50/30 dark:bg-emerald-950/10' : ''}`}>
+                              <td className="p-2.5 font-heading font-bold text-accent" dir="ltr">{m.piece_number || `#${idx + 1}`}</td>
+                              <td className="p-2.5 font-heading font-medium">{mName}</td>
+                              <td className="p-2.5 text-muted-foreground font-body">{mLoc || '-'}</td>
+                              <td className="p-2.5 text-muted-foreground font-body">{m.floor_label || '-'}</td>
+                              <td className="p-2.5 font-heading font-semibold" dir="ltr">{Number(m.length_mm).toLocaleString()}</td>
+                              <td className="p-2.5 font-heading font-semibold" dir="ltr">{Number(m.width_mm).toLocaleString()}</td>
+                              <td className="p-2.5 font-heading font-bold" dir="ltr">{Number(m.area_sqm).toFixed(3)}</td>
+                              <td className="p-2.5 font-heading font-semibold" dir="ltr">{Number(m.unit_price).toLocaleString()}</td>
+                              <td className="p-2.5 font-heading font-bold text-accent" dir="ltr">{Number(m.total_cost).toLocaleString()}</td>
+                              <td className="p-2.5"><Badge className={`${sCfg.bg} text-[9px]`}>{isRTL ? sCfg.label_ar : sCfg.label_en}</Badge></td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                      <tfoot>
+                        <tr className="border-t-2 border-border bg-muted/30 font-heading font-bold text-xs">
+                          <td colSpan={4} className="p-2.5">{isRTL ? 'الإجمالي' : 'Total'} ({measurementsTotals.count} {isRTL ? 'قطعة' : 'pcs'})</td>
+                          <td colSpan={2} className="p-2.5"></td>
+                          <td className="p-2.5" dir="ltr">{measurementsTotals.totalArea.toFixed(3)} م²</td>
+                          <td className="p-2.5"></td>
+                          <td className="p-2.5 text-accent" dir="ltr">{measurementsTotals.totalCost.toLocaleString()} {contract.currency_code}</td>
+                          <td className="p-2.5"></td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Notes per measurement */}
+                {measurements.filter(m => m.notes).length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="font-heading font-bold text-xs flex items-center gap-1.5"><Info className="w-3.5 h-3.5 text-accent" />{isRTL ? 'ملاحظات القطع' : 'Piece Notes'}</h4>
+                    {measurements.filter(m => m.notes).map(m => (
+                      <div key={m.id} className="p-3 rounded-lg bg-muted/30 border border-border">
+                        <span className="font-heading font-bold text-[10px] text-accent" dir="ltr">{m.piece_number}</span>
+                        <span className="mx-1.5 text-muted-foreground">—</span>
+                        <span className="text-[10px] text-muted-foreground font-body">{m.notes}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <Ruler className="w-12 h-12 mx-auto text-muted-foreground/20 mb-3" />
+                <p className="text-muted-foreground font-body text-sm">{isRTL ? 'لا توجد مقاسات مسجلة' : 'No measurements recorded'}</p>
+              </div>
+            )}
+          </TabsContent>
+
+          {/* ── Warranty ── */}
           <TabsContent value="warranty">
             {warranties && warranties.length > 0 ? (
               <div className="space-y-4">
@@ -888,7 +1117,6 @@ const ContractDetail = () => {
 
                   return (
                     <div key={w.id} className="rounded-xl bg-card border border-border overflow-hidden">
-                      {/* Warranty Header */}
                       <div className={`px-4 sm:px-6 py-3 border-b border-border flex items-center justify-between ${isActive ? 'bg-emerald-50/50 dark:bg-emerald-950/10' : isExpired ? 'bg-red-50/30 dark:bg-red-950/10' : 'bg-muted/30'}`}>
                         <div className="flex items-center gap-2 sm:gap-3">
                           <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${isActive ? 'bg-emerald-100 dark:bg-emerald-900/30' : 'bg-muted'}`}>
@@ -909,8 +1137,6 @@ const ContractDetail = () => {
 
                       <div className="p-4 sm:p-6 space-y-4">
                         {wDesc && <p className="text-xs sm:text-sm text-muted-foreground font-body">{wDesc}</p>}
-
-                        {/* Duration & Progress */}
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                           <div className="bg-muted/30 rounded-lg p-3 text-center">
                             <Timer className="w-4 h-4 text-accent mx-auto mb-1" />
@@ -928,8 +1154,6 @@ const ContractDetail = () => {
                             <p className={`font-heading font-bold text-xs ${isExpired ? 'text-destructive' : 'text-foreground'}`}>{remaining}</p>
                           </div>
                         </div>
-
-                        {/* Progress bar */}
                         <div>
                           <div className="flex items-center justify-between mb-1">
                             <span className="text-[10px] text-muted-foreground font-body">{isRTL ? 'المستهلك من الضمان' : 'Warranty Used'}</span>
@@ -937,25 +1161,15 @@ const ContractDetail = () => {
                           </div>
                           <Progress value={wProg} className="h-2" />
                         </div>
-
-                        {/* Coverage */}
                         {wCoverage && (
                           <div className="rounded-lg border border-border p-3">
-                            <div className="flex items-center gap-1.5 mb-2">
-                              <ShieldCheck className="w-3.5 h-3.5 text-accent" />
-                              <span className="font-heading font-bold text-xs">{isRTL ? 'ما يشمله الضمان' : 'Warranty Coverage'}</span>
-                            </div>
+                            <div className="flex items-center gap-1.5 mb-2"><ShieldCheck className="w-3.5 h-3.5 text-accent" /><span className="font-heading font-bold text-xs">{isRTL ? 'ما يشمله الضمان' : 'Warranty Coverage'}</span></div>
                             <p className="text-xs text-muted-foreground font-body whitespace-pre-wrap">{wCoverage}</p>
                           </div>
                         )}
-
-                        {/* Standard warranty sections */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div className="rounded-lg border border-border p-3">
-                            <div className="flex items-center gap-1.5 mb-2">
-                              <Package className="w-3.5 h-3.5 text-accent" />
-                              <span className="font-heading font-bold text-xs">{isRTL ? 'الأصناف والقطع المشمولة' : 'Covered Items'}</span>
-                            </div>
+                            <div className="flex items-center gap-1.5 mb-2"><Package className="w-3.5 h-3.5 text-accent" /><span className="font-heading font-bold text-xs">{isRTL ? 'الأصناف والقطع المشمولة' : 'Covered Items'}</span></div>
                             <ul className="text-[10px] text-muted-foreground font-body space-y-1 list-disc list-inside">
                               <li>{isRTL ? 'عيوب التصنيع والمواد الخام' : 'Manufacturing & material defects'}</li>
                               <li>{isRTL ? 'خلل في التركيب أو التثبيت' : 'Installation or assembly defects'}</li>
@@ -964,10 +1178,7 @@ const ContractDetail = () => {
                             </ul>
                           </div>
                           <div className="rounded-lg border border-border p-3">
-                            <div className="flex items-center gap-1.5 mb-2">
-                              <CircleAlert className="w-3.5 h-3.5 text-destructive" />
-                              <span className="font-heading font-bold text-xs">{isRTL ? 'الاستثناءات وفقدان الضمان' : 'Exclusions & Void Conditions'}</span>
-                            </div>
+                            <div className="flex items-center gap-1.5 mb-2"><CircleAlert className="w-3.5 h-3.5 text-destructive" /><span className="font-heading font-bold text-xs">{isRTL ? 'الاستثناءات وفقدان الضمان' : 'Exclusions & Void Conditions'}</span></div>
                             <ul className="text-[10px] text-muted-foreground font-body space-y-1 list-disc list-inside">
                               <li>{isRTL ? 'سوء الاستخدام أو الإهمال' : 'Misuse or negligence'}</li>
                               <li>{isRTL ? 'الاستهلاك الطبيعي والتآكل' : 'Normal wear and tear'}</li>
@@ -1109,7 +1320,6 @@ const ContractDetail = () => {
           <TabsContent value="attachments">
             {attachments && attachments.length > 0 ? (
               <>
-                {/* Image gallery */}
                 {attachments.filter(a => a.file_type === 'image').length > 0 && (
                   <div className="mb-4">
                     <h3 className="font-heading font-bold text-xs mb-2 flex items-center gap-1.5"><FileImage className="w-3.5 h-3.5 text-accent" />{isRTL ? 'الصور والمستندات' : 'Images & Documents'}</h3>
@@ -1126,7 +1336,6 @@ const ContractDetail = () => {
                     </div>
                   </div>
                 )}
-                {/* File list */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {attachments.filter(a => a.file_type !== 'image').map(att => (
                     <div key={att.id} className="p-3 rounded-xl bg-card border border-border flex items-center gap-3">
