@@ -414,24 +414,31 @@ const DashboardContracts = () => {
   });
 
   /* ── Helpers ── */
-  const stats = useMemo(() => ({
-    total: contracts.length,
-    active: contracts.filter((c: any) => c.status === 'active').length,
-    completed: contracts.filter((c: any) => c.status === 'completed').length,
-    pendingApproval: contracts.filter((c: any) => c.status === 'pending_approval').length,
-    draft: contracts.filter((c: any) => c.status === 'draft').length,
-    totalAmount: contracts.reduce((s: number, c: any) => s + Number(c.total_amount), 0),
-  }), [contracts]);
+  const stats = useMemo(() => {
+    const src = roleFilter === 'provider' ? providerContracts : roleFilter === 'client' ? clientContracts : contracts;
+    return {
+      total: src.length,
+      active: src.filter((c: any) => c.status === 'active').length,
+      completed: src.filter((c: any) => c.status === 'completed').length,
+      pendingApproval: src.filter((c: any) => c.status === 'pending_approval').length,
+      draft: src.filter((c: any) => c.status === 'draft').length,
+      totalAmount: src.reduce((s: number, c: any) => s + Number(c.total_amount), 0),
+      asProvider: providerContracts.length,
+      asClient: clientContracts.length,
+    };
+  }, [contracts, providerContracts, clientContracts, roleFilter]);
 
   const filtered = useMemo(() => {
-    let result = contracts;
+    let result = roleFilter === 'provider' ? providerContracts.map((c: any) => ({ ...c, _role: 'provider' }))
+      : roleFilter === 'client' ? clientContracts.map((c: any) => ({ ...c, _role: 'client' }))
+      : contracts;
     if (statusFilter !== 'all') result = result.filter((c: any) => c.status === statusFilter);
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter((c: any) => c.title_ar.toLowerCase().includes(q) || (c.title_en || '').toLowerCase().includes(q) || c.contract_number.toLowerCase().includes(q));
     }
     return result;
-  }, [contracts, statusFilter, searchQuery]);
+  }, [contracts, providerContracts, clientContracts, roleFilter, statusFilter, searchQuery]);
 
   const formatDate = (d: string | null) => d ? new Date(d).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '-';
 
