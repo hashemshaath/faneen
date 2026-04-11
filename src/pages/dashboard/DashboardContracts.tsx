@@ -390,14 +390,14 @@ const DashboardContracts = () => {
   }, [uniqueContracts, user?.id]);
 
   const filtered = useMemo(() => {
-    let result = contracts;
+    let result = uniqueContracts;
     if (statusFilter !== 'all') result = result.filter((c: any) => c.status === statusFilter);
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter((c: any) => c.title_ar.toLowerCase().includes(q) || (c.title_en || '').toLowerCase().includes(q) || c.contract_number.toLowerCase().includes(q));
     }
     return result;
-  }, [contracts, statusFilter, searchQuery]);
+  }, [uniqueContracts, statusFilter, searchQuery]);
 
   const formatDate = (d: string | null) => d ? new Date(d).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '-';
 
