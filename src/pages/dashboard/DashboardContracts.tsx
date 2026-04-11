@@ -27,7 +27,7 @@ import {
   Paperclip, TrendingUp, BarChart3, CreditCard, Receipt,
   CalendarDays, MapPin, Building2, Hash, Timer,
   CircleDot, Banknote, FileCheck, Share2,
-  Ruler, ClipboardList, ShieldCheck, WrenchIcon,
+  Ruler, ClipboardList, ShieldCheck, WrenchIcon, Upload,
 } from 'lucide-react';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
