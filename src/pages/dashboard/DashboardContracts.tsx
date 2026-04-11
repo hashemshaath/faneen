@@ -1260,7 +1260,7 @@ const DashboardContracts = () => {
                                       <Send className="w-3.5 h-3.5" />{isRTL ? 'إرسال للمراجعة' : 'Send for Review'}
                                     </Button>
                                   )}
-                                  {canAccept && c.status !== 'completed' && c.status !== 'cancelled' && (
+                                  {((user?.id === c.client_id && !c.client_accepted_at) || (user?.id === c.provider_id && !c.provider_accepted_at)) && c.status !== 'completed' && c.status !== 'cancelled' && (
                                     <Button variant="outline" size="sm" className="gap-1.5 text-xs h-9 text-emerald-600 border-emerald-300" onClick={() => setApproveConfirm(c)}>
                                       <CheckCircle2 className="w-3.5 h-3.5" />{isRTL ? 'موافقة' : 'Approve'}
                                     </Button>
