@@ -1,32 +1,38 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Languages, Sparkles, Wand2, Loader2 } from 'lucide-react';
-import { callBlogAi, stripMarkdown } from '@/lib/blog-ai-utils';
+import { stripMarkdown } from '@/lib/blog-ai-utils';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useAiSettings } from '@/hooks/useAiSettings';
 
 interface Props {
-  /** Current field value */
   value: string;
-  /** Field language */
   lang: 'ar' | 'en';
-  /** Callback to set the translated/improved value on the OTHER language field */
   onTranslated?: (translated: string) => void;
-  /** Callback to replace current field with improved text */
   onImproved?: (improved: string) => void;
-  /** Focus keyword for improvement context */
   focusKeyword?: string;
-  /** Is the interface RTL */
   isRTL?: boolean;
-  /** Field type for context - controls markdown stripping and excerpt generation */
   fieldType?: 'title' | 'excerpt' | 'content' | 'meta_title' | 'meta_description' | 'description' | 'short_text';
-  /** Compact mode - smaller buttons */
   compact?: boolean;
+}
+
+async function callWithSettings(params: Record<string, any>): Promise<string> {
+  const { data, error } = await supabase.functions.invoke('blog-ai-tools', { body: params });
+  if (error) {
+    if (error.message?.includes('429')) toast.error('Rate limited, please wait.');
+    else if (error.message?.includes('402')) toast.error('Credits exhausted.');
+    else toast.error(error.message || 'AI error');
+    throw error;
+  }
+  return data?.result || '';
 }
 
 export const FieldAiActions: React.FC<Props> = ({
   value, lang, onTranslated, onImproved, focusKeyword, isRTL = true, fieldType = 'content', compact = false,
 }) => {
   const [loading, setLoading] = useState<string | null>(null);
+  const { settings } = useAiSettings();
 
   const isEmpty = !value?.trim();
   if (isEmpty && !onTranslated && !onImproved) return null;
@@ -38,11 +44,14 @@ export const FieldAiActions: React.FC<Props> = ({
   const handleTranslate = async () => {
     setLoading('translate');
     try {
-      const result = await callBlogAi({
+      const result = await callWithSettings({
         action: 'translate',
         text: value,
         sourceLang: lang,
         targetLang,
+        tone: settings.default_tone,
+        model: settings.default_model,
+        translationInstructions: settings.translation_instructions || undefined,
       });
       onTranslated?.(clean(result));
       toast.success(isRTL ? 'تمت الترجمة' : 'Translated');
@@ -52,10 +61,14 @@ export const FieldAiActions: React.FC<Props> = ({
   const handleImprove = async () => {
     setLoading('improve');
     try {
-      const result = await callBlogAi({
+      const result = await callWithSettings({
         action: 'improve_content',
         text: value,
         keywords: focusKeyword ? [focusKeyword] : [],
+        tone: settings.default_tone,
+        model: settings.default_model,
+        contentInstructions: settings.content_instructions || undefined,
+        responseStyle: settings.response_style,
       });
       onImproved?.(clean(result));
       toast.success(isRTL ? 'تم التحسين' : 'Improved');
@@ -65,11 +78,13 @@ export const FieldAiActions: React.FC<Props> = ({
   const handleGenerateExcerpt = async () => {
     setLoading('excerpt');
     try {
-      const result = await callBlogAi({
+      const result = await callWithSettings({
         action: 'generate_excerpt',
         title: '',
         content: value,
         keywords: focusKeyword ? [focusKeyword] : [],
+        tone: settings.default_tone,
+        model: settings.default_model,
       });
       onImproved?.(clean(result));
       toast.success(isRTL ? 'تم التوليد' : 'Generated');
