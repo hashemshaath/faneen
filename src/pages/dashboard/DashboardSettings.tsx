@@ -63,6 +63,7 @@ const DashboardSettings = () => {
   const [profileForm, setProfileForm] = useState({
     full_name: '',
     phone: '',
+    email: '',
     avatar_url: '',
   });
 
@@ -72,6 +73,7 @@ const DashboardSettings = () => {
       setProfileForm({
         full_name: profile.full_name || '',
         phone: profile.phone || '',
+        email: profile.email || '',
         avatar_url: profile.avatar_url || '',
       });
     }
