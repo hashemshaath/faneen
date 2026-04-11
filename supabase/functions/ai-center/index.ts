@@ -28,9 +28,12 @@ serve(async (req) => {
     let userPrompt = text;
 
     switch (action) {
-      case "translate":
-        systemPrompt = `You are an expert translator. Translate from ${sourceLang === 'ar' ? 'Arabic' : 'English'} to ${targetLang === 'ar' ? 'Arabic' : 'English'}. ${toneInstruction} Return ONLY the translation as clean plain text. No markdown symbols.`;
+      case "translate": {
+        let extra = '';
+        if (translationInstructions) extra = `\nAdditional translation rules:\n${translationInstructions}\n`;
+        systemPrompt = `You are an expert translator. Translate from ${sourceLang === 'ar' ? 'Arabic' : 'English'} to ${targetLang === 'ar' ? 'Arabic' : 'English'}. ${toneInstruction} Return ONLY the translation as clean plain text. No markdown symbols.${extra}`;
         break;
+      }
 
       case "improve":
         systemPrompt = `You are an expert content editor. Improve the given text for clarity, readability and engagement. ${toneInstruction} ${styleInstruction} Maintain the original language. Return ONLY the improved text as plain text. No markdown symbols unless the text is a long article.`;
