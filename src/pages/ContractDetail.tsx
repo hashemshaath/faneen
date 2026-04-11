@@ -663,7 +663,7 @@ const ContractDetail = () => {
             <div className="flex items-center gap-0 overflow-x-auto pb-2">
               {milestones.map((m, idx) => {
                 const isComp = m.status === 'completed';
-                const isActive = m.status === 'in_progress';
+                const isActive = (m.status as string) === 'in_progress';
                 const pct = totalAmount > 0 ? Math.round((Number(m.amount) / totalAmount) * 100) : 0;
                 return (
                   <React.Fragment key={m.id}>
