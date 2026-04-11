@@ -305,6 +305,14 @@ const DashboardContracts = () => {
   const [sendConfirm, setSendConfirm] = useState<any>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [sortBy, setSortBy] = useState<'date' | 'amount' | 'status'>('date');
+  const [showAddMeasurement, setShowAddMeasurement] = useState<string | null>(null);
+  const [showAddMilestone, setShowAddMilestone] = useState<string | null>(null);
+  const [showAddAmendment, setShowAddAmendment] = useState<string | null>(null);
+  const [measurementForm, setMeasurementForm] = useState({ name_ar: '', piece_number: '', floor_label: 'ground_floor', location_ar: '', length_mm: '', width_mm: '', quantity: '1', unit_price: '' });
+  const [milestoneForm, setMilestoneForm] = useState({ title_ar: '', amount: '', due_date: '' });
+  const [amendmentForm, setAmendmentForm] = useState({ title_ar: '', description_ar: '', amendment_type: 'scope_change', new_amount: '' });
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [uploadingContractId, setUploadingContractId] = useState<string | null>(null);
 
   /* ── Data Queries ── */
   const { data: providerContracts = [], isLoading: loadingProvider } = useQuery({
