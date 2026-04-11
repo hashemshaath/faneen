@@ -98,8 +98,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
           </div>
           <FieldErrorDisplay message={errors.email} />
         </div>
-        </div>
-        <Button onClick={handleSubmit} disabled={loading} className="w-full h-11" variant="hero">
+        <Button onClick={handleSubmit} disabled={loading || !!errors.email} className="w-full h-11" variant="hero">
           {loading && <Loader2 className="w-4 h-4 animate-spin me-2" />}
           {loading ? t('common.loading') : t('auth.reset_password')}
         </Button>
