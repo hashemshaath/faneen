@@ -197,6 +197,7 @@ const DashboardContracts = () => {
   const queryClient = useQueryClient();
 
   const [statusFilter, setStatusFilter] = useState('all');
+  const [roleFilter, setRoleFilter] = useState<'all' | 'provider' | 'client'>('all');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [noteText, setNoteText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -209,8 +210,8 @@ const DashboardContracts = () => {
   const [sendConfirm, setSendConfirm] = useState<any>(null);
   const [isExporting, setIsExporting] = useState(false);
 
-  /* ── Data ── */
-  const { data: contracts = [], isLoading } = useQuery({
+  /* ── Data: fetch ALL contracts where user is client OR provider ── */
+  const { data: providerContracts = [], isLoading: loadingProvider } = useQuery({
     queryKey: ['dashboard-contracts', 'provider', user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -218,12 +219,40 @@ const DashboardContracts = () => {
         .select('*')
         .eq('provider_id', user!.id)
         .order('created_at', { ascending: false });
-
       if (error) throw error;
       return data ?? [];
     },
     enabled: !!user,
   });
+
+  const { data: clientContracts = [], isLoading: loadingClient } = useQuery({
+    queryKey: ['dashboard-contracts', 'client', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('contracts')
+        .select('*')
+        .eq('client_id', user!.id)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!user,
+  });
+
+  const isLoading = loadingProvider || loadingClient;
+
+  /* Deduplicate & tag role */
+  const contracts = useMemo(() => {
+    const seen = new Set<string>();
+    const result: any[] = [];
+    providerContracts.forEach((c: any) => {
+      if (!seen.has(c.id)) { seen.add(c.id); result.push({ ...c, _role: 'provider' as const }); }
+    });
+    clientContracts.forEach((c: any) => {
+      if (!seen.has(c.id)) { seen.add(c.id); result.push({ ...c, _role: 'client' as const }); }
+    });
+    return result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  }, [providerContracts, clientContracts]);
 
   const contractIds = useMemo(() => contracts.map((c: any) => c.id), [contracts]);
 
