@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { authService } from '@/services/auth';
 import { Button } from '@/components/ui/button';
@@ -21,7 +20,6 @@ interface RegisterFormProps {
 
 export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onEmailSent }) => {
   const { t, isRTL } = useLanguage();
-  const navigate = useNavigate();
 
   const [registerType, setRegisterType] = useState<RegisterType>('individual');
   const [step, setStep] = useState<RegisterStep>('type');
@@ -42,6 +40,11 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
   const BackArrow = isRTL ? ArrowRight : ArrowLeft;
 
   const handleRegister = async () => {
+    // Validation
+    if (!fullName.trim()) {
+      toast.error(isRTL ? 'يرجى إدخال الاسم الكامل' : 'Please enter your full name');
+      return;
+    }
     if (!email || !validateEmail(email)) {
       toast.error(isRTL ? 'البريد الإلكتروني غير صحيح' : 'Invalid email');
       return;
@@ -73,7 +76,12 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
       onEmailSent(email);
       toast.success(isRTL ? 'تم إرسال رابط التحقق إلى بريدك الإلكتروني' : 'Verification link sent to your email');
     } catch (err: any) {
-      toast.error(err.message);
+      const msg = err.message || '';
+      if (msg.includes('already registered')) {
+        toast.error(isRTL ? 'هذا البريد مسجل بالفعل' : 'This email is already registered');
+      } else {
+        toast.error(msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -82,10 +90,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
   const handleGoogle = async () => {
     setGoogleLoading(true);
     try {
-      const result = await authService.signInWithGoogle();
-      if (result.redirected) return;
-      toast.success(t('common.success'));
-      navigate('/onboarding');
+      await authService.signInWithGoogle();
+      // OAuth redirect handles the rest
     } catch (err: any) {
       toast.error(err.message);
     } finally {
@@ -153,7 +159,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
         </div>
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label>{t('auth.fullname')}</Label>
+            <Label>{t('auth.fullname')} <span className="text-destructive">*</span></Label>
             <div className="relative">
               <User className="absolute top-3 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
               <Input value={fullName} onChange={(e) => setFullName(e.target.value)} style={{ paddingInlineStart: '40px' }} />
@@ -167,22 +173,11 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
             </div>
           </div>
 
-          <PhoneInput
-            phone={phone}
-            countryCode={countryCode}
-            onPhoneChange={setPhone}
-            onCountryCodeChange={setCountryCode}
-            isRTL={isRTL}
-            optional
-          />
+          <PhoneInput phone={phone} countryCode={countryCode} onPhoneChange={setPhone} onCountryCodeChange={setCountryCode} isRTL={isRTL} optional />
 
           <PasswordField
-            password={password}
-            onChange={setPassword}
-            label={t('auth.password')}
-            showStrength
-            isRTL={isRTL}
-            showPassword={showPassword}
+            password={password} onChange={setPassword} label={t('auth.password')}
+            showStrength isRTL={isRTL} showPassword={showPassword}
             onToggleShow={() => setShowPassword(!showPassword)}
           />
 
@@ -195,19 +190,18 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
           </div>
 
           {registerType === 'business' ? (
-            <Button onClick={() => setStep('business-details')} disabled={!email || !fullName || passwordStrength.score < 2 || password !== confirmPassword} className="w-full h-11" variant="hero">
+            <Button onClick={() => setStep('business-details')} disabled={!email || !fullName.trim() || passwordStrength.score < 2 || password !== confirmPassword} className="w-full h-11" variant="hero">
               {t('auth.next')}
             </Button>
           ) : (
-            <Button onClick={handleRegister} disabled={loading || !email || !fullName || passwordStrength.score < 2 || password !== confirmPassword} className="w-full h-11" variant="hero">
+            <Button onClick={handleRegister} disabled={loading || !email || !fullName.trim() || passwordStrength.score < 2 || password !== confirmPassword} className="w-full h-11" variant="hero">
               {loading && <Loader2 className="w-4 h-4 animate-spin me-2" />}
               {loading ? t('common.loading') : t('auth.submit')}
             </Button>
           )}
         </div>
         <button onClick={() => setStep('type')} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
-          <BackArrow className="w-4 h-4" />
-          {t('auth.back')}
+          <BackArrow className="w-4 h-4" /> {t('auth.back')}
         </button>
       </div>
     );
@@ -224,14 +218,14 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
       </div>
       <div className="space-y-4">
         <div className="space-y-2">
-          <Label>{t('auth.business_name')}</Label>
+          <Label>{t('auth.business_name')} <span className="text-destructive">*</span></Label>
           <div className="relative">
             <Building2 className="absolute top-3 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
             <Input value={businessName} onChange={(e) => setBusinessName(e.target.value)} style={{ paddingInlineStart: '40px' }} />
           </div>
         </div>
         <div className="space-y-2">
-          <Label>{t('auth.business_username')}</Label>
+          <Label>{t('auth.business_username')} <span className="text-destructive">*</span></Label>
           <div className="relative">
             <Globe className="absolute top-3 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
             <Input value={username} onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ''))} placeholder="my-business" dir="ltr" style={{ paddingInlineStart: '40px' }} />
@@ -241,14 +235,13 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
             <p className="text-xs text-destructive">{isRTL ? 'اسم المستخدم غير صحيح (3-50 حرف)' : 'Invalid username (3-50 chars)'}</p>
           )}
         </div>
-        <Button onClick={handleRegister} disabled={loading || !businessName || !validateUsername(username)} className="w-full h-11" variant="hero">
+        <Button onClick={handleRegister} disabled={loading || !businessName.trim() || !validateUsername(username)} className="w-full h-11" variant="hero">
           {loading && <Loader2 className="w-4 h-4 animate-spin me-2" />}
           {loading ? t('common.loading') : t('auth.submit')}
         </Button>
       </div>
       <button onClick={() => setStep('details')} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
-        <BackArrow className="w-4 h-4" />
-        {t('auth.back')}
+        <BackArrow className="w-4 h-4" /> {t('auth.back')}
       </button>
     </div>
   );

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -40,6 +40,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [roles, setRoles] = useState<string[]>([]);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [providerAccess, setProviderAccess] = useState(false);
+  const initRef = useRef(false);
 
   const fetchRoles = useCallback(async (userId: string) => {
     const { data } = await supabase
@@ -63,26 +64,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchProviderAccess = useCallback(async (userId: string) => {
     try {
-      // Run queries independently so one failure doesn't block the other
       const [bizResult, staffResult] = await Promise.allSettled([
-        supabase
-          .from('businesses')
-          .select('id')
-          .eq('user_id', userId)
-          .limit(1)
-          .maybeSingle(),
-        supabase
-          .from('business_staff')
-          .select('id')
-          .eq('user_id', userId)
-          .eq('is_active', true)
-          .limit(1)
-          .maybeSingle(),
+        supabase.from('businesses').select('id').eq('user_id', userId).limit(1).maybeSingle(),
+        supabase.from('business_staff').select('id').eq('user_id', userId).eq('is_active', true).limit(1).maybeSingle(),
       ]);
-
       const ownedBusiness = bizResult.status === 'fulfilled' ? bizResult.value.data : null;
       const staffMembership = staffResult.status === 'fulfilled' ? staffResult.value.data : null;
-
       const hasProviderAccess = Boolean(ownedBusiness?.id || staffMembership?.id);
       setProviderAccess(hasProviderAccess);
       return hasProviderAccess;
@@ -94,9 +81,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const refreshProfile = useCallback(async () => {
     if (user) {
-      await fetchProfile(user.id);
+      await Promise.all([fetchProfile(user.id), fetchRoles(user.id), fetchProviderAccess(user.id)]);
     }
-  }, [user, fetchProfile]);
+  }, [user, fetchProfile, fetchRoles, fetchProviderAccess]);
 
   const loadUserData = useCallback(async (userId: string) => {
     try {
@@ -111,21 +98,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     let mounted = true;
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!mounted) return;
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        // Don't set loading=false here — wait for loadUserData
-        loadUserData(session.user.id);
-      } else {
-        setRoles([]);
-        setProfile(null);
-        setProviderAccess(false);
-        setLoading(false);
-      }
-    });
-
+    // Get initial session first, then subscribe
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!mounted) return;
       setSession(session);
@@ -133,8 +106,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (session?.user) {
         loadUserData(session.user.id);
       } else {
-        setProviderAccess(false);
         setLoading(false);
+      }
+      initRef.current = true;
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!mounted) return;
+      setSession(session);
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        // Reload user data on sign in or token refresh
+        loadUserData(session.user.id);
+      } else {
+        setRoles([]);
+        setProfile(null);
+        setProviderAccess(false);
+        if (initRef.current) setLoading(false);
       }
     });
 
@@ -145,10 +133,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [loadUserData]);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
     setRoles([]);
     setProfile(null);
     setProviderAccess(false);
+    await supabase.auth.signOut();
   };
 
   const isSuperAdmin = roles.includes('super_admin');

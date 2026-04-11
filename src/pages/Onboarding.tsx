@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRoleRedirect } from '@/hooks/useRoleRedirect';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { authService, useOtpFlow, countryCodes } from '@/services/auth';
 import { AuthLayout } from '@/components/auth/AuthLayout';
@@ -9,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { User, Building2, Phone, Globe, ChevronDown, Check, Loader2 } from 'lucide-react';
+import { User, Building2, Phone, Globe, Check, Loader2 } from 'lucide-react';
 
 type OnboardingStep = 'account-type' | 'details' | 'phone-verify' | 'business-details';
 
@@ -17,6 +18,7 @@ const Onboarding = () => {
   const { t, language, isRTL } = useLanguage();
   const navigate = useNavigate();
   const { user, profile, refreshProfile } = useAuth();
+  const { getTargetRoute } = useRoleRedirect();
 
   const [step, setStep] = useState<OnboardingStep>('account-type');
   const [accountType, setAccountType] = useState<'individual' | 'business'>('individual');
@@ -27,7 +29,6 @@ const Onboarding = () => {
   const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // OTP flow
   const otp = useOtpFlow({
     isRTL,
     onSendOtp: () => authService.sendOtp(phone, countryCode),
@@ -46,7 +47,7 @@ const Onboarding = () => {
 
   useEffect(() => {
     if (!user) { navigate('/auth'); return; }
-    if (profile?.is_onboarded) { navigate('/'); return; }
+    if (profile?.is_onboarded) { navigate(getTargetRoute()); return; }
     if (profile?.full_name) setFullName(profile.full_name);
     else if (user?.user_metadata?.full_name) setFullName(user.user_metadata.full_name);
     if (profile?.account_type && profile.account_type !== 'individual') {
@@ -70,7 +71,13 @@ const Onboarding = () => {
 
       await refreshProfile();
       toast.success(isRTL ? 'تم إكمال التسجيل بنجاح!' : 'Registration completed successfully!');
-      navigate('/');
+      
+      // Role-based redirect after onboarding
+      if (accountType === 'business') {
+        navigate('/dashboard');
+      } else {
+        navigate('/');
+      }
     } catch (err: any) {
       toast.error(err.message);
     } finally {
@@ -98,18 +105,13 @@ const Onboarding = () => {
     if (!ok && otp.error) toast.error(otp.error);
   };
 
-  // ─── Step: Account Type ───
   if (step === 'account-type') {
     return (
       <AuthLayout>
         <div className="space-y-6">
           <div className="text-center space-y-2">
-            <h2 className="font-heading font-bold text-2xl text-foreground">
-              {isRTL ? 'مرحباً بك في فنيين' : 'Welcome to Faneen'}
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              {isRTL ? 'اختر نوع حسابك للمتابعة' : 'Choose your account type to continue'}
-            </p>
+            <h2 className="font-heading font-bold text-2xl text-foreground">{isRTL ? 'مرحباً بك في فنيين' : 'Welcome to Faneen'}</h2>
+            <p className="text-sm text-muted-foreground">{isRTL ? 'اختر نوع حسابك للمتابعة' : 'Choose your account type to continue'}</p>
           </div>
           <div className="grid grid-cols-1 gap-4">
             <button onClick={() => { setAccountType('individual'); setStep('details'); }}
@@ -130,7 +132,6 @@ const Onboarding = () => {
     );
   }
 
-  // ─── Step: Details ───
   if (step === 'details') {
     return (
       <AuthLayout>
@@ -146,9 +147,7 @@ const Onboarding = () => {
                 <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder={isRTL ? 'أدخل اسمك الكامل' : 'Enter your full name'} style={{ paddingInlineStart: '40px' }} />
               </div>
             </div>
-
             <PhoneInput phone={phone} countryCode={countryCode} onPhoneChange={setPhone} onCountryCodeChange={setCountryCode} isRTL={isRTL} optional />
-
             <Button
               onClick={() => {
                 if (!fullName.trim()) { toast.error(isRTL ? 'يرجى إدخال الاسم' : 'Please enter your name'); return; }
@@ -156,8 +155,7 @@ const Onboarding = () => {
                 else if (accountType === 'business') setStep('business-details');
                 else completeOnboarding();
               }}
-              disabled={!fullName.trim() || loading}
-              className="w-full" variant="hero"
+              disabled={!fullName.trim() || loading} className="w-full" variant="hero"
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin me-2" /> : null}
               {isRTL ? 'متابعة' : 'Continue'}
@@ -171,7 +169,6 @@ const Onboarding = () => {
     );
   }
 
-  // ─── Step: Phone Verification ───
   if (step === 'phone-verify') {
     return (
       <AuthLayout>
@@ -185,7 +182,6 @@ const Onboarding = () => {
               {isRTL ? `سنرسل رمز تحقق إلى ${countryCode}${phone}` : `We'll send a verification code to ${countryCode}${phone}`}
             </p>
           </div>
-
           {!otp.otpStep ? (
             <div className="space-y-4">
               <Button onClick={handlePhoneSend} disabled={otp.loading} className="w-full" variant="hero">
@@ -220,7 +216,6 @@ const Onboarding = () => {
               </div>
             </div>
           )}
-
           <button onClick={() => { setStep('details'); otp.resetOtp(); }} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
             {isRTL ? '→' : '←'} {isRTL ? 'رجوع' : 'Back'}
           </button>
@@ -229,7 +224,6 @@ const Onboarding = () => {
     );
   }
 
-  // ─── Step: Business Details ───
   return (
     <AuthLayout>
       <div className="space-y-6">
