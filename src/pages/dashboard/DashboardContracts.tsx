@@ -27,7 +27,7 @@ import {
   Paperclip, TrendingUp, BarChart3, CreditCard, Receipt,
   CalendarDays, MapPin, Building2, Hash, Timer,
   CircleDot, Banknote, FileCheck, Share2,
-  Ruler, ClipboardList, ShieldCheck, WrenchIcon,
+  Ruler, ClipboardList, ShieldCheck, WrenchIcon, Upload,
 } from 'lucide-react';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -305,6 +305,14 @@ const DashboardContracts = () => {
   const [sendConfirm, setSendConfirm] = useState<any>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [sortBy, setSortBy] = useState<'date' | 'amount' | 'status'>('date');
+  const [showAddMeasurement, setShowAddMeasurement] = useState<string | null>(null);
+  const [showAddMilestone, setShowAddMilestone] = useState<string | null>(null);
+  const [showAddAmendment, setShowAddAmendment] = useState<string | null>(null);
+  const [measurementForm, setMeasurementForm] = useState({ name_ar: '', piece_number: '', floor_label: 'ground_floor', location_ar: '', length_mm: '', width_mm: '', quantity: '1', unit_price: '' });
+  const [milestoneForm, setMilestoneForm] = useState({ title_ar: '', amount: '', due_date: '' });
+  const [amendmentForm, setAmendmentForm] = useState({ title_ar: '', description_ar: '', amendment_type: 'scope_change', new_amount: '' });
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [uploadingContractId, setUploadingContractId] = useState<string | null>(null);
 
   /* ── Data Queries ── */
   const { data: providerContracts = [], isLoading: loadingProvider } = useQuery({
@@ -412,6 +420,16 @@ const DashboardContracts = () => {
     enabled: contractIds.length > 0,
   });
 
+  const { data: allAmendments = [] } = useQuery({
+    queryKey: ['dashboard-contract-amendments', contractIds],
+    queryFn: async () => {
+      if (contractIds.length === 0) return [];
+      const { data } = await supabase.from('contract_amendments').select('*').in('contract_id', contractIds).order('created_at', { ascending: false });
+      return data ?? [];
+    },
+    enabled: contractIds.length > 0,
+  });
+
   const { data: profiles = [] } = useQuery({
     queryKey: ['contract-profiles', contractIds],
     queryFn: async () => {
@@ -442,6 +460,9 @@ const DashboardContracts = () => {
     enabled: !!user,
   });
 
+  /* ── Helper: isLocked ── */
+  const isContractLocked = (c: any) => ['active', 'completed', 'cancelled'].includes(c.status);
+
   /* ── Mutations ── */
   const addNoteMutation = useMutation({
     mutationFn: async ({ contractId, content, noteType }: { contractId: string; content: string; noteType?: string }) => {
@@ -449,6 +470,111 @@ const DashboardContracts = () => {
       if (error) throw error;
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['dashboard-contract-notes'] }); setNoteText(''); toast.success(isRTL ? 'تمت إضافة الملاحظة' : 'Note added'); },
+  });
+
+  const addMeasurementMutation = useMutation({
+    mutationFn: async ({ contractId }: { contractId: string }) => {
+      const area = (Number(measurementForm.length_mm) * Number(measurementForm.width_mm)) / 1000000;
+      const totalCost = Number(measurementForm.unit_price) * Number(measurementForm.quantity);
+      const { error } = await supabase.from('contract_measurements').insert({
+        contract_id: contractId, name_ar: measurementForm.name_ar, piece_number: measurementForm.piece_number,
+        floor_label: measurementForm.floor_label, location_ar: measurementForm.location_ar,
+        length_mm: Number(measurementForm.length_mm), width_mm: Number(measurementForm.width_mm),
+        quantity: Number(measurementForm.quantity), unit_price: Number(measurementForm.unit_price),
+        area_sqm: area, total_cost: totalCost,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard-contract-measurements'] });
+      setShowAddMeasurement(null);
+      setMeasurementForm({ name_ar: '', piece_number: '', floor_label: 'ground_floor', location_ar: '', length_mm: '', width_mm: '', quantity: '1', unit_price: '' });
+      toast.success(isRTL ? 'تمت إضافة المقاس' : 'Measurement added');
+    },
+    onError: (err: any) => toast.error(err.message),
+  });
+
+  const addMilestoneMutation = useMutation({
+    mutationFn: async ({ contractId }: { contractId: string }) => {
+      const existing = allMilestones.filter(m => m.contract_id === contractId);
+      const { error } = await supabase.from('contract_milestones').insert({
+        contract_id: contractId, title_ar: milestoneForm.title_ar,
+        amount: Number(milestoneForm.amount), due_date: milestoneForm.due_date || null,
+        sort_order: existing.length + 1,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard-milestones'] });
+      setShowAddMilestone(null);
+      setMilestoneForm({ title_ar: '', amount: '', due_date: '' });
+      toast.success(isRTL ? 'تمت إضافة المرحلة' : 'Milestone added');
+    },
+    onError: (err: any) => toast.error(err.message),
+  });
+
+  const addAmendmentMutation = useMutation({
+    mutationFn: async ({ contractId }: { contractId: string }) => {
+      const { error } = await supabase.from('contract_amendments').insert({
+        contract_id: contractId, requested_by: user!.id,
+        title_ar: amendmentForm.title_ar, description_ar: amendmentForm.description_ar || null,
+        amendment_type: amendmentForm.amendment_type,
+        new_amount: amendmentForm.new_amount ? Number(amendmentForm.new_amount) : null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard-contract-amendments'] });
+      setShowAddAmendment(null);
+      setAmendmentForm({ title_ar: '', description_ar: '', amendment_type: 'scope_change', new_amount: '' });
+      toast.success(isRTL ? 'تم إرسال طلب التعديل' : 'Amendment request sent');
+    },
+    onError: (err: any) => toast.error(err.message),
+  });
+
+  const approveAmendmentMutation = useMutation({
+    mutationFn: async ({ amendmentId, contract }: { amendmentId: string; contract: any }) => {
+      const isClient = user?.id === contract.client_id;
+      const field = isClient ? 'client_approved_at' : 'provider_approved_at';
+      const update: any = { [field]: new Date().toISOString() };
+      // Check if other party already approved
+      const amendment = allAmendments.find((a: any) => a.id === amendmentId);
+      const otherApproved = isClient ? amendment?.provider_approved_at : amendment?.client_approved_at;
+      if (otherApproved) update.status = 'approved';
+      const { error } = await supabase.from('contract_amendments').update(update).eq('id', amendmentId);
+      if (error) throw error;
+      // If both approved and has new_amount, update contract
+      if (otherApproved && amendment?.new_amount) {
+        await supabase.from('contracts').update({ total_amount: amendment.new_amount }).eq('id', contract.id);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard-contract-amendments'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-contracts'] });
+      toast.success(isRTL ? 'تمت الموافقة على التعديل' : 'Amendment approved');
+    },
+  });
+
+  const uploadAttachmentMutation = useMutation({
+    mutationFn: async ({ contractId, file }: { contractId: string; file: File }) => {
+      const ext = file.name.split('.').pop();
+      const path = `${contractId}/${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage.from('contract-attachments').upload(path, file);
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage.from('contract-attachments').getPublicUrl(path);
+      const fileType = file.type.startsWith('image/') ? 'image' : 'document';
+      const { error } = await supabase.from('contract_attachments').insert({
+        contract_id: contractId, user_id: user!.id, file_name: file.name,
+        file_url: urlData.publicUrl, file_type: fileType,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard-contract-attachments'] });
+      setUploadingContractId(null);
+      toast.success(isRTL ? 'تم رفع المرفق' : 'Attachment uploaded');
+    },
+    onError: (err: any) => toast.error(err.message),
   });
 
   const createContractMutation = useMutation({
@@ -1028,7 +1154,10 @@ const DashboardContracts = () => {
                   const measurements = allMeasurements.filter((m: any) => m.contract_id === c.id);
                   const warranties = allWarranties.filter((w: any) => w.contract_id === c.id);
                   const maintenance = allMaintenanceRequests.filter((r: any) => r.contract_id === c.id);
+                  const amendments = allAmendments.filter((a: any) => a.contract_id === c.id);
                   const isExpanded = expandedId === c.id;
+                  const locked = isContractLocked(c);
+                  const isProvider = user?.id === c.provider_id;
 
                   return (
                     <div key={c.id}>
@@ -1046,6 +1175,14 @@ const DashboardContracts = () => {
                       {isExpanded && (
                         <Card className="border-t-0 rounded-t-none border-border/40 bg-muted/10">
                           <CardContent className="p-3 sm:p-4">
+                            {/* Lock Banner */}
+                            {locked && (
+                              <div className="flex items-center gap-2 p-2.5 mb-3 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/30 text-amber-800 dark:text-amber-300">
+                                <Shield className="w-4 h-4 shrink-0" />
+                                <p className="text-[10px]">{isRTL ? 'العقد معتمد - التعديل يتطلب ملحق عقد وموافقة الطرفين' : 'Contract is approved - changes require an amendment with both parties\' approval'}</p>
+                              </div>
+                            )}
+
                             <Tabs defaultValue="milestones">
                               <TabsList className="w-full justify-start bg-muted/50 rounded-lg p-0.5 h-auto flex-wrap gap-0.5 mb-3">
                                 <TabsTrigger value="milestones" className="text-[10px] px-2.5 py-1 gap-0.5"><ListChecks className="w-3 h-3" />{isRTL ? 'المراحل' : 'Milestones'} ({milestones.length})</TabsTrigger>
@@ -1055,11 +1192,36 @@ const DashboardContracts = () => {
                                 <TabsTrigger value="maintenance" className="text-[10px] px-2.5 py-1 gap-0.5"><WrenchIcon className="w-3 h-3" />{isRTL ? 'صيانة' : 'Maint.'} ({maintenance.length})</TabsTrigger>
                                 <TabsTrigger value="notes" className="text-[10px] px-2.5 py-1 gap-0.5"><StickyNote className="w-3 h-3" />{isRTL ? 'ملاحظات' : 'Notes'} ({notes.length})</TabsTrigger>
                                 <TabsTrigger value="attachments" className="text-[10px] px-2.5 py-1 gap-0.5"><Paperclip className="w-3 h-3" />{isRTL ? 'مرفقات' : 'Files'} ({attachments.length})</TabsTrigger>
+                                <TabsTrigger value="amendments" className="text-[10px] px-2.5 py-1 gap-0.5"><FileText className="w-3 h-3" />{isRTL ? 'ملاحق' : 'Amendments'} ({amendments.length})</TabsTrigger>
                                 <TabsTrigger value="actions" className="text-[10px] px-2.5 py-1 gap-0.5"><Activity className="w-3 h-3" />{isRTL ? 'إجراءات' : 'Actions'}</TabsTrigger>
                               </TabsList>
 
-                              {/* Milestones */}
+                              {/* ═══ Milestones Tab ═══ */}
                               <TabsContent value="milestones" className="mt-0">
+                                {!locked && isProvider && (
+                                  <div className="mb-3">
+                                    {showAddMilestone === c.id ? (
+                                      <div className="p-3 rounded-lg border-2 border-dashed border-accent/30 bg-accent/5 space-y-2">
+                                        <h4 className="text-[11px] font-semibold">{isRTL ? 'إضافة مرحلة جديدة' : 'Add Milestone'}</h4>
+                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                          <Input placeholder={isRTL ? 'اسم المرحلة' : 'Title'} value={milestoneForm.title_ar} onChange={e => setMilestoneForm(f => ({ ...f, title_ar: e.target.value }))} className="h-8 text-xs" />
+                                          <Input type="number" placeholder={isRTL ? 'المبلغ' : 'Amount'} value={milestoneForm.amount} onChange={e => setMilestoneForm(f => ({ ...f, amount: e.target.value }))} dir="ltr" className="h-8 text-xs" />
+                                          <Input type="date" value={milestoneForm.due_date} onChange={e => setMilestoneForm(f => ({ ...f, due_date: e.target.value }))} dir="ltr" className="h-8 text-xs" />
+                                        </div>
+                                        <div className="flex gap-2">
+                                          <Button size="sm" className="h-7 text-[10px] gap-1" disabled={!milestoneForm.title_ar || !milestoneForm.amount || addMilestoneMutation.isPending} onClick={() => addMilestoneMutation.mutate({ contractId: c.id })}>
+                                            <Plus className="w-3 h-3" />{isRTL ? 'إضافة' : 'Add'}
+                                          </Button>
+                                          <Button variant="ghost" size="sm" className="h-7 text-[10px]" onClick={() => setShowAddMilestone(null)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1" onClick={() => setShowAddMilestone(c.id)}>
+                                        <Plus className="w-3 h-3" />{isRTL ? 'إضافة مرحلة' : 'Add Milestone'}
+                                      </Button>
+                                    )}
+                                  </div>
+                                )}
                                 {milestones.length > 0 ? (
                                   <div className="relative">
                                     <div className={`absolute top-0 bottom-0 ${isRTL ? 'right-3' : 'left-3'} w-0.5 bg-border/50`} />
@@ -1092,7 +1254,7 @@ const DashboardContracts = () => {
                                 ) : <p className="text-center py-5 text-muted-foreground text-xs">{isRTL ? 'لا توجد مراحل' : 'No milestones'}</p>}
                               </TabsContent>
 
-                              {/* Payments */}
+                              {/* ═══ Payments Tab ═══ */}
                               <TabsContent value="payments" className="mt-0">
                                 {payments.length > 0 ? (
                                   <div className="space-y-2">
@@ -1122,30 +1284,83 @@ const DashboardContracts = () => {
                                 ) : <p className="text-center py-5 text-muted-foreground text-xs">{isRTL ? 'لا توجد دفعات' : 'No payments'}</p>}
                               </TabsContent>
 
-                              {/* Measurements */}
+                              {/* ═══ Measurements Tab ═══ */}
                               <TabsContent value="measurements" className="mt-0">
+                                {!locked && isProvider && (
+                                  <div className="mb-3">
+                                    {showAddMeasurement === c.id ? (
+                                      <div className="p-3 rounded-lg border-2 border-dashed border-accent/30 bg-accent/5 space-y-2">
+                                        <h4 className="text-[11px] font-semibold">{isRTL ? 'إضافة قطعة مقاس جديدة' : 'Add Measurement'}</h4>
+                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                          <Input placeholder={isRTL ? 'اسم القطعة' : 'Name'} value={measurementForm.name_ar} onChange={e => setMeasurementForm(f => ({ ...f, name_ar: e.target.value }))} className="h-8 text-xs" />
+                                          <Input placeholder={isRTL ? 'رقم القطعة (W-GF-001)' : 'Piece # (W-GF-001)'} value={measurementForm.piece_number} onChange={e => setMeasurementForm(f => ({ ...f, piece_number: e.target.value }))} dir="ltr" className="h-8 text-xs" />
+                                          <Select value={measurementForm.floor_label} onValueChange={v => setMeasurementForm(f => ({ ...f, floor_label: v }))}>
+                                            <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                                            <SelectContent>
+                                              <SelectItem value="ground_floor">{isRTL ? 'الدور الأرضي' : 'Ground'}</SelectItem>
+                                              <SelectItem value="first_floor">{isRTL ? 'الدور الأول' : '1st Floor'}</SelectItem>
+                                              <SelectItem value="second_floor">{isRTL ? 'الدور الثاني' : '2nd Floor'}</SelectItem>
+                                              <SelectItem value="roof">{isRTL ? 'السطح' : 'Roof'}</SelectItem>
+                                            </SelectContent>
+                                          </Select>
+                                          <Input placeholder={isRTL ? 'الموقع (صالة، مطبخ)' : 'Location'} value={measurementForm.location_ar} onChange={e => setMeasurementForm(f => ({ ...f, location_ar: e.target.value }))} className="h-8 text-xs" />
+                                        </div>
+                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                          <Input type="number" placeholder={isRTL ? 'الطول (مم)' : 'Length mm'} value={measurementForm.length_mm} onChange={e => setMeasurementForm(f => ({ ...f, length_mm: e.target.value }))} dir="ltr" className="h-8 text-xs" />
+                                          <Input type="number" placeholder={isRTL ? 'العرض (مم)' : 'Width mm'} value={measurementForm.width_mm} onChange={e => setMeasurementForm(f => ({ ...f, width_mm: e.target.value }))} dir="ltr" className="h-8 text-xs" />
+                                          <Input type="number" placeholder={isRTL ? 'الكمية' : 'Qty'} value={measurementForm.quantity} onChange={e => setMeasurementForm(f => ({ ...f, quantity: e.target.value }))} dir="ltr" className="h-8 text-xs" />
+                                          <Input type="number" placeholder={isRTL ? 'سعر الوحدة' : 'Unit Price'} value={measurementForm.unit_price} onChange={e => setMeasurementForm(f => ({ ...f, unit_price: e.target.value }))} dir="ltr" className="h-8 text-xs" />
+                                        </div>
+                                        {measurementForm.length_mm && measurementForm.width_mm && measurementForm.unit_price && (
+                                          <div className="flex items-center gap-3 text-[10px] p-2 bg-muted/40 rounded-md">
+                                            <span>{isRTL ? 'المساحة:' : 'Area:'} <strong>{((Number(measurementForm.length_mm) * Number(measurementForm.width_mm)) / 1000000).toFixed(2)} م²</strong></span>
+                                            <span>{isRTL ? 'التكلفة:' : 'Cost:'} <strong>{(Number(measurementForm.unit_price) * Number(measurementForm.quantity || 1)).toLocaleString()} SAR</strong></span>
+                                          </div>
+                                        )}
+                                        <div className="flex gap-2">
+                                          <Button size="sm" className="h-7 text-[10px] gap-1" disabled={!measurementForm.name_ar || !measurementForm.piece_number || !measurementForm.length_mm || addMeasurementMutation.isPending} onClick={() => addMeasurementMutation.mutate({ contractId: c.id })}>
+                                            <Plus className="w-3 h-3" />{isRTL ? 'إضافة' : 'Add'}
+                                          </Button>
+                                          <Button variant="ghost" size="sm" className="h-7 text-[10px]" onClick={() => setShowAddMeasurement(null)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1" onClick={() => setShowAddMeasurement(c.id)}>
+                                        <Plus className="w-3 h-3" />{isRTL ? 'إضافة مقاس' : 'Add Measurement'}
+                                      </Button>
+                                    )}
+                                  </div>
+                                )}
                                 {measurements.length > 0 ? (
                                   <div className="space-y-1.5 max-h-60 overflow-y-auto">
+                                    <div className="grid grid-cols-[auto_1fr_auto_auto] gap-x-2 gap-y-0.5 text-[8px] font-semibold text-muted-foreground px-2 pb-1 border-b border-border/30">
+                                      <span>#</span><span>{isRTL ? 'القطعة' : 'Piece'}</span><span>{isRTL ? 'الأبعاد' : 'Dims'}</span><span>{isRTL ? 'التكلفة' : 'Cost'}</span>
+                                    </div>
                                     {measurements.map((m: any) => (
                                       <div key={m.id} className="p-2 rounded-lg bg-card border border-border/30 flex items-center justify-between gap-2">
                                         <div className="flex items-center gap-2 min-w-0">
                                           <Badge variant="outline" className="text-[8px] shrink-0 font-mono">{m.piece_number}</Badge>
                                           <div className="min-w-0">
                                             <p className="text-[10px] font-medium truncate">{isRTL ? m.name_ar : (m.name_en || m.name_ar)}</p>
-                                            <p className="text-[8px] text-muted-foreground">{m.floor_label} • {isRTL ? m.location_ar : (m.location_en || m.location_ar)}</p>
+                                            <p className="text-[8px] text-muted-foreground">{m.floor_label} • {isRTL ? m.location_ar : (m.location_en || m.location_ar)} • {isRTL ? 'كمية:' : 'Qty:'} {m.quantity}</p>
                                           </div>
                                         </div>
                                         <div className="text-end shrink-0">
                                           <p className="text-[9px] font-mono">{m.length_mm}×{m.width_mm} mm</p>
                                           <p className="text-[9px] font-semibold">{Number(m.total_cost || 0).toLocaleString()} {m.currency_code}</p>
+                                          <Badge variant={m.status === 'installed' ? 'default' : 'secondary'} className="text-[7px] mt-0.5">{m.status === 'installed' ? (isRTL ? 'مركّب' : 'Installed') : m.status === 'manufactured' ? (isRTL ? 'مصنّع' : 'Made') : (isRTL ? 'معلق' : 'Pending')}</Badge>
                                         </div>
                                       </div>
                                     ))}
+                                    <div className="flex items-center justify-between px-2 pt-2 border-t border-border/30 text-[10px] font-bold">
+                                      <span>{isRTL ? 'الإجمالي:' : 'Total:'} {measurements.length} {isRTL ? 'قطعة' : 'pcs'}</span>
+                                      <span>{measurements.reduce((s: number, m: any) => s + Number(m.total_cost || 0), 0).toLocaleString()} {c.currency_code}</span>
+                                    </div>
                                   </div>
                                 ) : <p className="text-center py-5 text-muted-foreground text-xs">{isRTL ? 'لا توجد مقاسات' : 'No measurements'}</p>}
                               </TabsContent>
 
-                              {/* Warranty */}
+                              {/* ═══ Warranty Tab ═══ */}
                               <TabsContent value="warranty" className="mt-0">
                                 {warranties.length > 0 ? (
                                   <div className="space-y-2">
@@ -1166,6 +1381,12 @@ const DashboardContracts = () => {
                                             <div><span className="text-muted-foreground">{isRTL ? 'النهاية:' : 'End:'}</span> {formatDate(w.end_date)}</div>
                                           </div>
                                           {w.coverage_description_ar && <p className="text-[9px] text-muted-foreground mt-1.5 line-clamp-2">{isRTL ? w.coverage_description_ar : (w.coverage_description_en || w.coverage_description_ar)}</p>}
+                                          {w.exclusions_ar && (
+                                            <div className="mt-1.5">
+                                              <span className="text-[8px] text-destructive font-semibold">{isRTL ? 'الاستثناءات:' : 'Exclusions:'}</span>
+                                              <p className="text-[9px] text-muted-foreground line-clamp-2">{isRTL ? w.exclusions_ar : (w.exclusions_en || w.exclusions_ar)}</p>
+                                            </div>
+                                          )}
                                         </div>
                                       );
                                     })}
@@ -1173,7 +1394,7 @@ const DashboardContracts = () => {
                                 ) : <p className="text-center py-5 text-muted-foreground text-xs">{isRTL ? 'لا يوجد ضمان' : 'No warranty'}</p>}
                               </TabsContent>
 
-                              {/* Maintenance */}
+                              {/* ═══ Maintenance Tab ═══ */}
                               <TabsContent value="maintenance" className="mt-0">
                                 {maintenance.length > 0 ? (
                                   <div className="space-y-2">
@@ -1190,13 +1411,14 @@ const DashboardContracts = () => {
                                           <span>{r.request_number}</span>
                                           {r.scheduled_date && <span><Calendar className="w-2.5 h-2.5 inline" /> {formatDate(r.scheduled_date)}</span>}
                                         </div>
+                                        {r.description_ar && <p className="text-[9px] text-muted-foreground mt-1 line-clamp-2">{isRTL ? r.description_ar : (r.description_en || r.description_ar)}</p>}
                                       </div>
                                     ))}
                                   </div>
                                 ) : <p className="text-center py-5 text-muted-foreground text-xs">{isRTL ? 'لا توجد طلبات صيانة' : 'No maintenance requests'}</p>}
                               </TabsContent>
 
-                              {/* Notes */}
+                              {/* ═══ Notes Tab ═══ */}
                               <TabsContent value="notes" className="mt-0">
                                 <div className="flex gap-2 mb-3">
                                   <Input placeholder={isRTL ? 'أضف ملاحظة...' : 'Add note...'} value={expandedId === c.id ? noteText : ''} onChange={e => setNoteText(e.target.value)} className="text-xs h-8" />
@@ -1222,8 +1444,15 @@ const DashboardContracts = () => {
                                 ) : <p className="text-center py-5 text-muted-foreground text-xs">{isRTL ? 'لا توجد ملاحظات' : 'No notes'}</p>}
                               </TabsContent>
 
-                              {/* Attachments */}
+                              {/* ═══ Attachments Tab ═══ */}
                               <TabsContent value="attachments" className="mt-0">
+                                <div className="mb-3">
+                                  <input type="file" ref={fileInputRef} className="hidden" onChange={e => { const file = e.target.files?.[0]; if (file && uploadingContractId) uploadAttachmentMutation.mutate({ contractId: uploadingContractId, file }); e.target.value = ''; }} />
+                                  <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1" disabled={uploadAttachmentMutation.isPending} onClick={() => { setUploadingContractId(c.id); fileInputRef.current?.click(); }}>
+                                    {uploadAttachmentMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
+                                    {isRTL ? 'رفع مرفق' : 'Upload'}
+                                  </Button>
+                                </div>
                                 {attachments.length > 0 ? (
                                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                     {attachments.map((a: any) => (
@@ -1242,7 +1471,83 @@ const DashboardContracts = () => {
                                 ) : <p className="text-center py-5 text-muted-foreground text-xs">{isRTL ? 'لا توجد مرفقات' : 'No attachments'}</p>}
                               </TabsContent>
 
-                              {/* Actions */}
+                              {/* ═══ Amendments Tab ═══ */}
+                              <TabsContent value="amendments" className="mt-0">
+                                {locked && (
+                                  <div className="mb-3">
+                                    {showAddAmendment === c.id ? (
+                                      <div className="p-3 rounded-lg border-2 border-dashed border-primary/30 bg-primary/5 space-y-2">
+                                        <h4 className="text-[11px] font-semibold">{isRTL ? 'طلب ملحق عقد' : 'Request Amendment'}</h4>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                          <Input placeholder={isRTL ? 'عنوان التعديل' : 'Amendment title'} value={amendmentForm.title_ar} onChange={e => setAmendmentForm(f => ({ ...f, title_ar: e.target.value }))} className="h-8 text-xs" />
+                                          <Select value={amendmentForm.amendment_type} onValueChange={v => setAmendmentForm(f => ({ ...f, amendment_type: v }))}>
+                                            <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                                            <SelectContent>
+                                              <SelectItem value="scope_change">{isRTL ? 'تعديل نطاق العمل' : 'Scope Change'}</SelectItem>
+                                              <SelectItem value="financial">{isRTL ? 'تعديل مالي' : 'Financial'}</SelectItem>
+                                              <SelectItem value="extension">{isRTL ? 'تمديد المدة' : 'Extension'}</SelectItem>
+                                              <SelectItem value="other">{isRTL ? 'أخرى' : 'Other'}</SelectItem>
+                                            </SelectContent>
+                                          </Select>
+                                        </div>
+                                        <Textarea placeholder={isRTL ? 'وصف التعديل المطلوب...' : 'Describe the amendment...'} value={amendmentForm.description_ar} onChange={e => setAmendmentForm(f => ({ ...f, description_ar: e.target.value }))} rows={2} className="text-xs" />
+                                        {amendmentForm.amendment_type === 'financial' && (
+                                          <Input type="number" placeholder={isRTL ? 'المبلغ الجديد' : 'New Amount'} value={amendmentForm.new_amount} onChange={e => setAmendmentForm(f => ({ ...f, new_amount: e.target.value }))} dir="ltr" className="h-8 text-xs" />
+                                        )}
+                                        <div className="flex gap-2">
+                                          <Button size="sm" className="h-7 text-[10px] gap-1" disabled={!amendmentForm.title_ar || addAmendmentMutation.isPending} onClick={() => addAmendmentMutation.mutate({ contractId: c.id })}>
+                                            <Send className="w-3 h-3" />{isRTL ? 'إرسال الطلب' : 'Submit'}
+                                          </Button>
+                                          <Button variant="ghost" size="sm" className="h-7 text-[10px]" onClick={() => setShowAddAmendment(null)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1" onClick={() => setShowAddAmendment(c.id)}>
+                                        <Plus className="w-3 h-3" />{isRTL ? 'طلب ملحق عقد' : 'Request Amendment'}
+                                      </Button>
+                                    )}
+                                  </div>
+                                )}
+                                {!locked && <p className="text-center py-3 text-muted-foreground text-[10px]">{isRTL ? 'العقد لم يُعتمد بعد - يمكنك تعديله مباشرة' : 'Contract not yet approved - you can edit it directly'}</p>}
+                                {amendments.length > 0 ? (
+                                  <div className="space-y-2">
+                                    {amendments.map((a: any) => {
+                                      const canApproveAmendment = a.status === 'pending' && (
+                                        (user?.id === c.client_id && !a.client_approved_at) ||
+                                        (user?.id === c.provider_id && !a.provider_approved_at)
+                                      );
+                                      const typeLabels: Record<string, string> = { scope_change: isRTL ? 'نطاق العمل' : 'Scope', financial: isRTL ? 'مالي' : 'Financial', extension: isRTL ? 'تمديد' : 'Extension', other: isRTL ? 'أخرى' : 'Other' };
+                                      return (
+                                        <div key={a.id} className={`p-3 rounded-lg border ${a.status === 'approved' ? 'border-emerald-200/50 bg-emerald-50/20 dark:border-emerald-800/20 dark:bg-emerald-950/10' : a.status === 'rejected' ? 'border-red-200/50 bg-red-50/20' : 'border-amber-200/50 bg-amber-50/20 dark:border-amber-800/20'} bg-card`}>
+                                          <div className="flex items-center justify-between gap-2 mb-1">
+                                            <h4 className="text-[11px] font-semibold truncate">{a.title_ar}</h4>
+                                            <div className="flex items-center gap-1 shrink-0">
+                                              <Badge variant="outline" className="text-[8px]">{typeLabels[a.amendment_type] || a.amendment_type}</Badge>
+                                              <Badge variant={a.status === 'approved' ? 'default' : a.status === 'rejected' ? 'destructive' : 'secondary'} className="text-[8px]">
+                                                {a.status === 'approved' ? (isRTL ? 'معتمد' : 'Approved') : a.status === 'rejected' ? (isRTL ? 'مرفوض' : 'Rejected') : (isRTL ? 'بانتظار' : 'Pending')}
+                                              </Badge>
+                                            </div>
+                                          </div>
+                                          {a.description_ar && <p className="text-[9px] text-muted-foreground mb-1">{a.description_ar}</p>}
+                                          <div className="flex items-center gap-3 text-[8px] text-muted-foreground">
+                                            {a.new_amount && <span className="font-medium">{isRTL ? 'المبلغ الجديد:' : 'New:'} {Number(a.new_amount).toLocaleString()} {c.currency_code}</span>}
+                                            <span>{isRTL ? 'العميل:' : 'Client:'} {a.client_approved_at ? '✅' : '⏳'}</span>
+                                            <span>{isRTL ? 'المزود:' : 'Provider:'} {a.provider_approved_at ? '✅' : '⏳'}</span>
+                                            <span>{formatDate(a.created_at)}</span>
+                                          </div>
+                                          {canApproveAmendment && (
+                                            <Button size="sm" variant="outline" className="h-6 text-[9px] gap-1 mt-2 text-emerald-600 border-emerald-300" onClick={() => approveAmendmentMutation.mutate({ amendmentId: a.id, contract: c })}>
+                                              <CheckCircle2 className="w-3 h-3" />{isRTL ? 'موافقة على الملحق' : 'Approve Amendment'}
+                                            </Button>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                ) : locked && <p className="text-center py-3 text-muted-foreground text-xs">{isRTL ? 'لا توجد ملاحق' : 'No amendments yet'}</p>}
+                              </TabsContent>
+
+                              {/* ═══ Actions Tab ═══ */}
                               <TabsContent value="actions" className="mt-0">
                                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                                   <Button variant="outline" size="sm" className="gap-1.5 text-xs h-9" onClick={() => handleExportPDF(c)} disabled={isExporting}>
@@ -1265,9 +1570,14 @@ const DashboardContracts = () => {
                                       <CheckCircle2 className="w-3.5 h-3.5" />{isRTL ? 'موافقة' : 'Approve'}
                                     </Button>
                                   )}
-                                  {(c.status === 'draft' || c.status === 'pending_approval') && user?.id === c.provider_id && (
+                                  {!locked && user?.id === c.provider_id && (
                                     <Button variant="outline" size="sm" className="gap-1.5 text-xs h-9" onClick={() => openEditContract(c)}>
                                       <FileText className="w-3.5 h-3.5" />{isRTL ? 'تعديل' : 'Edit'}
+                                    </Button>
+                                  )}
+                                  {locked && (
+                                    <Button variant="outline" size="sm" className="gap-1.5 text-xs h-9 text-amber-600 border-amber-300" onClick={() => setShowAddAmendment(c.id)}>
+                                      <FileText className="w-3.5 h-3.5" />{isRTL ? 'طلب ملحق' : 'Amendment'}
                                     </Button>
                                   )}
                                   <Button variant="outline" size="sm" className="gap-1.5 text-xs h-9" onClick={() => navigate(`/contracts/${c.id}`)}>

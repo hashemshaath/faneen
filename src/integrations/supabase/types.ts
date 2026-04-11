@@ -976,6 +976,74 @@ export type Database = {
           },
         ]
       }
+      contract_amendments: {
+        Row: {
+          amendment_type: string
+          client_approved_at: string | null
+          contract_id: string
+          created_at: string
+          description_ar: string | null
+          description_en: string | null
+          id: string
+          new_amount: number | null
+          new_end_date: string | null
+          provider_approved_at: string | null
+          rejected_by: string | null
+          rejection_reason: string | null
+          requested_by: string
+          status: string
+          title_ar: string
+          title_en: string | null
+          updated_at: string
+        }
+        Insert: {
+          amendment_type?: string
+          client_approved_at?: string | null
+          contract_id: string
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          id?: string
+          new_amount?: number | null
+          new_end_date?: string | null
+          provider_approved_at?: string | null
+          rejected_by?: string | null
+          rejection_reason?: string | null
+          requested_by: string
+          status?: string
+          title_ar: string
+          title_en?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amendment_type?: string
+          client_approved_at?: string | null
+          contract_id?: string
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          id?: string
+          new_amount?: number | null
+          new_end_date?: string | null
+          provider_approved_at?: string | null
+          rejected_by?: string | null
+          rejection_reason?: string | null
+          requested_by?: string
+          status?: string
+          title_ar?: string
+          title_en?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_amendments_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contract_attachments: {
         Row: {
           contract_id: string
