@@ -78,13 +78,6 @@ const providerGroups: MenuGroup[] = [
     ],
   },
   {
-    groupLabel: { ar: 'الأدوات', en: 'Tools' },
-    icon: Brain,
-    items: [
-      { label: { ar: 'مركز الذكاء', en: 'AI Center' }, url: '/dashboard/ai-center', icon: Brain },
-    ],
-  },
-  {
     groupLabel: { ar: 'الحساب', en: 'Account' },
     icon: Settings,
     items: [
@@ -116,10 +109,9 @@ const userGroups: MenuGroup[] = [
     ],
   },
   {
-    groupLabel: { ar: 'الأدوات والمزيد', en: 'Tools & More' },
-    icon: Brain,
+    groupLabel: { ar: 'المزيد', en: 'More' },
+    icon: Bookmark,
     items: [
-      { label: { ar: 'مركز الذكاء', en: 'AI Center' }, url: '/dashboard/ai-center', icon: Brain },
       { label: { ar: 'المفضلة', en: 'Bookmarks' }, url: '/dashboard/bookmarks', icon: Bookmark },
       { label: { ar: 'العمليات', en: 'Operations' }, url: '/dashboard/operations', icon: Activity },
     ],
@@ -178,6 +170,7 @@ const adminBaseGroups: MenuGroup[] = [
     groupLabel: { ar: 'النظام والأمان', en: 'System & Security' },
     icon: Cog,
     items: [
+      { label: { ar: 'مركز الذكاء', en: 'AI Center' }, url: '/admin/ai-center', icon: Brain },
       { label: { ar: 'إعدادات النظام', en: 'System Settings' }, url: '/admin/system-settings', icon: ShieldAlert, superAdminOnly: true },
       { label: { ar: 'إعدادات API', en: 'API Settings' }, url: '/admin/api-settings', icon: Key },
       { label: { ar: 'توثيق API', en: 'API Docs' }, url: '/admin/api-docs', icon: Book },
