@@ -202,7 +202,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
               </p>
             )}
             {email && !errors.email && !emailExists && (
-              <p className="flex items-center gap-1 text-xs text-emerald-600 mt-1">
+              <p className="flex items-center gap-1 text-xs text-accent mt-1">
                 <CheckCircle className="w-3 h-3" />
                 {isRTL ? 'صيغة البريد صحيحة' : 'Valid email format'}
               </p>
