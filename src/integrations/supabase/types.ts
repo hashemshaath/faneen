@@ -2870,6 +2870,14 @@ export type Database = {
         Args: { _promotion_id: string }
         Returns: undefined
       }
+      is_business_owner_or_manager: {
+        Args: { _business_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_business_staff: {
+        Args: { _business_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
