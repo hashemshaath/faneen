@@ -155,6 +155,36 @@ export type Database = {
         }
         Relationships: []
       }
+      auth_rate_limits: {
+        Row: {
+          attempt_type: string
+          attempts: number
+          blocked_until: string | null
+          first_attempt_at: string
+          id: string
+          identifier: string
+          last_attempt_at: string
+        }
+        Insert: {
+          attempt_type?: string
+          attempts?: number
+          blocked_until?: string | null
+          first_attempt_at?: string
+          id?: string
+          identifier: string
+          last_attempt_at?: string
+        }
+        Update: {
+          attempt_type?: string
+          attempts?: number
+          blocked_until?: string | null
+          first_attempt_at?: string
+          id?: string
+          identifier?: string
+          last_attempt_at?: string
+        }
+        Relationships: []
+      }
       blog_bookmarks: {
         Row: {
           created_at: string
@@ -2831,6 +2861,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_rate_limit: {
+        Args: {
+          _block_minutes?: number
+          _identifier: string
+          _max_attempts?: number
+          _type: string
+          _window_minutes?: number
+        }
+        Returns: boolean
+      }
       cleanup_expired_otps: { Args: never; Returns: undefined }
       create_notification: {
         Args: {
@@ -2849,6 +2889,28 @@ export type Database = {
       generate_ref_id: {
         Args: { _prefix: string; _seq_name: string }
         Returns: string
+      }
+      get_public_branch_data: {
+        Args: { _branch_id: string }
+        Returns: {
+          address: string
+          business_id: string
+          city_id: string
+          country_id: string
+          district: string
+          email: string
+          id: string
+          is_main: boolean
+          latitude: number
+          longitude: number
+          mobile: string
+          name_ar: string
+          name_en: string
+          phone: string
+          region: string
+          sort_order: number
+          website: string
+        }[]
       }
       has_admin_access: { Args: { _user_id: string }; Returns: boolean }
       has_business_role: {
