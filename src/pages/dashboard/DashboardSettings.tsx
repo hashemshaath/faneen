@@ -398,7 +398,8 @@ const DashboardSettings = () => {
                 {[
                   { icon: Hash, label: isRTL ? 'رقم الحساب' : 'Account #', value: profile?.account_number, tech: true },
                   { icon: Globe, label: isRTL ? 'اللغة المفضلة' : 'Language', value: language === 'ar' ? 'العربية' : 'English' },
-                  { icon: Mail, label: isRTL ? 'البريد' : 'Email', value: user?.email, tech: true },
+                  { icon: Mail, label: isRTL ? 'بريد تسجيل الدخول' : 'Login Email', value: user?.email, tech: true },
+                  { icon: Mail, label: isRTL ? 'بريد الملف الشخصي' : 'Profile Email', value: profile?.email || '-', tech: true },
                   { icon: Fingerprint, label: isRTL ? 'المعرف' : 'Ref ID', value: profile?.ref_id, tech: true },
                 ].map((item, i) => (
                   <div key={i} className="flex items-center justify-between p-2 rounded-lg bg-muted/20 hover:bg-muted/30 transition-colors">
