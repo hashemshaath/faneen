@@ -79,35 +79,47 @@ export type Database = {
       }
       ai_assistant_settings: {
         Row: {
+          content_instructions: string
           created_at: string | null
+          default_model: string
+          default_tone: string
           id: string
           include_knowledge: boolean | null
           language_preference: string | null
           max_knowledge_entries: number | null
           response_style: string | null
           system_prompt: string | null
+          translation_instructions: string
           updated_at: string | null
           user_id: string
         }
         Insert: {
+          content_instructions?: string
           created_at?: string | null
+          default_model?: string
+          default_tone?: string
           id?: string
           include_knowledge?: boolean | null
           language_preference?: string | null
           max_knowledge_entries?: number | null
           response_style?: string | null
           system_prompt?: string | null
+          translation_instructions?: string
           updated_at?: string | null
           user_id: string
         }
         Update: {
+          content_instructions?: string
           created_at?: string | null
+          default_model?: string
+          default_tone?: string
           id?: string
           include_knowledge?: boolean | null
           language_preference?: string | null
           max_knowledge_entries?: number | null
           response_style?: string | null
           system_prompt?: string | null
+          translation_instructions?: string
           updated_at?: string | null
           user_id?: string
         }
