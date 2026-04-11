@@ -63,7 +63,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchProviderAccess = useCallback(async (userId: string) => {
     try {
-      const [{ data: ownedBusiness }, { data: staffMembership }] = await Promise.all([
+      // Run queries independently so one failure doesn't block the other
+      const [bizResult, staffResult] = await Promise.allSettled([
         supabase
           .from('businesses')
           .select('id')
@@ -78,6 +79,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .limit(1)
           .maybeSingle(),
       ]);
+
+      const ownedBusiness = bizResult.status === 'fulfilled' ? bizResult.value.data : null;
+      const staffMembership = staffResult.status === 'fulfilled' ? staffResult.value.data : null;
 
       const hasProviderAccess = Boolean(ownedBusiness?.id || staffMembership?.id);
       setProviderAccess(hasProviderAccess);

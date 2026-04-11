@@ -82,7 +82,7 @@ export const TopProvidersSection = () => {
               return (
                 <Link
                   key={biz.id}
-                  to={`/business/${biz.username}`}
+                  to={`/${biz.username}`}
                   className={`group block rounded-2xl border border-border/50 dark:border-border/30 bg-card dark:bg-card/60 p-4 sm:p-5 hover:border-accent/40 hover:shadow-lg hover:shadow-accent/5 sm:hover:-translate-y-1 transition-all duration-500 ${isVisible ? 'animate-card-slide-up' : 'opacity-0'}`}
                   style={{ animationDelay: `${i * 80}ms`, animationFillMode: 'both' }}
                 >
