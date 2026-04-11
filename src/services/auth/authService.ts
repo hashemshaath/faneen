@@ -101,7 +101,13 @@ export const authService = {
   },
 
   // ─── Profile & Business ──────────────────────────────
-  async updateProfile(userId: string, profileData: Record<string, any>) {
+  async updateProfile(userId: string, profileData: {
+    full_name?: string;
+    account_type?: string;
+    is_onboarded?: boolean;
+    phone?: string;
+    country_code?: string;
+  }) {
     const { error } = await supabase
       .from('profiles')
       .update(profileData)
