@@ -297,7 +297,7 @@ const DashboardSettings = () => {
                   </div>
                   <Button variant="ghost" size="sm" className="text-xs gap-1 h-7" onClick={() => {
                     if (editingProfile) { updateProfileMutation.mutate(); }
-                    else { setProfileForm({ full_name: profile?.full_name || '', phone: profile?.phone || '', avatar_url: profile?.avatar_url || '' }); setEditingProfile(true); }
+                    else { setEditingProfile(true); }
                   }} disabled={updateProfileMutation.isPending}>
                     {editingProfile ? <><Check className="w-3 h-3" />{isRTL ? 'حفظ' : 'Save'}</> : <><Camera className="w-3 h-3" />{isRTL ? 'تعديل' : 'Edit'}</>}
                   </Button>
