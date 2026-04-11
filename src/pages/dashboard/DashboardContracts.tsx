@@ -364,24 +364,40 @@ const DashboardContracts = () => {
     },
   });
 
+  /* ── Deduplicate contracts (user could be both client & provider) ── */
+  const uniqueContracts = useMemo(() => {
+    const seen = new Set<string>();
+    return contracts.filter((c: any) => {
+      if (seen.has(c.id)) return false;
+      seen.add(c.id);
+      return true;
+    });
+  }, [contracts]);
+
   /* ── Helpers ── */
-  const stats = useMemo(() => ({
-    total: contracts.length,
-    active: contracts.filter((c: any) => c.status === 'active').length,
-    completed: contracts.filter((c: any) => c.status === 'completed').length,
-    pending: contracts.filter((c: any) => c.status === 'pending_approval' || c.status === 'draft').length,
-    totalAmount: contracts.reduce((s: number, c: any) => s + Number(c.total_amount), 0),
-  }), [contracts]);
+  const stats = useMemo(() => {
+    const asProvider = uniqueContracts.filter((c: any) => c.provider_id === user?.id);
+    const asClient = uniqueContracts.filter((c: any) => c.client_id === user?.id);
+    return {
+      total: uniqueContracts.length,
+      active: uniqueContracts.filter((c: any) => c.status === 'active').length,
+      completed: uniqueContracts.filter((c: any) => c.status === 'completed').length,
+      pending: uniqueContracts.filter((c: any) => c.status === 'pending_approval' || c.status === 'draft').length,
+      totalAmount: asProvider.reduce((s: number, c: any) => s + Number(c.total_amount), 0),
+      asProvider: asProvider.length,
+      asClient: asClient.length,
+    };
+  }, [uniqueContracts, user?.id]);
 
   const filtered = useMemo(() => {
-    let result = contracts;
+    let result = uniqueContracts;
     if (statusFilter !== 'all') result = result.filter((c: any) => c.status === statusFilter);
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter((c: any) => c.title_ar.toLowerCase().includes(q) || (c.title_en || '').toLowerCase().includes(q) || c.contract_number.toLowerCase().includes(q));
     }
     return result;
-  }, [contracts, statusFilter, searchQuery]);
+  }, [uniqueContracts, statusFilter, searchQuery]);
 
   const formatDate = (d: string | null) => d ? new Date(d).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '-';
 

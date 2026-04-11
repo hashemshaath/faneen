@@ -119,10 +119,17 @@ const Contracts = () => {
   }
 
   const isLoading = loadingClient || loadingProvider;
+  
+  // Deduplicate: if user is both client & provider on same contract, show once
+  const seen = new Set<string>();
   const allContracts = [
     ...(clientContracts?.map(c => ({ ...c, _role: 'client' as const })) || []),
     ...(providerContracts?.map(c => ({ ...c, _role: 'provider' as const })) || []),
-  ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  ].filter(c => {
+    if (seen.has(c.id)) return false;
+    seen.add(c.id);
+    return true;
+  }).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
   return (
     <div className="min-h-screen bg-background">
