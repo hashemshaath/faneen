@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -29,17 +29,29 @@ import { useBrowserNotifications } from '@/hooks/useBrowserNotifications';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { ar as arLocale, enUS } from 'date-fns/locale';
+import { useSearchParams } from 'react-router-dom';
 
 type SettingsTab = 'appearance' | 'account' | 'security' | 'notifications' | 'bnpl';
 
 const DashboardSettings = () => {
   const { isRTL, language } = useLanguage();
-  const { user, profile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   const { theme, setTheme } = useThemeMode();
   const queryClient = useQueryClient();
   const { isSupported: notifSupported, requestPermission, permission } = useBrowserNotifications();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const [activeTab, setActiveTab] = useState<SettingsTab>('appearance');
+  const validTabs: SettingsTab[] = ['appearance', 'account', 'security', 'notifications', 'bnpl'];
+  const tabFromUrl = searchParams.get('tab') as SettingsTab | null;
+  const [activeTab, setActiveTabState] = useState<SettingsTab>(
+    tabFromUrl && validTabs.includes(tabFromUrl) ? tabFromUrl : 'appearance'
+  );
+
+  const setActiveTab = useCallback((tab: SettingsTab) => {
+    setActiveTabState(tab);
+    setSearchParams({ tab }, { replace: true });
+  }, [setSearchParams]);
+
   const [accent, setAccentState] = useState(getStoredAccent);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -49,10 +61,21 @@ const DashboardSettings = () => {
   // Profile edit state
   const [editingProfile, setEditingProfile] = useState(false);
   const [profileForm, setProfileForm] = useState({
-    full_name: profile?.full_name || '',
-    phone: profile?.phone || '',
-    avatar_url: profile?.avatar_url || '',
+    full_name: '',
+    phone: '',
+    avatar_url: '',
   });
+
+  // Sync profile form with latest profile data
+  useEffect(() => {
+    if (profile && !editingProfile) {
+      setProfileForm({
+        full_name: profile.full_name || '',
+        phone: profile.phone || '',
+        avatar_url: profile.avatar_url || '',
+      });
+    }
+  }, [profile, editingProfile]);
 
   const { data: business } = useQuery({
     queryKey: ['my-business-for-settings'],
