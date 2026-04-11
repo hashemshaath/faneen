@@ -126,17 +126,19 @@ const DashboardSettings = () => {
 
   const updateProfileMutation = useMutation({
     mutationFn: async () => {
+      if (!user) throw new Error('Not authenticated');
       const { error } = await supabase.from('profiles').update({
-        full_name: profileForm.full_name,
-        phone: profileForm.phone,
+        full_name: profileForm.full_name.trim(),
+        phone: profileForm.phone.trim(),
         avatar_url: profileForm.avatar_url,
-      }).eq('user_id', user!.id);
+      }).eq('user_id', user.id);
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
+      await refreshProfile();
       queryClient.invalidateQueries({ queryKey: ['profile'] });
       setEditingProfile(false);
-      toast.success(isRTL ? 'تم تحديث الملف الشخصي' : 'Profile updated');
+      toast.success(isRTL ? 'تم تحديث الملف الشخصي بنجاح' : 'Profile updated successfully');
     },
     onError: (e: any) => toast.error(e.message),
   });
