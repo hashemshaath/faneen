@@ -420,6 +420,16 @@ const DashboardContracts = () => {
     enabled: contractIds.length > 0,
   });
 
+  const { data: allAmendments = [] } = useQuery({
+    queryKey: ['dashboard-contract-amendments', contractIds],
+    queryFn: async () => {
+      if (contractIds.length === 0) return [];
+      const { data } = await supabase.from('contract_amendments').select('*').in('contract_id', contractIds).order('created_at', { ascending: false });
+      return data ?? [];
+    },
+    enabled: contractIds.length > 0,
+  });
+
   const { data: profiles = [] } = useQuery({
     queryKey: ['contract-profiles', contractIds],
     queryFn: async () => {
@@ -450,6 +460,9 @@ const DashboardContracts = () => {
     enabled: !!user,
   });
 
+  /* ── Helper: isLocked ── */
+  const isContractLocked = (c: any) => ['active', 'completed', 'cancelled'].includes(c.status);
+
   /* ── Mutations ── */
   const addNoteMutation = useMutation({
     mutationFn: async ({ contractId, content, noteType }: { contractId: string; content: string; noteType?: string }) => {
@@ -457,6 +470,111 @@ const DashboardContracts = () => {
       if (error) throw error;
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['dashboard-contract-notes'] }); setNoteText(''); toast.success(isRTL ? 'تمت إضافة الملاحظة' : 'Note added'); },
+  });
+
+  const addMeasurementMutation = useMutation({
+    mutationFn: async ({ contractId }: { contractId: string }) => {
+      const area = (Number(measurementForm.length_mm) * Number(measurementForm.width_mm)) / 1000000;
+      const totalCost = Number(measurementForm.unit_price) * Number(measurementForm.quantity);
+      const { error } = await supabase.from('contract_measurements').insert({
+        contract_id: contractId, name_ar: measurementForm.name_ar, piece_number: measurementForm.piece_number,
+        floor_label: measurementForm.floor_label, location_ar: measurementForm.location_ar,
+        length_mm: Number(measurementForm.length_mm), width_mm: Number(measurementForm.width_mm),
+        quantity: Number(measurementForm.quantity), unit_price: Number(measurementForm.unit_price),
+        area_sqm: area, total_cost: totalCost,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard-contract-measurements'] });
+      setShowAddMeasurement(null);
+      setMeasurementForm({ name_ar: '', piece_number: '', floor_label: 'ground_floor', location_ar: '', length_mm: '', width_mm: '', quantity: '1', unit_price: '' });
+      toast.success(isRTL ? 'تمت إضافة المقاس' : 'Measurement added');
+    },
+    onError: (err: any) => toast.error(err.message),
+  });
+
+  const addMilestoneMutation = useMutation({
+    mutationFn: async ({ contractId }: { contractId: string }) => {
+      const existing = allMilestones.filter(m => m.contract_id === contractId);
+      const { error } = await supabase.from('contract_milestones').insert({
+        contract_id: contractId, title_ar: milestoneForm.title_ar,
+        amount: Number(milestoneForm.amount), due_date: milestoneForm.due_date || null,
+        sort_order: existing.length + 1,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard-milestones'] });
+      setShowAddMilestone(null);
+      setMilestoneForm({ title_ar: '', amount: '', due_date: '' });
+      toast.success(isRTL ? 'تمت إضافة المرحلة' : 'Milestone added');
+    },
+    onError: (err: any) => toast.error(err.message),
+  });
+
+  const addAmendmentMutation = useMutation({
+    mutationFn: async ({ contractId }: { contractId: string }) => {
+      const { error } = await supabase.from('contract_amendments').insert({
+        contract_id: contractId, requested_by: user!.id,
+        title_ar: amendmentForm.title_ar, description_ar: amendmentForm.description_ar || null,
+        amendment_type: amendmentForm.amendment_type,
+        new_amount: amendmentForm.new_amount ? Number(amendmentForm.new_amount) : null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard-contract-amendments'] });
+      setShowAddAmendment(null);
+      setAmendmentForm({ title_ar: '', description_ar: '', amendment_type: 'scope_change', new_amount: '' });
+      toast.success(isRTL ? 'تم إرسال طلب التعديل' : 'Amendment request sent');
+    },
+    onError: (err: any) => toast.error(err.message),
+  });
+
+  const approveAmendmentMutation = useMutation({
+    mutationFn: async ({ amendmentId, contract }: { amendmentId: string; contract: any }) => {
+      const isClient = user?.id === contract.client_id;
+      const field = isClient ? 'client_approved_at' : 'provider_approved_at';
+      const update: any = { [field]: new Date().toISOString() };
+      // Check if other party already approved
+      const amendment = allAmendments.find((a: any) => a.id === amendmentId);
+      const otherApproved = isClient ? amendment?.provider_approved_at : amendment?.client_approved_at;
+      if (otherApproved) update.status = 'approved';
+      const { error } = await supabase.from('contract_amendments').update(update).eq('id', amendmentId);
+      if (error) throw error;
+      // If both approved and has new_amount, update contract
+      if (otherApproved && amendment?.new_amount) {
+        await supabase.from('contracts').update({ total_amount: amendment.new_amount }).eq('id', contract.id);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard-contract-amendments'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-contracts'] });
+      toast.success(isRTL ? 'تمت الموافقة على التعديل' : 'Amendment approved');
+    },
+  });
+
+  const uploadAttachmentMutation = useMutation({
+    mutationFn: async ({ contractId, file }: { contractId: string; file: File }) => {
+      const ext = file.name.split('.').pop();
+      const path = `${contractId}/${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage.from('contract-attachments').upload(path, file);
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage.from('contract-attachments').getPublicUrl(path);
+      const fileType = file.type.startsWith('image/') ? 'image' : 'document';
+      const { error } = await supabase.from('contract_attachments').insert({
+        contract_id: contractId, user_id: user!.id, file_name: file.name,
+        file_url: urlData.publicUrl, file_type: fileType,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard-contract-attachments'] });
+      setUploadingContractId(null);
+      toast.success(isRTL ? 'تم رفع المرفق' : 'Attachment uploaded');
+    },
+    onError: (err: any) => toast.error(err.message),
   });
 
   const createContractMutation = useMutation({
