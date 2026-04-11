@@ -20,6 +20,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const BackArrow = isRTL ? ArrowRight : ArrowLeft;
+  const { errors, validateEmailField, clearError } = useFieldValidation(isRTL);
 
   const handleSubmit = async () => {
     if (!email || !validateEmail(email)) {
