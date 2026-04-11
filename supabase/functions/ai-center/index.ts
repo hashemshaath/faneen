@@ -9,7 +9,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { action, text, sourceLang, targetLang, tone, model, context, knowledgeContext, systemPromptOverride, responseStyle } = await req.json();
+    const { action, text, sourceLang, targetLang, tone, model, context, knowledgeContext, systemPromptOverride, responseStyle, translationInstructions, contentInstructions } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
@@ -28,9 +28,12 @@ serve(async (req) => {
     let userPrompt = text;
 
     switch (action) {
-      case "translate":
-        systemPrompt = `You are an expert translator. Translate from ${sourceLang === 'ar' ? 'Arabic' : 'English'} to ${targetLang === 'ar' ? 'Arabic' : 'English'}. ${toneInstruction} Return ONLY the translation as clean plain text. No markdown symbols.`;
+      case "translate": {
+        let extra = '';
+        if (translationInstructions) extra = `\nAdditional translation rules:\n${translationInstructions}\n`;
+        systemPrompt = `You are an expert translator. Translate from ${sourceLang === 'ar' ? 'Arabic' : 'English'} to ${targetLang === 'ar' ? 'Arabic' : 'English'}. ${toneInstruction} Return ONLY the translation as clean plain text. No markdown symbols.${extra}`;
         break;
+      }
 
       case "improve":
         systemPrompt = `You are an expert content editor. Improve the given text for clarity, readability and engagement. ${toneInstruction} ${styleInstruction} Maintain the original language. Return ONLY the improved text as plain text. No markdown symbols unless the text is a long article.`;
