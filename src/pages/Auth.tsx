@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRoleRedirect } from '@/hooks/useRoleRedirect';
 import { AuthLayout } from '@/components/auth/AuthLayout';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { RegisterForm } from '@/components/auth/RegisterForm';
@@ -10,8 +11,8 @@ import type { AuthMode } from '@/services/auth/types';
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const { user, profile, loading } = useAuth();
+  const { user, loading } = useAuth();
+  const { redirectByRole } = useRoleRedirect();
 
   const initialMode = (searchParams.get('mode') as AuthMode) || 'login';
   const [mode, setMode] = useState<AuthMode>(
@@ -19,17 +20,13 @@ const Auth = () => {
   );
   const [sentEmail, setSentEmail] = useState('');
 
-  // Redirect authenticated users
+  // Role-based redirect for authenticated users
   useEffect(() => {
     if (loading) return;
     if (user) {
-      if (profile && !profile.is_onboarded) {
-        navigate('/onboarding', { replace: true });
-      } else {
-        navigate('/', { replace: true });
-      }
+      redirectByRole();
     }
-  }, [user, profile, loading, navigate]);
+  }, [user, loading, redirectByRole]);
 
   const handleEmailSent = (email: string) => {
     setSentEmail(email);

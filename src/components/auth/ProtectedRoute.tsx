@@ -43,12 +43,15 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requireProvider = false,
   skipOnboarding = false,
 }) => {
-  const { user, loading, isAdmin, isSuperAdmin, isProvider, profile } = useAuth();
+  const { user, loading, isAdmin, isSuperAdmin, isProvider, profile, roles } = useAuth();
   const location = useLocation();
   const loggedRef = useRef(false);
 
+  // Wait until roles are actually loaded (not just user)
+  const rolesLoaded = !loading && (user ? roles.length > 0 || profile !== null : true);
+
   const shouldDeny =
-    !loading &&
+    rolesLoaded &&
     user &&
     ((requireSuperAdmin && !isSuperAdmin) ||
      (requireAdmin && !isAdmin) ||
@@ -62,7 +65,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     }
   }, [shouldDeny, user?.id, location.pathname, requireSuperAdmin, requireAdmin]);
 
-  if (loading) {
+  if (loading || !rolesLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="w-10 h-10 rounded-xl bg-gradient-gold flex items-center justify-center animate-pulse">
@@ -73,7 +76,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }
 
   if (requireAuth && !user) {
-    return <Navigate to="/auth" replace />;
+    return <Navigate to="/auth" state={{ from: location.pathname }} replace />;
   }
 
   // Redirect to onboarding if profile is not complete
