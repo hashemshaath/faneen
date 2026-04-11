@@ -10,6 +10,8 @@ import { PhoneInput } from './PhoneInput';
 import { OtpInput } from './OtpInput';
 import { GoogleAuthButton } from './GoogleAuthButton';
 import { AuthDivider } from './AuthDivider';
+import { FieldError } from './FieldError';
+import { useFieldValidation } from '@/hooks/useFieldValidation';
 
 interface LoginFormProps {
   onSwitchToRegister: () => void;
@@ -28,7 +30,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
-  // Phone OTP hook — no navigate here, AuthContext + Auth.tsx handle redirect
+  const { errors, validateEmailField, validatePhoneField, clearError } = useFieldValidation(isRTL);
+
   const otp = useOtpFlow({
     isRTL,
     onSendOtp: () => authService.sendLoginOtp(phone, countryCode),
@@ -45,20 +48,23 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
       }
       await authService.setSessionFromOtp(response);
       toast.success(isRTL ? 'تم تسجيل الدخول بنجاح' : 'Signed in successfully');
-      // Auth.tsx useEffect will handle role-based redirect
     },
   });
 
   const handleEmailLogin = async () => {
-    if (!email || !password) {
-      toast.error(isRTL ? 'يرجى إدخال البريد وكلمة المرور' : 'Please enter email and password');
+    // Validate email format first
+    if (!email || !validateEmailField(email)) {
+      if (!email) toast.error(isRTL ? 'يرجى إدخال البريد الإلكتروني' : 'Please enter your email');
+      return;
+    }
+    if (!password) {
+      toast.error(isRTL ? 'يرجى إدخال كلمة المرور' : 'Please enter your password');
       return;
     }
     setLoading(true);
     try {
       await authService.signInWithEmail(email, password);
       toast.success(t('common.success'));
-      // Auth.tsx useEffect will handle role-based redirect
     } catch (err: any) {
       const msg = err.message || '';
       if (msg.includes('Invalid login')) {
@@ -74,8 +80,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
   };
 
   const handlePhoneSend = async () => {
-    if (!phone || phone.length < 7) {
-      toast.error(isRTL ? 'أدخل رقم جوال صحيح' : 'Enter a valid phone number');
+    if (!phone || !validatePhoneField(phone)) {
+      if (!phone) toast.error(isRTL ? 'أدخل رقم جوال صحيح' : 'Enter a valid phone number');
       return;
     }
     const ok = await otp.sendOtp();
@@ -92,7 +98,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
     setGoogleLoading(true);
     try {
       await authService.signInWithGoogle();
-      // OAuth redirect handles the rest
     } catch (err: any) {
       toast.error(err.message);
     } finally {
@@ -113,7 +118,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
 
       <div className="flex rounded-xl bg-muted/50 p-1 gap-1">
         <button
-          onClick={() => { setLoginMethod('phone'); otp.resetOtp(); }}
+          onClick={() => { setLoginMethod('phone'); otp.resetOtp(); clearError('phone'); }}
           className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${
             loginMethod === 'phone' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
           }`}
@@ -122,7 +127,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
           {isRTL ? 'رقم الجوال' : 'Phone'}
         </button>
         <button
-          onClick={() => { setLoginMethod('email'); otp.resetOtp(); }}
+          onClick={() => { setLoginMethod('email'); otp.resetOtp(); clearError('email'); }}
           className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${
             loginMethod === 'email' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
           }`}
@@ -134,8 +139,13 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
 
       {loginMethod === 'phone' && !otp.otpStep && (
         <div className="space-y-4 animate-fade-in">
-          <PhoneInput phone={phone} countryCode={countryCode} onPhoneChange={setPhone} onCountryCodeChange={setCountryCode} isRTL={isRTL} />
-          <Button onClick={handlePhoneSend} disabled={otp.loading} className="w-full h-11" variant="hero">
+          <PhoneInput
+            phone={phone} countryCode={countryCode} onPhoneChange={(v) => { setPhone(v); clearError('phone'); }}
+            onCountryCodeChange={setCountryCode} isRTL={isRTL}
+            error={errors.phone}
+            onBlur={() => phone && validatePhoneField(phone)}
+          />
+          <Button onClick={handlePhoneSend} disabled={otp.loading || !!errors.phone} className="w-full h-11" variant="hero">
             {otp.loading && <Loader2 className="w-4 h-4 animate-spin me-2" />}
             {isRTL ? 'إرسال رمز التحقق' : 'Send Verification Code'}
           </Button>
@@ -156,9 +166,17 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
             <Label>{t('auth.email')}</Label>
             <div className="relative">
               <Mail className="absolute top-3 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
-              <Input type="email" placeholder="example@email.com" value={email} onChange={(e) => setEmail(e.target.value)} dir="ltr" style={{ paddingInlineStart: '40px' }}
-                onKeyDown={(e) => e.key === 'Enter' && handleEmailLogin()} />
+              <Input
+                type="email" placeholder="example@email.com" value={email}
+                onChange={(e) => { setEmail(e.target.value); clearError('email'); }}
+                onBlur={() => email && validateEmailField(email)}
+                dir="ltr"
+                style={{ paddingInlineStart: '40px' }}
+                className={errors.email ? 'border-destructive focus-visible:ring-destructive' : ''}
+                onKeyDown={(e) => e.key === 'Enter' && handleEmailLogin()}
+              />
             </div>
+            <FieldError message={errors.email} />
           </div>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -175,7 +193,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
               </button>
             </div>
           </div>
-          <Button onClick={handleEmailLogin} disabled={loading} className="w-full h-11" variant="hero">
+          <Button onClick={handleEmailLogin} disabled={loading || !!errors.email} className="w-full h-11" variant="hero">
             {loading && <Loader2 className="w-4 h-4 animate-spin me-2" />}
             {loading ? t('common.loading') : t('auth.login')}
           </Button>
