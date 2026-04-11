@@ -84,20 +84,20 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
           <Label>{t('auth.email')}</Label>
           <div className="relative">
             <Mail className="absolute top-3 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
-              <Input
-                type="email"
-                value={email}
-                onChange={(e) => { setEmail(e.target.value); clearError('email'); }}
-                onBlur={() => email && validateEmailField(email)}
-                dir="ltr"
-                style={{ paddingInlineStart: '40px' }}
-                className={errors.email ? 'border-destructive focus-visible:ring-destructive' : ''}
-                onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-                autoComplete="email"
-              />
-            </div>
-            <FieldErrorDisplay message={errors.email} />
+            <Input
+              type="email"
+              value={email}
+              onChange={(e) => { setEmail(e.target.value); clearError('email'); }}
+              onBlur={() => email && validateEmailField(email)}
+              dir="ltr"
+              style={{ paddingInlineStart: '40px' }}
+              className={errors.email ? 'border-destructive focus-visible:ring-destructive' : ''}
+              onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+              autoComplete="email"
+            />
           </div>
+          <FieldErrorDisplay message={errors.email} />
+        </div>
         </div>
         <Button onClick={handleSubmit} disabled={loading} className="w-full h-11" variant="hero">
           {loading && <Loader2 className="w-4 h-4 animate-spin me-2" />}
