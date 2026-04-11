@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -29,17 +29,29 @@ import { useBrowserNotifications } from '@/hooks/useBrowserNotifications';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { ar as arLocale, enUS } from 'date-fns/locale';
+import { useSearchParams } from 'react-router-dom';
 
 type SettingsTab = 'appearance' | 'account' | 'security' | 'notifications' | 'bnpl';
 
 const DashboardSettings = () => {
   const { isRTL, language } = useLanguage();
-  const { user, profile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   const { theme, setTheme } = useThemeMode();
   const queryClient = useQueryClient();
   const { isSupported: notifSupported, requestPermission, permission } = useBrowserNotifications();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const [activeTab, setActiveTab] = useState<SettingsTab>('appearance');
+  const validTabs: SettingsTab[] = ['appearance', 'account', 'security', 'notifications', 'bnpl'];
+  const tabFromUrl = searchParams.get('tab') as SettingsTab | null;
+  const [activeTab, setActiveTabState] = useState<SettingsTab>(
+    tabFromUrl && validTabs.includes(tabFromUrl) ? tabFromUrl : 'appearance'
+  );
+
+  const setActiveTab = useCallback((tab: SettingsTab) => {
+    setActiveTabState(tab);
+    setSearchParams({ tab }, { replace: true });
+  }, [setSearchParams]);
+
   const [accent, setAccentState] = useState(getStoredAccent);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -49,10 +61,23 @@ const DashboardSettings = () => {
   // Profile edit state
   const [editingProfile, setEditingProfile] = useState(false);
   const [profileForm, setProfileForm] = useState({
-    full_name: profile?.full_name || '',
-    phone: profile?.phone || '',
-    avatar_url: profile?.avatar_url || '',
+    full_name: '',
+    phone: '',
+    email: '',
+    avatar_url: '',
   });
+
+  // Sync profile form with latest profile data
+  useEffect(() => {
+    if (profile && !editingProfile) {
+      setProfileForm({
+        full_name: profile.full_name || '',
+        phone: profile.phone || '',
+        email: profile.email || '',
+        avatar_url: profile.avatar_url || '',
+      });
+    }
+  }, [profile, editingProfile]);
 
   const { data: business } = useQuery({
     queryKey: ['my-business-for-settings'],
@@ -103,17 +128,20 @@ const DashboardSettings = () => {
 
   const updateProfileMutation = useMutation({
     mutationFn: async () => {
+      if (!user) throw new Error('Not authenticated');
       const { error } = await supabase.from('profiles').update({
-        full_name: profileForm.full_name,
-        phone: profileForm.phone,
+        full_name: profileForm.full_name.trim(),
+        phone: profileForm.phone.trim(),
+        email: profileForm.email.trim(),
         avatar_url: profileForm.avatar_url,
-      }).eq('user_id', user!.id);
+      }).eq('user_id', user.id);
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
+      await refreshProfile();
       queryClient.invalidateQueries({ queryKey: ['profile'] });
       setEditingProfile(false);
-      toast.success(isRTL ? 'تم تحديث الملف الشخصي' : 'Profile updated');
+      toast.success(isRTL ? 'تم تحديث الملف الشخصي بنجاح' : 'Profile updated successfully');
     },
     onError: (e: any) => toast.error(e.message),
   });
@@ -272,7 +300,7 @@ const DashboardSettings = () => {
                   </div>
                   <Button variant="ghost" size="sm" className="text-xs gap-1 h-7" onClick={() => {
                     if (editingProfile) { updateProfileMutation.mutate(); }
-                    else { setProfileForm({ full_name: profile?.full_name || '', phone: profile?.phone || '', avatar_url: profile?.avatar_url || '' }); setEditingProfile(true); }
+                    else { setEditingProfile(true); }
                   }} disabled={updateProfileMutation.isPending}>
                     {editingProfile ? <><Check className="w-3 h-3" />{isRTL ? 'حفظ' : 'Save'}</> : <><Camera className="w-3 h-3" />{isRTL ? 'تعديل' : 'Edit'}</>}
                   </Button>
@@ -311,6 +339,14 @@ const DashboardSettings = () => {
                           <Input value={profileForm.full_name} onChange={e => setProfileForm(p => ({ ...p, full_name: e.target.value }))} className="h-8 text-xs mt-0.5" />
                         </div>
                         <div>
+                          <Label className="text-[10px]">{isRTL ? 'البريد الإلكتروني (للملف الشخصي)' : 'Email (Profile)'}</Label>
+                          <Input value={profileForm.email} onChange={e => setProfileForm(p => ({ ...p, email: e.target.value }))} className="h-8 text-xs mt-0.5 tech-content" dir="ltr" type="email" />
+                          <p className="text-[9px] text-muted-foreground mt-0.5">
+                            {isRTL ? 'هذا البريد يظهر في ملفك الشخصي. بريد تسجيل الدخول: ' : 'This email shows on your profile. Login email: '}
+                            <span className="tech-content font-medium">{user?.email}</span>
+                          </p>
+                        </div>
+                        <div>
                           <Label className="text-[10px]">{isRTL ? 'رقم الجوال' : 'Phone'}</Label>
                           <Input value={profileForm.phone} onChange={e => setProfileForm(p => ({ ...p, phone: e.target.value }))} className="h-8 text-xs mt-0.5 tech-content" dir="ltr" />
                         </div>
@@ -326,7 +362,7 @@ const DashboardSettings = () => {
                             {profile?.phone_verified && <Badge className="bg-emerald-500/10 text-emerald-600 text-[7px] px-1 py-0 h-3.5 gap-0.5"><CheckCircle className="w-2 h-2" />{isRTL ? 'موثق' : 'Verified'}</Badge>}
                           </div>
                           <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                            <Mail className="w-3 h-3" /><span className="tech-content">{user?.email || '-'}</span>
+                            <Mail className="w-3 h-3" /><span className="tech-content">{profile?.email || user?.email || '-'}</span>
                           </div>
                           {profile?.phone && (
                             <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
@@ -362,7 +398,8 @@ const DashboardSettings = () => {
                 {[
                   { icon: Hash, label: isRTL ? 'رقم الحساب' : 'Account #', value: profile?.account_number, tech: true },
                   { icon: Globe, label: isRTL ? 'اللغة المفضلة' : 'Language', value: language === 'ar' ? 'العربية' : 'English' },
-                  { icon: Mail, label: isRTL ? 'البريد' : 'Email', value: user?.email, tech: true },
+                  { icon: Mail, label: isRTL ? 'بريد تسجيل الدخول' : 'Login Email', value: user?.email, tech: true },
+                  { icon: Mail, label: isRTL ? 'بريد الملف الشخصي' : 'Profile Email', value: profile?.email || '-', tech: true },
                   { icon: Fingerprint, label: isRTL ? 'المعرف' : 'Ref ID', value: profile?.ref_id, tech: true },
                 ].map((item, i) => (
                   <div key={i} className="flex items-center justify-between p-2 rounded-lg bg-muted/20 hover:bg-muted/30 transition-colors">
