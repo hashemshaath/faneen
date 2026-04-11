@@ -23,8 +23,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
   const { errors, validateEmailField, clearError } = useFieldValidation(isRTL);
 
   const handleSubmit = async () => {
-    if (!email || !validateEmail(email)) {
-      toast.error(isRTL ? 'يرجى إدخال بريد إلكتروني صحيح' : 'Please enter a valid email');
+    if (!email || !validateEmailField(email)) {
       return;
     }
     setLoading(true);
