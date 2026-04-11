@@ -3,13 +3,34 @@ import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useCountUp } from "@/hooks/useCountUp";
 import { memo } from "react";
 import { Building2, Star, FolderOpen, TrendingUp } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
-const stats = [
-  { end: 2500, suffix: "+", labelKey: 'stats.providers' as const, icon: Building2 },
-  { end: 15000, suffix: "+", labelKey: 'stats.reviews' as const, icon: Star },
-  { end: 8200, suffix: "+", labelKey: 'stats.projects' as const, icon: FolderOpen },
-  { end: 98, suffix: "%", labelKey: 'stats.satisfaction' as const, icon: TrendingUp },
-];
+const useRealStats = () =>
+  useQuery({
+    queryKey: ['home-real-stats'],
+    queryFn: async () => {
+      const [bizRes, reviewRes, projRes, ratingRes] = await Promise.all([
+        supabase.from('businesses').select('id', { count: 'exact', head: true }).eq('is_active', true),
+        supabase.from('reviews').select('id', { count: 'exact', head: true }),
+        supabase.from('projects').select('id', { count: 'exact', head: true }).eq('status', 'published'),
+        supabase.from('businesses').select('rating_avg').eq('is_active', true).gt('rating_count', 0),
+      ]);
+
+      const businessCount = bizRes.count ?? 0;
+      const reviewCount = reviewRes.count ?? 0;
+      const projectCount = projRes.count ?? 0;
+
+      // Calculate satisfaction as average of all rated businesses' rating_avg (out of 5 → percentage)
+      const ratings = ratingRes.data ?? [];
+      const satisfaction = ratings.length > 0
+        ? Math.round((ratings.reduce((sum, r) => sum + Number(r.rating_avg), 0) / ratings.length / 5) * 100)
+        : 0;
+
+      return { businessCount, reviewCount, projectCount, satisfaction };
+    },
+    staleTime: 5 * 60 * 1000,
+  });
 
 const StatItem = memo(({ end, suffix, labelKey, index, isVisible, icon: Icon }: {
   end: number; suffix: string; labelKey: string; index: number; isVisible: boolean; icon: any;
@@ -37,6 +58,14 @@ StatItem.displayName = 'StatItem';
 
 export const StatsSection = () => {
   const { ref: visRef, isVisible } = useScrollAnimation();
+  const { data } = useRealStats();
+
+  const stats = [
+    { end: data?.businessCount ?? 0, suffix: "+", labelKey: 'stats.providers' as const, icon: Building2 },
+    { end: data?.reviewCount ?? 0, suffix: "+", labelKey: 'stats.reviews' as const, icon: Star },
+    { end: data?.projectCount ?? 0, suffix: "+", labelKey: 'stats.projects' as const, icon: FolderOpen },
+    { end: data?.satisfaction ?? 0, suffix: "%", labelKey: 'stats.satisfaction' as const, icon: TrendingUp },
+  ];
 
   return (
     <section className="py-10 sm:py-20 bg-background relative overflow-hidden">
