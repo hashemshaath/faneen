@@ -577,7 +577,7 @@ const DashboardMessages = () => {
                         <Button variant="ghost" size="icon" className="w-7 h-7"><MoreVertical className="w-3.5 h-3.5" /></Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align={isRTL ? 'start' : 'end'}>
-                        <DropdownMenuItem onClick={() => navigate(`/business/${selectedConv?.other_profile?.username || ''}`)}>
+                        <DropdownMenuItem onClick={() => navigate(`/${selectedConv?.other_profile?.username || ''}`)}>
                           <Eye className="w-3.5 h-3.5 me-2" />{isRTL ? 'عرض الملف' : 'View profile'}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
