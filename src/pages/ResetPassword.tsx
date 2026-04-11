@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '@/i18n/LanguageContext';
+import { authService } from '@/services/auth';
+import { PasswordField } from '@/components/auth/PasswordField';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useLanguage } from '@/i18n/LanguageContext';
-import { supabase } from '@/integrations/supabase/client';
 import { checkPasswordStrength } from '@/lib/password-strength';
 import { toast } from 'sonner';
-import { Lock, Eye, EyeOff } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 const ResetPassword = () => {
   const { t, isRTL } = useLanguage();
@@ -21,8 +22,7 @@ const ResetPassword = () => {
   const strength = checkPasswordStrength(password);
 
   useEffect(() => {
-    const hash = window.location.hash;
-    if (hash.includes('type=recovery')) {
+    if (window.location.hash.includes('type=recovery')) {
       setIsRecovery(true);
     }
   }, []);
@@ -38,8 +38,7 @@ const ResetPassword = () => {
     }
     setLoading(true);
     try {
-      const { error } = await supabase.auth.updateUser({ password });
-      if (error) throw error;
+      await authService.updatePassword(password);
       toast.success(t('common.success'));
       navigate('/');
     } catch (err: any) {
@@ -69,34 +68,15 @@ const ResetPassword = () => {
           <h2 className="font-heading font-bold text-2xl text-foreground text-center">{t('auth.new_password')}</h2>
 
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>{t('auth.new_password')}</Label>
-              <div className="relative">
-                <Lock className="absolute top-3 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
-                <Input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  style={{ paddingInlineStart: '40px', paddingInlineEnd: '40px' }}
-                />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute top-3 text-muted-foreground" style={{ [isRTL ? 'left' : 'right']: '12px' }}>
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-              {password && (
-                <div className="space-y-1.5">
-                  <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                    <div
-                      className="h-full rounded-full transition-all duration-500"
-                      style={{
-                        width: `${strength.percentage}%`,
-                        backgroundColor: strength.score <= 1 ? 'hsl(var(--destructive))' : strength.score === 2 ? 'hsl(var(--gold))' : 'hsl(142, 76%, 36%)',
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
+            <PasswordField
+              password={password}
+              onChange={setPassword}
+              label={t('auth.new_password')}
+              showStrength
+              isRTL={isRTL}
+              showPassword={showPassword}
+              onToggleShow={() => setShowPassword(!showPassword)}
+            />
 
             <div className="space-y-2">
               <Label>{t('auth.password.confirm')}</Label>
@@ -104,6 +84,7 @@ const ResetPassword = () => {
             </div>
 
             <Button onClick={handleReset} disabled={loading} className="w-full" variant="hero">
+              {loading ? <Loader2 className="w-4 h-4 animate-spin me-2" /> : null}
               {loading ? t('common.loading') : t('auth.reset_password')}
             </Button>
           </div>
