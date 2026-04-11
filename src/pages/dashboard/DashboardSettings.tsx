@@ -132,6 +132,7 @@ const DashboardSettings = () => {
       const { error } = await supabase.from('profiles').update({
         full_name: profileForm.full_name.trim(),
         phone: profileForm.phone.trim(),
+        email: profileForm.email.trim(),
         avatar_url: profileForm.avatar_url,
       }).eq('user_id', user.id);
       if (error) throw error;
