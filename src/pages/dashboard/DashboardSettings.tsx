@@ -339,6 +339,14 @@ const DashboardSettings = () => {
                           <Input value={profileForm.full_name} onChange={e => setProfileForm(p => ({ ...p, full_name: e.target.value }))} className="h-8 text-xs mt-0.5" />
                         </div>
                         <div>
+                          <Label className="text-[10px]">{isRTL ? 'البريد الإلكتروني (للملف الشخصي)' : 'Email (Profile)'}</Label>
+                          <Input value={profileForm.email} onChange={e => setProfileForm(p => ({ ...p, email: e.target.value }))} className="h-8 text-xs mt-0.5 tech-content" dir="ltr" type="email" />
+                          <p className="text-[9px] text-muted-foreground mt-0.5">
+                            {isRTL ? 'هذا البريد يظهر في ملفك الشخصي. بريد تسجيل الدخول: ' : 'This email shows on your profile. Login email: '}
+                            <span className="tech-content font-medium">{user?.email}</span>
+                          </p>
+                        </div>
+                        <div>
                           <Label className="text-[10px]">{isRTL ? 'رقم الجوال' : 'Phone'}</Label>
                           <Input value={profileForm.phone} onChange={e => setProfileForm(p => ({ ...p, phone: e.target.value }))} className="h-8 text-xs mt-0.5 tech-content" dir="ltr" />
                         </div>
@@ -354,7 +362,7 @@ const DashboardSettings = () => {
                             {profile?.phone_verified && <Badge className="bg-emerald-500/10 text-emerald-600 text-[7px] px-1 py-0 h-3.5 gap-0.5"><CheckCircle className="w-2 h-2" />{isRTL ? 'موثق' : 'Verified'}</Badge>}
                           </div>
                           <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                            <Mail className="w-3 h-3" /><span className="tech-content">{user?.email || '-'}</span>
+                            <Mail className="w-3 h-3" /><span className="tech-content">{profile?.email || user?.email || '-'}</span>
                           </div>
                           {profile?.phone && (
                             <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
