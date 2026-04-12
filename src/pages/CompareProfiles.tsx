@@ -3,6 +3,7 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { usePageMeta } from '@/hooks/usePageMeta';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { Card, CardContent } from '@/components/ui/card';
@@ -36,6 +37,10 @@ const RatingCell = ({ value, max = 10 }: { value: number; max?: number }) => {
 
 const CompareProfiles = () => {
   const { isRTL, language } = useLanguage();
+  usePageMeta({
+    title: isRTL ? 'مقارنة أنظمة القطاعات | فنيين' : 'Compare Profile Systems | Faneen',
+    description: isRTL ? 'قارن بين أنظمة قطاعات الألمنيوم والحديد من حيث المواصفات والمزايا' : 'Compare aluminum and iron profile systems by specifications and features',
+  });
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
