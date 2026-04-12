@@ -547,11 +547,14 @@ const DashboardContracts = () => {
         area_sqm: area, total_cost: totalCost,
       });
       if (error) throw error;
-      // Update contract total from measurements
+      // Update contract total from measurements + line items
       const { data: fresh } = await supabase.from('contract_measurements').select('total_cost').eq('contract_id', contractId);
+      const { data: freshLi } = await supabase.from('contract_line_items').select('total_cost').eq('contract_id', contractId);
       if (fresh) {
-        const newTotal = fresh.reduce((s, m) => s + Number(m.total_cost || 0), 0);
-        if (newTotal > 0) await supabase.from('contracts').update({ total_amount: newTotal }).eq('id', contractId);
+        const msTotal = fresh.reduce((s, m) => s + Number(m.total_cost || 0), 0);
+        const liTotal = (freshLi ?? []).reduce((s, l) => s + Number(l.total_cost || 0), 0);
+        const grandTotal = msTotal + liTotal;
+        if (grandTotal > 0) await supabase.from('contracts').update({ total_amount: grandTotal }).eq('id', contractId);
       }
     },
     onSuccess: () => {
@@ -801,6 +804,7 @@ const DashboardContracts = () => {
         terms_ar: form.terms_ar || null, terms_en: form.terms_en || null,
         supervisor_name: form.supervisor_name || null, supervisor_phone: form.supervisor_phone || null,
         supervisor_email: form.supervisor_email || null, status: 'draft',
+        vat_inclusive: form.vat_inclusive, vat_rate: Number(form.vat_rate),
       };
 
       if (editingId) {
