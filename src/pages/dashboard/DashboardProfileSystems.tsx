@@ -195,7 +195,7 @@ const SortableProfileRow = React.memo(({
 SortableProfileRow.displayName = 'SortableProfileRow';
 
 // ── Drag Overlay ──
-const DragOverlayProfile = ({ profile, isRTL }: { profile: any; isRTL: string }) => {
+const DragOverlayProfile = ({ profile, isRTL }: { profile: any; isRTL: boolean }) => {
   const cat = getCategoryInfo(profile.category);
   return (
     <div className="flex items-center gap-3 py-2.5 px-4 bg-card border border-primary/30 rounded-xl shadow-xl">
