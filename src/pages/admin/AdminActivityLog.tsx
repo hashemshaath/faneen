@@ -298,9 +298,12 @@ const AdminActivityLog = () => {
     },
   });
 
+  const SYSTEM_USER_ID = '00000000-0000-0000-0000-000000000000';
+
   const getProfileName = (userId: string) => {
+    if (userId === SYSTEM_USER_ID) return 'النظام (تلقائي)';
     const profile = profiles?.find(p => p.user_id === userId);
-    return profile?.full_name || profile?.email || userId.slice(0, 8);
+    return profile?.full_name || profile?.email || `مستخدم #${userId.slice(0, 6)}`;
   };
 
   const filteredLogs = useMemo(() => {
