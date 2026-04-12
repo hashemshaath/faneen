@@ -49,6 +49,7 @@ const DashboardBlog = lazyRetry(() => import("./pages/dashboard/DashboardBlog"))
 const DashboardProfileSystems = lazyRetry(() => import("./pages/dashboard/DashboardProfileSystems"));
 const DashboardMessages = lazyRetry(() => import("./pages/dashboard/DashboardMessages"));
 const DashboardBookmarks = lazyRetry(() => import("./pages/dashboard/DashboardBookmarks"));
+const DashboardBookings = lazyRetry(() => import("./pages/dashboard/DashboardBookings"));
 const DashboardNotifications = lazyRetry(() => import("./pages/dashboard/DashboardNotifications"));
 const Offers = lazyRetry(() => import("./pages/Offers"));
 const Compare = lazyRetry(() => import("./pages/Compare"));
