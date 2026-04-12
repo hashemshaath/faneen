@@ -56,6 +56,10 @@ const RatingBar = ({ value, max = 10, label, icon: Icon }: { value: number; max?
 
 const ProfileSystems = () => {
   const { isRTL, language } = useLanguage();
+  usePageMeta({
+    title: language === 'ar' ? 'أنظمة القطاعات - قطاعات الألمنيوم والحديد | فنيين' : 'Profile Systems - Aluminum & Iron Profiles | Faneen',
+    description: language === 'ar' ? 'تعرف على أنظمة قطاعات الألمنيوم والحديد المختلفة ومواصفاتها وتقييماتها.' : 'Learn about different aluminum and iron profile systems, specifications and ratings.',
+  });
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('all');
