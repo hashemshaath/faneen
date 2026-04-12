@@ -37,6 +37,16 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const EMOJI_QUICK = ['👍', '❤️', '😊', '👏', '🙏', '✅', '🎉', '💯', '🔥', '😂', '😍', '🤝', '💪', '👀', '🙌', '🥳', '🤔', '💬'];
 const EMOJI_REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
 
+const CONV_LABELS = [
+  { key: 'none', color: '', label_ar: 'بدون تصنيف', label_en: 'No label' },
+  { key: 'new_client', color: 'bg-emerald-500', label_ar: 'عميل جديد', label_en: 'New Client' },
+  { key: 'follow_up', color: 'bg-amber-500', label_ar: 'متابعة', label_en: 'Follow-up' },
+  { key: 'important', color: 'bg-destructive', label_ar: 'مهم', label_en: 'Important' },
+  { key: 'completed', color: 'bg-blue-500', label_ar: 'مكتمل', label_en: 'Completed' },
+  { key: 'vip', color: 'bg-purple-500', label_ar: 'VIP', label_en: 'VIP' },
+  { key: 'support', color: 'bg-cyan-500', label_ar: 'دعم فني', label_en: 'Support' },
+];
+
 const formatFileSize = (bytes: number) => {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
