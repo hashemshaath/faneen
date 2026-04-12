@@ -11,7 +11,7 @@ import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
-  Wrench, Image, Star, FileText, Shield, TrendingUp, Eye,
+  Wrench, Image, Star, FileText, Shield, TrendingUp, Eye, Mail,
   DollarSign, Plus, Send, BarChart3, ArrowUpRight, Activity,
   MessageSquare, Crown, Users, Building2, Newspaper, CreditCard,
   Bookmark, FolderOpen, Bell, Clock, CheckCircle2, AlertCircle,
@@ -297,7 +297,7 @@ const AdminDashboardView = React.memo(({ isRTL }: { isRTL: boolean }) => {
   const { data: stats } = useQuery({
     queryKey: ['admin-overview-stats'],
     queryFn: async () => {
-      const [users, businesses, contracts, categories, messages, subscriptions, roles, recentUsers, recentActivity, blogPosts] = await Promise.all([
+      const [users, businesses, contracts, categories, messages, subscriptions, roles, recentUsers, recentActivity, blogPosts, contactMessages, userGrowth] = await Promise.all([
         supabase.from('profiles').select('id', { count: 'exact', head: true }),
         supabase.from('businesses').select('id', { count: 'exact', head: true }),
         supabase.from('contracts').select('id, status, total_amount, created_at', { count: 'exact' }),
@@ -308,6 +308,8 @@ const AdminDashboardView = React.memo(({ isRTL }: { isRTL: boolean }) => {
         supabase.from('profiles').select('id, full_name, avatar_url, email, account_type, created_at').order('created_at', { ascending: false }).limit(5),
         supabase.from('admin_activity_log').select('id, action, entity_type, created_at, details').order('created_at', { ascending: false }).limit(6),
         supabase.from('blog_posts').select('id', { count: 'exact', head: true }),
+        supabase.from('contact_messages').select('id', { count: 'exact', head: true }).eq('status', 'new'),
+        supabase.from('profiles').select('created_at').order('created_at', { ascending: true }),
       ]);
 
       const allContracts = contracts.data || [];
@@ -324,8 +326,10 @@ const AdminDashboardView = React.memo(({ isRTL }: { isRTL: boolean }) => {
         contracts: allContracts.length, activeContracts, totalRevenue,
         categories: (categories as any).count ?? 0, messages: (messages as any).count ?? 0,
         subscriptions: (subscriptions as any).count ?? 0, blogPosts: (blogPosts as any).count ?? 0,
+        newContactMessages: (contactMessages as any).count ?? 0,
         roleCounts, statusCounts,
         monthlyContracts: buildMonthlyData(allContracts, isRTL),
+        monthlyUsers: buildMonthlyData(userGrowth.data || [], isRTL),
         recentUsers: recentUsers.data || [], recentActivity: recentActivity.data || [],
       };
     },
@@ -353,6 +357,7 @@ const AdminDashboardView = React.memo(({ isRTL }: { isRTL: boolean }) => {
     { icon: FileText, label: isRTL ? 'العقود النشطة' : 'Active Contracts', value: stats?.activeContracts ?? 0, sub: `${isRTL ? 'من' : 'of'} ${animatedContracts}`, color: 'bg-accent/10 text-accent', to: '/dashboard/contracts' },
     { icon: Crown, label: isRTL ? 'اشتراكات نشطة' : 'Active Subs', value: stats?.subscriptions ?? 0, color: 'bg-accent/10 text-accent', to: '/admin/memberships' },
     { icon: MessageSquare, label: isRTL ? 'المحادثات' : 'Conversations', value: stats?.messages ?? 0, color: 'bg-primary/10 text-primary', to: '/dashboard/messages' },
+    { icon: Mail, label: isRTL ? 'رسائل جديدة' : 'New Messages', value: stats?.newContactMessages ?? 0, color: 'bg-blue-500/10 text-blue-600', to: '/admin/contact-messages' },
   ], [isRTL, animatedUsers, animatedRevenue, animatedContracts, stats]);
 
   return (
@@ -385,12 +390,12 @@ const AdminDashboardView = React.memo(({ isRTL }: { isRTL: boolean }) => {
       )}
 
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
         {adminCards.map((card) => <StatCard key={card.label} {...card} />)}
       </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+      {/* Charts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
         <Card className="border-border/40">
           <CardHeader className="pb-1 px-4 pt-3">
             <CardTitle className="text-xs flex items-center gap-2">
@@ -440,6 +445,33 @@ const AdminDashboardView = React.memo(({ isRTL }: { isRTL: boolean }) => {
             ) : (
               <div className="flex items-center justify-center h-[120px] text-muted-foreground text-xs">{isRTL ? 'لا توجد بيانات' : 'No data'}</div>
             )}
+          </CardContent>
+        </Card>
+
+        {/* User Growth */}
+        <Card className="border-border/40">
+          <CardHeader className="pb-1 px-4 pt-3">
+            <CardTitle className="text-xs flex items-center gap-2">
+              <TrendingUp className="w-3.5 h-3.5 text-primary" />{isRTL ? 'نمو المستخدمين' : 'User Growth'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-4 pb-3">
+            <div className="h-[170px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={stats?.monthlyUsers || []}>
+                  <defs>
+                    <linearGradient id="userGrowthGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="month" tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} width={24} allowDecimals={false} />
+                  <Tooltip contentStyle={ChartTooltipStyle} />
+                  <Area type="monotone" dataKey="count" stroke="hsl(var(--primary))" fill="url(#userGrowthGrad)" strokeWidth={2} name={isRTL ? 'مستخدمين' : 'Users'} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -514,6 +546,7 @@ const AdminDashboardView = React.memo(({ isRTL }: { isRTL: boolean }) => {
               { icon: ShieldAlert, label: isRTL ? 'النظام' : 'System', to: '/admin/system-settings' },
               { icon: BarChart3, label: isRTL ? 'التصنيفات' : 'Categories', to: '/admin/categories' },
               { icon: MessageSquare, label: isRTL ? 'المحادثات' : 'Messages', to: '/dashboard/messages' },
+              { icon: Mail, label: isRTL ? 'رسائل التواصل' : 'Contact', to: '/admin/contact-messages' },
             ].map(a => <QuickAction key={a.to} {...a} />)}
           </div>
         </CardContent>

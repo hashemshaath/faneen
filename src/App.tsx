@@ -70,6 +70,7 @@ const AdminCategories = lazyRetry(() => import("./pages/admin/AdminCategories"))
 const AdminTags = lazyRetry(() => import("./pages/admin/AdminTags"));
 const AdminBusinesses = lazyRetry(() => import("./pages/admin/AdminBusinesses"));
 const AdminMemberships = lazyRetry(() => import("./pages/admin/AdminMemberships"));
+const AdminContactMessages = lazyRetry(() => import("./pages/admin/AdminContactMessages"));
 const Notifications = lazyRetry(() => import("./pages/Notifications"));
 const Membership = lazyRetry(() => import("./pages/Membership"));
 const DashboardOperations = lazyRetry(() => import("./pages/dashboard/DashboardOperations"));
@@ -166,6 +167,7 @@ const AppRoutes = () => (
           <Route path="/admin/tags" element={<ProtectedRoute requireAdmin><AdminTags /></ProtectedRoute>} />
           <Route path="/admin/businesses" element={<ProtectedRoute requireAdmin><AdminBusinesses /></ProtectedRoute>} />
           <Route path="/admin/memberships" element={<ProtectedRoute requireAdmin><AdminMemberships /></ProtectedRoute>} />
+          <Route path="/admin/contact-messages" element={<ProtectedRoute requireAdmin><AdminContactMessages /></ProtectedRoute>} />
 
           <Route path="/admin/users" element={<ProtectedRoute requireSuperAdmin><AdminUsers /></ProtectedRoute>} />
           <Route path="/admin/system-settings" element={<ProtectedRoute requireSuperAdmin><AdminSystemSettings /></ProtectedRoute>} />

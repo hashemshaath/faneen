@@ -141,6 +141,7 @@ const adminBaseGroups: MenuGroup[] = [
     items: [
       { label: { ar: 'لوحة التحكم', en: 'Dashboard' }, url: '/dashboard', icon: LayoutDashboard, end: true },
       { label: { ar: 'سجل النشاط', en: 'Activity Log' }, url: '/admin/activity-log', icon: BarChart3 },
+      { label: { ar: 'رسائل التواصل', en: 'Contact Messages' }, url: '/admin/contact-messages', icon: MessageSquare },
     ],
   },
   {
