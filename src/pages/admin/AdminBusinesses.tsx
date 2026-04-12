@@ -125,27 +125,26 @@ const exportCSV = (businesses: any[], language: string) => {
 };
 
 /* ─── Stat Card Component ─── */
-const StatCard = React.memo(({ label, value, icon: Icon, trend, color }: {
-  label: string; value: number; icon: any; trend?: string; color: string;
+const StatCard = React.memo(({ label, value, icon: Icon, trend, gradient, iconBg }: {
+  label: string; value: number; icon: any; trend?: string; gradient: string; iconBg: string;
 }) => (
-  <Card className="border-border/40 hover-lift overflow-hidden relative group">
-    <div className={`absolute inset-0 ${color} opacity-[0.03] group-hover:opacity-[0.06] transition-opacity`} />
-    <CardContent className="p-4 flex items-center gap-3 relative">
-      <div className={`p-2.5 rounded-xl ${color} shrink-0`}>
-        <Icon className="w-4 h-4" />
+  <div className={`relative overflow-hidden rounded-2xl border border-border/30 bg-gradient-to-br ${gradient} p-4 transition-all hover:shadow-md group`}>
+    <div className="flex items-center gap-3">
+      <div className={`w-10 h-10 rounded-xl ${iconBg} flex items-center justify-center transition-transform group-hover:scale-110 shrink-0`}>
+        <Icon className="w-5 h-5" />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-2xl font-heading font-bold leading-tight">{value}</p>
-        <p className="text-[11px] text-muted-foreground truncate">{label}</p>
+        <p className="text-2xl font-heading font-bold leading-none">{value}</p>
+        <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{label}</p>
       </div>
       {trend && (
-        <div className="flex items-center gap-0.5 text-[10px] text-green-600 bg-green-500/10 px-1.5 py-0.5 rounded-full">
+        <div className="flex items-center gap-0.5 text-[10px] text-emerald-600 bg-emerald-500/10 px-1.5 py-0.5 rounded-full font-medium">
           <TrendingUp className="w-3 h-3" />
           {trend}
         </div>
       )}
-    </CardContent>
-  </Card>
+    </div>
+  </div>
 ));
 StatCard.displayName = 'StatCard';
 
@@ -519,165 +518,161 @@ const AdminBusinesses = () => {
     <DashboardLayout>
       <div className="space-y-6">
         {/* ─── Header ─── */}
-        <div className="flex items-start justify-between flex-wrap gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <div className="flex items-center gap-3 mb-1">
-              <div className="p-2.5 rounded-xl bg-primary/10">
-                <Building2 className="w-5 h-5 text-primary" />
+            <h1 className="font-heading font-bold text-2xl text-foreground flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/20 to-primary/10 flex items-center justify-center shadow-sm">
+                <Building2 className="w-5 h-5 text-accent" />
               </div>
-              <div>
-                <h1 className="font-heading font-bold text-xl sm:text-2xl">
-                  {isRTL ? 'إدارة الأعمال' : 'Business Management'}
-                </h1>
-                <p className="text-xs text-muted-foreground">
-                  {isRTL ? 'التحكم الشامل في الأعمال والخدمات والفروع' : 'Full control over businesses, services & branches'}
-                </p>
-              </div>
-            </div>
+              {isRTL ? 'إدارة الأعمال' : 'Business Management'}
+            </h1>
+            <p className="text-muted-foreground font-body mt-1 text-sm">
+              {isRTL ? `${stats.total} نشاط تجاري مسجّل • التحكم الشامل في الأعمال والخدمات والفروع` : `${stats.total} registered businesses • Full control over businesses, services & branches`}
+            </p>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5"
+            <div className="flex bg-muted/50 border border-border/30 rounded-xl overflow-hidden p-0.5">
+              <button className={`p-2 rounded-lg transition-all ${viewMode === 'cards' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                onClick={() => setViewMode('cards')}><LayoutGrid className="w-4 h-4" /></button>
+              <button className={`p-2 rounded-lg transition-all ${viewMode === 'table' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                onClick={() => setViewMode('table')}><List className="w-4 h-4" /></button>
+            </div>
+            <Button variant="outline" size="sm" className="h-9 text-xs gap-1.5 rounded-xl"
               onClick={() => { refetchBusinesses(); toast.success(isRTL ? 'تم التحديث' : 'Refreshed'); }}>
               <RefreshCw className="w-3.5 h-3.5" />
-              {isRTL ? 'تحديث' : 'Refresh'}
+              <span className="hidden sm:inline">{isRTL ? 'تحديث' : 'Refresh'}</span>
             </Button>
-            <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5"
+            <Button variant="outline" size="sm" className="h-9 text-xs gap-1.5 rounded-xl"
               onClick={() => exportCSV(filtered, language)}>
               <Download className="w-3.5 h-3.5" />
-              {isRTL ? 'تصدير CSV' : 'Export CSV'}
+              <span className="hidden sm:inline">{isRTL ? 'تصدير' : 'Export'}</span>
             </Button>
           </div>
         </div>
 
         {/* ─── Stats ─── */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          <StatCard label={isRTL ? 'إجمالي الأعمال' : 'Total Businesses'} value={stats.total} icon={Building2} color="bg-primary/10 text-primary" />
-          <StatCard label={isRTL ? 'نشط' : 'Active'} value={stats.active} icon={Activity} color="bg-green-500/10 text-green-600"
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+          <StatCard label={isRTL ? 'إجمالي الأعمال' : 'Total Businesses'} value={stats.total} icon={Building2} gradient="from-primary/10 to-primary/5" iconBg="bg-primary/15 text-primary" />
+          <StatCard label={isRTL ? 'نشط' : 'Active'} value={stats.active} icon={Activity} gradient="from-emerald-500/10 to-emerald-500/5" iconBg="bg-emerald-500/15 text-emerald-600"
             trend={stats.total ? `${Math.round(stats.active / stats.total * 100)}%` : undefined} />
-          <StatCard label={isRTL ? 'موثق' : 'Verified'} value={stats.verified} icon={Shield} color="bg-blue-500/10 text-blue-600" />
-          <StatCard label={isRTL ? 'مرتبط بعقود' : 'With Contracts'} value={stats.contracts} icon={FileText} color="bg-accent/20 text-accent-foreground" />
-          <StatCard label={isRTL ? 'مميز / مؤسسات' : 'Premium/Enterprise'} value={stats.premium} icon={Crown} color="bg-purple-500/10 text-purple-600" />
+          <StatCard label={isRTL ? 'موثق' : 'Verified'} value={stats.verified} icon={Shield} gradient="from-blue-500/10 to-blue-500/5" iconBg="bg-blue-500/15 text-blue-600" />
+          <StatCard label={isRTL ? 'مرتبط بعقود' : 'With Contracts'} value={stats.contracts} icon={FileText} gradient="from-accent/10 to-accent/5" iconBg="bg-accent/15 text-accent" />
+          <StatCard label={isRTL ? 'مميز / مؤسسات' : 'Premium/Enterprise'} value={stats.premium} icon={Crown} gradient="from-purple-500/10 to-purple-500/5" iconBg="bg-purple-500/15 text-purple-600" />
         </div>
 
         {/* ─── Tier Distribution Bar ─── */}
         {stats.total > 0 && (
-          <Card className="border-border/40">
-            <CardContent className="p-3">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-xs font-semibold text-muted-foreground">{isRTL ? 'توزيع العضويات' : 'Membership Distribution'}</p>
-                <div className="flex items-center gap-3">
-                  {tiers.map(t => (
-                    <span key={t.value} className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                      <span className="text-xs">{t.icon}</span>
-                      {language === 'ar' ? t.label_ar : t.label_en}: {tierDistribution[t.value] || 0}
-                    </span>
-                  ))}
-                </div>
+          <div className="rounded-2xl border border-border/30 bg-card p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-heading font-bold text-sm flex items-center gap-2">
+                <Zap className="w-4 h-4 text-accent" />
+                {isRTL ? 'توزيع العضويات' : 'Membership Distribution'}
+              </h3>
+              <div className="flex items-center gap-3">
+                {tiers.map(t => (
+                  <span key={t.value} className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                    <span className="text-xs">{t.icon}</span>
+                    {language === 'ar' ? t.label_ar : t.label_en}: {tierDistribution[t.value] || 0}
+                  </span>
+                ))}
               </div>
-              <div className="flex h-2 rounded-full overflow-hidden bg-muted/50">
-                {tiers.map(t => {
-                  const pct = stats.total ? (tierDistribution[t.value] || 0) / stats.total * 100 : 0;
-                  if (!pct) return null;
-                  const colorMap: Record<string, string> = {
-                    free: 'bg-muted-foreground/40',
-                    basic: 'bg-blue-500',
-                    premium: 'bg-accent',
-                    enterprise: 'bg-purple-500',
-                  };
-                  return <div key={t.value} className={`${colorMap[t.value]} transition-all`} style={{ width: `${pct}%` }} />;
-                })}
-              </div>
-            </CardContent>
-          </Card>
+            </div>
+            <div className="flex h-3 rounded-full overflow-hidden bg-muted/50">
+              {tiers.map(t => {
+                const pct = stats.total ? (tierDistribution[t.value] || 0) / stats.total * 100 : 0;
+                if (!pct) return null;
+                const colorMap: Record<string, string> = {
+                  free: 'bg-muted-foreground/30',
+                  basic: 'bg-blue-500',
+                  premium: 'bg-accent',
+                  enterprise: 'bg-purple-500',
+                };
+                return <div key={t.value} className={`${colorMap[t.value]} transition-all`} style={{ width: `${pct}%` }} />;
+              })}
+            </div>
+          </div>
         )}
 
         {/* ─── Filters ─── */}
-        <Card className="border-border/40">
-          <CardContent className="p-3">
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="relative flex-1">
-                <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input value={search}
-                  onChange={e => { const v = e.target.value; startTransition(() => setSearch(v)); }}
-                  placeholder={isRTL ? 'بحث بالاسم، المعرف، الهاتف، البريد...' : 'Search by name, ID, phone, email...'}
-                  className="ps-9 h-9" />
-                {search && (
-                  <button onClick={() => setSearch('')}
-                    className="absolute end-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                )}
-              </div>
-              <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger className="w-full sm:w-40 h-9"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{isRTL ? 'كل الحالات' : 'All Status'}</SelectItem>
-                  <SelectItem value="verified">{isRTL ? 'موثق' : 'Verified'}</SelectItem>
-                  <SelectItem value="unverified">{isRTL ? 'غير موثق' : 'Unverified'}</SelectItem>
-                  <SelectItem value="inactive">{isRTL ? 'معطل' : 'Inactive'}</SelectItem>
-                  <SelectItem value="contract">{isRTL ? 'مرتبط بعقود' : 'With Contracts'}</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={filterTier} onValueChange={setFilterTier}>
-                <SelectTrigger className="w-full sm:w-36 h-9"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{isRTL ? 'كل العضويات' : 'All Tiers'}</SelectItem>
-                  {tiers.map(t => <SelectItem key={t.value} value={t.value}>{t.icon} {language === 'ar' ? t.label_ar : t.label_en}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <div className="flex items-center gap-1 border rounded-lg p-0.5">
-                <Button variant={viewMode === 'cards' ? 'default' : 'ghost'} size="sm" className="h-7 w-7 p-0"
-                  onClick={() => setViewMode('cards')}><LayoutGrid className="w-3.5 h-3.5" /></Button>
-                <Button variant={viewMode === 'table' ? 'default' : 'ghost'} size="sm" className="h-7 w-7 p-0"
-                  onClick={() => setViewMode('table')}><List className="w-3.5 h-3.5" /></Button>
-              </div>
-            </div>
-            {(search || filterStatus !== 'all' || filterTier !== 'all') && (
-              <div className="flex items-center gap-2 mt-2 pt-2 border-t border-border/30">
-                <Filter className="w-3 h-3 text-muted-foreground" />
-                <span className="text-[11px] text-muted-foreground">
-                  {isRTL ? `${filtered.length} نتيجة` : `${filtered.length} results`}
-                </span>
-                {search && <Badge variant="secondary" className="text-[10px] h-5 gap-1">{isRTL ? 'بحث' : 'Search'}: {search}<button onClick={() => setSearch('')}><X className="w-2.5 h-2.5" /></button></Badge>}
-                {filterStatus !== 'all' && <Badge variant="secondary" className="text-[10px] h-5 gap-1">{filterStatus}<button onClick={() => setFilterStatus('all')}><X className="w-2.5 h-2.5" /></button></Badge>}
-                {filterTier !== 'all' && <Badge variant="secondary" className="text-[10px] h-5 gap-1">{filterTier}<button onClick={() => setFilterTier('all')}><X className="w-2.5 h-2.5" /></button></Badge>}
-                <button className="text-[10px] text-primary hover:underline ms-auto"
-                  onClick={() => { setSearch(''); setFilterStatus('all'); setFilterTier('all'); }}>
-                  {isRTL ? 'مسح الكل' : 'Clear all'}
+        <div className="rounded-2xl border border-border/30 bg-card p-4">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
+              <Input value={search}
+                onChange={e => { const v = e.target.value; startTransition(() => setSearch(v)); }}
+                placeholder={isRTL ? 'بحث بالاسم، المعرف، الهاتف، البريد...' : 'Search by name, ID, phone, email...'}
+                className="ps-10 h-10 rounded-xl bg-muted/30 border-border/20 focus:bg-background transition-colors" />
+              {search && (
+                <button onClick={() => setSearch('')}
+                  className="absolute top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" style={{ [isRTL ? 'left' : 'right']: '10px' }}>
+                  <X className="w-3.5 h-3.5" />
                 </button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              )}
+            </div>
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="w-full sm:w-44 h-10 rounded-xl">
+                <Filter className="w-4 h-4 me-2 text-muted-foreground" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl">
+                <SelectItem value="all">{isRTL ? 'كل الحالات' : 'All Status'}</SelectItem>
+                <SelectItem value="verified">{isRTL ? 'موثق' : 'Verified'}</SelectItem>
+                <SelectItem value="unverified">{isRTL ? 'غير موثق' : 'Unverified'}</SelectItem>
+                <SelectItem value="inactive">{isRTL ? 'معطل' : 'Inactive'}</SelectItem>
+                <SelectItem value="contract">{isRTL ? 'مرتبط بعقود' : 'With Contracts'}</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={filterTier} onValueChange={setFilterTier}>
+              <SelectTrigger className="w-full sm:w-40 h-10 rounded-xl"><SelectValue /></SelectTrigger>
+              <SelectContent className="rounded-xl">
+                <SelectItem value="all">{isRTL ? 'كل العضويات' : 'All Tiers'}</SelectItem>
+                {tiers.map(t => <SelectItem key={t.value} value={t.value}>{t.icon} {language === 'ar' ? t.label_ar : t.label_en}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          {(search || filterStatus !== 'all' || filterTier !== 'all') && (
+            <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/20">
+              <span className="text-[11px] text-muted-foreground">{isRTL ? 'النتائج:' : 'Results:'} {filtered.length}</span>
+              {search && <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-lg" onClick={() => setSearch('')}>"{search}" <X className="w-2.5 h-2.5" /></Badge>}
+              {filterStatus !== 'all' && <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-lg" onClick={() => setFilterStatus('all')}>{filterStatus} <X className="w-2.5 h-2.5" /></Badge>}
+              {filterTier !== 'all' && <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-lg" onClick={() => setFilterTier('all')}>{filterTier} <X className="w-2.5 h-2.5" /></Badge>}
+              <button className="text-[10px] text-primary hover:underline ms-auto"
+                onClick={() => { setSearch(''); setFilterStatus('all'); setFilterTier('all'); }}>
+                {isRTL ? 'مسح الكل' : 'Clear all'}
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* ─── Inline Edit Panel ─── */}
         {editingBiz && (
-          <Card className="border-primary/30 bg-gradient-to-br from-primary/[0.03] to-transparent shadow-sm">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <div className="p-1.5 rounded-lg bg-primary/10"><Edit className="w-4 h-4 text-primary" /></div>
-                  <div>
-                    <span className="block">{isRTL ? 'تعديل العمل' : 'Edit Business'}: {editingBiz.name_ar}</span>
-                    <span className="text-[10px] font-normal text-muted-foreground">{editingBiz.ref_id} · @{editingBiz.username}</span>
+          <div className="rounded-2xl border border-accent/30 bg-gradient-to-r from-accent/5 to-transparent p-5 animate-in slide-in-from-top-2 duration-200 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-accent/15 flex items-center justify-center">
+                  <Edit className="w-4 h-4 text-accent" />
+                </div>
+                <div>
+                  <h3 className="font-heading font-bold text-base">{isRTL ? 'تعديل العمل' : 'Edit Business'}: {editingBiz.name_ar}</h3>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-[10px] font-mono text-muted-foreground">{editingBiz.ref_id} · @{editingBiz.username}</span>
+                    {contractBusinessIds.includes(editingBiz.id) && (
+                      <Badge variant="outline" className="text-[9px] gap-1"><FileText className="w-2.5 h-2.5" />{isRTL ? 'مرتبط بعقود' : 'Has Contracts'}</Badge>
+                    )}
                   </div>
-                  {contractBusinessIds.includes(editingBiz.id) && (
-                    <Badge variant="outline" className="text-[9px] gap-1"><FileText className="w-2.5 h-2.5" />{isRTL ? 'مرتبط بعقود' : 'Has Contracts'}</Badge>
-                  )}
-                </CardTitle>
-                <Button variant="ghost" size="icon" onClick={() => setEditingBiz(null)}><X className="w-4 h-4" /></Button>
+                </div>
               </div>
-            </CardHeader>
-            <CardContent>
+              <Button variant="ghost" size="icon" onClick={() => setEditingBiz(null)} className="rounded-xl"><X className="w-4 h-4" /></Button>
+            </div>
               <Tabs defaultValue="info" className="w-full">
-                <TabsList className="w-full grid grid-cols-7 h-9">
-                  <TabsTrigger value="info" className="text-[10px]">{isRTL ? 'المعلومات' : 'Info'}</TabsTrigger>
-                  <TabsTrigger value="address" className="text-[10px]">{isRTL ? 'العنوان' : 'Address'}</TabsTrigger>
-                  <TabsTrigger value="content" className="text-[10px]">{isRTL ? 'المحتوى' : 'Content'}</TabsTrigger>
-                  <TabsTrigger value="media" className="text-[10px]">{isRTL ? 'الوسائط' : 'Media'}</TabsTrigger>
-                  <TabsTrigger value="contact" className="text-[10px]">{isRTL ? 'التواصل' : 'Contact'}</TabsTrigger>
-                  <TabsTrigger value="branches" className="text-[10px]">{isRTL ? 'الفروع' : 'Branches'} <Badge variant="secondary" className="text-[8px] ms-0.5 h-4 px-1">{branches.length}</Badge></TabsTrigger>
-                  <TabsTrigger value="controls" className="text-[10px]">{isRTL ? 'التحكم' : 'Controls'}</TabsTrigger>
+                <TabsList className="w-full grid grid-cols-7 h-9 rounded-xl">
+                  <TabsTrigger value="info" className="text-[10px] rounded-lg">{isRTL ? 'المعلومات' : 'Info'}</TabsTrigger>
+                  <TabsTrigger value="address" className="text-[10px] rounded-lg">{isRTL ? 'العنوان' : 'Address'}</TabsTrigger>
+                  <TabsTrigger value="content" className="text-[10px] rounded-lg">{isRTL ? 'المحتوى' : 'Content'}</TabsTrigger>
+                  <TabsTrigger value="media" className="text-[10px] rounded-lg">{isRTL ? 'الوسائط' : 'Media'}</TabsTrigger>
+                  <TabsTrigger value="contact" className="text-[10px] rounded-lg">{isRTL ? 'التواصل' : 'Contact'}</TabsTrigger>
+                  <TabsTrigger value="branches" className="text-[10px] rounded-lg">{isRTL ? 'الفروع' : 'Branches'} <Badge variant="secondary" className="text-[8px] ms-0.5 h-4 px-1">{branches.length}</Badge></TabsTrigger>
+                  <TabsTrigger value="controls" className="text-[10px] rounded-lg">{isRTL ? 'التحكم' : 'Controls'}</TabsTrigger>
                 </TabsList>
 
                 {/* ── Info Tab ── */}
@@ -1178,31 +1173,31 @@ const AdminBusinesses = () => {
                 </TabsContent>
               </Tabs>
 
-              <div className="flex gap-2 pt-3 border-t mt-4">
-                <Button onClick={() => updateBizMutation.mutate()} disabled={!editForm.name_ar || updateBizMutation.isPending} className="flex-1 gap-1.5">
+              <Separator className="my-4" />
+              <div className="flex gap-2">
+                <Button onClick={() => updateBizMutation.mutate()} disabled={!editForm.name_ar || updateBizMutation.isPending} className="flex-1 gap-1.5 rounded-xl">
                   <Save className="w-3.5 h-3.5" />
                   {updateBizMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : (isRTL ? 'حفظ التعديلات' : 'Save Changes')}
                 </Button>
-                <Button variant="outline" onClick={() => setEditingBiz(null)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+                <Button variant="outline" onClick={() => setEditingBiz(null)} className="rounded-xl">{isRTL ? 'إلغاء' : 'Cancel'}</Button>
               </div>
-            </CardContent>
-          </Card>
+          </div>
         )}
 
         {/* ─── Inline Services Panel ─── */}
         {servicesPanel && (
-          <Card className="border-primary/30 bg-gradient-to-br from-primary/[0.03] to-transparent shadow-sm">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <div className="p-1.5 rounded-lg bg-primary/10"><Package className="w-4 h-4 text-primary" /></div>
-                  {isRTL ? 'إدارة الخدمات' : 'Manage Services'}
-                  <Badge variant="secondary" className="text-[10px]">{services.length}</Badge>
-                </CardTitle>
-                <Button variant="ghost" size="icon" onClick={() => setServicesPanel(null)}><X className="w-4 h-4" /></Button>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <div className="rounded-2xl border border-accent/30 bg-gradient-to-r from-accent/5 to-transparent p-5 animate-in slide-in-from-top-2 duration-200 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-heading font-bold text-base flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-accent/15 flex items-center justify-center">
+                  <Package className="w-4 h-4 text-accent" />
+                </div>
+                {isRTL ? 'إدارة الخدمات' : 'Manage Services'}
+                <Badge variant="secondary" className="text-[10px]">{services.length}</Badge>
+              </h3>
+              <Button variant="ghost" size="icon" onClick={() => setServicesPanel(null)} className="rounded-xl"><X className="w-4 h-4" /></Button>
+            </div>
+            <div className="space-y-4">
               <div className="space-y-2">
                 {services.map((svc: any) => (
                   <div key={svc.id} className={`flex items-center gap-3 p-3 rounded-xl border border-border/40 hover:border-primary/20 transition-all ${!svc.is_active ? 'opacity-50' : ''}`}>
@@ -1285,52 +1280,31 @@ const AdminBusinesses = () => {
                   {addServiceMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : (isRTL ? 'إضافة الخدمة' : 'Add Service')}
                 </Button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
 
         {/* ─── Business List ─── */}
         {isLoading ? (
-          <div className="space-y-3">
-            {[1, 2, 3, 4, 5].map(i => (
-              <Card key={i} className="border-border/40">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <Skeleton className="w-12 h-12 rounded-xl" />
-                    <div className="flex-1 space-y-2">
-                      <Skeleton className="h-4 w-48" />
-                      <Skeleton className="h-3 w-72" />
-                    </div>
-                    <div className="flex gap-2">
-                      <Skeleton className="h-7 w-20" />
-                      <Skeleton className="h-7 w-16" />
-                      <Skeleton className="h-7 w-7" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <div className="space-y-3">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-2xl" />)}</div>
         ) : filtered.length === 0 ? (
-          <Card className="border-dashed border-2">
-            <CardContent className="p-16 text-center text-muted-foreground">
-              <div className="p-4 rounded-full bg-muted/30 w-fit mx-auto mb-4">
-                <Building2 className="w-10 h-10 opacity-30" />
-              </div>
-              <p className="font-heading font-bold text-lg mb-1">{isRTL ? 'لا توجد نتائج' : 'No results found'}</p>
-              <p className="text-sm">{isRTL ? 'جرّب تعديل معايير البحث' : 'Try adjusting your search criteria'}</p>
-              {(search || filterStatus !== 'all' || filterTier !== 'all') && (
-                <Button variant="outline" size="sm" className="mt-4 gap-1.5"
-                  onClick={() => { setSearch(''); setFilterStatus('all'); setFilterTier('all'); }}>
-                  <X className="w-3.5 h-3.5" /> {isRTL ? 'مسح الفلاتر' : 'Clear Filters'}
-                </Button>
-              )}
-            </CardContent>
-          </Card>
+          <div className="rounded-2xl border border-border/30 bg-card p-12 text-center">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-accent/10 to-primary/10 flex items-center justify-center">
+              <Building2 className="w-8 h-8 text-accent/30" />
+            </div>
+            <p className="font-heading font-bold text-sm mb-1">{isRTL ? 'لا توجد نتائج' : 'No results found'}</p>
+            <p className="text-xs text-muted-foreground">{isRTL ? 'جرّب تعديل معايير البحث' : 'Try adjusting your search criteria'}</p>
+            {(search || filterStatus !== 'all' || filterTier !== 'all') && (
+              <Button variant="outline" size="sm" className="mt-4 gap-1.5 rounded-xl"
+                onClick={() => { setSearch(''); setFilterStatus('all'); setFilterTier('all'); }}>
+                <X className="w-3.5 h-3.5" /> {isRTL ? 'مسح الفلاتر' : 'Clear Filters'}
+              </Button>
+            )}
+          </div>
         ) : viewMode === 'table' ? (
           /* ─── Table View ─── */
-          <Card className="border-border/40">
-            <CardContent className="p-0">
+          <div className="rounded-2xl border border-border/30 bg-card overflow-hidden">
+            <div className="p-0">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/30">
@@ -1397,97 +1371,103 @@ const AdminBusinesses = () => {
                   })}
                 </TableBody>
               </Table>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         ) : (
           /* ─── Cards View ─── */
-          <div className="space-y-2">
+          <div className="space-y-3">
             {filtered.map((biz: any, idx: number) => {
               const tierInfo = tiers.find(t => t.value === biz.membership_tier) || tiers[0];
               const hasContract = contractBusinessIds.includes(biz.id);
               const svcCount = allServices.filter((s: any) => s.business_id === biz.id).length;
               return (
-                <Card key={biz.id}
-                  className={`border-border/40 hover:border-primary/20 hover:shadow-sm transition-all group animate-card-slide-up ${!biz.is_active ? 'opacity-60 border-destructive/20' : ''}`}
+                <div key={biz.id}
+                  className={`group relative rounded-2xl border bg-card transition-all duration-200 hover:shadow-md
+                    ${!biz.is_active ? 'opacity-60 border-destructive/40' : 'border-border/30 hover:border-primary/20'}`}
                   style={{ animationDelay: `${idx * 0.03}s` }}>
-                  <CardContent className="p-3.5">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <Avatar className="w-12 h-12 shrink-0 border-2 border-border/50 shadow-sm">
-                          <AvatarImage src={biz.logo_url || undefined} />
-                          <AvatarFallback className="bg-primary/5 text-primary font-bold text-sm">
-                            {biz.name_ar?.charAt(0)}
-                          </AvatarFallback>
-                        </Avatar>
+                  <div className="p-4">
+                    <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+                      <div className="flex items-start gap-3 flex-1 min-w-0">
+                        <div className="relative">
+                          <Avatar className="w-12 h-12 shrink-0 ring-2 ring-border/10">
+                            <AvatarImage src={biz.logo_url || undefined} />
+                            <AvatarFallback className="bg-gradient-to-br from-accent/20 to-primary/10 text-accent font-bold text-sm">
+                              {biz.name_ar?.charAt(0)}
+                            </AvatarFallback>
+                          </Avatar>
+                          {biz.is_verified && (
+                            <div className="absolute -bottom-1 -end-1 w-5 h-5 rounded-full bg-blue-500/15 flex items-center justify-center ring-2 ring-card">
+                              <CheckCircle className="w-3 h-3 text-blue-500" />
+                            </div>
+                          )}
+                        </div>
                         <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-1.5 mb-0.5">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <h3 className="font-heading font-bold text-sm truncate">
                               {language === 'ar' ? biz.name_ar : (biz.name_en || biz.name_ar)}
                             </h3>
-                            {biz.is_verified && (
-                              <span className="shrink-0 p-0.5 rounded-full bg-blue-500/10">
-                                <CheckCircle className="w-3 h-3 text-blue-500" />
-                              </span>
-                            )}
-                            {!biz.is_active && <Badge variant="destructive" className="text-[8px] h-4">{isRTL ? 'معطل' : 'Disabled'}</Badge>}
-                            {hasContract && <Badge variant="outline" className="text-[8px] h-4 gap-0.5"><FileText className="w-2 h-2" />{isRTL ? 'عقود' : 'Contracts'}</Badge>}
+                            {!biz.is_active && <Badge variant="destructive" className="text-[9px] gap-0.5 px-1.5 py-0"><Ban className="w-2.5 h-2.5" />{isRTL ? 'معطل' : 'Disabled'}</Badge>}
+                            {hasContract && <Badge variant="outline" className="text-[9px] gap-0.5 px-1.5 py-0"><FileText className="w-2.5 h-2.5" />{isRTL ? 'عقود' : 'Contracts'}</Badge>}
                           </div>
-                          <div className="flex items-center gap-2 text-[10px] text-muted-foreground flex-wrap">
-                            <span className="font-mono">@{biz.username}</span>
-                            <Badge variant="outline" className="text-[9px] h-4 font-mono">{biz.ref_id}</Badge>
-                            <Badge className={`text-[9px] h-4 ${tierInfo.color} border-0`}>
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
+                            <span className="text-[11px] text-muted-foreground font-mono">@{biz.username}</span>
+                            <span className="text-[11px] text-muted-foreground font-mono">{biz.ref_id}</span>
+                            {biz.phone && <span className="flex items-center gap-1 text-[11px] text-muted-foreground" dir="ltr"><Phone className="w-3 h-3 shrink-0" />{biz.phone}</span>}
+                          </div>
+                          <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                            <Badge className={`${tierInfo.color} text-[10px] border px-1.5 py-0`}>
                               {tierInfo.icon} {language === 'ar' ? tierInfo.label_ar : tierInfo.label_en}
                             </Badge>
-                            <span className="flex items-center gap-0.5">
+                            <span className="flex items-center gap-0.5 text-[11px] text-muted-foreground">
                               <Star className="w-3 h-3 text-accent fill-accent" />
                               {biz.rating_avg} ({biz.rating_count})
                             </span>
                             {svcCount > 0 && (
-                              <span className="flex items-center gap-0.5">
+                              <Badge variant="outline" className="text-[10px] gap-0.5 px-1.5 py-0">
                                 <Package className="w-2.5 h-2.5" /> {svcCount} {isRTL ? 'خدمة' : 'services'}
-                              </span>
+                              </Badge>
                             )}
-                            {biz.phone && <span className="flex items-center gap-0.5"><Phone className="w-2.5 h-2.5" />{biz.phone}</span>}
                           </div>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-1.5 flex-wrap shrink-0">
+                      <div className="flex items-center gap-1.5 flex-wrap sm:flex-nowrap shrink-0">
                         <Select value={biz.membership_tier} onValueChange={tier => tierMutation.mutate({ id: biz.id, tier })}>
-                          <SelectTrigger className="h-7 text-[10px] w-24 border-dashed"><SelectValue /></SelectTrigger>
-                          <SelectContent>
+                          <SelectTrigger className="h-8 text-xs w-28 border-dashed rounded-xl"><SelectValue /></SelectTrigger>
+                          <SelectContent className="rounded-xl">
                             {tiers.map(t => <SelectItem key={t.value} value={t.value}>{t.icon} {language === 'ar' ? t.label_ar : t.label_en}</SelectItem>)}
                           </SelectContent>
                         </Select>
 
-                        <Button variant={biz.is_verified ? 'default' : 'outline'} size="sm" className="h-7 text-[10px] gap-1 px-2"
+                        <Button variant={biz.is_verified ? 'default' : 'outline'} size="sm" className="h-8 text-xs gap-1.5 rounded-xl"
                           onClick={() => toggleMutation.mutate({ id: biz.id, field: 'is_verified', value: !biz.is_verified })}>
                           {biz.is_verified ? <CheckCircle className="w-3 h-3" /> : <Shield className="w-3 h-3" />}
                           {biz.is_verified ? (isRTL ? 'موثق' : 'Verified') : (isRTL ? 'توثيق' : 'Verify')}
                         </Button>
 
-                        <Button variant={biz.is_active ? 'outline' : 'destructive'} size="sm" className="h-7 text-[10px] gap-1 px-2"
+                        <Button variant="outline" size="sm"
+                          className={`h-8 text-xs gap-1.5 rounded-xl ${!biz.is_active ? 'text-emerald-600 border-emerald-200' : 'text-amber-600 border-amber-200'}`}
                           onClick={() => toggleMutation.mutate({ id: biz.id, field: 'is_active', value: !biz.is_active })}>
                           {biz.is_active ? <Ban className="w-3 h-3" /> : <CheckCircle className="w-3 h-3" />}
                           {biz.is_active ? (isRTL ? 'تعطيل' : 'Disable') : (isRTL ? 'تفعيل' : 'Enable')}
                         </Button>
 
-                        <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1 px-2"
+                        <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 rounded-xl"
                           onClick={() => openServices(biz.id)}>
                           <Package className="w-3 h-3" /> {isRTL ? 'خدمات' : 'Services'}
                         </Button>
 
-                        <Button variant="outline" size="sm" className="h-7 w-7 p-0" onClick={() => openEdit(biz)}>
-                          <Edit className="w-3 h-3" />
+                        <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs rounded-xl" onClick={() => openEdit(biz)}>
+                          <Edit className="w-3 h-3" />{isRTL ? 'تعديل' : 'Edit'}
                         </Button>
 
-                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" asChild>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-xl" asChild>
                           <Link to={`/${biz.username}`}><Eye className="w-3 h-3" /></Link>
                         </Button>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               );
             })}
           </div>
