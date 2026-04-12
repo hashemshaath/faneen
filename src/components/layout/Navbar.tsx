@@ -115,6 +115,11 @@ export const Navbar = () => {
               >
                 <link.icon className="w-3.5 h-3.5" />
                 {link.label}
+                {link.to === '/search' && (
+                  <kbd className="hidden xl:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-surface-nav-foreground/10 text-[9px] font-mono text-surface-nav-foreground/40 border border-surface-nav-foreground/10 leading-none">
+                    ⌘K
+                  </kbd>
+                )}
                 {isActive(link.to) && (
                   <span className="absolute bottom-0 inset-x-3 h-0.5 bg-gold rounded-full" />
                 )}
