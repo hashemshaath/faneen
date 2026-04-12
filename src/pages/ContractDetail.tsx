@@ -669,6 +669,22 @@ const ContractDetail = () => {
     });
   };
 
+  const handlePrintMeasurements = () => {
+    if (!contract || !measurements || measurements.length === 0) return;
+    printMeasurements({
+      contractNumber: contract.contract_number, businessName: bizName, currency: contract.currency_code,
+      vatRate, vatInclusive,
+      measurements: measurements.map(m => ({
+        pieceNumber: m.piece_number, name: language === 'ar' ? m.name_ar : (m.name_en || m.name_ar),
+        location: (language === 'ar' ? m.location_ar : (m.location_en || m.location_ar)) || '',
+        floor: m.floor_label || '', lengthMm: Number(m.length_mm), widthMm: Number(m.width_mm),
+        areaSqm: Number(m.area_sqm), unitPrice: Number(m.unit_price), quantity: Number(m.quantity),
+        totalCost: Number(m.total_cost), status: m.status,
+      })),
+      isRTL,
+    });
+  };
+
   const handleImportMeasurements = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
