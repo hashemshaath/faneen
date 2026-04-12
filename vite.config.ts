@@ -35,6 +35,8 @@ export default defineConfig(({ mode }) => ({
           'vendor-charts': ['recharts'],
           'vendor-map': ['leaflet'],
           'vendor-pdf': ['jspdf', 'jspdf-autotable'],
+          'vendor-dnd': ['@dnd-kit/core', '@dnd-kit/sortable', '@dnd-kit/utilities'],
+          'vendor-sanitize': ['dompurify'],
         },
       },
     },
