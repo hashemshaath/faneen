@@ -836,6 +836,27 @@ const DashboardMessages = () => {
     toast.success(isRTL ? 'تم إلغاء الرسالة المجدولة' : 'Scheduled message cancelled');
   }, [isRTL]);
 
+  /* ─── Export Chat ─── */
+  const handleExportChat = useCallback(() => {
+    if (!messages.length || !selectedConv) return;
+    const name = selectedConv.other_profile?.full_name || 'User';
+    const lines = messages.map((m: any) => {
+      const time = new Date(m.created_at).toLocaleString(language === 'ar' ? 'ar-SA' : 'en');
+      const sender = m.sender_id === user?.id ? (isRTL ? 'أنا' : 'Me') : name;
+      return `[${time}] ${sender}: ${m.content || (m.attachment_url ? '📎 مرفق' : '')}`;
+    });
+    const header = `${isRTL ? 'سجل المحادثة مع' : 'Chat history with'} ${name}\n${isRTL ? 'تاريخ التصدير' : 'Exported on'}: ${new Date().toLocaleString(language === 'ar' ? 'ar-SA' : 'en')}\n${'─'.repeat(50)}\n\n`;
+    const content = header + lines.join('\n');
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `chat-${name}-${format(new Date(), 'yyyy-MM-dd')}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(isRTL ? 'تم تصدير المحادثة بنجاح' : 'Chat exported successfully');
+  }, [messages, selectedConv, user?.id, isRTL, language]);
+
 
   /* ─── Filter & Select ─── */
   const filteredConversations = useMemo(() => {
