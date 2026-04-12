@@ -54,6 +54,42 @@ const BusinessProfile = () => {
   const { data: services = [] } = useServices(business?.id);
   const { data: branches = [] } = useBranches(business?.id);
 
+  const businessName = business ? getLocalizedValue(language, business.name_ar, business.name_en) : '';
+  const businessDesc = business ? (getLocalizedValue(language, business.description_ar, business.description_en) || getLocalizedValue(language, business.short_description_ar, business.short_description_en) || '') : '';
+
+  usePageMeta({
+    title: business ? `${businessName} | فنيين Faneen` : (isRTL ? 'جاري التحميل... | فنيين' : 'Loading... | Faneen'),
+    description: business ? (businessDesc.substring(0, 160) || `${businessName} - مزود خدمات معتمد على منصة فنيين`) : undefined,
+    ogType: 'business.business',
+    ogImage: business?.logo_url || undefined,
+  });
+
+  useJsonLd(useMemo(() => business ? ({
+    '@context': 'https://schema.org',
+    '@type': 'LocalBusiness',
+    name: business.name_ar,
+    alternateName: business.name_en,
+    description: business.description_ar,
+    url: `https://faneen.com/${business.username}`,
+    image: business.logo_url,
+    telephone: business.phone,
+    email: business.email,
+    address: business.address ? {
+      '@type': 'PostalAddress',
+      streetAddress: business.address,
+    } : undefined,
+    geo: business.latitude && business.longitude ? {
+      '@type': 'GeoCoordinates',
+      latitude: business.latitude,
+      longitude: business.longitude,
+    } : undefined,
+    aggregateRating: Number(business.rating_count) > 0 ? {
+      '@type': 'AggregateRating',
+      ratingValue: business.rating_avg,
+      reviewCount: business.rating_count,
+    } : undefined,
+  }) : null, [business]));
+
   const contactMutation = useMutation({
     mutationFn: async () => {
       if (!user) {
@@ -82,11 +118,11 @@ const BusinessProfile = () => {
 
       if (createError) throw createError;
 
-      const businessName = getLocalizedValue(language, business.name_ar, business.name_en);
+      const bName = getLocalizedValue(language, business.name_ar, business.name_en);
       const greeting =
         language === "ar"
-          ? `مرحباً، أود الاستفسار عن خدماتكم في ${businessName}`
-          : `Hello, I'd like to inquire about your services at ${businessName}`;
+          ? `مرحباً، أود الاستفسار عن خدماتكم في ${bName}`
+          : `Hello, I'd like to inquire about your services at ${bName}`;
 
       await supabase.from("messages").insert({
         conversation_id: created.id,
@@ -144,40 +180,6 @@ const BusinessProfile = () => {
       </div>
     );
   }
-
-  const businessName = getLocalizedValue(language, business.name_ar, business.name_en);
-  const businessDesc = getLocalizedValue(language, business.description_ar, business.description_en) || getLocalizedValue(language, business.short_description_ar, business.short_description_en) || '';
-
-  usePageMeta({
-    title: `${businessName} | فنيين Faneen`,
-    description: businessDesc.substring(0, 160) || `${businessName} - مزود خدمات معتمد على منصة فنيين`,
-    ogType: 'business.business',
-    ogImage: business.logo_url || undefined,
-  });
-
-  useJsonLd(useMemo(() => ({
-    '@context': 'https://schema.org',
-    '@type': 'LocalBusiness',
-    name: business.name_ar,
-    alternateName: business.name_en,
-    description: business.description_ar,
-    url: `https://faneen.com/${business.username}`,
-    image: business.logo_url,
-    telephone: business.phone,
-    email: business.email,
-    address: business.address ? {
-      '@type': 'PostalAddress',
-      streetAddress: business.address,
-    } : undefined,
-    geo: business.latitude && business.longitude ? {
-      '@type': 'GeoCoordinates',
-      latitude: business.latitude,
-      longitude: business.longitude,
-    } : undefined,
-    aggregateRating: Number(business.rating_count) > 0 ? {
-      '@type': 'AggregateRating',
-      ratingValue: business.rating_avg,
-      reviewCount: business.rating_count,
     } : undefined,
   }), [business]));
   const sectionIntroTitle =
