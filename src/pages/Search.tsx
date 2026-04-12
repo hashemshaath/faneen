@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
+import { usePageMeta } from '@/hooks/usePageMeta';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -53,6 +54,13 @@ const useEntityTags = () =>
 
 const SearchPage = () => {
   const { language } = useLanguage();
+
+  usePageMeta({
+    title: language === 'ar' ? 'البحث عن مزودي خدمات الألمنيوم والحديد | فنيين' : 'Search Aluminum & Iron Service Providers | Faneen',
+    description: language === 'ar'
+      ? 'ابحث عن أفضل مصانع ومحلات الألمنيوم والحديد والزجاج والخشب. قارن الأسعار والتقييمات واختر المزود المناسب.'
+      : 'Find the best aluminum, iron, glass and wood factories and shops. Compare prices, ratings and choose the right provider.',
+  });
   const [searchParams, setSearchParams] = useSearchParams();
   const isMobile = useIsMobile();
 
