@@ -50,6 +50,7 @@ const DashboardProfileSystems = lazyRetry(() => import("./pages/dashboard/Dashbo
 const DashboardMessages = lazyRetry(() => import("./pages/dashboard/DashboardMessages"));
 const DashboardBookmarks = lazyRetry(() => import("./pages/dashboard/DashboardBookmarks"));
 const DashboardBookings = lazyRetry(() => import("./pages/dashboard/DashboardBookings"));
+const DashboardAnalytics = lazyRetry(() => import("./pages/dashboard/DashboardAnalytics"));
 const DashboardNotifications = lazyRetry(() => import("./pages/dashboard/DashboardNotifications"));
 const Offers = lazyRetry(() => import("./pages/Offers"));
 const Compare = lazyRetry(() => import("./pages/Compare"));
