@@ -52,17 +52,18 @@ export const TopProvidersSection = () => {
         <div className="absolute top-1/3 end-0 w-96 h-96 bg-accent/10 rounded-full blur-[120px]" />
       </div>
       <div className="container px-4 sm:px-6 relative">
-        <div className="flex items-center justify-between mb-8 sm:mb-12">
+        <div className="flex items-center justify-between mb-8 sm:mb-14">
           <div>
-            <span className="text-xs sm:text-sm font-body text-accent font-semibold">
+            <span className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-body text-accent font-semibold mb-1">
+              <Star className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-accent text-accent" />
               {isRTL ? 'الأعلى تقييماً' : 'Top Rated'}
             </span>
-            <h2 className="font-heading font-bold text-xl sm:text-3xl md:text-4xl text-foreground mt-1 sm:mt-2">
+            <h2 className="font-heading font-bold text-xl sm:text-3xl md:text-4xl text-foreground mt-1 sm:mt-2 tracking-tight">
               {isRTL ? 'مزودو خدمة مميزون' : 'Featured Providers'}
             </h2>
           </div>
           <Link to="/search">
-            <Button variant="outline" size="sm" className="gap-1 text-xs sm:text-sm">
+            <Button variant="outline" size="sm" className="gap-1.5 text-xs sm:text-sm border-border/60 hover:border-accent/40 hover:text-accent">
               {isRTL ? 'عرض الكل' : 'View All'}
               {isRTL ? <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
             </Button>
@@ -83,19 +84,19 @@ export const TopProvidersSection = () => {
                 <Link
                   key={biz.id}
                   to={`/${biz.username}`}
-                  className={`group block rounded-2xl border border-border/50 dark:border-border/30 bg-card dark:bg-card/60 p-4 sm:p-5 hover:border-accent/40 hover:shadow-lg hover:shadow-accent/5 sm:hover:-translate-y-1 transition-all duration-500 ${isVisible ? 'animate-card-slide-up' : 'opacity-0'}`}
+                  className={`group block rounded-2xl border border-border/40 dark:border-border/20 bg-card dark:bg-card/50 p-4 sm:p-6 hover:border-accent/40 hover:shadow-xl hover:shadow-accent/5 sm:hover:-translate-y-1.5 transition-all duration-500 ${isVisible ? 'animate-card-slide-up' : 'opacity-0'}`}
                   style={{ animationDelay: `${i * 80}ms`, animationFillMode: 'both' }}
                 >
-                  <div className="flex items-center gap-3 mb-3">
-                    <Avatar className="w-12 h-12 rounded-xl ring-2 ring-border/20 group-hover:ring-accent/30 transition-all">
+                  <div className="flex items-center gap-3.5 mb-3.5">
+                    <Avatar className="w-13 h-13 sm:w-14 sm:h-14 rounded-xl ring-2 ring-border/15 group-hover:ring-accent/30 transition-all shadow-sm">
                       <AvatarImage src={biz.logo_url} className="object-cover" />
-                      <AvatarFallback className="rounded-xl bg-accent/10 text-accent font-bold text-lg">
+                      <AvatarFallback className="rounded-xl bg-accent/[0.08] text-accent font-bold text-lg">
                         {name?.charAt(0)}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5">
-                        <h3 className="font-heading font-bold text-sm truncate group-hover:text-accent transition-colors">
+                        <h3 className="font-heading font-bold text-sm sm:text-base truncate group-hover:text-accent transition-colors">
                           {name}
                         </h3>
                         {biz.is_verified && <CheckCircle2 className="w-3.5 h-3.5 text-accent shrink-0" />}
@@ -107,14 +108,14 @@ export const TopProvidersSection = () => {
                   </div>
 
                   {/* Rating */}
-                  <div className="flex items-center gap-1.5 mb-3">
+                  <div className="flex items-center gap-2 mb-3.5">
                     <div className="flex items-center gap-0.5">
                       {Array.from({ length: 5 }).map((_, si) => (
-                        <Star key={si} className={`w-3 h-3 ${si < Math.round(biz.rating_avg) ? 'text-accent fill-accent' : 'text-muted-foreground/20'}`} />
+                        <Star key={si} className={`w-3.5 h-3.5 ${si < Math.round(biz.rating_avg) ? 'text-accent fill-accent' : 'text-muted-foreground/15'}`} />
                       ))}
                     </div>
-                    <span className="text-xs font-bold text-foreground">{Number(biz.rating_avg).toFixed(1)}</span>
-                    <span className="text-[10px] text-muted-foreground">({biz.rating_count})</span>
+                    <span className="text-xs font-bold text-foreground tracking-tight">{Number(biz.rating_avg).toFixed(1)}</span>
+                    <span className="text-[10px] text-muted-foreground/70">({biz.rating_count})</span>
                   </div>
 
                   {/* Tags */}

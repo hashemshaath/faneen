@@ -40,16 +40,16 @@ const StatItem = memo(({ end, suffix, labelKey, index, isVisible, icon: Icon }: 
 
   return (
     <div
-      className={`relative text-center p-4 sm:p-6 rounded-2xl bg-card/80 dark:bg-card/50 border border-border/50 dark:border-border/30 backdrop-blur-sm hover:border-accent/30 transition-all duration-500 group ${isVisible ? 'animate-card-slide-up' : 'opacity-0'}`}
+      className={`relative text-center p-5 sm:p-7 rounded-2xl bg-card/90 dark:bg-card/40 border border-border/40 dark:border-border/20 backdrop-blur-sm hover:border-accent/30 hover:shadow-lg hover:shadow-accent/5 transition-all duration-500 group ${isVisible ? 'animate-card-slide-up' : 'opacity-0'}`}
       style={{ animationDelay: `${index * 120}ms`, animationFillMode: 'both' }}
     >
-      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-accent/10 dark:bg-accent/15 flex items-center justify-center mx-auto mb-2.5 sm:mb-3 group-hover:bg-gradient-gold group-hover:scale-110 transition-all duration-300">
-        <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-accent group-hover:text-secondary-foreground transition-colors" />
+      <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-xl bg-accent/[0.08] dark:bg-accent/15 flex items-center justify-center mx-auto mb-3 sm:mb-4 group-hover:bg-gradient-gold group-hover:scale-110 transition-all duration-300">
+        <Icon className="w-5 h-5 sm:w-7 sm:h-7 text-accent group-hover:text-secondary-foreground transition-colors" />
       </div>
-      <div className="font-heading font-black text-2xl sm:text-3xl md:text-4xl text-gradient-gold mb-1 sm:mb-2">
+      <div className="font-heading font-black text-2xl sm:text-4xl md:text-[2.75rem] text-gradient-gold mb-1.5 sm:mb-2 tracking-tight">
         {isVisible ? display + suffix : "0" + suffix}
       </div>
-      <div className="font-body text-[11px] sm:text-sm text-muted-foreground">{t(labelKey as any)}</div>
+      <div className="font-body text-[11px] sm:text-sm text-muted-foreground/80 font-medium">{t(labelKey as any)}</div>
     </div>
   );
 });
