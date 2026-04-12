@@ -10,42 +10,41 @@ export const CTASection = () => {
   const ArrowIcon = isRTL ? ArrowLeft : ArrowRight;
 
   return (
-    <section ref={visRef} className="py-16 sm:py-24 bg-background relative overflow-hidden">
+    <section ref={visRef} className="py-16 sm:py-28 bg-background relative overflow-hidden">
       <div className="container px-4 sm:px-6">
         <div
-          className={`relative rounded-3xl overflow-hidden bg-gradient-navy p-8 sm:p-12 md:p-16 text-center ${isVisible ? 'animate-fade-in' : 'opacity-0'}`}
+          className={`relative rounded-3xl overflow-hidden bg-gradient-navy p-10 sm:p-14 md:p-20 text-center ${isVisible ? 'animate-fade-in' : 'opacity-0'}`}
         >
           {/* Decorative elements */}
           <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute top-0 start-0 w-72 h-72 bg-accent/10 rounded-full blur-[100px]" />
-            <div className="absolute bottom-0 end-0 w-96 h-96 bg-accent/5 rounded-full blur-[120px]" />
-            <div className="absolute inset-0 -translate-x-full hover:translate-x-full transition-transform duration-[3000ms] bg-gradient-to-r from-transparent via-white/5 to-transparent" />
+            <div className="absolute top-0 start-0 w-80 h-80 bg-accent/10 rounded-full blur-[120px]" />
+            <div className="absolute bottom-0 end-0 w-96 h-96 bg-accent/5 rounded-full blur-[140px]" />
           </div>
 
           <div className="relative z-10 max-w-2xl mx-auto">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-accent/15 text-accent text-xs sm:text-sm font-body font-semibold mb-4 sm:mb-6">
-              <Sparkles className="w-3.5 h-3.5" />
+            <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-accent/15 text-accent text-xs sm:text-sm font-body font-semibold mb-5 sm:mb-7">
+              <Sparkles className="w-4 h-4" />
               {isRTL ? 'انضم إلينا اليوم' : 'Join Us Today'}
             </div>
 
-            <h2 className="font-heading font-bold text-2xl sm:text-3xl md:text-4xl text-surface-nav-foreground mb-4 sm:mb-6">
+            <h2 className="font-heading font-bold text-2xl sm:text-4xl md:text-5xl text-surface-nav-foreground mb-5 sm:mb-7 leading-tight">
               {isRTL ? 'ابدأ رحلتك مع فنيين' : 'Start Your Journey with Faneen'}
             </h2>
-            <p className="font-body text-sm sm:text-base text-surface-nav-foreground/60 mb-6 sm:mb-8 max-w-lg mx-auto">
+            <p className="font-body text-sm sm:text-lg text-surface-nav-foreground/55 mb-7 sm:mb-10 max-w-lg mx-auto leading-relaxed">
               {isRTL
                 ? 'سواء كنت تبحث عن مزود خدمة أو ترغب في عرض خدماتك، فنيين هو المكان الأمثل لك'
                 : 'Whether you\'re looking for a service provider or want to showcase your services, Faneen is the perfect place for you'}
             </p>
 
             {/* Trust indicators */}
-            <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-8 mb-6 sm:mb-8">
+            <div className="flex flex-wrap items-center justify-center gap-5 sm:gap-10 mb-7 sm:mb-10">
               {[
                 { icon: Shield, textAr: 'عقود محمية', textEn: 'Protected Contracts' },
                 { icon: Zap, textAr: 'تسجيل فوري', textEn: 'Instant Signup' },
                 { icon: Sparkles, textAr: 'مجاناً للبدء', textEn: 'Free to Start' },
               ].map((item) => (
-                <div key={item.textEn} className="flex items-center gap-1.5 text-surface-nav-foreground/50 text-xs sm:text-sm">
-                  <item.icon className="w-4 h-4 text-accent" />
+                <div key={item.textEn} className="flex items-center gap-2 text-surface-nav-foreground/50 text-xs sm:text-sm">
+                  <item.icon className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />
                   <span>{isRTL ? item.textAr : item.textEn}</span>
                 </div>
               ))}
@@ -53,13 +52,13 @@ export const CTASection = () => {
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
               <Link to="/auth">
-                <Button variant="hero" size="lg" className="px-8 sm:px-10 gap-2 shadow-lg shadow-accent/30 active:scale-95 transition-transform">
+                <Button variant="hero" size="lg" className="px-10 sm:px-12 py-3.5 gap-2 shadow-lg shadow-accent/30 active:scale-95 transition-transform text-sm sm:text-base font-semibold">
                   {isRTL ? 'سجّل الآن مجاناً' : 'Sign Up for Free'}
                   <ArrowIcon className="w-4 h-4" />
                 </Button>
               </Link>
               <Link to="/search">
-                <Button variant="heroOutline" size="lg" className="px-8 sm:px-10 gap-2 active:scale-95 transition-transform">
+                <Button variant="heroOutline" size="lg" className="px-10 sm:px-12 py-3.5 gap-2 active:scale-95 transition-transform text-sm sm:text-base">
                   {isRTL ? 'تصفح المزودين' : 'Browse Providers'}
                 </Button>
               </Link>
