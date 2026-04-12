@@ -3,25 +3,24 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Star, MessageCircle, Search, TrendingUp, TrendingDown,
   ThumbsUp, ThumbsDown, BarChart3, ArrowUpDown, X,
   Clock, ChevronDown, ChevronUp,
-  Sparkles, LayoutGrid, LayoutList,
+  Sparkles, LayoutGrid, LayoutList, FolderOpen, User,
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { toast } from 'sonner';
 import { Progress } from '@/components/ui/progress';
+import { cn } from '@/lib/utils';
 
-interface Review {
+interface ReviewWithRelations {
   id: string;
   business_id: string;
   user_id: string;
@@ -29,10 +28,16 @@ interface Review {
   title: string | null;
   content: string | null;
   created_at: string;
-  is_visible?: boolean;
+  is_verified: boolean;
+  project_id: string | null;
+  // joined
+  reviewer_name: string | null;
+  reviewer_avatar: string | null;
+  project_title_ar: string | null;
+  project_title_en: string | null;
 }
 
-type FilterMode = 'all' | '5' | '4' | '3' | '2' | '1';
+type FilterMode = 'all' | '5' | '4' | '3' | '2' | '1' | 'project' | 'general';
 type SortMode = 'newest' | 'oldest' | 'highest' | 'lowest';
 type ViewMode = 'cards' | 'compact';
 
@@ -48,10 +53,22 @@ const RatingStars = React.memo(({ rating, size = 'sm' }: { rating: number; size?
 });
 RatingStars.displayName = 'RatingStars';
 
+function getTimeAgo(dateStr: string, isRTL: boolean): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return isRTL ? `منذ ${mins} د` : `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return isRTL ? `منذ ${hours} س` : `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return isRTL ? `منذ ${days} ي` : `${days}d ago`;
+  const months = Math.floor(days / 30);
+  return isRTL ? `منذ ${months} ش` : `${months}mo ago`;
+}
+
 const ReviewCard = React.memo(({
-  review, isRTL, viewMode, onToggleExpand, isExpanded,
+  review, isRTL, language, viewMode, onToggleExpand, isExpanded,
 }: {
-  review: Review; isRTL: boolean; viewMode: ViewMode;
+  review: ReviewWithRelations; isRTL: boolean; language: string; viewMode: ViewMode;
   onToggleExpand: (id: string) => void; isExpanded: boolean;
 }) => {
   const dateStr = new Date(review.created_at).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', {
@@ -61,25 +78,42 @@ const ReviewCard = React.memo(({
   const sentiment = review.rating >= 4 ? 'positive' : review.rating >= 3 ? 'neutral' : 'negative';
   const sentimentColor = sentiment === 'positive' ? 'text-emerald-500' : sentiment === 'neutral' ? 'text-amber-500' : 'text-rose-500';
   const sentimentBg = sentiment === 'positive' ? 'bg-emerald-500/10' : sentiment === 'neutral' ? 'bg-amber-500/10' : 'bg-rose-500/10';
-  const initials = `U${review.user_id.slice(0, 2).toUpperCase()}`;
+
+  const displayName = review.reviewer_name || (isRTL ? 'مستخدم' : 'User');
+  const initials = displayName.slice(0, 2).toUpperCase();
+  const projectTitle = review.project_id
+    ? (language === 'ar' ? review.project_title_ar : (review.project_title_en || review.project_title_ar))
+    : null;
 
   if (viewMode === 'compact') {
     return (
       <Card className="border-border/40 hover:border-primary/20 transition-all">
         <CardContent className="p-2.5 sm:p-3 flex items-center gap-3">
           <Avatar className="w-8 h-8 shrink-0">
+            {review.reviewer_avatar && <AvatarImage src={review.reviewer_avatar} alt={displayName} />}
             <AvatarFallback className={`text-[10px] font-bold ${sentimentBg} ${sentimentColor}`}>{initials}</AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-semibold">{displayName}</span>
               <RatingStars rating={review.rating} />
-              {review.title && <span className="text-xs font-medium truncate">{review.title}</span>}
+              {review.project_id && (
+                <Badge variant="secondary" className="text-[8px] px-1.5 py-0 h-4 gap-0.5 bg-primary/10 text-primary">
+                  <FolderOpen className="w-2.5 h-2.5" />
+                  {isRTL ? 'مشروع' : 'Project'}
+                </Badge>
+              )}
+              {review.is_verified && (
+                <Badge variant="secondary" className="text-[8px] px-1.5 py-0 h-4 gap-0.5 bg-emerald-500/10 text-emerald-600">
+                  ✓ {isRTL ? 'موثق' : 'Verified'}
+                </Badge>
+              )}
             </div>
             {review.content && <p className="text-[11px] text-muted-foreground truncate mt-0.5">{review.content}</p>}
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <Badge variant="outline" className={`text-[9px] px-1.5 py-0 h-4 border-0 ${sentimentBg} ${sentimentColor}`}>
-              {sentiment === 'positive' ? (isRTL ? 'إيجابي' : 'Positive') : sentiment === 'neutral' ? (isRTL ? 'محايد' : 'Neutral') : (isRTL ? 'سلبي' : 'Negative')}
+              {sentiment === 'positive' ? (isRTL ? 'إيجابي' : '+') : sentiment === 'neutral' ? (isRTL ? 'محايد' : '~') : (isRTL ? 'سلبي' : '-')}
             </Badge>
             <span className="text-[10px] text-muted-foreground whitespace-nowrap">{timeAgo}</span>
           </div>
@@ -93,18 +127,44 @@ const ReviewCard = React.memo(({
       <CardContent className="p-3 sm:p-4">
         <div className="flex items-start gap-3">
           <Avatar className="w-9 h-9 shrink-0 mt-0.5">
+            {review.reviewer_avatar && <AvatarImage src={review.reviewer_avatar} alt={displayName} />}
             <AvatarFallback className={`text-xs font-bold ${sentimentBg} ${sentimentColor}`}>{initials}</AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between gap-2 mb-1">
               <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-sm font-semibold">{displayName}</span>
                 <RatingStars rating={review.rating} />
                 <Badge variant="outline" className={`text-[9px] px-1.5 py-0 h-4 border-0 ${sentimentBg} ${sentimentColor}`}>
                   {review.rating}/5
                 </Badge>
+                {review.is_verified && (
+                  <Badge variant="secondary" className="text-[8px] px-1.5 py-0 h-4 gap-0.5 bg-emerald-500/10 text-emerald-600">
+                    ✓ {isRTL ? 'موثق' : 'Verified'}
+                  </Badge>
+                )}
               </div>
               <span className="text-[10px] text-muted-foreground whitespace-nowrap">{timeAgo}</span>
             </div>
+
+            {/* Project Badge */}
+            {review.project_id && projectTitle && (
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <Badge className="text-[10px] px-2 py-0.5 gap-1 bg-primary/10 text-primary hover:bg-primary/20 cursor-default">
+                  <FolderOpen className="w-3 h-3" />
+                  {isRTL ? 'مشروع:' : 'Project:'} {projectTitle}
+                </Badge>
+              </div>
+            )}
+            {!review.project_id && (
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <Badge variant="outline" className="text-[10px] px-2 py-0.5 gap-1 text-muted-foreground">
+                  <User className="w-3 h-3" />
+                  {isRTL ? 'تقييم عام' : 'General Review'}
+                </Badge>
+              </div>
+            )}
+
             {review.title && <h4 className="text-sm font-semibold mb-1">{review.title}</h4>}
             {review.content && (
               <div>
@@ -129,20 +189,8 @@ const ReviewCard = React.memo(({
 });
 ReviewCard.displayName = 'ReviewCard';
 
-function getTimeAgo(dateStr: string, isRTL: boolean): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 60) return isRTL ? `منذ ${mins} د` : `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return isRTL ? `منذ ${hours} س` : `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  if (days < 30) return isRTL ? `منذ ${days} ي` : `${days}d ago`;
-  const months = Math.floor(days / 30);
-  return isRTL ? `منذ ${months} ش` : `${months}mo ago`;
-}
-
 const DashboardReviews = () => {
-  const { isRTL } = useLanguage();
+  const { isRTL, language } = useLanguage();
   const { user } = useAuth();
   const [filterMode, setFilterMode] = useState<FilterMode>('all');
   const [sortMode, setSortMode] = useState<SortMode>('newest');
@@ -164,21 +212,56 @@ const DashboardReviews = () => {
     queryKey: ['dashboard-reviews', business?.id],
     queryFn: async () => {
       if (!business?.id) return [];
-      const { data } = await supabase.from('reviews').select('*').eq('business_id', business.id).order('created_at', { ascending: false });
-      return (data ?? []) as Review[];
+      // Fetch reviews
+      const { data: reviewsData } = await supabase
+        .from('reviews')
+        .select('*')
+        .eq('business_id', business.id)
+        .order('created_at', { ascending: false });
+
+      if (!reviewsData?.length) return [];
+
+      // Get unique user IDs and project IDs
+      const userIds = [...new Set(reviewsData.map(r => r.user_id))];
+      const projectIds = [...new Set(reviewsData.filter(r => r.project_id).map(r => r.project_id!))];
+
+      // Fetch profiles and projects in parallel
+      const [profilesRes, projectsRes] = await Promise.all([
+        supabase.from('profiles').select('user_id, full_name, avatar_url').in('user_id', userIds),
+        projectIds.length > 0
+          ? supabase.from('projects').select('id, title_ar, title_en').in('id', projectIds)
+          : Promise.resolve({ data: [] }),
+      ]);
+
+      const profilesMap = new Map((profilesRes.data ?? []).map(p => [p.user_id, p]));
+      const projectsMap = new Map((projectsRes.data ?? []).map(p => [p.id, p]));
+
+      return reviewsData.map(r => {
+        const profile = profilesMap.get(r.user_id);
+        const project = r.project_id ? projectsMap.get(r.project_id) : null;
+        return {
+          ...r,
+          project_id: r.project_id ?? null,
+          reviewer_name: profile?.full_name || null,
+          reviewer_avatar: profile?.avatar_url || null,
+          project_title_ar: project?.title_ar || null,
+          project_title_en: project?.title_en || null,
+        } as ReviewWithRelations;
+      });
     },
     enabled: !!business?.id,
   });
 
   const stats = useMemo(() => {
-    if (reviews.length === 0) return { avg: 0, total: 0, distribution: [0, 0, 0, 0, 0], positive: 0, negative: 0, trend: 0 };
+    if (reviews.length === 0) return { avg: 0, total: 0, distribution: [0, 0, 0, 0, 0], positive: 0, negative: 0, trend: 0, projectCount: 0, generalCount: 0 };
     const dist = [0, 0, 0, 0, 0];
     let sum = 0;
     reviews.forEach(r => { dist[r.rating - 1]++; sum += r.rating; });
     const avg = sum / reviews.length;
     const positive = reviews.filter(r => r.rating >= 4).length;
     const negative = reviews.filter(r => r.rating <= 2).length;
-    // trend: compare last 30 days avg vs previous 30 days
+    const projectCount = reviews.filter(r => r.project_id).length;
+    const generalCount = reviews.filter(r => !r.project_id).length;
     const now = Date.now();
     const d30 = 30 * 86400000;
     const recent = reviews.filter(r => now - new Date(r.created_at).getTime() < d30);
@@ -186,15 +269,23 @@ const DashboardReviews = () => {
     const recentAvg = recent.length > 0 ? recent.reduce((s, r) => s + r.rating, 0) / recent.length : 0;
     const olderAvg = older.length > 0 ? older.reduce((s, r) => s + r.rating, 0) / older.length : 0;
     const trend = older.length > 0 ? recentAvg - olderAvg : 0;
-    return { avg, total: reviews.length, distribution: dist.reverse(), positive, negative, trend };
+    return { avg, total: reviews.length, distribution: dist.reverse(), positive, negative, trend, projectCount, generalCount };
   }, [reviews]);
 
   const filtered = useMemo(() => {
     let result = [...reviews];
-    if (filterMode !== 'all') result = result.filter(r => r.rating === parseInt(filterMode));
+    if (filterMode === 'project') result = result.filter(r => r.project_id);
+    else if (filterMode === 'general') result = result.filter(r => !r.project_id);
+    else if (filterMode !== 'all') result = result.filter(r => r.rating === parseInt(filterMode));
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      result = result.filter(r => (r.title || '').toLowerCase().includes(q) || (r.content || '').toLowerCase().includes(q));
+      result = result.filter(r =>
+        (r.title || '').toLowerCase().includes(q) ||
+        (r.content || '').toLowerCase().includes(q) ||
+        (r.reviewer_name || '').toLowerCase().includes(q) ||
+        (r.project_title_ar || '').toLowerCase().includes(q) ||
+        (r.project_title_en || '').toLowerCase().includes(q)
+      );
     }
     switch (sortMode) {
       case 'oldest': result.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()); break;
@@ -217,20 +308,18 @@ const DashboardReviews = () => {
     <DashboardLayout>
       <div className="space-y-5">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div>
-            <h1 className="font-heading font-bold text-xl sm:text-2xl flex items-center gap-2">
-              <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
-              {isRTL ? 'التقييمات والمراجعات' : 'Reviews & Ratings'}
-            </h1>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-              {isRTL ? 'تابع تقييمات عملائك وتحليلات الأداء' : 'Track customer feedback and performance analytics'}
-            </p>
-          </div>
+        <div>
+          <h1 className="font-heading font-bold text-xl sm:text-2xl flex items-center gap-2">
+            <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+            {isRTL ? 'التقييمات والمراجعات' : 'Reviews & Ratings'}
+          </h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+            {isRTL ? 'تابع تقييمات عملائك المرتبطة بالمشاريع والتقييمات العامة' : 'Track project-linked and general customer reviews'}
+          </p>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
           {[
             {
               label: isRTL ? 'متوسط التقييم' : 'Avg Rating', value: stats.avg.toFixed(1),
@@ -242,21 +331,23 @@ const DashboardReviews = () => {
                 </span>
               ) : null,
             },
-            { label: isRTL ? 'إجمالي التقييمات' : 'Total', value: stats.total, icon: MessageCircle, color: 'text-blue-500 bg-blue-500/10' },
+            { label: isRTL ? 'الإجمالي' : 'Total', value: stats.total, icon: MessageCircle, color: 'text-blue-500 bg-blue-500/10' },
             { label: isRTL ? 'إيجابية' : 'Positive', value: stats.positive, icon: ThumbsUp, color: 'text-emerald-500 bg-emerald-500/10' },
             { label: isRTL ? 'سلبية' : 'Negative', value: stats.negative, icon: ThumbsDown, color: 'text-rose-500 bg-rose-500/10' },
+            { label: isRTL ? 'مرتبطة بمشروع' : 'Project', value: stats.projectCount, icon: FolderOpen, color: 'text-primary bg-primary/10' },
+            { label: isRTL ? 'تقييم عام' : 'General', value: stats.generalCount, icon: User, color: 'text-muted-foreground bg-muted' },
           ].map((s, i) => (
             <Card key={i} className="border-border/40 bg-card/50">
-              <CardContent className="p-2.5 sm:p-3 flex items-center gap-2.5">
-                <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center shrink-0 ${s.color}`}>
-                  <s.icon className="w-4 h-4" />
+              <CardContent className="p-2.5 sm:p-3 flex items-center gap-2">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${s.color}`}>
+                  <s.icon className="w-3.5 h-3.5" />
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <p className="text-lg sm:text-xl font-bold">{s.value}</p>
+                    <p className="text-lg font-bold">{s.value}</p>
                     {s.extra}
                   </div>
-                  <p className="text-[10px] sm:text-xs text-muted-foreground truncate">{s.label}</p>
+                  <p className="text-[9px] sm:text-[10px] text-muted-foreground truncate">{s.label}</p>
                 </div>
               </CardContent>
             </Card>
@@ -296,10 +387,10 @@ const DashboardReviews = () => {
         {/* Toolbar */}
         {reviews.length > 0 && (
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 items-stretch sm:items-center justify-between">
-            <div className="flex items-center gap-2 flex-1">
+            <div className="flex items-center gap-2 flex-1 flex-wrap">
               <div className="relative flex-1 sm:max-w-xs">
                 <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input placeholder={isRTL ? 'ابحث في التقييمات...' : 'Search reviews...'} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="ps-9 h-9" />
+                <Input placeholder={isRTL ? 'ابحث بالاسم أو المحتوى أو المشروع...' : 'Search by name, content, or project...'} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="ps-9 h-9" />
               </div>
               <Select value={sortMode} onValueChange={(v) => setSortMode(v as SortMode)}>
                 <SelectTrigger className="w-auto h-9 text-xs gap-1">
@@ -313,11 +404,23 @@ const DashboardReviews = () => {
                   <SelectItem value="lowest">{isRTL ? 'الأقل تقييماً' : 'Lowest'}</SelectItem>
                 </SelectContent>
               </Select>
+              {/* Type filter */}
+              <Select value={filterMode === 'project' || filterMode === 'general' ? filterMode : 'all-types'} onValueChange={(v) => setFilterMode(v === 'all-types' ? 'all' : v as FilterMode)}>
+                <SelectTrigger className="w-auto h-9 text-xs gap-1">
+                  <FolderOpen className="w-3.5 h-3.5" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all-types">{isRTL ? 'الكل' : 'All Types'}</SelectItem>
+                  <SelectItem value="project">{isRTL ? 'مرتبطة بمشروع' : 'Project Reviews'}</SelectItem>
+                  <SelectItem value="general">{isRTL ? 'تقييمات عامة' : 'General Reviews'}</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="flex items-center gap-2">
               {filterMode !== 'all' && (
                 <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => setFilterMode('all')}>
-                  <X className="w-3 h-3 me-1" />{isRTL ? 'إزالة الفلتر' : 'Clear filter'}
+                  <X className="w-3 h-3 me-1" />{isRTL ? 'مسح الفلتر' : 'Clear'}
                 </Button>
               )}
               <div className="flex border border-border/40 rounded-lg overflow-hidden">
@@ -343,7 +446,7 @@ const DashboardReviews = () => {
               </div>
               <h3 className="text-base font-semibold mb-2">{isRTL ? 'لا توجد تقييمات بعد' : 'No reviews yet'}</h3>
               <p className="text-sm text-muted-foreground max-w-sm">
-                {isRTL ? 'ستظهر تقييمات العملاء هنا بمجرد استلامها' : 'Customer reviews will appear here once received'}
+                {isRTL ? 'ستظهر تقييمات العملاء هنا مرتبطة بحساباتهم ومشاريعهم' : 'Customer reviews linked to their accounts and projects will appear here'}
               </p>
             </CardContent>
           </Card>
@@ -360,7 +463,7 @@ const DashboardReviews = () => {
               {isRTL ? `عرض ${filtered.length} من ${reviews.length} تقييم` : `Showing ${filtered.length} of ${reviews.length} reviews`}
             </p>
             {filtered.map(review => (
-              <ReviewCard key={review.id} review={review} isRTL={isRTL} viewMode={viewMode}
+              <ReviewCard key={review.id} review={review} isRTL={isRTL} language={language} viewMode={viewMode}
                 onToggleExpand={toggleExpand} isExpanded={expandedIds.has(review.id)} />
             ))}
           </div>
