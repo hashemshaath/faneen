@@ -19,7 +19,7 @@ import {
   BarChart3, MessageCircle, TrendingUp, Zap, Shield, Forward, Mic, MicOff,
   Volume2, VolumeX, Bell, BellOff, AlertCircle, UserPlus, AtSign, Link2,
   Bookmark, BookmarkCheck, Filter, LayoutList, Calendar, Globe,
-  Timer, Tag, Palette, FileDown, ClockIcon,
+  Timer, Tag, Palette, FileDown, ChevronUp,
 } from 'lucide-react';
 import { format, formatDistanceToNow, isToday, isYesterday, differenceInMinutes } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
@@ -153,7 +153,9 @@ const ConversationItem = React.memo(({ conv, isSelected, unread, isRTL, language
   const timeAgo = conv.last_message_at
     ? formatDistanceToNow(new Date(conv.last_message_at), { addSuffix: false, locale: language === 'ar' ? ar : enUS })
     : '';
-  const isOnline = conv.last_message_at && differenceInMinutes(new Date(), new Date(conv.last_message_at)) < 5;
+  const minutesAgo = conv.last_message_at ? differenceInMinutes(new Date(), new Date(conv.last_message_at)) : 999;
+  const isOnline = minutesAgo < 5;
+  const isAway = !isOnline && minutesAgo < 30;
 
   return (
     <div
@@ -182,9 +184,12 @@ const ConversationItem = React.memo(({ conv, isSelected, unread, isRTL, language
           </AvatarFallback>
         </Avatar>
         {isOnline && (
-          <span className="absolute -bottom-0.5 -end-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-card" />
+          <span className="absolute -bottom-0.5 -end-0.5 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-card shadow-sm shadow-emerald-500/30" />
         )}
-        {unread > 0 && !isOnline && (
+        {isAway && !isOnline && (
+          <span className="absolute -bottom-0.5 -end-0.5 w-3.5 h-3.5 bg-amber-400 rounded-full border-2 border-card shadow-sm" />
+        )}
+        {!isOnline && !isAway && unread > 0 && (
           <span className="absolute -top-0.5 -end-0.5 w-3 h-3 bg-accent rounded-full border-2 border-card animate-pulse" />
         )}
       </div>
@@ -420,10 +425,17 @@ const ChatInfoPanel = React.memo(({ conv, messages, isRTL, language, onClose }: 
             <div>
               <h4 className="font-heading font-bold text-sm">{conv?.other_profile?.full_name}</h4>
               <p className="text-[11px] text-muted-foreground">{conv?.other_profile?.email || ''}</p>
-              <Badge variant="outline" className="text-[9px] mt-1.5 gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                {isRTL ? 'متصل' : 'Online'}
-              </Badge>
+              {(() => {
+                const mins = conv?.last_message_at ? differenceInMinutes(new Date(), new Date(conv.last_message_at)) : 999;
+                const online = mins < 5;
+                const away = !online && mins < 30;
+                return (
+                  <Badge variant="outline" className="text-[9px] mt-1.5 gap-1">
+                    <span className={`w-1.5 h-1.5 rounded-full ${online ? 'bg-emerald-500' : away ? 'bg-amber-400' : 'bg-muted-foreground/30'}`} />
+                    {online ? (isRTL ? 'متصل' : 'Online') : away ? (isRTL ? 'بعيد' : 'Away') : (isRTL ? 'غير متصل' : 'Offline')}
+                  </Badge>
+                );
+              })()}
             </div>
           </div>
 
@@ -560,6 +572,7 @@ const DashboardMessages = () => {
   const [deferredSearch, setDeferredSearch] = useState('');
   const [chatSearchTerm, setChatSearchTerm] = useState('');
   const [showChatSearch, setShowChatSearch] = useState(false);
+  const [chatSearchIndex, setChatSearchIndex] = useState(0);
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
   const [attachedPreview, setAttachedPreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -1125,14 +1138,42 @@ const DashboardMessages = () => {
                           {selectedConv?.other_profile?.full_name?.charAt(0) || '؟'}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="absolute -bottom-0.5 -end-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-card" />
+                      {(() => {
+                        const mins = selectedConv?.last_message_at ? differenceInMinutes(new Date(), new Date(selectedConv.last_message_at)) : 999;
+                        const online = mins < 5;
+                        const away = !online && mins < 30;
+                        return online
+                          ? <span className="absolute -bottom-0.5 -end-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-card shadow-sm shadow-emerald-500/30" />
+                          : away
+                            ? <span className="absolute -bottom-0.5 -end-0.5 w-3 h-3 bg-amber-400 rounded-full border-2 border-card" />
+                            : <span className="absolute -bottom-0.5 -end-0.5 w-3 h-3 bg-muted-foreground/30 rounded-full border-2 border-card" />;
+                      })()}
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-heading font-bold text-sm truncate">{selectedConv?.other_profile?.full_name || (isRTL ? 'مستخدم' : 'User')}</h3>
-                      <p className="text-[10px] text-emerald-500 font-medium flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                        {isRTL ? 'متصل الآن' : 'Online'}
-                      </p>
+                      {(() => {
+                        const mins = selectedConv?.last_message_at ? differenceInMinutes(new Date(), new Date(selectedConv.last_message_at)) : 999;
+                        if (mins < 5) return (
+                          <p className="text-[10px] text-emerald-500 font-medium flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                            {isRTL ? 'متصل الآن' : 'Online'}
+                          </p>
+                        );
+                        if (mins < 30) return (
+                          <p className="text-[10px] text-amber-500 font-medium flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                            {isRTL ? 'بعيد' : 'Away'}
+                          </p>
+                        );
+                        return (
+                          <p className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30" />
+                            {selectedConv?.last_message_at
+                              ? `${isRTL ? 'آخر ظهور' : 'Last seen'} ${formatDistanceToNow(new Date(selectedConv.last_message_at), { addSuffix: true, locale: language === 'ar' ? ar : enUS })}`
+                              : (isRTL ? 'غير متصل' : 'Offline')}
+                          </p>
+                        );
+                      })()}
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
                       <Tooltip>
@@ -1195,15 +1236,43 @@ const DashboardMessages = () => {
 
                   {/* ─── Chat Search Bar ─── */}
                   {showChatSearch && (
-                    <div className="px-4 py-2 border-b border-border/20 bg-card/60 backdrop-blur-sm flex items-center gap-2 animate-in slide-in-from-top-1 duration-200">
-                      <Search className="w-4 h-4 text-muted-foreground shrink-0" />
-                      <Input value={chatSearchTerm} onChange={e => setChatSearchTerm(e.target.value)}
+                    <div className="px-4 py-2 border-b border-border/20 bg-accent/5 backdrop-blur-sm flex items-center gap-2 animate-in slide-in-from-top-1 duration-200">
+                      <Search className="w-4 h-4 text-accent shrink-0" />
+                      <Input value={chatSearchTerm} onChange={e => { setChatSearchTerm(e.target.value); setChatSearchIndex(0); }}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter' && filteredMessages.length > 0) {
+                            setChatSearchIndex(prev => (prev + 1) % filteredMessages.length);
+                            const target = document.getElementById(`msg-${filteredMessages[chatSearchIndex]?.id}`);
+                            target?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                          }
+                        }}
                         placeholder={isRTL ? 'بحث في الرسائل...' : 'Search messages...'}
                         className="h-8 text-xs border-0 bg-transparent shadow-none focus-visible:ring-0 rounded-xl" autoFocus />
-                      {chatSearchTerm && (
-                        <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4 shrink-0 rounded-md">{filteredMessages.length}</Badge>
+                      {chatSearchTerm && filteredMessages.length > 0 && (
+                        <div className="flex items-center gap-0.5 shrink-0">
+                          <span className="text-[10px] text-muted-foreground font-medium tabular-nums">
+                            {chatSearchIndex + 1}/{filteredMessages.length}
+                          </span>
+                          <Button variant="ghost" size="icon" className="w-6 h-6 rounded-md" onClick={() => {
+                            const prev = (chatSearchIndex - 1 + filteredMessages.length) % filteredMessages.length;
+                            setChatSearchIndex(prev);
+                            document.getElementById(`msg-${filteredMessages[prev]?.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                          }}>
+                            <ChevronUp className="w-3 h-3" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="w-6 h-6 rounded-md" onClick={() => {
+                            const next = (chatSearchIndex + 1) % filteredMessages.length;
+                            setChatSearchIndex(next);
+                            document.getElementById(`msg-${filteredMessages[next]?.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                          }}>
+                            <ChevronDown className="w-3 h-3" />
+                          </Button>
+                        </div>
                       )}
-                      <Button variant="ghost" size="icon" className="w-7 h-7 shrink-0 rounded-lg" onClick={() => { setShowChatSearch(false); setChatSearchTerm(''); }}>
+                      {chatSearchTerm && filteredMessages.length === 0 && (
+                        <span className="text-[10px] text-muted-foreground shrink-0">{isRTL ? 'لا نتائج' : 'No results'}</span>
+                      )}
+                      <Button variant="ghost" size="icon" className="w-7 h-7 shrink-0 rounded-lg" onClick={() => { setShowChatSearch(false); setChatSearchTerm(''); setChatSearchIndex(0); }}>
                         <X className="w-3.5 h-3.5" />
                       </Button>
                     </div>
@@ -1230,10 +1299,15 @@ const DashboardMessages = () => {
                               </span>
                               <div className="flex-1 h-px bg-border/30" />
                             </div>
-                            {group.messages.map((msg: any) => (
-                              <MessageBubble key={msg.id} msg={msg} isMine={msg.sender_id === user?.id} language={language} isRTL={isRTL}
-                                onReply={handleReply} onCopy={handleCopy} onReact={handleReactMessage} onStar={toggleStarMessage} onForward={handleForwardMessage} />
-                            ))}
+                            {group.messages.map((msg: any) => {
+                              const isSearchMatch = chatSearchTerm && msg.content?.toLowerCase().includes(chatSearchTerm.toLowerCase());
+                              return (
+                                <div key={msg.id} id={`msg-${msg.id}`} className={isSearchMatch ? 'bg-accent/10 rounded-xl -mx-1 px-1 transition-colors' : ''}>
+                                  <MessageBubble msg={msg} isMine={msg.sender_id === user?.id} language={language} isRTL={isRTL}
+                                    onReply={handleReply} onCopy={handleCopy} onReact={handleReactMessage} onStar={toggleStarMessage} onForward={handleForwardMessage} />
+                                </div>
+                              );
+                            })}
                           </React.Fragment>
                         ))}
                         <div ref={messagesEndRef} />
