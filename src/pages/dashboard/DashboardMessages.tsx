@@ -425,10 +425,17 @@ const ChatInfoPanel = React.memo(({ conv, messages, isRTL, language, onClose }: 
             <div>
               <h4 className="font-heading font-bold text-sm">{conv?.other_profile?.full_name}</h4>
               <p className="text-[11px] text-muted-foreground">{conv?.other_profile?.email || ''}</p>
-              <Badge variant="outline" className="text-[9px] mt-1.5 gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                {isRTL ? 'متصل' : 'Online'}
-              </Badge>
+              {(() => {
+                const mins = conv?.last_message_at ? differenceInMinutes(new Date(), new Date(conv.last_message_at)) : 999;
+                const online = mins < 5;
+                const away = !online && mins < 30;
+                return (
+                  <Badge variant="outline" className="text-[9px] mt-1.5 gap-1">
+                    <span className={`w-1.5 h-1.5 rounded-full ${online ? 'bg-emerald-500' : away ? 'bg-amber-400' : 'bg-muted-foreground/30'}`} />
+                    {online ? (isRTL ? 'متصل' : 'Online') : away ? (isRTL ? 'بعيد' : 'Away') : (isRTL ? 'غير متصل' : 'Offline')}
+                  </Badge>
+                );
+              })()}
             </div>
           </div>
 
