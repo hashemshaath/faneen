@@ -62,7 +62,7 @@ export const Footer = () => {
   const { ref: footerRef, visible } = useInView();
 
   return (
-    <footer ref={footerRef} className="relative bg-surface-nav overflow-hidden">
+    <footer ref={footerRef} role="contentinfo" aria-label={language === 'ar' ? 'تذييل الموقع' : 'Site footer'} className="relative bg-surface-nav overflow-hidden">
       {/* Decorative elements */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-0 start-1/4 w-[500px] h-[500px] bg-gold/[0.02] rounded-full blur-[120px]" />
