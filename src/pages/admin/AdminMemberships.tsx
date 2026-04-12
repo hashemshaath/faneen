@@ -18,33 +18,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { format, formatDistanceToNow } from 'date-fns';
-import { ar as arLocale, enUS } from 'date-fns/locale';
+import { format } from 'date-fns';
 import {
   Crown, Pencil, Loader2, Users, CreditCard, X, Check, Save,
-  Zap, Star, Building2, TrendingUp, AlertTriangle, Clock, Ban,
-  RefreshCw, BarChart3, Eye, Search, Filter, ChevronDown, ChevronUp,
-  UserCheck, CalendarDays, DollarSign, Shield, Sparkles, ArrowUpCircle,
-  Download, FileText, Hash, Activity, Globe, Layers, PieChart,
-  ArrowRight, ArrowLeft, ExternalLink, CircleDot, Info,
+  Zap, Building2, AlertTriangle, Clock, Ban,
+  RefreshCw, BarChart3, Search, UserCheck, CalendarDays, DollarSign, Shield, ArrowUpCircle,
+  Download, Hash, Activity, Layers,
 } from 'lucide-react';
-
-type Tab = 'overview' | 'plans' | 'subscriptions' | 'businesses';
-
-const TIERS = ['free', 'basic', 'premium', 'enterprise'] as const;
-const tierIcons: Record<string, React.ElementType> = { free: Zap, basic: Star, premium: Crown, enterprise: Building2 };
-const tierColors: Record<string, { bg: string; badge: string; border: string; text: string }> = {
-  free: { bg: 'bg-muted/40', badge: 'bg-muted text-muted-foreground', border: 'border-border/40', text: 'text-muted-foreground' },
-  basic: { bg: 'bg-blue-500/5', badge: 'bg-blue-500/15 text-blue-600', border: 'border-blue-500/20', text: 'text-blue-600' },
-  premium: { bg: 'bg-accent/5', badge: 'bg-accent/15 text-accent', border: 'border-accent/20', text: 'text-accent' },
-  enterprise: { bg: 'bg-purple-500/5', badge: 'bg-purple-500/15 text-purple-600', border: 'border-purple-500/20', text: 'text-purple-600' },
-};
-const statusConfig: Record<string, { badge: string; label_ar: string; label_en: string }> = {
-  active: { badge: 'bg-emerald-500/10 text-emerald-600', label_ar: 'نشط', label_en: 'Active' },
-  cancelled: { badge: 'bg-destructive/10 text-destructive', label_ar: 'ملغي', label_en: 'Cancelled' },
-  expired: { badge: 'bg-muted text-muted-foreground', label_ar: 'منتهي', label_en: 'Expired' },
-  replaced: { badge: 'bg-amber-500/10 text-amber-600', label_ar: 'مُحدّث', label_en: 'Replaced' },
-};
+import { TIERS, tierIcons, tierColors, statusConfig } from '@/lib/membership-tiers';
 
 /* ─── Plan Card ─── */
 const PlanCard = React.memo(({ plan, isRTL, subsCount, onEdit }: { plan: any; isRTL: boolean; subsCount: number; onEdit: (p: any) => void }) => {
