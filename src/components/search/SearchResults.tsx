@@ -21,11 +21,13 @@ interface SearchResultsProps {
   totalPages: number;
   itemsPerPage: number;
   onPageChange: (page: number) => void;
+  didYouMean?: string | null;
+  onDidYouMeanClick?: (term: string) => void;
 }
 
 export const SearchResults = ({
   businesses, isLoading, viewMode, onViewModeChange, totalCount, onClearFilters,
-  currentPage, totalPages, itemsPerPage, onPageChange,
+  currentPage, totalPages, itemsPerPage, onPageChange, didYouMean, onDidYouMeanClick,
 }: SearchResultsProps) => {
   const { t, isRTL } = useLanguage();
 

@@ -17,7 +17,7 @@ export interface SearchFilterValues {
   cityId: string;
   minRating: number;
   verifiedOnly: boolean;
-  sortBy: 'rating' | 'newest' | 'name';
+  sortBy: 'rating' | 'newest' | 'name' | 'relevance';
   priceMin: number;
   priceMax: number;
 }
