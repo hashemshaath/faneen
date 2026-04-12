@@ -1176,6 +1176,18 @@ const DashboardMessages = () => {
                           <DropdownMenuItem className="rounded-lg text-xs gap-2" onClick={() => setShowInfoPanel(true)}>
                             <BarChart3 className="w-3.5 h-3.5" />{isRTL ? 'إحصائيات المحادثة' : 'Chat statistics'}
                           </DropdownMenuItem>
+                          <DropdownMenuItem className="rounded-lg text-xs gap-2" onClick={handleExportChat}>
+                            <FileDown className="w-3.5 h-3.5" />{isRTL ? 'تصدير المحادثة' : 'Export chat'}
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <p className="px-2 py-1 text-[9px] font-semibold text-muted-foreground uppercase">{isRTL ? 'تصنيف' : 'Label'}</p>
+                          {CONV_LABELS.map(l => (
+                            <DropdownMenuItem key={l.key} className="rounded-lg text-xs gap-2" onClick={() => setConvLabel(selectedConversation!, l.key)}>
+                              {l.color ? <span className={`w-2.5 h-2.5 rounded-full ${l.color}`} /> : <X className="w-2.5 h-2.5 text-muted-foreground" />}
+                              {language === 'ar' ? l.label_ar : l.label_en}
+                              {convLabels[selectedConversation!] === l.key && <Check className="w-3 h-3 ms-auto text-accent" />}
+                            </DropdownMenuItem>
+                          ))}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
