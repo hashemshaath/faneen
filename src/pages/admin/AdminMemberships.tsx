@@ -27,6 +27,8 @@ import {
 } from 'lucide-react';
 import { TIERS, tierIcons, tierColors, statusConfig } from '@/lib/membership-tiers';
 
+type Tab = 'overview' | 'plans' | 'subscriptions' | 'businesses';
+
 /* ─── Plan Card ─── */
 const PlanCard = React.memo(({ plan, isRTL, subsCount, onEdit }: { plan: any; isRTL: boolean; subsCount: number; onEdit: (p: any) => void }) => {
   const Icon = tierIcons[plan.tier] || Zap;
