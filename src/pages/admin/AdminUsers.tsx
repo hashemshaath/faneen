@@ -177,11 +177,6 @@ const UserCard = React.memo(({ profile, roles, business, isCurrentUser, canManag
                     <Hash className="w-2.5 h-2.5" />{profile.ref_id}
                   </Badge>
                 )}
-                {profile.account_number && (
-                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 gap-0.5 font-mono opacity-60">
-                    #{profile.account_number}
-                  </Badge>
-                )}
                 {/* Role badges */}
                 {roles.map((r: any) => {
                   const cfg = roleConfig[r.role as keyof typeof roleConfig] || roleConfig.user;
