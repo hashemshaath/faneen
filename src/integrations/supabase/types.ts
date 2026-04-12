@@ -486,6 +486,129 @@ export type Database = {
         }
         Relationships: []
       }
+      bookings: {
+        Row: {
+          booking_date: string
+          business_id: string
+          cancellation_reason: string | null
+          cancelled_by: string | null
+          client_id: string
+          client_name: string | null
+          client_phone: string | null
+          created_at: string
+          end_time: string
+          id: string
+          notes: string | null
+          ref_id: string
+          start_time: string
+          status: Database["public"]["Enums"]["booking_status"]
+          updated_at: string
+        }
+        Insert: {
+          booking_date: string
+          business_id: string
+          cancellation_reason?: string | null
+          cancelled_by?: string | null
+          client_id: string
+          client_name?: string | null
+          client_phone?: string | null
+          created_at?: string
+          end_time: string
+          id?: string
+          notes?: string | null
+          ref_id?: string
+          start_time: string
+          status?: Database["public"]["Enums"]["booking_status"]
+          updated_at?: string
+        }
+        Update: {
+          booking_date?: string
+          business_id?: string
+          cancellation_reason?: string | null
+          cancelled_by?: string | null
+          client_id?: string
+          client_name?: string | null
+          client_phone?: string | null
+          created_at?: string
+          end_time?: string
+          id?: string
+          notes?: string | null
+          ref_id?: string
+          start_time?: string
+          status?: Database["public"]["Enums"]["booking_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_availability: {
+        Row: {
+          business_id: string
+          created_at: string
+          day_of_week: number
+          end_time: string
+          id: string
+          is_active: boolean
+          max_bookings_per_slot: number
+          slot_duration_minutes: number
+          start_time: string
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          day_of_week: number
+          end_time?: string
+          id?: string
+          is_active?: boolean
+          max_bookings_per_slot?: number
+          slot_duration_minutes?: number
+          start_time?: string
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          day_of_week?: number
+          end_time?: string
+          id?: string
+          is_active?: boolean
+          max_bookings_per_slot?: number
+          slot_duration_minutes?: number
+          start_time?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_availability_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_availability_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_bnpl_providers: {
         Row: {
           bnpl_provider_id: string
@@ -3515,6 +3638,12 @@ export type Database = {
     Enums: {
       account_type: "individual" | "business" | "company"
       app_role: "admin" | "moderator" | "user" | "super_admin"
+      booking_status:
+        | "pending"
+        | "confirmed"
+        | "cancelled"
+        | "completed"
+        | "no_show"
       business_staff_role: "owner" | "manager" | "editor" | "viewer"
       contract_status:
         | "draft"
@@ -3664,6 +3793,13 @@ export const Constants = {
     Enums: {
       account_type: ["individual", "business", "company"],
       app_role: ["admin", "moderator", "user", "super_admin"],
+      booking_status: [
+        "pending",
+        "confirmed",
+        "cancelled",
+        "completed",
+        "no_show",
+      ],
       business_staff_role: ["owner", "manager", "editor", "viewer"],
       contract_status: [
         "draft",
