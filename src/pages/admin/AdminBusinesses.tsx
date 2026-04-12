@@ -1280,8 +1280,8 @@ const AdminBusinesses = () => {
                   {addServiceMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : (isRTL ? 'إضافة الخدمة' : 'Add Service')}
                 </Button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
 
         {/* ─── Business List ─── */}
