@@ -46,37 +46,16 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
   const handleEmailBlur = () => {
     if (!email) return;
     const valid = validateEmailField(email);
-    if (valid) {
-      setEmailExists(false);
-    }
+    if (valid) setEmailExists(false);
   };
 
   const handleRegister = async () => {
-    // Validate all fields
-    if (!fullName.trim()) {
-      toast.error(isRTL ? 'يرجى إدخال الاسم الكامل' : 'Please enter your full name');
-      return;
-    }
-    if (!email || !validateEmailField(email)) {
-      toast.error(isRTL ? 'البريد الإلكتروني غير صحيح' : 'Invalid email');
-      return;
-    }
-    if (phone && !validatePhoneField(phone)) {
-      toast.error(isRTL ? 'رقم الجوال غير صحيح' : 'Invalid phone number');
-      return;
-    }
-    if (passwordStrength.score < 2) {
-      toast.error(isRTL ? 'كلمة المرور ضعيفة جداً' : 'Password is too weak');
-      return;
-    }
-    if (password !== confirmPassword) {
-      toast.error(isRTL ? 'كلمة المرور غير متطابقة' : 'Passwords do not match');
-      return;
-    }
-    if (registerType === 'business' && !validateUsername(username)) {
-      toast.error(isRTL ? 'اسم المستخدم غير صحيح' : 'Invalid username');
-      return;
-    }
+    if (!fullName.trim()) { toast.error(isRTL ? 'يرجى إدخال الاسم الكامل' : 'Please enter your full name'); return; }
+    if (!email || !validateEmailField(email)) { toast.error(isRTL ? 'البريد الإلكتروني غير صحيح' : 'Invalid email'); return; }
+    if (phone && !validatePhoneField(phone)) { toast.error(isRTL ? 'رقم الجوال غير صحيح' : 'Invalid phone number'); return; }
+    if (passwordStrength.score < 2) { toast.error(isRTL ? 'كلمة المرور ضعيفة جداً' : 'Password is too weak'); return; }
+    if (password !== confirmPassword) { toast.error(isRTL ? 'كلمة المرور غير متطابقة' : 'Passwords do not match'); return; }
+    if (registerType === 'business' && !validateUsername(username)) { toast.error(isRTL ? 'اسم المستخدم غير صحيح' : 'Invalid username'); return; }
 
     setLoading(true);
     try {
@@ -91,7 +70,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
       const msg = err.message || '';
       if (msg.includes('already registered')) {
         setEmailExists(true);
-        toast.error(isRTL ? 'هذا البريد مسجل بالفعل. يمكنك تسجيل الدخول أو استعادة كلمة المرور' : 'This email is already registered. You can login or reset your password');
+        toast.error(isRTL ? 'هذا البريد مسجل بالفعل' : 'This email is already registered');
       } else {
         toast.error(msg);
       }
@@ -102,48 +81,42 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
 
   const handleGoogle = async () => {
     setGoogleLoading(true);
-    try {
-      await authService.signInWithGoogle();
-    } catch (err: any) {
-      toast.error(err.message);
-    } finally {
-      setGoogleLoading(false);
-    }
+    try { await authService.signInWithGoogle(); } catch (err: any) { toast.error(err.message); } finally { setGoogleLoading(false); }
   };
 
   // ─── Step: Account Type ───
   if (step === 'type') {
     return (
-      <div className="space-y-6">
+      <div className="space-y-7">
         <div className="space-y-2">
-          <h2 className="font-heading font-bold text-2xl text-foreground">{t('auth.register')}</h2>
-          <p className="text-sm text-muted-foreground">
+          <h2 className="font-heading font-bold text-3xl text-foreground tracking-tight">{t('auth.register')}</h2>
+          <p className="text-sm text-muted-foreground/80">
             {isRTL ? 'اختر نوع الحساب المناسب لك' : 'Choose the right account type'}
           </p>
         </div>
         <div className="grid grid-cols-1 gap-3">
           <button
             onClick={() => { setRegisterType('individual'); setStep('details'); }}
-            className="flex items-center gap-4 p-4 rounded-xl border-2 border-border hover:border-accent/50 bg-card hover:bg-accent/5 transition-all text-start group"
+            className="flex items-center gap-4 p-5 rounded-2xl border-2 border-border/60 hover:border-accent/50 bg-card hover:bg-accent/5 transition-all text-start group"
           >
-            <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center group-hover:bg-accent/10 transition-colors shrink-0">
+            <div className="w-13 h-13 rounded-xl bg-muted/60 flex items-center justify-center group-hover:bg-accent/10 transition-colors shrink-0">
               <User className="w-6 h-6 text-muted-foreground group-hover:text-accent transition-colors" />
             </div>
             <div>
               <h3 className="font-heading font-bold text-sm">{t('auth.register_individual')}</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">{t('membership.individual.desc')}</p>
+              <p className="text-xs text-muted-foreground/70 mt-1 leading-relaxed">{t('membership.individual.desc')}</p>
             </div>
           </button>
           <button
             onClick={() => { setRegisterType('business'); setStep('details'); }}
-            className="flex items-center gap-4 p-4 rounded-xl border-2 border-accent/30 bg-accent/5 hover:border-accent hover:bg-accent/10 transition-all text-start group"
+            className="flex items-center gap-4 p-5 rounded-2xl border-2 border-accent/30 bg-accent/5 hover:border-accent hover:bg-accent/10 transition-all text-start group"
           >
-            <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
+            <div className="w-13 h-13 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
               <Building2 className="w-6 h-6 text-accent" />
             </div>
             <div>
               <h3 className="font-heading font-bold text-sm">{t('auth.register_business')}</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">{t('membership.business.desc')}</p>
+              <p className="text-xs text-muted-foreground/70 mt-1 leading-relaxed">{t('membership.business.desc')}</p>
             </div>
           </button>
         </div>
@@ -151,9 +124,9 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
         <AuthDivider isRTL={isRTL} />
         <GoogleAuthButton onClick={handleGoogle} loading={googleLoading} isRTL={isRTL} mode="register" />
 
-        <div className="text-center text-sm">
+        <div className="text-center text-sm pt-1">
           <span className="text-muted-foreground">{isRTL ? 'لديك حساب؟' : 'Have an account?'} </span>
-          <button onClick={onSwitchToLogin} className="text-accent font-medium hover:underline">{t('auth.has_account')}</button>
+          <button onClick={onSwitchToLogin} className="text-accent font-semibold hover:underline">{t('auth.has_account')}</button>
         </div>
       </div>
     );
@@ -164,32 +137,32 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
     const isFormValid = email && fullName.trim() && passwordStrength.score >= 2 && password === confirmPassword && !errors.email && !errors.phone && !emailExists;
 
     return (
-      <div className="space-y-6">
+      <div className="space-y-7">
         <div className="space-y-2">
-          <h2 className="font-heading font-bold text-2xl text-foreground">{t('auth.register')}</h2>
-          <p className="text-sm text-muted-foreground">
+          <h2 className="font-heading font-bold text-3xl text-foreground tracking-tight">{t('auth.register')}</h2>
+          <p className="text-sm text-muted-foreground/80">
             {isRTL ? 'أدخل بياناتك لإنشاء حسابك' : 'Enter your details to create an account'}
           </p>
         </div>
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label>{t('auth.fullname')} <span className="text-destructive">*</span></Label>
+            <Label className="text-xs font-semibold">{t('auth.fullname')} <span className="text-destructive">*</span></Label>
             <div className="relative">
-              <User className="absolute top-3 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
-              <Input value={fullName} onChange={(e) => setFullName(e.target.value)} style={{ paddingInlineStart: '40px' }} />
+              <User className="absolute top-3.5 text-muted-foreground/60 w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '14px' }} />
+              <Input value={fullName} onChange={(e) => setFullName(e.target.value)} className="h-12 rounded-xl" style={{ paddingInlineStart: '42px' }} />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label>{t('auth.email')} <span className="text-destructive">*</span></Label>
+            <Label className="text-xs font-semibold">{t('auth.email')} <span className="text-destructive">*</span></Label>
             <div className="relative">
-              <Mail className="absolute top-3 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
+              <Mail className="absolute top-3.5 text-muted-foreground/60 w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '14px' }} />
               <Input
                 type="email" placeholder="example@email.com" value={email}
                 onChange={(e) => { setEmail(e.target.value); clearError('email'); setEmailExists(false); }}
                 onBlur={handleEmailBlur}
-                dir="ltr" style={{ paddingInlineStart: '40px' }}
-                className={errors.email || emailExists ? 'border-destructive focus-visible:ring-destructive' : ''}
+                dir="ltr" style={{ paddingInlineStart: '42px' }}
+                className={`h-12 rounded-xl ${errors.email || emailExists ? 'border-destructive focus-visible:ring-destructive' : ''}`}
               />
             </div>
             <FieldError message={errors.email} />
@@ -224,25 +197,25 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
           />
 
           <div className="space-y-2">
-            <Label>{t('auth.password.confirm')}</Label>
-            <Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+            <Label className="text-xs font-semibold">{t('auth.password.confirm')}</Label>
+            <Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="h-12 rounded-xl" />
             {confirmPassword && password !== confirmPassword && (
               <p className="text-xs text-destructive">{isRTL ? 'كلمة المرور غير متطابقة' : 'Passwords do not match'}</p>
             )}
           </div>
 
           {registerType === 'business' ? (
-            <Button onClick={() => setStep('business-details')} disabled={!isFormValid} className="w-full h-11" variant="hero">
+            <Button onClick={() => setStep('business-details')} disabled={!isFormValid} className="w-full h-12 rounded-xl text-sm font-semibold" variant="hero">
               {t('auth.next')}
             </Button>
           ) : (
-            <Button onClick={handleRegister} disabled={loading || !isFormValid} className="w-full h-11" variant="hero">
+            <Button onClick={handleRegister} disabled={loading || !isFormValid} className="w-full h-12 rounded-xl text-sm font-semibold" variant="hero">
               {loading && <Loader2 className="w-4 h-4 animate-spin me-2" />}
               {loading ? t('common.loading') : t('auth.submit')}
             </Button>
           )}
         </div>
-        <button onClick={() => setStep('type')} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
+        <button onClick={() => setStep('type')} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
           <BackArrow className="w-4 h-4" /> {t('auth.back')}
         </button>
       </div>
@@ -251,38 +224,38 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
 
   // ─── Step: Business Details ───
   return (
-    <div className="space-y-6">
+    <div className="space-y-7">
       <div className="space-y-2">
-        <h2 className="font-heading font-bold text-2xl text-foreground">{t('auth.register_business')}</h2>
-        <p className="text-sm text-muted-foreground">
+        <h2 className="font-heading font-bold text-3xl text-foreground tracking-tight">{t('auth.register_business')}</h2>
+        <p className="text-sm text-muted-foreground/80">
           {isRTL ? 'أدخل بيانات نشاطك التجاري' : 'Enter your business details'}
         </p>
       </div>
       <div className="space-y-4">
         <div className="space-y-2">
-          <Label>{t('auth.business_name')} <span className="text-destructive">*</span></Label>
+          <Label className="text-xs font-semibold">{t('auth.business_name')} <span className="text-destructive">*</span></Label>
           <div className="relative">
-            <Building2 className="absolute top-3 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
-            <Input value={businessName} onChange={(e) => setBusinessName(e.target.value)} style={{ paddingInlineStart: '40px' }} />
+            <Building2 className="absolute top-3.5 text-muted-foreground/60 w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '14px' }} />
+            <Input value={businessName} onChange={(e) => setBusinessName(e.target.value)} className="h-12 rounded-xl" style={{ paddingInlineStart: '42px' }} />
           </div>
         </div>
         <div className="space-y-2">
-          <Label>{t('auth.business_username')} <span className="text-destructive">*</span></Label>
+          <Label className="text-xs font-semibold">{t('auth.business_username')} <span className="text-destructive">*</span></Label>
           <div className="relative">
-            <Globe className="absolute top-3 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
-            <Input value={username} onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ''))} placeholder="my-business" dir="ltr" style={{ paddingInlineStart: '40px' }} />
+            <Globe className="absolute top-3.5 text-muted-foreground/60 w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '14px' }} />
+            <Input value={username} onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ''))} placeholder="my-business" dir="ltr" className="h-12 rounded-xl" style={{ paddingInlineStart: '42px' }} />
           </div>
           {username && <p className="text-xs text-muted-foreground">faneen.com/{username}</p>}
           {username && !validateUsername(username) && (
             <p className="text-xs text-destructive">{isRTL ? 'اسم المستخدم غير صحيح (3-50 حرف)' : 'Invalid username (3-50 chars)'}</p>
           )}
         </div>
-        <Button onClick={handleRegister} disabled={loading || !businessName.trim() || !validateUsername(username)} className="w-full h-11" variant="hero">
+        <Button onClick={handleRegister} disabled={loading || !businessName.trim() || !validateUsername(username)} className="w-full h-12 rounded-xl text-sm font-semibold" variant="hero">
           {loading && <Loader2 className="w-4 h-4 animate-spin me-2" />}
           {loading ? t('common.loading') : t('auth.submit')}
         </Button>
       </div>
-      <button onClick={() => setStep('details')} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
+      <button onClick={() => setStep('details')} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
         <BackArrow className="w-4 h-4" /> {t('auth.back')}
       </button>
     </div>
