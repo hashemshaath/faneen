@@ -260,7 +260,14 @@ const ContractDetail = () => {
     enabled: !!id && !!user,
   });
 
-  /* ─── Mutations ─── */
+  const { data: amendments } = useQuery({
+    queryKey: ['contract-amendments', id],
+    queryFn: async () => {
+      const { data } = await supabase.from('contract_amendments').select('*').eq('contract_id', id!).order('created_at', { ascending: false });
+      return data ?? [];
+    },
+    enabled: !!id && !!user,
+  });
   const acceptMutation = useMutation({
     mutationFn: async () => {
       const isClientUser = user?.id === contract?.client_id;
