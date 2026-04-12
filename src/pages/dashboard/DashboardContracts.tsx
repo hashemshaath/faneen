@@ -1604,27 +1604,28 @@ const DashboardContracts = () => {
                                 ) : <p className="text-center py-8 text-muted-foreground text-xs">{isRTL ? 'لا توجد دفعات' : 'No payments yet'}</p>}
                               </TabsContent>
 
-                              {/* ═══ Measurements Tab ═══ */}
-                              <TabsContent value="measurements" className="mt-0">
+                              {/* ═══ Measurements & Line Items Tab ═══ */}
+                              <TabsContent value="measurements" className="mt-0 space-y-4">
+                                {/* Measurement Form */}
                                 {!locked && isProvider && (
                                   <div className="mb-3">
                                     {showAddMeasurement === c.id ? (
                                       <div className="p-4 rounded-xl border-2 border-dashed border-accent/30 bg-accent/5 space-y-3">
-                                        <h4 className="text-xs font-semibold">{isRTL ? 'إضافة قطعة مقاس جديدة' : 'Add New Measurement'}</h4>
+                                        <h4 className="text-xs font-semibold">{isRTL ? 'إضافة قطعة مقاس' : 'Add Measurement'}</h4>
                                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                                           <Input placeholder={isRTL ? 'اسم القطعة' : 'Piece Name'} value={measurementForm.name_ar} onChange={e => setMeasurementForm(f => ({ ...f, name_ar: e.target.value }))} className="h-9 text-xs" />
                                           <Input placeholder={isRTL ? 'رقم القطعة' : 'Piece #'} value={measurementForm.piece_number} onChange={e => setMeasurementForm(f => ({ ...f, piece_number: e.target.value }))} dir="ltr" className="h-9 text-xs" />
                                           <Select value={measurementForm.floor_label} onValueChange={v => setMeasurementForm(f => ({ ...f, floor_label: v }))}>
                                             <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
                                             <SelectContent>
-                                              <SelectItem value="ground_floor">{isRTL ? 'الدور الأرضي' : 'Ground'}</SelectItem>
-                                              <SelectItem value="first_floor">{isRTL ? 'الدور الأول' : '1st Floor'}</SelectItem>
-                                              <SelectItem value="second_floor">{isRTL ? 'الدور الثاني' : '2nd Floor'}</SelectItem>
-                                              <SelectItem value="third_floor">{isRTL ? 'الدور الثالث' : '3rd Floor'}</SelectItem>
-                                              <SelectItem value="roof">{isRTL ? 'السطح' : 'Roof'}</SelectItem>
+                                              <SelectItem value="ground_floor">{isRTL ? 'أرضي' : 'Ground'}</SelectItem>
+                                              <SelectItem value="first_floor">{isRTL ? 'أول' : '1st'}</SelectItem>
+                                              <SelectItem value="second_floor">{isRTL ? 'ثاني' : '2nd'}</SelectItem>
+                                              <SelectItem value="third_floor">{isRTL ? 'ثالث' : '3rd'}</SelectItem>
+                                              <SelectItem value="roof">{isRTL ? 'سطح' : 'Roof'}</SelectItem>
                                             </SelectContent>
                                           </Select>
-                                          <Input placeholder={isRTL ? 'الموقع (صالة، مطبخ)' : 'Location'} value={measurementForm.location_ar} onChange={e => setMeasurementForm(f => ({ ...f, location_ar: e.target.value }))} className="h-9 text-xs" />
+                                          <Input placeholder={isRTL ? 'الموقع' : 'Location'} value={measurementForm.location_ar} onChange={e => setMeasurementForm(f => ({ ...f, location_ar: e.target.value }))} className="h-9 text-xs" />
                                         </div>
                                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                                           <Input type="number" placeholder={isRTL ? 'الطول (مم)' : 'Length mm'} value={measurementForm.length_mm} onChange={e => setMeasurementForm(f => ({ ...f, length_mm: e.target.value }))} dir="ltr" className="h-9 text-xs" />
@@ -1635,25 +1636,58 @@ const DashboardContracts = () => {
                                         {measurementForm.length_mm && measurementForm.width_mm && measurementForm.unit_price && (
                                           <div className="flex items-center gap-4 text-[11px] p-2.5 bg-muted/40 rounded-lg border border-border/30">
                                             <span>{isRTL ? 'المساحة:' : 'Area:'} <strong className="text-accent">{((Number(measurementForm.length_mm) * Number(measurementForm.width_mm)) / 1000000).toFixed(2)} م²</strong></span>
-                                            <span>{isRTL ? 'التكلفة:' : 'Cost:'} <strong className="text-accent">{(Number(measurementForm.unit_price) * Number(measurementForm.quantity || 1)).toLocaleString()} SAR</strong></span>
+                                            <span>{isRTL ? 'التكلفة:' : 'Cost:'} <strong className="text-accent">{(Number(measurementForm.unit_price) * Number(measurementForm.quantity || 1)).toLocaleString()} {c.currency_code}</strong></span>
                                           </div>
                                         )}
                                         <div className="flex gap-2">
                                           <Button size="sm" className="h-8 text-xs gap-1" disabled={!measurementForm.name_ar || !measurementForm.piece_number || !measurementForm.length_mm || addMeasurementMutation.isPending} onClick={() => addMeasurementMutation.mutate({ contractId: c.id })}>
-                                            {addMeasurementMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}{isRTL ? 'إضافة وتحديث قيمة العقد' : 'Add & Update Total'}
+                                            {addMeasurementMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}{isRTL ? 'إضافة' : 'Add'}
                                           </Button>
                                           <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => setShowAddMeasurement(null)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
                                         </div>
                                       </div>
                                     ) : (
-                                      <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5" onClick={() => setShowAddMeasurement(c.id)}>
-                                        <Plus className="w-3.5 h-3.5" />{isRTL ? 'إضافة مقاس' : 'Add Measurement'}
-                                      </Button>
+                                      <div className="flex gap-2">
+                                        <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5" onClick={() => setShowAddMeasurement(c.id)}><Plus className="w-3.5 h-3.5" />{isRTL ? 'مقاس' : 'Measurement'}</Button>
+                                        <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5" onClick={() => setShowAddLineItem(c.id)}><Plus className="w-3.5 h-3.5" />{isRTL ? 'بند إضافي' : 'Line Item'}</Button>
+                                      </div>
                                     )}
                                   </div>
                                 )}
-                                {measurements.length > 0 ? (
-                                  <div className="space-y-2 max-h-72 overflow-y-auto">
+
+                                {/* Line Item Form */}
+                                {showAddLineItem === c.id && !locked && isProvider && (
+                                  <div className="p-4 rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 space-y-3">
+                                    <h4 className="text-xs font-semibold">{isRTL ? 'إضافة بند إضافي (خدمة/مادة)' : 'Add Line Item (Service/Material)'}</h4>
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                                      <Input placeholder={isRTL ? 'اسم البند' : 'Item Name'} value={lineItemForm.name_ar} onChange={e => setLineItemForm(f => ({ ...f, name_ar: e.target.value }))} className="h-9 text-xs" />
+                                      <Select value={lineItemForm.item_type} onValueChange={v => setLineItemForm(f => ({ ...f, item_type: v }))}>
+                                        <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="service">{isRTL ? 'خدمة' : 'Service'}</SelectItem>
+                                          <SelectItem value="material">{isRTL ? 'مادة' : 'Material'}</SelectItem>
+                                          <SelectItem value="installation">{isRTL ? 'تركيب' : 'Installation'}</SelectItem>
+                                          <SelectItem value="other">{isRTL ? 'أخرى' : 'Other'}</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                      <Input type="number" placeholder={isRTL ? 'الكمية' : 'Qty'} value={lineItemForm.quantity} onChange={e => setLineItemForm(f => ({ ...f, quantity: e.target.value }))} dir="ltr" className="h-9 text-xs" />
+                                      <Input type="number" placeholder={isRTL ? 'سعر الوحدة' : 'Unit Price'} value={lineItemForm.unit_price} onChange={e => setLineItemForm(f => ({ ...f, unit_price: e.target.value }))} dir="ltr" className="h-9 text-xs" />
+                                    </div>
+                                    <Input placeholder={isRTL ? 'وصف البند (اختياري)' : 'Description (optional)'} value={lineItemForm.description_ar} onChange={e => setLineItemForm(f => ({ ...f, description_ar: e.target.value }))} className="h-9 text-xs" />
+                                    {lineItemForm.unit_price && <p className="text-[11px] text-muted-foreground">{isRTL ? 'التكلفة:' : 'Cost:'} <strong className="text-accent">{(Number(lineItemForm.unit_price) * Number(lineItemForm.quantity || 1)).toLocaleString()} {c.currency_code}</strong></p>}
+                                    <div className="flex gap-2">
+                                      <Button size="sm" className="h-8 text-xs gap-1" disabled={!lineItemForm.name_ar || !lineItemForm.unit_price || addLineItemMutation.isPending} onClick={() => addLineItemMutation.mutate({ contractId: c.id })}>
+                                        {addLineItemMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}{isRTL ? 'إضافة' : 'Add'}
+                                      </Button>
+                                      <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => setShowAddLineItem(null)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Measurements List */}
+                                {measurements.length > 0 && (
+                                  <div className="space-y-2">
+                                    <h5 className="text-[10px] font-semibold text-muted-foreground flex items-center gap-1"><Ruler className="w-3 h-3" />{isRTL ? 'المقاسات' : 'Measurements'}</h5>
                                     {measurements.map((m: any) => (
                                       <div key={m.id} className="p-3 rounded-xl bg-card border border-border/30 flex items-center justify-between gap-3 hover:border-accent/20 transition-colors">
                                         <div className="flex items-center gap-3 min-w-0">
@@ -1665,17 +1699,76 @@ const DashboardContracts = () => {
                                         </div>
                                         <div className="text-end shrink-0">
                                           <p className="text-[10px] font-mono text-muted-foreground">{m.length_mm}×{m.width_mm} mm</p>
-                                          <p className="text-xs font-bold">{Number(m.total_cost || 0).toLocaleString()} {m.currency_code}</p>
-                                          <Badge variant={m.status === 'installed' ? 'default' : m.status === 'manufactured' ? 'secondary' : 'outline'} className="text-[7px] mt-0.5">{m.status === 'installed' ? (isRTL ? 'مركّب' : 'Installed') : m.status === 'manufactured' ? (isRTL ? 'مصنّع' : 'Made') : (isRTL ? 'معلق' : 'Pending')}</Badge>
+                                          <p className="text-xs font-bold">{Number(m.total_cost || 0).toLocaleString()} {c.currency_code}</p>
                                         </div>
                                       </div>
                                     ))}
-                                    <div className="flex items-center justify-between px-3 pt-3 border-t border-border/30 text-xs font-bold">
-                                      <span>{measurements.length} {isRTL ? 'قطعة' : 'pieces'}</span>
-                                      <span className="text-accent">{measurements.reduce((s: number, m: any) => s + Number(m.total_cost || 0), 0).toLocaleString()} {c.currency_code}</span>
+                                  </div>
+                                )}
+
+                                {/* Line Items List */}
+                                {lineItems.length > 0 && (
+                                  <div className="space-y-2">
+                                    <h5 className="text-[10px] font-semibold text-muted-foreground flex items-center gap-1"><ClipboardList className="w-3 h-3" />{isRTL ? 'بنود إضافية' : 'Additional Items'}</h5>
+                                    {lineItems.map((li: any) => {
+                                      const typeLabels: Record<string, string> = { service: isRTL ? 'خدمة' : 'Service', material: isRTL ? 'مادة' : 'Material', installation: isRTL ? 'تركيب' : 'Install', other: isRTL ? 'أخرى' : 'Other' };
+                                      return (
+                                        <div key={li.id} className="p-3 rounded-xl bg-card border border-border/30 flex items-center justify-between gap-3 hover:border-primary/20 transition-colors">
+                                          <div className="flex items-center gap-3 min-w-0">
+                                            <Badge variant="secondary" className="text-[8px] shrink-0">{typeLabels[li.item_type] || li.item_type}</Badge>
+                                            <div className="min-w-0">
+                                              <p className="text-xs font-medium truncate">{li.name_ar}</p>
+                                              {li.description_ar && <p className="text-[9px] text-muted-foreground truncate">{li.description_ar}</p>}
+                                            </div>
+                                          </div>
+                                          <div className="flex items-center gap-2">
+                                            <div className="text-end shrink-0">
+                                              <p className="text-[10px] text-muted-foreground">{li.quantity} × {Number(li.unit_price).toLocaleString()}</p>
+                                              <p className="text-xs font-bold">{Number(li.total_cost || 0).toLocaleString()} {c.currency_code}</p>
+                                            </div>
+                                            {!locked && isProvider && (
+                                              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/10" onClick={() => deleteLineItemMutation.mutate({ id: li.id, contractId: c.id })}>
+                                                <X className="w-3 h-3" />
+                                              </Button>
+                                            )}
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+
+                                {measurements.length === 0 && lineItems.length === 0 && <p className="text-center py-8 text-muted-foreground text-xs">{isRTL ? 'لا توجد مقاسات أو بنود' : 'No measurements or items'}</p>}
+
+                                {/* Financial Summary with VAT */}
+                                {(measurements.length > 0 || lineItems.length > 0) && (
+                                  <div className="p-4 rounded-xl bg-gradient-to-br from-accent/5 to-accent/10 border border-accent/20 space-y-2">
+                                    <div className="flex items-center justify-between text-[11px]">
+                                      <span className="text-muted-foreground">{isRTL ? 'المقاسات' : 'Measurements'} ({measurements.length})</span>
+                                      <span className="font-semibold">{measurementTotal.toLocaleString()} {c.currency_code}</span>
+                                    </div>
+                                    {lineItems.length > 0 && (
+                                      <div className="flex items-center justify-between text-[11px]">
+                                        <span className="text-muted-foreground">{isRTL ? 'بنود إضافية' : 'Line Items'} ({lineItems.length})</span>
+                                        <span className="font-semibold">{lineItemTotal.toLocaleString()} {c.currency_code}</span>
+                                      </div>
+                                    )}
+                                    <Separator className="my-1" />
+                                    <div className="flex items-center justify-between text-[11px]">
+                                      <span className="text-muted-foreground">{isRTL ? 'المجموع الفرعي' : 'Subtotal'}</span>
+                                      <span className="font-bold">{subtotal.toLocaleString()} {c.currency_code}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between text-[11px]">
+                                      <span className="text-muted-foreground flex items-center gap-1"><Percent className="w-3 h-3" />{isRTL ? `ضريبة القيمة المضافة (${vatRate}%)` : `VAT (${vatRate}%)`} {c.vat_inclusive ? (isRTL ? '(شاملة)' : '(incl.)') : ''}</span>
+                                      <span className="font-semibold">{vatAmount.toFixed(2)} {c.currency_code}</span>
+                                    </div>
+                                    <Separator className="my-1" />
+                                    <div className="flex items-center justify-between text-sm font-bold text-accent">
+                                      <span>{isRTL ? 'الإجمالي النهائي' : 'Grand Total'}</span>
+                                      <span>{grandTotal.toLocaleString()} {c.currency_code}</span>
                                     </div>
                                   </div>
-                                ) : <p className="text-center py-8 text-muted-foreground text-xs">{isRTL ? 'لا توجد مقاسات' : 'No measurements'}</p>}
+                                )}
                               </TabsContent>
 
                               {/* ═══ Warranty Tab ═══ */}
