@@ -120,53 +120,53 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
         <DashboardSidebar />
         <div className="flex-1 flex flex-col min-w-0">
           {/* Header */}
-          <header className="sticky top-0 z-10 border-b border-border/40 bg-card/90 backdrop-blur-xl dark:border-border/20 dark:bg-card/70">
-            <div className="flex items-center h-14 sm:h-16 px-3 sm:px-5 gap-3">
+          <header className="sticky top-0 z-10 border-b border-border/30 bg-card/95 backdrop-blur-2xl dark:border-border/15 dark:bg-card/80 shadow-sm shadow-black/[0.02]">
+            <div className="flex items-center h-14 sm:h-[4.25rem] px-3 sm:px-6 gap-3">
               <SidebarTrigger />
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   {pageTitle && (
-                    <h2 className="font-heading font-bold text-sm sm:text-base text-foreground truncate">{pageTitle}</h2>
+                    <h2 className="font-heading font-bold text-sm sm:text-lg text-foreground truncate">{pageTitle}</h2>
                   )}
                 </div>
-                <p className="text-[10px] sm:text-xs text-muted-foreground truncate hidden sm:block">{todayStr}</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground/70 truncate hidden sm:block">{todayStr}</p>
               </div>
 
-              <div className="flex items-center gap-1.5 sm:gap-2">
+              <div className="flex items-center gap-2 sm:gap-2.5">
                 <ThemeToggle />
                 <NotificationBell />
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="flex items-center gap-2 rounded-full border border-border/40 bg-muted/30 py-1 pe-2 sm:pe-3 ps-1 dark:border-border/20 hover:bg-muted/50 transition-colors focus:outline-none focus:ring-2 focus:ring-accent/30">
+                    <button className="flex items-center gap-2.5 rounded-full border border-border/30 bg-muted/20 py-1 pe-2.5 sm:pe-3.5 ps-1 dark:border-border/15 hover:bg-muted/40 transition-colors focus:outline-none focus:ring-2 focus:ring-accent/30">
                       <div className="relative">
-                        <Avatar className="h-7 w-7 sm:h-8 sm:w-8">
+                        <Avatar className="h-8 w-8 sm:h-9 sm:w-9">
                           <AvatarImage src={profile?.avatar_url || undefined} />
-                          <AvatarFallback className="bg-accent/15 text-accent text-[10px] sm:text-xs font-bold">{initial}</AvatarFallback>
+                          <AvatarFallback className="bg-accent/15 text-accent text-xs sm:text-sm font-bold">{initial}</AvatarFallback>
                         </Avatar>
                         <span className="absolute -bottom-0.5 -end-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-card rounded-full" />
                       </div>
                       <div className="hidden sm:flex flex-col items-start min-w-0">
-                        <span className="text-xs font-medium text-foreground truncate max-w-[120px] leading-tight">
+                        <span className="text-xs font-semibold text-foreground truncate max-w-[120px] leading-tight">
                           {profile?.full_name || (isRTL ? 'مستخدم' : 'User')}
                         </span>
-                        <span className="text-[10px] text-muted-foreground leading-tight">
+                        <span className="text-[10px] text-muted-foreground/70 leading-tight">
                           {isRTL ? accountLabel?.ar : accountLabel?.en}
                         </span>
                       </div>
-                      <ChevronDown className="w-3 h-3 text-muted-foreground hidden sm:block" />
+                      <ChevronDown className="w-3.5 h-3.5 text-muted-foreground/50 hidden sm:block" />
                     </button>
                   </DropdownMenuTrigger>
 
                   <DropdownMenuContent align={isRTL ? 'start' : 'end'} className="w-72 p-0" sideOffset={8}>
                     {/* Profile header */}
-                    <div className="p-3 border-b border-border/40">
+                    <div className="p-4 border-b border-border/30 bg-muted/10">
                       <div className="flex items-center gap-3">
                         <div className="relative group">
-                          <Avatar className="h-12 w-12">
+                          <Avatar className="h-13 w-13">
                             <AvatarImage src={profile?.avatar_url || undefined} />
-                            <AvatarFallback className="bg-accent/15 text-accent text-base font-bold">{initial}</AvatarFallback>
+                            <AvatarFallback className="bg-accent/15 text-accent text-lg font-bold">{initial}</AvatarFallback>
                           </Avatar>
                           <button onClick={() => fileInputRef.current?.click()} disabled={avatarUploading}
                             className="absolute inset-0 flex items-center justify-center bg-foreground/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
@@ -175,13 +175,13 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
                           <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="font-medium text-sm text-foreground truncate">{profile?.full_name || (isRTL ? 'مستخدم' : 'User')}</p>
-                          <div className={`inline-flex items-center gap-1 mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-medium ${roleBadge.color}`}>
+                          <p className="font-semibold text-sm text-foreground truncate">{profile?.full_name || (isRTL ? 'مستخدم' : 'User')}</p>
+                          <div className={`inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${roleBadge.color}`}>
                             <roleBadge.icon className="w-2.5 h-2.5" />{roleBadge.label}
                           </div>
                         </div>
                       </div>
-                      <div className="mt-2 space-y-1">
+                      <div className="mt-3 space-y-1.5">
                         <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
                           <Mail className="w-3 h-3 shrink-0" /><span className="truncate tech-content" dir="ltr">{user.email}</span>
                         </div>
@@ -201,18 +201,18 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
                       </div>
                     </div>
 
-                    <div className="p-1">
-                      <DropdownMenuItem onClick={() => navigate('/dashboard/settings')} className="gap-2 py-2 rounded-lg cursor-pointer">
-                        <Settings className="w-3.5 h-3.5 text-muted-foreground" />
+                    <div className="p-1.5">
+                      <DropdownMenuItem onClick={() => navigate('/dashboard/settings')} className="gap-2 py-2.5 rounded-lg cursor-pointer">
+                        <Settings className="w-4 h-4 text-muted-foreground" />
                         <span className="text-xs">{isRTL ? 'الإعدادات' : 'Settings'}</span>
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate('/dashboard/settings?tab=security')} className="gap-2 py-2 rounded-lg cursor-pointer">
-                        <Lock className="w-3.5 h-3.5 text-muted-foreground" />
+                      <DropdownMenuItem onClick={() => navigate('/dashboard/settings?tab=security')} className="gap-2 py-2.5 rounded-lg cursor-pointer">
+                        <Lock className="w-4 h-4 text-muted-foreground" />
                         <span className="text-xs">{isRTL ? 'الأمان وكلمة المرور' : 'Security & Password'}</span>
                       </DropdownMenuItem>
                       {!profile?.phone_verified && (
-                        <DropdownMenuItem onClick={() => navigate('/dashboard/settings?tab=account')} className="gap-2 py-2 rounded-lg cursor-pointer text-amber-600">
-                          <Phone className="w-3.5 h-3.5" />
+                        <DropdownMenuItem onClick={() => navigate('/dashboard/settings?tab=account')} className="gap-2 py-2.5 rounded-lg cursor-pointer text-amber-600">
+                          <Phone className="w-4 h-4" />
                           <span className="text-xs">{isRTL ? 'تأكيد رقم الجوال' : 'Verify Phone'}</span>
                         </DropdownMenuItem>
                       )}
@@ -220,10 +220,10 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
 
                     <DropdownMenuSeparator className="my-0" />
 
-                    <div className="p-1">
+                    <div className="p-1.5">
                       <DropdownMenuItem onClick={handleLogout}
-                        className="gap-2 py-2 rounded-lg cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10">
-                        <LogOut className="w-3.5 h-3.5" />
+                        className="gap-2 py-2.5 rounded-lg cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10">
+                        <LogOut className="w-4 h-4" />
                         <span className="text-xs">{isRTL ? 'تسجيل الخروج' : 'Sign Out'}</span>
                       </DropdownMenuItem>
                     </div>
@@ -233,7 +233,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
             </div>
           </header>
 
-          <main className="flex-1 p-3 sm:p-4 md:p-6 bg-background overflow-auto">
+          <main className="flex-1 p-3 sm:p-5 md:p-7 bg-background overflow-auto">
             {children}
           </main>
         </div>
