@@ -273,15 +273,25 @@ const BusinessProfile = () => {
                 </div>
               </div>
 
-              <Button
-                variant="hero"
-                className="gap-2 self-start"
-                onClick={() => contactMutation.mutate()}
-                disabled={contactMutation.isPending}
-              >
-                {contactMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageSquare className="h-4 w-4" />}
-                {language === "ar" ? "ابدأ التواصل الآن" : "Start contact now"}
-              </Button>
+              <div className="flex gap-2 self-start">
+                <Button
+                  variant="hero"
+                  className="gap-2"
+                  onClick={() => contactMutation.mutate()}
+                  disabled={contactMutation.isPending}
+                >
+                  {contactMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageSquare className="h-4 w-4" />}
+                  {language === "ar" ? "ابدأ التواصل الآن" : "Start contact now"}
+                </Button>
+                <Button
+                  variant="outline"
+                  className="gap-2"
+                  onClick={() => setBookingOpen(true)}
+                >
+                  <CalendarClock className="h-4 w-4" />
+                  {language === "ar" ? "حجز موعد" : "Book"}
+                </Button>
+              </div>
             </div>
           </section>
 
