@@ -1131,14 +1131,42 @@ const DashboardMessages = () => {
                           {selectedConv?.other_profile?.full_name?.charAt(0) || '؟'}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="absolute -bottom-0.5 -end-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-card" />
+                      {(() => {
+                        const mins = selectedConv?.last_message_at ? differenceInMinutes(new Date(), new Date(selectedConv.last_message_at)) : 999;
+                        const online = mins < 5;
+                        const away = !online && mins < 30;
+                        return online
+                          ? <span className="absolute -bottom-0.5 -end-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-card shadow-sm shadow-emerald-500/30" />
+                          : away
+                            ? <span className="absolute -bottom-0.5 -end-0.5 w-3 h-3 bg-amber-400 rounded-full border-2 border-card" />
+                            : <span className="absolute -bottom-0.5 -end-0.5 w-3 h-3 bg-muted-foreground/30 rounded-full border-2 border-card" />;
+                      })()}
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-heading font-bold text-sm truncate">{selectedConv?.other_profile?.full_name || (isRTL ? 'مستخدم' : 'User')}</h3>
-                      <p className="text-[10px] text-emerald-500 font-medium flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                        {isRTL ? 'متصل الآن' : 'Online'}
-                      </p>
+                      {(() => {
+                        const mins = selectedConv?.last_message_at ? differenceInMinutes(new Date(), new Date(selectedConv.last_message_at)) : 999;
+                        if (mins < 5) return (
+                          <p className="text-[10px] text-emerald-500 font-medium flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                            {isRTL ? 'متصل الآن' : 'Online'}
+                          </p>
+                        );
+                        if (mins < 30) return (
+                          <p className="text-[10px] text-amber-500 font-medium flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                            {isRTL ? 'بعيد' : 'Away'}
+                          </p>
+                        );
+                        return (
+                          <p className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30" />
+                            {selectedConv?.last_message_at
+                              ? `${isRTL ? 'آخر ظهور' : 'Last seen'} ${formatDistanceToNow(new Date(selectedConv.last_message_at), { addSuffix: true, locale: language === 'ar' ? ar : enUS })}`
+                              : (isRTL ? 'غير متصل' : 'Offline')}
+                          </p>
+                        );
+                      })()}
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
                       <Tooltip>
