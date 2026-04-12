@@ -535,6 +535,13 @@ export type Database = {
             referencedRelation: "businesses"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "business_bnpl_providers_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       business_branches: {
@@ -634,6 +641,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "business_branches_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "business_branches_city_id_fkey"
             columns: ["city_id"]
             isOneToOne: false
@@ -700,6 +714,13 @@ export type Database = {
             referencedRelation: "businesses"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "business_services_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       business_staff: {
@@ -739,6 +760,13 @@ export type Database = {
             columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_staff_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
             referencedColumns: ["id"]
           },
         ]
@@ -1487,6 +1515,13 @@ export type Database = {
             referencedRelation: "businesses"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "contracts_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       conversation_members: {
@@ -1947,6 +1982,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "membership_subscriptions_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "membership_subscriptions_plan_id_fkey"
             columns: ["plan_id"]
             isOneToOne: false
@@ -2001,6 +2043,13 @@ export type Database = {
             columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_templates_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
             referencedColumns: ["id"]
           },
         ]
@@ -2292,6 +2341,13 @@ export type Database = {
             referencedRelation: "businesses"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "portfolio_items_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       profile_images: {
@@ -2460,6 +2516,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "profile_suppliers_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "profile_suppliers_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: false
@@ -2562,6 +2625,13 @@ export type Database = {
             columns: ["origin_business_id"]
             isOneToOne: false
             referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profile_systems_origin_business_id_fkey"
+            columns: ["origin_business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
             referencedColumns: ["id"]
           },
         ]
@@ -2764,6 +2834,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "projects_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "projects_category_id_fkey"
             columns: ["category_id"]
             isOneToOne: false
@@ -2860,6 +2937,13 @@ export type Database = {
             referencedRelation: "businesses"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "promotions_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       provider_installment_settings: {
@@ -2907,6 +2991,13 @@ export type Database = {
             referencedRelation: "businesses"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "provider_installment_settings_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: true
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       reviews: {
@@ -2952,6 +3043,13 @@ export type Database = {
             columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
             referencedColumns: ["id"]
           },
           {
@@ -3084,7 +3182,197 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      business_branches_public: {
+        Row: {
+          address: string | null
+          business_id: string | null
+          created_at: string | null
+          district: string | null
+          id: string | null
+          is_active: boolean | null
+          is_main: boolean | null
+          latitude: number | null
+          longitude: number | null
+          name_ar: string | null
+          name_en: string | null
+          region: string | null
+          sort_order: number | null
+          street_name: string | null
+          website: string | null
+        }
+        Insert: {
+          address?: string | null
+          business_id?: string | null
+          created_at?: string | null
+          district?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          is_main?: boolean | null
+          latitude?: number | null
+          longitude?: number | null
+          name_ar?: string | null
+          name_en?: string | null
+          region?: string | null
+          sort_order?: number | null
+          street_name?: string | null
+          website?: string | null
+        }
+        Update: {
+          address?: string | null
+          business_id?: string | null
+          created_at?: string | null
+          district?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          is_main?: boolean | null
+          latitude?: number | null
+          longitude?: number | null
+          name_ar?: string | null
+          name_en?: string | null
+          region?: string | null
+          sort_order?: number | null
+          street_name?: string | null
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_branches_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_branches_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      businesses_public: {
+        Row: {
+          address: string | null
+          business_number: number | null
+          category_id: string | null
+          city_id: string | null
+          country_id: string | null
+          cover_url: string | null
+          created_at: string | null
+          description_ar: string | null
+          description_en: string | null
+          district: string | null
+          id: string | null
+          is_active: boolean | null
+          is_verified: boolean | null
+          latitude: number | null
+          logo_url: string | null
+          longitude: number | null
+          membership_tier: Database["public"]["Enums"]["membership_tier"] | null
+          name_ar: string | null
+          name_en: string | null
+          rating_avg: number | null
+          rating_count: number | null
+          ref_id: string | null
+          region: string | null
+          short_description_ar: string | null
+          short_description_en: string | null
+          street_name: string | null
+          updated_at: string | null
+          username: string | null
+          website: string | null
+        }
+        Insert: {
+          address?: string | null
+          business_number?: number | null
+          category_id?: string | null
+          city_id?: string | null
+          country_id?: string | null
+          cover_url?: string | null
+          created_at?: string | null
+          description_ar?: string | null
+          description_en?: string | null
+          district?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          is_verified?: boolean | null
+          latitude?: number | null
+          logo_url?: string | null
+          longitude?: number | null
+          membership_tier?:
+            | Database["public"]["Enums"]["membership_tier"]
+            | null
+          name_ar?: string | null
+          name_en?: string | null
+          rating_avg?: number | null
+          rating_count?: number | null
+          ref_id?: string | null
+          region?: string | null
+          short_description_ar?: string | null
+          short_description_en?: string | null
+          street_name?: string | null
+          updated_at?: string | null
+          username?: string | null
+          website?: string | null
+        }
+        Update: {
+          address?: string | null
+          business_number?: number | null
+          category_id?: string | null
+          city_id?: string | null
+          country_id?: string | null
+          cover_url?: string | null
+          created_at?: string | null
+          description_ar?: string | null
+          description_en?: string | null
+          district?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          is_verified?: boolean | null
+          latitude?: number | null
+          logo_url?: string | null
+          longitude?: number | null
+          membership_tier?:
+            | Database["public"]["Enums"]["membership_tier"]
+            | null
+          name_ar?: string | null
+          name_en?: string | null
+          rating_avg?: number | null
+          rating_count?: number | null
+          ref_id?: string | null
+          region?: string | null
+          short_description_ar?: string | null
+          short_description_en?: string | null
+          street_name?: string | null
+          updated_at?: string | null
+          username?: string | null
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "businesses_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "businesses_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "businesses_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       check_rate_limit: {
@@ -3222,6 +3510,7 @@ export type Database = {
         Returns: boolean
       }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      unsubscribe_newsletter: { Args: { p_email: string }; Returns: boolean }
     }
     Enums: {
       account_type: "individual" | "business" | "company"
