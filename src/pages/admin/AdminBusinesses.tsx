@@ -518,44 +518,46 @@ const AdminBusinesses = () => {
     <DashboardLayout>
       <div className="space-y-6">
         {/* ─── Header ─── */}
-        <div className="flex items-start justify-between flex-wrap gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <div className="flex items-center gap-3 mb-1">
-              <div className="p-2.5 rounded-xl bg-primary/10">
-                <Building2 className="w-5 h-5 text-primary" />
+            <h1 className="font-heading font-bold text-2xl text-foreground flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/20 to-primary/10 flex items-center justify-center shadow-sm">
+                <Building2 className="w-5 h-5 text-accent" />
               </div>
-              <div>
-                <h1 className="font-heading font-bold text-xl sm:text-2xl">
-                  {isRTL ? 'إدارة الأعمال' : 'Business Management'}
-                </h1>
-                <p className="text-xs text-muted-foreground">
-                  {isRTL ? 'التحكم الشامل في الأعمال والخدمات والفروع' : 'Full control over businesses, services & branches'}
-                </p>
-              </div>
-            </div>
+              {isRTL ? 'إدارة الأعمال' : 'Business Management'}
+            </h1>
+            <p className="text-muted-foreground font-body mt-1 text-sm">
+              {isRTL ? `${stats.total} نشاط تجاري مسجّل • التحكم الشامل في الأعمال والخدمات والفروع` : `${stats.total} registered businesses • Full control over businesses, services & branches`}
+            </p>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5"
+            <div className="flex bg-muted/50 border border-border/30 rounded-xl overflow-hidden p-0.5">
+              <button className={`p-2 rounded-lg transition-all ${viewMode === 'cards' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                onClick={() => setViewMode('cards')}><LayoutGrid className="w-4 h-4" /></button>
+              <button className={`p-2 rounded-lg transition-all ${viewMode === 'table' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                onClick={() => setViewMode('table')}><List className="w-4 h-4" /></button>
+            </div>
+            <Button variant="outline" size="sm" className="h-9 text-xs gap-1.5 rounded-xl"
               onClick={() => { refetchBusinesses(); toast.success(isRTL ? 'تم التحديث' : 'Refreshed'); }}>
               <RefreshCw className="w-3.5 h-3.5" />
-              {isRTL ? 'تحديث' : 'Refresh'}
+              <span className="hidden sm:inline">{isRTL ? 'تحديث' : 'Refresh'}</span>
             </Button>
-            <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5"
+            <Button variant="outline" size="sm" className="h-9 text-xs gap-1.5 rounded-xl"
               onClick={() => exportCSV(filtered, language)}>
               <Download className="w-3.5 h-3.5" />
-              {isRTL ? 'تصدير CSV' : 'Export CSV'}
+              <span className="hidden sm:inline">{isRTL ? 'تصدير' : 'Export'}</span>
             </Button>
           </div>
         </div>
 
         {/* ─── Stats ─── */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          <StatCard label={isRTL ? 'إجمالي الأعمال' : 'Total Businesses'} value={stats.total} icon={Building2} color="bg-primary/10 text-primary" />
-          <StatCard label={isRTL ? 'نشط' : 'Active'} value={stats.active} icon={Activity} color="bg-green-500/10 text-green-600"
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+          <StatCard label={isRTL ? 'إجمالي الأعمال' : 'Total Businesses'} value={stats.total} icon={Building2} gradient="from-primary/10 to-primary/5" iconBg="bg-primary/15 text-primary" />
+          <StatCard label={isRTL ? 'نشط' : 'Active'} value={stats.active} icon={Activity} gradient="from-emerald-500/10 to-emerald-500/5" iconBg="bg-emerald-500/15 text-emerald-600"
             trend={stats.total ? `${Math.round(stats.active / stats.total * 100)}%` : undefined} />
-          <StatCard label={isRTL ? 'موثق' : 'Verified'} value={stats.verified} icon={Shield} color="bg-blue-500/10 text-blue-600" />
-          <StatCard label={isRTL ? 'مرتبط بعقود' : 'With Contracts'} value={stats.contracts} icon={FileText} color="bg-accent/20 text-accent-foreground" />
-          <StatCard label={isRTL ? 'مميز / مؤسسات' : 'Premium/Enterprise'} value={stats.premium} icon={Crown} color="bg-purple-500/10 text-purple-600" />
+          <StatCard label={isRTL ? 'موثق' : 'Verified'} value={stats.verified} icon={Shield} gradient="from-blue-500/10 to-blue-500/5" iconBg="bg-blue-500/15 text-blue-600" />
+          <StatCard label={isRTL ? 'مرتبط بعقود' : 'With Contracts'} value={stats.contracts} icon={FileText} gradient="from-accent/10 to-accent/5" iconBg="bg-accent/15 text-accent" />
+          <StatCard label={isRTL ? 'مميز / مؤسسات' : 'Premium/Enterprise'} value={stats.premium} icon={Crown} gradient="from-purple-500/10 to-purple-500/5" iconBg="bg-purple-500/15 text-purple-600" />
         </div>
 
         {/* ─── Tier Distribution Bar ─── */}
