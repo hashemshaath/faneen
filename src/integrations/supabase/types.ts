@@ -3775,6 +3775,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_blog_views: { Args: { _post_id: string }; Returns: undefined }
       increment_promotion_views: {
         Args: { _promotion_id: string }
         Returns: undefined
