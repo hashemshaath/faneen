@@ -21,7 +21,7 @@ import {
   Loader2, RefreshCw, AlertTriangle, Server, Eye, EyeOff, Search, X,
   CheckCircle2, XCircle, Settings, Sparkles, Download, Upload, Shield,
   Smartphone, CreditCard, BarChart3, Brain, Key, Palette, FileText,
-  Zap, Activity, ChevronDown, RotateCcw, Hash, ExternalLink, Info,
+  Zap, Activity, ChevronDown, RotateCcw, Hash, ExternalLink, Info, Layers,
 } from 'lucide-react';
 
 /* ═══════════ Types ═══════════ */
