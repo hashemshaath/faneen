@@ -25,12 +25,10 @@ export const exportComparePDF = async (data: ExportData) => {
 
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
 
-  // Register Arabic font
-  await registerArabicFont(doc);
-  if (data.isRTL) doc.setFont('Amiri');
+  const fontLoaded = await setupArabicDoc(doc, data.isRTL);
 
   const pageWidth = doc.internal.pageSize.getWidth();
-  const rtlStyles = data.isRTL ? { font: 'Amiri', halign: 'right' as const } : {};
+  const rtlStyles = getArabicTableStyles(data.isRTL, fontLoaded);
 
   // Title
   doc.setFontSize(18);
