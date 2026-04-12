@@ -646,32 +646,33 @@ const AdminBusinesses = () => {
 
         {/* ─── Inline Edit Panel ─── */}
         {editingBiz && (
-          <Card className="border-primary/30 bg-gradient-to-br from-primary/[0.03] to-transparent shadow-sm">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <div className="p-1.5 rounded-lg bg-primary/10"><Edit className="w-4 h-4 text-primary" /></div>
-                  <div>
-                    <span className="block">{isRTL ? 'تعديل العمل' : 'Edit Business'}: {editingBiz.name_ar}</span>
-                    <span className="text-[10px] font-normal text-muted-foreground">{editingBiz.ref_id} · @{editingBiz.username}</span>
+          <div className="rounded-2xl border border-accent/30 bg-gradient-to-r from-accent/5 to-transparent p-5 animate-in slide-in-from-top-2 duration-200 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-accent/15 flex items-center justify-center">
+                  <Edit className="w-4 h-4 text-accent" />
+                </div>
+                <div>
+                  <h3 className="font-heading font-bold text-base">{isRTL ? 'تعديل العمل' : 'Edit Business'}: {editingBiz.name_ar}</h3>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-[10px] font-mono text-muted-foreground">{editingBiz.ref_id} · @{editingBiz.username}</span>
+                    {contractBusinessIds.includes(editingBiz.id) && (
+                      <Badge variant="outline" className="text-[9px] gap-1"><FileText className="w-2.5 h-2.5" />{isRTL ? 'مرتبط بعقود' : 'Has Contracts'}</Badge>
+                    )}
                   </div>
-                  {contractBusinessIds.includes(editingBiz.id) && (
-                    <Badge variant="outline" className="text-[9px] gap-1"><FileText className="w-2.5 h-2.5" />{isRTL ? 'مرتبط بعقود' : 'Has Contracts'}</Badge>
-                  )}
-                </CardTitle>
-                <Button variant="ghost" size="icon" onClick={() => setEditingBiz(null)}><X className="w-4 h-4" /></Button>
+                </div>
               </div>
-            </CardHeader>
-            <CardContent>
+              <Button variant="ghost" size="icon" onClick={() => setEditingBiz(null)} className="rounded-xl"><X className="w-4 h-4" /></Button>
+            </div>
               <Tabs defaultValue="info" className="w-full">
-                <TabsList className="w-full grid grid-cols-7 h-9">
-                  <TabsTrigger value="info" className="text-[10px]">{isRTL ? 'المعلومات' : 'Info'}</TabsTrigger>
-                  <TabsTrigger value="address" className="text-[10px]">{isRTL ? 'العنوان' : 'Address'}</TabsTrigger>
-                  <TabsTrigger value="content" className="text-[10px]">{isRTL ? 'المحتوى' : 'Content'}</TabsTrigger>
-                  <TabsTrigger value="media" className="text-[10px]">{isRTL ? 'الوسائط' : 'Media'}</TabsTrigger>
-                  <TabsTrigger value="contact" className="text-[10px]">{isRTL ? 'التواصل' : 'Contact'}</TabsTrigger>
-                  <TabsTrigger value="branches" className="text-[10px]">{isRTL ? 'الفروع' : 'Branches'} <Badge variant="secondary" className="text-[8px] ms-0.5 h-4 px-1">{branches.length}</Badge></TabsTrigger>
-                  <TabsTrigger value="controls" className="text-[10px]">{isRTL ? 'التحكم' : 'Controls'}</TabsTrigger>
+                <TabsList className="w-full grid grid-cols-7 h-9 rounded-xl">
+                  <TabsTrigger value="info" className="text-[10px] rounded-lg">{isRTL ? 'المعلومات' : 'Info'}</TabsTrigger>
+                  <TabsTrigger value="address" className="text-[10px] rounded-lg">{isRTL ? 'العنوان' : 'Address'}</TabsTrigger>
+                  <TabsTrigger value="content" className="text-[10px] rounded-lg">{isRTL ? 'المحتوى' : 'Content'}</TabsTrigger>
+                  <TabsTrigger value="media" className="text-[10px] rounded-lg">{isRTL ? 'الوسائط' : 'Media'}</TabsTrigger>
+                  <TabsTrigger value="contact" className="text-[10px] rounded-lg">{isRTL ? 'التواصل' : 'Contact'}</TabsTrigger>
+                  <TabsTrigger value="branches" className="text-[10px] rounded-lg">{isRTL ? 'الفروع' : 'Branches'} <Badge variant="secondary" className="text-[8px] ms-0.5 h-4 px-1">{branches.length}</Badge></TabsTrigger>
+                  <TabsTrigger value="controls" className="text-[10px] rounded-lg">{isRTL ? 'التحكم' : 'Controls'}</TabsTrigger>
                 </TabsList>
 
                 {/* ── Info Tab ── */}
