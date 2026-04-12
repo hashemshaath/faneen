@@ -1,17 +1,38 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
+const HEADERS = {
   "Content-Type": "application/xml; charset=utf-8",
-  "Cache-Control": "public, max-age=3600, s-maxage=3600",
+  "Cache-Control": "public, max-age=86400, s-maxage=86400",
+  "X-Robots-Tag": "noindex",
 };
 
-const BASE_URL = "https://faneen.com";
+const BASE = "https://faneen.com";
+
+function esc(s: string) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/'/g, "&apos;").replace(/"/g, "&quot;");
+}
+
+function entry(loc: string, opts: { lastmod?: string; changefreq: string; priority: string }) {
+  return `  <url>
+    <loc>${esc(loc)}</loc>${opts.lastmod ? `\n    <lastmod>${opts.lastmod}</lastmod>` : ""}
+    <changefreq>${opts.changefreq}</changefreq>
+    <priority>${opts.priority}</priority>
+  </url>`;
+}
+
+function toDate(d: string | null): string {
+  if (!d) return new Date().toISOString().split("T")[0];
+  try { return new Date(d).toISOString().split("T")[0]; } catch { return new Date().toISOString().split("T")[0]; }
+}
 
 Deno.serve(async () => {
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+
+    const today = new Date().toISOString().split("T")[0];
 
     // Static pages
     const staticPages = [
@@ -30,135 +51,75 @@ Deno.serve(async () => {
       { loc: "/terms", priority: "0.3", changefreq: "yearly" },
     ];
 
-    // Fetch businesses
-    const { data: businesses } = await supabase
-      .from("businesses")
-      .select("username, updated_at")
-      .eq("is_active", true)
-      .order("rating_avg", { ascending: false })
-      .limit(1000);
+    // Parallel fetches
+    const [bizRes, postRes, catRes, cityRes, profileRes, projectRes] = await Promise.all([
+      supabase.from("businesses").select("username, updated_at").eq("is_active", true).order("rating_avg", { ascending: false }).limit(50000),
+      supabase.from("blog_posts").select("slug, updated_at").eq("status", "published").order("published_at", { ascending: false }).limit(10000),
+      supabase.from("categories").select("slug, created_at").eq("is_active", true),
+      supabase.from("cities").select("id, name_en, created_at").eq("is_active", true),
+      supabase.from("profile_systems").select("slug, updated_at").eq("is_active", true).limit(10000),
+      supabase.from("projects").select("id, updated_at").eq("status", "published").order("created_at", { ascending: false }).limit(10000),
+    ]);
 
-    // Fetch blog posts
-    const { data: posts } = await supabase
-      .from("blog_posts")
-      .select("slug, updated_at")
-      .eq("status", "published")
-      .order("published_at", { ascending: false })
-      .limit(1000);
+    const entries: string[] = [];
 
-    // Fetch categories
-    const { data: categories } = await supabase
-      .from("categories")
-      .select("slug, created_at")
-      .eq("is_active", true);
-
-    // Fetch cities
-    const { data: cities } = await supabase
-      .from("cities")
-      .select("id, name_en, created_at")
-      .eq("is_active", true);
-
-    // Fetch profile systems
-    const { data: profiles } = await supabase
-      .from("profile_systems")
-      .select("slug, updated_at")
-      .eq("is_active", true)
-      .limit(500);
-
-    // Fetch projects
-    const { data: projects } = await supabase
-      .from("projects")
-      .select("id, updated_at")
-      .eq("status", "published")
-      .order("created_at", { ascending: false })
-      .limit(500);
-
-    // Build XML
-    let xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml">
-`;
-
-    // Static pages
-    for (const page of staticPages) {
-      xml += `  <url>
-    <loc>${BASE_URL}${page.loc}</loc>
-    <changefreq>${page.changefreq}</changefreq>
-    <priority>${page.priority}</priority>
-  </url>
-`;
+    // Static
+    for (const p of staticPages) {
+      entries.push(entry(`${BASE}${p.loc}`, { lastmod: today, changefreq: p.changefreq, priority: p.priority }));
     }
 
     // Businesses
-    if (businesses) {
-      for (const b of businesses) {
-        xml += `  <url>
-    <loc>${BASE_URL}/${encodeURIComponent(b.username)}</loc>
-    <lastmod>${new Date(b.updated_at).toISOString().split("T")[0]}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-`;
+    if (bizRes.data) {
+      for (const b of bizRes.data) {
+        entries.push(entry(`${BASE}/${encodeURIComponent(b.username)}`, { lastmod: toDate(b.updated_at), changefreq: "weekly", priority: "0.8" }));
       }
     }
 
-    // Blog posts
-    if (posts) {
-      for (const p of posts) {
-        xml += `  <url>
-    <loc>${BASE_URL}/blog/${encodeURIComponent(p.slug)}</loc>
-    <lastmod>${new Date(p.updated_at).toISOString().split("T")[0]}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-`;
+    // Blog
+    if (postRes.data) {
+      for (const p of postRes.data) {
+        entries.push(entry(`${BASE}/blog/${encodeURIComponent(p.slug)}`, { lastmod: toDate(p.updated_at), changefreq: "monthly", priority: "0.7" }));
       }
     }
 
     // Categories
-    if (categories) {
-      for (const c of categories) {
-        xml += `  <url>
-    <loc>${BASE_URL}/categories/${encodeURIComponent(c.slug)}</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-`;
+    if (catRes.data) {
+      for (const c of catRes.data) {
+        entries.push(entry(`${BASE}/categories/${encodeURIComponent(c.slug)}`, { lastmod: toDate(c.created_at), changefreq: "weekly", priority: "0.7" }));
+      }
+    }
+
+    // Cities
+    if (cityRes.data) {
+      for (const city of cityRes.data) {
+        const slug = city.name_en?.toLowerCase().replace(/\s+/g, "-") || city.id;
+        entries.push(entry(`${BASE}/search?city=${encodeURIComponent(city.id)}`, { lastmod: toDate(city.created_at), changefreq: "daily", priority: "0.7" }));
       }
     }
 
     // Profile systems
-    if (profiles) {
-      for (const p of profiles) {
-        xml += `  <url>
-    <loc>${BASE_URL}/profile-systems/${encodeURIComponent(p.slug)}</loc>
-    <lastmod>${new Date(p.updated_at).toISOString().split("T")[0]}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-`;
+    if (profileRes.data) {
+      for (const p of profileRes.data) {
+        entries.push(entry(`${BASE}/profile-systems/${encodeURIComponent(p.slug)}`, { lastmod: toDate(p.updated_at), changefreq: "monthly", priority: "0.6" }));
       }
     }
 
     // Projects
-    if (projects) {
-      for (const p of projects) {
-        xml += `  <url>
-    <loc>${BASE_URL}/projects/${p.id}</loc>
-    <lastmod>${new Date(p.updated_at).toISOString().split("T")[0]}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-`;
+    if (projectRes.data) {
+      for (const p of projectRes.data) {
+        entries.push(entry(`${BASE}/projects/${p.id}`, { lastmod: toDate(p.updated_at), changefreq: "monthly", priority: "0.6" }));
       }
     }
 
-    xml += `</urlset>`;
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${entries.join("\n")}
+</urlset>`;
 
-    return new Response(xml, { headers: corsHeaders });
+    return new Response(xml, { headers: HEADERS });
   } catch (error) {
-    console.error("Sitemap generation error:", error);
-    return new Response("<error>Failed to generate sitemap</error>", {
+    console.error("Sitemap error:", error);
+    return new Response(`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>`, {
       status: 500,
       headers: { "Content-Type": "application/xml" },
     });
