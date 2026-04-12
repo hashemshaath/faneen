@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useRef, useMemo, useTransition } from 'react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -16,7 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ImageUpload, MultiImageUpload } from '@/components/ui/image-upload';
+import { ImageUpload } from '@/components/ui/image-upload';
 import { FieldAiActions } from '@/components/blog/FieldAiActions';
 import { toast } from 'sonner';
 import L from 'leaflet';
@@ -26,9 +26,14 @@ import {
   Edit, Trash2, Plus, X, Globe, Phone, Mail, MapPin, Settings,
   Shield, Crown, BarChart3, Package, DollarSign, ExternalLink,
   GripVertical, ToggleLeft, ToggleRight, Save, Image, MapPinned,
-  FileText, Users, Locate, Navigation,
+  FileText, Users, Locate, Navigation, Download, LayoutGrid, List,
+  TrendingUp, ArrowUpRight, Filter, RefreshCw, Copy, MoreHorizontal,
+  Activity, Zap,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from '@/components/ui/table';
 
 // Fix leaflet icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -39,10 +44,10 @@ L.Icon.Default.mergeOptions({
 });
 
 const tiers = [
-  { value: 'free', label_ar: 'مجاني', label_en: 'Free', color: 'bg-muted text-muted-foreground' },
-  { value: 'basic', label_ar: 'أساسي', label_en: 'Basic', color: 'bg-blue-500/10 text-blue-600' },
-  { value: 'premium', label_ar: 'مميز', label_en: 'Premium', color: 'bg-yellow-500/10 text-yellow-600' },
-  { value: 'enterprise', label_ar: 'مؤسسات', label_en: 'Enterprise', color: 'bg-purple-500/10 text-purple-600' },
+  { value: 'free', label_ar: 'مجاني', label_en: 'Free', color: 'bg-muted text-muted-foreground', icon: '🆓' },
+  { value: 'basic', label_ar: 'أساسي', label_en: 'Basic', color: 'bg-blue-500/10 text-blue-600', icon: '⭐' },
+  { value: 'premium', label_ar: 'مميز', label_en: 'Premium', color: 'bg-accent/20 text-accent-foreground', icon: '👑' },
+  { value: 'enterprise', label_ar: 'مؤسسات', label_en: 'Enterprise', color: 'bg-purple-500/10 text-purple-600', icon: '🏢' },
 ];
 
 /* ─── Location Map Picker ─── */
@@ -101,6 +106,49 @@ const reverseGeocode = async (lat: number, lng: number) => {
   } catch { return null; }
 };
 
+/* ─── CSV Export ─── */
+const exportCSV = (businesses: any[], language: string) => {
+  const headers = ['Ref ID', 'Name (AR)', 'Name (EN)', 'Username', 'Phone', 'Email', 'Category', 'Tier', 'Verified', 'Active', 'Rating', 'Created'];
+  const rows = businesses.map((b: any) => [
+    b.ref_id, b.name_ar, b.name_en || '', `@${b.username}`, b.phone || '', b.email || '',
+    b.category_id || '', b.membership_tier, b.is_verified ? 'Yes' : 'No', b.is_active ? 'Yes' : 'No',
+    `${b.rating_avg} (${b.rating_count})`, new Date(b.created_at).toLocaleDateString(),
+  ]);
+  const csv = [headers, ...rows].map(r => r.map((c: string) => `"${c}"`).join(',')).join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `businesses_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+/* ─── Stat Card Component ─── */
+const StatCard = React.memo(({ label, value, icon: Icon, trend, color }: {
+  label: string; value: number; icon: any; trend?: string; color: string;
+}) => (
+  <Card className="border-border/40 hover-lift overflow-hidden relative group">
+    <div className={`absolute inset-0 ${color} opacity-[0.03] group-hover:opacity-[0.06] transition-opacity`} />
+    <CardContent className="p-4 flex items-center gap-3 relative">
+      <div className={`p-2.5 rounded-xl ${color} shrink-0`}>
+        <Icon className="w-4 h-4" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-2xl font-heading font-bold leading-tight">{value}</p>
+        <p className="text-[11px] text-muted-foreground truncate">{label}</p>
+      </div>
+      {trend && (
+        <div className="flex items-center gap-0.5 text-[10px] text-green-600 bg-green-500/10 px-1.5 py-0.5 rounded-full">
+          <TrendingUp className="w-3 h-3" />
+          {trend}
+        </div>
+      )}
+    </CardContent>
+  </Card>
+));
+StatCard.displayName = 'StatCard';
+
 const AdminBusinesses = () => {
   const { isRTL, language } = useLanguage();
   const { isAdmin, user } = useAuth();
@@ -116,6 +164,8 @@ const AdminBusinesses = () => {
   const [geocoding, setGeocoding] = useState(false);
   const [branchForm, setBranchForm] = useState<any>(null);
   const [editingBranchId, setEditingBranchId] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
+  const [isPending, startTransition] = useTransition();
 
   const setField = useCallback((key: string, value: any) => {
     setEditForm((f: any) => ({ ...f, [key]: value }));
@@ -126,7 +176,7 @@ const AdminBusinesses = () => {
   }, []);
 
   /* ─── Queries ─── */
-  const { data: businesses = [], isLoading } = useQuery({
+  const { data: businesses = [], isLoading, refetch: refetchBusinesses } = useQuery({
     queryKey: ['admin-businesses'],
     queryFn: async () => {
       const { data, error } = await supabase.from('businesses').select('*').order('created_at', { ascending: false });
@@ -197,7 +247,6 @@ const AdminBusinesses = () => {
     enabled: !!editingBiz?.id,
   });
 
-  // Sync with contracts - get businesses involved in contracts
   const { data: contractBusinessIds = [] } = useQuery({
     queryKey: ['contract-business-ids'],
     queryFn: async () => {
@@ -242,36 +291,20 @@ const AdminBusinesses = () => {
     mutationFn: async () => {
       const id = editingBiz.id;
       const payload: any = {
-        name_ar: editForm.name_ar,
-        name_en: editForm.name_en || null,
-        short_description_ar: editForm.short_description_ar || null,
-        short_description_en: editForm.short_description_en || null,
-        description_ar: editForm.description_ar || null,
-        description_en: editForm.description_en || null,
-        phone: editForm.phone || null,
-        email: editForm.email || null,
-        website: editForm.website || null,
-        address: editForm.address || null,
-        national_id: editForm.national_id || null,
-        additional_number: editForm.additional_number || null,
-        region: editForm.region || null,
-        district: editForm.district || null,
-        street_name: editForm.street_name || null,
-        building_number: editForm.building_number || null,
-        latitude: editForm.latitude || null,
-        longitude: editForm.longitude || null,
-        category_id: editForm.category_id || null,
-        country_id: editForm.country_id || null,
-        city_id: editForm.city_id || null,
-        logo_url: editForm.logo_url || null,
-        cover_url: editForm.cover_url || null,
-        unified_number: editForm.unified_number || null,
-        contact_person: editForm.contact_person || null,
-        mobile: editForm.mobile || null,
-        customer_service_phone: editForm.customer_service_phone || null,
-        is_active: editForm.is_active,
-        is_verified: editForm.is_verified,
-        membership_tier: editForm.membership_tier,
+        name_ar: editForm.name_ar, name_en: editForm.name_en || null,
+        short_description_ar: editForm.short_description_ar || null, short_description_en: editForm.short_description_en || null,
+        description_ar: editForm.description_ar || null, description_en: editForm.description_en || null,
+        phone: editForm.phone || null, email: editForm.email || null, website: editForm.website || null,
+        address: editForm.address || null, national_id: editForm.national_id || null,
+        additional_number: editForm.additional_number || null, region: editForm.region || null,
+        district: editForm.district || null, street_name: editForm.street_name || null,
+        building_number: editForm.building_number || null, latitude: editForm.latitude || null,
+        longitude: editForm.longitude || null, category_id: editForm.category_id || null,
+        country_id: editForm.country_id || null, city_id: editForm.city_id || null,
+        logo_url: editForm.logo_url || null, cover_url: editForm.cover_url || null,
+        unified_number: editForm.unified_number || null, contact_person: editForm.contact_person || null,
+        mobile: editForm.mobile || null, customer_service_phone: editForm.customer_service_phone || null,
+        is_active: editForm.is_active, is_verified: editForm.is_verified, membership_tier: editForm.membership_tier,
       };
       const { error } = await supabase.from('businesses').update(payload).eq('id', id);
       if (error) throw error;
@@ -289,10 +322,8 @@ const AdminBusinesses = () => {
     mutationFn: async () => {
       const { error } = await supabase.from('business_services').insert({
         business_id: servicesPanel!,
-        name_ar: newService.name_ar,
-        name_en: newService.name_en || null,
-        description_ar: newService.description_ar || null,
-        description_en: newService.description_en || null,
+        name_ar: newService.name_ar, name_en: newService.name_en || null,
+        description_ar: newService.description_ar || null, description_en: newService.description_en || null,
         price_from: newService.price_from ? parseFloat(newService.price_from) : null,
         price_to: newService.price_to ? parseFloat(newService.price_to) : null,
         is_active: newService.is_active,
@@ -328,10 +359,7 @@ const AdminBusinesses = () => {
   const addPortfolioMutation = useMutation({
     mutationFn: async (url: string) => {
       const { error } = await supabase.from('portfolio_items').insert({
-        business_id: editingBiz.id,
-        title_ar: 'صورة',
-        media_url: url,
-        media_type: 'image',
+        business_id: editingBiz.id, title_ar: 'صورة', media_url: url, media_type: 'image',
       });
       if (error) throw error;
     },
@@ -360,27 +388,17 @@ const AdminBusinesses = () => {
       if (!branchForm || !editingBiz) return;
       const payload: any = {
         business_id: editingBiz.id,
-        name_ar: branchForm.name_ar,
-        name_en: branchForm.name_en || null,
-        is_main: branchForm.is_main,
-        is_active: branchForm.is_active,
-        contact_person: branchForm.contact_person || null,
-        phone: branchForm.phone || null,
-        mobile: branchForm.mobile || null,
-        unified_number: branchForm.unified_number || null,
+        name_ar: branchForm.name_ar, name_en: branchForm.name_en || null,
+        is_main: branchForm.is_main, is_active: branchForm.is_active,
+        contact_person: branchForm.contact_person || null, phone: branchForm.phone || null,
+        mobile: branchForm.mobile || null, unified_number: branchForm.unified_number || null,
         customer_service_phone: branchForm.customer_service_phone || null,
-        email: branchForm.email || null,
-        website: branchForm.website || null,
-        country_id: branchForm.country_id || null,
-        city_id: branchForm.city_id || null,
-        region: branchForm.region || null,
-        district: branchForm.district || null,
-        street_name: branchForm.street_name || null,
-        building_number: branchForm.building_number || null,
-        national_id: branchForm.national_id || null,
-        additional_number: branchForm.additional_number || null,
-        address: branchForm.address || null,
-        latitude: branchForm.latitude || null,
+        email: branchForm.email || null, website: branchForm.website || null,
+        country_id: branchForm.country_id || null, city_id: branchForm.city_id || null,
+        region: branchForm.region || null, district: branchForm.district || null,
+        street_name: branchForm.street_name || null, building_number: branchForm.building_number || null,
+        national_id: branchForm.national_id || null, additional_number: branchForm.additional_number || null,
+        address: branchForm.address || null, latitude: branchForm.latitude || null,
         longitude: branchForm.longitude || null,
       };
       if (editingBranchId) {
@@ -418,6 +436,7 @@ const AdminBusinesses = () => {
     },
     onSuccess: () => refetchBranches(),
   });
+
   const handleMapPick = async (lat: number, lng: number) => {
     setField('latitude', lat);
     setField('longitude', lng);
@@ -462,7 +481,7 @@ const AdminBusinesses = () => {
   };
 
   /* ─── Filters ─── */
-  const filtered = businesses.filter((b: any) => {
+  const filtered = useMemo(() => businesses.filter((b: any) => {
     const matchSearch = !search ||
       b.name_ar?.includes(search) || b.name_en?.toLowerCase().includes(search.toLowerCase()) ||
       b.username?.includes(search) || b.ref_id?.includes(search) ||
@@ -474,14 +493,21 @@ const AdminBusinesses = () => {
       (filterStatus === 'contract' && contractBusinessIds.includes(b.id));
     const matchTier = filterTier === 'all' || b.membership_tier === filterTier;
     return matchSearch && matchStatus && matchTier;
-  });
+  }), [businesses, search, filterStatus, filterTier, contractBusinessIds]);
 
-  const stats = {
+  const stats = useMemo(() => ({
     total: businesses.length,
     verified: businesses.filter((b: any) => b.is_verified).length,
     active: businesses.filter((b: any) => b.is_active).length,
     contracts: contractBusinessIds.length,
-  };
+    premium: businesses.filter((b: any) => b.membership_tier === 'premium' || b.membership_tier === 'enterprise').length,
+  }), [businesses, contractBusinessIds]);
+
+  const tierDistribution = useMemo(() => {
+    const dist: Record<string, number> = {};
+    tiers.forEach(t => { dist[t.value] = businesses.filter((b: any) => b.membership_tier === t.value).length; });
+    return dist;
+  }, [businesses]);
 
   const filteredCities = editForm.country_id
     ? cities.filter((c: any) => c.country_id === editForm.country_id)
@@ -491,77 +517,150 @@ const AdminBusinesses = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-5">
-        {/* Header */}
-        <div className="flex items-center justify-between flex-wrap gap-3">
+      <div className="space-y-6">
+        {/* ─── Header ─── */}
+        <div className="flex items-start justify-between flex-wrap gap-4">
           <div>
-            <h1 className="font-heading font-bold text-2xl flex items-center gap-2">
-              <Building2 className="w-6 h-6 text-primary" />
-              {isRTL ? 'إدارة الأعمال' : 'Business Management'}
-            </h1>
-            <p className="text-sm text-muted-foreground mt-0.5">
-              {isRTL ? 'التحكم الشامل في الأعمال والخدمات والمحتوى' : 'Full control over businesses, services & content'}
-            </p>
+            <div className="flex items-center gap-3 mb-1">
+              <div className="p-2.5 rounded-xl bg-primary/10">
+                <Building2 className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h1 className="font-heading font-bold text-xl sm:text-2xl">
+                  {isRTL ? 'إدارة الأعمال' : 'Business Management'}
+                </h1>
+                <p className="text-xs text-muted-foreground">
+                  {isRTL ? 'التحكم الشامل في الأعمال والخدمات والفروع' : 'Full control over businesses, services & branches'}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5"
+              onClick={() => { refetchBusinesses(); toast.success(isRTL ? 'تم التحديث' : 'Refreshed'); }}>
+              <RefreshCw className="w-3.5 h-3.5" />
+              {isRTL ? 'تحديث' : 'Refresh'}
+            </Button>
+            <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5"
+              onClick={() => exportCSV(filtered, language)}>
+              <Download className="w-3.5 h-3.5" />
+              {isRTL ? 'تصدير CSV' : 'Export CSV'}
+            </Button>
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {[
-            { label: isRTL ? 'الإجمالي' : 'Total', value: stats.total, icon: Building2, color: 'bg-primary/10 text-primary' },
-            { label: isRTL ? 'نشط' : 'Active', value: stats.active, icon: CheckCircle, color: 'bg-green-500/10 text-green-600' },
-            { label: isRTL ? 'موثق' : 'Verified', value: stats.verified, icon: Shield, color: 'bg-blue-500/10 text-blue-600' },
-            { label: isRTL ? 'مرتبط بعقود' : 'With Contracts', value: stats.contracts, icon: FileText, color: 'bg-yellow-500/10 text-yellow-600' },
-          ].map((s, i) => (
-            <Card key={i} className="border-border/40">
-              <CardContent className="p-2.5 flex items-center gap-2">
-                <div className={`p-1.5 rounded-lg ${s.color}`}><s.icon className="w-3.5 h-3.5" /></div>
-                <div>
-                  <p className="text-sm font-bold leading-tight">{s.value}</p>
-                  <p className="text-[9px] text-muted-foreground">{s.label}</p>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+        {/* ─── Stats ─── */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          <StatCard label={isRTL ? 'إجمالي الأعمال' : 'Total Businesses'} value={stats.total} icon={Building2} color="bg-primary/10 text-primary" />
+          <StatCard label={isRTL ? 'نشط' : 'Active'} value={stats.active} icon={Activity} color="bg-green-500/10 text-green-600"
+            trend={stats.total ? `${Math.round(stats.active / stats.total * 100)}%` : undefined} />
+          <StatCard label={isRTL ? 'موثق' : 'Verified'} value={stats.verified} icon={Shield} color="bg-blue-500/10 text-blue-600" />
+          <StatCard label={isRTL ? 'مرتبط بعقود' : 'With Contracts'} value={stats.contracts} icon={FileText} color="bg-accent/20 text-accent-foreground" />
+          <StatCard label={isRTL ? 'مميز / مؤسسات' : 'Premium/Enterprise'} value={stats.premium} icon={Crown} color="bg-purple-500/10 text-purple-600" />
         </div>
 
-        {/* Filters */}
-        <Card>
-          <CardContent className="p-3 flex flex-col sm:flex-row gap-3">
-            <div className="relative flex-1">
-              <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input value={search} onChange={e => setSearch(e.target.value)}
-                placeholder={isRTL ? 'بحث بالاسم، المعرف، الهاتف، البريد...' : 'Search by name, ID, phone, email...'}
-                className="ps-9" />
+        {/* ─── Tier Distribution Bar ─── */}
+        {stats.total > 0 && (
+          <Card className="border-border/40">
+            <CardContent className="p-3">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-semibold text-muted-foreground">{isRTL ? 'توزيع العضويات' : 'Membership Distribution'}</p>
+                <div className="flex items-center gap-3">
+                  {tiers.map(t => (
+                    <span key={t.value} className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                      <span className="text-xs">{t.icon}</span>
+                      {language === 'ar' ? t.label_ar : t.label_en}: {tierDistribution[t.value] || 0}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div className="flex h-2 rounded-full overflow-hidden bg-muted/50">
+                {tiers.map(t => {
+                  const pct = stats.total ? (tierDistribution[t.value] || 0) / stats.total * 100 : 0;
+                  if (!pct) return null;
+                  const colorMap: Record<string, string> = {
+                    free: 'bg-muted-foreground/40',
+                    basic: 'bg-blue-500',
+                    premium: 'bg-accent',
+                    enterprise: 'bg-purple-500',
+                  };
+                  return <div key={t.value} className={`${colorMap[t.value]} transition-all`} style={{ width: `${pct}%` }} />;
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* ─── Filters ─── */}
+        <Card className="border-border/40">
+          <CardContent className="p-3">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1">
+                <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input value={search}
+                  onChange={e => { const v = e.target.value; startTransition(() => setSearch(v)); }}
+                  placeholder={isRTL ? 'بحث بالاسم، المعرف، الهاتف، البريد...' : 'Search by name, ID, phone, email...'}
+                  className="ps-9 h-9" />
+                {search && (
+                  <button onClick={() => setSearch('')}
+                    className="absolute end-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger className="w-full sm:w-40 h-9"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{isRTL ? 'كل الحالات' : 'All Status'}</SelectItem>
+                  <SelectItem value="verified">{isRTL ? 'موثق' : 'Verified'}</SelectItem>
+                  <SelectItem value="unverified">{isRTL ? 'غير موثق' : 'Unverified'}</SelectItem>
+                  <SelectItem value="inactive">{isRTL ? 'معطل' : 'Inactive'}</SelectItem>
+                  <SelectItem value="contract">{isRTL ? 'مرتبط بعقود' : 'With Contracts'}</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={filterTier} onValueChange={setFilterTier}>
+                <SelectTrigger className="w-full sm:w-36 h-9"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{isRTL ? 'كل العضويات' : 'All Tiers'}</SelectItem>
+                  {tiers.map(t => <SelectItem key={t.value} value={t.value}>{t.icon} {language === 'ar' ? t.label_ar : t.label_en}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <div className="flex items-center gap-1 border rounded-lg p-0.5">
+                <Button variant={viewMode === 'cards' ? 'default' : 'ghost'} size="sm" className="h-7 w-7 p-0"
+                  onClick={() => setViewMode('cards')}><LayoutGrid className="w-3.5 h-3.5" /></Button>
+                <Button variant={viewMode === 'table' ? 'default' : 'ghost'} size="sm" className="h-7 w-7 p-0"
+                  onClick={() => setViewMode('table')}><List className="w-3.5 h-3.5" /></Button>
+              </div>
             </div>
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-full sm:w-40"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{isRTL ? 'كل الحالات' : 'All Status'}</SelectItem>
-                <SelectItem value="verified">{isRTL ? 'موثق' : 'Verified'}</SelectItem>
-                <SelectItem value="unverified">{isRTL ? 'غير موثق' : 'Unverified'}</SelectItem>
-                <SelectItem value="inactive">{isRTL ? 'معطل' : 'Inactive'}</SelectItem>
-                <SelectItem value="contract">{isRTL ? 'مرتبط بعقود' : 'With Contracts'}</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={filterTier} onValueChange={setFilterTier}>
-              <SelectTrigger className="w-full sm:w-36"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{isRTL ? 'كل العضويات' : 'All Tiers'}</SelectItem>
-                {tiers.map(t => <SelectItem key={t.value} value={t.value}>{language === 'ar' ? t.label_ar : t.label_en}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            {(search || filterStatus !== 'all' || filterTier !== 'all') && (
+              <div className="flex items-center gap-2 mt-2 pt-2 border-t border-border/30">
+                <Filter className="w-3 h-3 text-muted-foreground" />
+                <span className="text-[11px] text-muted-foreground">
+                  {isRTL ? `${filtered.length} نتيجة` : `${filtered.length} results`}
+                </span>
+                {search && <Badge variant="secondary" className="text-[10px] h-5 gap-1">{isRTL ? 'بحث' : 'Search'}: {search}<button onClick={() => setSearch('')}><X className="w-2.5 h-2.5" /></button></Badge>}
+                {filterStatus !== 'all' && <Badge variant="secondary" className="text-[10px] h-5 gap-1">{filterStatus}<button onClick={() => setFilterStatus('all')}><X className="w-2.5 h-2.5" /></button></Badge>}
+                {filterTier !== 'all' && <Badge variant="secondary" className="text-[10px] h-5 gap-1">{filterTier}<button onClick={() => setFilterTier('all')}><X className="w-2.5 h-2.5" /></button></Badge>}
+                <button className="text-[10px] text-primary hover:underline ms-auto"
+                  onClick={() => { setSearch(''); setFilterStatus('all'); setFilterTier('all'); }}>
+                  {isRTL ? 'مسح الكل' : 'Clear all'}
+                </button>
+              </div>
+            )}
           </CardContent>
         </Card>
 
         {/* ─── Inline Edit Panel ─── */}
         {editingBiz && (
-          <Card className="border-primary/30 bg-primary/5">
+          <Card className="border-primary/30 bg-gradient-to-br from-primary/[0.03] to-transparent shadow-sm">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base flex items-center gap-2">
-                  <Edit className="w-4 h-4 text-primary" />
-                  {isRTL ? 'تعديل العمل' : 'Edit Business'}: {editingBiz.name_ar}
+                  <div className="p-1.5 rounded-lg bg-primary/10"><Edit className="w-4 h-4 text-primary" /></div>
+                  <div>
+                    <span className="block">{isRTL ? 'تعديل العمل' : 'Edit Business'}: {editingBiz.name_ar}</span>
+                    <span className="text-[10px] font-normal text-muted-foreground">{editingBiz.ref_id} · @{editingBiz.username}</span>
+                  </div>
                   {contractBusinessIds.includes(editingBiz.id) && (
                     <Badge variant="outline" className="text-[9px] gap-1"><FileText className="w-2.5 h-2.5" />{isRTL ? 'مرتبط بعقود' : 'Has Contracts'}</Badge>
                   )}
@@ -583,7 +682,6 @@ const AdminBusinesses = () => {
 
                 {/* ── Info Tab ── */}
                 <TabsContent value="info" className="space-y-4 mt-3">
-                  {/* Arabic name first */}
                   <div>
                     <div className="flex items-center justify-between mb-1">
                       <Label className="text-xs">{isRTL ? 'الاسم (عربي)' : 'Name (AR)'} *</Label>
@@ -600,7 +698,6 @@ const AdminBusinesses = () => {
                     </div>
                     <Input value={editForm.name_en} onChange={e => setField('name_en', e.target.value)} dir="ltr" />
                   </div>
-
                   <div>
                     <Label className="text-xs">{isRTL ? 'التصنيف' : 'Category'}</Label>
                     <Select value={editForm.category_id} onValueChange={v => setField('category_id', v)}>
@@ -610,21 +707,27 @@ const AdminBusinesses = () => {
                       </SelectContent>
                     </Select>
                   </div>
-
                   <Separator />
-                  <div className="p-3 rounded-lg bg-muted/20 border border-border/30 text-[10px] space-y-1 text-muted-foreground font-mono">
-                    <p>ID: {editingBiz.id}</p>
+                  <div className="p-3 rounded-xl bg-muted/30 border border-border/30 text-[10px] space-y-1 text-muted-foreground font-mono">
+                    <div className="flex items-center justify-between">
+                      <span>ID: {editingBiz.id}</span>
+                      <Button variant="ghost" size="sm" className="h-5 w-5 p-0"
+                        onClick={() => { navigator.clipboard.writeText(editingBiz.id); toast.success('Copied'); }}>
+                        <Copy className="w-2.5 h-2.5" />
+                      </Button>
+                    </div>
                     <p>Ref: {editingBiz.ref_id}</p>
                     <p>Username: @{editingBiz.username}</p>
                     <p>Owner: {editingBiz.user_id}</p>
                     <p>Created: {new Date(editingBiz.created_at).toLocaleDateString()}</p>
-                    <p>Rating: {editingBiz.rating_avg} ({editingBiz.rating_count} reviews)</p>
+                    <p className="flex items-center gap-1">
+                      Rating: <Star className="w-2.5 h-2.5 text-accent" /> {editingBiz.rating_avg} ({editingBiz.rating_count} reviews)
+                    </p>
                   </div>
                 </TabsContent>
 
                 {/* ── Address Tab ── */}
                 <TabsContent value="address" className="space-y-4 mt-3">
-                  {/* Map */}
                   <div>
                     <Label className="text-xs font-semibold mb-2 flex items-center gap-1">
                       <MapPinned className="w-3 h-3" />
@@ -633,12 +736,8 @@ const AdminBusinesses = () => {
                     <p className="text-[10px] text-muted-foreground mb-2">
                       {isRTL ? 'انقر على الخريطة لتحديد الموقع وتعبئة حقول العنوان تلقائياً' : 'Click on map to pick location and auto-fill address fields'}
                     </p>
-                    <LocationPicker
-                      lat={parseFloat(editForm.latitude) || 0}
-                      lng={parseFloat(editForm.longitude) || 0}
-                      onPick={handleMapPick}
-                      isRTL={isRTL}
-                    />
+                    <LocationPicker lat={parseFloat(editForm.latitude) || 0} lng={parseFloat(editForm.longitude) || 0}
+                      onPick={handleMapPick} isRTL={isRTL} />
                     {geocoding && (
                       <div className="flex items-center gap-2 mt-2 text-xs text-primary">
                         <Loader2 className="w-3 h-3 animate-spin" />
@@ -656,10 +755,7 @@ const AdminBusinesses = () => {
                       </div>
                     </div>
                   </div>
-
                   <Separator />
-
-                  {/* National IDs */}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <Label className="text-xs">{isRTL ? 'الرقم الوطني' : 'National ID'}</Label>
@@ -670,8 +766,6 @@ const AdminBusinesses = () => {
                       <Input value={editForm.additional_number} onChange={e => setField('additional_number', e.target.value)} dir="ltr" className="mt-1" />
                     </div>
                   </div>
-
-                  {/* Country / City */}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <Label className="text-xs">{isRTL ? 'الدولة' : 'Country'}</Label>
@@ -692,8 +786,6 @@ const AdminBusinesses = () => {
                       </Select>
                     </div>
                   </div>
-
-                  {/* Region / District */}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <Label className="text-xs">{isRTL ? 'المنطقة' : 'Region'}</Label>
@@ -704,8 +796,6 @@ const AdminBusinesses = () => {
                       <Input value={editForm.district} onChange={e => setField('district', e.target.value)} className="mt-1" />
                     </div>
                   </div>
-
-                  {/* Street / Building */}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <Label className="text-xs">{isRTL ? 'اسم الشارع' : 'Street Name'}</Label>
@@ -716,8 +806,6 @@ const AdminBusinesses = () => {
                       <Input value={editForm.building_number} onChange={e => setField('building_number', e.target.value)} dir="ltr" className="mt-1" />
                     </div>
                   </div>
-
-                  {/* Full address */}
                   <div>
                     <div className="flex items-center justify-between mb-1">
                       <Label className="text-xs flex items-center gap-1"><MapPin className="w-3 h-3" /> {isRTL ? 'العنوان الكامل' : 'Full Address'}</Label>
@@ -730,7 +818,6 @@ const AdminBusinesses = () => {
 
                 {/* ── Content Tab ── */}
                 <TabsContent value="content" className="space-y-4 mt-3">
-                  {/* Short description AR */}
                   <div>
                     <div className="flex items-center justify-between mb-1">
                       <Label className="text-xs font-semibold">{isRTL ? 'نبذة قصيرة (عربي)' : 'Short Description (AR)'}</Label>
@@ -750,10 +837,7 @@ const AdminBusinesses = () => {
                     <Textarea value={editForm.short_description_en} onChange={e => setField('short_description_en', e.target.value)} rows={2} dir="ltr" />
                     <span className="text-[10px] text-muted-foreground">{editForm.short_description_en?.length || 0}/150</span>
                   </div>
-
                   <Separator />
-
-                  {/* Long description AR */}
                   <div>
                     <div className="flex items-center justify-between mb-1">
                       <Label className="text-xs font-semibold">{isRTL ? 'الوصف التفصيلي (عربي)' : 'Full Description (AR)'}</Label>
@@ -780,54 +864,36 @@ const AdminBusinesses = () => {
                     <div>
                       <Label className="text-xs font-semibold mb-2 block">{isRTL ? 'الشعار' : 'Logo'}</Label>
                       <ImageUpload bucket="business-assets" value={editForm.logo_url}
-                        onChange={(url) => setField('logo_url', url)}
-                        onRemove={() => setField('logo_url', '')}
-                        aspectRatio="square"
-                        placeholder={isRTL ? 'رفع الشعار' : 'Upload logo'} />
+                        onChange={(url) => setField('logo_url', url)} onRemove={() => setField('logo_url', '')}
+                        aspectRatio="square" placeholder={isRTL ? 'رفع الشعار' : 'Upload logo'} />
                     </div>
                     <div>
                       <Label className="text-xs font-semibold mb-2 block">{isRTL ? 'صورة الغلاف' : 'Cover Image'}</Label>
                       <ImageUpload bucket="business-assets" value={editForm.cover_url}
-                        onChange={(url) => setField('cover_url', url)}
-                        onRemove={() => setField('cover_url', '')}
+                        onChange={(url) => setField('cover_url', url)} onRemove={() => setField('cover_url', '')}
                         placeholder={isRTL ? 'رفع صورة الغلاف' : 'Upload cover'} />
                     </div>
                   </div>
-
                   <Separator />
-
-                  {/* Portfolio / Work Images */}
                   <div>
                     <Label className="text-xs font-semibold mb-2 flex items-center gap-1">
-                      <Image className="w-3 h-3" />
-                      {isRTL ? 'معرض صور الأعمال' : 'Work Gallery'}
+                      <Image className="w-3 h-3" /> {isRTL ? 'معرض صور الأعمال' : 'Work Gallery'}
                       <Badge variant="secondary" className="text-[9px] ms-1">{portfolioData.length}</Badge>
                     </Label>
-                    <p className="text-[10px] text-muted-foreground mb-2">
-                      {isRTL ? 'أضف صور أعمال ومشاريع النشاط التجاري' : 'Add work and project images for this business'}
-                    </p>
-
                     <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                       {portfolioData.map((item: any) => (
                         <div key={item.id} className="relative aspect-square rounded-lg overflow-hidden border border-border/50 group">
                           <img src={item.media_url} alt="" className="w-full h-full object-cover" />
-                          <button
-                            type="button"
+                          <button type="button"
                             onClick={() => { if (confirm(isRTL ? 'حذف هذه الصورة؟' : 'Delete this image?')) deletePortfolioMutation.mutate(item.id); }}
-                            className="absolute top-1 end-1 bg-destructive text-destructive-foreground rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
+                            className="absolute top-1 end-1 bg-destructive text-destructive-foreground rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                             <X className="w-3 h-3" />
                           </button>
                         </div>
                       ))}
                       <div className="aspect-square">
-                        <ImageUpload
-                          bucket="portfolio-images"
-                          folder="admin"
-                          aspectRatio="square"
-                          onChange={(url) => addPortfolioMutation.mutate(url)}
-                          placeholder={isRTL ? 'إضافة صورة' : 'Add image'}
-                        />
+                        <ImageUpload bucket="portfolio-images" folder="admin" aspectRatio="square"
+                          onChange={(url) => addPortfolioMutation.mutate(url)} placeholder={isRTL ? 'إضافة صورة' : 'Add image'} />
                       </div>
                     </div>
                   </div>
@@ -852,8 +918,7 @@ const AdminBusinesses = () => {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <Label className="text-xs flex items-center gap-1"><Phone className="w-3 h-3" /> {isRTL ? 'الرقم الموحد' : 'Unified Number'}</Label>
-                      <Input value={editForm.unified_number} onChange={e => setField('unified_number', e.target.value)} dir="ltr" className="mt-1"
-                        placeholder={isRTL ? '920xxxxxxx' : '920xxxxxxx'} />
+                      <Input value={editForm.unified_number} onChange={e => setField('unified_number', e.target.value)} dir="ltr" className="mt-1" placeholder="920xxxxxxx" />
                     </div>
                     <div>
                       <Label className="text-xs flex items-center gap-1"><Phone className="w-3 h-3" /> {isRTL ? 'خدمة العملاء' : 'Customer Service'}</Label>
@@ -866,22 +931,17 @@ const AdminBusinesses = () => {
                   </div>
                   <div>
                     <Label className="text-xs flex items-center gap-1"><Globe className="w-3 h-3" /> {isRTL ? 'الموقع الإلكتروني' : 'Website'}</Label>
-                    <Input value={editForm.website} onChange={e => setField('website', e.target.value)} dir="ltr" className="mt-1"
-                      placeholder="https://" />
+                    <Input value={editForm.website} onChange={e => setField('website', e.target.value)} dir="ltr" className="mt-1" placeholder="https://" />
                   </div>
-
-                  {/* Services summary for this business */}
                   {editingBiz && (
                     <div className="mt-4">
                       <Separator className="mb-3" />
                       <div className="flex items-center justify-between mb-2">
                         <Label className="text-xs font-semibold flex items-center gap-1">
-                          <Package className="w-3 h-3" />
-                          {isRTL ? 'الخدمات المسجلة' : 'Registered Services'}
+                          <Package className="w-3 h-3" /> {isRTL ? 'الخدمات المسجلة' : 'Registered Services'}
                         </Label>
                         <Button variant="outline" size="sm" className="h-6 text-[10px] gap-1" onClick={() => { setEditingBiz(null); openServices(editingBiz.id); }}>
-                          <Settings className="w-3 h-3" />
-                          {isRTL ? 'إدارة' : 'Manage'}
+                          <Settings className="w-3 h-3" /> {isRTL ? 'إدارة' : 'Manage'}
                         </Button>
                       </div>
                       {allServices.filter((s: any) => s.business_id === editingBiz.id).length === 0 ? (
@@ -901,10 +961,9 @@ const AdminBusinesses = () => {
 
                 {/* ── Branches Tab ── */}
                 <TabsContent value="branches" className="space-y-4 mt-3">
-                  {/* Branch List */}
                   <div className="space-y-2">
                     {branches.map((br: any) => (
-                      <div key={br.id} className={`flex items-center gap-3 p-3 rounded-lg border border-border/40 ${!br.is_active ? 'opacity-50' : ''}`}>
+                      <div key={br.id} className={`flex items-center gap-3 p-3 rounded-xl border border-border/40 hover:border-primary/20 transition-all ${!br.is_active ? 'opacity-50' : ''}`}>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5">
                             <p className="text-sm font-medium truncate">{language === 'ar' ? br.name_ar : (br.name_en || br.name_ar)}</p>
@@ -923,14 +982,11 @@ const AdminBusinesses = () => {
                           <Button variant="outline" size="sm" className="h-6 w-6 p-0" onClick={() => {
                             setEditingBranchId(br.id);
                             setBranchForm({
-                              name_ar: br.name_ar, name_en: br.name_en || '',
-                              is_main: br.is_main, is_active: br.is_active,
-                              contact_person: br.contact_person || '', phone: br.phone || '',
-                              mobile: br.mobile || '', unified_number: br.unified_number || '',
-                              customer_service_phone: br.customer_service_phone || '',
-                              email: br.email || '', website: br.website || '',
-                              country_id: br.country_id || '', city_id: br.city_id || '',
-                              region: br.region || '', district: br.district || '',
+                              name_ar: br.name_ar, name_en: br.name_en || '', is_main: br.is_main, is_active: br.is_active,
+                              contact_person: br.contact_person || '', phone: br.phone || '', mobile: br.mobile || '',
+                              unified_number: br.unified_number || '', customer_service_phone: br.customer_service_phone || '',
+                              email: br.email || '', website: br.website || '', country_id: br.country_id || '',
+                              city_id: br.city_id || '', region: br.region || '', district: br.district || '',
                               street_name: br.street_name || '', building_number: br.building_number || '',
                               national_id: br.national_id || '', additional_number: br.additional_number || '',
                               address: br.address || '', latitude: br.latitude || '', longitude: br.longitude || '',
@@ -950,9 +1006,8 @@ const AdminBusinesses = () => {
                     )}
                   </div>
 
-                  {/* Add/Edit Branch Form */}
                   {branchForm ? (
-                    <div className="space-y-3 p-4 rounded-lg border border-primary/30 bg-primary/5">
+                    <div className="space-y-3 p-4 rounded-xl border border-primary/30 bg-primary/[0.03]">
                       <div className="flex items-center justify-between">
                         <p className="text-xs font-bold text-primary flex items-center gap-1.5">
                           {editingBranchId ? <Edit className="w-3 h-3" /> : <Plus className="w-3 h-3" />}
@@ -962,8 +1017,6 @@ const AdminBusinesses = () => {
                           <X className="w-3 h-3" />
                         </Button>
                       </div>
-
-                      {/* Branch Name */}
                       <div>
                         <Label className="text-xs">{isRTL ? 'اسم الفرع (عربي)' : 'Branch Name (AR)'} *</Label>
                         <Input value={branchForm.name_ar} onChange={e => setBranchForm((f: any) => ({ ...f, name_ar: e.target.value }))} className="mt-1" />
@@ -972,8 +1025,6 @@ const AdminBusinesses = () => {
                         <Label className="text-xs">{isRTL ? 'اسم الفرع (إنجليزي)' : 'Branch Name (EN)'}</Label>
                         <Input value={branchForm.name_en} onChange={e => setBranchForm((f: any) => ({ ...f, name_en: e.target.value }))} dir="ltr" className="mt-1" />
                       </div>
-
-                      {/* Contact Info */}
                       <Separator />
                       <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{isRTL ? 'بيانات التواصل' : 'Contact Info'}</p>
                       <div>
@@ -1010,8 +1061,6 @@ const AdminBusinesses = () => {
                           <Input value={branchForm.website} onChange={e => setBranchForm((f: any) => ({ ...f, website: e.target.value }))} dir="ltr" className="mt-1" />
                         </div>
                       </div>
-
-                      {/* Address */}
                       <Separator />
                       <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{isRTL ? 'العنوان' : 'Address'}</p>
                       <div className="grid grid-cols-2 gap-3">
@@ -1070,8 +1119,6 @@ const AdminBusinesses = () => {
                         <Label className="text-xs">{isRTL ? 'العنوان الكامل' : 'Full Address'}</Label>
                         <Textarea value={branchForm.address} onChange={e => setBranchForm((f: any) => ({ ...f, address: e.target.value }))} rows={2} className="mt-1" />
                       </div>
-
-                      {/* Options */}
                       <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2">
                           <Switch checked={branchForm.is_main} onCheckedChange={v => setBranchForm((f: any) => ({ ...f, is_main: v }))} />
@@ -1082,7 +1129,6 @@ const AdminBusinesses = () => {
                           <span className="text-xs">{isRTL ? 'مفعّل' : 'Active'}</span>
                         </div>
                       </div>
-
                       <Button onClick={() => saveBranchMutation.mutate()} disabled={!branchForm.name_ar || saveBranchMutation.isPending}
                         className="w-full gap-1.5">
                         <Save className="w-3.5 h-3.5" />
@@ -1091,8 +1137,7 @@ const AdminBusinesses = () => {
                     </div>
                   ) : (
                     <Button variant="outline" className="w-full gap-1.5" onClick={() => { setBranchForm(emptyBranch()); setEditingBranchId(null); }}>
-                      <Plus className="w-3.5 h-3.5" />
-                      {isRTL ? 'إضافة فرع جديد' : 'Add New Branch'}
+                      <Plus className="w-3.5 h-3.5" /> {isRTL ? 'إضافة فرع جديد' : 'Add New Branch'}
                     </Button>
                   )}
                 </TabsContent>
@@ -1100,21 +1145,21 @@ const AdminBusinesses = () => {
                 {/* ── Controls Tab ── */}
                 <TabsContent value="controls" className="space-y-4 mt-3">
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+                    <div className="flex items-center justify-between p-3.5 rounded-xl bg-muted/30 border border-border/30">
                       <div>
                         <p className="text-sm font-medium">{isRTL ? 'حالة التفعيل' : 'Active Status'}</p>
                         <p className="text-[10px] text-muted-foreground">{isRTL ? 'تفعيل أو تعطيل ظهور العمل' : 'Enable or disable business visibility'}</p>
                       </div>
                       <Switch checked={editForm.is_active} onCheckedChange={v => setField('is_active', v)} />
                     </div>
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+                    <div className="flex items-center justify-between p-3.5 rounded-xl bg-muted/30 border border-border/30">
                       <div>
                         <p className="text-sm font-medium">{isRTL ? 'التوثيق' : 'Verification'}</p>
                         <p className="text-[10px] text-muted-foreground">{isRTL ? 'علامة التوثيق الرسمية' : 'Official verification badge'}</p>
                       </div>
                       <Switch checked={editForm.is_verified} onCheckedChange={v => setField('is_verified', v)} />
                     </div>
-                    <div className="p-3 rounded-lg bg-muted/30">
+                    <div className="p-3.5 rounded-xl bg-muted/30 border border-border/30">
                       <p className="text-sm font-medium mb-2">{isRTL ? 'مستوى العضوية' : 'Membership Tier'}</p>
                       <Select value={editForm.membership_tier} onValueChange={v => setField('membership_tier', v)}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
@@ -1122,7 +1167,7 @@ const AdminBusinesses = () => {
                           {tiers.map(t => (
                             <SelectItem key={t.value} value={t.value}>
                               <span className="flex items-center gap-2">
-                                <Crown className="w-3 h-3" /> {language === 'ar' ? t.label_ar : t.label_en}
+                                <span>{t.icon}</span> {language === 'ar' ? t.label_ar : t.label_en}
                               </span>
                             </SelectItem>
                           ))}
@@ -1136,7 +1181,7 @@ const AdminBusinesses = () => {
               <div className="flex gap-2 pt-3 border-t mt-4">
                 <Button onClick={() => updateBizMutation.mutate()} disabled={!editForm.name_ar || updateBizMutation.isPending} className="flex-1 gap-1.5">
                   <Save className="w-3.5 h-3.5" />
-                  {updateBizMutation.isPending ? '...' : (isRTL ? 'حفظ التعديلات' : 'Save Changes')}
+                  {updateBizMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : (isRTL ? 'حفظ التعديلات' : 'Save Changes')}
                 </Button>
                 <Button variant="outline" onClick={() => setEditingBiz(null)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
               </div>
@@ -1146,11 +1191,11 @@ const AdminBusinesses = () => {
 
         {/* ─── Inline Services Panel ─── */}
         {servicesPanel && (
-          <Card className="border-primary/30 bg-primary/5">
+          <Card className="border-primary/30 bg-gradient-to-br from-primary/[0.03] to-transparent shadow-sm">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base flex items-center gap-2">
-                  <Package className="w-4 h-4 text-primary" />
+                  <div className="p-1.5 rounded-lg bg-primary/10"><Package className="w-4 h-4 text-primary" /></div>
                   {isRTL ? 'إدارة الخدمات' : 'Manage Services'}
                   <Badge variant="secondary" className="text-[10px]">{services.length}</Badge>
                 </CardTitle>
@@ -1158,10 +1203,9 @@ const AdminBusinesses = () => {
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Existing Services */}
               <div className="space-y-2">
                 {services.map((svc: any) => (
-                  <div key={svc.id} className={`flex items-center gap-3 p-2.5 rounded-lg border border-border/40 ${!svc.is_active ? 'opacity-50' : ''}`}>
+                  <div key={svc.id} className={`flex items-center gap-3 p-3 rounded-xl border border-border/40 hover:border-primary/20 transition-all ${!svc.is_active ? 'opacity-50' : ''}`}>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{language === 'ar' ? svc.name_ar : (svc.name_en || svc.name_ar)}</p>
                       <p className="text-[10px] text-muted-foreground">
@@ -1182,10 +1226,7 @@ const AdminBusinesses = () => {
                   <p className="text-center text-sm text-muted-foreground py-6">{isRTL ? 'لا توجد خدمات' : 'No services'}</p>
                 )}
               </div>
-
               <Separator />
-
-              {/* Add New Service - Arabic fields first */}
               <div className="space-y-3">
                 <p className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
                   <Plus className="w-3 h-3" /> {isRTL ? 'إضافة خدمة جديدة' : 'Add New Service'}
@@ -1241,7 +1282,7 @@ const AdminBusinesses = () => {
                 <Button onClick={() => addServiceMutation.mutate()} disabled={!newService.name_ar || addServiceMutation.isPending}
                   className="w-full gap-1.5">
                   <Plus className="w-3.5 h-3.5" />
-                  {addServiceMutation.isPending ? '...' : (isRTL ? 'إضافة الخدمة' : 'Add Service')}
+                  {addServiceMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : (isRTL ? 'إضافة الخدمة' : 'Add Service')}
                 </Button>
               </div>
             </CardContent>
@@ -1250,25 +1291,129 @@ const AdminBusinesses = () => {
 
         {/* ─── Business List ─── */}
         {isLoading ? (
-          <div className="space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-20 rounded-xl" />)}</div>
+          <div className="space-y-3">
+            {[1, 2, 3, 4, 5].map(i => (
+              <Card key={i} className="border-border/40">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="w-12 h-12 rounded-xl" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-4 w-48" />
+                      <Skeleton className="h-3 w-72" />
+                    </div>
+                    <div className="flex gap-2">
+                      <Skeleton className="h-7 w-20" />
+                      <Skeleton className="h-7 w-16" />
+                      <Skeleton className="h-7 w-7" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         ) : filtered.length === 0 ? (
-          <Card className="border-dashed">
-            <CardContent className="p-12 text-center text-muted-foreground">
-              <Building2 className="w-12 h-12 mx-auto mb-3 opacity-30" />
-              <p className="font-medium">{isRTL ? 'لا توجد نتائج' : 'No results found'}</p>
+          <Card className="border-dashed border-2">
+            <CardContent className="p-16 text-center text-muted-foreground">
+              <div className="p-4 rounded-full bg-muted/30 w-fit mx-auto mb-4">
+                <Building2 className="w-10 h-10 opacity-30" />
+              </div>
+              <p className="font-heading font-bold text-lg mb-1">{isRTL ? 'لا توجد نتائج' : 'No results found'}</p>
+              <p className="text-sm">{isRTL ? 'جرّب تعديل معايير البحث' : 'Try adjusting your search criteria'}</p>
+              {(search || filterStatus !== 'all' || filterTier !== 'all') && (
+                <Button variant="outline" size="sm" className="mt-4 gap-1.5"
+                  onClick={() => { setSearch(''); setFilterStatus('all'); setFilterTier('all'); }}>
+                  <X className="w-3.5 h-3.5" /> {isRTL ? 'مسح الفلاتر' : 'Clear Filters'}
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        ) : viewMode === 'table' ? (
+          /* ─── Table View ─── */
+          <Card className="border-border/40">
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/30">
+                    <TableHead className="text-[11px] font-semibold">{isRTL ? 'النشاط' : 'Business'}</TableHead>
+                    <TableHead className="text-[11px] font-semibold">{isRTL ? 'المعرف' : 'Username'}</TableHead>
+                    <TableHead className="text-[11px] font-semibold">{isRTL ? 'العضوية' : 'Tier'}</TableHead>
+                    <TableHead className="text-[11px] font-semibold">{isRTL ? 'التقييم' : 'Rating'}</TableHead>
+                    <TableHead className="text-[11px] font-semibold">{isRTL ? 'الحالة' : 'Status'}</TableHead>
+                    <TableHead className="text-[11px] font-semibold text-center">{isRTL ? 'إجراءات' : 'Actions'}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filtered.map((biz: any, idx: number) => {
+                    const tierInfo = tiers.find(t => t.value === biz.membership_tier) || tiers[0];
+                    return (
+                      <TableRow key={biz.id} className={`hover:bg-muted/30 ${!biz.is_active ? 'opacity-50' : ''}`}
+                        style={{ animationDelay: `${idx * 0.02}s` }}>
+                        <TableCell className="py-2.5">
+                          <div className="flex items-center gap-2.5">
+                            <Avatar className="w-8 h-8 border border-border/50">
+                              <AvatarImage src={biz.logo_url || undefined} />
+                              <AvatarFallback className="bg-primary/5 text-primary font-bold text-[10px]">{biz.name_ar?.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="text-xs font-semibold truncate max-w-[180px]">{language === 'ar' ? biz.name_ar : (biz.name_en || biz.name_ar)}</p>
+                              <p className="text-[10px] text-muted-foreground">{biz.ref_id}</p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-[11px] text-muted-foreground">@{biz.username}</TableCell>
+                        <TableCell>
+                          <Badge className={`text-[9px] h-5 ${tierInfo.color} border-0`}>
+                            {tierInfo.icon} {language === 'ar' ? tierInfo.label_ar : tierInfo.label_en}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <span className="flex items-center gap-0.5 text-[11px]">
+                            <Star className="w-3 h-3 text-accent fill-accent" /> {biz.rating_avg}
+                            <span className="text-muted-foreground">({biz.rating_count})</span>
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            {biz.is_verified && <Badge className="text-[8px] h-4 bg-blue-500/10 text-blue-600 border-0">{isRTL ? 'موثق' : 'Verified'}</Badge>}
+                            {!biz.is_active && <Badge variant="destructive" className="text-[8px] h-4">{isRTL ? 'معطل' : 'Disabled'}</Badge>}
+                            {biz.is_active && !biz.is_verified && <Badge className="text-[8px] h-4 bg-green-500/10 text-green-600 border-0">{isRTL ? 'نشط' : 'Active'}</Badge>}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center justify-center gap-1">
+                            <Button variant="outline" size="sm" className="h-6 w-6 p-0" onClick={() => openEdit(biz)}>
+                              <Edit className="w-3 h-3" />
+                            </Button>
+                            <Button variant="outline" size="sm" className="h-6 w-6 p-0" onClick={() => openServices(biz.id)}>
+                              <Package className="w-3 h-3" />
+                            </Button>
+                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0" asChild>
+                              <Link to={`/${biz.username}`}><Eye className="w-3 h-3" /></Link>
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         ) : (
+          /* ─── Cards View ─── */
           <div className="space-y-2">
-            {filtered.map((biz: any) => {
+            {filtered.map((biz: any, idx: number) => {
               const tierInfo = tiers.find(t => t.value === biz.membership_tier) || tiers[0];
               const hasContract = contractBusinessIds.includes(biz.id);
+              const svcCount = allServices.filter((s: any) => s.business_id === biz.id).length;
               return (
-                <Card key={biz.id} className={`border-border/40 hover:border-primary/20 transition-all group ${!biz.is_active ? 'opacity-60 border-destructive/20' : ''}`}>
-                  <CardContent className="p-3">
+                <Card key={biz.id}
+                  className={`border-border/40 hover:border-primary/20 hover:shadow-sm transition-all group animate-card-slide-up ${!biz.is_active ? 'opacity-60 border-destructive/20' : ''}`}
+                  style={{ animationDelay: `${idx * 0.03}s` }}>
+                  <CardContent className="p-3.5">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                       <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <Avatar className="w-11 h-11 shrink-0 border border-border/50">
+                        <Avatar className="w-12 h-12 shrink-0 border-2 border-border/50 shadow-sm">
                           <AvatarImage src={biz.logo_url || undefined} />
                           <AvatarFallback className="bg-primary/5 text-primary font-bold text-sm">
                             {biz.name_ar?.charAt(0)}
@@ -1279,20 +1424,29 @@ const AdminBusinesses = () => {
                             <h3 className="font-heading font-bold text-sm truncate">
                               {language === 'ar' ? biz.name_ar : (biz.name_en || biz.name_ar)}
                             </h3>
-                            {biz.is_verified && <CheckCircle className="w-3.5 h-3.5 text-blue-500 shrink-0" />}
+                            {biz.is_verified && (
+                              <span className="shrink-0 p-0.5 rounded-full bg-blue-500/10">
+                                <CheckCircle className="w-3 h-3 text-blue-500" />
+                              </span>
+                            )}
                             {!biz.is_active && <Badge variant="destructive" className="text-[8px] h-4">{isRTL ? 'معطل' : 'Disabled'}</Badge>}
                             {hasContract && <Badge variant="outline" className="text-[8px] h-4 gap-0.5"><FileText className="w-2 h-2" />{isRTL ? 'عقود' : 'Contracts'}</Badge>}
                           </div>
                           <div className="flex items-center gap-2 text-[10px] text-muted-foreground flex-wrap">
-                            <span>@{biz.username}</span>
-                            <Badge variant="outline" className="text-[9px] h-4">{biz.ref_id}</Badge>
+                            <span className="font-mono">@{biz.username}</span>
+                            <Badge variant="outline" className="text-[9px] h-4 font-mono">{biz.ref_id}</Badge>
                             <Badge className={`text-[9px] h-4 ${tierInfo.color} border-0`}>
-                              {language === 'ar' ? tierInfo.label_ar : tierInfo.label_en}
+                              {tierInfo.icon} {language === 'ar' ? tierInfo.label_ar : tierInfo.label_en}
                             </Badge>
                             <span className="flex items-center gap-0.5">
-                              <Star className="w-3 h-3 text-yellow-500" />
+                              <Star className="w-3 h-3 text-accent fill-accent" />
                               {biz.rating_avg} ({biz.rating_count})
                             </span>
+                            {svcCount > 0 && (
+                              <span className="flex items-center gap-0.5">
+                                <Package className="w-2.5 h-2.5" /> {svcCount} {isRTL ? 'خدمة' : 'services'}
+                              </span>
+                            )}
                             {biz.phone && <span className="flex items-center gap-0.5"><Phone className="w-2.5 h-2.5" />{biz.phone}</span>}
                           </div>
                         </div>
@@ -1302,7 +1456,7 @@ const AdminBusinesses = () => {
                         <Select value={biz.membership_tier} onValueChange={tier => tierMutation.mutate({ id: biz.id, tier })}>
                           <SelectTrigger className="h-7 text-[10px] w-24 border-dashed"><SelectValue /></SelectTrigger>
                           <SelectContent>
-                            {tiers.map(t => <SelectItem key={t.value} value={t.value}>{language === 'ar' ? t.label_ar : t.label_en}</SelectItem>)}
+                            {tiers.map(t => <SelectItem key={t.value} value={t.value}>{t.icon} {language === 'ar' ? t.label_ar : t.label_en}</SelectItem>)}
                           </SelectContent>
                         </Select>
 
@@ -1320,8 +1474,7 @@ const AdminBusinesses = () => {
 
                         <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1 px-2"
                           onClick={() => openServices(biz.id)}>
-                          <Package className="w-3 h-3" />
-                          {isRTL ? 'خدمات' : 'Services'}
+                          <Package className="w-3 h-3" /> {isRTL ? 'خدمات' : 'Services'}
                         </Button>
 
                         <Button variant="outline" size="sm" className="h-7 w-7 p-0" onClick={() => openEdit(biz)}>
@@ -1341,9 +1494,21 @@ const AdminBusinesses = () => {
         )}
 
         {!isLoading && filtered.length > 0 && (
-          <p className="text-[10px] text-muted-foreground text-center">
-            {isRTL ? `عرض ${filtered.length} من ${businesses.length}` : `Showing ${filtered.length} of ${businesses.length}`}
-          </p>
+          <div className="flex items-center justify-between pt-2 border-t border-border/30">
+            <p className="text-[11px] text-muted-foreground">
+              {isRTL ? `عرض ${filtered.length} من ${businesses.length} نشاط` : `Showing ${filtered.length} of ${businesses.length} businesses`}
+            </p>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="text-[10px] h-5 gap-1">
+                <Activity className="w-3 h-3" />
+                {isRTL ? `${stats.active} نشط` : `${stats.active} active`}
+              </Badge>
+              <Badge variant="outline" className="text-[10px] h-5 gap-1">
+                <Shield className="w-3 h-3" />
+                {isRTL ? `${stats.verified} موثق` : `${stats.verified} verified`}
+              </Badge>
+            </div>
+          </div>
         )}
       </div>
     </DashboardLayout>
