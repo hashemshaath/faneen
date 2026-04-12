@@ -7,89 +7,184 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
-  Activity, Search, User, Clock, Filter, Download, X,
+  Activity, Search, Clock, Filter, Download, X,
   Shield, Settings, LogIn, Trash2, Edit, UserPlus, UserMinus,
   Ban, CheckCircle, AlertTriangle, FileText, ChevronDown, ChevronUp,
-  TrendingUp, Users, Zap
+  TrendingUp, Users, Zap, ArrowRight
 } from 'lucide-react';
-import { format, isToday, isYesterday, isThisWeek } from 'date-fns';
+import { format, isToday, isYesterday, isThisWeek, isThisMonth } from 'date-fns';
 import { ar } from 'date-fns/locale';
 
 /* ─── Action Config ─── */
-const actionConfig: Record<string, { ar: string; en: string; color: string; icon: React.ElementType }> = {
-  create: { ar: 'إنشاء', en: 'إنشاء جديد', color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400', icon: FileText },
-  update: { ar: 'تعديل', en: 'تعديل', color: 'bg-blue-500/10 text-blue-600 dark:text-blue-400', icon: Edit },
-  delete: { ar: 'حذف', en: 'حذف', color: 'bg-red-500/10 text-red-600 dark:text-red-400', icon: Trash2 },
-  login: { ar: 'تسجيل دخول', en: 'تسجيل دخول', color: 'bg-purple-500/10 text-purple-600 dark:text-purple-400', icon: LogIn },
-  role_change: { ar: 'تغيير صلاحية', en: 'تغيير صلاحية', color: 'bg-amber-500/10 text-amber-600 dark:text-amber-400', icon: Shield },
-  role_assigned: { ar: 'منح صلاحية', en: 'منح صلاحية', color: 'bg-amber-500/10 text-amber-600 dark:text-amber-400', icon: UserPlus },
-  role_updated: { ar: 'تحديث صلاحية', en: 'تحديث صلاحية', color: 'bg-amber-500/10 text-amber-600 dark:text-amber-400', icon: Shield },
-  role_removed: { ar: 'سحب صلاحية', en: 'سحب صلاحية', color: 'bg-red-500/10 text-red-600 dark:text-red-400', icon: UserMinus },
-  settings: { ar: 'تعديل إعدادات', en: 'تعديل إعدادات', color: 'bg-teal-500/10 text-teal-600 dark:text-teal-400', icon: Settings },
-  setting_created: { ar: 'إنشاء إعداد', en: 'إنشاء إعداد', color: 'bg-teal-500/10 text-teal-600 dark:text-teal-400', icon: Settings },
-  setting_updated: { ar: 'تحديث إعداد', en: 'تحديث إعداد', color: 'bg-blue-500/10 text-blue-600 dark:text-blue-400', icon: Settings },
-  setting_deleted: { ar: 'حذف إعداد', en: 'حذف إعداد', color: 'bg-red-500/10 text-red-600 dark:text-red-400', icon: Settings },
-  user_disabled: { ar: 'تعطيل حساب', en: 'تعطيل حساب', color: 'bg-orange-500/10 text-orange-600 dark:text-orange-400', icon: Ban },
-  user_enabled: { ar: 'تفعيل حساب', en: 'تفعيل حساب', color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400', icon: CheckCircle },
-  unauthorized_access: { ar: 'محاولة وصول غير مصرح', en: 'محاولة وصول غير مصرح', color: 'bg-red-500/15 text-red-700 dark:text-red-400', icon: AlertTriangle },
+const actionConfig: Record<string, { ar: string; color: string; icon: React.ElementType; iconBg: string }> = {
+  create:              { ar: 'إنشاء',                  color: 'text-emerald-600 dark:text-emerald-400', iconBg: 'bg-emerald-500/10', icon: FileText },
+  update:              { ar: 'تعديل بيانات',           color: 'text-blue-600 dark:text-blue-400',       iconBg: 'bg-blue-500/10',    icon: Edit },
+  delete:              { ar: 'حذف',                    color: 'text-red-600 dark:text-red-400',         iconBg: 'bg-red-500/10',     icon: Trash2 },
+  login:               { ar: 'تسجيل دخول',             color: 'text-purple-600 dark:text-purple-400',   iconBg: 'bg-purple-500/10',  icon: LogIn },
+  role_change:         { ar: 'تغيير صلاحية',           color: 'text-amber-600 dark:text-amber-400',     iconBg: 'bg-amber-500/10',   icon: Shield },
+  role_assigned:       { ar: 'منح صلاحية',             color: 'text-amber-600 dark:text-amber-400',     iconBg: 'bg-amber-500/10',   icon: UserPlus },
+  role_updated:        { ar: 'تحديث صلاحية',           color: 'text-amber-600 dark:text-amber-400',     iconBg: 'bg-amber-500/10',   icon: Shield },
+  role_removed:        { ar: 'سحب صلاحية',             color: 'text-red-600 dark:text-red-400',         iconBg: 'bg-red-500/10',     icon: UserMinus },
+  settings:            { ar: 'تعديل إعدادات',          color: 'text-teal-600 dark:text-teal-400',       iconBg: 'bg-teal-500/10',    icon: Settings },
+  setting_created:     { ar: 'إنشاء إعداد',            color: 'text-teal-600 dark:text-teal-400',       iconBg: 'bg-teal-500/10',    icon: Settings },
+  setting_updated:     { ar: 'تحديث إعداد',            color: 'text-blue-600 dark:text-blue-400',       iconBg: 'bg-blue-500/10',    icon: Settings },
+  setting_deleted:     { ar: 'حذف إعداد',              color: 'text-red-600 dark:text-red-400',         iconBg: 'bg-red-500/10',     icon: Settings },
+  user_disabled:       { ar: 'تعطيل حساب',             color: 'text-orange-600 dark:text-orange-400',   iconBg: 'bg-orange-500/10',  icon: Ban },
+  user_enabled:        { ar: 'تفعيل حساب',             color: 'text-emerald-600 dark:text-emerald-400', iconBg: 'bg-emerald-500/10', icon: CheckCircle },
+  unauthorized_access: { ar: 'محاولة وصول غير مصرح',   color: 'text-red-700 dark:text-red-400',         iconBg: 'bg-red-500/15',     icon: AlertTriangle },
 };
 
-const entityLabels: Record<string, { ar: string; en: string }> = {
-  user: { ar: 'مستخدم', en: 'مستخدم' },
-  business: { ar: 'نشاط تجاري', en: 'نشاط تجاري' },
-  contract: { ar: 'عقد', en: 'عقد' },
-  blog_post: { ar: 'مقال', en: 'مقال' },
-  profile_system: { ar: 'نظام بروفايل', en: 'نظام بروفايل' },
-  setting: { ar: 'إعداد', en: 'إعداد' },
-  platform_setting: { ar: 'إعداد المنصة', en: 'إعداد المنصة' },
-  role: { ar: 'صلاحية', en: 'صلاحية' },
-  user_role: { ar: 'صلاحية مستخدم', en: 'صلاحية مستخدم' },
-  route: { ar: 'مسار', en: 'مسار' },
+const entityLabels: Record<string, string> = {
+  user: 'مستخدم',
+  business: 'نشاط تجاري',
+  contract: 'عقد',
+  blog_post: 'مقال',
+  profile_system: 'نظام بروفايل',
+  setting: 'إعداد',
+  platform_setting: 'إعداد المنصة',
+  role: 'صلاحية',
+  user_role: 'صلاحية مستخدم',
+  route: 'مسار',
 };
 
-/* ─── Detail field labels ─── */
-const detailFieldLabels: Record<string, { ar: string; en: string }> = {
-  setting_key: { ar: 'المفتاح', en: 'المفتاح' },
-  setting_value: { ar: 'القيمة', en: 'القيمة' },
-  old_value: { ar: 'القيمة السابقة', en: 'القيمة السابقة' },
-  new_value: { ar: 'القيمة الجديدة', en: 'القيمة الجديدة' },
-  role: { ar: 'الصلاحية', en: 'الصلاحية' },
-  old_role: { ar: 'الصلاحية السابقة', en: 'الصلاحية السابقة' },
-  new_role: { ar: 'الصلاحية الجديدة', en: 'الصلاحية الجديدة' },
-  target_user_id: { ar: 'المستخدم المستهدف', en: 'المستخدم المستهدف' },
-  target_user: { ar: 'المستخدم المستهدف', en: 'المستخدم المستهدف' },
-  reason: { ar: 'السبب', en: 'السبب' },
-  name: { ar: 'الاسم', en: 'الاسم' },
-  email: { ar: 'البريد', en: 'البريد' },
-  status: { ar: 'الحالة', en: 'الحالة' },
-  field: { ar: 'الحقل', en: 'الحقل' },
-  value: { ar: 'القيمة', en: 'القيمة' },
-  business_name: { ar: 'اسم النشاط', en: 'اسم النشاط' },
-  tier: { ar: 'العضوية', en: 'العضوية' },
-  route: { ar: 'المسار', en: 'المسار' },
+const roleLabels: Record<string, string> = {
+  admin: 'مشرف',
+  super_admin: 'مشرف أعلى',
+  user: 'مستخدم',
+  moderator: 'مراقب',
 };
 
-/* ─── Format details as readable key-value ─── */
-const formatDetails = (details: any): { key: string; label: string; value: string }[] | null => {
-  if (!details || typeof details !== 'object') return null;
-  const entries = Object.entries(details).filter(([, v]) => v !== null && v !== undefined && v !== '');
-  if (!entries.length) return null;
-  return entries.map(([key, value]) => ({
-    key,
-    label: detailFieldLabels[key]?.ar || key,
-    value: typeof value === 'object' ? JSON.stringify(value) : String(value),
-  }));
+const fieldLabels: Record<string, string> = {
+  full_name: 'الاسم الكامل',
+  email: 'البريد الإلكتروني',
+  phone: 'رقم الجوال',
+  account_type: 'نوع الحساب',
+  avatar_url: 'الصورة الشخصية',
+  is_active: 'حالة الحساب',
+  membership_tier: 'فئة العضوية',
+  name_ar: 'الاسم بالعربي',
+  name_en: 'الاسم بالإنجليزي',
+  status: 'الحالة',
+  is_verified: 'التوثيق',
+  category_id: 'التصنيف',
+};
+
+const accountTypeLabels: Record<string, string> = {
+  individual: 'فردي',
+  business: 'تجاري',
+};
+
+/* ─── Format detail value ─── */
+const formatValue = (value: any): string => {
+  if (value === null || value === undefined || value === '') return '—';
+  if (value === true) return 'نعم';
+  if (value === false) return 'لا';
+  if (accountTypeLabels[value]) return accountTypeLabels[value];
+  if (roleLabels[value]) return roleLabels[value];
+  return String(value);
+};
+
+/* ─── Build readable detail items from log details ─── */
+interface DetailItem {
+  label: string;
+  oldVal?: string;
+  newVal?: string;
+  value?: string;
+}
+
+const buildDetailItems = (details: any, action: string): DetailItem[] => {
+  if (!details || typeof details !== 'object') return [];
+  const items: DetailItem[] = [];
+
+  // Handle "changes" object (update actions)
+  if (details.changes && typeof details.changes === 'object') {
+    for (const [field, change] of Object.entries(details.changes)) {
+      const label = fieldLabels[field] || field;
+      if (change && typeof change === 'object' && 'old' in (change as any)) {
+        const c = change as { old: any; new: any };
+        items.push({ label, oldVal: formatValue(c.old), newVal: formatValue(c.new) });
+      } else {
+        items.push({ label, value: formatValue(change) });
+      }
+    }
+  }
+
+  // Handle role fields
+  if (details.role) {
+    items.push({ label: 'الصلاحية', value: roleLabels[details.role] || details.role });
+  }
+  if (details.old_role && details.new_role) {
+    items.push({ label: 'الصلاحية', oldVal: roleLabels[details.old_role] || details.old_role, newVal: roleLabels[details.new_role] || details.new_role });
+  }
+
+  // Handle setting fields
+  if (details.setting_key) {
+    items.push({ label: 'المفتاح', value: details.setting_key });
+  }
+  if (details.setting_value !== undefined && details.setting_value !== null) {
+    items.push({ label: 'القيمة', value: formatValue(details.setting_value) });
+  }
+  if (details.old_value !== undefined) {
+    items.push({ label: 'القيمة', oldVal: formatValue(details.old_value), newVal: formatValue(details.new_value) });
+  }
+
+  // Handle reason
+  if (details.reason) {
+    items.push({ label: 'السبب', value: details.reason });
+  }
+
+  // Handle business name
+  if (details.business_name) {
+    items.push({ label: 'اسم النشاط', value: details.business_name });
+  }
+
+  return items;
+};
+
+/* ─── Build a human-readable summary ─── */
+const buildSummary = (log: any, getProfileName: (id: string) => string): string => {
+  const details = log.details;
+  const action = log.action;
+  const entityLabel = log.entity_type ? entityLabels[log.entity_type] || log.entity_type : '';
+
+  if (action === 'role_assigned' && details?.role) {
+    const targetName = details.target_user_id ? getProfileName(details.target_user_id) : '';
+    return `تم منح صلاحية "${roleLabels[details.role] || details.role}" ${targetName ? `للمستخدم ${targetName}` : ''}`;
+  }
+  if (action === 'role_removed' && details?.role) {
+    const targetName = details.target_user_id ? getProfileName(details.target_user_id) : '';
+    return `تم سحب صلاحية "${roleLabels[details.role] || details.role}" ${targetName ? `من المستخدم ${targetName}` : ''}`;
+  }
+  if (action === 'role_updated' && details?.old_role && details?.new_role) {
+    const targetName = details.target_user_id ? getProfileName(details.target_user_id) : '';
+    return `تم تغيير الصلاحية من "${roleLabels[details.old_role] || details.old_role}" إلى "${roleLabels[details.new_role] || details.new_role}" ${targetName ? `للمستخدم ${targetName}` : ''}`;
+  }
+  if (action === 'update' && details?.changes) {
+    const fields = Object.keys(details.changes).map(f => fieldLabels[f] || f);
+    const targetName = details.target_user_id ? getProfileName(details.target_user_id) : '';
+    return `تم تعديل ${fields.join('، ')} ${targetName ? `للمستخدم ${targetName}` : ''} ${entityLabel ? `(${entityLabel})` : ''}`;
+  }
+  if (action === 'user_disabled') {
+    const targetName = details?.target_user_id ? getProfileName(details.target_user_id) : '';
+    return `تم تعطيل حساب ${targetName || 'المستخدم'}`;
+  }
+  if (action === 'user_enabled') {
+    const targetName = details?.target_user_id ? getProfileName(details.target_user_id) : '';
+    return `تم تفعيل حساب ${targetName || 'المستخدم'}`;
+  }
+
+  return entityLabel ? `${actionConfig[action]?.ar || action} ${entityLabel}` : (actionConfig[action]?.ar || action);
 };
 
 /* ─── Timeline date grouping ─── */
-const getDateGroup = (dateStr: string, isRTL: boolean): string => {
+const getDateGroup = (dateStr: string): string => {
   const date = new Date(dateStr);
-  if (isToday(date)) return isRTL ? 'اليوم' : 'اليوم';
-  if (isYesterday(date)) return isRTL ? 'أمس' : 'أمس';
-  if (isThisWeek(date)) return isRTL ? 'هذا الأسبوع' : 'هذا الأسبوع';
+  if (isToday(date)) return 'اليوم';
+  if (isYesterday(date)) return 'أمس';
+  if (isThisWeek(date)) return 'هذا الأسبوع';
+  if (isThisMonth(date)) return 'هذا الشهر';
   return format(date, 'yyyy/MM/dd', { locale: ar });
 };
 
@@ -98,54 +193,39 @@ const LogItem = React.memo(({ log, getProfileName, isRTL }: {
   log: any; getProfileName: (id: string) => string; isRTL: boolean;
 }) => {
   const [expanded, setExpanded] = useState(false);
-  const config = actionConfig[log.action] || { ar: log.action, en: log.action, color: 'bg-muted text-muted-foreground', icon: Activity };
+  const config = actionConfig[log.action] || { ar: log.action, color: 'text-muted-foreground', iconBg: 'bg-muted', icon: Activity };
   const ActionIcon = config.icon;
-  const entityLabel = log.entity_type ? (entityLabels[log.entity_type]?.ar || log.entity_type) : null;
-  const details = formatDetails(log.details);
-  const profileName = getProfileName(log.user_id);
+  const summary = buildSummary(log, getProfileName);
+  const detailItems = buildDetailItems(log.details, log.action);
+  const adminName = getProfileName(log.user_id);
+  const hasDetails = detailItems.length > 0;
 
   return (
-    <div className="group relative flex gap-3 py-3 px-4 rounded-xl hover:bg-muted/30 transition-colors">
-      {/* Icon */}
-      <div className={`w-9 h-9 rounded-xl ${config.color} flex items-center justify-center shrink-0 mt-0.5`}>
-        <ActionIcon className="w-4 h-4" />
+    <div className="group relative flex gap-3 py-3.5 px-4 hover:bg-muted/20 transition-colors">
+      {/* Timeline dot line */}
+      <div className="flex flex-col items-center shrink-0">
+        <div className={`w-9 h-9 rounded-xl ${config.iconBg} ${config.color} flex items-center justify-center`}>
+          <ActionIcon className="w-4 h-4" />
+        </div>
+        <div className="w-px flex-1 bg-border/20 mt-1.5" />
       </div>
 
       {/* Content */}
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 pb-1">
         <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            {/* Action description */}
-            <p className="text-sm font-medium leading-snug">
-              <span className="text-foreground">{profileName}</span>
-              <span className="text-muted-foreground mx-1.5">{'·'}</span>
-              <span className="text-foreground/80">{config.ar}</span>
-              {entityLabel && (
-                <>
-                  <span className="text-muted-foreground mx-1.5">{'·'}</span>
-                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-normal align-middle">
-                    {entityLabel}
-                  </Badge>
-                </>
-              )}
-            </p>
-
-            {/* Quick detail summary */}
-            {details && !expanded && (
-              <p className="text-xs text-muted-foreground mt-0.5 truncate max-w-md">
-                {details.slice(0, 2).map(d => `${d.label}: ${d.value}`).join(' • ')}
-                {details.length > 2 && ` (+${details.length - 2})`}
-              </p>
-            )}
+          <div className="min-w-0 flex-1">
+            {/* Admin name */}
+            <p className="text-[11px] text-muted-foreground mb-0.5">{adminName}</p>
+            {/* Summary */}
+            <p className="text-sm font-medium text-foreground leading-relaxed">{summary}</p>
           </div>
 
-          {/* Time + Expand */}
-          <div className="flex items-center gap-1.5 shrink-0">
+          <div className="flex items-center gap-1.5 shrink-0 pt-1">
             <span className="text-[11px] text-muted-foreground flex items-center gap-1">
               <Clock className="w-3 h-3" />
-              {format(new Date(log.created_at), 'HH:mm', { locale: ar })}
+              {format(new Date(log.created_at), 'hh:mm a', { locale: ar })}
             </span>
-            {details && (
+            {hasDetails && (
               <button
                 onClick={() => setExpanded(!expanded)}
                 className="p-1 rounded-lg hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors"
@@ -157,13 +237,26 @@ const LogItem = React.memo(({ log, getProfileName, isRTL }: {
         </div>
 
         {/* Expanded details */}
-        {expanded && details && (
-          <div className="mt-2 rounded-lg bg-muted/30 border border-border/20 p-3 animate-in slide-in-from-top-1 duration-150">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {details.map(d => (
-                <div key={d.key} className="flex items-start gap-2">
-                  <span className="text-[11px] text-muted-foreground font-medium shrink-0 min-w-[80px]">{d.label}:</span>
-                  <span className="text-[11px] text-foreground break-all">{d.value}</span>
+        {expanded && hasDetails && (
+          <div className="mt-2.5 rounded-xl bg-muted/20 border border-border/15 p-3 animate-in slide-in-from-top-1 duration-150">
+            <p className="text-[10px] font-bold text-muted-foreground mb-2 uppercase tracking-wider">تفاصيل التغييرات</p>
+            <div className="space-y-2">
+              {detailItems.map((item, idx) => (
+                <div key={idx} className="flex items-center gap-2 text-xs">
+                  <span className="text-muted-foreground font-medium shrink-0 min-w-[90px]">{item.label}</span>
+                  {item.oldVal !== undefined && item.newVal !== undefined ? (
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="px-2 py-0.5 rounded-md bg-red-500/8 text-red-600 dark:text-red-400 line-through text-[11px]">
+                        {item.oldVal}
+                      </span>
+                      <ArrowRight className="w-3 h-3 text-muted-foreground shrink-0" />
+                      <span className="px-2 py-0.5 rounded-md bg-emerald-500/8 text-emerald-600 dark:text-emerald-400 text-[11px] font-medium">
+                        {item.newVal}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-foreground">{item.value}</span>
+                  )}
                 </div>
               ))}
             </div>
@@ -176,7 +269,7 @@ const LogItem = React.memo(({ log, getProfileName, isRTL }: {
 LogItem.displayName = 'LogItem';
 
 const AdminActivityLog = () => {
-  const { isRTL, language } = useLanguage();
+  const { isRTL } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [actionFilter, setActionFilter] = useState('all');
   const [, startTransition] = useTransition();
@@ -189,11 +282,7 @@ const AdminActivityLog = () => {
         .select('*')
         .order('created_at', { ascending: false })
         .limit(200);
-
-      if (actionFilter !== 'all') {
-        query = query.eq('action', actionFilter);
-      }
-
+      if (actionFilter !== 'all') query = query.eq('action', actionFilter);
       const { data, error } = await query;
       if (error) throw error;
       return data;
@@ -203,9 +292,7 @@ const AdminActivityLog = () => {
   const { data: profiles } = useQuery({
     queryKey: ['admin-profiles'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('user_id, full_name, email');
+      const { data, error } = await supabase.from('profiles').select('user_id, full_name, email');
       if (error) throw error;
       return data;
     },
@@ -223,17 +310,16 @@ const AdminActivityLog = () => {
     return logs.filter(log => {
       const name = getProfileName(log.user_id).toLowerCase();
       const actionLabel = (actionConfig[log.action]?.ar || log.action).toLowerCase();
-      const entityLabel = log.entity_type ? (entityLabels[log.entity_type]?.ar || log.entity_type).toLowerCase() : '';
+      const entityLabel = log.entity_type ? (entityLabels[log.entity_type] || log.entity_type).toLowerCase() : '';
       return name.includes(q) || actionLabel.includes(q) || entityLabel.includes(q);
     });
   }, [logs, searchQuery, profiles]);
 
-  /* ─── Group by date ─── */
   const groupedLogs = useMemo(() => {
     const groups: { label: string; logs: typeof filteredLogs }[] = [];
     let currentLabel = '';
     for (const log of filteredLogs) {
-      const label = getDateGroup(log.created_at, isRTL);
+      const label = getDateGroup(log.created_at);
       if (label !== currentLabel) {
         currentLabel = label;
         groups.push({ label, logs: [log] });
@@ -242,9 +328,8 @@ const AdminActivityLog = () => {
       }
     }
     return groups;
-  }, [filteredLogs, isRTL]);
+  }, [filteredLogs]);
 
-  /* ─── Stats ─── */
   const stats = useMemo(() => {
     if (!logs) return { total: 0, today: 0, uniqueAdmins: 0, topAction: '' };
     const todayCount = logs.filter(l => isToday(new Date(l.created_at))).length;
@@ -257,19 +342,19 @@ const AdminActivityLog = () => {
 
   const exportToCSV = () => {
     if (!filteredLogs?.length) return;
-    const headers = ['التاريخ', 'المشرف', 'العملية', 'نوع الكيان', 'التفاصيل'];
+    const headers = ['التاريخ', 'المشرف', 'الوصف', 'التفاصيل'];
     const rows = filteredLogs.map(log => [
       format(new Date(log.created_at), 'yyyy-MM-dd HH:mm:ss'),
       getProfileName(log.user_id),
-      actionConfig[log.action]?.ar || log.action,
-      log.entity_type ? (entityLabels[log.entity_type]?.ar || log.entity_type) : '',
-      formatDetails(log.details)?.map(d => `${d.label}: ${d.value}`).join(' | ') || '',
+      buildSummary(log, getProfileName),
+      buildDetailItems(log.details, log.action).map(d =>
+        d.oldVal !== undefined ? `${d.label}: ${d.oldVal} → ${d.newVal}` : `${d.label}: ${d.value}`
+      ).join(' | ') || '',
     ]);
     const csvContent = [headers, ...rows]
       .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
       .join('\n');
-    const BOM = '\uFEFF';
-    const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -281,81 +366,53 @@ const AdminActivityLog = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* ─── Header ─── */}
+        {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <h1 className="font-heading font-bold text-2xl text-foreground flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/15 to-accent/10 flex items-center justify-center shadow-sm">
                 <Activity className="w-5 h-5 text-primary" />
               </div>
-              {isRTL ? 'سجل نشاط المشرفين' : 'Admin Activity Log'}
+              سجل نشاط المشرفين
             </h1>
-            <p className="text-muted-foreground text-sm mt-1">
-              {isRTL ? 'تتبع جميع العمليات الإدارية بالتفصيل' : 'Track all admin operations in detail'}
-            </p>
+            <p className="text-muted-foreground text-sm mt-1">تتبع جميع العمليات الإدارية بالتفصيل</p>
           </div>
           <Button variant="outline" size="sm" className="h-9 text-xs gap-1.5 rounded-xl"
             onClick={exportToCSV} disabled={!filteredLogs?.length}>
             <Download className="w-3.5 h-3.5" />
-            {isRTL ? 'تصدير CSV' : 'Export CSV'}
+            تصدير CSV
           </Button>
         </div>
 
-        {/* ─── Stats ─── */}
+        {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <div className="rounded-2xl border border-border/30 bg-gradient-to-br from-primary/10 to-primary/5 p-4 transition-all hover:shadow-md group">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary/15 text-primary flex items-center justify-center transition-transform group-hover:scale-110">
-                <Activity className="w-5 h-5" />
-              </div>
-              <div>
-                <p className="text-2xl font-heading font-bold leading-none">{stats.total}</p>
-                <p className="text-[11px] text-muted-foreground mt-0.5">{isRTL ? 'إجمالي العمليات' : 'Total Operations'}</p>
-              </div>
-            </div>
-          </div>
-          <div className="rounded-2xl border border-border/30 bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 p-4 transition-all hover:shadow-md group">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/15 text-emerald-600 flex items-center justify-center transition-transform group-hover:scale-110">
-                <TrendingUp className="w-5 h-5" />
-              </div>
-              <div>
-                <p className="text-2xl font-heading font-bold leading-none">{stats.today}</p>
-                <p className="text-[11px] text-muted-foreground mt-0.5">{isRTL ? 'عمليات اليوم' : "Today's Operations"}</p>
+          {[
+            { icon: Activity, label: 'إجمالي العمليات', value: stats.total, gradient: 'from-primary/10 to-primary/5', iconBg: 'bg-primary/15 text-primary' },
+            { icon: TrendingUp, label: 'عمليات اليوم', value: stats.today, gradient: 'from-emerald-500/10 to-emerald-500/5', iconBg: 'bg-emerald-500/15 text-emerald-600' },
+            { icon: Users, label: 'مشرفون نشطون', value: stats.uniqueAdmins, gradient: 'from-blue-500/10 to-blue-500/5', iconBg: 'bg-blue-500/15 text-blue-600' },
+            { icon: Zap, label: 'الأكثر تكراراً', value: actionConfig[stats.topAction]?.ar || '—', gradient: 'from-accent/10 to-accent/5', iconBg: 'bg-accent/15 text-accent-foreground' },
+          ].map((stat, i) => (
+            <div key={i} className={`rounded-2xl border border-border/30 bg-gradient-to-br ${stat.gradient} p-4 transition-all hover:shadow-md group`}>
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-xl ${stat.iconBg} flex items-center justify-center transition-transform group-hover:scale-110`}>
+                  <stat.icon className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className={`font-heading font-bold leading-none ${typeof stat.value === 'number' ? 'text-2xl' : 'text-sm'}`}>{stat.value}</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">{stat.label}</p>
+                </div>
               </div>
             </div>
-          </div>
-          <div className="rounded-2xl border border-border/30 bg-gradient-to-br from-blue-500/10 to-blue-500/5 p-4 transition-all hover:shadow-md group">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-500/15 text-blue-600 flex items-center justify-center transition-transform group-hover:scale-110">
-                <Users className="w-5 h-5" />
-              </div>
-              <div>
-                <p className="text-2xl font-heading font-bold leading-none">{stats.uniqueAdmins}</p>
-                <p className="text-[11px] text-muted-foreground mt-0.5">{isRTL ? 'مشرفون نشطون' : 'Active Admins'}</p>
-              </div>
-            </div>
-          </div>
-          <div className="rounded-2xl border border-border/30 bg-gradient-to-br from-accent/10 to-accent/5 p-4 transition-all hover:shadow-md group">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-accent/15 text-accent flex items-center justify-center transition-transform group-hover:scale-110">
-                <Zap className="w-5 h-5" />
-              </div>
-              <div>
-                <p className="text-sm font-heading font-bold leading-none">{actionConfig[stats.topAction]?.ar || '-'}</p>
-                <p className="text-[11px] text-muted-foreground mt-0.5">{isRTL ? 'الأكثر تكراراً' : 'Most Frequent'}</p>
-              </div>
-            </div>
-          </div>
+          ))}
         </div>
 
-        {/* ─── Filters ─── */}
+        {/* Filters */}
         <div className="rounded-2xl border border-border/30 bg-card p-4">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
               <Search className="absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
               <Input
-                placeholder={isRTL ? 'بحث بالاسم، العملية، أو نوع الكيان...' : 'Search by name, action, or entity...'}
+                placeholder="بحث بالاسم أو العملية..."
                 value={searchQuery}
                 onChange={e => { const v = e.target.value; startTransition(() => setSearchQuery(v)); }}
                 className="ps-10 h-10 rounded-xl bg-muted/30 border-border/20 focus:bg-background transition-colors"
@@ -373,7 +430,7 @@ const AdminActivityLog = () => {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="rounded-xl">
-                <SelectItem value="all">{isRTL ? 'جميع العمليات' : 'All Actions'}</SelectItem>
+                <SelectItem value="all">جميع العمليات</SelectItem>
                 {Object.entries(actionConfig).map(([key, val]) => (
                   <SelectItem key={key} value={key}>
                     <span className="flex items-center gap-2">
@@ -387,18 +444,18 @@ const AdminActivityLog = () => {
           </div>
           {(searchQuery || actionFilter !== 'all') && (
             <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/20">
-              <span className="text-[11px] text-muted-foreground">{isRTL ? 'النتائج:' : 'Results:'} {filteredLogs.length}</span>
+              <span className="text-[11px] text-muted-foreground">النتائج: {filteredLogs.length}</span>
               {searchQuery && <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-lg" onClick={() => setSearchQuery('')}>"{searchQuery}" <X className="w-2.5 h-2.5" /></Badge>}
               {actionFilter !== 'all' && <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-lg" onClick={() => setActionFilter('all')}>{actionConfig[actionFilter]?.ar} <X className="w-2.5 h-2.5" /></Badge>}
               <button className="text-[10px] text-primary hover:underline ms-auto"
                 onClick={() => { setSearchQuery(''); setActionFilter('all'); }}>
-                {isRTL ? 'مسح الكل' : 'Clear all'}
+                مسح الكل
               </button>
             </div>
           )}
         </div>
 
-        {/* ─── Timeline ─── */}
+        {/* Timeline */}
         <div className="rounded-2xl border border-border/30 bg-card overflow-hidden">
           {isLoading ? (
             <div className="p-4 space-y-3">
@@ -406,8 +463,8 @@ const AdminActivityLog = () => {
                 <div key={i} className="flex items-center gap-3 p-3">
                   <Skeleton className="w-9 h-9 rounded-xl" />
                   <div className="flex-1 space-y-1.5">
+                    <Skeleton className="h-3 w-32" />
                     <Skeleton className="h-4 w-64" />
-                    <Skeleton className="h-3 w-40" />
                   </div>
                   <Skeleton className="h-3 w-16" />
                 </div>
@@ -418,22 +475,20 @@ const AdminActivityLog = () => {
               <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-accent/10 to-primary/10 flex items-center justify-center mb-4">
                 <Activity className="w-8 h-8 opacity-30" />
               </div>
-              <p className="font-heading font-bold text-sm mb-1">{isRTL ? 'لا توجد سجلات نشاط' : 'No activity logs found'}</p>
-              <p className="text-xs">{isRTL ? 'جرّب تعديل معايير البحث' : 'Try adjusting your search criteria'}</p>
+              <p className="font-heading font-bold text-sm mb-1">لا توجد سجلات نشاط</p>
+              <p className="text-xs">جرّب تعديل معايير البحث</p>
             </div>
           ) : (
-            <div className="divide-y divide-border/10">
+            <div>
               {groupedLogs.map((group) => (
                 <div key={group.label}>
-                  {/* Date header */}
                   <div className="sticky top-0 z-10 bg-muted/50 backdrop-blur-sm px-4 py-2 border-b border-border/10">
                     <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
                       {group.label}
                       <span className="text-[10px] font-normal ms-2 opacity-70">({group.logs.length})</span>
                     </span>
                   </div>
-                  {/* Log items */}
-                  <div className="divide-y divide-border/5">
+                  <div>
                     {group.logs.map(log => (
                       <LogItem key={log.id} log={log} getProfileName={getProfileName} isRTL={isRTL} />
                     ))}
