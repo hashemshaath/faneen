@@ -833,6 +833,7 @@ const DashboardContracts = () => {
       terms_ar: c.terms_ar || '', terms_en: c.terms_en || '',
       supervisor_name: c.supervisor_name || '', supervisor_phone: c.supervisor_phone || '',
       supervisor_email: c.supervisor_email || '', client_email: '',
+      vat_inclusive: c.vat_inclusive || false, vat_rate: c.vat_rate?.toString() || '15',
     });
     setViewSection('create');
   }, []);
