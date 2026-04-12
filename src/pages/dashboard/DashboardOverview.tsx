@@ -546,6 +546,7 @@ const AdminDashboardView = React.memo(({ isRTL }: { isRTL: boolean }) => {
               { icon: ShieldAlert, label: isRTL ? 'النظام' : 'System', to: '/admin/system-settings' },
               { icon: BarChart3, label: isRTL ? 'التصنيفات' : 'Categories', to: '/admin/categories' },
               { icon: MessageSquare, label: isRTL ? 'المحادثات' : 'Messages', to: '/dashboard/messages' },
+              { icon: Mail, label: isRTL ? 'رسائل التواصل' : 'Contact', to: '/admin/contact-messages' },
             ].map(a => <QuickAction key={a.to} {...a} />)}
           </div>
         </CardContent>
