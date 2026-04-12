@@ -2916,6 +2916,7 @@ export type Database = {
           created_at: string
           id: string
           is_verified: boolean
+          project_id: string | null
           rating: number
           title: string | null
           updated_at: string
@@ -2927,6 +2928,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_verified?: boolean
+          project_id?: string | null
           rating: number
           title?: string | null
           updated_at?: string
@@ -2938,6 +2940,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_verified?: boolean
+          project_id?: string | null
           rating?: number
           title?: string | null
           updated_at?: string
@@ -2949,6 +2952,13 @@ export type Database = {
             columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]
