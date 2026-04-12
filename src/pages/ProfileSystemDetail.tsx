@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { usePageMeta, useJsonLd } from '@/hooks/usePageMeta';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -294,6 +295,22 @@ const ProfileSystemDetail = () => {
   const features = language === 'ar' ? (profile.features_ar || []) : (profile.features_en?.length ? profile.features_en : (profile.features_ar || []));
   const rec = recommendationLabels[profile.recommendation_level] || recommendationLabels.standard;
   const RecIcon = rec.icon;
+
+  usePageMeta({
+    title: name,
+    description: desc?.slice(0, 160) || '',
+    ogImage: profile.cover_image_url || undefined,
+    ogType: 'article',
+  });
+
+  useJsonLd({
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name,
+    description: desc?.slice(0, 300),
+    image: profile.cover_image_url,
+    url: `https://faneen.com/profile-systems/${slug}`,
+  });
   const avgRating = reviews.length ? (reviews.reduce((s: number, r: any) => s + r.rating, 0) / reviews.length) : 0;
   const ratingDistribution = [5, 4, 3, 2, 1].map(star => ({
     star,

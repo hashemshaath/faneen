@@ -15,6 +15,7 @@ import { RelatedProjects } from '@/components/project/RelatedProjects';
 import {
   FolderOpen, ArrowRight, ArrowLeft, Tag, MapPin, Building2, Share2, Bookmark
 } from 'lucide-react';
+import { usePageMeta, useJsonLd } from '@/hooks/usePageMeta';
 
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -57,6 +58,25 @@ const ProjectDetail = () => {
     },
     enabled: !!project?.category_id,
   });
+
+  const projectTitle = project ? (language === 'ar' ? project.title_ar : (project.title_en || project.title_ar)) : '';
+  const projectDesc = project ? (language === 'ar' ? project.description_ar : (project.description_en || project.description_ar)) : '';
+
+  usePageMeta({
+    title: projectTitle || (isRTL ? 'تفاصيل المشروع' : 'Project Details'),
+    description: projectDesc?.slice(0, 160) || '',
+    ogImage: project?.cover_image_url || undefined,
+    ogType: 'article',
+  });
+
+  useJsonLd(project ? {
+    '@context': 'https://schema.org',
+    '@type': 'CreativeWork',
+    name: projectTitle,
+    description: projectDesc?.slice(0, 300),
+    image: project.cover_image_url,
+    url: `https://faneen.com/projects/${id}`,
+  } : null);
 
   const { data: city } = useQuery({
     queryKey: ['city', project?.city_id],
