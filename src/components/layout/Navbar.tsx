@@ -174,7 +174,7 @@ export const Navbar = () => {
             {/* Mobile toggle */}
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="lg:hidden text-surface-nav-foreground/80 hover:text-gold transition-colors p-1.5 rounded-lg hover:bg-gold/5 focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none"
+              className="lg:hidden text-surface-nav-foreground/80 hover:text-gold transition-colors p-2.5 rounded-lg hover:bg-gold/5 focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none min-w-[44px] min-h-[44px] flex items-center justify-center"
               aria-label={mobileOpen ? (language === 'ar' ? 'إغلاق القائمة' : 'Close menu') : (language === 'ar' ? 'فتح القائمة' : 'Open menu')}
               aria-expanded={mobileOpen}
             >
