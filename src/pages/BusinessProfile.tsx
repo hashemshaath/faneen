@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { usePageMeta, useJsonLd } from "@/hooks/usePageMeta";
+import { usePageMeta, useMultiJsonLd } from "@/hooks/usePageMeta";
 import {
   CreditCard,
   FolderOpen,
@@ -77,37 +77,58 @@ const BusinessProfile = () => {
     keywords: business ? [businessName, categoryName, cityName, 'فنيين', 'دليل أعمال'].filter(Boolean).join(', ') : undefined,
   });
 
-  useJsonLd(useMemo(() => business ? ({
-    '@context': 'https://schema.org',
-    '@type': 'LocalBusiness',
-    name: business.name_ar,
-    alternateName: business.name_en,
-    description: business.description_ar,
-    url: `https://faneen.com/${business.username}`,
-    image: business.logo_url || business.cover_url,
-    logo: business.logo_url,
-    telephone: business.phone,
-    email: business.email,
-    address: {
-      '@type': 'PostalAddress',
-      streetAddress: business.address || undefined,
-      addressRegion: business.region || undefined,
-      addressLocality: cityName || undefined,
-      addressCountry: business.countries?.code || 'SA',
-    },
-    geo: business.latitude && business.longitude ? {
-      '@type': 'GeoCoordinates',
-      latitude: business.latitude,
-      longitude: business.longitude,
-    } : undefined,
-    aggregateRating: Number(business.rating_count) > 0 ? {
-      '@type': 'AggregateRating',
-      ratingValue: business.rating_avg,
-      reviewCount: business.rating_count,
-      bestRating: 5,
-    } : undefined,
-    priceRange: business.membership_tier === 'free' ? '$$' : '$$$',
-  }) : null, [business]));
+  const structuredDataArray = useMemo(() => {
+    if (!business) return null;
+    const localBusiness: Record<string, any> = {
+      '@context': 'https://schema.org',
+      '@type': 'LocalBusiness',
+      '@id': `https://faneen.com/${business.username}`,
+      name: business.name_ar,
+      alternateName: business.name_en,
+      description: business.description_ar,
+      url: `https://faneen.com/${business.username}`,
+      image: business.logo_url || business.cover_url,
+      logo: business.logo_url,
+      telephone: business.phone,
+      email: business.email,
+      address: {
+        '@type': 'PostalAddress',
+        streetAddress: business.address || undefined,
+        addressRegion: business.region || undefined,
+        addressLocality: cityName || undefined,
+        addressCountry: business.countries?.code || 'SA',
+      },
+      geo: business.latitude && business.longitude ? {
+        '@type': 'GeoCoordinates',
+        latitude: business.latitude,
+        longitude: business.longitude,
+      } : undefined,
+      aggregateRating: Number(business.rating_count) > 0 ? {
+        '@type': 'AggregateRating',
+        ratingValue: Number(business.rating_avg).toFixed(1),
+        reviewCount: business.rating_count,
+        bestRating: '5',
+        worstRating: '1',
+      } : undefined,
+      priceRange: business.membership_tier === 'free' ? '$$' : '$$$',
+      areaServed: cityName ? { '@type': 'City', name: cityName } : undefined,
+      serviceType: services.length > 0 ? services.map(s => s.name_ar) : undefined,
+    };
+
+    const breadcrumb: Record<string, any> = {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'فنيين', item: 'https://faneen.com' },
+        ...(categoryName ? [{ '@type': 'ListItem', position: 2, name: categoryName, item: `https://faneen.com/categories/${business.categories?.slug || ''}` }] : []),
+        { '@type': 'ListItem', position: categoryName ? 3 : 2, name: business.name_ar, item: `https://faneen.com/${business.username}` },
+      ],
+    };
+
+    return [localBusiness, breadcrumb];
+  }, [business, services, categoryName, cityName]);
+
+  useMultiJsonLd(structuredDataArray);
 
   const contactMutation = useMutation({
     mutationFn: async () => {

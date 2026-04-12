@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
-import { usePageMeta } from '@/hooks/usePageMeta';
+import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { Card, CardContent } from '@/components/ui/card';
@@ -43,6 +43,40 @@ const Categories = () => {
       ? (language === 'ar' ? `تصفح أفضل مزودي خدمات ${catName} مع التقييمات والأسعار` : `Browse the best ${catName} service providers`)
       : (language === 'ar' ? 'تصفح جميع أقسام وفئات خدمات الألمنيوم والحديد والزجاج والخشب' : 'Browse all aluminum, iron, glass and wood categories'),
   });
+
+  useMultiJsonLd(useMemo(() => {
+    if (!selectedCategory) return null;
+    const breadcrumb = {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'فنيين', item: 'https://faneen.com' },
+        { '@type': 'ListItem', position: 2, name: catName, item: `https://faneen.com/categories/${selectedCategory.slug}` },
+      ],
+    };
+    const faq = {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: [
+        {
+          '@type': 'Question',
+          name: `كيف أجد أفضل ورشة ${catName} في السعودية؟`,
+          acceptedAnswer: { '@type': 'Answer', text: `ابحث في دليل فنيين عن ورش ${catName}. يمكنك تصفية النتائج حسب التقييم والموقع ومقارنة الأسعار والخدمات.` },
+        },
+        {
+          '@type': 'Question',
+          name: `ما هي أسعار ${catName} في السعودية؟`,
+          acceptedAnswer: { '@type': 'Answer', text: `تتفاوت أسعار ${catName} حسب الجودة والمساحة والموقع. يمكنك طلب عروض أسعار مجانية من خلال دليل فنيين.` },
+        },
+        {
+          '@type': 'Question',
+          name: `هل يمكنني الاطلاع على أعمال ورش ${catName} السابقة؟`,
+          acceptedAnswer: { '@type': 'Answer', text: `نعم، كل ورشة في دليل فنيين تملك معرض صور لأعمالها السابقة يمكنك الاطلاع عليه قبل التواصل.` },
+        },
+      ],
+    };
+    return [breadcrumb, faq];
+  }, [selectedCategory, catName]));
 
   if (slug && selectedCategory) {
     return (

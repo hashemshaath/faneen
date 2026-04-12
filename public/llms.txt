@@ -1,0 +1,33 @@
+# Faneen — دليل الصناعات الخفيفة
+
+## About
+فنيين (Faneen) is the leading Arabic business directory for light industries
+in Saudi Arabia and the Gulf region. We connect customers with verified workshops
+and manufacturers specializing in aluminum, iron, glass, wood, kitchens, doors,
+windows, and decorations.
+
+## Coverage
+- Aluminum works (أعمال الألمنيوم): windows, doors, facades, structures
+- Iron works (أعمال الحديد): railings, gates, stairs, furniture
+- Glass works (أعمال الزجاج): mirrors, partitions, storefronts
+- Wood works (أعمال الخشب): kitchens, doors, furniture, flooring
+- Kitchen manufacturing (تصنيع المطابخ): custom kitchens
+- Decoration (ديكورات): interior, gypsum, painting
+
+## Key URLs
+- Homepage: https://faneen.com/
+- Search: https://faneen.com/search
+- Categories: https://faneen.com/categories
+- Blog: https://faneen.com/blog
+- Projects: https://faneen.com/projects
+
+## Data
+Business listings include: name (Arabic/English), description, services,
+city, phone, images, rating, reviews.
+
+## API
+- Dynamic sitemap: https://faneen.com/sitemap.xml
+- Edge function sitemap: https://hckpxwhjycmdflaneihd.supabase.co/functions/v1/sitemap
+
+## Contact
+Website: https://faneen.com
