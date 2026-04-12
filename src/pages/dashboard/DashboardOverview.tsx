@@ -85,17 +85,17 @@ const StatCard = React.memo(({ icon: Icon, label, value, sub, color, to }: {
   icon: React.ElementType; label: string; value: string | number; sub?: string; color: string; to?: string;
 }) => {
   const content = (
-    <Card className="border-border/40 hover:shadow-md hover:border-accent/20 transition-all group">
-      <CardContent className="p-3 sm:p-4">
-        <div className="flex items-center justify-between mb-2">
-          <div className={cn('w-9 h-9 rounded-xl flex items-center justify-center', color)}>
-            <Icon className="w-4 h-4" />
+    <Card className="border-border/30 hover:shadow-lg hover:shadow-accent/5 hover:border-accent/25 transition-all duration-300 group">
+      <CardContent className="p-4 sm:p-5">
+        <div className="flex items-center justify-between mb-3">
+          <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center', color)}>
+            <Icon className="w-4.5 h-4.5" />
           </div>
-          {to && <ArrowUpRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />}
+          {to && <ArrowUpRight className="w-4 h-4 text-muted-foreground/40 opacity-0 group-hover:opacity-100 transition-opacity" />}
         </div>
-        <p className="text-lg sm:text-xl font-bold leading-none"><span className="tech-content">{value}</span></p>
-        {sub && <p className="text-[9px] text-muted-foreground mt-0.5">{sub}</p>}
-        <p className="text-[10px] text-muted-foreground mt-1">{label}</p>
+        <p className="text-xl sm:text-2xl font-bold leading-none tracking-tight"><span className="tech-content">{value}</span></p>
+        {sub && <p className="text-[10px] text-muted-foreground mt-1">{sub}</p>}
+        <p className="text-[10px] sm:text-xs text-muted-foreground mt-1.5">{label}</p>
       </CardContent>
     </Card>
   );
@@ -106,11 +106,11 @@ StatCard.displayName = 'StatCard';
 // ═══ Quick action button ═══
 const QuickAction = React.memo(({ icon: Icon, label, to }: { icon: React.ElementType; label: string; to: string }) => (
   <Link to={to}>
-    <Button variant="outline" className="w-full h-auto py-2.5 flex flex-col gap-1 rounded-xl hover:border-accent/50 hover:bg-accent/5 transition-all">
-      <div className="w-7 h-7 rounded-lg bg-accent/10 flex items-center justify-center">
-        <Icon className="w-3.5 h-3.5 text-accent" />
+    <Button variant="outline" className="w-full h-auto py-3 flex flex-col gap-1.5 rounded-xl hover:border-accent/50 hover:bg-accent/5 hover:shadow-sm transition-all duration-300">
+      <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
+        <Icon className="w-4 h-4 text-accent" />
       </div>
-      <span className="text-[9px]">{label}</span>
+      <span className="text-[10px] font-medium">{label}</span>
     </Button>
   </Link>
 ));
@@ -356,21 +356,21 @@ const AdminDashboardView = React.memo(({ isRTL }: { isRTL: boolean }) => {
   ], [isRTL, animatedUsers, animatedRevenue, animatedContracts, stats]);
 
   return (
-    <div className="space-y-4" ref={ref}>
+    <div className="space-y-5" ref={ref}>
       {/* Welcome */}
-      <div className="rounded-2xl border border-border/40 bg-gradient-to-br from-card via-card to-accent/5 p-4 sm:p-5 dark:from-card/80 dark:to-accent/10">
+      <div className="rounded-2xl border border-border/30 bg-gradient-to-br from-card via-card to-accent/5 p-5 sm:p-6 dark:from-card/80 dark:to-accent/10">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-accent/15 flex items-center justify-center">
-              <ShieldAlert className="w-4.5 h-4.5 text-accent" />
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-xl bg-accent/15 flex items-center justify-center">
+              <ShieldAlert className="w-5 h-5 text-accent" />
             </div>
             <div>
-              <h1 className="font-heading font-bold text-base sm:text-lg">{isRTL ? 'لوحة الإدارة' : 'Admin Dashboard'}</h1>
-              <p className="text-[10px] text-muted-foreground">{isRTL ? 'نظرة شاملة على النظام' : 'System overview'}</p>
+              <h1 className="font-heading font-bold text-lg sm:text-xl">{isRTL ? 'لوحة الإدارة' : 'Admin Dashboard'}</h1>
+              <p className="text-xs text-muted-foreground/70 mt-0.5">{isRTL ? 'نظرة شاملة على النظام' : 'System overview'}</p>
             </div>
           </div>
-          <Badge variant="outline" className="text-[10px] gap-1 bg-emerald-500/10 border-emerald-500/30 text-emerald-600">
-            <Zap className="w-2.5 h-2.5" />{isRTL ? 'مباشر' : 'Live'}
+          <Badge variant="outline" className="text-[10px] gap-1.5 bg-emerald-500/10 border-emerald-500/30 text-emerald-600">
+            <Zap className="w-3 h-3" />{isRTL ? 'مباشر' : 'Live'}
           </Badge>
         </div>
       </div>
@@ -385,7 +385,7 @@ const AdminDashboardView = React.memo(({ isRTL }: { isRTL: boolean }) => {
       )}
 
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-2.5">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         {adminCards.map((card) => <StatCard key={card.label} {...card} />)}
       </div>
 
@@ -646,9 +646,9 @@ const ProviderDashboardView = React.memo(({ isRTL, user, profile }: { isRTL: boo
   );
 
   return (
-    <div className="space-y-4" ref={ref}>
+    <div className="space-y-5" ref={ref}>
       {/* Welcome */}
-      <div className="rounded-2xl border border-border/40 bg-gradient-to-br from-card via-card to-accent/5 p-4 sm:p-5 dark:from-card/80 dark:to-accent/10">
+      <div className="rounded-2xl border border-border/30 bg-gradient-to-br from-card via-card to-accent/5 p-5 sm:p-6 dark:from-card/80 dark:to-accent/10">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div className="flex items-center gap-2.5">
             <div className="w-10 h-10 rounded-xl bg-accent/15 flex items-center justify-center shrink-0 overflow-hidden">
@@ -680,7 +680,7 @@ const ProviderDashboardView = React.memo(({ isRTL, user, profile }: { isRTL: boo
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <StatCard icon={DollarSign} label={isRTL ? 'إجمالي الإيرادات' : 'Revenue'} value={`${animatedRevenue.toLocaleString()} ${isRTL ? 'ر.س' : 'SAR'}`} color="bg-emerald-500/10 text-emerald-600" />
         <StatCard icon={FileText} label={isRTL ? 'العقود النشطة' : 'Active'} value={stats?.activeContracts ?? 0} sub={`${isRTL ? 'من' : 'of'} ${animatedContracts}`} color="bg-accent/10 text-accent" />
         <StatCard icon={Star} label={isRTL ? 'التقييم' : 'Rating'} value={stats?.avgRating ?? '0.0'} sub={`${stats?.reviews ?? 0} ${isRTL ? 'تقييم' : 'reviews'}`} color="bg-accent/10 text-accent" />
@@ -889,13 +889,13 @@ const UserDashboardView = React.memo(({ isRTL, user, profile }: { isRTL: boolean
   );
 
   return (
-    <div className="space-y-4" ref={ref}>
+    <div className="space-y-5" ref={ref}>
       {/* Welcome */}
-      <div className="rounded-2xl border border-border/40 bg-gradient-to-br from-card via-card to-accent/5 p-4 sm:p-5 dark:from-card/80 dark:to-accent/10">
+      <div className="rounded-2xl border border-border/30 bg-gradient-to-br from-card via-card to-accent/5 p-5 sm:p-6 dark:from-card/80 dark:to-accent/10">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="font-heading font-bold text-base sm:text-lg">{isRTL ? `مرحباً ${profile?.full_name || ''}` : `Welcome ${profile?.full_name || ''}`}</h1>
-            <p className="text-[10px] text-muted-foreground mt-0.5">{isRTL ? 'تتبع عقودك ورسائلك' : 'Track your contracts & messages'}</p>
+             <h1 className="font-heading font-bold text-lg sm:text-xl">{isRTL ? `مرحباً ${profile?.full_name || ''}` : `Welcome ${profile?.full_name || ''}`}</h1>
+             <p className="text-xs text-muted-foreground/70 mt-0.5">{isRTL ? 'تتبع عقودك ورسائلك' : 'Track your contracts & messages'}</p>
           </div>
           {profile?.ref_id && <Badge variant="outline" className="tech-content text-[9px] h-5">{profile.ref_id}</Badge>}
         </div>
@@ -909,7 +909,7 @@ const UserDashboardView = React.memo(({ isRTL, user, profile }: { isRTL: boolean
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <StatCard icon={FileText} label={isRTL ? 'العقود النشطة' : 'Active'} value={stats?.activeContracts ?? 0} sub={`${isRTL ? 'من' : 'of'} ${stats?.totalContracts ?? 0}`} color="bg-accent/10 text-accent" />
         <StatCard icon={DollarSign} label={isRTL ? 'إجمالي الإنفاق' : 'Spent'} value={`${animatedSpent.toLocaleString()} ${isRTL ? 'ر.س' : 'SAR'}`} color="bg-emerald-500/10 text-emerald-600" />
         <StatCard icon={MessageSquare} label={isRTL ? 'المحادثات' : 'Conversations'} value={stats?.messages ?? 0} color="bg-primary/10 text-primary" />
