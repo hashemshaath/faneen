@@ -9,10 +9,11 @@ interface PageMetaOptions {
   ogImage?: string;
   ogType?: string;
   noindex?: boolean;
+  keywords?: string;
 }
 
 const BASE_URL = 'https://faneen.com';
-const DEFAULT_OG_IMAGE = 'https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/0262d291-fd10-4347-a69d-2b3087be7f84/id-preview-3203244e--d320e6b5-e4e8-444e-8ccf-7c6ff9bd67d7.lovable.app-1775753375295.png';
+const DEFAULT_OG_IMAGE = 'https://faneen.com/og-image.jpg';
 const SITE_NAME = 'فنيين Faneen';
 
 function setMeta(name: string, content: string, attr: 'name' | 'property' = 'name') {
@@ -44,6 +45,10 @@ export function usePageMeta(options: PageMetaOptions) {
       setMeta('description', options.description);
     }
 
+    if (options.keywords) {
+      setMeta('keywords', options.keywords);
+    }
+
     // Canonical
     const canonicalUrl = options.canonical || `${BASE_URL}${window.location.pathname}`;
     setCanonical(canonicalUrl);
@@ -55,6 +60,7 @@ export function usePageMeta(options: PageMetaOptions) {
     setMeta('og:type', options.ogType || 'website', 'property');
     setMeta('og:url', canonicalUrl, 'property');
     setMeta('og:site_name', SITE_NAME, 'property');
+    setMeta('og:locale', 'ar_SA', 'property');
 
     // Twitter
     setMeta('twitter:title', options.ogTitle || fullTitle, 'name');
@@ -66,9 +72,9 @@ export function usePageMeta(options: PageMetaOptions) {
     if (options.noindex) {
       setMeta('robots', 'noindex, nofollow');
     } else {
-      setMeta('robots', 'index, follow');
+      setMeta('robots', 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1');
     }
-  }, [options.title, options.description, options.canonical, options.ogTitle, options.ogDescription, options.ogImage, options.ogType, options.noindex]);
+  }, [options.title, options.description, options.canonical, options.ogTitle, options.ogDescription, options.ogImage, options.ogType, options.noindex, options.keywords]);
 }
 
 // JSON-LD helper
@@ -88,4 +94,26 @@ export function useJsonLd(data: Record<string, any> | null) {
       script?.remove();
     };
   }, [data]);
+}
+
+// Multiple JSON-LD blocks helper
+export function useMultiJsonLd(dataArray: Record<string, any>[] | null) {
+  useEffect(() => {
+    if (!dataArray || dataArray.length === 0) return;
+    const containerId = 'json-ld-multi';
+    // Remove old
+    document.querySelectorAll(`script[data-multi-ld]`).forEach(el => el.remove());
+    
+    dataArray.forEach((data, i) => {
+      const script = document.createElement('script');
+      script.type = 'application/ld+json';
+      script.setAttribute('data-multi-ld', String(i));
+      script.textContent = JSON.stringify(data);
+      document.head.appendChild(script);
+    });
+
+    return () => {
+      document.querySelectorAll(`script[data-multi-ld]`).forEach(el => el.remove());
+    };
+  }, [dataArray]);
 }

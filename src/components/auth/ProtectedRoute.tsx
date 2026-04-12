@@ -2,6 +2,7 @@ import React, { useEffect, useRef, lazy, Suspense } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { useNoIndex } from '@/hooks/useNoIndex';
 
 const Forbidden = lazy(() => import('@/pages/Forbidden'));
 
@@ -47,6 +48,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   const { user, loading, isAdmin, isSuperAdmin, isProvider, profile, roles } = useAuth();
   const location = useLocation();
   const loggedRef = useRef(false);
+
+  // Prevent search engines from indexing protected pages
+  useNoIndex();
 
   // Wait for full data load: loading must be false AND if user exists, profile must be loaded
   const fullyLoaded = !loading && (!user || profile !== null);
