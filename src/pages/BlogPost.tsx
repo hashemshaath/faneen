@@ -193,7 +193,7 @@ const BlogPost = () => {
     publisher: { '@type': 'Organization', name: 'فنيين Faneen', url: 'https://faneen.com' },
   }) : null, [post]));
 
-  const { data: postData, isLoading } = useQuery({
+  const { data: post, isLoading } = useQuery({
     queryKey: ['blog-post', slug],
     queryFn: async () => {
       const { data, error } = await supabase.from('blog_posts').select('*').eq('slug', slug!).eq('status', 'published').maybeSingle();
