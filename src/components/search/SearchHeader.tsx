@@ -6,13 +6,14 @@ import { SearchAutocomplete } from './SearchAutocomplete';
 interface SearchHeaderProps {
   query: string;
   onQueryChange: (q: string) => void;
+  onSearch?: (q: string) => void;
   totalResults: number;
   categories?: { id: string; name_ar: string; name_en: string; slug: string }[];
   onCategoryClick?: (id: string) => void;
   businesses?: any[];
 }
 
-export const SearchHeader = ({ query, onQueryChange, totalResults, categories, onCategoryClick, businesses }: SearchHeaderProps) => {
+export const SearchHeader = ({ query, onQueryChange, onSearch, totalResults, categories, onCategoryClick, businesses }: SearchHeaderProps) => {
   const { t, language } = useLanguage();
 
   return (
