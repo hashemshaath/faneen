@@ -565,6 +565,7 @@ const DashboardMessages = () => {
   const [deferredSearch, setDeferredSearch] = useState('');
   const [chatSearchTerm, setChatSearchTerm] = useState('');
   const [showChatSearch, setShowChatSearch] = useState(false);
+  const [chatSearchIndex, setChatSearchIndex] = useState(0);
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
   const [attachedPreview, setAttachedPreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
