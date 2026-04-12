@@ -1536,6 +1536,30 @@ const DashboardContracts = () => {
 
                               {/* ═══ Payments Tab ═══ */}
                               <TabsContent value="payments" className="mt-0">
+                                {isProvider && (
+                                  <div className="mb-3">
+                                    {showAddPayment === c.id ? (
+                                      <div className="p-4 rounded-xl border-2 border-dashed border-accent/30 bg-accent/5 space-y-3">
+                                        <h4 className="text-xs font-semibold">{isRTL ? 'إضافة دفعة جديدة' : 'Add Payment'}</h4>
+                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                                          <Input type="number" placeholder={isRTL ? 'المبلغ' : 'Amount'} value={paymentForm.amount} onChange={e => setPaymentForm(f => ({ ...f, amount: e.target.value }))} dir="ltr" className="h-9 text-xs" />
+                                          <Input type="date" placeholder={isRTL ? 'تاريخ الاستحقاق' : 'Due Date'} value={paymentForm.due_date} onChange={e => setPaymentForm(f => ({ ...f, due_date: e.target.value }))} dir="ltr" className="h-9 text-xs" />
+                                          <Input placeholder={isRTL ? 'ملاحظات' : 'Notes'} value={paymentForm.notes} onChange={e => setPaymentForm(f => ({ ...f, notes: e.target.value }))} className="h-9 text-xs" />
+                                        </div>
+                                        <div className="flex gap-2">
+                                          <Button size="sm" className="h-8 text-xs gap-1" disabled={!paymentForm.amount || !paymentForm.due_date || addPaymentMutation.isPending} onClick={() => addPaymentMutation.mutate({ contractId: c.id })}>
+                                            {addPaymentMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}{isRTL ? 'إضافة' : 'Add'}
+                                          </Button>
+                                          <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => setShowAddPayment(null)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5" onClick={() => setShowAddPayment(c.id)}>
+                                        <Plus className="w-3.5 h-3.5" />{isRTL ? 'إضافة دفعة' : 'Add Payment'}
+                                      </Button>
+                                    )}
+                                  </div>
+                                )}
                                 {payments.length > 0 ? (
                                   <div className="space-y-2">
                                     {payments.sort((a: any, b: any) => a.installment_number - b.installment_number).map((p: any) => (
@@ -1548,21 +1572,33 @@ const DashboardContracts = () => {
                                             <div>
                                               <p className="text-xs font-semibold">{isRTL ? `الدفعة ${p.installment_number}` : `Payment #${p.installment_number}`}</p>
                                               <p className="text-[10px] text-muted-foreground">{isRTL ? 'استحقاق:' : 'Due:'} {formatDate(p.due_date)}</p>
+                                              {p.paid_at && <p className="text-[9px] text-emerald-600">{isRTL ? 'دفع:' : 'Paid:'} {formatDate(p.paid_at)}</p>}
+                                              {p.notes && <p className="text-[9px] text-muted-foreground mt-0.5">{p.notes}</p>}
                                             </div>
                                           </div>
-                                          <div className="text-end">
-                                            <p className="text-sm font-bold">{Number(p.amount).toLocaleString()} {c.currency_code}</p>
-                                            <Badge variant={p.status === 'paid' ? 'default' : p.status === 'overdue' ? 'destructive' : 'secondary'} className="text-[8px] mt-0.5">
-                                              {p.status === 'paid' ? (isRTL ? 'مدفوع' : 'Paid') : p.status === 'overdue' ? (isRTL ? 'متأخر' : 'Overdue') : (isRTL ? 'معلق' : 'Pending')}
-                                            </Badge>
+                                          <div className="flex items-center gap-2">
+                                            <div className="text-end">
+                                              <p className="text-sm font-bold">{Number(p.amount).toLocaleString()} {c.currency_code}</p>
+                                              <Badge variant={p.status === 'paid' ? 'default' : p.status === 'overdue' ? 'destructive' : 'secondary'} className="text-[8px] mt-0.5">
+                                                {p.status === 'paid' ? (isRTL ? 'مدفوع' : 'Paid') : p.status === 'overdue' ? (isRTL ? 'متأخر' : 'Overdue') : (isRTL ? 'معلق' : 'Pending')}
+                                              </Badge>
+                                            </div>
+                                            {p.status !== 'paid' && isProvider && (
+                                              <Button variant="ghost" size="icon" className="h-8 w-8 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/20" onClick={() => markPaidMutation.mutate({ paymentId: p.id })}>
+                                                <Banknote className="w-4 h-4" />
+                                              </Button>
+                                            )}
                                           </div>
                                         </div>
                                       </div>
                                     ))}
                                     {/* Payment Summary */}
-                                    <div className="p-3 rounded-xl bg-muted/30 border border-border/30 flex items-center justify-between">
-                                      <span className="text-[10px] text-muted-foreground">{isRTL ? 'الإجمالي المدفوع' : 'Total Paid'}</span>
-                                      <span className="text-xs font-bold text-emerald-600">{payments.filter((p:any)=>p.status==='paid').reduce((s:number,p:any)=>s+Number(p.amount),0).toLocaleString()} / {Number(c.total_amount).toLocaleString()} {c.currency_code}</span>
+                                    <div className="p-3 rounded-xl bg-muted/30 border border-border/30">
+                                      <div className="flex items-center justify-between mb-1">
+                                        <span className="text-[10px] text-muted-foreground">{isRTL ? 'الإجمالي المدفوع' : 'Total Paid'}</span>
+                                        <span className="text-xs font-bold text-emerald-600">{payments.filter((p:any)=>p.status==='paid').reduce((s:number,p:any)=>s+Number(p.amount),0).toLocaleString()} / {Number(c.total_amount).toLocaleString()} {c.currency_code}</span>
+                                      </div>
+                                      <Progress value={Number(c.total_amount) > 0 ? (payments.filter((p:any)=>p.status==='paid').reduce((s:number,p:any)=>s+Number(p.amount),0) / Number(c.total_amount)) * 100 : 0} className="h-1.5 [&>div]:bg-emerald-500" />
                                     </div>
                                   </div>
                                 ) : <p className="text-center py-8 text-muted-foreground text-xs">{isRTL ? 'لا توجد دفعات' : 'No payments yet'}</p>}
