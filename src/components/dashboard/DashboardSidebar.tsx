@@ -22,6 +22,7 @@ import {
   Layers, MessageSquare, Users, Newspaper, Building2, Bell, Activity,
   Bookmark, ShieldAlert, Crown, FolderTree, Tags, UserCog, Database,
   BarChart3, Cog, Eye, TrendingUp, AlertTriangle, Server, Brain,
+  CalendarClock,
 } from 'lucide-react';
 
 interface MenuItem {
@@ -73,6 +74,7 @@ const providerGroups: MenuGroup[] = [
     icon: MessageSquare,
     items: [
       { label: { ar: 'الرسائل', en: 'Messages' }, url: '/dashboard/messages', icon: MessageSquare },
+      { label: { ar: 'حجز المواعيد', en: 'Bookings' }, url: '/dashboard/bookings', icon: CalendarClock },
       { label: { ar: 'التقييمات', en: 'Reviews' }, url: '/dashboard/reviews', icon: Star },
       { label: { ar: 'العمليات', en: 'Operations' }, url: '/dashboard/operations', icon: Activity },
     ],
