@@ -7,6 +7,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
+import { useGlobalSearch } from "@/hooks/useGlobalSearch";
 
 export const Navbar = () => {
   const { t, language, setLanguage, isRTL } = useLanguage();
