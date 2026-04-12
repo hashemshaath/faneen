@@ -10,6 +10,7 @@ import { ThemeProvider } from "@/components/ThemeToggle";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { AppDirectionShell } from "@/components/ui/app-direction-shell";
+import { RouteScrollToTop } from "@/components/RouteScrollToTop";
 import Index from "./pages/Index";
 
 function lazyRetry<T extends ComponentType<any>>(
@@ -101,6 +102,7 @@ const PageLoader = () => (
 const AppRoutes = () => (
   <BrowserRouter>
     <AppDirectionShell>
+      <RouteScrollToTop />
       <Suspense fallback={<PageLoader />}>
         <Routes>
           <Route path="/" element={<Index />} />
