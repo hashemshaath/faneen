@@ -1362,10 +1362,34 @@ const ContractDetail = () => {
                       </tbody>
                       <tfoot>
                         <tr className="border-t-2 border-border bg-muted/30 font-heading font-bold text-xs">
-                          <td colSpan={5} className="p-2.5">{isRTL ? 'الإجمالي' : 'Total'} ({measurementsTotals.count} {isRTL ? 'قطعة' : 'pcs'})</td>
+                          <td colSpan={5} className="p-2.5">{isRTL ? 'المجموع الفرعي' : 'Subtotal'} ({measurementsTotals.count} {isRTL ? 'قطعة' : 'pcs'})</td>
                           <td className="p-2.5" dir="ltr">{measurementsTotals.totalArea.toFixed(3)}</td>
                           <td className="p-2.5"></td>
-                          <td className="p-2.5 text-accent" dir="ltr">{measurementsTotals.totalCost.toLocaleString()}</td>
+                          <td className="p-2.5" dir="ltr">{measurementsTotals.totalCost.toLocaleString()}</td>
+                          <td className="p-2.5"></td>
+                          {!isContractLocked && <td className="p-2.5"></td>}
+                        </tr>
+                        <tr className="border-t border-border bg-amber-50/50 dark:bg-amber-950/10 font-heading text-xs">
+                          <td colSpan={5} className="p-2.5 flex items-center gap-1">
+                            <Percent className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+                            <span className="text-amber-700 dark:text-amber-400">{isRTL ? `ضريبة القيمة المضافة (${vatRate}%)` : `VAT (${vatRate}%)`}</span>
+                            {vatInclusive && <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-[8px] ms-1">{isRTL ? 'مشمولة' : 'Included'}</Badge>}
+                          </td>
+                          <td className="p-2.5" dir="ltr"></td>
+                          <td className="p-2.5"></td>
+                          <td className="p-2.5 text-amber-600 dark:text-amber-400 font-semibold" dir="ltr">
+                            {(vatInclusive ? measurementsTotals.totalCost * vatRate / (100 + vatRate) : measurementsTotals.totalCost * vatRate / 100).toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                          </td>
+                          <td className="p-2.5"></td>
+                          {!isContractLocked && <td className="p-2.5"></td>}
+                        </tr>
+                        <tr className="border-t border-border bg-accent/5 font-heading font-bold text-xs">
+                          <td colSpan={5} className="p-2.5 text-accent">{isRTL ? 'الإجمالي شامل الضريبة' : 'Grand Total (incl. VAT)'}</td>
+                          <td className="p-2.5" dir="ltr"></td>
+                          <td className="p-2.5"></td>
+                          <td className="p-2.5 text-accent text-sm" dir="ltr">
+                            {(vatInclusive ? measurementsTotals.totalCost : measurementsTotals.totalCost + measurementsTotals.totalCost * vatRate / 100).toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                          </td>
                           <td className="p-2.5"></td>
                           {!isContractLocked && <td className="p-2.5"></td>}
                         </tr>
