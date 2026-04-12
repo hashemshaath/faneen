@@ -68,6 +68,17 @@ const SearchPage = () => {
       : (language === 'ar' ? 'ابحث عن أفضل مصانع ومحلات الألمنيوم والحديد والزجاج والخشب. قارن الأسعار والتقييمات واختر المزود المناسب.' : 'Find the best aluminum, iron, glass and wood factories and shops.'),
     noindex: !!searchQuery,
   });
+
+  // Search page BreadcrumbList
+  useJsonLd(useMemo(() => ({
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'فنيين', item: 'https://faneen.com' },
+      { '@type': 'ListItem', position: 2, name: language === 'ar' ? 'البحث' : 'Search', item: 'https://faneen.com/search' },
+    ],
+  }), [language]));
+
   const isMobile = useIsMobile();
 
   const { data: categories } = useCategories();
