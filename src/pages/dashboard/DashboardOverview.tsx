@@ -11,7 +11,7 @@ import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
-  Wrench, Image, Star, FileText, Shield, TrendingUp, Eye,
+  Wrench, Image, Star, FileText, Shield, TrendingUp, Eye, Mail,
   DollarSign, Plus, Send, BarChart3, ArrowUpRight, Activity,
   MessageSquare, Crown, Users, Building2, Newspaper, CreditCard,
   Bookmark, FolderOpen, Bell, Clock, CheckCircle2, AlertCircle,
