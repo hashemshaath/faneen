@@ -1375,93 +1375,99 @@ const AdminBusinesses = () => {
           </div>
         ) : (
           /* ─── Cards View ─── */
-          <div className="space-y-2">
+          <div className="space-y-3">
             {filtered.map((biz: any, idx: number) => {
               const tierInfo = tiers.find(t => t.value === biz.membership_tier) || tiers[0];
               const hasContract = contractBusinessIds.includes(biz.id);
               const svcCount = allServices.filter((s: any) => s.business_id === biz.id).length;
               return (
-                <Card key={biz.id}
-                  className={`border-border/40 hover:border-primary/20 hover:shadow-sm transition-all group animate-card-slide-up ${!biz.is_active ? 'opacity-60 border-destructive/20' : ''}`}
+                <div key={biz.id}
+                  className={`group relative rounded-2xl border bg-card transition-all duration-200 hover:shadow-md
+                    ${!biz.is_active ? 'opacity-60 border-destructive/40' : 'border-border/30 hover:border-primary/20'}`}
                   style={{ animationDelay: `${idx * 0.03}s` }}>
-                  <CardContent className="p-3.5">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <Avatar className="w-12 h-12 shrink-0 border-2 border-border/50 shadow-sm">
-                          <AvatarImage src={biz.logo_url || undefined} />
-                          <AvatarFallback className="bg-primary/5 text-primary font-bold text-sm">
-                            {biz.name_ar?.charAt(0)}
-                          </AvatarFallback>
-                        </Avatar>
+                  <div className="p-4">
+                    <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+                      <div className="flex items-start gap-3 flex-1 min-w-0">
+                        <div className="relative">
+                          <Avatar className="w-12 h-12 shrink-0 ring-2 ring-border/10">
+                            <AvatarImage src={biz.logo_url || undefined} />
+                            <AvatarFallback className="bg-gradient-to-br from-accent/20 to-primary/10 text-accent font-bold text-sm">
+                              {biz.name_ar?.charAt(0)}
+                            </AvatarFallback>
+                          </Avatar>
+                          {biz.is_verified && (
+                            <div className="absolute -bottom-1 -end-1 w-5 h-5 rounded-full bg-blue-500/15 flex items-center justify-center ring-2 ring-card">
+                              <CheckCircle className="w-3 h-3 text-blue-500" />
+                            </div>
+                          )}
+                        </div>
                         <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-1.5 mb-0.5">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <h3 className="font-heading font-bold text-sm truncate">
                               {language === 'ar' ? biz.name_ar : (biz.name_en || biz.name_ar)}
                             </h3>
-                            {biz.is_verified && (
-                              <span className="shrink-0 p-0.5 rounded-full bg-blue-500/10">
-                                <CheckCircle className="w-3 h-3 text-blue-500" />
-                              </span>
-                            )}
-                            {!biz.is_active && <Badge variant="destructive" className="text-[8px] h-4">{isRTL ? 'معطل' : 'Disabled'}</Badge>}
-                            {hasContract && <Badge variant="outline" className="text-[8px] h-4 gap-0.5"><FileText className="w-2 h-2" />{isRTL ? 'عقود' : 'Contracts'}</Badge>}
+                            {!biz.is_active && <Badge variant="destructive" className="text-[9px] gap-0.5 px-1.5 py-0"><Ban className="w-2.5 h-2.5" />{isRTL ? 'معطل' : 'Disabled'}</Badge>}
+                            {hasContract && <Badge variant="outline" className="text-[9px] gap-0.5 px-1.5 py-0"><FileText className="w-2.5 h-2.5" />{isRTL ? 'عقود' : 'Contracts'}</Badge>}
                           </div>
-                          <div className="flex items-center gap-2 text-[10px] text-muted-foreground flex-wrap">
-                            <span className="font-mono">@{biz.username}</span>
-                            <Badge variant="outline" className="text-[9px] h-4 font-mono">{biz.ref_id}</Badge>
-                            <Badge className={`text-[9px] h-4 ${tierInfo.color} border-0`}>
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
+                            <span className="text-[11px] text-muted-foreground font-mono">@{biz.username}</span>
+                            <span className="text-[11px] text-muted-foreground font-mono">{biz.ref_id}</span>
+                            {biz.phone && <span className="flex items-center gap-1 text-[11px] text-muted-foreground" dir="ltr"><Phone className="w-3 h-3 shrink-0" />{biz.phone}</span>}
+                          </div>
+                          <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                            <Badge className={`${tierInfo.color} text-[10px] border px-1.5 py-0`}>
                               {tierInfo.icon} {language === 'ar' ? tierInfo.label_ar : tierInfo.label_en}
                             </Badge>
-                            <span className="flex items-center gap-0.5">
+                            <span className="flex items-center gap-0.5 text-[11px] text-muted-foreground">
                               <Star className="w-3 h-3 text-accent fill-accent" />
                               {biz.rating_avg} ({biz.rating_count})
                             </span>
                             {svcCount > 0 && (
-                              <span className="flex items-center gap-0.5">
+                              <Badge variant="outline" className="text-[10px] gap-0.5 px-1.5 py-0">
                                 <Package className="w-2.5 h-2.5" /> {svcCount} {isRTL ? 'خدمة' : 'services'}
-                              </span>
+                              </Badge>
                             )}
-                            {biz.phone && <span className="flex items-center gap-0.5"><Phone className="w-2.5 h-2.5" />{biz.phone}</span>}
                           </div>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-1.5 flex-wrap shrink-0">
+                      <div className="flex items-center gap-1.5 flex-wrap sm:flex-nowrap shrink-0">
                         <Select value={biz.membership_tier} onValueChange={tier => tierMutation.mutate({ id: biz.id, tier })}>
-                          <SelectTrigger className="h-7 text-[10px] w-24 border-dashed"><SelectValue /></SelectTrigger>
-                          <SelectContent>
+                          <SelectTrigger className="h-8 text-xs w-28 border-dashed rounded-xl"><SelectValue /></SelectTrigger>
+                          <SelectContent className="rounded-xl">
                             {tiers.map(t => <SelectItem key={t.value} value={t.value}>{t.icon} {language === 'ar' ? t.label_ar : t.label_en}</SelectItem>)}
                           </SelectContent>
                         </Select>
 
-                        <Button variant={biz.is_verified ? 'default' : 'outline'} size="sm" className="h-7 text-[10px] gap-1 px-2"
+                        <Button variant={biz.is_verified ? 'default' : 'outline'} size="sm" className="h-8 text-xs gap-1.5 rounded-xl"
                           onClick={() => toggleMutation.mutate({ id: biz.id, field: 'is_verified', value: !biz.is_verified })}>
                           {biz.is_verified ? <CheckCircle className="w-3 h-3" /> : <Shield className="w-3 h-3" />}
                           {biz.is_verified ? (isRTL ? 'موثق' : 'Verified') : (isRTL ? 'توثيق' : 'Verify')}
                         </Button>
 
-                        <Button variant={biz.is_active ? 'outline' : 'destructive'} size="sm" className="h-7 text-[10px] gap-1 px-2"
+                        <Button variant="outline" size="sm"
+                          className={`h-8 text-xs gap-1.5 rounded-xl ${!biz.is_active ? 'text-emerald-600 border-emerald-200' : 'text-amber-600 border-amber-200'}`}
                           onClick={() => toggleMutation.mutate({ id: biz.id, field: 'is_active', value: !biz.is_active })}>
                           {biz.is_active ? <Ban className="w-3 h-3" /> : <CheckCircle className="w-3 h-3" />}
                           {biz.is_active ? (isRTL ? 'تعطيل' : 'Disable') : (isRTL ? 'تفعيل' : 'Enable')}
                         </Button>
 
-                        <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1 px-2"
+                        <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 rounded-xl"
                           onClick={() => openServices(biz.id)}>
                           <Package className="w-3 h-3" /> {isRTL ? 'خدمات' : 'Services'}
                         </Button>
 
-                        <Button variant="outline" size="sm" className="h-7 w-7 p-0" onClick={() => openEdit(biz)}>
-                          <Edit className="w-3 h-3" />
+                        <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs rounded-xl" onClick={() => openEdit(biz)}>
+                          <Edit className="w-3 h-3" />{isRTL ? 'تعديل' : 'Edit'}
                         </Button>
 
-                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" asChild>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-xl" asChild>
                           <Link to={`/${biz.username}`}><Eye className="w-3 h-3" /></Link>
                         </Button>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               );
             })}
           </div>
