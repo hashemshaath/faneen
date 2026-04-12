@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback, useTransition } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -13,11 +13,15 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import {
   Users, Search, Shield, ShieldCheck, ShieldAlert, UserPlus, Trash2,
   Mail, Phone, Calendar, Crown, Loader2, Pencil, Ban, UserX, Download,
   KeyRound, Send, Lock, Eye, EyeOff, X, AlertTriangle, Check,
+  LayoutGrid, LayoutList, Activity, TrendingUp, UserCheck, Filter,
+  Hash, Clock, Sparkles,
 } from 'lucide-react';
 import type { Tables } from '@/integrations/supabase/types';
 
@@ -25,49 +29,238 @@ type Profile = Tables<'profiles'>;
 type UserRole = Tables<'user_roles'>;
 
 const roleConfig = {
-  super_admin: { icon: ShieldAlert, color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400', labelAr: 'مشرف أعلى', labelEn: 'Super Admin' },
-  admin: { icon: Crown, color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400', labelAr: 'مشرف', labelEn: 'Admin' },
-  moderator: { icon: ShieldCheck, color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400', labelAr: 'مشرف محتوى', labelEn: 'Moderator' },
-  user: { icon: Users, color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400', labelAr: 'مستخدم', labelEn: 'User' },
+  super_admin: { icon: ShieldAlert, gradient: 'from-purple-500/15 to-purple-500/5', iconBg: 'bg-purple-500/15 text-purple-600 dark:text-purple-400', badge: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 border-purple-200 dark:border-purple-800', labelAr: 'مشرف أعلى', labelEn: 'Super Admin' },
+  admin: { icon: Crown, gradient: 'from-red-500/15 to-red-500/5', iconBg: 'bg-red-500/15 text-red-600 dark:text-red-400', badge: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800', labelAr: 'مشرف', labelEn: 'Admin' },
+  moderator: { icon: ShieldCheck, gradient: 'from-amber-500/15 to-amber-500/5', iconBg: 'bg-amber-500/15 text-amber-600 dark:text-amber-400', badge: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800', labelAr: 'مشرف محتوى', labelEn: 'Moderator' },
+  user: { icon: Users, gradient: 'from-blue-500/15 to-blue-500/5', iconBg: 'bg-blue-500/15 text-blue-600 dark:text-blue-400', badge: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-800', labelAr: 'مستخدم', labelEn: 'User' },
 };
 
 const tierConfig = {
-  free: { labelAr: 'مجاني', labelEn: 'Free', color: 'bg-muted text-muted-foreground' },
-  basic: { labelAr: 'أساسي', labelEn: 'Basic', color: 'bg-blue-100 text-blue-700' },
-  premium: { labelAr: 'مميز', labelEn: 'Premium', color: 'bg-gold/20 text-gold' },
-  enterprise: { labelAr: 'مؤسسات', labelEn: 'Enterprise', color: 'bg-purple-100 text-purple-700' },
+  free: { labelAr: 'مجاني', labelEn: 'Free', color: 'bg-muted text-muted-foreground border-border' },
+  basic: { labelAr: 'أساسي', labelEn: 'Basic', color: 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400 border-blue-200 dark:border-blue-800' },
+  premium: { labelAr: 'مميز', labelEn: 'Premium', color: 'bg-accent/10 text-accent border-accent/30' },
+  enterprise: { labelAr: 'مؤسسات', labelEn: 'Enterprise', color: 'bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400 border-purple-200 dark:border-purple-800' },
 };
 
 const accountTypeConfig = {
-  individual: { labelAr: 'فرد', labelEn: 'Individual' },
-  business: { labelAr: 'أعمال', labelEn: 'Business' },
-  company: { labelAr: 'شركة', labelEn: 'Company' },
+  individual: { labelAr: 'فرد', labelEn: 'Individual', icon: '👤' },
+  business: { labelAr: 'أعمال', labelEn: 'Business', icon: '🏢' },
+  company: { labelAr: 'شركة', labelEn: 'Company', icon: '🏗️' },
 };
 
-// ─── Inline panel type ───
 type ActivePanel =
   | null
   | { type: 'edit'; profile: Profile }
   | { type: 'password'; userId: string; userName: string }
   | { type: 'delete'; userId: string; userName: string };
 
+/* ─── Stat Card ─── */
+const StatCard = React.memo(({ icon: Icon, label, value, gradient, iconBg, percentage }: {
+  icon: any; label: string; value: number; gradient: string; iconBg: string; percentage?: number;
+}) => (
+  <div className={`relative overflow-hidden rounded-2xl border border-border/30 bg-gradient-to-br ${gradient} p-4 transition-all hover:shadow-md group`}>
+    <div className="flex items-center gap-3">
+      <div className={`w-10 h-10 rounded-xl ${iconBg} flex items-center justify-center transition-transform group-hover:scale-110`}>
+        <Icon className="w-5 h-5" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-2xl font-bold font-heading leading-none">{value}</p>
+        <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{label}</p>
+      </div>
+    </div>
+    {percentage !== undefined && (
+      <div className="mt-2.5">
+        <Progress value={percentage} className="h-1.5" />
+      </div>
+    )}
+  </div>
+));
+StatCard.displayName = 'StatCard';
+
+/* ─── User Card (memo) ─── */
+const UserCard = React.memo(({ profile, roles, isCurrentUser, canManageUser, isSuperAdmin, isRTL, language,
+  onEdit, onPassword, onToggleBan, onDelete, onAddRole, onRemoveRole, addingRoleFor, selectedRole, setSelectedRole, addRoleMutation, setAddingRoleFor,
+}: any) => {
+  const tier = tierConfig[profile.membership_tier as keyof typeof tierConfig] || tierConfig.free;
+  const accType = accountTypeConfig[profile.account_type as keyof typeof accountTypeConfig] || accountTypeConfig.individual;
+  const createdDate = new Date(profile.created_at).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en', { year: 'numeric', month: 'short', day: 'numeric' });
+  const isBanned = (profile as any).is_banned;
+  const highestRole = roles.length > 0
+    ? roles.reduce((best: any, r: any) => {
+        const order = ['super_admin', 'admin', 'moderator', 'user'];
+        return order.indexOf(r.role) < order.indexOf(best.role) ? r : best;
+      })
+    : null;
+  const highestCfg = highestRole ? roleConfig[highestRole.role as keyof typeof roleConfig] : null;
+
+  return (
+    <div className={`group relative rounded-2xl border bg-card transition-all duration-200 hover:shadow-md
+      ${isCurrentUser ? 'border-accent/40 ring-1 ring-accent/20' : 'border-border/30'}
+      ${isBanned ? 'opacity-60 border-destructive/40' : ''}`}>
+      <div className="p-4">
+        <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+          {/* Avatar & basic info */}
+          <div className="flex items-start gap-3 flex-1 min-w-0">
+            <div className="relative">
+              <Avatar className={`w-12 h-12 shrink-0 ring-2 ${isCurrentUser ? 'ring-accent/30' : 'ring-border/10'}`}>
+                <AvatarImage src={profile.avatar_url || undefined} />
+                <AvatarFallback className="bg-gradient-to-br from-accent/20 to-primary/10 text-accent font-bold text-sm">
+                  {(profile.full_name || '?').charAt(0)}
+                </AvatarFallback>
+              </Avatar>
+              {highestCfg && (
+                <div className={`absolute -bottom-1 -end-1 w-5 h-5 rounded-full ${highestCfg.iconBg} flex items-center justify-center ring-2 ring-card`}>
+                  <highestCfg.icon className="w-2.5 h-2.5" />
+                </div>
+              )}
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="font-heading font-bold text-foreground truncate text-sm">
+                  {profile.full_name || (isRTL ? 'بدون اسم' : 'No name')}
+                </h3>
+                {isCurrentUser && (
+                  <Badge variant="outline" className="text-[9px] border-accent text-accent px-1.5 py-0">{isRTL ? 'أنت' : 'You'}</Badge>
+                )}
+                {isBanned && (
+                  <Badge variant="destructive" className="text-[9px] gap-0.5 px-1.5 py-0"><Ban className="w-2.5 h-2.5" />{isRTL ? 'معطّل' : 'Disabled'}</Badge>
+                )}
+              </div>
+
+              {/* Contact info */}
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
+                {profile.email && (
+                  <span className="flex items-center gap-1 text-[11px] text-muted-foreground truncate max-w-[200px]">
+                    <Mail className="w-3 h-3 shrink-0" /> {profile.email}
+                  </span>
+                )}
+                {profile.phone && (
+                  <span className="flex items-center gap-1 text-[11px] text-muted-foreground" dir="ltr">
+                    <Phone className="w-3 h-3 shrink-0" /> {profile.phone}
+                  </span>
+                )}
+                <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                  <Calendar className="w-3 h-3 shrink-0" /> {createdDate}
+                </span>
+              </div>
+
+              {/* Badges row */}
+              <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                <Badge className={`${tier.color} text-[10px] border px-1.5 py-0`}>{isRTL ? tier.labelAr : tier.labelEn}</Badge>
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0 gap-0.5">
+                  <span>{accType.icon}</span> {isRTL ? accType.labelAr : accType.labelEn}
+                </Badge>
+                {profile.account_number && (
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 gap-0.5 font-mono">
+                    <Hash className="w-2.5 h-2.5" />{profile.account_number}
+                  </Badge>
+                )}
+                {/* Role badges */}
+                {roles.map((r: any) => {
+                  const cfg = roleConfig[r.role as keyof typeof roleConfig] || roleConfig.user;
+                  const RoleIcon = cfg.icon;
+                  return (
+                    <div key={r.id} className="flex items-center">
+                      <Badge className={`${cfg.badge} gap-0.5 text-[10px] border px-1.5 py-0`}>
+                        <RoleIcon className="w-2.5 h-2.5" />{isRTL ? cfg.labelAr : cfg.labelEn}
+                      </Badge>
+                      {!isCurrentUser && isSuperAdmin && (
+                        <button onClick={() => onRemoveRole(r.id)} className="ms-0.5 p-0.5 rounded hover:bg-destructive/10 text-destructive/60 hover:text-destructive transition-colors">
+                          <X className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+                {roles.length === 0 && <span className="text-[10px] text-muted-foreground">{isRTL ? 'بدون صلاحيات' : 'No roles'}</span>}
+              </div>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center gap-1.5 flex-wrap sm:flex-nowrap shrink-0">
+            <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs rounded-xl" onClick={() => onEdit(profile)}>
+              <Pencil className="w-3 h-3" />{isRTL ? 'تعديل' : 'Edit'}
+            </Button>
+            {canManageUser && (
+              <>
+                {isSuperAdmin && (
+                  <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs rounded-xl"
+                    onClick={() => onPassword(profile)}>
+                    <KeyRound className="w-3 h-3" />{isRTL ? 'كلمة المرور' : 'Password'}
+                  </Button>
+                )}
+                <Button variant="outline" size="sm"
+                  className={`h-8 gap-1.5 text-xs rounded-xl ${isBanned ? 'text-emerald-600 hover:text-emerald-700 border-emerald-200' : 'text-amber-600 hover:text-amber-700 border-amber-200'}`}
+                  onClick={() => onToggleBan(profile)}>
+                  {isBanned ? <UserCheck className="w-3 h-3" /> : <Ban className="w-3 h-3" />}
+                  {isBanned ? (isRTL ? 'تفعيل' : 'Enable') : (isRTL ? 'تعطيل' : 'Disable')}
+                </Button>
+                <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs rounded-xl text-destructive hover:text-destructive border-destructive/30"
+                  onClick={() => onDelete(profile)}>
+                  <UserX className="w-3 h-3" />{isRTL ? 'حذف' : 'Delete'}
+                </Button>
+              </>
+            )}
+            {/* Add role inline */}
+            {isSuperAdmin && (addingRoleFor === profile.user_id ? (
+              <div className="flex items-center gap-1">
+                <Select value={selectedRole} onValueChange={setSelectedRole}>
+                  <SelectTrigger className="h-8 w-28 text-xs rounded-xl"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="super_admin">{isRTL ? 'مشرف أعلى' : 'Super Admin'}</SelectItem>
+                    <SelectItem value="admin">{isRTL ? 'مشرف' : 'Admin'}</SelectItem>
+                    <SelectItem value="moderator">{isRTL ? 'مشرف محتوى' : 'Moderator'}</SelectItem>
+                    <SelectItem value="user">{isRTL ? 'مستخدم' : 'User'}</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button size="sm" className="h-8 w-8 p-0 rounded-xl"
+                  onClick={() => onAddRole(profile.user_id)} disabled={addRoleMutation.isPending}>
+                  {addRoleMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
+                </Button>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-xl" onClick={() => setAddingRoleFor(null)}>
+                  <X className="w-3 h-3" />
+                </Button>
+              </div>
+            ) : (
+              <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs rounded-xl"
+                onClick={() => { setAddingRoleFor(profile.user_id); setSelectedRole('user'); }}>
+                <UserPlus className="w-3 h-3" />{isRTL ? 'صلاحية' : 'Role'}
+              </Button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+});
+UserCard.displayName = 'UserCard';
+
+/* ─── Main Component ─── */
 const AdminUsers = () => {
   const { isRTL, language } = useLanguage();
   const { user, isSuperAdmin } = useAuth();
   const queryClient = useQueryClient();
+  const [, startTransition] = useTransition();
 
   const [searchTerm, setSearchTerm] = useState('');
+  const [deferredSearch, setDeferredSearch] = useState('');
   const [filterRole, setFilterRole] = useState<string>('all');
   const [addingRoleFor, setAddingRoleFor] = useState<string | null>(null);
   const [selectedRole, setSelectedRole] = useState<string>('user');
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
 
-  // Inline panel state (replaces all dialogs)
   const [activePanel, setActivePanel] = useState<ActivePanel>(null);
   const [editForm, setEditForm] = useState({ full_name: '', account_type: '', membership_tier: '', phone: '', email: '' });
   const [newPassword, setNewPassword] = useState('');
   const [showNewPassword, setShowNewPassword] = useState(false);
 
   const closePanel = () => { setActivePanel(null); setNewPassword(''); setShowNewPassword(false); };
+
+  const handleSearchChange = useCallback((val: string) => {
+    setSearchTerm(val);
+    startTransition(() => setDeferredSearch(val));
+  }, []);
 
   // ─── Queries ───
   const { data: profiles = [], isLoading: loadingProfiles } = useQuery({
@@ -201,14 +394,14 @@ const AdminUsers = () => {
     onError: () => toast.error(isRTL ? 'فشل حذف الحساب' : 'Failed to delete account'),
   });
 
-  // ─── Helpers ───
-  const openEdit = (profile: Profile) => {
+  // ─── Handlers ───
+  const openEdit = useCallback((profile: Profile) => {
     setActivePanel({ type: 'edit', profile });
     setEditForm({
       full_name: profile.full_name || '', account_type: profile.account_type || 'individual',
       membership_tier: profile.membership_tier || 'free', phone: profile.phone || '', email: profile.email || '',
     });
-  };
+  }, []);
 
   const handleSaveProfile = () => {
     if (activePanel?.type !== 'edit') return;
@@ -222,15 +415,36 @@ const AdminUsers = () => {
     });
   };
 
-  const roleMap = new Map<string, UserRole[]>();
-  userRoles.forEach(r => { const arr = roleMap.get(r.user_id) || []; arr.push(r); roleMap.set(r.user_id, arr); });
+  // ─── Computed ───
+  const roleMap = useMemo(() => {
+    const map = new Map<string, UserRole[]>();
+    userRoles.forEach(r => { const arr = map.get(r.user_id) || []; arr.push(r); map.set(r.user_id, arr); });
+    return map;
+  }, [userRoles]);
 
-  const filtered = profiles.filter(p => {
-    const matchesSearch = !searchTerm || p.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) || p.email?.toLowerCase().includes(searchTerm.toLowerCase()) || p.phone?.includes(searchTerm);
+  const filtered = useMemo(() => profiles.filter(p => {
+    const matchesSearch = !deferredSearch || p.full_name?.toLowerCase().includes(deferredSearch.toLowerCase()) || p.email?.toLowerCase().includes(deferredSearch.toLowerCase()) || p.phone?.includes(deferredSearch);
     const roles = roleMap.get(p.user_id) || [];
     const matchesRole = filterRole === 'all' || (filterRole === 'no_role' && roles.length === 0) || roles.some(r => r.role === filterRole);
     return matchesSearch && matchesRole;
-  });
+  }), [profiles, deferredSearch, filterRole, roleMap]);
+
+  const stats = useMemo(() => {
+    const totalUsers = profiles.length;
+    const superAdmins = userRoles.filter(r => r.role === 'super_admin').length;
+    const admins = userRoles.filter(r => r.role === 'admin').length;
+    const moderators = userRoles.filter(r => r.role === 'moderator').length;
+    const bannedCount = profiles.filter(p => (p as any).is_banned).length;
+    const tierDist = { free: 0, basic: 0, premium: 0, enterprise: 0 };
+    profiles.forEach(p => {
+      const t = p.membership_tier as keyof typeof tierDist;
+      if (t in tierDist) tierDist[t]++;
+    });
+    // Recent (last 7 days)
+    const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    const recentUsers = profiles.filter(p => new Date(p.created_at).getTime() > weekAgo).length;
+    return { totalUsers, superAdmins, admins, moderators, bannedCount, tierDist, recentUsers };
+  }, [profiles, userRoles]);
 
   const exportCSV = () => {
     const headers = ['Name', 'Email', 'Phone', 'Account Type', 'Membership', 'Roles', 'Banned', 'Created At'];
@@ -249,11 +463,6 @@ const AdminUsers = () => {
     toast.success(isRTL ? 'تم تصدير القائمة بنجاح' : 'Users exported successfully');
   };
 
-  const totalUsers = profiles.length;
-  const superAdmins = userRoles.filter(r => r.role === 'super_admin').length;
-  const admins = userRoles.filter(r => r.role === 'admin').length;
-  const moderators = userRoles.filter(r => r.role === 'moderator').length;
-
   if (!user) {
     return (
       <DashboardLayout>
@@ -267,140 +476,197 @@ const AdminUsers = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="font-heading font-bold text-2xl text-foreground flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
-              <Users className="w-5 h-5 text-accent" />
-            </div>
-            {isRTL ? 'إدارة المستخدمين والصلاحيات' : 'Users & Roles Management'}
-          </h1>
-          <p className="text-muted-foreground font-body mt-1">
-            {isRTL ? 'عرض وإدارة المستخدمين وتعيين الصلاحيات' : 'View and manage users and assign roles'}
-          </p>
-        </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[
-            { label: isRTL ? 'إجمالي المستخدمين' : 'Total Users', value: totalUsers, icon: Users, color: 'text-blue-500' },
-            { label: isRTL ? 'مشرف أعلى' : 'Super Admins', value: superAdmins, icon: ShieldAlert, color: 'text-purple-500' },
-            { label: isRTL ? 'المشرفين' : 'Admins', value: admins, icon: Crown, color: 'text-red-500' },
-            { label: isRTL ? 'مشرفي المحتوى' : 'Moderators', value: moderators, icon: ShieldCheck, color: 'text-amber-500' },
-          ].map((stat, i) => (
-            <Card key={i}>
-              <CardContent className="p-4 flex items-center gap-3">
-                <stat.icon className={`w-8 h-8 ${stat.color}`} />
-                <div>
-                  <p className="font-heading font-bold text-xl">{stat.value}</p>
-                  <p className="text-xs text-muted-foreground font-body">{stat.label}</p>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {/* Search & Filter */}
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex flex-col md:flex-row gap-3">
-              <div className="relative flex-1">
-                <Search className="absolute top-2.5 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
-                <Input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder={isRTL ? 'بحث بالاسم أو البريد أو الهاتف...' : 'Search by name, email, or phone...'} className="ps-10" />
+        {/* ─── Header ─── */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <h1 className="font-heading font-bold text-2xl text-foreground flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/20 to-primary/10 flex items-center justify-center shadow-sm">
+                <Users className="w-5 h-5 text-accent" />
               </div>
-              <Select value={filterRole} onValueChange={setFilterRole}>
-                <SelectTrigger className="w-full md:w-48"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{isRTL ? 'جميع المستخدمين' : 'All Users'}</SelectItem>
-                  <SelectItem value="super_admin">{isRTL ? 'مشرف أعلى' : 'Super Admin'}</SelectItem>
-                  <SelectItem value="admin">{isRTL ? 'المشرفين' : 'Admins'}</SelectItem>
-                  <SelectItem value="moderator">{isRTL ? 'مشرفي المحتوى' : 'Moderators'}</SelectItem>
-                  <SelectItem value="user">{isRTL ? 'مستخدم عادي' : 'Regular User'}</SelectItem>
-                  <SelectItem value="no_role">{isRTL ? 'بدون صلاحيات' : 'No Role'}</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button variant="outline" onClick={exportCSV} className="gap-2">
-                <Download className="w-4 h-4" />
-                {isRTL ? 'تصدير CSV' : 'Export CSV'}
-              </Button>
+              {isRTL ? 'إدارة المستخدمين والصلاحيات' : 'Users & Roles Management'}
+            </h1>
+            <p className="text-muted-foreground font-body mt-1 text-sm">
+              {isRTL ? `${stats.totalUsers} مستخدم مسجّل • ${stats.recentUsers} جديد هذا الأسبوع` : `${stats.totalUsers} registered users • ${stats.recentUsers} new this week`}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="flex bg-muted/50 border border-border/30 rounded-xl overflow-hidden p-0.5">
+              <button className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                onClick={() => setViewMode('list')}><LayoutList className="w-4 h-4" /></button>
+              <button className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                onClick={() => setViewMode('grid')}><LayoutGrid className="w-4 h-4" /></button>
             </div>
-          </CardContent>
-        </Card>
+            <Button variant="outline" onClick={exportCSV} className="gap-2 rounded-xl h-9">
+              <Download className="w-4 h-4" />
+              <span className="hidden sm:inline">{isRTL ? 'تصدير' : 'Export'}</span>
+            </Button>
+          </div>
+        </div>
+
+        {/* ─── Stats Grid ─── */}
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+          <StatCard icon={Users} label={isRTL ? 'إجمالي المستخدمين' : 'Total Users'} value={stats.totalUsers} gradient="from-primary/10 to-primary/5" iconBg="bg-primary/15 text-primary" />
+          <StatCard icon={ShieldAlert} label={isRTL ? 'مشرف أعلى' : 'Super Admins'} value={stats.superAdmins} gradient="from-purple-500/10 to-purple-500/5" iconBg="bg-purple-500/15 text-purple-600" percentage={stats.totalUsers ? (stats.superAdmins / stats.totalUsers) * 100 : 0} />
+          <StatCard icon={Crown} label={isRTL ? 'المشرفين' : 'Admins'} value={stats.admins} gradient="from-red-500/10 to-red-500/5" iconBg="bg-red-500/15 text-red-600" percentage={stats.totalUsers ? (stats.admins / stats.totalUsers) * 100 : 0} />
+          <StatCard icon={ShieldCheck} label={isRTL ? 'مشرفي المحتوى' : 'Moderators'} value={stats.moderators} gradient="from-amber-500/10 to-amber-500/5" iconBg="bg-amber-500/15 text-amber-600" percentage={stats.totalUsers ? (stats.moderators / stats.totalUsers) * 100 : 0} />
+          <StatCard icon={TrendingUp} label={isRTL ? 'جديد هذا الأسبوع' : 'New This Week'} value={stats.recentUsers} gradient="from-emerald-500/10 to-emerald-500/5" iconBg="bg-emerald-500/15 text-emerald-600" />
+        </div>
+
+        {/* ─── Membership Distribution ─── */}
+        <div className="rounded-2xl border border-border/30 bg-card p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-heading font-bold text-sm flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-accent" />
+              {isRTL ? 'توزيع العضويات' : 'Membership Distribution'}
+            </h3>
+            {stats.bannedCount > 0 && (
+              <Badge variant="destructive" className="text-[10px] gap-1">
+                <Ban className="w-3 h-3" /> {stats.bannedCount} {isRTL ? 'معطّل' : 'disabled'}
+              </Badge>
+            )}
+          </div>
+          <div className="flex h-3 rounded-full overflow-hidden bg-muted/50">
+            {Object.entries(stats.tierDist).map(([tier, count]) => {
+              if (count === 0) return null;
+              const pct = (count / stats.totalUsers) * 100;
+              const colors: Record<string, string> = { free: 'bg-muted-foreground/30', basic: 'bg-blue-500', premium: 'bg-accent', enterprise: 'bg-purple-500' };
+              return <div key={tier} className={`${colors[tier]} transition-all`} style={{ width: `${pct}%` }} title={`${tier}: ${count}`} />;
+            })}
+          </div>
+          <div className="flex flex-wrap gap-3 mt-2">
+            {Object.entries(stats.tierDist).map(([tier, count]) => {
+              const cfg = tierConfig[tier as keyof typeof tierConfig];
+              return (
+                <span key={tier} className="text-[11px] text-muted-foreground flex items-center gap-1">
+                  <span className={`w-2.5 h-2.5 rounded-full ${tier === 'free' ? 'bg-muted-foreground/30' : tier === 'basic' ? 'bg-blue-500' : tier === 'premium' ? 'bg-accent' : 'bg-purple-500'}`} />
+                  {isRTL ? cfg.labelAr : cfg.labelEn}: {count}
+                </span>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ─── Search & Filter ─── */}
+        <div className="rounded-2xl border border-border/30 bg-card p-4">
+          <div className="flex flex-col md:flex-row gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
+              <Input
+                value={searchTerm}
+                onChange={e => handleSearchChange(e.target.value)}
+                placeholder={isRTL ? 'بحث بالاسم أو البريد أو الهاتف...' : 'Search by name, email, or phone...'}
+                className="ps-10 h-10 rounded-xl bg-muted/30 border-border/20 focus:bg-background transition-colors"
+              />
+            </div>
+            <Select value={filterRole} onValueChange={setFilterRole}>
+              <SelectTrigger className="w-full md:w-48 h-10 rounded-xl">
+                <Filter className="w-4 h-4 me-2 text-muted-foreground" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl">
+                <SelectItem value="all">{isRTL ? 'جميع المستخدمين' : 'All Users'}</SelectItem>
+                <SelectItem value="super_admin">{isRTL ? 'مشرف أعلى' : 'Super Admin'}</SelectItem>
+                <SelectItem value="admin">{isRTL ? 'المشرفين' : 'Admins'}</SelectItem>
+                <SelectItem value="moderator">{isRTL ? 'مشرفي المحتوى' : 'Moderators'}</SelectItem>
+                <SelectItem value="user">{isRTL ? 'مستخدم عادي' : 'Regular User'}</SelectItem>
+                <SelectItem value="no_role">{isRTL ? 'بدون صلاحيات' : 'No Role'}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {/* Active filters */}
+          {(filterRole !== 'all' || deferredSearch) && (
+            <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/20">
+              <span className="text-[11px] text-muted-foreground">{isRTL ? 'النتائج:' : 'Results:'} {filtered.length}</span>
+              {filterRole !== 'all' && (
+                <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-lg" onClick={() => setFilterRole('all')}>
+                  {filterRole} <X className="w-2.5 h-2.5" />
+                </Badge>
+              )}
+              {deferredSearch && (
+                <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-lg" onClick={() => { setSearchTerm(''); setDeferredSearch(''); }}>
+                  "{deferredSearch}" <X className="w-2.5 h-2.5" />
+                </Badge>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* ═══ Inline Edit Panel ═══ */}
         {activePanel?.type === 'edit' && (
-          <Card className="border-accent/30 bg-accent/5">
-            <CardHeader className="flex flex-row items-center justify-between pb-4">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Pencil className="w-5 h-5 text-accent" />
+          <div className="rounded-2xl border border-accent/30 bg-gradient-to-r from-accent/5 to-transparent p-5 animate-in slide-in-from-top-2 duration-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-heading font-bold text-lg flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-accent/15 flex items-center justify-center">
+                  <Pencil className="w-4 h-4 text-accent" />
+                </div>
                 {isRTL ? 'تعديل بيانات المستخدم' : 'Edit User Profile'}
-              </CardTitle>
-              <Button variant="ghost" size="icon" onClick={closePanel}><X className="w-4 h-4" /></Button>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>{isRTL ? 'الاسم الكامل' : 'Full Name'}</Label>
-                  <Input value={editForm.full_name} onChange={e => setEditForm(p => ({ ...p, full_name: e.target.value }))} maxLength={100} />
-                </div>
-                <div className="space-y-2">
-                  <Label>{isRTL ? 'البريد الإلكتروني' : 'Email'}</Label>
-                  <Input type="email" value={editForm.email} onChange={e => setEditForm(p => ({ ...p, email: e.target.value }))} maxLength={255} />
-                </div>
-                <div className="space-y-2">
-                  <Label>{isRTL ? 'رقم الهاتف' : 'Phone'}</Label>
-                  <Input value={editForm.phone} onChange={e => setEditForm(p => ({ ...p, phone: e.target.value }))} dir="ltr" maxLength={20} />
-                </div>
-                <div className="space-y-2">
-                  <Label>{isRTL ? 'نوع الحساب' : 'Account Type'}</Label>
-                  <Select value={editForm.account_type} onValueChange={val => setEditForm(p => ({ ...p, account_type: val }))}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="individual">{isRTL ? 'فرد' : 'Individual'}</SelectItem>
-                      <SelectItem value="business">{isRTL ? 'أعمال' : 'Business'}</SelectItem>
-                      <SelectItem value="company">{isRTL ? 'شركة' : 'Company'}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>{isRTL ? 'مستوى العضوية' : 'Membership Tier'}</Label>
-                  <Select value={editForm.membership_tier} onValueChange={val => setEditForm(p => ({ ...p, membership_tier: val }))}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="free">{isRTL ? 'مجاني' : 'Free'}</SelectItem>
-                      <SelectItem value="basic">{isRTL ? 'أساسي' : 'Basic'}</SelectItem>
-                      <SelectItem value="premium">{isRTL ? 'مميز' : 'Premium'}</SelectItem>
-                      <SelectItem value="enterprise">{isRTL ? 'مؤسسات' : 'Enterprise'}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              </h3>
+              <Button variant="ghost" size="icon" onClick={closePanel} className="rounded-xl"><X className="w-4 h-4" /></Button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs">{isRTL ? 'الاسم الكامل' : 'Full Name'}</Label>
+                <Input value={editForm.full_name} onChange={e => setEditForm(p => ({ ...p, full_name: e.target.value }))} maxLength={100} className="h-10 rounded-xl" />
               </div>
-              <Separator />
-              <div className="flex items-center gap-2 justify-end">
-                <Button variant="outline" onClick={closePanel}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
-                <Button onClick={handleSaveProfile} disabled={updateProfileMutation.isPending}>
-                  {updateProfileMutation.isPending && <Loader2 className="w-4 h-4 animate-spin me-2" />}
-                  {isRTL ? 'حفظ التغييرات' : 'Save Changes'}
-                </Button>
+              <div className="space-y-1.5">
+                <Label className="text-xs">{isRTL ? 'البريد الإلكتروني' : 'Email'}</Label>
+                <Input type="email" value={editForm.email} onChange={e => setEditForm(p => ({ ...p, email: e.target.value }))} maxLength={255} className="h-10 rounded-xl" />
               </div>
-            </CardContent>
-          </Card>
+              <div className="space-y-1.5">
+                <Label className="text-xs">{isRTL ? 'رقم الهاتف' : 'Phone'}</Label>
+                <Input value={editForm.phone} onChange={e => setEditForm(p => ({ ...p, phone: e.target.value }))} dir="ltr" maxLength={20} className="h-10 rounded-xl" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">{isRTL ? 'نوع الحساب' : 'Account Type'}</Label>
+                <Select value={editForm.account_type} onValueChange={val => setEditForm(p => ({ ...p, account_type: val }))}>
+                  <SelectTrigger className="h-10 rounded-xl"><SelectValue /></SelectTrigger>
+                  <SelectContent className="rounded-xl">
+                    <SelectItem value="individual">{isRTL ? 'فرد' : 'Individual'}</SelectItem>
+                    <SelectItem value="business">{isRTL ? 'أعمال' : 'Business'}</SelectItem>
+                    <SelectItem value="company">{isRTL ? 'شركة' : 'Company'}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">{isRTL ? 'مستوى العضوية' : 'Membership Tier'}</Label>
+                <Select value={editForm.membership_tier} onValueChange={val => setEditForm(p => ({ ...p, membership_tier: val }))}>
+                  <SelectTrigger className="h-10 rounded-xl"><SelectValue /></SelectTrigger>
+                  <SelectContent className="rounded-xl">
+                    <SelectItem value="free">{isRTL ? 'مجاني' : 'Free'}</SelectItem>
+                    <SelectItem value="basic">{isRTL ? 'أساسي' : 'Basic'}</SelectItem>
+                    <SelectItem value="premium">{isRTL ? 'مميز' : 'Premium'}</SelectItem>
+                    <SelectItem value="enterprise">{isRTL ? 'مؤسسات' : 'Enterprise'}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <Separator className="my-4" />
+            <div className="flex items-center gap-2 justify-end">
+              <Button variant="outline" onClick={closePanel} className="rounded-xl">{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+              <Button onClick={handleSaveProfile} disabled={updateProfileMutation.isPending} className="rounded-xl gap-2">
+                {updateProfileMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+                {isRTL ? 'حفظ التغييرات' : 'Save Changes'}
+              </Button>
+            </div>
+          </div>
         )}
 
         {/* ═══ Inline Password Panel ═══ */}
         {activePanel?.type === 'password' && (
-          <Card className="border-accent/30 bg-accent/5">
-            <CardHeader className="flex flex-row items-center justify-between pb-4">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Lock className="w-5 h-5 text-accent" />
+          <div className="rounded-2xl border border-accent/30 bg-gradient-to-r from-accent/5 to-transparent p-5 animate-in slide-in-from-top-2 duration-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-heading font-bold text-lg flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-accent/15 flex items-center justify-center">
+                  <Lock className="w-4 h-4 text-accent" />
+                </div>
                 {isRTL ? 'تغيير كلمة المرور' : 'Change Password'}
                 <span className="text-sm font-normal text-muted-foreground">— {activePanel.userName}</span>
-              </CardTitle>
-              <Button variant="ghost" size="icon" onClick={closePanel}><X className="w-4 h-4" /></Button>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="max-w-md space-y-2">
-                <Label>{isRTL ? 'كلمة المرور الجديدة' : 'New Password'}</Label>
+              </h3>
+              <Button variant="ghost" size="icon" onClick={closePanel} className="rounded-xl"><X className="w-4 h-4" /></Button>
+            </div>
+            <div className="max-w-md space-y-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs">{isRTL ? 'كلمة المرور الجديدة' : 'New Password'}</Label>
                 <div className="relative">
                   <Input
                     type={showNewPassword ? 'text' : 'password'}
@@ -408,192 +674,106 @@ const AdminUsers = () => {
                     onChange={e => setNewPassword(e.target.value)}
                     placeholder={isRTL ? '8 أحرف على الأقل' : 'Min 8 characters'}
                     minLength={8}
-                    className="pe-10"
+                    className="pe-10 h-10 rounded-xl"
                   />
-                  <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute top-2.5 text-muted-foreground" style={{ [isRTL ? 'left' : 'right']: '10px' }}>
+                  <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute top-2.5 text-muted-foreground hover:text-foreground transition-colors" style={{ [isRTL ? 'left' : 'right']: '10px' }}>
                     {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <Button
                   onClick={() => changePasswordMutation.mutate({ targetUserId: activePanel.userId, password: newPassword })}
                   disabled={changePasswordMutation.isPending || newPassword.length < 8}
+                  className="rounded-xl gap-2"
                 >
-                  {changePasswordMutation.isPending && <Loader2 className="w-4 h-4 animate-spin me-2" />}
+                  {changePasswordMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
                   {isRTL ? 'تغيير كلمة المرور' : 'Change Password'}
                 </Button>
-                <Button variant="outline" onClick={() => sendResetLinkMutation.mutate(activePanel.userId)} disabled={sendResetLinkMutation.isPending} className="gap-1.5">
+                <Button variant="outline" onClick={() => sendResetLinkMutation.mutate(activePanel.userId)} disabled={sendResetLinkMutation.isPending} className="gap-1.5 rounded-xl">
                   <Send className="w-4 h-4" />
                   {isRTL ? 'إرسال رابط إعادة تعيين' : 'Send Reset Link'}
                 </Button>
-                <Button variant="ghost" onClick={closePanel}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+                <Button variant="ghost" onClick={closePanel} className="rounded-xl">{isRTL ? 'إلغاء' : 'Cancel'}</Button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
 
-        {/* ═══ Inline Delete Confirmation Panel ═══ */}
+        {/* ═══ Inline Delete Confirmation ═══ */}
         {activePanel?.type === 'delete' && (
-          <Card className="border-destructive/40 bg-destructive/5">
-            <CardHeader className="flex flex-row items-center justify-between pb-4">
-              <CardTitle className="flex items-center gap-2 text-lg text-destructive">
-                <AlertTriangle className="w-5 h-5" />
+          <div className="rounded-2xl border border-destructive/30 bg-gradient-to-r from-destructive/5 to-transparent p-5 animate-in slide-in-from-top-2 duration-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-heading font-bold text-lg flex items-center gap-2 text-destructive">
+                <div className="w-8 h-8 rounded-lg bg-destructive/15 flex items-center justify-center">
+                  <AlertTriangle className="w-4 h-4 text-destructive" />
+                </div>
                 {isRTL ? 'تأكيد حذف الحساب' : 'Confirm Account Deletion'}
-              </CardTitle>
-              <Button variant="ghost" size="icon" onClick={closePanel}><X className="w-4 h-4" /></Button>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                {isRTL
-                  ? `هل أنت متأكد من حذف حساب "${activePanel.userName}"؟ سيتم حذف جميع بيانات المستخدم نهائياً ولا يمكن التراجع عن هذا الإجراء.`
-                  : `Are you sure you want to delete "${activePanel.userName}"? All user data will be permanently removed and this action cannot be undone.`}
-              </p>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="destructive"
-                  onClick={() => deleteUserMutation.mutate(activePanel.userId)}
-                  disabled={deleteUserMutation.isPending}
-                >
-                  {deleteUserMutation.isPending && <Loader2 className="w-4 h-4 animate-spin me-2" />}
-                  {isRTL ? 'حذف نهائي' : 'Delete Permanently'}
-                </Button>
-                <Button variant="outline" onClick={closePanel}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
-              </div>
-            </CardContent>
-          </Card>
+              </h3>
+              <Button variant="ghost" size="icon" onClick={closePanel} className="rounded-xl"><X className="w-4 h-4" /></Button>
+            </div>
+            <p className="text-sm text-muted-foreground mb-4 max-w-lg">
+              {isRTL
+                ? `هل أنت متأكد من حذف حساب "${activePanel.userName}"؟ سيتم حذف جميع بيانات المستخدم نهائياً ولا يمكن التراجع عن هذا الإجراء.`
+                : `Are you sure you want to delete "${activePanel.userName}"? All user data will be permanently removed and this action cannot be undone.`}
+            </p>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="destructive"
+                onClick={() => deleteUserMutation.mutate(activePanel.userId)}
+                disabled={deleteUserMutation.isPending}
+                className="rounded-xl gap-2"
+              >
+                {deleteUserMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+                {isRTL ? 'حذف نهائي' : 'Delete Permanently'}
+              </Button>
+              <Button variant="outline" onClick={closePanel} className="rounded-xl">{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+            </div>
+          </div>
         )}
 
         {/* ═══ Users List ═══ */}
         {(loadingProfiles || loadingRoles) ? (
-          <div className="space-y-3">{[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-20 rounded-xl" />)}</div>
+          <div className="space-y-3">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-2xl" />)}</div>
         ) : filtered.length === 0 ? (
-          <Card>
-            <CardContent className="p-12 text-center">
-              <Users className="w-16 h-16 mx-auto text-muted-foreground/20 mb-4" />
-              <p className="text-muted-foreground font-body">{isRTL ? 'لا توجد نتائج' : 'No results'}</p>
-            </CardContent>
-          </Card>
+          <div className="rounded-2xl border border-border/30 bg-card p-12 text-center">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-accent/10 to-primary/10 flex items-center justify-center">
+              <Users className="w-8 h-8 text-accent/30" />
+            </div>
+            <p className="font-heading font-bold text-sm mb-1">{isRTL ? 'لا توجد نتائج' : 'No results found'}</p>
+            <p className="text-xs text-muted-foreground">{isRTL ? 'حاول تغيير معايير البحث' : 'Try changing your search criteria'}</p>
+          </div>
         ) : (
-          <div className="space-y-3">
+          <div className={viewMode === 'grid' ? 'grid grid-cols-1 lg:grid-cols-2 gap-3' : 'space-y-3'}>
             {filtered.map(profile => {
               const roles = roleMap.get(profile.user_id) || [];
-              const tier = tierConfig[profile.membership_tier as keyof typeof tierConfig] || tierConfig.free;
-              const accType = accountTypeConfig[profile.account_type as keyof typeof accountTypeConfig] || accountTypeConfig.individual;
-              const createdDate = new Date(profile.created_at).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en', { year: 'numeric', month: 'short', day: 'numeric' });
               const isCurrentUser = profile.user_id === user.id;
               const targetIsSuperAdmin = roles.some(r => r.role === 'super_admin');
               const targetIsAdmin = roles.some(r => r.role === 'admin' || r.role === 'super_admin');
               const canManageUser = !isCurrentUser && (isSuperAdmin || (!targetIsSuperAdmin && !targetIsAdmin));
 
               return (
-                <Card key={profile.id} className={`transition-colors ${isCurrentUser ? 'border-accent/40' : ''} ${(profile as any).is_banned ? 'opacity-60 border-destructive/40' : ''}`}>
-                  <CardContent className="p-4">
-                    <div className="flex flex-col md:flex-row md:items-center gap-4">
-                      {/* User info */}
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <Avatar className="w-12 h-12 shrink-0">
-                          <AvatarImage src={profile.avatar_url || undefined} />
-                          <AvatarFallback className="bg-accent/10 text-accent font-bold">
-                            {(profile.full_name || '?').charAt(0)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="font-heading font-bold text-foreground truncate">
-                              {profile.full_name || (isRTL ? 'بدون اسم' : 'No name')}
-                            </h3>
-                            {isCurrentUser && <Badge variant="outline" className="text-[10px] border-accent text-accent">{isRTL ? 'أنت' : 'You'}</Badge>}
-                            {(profile as any).is_banned && (
-                              <Badge variant="destructive" className="text-[10px] gap-1"><Ban className="w-3 h-3" />{isRTL ? 'معطّل' : 'Disabled'}</Badge>
-                            )}
-                            <Badge className={`${tier.color} text-[10px]`}>{isRTL ? tier.labelAr : tier.labelEn}</Badge>
-                          </div>
-                          <div className="flex flex-wrap items-center gap-3 mt-1 text-xs text-muted-foreground">
-                            {profile.email && <span className="flex items-center gap-1"><Mail className="w-3 h-3" /> {profile.email}</span>}
-                            {profile.phone && <span className="flex items-center gap-1" dir="ltr"><Phone className="w-3 h-3" /> {profile.phone}</span>}
-                            <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {createdDate}</span>
-                            <Badge variant="outline" className="text-[10px]">{isRTL ? accType.labelAr : accType.labelEn}</Badge>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Actions & Roles */}
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <Button variant="outline" size="sm" className="h-7 gap-1 text-xs" onClick={() => openEdit(profile)}>
-                          <Pencil className="w-3 h-3" />{isRTL ? 'تعديل' : 'Edit'}
-                        </Button>
-
-                        {canManageUser && (
-                          <>
-                            {isSuperAdmin && (
-                              <Button variant="outline" size="sm" className="h-7 gap-1 text-xs"
-                                onClick={() => setActivePanel({ type: 'password', userId: profile.user_id, userName: profile.full_name || '' })}>
-                                <KeyRound className="w-3 h-3" />{isRTL ? 'كلمة المرور' : 'Password'}
-                              </Button>
-                            )}
-                            <Button variant="outline" size="sm"
-                              className={`h-7 gap-1 text-xs ${(profile as any).is_banned ? 'text-green-600 hover:text-green-700' : 'text-amber-600 hover:text-amber-700'}`}
-                              onClick={() => toggleBanMutation.mutate({ profileId: profile.id, userId: profile.user_id, isBanned: !(profile as any).is_banned })}
-                              disabled={toggleBanMutation.isPending}>
-                              <Ban className="w-3 h-3" />
-                              {(profile as any).is_banned ? (isRTL ? 'تفعيل' : 'Enable') : (isRTL ? 'تعطيل' : 'Disable')}
-                            </Button>
-                            <Button variant="outline" size="sm" className="h-7 gap-1 text-xs text-destructive hover:text-destructive"
-                              onClick={() => setActivePanel({ type: 'delete', userId: profile.user_id, userName: profile.full_name || '' })}>
-                              <UserX className="w-3 h-3" />{isRTL ? 'حذف' : 'Delete'}
-                            </Button>
-                          </>
-                        )}
-
-                        {/* Roles badges */}
-                        {roles.length === 0 && <span className="text-xs text-muted-foreground">{isRTL ? 'بدون صلاحيات' : 'No roles'}</span>}
-                        {roles.map(r => {
-                          const cfg = roleConfig[r.role as keyof typeof roleConfig] || roleConfig.user;
-                          const RoleIcon = cfg.icon;
-                          return (
-                            <div key={r.id} className="flex items-center gap-1">
-                              <Badge className={`${cfg.color} gap-1 text-xs`}><RoleIcon className="w-3 h-3" />{isRTL ? cfg.labelAr : cfg.labelEn}</Badge>
-                              {!isCurrentUser && isSuperAdmin && (
-                                <Button variant="ghost" size="icon" className="w-6 h-6 text-destructive hover:text-destructive"
-                                  onClick={() => removeRoleMutation.mutate(r.id)} disabled={removeRoleMutation.isPending}>
-                                  <Trash2 className="w-3 h-3" />
-                                </Button>
-                              )}
-                            </div>
-                          );
-                        })}
-
-                        {/* Add role inline */}
-                        {isSuperAdmin && (addingRoleFor === profile.user_id ? (
-                          <div className="flex items-center gap-1.5">
-                            <Select value={selectedRole} onValueChange={setSelectedRole}>
-                              <SelectTrigger className="h-7 w-32 text-xs"><SelectValue /></SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="super_admin">{isRTL ? 'مشرف أعلى' : 'Super Admin'}</SelectItem>
-                                <SelectItem value="admin">{isRTL ? 'مشرف' : 'Admin'}</SelectItem>
-                                <SelectItem value="moderator">{isRTL ? 'مشرف محتوى' : 'Moderator'}</SelectItem>
-                                <SelectItem value="user">{isRTL ? 'مستخدم' : 'User'}</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <Button variant="default" size="sm" className="h-7 px-2 text-xs"
-                              onClick={() => addRoleMutation.mutate({ userId: profile.user_id, role: selectedRole })} disabled={addRoleMutation.isPending}>
-                              {addRoleMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
-                            </Button>
-                            <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => setAddingRoleFor(null)}>
-                              <X className="w-3 h-3" />
-                            </Button>
-                          </div>
-                        ) : (
-                          <Button variant="outline" size="sm" className="h-7 gap-1 text-xs"
-                            onClick={() => { setAddingRoleFor(profile.user_id); setSelectedRole('user'); }}>
-                            <UserPlus className="w-3 h-3" />{isRTL ? 'صلاحية' : 'Role'}
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                <UserCard
+                  key={profile.id}
+                  profile={profile}
+                  roles={roles}
+                  isCurrentUser={isCurrentUser}
+                  canManageUser={canManageUser}
+                  isSuperAdmin={isSuperAdmin}
+                  isRTL={isRTL}
+                  language={language}
+                  onEdit={openEdit}
+                  onPassword={(p: Profile) => setActivePanel({ type: 'password', userId: p.user_id, userName: p.full_name || '' })}
+                  onToggleBan={(p: Profile) => toggleBanMutation.mutate({ profileId: p.id, userId: p.user_id, isBanned: !(p as any).is_banned })}
+                  onDelete={(p: Profile) => setActivePanel({ type: 'delete', userId: p.user_id, userName: p.full_name || '' })}
+                  onAddRole={(userId: string) => addRoleMutation.mutate({ userId, role: selectedRole })}
+                  onRemoveRole={(roleId: string) => removeRoleMutation.mutate(roleId)}
+                  addingRoleFor={addingRoleFor}
+                  selectedRole={selectedRole}
+                  setSelectedRole={setSelectedRole}
+                  addRoleMutation={addRoleMutation}
+                  setAddingRoleFor={setAddingRoleFor}
+                />
               );
             })}
           </div>
