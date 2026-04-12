@@ -763,18 +763,22 @@ const AdminUsers = () => {
 
             {/* Show linked business in edit panel */}
             {(() => {
-              const biz = businessMap.get(activePanel.profile.user_id);
-              if (!biz) return null;
+              const bizList = businessMap.get(activePanel.profile.user_id) || [];
+              if (bizList.length === 0) return null;
               return (
                 <div className="mt-4 p-3 rounded-xl bg-muted/40 border border-border/30">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 mb-2">
                     <Building2 className="w-4 h-4 text-emerald-600" />
-                    <span className="text-xs font-bold">{isRTL ? 'الحساب التجاري المرتبط' : 'Linked Business Account'}</span>
+                    <span className="text-xs font-bold">{isRTL ? 'الحسابات التجارية المرتبطة' : 'Linked Business Accounts'} ({bizList.length})</span>
                   </div>
-                  <div className="flex items-center gap-3 mt-2 flex-wrap">
-                    <Badge variant="outline" className="font-mono text-xs gap-1"><Link2 className="w-3 h-3" />{biz.ref_id}</Badge>
-                    <span className="text-xs text-muted-foreground">{biz.name_ar}</span>
-                    <span className="text-xs text-muted-foreground">@{biz.username}</span>
+                  <div className="space-y-1.5">
+                    {bizList.map(biz => (
+                      <div key={biz.id} className="flex items-center gap-3 flex-wrap">
+                        <Badge variant="outline" className="font-mono text-xs gap-1"><Link2 className="w-3 h-3" />{biz.ref_id}</Badge>
+                        <span className="text-xs text-muted-foreground">{biz.name_ar}</span>
+                        <span className="text-xs text-muted-foreground">@{biz.username}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               );
