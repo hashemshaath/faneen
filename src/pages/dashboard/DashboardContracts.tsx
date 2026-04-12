@@ -623,6 +623,147 @@ const DashboardContracts = () => {
     },
   });
 
+  /* ── Maintenance Request Mutation ── */
+  const addMaintenanceMutation = useMutation({
+    mutationFn: async ({ contractId }: { contractId: string }) => {
+      const contract = contracts.find((c: any) => c.id === contractId);
+      if (!contract) throw new Error('Contract not found');
+      const { data: mainReq, error } = await supabase.from('maintenance_requests').insert({
+        contract_id: contractId, client_id: contract.client_id, provider_id: contract.provider_id,
+        title_ar: maintenanceForm.title_ar, description_ar: maintenanceForm.description_ar || null,
+        priority: maintenanceForm.priority as any,
+        scheduled_date: maintenanceForm.scheduled_date || null,
+      }).select('id').single();
+      if (error) throw error;
+      // Upload maintenance images as attachments
+      for (const file of maintenanceImages) {
+        const ext = file.name.split('.').pop();
+        const path = `maintenance/${mainReq.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+        const { error: upErr } = await supabase.storage.from('contract-attachments').upload(path, file);
+        if (!upErr) {
+          const { data: urlData } = supabase.storage.from('contract-attachments').getPublicUrl(path);
+          await supabase.from('contract_attachments').insert({
+            contract_id: contractId, user_id: user!.id, file_name: file.name,
+            file_url: urlData.publicUrl, file_type: 'image',
+          });
+        }
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard-contract-maintenance'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-contract-attachments'] });
+      setShowAddMaintenance(null);
+      setMaintenanceForm({ title_ar: '', description_ar: '', priority: 'normal', scheduled_date: '' });
+      setMaintenanceImages([]);
+      toast.success(isRTL ? 'تم إرسال طلب الصيانة' : 'Maintenance request submitted');
+    },
+    onError: (err: any) => toast.error(err.message),
+  });
+
+  /* ── Add Payment Mutation ── */
+  const addPaymentMutation = useMutation({
+    mutationFn: async ({ contractId }: { contractId: string }) => {
+      // Find or create installment plan
+      let { data: plan } = await supabase.from('installment_plans').select('id').eq('contract_id', contractId).maybeSingle();
+      if (!plan) {
+        const contract = contracts.find((c: any) => c.id === contractId);
+        const { data: newPlan, error: planErr } = await supabase.from('installment_plans').insert({
+          contract_id: contractId, total_amount: Number(contract?.total_amount || 0),
+          installment_amount: Number(paymentForm.amount), number_of_installments: 1,
+          start_date: paymentForm.due_date || new Date().toISOString().split('T')[0],
+        }).select('id').single();
+        if (planErr) throw planErr;
+        plan = newPlan;
+      }
+      const existing = allPayments.filter((p: any) => p.contract_id === contractId);
+      const { error } = await supabase.from('installment_payments').insert({
+        plan_id: plan!.id, installment_number: existing.length + 1,
+        amount: Number(paymentForm.amount), due_date: paymentForm.due_date,
+        notes: paymentForm.notes || null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard-contract-payments'] });
+      setShowAddPayment(null);
+      setPaymentForm({ amount: '', due_date: '', notes: '' });
+      toast.success(isRTL ? 'تمت إضافة الدفعة' : 'Payment added');
+    },
+    onError: (err: any) => toast.error(err.message),
+  });
+
+  /* ── Mark Payment as Paid ── */
+  const markPaidMutation = useMutation({
+    mutationFn: async ({ paymentId }: { paymentId: string }) => {
+      const { error } = await supabase.from('installment_payments').update({ status: 'paid', paid_at: new Date().toISOString() }).eq('id', paymentId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard-contract-payments'] });
+      toast.success(isRTL ? 'تم تسجيل الدفع' : 'Payment recorded');
+    },
+  });
+
+  /* ── Add Line Item Mutation ── */
+  const addLineItemMutation = useMutation({
+    mutationFn: async ({ contractId }: { contractId: string }) => {
+      const existing = allLineItems.filter((li: any) => li.contract_id === contractId);
+      const { error } = await supabase.from('contract_line_items').insert({
+        contract_id: contractId, name_ar: lineItemForm.name_ar,
+        description_ar: lineItemForm.description_ar || null,
+        quantity: Number(lineItemForm.quantity), unit_price: Number(lineItemForm.unit_price),
+        item_type: lineItemForm.item_type, sort_order: existing.length + 1,
+      });
+      if (error) throw error;
+      // Recalculate contract total: measurements + line items
+      const { data: freshMs } = await supabase.from('contract_measurements').select('total_cost').eq('contract_id', contractId);
+      const { data: freshLi } = await supabase.from('contract_line_items').select('total_cost').eq('contract_id', contractId);
+      const msTotal = (freshMs ?? []).reduce((s, m) => s + Number(m.total_cost || 0), 0);
+      const liTotal = (freshLi ?? []).reduce((s, l) => s + Number(l.total_cost || 0), 0);
+      const grandTotal = msTotal + liTotal;
+      if (grandTotal > 0) await supabase.from('contracts').update({ total_amount: grandTotal }).eq('id', contractId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard-contract-line-items'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-contracts'] });
+      setShowAddLineItem(null);
+      setLineItemForm({ name_ar: '', description_ar: '', quantity: '1', unit_price: '', item_type: 'service' });
+      toast.success(isRTL ? 'تمت إضافة البند وتحديث قيمة العقد' : 'Item added & total updated');
+    },
+    onError: (err: any) => toast.error(err.message),
+  });
+
+  /* ── Delete Line Item ── */
+  const deleteLineItemMutation = useMutation({
+    mutationFn: async ({ id, contractId }: { id: string; contractId: string }) => {
+      const { error } = await supabase.from('contract_line_items').delete().eq('id', id);
+      if (error) throw error;
+      const { data: freshMs } = await supabase.from('contract_measurements').select('total_cost').eq('contract_id', contractId);
+      const { data: freshLi } = await supabase.from('contract_line_items').select('total_cost').eq('contract_id', contractId);
+      const total = (freshMs ?? []).reduce((s, m) => s + Number(m.total_cost || 0), 0) + (freshLi ?? []).reduce((s, l) => s + Number(l.total_cost || 0), 0);
+      if (total > 0) await supabase.from('contracts').update({ total_amount: total }).eq('id', contractId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard-contract-line-items'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-contracts'] });
+      toast.success(isRTL ? 'تم حذف البند' : 'Item deleted');
+    },
+  });
+
+  /* ── Update Milestone Status ── */
+  const updateMilestoneMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      const update: any = { status };
+      if (status === 'completed') update.completed_at = new Date().toISOString();
+      const { error } = await supabase.from('contract_milestones').update(update).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard-milestones'] });
+      toast.success(isRTL ? 'تم تحديث المرحلة' : 'Milestone updated');
+    },
+  });
+
   const uploadAttachmentMutation = useMutation({
     mutationFn: async ({ contractId, file }: { contractId: string; file: File }) => {
       const ext = file.name.split('.').pop();
