@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Phone, Mail, Lock, Eye, EyeOff, Loader2, Shield } from 'lucide-react';
+import { Phone, Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { PhoneInput } from './PhoneInput';
 import { OtpInput } from './OtpInput';
 import { GoogleAuthButton } from './GoogleAuthButton';
@@ -52,7 +52,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
   });
 
   const handleEmailLogin = async () => {
-    // Validate email format first
     if (!email || !validateEmailField(email)) {
       if (!email) toast.error(isRTL ? 'يرجى إدخال البريد الإلكتروني' : 'Please enter your email');
       return;
@@ -106,21 +105,22 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-7">
       <div className="space-y-2">
-        <h2 className="font-heading font-bold text-2xl text-foreground">
+        <h2 className="font-heading font-bold text-3xl text-foreground tracking-tight">
           {isRTL ? 'مرحباً بعودتك' : 'Welcome back'}
         </h2>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-muted-foreground/80">
           {isRTL ? 'سجّل دخولك للوصول إلى حسابك' : 'Sign in to access your account'}
         </p>
       </div>
 
-      <div className="flex rounded-xl bg-muted/50 p-1 gap-1">
+      {/* Method toggle */}
+      <div className="flex rounded-2xl bg-muted/40 p-1 gap-1">
         <button
           onClick={() => { setLoginMethod('phone'); otp.resetOtp(); clearError('phone'); }}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${
-            loginMethod === 'phone' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+          className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium transition-all duration-300 ${
+            loginMethod === 'phone' ? 'bg-card text-foreground shadow-sm ring-1 ring-border/30' : 'text-muted-foreground hover:text-foreground'
           }`}
         >
           <Phone className="w-4 h-4" />
@@ -128,8 +128,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
         </button>
         <button
           onClick={() => { setLoginMethod('email'); otp.resetOtp(); clearError('email'); }}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${
-            loginMethod === 'email' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+          className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium transition-all duration-300 ${
+            loginMethod === 'email' ? 'bg-card text-foreground shadow-sm ring-1 ring-border/30' : 'text-muted-foreground hover:text-foreground'
           }`}
         >
           <Mail className="w-4 h-4" />
@@ -145,7 +145,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
             error={errors.phone}
             onBlur={() => phone && validatePhoneField(phone)}
           />
-          <Button onClick={handlePhoneSend} disabled={otp.loading || !!errors.phone} className="w-full h-11" variant="hero">
+          <Button onClick={handlePhoneSend} disabled={otp.loading || !!errors.phone} className="w-full h-12 rounded-xl text-sm font-semibold" variant="hero">
             {otp.loading && <Loader2 className="w-4 h-4 animate-spin me-2" />}
             {isRTL ? 'إرسال رمز التحقق' : 'Send Verification Code'}
           </Button>
@@ -163,16 +163,16 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
       {loginMethod === 'email' && (
         <div className="space-y-4 animate-fade-in">
           <div className="space-y-2">
-            <Label>{t('auth.email')}</Label>
+            <Label className="text-xs font-semibold">{t('auth.email')}</Label>
             <div className="relative">
-              <Mail className="absolute top-3 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
+              <Mail className="absolute top-3.5 text-muted-foreground/60 w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '14px' }} />
               <Input
                 type="email" placeholder="example@email.com" value={email}
                 onChange={(e) => { setEmail(e.target.value); clearError('email'); }}
                 onBlur={() => email && validateEmailField(email)}
                 dir="ltr"
-                style={{ paddingInlineStart: '40px' }}
-                className={errors.email ? 'border-destructive focus-visible:ring-destructive' : ''}
+                style={{ paddingInlineStart: '42px' }}
+                className={`h-12 rounded-xl ${errors.email ? 'border-destructive focus-visible:ring-destructive' : ''}`}
                 onKeyDown={(e) => e.key === 'Enter' && handleEmailLogin()}
               />
             </div>
@@ -180,20 +180,21 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
           </div>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label>{t('auth.password')}</Label>
-              <button onClick={onForgotPassword} className="text-xs text-accent hover:underline">{t('auth.forgot')}</button>
+              <Label className="text-xs font-semibold">{t('auth.password')}</Label>
+              <button onClick={onForgotPassword} className="text-xs text-accent hover:underline font-medium">{t('auth.forgot')}</button>
             </div>
             <div className="relative">
-              <Lock className="absolute top-3 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
+              <Lock className="absolute top-3.5 text-muted-foreground/60 w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '14px' }} />
               <Input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)}
-                style={{ paddingInlineStart: '40px', paddingInlineEnd: '40px' }}
+                className="h-12 rounded-xl"
+                style={{ paddingInlineStart: '42px', paddingInlineEnd: '42px' }}
                 onKeyDown={(e) => e.key === 'Enter' && handleEmailLogin()} />
-              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute top-3 text-muted-foreground hover:text-foreground transition-colors" style={{ [isRTL ? 'left' : 'right']: '12px' }}>
+              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute top-3.5 text-muted-foreground/60 hover:text-foreground transition-colors" style={{ [isRTL ? 'left' : 'right']: '14px' }}>
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
           </div>
-          <Button onClick={handleEmailLogin} disabled={loading || !!errors.email} className="w-full h-11" variant="hero">
+          <Button onClick={handleEmailLogin} disabled={loading || !!errors.email} className="w-full h-12 rounded-xl text-sm font-semibold" variant="hero">
             {loading && <Loader2 className="w-4 h-4 animate-spin me-2" />}
             {loading ? t('common.loading') : t('auth.login')}
           </Button>
@@ -203,16 +204,11 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
       <AuthDivider isRTL={isRTL} />
       <GoogleAuthButton onClick={handleGoogle} loading={googleLoading} isRTL={isRTL} />
 
-      <div className="text-center">
+      <div className="text-center pt-1">
         <p className="text-sm text-muted-foreground">
           {isRTL ? 'ليس لديك حساب؟' : "Don't have an account?"}{' '}
-          <button onClick={onSwitchToRegister} className="text-accent font-medium hover:underline">{t('auth.no_account')}</button>
+          <button onClick={onSwitchToRegister} className="text-accent font-semibold hover:underline">{t('auth.no_account')}</button>
         </p>
-      </div>
-
-      <div className="flex items-center justify-center gap-1.5 text-[10px] text-muted-foreground">
-        <Shield className="w-3 h-3" />
-        {isRTL ? 'اتصال آمن ومشفر' : 'Secure & encrypted connection'}
       </div>
     </div>
   );
