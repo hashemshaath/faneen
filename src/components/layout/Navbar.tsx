@@ -7,6 +7,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
+import { useGlobalSearch } from "@/hooks/useGlobalSearch";
 
 export const Navbar = () => {
   const { t, language, setLanguage, isRTL } = useLanguage();
@@ -16,6 +17,7 @@ export const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const menuRef = useRef<HTMLDivElement>(null);
+  useGlobalSearch();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10);

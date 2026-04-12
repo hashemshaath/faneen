@@ -55,6 +55,12 @@ const SearchPage = () => {
   const { data: entityTags } = useEntityTags();
 
   const [query, setQuery] = useState(searchParams.get('q') || '');
+  // Sync query state when URL changes externally (e.g. navigating from homepage)
+  React.useEffect(() => {
+    const urlQ = searchParams.get('q') || '';
+    if (urlQ !== query) setQuery(urlQ);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams.get('q')]);
   const debouncedQuery = useDebouncedValue(query, 300);
   const [viewMode, setViewMode] = useState<ViewMode>('split');
   const [showFilters, setShowFilters] = useState(true);

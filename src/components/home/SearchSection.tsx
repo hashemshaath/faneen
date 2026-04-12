@@ -1,14 +1,29 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useParallax } from "@/hooks/useParallax";
+import { addToSearchHistory } from "@/services/search";
 
 const tags = ['cat.aluminum', 'cat.iron', 'cat.glass', 'cat.wood', 'cat.accessories', 'cat.designers'] as const;
 
 export const SearchSection = () => {
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const titleRef = useParallax<HTMLDivElement>(0.06);
   const formRef = useParallax<HTMLDivElement>(0.1);
+  const [query, setQuery] = useState('');
+
+  const handleSearch = () => {
+    const q = query.trim();
+    if (q) {
+      addToSearchHistory(q);
+      navigate(`/search?q=${encodeURIComponent(q)}`);
+    } else {
+      navigate('/search');
+    }
+  };
 
   return (
     <section id="providers" className="py-12 sm:py-24 bg-gradient-navy relative overflow-hidden">
@@ -20,22 +35,28 @@ export const SearchSection = () => {
             <p className="font-body text-xs sm:text-base text-surface-nav-foreground/60 mb-6 sm:mb-10">{t('search.desc')}</p>
           </div>
           <div ref={formRef}>
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-primary-foreground/10 border border-gold/20 backdrop-blur-sm">
+            <form onSubmit={e => { e.preventDefault(); handleSearch(); }} className="flex flex-col sm:flex-row gap-2 sm:gap-3 p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-primary-foreground/10 border border-gold/20 backdrop-blur-sm">
               <div className="flex-1 relative">
                 <Search className="absolute end-3 sm:end-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-surface-nav-foreground/40" />
                 <input
                   type="text"
+                  value={query}
+                  onChange={e => setQuery(e.target.value)}
                   placeholder={t('search.placeholder')}
                   className="w-full pe-10 sm:pe-12 ps-3 sm:ps-4 py-3 sm:py-4 rounded-lg sm:rounded-xl bg-primary-foreground/10 text-surface-nav-foreground placeholder:text-surface-nav-foreground/30 font-body text-sm border-0 outline-none focus:ring-2 focus:ring-gold/50"
                 />
               </div>
-              <Button variant="hero" size="lg" className="px-6 sm:px-8 py-3 sm:py-0 active:scale-95 transition-transform">
+              <Button type="submit" variant="hero" size="lg" className="px-6 sm:px-8 py-3 sm:py-0 active:scale-95 transition-transform">
                 {t('search.btn')}
               </Button>
-            </div>
+            </form>
             <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-3 mt-4 sm:mt-6">
               {tags.map(tag => (
-                <span key={tag} className="px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-body text-gold border border-gold/30 hover:bg-gold/10 active:scale-95 cursor-pointer transition-all">
+                <span
+                  key={tag}
+                  onClick={() => navigate(`/search?q=${encodeURIComponent(t(tag))}`)}
+                  className="px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-body text-gold border border-gold/30 hover:bg-gold/10 active:scale-95 cursor-pointer transition-all"
+                >
                   {t(tag)}
                 </span>
               ))}
