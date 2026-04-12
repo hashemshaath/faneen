@@ -27,6 +27,7 @@ import { Link } from 'react-router-dom';
 import { useCountUp } from '@/hooks/useCountUp';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { cn } from '@/lib/utils';
+import { tierIcons } from '@/lib/membership-tiers';
 
 // ═══ Shared utils ═══
 const CHART_COLORS = [
