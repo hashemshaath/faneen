@@ -38,7 +38,8 @@ const useBusinesses = () =>
         .from('businesses')
         .select('*, categories(*), cities(*), business_services(price_from, price_to, is_active)')
         .eq('is_active', true)
-        .order('rating_avg', { ascending: false });
+        .order('rating_avg', { ascending: false })
+        .limit(500);
       return data ?? [];
     },
   });
