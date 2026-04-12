@@ -3,11 +3,14 @@ import { ShieldX, ArrowRight, ArrowLeft, Home, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePageMeta } from '@/hooks/usePageMeta';
 
 const Forbidden = () => {
   const { isRTL } = useLanguage();
   const { user } = useAuth();
   const Arrow = isRTL ? ArrowLeft : ArrowRight;
+
+  usePageMeta({ title: isRTL ? 'غير مصرح' : 'Access Denied', noindex: true });
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">

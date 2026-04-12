@@ -10,9 +10,11 @@ import { Label } from '@/components/ui/label';
 import { checkPasswordStrength } from '@/lib/password-strength';
 import { toast } from 'sonner';
 import { Loader2, ShieldCheck } from 'lucide-react';
+import { usePageMeta } from '@/hooks/usePageMeta';
 
 const ResetPassword = () => {
   const { t, isRTL } = useLanguage();
+  usePageMeta({ title: isRTL ? 'إعادة تعيين كلمة المرور' : 'Reset Password', noindex: true });
   const navigate = useNavigate();
   const { session } = useAuth();
   const [password, setPassword] = useState('');

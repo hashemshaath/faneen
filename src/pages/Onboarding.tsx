@@ -11,11 +11,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { User, Building2, Phone, Globe, Check, Loader2 } from 'lucide-react';
+import { usePageMeta } from '@/hooks/usePageMeta';
 
 type OnboardingStep = 'account-type' | 'details' | 'phone-verify' | 'business-details';
 
 const Onboarding = () => {
   const { t, language, isRTL } = useLanguage();
+  usePageMeta({ title: isRTL ? 'إعداد الحساب' : 'Account Setup', noindex: true });
   const navigate = useNavigate();
   const { user, profile, refreshProfile } = useAuth();
   const { getTargetRoute } = useRoleRedirect();
