@@ -149,7 +149,7 @@ const AttachmentPreview = React.memo(({ url, type, name }: { url: string; type: 
 AttachmentPreview.displayName = 'AttachmentPreview';
 
 /* ─── Conversation Item (memo) ─── */
-const ConversationItem = React.memo(({ conv, isSelected, unread, isRTL, language, isSuperAdmin, isPinned, isStarred, isMuted, onClick, onPin, onStar, onMute }: any) => {
+const ConversationItem = React.memo(({ conv, isSelected, unread, isRTL, language, isSuperAdmin, isPinned, isStarred, isMuted, convLabel, onClick, onPin, onStar, onMute, onSetLabel }: any) => {
   const timeAgo = conv.last_message_at
     ? formatDistanceToNow(new Date(conv.last_message_at), { addSuffix: false, locale: language === 'ar' ? ar : enUS })
     : '';
@@ -168,6 +168,10 @@ const ConversationItem = React.memo(({ conv, isSelected, unread, isRTL, language
         <div className="absolute top-1.5 end-2">
           <Pin className="w-2.5 h-2.5 text-accent/60 fill-current" />
         </div>
+      )}
+      {/* Color label indicator */}
+      {convLabel && convLabel !== 'none' && (
+        <div className={`absolute top-0 start-0 w-1 h-full rounded-e ${CONV_LABELS.find(l => l.key === convLabel)?.color || ''}`} />
       )}
 
       <div className="relative">
