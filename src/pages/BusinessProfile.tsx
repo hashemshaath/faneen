@@ -1,8 +1,9 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { usePageMeta, useMultiJsonLd } from "@/hooks/usePageMeta";
 import {
+  CalendarClock,
   CreditCard,
   FolderOpen,
   GitBranch,
@@ -42,6 +43,7 @@ import {
   useServices,
 } from "@/components/business-profile/business-profile.data";
 import { BnplBadges } from "@/components/bnpl/BnplBadges";
+import { BookingWidget } from "@/components/booking/BookingWidget";
 
 const BusinessProfile = () => {
   const { username } = useParams<{ username: string }>();
@@ -49,6 +51,7 @@ const BusinessProfile = () => {
   const { BackIcon } = useDirection();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [bookingOpen, setBookingOpen] = useState(false);
   const { data: business, isLoading, error } = useBusinessByUsername(username || "");
   const { data: projects = [] } = useProjects(business?.id);
   const { data: services = [] } = useServices(business?.id);
@@ -271,15 +274,25 @@ const BusinessProfile = () => {
                 </div>
               </div>
 
-              <Button
-                variant="hero"
-                className="gap-2 self-start"
-                onClick={() => contactMutation.mutate()}
-                disabled={contactMutation.isPending}
-              >
-                {contactMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageSquare className="h-4 w-4" />}
-                {language === "ar" ? "ابدأ التواصل الآن" : "Start contact now"}
-              </Button>
+              <div className="flex gap-2 self-start">
+                <Button
+                  variant="hero"
+                  className="gap-2"
+                  onClick={() => contactMutation.mutate()}
+                  disabled={contactMutation.isPending}
+                >
+                  {contactMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageSquare className="h-4 w-4" />}
+                  {language === "ar" ? "ابدأ التواصل الآن" : "Start contact now"}
+                </Button>
+                <Button
+                  variant="outline"
+                  className="gap-2"
+                  onClick={() => setBookingOpen(true)}
+                >
+                  <CalendarClock className="h-4 w-4" />
+                  {language === "ar" ? "حجز موعد" : "Book"}
+                </Button>
+              </div>
             </div>
           </section>
 
@@ -333,6 +346,13 @@ const BusinessProfile = () => {
           </section>
         </main>
       </div>
+
+      <BookingWidget
+        businessId={business.id}
+        businessName={businessName}
+        open={bookingOpen}
+        onOpenChange={setBookingOpen}
+      />
 
       <Footer />
     </div>

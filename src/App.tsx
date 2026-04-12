@@ -49,6 +49,7 @@ const DashboardBlog = lazyRetry(() => import("./pages/dashboard/DashboardBlog"))
 const DashboardProfileSystems = lazyRetry(() => import("./pages/dashboard/DashboardProfileSystems"));
 const DashboardMessages = lazyRetry(() => import("./pages/dashboard/DashboardMessages"));
 const DashboardBookmarks = lazyRetry(() => import("./pages/dashboard/DashboardBookmarks"));
+const DashboardBookings = lazyRetry(() => import("./pages/dashboard/DashboardBookings"));
 const DashboardNotifications = lazyRetry(() => import("./pages/dashboard/DashboardNotifications"));
 const Offers = lazyRetry(() => import("./pages/Offers"));
 const Compare = lazyRetry(() => import("./pages/Compare"));
@@ -139,6 +140,7 @@ const AppRoutes = () => (
           <Route path="/dashboard/messages" element={<ProtectedRoute><DashboardMessages /></ProtectedRoute>} />
           <Route path="/dashboard/bookmarks" element={<ProtectedRoute><DashboardBookmarks /></ProtectedRoute>} />
           <Route path="/dashboard/notifications" element={<ProtectedRoute><DashboardNotifications /></ProtectedRoute>} />
+          <Route path="/dashboard/bookings" element={<ProtectedRoute><DashboardBookings /></ProtectedRoute>} />
           <Route path="/dashboard/settings" element={<ProtectedRoute><DashboardSettings /></ProtectedRoute>} />
 
           <Route path="/dashboard/services" element={<ProtectedRoute requireProvider><DashboardServices /></ProtectedRoute>} />
