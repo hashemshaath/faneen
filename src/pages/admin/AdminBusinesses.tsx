@@ -1371,8 +1371,8 @@ const AdminBusinesses = () => {
                   })}
                 </TableBody>
               </Table>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         ) : (
           /* ─── Cards View ─── */
           <div className="space-y-2">
