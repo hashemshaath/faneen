@@ -354,3 +354,8 @@
 .sidebar-mobile-content [data-sidebar="menu-item"]:nth-child(13) { animation-delay: 0.40s; }
 .sidebar-mobile-content [data-sidebar="menu-item"]:nth-child(14) { animation-delay: 0.43s; }
 .sidebar-mobile-content [data-sidebar="menu-item"]:nth-child(15) { animation-delay: 0.46s; }
+
+@keyframes progress {
+  from { width: 0%; }
+  to { width: 100%; }
+}
