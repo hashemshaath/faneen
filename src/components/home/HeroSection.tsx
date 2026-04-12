@@ -61,22 +61,22 @@ const SearchBar = memo(({ categories, cities, language, isRTL, t, onSearch }: an
 
   return (
     <form onSubmit={handleSearch} className="mt-8 sm:mt-12 max-w-4xl mx-auto">
-      <div className="bg-white/10 backdrop-blur-xl border border-white/15 rounded-2xl sm:rounded-3xl p-2 sm:p-3 shadow-2xl shadow-black/20">
+      <div className="bg-white/[0.07] backdrop-blur-2xl border border-white/10 rounded-2xl sm:rounded-3xl p-2.5 sm:p-3.5 shadow-2xl shadow-black/30 ring-1 ring-inset ring-white/[0.05]">
         <div className="flex flex-col sm:flex-row gap-2">
           <div className="flex-1 relative">
-            <Search className="absolute end-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-white/40" />
+            <Search className="absolute end-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-white/30" />
             <input
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder={t('search.placeholder')}
-              className="w-full pe-11 ps-3 sm:pe-12 sm:ps-4 py-3 sm:py-4 rounded-xl sm:rounded-2xl bg-white/10 text-white placeholder:text-white/30 font-body text-sm border-0 outline-none focus:ring-2 focus:ring-gold/40 focus:bg-white/15 transition-all"
+              className="w-full pe-11 ps-3 sm:pe-12 sm:ps-4 py-3.5 sm:py-4 rounded-xl sm:rounded-2xl bg-white/[0.06] text-white placeholder:text-white/25 font-body text-sm border-0 outline-none focus:ring-2 focus:ring-gold/40 focus:bg-white/[0.1] transition-all"
             />
           </div>
           <select
             value={selectedCategory}
             onChange={e => setSelectedCategory(e.target.value)}
-            className="sm:w-44 py-3 sm:py-4 px-3 sm:px-4 rounded-xl sm:rounded-2xl bg-white/10 text-white font-body text-sm border-0 outline-none focus:ring-2 focus:ring-gold/40 appearance-none cursor-pointer"
+            className="sm:w-44 py-3.5 sm:py-4 px-3 sm:px-4 rounded-xl sm:rounded-2xl bg-white/[0.06] text-white/80 font-body text-sm border-0 outline-none focus:ring-2 focus:ring-gold/40 appearance-none cursor-pointer"
           >
             <option value="" className="bg-surface-nav text-surface-nav-foreground">{isRTL ? 'جميع الأقسام' : 'All Categories'}</option>
             {categories.map((c: any) => (
@@ -88,7 +88,7 @@ const SearchBar = memo(({ categories, cities, language, isRTL, t, onSearch }: an
           <select
             value={selectedCity}
             onChange={e => setSelectedCity(e.target.value)}
-            className="sm:w-40 py-3 sm:py-4 px-3 sm:px-4 rounded-xl sm:rounded-2xl bg-white/10 text-white font-body text-sm border-0 outline-none focus:ring-2 focus:ring-gold/40 appearance-none cursor-pointer hidden sm:block"
+            className="sm:w-40 py-3.5 sm:py-4 px-3 sm:px-4 rounded-xl sm:rounded-2xl bg-white/[0.06] text-white/80 font-body text-sm border-0 outline-none focus:ring-2 focus:ring-gold/40 appearance-none cursor-pointer hidden sm:block"
           >
             <option value="" className="bg-surface-nav text-surface-nav-foreground">{isRTL ? 'جميع المدن' : 'All Cities'}</option>
             {cities.map((c: any) => (
@@ -97,7 +97,7 @@ const SearchBar = memo(({ categories, cities, language, isRTL, t, onSearch }: an
               </option>
             ))}
           </select>
-          <Button type="submit" variant="hero" size="lg" className="px-8 sm:px-10 py-3 sm:py-4 rounded-xl sm:rounded-2xl active:scale-95 transition-transform shadow-lg shadow-gold/30 text-sm sm:text-base">
+          <Button type="submit" variant="hero" size="lg" className="px-8 sm:px-10 py-3.5 sm:py-4 rounded-xl sm:rounded-2xl active:scale-95 transition-transform shadow-lg shadow-gold/25 text-sm sm:text-base font-semibold tracking-wide">
             <Search className="w-4 h-4 sm:w-5 sm:h-5 me-2" />
             {t('search.btn')}
           </Button>
@@ -124,9 +124,9 @@ const HeroTitle = memo(({ slides, current, language, t }: { slides: typeof slide
   const { displayedText: typedLine2 } = useTypingAnimation({ text: line2, speed: 40, delay: 0, enabled: line1Done });
 
   return (
-    <div className="min-h-[120px] sm:min-h-[180px] flex flex-col items-center justify-center">
+    <div className="min-h-[130px] sm:min-h-[200px] flex flex-col items-center justify-center">
       <div className="animate-fade-in">
-        <h2 className="font-heading font-black text-[1.7rem] leading-[1.25] sm:text-4xl md:text-5xl lg:text-6xl text-white sm:leading-tight mb-3 sm:mb-5">
+        <h2 className="font-heading font-black text-[1.8rem] leading-[1.2] sm:text-[2.75rem] md:text-[3.25rem] lg:text-[3.75rem] text-white sm:leading-[1.15] mb-3 sm:mb-6 tracking-tight">
           <span>{typedLine1}</span>
           <span className="inline-block w-[3px] h-[0.9em] bg-gold/80 align-middle animate-pulse ms-1" style={{ opacity: line1Done ? 0 : 1, transition: 'opacity 0.3s' }} />
           {line1Done && (
@@ -137,7 +137,7 @@ const HeroTitle = memo(({ slides, current, language, t }: { slides: typeof slide
             </>
           )}
         </h2>
-        <p className={`font-body text-sm sm:text-lg text-white/60 max-w-2xl mx-auto leading-relaxed px-2 transition-opacity duration-700 ${line1Done ? 'opacity-100' : 'opacity-0'}`}>
+        <p className={`font-body text-sm sm:text-lg text-white/50 max-w-2xl mx-auto leading-relaxed px-2 transition-opacity duration-700 ${line1Done ? 'opacity-100' : 'opacity-0'}`}>
           {desc}
         </p>
       </div>
@@ -248,8 +248,8 @@ export const HeroSection = () => {
       ))}
 
       {/* Overlays */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/80" />
-      <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at 50% 30%, transparent 20%, hsl(220 35% 8% / 0.6) 70%)" }} />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/35 to-black/85" />
+      <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at 50% 25%, hsl(42 85% 55% / 0.04) 0%, transparent 50%), radial-gradient(ellipse at 50% 30%, transparent 20%, hsl(220 35% 6% / 0.7) 70%)" }} />
 
       {/* Particles */}
       <HeroParticles />
@@ -257,9 +257,9 @@ export const HeroSection = () => {
       {/* Content */}
       <div className="relative z-10 container text-center px-4 sm:px-6 pt-24 sm:pt-28 pb-8">
         {/* Badge */}
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-gold/30 bg-gold/10 backdrop-blur-md mb-6 sm:mb-8 animate-fade-in">
-          <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gold" />
-          <span className="text-[11px] sm:text-sm font-body text-gold">{t('hero.badge')}</span>
+        <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full border border-gold/25 bg-gold/[0.08] backdrop-blur-xl mb-6 sm:mb-8 animate-fade-in shadow-sm shadow-gold/10">
+          <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gold fill-gold/30" />
+          <span className="text-[11px] sm:text-sm font-body font-medium text-gold/90 tracking-wide">{t('hero.badge')}</span>
         </div>
 
         {/* Title with slide transition + typing animation */}
@@ -276,13 +276,13 @@ export const HeroSection = () => {
         />
 
         {/* Quick tags */}
-        <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 mt-4 sm:mt-6">
+        <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2.5 mt-4 sm:mt-6">
           {categories.slice(0, 5).map((cat: any) => (
             <button
               key={cat.id}
               type="button"
               onClick={() => navigate(`/search?category=${cat.id}`)}
-              className="px-3 sm:px-4 py-1.5 rounded-full text-[10px] sm:text-xs font-body text-white/60 border border-white/15 hover:bg-gold/15 hover:text-gold hover:border-gold/30 active:scale-95 cursor-pointer transition-all duration-300"
+              className="px-3.5 sm:px-4.5 py-1.5 sm:py-2 rounded-full text-[10px] sm:text-xs font-body font-medium text-white/50 border border-white/10 hover:bg-gold/10 hover:text-gold hover:border-gold/25 active:scale-95 cursor-pointer transition-all duration-300 backdrop-blur-sm"
             >
               {language === 'ar' ? cat.name_ar : cat.name_en}
             </button>
@@ -311,17 +311,19 @@ export const HeroSection = () => {
         </div>
 
         {/* Stats bar */}
-        <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-10 text-white/50 font-body text-[11px] sm:text-sm mt-6 sm:mt-10">
+        <div className="flex flex-wrap items-center justify-center gap-5 sm:gap-10 text-white/40 font-body text-[10px] sm:text-sm mt-6 sm:mt-10">
           <div className="flex items-center gap-1.5">
-            <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gold" />
+            <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gold/70" />
             <span>{t('hero.providers_count')}</span>
           </div>
+          <div className="w-px h-3 bg-white/15 hidden sm:block" />
           <div className="flex items-center gap-1.5">
-            <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gold" />
+            <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gold/70" />
             <span>{t('hero.reviews_count')}</span>
           </div>
+          <div className="w-px h-3 bg-white/15 hidden sm:block" />
           <div className="flex items-center gap-1.5">
-            <Shield className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gold" />
+            <Shield className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gold/70" />
             <span>{t('hero.protection')}</span>
           </div>
         </div>
