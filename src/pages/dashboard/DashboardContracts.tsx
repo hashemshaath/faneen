@@ -1506,7 +1506,19 @@ const DashboardContracts = () => {
                                             <div className={`p-3 rounded-xl border transition-all ${isCompleted ? 'border-emerald-200/50 bg-emerald-50/30 dark:border-emerald-800/20 dark:bg-emerald-950/10' : isInProgress ? 'border-accent/30 bg-accent/5' : 'border-border/40 bg-card hover:border-border'}`}>
                                               <div className="flex items-center justify-between gap-2">
                                                 <h4 className="font-semibold text-xs">{mTitle}</h4>
-                                                <Badge variant={isCompleted ? 'default' : isInProgress ? 'secondary' : 'outline'} className="text-[8px] shrink-0">{isCompleted ? (isRTL ? 'مكتمل' : 'Done') : isInProgress ? (isRTL ? 'جاري' : 'Progress') : (isRTL ? 'قادم' : 'Pending')}</Badge>
+                                                <div className="flex items-center gap-1">
+                                                  {isProvider && !isCompleted && (
+                                                    <Select value={m.status} onValueChange={v => updateMilestoneMutation.mutate({ id: m.id, status: v })}>
+                                                      <SelectTrigger className="h-6 text-[8px] w-20 px-1.5 border-0 bg-transparent"><SelectValue /></SelectTrigger>
+                                                      <SelectContent>
+                                                        <SelectItem value="pending" className="text-[10px]">{isRTL ? 'قادم' : 'Pending'}</SelectItem>
+                                                        <SelectItem value="in_progress" className="text-[10px]">{isRTL ? 'جاري' : 'In Progress'}</SelectItem>
+                                                        <SelectItem value="completed" className="text-[10px]">{isRTL ? 'مكتمل' : 'Done'}</SelectItem>
+                                                      </SelectContent>
+                                                    </Select>
+                                                  )}
+                                                  <Badge variant={isCompleted ? 'default' : isInProgress ? 'secondary' : 'outline'} className="text-[8px] shrink-0">{isCompleted ? (isRTL ? 'مكتمل' : 'Done') : isInProgress ? (isRTL ? 'جاري' : 'Progress') : (isRTL ? 'قادم' : 'Pending')}</Badge>
+                                                </div>
                                               </div>
                                               <div className="flex items-center gap-3 mt-1.5 text-[10px] text-muted-foreground">
                                                 <span className="font-medium text-foreground"><DollarSign className="w-3 h-3 inline text-accent" />{Number(m.amount).toLocaleString()} {c.currency_code}</span>
