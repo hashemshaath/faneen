@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Clock, User, Tag, Eye } from 'lucide-react';
 import { marked } from 'marked';
+import DOMPurify from 'dompurify';
 
 interface Props {
   title: string;
@@ -73,7 +74,7 @@ export const ArticlePreview: React.FC<Props> = ({
           prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-xs
           prose-table:border prose-table:border-border
           prose-th:bg-muted/50 prose-th:p-2 prose-td:p-2 prose-td:border prose-td:border-border"
-        dangerouslySetInnerHTML={{ __html: htmlContent || `<p class="text-muted-foreground">${isRTL ? 'لا يوجد محتوى بعد...' : 'No content yet...'}</p>` }}
+        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(htmlContent || `<p class="text-muted-foreground">${isRTL ? 'لا يوجد محتوى بعد...' : 'No content yet...'}</p>`) }}
       />
 
       {/* Tags */}
