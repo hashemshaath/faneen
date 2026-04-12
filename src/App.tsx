@@ -72,6 +72,12 @@ const DashboardOperations = lazyRetry(() => import("./pages/dashboard/DashboardO
 const DashboardAiCenter = lazyRetry(() => import("./pages/dashboard/DashboardAiCenter"));
 const NotFound = lazyRetry(() => import("./pages/NotFound"));
 const Onboarding = lazyRetry(() => import("./pages/Onboarding"));
+const Categories = lazyRetry(() => import("./pages/Categories"));
+const About = lazyRetry(() => import("./pages/About"));
+const Contact = lazyRetry(() => import("./pages/Contact"));
+const Privacy = lazyRetry(() => import("./pages/Privacy"));
+const Terms = lazyRetry(() => import("./pages/Terms"));
+const Forbidden = lazyRetry(() => import("./pages/Forbidden"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -109,9 +115,16 @@ const AppRoutes = () => (
           <Route path="/blog/:slug" element={<BlogPost />} />
           <Route path="/profile-systems" element={<ProfileSystems />} />
           <Route path="/profile-systems/:slug" element={<ProfileSystemDetail />} />
+          <Route path="/categories" element={<Categories />} />
+          <Route path="/categories/:slug" element={<Categories />} />
           <Route path="/compare" element={<Compare />} />
           <Route path="/compare-profiles" element={<CompareProfiles />} />
           <Route path="/membership" element={<Membership />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/forbidden" element={<Forbidden />} />
 
           <Route path="/contracts" element={<ProtectedRoute><Contracts /></ProtectedRoute>} />
           <Route path="/contracts/:id" element={<ProtectedRoute><ContractDetail /></ProtectedRoute>} />
