@@ -10,6 +10,18 @@
   * {
     transition: background-color 0.3s ease, color 0.15s ease, border-color 0.3s ease, box-shadow 0.3s ease;
   }
+
+  /* Global focus-visible styles for keyboard accessibility */
+  :focus-visible {
+    outline: 2px solid hsl(var(--gold, 42 85% 55%));
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Remove focus outline for mouse users */
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
   :root {
     --background: 220 20% 97%;
     --foreground: 220 30% 12%;
