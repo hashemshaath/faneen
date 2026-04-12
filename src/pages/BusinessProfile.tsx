@@ -180,8 +180,8 @@ const BusinessProfile = () => {
       </div>
     );
   }
-    } : undefined,
-  }), [business]));
+
+
   const sectionIntroTitle =
     language === "ar"
       ? "كل ما تحتاجه للتعامل مع المزود في صفحة واحدة"
