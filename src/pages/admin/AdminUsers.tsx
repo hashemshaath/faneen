@@ -206,25 +206,29 @@ const UserCard = React.memo(({ profile, roles, business, isCurrentUser, canManag
                 )}
               </div>
 
-              {/* ─── Business Card (linked entity) ─── */}
-              {biz && (
-                <div className="mt-2.5 flex items-center gap-2 rounded-xl bg-muted/40 border border-border/30 px-3 py-2">
-                  <Building2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-xs font-bold text-foreground truncate">{isRTL ? biz.name_ar : (biz.name_en || biz.name_ar)}</span>
-                      {biz.is_verified && <Check className="w-3 h-3 text-emerald-500" />}
+              {/* ─── Business Cards (linked entities) ─── */}
+              {bizList.length > 0 && (
+                <div className="mt-2.5 space-y-1.5">
+                  {bizList.map(biz => (
+                    <div key={biz.id} className="flex items-center gap-2 rounded-xl bg-muted/40 border border-border/30 px-3 py-2">
+                      <Building2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-xs font-bold text-foreground truncate">{isRTL ? biz.name_ar : (biz.name_en || biz.name_ar)}</span>
+                          {biz.is_verified && <Check className="w-3 h-3 text-emerald-500" />}
+                        </div>
+                        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                          <span className="text-[10px] font-mono text-accent flex items-center gap-0.5">
+                            <Link2 className="w-2.5 h-2.5" />{biz.ref_id}
+                          </span>
+                          <span className="text-[10px] text-muted-foreground">@{biz.username}</span>
+                        </div>
+                      </div>
+                      <Badge variant="outline" className="text-[9px] px-1.5 py-0 shrink-0">
+                        {isRTL ? 'مالك' : 'Owner'}
+                      </Badge>
                     </div>
-                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                      <span className="text-[10px] font-mono text-accent flex items-center gap-0.5">
-                        <Link2 className="w-2.5 h-2.5" />{biz.ref_id}
-                      </span>
-                      <span className="text-[10px] text-muted-foreground">@{biz.username}</span>
-                    </div>
-                  </div>
-                  <Badge variant="outline" className="text-[9px] px-1.5 py-0 shrink-0">
-                    {isRTL ? 'مالك' : 'Owner'}
-                  </Badge>
+                  ))}
                 </div>
               )}
             </div>
