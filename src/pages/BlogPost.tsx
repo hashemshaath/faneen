@@ -1,4 +1,5 @@
 import React, { useMemo, useEffect, useState, useRef, useCallback } from 'react';
+import { usePageMeta, useJsonLd } from '@/hooks/usePageMeta';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -169,7 +170,30 @@ const BlogPost = () => {
   const [totalMatches, setTotalMatches] = useState(0);
   const articleRef = useRef<HTMLDivElement>(null);
 
-  const { data: post, isLoading } = useQuery({
+  const postTitle = post ? (language === 'ar' ? post.title_ar : (post.title_en || post.title_ar)) : '';
+  const postDesc = post ? (language === 'ar' ? (post.meta_description_ar || post.excerpt_ar) : (post.meta_description_en || post.excerpt_en || post.meta_description_ar || post.excerpt_ar)) : '';
+
+  usePageMeta({
+    title: post ? `${postTitle} | مدونة فنيين` : 'جاري التحميل... | فنيين',
+    description: postDesc?.substring(0, 160) || undefined,
+    ogType: 'article',
+    ogImage: post?.cover_image_url || post?.og_image_url || undefined,
+  });
+
+  useJsonLd(useMemo(() => post ? ({
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: post.title_ar,
+    alternativeHeadline: post.title_en,
+    description: post.meta_description_ar || post.excerpt_ar,
+    image: post.cover_image_url || post.og_image_url,
+    datePublished: post.published_at,
+    dateModified: post.updated_at,
+    url: `https://faneen.com/blog/${post.slug}`,
+    publisher: { '@type': 'Organization', name: 'فنيين Faneen', url: 'https://faneen.com' },
+  }) : null, [post]));
+
+  const { data: postData, isLoading } = useQuery({
     queryKey: ['blog-post', slug],
     queryFn: async () => {
       const { data, error } = await supabase.from('blog_posts').select('*').eq('slug', slug!).eq('status', 'published').maybeSingle();
