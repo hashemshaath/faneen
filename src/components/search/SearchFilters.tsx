@@ -183,6 +183,7 @@ export const SearchFilters = ({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="relevance">{language === 'ar' ? 'الأكثر صلة' : 'Relevance'}</SelectItem>
                 <SelectItem value="rating">{t('search.sort_rating')}</SelectItem>
                 <SelectItem value="newest">{t('search.sort_newest')}</SelectItem>
                 <SelectItem value="name">{t('search.sort_name')}</SelectItem>
