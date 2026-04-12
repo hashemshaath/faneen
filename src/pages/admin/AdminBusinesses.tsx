@@ -1173,15 +1173,15 @@ const AdminBusinesses = () => {
                 </TabsContent>
               </Tabs>
 
-              <div className="flex gap-2 pt-3 border-t mt-4">
-                <Button onClick={() => updateBizMutation.mutate()} disabled={!editForm.name_ar || updateBizMutation.isPending} className="flex-1 gap-1.5">
+              <Separator className="my-4" />
+              <div className="flex gap-2">
+                <Button onClick={() => updateBizMutation.mutate()} disabled={!editForm.name_ar || updateBizMutation.isPending} className="flex-1 gap-1.5 rounded-xl">
                   <Save className="w-3.5 h-3.5" />
                   {updateBizMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : (isRTL ? 'حفظ التعديلات' : 'Save Changes')}
                 </Button>
-                <Button variant="outline" onClick={() => setEditingBiz(null)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+                <Button variant="outline" onClick={() => setEditingBiz(null)} className="rounded-xl">{isRTL ? 'إلغاء' : 'Cancel'}</Button>
               </div>
-            </CardContent>
-          </Card>
+          </div>
         )}
 
         {/* ─── Inline Services Panel ─── */}
