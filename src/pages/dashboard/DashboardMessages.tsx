@@ -836,6 +836,25 @@ const DashboardMessages = () => {
     toast.success(isRTL ? 'تم إلغاء الرسالة المجدولة' : 'Scheduled message cancelled');
   }, [isRTL]);
 
+  /* ─── Filter & Select ─── */
+  const filteredConversations = useMemo(() => {
+    let result = conversations;
+    if (deferredSearch) result = result.filter((c: any) => c.other_profile?.full_name?.toLowerCase().includes(deferredSearch.toLowerCase()));
+    if (convFilter === 'unread') result = result.filter((c: any) => (unreadCounts as Record<string, number>)[c.id] > 0);
+    if (convFilter === 'starred') result = result.filter((c: any) => starredConvs.has(c.id));
+    if (convFilter === 'pinned') result = result.filter((c: any) => pinnedConvs.has(c.id));
+
+    result = [...result].sort((a: any, b: any) => {
+      const aPinned = pinnedConvs.has(a.id) ? 1 : 0;
+      const bPinned = pinnedConvs.has(b.id) ? 1 : 0;
+      return bPinned - aPinned;
+    });
+
+    return result;
+  }, [conversations, deferredSearch, convFilter, unreadCounts, starredConvs, pinnedConvs]);
+
+  const selectedConv = conversations.find((c: any) => c.id === selectedConversation);
+
   /* ─── Export Chat ─── */
   const handleExportChat = useCallback(() => {
     if (!messages.length || !selectedConv) return;
@@ -857,25 +876,6 @@ const DashboardMessages = () => {
     toast.success(isRTL ? 'تم تصدير المحادثة بنجاح' : 'Chat exported successfully');
   }, [messages, selectedConv, user?.id, isRTL, language]);
 
-
-  /* ─── Filter & Select ─── */
-  const filteredConversations = useMemo(() => {
-    let result = conversations;
-    if (deferredSearch) result = result.filter((c: any) => c.other_profile?.full_name?.toLowerCase().includes(deferredSearch.toLowerCase()));
-    if (convFilter === 'unread') result = result.filter((c: any) => (unreadCounts as Record<string, number>)[c.id] > 0);
-    if (convFilter === 'starred') result = result.filter((c: any) => starredConvs.has(c.id));
-    if (convFilter === 'pinned') result = result.filter((c: any) => pinnedConvs.has(c.id));
-
-    result = [...result].sort((a: any, b: any) => {
-      const aPinned = pinnedConvs.has(a.id) ? 1 : 0;
-      const bPinned = pinnedConvs.has(b.id) ? 1 : 0;
-      return bPinned - aPinned;
-    });
-
-    return result;
-  }, [conversations, deferredSearch, convFilter, unreadCounts, starredConvs, pinnedConvs]);
-
-  const selectedConv = conversations.find((c: any) => c.id === selectedConversation);
 
   const filteredMessages = useMemo(() => {
     if (!chatSearchTerm) return messages;
