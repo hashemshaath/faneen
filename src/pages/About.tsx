@@ -1,16 +1,26 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useLanguage } from '@/i18n/LanguageContext';
-import { usePageMeta } from '@/hooks/usePageMeta';
+import { usePageMeta, useJsonLd } from '@/hooks/usePageMeta';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { Mail, Phone, MapPin, MessageSquare } from 'lucide-react';
 
 const About = () => {
-  const { isRTL } = useLanguage();
+  const { isRTL, language } = useLanguage();
   usePageMeta({
     title: isRTL ? 'من نحن - عن منصة فنيين | فنيين' : 'About Us - Faneen Platform | Faneen',
     description: isRTL ? 'تعرف على منصة فنيين - المنصة الأولى لدليل أعمال الألمنيوم والحديد والزجاج والخشب في العالم العربي' : 'Learn about Faneen - the leading business directory for aluminum, iron, glass and wood in the Arab world',
+    canonical: 'https://faneen.com/about',
   });
+
+  useJsonLd(useMemo(() => ({
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'فنيين', item: 'https://faneen.com' },
+      { '@type': 'ListItem', position: 2, name: language === 'ar' ? 'من نحن' : 'About', item: 'https://faneen.com/about' },
+    ],
+  }), [language]));
 
   return (
     <div className="min-h-screen bg-background">

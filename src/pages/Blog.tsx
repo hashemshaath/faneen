@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { usePageMeta } from '@/hooks/usePageMeta';
+import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -61,7 +61,29 @@ const Blog = () => {
   usePageMeta({
     title: language === 'ar' ? 'المدونة - مقالات ونصائح عن الألمنيوم والحديد | فنيين' : 'Blog - Aluminum & Iron Industry Articles | Faneen',
     description: language === 'ar' ? 'اقرأ أحدث المقالات والنصائح حول صناعة الألمنيوم والحديد والزجاج والخشب. أدلة مهنية وأخبار الصناعة.' : 'Read the latest articles and tips about aluminum, iron, glass and wood industries.',
+    canonical: 'https://faneen.com/blog',
   });
+
+  // Blog page JSON-LD: BreadcrumbList + CollectionPage
+  useMultiJsonLd(useMemo(() => {
+    const breadcrumb = {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'فنيين', item: 'https://faneen.com' },
+        { '@type': 'ListItem', position: 2, name: language === 'ar' ? 'المدونة' : 'Blog', item: 'https://faneen.com/blog' },
+      ],
+    };
+    const collection = {
+      '@context': 'https://schema.org',
+      '@type': 'CollectionPage',
+      name: language === 'ar' ? 'مدونة فنيين' : 'Faneen Blog',
+      url: 'https://faneen.com/blog',
+      description: language === 'ar' ? 'مقالات ونصائح حول صناعة الألمنيوم والحديد والزجاج' : 'Articles and tips about aluminum, iron and glass industries',
+      publisher: { '@type': 'Organization', name: 'فنيين Faneen', url: 'https://faneen.com' },
+    };
+    return [breadcrumb, collection];
+  }, [language]));
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('newest');
