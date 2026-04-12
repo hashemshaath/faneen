@@ -1,4 +1,4 @@
-import { registerArabicFont } from './pdf-arabic-font';
+import { setupArabicDoc, getArabicTableStyles } from './pdf-arabic-font';
 
 interface ExportBusiness {
   name: string;
