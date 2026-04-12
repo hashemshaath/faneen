@@ -23,10 +23,12 @@ import {
   Globe, Building2, Shield, Loader2, BarChart3, ArrowDownRight,
   ExternalLink, Info, ShieldCheck, Users, Banknote, Star,
   Calculator, Download, CalendarDays, Bell, PieChart,
-  ArrowUpRight, Wallet, Receipt, CircleDollarSign,
+  ArrowUpRight, Wallet, Receipt, CircleDollarSign, Sparkles,
+  TrendingDown, Target, Zap, Activity,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { PieChart as RechartsPie, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
 /* ── shared ────────────────────────────────────── */
 const statusColors: Record<string, string> = {
@@ -54,6 +56,50 @@ const fmtDate = (d: string | null, lang: string) =>
 
 const fmtNum = (n: number) => Number(n).toLocaleString();
 
+/* ── Donut Chart ────────────────────────────────── */
+const PaymentDonut = React.memo(({ stats, isRTL }: { stats: any; isRTL: boolean }) => {
+  const data = [
+    { name: isRTL ? 'مدفوع' : 'Paid', value: stats.paidAmount, color: '#10b981' },
+    { name: isRTL ? 'معلق' : 'Pending', value: stats.pendingAmount, color: '#f59e0b' },
+    { name: isRTL ? 'متأخر' : 'Overdue', value: stats.overdueAmount, color: '#ef4444' },
+  ].filter(d => d.value > 0);
+
+  if (data.length === 0) return null;
+  const pct = stats.totalAmount > 0 ? Math.round((stats.paidAmount / stats.totalAmount) * 100) : 0;
+
+  return (
+    <div className="relative w-36 h-36 mx-auto">
+      <ResponsiveContainer>
+        <RechartsPie>
+          <Pie data={data} cx="50%" cy="50%" innerRadius={42} outerRadius={62} paddingAngle={3} dataKey="value" strokeWidth={0}>
+            {data.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+          </Pie>
+          <Tooltip formatter={(v: number) => fmtNum(v) + ' SAR'} />
+        </RechartsPie>
+      </ResponsiveContainer>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="text-2xl font-bold tech-content text-foreground">{pct}%</span>
+        <span className="text-[8px] text-muted-foreground">{isRTL ? 'مسدد' : 'Paid'}</span>
+      </div>
+    </div>
+  );
+});
+PaymentDonut.displayName = 'PaymentDonut';
+
+/* ── Mini Progress Ring ──────────────────────────── */
+const MiniRing = React.memo(({ pct, size = 32, stroke = 3 }: { pct: number; size?: number; stroke?: number }) => {
+  const r = (size - stroke) / 2;
+  const circ = 2 * Math.PI * r;
+  const offset = circ - (pct / 100) * circ;
+  return (
+    <svg width={size} height={size} className="shrink-0 -rotate-90">
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="hsl(var(--muted))" strokeWidth={stroke} />
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={pct >= 100 ? '#10b981' : 'hsl(var(--accent))'} strokeWidth={stroke} strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round" className="transition-all duration-700" />
+    </svg>
+  );
+});
+MiniRing.displayName = 'MiniRing';
+
 /* ── Installment Calculator ────────────────────── */
 const InstallmentCalc = React.memo(({ isRTL }: { isRTL: boolean }) => {
   const [total, setTotal] = useState(10000);
@@ -63,10 +109,12 @@ const InstallmentCalc = React.memo(({ isRTL }: { isRTL: boolean }) => {
   const perMonth = months > 0 ? remaining / months : 0;
 
   return (
-    <Card className="border-accent/20 bg-accent/[0.02]">
+    <Card className="border-accent/20 bg-gradient-to-br from-accent/[0.03] to-transparent">
       <CardContent className="p-4 sm:p-5 space-y-4">
         <h3 className="font-heading font-bold text-sm flex items-center gap-2">
-          <Calculator className="w-4 h-4 text-accent" />
+          <div className="w-7 h-7 rounded-lg bg-accent/10 flex items-center justify-center">
+            <Calculator className="w-4 h-4 text-accent" />
+          </div>
           {isRTL ? 'حاسبة الأقساط' : 'Installment Calculator'}
         </h3>
 
@@ -87,15 +135,15 @@ const InstallmentCalc = React.memo(({ isRTL }: { isRTL: boolean }) => {
 
         {/* Result */}
         <div className="grid grid-cols-3 gap-2">
-          <div className="p-3 rounded-xl bg-accent/10 text-center">
+          <div className="p-3 rounded-xl bg-accent/10 text-center border border-accent/10">
             <p className="text-lg font-bold tech-content text-accent">{fmtNum(remaining)}</p>
             <p className="text-[9px] text-muted-foreground">{isRTL ? 'المبلغ المتبقي' : 'Remaining'} SAR</p>
           </div>
-          <div className="p-3 rounded-xl bg-primary/10 text-center">
+          <div className="p-3 rounded-xl bg-primary/10 text-center border border-primary/10">
             <p className="text-lg font-bold tech-content text-primary">{fmtNum(Math.ceil(perMonth))}</p>
             <p className="text-[9px] text-muted-foreground">{isRTL ? 'القسط الشهري' : 'Monthly'} SAR</p>
           </div>
-          <div className="p-3 rounded-xl bg-muted/50 text-center">
+          <div className="p-3 rounded-xl bg-muted/50 text-center border border-border/20">
             <p className="text-lg font-bold tech-content">{down > 0 ? Math.round((down / total) * 100) : 0}%</p>
             <p className="text-[9px] text-muted-foreground">{isRTL ? 'نسبة الدفعة الأولى' : 'Down %'}</p>
           </div>
@@ -109,7 +157,7 @@ const InstallmentCalc = React.memo(({ isRTL }: { isRTL: boolean }) => {
               const dueDate = new Date();
               dueDate.setMonth(dueDate.getMonth() + i + 1);
               return (
-                <div key={i} className="flex items-center justify-between p-2 rounded-lg bg-muted/20 text-[10px]">
+                <div key={i} className="flex items-center justify-between p-2 rounded-lg bg-muted/20 text-[10px] hover:bg-muted/40 transition-colors">
                   <span className="flex items-center gap-1.5">
                     <span className="w-5 h-5 rounded-full bg-accent/10 text-accent font-bold flex items-center justify-center text-[8px]">{i + 1}</span>
                     {dueDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
@@ -137,7 +185,7 @@ const PaymentTimeline = React.memo(({ plans, isRTL, language }: { plans: any[]; 
         }
       });
     });
-    return all.sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime()).slice(0, 8);
+    return all.sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime()).slice(0, 10);
   }, [plans]);
 
   if (upcoming.length === 0) return null;
@@ -145,19 +193,22 @@ const PaymentTimeline = React.memo(({ plans, isRTL, language }: { plans: any[]; 
   const now = new Date();
 
   return (
-    <Card className="border-border/40">
+    <Card className="border-border/40 overflow-hidden">
+      <div className="h-0.5 bg-gradient-to-r from-accent via-primary to-accent/50" />
       <CardContent className="p-4 sm:p-5">
         <h3 className="font-heading font-bold text-sm flex items-center gap-2 mb-4">
-          <CalendarDays className="w-4 h-4 text-accent" />
+          <div className="w-7 h-7 rounded-lg bg-accent/10 flex items-center justify-center">
+            <CalendarDays className="w-4 h-4 text-accent" />
+          </div>
           {isRTL ? 'المدفوعات القادمة' : 'Upcoming Payments'}
           <Badge variant="secondary" className="text-[8px] px-1.5 py-0 h-4">{upcoming.length}</Badge>
         </h3>
 
         <div className="relative">
           {/* Timeline line */}
-          <div className={cn("absolute top-0 bottom-0 w-px bg-border/60", isRTL ? "right-3" : "left-3")} />
+          <div className={cn("absolute top-0 bottom-0 w-px bg-gradient-to-b from-accent/40 via-border to-transparent", isRTL ? "right-3" : "left-3")} />
 
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {upcoming.map((p, i) => {
               const due = new Date(p.due_date);
               const isOverdue = p.status === 'overdue' || due < now;
@@ -167,14 +218,14 @@ const PaymentTimeline = React.memo(({ plans, isRTL, language }: { plans: any[]; 
                 <div key={p.id} className={cn("relative flex items-start gap-3", isRTL ? "pr-8" : "pl-8")}>
                   {/* Dot */}
                   <div className={cn(
-                    "absolute top-1 w-2.5 h-2.5 rounded-full border-2 border-background z-10",
-                    isOverdue ? "bg-destructive" : daysLeft <= 7 ? "bg-amber-500" : "bg-accent",
+                    "absolute top-1.5 w-2.5 h-2.5 rounded-full border-2 border-background z-10 transition-all",
+                    isOverdue ? "bg-destructive ring-2 ring-destructive/20" : daysLeft <= 7 ? "bg-amber-500 ring-2 ring-amber-500/20" : "bg-accent",
                     isRTL ? "right-[7px]" : "left-[7px]"
                   )} />
 
                   <div className={cn(
-                    "flex-1 p-2.5 rounded-xl text-xs transition-colors",
-                    isOverdue ? "bg-destructive/5 border border-destructive/20" : "bg-muted/30 border border-border/20"
+                    "flex-1 p-3 rounded-xl text-xs transition-all hover:shadow-sm",
+                    isOverdue ? "bg-destructive/5 border border-destructive/20 hover:bg-destructive/10" : "bg-muted/30 border border-border/20 hover:bg-muted/50"
                   )}>
                     <div className="flex items-center justify-between gap-2 mb-1">
                       <span className="font-semibold truncate">
@@ -189,7 +240,7 @@ const PaymentTimeline = React.memo(({ plans, isRTL, language }: { plans: any[]; 
                       </span>
                       <span>{isRTL ? `القسط ${p.installment_number}` : `#${p.installment_number}`}</span>
                       {isOverdue ? (
-                        <Badge className="bg-destructive/10 text-destructive text-[8px] px-1.5 py-0 h-[14px] gap-0.5">
+                        <Badge className="bg-destructive/10 text-destructive text-[8px] px-1.5 py-0 h-[14px] gap-0.5 animate-pulse">
                           <AlertTriangle className="w-2.5 h-2.5" />
                           {isRTL ? 'متأخر' : 'Overdue'}
                         </Badge>
@@ -221,13 +272,13 @@ const PaymentItem = React.memo(({ payment, plan, isProvider, isRTL, language, on
 
   return (
     <div className={cn(
-      'flex items-center justify-between p-2.5 rounded-lg text-xs gap-2 transition-colors',
-      isPaid ? 'bg-emerald-50/50 dark:bg-emerald-950/10' :
-      isOverdue ? 'bg-destructive/5' : 'bg-muted/30'
+      'flex items-center justify-between p-2.5 rounded-lg text-xs gap-2 transition-all group/item',
+      isPaid ? 'bg-emerald-50/50 dark:bg-emerald-950/10 hover:bg-emerald-50/80 dark:hover:bg-emerald-950/20' :
+      isOverdue ? 'bg-destructive/5 hover:bg-destructive/10' : 'bg-muted/30 hover:bg-muted/50'
     )}>
       <div className="flex items-center gap-2 min-w-0">
         {isPaid ? <CheckCircle className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" /> :
-         isOverdue ? <AlertTriangle className="w-3.5 h-3.5 text-destructive shrink-0" /> :
+         isOverdue ? <AlertTriangle className="w-3.5 h-3.5 text-destructive shrink-0 animate-pulse" /> :
          <Clock className="w-3.5 h-3.5 text-muted-foreground shrink-0" />}
         <span className="font-medium">{isRTL ? `القسط ${payment.installment_number}` : `#${payment.installment_number}`}</span>
       </div>
@@ -245,7 +296,7 @@ const PaymentItem = React.memo(({ payment, plan, isProvider, isRTL, language, on
           {statusLabels[payment.status]?.[isRTL ? 'ar' : 'en'] || payment.status}
         </Badge>
         {payment.status === 'pending' && isProvider && (
-          <Button size="sm" variant="outline" className="h-5 text-[9px] px-1.5 gap-0.5" onClick={() => onMarkPaid(payment.id)} disabled={isPending}>
+          <Button size="sm" variant="outline" className="h-5 text-[9px] px-1.5 gap-0.5 opacity-0 group-hover/item:opacity-100 transition-opacity" onClick={() => onMarkPaid(payment.id)} disabled={isPending}>
             <CheckCircle className="w-2.5 h-2.5" />{isRTL ? 'تسجيل' : 'Paid'}
           </Button>
         )}
@@ -266,66 +317,98 @@ const PlanCard = React.memo(({ plan, user, isRTL, language, onMarkPaid, isPendin
   const paidAmount = payments.filter((p: any) => p.status === 'paid').reduce((s: number, p: any) => s + Number(p.amount), 0);
   const contract = plan.contract;
   const isUserProvider = user?.id === contract?.provider_id;
+  const nextPayment = payments.find((p: any) => p.status === 'pending' || p.status === 'overdue');
 
   return (
     <Card className={cn(
-      "border-border/40 overflow-hidden group hover:shadow-md transition-all",
-      overdueCount > 0 && "border-l-2 border-l-destructive"
+      "border-border/40 overflow-hidden group hover:shadow-lg transition-all duration-300",
+      overdueCount > 0 && "border-l-2 border-l-destructive",
+      plan.status === 'completed' && "border-l-2 border-l-emerald-500"
     )}>
-      <CardContent className="p-3 sm:p-4">
-        <div className="flex items-start justify-between gap-2 mb-3">
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
-              <h3 className="font-heading font-bold text-xs sm:text-sm truncate">
-                {contract ? (isRTL ? contract.title_ar : (contract.title_en || contract.title_ar)) : ''}
-              </h3>
-              <Badge className={`${statusColors[plan.status] || ''} text-[8px] px-1.5 py-0 h-[14px]`}>
-                {statusLabels[plan.status]?.[isRTL ? 'ar' : 'en'] || plan.status}
-              </Badge>
-              <Badge variant="outline" className="text-[8px] px-1.5 py-0 h-[14px]">
-                {isUserProvider ? (isRTL ? 'مزود' : 'Provider') : (isRTL ? 'عميل' : 'Client')}
-              </Badge>
-              {overdueCount > 0 && (
-                <Badge className="bg-destructive/10 text-destructive text-[8px] px-1.5 py-0 h-[14px] gap-0.5">
-                  <AlertTriangle className="w-2.5 h-2.5" />
-                  {overdueCount} {isRTL ? 'متأخر' : 'overdue'}
+      <CardContent className="p-0">
+        {/* Color accent bar */}
+        <div className={cn(
+          "h-0.5 w-full",
+          overdueCount > 0 ? "bg-gradient-to-r from-destructive to-destructive/50" :
+          plan.status === 'completed' ? "bg-gradient-to-r from-emerald-500 to-emerald-500/50" :
+          "bg-gradient-to-r from-accent to-accent/30"
+        )} />
+
+        <div className="p-3 sm:p-4">
+          <div className="flex items-start justify-between gap-3 mb-3">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
+                <h3 className="font-heading font-bold text-xs sm:text-sm truncate">
+                  {contract ? (isRTL ? contract.title_ar : (contract.title_en || contract.title_ar)) : ''}
+                </h3>
+                <Badge className={`${statusColors[plan.status] || ''} text-[8px] px-1.5 py-0 h-[14px]`}>
+                  {statusLabels[plan.status]?.[isRTL ? 'ar' : 'en'] || plan.status}
                 </Badge>
-              )}
+                <Badge variant="outline" className="text-[8px] px-1.5 py-0 h-[14px] gap-0.5">
+                  {isUserProvider ? <><Zap className="w-2 h-2" />{isRTL ? 'مزود' : 'Provider'}</> : <><Users className="w-2 h-2" />{isRTL ? 'عميل' : 'Client'}</>}
+                </Badge>
+                {overdueCount > 0 && (
+                  <Badge className="bg-destructive/10 text-destructive text-[8px] px-1.5 py-0 h-[14px] gap-0.5 animate-pulse">
+                    <AlertTriangle className="w-2.5 h-2.5" />
+                    {overdueCount} {isRTL ? 'متأخر' : 'overdue'}
+                  </Badge>
+                )}
+              </div>
+              <p className="tech-content text-[9px] text-muted-foreground">{contract?.contract_number} • {plan.ref_id}</p>
             </div>
-            <p className="tech-content text-[9px] text-muted-foreground">{contract?.contract_number} • {plan.ref_id}</p>
-          </div>
-          <div className="text-end shrink-0">
-            <p className="tech-content font-bold text-sm">{fmtNum(Number(plan.total_amount))} <span className="text-[10px] font-normal text-muted-foreground">{plan.currency_code}</span></p>
-            <p className="text-[9px] text-muted-foreground">{isRTL ? 'مدفوع:' : 'Paid:'} <span className="tech-content text-emerald-600 dark:text-emerald-400">{fmtNum(paidAmount)}</span></p>
-          </div>
-        </div>
 
-        {/* Progress with mini stats */}
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-2">
-            <Progress value={progress} className="h-2 flex-1" />
-            <span className="tech-content text-[10px] font-bold text-accent">{progress}%</span>
+            {/* Mini ring + amount */}
+            <div className="flex items-center gap-2 shrink-0">
+              <MiniRing pct={progress} size={36} stroke={3} />
+              <div className="text-end">
+                <p className="tech-content font-bold text-sm">{fmtNum(Number(plan.total_amount))} <span className="text-[10px] font-normal text-muted-foreground">{plan.currency_code}</span></p>
+                <p className="text-[9px] text-muted-foreground">{isRTL ? 'مدفوع:' : 'Paid:'} <span className="tech-content text-emerald-600 dark:text-emerald-400">{fmtNum(paidAmount)}</span></p>
+              </div>
+            </div>
           </div>
-          <div className="flex items-center justify-between text-[9px] text-muted-foreground">
-            <span>{isRTL ? 'الدفعة الأولى:' : 'Down:'} <span className="tech-content font-medium">{fmtNum(Number(plan.down_payment))}</span></span>
-            <span>{isRTL ? 'القسط:' : 'Per:'} <span className="tech-content font-medium">{fmtNum(Number(plan.installment_amount))}</span></span>
-            <span className="flex items-center gap-0.5">
-              <Receipt className="w-2.5 h-2.5" />
-              {paidCount}/{payments.length}
-            </span>
-            <Button variant="ghost" size="icon" className="w-6 h-6" onClick={() => setExpanded(!expanded)}>
-              {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-            </Button>
-          </div>
-        </div>
 
-        {expanded && (
-          <div className="space-y-1 mt-3 animate-in slide-in-from-top-2 duration-200">
-            {payments.map((payment: any) => (
-              <PaymentItem key={payment.id} payment={payment} plan={plan} isProvider={isUserProvider} isRTL={isRTL} language={language} onMarkPaid={onMarkPaid} isPending={isPending} />
-            ))}
+          {/* Next payment highlight */}
+          {nextPayment && (
+            <div className={cn(
+              "p-2 rounded-lg mb-3 flex items-center justify-between text-[10px]",
+              nextPayment.status === 'overdue' ? "bg-destructive/5 border border-destructive/15" : "bg-accent/5 border border-accent/15"
+            )}>
+              <span className="flex items-center gap-1.5 text-muted-foreground">
+                <Target className="w-3 h-3" />
+                {isRTL ? 'القسط التالي:' : 'Next:'} <span className="font-medium text-foreground">{isRTL ? `القسط ${nextPayment.installment_number}` : `#${nextPayment.installment_number}`}</span>
+                <span className="flex items-center gap-0.5"><Calendar className="w-2.5 h-2.5" />{fmtDate(nextPayment.due_date, language)}</span>
+              </span>
+              <span className="tech-content font-bold text-accent">{fmtNum(Number(nextPayment.amount))} {plan.currency_code}</span>
+            </div>
+          )}
+
+          {/* Progress with mini stats */}
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2">
+              <Progress value={progress} className="h-2 flex-1" />
+              <span className="tech-content text-[10px] font-bold text-accent">{progress}%</span>
+            </div>
+            <div className="flex items-center justify-between text-[9px] text-muted-foreground">
+              <span>{isRTL ? 'الدفعة الأولى:' : 'Down:'} <span className="tech-content font-medium">{fmtNum(Number(plan.down_payment))}</span></span>
+              <span>{isRTL ? 'القسط:' : 'Per:'} <span className="tech-content font-medium">{fmtNum(Number(plan.installment_amount))}</span></span>
+              <span className="flex items-center gap-0.5">
+                <Receipt className="w-2.5 h-2.5" />
+                {paidCount}/{payments.length}
+              </span>
+              <Button variant="ghost" size="icon" className="w-6 h-6" onClick={() => setExpanded(!expanded)}>
+                {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+              </Button>
+            </div>
           </div>
-        )}
+
+          {expanded && (
+            <div className="space-y-1 mt-3 animate-in slide-in-from-top-2 duration-200">
+              {payments.map((payment: any) => (
+                <PaymentItem key={payment.id} payment={payment} plan={plan} isProvider={isUserProvider} isRTL={isRTL} language={language} onMarkPaid={onMarkPaid} isPending={isPending} />
+              ))}
+            </div>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
@@ -339,13 +422,13 @@ const BnplShowcaseCard = React.memo(({ provider, isRTL }: { provider: any; isRTL
   const desc = isRTL ? provider.description_ar : provider.description_en;
 
   return (
-    <Card className="border-border/40 overflow-hidden hover:shadow-lg transition-all group">
+    <Card className="border-border/40 overflow-hidden hover:shadow-xl transition-all duration-300 group">
       <CardContent className="p-0">
         <div className="h-1.5 w-full" style={{ background: `linear-gradient(90deg, ${provider.color_hex}, ${provider.color_hex}88)` }} />
         
         <div className="p-4 sm:p-5">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl border-2 border-border/20 flex items-center justify-center bg-background overflow-hidden shrink-0 shadow-sm group-hover:shadow-md transition-shadow"
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl border-2 border-border/20 flex items-center justify-center bg-background overflow-hidden shrink-0 shadow-sm group-hover:shadow-md group-hover:scale-105 transition-all duration-300"
               style={{ borderColor: provider.color_hex + '40' }}>
               {provider.logo_url ? (
                 <img src={provider.logo_url} alt={name} className="w-10 h-10 sm:w-12 sm:h-12 object-contain" loading="lazy" />
@@ -373,17 +456,17 @@ const BnplShowcaseCard = React.memo(({ provider, isRTL }: { provider: any; isRTL
           </div>
 
           <div className="grid grid-cols-3 gap-2 mb-4">
-            <div className="p-2.5 rounded-xl bg-muted/40 text-center">
+            <div className="p-2.5 rounded-xl bg-muted/40 text-center hover:bg-muted/60 transition-colors">
               <Banknote className="w-4 h-4 text-primary mx-auto mb-1" />
               <p className="text-sm sm:text-base font-bold text-foreground tech-content">{provider.installments_count}</p>
               <p className="text-[9px] text-muted-foreground">{isRTL ? 'عدد الأقساط' : 'Payments'}</p>
             </div>
-            <div className="p-2.5 rounded-xl bg-muted/40 text-center">
+            <div className="p-2.5 rounded-xl bg-muted/40 text-center hover:bg-muted/60 transition-colors">
               <DollarSign className="w-4 h-4 text-primary mx-auto mb-1" />
               <p className="text-sm sm:text-base font-bold text-foreground tech-content">{fmtNum(Number(provider.min_amount))}</p>
               <p className="text-[9px] text-muted-foreground">{isRTL ? 'الحد الأدنى' : 'Min'} {provider.currency_code}</p>
             </div>
-            <div className="p-2.5 rounded-xl bg-muted/40 text-center">
+            <div className="p-2.5 rounded-xl bg-muted/40 text-center hover:bg-muted/60 transition-colors">
               <TrendingUp className="w-4 h-4 text-primary mx-auto mb-1" />
               <p className="text-sm sm:text-base font-bold text-foreground tech-content">{fmtNum(Number(provider.max_amount))}</p>
               <p className="text-[9px] text-muted-foreground">{isRTL ? 'الحد الأقصى' : 'Max'} {provider.currency_code}</p>
@@ -399,8 +482,8 @@ const BnplShowcaseCard = React.memo(({ provider, isRTL }: { provider: any; isRTL
                 </p>
                 <p className="text-[10px] text-amber-600/80 dark:text-amber-400/70 mt-0.5 leading-relaxed">
                   {isRTL 
-                    ? 'يعتمد القبول على الموافقة الائتمانية والسجل الائتماني للعميل. قد تطبق شروط وأحكام إضافية.'
-                    : 'Approval depends on credit assessment and customer credit history. Additional terms and conditions may apply.'}
+                    ? 'يعتمد القبول على الموافقة الائتمانية والسجل الائتماني للعميل.'
+                    : 'Approval depends on credit assessment and customer credit history.'}
                 </p>
               </div>
             </div>
@@ -454,7 +537,7 @@ const AdminBnplForm = React.memo(({ provider, isRTL, language, onSave, onCancel,
   const set = (k: string, v: any) => setForm(p => ({ ...p, [k]: v }));
 
   return (
-    <Card className="border-accent/30 bg-accent/[0.02]">
+    <Card className="border-accent/30 bg-gradient-to-br from-accent/[0.03] to-transparent">
       <CardContent className="p-3 sm:p-4 space-y-4">
         <div className="flex items-center justify-between gap-2">
           <h4 className="font-heading font-bold text-sm flex items-center gap-1.5">
@@ -593,6 +676,10 @@ const DashboardInstallments = () => {
     const totalAmount = plans.reduce((s: number, p: any) => s + Number(p.total_amount), 0);
     const paidAmount = plans.reduce((s: number, p: any) =>
       s + (p.installment_payments || []).filter((pay: any) => pay.status === 'paid').reduce((sum: number, pay: any) => sum + Number(pay.amount), 0), 0);
+    const pendingAmount = plans.reduce((s: number, p: any) =>
+      s + (p.installment_payments || []).filter((pay: any) => pay.status === 'pending').reduce((sum: number, pay: any) => sum + Number(pay.amount), 0), 0);
+    const overdueAmount = plans.reduce((s: number, p: any) =>
+      s + (p.installment_payments || []).filter((pay: any) => pay.status === 'overdue').reduce((sum: number, pay: any) => sum + Number(pay.amount), 0), 0);
     const pendingPayments = plans.reduce((s: number, p: any) =>
       s + (p.installment_payments || []).filter((pay: any) => pay.status === 'pending').length, 0);
     const overduePayments = plans.reduce((s: number, p: any) =>
@@ -600,7 +687,7 @@ const DashboardInstallments = () => {
     const totalPayments = plans.reduce((s: number, p: any) => s + (p.installment_payments || []).length, 0);
     const paidPayments = plans.reduce((s: number, p: any) =>
       s + (p.installment_payments || []).filter((pay: any) => pay.status === 'paid').length, 0);
-    return { totalAmount, paidAmount, pendingPayments, overduePayments, totalPayments, paidPayments };
+    return { totalAmount, paidAmount, pendingAmount, overdueAmount, pendingPayments, overduePayments, totalPayments, paidPayments };
   }, [plans]);
 
   const markPaidMutation = useMutation({
@@ -682,29 +769,61 @@ const DashboardInstallments = () => {
   return (
     <DashboardLayout>
       <div className="space-y-5">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div>
-            <h1 className="font-heading font-bold text-xl sm:text-2xl flex items-center gap-2">
-              <CreditCard className="w-5 h-5 sm:w-6 sm:h-6 text-accent" />
-              {isRTL ? 'الأقساط والتقسيط' : 'Installments & BNPL'}
-            </h1>
-            <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">
-              {isRTL ? 'إدارة خطط التقسيط المباشر وشركات التقسيط المعتمدة' : 'Manage direct installment plans and authorized BNPL partners'}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => setShowCalc(!showCalc)}>
-              <Calculator className="w-3.5 h-3.5" />
-              {isRTL ? 'الحاسبة' : 'Calculator'}
-            </Button>
-            {plans.length > 0 && (
-              <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={exportCSV}>
-                <Download className="w-3.5 h-3.5" />
-                {isRTL ? 'تصدير' : 'Export'}
+        {/* ── Glassmorphism Header ── */}
+        <div className="relative overflow-hidden rounded-2xl border border-border/40 bg-gradient-to-br from-accent/5 via-background to-primary/5 p-4 sm:p-6">
+          <div className="absolute -top-20 -end-20 w-60 h-60 rounded-full bg-accent/5 blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-20 -start-20 w-40 h-40 rounded-full bg-primary/5 blur-3xl pointer-events-none" />
+          
+          <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-accent/20 to-accent/5 flex items-center justify-center shadow-sm">
+                <CreditCard className="w-6 h-6 text-accent" />
+              </div>
+              <div>
+                <h1 className="font-heading font-bold text-xl sm:text-2xl text-foreground">
+                  {isRTL ? 'الأقساط والتقسيط' : 'Installments & BNPL'}
+                </h1>
+                <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">
+                  {isRTL ? 'إدارة خطط التقسيط المباشر وشركات التقسيط المعتمدة' : 'Manage direct installment plans and authorized BNPL partners'}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Button variant="outline" size="sm" className="gap-1.5 text-xs backdrop-blur-sm bg-background/50" onClick={() => setShowCalc(!showCalc)}>
+                <Calculator className="w-3.5 h-3.5" />
+                {isRTL ? 'الحاسبة' : 'Calculator'}
               </Button>
-            )}
+              {plans.length > 0 && (
+                <Button variant="outline" size="sm" className="gap-1.5 text-xs backdrop-blur-sm bg-background/50" onClick={exportCSV}>
+                  <Download className="w-3.5 h-3.5" />
+                  {isRTL ? 'تصدير' : 'Export'}
+                </Button>
+              )}
+            </div>
           </div>
+
+          {/* Quick stats in header */}
+          {plans.length > 0 && (
+            <div className="relative grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4">
+              {[
+                { icon: Activity, label: isRTL ? 'خطط التقسيط' : 'Total Plans', value: plans.length, color: 'text-primary' },
+                { icon: CircleDollarSign, label: isRTL ? 'إجمالي المبالغ' : 'Total Amount', value: fmtNum(stats.totalAmount), sub: 'SAR', color: 'text-accent' },
+                { icon: TrendingUp, label: isRTL ? 'المدفوع' : 'Paid', value: fmtNum(stats.paidAmount), sub: 'SAR', color: 'text-emerald-600 dark:text-emerald-400' },
+                { icon: TrendingDown, label: isRTL ? 'المتبقي' : 'Remaining', value: fmtNum(stats.totalAmount - stats.paidAmount), sub: 'SAR', color: 'text-amber-600 dark:text-amber-400' },
+              ].map((s, i) => (
+                <div key={i} className="p-3 rounded-xl bg-background/60 backdrop-blur-sm border border-border/30 hover:bg-background/80 transition-colors">
+                  <div className="flex items-center gap-2 mb-1">
+                    <s.icon className={cn("w-4 h-4", s.color)} />
+                    <span className="text-[9px] text-muted-foreground">{s.label}</span>
+                  </div>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-lg font-bold tech-content">{s.value}</span>
+                    {s.sub && <span className="text-[9px] text-muted-foreground">{s.sub}</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Calculator */}
@@ -712,7 +831,7 @@ const DashboardInstallments = () => {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="w-full sm:w-auto">
+          <TabsList className="w-full sm:w-auto bg-muted/50 p-1">
             <TabsTrigger value="plans" className="gap-1.5 text-xs">
               <FileText className="w-3.5 h-3.5" />
               {isRTL ? 'خطط التقسيط' : 'Plans'}
@@ -740,52 +859,67 @@ const DashboardInstallments = () => {
 
           {/* ── Plans Tab ── */}
           <TabsContent value="plans" className="space-y-4 mt-4">
-            {/* Enhanced Stats */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
-              {[
-                { icon: Wallet, label: isRTL ? 'خطط التقسيط' : 'Plans', value: plans.length, color: 'text-primary bg-primary/10' },
-                { icon: CircleDollarSign, label: isRTL ? 'إجمالي المبالغ' : 'Total', value: fmtNum(stats.totalAmount), sub: 'SAR', color: 'text-accent bg-accent/10' },
-                { icon: ArrowUpRight, label: isRTL ? 'المدفوع' : 'Paid', value: fmtNum(stats.paidAmount), sub: 'SAR', color: 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10', extra: stats.totalAmount > 0 ? `${Math.round((stats.paidAmount / stats.totalAmount) * 100)}%` : undefined },
-                { icon: AlertTriangle, label: isRTL ? 'متأخرة' : 'Overdue', value: stats.overduePayments, color: stats.overduePayments > 0 ? 'text-destructive bg-destructive/10' : 'text-muted-foreground bg-muted', pulse: stats.overduePayments > 0 },
-              ].map((s: any, i) => (
-                <Card key={i} className={cn("border-border/40 bg-card/50", s.pulse && "border-destructive/30")}>
-                  <CardContent className="p-2.5 sm:p-3 flex items-center gap-2">
-                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${s.color}`}>
-                      <s.icon className="w-4 h-4" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-baseline gap-1">
-                        <p className="text-lg sm:text-xl font-bold tech-content">{s.value}</p>
-                        {s.sub && <span className="text-[9px] font-normal text-muted-foreground">{s.sub}</span>}
-                        {s.extra && <Badge className="bg-emerald-500/10 text-emerald-600 text-[7px] px-1 py-0 h-3 ms-1">{s.extra}</Badge>}
-                      </div>
-                      <p className="text-[9px] sm:text-[10px] text-muted-foreground truncate">{s.label}</p>
+            {/* Analytics row: donut + progress + breakdown */}
+            {stats.totalAmount > 0 && (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+                {/* Donut */}
+                <Card className="border-border/40 bg-card/50">
+                  <CardContent className="p-4 flex flex-col items-center justify-center">
+                    <h4 className="text-[11px] font-semibold text-muted-foreground mb-2 flex items-center gap-1.5">
+                      <PieChart className="w-3.5 h-3.5" />
+                      {isRTL ? 'توزيع المدفوعات' : 'Payment Distribution'}
+                    </h4>
+                    <PaymentDonut stats={stats} isRTL={isRTL} />
+                    <div className="flex items-center gap-3 mt-3 text-[9px] text-muted-foreground">
+                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500" />{isRTL ? 'مدفوع' : 'Paid'}</span>
+                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-500" />{isRTL ? 'معلق' : 'Pending'}</span>
+                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-destructive" />{isRTL ? 'متأخر' : 'Overdue'}</span>
                     </div>
                   </CardContent>
                 </Card>
-              ))}
-            </div>
 
-            {/* Overall progress with breakdown */}
-            {stats.totalAmount > 0 && (
-              <Card className="border-border/40 bg-card/50">
-                <CardContent className="p-3 sm:p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-[11px] font-semibold flex items-center gap-1.5">
-                      <BarChart3 className="w-3.5 h-3.5 text-primary" />
-                      {isRTL ? 'نسبة السداد الإجمالية' : 'Overall Payment Progress'}
-                    </span>
-                    <span className="tech-content text-sm font-bold text-accent">{Math.round((stats.paidAmount / stats.totalAmount) * 100)}%</span>
-                  </div>
-                  <Progress value={(stats.paidAmount / stats.totalAmount) * 100} className="h-2.5 mb-2" />
-                  <div className="flex items-center gap-4 text-[9px] text-muted-foreground flex-wrap">
-                    <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500" />{isRTL ? 'مدفوع' : 'Paid'}: {stats.paidPayments}</span>
-                    <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-500" />{isRTL ? 'معلق' : 'Pending'}: {stats.pendingPayments}</span>
-                    <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-destructive" />{isRTL ? 'متأخر' : 'Overdue'}: {stats.overduePayments}</span>
-                    <span className="ms-auto font-medium">{isRTL ? 'المتبقي:' : 'Remaining:'} <span className="tech-content text-foreground">{fmtNum(stats.totalAmount - stats.paidAmount)} SAR</span></span>
-                  </div>
-                </CardContent>
-              </Card>
+                {/* Overall progress */}
+                <Card className="border-border/40 bg-card/50 lg:col-span-2">
+                  <CardContent className="p-4 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-semibold flex items-center gap-1.5">
+                        <BarChart3 className="w-3.5 h-3.5 text-primary" />
+                        {isRTL ? 'نسبة السداد الإجمالية' : 'Overall Payment Progress'}
+                      </span>
+                      <span className="tech-content text-sm font-bold text-accent">{Math.round((stats.paidAmount / stats.totalAmount) * 100)}%</span>
+                    </div>
+                    <Progress value={(stats.paidAmount / stats.totalAmount) * 100} className="h-3" />
+                    
+                    {/* Amount breakdown */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {[
+                        { label: isRTL ? 'إجمالي' : 'Total', value: fmtNum(stats.totalAmount), color: 'text-foreground', bg: 'bg-muted/40' },
+                        { label: isRTL ? 'مسدد' : 'Paid', value: fmtNum(stats.paidAmount), color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50/50 dark:bg-emerald-950/10' },
+                        { label: isRTL ? 'معلق' : 'Pending', value: fmtNum(stats.pendingAmount), color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50/50 dark:bg-amber-950/10' },
+                        { label: isRTL ? 'متأخر' : 'Overdue', value: fmtNum(stats.overdueAmount), color: 'text-destructive', bg: stats.overdueAmount > 0 ? 'bg-destructive/5' : 'bg-muted/30' },
+                      ].map((item, i) => (
+                        <div key={i} className={cn("p-2 rounded-lg text-center", item.bg)}>
+                          <p className={cn("text-sm font-bold tech-content", item.color)}>{item.value}</p>
+                          <p className="text-[8px] text-muted-foreground">{item.label} SAR</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="flex items-center gap-4 text-[9px] text-muted-foreground flex-wrap pt-1 border-t border-border/20">
+                      <span className="flex items-center gap-1">
+                        <Receipt className="w-3 h-3" />
+                        {isRTL ? 'الدفعات:' : 'Payments:'} <span className="tech-content font-medium text-foreground">{stats.paidPayments}/{stats.totalPayments}</span>
+                      </span>
+                      {stats.overduePayments > 0 && (
+                        <Badge className="bg-destructive/10 text-destructive text-[8px] px-1.5 py-0 h-[14px] gap-0.5 animate-pulse">
+                          <AlertTriangle className="w-2.5 h-2.5" />
+                          {stats.overduePayments} {isRTL ? 'متأخر' : 'overdue'}
+                        </Badge>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             )}
 
             {/* Filters */}
@@ -815,12 +949,12 @@ const DashboardInstallments = () => {
               <div className="space-y-3">{[1, 2, 3].map(i => <Skeleton key={i} className="h-32 rounded-xl" />)}</div>
             ) : filtered.length === 0 ? (
               <Card className="border-dashed border-2">
-                <CardContent className="flex flex-col items-center py-12 text-muted-foreground">
-                  <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-3">
-                    <CreditCard className="w-7 h-7 text-primary opacity-50" />
+                <CardContent className="flex flex-col items-center py-16 text-muted-foreground">
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center mb-4">
+                    <CreditCard className="w-8 h-8 text-primary opacity-50" />
                   </div>
                   <p className="font-heading font-bold text-foreground mb-1 text-sm">{isRTL ? 'لا توجد خطط تقسيط' : 'No installment plans'}</p>
-                  <p className="text-xs">{hasFilters ? (isRTL ? 'جرّب تعديل الفلاتر' : 'Adjust filters') : (isRTL ? 'ستظهر هنا عند إنشائها من العقود' : 'Will appear when created from contracts')}</p>
+                  <p className="text-xs max-w-xs text-center">{hasFilters ? (isRTL ? 'جرّب تعديل الفلاتر' : 'Adjust filters') : (isRTL ? 'ستظهر هنا عند إنشائها من العقود' : 'Will appear when created from contracts')}</p>
                 </CardContent>
               </Card>
             ) : (
@@ -846,8 +980,10 @@ const DashboardInstallments = () => {
               <div className="space-y-3">{[1, 2, 3].map(i => <Skeleton key={i} className="h-20 rounded-xl" />)}</div>
             ) : plans.length === 0 ? (
               <Card className="border-dashed border-2">
-                <CardContent className="flex flex-col items-center py-12 text-muted-foreground">
-                  <CalendarDays className="w-10 h-10 mb-3 opacity-40" />
+                <CardContent className="flex flex-col items-center py-16 text-muted-foreground">
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-accent/10 to-primary/10 flex items-center justify-center mb-4">
+                    <CalendarDays className="w-8 h-8 opacity-40" />
+                  </div>
                   <p className="font-heading font-bold text-foreground mb-1 text-sm">{isRTL ? 'لا توجد مدفوعات قادمة' : 'No upcoming payments'}</p>
                 </CardContent>
               </Card>
@@ -855,14 +991,19 @@ const DashboardInstallments = () => {
               <>
                 {/* Overdue alert */}
                 {stats.overduePayments > 0 && (
-                  <Card className="border-destructive/30 bg-destructive/5">
-                    <CardContent className="p-3 flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center shrink-0">
-                        <AlertTriangle className="w-5 h-5 text-destructive" />
+                  <Card className="border-destructive/30 bg-gradient-to-r from-destructive/5 to-transparent overflow-hidden">
+                    <div className="h-0.5 bg-destructive/50" />
+                    <CardContent className="p-3 sm:p-4 flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-2xl bg-destructive/10 flex items-center justify-center shrink-0 animate-pulse">
+                        <AlertTriangle className="w-6 h-6 text-destructive" />
                       </div>
-                      <div>
+                      <div className="flex-1">
                         <p className="text-sm font-bold text-destructive">{stats.overduePayments} {isRTL ? 'أقساط متأخرة' : 'overdue payments'}</p>
                         <p className="text-[10px] text-muted-foreground">{isRTL ? 'يرجى المبادرة بالسداد لتجنب أي رسوم إضافية' : 'Please settle to avoid additional charges'}</p>
+                      </div>
+                      <div className="text-end shrink-0">
+                        <p className="text-lg font-bold tech-content text-destructive">{fmtNum(stats.overdueAmount)}</p>
+                        <p className="text-[9px] text-muted-foreground">SAR</p>
                       </div>
                     </CardContent>
                   </Card>
@@ -885,15 +1026,18 @@ const DashboardInstallments = () => {
                   if (recent5.length === 0) return null;
 
                   return (
-                    <Card className="border-border/40">
+                    <Card className="border-border/40 overflow-hidden">
+                      <div className="h-0.5 bg-gradient-to-r from-emerald-500 to-emerald-500/30" />
                       <CardContent className="p-4 sm:p-5">
                         <h3 className="font-heading font-bold text-sm flex items-center gap-2 mb-3">
-                          <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                          <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                            <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                          </div>
                           {isRTL ? 'آخر المدفوعات' : 'Recent Payments'}
                         </h3>
                         <div className="space-y-1.5">
                           {recent5.map((p: any) => (
-                            <div key={p.id} className="flex items-center justify-between p-2 rounded-lg bg-emerald-50/30 dark:bg-emerald-950/10 text-xs">
+                            <div key={p.id} className="flex items-center justify-between p-2.5 rounded-lg bg-emerald-50/30 dark:bg-emerald-950/10 text-xs hover:bg-emerald-50/60 dark:hover:bg-emerald-950/20 transition-colors">
                               <div className="flex items-center gap-2 min-w-0">
                                 <CheckCircle className="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
                                 <span className="truncate">{p.contract ? (isRTL ? p.contract.title_ar : (p.contract.title_en || p.contract.title_ar)) : ''}</span>
@@ -916,7 +1060,7 @@ const DashboardInstallments = () => {
           {/* ── BNPL Partners Showcase Tab ── */}
           <TabsContent value="bnpl" className="space-y-5 mt-4">
             <div className="text-center space-y-2 pb-2">
-              <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center mx-auto">
                 <Building2 className="w-7 h-7 text-primary" />
               </div>
               <h2 className="font-heading font-bold text-lg sm:text-xl">
@@ -929,9 +1073,11 @@ const DashboardInstallments = () => {
               </p>
             </div>
 
-            <Card className="border-primary/20 bg-primary/5">
+            <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
               <CardContent className="p-3 sm:p-4 flex items-start gap-3">
-                <ShieldCheck className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                  <ShieldCheck className="w-5 h-5 text-primary" />
+                </div>
                 <div className="space-y-1.5">
                   <p className="text-xs font-semibold text-foreground">
                     {isRTL ? 'كيف يعمل التقسيط عبر الشركات المتخصصة؟' : 'How does BNPL work?'}
@@ -944,7 +1090,7 @@ const DashboardInstallments = () => {
                       isRTL ? 'يحصل المزود على المبلغ كاملاً من شركة التقسيط' : 'Provider receives the full amount from the BNPL company',
                     ].map((text, i) => (
                       <li key={i} className="flex items-start gap-1.5">
-                        <span className="text-primary font-bold mt-0.5">{isRTL ? ['١','٢','٣','٤'][i] : i + 1}</span>
+                        <span className="w-4 h-4 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-[8px] shrink-0 mt-0.5">{isRTL ? ['١','٢','٣','٤'][i] : i + 1}</span>
                         {text}
                       </li>
                     ))}
@@ -959,8 +1105,10 @@ const DashboardInstallments = () => {
               </div>
             ) : activeProviders.length === 0 ? (
               <Card className="border-dashed border-2">
-                <CardContent className="flex flex-col items-center py-12 text-muted-foreground">
-                  <Building2 className="w-10 h-10 mb-3 opacity-40" />
+                <CardContent className="flex flex-col items-center py-16 text-muted-foreground">
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center mb-4">
+                    <Building2 className="w-8 h-8 opacity-40" />
+                  </div>
                   <p className="font-bold text-foreground mb-1 text-sm">{isRTL ? 'لا توجد شركات تقسيط متاحة حالياً' : 'No BNPL providers available'}</p>
                 </CardContent>
               </Card>
