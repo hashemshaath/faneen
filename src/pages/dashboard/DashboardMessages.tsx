@@ -1057,6 +1057,8 @@ const DashboardMessages = () => {
                         onPin={togglePinConv}
                         onStar={toggleStarConv}
                         onMute={toggleMuteConv}
+                        convLabel={convLabels[conv.id] || 'none'}
+                        onSetLabel={setConvLabel}
                       />
                     ))}
                   </div>
