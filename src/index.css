@@ -130,6 +130,8 @@
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
     font-feature-settings: "kern" 1, "liga" 1;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
   }
 
   #root {
@@ -154,6 +156,64 @@
   input, textarea, select, button {
     font-family: inherit;
     letter-spacing: 0.01em;
+  }
+
+  /* ── Mobile-first typography & spacing ── */
+  @media (max-width: 640px) {
+    body {
+      font-size: 14px;
+      line-height: 1.65;
+    }
+
+    h1 { font-size: 1.5rem; }
+    h2 { font-size: 1.25rem; }
+    h3 { font-size: 1.1rem; }
+
+    p {
+      line-height: 1.7;
+      margin-bottom: 0.4em;
+    }
+
+    /* Better touch targets */
+    button, a, [role="button"] {
+      min-height: 36px;
+    }
+
+    /* Tighter container padding on mobile */
+    .container {
+      padding-left: 16px;
+      padding-right: 16px;
+    }
+
+    /* Improve card spacing */
+    .card, [class*="rounded-2xl"] {
+      border-radius: 1rem;
+    }
+
+    /* Compact tables on mobile */
+    table {
+      font-size: 12px;
+    }
+
+    th, td {
+      padding: 6px 8px;
+    }
+  }
+
+  /* ── Small phones (320-374px) ── */
+  @media (max-width: 374px) {
+    body {
+      font-size: 13px;
+    }
+
+    h1 { font-size: 1.35rem; }
+    h2 { font-size: 1.15rem; }
+    h3 { font-size: 1rem; }
+
+    .container {
+      padding-left: 12px;
+      padding-right: 12px;
+    }
   }
 }
 
