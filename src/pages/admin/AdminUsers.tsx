@@ -505,15 +505,15 @@ const AdminUsers = () => {
 
   const filtered = useMemo(() => profiles.filter(p => {
     const lowerSearch = deferredSearch.toLowerCase();
-    const biz = businessMap.get(p.user_id);
+    const bizList = businessMap.get(p.user_id) || [];
     const matchesSearch = !deferredSearch
       || p.full_name?.toLowerCase().includes(lowerSearch)
       || p.email?.toLowerCase().includes(lowerSearch)
       || p.phone?.includes(deferredSearch)
       || p.ref_id?.toLowerCase().includes(lowerSearch)
-      || biz?.ref_id?.toLowerCase().includes(lowerSearch)
-      || biz?.name_ar?.toLowerCase().includes(lowerSearch)
-      || biz?.username?.toLowerCase().includes(lowerSearch);
+      || bizList.some(b => b.ref_id?.toLowerCase().includes(lowerSearch))
+      || bizList.some(b => b.name_ar?.toLowerCase().includes(lowerSearch))
+      || bizList.some(b => b.username?.toLowerCase().includes(lowerSearch));
     const roles = roleMap.get(p.user_id) || [];
     const matchesRole = filterRole === 'all' || (filterRole === 'no_role' && roles.length === 0) || roles.some(r => r.role === filterRole);
     const matchesType = filterAccountType === 'all' || p.account_type === filterAccountType;
