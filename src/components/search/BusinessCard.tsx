@@ -169,4 +169,6 @@ export const BusinessCard = memo(({ business: b, viewMode }: BusinessCardProps) 
       </div>
     </Link>
   );
-};
+});
+
+BusinessCard.displayName = 'BusinessCard';
