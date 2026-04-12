@@ -19,7 +19,7 @@ import {
   BarChart3, MessageCircle, TrendingUp, Zap, Shield, Forward, Mic, MicOff,
   Volume2, VolumeX, Bell, BellOff, AlertCircle, UserPlus, AtSign, Link2,
   Bookmark, BookmarkCheck, Filter, LayoutList, Calendar, Globe,
-  Timer, Tag, Palette, FileDown, ClockIcon,
+  Timer, Tag, Palette, FileDown, ChevronUp,
 } from 'lucide-react';
 import { format, formatDistanceToNow, isToday, isYesterday, differenceInMinutes } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
@@ -153,7 +153,9 @@ const ConversationItem = React.memo(({ conv, isSelected, unread, isRTL, language
   const timeAgo = conv.last_message_at
     ? formatDistanceToNow(new Date(conv.last_message_at), { addSuffix: false, locale: language === 'ar' ? ar : enUS })
     : '';
-  const isOnline = conv.last_message_at && differenceInMinutes(new Date(), new Date(conv.last_message_at)) < 5;
+  const minutesAgo = conv.last_message_at ? differenceInMinutes(new Date(), new Date(conv.last_message_at)) : 999;
+  const isOnline = minutesAgo < 5;
+  const isAway = !isOnline && minutesAgo < 30;
 
   return (
     <div
@@ -182,9 +184,12 @@ const ConversationItem = React.memo(({ conv, isSelected, unread, isRTL, language
           </AvatarFallback>
         </Avatar>
         {isOnline && (
-          <span className="absolute -bottom-0.5 -end-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-card" />
+          <span className="absolute -bottom-0.5 -end-0.5 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-card shadow-sm shadow-emerald-500/30" />
         )}
-        {unread > 0 && !isOnline && (
+        {isAway && !isOnline && (
+          <span className="absolute -bottom-0.5 -end-0.5 w-3.5 h-3.5 bg-amber-400 rounded-full border-2 border-card shadow-sm" />
+        )}
+        {!isOnline && !isAway && unread > 0 && (
           <span className="absolute -top-0.5 -end-0.5 w-3 h-3 bg-accent rounded-full border-2 border-card animate-pulse" />
         )}
       </div>
