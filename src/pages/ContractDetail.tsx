@@ -1181,9 +1181,72 @@ const ContractDetail = () => {
 
           {/* ── Measurements ── */}
           <TabsContent value="measurements">
+            {/* Add/Edit Form */}
+            {!isContractLocked && (isProvider || isClient) && (
+              <div className="mb-4">
+                {showMeasurementForm ? (
+                  <div className="p-4 rounded-xl bg-card border-2 border-dashed border-accent/30 space-y-3">
+                    <h3 className="font-heading font-bold text-sm flex items-center gap-2">
+                      <Plus className="w-4 h-4 text-accent" />
+                      {editingMeasurement ? (isRTL ? 'تعديل المقاس' : 'Edit Measurement') : (isRTL ? 'إضافة قطعة جديدة' : 'Add Measurement')}
+                    </h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      <Input placeholder={isRTL ? 'اسم القطعة *' : 'Name *'} value={mForm.name_ar} onChange={e => setMForm(f => ({ ...f, name_ar: e.target.value }))} className="text-sm" />
+                      <Input placeholder={isRTL ? 'رقم القطعة (W-GF-001)' : 'Piece # (W-GF-001)'} value={mForm.piece_number} onChange={e => setMForm(f => ({ ...f, piece_number: e.target.value }))} dir="ltr" className="text-sm" />
+                      <Select value={mForm.floor_label} onValueChange={v => setMForm(f => ({ ...f, floor_label: v }))}>
+                        <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="ground_floor">{isRTL ? 'الدور الأرضي' : 'Ground Floor'}</SelectItem>
+                          <SelectItem value="first_floor">{isRTL ? 'الدور الأول' : '1st Floor'}</SelectItem>
+                          <SelectItem value="second_floor">{isRTL ? 'الدور الثاني' : '2nd Floor'}</SelectItem>
+                          <SelectItem value="roof">{isRTL ? 'السطح' : 'Roof'}</SelectItem>
+                          <SelectItem value="basement">{isRTL ? 'القبو' : 'Basement'}</SelectItem>
+                          <SelectItem value="external">{isRTL ? 'خارجي' : 'External'}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Input placeholder={isRTL ? 'المكان (مطبخ، حمام...)' : 'Location (kitchen...)'} value={mForm.location_ar} onChange={e => setMForm(f => ({ ...f, location_ar: e.target.value }))} className="text-sm" />
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      <Input type="number" placeholder={isRTL ? 'الطول (مم) *' : 'Length (mm) *'} value={mForm.length_mm} onChange={e => setMForm(f => ({ ...f, length_mm: e.target.value }))} dir="ltr" className="text-sm" />
+                      <Input type="number" placeholder={isRTL ? 'العرض (مم) *' : 'Width (mm) *'} value={mForm.width_mm} onChange={e => setMForm(f => ({ ...f, width_mm: e.target.value }))} dir="ltr" className="text-sm" />
+                      <Input type="number" placeholder={isRTL ? 'الكمية' : 'Qty'} value={mForm.quantity} onChange={e => setMForm(f => ({ ...f, quantity: e.target.value }))} dir="ltr" className="text-sm" />
+                      <Input type="number" placeholder={isRTL ? 'سعر الوحدة *' : 'Unit price *'} value={mForm.unit_price} onChange={e => setMForm(f => ({ ...f, unit_price: e.target.value }))} dir="ltr" className="text-sm" />
+                    </div>
+                    {/* Live calc preview */}
+                    {mForm.length_mm && mForm.width_mm && mForm.unit_price && (
+                      <div className="flex items-center gap-4 p-2.5 rounded-lg bg-accent/5 border border-accent/10 text-xs font-heading">
+                        <span>{isRTL ? 'المساحة:' : 'Area:'} <strong>{((Number(mForm.length_mm) * Number(mForm.width_mm)) / 1000000).toFixed(3)} م²</strong></span>
+                        <span>{isRTL ? 'التكلفة:' : 'Cost:'} <strong className="text-accent">{(Number(mForm.unit_price) * Number(mForm.quantity || 1)).toLocaleString()} {contract.currency_code}</strong></span>
+                      </div>
+                    )}
+                    <Input placeholder={isRTL ? 'ملاحظات (اختياري)' : 'Notes (optional)'} value={mForm.notes} onChange={e => setMForm(f => ({ ...f, notes: e.target.value }))} className="text-sm" />
+                    <div className="flex gap-2">
+                      <Button variant="hero" size="sm" className="gap-1.5 text-xs" disabled={!mForm.name_ar || !mForm.length_mm || !mForm.width_mm || !mForm.unit_price || addMeasurementMutation.isPending} onClick={() => addMeasurementMutation.mutate()}>
+                        <Plus className="w-3.5 h-3.5" />{editingMeasurement ? (isRTL ? 'تحديث' : 'Update') : (isRTL ? 'إضافة' : 'Add')}
+                      </Button>
+                      <Button variant="outline" size="sm" className="text-xs" onClick={resetMForm}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+                    </div>
+                  </div>
+                ) : (
+                  <Button variant="outline" className="gap-1.5 text-xs" onClick={() => setShowMeasurementForm(true)}><Plus className="w-3.5 h-3.5" />{isRTL ? 'إضافة قطعة' : 'Add Measurement'}</Button>
+                )}
+              </div>
+            )}
+            {isContractLocked && (
+              <div className="text-[10px] text-amber-600 dark:text-amber-400 mb-3 flex items-center gap-1"><Shield className="w-3 h-3" />{isRTL ? 'المقاسات مقفلة - المجموع النهائي يحدد قيمة العقد' : 'Measurements locked - total determines contract value'}</div>
+            )}
+
+            {/* Info banner: total = contract value */}
+            {measurements && measurements.length > 0 && (
+              <div className="flex items-center gap-2 p-3 mb-4 rounded-xl bg-accent/5 border border-accent/10">
+                <Info className="w-4 h-4 text-accent shrink-0" />
+                <p className="text-[10px] font-body text-muted-foreground">{isRTL ? 'المجموع النهائي للمقاسات يحدد تلقائياً قيمة العقد الإجمالية' : 'The final measurements total automatically determines the contract total value'}</p>
+                <span className="font-heading font-bold text-sm text-accent ms-auto">{measurementsTotals.totalCost.toLocaleString()} {contract.currency_code}</span>
+              </div>
+            )}
+
             {measurements && measurements.length > 0 ? (
               <div className="space-y-4">
-                {/* Filter by floor */}
                 {floors.length > 1 && (
                   <div className="flex items-center gap-2 flex-wrap">
                     <Filter className="w-3.5 h-3.5 text-muted-foreground" />
@@ -1198,7 +1261,6 @@ const ContractDetail = () => {
                   </div>
                 )}
 
-                {/* Summary */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <StatCard icon={Grid3X3} label={isRTL ? 'عدد القطع' : 'Pieces'} value={measurementsTotals.count} />
                   <StatCard icon={Ruler} label={isRTL ? 'إجمالي المساحة' : 'Total Area'} value={`${measurementsTotals.totalArea} م²`} />
@@ -1206,7 +1268,6 @@ const ContractDetail = () => {
                   <StatCard icon={CheckCircle2} label={isRTL ? 'المركّب' : 'Installed'} value={`${measurementsTotals.installed}/${measurementsTotals.count}`} />
                 </div>
 
-                {/* Table */}
                 <div className="border border-border rounded-xl overflow-hidden">
                   <div className="overflow-x-auto">
                     <table className="w-full text-xs">
@@ -1221,6 +1282,7 @@ const ContractDetail = () => {
                           <th className="p-2.5 text-start font-heading font-semibold whitespace-nowrap">{isRTL ? 'سعر/م²' : '$/m²'}</th>
                           <th className="p-2.5 text-start font-heading font-semibold whitespace-nowrap">{isRTL ? 'التكلفة' : 'Cost'}</th>
                           <th className="p-2.5 text-start font-heading font-semibold whitespace-nowrap">{isRTL ? 'الحالة' : 'Status'}</th>
+                          {!isContractLocked && <th className="p-2.5 text-start font-heading font-semibold whitespace-nowrap">{isRTL ? 'إجراء' : 'Action'}</th>}
                         </tr>
                       </thead>
                       <tbody>
@@ -1242,6 +1304,18 @@ const ContractDetail = () => {
                               <td className="p-2.5 font-heading font-semibold" dir="ltr">{Number(m.unit_price).toLocaleString()}</td>
                               <td className="p-2.5 font-heading font-bold text-accent" dir="ltr">{Number(m.total_cost).toLocaleString()}</td>
                               <td className="p-2.5"><Badge className={`${sCfg.bg} text-[9px]`}>{isRTL ? sCfg.label_ar : sCfg.label_en}</Badge></td>
+                              {!isContractLocked && (
+                                <td className="p-2.5">
+                                  <div className="flex items-center gap-1">
+                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => startEditMeasurement(m)} title={isRTL ? 'تعديل' : 'Edit'}>
+                                      <PenTool className="w-3 h-3 text-muted-foreground" />
+                                    </Button>
+                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteMeasurementMutation.mutate(m.id)} title={isRTL ? 'حذف' : 'Delete'}>
+                                      <Trash2 className="w-3 h-3 text-destructive" />
+                                    </Button>
+                                  </div>
+                                </td>
+                              )}
                             </tr>
                           );
                         })}
@@ -1253,6 +1327,7 @@ const ContractDetail = () => {
                           <td className="p-2.5"></td>
                           <td className="p-2.5 text-accent" dir="ltr">{measurementsTotals.totalCost.toLocaleString()}</td>
                           <td className="p-2.5"></td>
+                          {!isContractLocked && <td className="p-2.5"></td>}
                         </tr>
                       </tfoot>
                     </table>
@@ -1260,7 +1335,11 @@ const ContractDetail = () => {
                 </div>
               </div>
             ) : (
-              <div className="text-center py-12"><Ruler className="w-12 h-12 mx-auto text-muted-foreground/20 mb-3" /><p className="text-muted-foreground font-body text-sm">{isRTL ? 'لا توجد مقاسات' : 'No measurements'}</p></div>
+              <div className="text-center py-12">
+                <Ruler className="w-12 h-12 mx-auto text-muted-foreground/20 mb-3" />
+                <p className="text-muted-foreground font-body text-sm mb-2">{isRTL ? 'لا توجد مقاسات بعد' : 'No measurements yet'}</p>
+                {!isContractLocked && <p className="text-[10px] text-muted-foreground">{isRTL ? 'أضف المقاسات لتحديد قيمة العقد النهائية' : 'Add measurements to determine the final contract value'}</p>}
+              </div>
             )}
           </TabsContent>
 
