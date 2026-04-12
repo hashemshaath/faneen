@@ -85,30 +85,46 @@ const Index = () => {
       <Suspense fallback={<SectionFallback />}>
         <CategoriesSection />
       </Suspense>
-      <Suspense fallback={<SectionFallback />}>
-        <HowItWorksSection />
-      </Suspense>
-      <Suspense fallback={<SectionFallback />}>
-        <TopProvidersSection />
-      </Suspense>
-      <Suspense fallback={<SectionFallback />}>
-        <LatestProjectsSection />
-      </Suspense>
-      <Suspense fallback={<SectionFallback />}>
-        <LatestOffersSection />
-      </Suspense>
-      <Suspense fallback={<SectionFallback />}>
-        <FeaturesSection />
-      </Suspense>
-      <Suspense fallback={<SectionFallback />}>
-        <LatestBlogSection />
-      </Suspense>
-      <Suspense fallback={<SectionFallback />}>
-        <MembershipSection />
-      </Suspense>
-      <Suspense fallback={<SectionFallback />}>
-        <CTASection />
-      </Suspense>
+      <div className="cv-auto">
+        <Suspense fallback={<SectionFallback />}>
+          <HowItWorksSection />
+        </Suspense>
+      </div>
+      <div className="cv-auto">
+        <Suspense fallback={<SectionFallback />}>
+          <TopProvidersSection />
+        </Suspense>
+      </div>
+      <div className="cv-auto">
+        <Suspense fallback={<SectionFallback />}>
+          <LatestProjectsSection />
+        </Suspense>
+      </div>
+      <div className="cv-auto">
+        <Suspense fallback={<SectionFallback />}>
+          <LatestOffersSection />
+        </Suspense>
+      </div>
+      <div className="cv-auto">
+        <Suspense fallback={<SectionFallback />}>
+          <FeaturesSection />
+        </Suspense>
+      </div>
+      <div className="cv-auto">
+        <Suspense fallback={<SectionFallback />}>
+          <LatestBlogSection />
+        </Suspense>
+      </div>
+      <div className="cv-auto">
+        <Suspense fallback={<SectionFallback />}>
+          <MembershipSection />
+        </Suspense>
+      </div>
+      <div className="cv-auto">
+        <Suspense fallback={<SectionFallback />}>
+          <CTASection />
+        </Suspense>
+      </div>
       <Footer />
       <ScrollToTop />
     </div>

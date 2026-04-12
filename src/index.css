@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap');
+/* Font loaded via <link> in index.html for faster FCP */
 
 /* Typography improvements */
 
@@ -7,8 +7,10 @@
 @tailwind utilities;
 
 @layer base {
-  * {
-    transition: background-color 0.3s ease, color 0.15s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  /* Theme transitions only on interactive elements — NOT on * which kills perf */
+  button, a, input, select, textarea, [role="button"],
+  .transition-colors, .transition-all {
+    transition: background-color 0.2s ease, color 0.15s ease, border-color 0.2s ease, box-shadow 0.2s ease;
   }
 
   /* Global focus-visible styles for keyboard accessibility */
@@ -354,6 +356,12 @@
 .sidebar-mobile-content [data-sidebar="menu-item"]:nth-child(13) { animation-delay: 0.40s; }
 .sidebar-mobile-content [data-sidebar="menu-item"]:nth-child(14) { animation-delay: 0.43s; }
 .sidebar-mobile-content [data-sidebar="menu-item"]:nth-child(15) { animation-delay: 0.46s; }
+
+/* content-visibility for below-fold sections — skip layout/paint until near viewport */
+.cv-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 600px;
+}
 
 @keyframes progress {
   from { width: 0%; }
