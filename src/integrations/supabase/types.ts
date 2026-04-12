@@ -3116,6 +3116,14 @@ export type Database = {
         Args: { _prefix: string; _seq_name: string }
         Returns: string
       }
+      get_contract_counterpart_profile: {
+        Args: { _target_user_id: string; _viewer_id: string }
+        Returns: {
+          avatar_url: string
+          full_name: string
+          user_id: string
+        }[]
+      }
       get_public_bnpl_for_business: {
         Args: { _business_id: string }
         Returns: {
@@ -3144,6 +3152,44 @@ export type Database = {
           phone: string
           region: string
           sort_order: number
+          website: string
+        }[]
+      }
+      get_public_business_data: {
+        Args: { _business_id: string }
+        Returns: {
+          address: string
+          business_number: number
+          category_id: string
+          city_id: string
+          country_id: string
+          cover_url: string
+          created_at: string
+          description_ar: string
+          description_en: string
+          district: string
+          email: string
+          id: string
+          is_active: boolean
+          is_verified: boolean
+          latitude: number
+          logo_url: string
+          longitude: number
+          membership_tier: Database["public"]["Enums"]["membership_tier"]
+          mobile: string
+          name_ar: string
+          name_en: string
+          phone: string
+          rating_avg: number
+          rating_count: number
+          ref_id: string
+          region: string
+          short_description_ar: string
+          short_description_en: string
+          street_name: string
+          updated_at: string
+          user_id: string
+          username: string
           website: string
         }[]
       }
