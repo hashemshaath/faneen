@@ -77,13 +77,16 @@ export const Navbar = () => {
 
   return (
     <>
-      <nav className={`fixed top-0 end-0 start-0 z-50 transition-all duration-500 ${
-        scrolled
-          ? 'bg-surface-nav/98 backdrop-blur-xl shadow-xl shadow-black/10 border-b border-gold/10'
-          : isHome
-            ? 'bg-transparent border-b border-transparent'
-            : 'bg-surface-nav/95 backdrop-blur-md border-b border-gold/20'
-      }`}>
+      <nav
+        role="navigation"
+        aria-label={language === 'ar' ? 'التنقل الرئيسي' : 'Main navigation'}
+        className={`fixed top-0 end-0 start-0 z-50 transition-all duration-500 ${
+          scrolled
+            ? 'bg-surface-nav/98 backdrop-blur-xl shadow-xl shadow-black/10 border-b border-gold/10'
+            : isHome
+              ? 'bg-transparent border-b border-transparent'
+              : 'bg-surface-nav/95 backdrop-blur-md border-b border-gold/20'
+        }`}>
         <div className="container flex items-center justify-between h-16 sm:h-[4.5rem] px-4 sm:px-6">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2.5 sm:gap-3 group">
@@ -160,7 +163,8 @@ export const Navbar = () => {
             <ThemeToggle variant="navbar" />
             <button
               onClick={() => setLanguage(language === 'ar' ? 'en' : 'ar')}
-              className="text-[10px] sm:text-xs text-surface-nav-foreground/50 hover:text-gold transition-colors px-2 py-1.5 rounded-lg border border-surface-nav-foreground/15 hover:border-gold/30 font-medium"
+              className="text-[10px] sm:text-xs text-surface-nav-foreground/50 hover:text-gold transition-colors px-2 py-1.5 rounded-lg border border-surface-nav-foreground/15 hover:border-gold/30 font-medium focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none"
+              aria-label={language === 'ar' ? 'تبديل اللغة إلى الإنجليزية' : 'Switch language to Arabic'}
             >
               {t('nav.language')}
             </button>
@@ -170,8 +174,9 @@ export const Navbar = () => {
             {/* Mobile toggle */}
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="lg:hidden text-surface-nav-foreground/80 hover:text-gold transition-colors p-1.5 rounded-lg hover:bg-gold/5"
-              aria-label="Toggle menu"
+              className="lg:hidden text-surface-nav-foreground/80 hover:text-gold transition-colors p-1.5 rounded-lg hover:bg-gold/5 focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none"
+              aria-label={mobileOpen ? (language === 'ar' ? 'إغلاق القائمة' : 'Close menu') : (language === 'ar' ? 'فتح القائمة' : 'Open menu')}
+              aria-expanded={mobileOpen}
             >
               <div className="relative w-5 h-5">
                 <Menu className={`w-5 h-5 absolute inset-0 transition-all duration-300 ${mobileOpen ? 'opacity-0 rotate-90 scale-75' : 'opacity-100'}`} />

@@ -223,7 +223,7 @@ export const HeroSection = () => {
   }, [navigate]);
 
   return (
-    <section className="relative min-h-[85vh] sm:min-h-screen flex flex-col items-center justify-center overflow-hidden">
+    <section id="main-content" role="banner" aria-label={language === 'ar' ? 'القسم الرئيسي' : 'Hero section'} className="relative min-h-[85vh] sm:min-h-screen flex flex-col items-center justify-center overflow-hidden">
       {/* Slides — only first image is eager, others lazy */}
       {slides.map((slide, i) => (
         <img
@@ -231,7 +231,7 @@ export const HeroSection = () => {
           ref={el => { imgRefs.current[i] = el; }}
           src={i === 0 ? slide.image : (current === i ? slide.image : undefined)}
           data-src={slide.image}
-          alt=""
+          alt={i === current ? (language === 'ar' ? 'خلفية قسم البحث الرئيسي' : 'Hero background') : ''}
           className={`absolute inset-0 w-full h-full object-cover will-change-transform scale-115 transition-opacity duration-1000 ${i === current ? 'opacity-100' : 'opacity-0'}`}
           width={1920}
           height={1080}
@@ -291,7 +291,7 @@ export const HeroSection = () => {
 
         {/* Slide controls */}
         <div className="flex items-center justify-center gap-3 mt-8 sm:mt-10">
-          <button onClick={prev} className="w-9 h-9 rounded-full bg-white/10 backdrop-blur-md border border-white/15 flex items-center justify-center text-white/60 hover:text-gold hover:bg-gold/15 hover:border-gold/30 transition-all active:scale-90">
+          <button onClick={prev} aria-label={language === 'ar' ? 'الشريحة السابقة' : 'Previous slide'} className="w-9 h-9 rounded-full bg-white/10 backdrop-blur-md border border-white/15 flex items-center justify-center text-white/60 hover:text-gold hover:bg-gold/15 hover:border-gold/30 transition-all active:scale-90 focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none">
             {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
           </button>
           <div className="flex items-center gap-2">
@@ -299,11 +299,13 @@ export const HeroSection = () => {
               <button
                 key={i}
                 onClick={() => goTo(i)}
-                className={`h-1.5 rounded-full transition-all duration-500 ${i === current ? 'bg-gold w-8' : 'bg-white/25 w-1.5 hover:bg-white/40'}`}
+                className={`h-1.5 rounded-full transition-all duration-500 focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none ${i === current ? 'bg-gold w-8' : 'bg-white/25 w-1.5 hover:bg-white/40'}`}
+                aria-label={`${language === 'ar' ? 'انتقل للشريحة' : 'Go to slide'} ${i + 1}`}
+                aria-current={i === current ? 'true' : undefined}
               />
             ))}
           </div>
-          <button onClick={next} className="w-9 h-9 rounded-full bg-white/10 backdrop-blur-md border border-white/15 flex items-center justify-center text-white/60 hover:text-gold hover:bg-gold/15 hover:border-gold/30 transition-all active:scale-90">
+          <button onClick={next} aria-label={language === 'ar' ? 'الشريحة التالية' : 'Next slide'} className="w-9 h-9 rounded-full bg-white/10 backdrop-blur-md border border-white/15 flex items-center justify-center text-white/60 hover:text-gold hover:bg-gold/15 hover:border-gold/30 transition-all active:scale-90 focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none">
             {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
           </button>
         </div>
