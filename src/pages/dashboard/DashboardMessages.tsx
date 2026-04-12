@@ -19,6 +19,7 @@ import {
   BarChart3, MessageCircle, TrendingUp, Zap, Shield, Forward, Mic, MicOff,
   Volume2, VolumeX, Bell, BellOff, AlertCircle, UserPlus, AtSign, Link2,
   Bookmark, BookmarkCheck, Filter, LayoutList, Calendar, Globe,
+  Timer, Tag, Palette, FileDown, ClockIcon,
 } from 'lucide-react';
 import { format, formatDistanceToNow, isToday, isYesterday, differenceInMinutes } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
@@ -35,6 +36,16 @@ const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const EMOJI_QUICK = ['👍', '❤️', '😊', '👏', '🙏', '✅', '🎉', '💯', '🔥', '😂', '😍', '🤝', '💪', '👀', '🙌', '🥳', '🤔', '💬'];
 const EMOJI_REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
+
+const CONV_LABELS = [
+  { key: 'none', color: '', label_ar: 'بدون تصنيف', label_en: 'No label' },
+  { key: 'new_client', color: 'bg-emerald-500', label_ar: 'عميل جديد', label_en: 'New Client' },
+  { key: 'follow_up', color: 'bg-amber-500', label_ar: 'متابعة', label_en: 'Follow-up' },
+  { key: 'important', color: 'bg-destructive', label_ar: 'مهم', label_en: 'Important' },
+  { key: 'completed', color: 'bg-blue-500', label_ar: 'مكتمل', label_en: 'Completed' },
+  { key: 'vip', color: 'bg-purple-500', label_ar: 'VIP', label_en: 'VIP' },
+  { key: 'support', color: 'bg-cyan-500', label_ar: 'دعم فني', label_en: 'Support' },
+];
 
 const formatFileSize = (bytes: number) => {
   if (bytes < 1024) return `${bytes} B`;
@@ -138,7 +149,7 @@ const AttachmentPreview = React.memo(({ url, type, name }: { url: string; type: 
 AttachmentPreview.displayName = 'AttachmentPreview';
 
 /* ─── Conversation Item (memo) ─── */
-const ConversationItem = React.memo(({ conv, isSelected, unread, isRTL, language, isSuperAdmin, isPinned, isStarred, isMuted, onClick, onPin, onStar, onMute }: any) => {
+const ConversationItem = React.memo(({ conv, isSelected, unread, isRTL, language, isSuperAdmin, isPinned, isStarred, isMuted, convLabel, onClick, onPin, onStar, onMute, onSetLabel }: any) => {
   const timeAgo = conv.last_message_at
     ? formatDistanceToNow(new Date(conv.last_message_at), { addSuffix: false, locale: language === 'ar' ? ar : enUS })
     : '';
@@ -157,6 +168,10 @@ const ConversationItem = React.memo(({ conv, isSelected, unread, isRTL, language
         <div className="absolute top-1.5 end-2">
           <Pin className="w-2.5 h-2.5 text-accent/60 fill-current" />
         </div>
+      )}
+      {/* Color label indicator */}
+      {convLabel && convLabel !== 'none' && (
+        <div className={`absolute top-0 start-0 w-1 h-full rounded-e ${CONV_LABELS.find(l => l.key === convLabel)?.color || ''}`} />
       )}
 
       <div className="relative">
@@ -556,12 +571,16 @@ const DashboardMessages = () => {
   const [showInfoPanel, setShowInfoPanel] = useState(false);
   const [forwardMsg, setForwardMsg] = useState<any>(null);
 
-  // Local state for pinned/starred/muted conversations and message reactions/stars
+  // Local state for pinned/starred/muted/labels and message reactions/stars
   const [pinnedConvs, setPinnedConvs] = useState<Set<string>>(new Set());
   const [starredConvs, setStarredConvs] = useState<Set<string>>(new Set());
   const [mutedConvs, setMutedConvs] = useState<Set<string>>(new Set());
+  const [convLabels, setConvLabels] = useState<Record<string, string>>({});
   const [messageReactions, setMessageReactions] = useState<Record<string, string>>({});
   const [starredMessages, setStarredMessages] = useState<Set<string>>(new Set());
+  const [showScheduler, setShowScheduler] = useState(false);
+  const [scheduleTime, setScheduleTime] = useState('');
+  const [scheduledMessages, setScheduledMessages] = useState<{ convId: string; text: string; time: string; id: string }[]>([]);
 
   const dragCounter = useRef(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -584,6 +603,16 @@ const DashboardMessages = () => {
   const toggleMuteConv = useCallback((id: string) => {
     setMutedConvs(prev => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next; });
     toast.success(isRTL ? 'تم تحديث الإشعارات' : 'Notifications updated');
+  }, [isRTL]);
+  const setConvLabel = useCallback((id: string, label: string) => {
+    setConvLabels(prev => {
+      const next = { ...prev };
+      if (label === 'none') delete next[id];
+      else next[id] = label;
+      return next;
+    });
+    const found = CONV_LABELS.find(l => l.key === label);
+    if (found && label !== 'none') toast.success(isRTL ? `تم تصنيف المحادثة: ${found.label_ar}` : `Labeled: ${found.label_en}`);
   }, [isRTL]);
   const handleReactMessage = useCallback((msgId: string, emoji: string | null) => {
     setMessageReactions(prev => {
@@ -791,6 +820,22 @@ const DashboardMessages = () => {
   const handleCopy = useCallback((text: string) => { if (!text) return; navigator.clipboard.writeText(text); toast.success(isRTL ? 'تم النسخ' : 'Copied'); }, [isRTL]);
   const handleEmojiSelect = useCallback((emoji: string) => { setMessageText(prev => prev + emoji); setShowEmoji(false); inputRef.current?.focus(); }, []);
 
+  /* ─── Schedule Message ─── */
+  const handleScheduleMessage = useCallback(() => {
+    if (!messageText.trim() || !selectedConversation || !scheduleTime) return;
+    const id = crypto.randomUUID();
+    setScheduledMessages(prev => [...prev, { id, convId: selectedConversation, text: messageText.trim(), time: scheduleTime }]);
+    setMessageText('');
+    setShowScheduler(false);
+    setScheduleTime('');
+    toast.success(isRTL ? `تمت جدولة الرسالة` : `Message scheduled`);
+  }, [messageText, selectedConversation, scheduleTime, isRTL]);
+
+  const cancelScheduledMessage = useCallback((id: string) => {
+    setScheduledMessages(prev => prev.filter(m => m.id !== id));
+    toast.success(isRTL ? 'تم إلغاء الرسالة المجدولة' : 'Scheduled message cancelled');
+  }, [isRTL]);
+
   /* ─── Filter & Select ─── */
   const filteredConversations = useMemo(() => {
     let result = conversations;
@@ -809,6 +854,28 @@ const DashboardMessages = () => {
   }, [conversations, deferredSearch, convFilter, unreadCounts, starredConvs, pinnedConvs]);
 
   const selectedConv = conversations.find((c: any) => c.id === selectedConversation);
+
+  /* ─── Export Chat ─── */
+  const handleExportChat = useCallback(() => {
+    if (!messages.length || !selectedConv) return;
+    const name = selectedConv.other_profile?.full_name || 'User';
+    const lines = messages.map((m: any) => {
+      const time = new Date(m.created_at).toLocaleString(language === 'ar' ? 'ar-SA' : 'en');
+      const sender = m.sender_id === user?.id ? (isRTL ? 'أنا' : 'Me') : name;
+      return `[${time}] ${sender}: ${m.content || (m.attachment_url ? '📎 مرفق' : '')}`;
+    });
+    const header = `${isRTL ? 'سجل المحادثة مع' : 'Chat history with'} ${name}\n${isRTL ? 'تاريخ التصدير' : 'Exported on'}: ${new Date().toLocaleString(language === 'ar' ? 'ar-SA' : 'en')}\n${'─'.repeat(50)}\n\n`;
+    const content = header + lines.join('\n');
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `chat-${name}-${format(new Date(), 'yyyy-MM-dd')}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(isRTL ? 'تم تصدير المحادثة بنجاح' : 'Chat exported successfully');
+  }, [messages, selectedConv, user?.id, isRTL, language]);
+
 
   const filteredMessages = useMemo(() => {
     if (!chatSearchTerm) return messages;
@@ -990,6 +1057,8 @@ const DashboardMessages = () => {
                         onPin={togglePinConv}
                         onStar={toggleStarConv}
                         onMute={toggleMuteConv}
+                        convLabel={convLabels[conv.id] || 'none'}
+                        onSetLabel={setConvLabel}
                       />
                     ))}
                   </div>
@@ -1107,6 +1176,18 @@ const DashboardMessages = () => {
                           <DropdownMenuItem className="rounded-lg text-xs gap-2" onClick={() => setShowInfoPanel(true)}>
                             <BarChart3 className="w-3.5 h-3.5" />{isRTL ? 'إحصائيات المحادثة' : 'Chat statistics'}
                           </DropdownMenuItem>
+                          <DropdownMenuItem className="rounded-lg text-xs gap-2" onClick={handleExportChat}>
+                            <FileDown className="w-3.5 h-3.5" />{isRTL ? 'تصدير المحادثة' : 'Export chat'}
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <p className="px-2 py-1 text-[9px] font-semibold text-muted-foreground uppercase">{isRTL ? 'تصنيف' : 'Label'}</p>
+                          {CONV_LABELS.map(l => (
+                            <DropdownMenuItem key={l.key} className="rounded-lg text-xs gap-2" onClick={() => setConvLabel(selectedConversation!, l.key)}>
+                              {l.color ? <span className={`w-2.5 h-2.5 rounded-full ${l.color}`} /> : <X className="w-2.5 h-2.5 text-muted-foreground" />}
+                              {language === 'ar' ? l.label_ar : l.label_en}
+                              {convLabels[selectedConversation!] === l.key && <Check className="w-3 h-3 ms-auto text-accent" />}
+                            </DropdownMenuItem>
+                          ))}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
@@ -1243,6 +1324,14 @@ const DashboardMessages = () => {
                           </TooltipTrigger>
                           <TooltipContent side="top" className="text-xs">{isRTL ? 'قوالب' : 'Templates'}</TooltipContent>
                         </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" className={`shrink-0 h-9 w-9 rounded-xl text-muted-foreground hover:text-foreground ${showScheduler ? 'bg-muted text-accent' : ''}`} onClick={() => { setShowScheduler(!showScheduler); setShowEmoji(false); setShowTemplates(false); }}>
+                              <Timer className="w-4 h-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="text-xs">{isRTL ? 'جدولة' : 'Schedule'}</TooltipContent>
+                        </Tooltip>
                       </div>
 
                       <Input
@@ -1264,6 +1353,58 @@ const DashboardMessages = () => {
                         {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                       </Button>
                     </div>
+
+                    {/* Scheduler popup */}
+                    {showScheduler && (
+                      <div className="mt-2 p-3 bg-muted/30 rounded-xl border border-border/20 animate-in slide-in-from-bottom-1 duration-200">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Timer className="w-4 h-4 text-accent shrink-0" />
+                          <p className="text-xs font-bold text-foreground">{isRTL ? 'جدولة الرسالة' : 'Schedule Message'}</p>
+                        </div>
+                        <div className="flex gap-2 items-end">
+                          <div className="flex-1">
+                            <input
+                              type="datetime-local"
+                              value={scheduleTime}
+                              onChange={e => setScheduleTime(e.target.value)}
+                              min={new Date().toISOString().slice(0, 16)}
+                              className="w-full h-9 px-3 text-xs rounded-lg border border-border/30 bg-background focus:ring-2 focus:ring-accent/30 focus:border-accent outline-none transition-all"
+                            />
+                          </div>
+                          <Button size="sm" className="h-9 gap-1.5 rounded-lg text-xs" disabled={!messageText.trim() || !scheduleTime} onClick={handleScheduleMessage}>
+                            <Timer className="w-3.5 h-3.5" />
+                            {isRTL ? 'جدولة' : 'Schedule'}
+                          </Button>
+                          <Button variant="ghost" size="sm" className="h-9 rounded-lg text-xs" onClick={() => { setShowScheduler(false); setScheduleTime(''); }}>
+                            {isRTL ? 'إلغاء' : 'Cancel'}
+                          </Button>
+                        </div>
+                        {!messageText.trim() && (
+                          <p className="text-[10px] text-muted-foreground mt-1.5 flex items-center gap-1">
+                            <AlertCircle className="w-3 h-3" />
+                            {isRTL ? 'اكتب رسالة أولاً قبل الجدولة' : 'Write a message first to schedule'}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Scheduled messages indicator */}
+                    {scheduledMessages.filter(s => s.convId === selectedConversation).length > 0 && (
+                      <div className="mt-2 space-y-1">
+                        {scheduledMessages.filter(s => s.convId === selectedConversation).map(sm => (
+                          <div key={sm.id} className="flex items-center gap-2 px-2.5 py-1.5 bg-amber-500/5 border border-amber-500/20 rounded-lg">
+                            <Timer className="w-3 h-3 text-amber-600 shrink-0" />
+                            <p className="text-[10px] text-foreground truncate flex-1">{sm.text}</p>
+                            <span className="text-[9px] text-amber-600 font-medium shrink-0">
+                              {new Date(sm.time).toLocaleString(language === 'ar' ? 'ar-SA' : 'en', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                            <button onClick={() => cancelScheduledMessage(sm.id)} className="p-0.5 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors shrink-0">
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
 
                     {/* Character count */}
                     {messageText.length > 200 && (
