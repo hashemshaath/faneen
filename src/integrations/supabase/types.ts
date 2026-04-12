@@ -1092,6 +1092,59 @@ export type Database = {
           },
         ]
       }
+      contract_line_items: {
+        Row: {
+          contract_id: string
+          created_at: string
+          description_ar: string | null
+          id: string
+          item_type: string
+          name_ar: string
+          name_en: string | null
+          quantity: number
+          sort_order: number
+          total_cost: number | null
+          unit_price: number
+          updated_at: string
+        }
+        Insert: {
+          contract_id: string
+          created_at?: string
+          description_ar?: string | null
+          id?: string
+          item_type?: string
+          name_ar: string
+          name_en?: string | null
+          quantity?: number
+          sort_order?: number
+          total_cost?: number | null
+          unit_price?: number
+          updated_at?: string
+        }
+        Update: {
+          contract_id?: string
+          created_at?: string
+          description_ar?: string | null
+          id?: string
+          item_type?: string
+          name_ar?: string
+          name_en?: string | null
+          quantity?: number
+          sort_order?: number
+          total_cost?: number | null
+          unit_price?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_line_items_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contract_measurements: {
         Row: {
           area_sqm: number | null
@@ -1363,6 +1416,8 @@ export type Database = {
           title_en: string | null
           total_amount: number
           updated_at: string
+          vat_inclusive: boolean
+          vat_rate: number
         }
         Insert: {
           business_id?: string | null
@@ -1391,6 +1446,8 @@ export type Database = {
           title_en?: string | null
           total_amount: number
           updated_at?: string
+          vat_inclusive?: boolean
+          vat_rate?: number
         }
         Update: {
           business_id?: string | null
@@ -1419,6 +1476,8 @@ export type Database = {
           title_en?: string | null
           total_amount?: number
           updated_at?: string
+          vat_inclusive?: boolean
+          vat_rate?: number
         }
         Relationships: [
           {
