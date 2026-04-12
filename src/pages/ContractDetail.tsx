@@ -1415,7 +1415,8 @@ const ContractDetail = () => {
 
             {/* Add/Edit Form */}
             {!isContractLocked && (isProvider || isClient) && showMeasurementForm && (
-                  <div className="p-4 rounded-xl bg-card border-2 border-dashed border-accent/30 space-y-3">
+              <div className="mb-4">
+                <div className="p-4 rounded-xl bg-card border-2 border-dashed border-accent/30 space-y-3">
                     <h3 className="font-heading font-bold text-sm flex items-center gap-2">
                       <Plus className="w-4 h-4 text-accent" />
                       {editingMeasurement ? (isRTL ? 'تعديل المقاس' : 'Edit Measurement') : (isRTL ? 'إضافة قطعة جديدة' : 'Add Measurement')}
@@ -1442,7 +1443,6 @@ const ContractDetail = () => {
                       <Input type="number" placeholder={isRTL ? 'الكمية' : 'Qty'} value={mForm.quantity} onChange={e => setMForm(f => ({ ...f, quantity: e.target.value }))} dir="ltr" className="text-sm" />
                       <Input type="number" placeholder={isRTL ? 'سعر الوحدة *' : 'Unit price *'} value={mForm.unit_price} onChange={e => setMForm(f => ({ ...f, unit_price: e.target.value }))} dir="ltr" className="text-sm" />
                     </div>
-                    {/* Live calc preview */}
                     {mForm.length_mm && mForm.width_mm && mForm.unit_price && (
                       <div className="flex items-center gap-4 p-2.5 rounded-lg bg-accent/5 border border-accent/10 text-xs font-heading">
                         <span>{isRTL ? 'المساحة:' : 'Area:'} <strong>{((Number(mForm.length_mm) * Number(mForm.width_mm)) / 1000000).toFixed(3)} م²</strong></span>
@@ -1456,10 +1456,7 @@ const ContractDetail = () => {
                       </Button>
                       <Button variant="outline" size="sm" className="text-xs" onClick={resetMForm}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
                     </div>
-                  </div>
-                ) : (
-                  <Button variant="outline" className="gap-1.5 text-xs" onClick={() => setShowMeasurementForm(true)}><Plus className="w-3.5 h-3.5" />{isRTL ? 'إضافة قطعة' : 'Add Measurement'}</Button>
-                )}
+                </div>
               </div>
             )}
             {isContractLocked && (
