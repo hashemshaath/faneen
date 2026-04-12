@@ -347,6 +347,13 @@ const BusinessProfile = () => {
         </main>
       </div>
 
+      <BookingWidget
+        businessId={business.id}
+        businessName={businessName}
+        open={bookingOpen}
+        onOpenChange={setBookingOpen}
+      />
+
       <Footer />
     </div>
   );
