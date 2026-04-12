@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Badge } from '@/components/ui/badge';
 import {
-  Star, MapPin, BadgeCheck, Phone, Building2, Crown, Globe, ChevronRight, ChevronLeft,
+  Star, MapPin, BadgeCheck, Phone, Crown, Globe, ChevronRight, ChevronLeft,
   Briefcase, CreditCard,
 } from 'lucide-react';
 
