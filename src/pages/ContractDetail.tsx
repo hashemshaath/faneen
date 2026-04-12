@@ -1076,6 +1076,33 @@ const ContractDetail = () => {
 
           {/* ── Milestones ── */}
           <TabsContent value="milestones">
+            {/* Add Milestone Form */}
+            {!isContractLocked && (isProvider || isClient) && (
+              <div className="mb-4">
+                {showMilestoneForm ? (
+                  <div className="p-4 rounded-xl bg-card border-2 border-dashed border-accent/30 space-y-3">
+                    <h3 className="font-heading font-bold text-sm flex items-center gap-2"><Plus className="w-4 h-4 text-accent" />{isRTL ? 'إضافة مرحلة جديدة' : 'Add Milestone'}</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <Input placeholder={isRTL ? 'اسم المرحلة *' : 'Title *'} value={msForm.title_ar} onChange={e => setMsForm(f => ({ ...f, title_ar: e.target.value }))} className="text-sm" />
+                      <Input type="number" placeholder={isRTL ? 'المبلغ *' : 'Amount *'} value={msForm.amount} onChange={e => setMsForm(f => ({ ...f, amount: e.target.value }))} dir="ltr" className="text-sm" />
+                      <Input type="date" value={msForm.due_date} onChange={e => setMsForm(f => ({ ...f, due_date: e.target.value }))} dir="ltr" className="text-sm" />
+                      <Input placeholder={isRTL ? 'وصف المرحلة' : 'Description'} value={msForm.description_ar} onChange={e => setMsForm(f => ({ ...f, description_ar: e.target.value }))} className="text-sm" />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button variant="hero" size="sm" className="gap-1.5 text-xs" disabled={!msForm.title_ar || !msForm.amount || addMilestoneMutation.isPending} onClick={() => addMilestoneMutation.mutate()}>
+                        <Plus className="w-3.5 h-3.5" />{isRTL ? 'إضافة' : 'Add'}
+                      </Button>
+                      <Button variant="outline" size="sm" className="text-xs" onClick={() => setShowMilestoneForm(false)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+                    </div>
+                  </div>
+                ) : (
+                  <Button variant="outline" className="gap-1.5 text-xs" onClick={() => setShowMilestoneForm(true)}><Plus className="w-3.5 h-3.5" />{isRTL ? 'إضافة مرحلة' : 'Add Milestone'}</Button>
+                )}
+              </div>
+            )}
+            {isContractLocked && (
+              <div className="text-[10px] text-amber-600 dark:text-amber-400 mb-3 flex items-center gap-1"><Shield className="w-3 h-3" />{isRTL ? 'المراحل مقفلة - استخدم ملحق العقد للتعديل' : 'Milestones locked - use amendments to modify'}</div>
+            )}
             <div className="space-y-2 sm:space-y-3">
               {milestones?.map((m, idx) => {
                 const mTitle = language === 'ar' ? m.title_ar : (m.title_en || m.title_ar);
