@@ -42,10 +42,13 @@ const SectionFallback = () => (
 
 const Index = () => {
   usePageMeta({
-    title: 'فنيين Faneen - دليل أعمال الألمنيوم والحديد والزجاج والخشب',
-    description: 'فنيين هي المنصة الأولى للبحث عن مصانع ومحلات الألمنيوم والحديد والاستيل والزجاج والخشب. تقييمات، عقود محمية، تقسيط، ضمانات.',
+    title: 'فنيين Faneen — دليل أعمال الألمنيوم والحديد والزجاج والديكورات',
+    description: 'دليل شامل لأفضل ورش ومصانع الألمنيوم والحديد والزجاج والخشب والمطابخ والأبواب والشبابيك في المملكة العربية السعودية والخليج. ابحث عن الحرفيين والمقاولين الموثوقين بسهولة.',
+    keywords: 'ألمنيوم, حديد, زجاج, مطابخ, أبواب, شبابيك, ديكورات, ورش, صناعات خفيفة, دليل أعمال, فنيين',
     canonical: 'https://faneen.com/',
     ogType: 'website',
+    ogTitle: 'فنيين Faneen — دليل الصناعات الخفيفة',
+    ogDescription: 'دليل شامل لأفضل ورش ومصانع الألمنيوم والحديد والزجاج والديكورات في الخليج',
   });
 
   useJsonLd(useMemo(() => ({
@@ -53,13 +56,25 @@ const Index = () => {
     '@type': 'WebSite',
     name: 'فنيين Faneen',
     url: 'https://faneen.com',
-    description: 'المنصة الأولى للبحث عن مصانع ومحلات الألمنيوم والحديد والاستيل والزجاج والخشب',
+    description: 'دليل شامل لأعمال الألمنيوم والحديد والزجاج والخشب والمطابخ والديكورات',
+    inLanguage: 'ar',
     potentialAction: {
       '@type': 'SearchAction',
-      target: 'https://faneen.com/search?q={search_term_string}',
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: 'https://faneen.com/search?q={search_term_string}',
+      },
       'query-input': 'required name=search_term_string',
     },
-    inLanguage: ['ar', 'en'],
+    publisher: {
+      '@type': 'Organization',
+      name: 'فنيين Faneen',
+      url: 'https://faneen.com',
+      logo: {
+        '@type': 'ImageObject',
+        url: 'https://faneen.com/logo.png',
+      },
+    },
   }), []));
 
   return (
