@@ -14,21 +14,23 @@ import { toast } from 'sonner';
 import {
   MessageSquare, Send, Search, Check, CheckCheck, ArrowLeft, ArrowRight,
   Paperclip, Image as ImageIcon, FileText, X, Download, Loader2, Eye, ExternalLink,
-  Upload, Sparkles, Reply, MoreVertical, Users, Clock, Archive, Smile, Mic, Pin,
-  Star, Trash2, Forward, Copy, ChevronDown,
+  Upload, Sparkles, Reply, MoreVertical, Users, Clock, Archive, Smile, Pin,
+  Star, Trash2, Copy, ChevronDown, Phone, Video, Info, StarOff, Hash,
+  BarChart3, MessageCircle, TrendingUp, Zap, Shield,
 } from 'lucide-react';
-import { format, formatDistanceToNow, isToday, isYesterday } from 'date-fns';
+import { format, formatDistanceToNow, isToday, isYesterday, differenceInMinutes } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
 import { MessageTemplates } from '@/components/messages/MessageTemplates';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 
 const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
-
-const EMOJI_QUICK = ['👍', '❤️', '😊', '👏', '🙏', '✅', '🎉', '💯'];
+const EMOJI_QUICK = ['👍', '❤️', '😊', '👏', '🙏', '✅', '🎉', '💯', '🔥', '😂', '😍', '🤝'];
+const EMOJI_REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
 
 const formatFileSize = (bytes: number) => {
   if (bytes < 1024) return `${bytes} B`;
@@ -49,7 +51,7 @@ const ConversationSkeleton = () => (
   <div className="space-y-0.5">
     {Array.from({ length: 6 }).map((_, i) => (
       <div key={i} className="flex items-center gap-2.5 p-3">
-        <Skeleton className="w-10 h-10 rounded-full shrink-0" />
+        <Skeleton className="w-11 h-11 rounded-full shrink-0" />
         <div className="flex-1 space-y-1.5">
           <div className="flex justify-between">
             <Skeleton className="h-3.5 w-24" />
@@ -62,6 +64,23 @@ const ConversationSkeleton = () => (
   </div>
 );
 
+/* ─── Typing Indicator ─── */
+const TypingIndicator = React.memo(({ isRTL }: { isRTL: boolean }) => (
+  <div className="flex justify-start mb-1.5 animate-in fade-in-0 duration-300">
+    <div className="bg-card border border-border/30 rounded-2xl rounded-es-md px-4 py-2.5 shadow-sm">
+      <div className="flex items-center gap-1.5">
+        <div className="flex gap-1">
+          <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50 animate-bounce" style={{ animationDelay: '0ms' }} />
+          <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50 animate-bounce" style={{ animationDelay: '150ms' }} />
+          <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50 animate-bounce" style={{ animationDelay: '300ms' }} />
+        </div>
+        <span className="text-[10px] text-muted-foreground ms-1">{isRTL ? 'يكتب...' : 'typing...'}</span>
+      </div>
+    </div>
+  </div>
+));
+TypingIndicator.displayName = 'TypingIndicator';
+
 /* ─── Attachment Preview (memo) ─── */
 const AttachmentPreview = React.memo(({ url, type, name }: { url: string; type: string; name?: string }) => {
   const [showPdf, setShowPdf] = React.useState(false);
@@ -73,7 +92,7 @@ const AttachmentPreview = React.memo(({ url, type, name }: { url: string; type: 
     return (
       <a href={url} target="_blank" rel="noopener noreferrer" className="block mt-2 group/img">
         <div className="relative overflow-hidden rounded-xl border border-border/20 shadow-sm">
-          <img src={url} alt={name || 'attachment'} className="max-w-[220px] max-h-[180px] object-cover transition-transform duration-300 group-hover/img:scale-105" loading="lazy" />
+          <img src={url} alt={name || 'attachment'} className="max-w-[240px] max-h-[200px] object-cover transition-transform duration-300 group-hover/img:scale-105" loading="lazy" />
           <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/10 transition-colors flex items-center justify-center">
             <Eye className="w-5 h-5 text-white opacity-0 group-hover/img:opacity-100 transition-opacity drop-shadow-lg" />
           </div>
@@ -118,10 +137,11 @@ const AttachmentPreview = React.memo(({ url, type, name }: { url: string; type: 
 AttachmentPreview.displayName = 'AttachmentPreview';
 
 /* ─── Conversation Item (memo) ─── */
-const ConversationItem = React.memo(({ conv, isSelected, unread, isRTL, language, isSuperAdmin, onClick }: any) => {
+const ConversationItem = React.memo(({ conv, isSelected, unread, isRTL, language, isSuperAdmin, isPinned, isStarred, onClick, onPin, onStar }: any) => {
   const timeAgo = conv.last_message_at
     ? formatDistanceToNow(new Date(conv.last_message_at), { addSuffix: false, locale: language === 'ar' ? ar : enUS })
     : '';
+  const isOnline = conv.last_message_at && differenceInMinutes(new Date(), new Date(conv.last_message_at)) < 5;
 
   return (
     <div
@@ -131,22 +151,36 @@ const ConversationItem = React.memo(({ conv, isSelected, unread, isRTL, language
           : 'hover:bg-muted/40 border-s-[3px] border-s-transparent'}`}
       onClick={onClick}
     >
+      {/* Pin indicator */}
+      {isPinned && (
+        <div className="absolute top-1.5 end-2">
+          <Pin className="w-2.5 h-2.5 text-muted-foreground/60 fill-current" />
+        </div>
+      )}
+
       <div className="relative">
-        <Avatar className={`w-10 h-10 shrink-0 ring-2 transition-all ${isSelected ? 'ring-accent/30' : 'ring-border/10 group-hover:ring-border/30'}`}>
+        <Avatar className={`w-11 h-11 shrink-0 ring-2 transition-all ${isSelected ? 'ring-accent/30' : 'ring-border/10 group-hover:ring-border/30'}`}>
           <AvatarImage src={conv.other_profile?.avatar_url} />
           <AvatarFallback className="bg-gradient-to-br from-accent/20 to-primary/10 text-accent font-bold text-xs">
             {conv.other_profile?.full_name?.charAt(0) || '؟'}
           </AvatarFallback>
         </Avatar>
-        {unread > 0 && (
+        {/* Online indicator */}
+        {isOnline && (
+          <span className="absolute -bottom-0.5 -end-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-card" />
+        )}
+        {unread > 0 && !isOnline && (
           <span className="absolute -top-0.5 -end-0.5 w-3 h-3 bg-accent rounded-full border-2 border-card animate-pulse" />
         )}
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">
-          <h4 className={`text-sm truncate transition-colors ${unread > 0 ? 'font-bold text-foreground' : 'font-medium text-foreground/80'}`}>
-            {conv.other_profile?.full_name || (isRTL ? 'مستخدم' : 'User')}
-          </h4>
+          <div className="flex items-center gap-1.5 min-w-0">
+            <h4 className={`text-sm truncate transition-colors ${unread > 0 ? 'font-bold text-foreground' : 'font-medium text-foreground/80'}`}>
+              {conv.other_profile?.full_name || (isRTL ? 'مستخدم' : 'User')}
+            </h4>
+            {isStarred && <Star className="w-3 h-3 text-amber-500 fill-amber-500 shrink-0" />}
+          </div>
           <span className={`text-[10px] shrink-0 ${unread > 0 ? 'text-accent font-semibold' : 'text-muted-foreground'}`}>{timeAgo}</span>
         </div>
         {isSuperAdmin && conv.participant_1_name && conv.participant_2_name && (
@@ -165,13 +199,24 @@ const ConversationItem = React.memo(({ conv, isSelected, unread, isRTL, language
           )}
         </div>
       </div>
+
+      {/* Hover actions */}
+      <div className="absolute end-2 bottom-2 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+        <button onClick={(e) => { e.stopPropagation(); onPin?.(conv.id); }} className="p-1 rounded-md hover:bg-muted/60 text-muted-foreground" title={isRTL ? 'تثبيت' : 'Pin'}>
+          <Pin className={`w-2.5 h-2.5 ${isPinned ? 'fill-current' : ''}`} />
+        </button>
+        <button onClick={(e) => { e.stopPropagation(); onStar?.(conv.id); }} className="p-1 rounded-md hover:bg-muted/60 text-muted-foreground" title={isRTL ? 'مفضلة' : 'Star'}>
+          <Star className={`w-2.5 h-2.5 ${isStarred ? 'fill-amber-500 text-amber-500' : ''}`} />
+        </button>
+      </div>
     </div>
   );
 });
 ConversationItem.displayName = 'ConversationItem';
 
 /* ─── Message Bubble (memo) ─── */
-const MessageBubble = React.memo(({ msg, isMine, language, isRTL, onReply, onCopy }: any) => {
+const MessageBubble = React.memo(({ msg, isMine, language, isRTL, onReply, onCopy, onReact, onStar }: any) => {
+  const [showReactions, setShowReactions] = useState(false);
   const isReply = msg.content?.startsWith('↩️');
   let replyPreview = '';
   let mainContent = msg.content || '';
@@ -181,59 +226,89 @@ const MessageBubble = React.memo(({ msg, isMine, language, isRTL, onReply, onCop
     mainContent = parts.slice(1).join('\n\n');
   }
 
+  const reaction = msg._reaction;
+
   return (
-    <div className={`flex group/msg ${isMine ? 'justify-end' : 'justify-start'} mb-1.5 animate-in fade-in-0 slide-in-from-bottom-1 duration-200`}>
+    <div className={`flex group/msg ${isMine ? 'justify-end' : 'justify-start'} mb-2 animate-in fade-in-0 slide-in-from-bottom-1 duration-200`}>
       {/* Actions - mine */}
       {isMine && (
         <div className="flex items-center gap-0.5 opacity-0 group-hover/msg:opacity-100 transition-all me-1 self-center">
+          <button onClick={() => setShowReactions(!showReactions)} className="p-1 rounded-lg hover:bg-muted/60 text-muted-foreground transition-colors" title={isRTL ? 'تفاعل' : 'React'}>
+            <Smile className="w-3 h-3" />
+          </button>
           <button onClick={() => onCopy?.(msg.content)} className="p-1 rounded-lg hover:bg-muted/60 text-muted-foreground transition-colors" title={isRTL ? 'نسخ' : 'Copy'}>
             <Copy className="w-3 h-3" />
           </button>
           <button onClick={() => onReply(msg)} className="p-1 rounded-lg hover:bg-muted/60 text-muted-foreground transition-colors" title={isRTL ? 'رد' : 'Reply'}>
             <Reply className="w-3 h-3" />
           </button>
+          <button onClick={() => onStar?.(msg.id)} className="p-1 rounded-lg hover:bg-muted/60 text-muted-foreground transition-colors" title={isRTL ? 'مفضلة' : 'Star'}>
+            <Star className={`w-3 h-3 ${msg._starred ? 'fill-amber-500 text-amber-500' : ''}`} />
+          </button>
         </div>
       )}
 
-      <div className={`max-w-[70%] relative group/bubble
-        ${isMine
-          ? 'bg-gradient-to-br from-primary to-primary/90 text-primary-foreground rounded-2xl rounded-ee-md shadow-md shadow-primary/10'
-          : 'bg-card border border-border/30 rounded-2xl rounded-es-md shadow-sm'}`}>
-        {/* Reply context */}
-        {isReply && replyPreview && (
-          <div className={`mx-3 mt-2 mb-0 px-2.5 py-1.5 rounded-lg text-[10px] flex items-center gap-1.5
-            ${isMine ? 'bg-primary-foreground/10 text-primary-foreground/80' : 'bg-muted/50 text-muted-foreground'}`}>
-            <Reply className="w-2.5 h-2.5 shrink-0" />
-            <span className="truncate">{replyPreview}</span>
-          </div>
-        )}
-
-        {/* Attachment */}
-        {msg.attachment_url && (
-          <div className="px-3 pt-1">
-            <AttachmentPreview url={msg.attachment_url} type={msg.message_type} name={msg.content?.startsWith('📎') ? msg.content.slice(3) : undefined} />
-          </div>
-        )}
-
-        {/* Text */}
-        {mainContent && !mainContent.startsWith('📎') && (
-          <p className="whitespace-pre-wrap break-words leading-relaxed text-[13px] px-3.5 py-2">{mainContent}</p>
-        )}
-        {mainContent?.startsWith('📎') && !msg.attachment_url && (
-          <p className="whitespace-pre-wrap break-words text-[13px] px-3.5 py-2">{mainContent}</p>
-        )}
-
-        {/* Time & status */}
-        <div className={`flex items-center gap-1 px-3 pb-1.5 ${isMine ? 'justify-end' : ''}`}>
-          <span className={`text-[9px] ${isMine ? 'text-primary-foreground/50' : 'text-muted-foreground/70'}`}>
-            {new Date(msg.created_at).toLocaleTimeString(language === 'ar' ? 'ar-SA' : 'en', { hour: '2-digit', minute: '2-digit' })}
-          </span>
-          {isMine && (
-            msg.is_read
-              ? <CheckCheck className="w-3.5 h-3.5 text-sky-300" />
-              : <Check className="w-3 h-3 text-primary-foreground/40" />
+      <div className="relative">
+        <div className={`max-w-[70%] relative group/bubble
+          ${isMine
+            ? 'bg-gradient-to-br from-primary to-primary/90 text-primary-foreground rounded-2xl rounded-ee-md shadow-md shadow-primary/10'
+            : 'bg-card border border-border/30 rounded-2xl rounded-es-md shadow-sm'}`}>
+          {/* Reply context */}
+          {isReply && replyPreview && (
+            <div className={`mx-3 mt-2 mb-0 px-2.5 py-1.5 rounded-lg text-[10px] flex items-center gap-1.5
+              ${isMine ? 'bg-primary-foreground/10 text-primary-foreground/80' : 'bg-muted/50 text-muted-foreground'}`}>
+              <Reply className="w-2.5 h-2.5 shrink-0" />
+              <span className="truncate">{replyPreview}</span>
+            </div>
           )}
+
+          {/* Attachment */}
+          {msg.attachment_url && (
+            <div className="px-3 pt-1">
+              <AttachmentPreview url={msg.attachment_url} type={msg.message_type} name={msg.content?.startsWith('📎') ? msg.content.slice(3) : undefined} />
+            </div>
+          )}
+
+          {/* Text */}
+          {mainContent && !mainContent.startsWith('📎') && (
+            <p className="whitespace-pre-wrap break-words leading-relaxed text-[13px] px-3.5 py-2">{mainContent}</p>
+          )}
+          {mainContent?.startsWith('📎') && !msg.attachment_url && (
+            <p className="whitespace-pre-wrap break-words text-[13px] px-3.5 py-2">{mainContent}</p>
+          )}
+
+          {/* Time & status */}
+          <div className={`flex items-center gap-1 px-3 pb-1.5 ${isMine ? 'justify-end' : ''}`}>
+            <span className={`text-[9px] ${isMine ? 'text-primary-foreground/50' : 'text-muted-foreground/70'}`}>
+              {new Date(msg.created_at).toLocaleTimeString(language === 'ar' ? 'ar-SA' : 'en', { hour: '2-digit', minute: '2-digit' })}
+            </span>
+            {isMine && (
+              msg.is_read
+                ? <CheckCheck className="w-3.5 h-3.5 text-sky-300" />
+                : <Check className="w-3 h-3 text-primary-foreground/40" />
+            )}
+          </div>
         </div>
+
+        {/* Reaction badge */}
+        {reaction && (
+          <div className={`absolute -bottom-2 ${isMine ? 'start-2' : 'end-2'} bg-card border border-border/30 rounded-full px-1.5 py-0.5 text-xs shadow-sm cursor-pointer hover:scale-110 transition-transform`}
+            onClick={() => onReact?.(msg.id, null)}>
+            {reaction}
+          </div>
+        )}
+
+        {/* Reactions picker */}
+        {showReactions && (
+          <div className={`absolute bottom-full mb-1 ${isMine ? 'end-0' : 'start-0'} bg-card border border-border/30 rounded-xl shadow-xl p-1.5 flex gap-0.5 animate-in fade-in-0 slide-in-from-bottom-2 duration-200 z-10`}>
+            {EMOJI_REACTIONS.map(e => (
+              <button key={e} onClick={() => { onReact?.(msg.id, e); setShowReactions(false); }}
+                className="w-7 h-7 rounded-lg hover:bg-muted/60 flex items-center justify-center text-sm transition-all hover:scale-125">
+                {e}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Actions - other */}
@@ -241,6 +316,9 @@ const MessageBubble = React.memo(({ msg, isMine, language, isRTL, onReply, onCop
         <div className="flex items-center gap-0.5 opacity-0 group-hover/msg:opacity-100 transition-all ms-1 self-center">
           <button onClick={() => onReply(msg)} className="p-1 rounded-lg hover:bg-muted/60 text-muted-foreground transition-colors" title={isRTL ? 'رد' : 'Reply'}>
             <Reply className="w-3 h-3" />
+          </button>
+          <button onClick={() => setShowReactions(!showReactions)} className="p-1 rounded-lg hover:bg-muted/60 text-muted-foreground transition-colors" title={isRTL ? 'تفاعل' : 'React'}>
+            <Smile className="w-3 h-3" />
           </button>
           <button onClick={() => onCopy?.(msg.content)} className="p-1 rounded-lg hover:bg-muted/60 text-muted-foreground transition-colors" title={isRTL ? 'نسخ' : 'Copy'}>
             <Copy className="w-3 h-3" />
@@ -254,17 +332,121 @@ MessageBubble.displayName = 'MessageBubble';
 
 /* ─── Emoji Quick Picker ─── */
 const EmojiQuickPicker = React.memo(({ onSelect, isRTL }: { onSelect: (e: string) => void; isRTL: boolean }) => (
-  <div className="absolute bottom-full mb-2 start-0 bg-card border border-border/40 rounded-xl shadow-xl p-2 flex gap-1 animate-in fade-in-0 slide-in-from-bottom-2 duration-200">
-    {EMOJI_QUICK.map(e => (
-      <button key={e} onClick={() => onSelect(e)} className="w-8 h-8 rounded-lg hover:bg-muted/60 flex items-center justify-center text-base transition-all hover:scale-110">
-        {e}
-      </button>
-    ))}
+  <div className="absolute bottom-full mb-2 start-0 bg-card border border-border/40 rounded-2xl shadow-xl p-2.5 animate-in fade-in-0 slide-in-from-bottom-2 duration-200">
+    <p className="text-[9px] text-muted-foreground font-medium mb-1.5 px-1">{isRTL ? 'رموز سريعة' : 'Quick Emoji'}</p>
+    <div className="grid grid-cols-6 gap-0.5">
+      {EMOJI_QUICK.map(e => (
+        <button key={e} onClick={() => onSelect(e)} className="w-8 h-8 rounded-lg hover:bg-muted/60 flex items-center justify-center text-base transition-all hover:scale-110">
+          {e}
+        </button>
+      ))}
+    </div>
   </div>
 ));
 EmojiQuickPicker.displayName = 'EmojiQuickPicker';
 
+/* ─── Chat Info Panel ─── */
+const ChatInfoPanel = React.memo(({ conv, messages, isRTL, onClose }: { conv: any; messages: any[]; isRTL: boolean; onClose: () => void }) => {
+  const totalMsgs = messages.length;
+  const myMsgs = messages.filter((m: any) => m.sender_id !== conv?.participant_1 && m.sender_id !== conv?.participant_2).length;
+  const attachments = messages.filter((m: any) => m.attachment_url);
+  const images = attachments.filter((m: any) => m.message_type === 'image');
+  const files = attachments.filter((m: any) => m.message_type === 'file');
+  const firstMsg = messages[0];
+
+  return (
+    <div className="w-72 border-s border-border/30 bg-card flex flex-col animate-in slide-in-from-end duration-300 shrink-0 hidden lg:flex">
+      <div className="p-4 border-b border-border/20 flex items-center justify-between">
+        <h3 className="font-heading font-bold text-sm flex items-center gap-1.5">
+          <Info className="w-4 h-4 text-primary" />
+          {isRTL ? 'تفاصيل المحادثة' : 'Chat Details'}
+        </h3>
+        <Button variant="ghost" size="icon" className="w-7 h-7 rounded-lg" onClick={onClose}><X className="w-3.5 h-3.5" /></Button>
+      </div>
+
+      <ScrollArea className="flex-1">
+        <div className="p-4 space-y-4">
+          {/* Profile */}
+          <div className="text-center space-y-2">
+            <Avatar className="w-20 h-20 mx-auto ring-4 ring-border/10">
+              <AvatarImage src={conv?.other_profile?.avatar_url} />
+              <AvatarFallback className="bg-gradient-to-br from-accent/20 to-primary/10 text-accent font-bold text-xl">
+                {conv?.other_profile?.full_name?.charAt(0) || '؟'}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <h4 className="font-heading font-bold text-sm">{conv?.other_profile?.full_name}</h4>
+              <p className="text-[11px] text-muted-foreground">{conv?.other_profile?.email || ''}</p>
+            </div>
+          </div>
+
+          {/* Stats */}
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              { label: isRTL ? 'الرسائل' : 'Messages', value: totalMsgs, icon: MessageCircle },
+              { label: isRTL ? 'المرفقات' : 'Attachments', value: attachments.length, icon: Paperclip },
+              { label: isRTL ? 'الصور' : 'Images', value: images.length, icon: ImageIcon },
+              { label: isRTL ? 'الملفات' : 'Files', value: files.length, icon: FileText },
+            ].map((s, i) => (
+              <div key={i} className="p-2.5 rounded-xl bg-muted/20 border border-border/20 text-center">
+                <s.icon className="w-3.5 h-3.5 text-muted-foreground mx-auto mb-1" />
+                <p className="text-sm font-bold">{s.value}</p>
+                <p className="text-[9px] text-muted-foreground">{s.label}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* First message date */}
+          {firstMsg && (
+            <div className="text-center p-3 rounded-xl bg-muted/10 border border-border/20">
+              <p className="text-[10px] text-muted-foreground">{isRTL ? 'بداية المحادثة' : 'Conversation started'}</p>
+              <p className="text-xs font-medium mt-0.5">{format(new Date(firstMsg.created_at), 'PPP', { locale: isRTL ? ar : enUS })}</p>
+            </div>
+          )}
+
+          {/* Shared media */}
+          {images.length > 0 && (
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">{isRTL ? 'الصور المشتركة' : 'Shared Images'}</p>
+              <div className="grid grid-cols-3 gap-1.5">
+                {images.slice(0, 9).map((m: any) => (
+                  <a key={m.id} href={m.attachment_url} target="_blank" rel="noopener noreferrer"
+                    className="aspect-square rounded-lg overflow-hidden border border-border/20 hover:opacity-80 transition-opacity">
+                    <img src={m.attachment_url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                  </a>
+                ))}
+              </div>
+              {images.length > 9 && (
+                <p className="text-[10px] text-center text-muted-foreground mt-1.5">+{images.length - 9} {isRTL ? 'صور أخرى' : 'more'}</p>
+              )}
+            </div>
+          )}
+
+          {/* Shared files */}
+          {files.length > 0 && (
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">{isRTL ? 'الملفات المشتركة' : 'Shared Files'}</p>
+              <div className="space-y-1">
+                {files.slice(0, 5).map((m: any) => (
+                  <a key={m.id} href={m.attachment_url} target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/30 transition-colors">
+                    <FileText className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                    <span className="text-[11px] truncate">{m.content?.replace('📎 ', '') || 'File'}</span>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </ScrollArea>
+    </div>
+  );
+});
+ChatInfoPanel.displayName = 'ChatInfoPanel';
+
+/* ═══════════════════════════════════════════════════════ */
 /* ─── Main Component ─── */
+/* ═══════════════════════════════════════════════════════ */
 const DashboardMessages = () => {
   const { isRTL, language } = useLanguage();
   const { user, isSuperAdmin } = useAuth();
@@ -284,9 +466,15 @@ const DashboardMessages = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
   const [replyTo, setReplyTo] = useState<any>(null);
-  const [convFilter, setConvFilter] = useState<'all' | 'unread'>('all');
+  const [convFilter, setConvFilter] = useState<'all' | 'unread' | 'starred'>('all');
   const [showEmoji, setShowEmoji] = useState(false);
-  const [showScrollBottom, setShowScrollBottom] = useState(false);
+  const [showInfoPanel, setShowInfoPanel] = useState(false);
+
+  // Local state for pinned/starred conversations and message reactions/stars
+  const [pinnedConvs, setPinnedConvs] = useState<Set<string>>(new Set());
+  const [starredConvs, setStarredConvs] = useState<Set<string>>(new Set());
+  const [messageReactions, setMessageReactions] = useState<Record<string, string>>({});
+  const [starredMessages, setStarredMessages] = useState<Set<string>>(new Set());
 
   const dragCounter = useRef(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -298,6 +486,24 @@ const DashboardMessages = () => {
   const handleSearchChange = useCallback((val: string) => {
     setSearchTerm(val);
     startTransition(() => setDeferredSearch(val));
+  }, []);
+
+  const togglePinConv = useCallback((id: string) => {
+    setPinnedConvs(prev => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next; });
+  }, []);
+  const toggleStarConv = useCallback((id: string) => {
+    setStarredConvs(prev => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next; });
+  }, []);
+  const handleReactMessage = useCallback((msgId: string, emoji: string | null) => {
+    setMessageReactions(prev => {
+      const next = { ...prev };
+      if (emoji === null || next[msgId] === emoji) delete next[msgId];
+      else next[msgId] = emoji;
+      return next;
+    });
+  }, []);
+  const toggleStarMessage = useCallback((msgId: string) => {
+    setStarredMessages(prev => { const next = new Set(prev); next.has(msgId) ? next.delete(msgId) : next.add(msgId); return next; });
   }, []);
 
   /* ─── Drag & Drop ─── */
@@ -513,8 +719,17 @@ const DashboardMessages = () => {
     let result = conversations;
     if (deferredSearch) result = result.filter((c: any) => c.other_profile?.full_name?.toLowerCase().includes(deferredSearch.toLowerCase()));
     if (convFilter === 'unread') result = result.filter((c: any) => (unreadCounts as Record<string, number>)[c.id] > 0);
+    if (convFilter === 'starred') result = result.filter((c: any) => starredConvs.has(c.id));
+
+    // Sort: pinned first
+    result = [...result].sort((a: any, b: any) => {
+      const aPinned = pinnedConvs.has(a.id) ? 1 : 0;
+      const bPinned = pinnedConvs.has(b.id) ? 1 : 0;
+      return bPinned - aPinned;
+    });
+
     return result;
-  }, [conversations, deferredSearch, convFilter, unreadCounts]);
+  }, [conversations, deferredSearch, convFilter, unreadCounts, starredConvs, pinnedConvs]);
 
   const selectedConv = conversations.find((c: any) => c.id === selectedConversation);
 
@@ -523,11 +738,20 @@ const DashboardMessages = () => {
     return messages.filter((m: any) => m.content?.toLowerCase().includes(chatSearchTerm.toLowerCase()));
   }, [messages, chatSearchTerm]);
 
+  // Enrich messages with reaction/star state
+  const enrichedMessages = useMemo(() => {
+    const source = chatSearchTerm ? filteredMessages : messages;
+    return source.map((m: any) => ({
+      ...m,
+      _reaction: messageReactions[m.id] || null,
+      _starred: starredMessages.has(m.id),
+    }));
+  }, [messages, filteredMessages, chatSearchTerm, messageReactions, starredMessages]);
+
   /* ─── Date-grouped messages ─── */
   const groupedMessages = useMemo(() => {
     const groups: { date: string; label: string; messages: any[] }[] = [];
-    const source = chatSearchTerm ? filteredMessages : messages;
-    source.forEach((msg: any) => {
+    enrichedMessages.forEach((msg: any) => {
       const d = new Date(msg.created_at);
       const dateKey = format(d, 'yyyy-MM-dd');
       const last = groups[groups.length - 1];
@@ -538,57 +762,65 @@ const DashboardMessages = () => {
       }
     });
     return groups;
-  }, [messages, filteredMessages, chatSearchTerm, language]);
+  }, [enrichedMessages, language]);
 
   /* ─── Stats ─── */
   const stats = useMemo(() => ({
     total: conversations.length,
     unread: totalUnread,
-  }), [conversations.length, totalUnread]);
+    starred: starredConvs.size,
+    pinned: pinnedConvs.size,
+  }), [conversations.length, totalUnread, starredConvs.size, pinnedConvs.size]);
 
   return (
     <DashboardLayout>
-      <div className="h-[calc(100vh-8rem)]">
-        {/* ─── Stats Bar ─── */}
-        <div className="flex items-center gap-2 mb-3 overflow-x-auto pb-1 no-scrollbar">
-          {[
-            { icon: MessageSquare, label: isRTL ? 'المحادثات' : 'Conversations', value: stats.total, gradient: 'from-primary/15 to-primary/5', iconBg: 'bg-primary/15 text-primary' },
-            { icon: Clock, label: isRTL ? 'غير مقروءة' : 'Unread', value: stats.unread, gradient: 'from-amber-500/15 to-amber-500/5', iconBg: 'bg-amber-500/15 text-amber-600' },
-          ].map((s, i) => (
-            <div key={i} className={`flex items-center gap-2.5 px-3 py-2 rounded-xl border border-border/30 bg-gradient-to-r ${s.gradient} shrink-0 transition-all hover:shadow-sm`}>
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${s.iconBg}`}><s.icon className="w-4 h-4" /></div>
-              <div>
-                <p className="text-base font-bold leading-none">{s.value}</p>
-                <p className="text-[10px] text-muted-foreground mt-0.5">{s.label}</p>
+      <TooltipProvider>
+        <div className="h-[calc(100vh-8rem)]">
+          {/* ─── Stats Bar ─── */}
+          <div className="flex items-center gap-2 mb-3 overflow-x-auto pb-1 no-scrollbar">
+            {[
+              { icon: MessageSquare, label: isRTL ? 'المحادثات' : 'Conversations', value: stats.total, gradient: 'from-primary/15 to-primary/5', iconBg: 'bg-primary/15 text-primary' },
+              { icon: Clock, label: isRTL ? 'غير مقروءة' : 'Unread', value: stats.unread, gradient: 'from-amber-500/15 to-amber-500/5', iconBg: 'bg-amber-500/15 text-amber-600' },
+              { icon: Star, label: isRTL ? 'مميزة' : 'Starred', value: stats.starred, gradient: 'from-yellow-500/15 to-yellow-500/5', iconBg: 'bg-yellow-500/15 text-yellow-600' },
+              { icon: Pin, label: isRTL ? 'مثبتة' : 'Pinned', value: stats.pinned, gradient: 'from-blue-500/15 to-blue-500/5', iconBg: 'bg-blue-500/15 text-blue-600' },
+            ].map((s, i) => (
+              <div key={i} className={`flex items-center gap-2.5 px-3 py-2 rounded-xl border border-border/30 bg-gradient-to-r ${s.gradient} shrink-0 transition-all hover:shadow-sm`}>
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${s.iconBg}`}><s.icon className="w-4 h-4" /></div>
+                <div>
+                  <p className="text-base font-bold leading-none">{s.value}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">{s.label}</p>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
 
-        <div className="flex h-[calc(100%-3.5rem)] border border-border/30 rounded-2xl overflow-hidden bg-card shadow-lg">
-          {/* ═══ Conversations List ═══ */}
-          <div className={`w-full md:w-[320px] lg:w-[340px] border-e border-border/30 flex flex-col bg-card ${selectedConversation ? 'hidden md:flex' : 'flex'}`}>
-            {/* Header */}
-            <div className="p-3 border-b border-border/30 space-y-2.5">
-              <div className="flex items-center justify-between">
-                <h2 className="font-heading font-bold text-base flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-accent/10 flex items-center justify-center">
-                    <MessageSquare className="w-4 h-4 text-accent" />
-                  </div>
-                  {isRTL ? 'المحادثات' : 'Messages'}
-                  {totalUnread > 0 && (
-                    <Badge className="text-[9px] px-1.5 py-0 h-4 min-w-[18px] justify-center bg-accent text-accent-foreground border-0 animate-pulse">{totalUnread}</Badge>
-                  )}
-                </h2>
+          <div className="flex h-[calc(100%-3.5rem)] border border-border/30 rounded-2xl overflow-hidden bg-card shadow-lg">
+            {/* ═══ Conversations List ═══ */}
+            <div className={`w-full md:w-[320px] lg:w-[340px] border-e border-border/30 flex flex-col bg-card ${selectedConversation ? 'hidden md:flex' : 'flex'}`}>
+              {/* Header */}
+              <div className="p-3 border-b border-border/30 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <h2 className="font-heading font-bold text-base flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-accent/10 flex items-center justify-center">
+                      <MessageSquare className="w-4 h-4 text-accent" />
+                    </div>
+                    {isRTL ? 'المحادثات' : 'Messages'}
+                    {totalUnread > 0 && (
+                      <Badge className="text-[9px] px-1.5 py-0 h-4 min-w-[18px] justify-center bg-accent text-accent-foreground border-0 animate-pulse">{totalUnread}</Badge>
+                    )}
+                  </h2>
+                </div>
+
                 {/* Filter tabs */}
                 <div className="flex bg-muted/50 border border-border/30 rounded-xl overflow-hidden p-0.5">
                   {[
                     { key: 'all' as const, icon: Users, label: isRTL ? 'الكل' : 'All' },
                     { key: 'unread' as const, icon: Archive, label: isRTL ? 'غير مقروء' : 'Unread' },
+                    { key: 'starred' as const, icon: Star, label: isRTL ? 'مميزة' : 'Starred' },
                   ].map(f => (
                     <button
                       key={f.key}
-                      className={`px-2.5 py-1.5 text-[10px] font-medium transition-all rounded-lg flex items-center gap-1
+                      className={`flex-1 px-2 py-1.5 text-[10px] font-medium transition-all rounded-lg flex items-center justify-center gap-1
                         ${convFilter === f.key ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                       onClick={() => setConvFilter(f.key)}
                     >
@@ -597,281 +829,350 @@ const DashboardMessages = () => {
                     </button>
                   ))}
                 </div>
-              </div>
-              <div className="relative">
-                <Search className="absolute top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
-                <Input
-                  value={searchTerm}
-                  onChange={e => handleSearchChange(e.target.value)}
-                  placeholder={isRTL ? 'بحث في المحادثات...' : 'Search conversations...'}
-                  className="ps-9 h-9 text-xs bg-muted/30 border-border/20 rounded-xl focus:bg-background transition-colors"
-                />
-              </div>
-            </div>
 
-            {/* List */}
-            <ScrollArea className="flex-1">
-              {loadingConvs ? (
-                <ConversationSkeleton />
-              ) : filteredConversations.length === 0 ? (
-                <div className="p-8 text-center text-muted-foreground">
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-accent/10 to-primary/10 flex items-center justify-center">
-                    <MessageSquare className="w-8 h-8 text-accent/40" />
+                <div className="relative">
+                  <Search className="absolute top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
+                  <Input
+                    value={searchTerm}
+                    onChange={e => handleSearchChange(e.target.value)}
+                    placeholder={isRTL ? 'بحث في المحادثات...' : 'Search conversations...'}
+                    className="ps-9 h-9 text-xs bg-muted/30 border-border/20 rounded-xl focus:bg-background transition-colors"
+                  />
+                </div>
+              </div>
+
+              {/* List */}
+              <ScrollArea className="flex-1">
+                {loadingConvs ? (
+                  <ConversationSkeleton />
+                ) : filteredConversations.length === 0 ? (
+                  <div className="p-8 text-center text-muted-foreground">
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-accent/10 to-primary/10 flex items-center justify-center">
+                      <MessageSquare className="w-8 h-8 text-accent/40" />
+                    </div>
+                    <p className="font-heading font-bold text-sm mb-1">{isRTL ? 'لا توجد محادثات' : 'No conversations'}</p>
+                    <p className="text-xs text-muted-foreground mb-5">{isRTL ? 'ابدأ التواصل مع مزودي الخدمة' : 'Start connecting with providers'}</p>
+                    <div className="space-y-2 text-start bg-muted/30 rounded-xl p-3.5 border border-border/20">
+                      <p className="text-xs font-semibold text-foreground mb-2">{isRTL ? '💡 نصائح:' : '💡 Tips:'}</p>
+                      {[
+                        { emoji: '🔍', text: isRTL ? 'ابحث عن مزودي الخدمة' : 'Find providers' },
+                        { emoji: '💬', text: isRTL ? 'اضغط "تواصل" في صفحة المزود' : 'Click "Contact" on provider page' },
+                        { emoji: '📎', text: isRTL ? 'أرسل صور وملفات بسهولة' : 'Send files & photos easily' },
+                        { emoji: '⭐', text: isRTL ? 'ميّز المحادثات المهمة بنجمة' : 'Star important conversations' },
+                      ].map((tip, i) => (
+                        <div key={i} className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                          <span>{tip.emoji}</span>
+                          <span>{tip.text}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <Button variant="outline" size="sm" className="mt-4 gap-1.5 text-xs h-9 rounded-xl" onClick={() => navigate('/search')}>
+                      <Search className="w-3.5 h-3.5" />{isRTL ? 'بحث عن مزودين' : 'Find Providers'}
+                    </Button>
                   </div>
-                  <p className="font-heading font-bold text-sm mb-1">{isRTL ? 'لا توجد محادثات' : 'No conversations'}</p>
-                  <p className="text-xs text-muted-foreground mb-5">{isRTL ? 'ابدأ التواصل مع مزودي الخدمة' : 'Start connecting with providers'}</p>
-                  <div className="space-y-2 text-start bg-muted/30 rounded-xl p-3.5 border border-border/20">
-                    <p className="text-xs font-semibold text-foreground mb-2">{isRTL ? '💡 نصائح:' : '💡 Tips:'}</p>
-                    {[
-                      { emoji: '🔍', text: isRTL ? 'ابحث عن مزودي الخدمة' : 'Find providers' },
-                      { emoji: '💬', text: isRTL ? 'اضغط "تواصل" في صفحة المزود' : 'Click "Contact" on provider page' },
-                      { emoji: '📎', text: isRTL ? 'أرسل صور وملفات بسهولة' : 'Send files & photos easily' },
-                    ].map((tip, i) => (
-                      <div key={i} className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                        <span>{tip.emoji}</span>
-                        <span>{tip.text}</span>
-                      </div>
+                ) : (
+                  <div className="divide-y divide-border/10">
+                    {filteredConversations.map((conv: any) => (
+                      <ConversationItem
+                        key={conv.id}
+                        conv={conv}
+                        isSelected={conv.id === selectedConversation}
+                        unread={(unreadCounts as Record<string, number>)[conv.id] || 0}
+                        isRTL={isRTL}
+                        language={language}
+                        isSuperAdmin={isSuperAdmin}
+                        isPinned={pinnedConvs.has(conv.id)}
+                        isStarred={starredConvs.has(conv.id)}
+                        onClick={() => setSelectedConversation(conv.id)}
+                        onPin={togglePinConv}
+                        onStar={toggleStarConv}
+                      />
                     ))}
                   </div>
-                  <Button variant="outline" size="sm" className="mt-4 gap-1.5 text-xs h-9 rounded-xl" onClick={() => navigate('/search')}>
-                    <Search className="w-3.5 h-3.5" />{isRTL ? 'بحث عن مزودين' : 'Find Providers'}
-                  </Button>
-                </div>
-              ) : (
-                <div className="divide-y divide-border/10">
-                  {filteredConversations.map((conv: any) => (
-                    <ConversationItem
-                      key={conv.id}
-                      conv={conv}
-                      isSelected={conv.id === selectedConversation}
-                      unread={(unreadCounts as Record<string, number>)[conv.id] || 0}
-                      isRTL={isRTL}
-                      language={language}
-                      isSuperAdmin={isSuperAdmin}
-                      onClick={() => setSelectedConversation(conv.id)}
-                    />
-                  ))}
+                )}
+              </ScrollArea>
+            </div>
+
+            {/* ═══ Chat Area ═══ */}
+            <div
+              className={`flex-1 flex flex-col relative bg-muted/20 ${!selectedConversation ? 'hidden md:flex' : 'flex'}`}
+              onDragEnter={selectedConversation ? handleDragEnter : undefined}
+              onDragLeave={selectedConversation ? handleDragLeave : undefined}
+              onDragOver={selectedConversation ? handleDragOver : undefined}
+              onDrop={selectedConversation ? handleDrop : undefined}
+            >
+              {/* Drag overlay */}
+              {isDragging && selectedConversation && (
+                <div className="absolute inset-0 z-50 bg-accent/10 border-2 border-dashed border-accent rounded-xl flex items-center justify-center backdrop-blur-sm">
+                  <div className="text-center">
+                    <div className="w-16 h-16 mx-auto mb-3 rounded-2xl bg-accent/20 flex items-center justify-center">
+                      <Upload className="w-8 h-8 text-accent" />
+                    </div>
+                    <p className="font-heading font-bold text-sm text-accent">{isRTL ? 'أفلت الملف هنا' : 'Drop file here'}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{isRTL ? 'الحد الأقصى 10 ميجابايت' : 'Max 10MB'}</p>
+                  </div>
                 </div>
               )}
-            </ScrollArea>
-          </div>
 
-          {/* ═══ Chat Area ═══ */}
-          <div
-            className={`flex-1 flex flex-col relative bg-muted/20 ${!selectedConversation ? 'hidden md:flex' : 'flex'}`}
-            onDragEnter={selectedConversation ? handleDragEnter : undefined}
-            onDragLeave={selectedConversation ? handleDragLeave : undefined}
-            onDragOver={selectedConversation ? handleDragOver : undefined}
-            onDrop={selectedConversation ? handleDrop : undefined}
-          >
-            {/* Drag overlay */}
-            {isDragging && selectedConversation && (
-              <div className="absolute inset-0 z-50 bg-accent/10 border-2 border-dashed border-accent rounded-xl flex items-center justify-center backdrop-blur-sm">
-                <div className="text-center">
-                  <div className="w-16 h-16 mx-auto mb-3 rounded-2xl bg-accent/20 flex items-center justify-center">
-                    <Upload className="w-8 h-8 text-accent" />
-                  </div>
-                  <p className="font-heading font-bold text-sm text-accent">{isRTL ? 'أفلت الملف هنا' : 'Drop file here'}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{isRTL ? 'الحد الأقصى 10 ميجابايت' : 'Max 10MB'}</p>
-                </div>
-              </div>
-            )}
-
-            {!selectedConversation ? (
-              <div className="flex-1 flex items-center justify-center text-muted-foreground">
-                <div className="text-center max-w-sm">
-                  <div className="w-20 h-20 mx-auto mb-4 rounded-3xl bg-gradient-to-br from-accent/15 to-primary/10 flex items-center justify-center">
-                    <MessageSquare className="w-10 h-10 text-accent/30" />
-                  </div>
-                  <p className="font-heading font-bold text-lg mb-1.5">{isRTL ? 'مرحباً بك في المحادثات' : 'Welcome to Messages'}</p>
-                  <p className="text-sm text-muted-foreground">{isRTL ? 'اختر محادثة من القائمة أو ابدأ محادثة جديدة' : 'Select a conversation or start a new one'}</p>
-                </div>
-              </div>
-            ) : (
-              <>
-                {/* ─── Chat Header ─── */}
-                <div className="h-14 flex items-center gap-3 px-4 border-b border-border/30 bg-card/80 backdrop-blur-sm shrink-0">
-                  <Button variant="ghost" size="icon" className="md:hidden shrink-0 h-9 w-9 rounded-xl" onClick={() => setSelectedConversation(null)}>
-                    <BackIcon className="w-4 h-4" />
-                  </Button>
-                  <div className="relative">
-                    <Avatar className="w-9 h-9 shrink-0 ring-2 ring-border/10">
-                      <AvatarImage src={selectedConv?.other_profile?.avatar_url} />
-                      <AvatarFallback className="bg-gradient-to-br from-accent/20 to-primary/10 text-accent font-bold text-xs">
-                        {selectedConv?.other_profile?.full_name?.charAt(0) || '؟'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="absolute -bottom-0.5 -end-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-card" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-heading font-bold text-sm truncate">{selectedConv?.other_profile?.full_name || (isRTL ? 'مستخدم' : 'User')}</h3>
-                    <p className="text-[10px] text-emerald-500 font-medium">
-                      {isRTL ? 'متصل الآن' : 'Online'}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <Button variant="ghost" size="icon" className="w-8 h-8 rounded-xl" onClick={() => { setShowChatSearch(!showChatSearch); setChatSearchTerm(''); }}>
-                      <Search className="w-4 h-4" />
-                    </Button>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="w-8 h-8 rounded-xl"><MoreVertical className="w-4 h-4" /></Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align={isRTL ? 'start' : 'end'} className="rounded-xl">
-                        <DropdownMenuItem onClick={() => navigate(`/${selectedConv?.other_profile?.username || ''}`)} className="rounded-lg">
-                          <Eye className="w-3.5 h-3.5 me-2" />{isRTL ? 'عرض الملف الشخصي' : 'View profile'}
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem className="rounded-lg text-muted-foreground">
-                          <Pin className="w-3.5 h-3.5 me-2" />{isRTL ? 'تثبيت المحادثة' : 'Pin conversation'}
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
-
-                {/* ─── Chat Search Bar ─── */}
-                {showChatSearch && (
-                  <div className="px-4 py-2 border-b border-border/20 bg-card/60 backdrop-blur-sm flex items-center gap-2 animate-in slide-in-from-top-1 duration-200">
-                    <Search className="w-4 h-4 text-muted-foreground shrink-0" />
-                    <Input value={chatSearchTerm} onChange={e => setChatSearchTerm(e.target.value)}
-                      placeholder={isRTL ? 'بحث في الرسائل...' : 'Search messages...'}
-                      className="h-8 text-xs border-0 bg-transparent shadow-none focus-visible:ring-0 rounded-xl" autoFocus />
-                    {chatSearchTerm && (
-                      <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4 shrink-0 rounded-md">{filteredMessages.length}</Badge>
-                    )}
-                    <Button variant="ghost" size="icon" className="w-7 h-7 shrink-0 rounded-lg" onClick={() => { setShowChatSearch(false); setChatSearchTerm(''); }}>
-                      <X className="w-3.5 h-3.5" />
-                    </Button>
-                  </div>
-                )}
-
-                {/* ─── Messages ─── */}
-                <ScrollArea className="flex-1 px-4 py-3" ref={scrollAreaRef}>
-                  {loadingMsgs ? (
-                    <div className="space-y-3 py-4">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <div key={i} className={`flex ${i % 2 === 0 ? 'justify-end' : 'justify-start'}`}>
-                          <Skeleton className={`h-10 rounded-2xl ${i % 2 === 0 ? 'w-48' : 'w-36'}`} />
+              {!selectedConversation ? (
+                <div className="flex-1 flex items-center justify-center text-muted-foreground">
+                  <div className="text-center max-w-sm">
+                    <div className="w-24 h-24 mx-auto mb-5 rounded-3xl bg-gradient-to-br from-accent/15 to-primary/10 flex items-center justify-center shadow-inner">
+                      <MessageSquare className="w-12 h-12 text-accent/30" />
+                    </div>
+                    <p className="font-heading font-bold text-xl mb-2">{isRTL ? 'مرحباً بك في المحادثات' : 'Welcome to Messages'}</p>
+                    <p className="text-sm text-muted-foreground mb-6">{isRTL ? 'اختر محادثة من القائمة أو ابدأ محادثة جديدة' : 'Select a conversation or start a new one'}</p>
+                    <div className="grid grid-cols-2 gap-3 max-w-xs mx-auto">
+                      {[
+                        { icon: Shield, label: isRTL ? 'مشفّرة' : 'Encrypted', desc: isRTL ? 'محادثات آمنة' : 'Secure chats' },
+                        { icon: Paperclip, label: isRTL ? 'مرفقات' : 'Attachments', desc: isRTL ? 'صور وملفات' : 'Images & files' },
+                        { icon: Sparkles, label: isRTL ? 'قوالب' : 'Templates', desc: isRTL ? 'ردود جاهزة' : 'Quick replies' },
+                        { icon: Star, label: isRTL ? 'مفضلة' : 'Favorites', desc: isRTL ? 'محادثات مميزة' : 'Star chats' },
+                      ].map((feat, i) => (
+                        <div key={i} className="p-3 rounded-xl bg-card border border-border/30 text-center">
+                          <feat.icon className="w-5 h-5 text-accent mx-auto mb-1.5" />
+                          <p className="text-xs font-heading font-bold">{feat.label}</p>
+                          <p className="text-[9px] text-muted-foreground">{feat.desc}</p>
                         </div>
                       ))}
                     </div>
-                  ) : (
-                    <div className="space-y-0.5">
-                      {groupedMessages.map((group) => (
-                        <React.Fragment key={group.date}>
-                          <div className="flex items-center gap-4 my-4">
-                            <div className="flex-1 h-px bg-border/30" />
-                            <span className="text-[10px] text-muted-foreground font-medium bg-card/80 backdrop-blur-sm px-3 py-1 rounded-full border border-border/20 shadow-sm">
-                              {group.label}
-                            </span>
-                            <div className="flex-1 h-px bg-border/30" />
-                          </div>
-                          {group.messages.map((msg: any) => (
-                            <MessageBubble key={msg.id} msg={msg} isMine={msg.sender_id === user?.id} language={language} isRTL={isRTL} onReply={handleReply} onCopy={handleCopy} />
-                          ))}
-                        </React.Fragment>
-                      ))}
-                      <div ref={messagesEndRef} />
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {/* ─── Chat Header ─── */}
+                  <div className="h-14 flex items-center gap-3 px-4 border-b border-border/30 bg-card/80 backdrop-blur-sm shrink-0">
+                    <Button variant="ghost" size="icon" className="md:hidden shrink-0 h-9 w-9 rounded-xl" onClick={() => setSelectedConversation(null)}>
+                      <BackIcon className="w-4 h-4" />
+                    </Button>
+                    <div className="relative">
+                      <Avatar className="w-9 h-9 shrink-0 ring-2 ring-border/10">
+                        <AvatarImage src={selectedConv?.other_profile?.avatar_url} />
+                        <AvatarFallback className="bg-gradient-to-br from-accent/20 to-primary/10 text-accent font-bold text-xs">
+                          {selectedConv?.other_profile?.full_name?.charAt(0) || '؟'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="absolute -bottom-0.5 -end-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-card" />
                     </div>
-                  )}
-                </ScrollArea>
-
-                {/* ─── Scroll to bottom button ─── */}
-                {messages.length > 20 && (
-                  <button
-                    onClick={() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })}
-                    className="absolute bottom-24 end-4 w-9 h-9 rounded-full bg-card border border-border/30 shadow-lg flex items-center justify-center hover:bg-muted/50 transition-all z-10"
-                  >
-                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                  </button>
-                )}
-
-                {/* ─── Reply Preview ─── */}
-                {replyTo && (
-                  <div className="px-4 pt-2 border-t border-border/20 bg-card/60 backdrop-blur-sm animate-in slide-in-from-bottom-1 duration-200">
-                    <div className="flex items-center gap-2.5 p-2 bg-muted/40 rounded-xl border border-border/20">
-                      <div className="w-1 h-8 rounded-full bg-accent shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[10px] text-accent font-semibold">{isRTL ? 'رد على رسالة' : 'Replying to'}</p>
-                        <p className="text-xs text-muted-foreground truncate">{replyTo.content?.substring(0, 60)}</p>
-                      </div>
-                      <Button variant="ghost" size="icon" className="w-6 h-6 shrink-0 rounded-lg" onClick={() => setReplyTo(null)}>
-                        <X className="w-3 h-3" />
-                      </Button>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-heading font-bold text-sm truncate">{selectedConv?.other_profile?.full_name || (isRTL ? 'مستخدم' : 'User')}</h3>
+                      <p className="text-[10px] text-emerald-500 font-medium">
+                        {isRTL ? 'متصل الآن' : 'Online'}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button variant="ghost" size="icon" className="w-8 h-8 rounded-xl" onClick={() => { setShowChatSearch(!showChatSearch); setChatSearchTerm(''); }}>
+                            <Search className="w-4 h-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom" className="text-xs">{isRTL ? 'بحث' : 'Search'}</TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button variant="ghost" size="icon" className={`w-8 h-8 rounded-xl ${showInfoPanel ? 'bg-muted' : ''}`} onClick={() => setShowInfoPanel(!showInfoPanel)}>
+                            <Info className="w-4 h-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom" className="text-xs">{isRTL ? 'تفاصيل' : 'Details'}</TooltipContent>
+                      </Tooltip>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="w-8 h-8 rounded-xl"><MoreVertical className="w-4 h-4" /></Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align={isRTL ? 'start' : 'end'} className="rounded-xl min-w-[180px]">
+                          <DropdownMenuItem onClick={() => navigate(`/${selectedConv?.other_profile?.username || ''}`)} className="rounded-lg text-xs">
+                            <Eye className="w-3.5 h-3.5 me-2" />{isRTL ? 'عرض الملف الشخصي' : 'View profile'}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="rounded-lg text-xs" onClick={() => togglePinConv(selectedConversation!)}>
+                            <Pin className={`w-3.5 h-3.5 me-2 ${pinnedConvs.has(selectedConversation!) ? 'fill-current' : ''}`} />
+                            {pinnedConvs.has(selectedConversation!) ? (isRTL ? 'إلغاء التثبيت' : 'Unpin') : (isRTL ? 'تثبيت المحادثة' : 'Pin conversation')}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="rounded-lg text-xs" onClick={() => toggleStarConv(selectedConversation!)}>
+                            <Star className={`w-3.5 h-3.5 me-2 ${starredConvs.has(selectedConversation!) ? 'fill-amber-500 text-amber-500' : ''}`} />
+                            {starredConvs.has(selectedConversation!) ? (isRTL ? 'إزالة من المميزة' : 'Unstar') : (isRTL ? 'تمييز بنجمة' : 'Star conversation')}
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem className="rounded-lg text-xs" onClick={() => setShowInfoPanel(true)}>
+                            <BarChart3 className="w-3.5 h-3.5 me-2" />{isRTL ? 'إحصائيات المحادثة' : 'Chat statistics'}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </div>
-                )}
 
-                {/* ─── Attachment Preview ─── */}
-                {attachedFile && (
-                  <div className="px-4 pt-2 border-t border-border/20 animate-in slide-in-from-bottom-1 duration-200">
-                    <div className="flex items-center gap-2.5 p-2.5 bg-muted/40 rounded-xl border border-border/20">
-                      {attachedPreview ? (
-                        <img src={attachedPreview} alt="" className="w-12 h-12 rounded-xl object-cover border border-border/20" />
-                      ) : (
-                        <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center border border-border/20">
-                          <FileText className="w-5 h-5 text-muted-foreground" />
-                        </div>
+                  {/* ─── Chat Search Bar ─── */}
+                  {showChatSearch && (
+                    <div className="px-4 py-2 border-b border-border/20 bg-card/60 backdrop-blur-sm flex items-center gap-2 animate-in slide-in-from-top-1 duration-200">
+                      <Search className="w-4 h-4 text-muted-foreground shrink-0" />
+                      <Input value={chatSearchTerm} onChange={e => setChatSearchTerm(e.target.value)}
+                        placeholder={isRTL ? 'بحث في الرسائل...' : 'Search messages...'}
+                        className="h-8 text-xs border-0 bg-transparent shadow-none focus-visible:ring-0 rounded-xl" autoFocus />
+                      {chatSearchTerm && (
+                        <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4 shrink-0 rounded-md">{filteredMessages.length}</Badge>
                       )}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium truncate">{attachedFile.name}</p>
-                        <p className="text-[10px] text-muted-foreground">{formatFileSize(attachedFile.size)}</p>
-                      </div>
-                      <Button variant="ghost" size="icon" className="w-7 h-7 shrink-0 rounded-lg" onClick={removeAttachment}>
+                      <Button variant="ghost" size="icon" className="w-7 h-7 shrink-0 rounded-lg" onClick={() => { setShowChatSearch(false); setChatSearchTerm(''); }}>
                         <X className="w-3.5 h-3.5" />
                       </Button>
                     </div>
-                  </div>
-                )}
-
-                {/* ─── Input Area ─── */}
-                <div className="p-3 border-t border-border/30 bg-card relative">
-                  {showTemplates && (
-                    <MessageTemplates onSelectTemplate={(content) => { setMessageText(content); setShowTemplates(false); inputRef.current?.focus(); }} onClose={() => setShowTemplates(false)} />
                   )}
-                  {showEmoji && <EmojiQuickPicker onSelect={handleEmojiSelect} isRTL={isRTL} />}
 
-                  <div className="flex gap-1.5 items-end">
-                    <input ref={fileInputRef} type="file" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt" className="hidden" onChange={handleFileSelect} />
+                  {/* ─── Messages ─── */}
+                  <ScrollArea className="flex-1 px-4 py-3" ref={scrollAreaRef}>
+                    {loadingMsgs ? (
+                      <div className="space-y-3 py-4">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <div key={i} className={`flex ${i % 2 === 0 ? 'justify-end' : 'justify-start'}`}>
+                            <Skeleton className={`h-10 rounded-2xl ${i % 2 === 0 ? 'w-48' : 'w-36'}`} />
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="space-y-0.5">
+                        {groupedMessages.map((group) => (
+                          <React.Fragment key={group.date}>
+                            <div className="flex items-center gap-4 my-4">
+                              <div className="flex-1 h-px bg-border/30" />
+                              <span className="text-[10px] text-muted-foreground font-medium bg-card/80 backdrop-blur-sm px-3 py-1 rounded-full border border-border/20 shadow-sm">
+                                {group.label}
+                              </span>
+                              <div className="flex-1 h-px bg-border/30" />
+                            </div>
+                            {group.messages.map((msg: any) => (
+                              <MessageBubble key={msg.id} msg={msg} isMine={msg.sender_id === user?.id} language={language} isRTL={isRTL}
+                                onReply={handleReply} onCopy={handleCopy} onReact={handleReactMessage} onStar={toggleStarMessage} />
+                            ))}
+                          </React.Fragment>
+                        ))}
+                        <div ref={messagesEndRef} />
+                      </div>
+                    )}
+                  </ScrollArea>
 
-                    <div className="flex items-center gap-0.5">
-                      <Button variant="ghost" size="icon" className="shrink-0 h-9 w-9 rounded-xl text-muted-foreground hover:text-foreground" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
-                        <Paperclip className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="shrink-0 h-9 w-9 rounded-xl text-muted-foreground hover:text-foreground" onClick={() => { setShowEmoji(!showEmoji); setShowTemplates(false); }}>
-                        <Smile className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="shrink-0 h-9 w-9 rounded-xl text-muted-foreground hover:text-accent" onClick={() => { setShowTemplates(!showTemplates); setShowEmoji(false); }}>
-                        <Sparkles className="w-4 h-4" />
+                  {/* ─── Scroll to bottom button ─── */}
+                  {messages.length > 20 && (
+                    <button
+                      onClick={() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })}
+                      className="absolute bottom-24 end-4 w-9 h-9 rounded-full bg-card border border-border/30 shadow-lg flex items-center justify-center hover:bg-muted/50 transition-all z-10"
+                    >
+                      <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                    </button>
+                  )}
+
+                  {/* ─── Reply Preview ─── */}
+                  {replyTo && (
+                    <div className="px-4 pt-2 border-t border-border/20 bg-card/60 backdrop-blur-sm animate-in slide-in-from-bottom-1 duration-200">
+                      <div className="flex items-center gap-2.5 p-2 bg-muted/40 rounded-xl border border-border/20">
+                        <div className="w-1 h-8 rounded-full bg-accent shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[10px] text-accent font-semibold">{isRTL ? 'رد على رسالة' : 'Replying to'}</p>
+                          <p className="text-xs text-muted-foreground truncate">{replyTo.content?.substring(0, 60)}</p>
+                        </div>
+                        <Button variant="ghost" size="icon" className="w-6 h-6 shrink-0 rounded-lg" onClick={() => setReplyTo(null)}>
+                          <X className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ─── Attachment Preview ─── */}
+                  {attachedFile && (
+                    <div className="px-4 pt-2 border-t border-border/20 animate-in slide-in-from-bottom-1 duration-200">
+                      <div className="flex items-center gap-2.5 p-2.5 bg-muted/40 rounded-xl border border-border/20">
+                        {attachedPreview ? (
+                          <img src={attachedPreview} alt="" className="w-12 h-12 rounded-xl object-cover border border-border/20" />
+                        ) : (
+                          <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center border border-border/20">
+                            <FileText className="w-5 h-5 text-muted-foreground" />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-medium truncate">{attachedFile.name}</p>
+                          <p className="text-[10px] text-muted-foreground">{formatFileSize(attachedFile.size)}</p>
+                        </div>
+                        <Button variant="ghost" size="icon" className="w-7 h-7 shrink-0 rounded-lg" onClick={removeAttachment}>
+                          <X className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ─── Input Area ─── */}
+                  <div className="p-3 border-t border-border/30 bg-card relative">
+                    {showTemplates && (
+                      <MessageTemplates onSelectTemplate={(content) => { setMessageText(content); setShowTemplates(false); inputRef.current?.focus(); }} onClose={() => setShowTemplates(false)} />
+                    )}
+                    {showEmoji && <EmojiQuickPicker onSelect={handleEmojiSelect} isRTL={isRTL} />}
+
+                    <div className="flex gap-1.5 items-end">
+                      <input ref={fileInputRef} type="file" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt" className="hidden" onChange={handleFileSelect} />
+
+                      <div className="flex items-center gap-0.5">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" className="shrink-0 h-9 w-9 rounded-xl text-muted-foreground hover:text-foreground" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
+                              <Paperclip className="w-4 h-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="text-xs">{isRTL ? 'إرفاق ملف' : 'Attach file'}</TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" className="shrink-0 h-9 w-9 rounded-xl text-muted-foreground hover:text-foreground" onClick={() => { setShowEmoji(!showEmoji); setShowTemplates(false); }}>
+                              <Smile className="w-4 h-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="text-xs">{isRTL ? 'رموز تعبيرية' : 'Emoji'}</TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" className="shrink-0 h-9 w-9 rounded-xl text-muted-foreground hover:text-accent" onClick={() => { setShowTemplates(!showTemplates); setShowEmoji(false); }}>
+                              <Sparkles className="w-4 h-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="text-xs">{isRTL ? 'قوالب الرسائل' : 'Templates'}</TooltipContent>
+                        </Tooltip>
+                      </div>
+
+                      <Input
+                        ref={inputRef}
+                        value={messageText}
+                        onChange={e => setMessageText(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        onFocus={() => { setShowEmoji(false); }}
+                        placeholder={isRTL ? 'اكتب رسالتك...' : 'Type a message...'}
+                        className="flex-1 h-10 text-sm bg-muted/30 border-border/20 rounded-xl focus:bg-background transition-colors"
+                        disabled={isUploading}
+                      />
+
+                      <Button
+                        onClick={handleSend}
+                        disabled={(!messageText.trim() && !attachedFile) || sendMutation.isPending || isUploading}
+                        className="shrink-0 h-10 w-10 rounded-xl bg-gradient-to-r from-accent to-accent/80 hover:from-accent/90 hover:to-accent/70 text-accent-foreground shadow-md shadow-accent/20 transition-all disabled:opacity-40"
+                      >
+                        {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                       </Button>
                     </div>
 
-                    <Input
-                      ref={inputRef}
-                      value={messageText}
-                      onChange={e => setMessageText(e.target.value)}
-                      onKeyDown={handleKeyDown}
-                      onFocus={() => { setShowEmoji(false); }}
-                      placeholder={isRTL ? 'اكتب رسالتك...' : 'Type a message...'}
-                      className="flex-1 h-10 text-sm bg-muted/30 border-border/20 rounded-xl focus:bg-background transition-colors"
-                      disabled={isUploading}
-                    />
-
-                    <Button
-                      onClick={handleSend}
-                      disabled={(!messageText.trim() && !attachedFile) || sendMutation.isPending || isUploading}
-                      className="shrink-0 h-10 w-10 rounded-xl bg-gradient-to-r from-accent to-accent/80 hover:from-accent/90 hover:to-accent/70 text-accent-foreground shadow-md shadow-accent/20 transition-all disabled:opacity-40"
-                    >
-                      {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                    </Button>
+                    {/* Character count */}
+                    {messageText.length > 200 && (
+                      <p className={`text-[9px] mt-1 text-end ${messageText.length > 2000 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                        {messageText.length}/2000
+                      </p>
+                    )}
                   </div>
-                </div>
-              </>
+                </>
+              )}
+            </div>
+
+            {/* ═══ Info Panel ═══ */}
+            {showInfoPanel && selectedConversation && (
+              <ChatInfoPanel conv={selectedConv} messages={messages} isRTL={isRTL} onClose={() => setShowInfoPanel(false)} />
             )}
           </div>
         </div>
-      </div>
+      </TooltipProvider>
     </DashboardLayout>
   );
 };
