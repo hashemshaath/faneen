@@ -16,6 +16,7 @@ export default defineConfig(({ mode }) => ({
   build: {
     target: 'es2020',
     cssMinify: true,
+    chunkSizeWarningLimit: 500,
     rollupOptions: {
       output: {
         manualChunks: {
@@ -37,6 +38,7 @@ export default defineConfig(({ mode }) => ({
         },
       },
     },
+    minify: 'esbuild',
   },
   plugins: [
     react(),
