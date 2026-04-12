@@ -43,7 +43,7 @@ export const CategoriesSection = () => {
             <Link
               to="/search"
               key={cat.titleKey}
-              className={`group relative rounded-2xl overflow-hidden border border-border/30 dark:border-border/20 hover:border-accent/40 active:scale-[0.97] sm:hover:-translate-y-2 transition-all duration-500 cursor-pointer aspect-[4/3] sm:aspect-[5/3] ${isVisible ? 'animate-card-slide-up' : 'opacity-0'}`}
+              className={`group relative rounded-2xl overflow-hidden border border-border/40 dark:border-border/20 hover:border-accent/50 shadow-sm hover:shadow-xl hover:shadow-accent/5 active:scale-[0.97] sm:hover:-translate-y-2 transition-all duration-500 cursor-pointer aspect-[4/3] sm:aspect-[5/3] ${isVisible ? 'animate-card-slide-up' : 'opacity-0'}`}
               style={{ animationDelay: `${i * 100}ms`, animationFillMode: 'both' }}
             >
               {/* Cover Image */}
@@ -53,22 +53,22 @@ export const CategoriesSection = () => {
                 loading="lazy"
                 width={640}
                 height={512}
-                className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 brightness-[0.35] group-hover:brightness-[0.25]"
+                className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 brightness-[0.3] group-hover:brightness-[0.2]"
               />
-              {/* Unified accent overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/40 to-transparent" />
+              {/* Gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
               {/* Content */}
-              <div className="absolute inset-0 flex flex-col justify-end p-4 sm:p-6 z-10">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-accent/20 backdrop-blur-sm flex items-center justify-center mb-2 sm:mb-3 group-hover:bg-accent/30 transition-colors">
-                  <cat.icon className="w-5 h-5 sm:w-6 sm:h-6 text-accent" />
+              <div className="absolute inset-0 flex flex-col justify-end p-4 sm:p-7 z-10">
+                <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-xl bg-accent/15 backdrop-blur-md border border-accent/20 flex items-center justify-center mb-3 sm:mb-4 group-hover:bg-accent/25 group-hover:border-accent/40 transition-all duration-300">
+                  <cat.icon className="w-5 h-5 sm:w-7 sm:h-7 text-accent" />
                 </div>
-                <h3 className="font-heading font-bold text-sm sm:text-xl text-foreground mb-1 sm:mb-1.5 group-hover:text-accent transition-colors duration-300">
+                <h3 className="font-heading font-bold text-base sm:text-2xl text-white mb-1 sm:mb-2 group-hover:text-accent transition-colors duration-300">
                   {t(cat.titleKey)}
                 </h3>
-                <p className="font-body text-muted-foreground text-[10px] sm:text-sm line-clamp-2 mb-2 sm:mb-3">
+                <p className="font-body text-white/60 text-[11px] sm:text-sm leading-relaxed line-clamp-2 mb-2 sm:mb-4">
                   {t(cat.descKey)}
                 </p>
-                <div className="flex items-center gap-1 text-accent/70 group-hover:text-accent text-xs sm:text-sm font-medium transition-colors">
+                <div className="flex items-center gap-1.5 text-accent/80 group-hover:text-accent text-xs sm:text-sm font-semibold tracking-wide transition-colors">
                   <span>{isRTL ? 'استكشف' : 'Explore'}</span>
                   <ArrowIcon className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1 rtl:group-hover:-translate-x-1" />
                 </div>
