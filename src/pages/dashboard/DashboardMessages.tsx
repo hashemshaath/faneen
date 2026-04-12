@@ -571,12 +571,16 @@ const DashboardMessages = () => {
   const [showInfoPanel, setShowInfoPanel] = useState(false);
   const [forwardMsg, setForwardMsg] = useState<any>(null);
 
-  // Local state for pinned/starred/muted conversations and message reactions/stars
+  // Local state for pinned/starred/muted/labels and message reactions/stars
   const [pinnedConvs, setPinnedConvs] = useState<Set<string>>(new Set());
   const [starredConvs, setStarredConvs] = useState<Set<string>>(new Set());
   const [mutedConvs, setMutedConvs] = useState<Set<string>>(new Set());
+  const [convLabels, setConvLabels] = useState<Record<string, string>>({});
   const [messageReactions, setMessageReactions] = useState<Record<string, string>>({});
   const [starredMessages, setStarredMessages] = useState<Set<string>>(new Set());
+  const [showScheduler, setShowScheduler] = useState(false);
+  const [scheduleTime, setScheduleTime] = useState('');
+  const [scheduledMessages, setScheduledMessages] = useState<{ convId: string; text: string; time: string; id: string }[]>([]);
 
   const dragCounter = useRef(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
