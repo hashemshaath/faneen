@@ -152,6 +152,7 @@ const AppRoutes = () => (
           <Route path="/dashboard/promotions" element={<ProtectedRoute requireProvider><DashboardPromotions /></ProtectedRoute>} />
           <Route path="/dashboard/projects" element={<ProtectedRoute requireProvider><DashboardProjects /></ProtectedRoute>} />
           <Route path="/dashboard/operations" element={<ProtectedRoute><DashboardOperations /></ProtectedRoute>} />
+          <Route path="/dashboard/analytics" element={<ProtectedRoute requireProvider><DashboardAnalytics /></ProtectedRoute>} />
           <Route path="/admin/ai-center" element={<ProtectedRoute requireAdmin><DashboardAiCenter /></ProtectedRoute>} />
 
           <Route path="/dashboard/blog" element={<ProtectedRoute requireAdmin><DashboardBlog /></ProtectedRoute>} />
