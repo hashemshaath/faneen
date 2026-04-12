@@ -3645,6 +3645,18 @@ export type Database = {
       }
     }
     Functions: {
+      admin_upgrade_subscription: {
+        Args: {
+          _billing_cycle?: string
+          _new_plan_id: string
+          _subscription_id: string
+        }
+        Returns: string
+      }
+      cancel_subscription: {
+        Args: { _subscription_id: string }
+        Returns: undefined
+      }
       check_rate_limit: {
         Args: {
           _block_minutes?: number
@@ -3805,6 +3817,15 @@ export type Database = {
           msg_id: number
           read_ct: number
         }[]
+      }
+      subscribe_to_plan: {
+        Args: {
+          _billing_cycle?: string
+          _business_id?: string
+          _plan_id: string
+          _user_id: string
+        }
+        Returns: string
       }
       unsubscribe_newsletter: { Args: { p_email: string }; Returns: boolean }
     }
