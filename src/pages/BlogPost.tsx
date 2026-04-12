@@ -1,4 +1,5 @@
 import React, { useMemo, useEffect, useState, useRef, useCallback } from 'react';
+import DOMPurify from 'dompurify';
 import { usePageMeta, useJsonLd } from '@/hooks/usePageMeta';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useParams, Link } from 'react-router-dom';
@@ -648,7 +649,7 @@ const BlogPost = () => {
               prose-hr:border-border/50 prose-hr:my-8
               [&_table]:block [&_table]:overflow-x-auto [&_table]:max-w-full
               ">
-              <div dangerouslySetInnerHTML={{ __html: renderedHTML }} />
+              <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(renderedHTML) }} />
             </article>
 
             {/* Tags footer */}
