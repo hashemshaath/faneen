@@ -55,14 +55,19 @@ const useEntityTags = () =>
 
 const SearchPage = () => {
   const { language } = useLanguage();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const searchQuery = searchParams.get('q') || '';
 
   usePageMeta({
-    title: language === 'ar' ? 'البحث عن مزودي خدمات الألمنيوم والحديد | فنيين' : 'Search Aluminum & Iron Service Providers | Faneen',
-    description: language === 'ar'
-      ? 'ابحث عن أفضل مصانع ومحلات الألمنيوم والحديد والزجاج والخشب. قارن الأسعار والتقييمات واختر المزود المناسب.'
-      : 'Find the best aluminum, iron, glass and wood factories and shops. Compare prices, ratings and choose the right provider.',
+    title: searchQuery
+      ? (language === 'ar' ? `نتائج البحث عن "${searchQuery}" | فنيين` : `Search results for "${searchQuery}" | Faneen`)
+      : (language === 'ar' ? 'البحث عن مزودي خدمات الألمنيوم والحديد | فنيين' : 'Search Aluminum & Iron Service Providers | Faneen'),
+    description: searchQuery
+      ? (language === 'ar' ? `نتائج البحث عن ${searchQuery} في دليل فنيين للصناعات الخفيفة` : `Search results for ${searchQuery} in Faneen directory`)
+      : (language === 'ar' ? 'ابحث عن أفضل مصانع ومحلات الألمنيوم والحديد والزجاج والخشب. قارن الأسعار والتقييمات واختر المزود المناسب.' : 'Find the best aluminum, iron, glass and wood factories and shops.'),
+    noindex: !!searchQuery,
   });
-  const [searchParams, setSearchParams] = useSearchParams();
   const isMobile = useIsMobile();
 
   const { data: categories } = useCategories();
