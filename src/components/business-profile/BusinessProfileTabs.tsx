@@ -729,12 +729,7 @@ export const ContactTab = ({ business }: { business: any }) => {
           {addressParts.length > 0 && <p>{addressParts.join("، ")}</p>}
           {business.address && <p>{business.address}</p>}
           {(cityName || countryName) && <p>{[cityName, countryName].filter(Boolean).join("، ")}</p>}
-          {business.national_id && (
-            <p className="flex items-center gap-1.5">
-              <span className="text-muted-foreground/60">{language === "ar" ? "الرقم الوطني:" : "National ID:"}</span>
-              <span className="tech-content">{business.national_id}</span>
-            </p>
-          )}
+          {/* national_id removed from public view for security */}
           {business.additional_number && (
             <p className="flex items-center gap-1.5">
               <span className="text-muted-foreground/60">{language === "ar" ? "الرقم الإضافي:" : "Additional No:"}</span>
