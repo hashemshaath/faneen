@@ -1229,15 +1229,43 @@ const DashboardMessages = () => {
 
                   {/* ─── Chat Search Bar ─── */}
                   {showChatSearch && (
-                    <div className="px-4 py-2 border-b border-border/20 bg-card/60 backdrop-blur-sm flex items-center gap-2 animate-in slide-in-from-top-1 duration-200">
-                      <Search className="w-4 h-4 text-muted-foreground shrink-0" />
-                      <Input value={chatSearchTerm} onChange={e => setChatSearchTerm(e.target.value)}
+                    <div className="px-4 py-2 border-b border-border/20 bg-accent/5 backdrop-blur-sm flex items-center gap-2 animate-in slide-in-from-top-1 duration-200">
+                      <Search className="w-4 h-4 text-accent shrink-0" />
+                      <Input value={chatSearchTerm} onChange={e => { setChatSearchTerm(e.target.value); setChatSearchIndex(0); }}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter' && filteredMessages.length > 0) {
+                            setChatSearchIndex(prev => (prev + 1) % filteredMessages.length);
+                            const target = document.getElementById(`msg-${filteredMessages[chatSearchIndex]?.id}`);
+                            target?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                          }
+                        }}
                         placeholder={isRTL ? 'بحث في الرسائل...' : 'Search messages...'}
                         className="h-8 text-xs border-0 bg-transparent shadow-none focus-visible:ring-0 rounded-xl" autoFocus />
-                      {chatSearchTerm && (
-                        <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4 shrink-0 rounded-md">{filteredMessages.length}</Badge>
+                      {chatSearchTerm && filteredMessages.length > 0 && (
+                        <div className="flex items-center gap-0.5 shrink-0">
+                          <span className="text-[10px] text-muted-foreground font-medium tabular-nums">
+                            {chatSearchIndex + 1}/{filteredMessages.length}
+                          </span>
+                          <Button variant="ghost" size="icon" className="w-6 h-6 rounded-md" onClick={() => {
+                            const prev = (chatSearchIndex - 1 + filteredMessages.length) % filteredMessages.length;
+                            setChatSearchIndex(prev);
+                            document.getElementById(`msg-${filteredMessages[prev]?.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                          }}>
+                            <ChevronUp className="w-3 h-3" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="w-6 h-6 rounded-md" onClick={() => {
+                            const next = (chatSearchIndex + 1) % filteredMessages.length;
+                            setChatSearchIndex(next);
+                            document.getElementById(`msg-${filteredMessages[next]?.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                          }}>
+                            <ChevronDown className="w-3 h-3" />
+                          </Button>
+                        </div>
                       )}
-                      <Button variant="ghost" size="icon" className="w-7 h-7 shrink-0 rounded-lg" onClick={() => { setShowChatSearch(false); setChatSearchTerm(''); }}>
+                      {chatSearchTerm && filteredMessages.length === 0 && (
+                        <span className="text-[10px] text-muted-foreground shrink-0">{isRTL ? 'لا نتائج' : 'No results'}</span>
+                      )}
+                      <Button variant="ghost" size="icon" className="w-7 h-7 shrink-0 rounded-lg" onClick={() => { setShowChatSearch(false); setChatSearchTerm(''); setChatSearchIndex(0); }}>
                         <X className="w-3.5 h-3.5" />
                       </Button>
                     </div>
