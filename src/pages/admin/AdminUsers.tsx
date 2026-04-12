@@ -546,10 +546,12 @@ const AdminUsers = () => {
       const roles = (roleMap.get(p.user_id) || []).map(r => r.role).join(', ') || 'none';
       const accType = accountTypeConfig[p.account_type as keyof typeof accountTypeConfig]?.labelEn || p.account_type;
       const tier = tierConfig[p.membership_tier as keyof typeof tierConfig]?.labelEn || p.membership_tier;
-      const biz = businessMap.get(p.user_id);
+      const bizList = businessMap.get(p.user_id) || [];
+      const bizRefs = bizList.map(b => b.ref_id).join(' | ');
+      const bizNames = bizList.map(b => b.name_ar).join(' | ');
       const createdAt = p.created_at ? new Date(p.created_at) : null;
       const createdStr = createdAt && !isNaN(createdAt.getTime()) ? createdAt.toISOString().split('T')[0] : '';
-      return [p.ref_id || '', p.full_name || '', p.email || '', p.phone || '', accType, biz?.ref_id || '', biz?.name_ar || '', tier, roles, (p as any).is_banned ? 'Yes' : 'No', createdStr]
+      return [p.ref_id || '', p.full_name || '', p.email || '', p.phone || '', accType, bizRefs, bizNames, tier, roles, (p as any).is_banned ? 'Yes' : 'No', createdStr]
         .map(v => `"${String(v).replace(/"/g, '""')}"`).join(',');
     });
     const csv = '\uFEFF' + [headers.join(','), ...rows].join('\n');
