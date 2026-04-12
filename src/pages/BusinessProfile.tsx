@@ -50,6 +50,7 @@ const BusinessProfile = () => {
   const { BackIcon } = useDirection();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [bookingOpen, setBookingOpen] = useState(false);
   const { data: business, isLoading, error } = useBusinessByUsername(username || "");
   const { data: projects = [] } = useProjects(business?.id);
   const { data: services = [] } = useServices(business?.id);
