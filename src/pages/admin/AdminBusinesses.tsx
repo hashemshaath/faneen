@@ -562,94 +562,87 @@ const AdminBusinesses = () => {
 
         {/* ─── Tier Distribution Bar ─── */}
         {stats.total > 0 && (
-          <Card className="border-border/40">
-            <CardContent className="p-3">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-xs font-semibold text-muted-foreground">{isRTL ? 'توزيع العضويات' : 'Membership Distribution'}</p>
-                <div className="flex items-center gap-3">
-                  {tiers.map(t => (
-                    <span key={t.value} className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                      <span className="text-xs">{t.icon}</span>
-                      {language === 'ar' ? t.label_ar : t.label_en}: {tierDistribution[t.value] || 0}
-                    </span>
-                  ))}
-                </div>
+          <div className="rounded-2xl border border-border/30 bg-card p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-heading font-bold text-sm flex items-center gap-2">
+                <Zap className="w-4 h-4 text-accent" />
+                {isRTL ? 'توزيع العضويات' : 'Membership Distribution'}
+              </h3>
+              <div className="flex items-center gap-3">
+                {tiers.map(t => (
+                  <span key={t.value} className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                    <span className="text-xs">{t.icon}</span>
+                    {language === 'ar' ? t.label_ar : t.label_en}: {tierDistribution[t.value] || 0}
+                  </span>
+                ))}
               </div>
-              <div className="flex h-2 rounded-full overflow-hidden bg-muted/50">
-                {tiers.map(t => {
-                  const pct = stats.total ? (tierDistribution[t.value] || 0) / stats.total * 100 : 0;
-                  if (!pct) return null;
-                  const colorMap: Record<string, string> = {
-                    free: 'bg-muted-foreground/40',
-                    basic: 'bg-blue-500',
-                    premium: 'bg-accent',
-                    enterprise: 'bg-purple-500',
-                  };
-                  return <div key={t.value} className={`${colorMap[t.value]} transition-all`} style={{ width: `${pct}%` }} />;
-                })}
-              </div>
-            </CardContent>
-          </Card>
+            </div>
+            <div className="flex h-3 rounded-full overflow-hidden bg-muted/50">
+              {tiers.map(t => {
+                const pct = stats.total ? (tierDistribution[t.value] || 0) / stats.total * 100 : 0;
+                if (!pct) return null;
+                const colorMap: Record<string, string> = {
+                  free: 'bg-muted-foreground/30',
+                  basic: 'bg-blue-500',
+                  premium: 'bg-accent',
+                  enterprise: 'bg-purple-500',
+                };
+                return <div key={t.value} className={`${colorMap[t.value]} transition-all`} style={{ width: `${pct}%` }} />;
+              })}
+            </div>
+          </div>
         )}
 
         {/* ─── Filters ─── */}
-        <Card className="border-border/40">
-          <CardContent className="p-3">
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="relative flex-1">
-                <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input value={search}
-                  onChange={e => { const v = e.target.value; startTransition(() => setSearch(v)); }}
-                  placeholder={isRTL ? 'بحث بالاسم، المعرف، الهاتف، البريد...' : 'Search by name, ID, phone, email...'}
-                  className="ps-9 h-9" />
-                {search && (
-                  <button onClick={() => setSearch('')}
-                    className="absolute end-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                )}
-              </div>
-              <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger className="w-full sm:w-40 h-9"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{isRTL ? 'كل الحالات' : 'All Status'}</SelectItem>
-                  <SelectItem value="verified">{isRTL ? 'موثق' : 'Verified'}</SelectItem>
-                  <SelectItem value="unverified">{isRTL ? 'غير موثق' : 'Unverified'}</SelectItem>
-                  <SelectItem value="inactive">{isRTL ? 'معطل' : 'Inactive'}</SelectItem>
-                  <SelectItem value="contract">{isRTL ? 'مرتبط بعقود' : 'With Contracts'}</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={filterTier} onValueChange={setFilterTier}>
-                <SelectTrigger className="w-full sm:w-36 h-9"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{isRTL ? 'كل العضويات' : 'All Tiers'}</SelectItem>
-                  {tiers.map(t => <SelectItem key={t.value} value={t.value}>{t.icon} {language === 'ar' ? t.label_ar : t.label_en}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <div className="flex items-center gap-1 border rounded-lg p-0.5">
-                <Button variant={viewMode === 'cards' ? 'default' : 'ghost'} size="sm" className="h-7 w-7 p-0"
-                  onClick={() => setViewMode('cards')}><LayoutGrid className="w-3.5 h-3.5" /></Button>
-                <Button variant={viewMode === 'table' ? 'default' : 'ghost'} size="sm" className="h-7 w-7 p-0"
-                  onClick={() => setViewMode('table')}><List className="w-3.5 h-3.5" /></Button>
-              </div>
-            </div>
-            {(search || filterStatus !== 'all' || filterTier !== 'all') && (
-              <div className="flex items-center gap-2 mt-2 pt-2 border-t border-border/30">
-                <Filter className="w-3 h-3 text-muted-foreground" />
-                <span className="text-[11px] text-muted-foreground">
-                  {isRTL ? `${filtered.length} نتيجة` : `${filtered.length} results`}
-                </span>
-                {search && <Badge variant="secondary" className="text-[10px] h-5 gap-1">{isRTL ? 'بحث' : 'Search'}: {search}<button onClick={() => setSearch('')}><X className="w-2.5 h-2.5" /></button></Badge>}
-                {filterStatus !== 'all' && <Badge variant="secondary" className="text-[10px] h-5 gap-1">{filterStatus}<button onClick={() => setFilterStatus('all')}><X className="w-2.5 h-2.5" /></button></Badge>}
-                {filterTier !== 'all' && <Badge variant="secondary" className="text-[10px] h-5 gap-1">{filterTier}<button onClick={() => setFilterTier('all')}><X className="w-2.5 h-2.5" /></button></Badge>}
-                <button className="text-[10px] text-primary hover:underline ms-auto"
-                  onClick={() => { setSearch(''); setFilterStatus('all'); setFilterTier('all'); }}>
-                  {isRTL ? 'مسح الكل' : 'Clear all'}
+        <div className="rounded-2xl border border-border/30 bg-card p-4">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
+              <Input value={search}
+                onChange={e => { const v = e.target.value; startTransition(() => setSearch(v)); }}
+                placeholder={isRTL ? 'بحث بالاسم، المعرف، الهاتف، البريد...' : 'Search by name, ID, phone, email...'}
+                className="ps-10 h-10 rounded-xl bg-muted/30 border-border/20 focus:bg-background transition-colors" />
+              {search && (
+                <button onClick={() => setSearch('')}
+                  className="absolute top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" style={{ [isRTL ? 'left' : 'right']: '10px' }}>
+                  <X className="w-3.5 h-3.5" />
                 </button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              )}
+            </div>
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="w-full sm:w-44 h-10 rounded-xl">
+                <Filter className="w-4 h-4 me-2 text-muted-foreground" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl">
+                <SelectItem value="all">{isRTL ? 'كل الحالات' : 'All Status'}</SelectItem>
+                <SelectItem value="verified">{isRTL ? 'موثق' : 'Verified'}</SelectItem>
+                <SelectItem value="unverified">{isRTL ? 'غير موثق' : 'Unverified'}</SelectItem>
+                <SelectItem value="inactive">{isRTL ? 'معطل' : 'Inactive'}</SelectItem>
+                <SelectItem value="contract">{isRTL ? 'مرتبط بعقود' : 'With Contracts'}</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={filterTier} onValueChange={setFilterTier}>
+              <SelectTrigger className="w-full sm:w-40 h-10 rounded-xl"><SelectValue /></SelectTrigger>
+              <SelectContent className="rounded-xl">
+                <SelectItem value="all">{isRTL ? 'كل العضويات' : 'All Tiers'}</SelectItem>
+                {tiers.map(t => <SelectItem key={t.value} value={t.value}>{t.icon} {language === 'ar' ? t.label_ar : t.label_en}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          {(search || filterStatus !== 'all' || filterTier !== 'all') && (
+            <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/20">
+              <span className="text-[11px] text-muted-foreground">{isRTL ? 'النتائج:' : 'Results:'} {filtered.length}</span>
+              {search && <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-lg" onClick={() => setSearch('')}>"{search}" <X className="w-2.5 h-2.5" /></Badge>}
+              {filterStatus !== 'all' && <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-lg" onClick={() => setFilterStatus('all')}>{filterStatus} <X className="w-2.5 h-2.5" /></Badge>}
+              {filterTier !== 'all' && <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-lg" onClick={() => setFilterTier('all')}>{filterTier} <X className="w-2.5 h-2.5" /></Badge>}
+              <button className="text-[10px] text-primary hover:underline ms-auto"
+                onClick={() => { setSearch(''); setFilterStatus('all'); setFilterTier('all'); }}>
+                {isRTL ? 'مسح الكل' : 'Clear all'}
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* ─── Inline Edit Panel ─── */}
         {editingBiz && (
