@@ -390,12 +390,12 @@ const AdminDashboardView = React.memo(({ isRTL }: { isRTL: boolean }) => {
       )}
 
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
         {adminCards.map((card) => <StatCard key={card.label} {...card} />)}
       </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+      {/* Charts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
         <Card className="border-border/40">
           <CardHeader className="pb-1 px-4 pt-3">
             <CardTitle className="text-xs flex items-center gap-2">
