@@ -1045,6 +1045,17 @@ const ContractDetail = () => {
           </div>
         )}
 
+        {/* ─── Lock Banner ─── */}
+        {isContractLocked && (
+          <div className="flex items-center gap-2 p-3 mb-4 rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/30 text-amber-800 dark:text-amber-300">
+            <Shield className="w-5 h-5 shrink-0" />
+            <div>
+              <p className="font-heading font-bold text-xs">{isRTL ? 'العقد معتمد ومقفل' : 'Contract Approved & Locked'}</p>
+              <p className="text-[10px] font-body">{isRTL ? 'أي تعديل يتطلب ملحق عقد وموافقة الطرفين' : 'Any changes require an amendment approved by both parties'}</p>
+            </div>
+          </div>
+        )}
+
         {/* ─── Tabs ─── */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="w-full justify-start bg-muted/50 rounded-xl p-1 h-auto flex-wrap mb-4 sm:mb-6 gap-1">
@@ -1055,6 +1066,7 @@ const ContractDetail = () => {
               { value: 'maintenance', icon: Wrench, label: isRTL ? 'الصيانة' : 'Maintenance', count: maintenanceReqs?.length || 0 },
               { value: 'notes', icon: StickyNote, label: isRTL ? 'الملاحظات' : 'Notes', count: notes?.length || 0 },
               { value: 'attachments', icon: Paperclip, label: isRTL ? 'المرفقات' : 'Attachments', count: attachments?.length || 0 },
+              { value: 'amendments', icon: FileText, label: isRTL ? 'الملاحق' : 'Amendments', count: amendments?.length || 0 },
             ].map(tab => (
               <TabsTrigger key={tab.value} value={tab.value} className="font-body rounded-lg data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-3 sm:px-4 py-2 gap-1.5 text-xs sm:text-sm">
                 <tab.icon className="w-3.5 h-3.5" />{tab.label} ({tab.count})
