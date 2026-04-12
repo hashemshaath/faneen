@@ -6,6 +6,7 @@ import { Footer } from '@/components/layout/Footer';
 import { SearchHeader } from '@/components/search/SearchHeader';
 import { SearchFilters } from '@/components/search/SearchFilters';
 import { SearchResults, type ViewMode } from '@/components/search/SearchResults';
+import { ActiveFilterChips } from '@/components/search/ActiveFilterChips';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
   useDebouncedValue,
@@ -55,7 +56,6 @@ const SearchPage = () => {
   const { data: entityTags } = useEntityTags();
 
   const [query, setQuery] = useState(searchParams.get('q') || '');
-  // Sync query state when URL changes externally (e.g. navigating from homepage)
   React.useEffect(() => {
     const urlQ = searchParams.get('q') || '';
     if (urlQ !== query) setQuery(urlQ);
@@ -116,16 +116,15 @@ const SearchPage = () => {
     setFilters({ ...defaultFilters });
     setQuery('');
     setCurrentPage(1);
+    setSelectedTags([]);
     setSearchParams({}, { replace: true });
   }, [setSearchParams]);
 
-  // Use debounced query for filtering
   const filtered = useMemo(() => {
     if (!businesses) return [];
     return filterAndSort(businesses, debouncedQuery, filters, selectedTags, entityTags, language);
   }, [businesses, debouncedQuery, filters, language, selectedTags, entityTags]);
 
-  // "Did you mean?" suggestion
   const didYouMean = useMemo(() => {
     if (!debouncedQuery.trim() || filtered.length > 0 || !businesses) return null;
     const allNames = businesses.map(b => language === 'ar' ? b.name_ar : (b.name_en || b.name_ar));
@@ -144,6 +143,8 @@ const SearchPage = () => {
     window.scrollTo({ top: 400, behavior: 'smooth' });
   }, []);
 
+  const showChips = hasActiveFilters || query.trim() || selectedTags.length > 0;
+
   return (
     <div className="min-h-screen bg-background">
       <SearchHeader
@@ -157,6 +158,24 @@ const SearchPage = () => {
       />
 
       <div className="container py-6 sm:py-8 px-3 sm:px-6">
+        {/* Active filter chips */}
+        {showChips && (
+          <ActiveFilterChips
+            filters={filters}
+            query={query}
+            selectedTags={selectedTags}
+            categories={categories}
+            cities={cities}
+            onFilterChange={handleFilterChange}
+            onQueryChange={handleQueryChange}
+            onClearTag={(tagId) => {
+              setSelectedTags(prev => prev.filter(t => t !== tagId));
+              setCurrentPage(1);
+            }}
+            onClearAll={clearFilters}
+          />
+        )}
+
         <div className="flex flex-col lg:flex-row gap-5 sm:gap-6">
           <SearchFilters
             filters={filters}
