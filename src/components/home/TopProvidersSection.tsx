@@ -34,7 +34,7 @@ export const TopProvidersSection = () => {
     queryKey: ['top-providers-home'],
     queryFn: async () => {
       const { data } = await supabase
-        .from('businesses')
+        .from('businesses_public')
         .select('id, username, name_ar, name_en, logo_url, rating_avg, rating_count, membership_tier, is_verified, category_id, categories(name_ar, name_en), cities(name_ar, name_en)')
         .eq('is_active', true)
         .gt('rating_count', 0)
