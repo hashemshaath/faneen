@@ -604,6 +604,16 @@ const DashboardMessages = () => {
     setMutedConvs(prev => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next; });
     toast.success(isRTL ? 'تم تحديث الإشعارات' : 'Notifications updated');
   }, [isRTL]);
+  const setConvLabel = useCallback((id: string, label: string) => {
+    setConvLabels(prev => {
+      const next = { ...prev };
+      if (label === 'none') delete next[id];
+      else next[id] = label;
+      return next;
+    });
+    const found = CONV_LABELS.find(l => l.key === label);
+    if (found && label !== 'none') toast.success(isRTL ? `تم تصنيف المحادثة: ${found.label_ar}` : `Labeled: ${found.label_en}`);
+  }, [isRTL]);
   const handleReactMessage = useCallback((msgId: string, emoji: string | null) => {
     setMessageReactions(prev => {
       const next = { ...prev };
