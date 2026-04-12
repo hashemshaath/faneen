@@ -180,16 +180,16 @@ export const Footer = () => {
             </h4>
             <ul className="space-y-3 font-body text-[13px] text-surface-nav-foreground/40">
               {[
-                { label: t('cat.aluminum'), href: '#' },
-                { label: t('cat.iron'), href: '#' },
-                { label: t('cat.glass'), href: '#' },
-                { label: t('cat.wood'), href: '#' },
+                { label: t('cat.aluminum'), to: '/search?category=aluminum' },
+                { label: t('cat.iron'), to: '/search?category=iron' },
+                { label: t('cat.glass'), to: '/search?category=glass' },
+                { label: t('cat.wood'), to: '/search?category=wood' },
               ].map((item, i) => (
                 <li key={i}>
-                  <a href={item.href} className="group flex items-center gap-1.5 hover:text-gold transition-all duration-200">
+                  <PrefetchLink to={item.to} className="group flex items-center gap-1.5 hover:text-gold transition-all duration-200">
                     <span className="w-1 h-1 rounded-full bg-gold/30 group-hover:bg-gold group-hover:scale-150 transition-all" />
                     {item.label}
-                  </a>
+                  </PrefetchLink>
                 </li>
               ))}
             </ul>
@@ -224,16 +224,16 @@ export const Footer = () => {
             </h4>
             <ul className="space-y-3 font-body text-[13px] text-surface-nav-foreground/40">
               {[
-                { label: t('footer.support'), href: '#' },
-                { label: t('footer.partnerships'), href: '#' },
-                { label: t('footer.privacy'), href: '#' },
-                { label: t('footer.terms'), href: '#' },
+                { label: t('footer.support'), to: '/contact' },
+                { label: t('footer.partnerships'), to: '/about' },
+                { label: t('footer.privacy'), to: '/privacy' },
+                { label: t('footer.terms'), to: '/terms' },
               ].map((item, i) => (
                 <li key={i}>
-                  <a href={item.href} className="group flex items-center gap-1.5 hover:text-gold transition-all duration-200">
+                  <PrefetchLink to={item.to} className="group flex items-center gap-1.5 hover:text-gold transition-all duration-200">
                     <span className="w-1 h-1 rounded-full bg-gold/30 group-hover:bg-gold group-hover:scale-150 transition-all" />
                     {item.label}
-                  </a>
+                  </PrefetchLink>
                 </li>
               ))}
             </ul>
