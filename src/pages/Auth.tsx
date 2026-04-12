@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRoleRedirect } from '@/hooks/useRoleRedirect';
+import { usePageMeta } from '@/hooks/usePageMeta';
 import { AuthLayout } from '@/components/auth/AuthLayout';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { RegisterForm } from '@/components/auth/RegisterForm';
@@ -19,6 +20,11 @@ const Auth = () => {
     ['login', 'register', 'forgot-password'].includes(initialMode) ? initialMode : 'login'
   );
   const [sentEmail, setSentEmail] = useState('');
+
+  usePageMeta({
+    title: mode === 'register' ? 'إنشاء حساب | فنيين' : 'تسجيل الدخول | فنيين',
+    description: 'سجل دخولك أو أنشئ حساباً جديداً في منصة فنيين لدليل أعمال الألمنيوم والحديد',
+  });
 
   // Role-based redirect for authenticated users
   useEffect(() => {
