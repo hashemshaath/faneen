@@ -1186,18 +1186,18 @@ const AdminBusinesses = () => {
 
         {/* ─── Inline Services Panel ─── */}
         {servicesPanel && (
-          <Card className="border-primary/30 bg-gradient-to-br from-primary/[0.03] to-transparent shadow-sm">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <div className="p-1.5 rounded-lg bg-primary/10"><Package className="w-4 h-4 text-primary" /></div>
-                  {isRTL ? 'إدارة الخدمات' : 'Manage Services'}
-                  <Badge variant="secondary" className="text-[10px]">{services.length}</Badge>
-                </CardTitle>
-                <Button variant="ghost" size="icon" onClick={() => setServicesPanel(null)}><X className="w-4 h-4" /></Button>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <div className="rounded-2xl border border-accent/30 bg-gradient-to-r from-accent/5 to-transparent p-5 animate-in slide-in-from-top-2 duration-200 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-heading font-bold text-base flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-accent/15 flex items-center justify-center">
+                  <Package className="w-4 h-4 text-accent" />
+                </div>
+                {isRTL ? 'إدارة الخدمات' : 'Manage Services'}
+                <Badge variant="secondary" className="text-[10px]">{services.length}</Badge>
+              </h3>
+              <Button variant="ghost" size="icon" onClick={() => setServicesPanel(null)} className="rounded-xl"><X className="w-4 h-4" /></Button>
+            </div>
+            <div className="space-y-4">
               <div className="space-y-2">
                 {services.map((svc: any) => (
                   <div key={svc.id} className={`flex items-center gap-3 p-3 rounded-xl border border-border/40 hover:border-primary/20 transition-all ${!svc.is_active ? 'opacity-50' : ''}`}>
