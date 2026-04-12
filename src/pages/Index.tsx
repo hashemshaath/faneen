@@ -1,4 +1,4 @@
-import { lazy, Suspense, ComponentType, useMemo } from "react";
+import { lazy, Suspense, ComponentType, useMemo, memo } from "react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { HeroSection } from "@/components/home/HeroSection";

@@ -12,7 +12,7 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { AppDirectionShell } from "@/components/ui/app-direction-shell";
 import { RouteScrollToTop } from "@/components/RouteScrollToTop";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import Index from "./pages/Index";
+const Index = lazyRetry(() => import("./pages/Index"));
 
 function lazyRetry<T extends ComponentType<any>>(
   factory: () => Promise<{ default: T }>,
