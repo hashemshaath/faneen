@@ -16,7 +16,7 @@ import { Progress } from '@/components/ui/progress';
 import { toast } from '@/hooks/use-toast';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
-import { exportContractPDF, exportMeasurementsPDF, exportMeasurementsExcel, parseMeasurementsFromCSV, type ImportedMeasurement } from '@/lib/contract-pdf-export';
+import { exportContractPDF, exportMeasurementsPDF, exportMeasurementsExcel, printMeasurements, parseMeasurementsFromCSV, type ImportedMeasurement } from '@/lib/contract-pdf-export';
 import {
   FileText, Shield, Wrench, CheckCircle2, Clock,
   Calendar, DollarSign, AlertTriangle, XCircle, ListChecks, Plus, Send,
@@ -657,6 +657,22 @@ const ContractDetail = () => {
     if (!contract || !measurements || measurements.length === 0) return;
     exportMeasurementsExcel({
       contractNumber: contract.contract_number, currency: contract.currency_code,
+      vatRate, vatInclusive,
+      measurements: measurements.map(m => ({
+        pieceNumber: m.piece_number, name: language === 'ar' ? m.name_ar : (m.name_en || m.name_ar),
+        location: (language === 'ar' ? m.location_ar : (m.location_en || m.location_ar)) || '',
+        floor: m.floor_label || '', lengthMm: Number(m.length_mm), widthMm: Number(m.width_mm),
+        areaSqm: Number(m.area_sqm), unitPrice: Number(m.unit_price), quantity: Number(m.quantity),
+        totalCost: Number(m.total_cost), status: m.status,
+      })),
+      isRTL,
+    });
+  };
+
+  const handlePrintMeasurements = () => {
+    if (!contract || !measurements || measurements.length === 0) return;
+    printMeasurements({
+      contractNumber: contract.contract_number, businessName: bizName, currency: contract.currency_code,
       vatRate, vatInclusive,
       measurements: measurements.map(m => ({
         pieceNumber: m.piece_number, name: language === 'ar' ? m.name_ar : (m.name_en || m.name_ar),
@@ -1327,6 +1343,7 @@ const ContractDetail = () => {
                   <div className="ms-auto" />
                   <Button variant="outline" size="sm" className="gap-1.5 text-[10px] h-8" onClick={handleExportMeasurementsExcel}><Download className="w-3 h-3" />{isRTL ? 'تصدير Excel' : 'Export CSV'}</Button>
                   <Button variant="outline" size="sm" className="gap-1.5 text-[10px] h-8" onClick={handleExportMeasurementsPDF}><Download className="w-3 h-3" />{isRTL ? 'تصدير PDF' : 'Export PDF'}</Button>
+                  <Button variant="outline" size="sm" className="gap-1.5 text-[10px] h-8" onClick={handlePrintMeasurements}><Printer className="w-3 h-3" />{isRTL ? 'طباعة' : 'Print'}</Button>
                 </>
               )}
             </div>
