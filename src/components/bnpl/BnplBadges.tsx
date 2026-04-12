@@ -16,18 +16,35 @@ interface Props {
 export const BnplBadges = ({ businessId, compact = false }: Props) => {
   const { isRTL, language } = useLanguage();
 
-  const { data: linkedProviders = [] } = useQuery({
-    queryKey: ['business-bnpl-public', businessId],
+  // Use RPC to get public-safe BNPL links (no merchant_code/credit_limit)
+  const { data: publicLinks = [] } = useQuery({
+    queryKey: ['business-bnpl-public-safe', businessId],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('business_bnpl_providers')
-        .select('*, bnpl_providers(*)')
-        .eq('business_id', businessId)
-        .eq('is_active', true);
+      const { data } = await supabase.rpc('get_public_bnpl_for_business', { _business_id: businessId });
       return data ?? [];
     },
     enabled: !!businessId,
   });
+
+  // Fetch provider details separately (public table)
+  const providerIds = publicLinks.map((l: any) => l.bnpl_provider_id);
+  const { data: providers = [] } = useQuery({
+    queryKey: ['bnpl-providers', providerIds],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('bnpl_providers')
+        .select('*')
+        .in('id', providerIds)
+        .eq('is_active', true);
+      return data ?? [];
+    },
+    enabled: providerIds.length > 0,
+  });
+
+  const linkedProviders = publicLinks.map((link: any) => ({
+    ...link,
+    bnpl_providers: providers.find((p: any) => p.id === link.bnpl_provider_id) || null,
+  }));
 
   if (linkedProviders.length === 0) return null;
 

@@ -3116,6 +3116,15 @@ export type Database = {
         Args: { _prefix: string; _seq_name: string }
         Returns: string
       }
+      get_public_bnpl_for_business: {
+        Args: { _business_id: string }
+        Returns: {
+          bnpl_provider_id: string
+          business_id: string
+          id: string
+          is_active: boolean
+        }[]
+      }
       get_public_branch_data: {
         Args: { _branch_id: string }
         Returns: {
