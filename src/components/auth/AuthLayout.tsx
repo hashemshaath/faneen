@@ -151,7 +151,7 @@ export const AuthLayout: React.FC<{ children: React.ReactNode }> = ({ children }
       <div className="flex-1 flex flex-col min-h-screen">
         {/* Top bar */}
         <div className="flex items-center justify-between px-6 sm:px-10 py-6">
-          <div className="flex items-center gap-2.5 lg:hidden">
+          <div className="flex items-center gap-2.5 md:hidden">
             <div className="w-10 h-10 rounded-xl bg-gradient-gold flex items-center justify-center shadow-md">
               <span className="font-heading font-black text-lg text-secondary-foreground">ف</span>
             </div>
@@ -160,7 +160,7 @@ export const AuthLayout: React.FC<{ children: React.ReactNode }> = ({ children }
               <span className="text-[10px] text-accent tracking-wider">Faneen</span>
             </div>
           </div>
-          <div className="hidden lg:block" />
+          <div className="hidden md:block" />
 
           <div className="flex items-center gap-2.5">
             <ThemeToggle />
