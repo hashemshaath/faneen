@@ -297,7 +297,7 @@ const AdminDashboardView = React.memo(({ isRTL }: { isRTL: boolean }) => {
   const { data: stats } = useQuery({
     queryKey: ['admin-overview-stats'],
     queryFn: async () => {
-      const [users, businesses, contracts, categories, messages, subscriptions, roles, recentUsers, recentActivity, blogPosts] = await Promise.all([
+      const [users, businesses, contracts, categories, messages, subscriptions, roles, recentUsers, recentActivity, blogPosts, contactMessages, userGrowth] = await Promise.all([
         supabase.from('profiles').select('id', { count: 'exact', head: true }),
         supabase.from('businesses').select('id', { count: 'exact', head: true }),
         supabase.from('contracts').select('id, status, total_amount, created_at', { count: 'exact' }),
@@ -308,6 +308,8 @@ const AdminDashboardView = React.memo(({ isRTL }: { isRTL: boolean }) => {
         supabase.from('profiles').select('id, full_name, avatar_url, email, account_type, created_at').order('created_at', { ascending: false }).limit(5),
         supabase.from('admin_activity_log').select('id, action, entity_type, created_at, details').order('created_at', { ascending: false }).limit(6),
         supabase.from('blog_posts').select('id', { count: 'exact', head: true }),
+        supabase.from('contact_messages').select('id', { count: 'exact', head: true }).eq('status', 'new'),
+        supabase.from('profiles').select('created_at').order('created_at', { ascending: true }),
       ]);
 
       const allContracts = contracts.data || [];
@@ -324,8 +326,10 @@ const AdminDashboardView = React.memo(({ isRTL }: { isRTL: boolean }) => {
         contracts: allContracts.length, activeContracts, totalRevenue,
         categories: (categories as any).count ?? 0, messages: (messages as any).count ?? 0,
         subscriptions: (subscriptions as any).count ?? 0, blogPosts: (blogPosts as any).count ?? 0,
+        newContactMessages: (contactMessages as any).count ?? 0,
         roleCounts, statusCounts,
         monthlyContracts: buildMonthlyData(allContracts, isRTL),
+        monthlyUsers: buildMonthlyData(userGrowth.data || [], isRTL),
         recentUsers: recentUsers.data || [], recentActivity: recentActivity.data || [],
       };
     },
