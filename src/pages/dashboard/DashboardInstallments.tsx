@@ -422,70 +422,67 @@ const BnplShowcaseCard = React.memo(({ provider, isRTL }: { provider: any; isRTL
   const desc = isRTL ? provider.description_ar : provider.description_en;
 
   return (
-    <Card className="border-border/40 overflow-hidden hover:shadow-xl transition-all duration-300 group">
+    <Card className="border-border/40 overflow-hidden hover:shadow-xl transition-all duration-300 group relative">
       <CardContent className="p-0">
-        <div className="h-1.5 w-full" style={{ background: `linear-gradient(90deg, ${provider.color_hex}, ${provider.color_hex}88)` }} />
+        {/* Gradient header with logo */}
+        <div className="relative h-28 flex items-center justify-center overflow-hidden" style={{ background: `linear-gradient(135deg, ${provider.color_hex}18, ${provider.color_hex}08)` }}>
+          <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: `radial-gradient(${provider.color_hex} 1px, transparent 1px)`, backgroundSize: '16px 16px' }} />
+          <div className="absolute top-0 inset-x-0 h-1" style={{ background: `linear-gradient(90deg, ${provider.color_hex}, ${provider.color_hex}66)` }} />
+          
+          <div className="relative w-20 h-20 rounded-2xl border-2 bg-background shadow-lg flex items-center justify-center overflow-hidden group-hover:scale-110 transition-transform duration-300"
+            style={{ borderColor: provider.color_hex + '30' }}>
+            {provider.logo_url ? (
+              <img src={provider.logo_url} alt={name} className="w-14 h-14 object-contain" loading="lazy" />
+            ) : (
+              <span className="text-3xl font-bold" style={{ color: provider.color_hex }}>{(provider.name_en || 'B').charAt(0)}</span>
+            )}
+          </div>
+
+          {/* Interest badge floating */}
+          <div className="absolute top-3 end-3">
+            {provider.interest_rate === 0 ? (
+              <Badge className="bg-emerald-500/90 text-white text-[10px] px-2.5 py-1 gap-1 shadow-sm">
+                <CheckCircle className="w-3 h-3" />
+                {isRTL ? 'بدون فوائد' : '0% Interest'}
+              </Badge>
+            ) : (
+              <Badge className="bg-background/90 backdrop-blur-sm text-foreground text-[10px] px-2.5 py-1 border shadow-sm">{provider.interest_rate}% {isRTL ? 'فائدة' : 'Interest'}</Badge>
+            )}
+          </div>
+        </div>
         
         <div className="p-4 sm:p-5">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl border-2 border-border/20 flex items-center justify-center bg-background overflow-hidden shrink-0 shadow-sm group-hover:shadow-md group-hover:scale-105 transition-all duration-300"
-              style={{ borderColor: provider.color_hex + '40' }}>
-              {provider.logo_url ? (
-                <img src={provider.logo_url} alt={name} className="w-10 h-10 sm:w-12 sm:h-12 object-contain" loading="lazy" />
-              ) : (
-                <span className="text-2xl font-bold" style={{ color: provider.color_hex }}>{(provider.name_en || 'B').charAt(0)}</span>
-              )}
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="font-heading font-bold text-base sm:text-lg">{name}</h3>
-              <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                {provider.interest_rate === 0 ? (
-                  <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] px-2 py-0.5 gap-1">
-                    <CheckCircle className="w-3 h-3" />
-                    {isRTL ? 'بدون فوائد' : '0% Interest'}
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" className="text-[10px] px-2 py-0.5">{provider.interest_rate}%</Badge>
-                )}
-                <Badge variant="secondary" className="text-[10px] px-2 py-0.5 gap-1">
-                  <ShieldCheck className="w-3 h-3" />
-                  {isRTL ? 'شريك معتمد' : 'Authorized'}
-                </Badge>
-              </div>
+          <div className="text-center mb-4 -mt-1">
+            <h3 className="font-heading font-bold text-lg">{name}</h3>
+            <div className="flex items-center justify-center gap-2 mt-1">
+              <Badge variant="secondary" className="text-[10px] px-2 py-0.5 gap-1">
+                <ShieldCheck className="w-3 h-3" />
+                {isRTL ? 'شريك معتمد' : 'Authorized Partner'}
+              </Badge>
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-2 mb-4">
-            <div className="p-2.5 rounded-xl bg-muted/40 text-center hover:bg-muted/60 transition-colors">
-              <Banknote className="w-4 h-4 text-primary mx-auto mb-1" />
-              <p className="text-sm sm:text-base font-bold text-foreground tech-content">{provider.installments_count}</p>
-              <p className="text-[9px] text-muted-foreground">{isRTL ? 'عدد الأقساط' : 'Payments'}</p>
+          <div className="grid grid-cols-3 gap-1.5 mb-4">
+            <div className="p-3 rounded-xl text-center border border-border/20 hover:border-border/40 transition-colors" style={{ background: `${provider.color_hex}06` }}>
+              <p className="text-base sm:text-lg font-bold text-foreground tech-content">{provider.installments_count}</p>
+              <p className="text-[8px] text-muted-foreground mt-0.5">{isRTL ? 'عدد الأقساط' : 'Installments'}</p>
             </div>
-            <div className="p-2.5 rounded-xl bg-muted/40 text-center hover:bg-muted/60 transition-colors">
-              <DollarSign className="w-4 h-4 text-primary mx-auto mb-1" />
-              <p className="text-sm sm:text-base font-bold text-foreground tech-content">{fmtNum(Number(provider.min_amount))}</p>
-              <p className="text-[9px] text-muted-foreground">{isRTL ? 'الحد الأدنى' : 'Min'} {provider.currency_code}</p>
+            <div className="p-3 rounded-xl text-center border border-border/20 hover:border-border/40 transition-colors" style={{ background: `${provider.color_hex}06` }}>
+              <p className="text-base sm:text-lg font-bold text-foreground tech-content">{fmtNum(Number(provider.min_amount))}</p>
+              <p className="text-[8px] text-muted-foreground mt-0.5">{isRTL ? 'الحد الأدنى' : 'Min'} {provider.currency_code}</p>
             </div>
-            <div className="p-2.5 rounded-xl bg-muted/40 text-center hover:bg-muted/60 transition-colors">
-              <TrendingUp className="w-4 h-4 text-primary mx-auto mb-1" />
-              <p className="text-sm sm:text-base font-bold text-foreground tech-content">{fmtNum(Number(provider.max_amount))}</p>
-              <p className="text-[9px] text-muted-foreground">{isRTL ? 'الحد الأقصى' : 'Max'} {provider.currency_code}</p>
+            <div className="p-3 rounded-xl text-center border border-border/20 hover:border-border/40 transition-colors" style={{ background: `${provider.color_hex}06` }}>
+              <p className="text-base sm:text-lg font-bold text-foreground tech-content">{fmtNum(Number(provider.max_amount))}</p>
+              <p className="text-[8px] text-muted-foreground mt-0.5">{isRTL ? 'الحد الأقصى' : 'Max'} {provider.currency_code}</p>
             </div>
           </div>
 
-          <div className="p-3 rounded-xl bg-amber-500/5 border border-amber-500/20 mb-3">
-            <div className="flex items-start gap-2">
-              <Info className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-              <div>
-                <p className="text-[11px] font-semibold text-amber-700 dark:text-amber-400">
-                  {isRTL ? 'يخضع للموافقة الائتمانية' : 'Subject to Credit Approval'}
-                </p>
-                <p className="text-[10px] text-amber-600/80 dark:text-amber-400/70 mt-0.5 leading-relaxed">
-                  {isRTL 
-                    ? 'يعتمد القبول على الموافقة الائتمانية والسجل الائتماني للعميل.'
-                    : 'Approval depends on credit assessment and customer credit history.'}
-                </p>
-              </div>
+          <div className="p-2.5 rounded-lg bg-amber-500/5 border border-amber-500/15 mb-3">
+            <div className="flex items-center gap-1.5">
+              <Info className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+              <p className="text-[10px] text-amber-700 dark:text-amber-400">
+                {isRTL ? 'يخضع للموافقة الائتمانية والسجل الائتماني' : 'Subject to credit approval'}
+              </p>
             </div>
           </div>
 
@@ -496,10 +493,11 @@ const BnplShowcaseCard = React.memo(({ provider, isRTL }: { provider: any; isRTL
 
           {showDetails && (
             <div className="mt-3 space-y-3 animate-in slide-in-from-top-2 duration-200">
-              <p className="text-xs text-muted-foreground leading-relaxed">{desc}</p>
+              {desc && <p className="text-xs text-muted-foreground leading-relaxed">{desc}</p>}
               {provider.website_url && (
                 <a href={provider.website_url} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 py-2.5 rounded-xl border border-border/30 text-xs font-medium text-muted-foreground hover:text-primary hover:border-primary/30 transition-all">
+                  className="flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-medium transition-all hover:opacity-80"
+                  style={{ background: `${provider.color_hex}10`, color: provider.color_hex }}>
                   <Globe className="w-4 h-4" />
                   {isRTL ? 'زيارة الموقع الرسمي' : 'Visit Official Website'}
                   <ExternalLink className="w-3.5 h-3.5" />
@@ -1132,21 +1130,42 @@ const DashboardInstallments = () => {
           {/* ── Admin Tab ── */}
           {hasAdminRole && (
             <TabsContent value="admin" className="space-y-4 mt-4">
-              <div className="flex items-center justify-between gap-2">
+              {/* Admin header with stats */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
                   <h2 className="font-heading font-bold text-base flex items-center gap-1.5">
                     <Shield className="w-4 h-4 text-accent" />
                     {isRTL ? 'إدارة شركات التقسيط' : 'Manage BNPL Providers'}
                   </h2>
                   <p className="text-[10px] text-muted-foreground mt-0.5">
-                    {isRTL ? 'أضف وعدّل شركات التقسيط مع شعاراتها وتفاصيلها' : 'Add and edit BNPL providers with logos and details'}
+                    {isRTL 
+                      ? `${allProviders.length} شركة مسجلة • ${activeProviders.length} مفعّلة` 
+                      : `${allProviders.length} registered • ${activeProviders.length} active`}
                   </p>
                 </div>
-                {!showNewProvider && !editingProvider && (
-                  <Button size="sm" className="gap-1.5 text-xs" onClick={() => setShowNewProvider(true)}>
-                    <Plus className="w-3.5 h-3.5" />{isRTL ? 'إضافة شركة' : 'Add Provider'}
-                  </Button>
-                )}
+                <div className="flex items-center gap-2">
+                  {!showNewProvider && !editingProvider && (
+                    <Button size="sm" className="gap-1.5 text-xs" onClick={() => setShowNewProvider(true)}>
+                      <Plus className="w-3.5 h-3.5" />{isRTL ? 'إضافة شركة' : 'Add Provider'}
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {/* Admin quick stats */}
+              <div className="grid grid-cols-3 gap-2">
+                <div className="p-3 rounded-xl bg-primary/5 border border-primary/10 text-center">
+                  <p className="text-lg font-bold tech-content text-primary">{allProviders.length}</p>
+                  <p className="text-[9px] text-muted-foreground">{isRTL ? 'إجمالي الشركات' : 'Total Providers'}</p>
+                </div>
+                <div className="p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/10 text-center">
+                  <p className="text-lg font-bold tech-content text-emerald-600 dark:text-emerald-400">{activeProviders.length}</p>
+                  <p className="text-[9px] text-muted-foreground">{isRTL ? 'مفعّلة' : 'Active'}</p>
+                </div>
+                <div className="p-3 rounded-xl bg-muted/50 border border-border/20 text-center">
+                  <p className="text-lg font-bold tech-content text-muted-foreground">{allProviders.length - activeProviders.length}</p>
+                  <p className="text-[9px] text-muted-foreground">{isRTL ? 'معطّلة' : 'Inactive'}</p>
+                </div>
               </div>
 
               {showNewProvider && (
@@ -1158,58 +1177,130 @@ const DashboardInstallments = () => {
               )}
 
               {loadingProviders ? (
-                <div className="space-y-3">{[1, 2, 3].map(i => <Skeleton key={i} className="h-20 rounded-xl" />)}</div>
+                <div className="space-y-3">{[1, 2, 3].map(i => <Skeleton key={i} className="h-32 rounded-xl" />)}</div>
               ) : allProviders.length === 0 && !showNewProvider ? (
                 <Card className="border-dashed border-2">
-                  <CardContent className="flex flex-col items-center py-12 text-muted-foreground">
-                    <Building2 className="w-10 h-10 mb-3 opacity-40" />
+                  <CardContent className="flex flex-col items-center py-16 text-muted-foreground">
+                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center mb-4">
+                      <Building2 className="w-8 h-8 opacity-40" />
+                    </div>
                     <p className="font-bold text-foreground mb-1 text-sm">{isRTL ? 'لا توجد شركات تقسيط' : 'No BNPL providers'}</p>
-                    <Button size="sm" className="mt-3 gap-1.5" onClick={() => setShowNewProvider(true)}>
+                    <p className="text-xs text-muted-foreground mb-3">{isRTL ? 'أضف أول شركة تقسيط لبدء العمل' : 'Add your first BNPL provider to get started'}</p>
+                    <Button size="sm" className="gap-1.5" onClick={() => setShowNewProvider(true)}>
                       <Plus className="w-3.5 h-3.5" />{isRTL ? 'إضافة أول شركة' : 'Add First Provider'}
                     </Button>
                   </CardContent>
                 </Card>
               ) : (
-                <div className="space-y-2">
+                <div className="grid gap-3 sm:grid-cols-2">
                   {allProviders.map((p: any) => {
                     const name = isRTL ? p.name_ar : p.name_en;
+                    const nameSecondary = isRTL ? p.name_en : p.name_ar;
+                    const desc = isRTL ? p.description_ar : p.description_en;
+                    const isEditing = editingProvider?.id === p.id;
+                    
                     return (
-                      <Card key={p.id} className={cn('border-border/40 transition-all hover:shadow-sm', !p.is_active && 'opacity-60')}>
-                        <CardContent className="p-2.5 sm:p-3 flex items-center gap-3">
-                          <div className="w-12 h-12 rounded-xl border border-border/20 flex items-center justify-center bg-background overflow-hidden shrink-0"
-                            style={{ borderColor: p.is_active ? p.color_hex + '30' : undefined }}>
-                            {p.logo_url ? (
-                              <img src={p.logo_url} alt={name} className="w-8 h-8 object-contain" loading="lazy" />
-                            ) : (
-                              <span className="text-lg font-bold" style={{ color: p.color_hex }}>{(p.name_en || 'B').charAt(0)}</span>
+                      <Card key={p.id} className={cn(
+                        'border-border/40 transition-all overflow-hidden group/admin',
+                        !p.is_active && 'opacity-70',
+                        isEditing && 'ring-2 ring-accent/30'
+                      )}>
+                        <CardContent className="p-0">
+                          {/* Color header bar */}
+                          <div className="h-1.5 w-full relative" style={{ background: p.is_active ? `linear-gradient(90deg, ${p.color_hex}, ${p.color_hex}66)` : 'hsl(var(--muted))' }}>
+                            {!p.is_active && <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_4px,hsl(var(--muted-foreground)/0.1)_4px,hsl(var(--muted-foreground)/0.1)_8px)]" />}
+                          </div>
+
+                          <div className="p-3 sm:p-4">
+                            {/* Top row: Logo + Name + Actions */}
+                            <div className="flex items-start gap-3 mb-3">
+                              <div className="w-14 h-14 rounded-xl border-2 border-border/20 flex items-center justify-center bg-background overflow-hidden shrink-0 shadow-sm"
+                                style={{ borderColor: p.is_active ? p.color_hex + '30' : undefined }}>
+                                {p.logo_url ? (
+                                  <img src={p.logo_url} alt={name} className="w-10 h-10 object-contain" loading="lazy" />
+                                ) : (
+                                  <span className="text-xl font-bold" style={{ color: p.color_hex }}>{(p.name_en || 'B').charAt(0)}</span>
+                                )}
+                              </div>
+
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <h4 className="font-heading font-bold text-sm">{name}</h4>
+                                  <Badge className={cn('text-[8px] px-1.5 py-0 h-[14px]', p.is_active ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-destructive/10 text-destructive')}>
+                                    {p.is_active ? (isRTL ? 'مفعّل' : 'Active') : (isRTL ? 'معطّل' : 'Disabled')}
+                                  </Badge>
+                                </div>
+                                {nameSecondary && <p className="text-[10px] text-muted-foreground">{nameSecondary}</p>}
+                                <div className="flex items-center gap-1.5 mt-1">
+                                  <Badge variant="outline" className="text-[7px] px-1 py-0 h-3 tech-content">{p.slug}</Badge>
+                                  {p.interest_rate === 0 && (
+                                    <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[7px] px-1 py-0 h-3 gap-0.5">
+                                      <CheckCircle className="w-2 h-2" />{isRTL ? 'بدون فوائد' : '0%'}
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Action buttons */}
+                              <div className="flex items-center gap-0.5 shrink-0">
+                                <Switch 
+                                  checked={p.is_active} 
+                                  onCheckedChange={(checked) => {
+                                    saveProviderMutation.mutate({ form: { is_active: checked }, id: p.id });
+                                  }}
+                                  className="scale-75"
+                                />
+                                <Button variant="ghost" size="icon" className="w-7 h-7 opacity-60 hover:opacity-100" onClick={() => { setEditingProvider(p); setShowNewProvider(false); }}>
+                                  <Edit2 className="w-3 h-3" />
+                                </Button>
+                                <Button variant="ghost" size="icon" className="w-7 h-7 text-destructive opacity-60 hover:opacity-100" onClick={() => {
+                                  if (confirm(isRTL ? 'هل أنت متأكد من حذف هذا المزود؟ لا يمكن التراجع.' : 'Are you sure you want to delete this provider? This cannot be undone.')) deleteProviderMutation.mutate(p.id);
+                                }}>
+                                  <Trash2 className="w-3 h-3" />
+                                </Button>
+                              </div>
+                            </div>
+
+                            {/* Provider details grid */}
+                            <div className="grid grid-cols-4 gap-1.5 mb-3">
+                              <div className="p-2 rounded-lg bg-muted/30 text-center">
+                                <p className="text-xs font-bold tech-content">{p.installments_count}</p>
+                                <p className="text-[7px] text-muted-foreground">{isRTL ? 'أقساط' : 'Payments'}</p>
+                              </div>
+                              <div className="p-2 rounded-lg bg-muted/30 text-center">
+                                <p className="text-xs font-bold tech-content">{p.interest_rate}%</p>
+                                <p className="text-[7px] text-muted-foreground">{isRTL ? 'فائدة' : 'Interest'}</p>
+                              </div>
+                              <div className="p-2 rounded-lg bg-muted/30 text-center">
+                                <p className="text-xs font-bold tech-content">{fmtNum(Number(p.min_amount))}</p>
+                                <p className="text-[7px] text-muted-foreground">{isRTL ? 'الحد الأدنى' : 'Min'}</p>
+                              </div>
+                              <div className="p-2 rounded-lg bg-muted/30 text-center">
+                                <p className="text-xs font-bold tech-content">{fmtNum(Number(p.max_amount))}</p>
+                                <p className="text-[7px] text-muted-foreground">{isRTL ? 'الحد الأقصى' : 'Max'}</p>
+                              </div>
+                            </div>
+
+                            {/* Description if available */}
+                            {desc && (
+                              <p className="text-[10px] text-muted-foreground leading-relaxed line-clamp-2 mb-2">{desc}</p>
                             )}
-                          </div>
 
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <h4 className="font-heading font-bold text-xs sm:text-sm">{name}</h4>
-                              <Badge className={cn('text-[8px] px-1.5 py-0 h-[14px]', p.is_active ? 'bg-emerald-500/10 text-emerald-600' : 'bg-muted text-muted-foreground')}>
-                                {p.is_active ? (isRTL ? 'مفعّل' : 'Active') : (isRTL ? 'معطّل' : 'Inactive')}
-                              </Badge>
-                              <Badge variant="outline" className="text-[8px] px-1.5 py-0 h-[14px] tech-content">{p.slug}</Badge>
+                            {/* Footer info */}
+                            <div className="flex items-center justify-between text-[9px] text-muted-foreground pt-2 border-t border-border/20">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="flex items-center gap-0.5"><DollarSign className="w-2.5 h-2.5" />{p.currency_code}</span>
+                                <span className="flex items-center gap-0.5"><BarChart3 className="w-2.5 h-2.5" />{isRTL ? `ترتيب: ${p.sort_order}` : `Order: ${p.sort_order}`}</span>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                {p.website_url && (
+                                  <a href={p.website_url} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline flex items-center gap-0.5">
+                                    <Globe className="w-2.5 h-2.5" />{isRTL ? 'الموقع' : 'Website'}
+                                  </a>
+                                )}
+                                <span className="text-muted-foreground/50">{fmtDate(p.created_at, language)}</span>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-2 mt-0.5 text-[9px] text-muted-foreground flex-wrap">
-                              <span className="flex items-center gap-0.5"><Calendar className="w-2.5 h-2.5" />{p.installments_count} {isRTL ? 'قسط' : 'payments'}</span>
-                              <span className="flex items-center gap-0.5"><DollarSign className="w-2.5 h-2.5" />{p.min_amount}-{p.max_amount}</span>
-                              <span className="flex items-center gap-0.5"><Percent className="w-2.5 h-2.5" />{p.interest_rate}%</span>
-                              {p.website_url && <a href={p.website_url} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline flex items-center gap-0.5"><Globe className="w-2.5 h-2.5" />{isRTL ? 'الموقع' : 'Site'}</a>}
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-1 shrink-0">
-                            <Button variant="ghost" size="icon" className="w-7 h-7" onClick={() => { setEditingProvider(p); setShowNewProvider(false); }}>
-                              <Edit2 className="w-3 h-3" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="w-7 h-7 text-destructive" onClick={() => {
-                              if (confirm(isRTL ? 'هل تريد حذف هذا المزود؟' : 'Delete this provider?')) deleteProviderMutation.mutate(p.id);
-                            }}>
-                              <Trash2 className="w-3 h-3" />
-                            </Button>
                           </div>
                         </CardContent>
                       </Card>
