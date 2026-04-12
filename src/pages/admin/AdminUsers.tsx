@@ -5,7 +5,6 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -13,20 +12,32 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import {
   Users, Search, Shield, ShieldCheck, ShieldAlert, UserPlus, Trash2,
   Mail, Phone, Calendar, Crown, Loader2, Pencil, Ban, UserX, Download,
   KeyRound, Send, Lock, Eye, EyeOff, X, AlertTriangle, Check,
-  LayoutGrid, LayoutList, Activity, TrendingUp, UserCheck, Filter,
-  Hash, Clock, Sparkles,
+  LayoutGrid, LayoutList, TrendingUp, UserCheck, Filter,
+  Hash, Sparkles, Building2, Briefcase, Link2, ExternalLink,
 } from 'lucide-react';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Profile = Tables<'profiles'>;
 type UserRole = Tables<'user_roles'>;
+
+interface BusinessInfo {
+  id: string;
+  user_id: string;
+  name_ar: string;
+  name_en: string | null;
+  ref_id: string;
+  username: string;
+  is_active: boolean;
+  is_verified: boolean;
+  membership_tier: string;
+  business_number: number;
+}
 
 const roleConfig = {
   super_admin: { icon: ShieldAlert, gradient: 'from-purple-500/15 to-purple-500/5', iconBg: 'bg-purple-500/15 text-purple-600 dark:text-purple-400', badge: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 border-purple-200 dark:border-purple-800', labelAr: 'مشرف أعلى', labelEn: 'Super Admin' },
@@ -42,10 +53,10 @@ const tierConfig = {
   enterprise: { labelAr: 'مؤسسات', labelEn: 'Enterprise', color: 'bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400 border-purple-200 dark:border-purple-800' },
 };
 
-const accountTypeConfig = {
-  individual: { labelAr: 'فرد', labelEn: 'Individual', icon: '👤' },
-  business: { labelAr: 'أعمال', labelEn: 'Business', icon: '🏢' },
-  company: { labelAr: 'شركة', labelEn: 'Company', icon: '🏗️' },
+const accountTypeConfig: Record<string, { labelAr: string; labelEn: string; icon: React.ElementType; color: string }> = {
+  individual: { labelAr: 'فرد', labelEn: 'Individual', icon: Users, color: 'text-blue-600 bg-blue-500/10 border-blue-200 dark:border-blue-800' },
+  business: { labelAr: 'مزود خدمة', labelEn: 'Provider', icon: Briefcase, color: 'text-emerald-600 bg-emerald-500/10 border-emerald-200 dark:border-emerald-800' },
+  company: { labelAr: 'شركة', labelEn: 'Company', icon: Building2, color: 'text-purple-600 bg-purple-500/10 border-purple-200 dark:border-purple-800' },
 };
 
 type ActivePanel =
@@ -54,9 +65,17 @@ type ActivePanel =
   | { type: 'password'; userId: string; userName: string }
   | { type: 'delete'; userId: string; userName: string };
 
+/** Safe date formatter — returns fallback for invalid/missing dates */
+const formatDate = (dateStr: string | null | undefined, lang: string): string => {
+  if (!dateStr) return lang === 'ar' ? 'غير محدد' : 'N/A';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return lang === 'ar' ? 'غير محدد' : 'N/A';
+  return d.toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en', { year: 'numeric', month: 'short', day: 'numeric' });
+};
+
 /* ─── Stat Card ─── */
 const StatCard = React.memo(({ icon: Icon, label, value, gradient, iconBg, percentage }: {
-  icon: any; label: string; value: number; gradient: string; iconBg: string; percentage?: number;
+  icon: React.ElementType; label: string; value: number; gradient: string; iconBg: string; percentage?: number;
 }) => (
   <div className={`relative overflow-hidden rounded-2xl border border-border/30 bg-gradient-to-br ${gradient} p-4 transition-all hover:shadow-md group`}>
     <div className="flex items-center gap-3">
@@ -78,13 +97,16 @@ const StatCard = React.memo(({ icon: Icon, label, value, gradient, iconBg, perce
 StatCard.displayName = 'StatCard';
 
 /* ─── User Card (memo) ─── */
-const UserCard = React.memo(({ profile, roles, isCurrentUser, canManageUser, isSuperAdmin, isRTL, language,
+const UserCard = React.memo(({ profile, roles, business, isCurrentUser, canManageUser, isSuperAdmin, isRTL, language,
   onEdit, onPassword, onToggleBan, onDelete, onAddRole, onRemoveRole, addingRoleFor, selectedRole, setSelectedRole, addRoleMutation, setAddingRoleFor,
 }: any) => {
   const tier = tierConfig[profile.membership_tier as keyof typeof tierConfig] || tierConfig.free;
   const accType = accountTypeConfig[profile.account_type as keyof typeof accountTypeConfig] || accountTypeConfig.individual;
-  const createdDate = new Date(profile.created_at).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en', { year: 'numeric', month: 'short', day: 'numeric' });
+  const AccIcon = accType.icon;
+  const createdDate = formatDate(profile.created_at, language);
   const isBanned = (profile as any).is_banned;
+  const biz = business as BusinessInfo | null;
+
   const highestRole = roles.length > 0
     ? roles.reduce((best: any, r: any) => {
         const order = ['super_admin', 'admin', 'moderator', 'user'];
@@ -147,12 +169,17 @@ const UserCard = React.memo(({ profile, roles, isCurrentUser, canManageUser, isS
               {/* Badges row */}
               <div className="flex flex-wrap items-center gap-1.5 mt-2">
                 <Badge className={`${tier.color} text-[10px] border px-1.5 py-0`}>{isRTL ? tier.labelAr : tier.labelEn}</Badge>
-                <Badge variant="outline" className="text-[10px] px-1.5 py-0 gap-0.5">
-                  <span>{accType.icon}</span> {isRTL ? accType.labelAr : accType.labelEn}
+                <Badge className={`${accType.color} text-[10px] border px-1.5 py-0 gap-0.5`}>
+                  <AccIcon className="w-2.5 h-2.5" /> {isRTL ? accType.labelAr : accType.labelEn}
                 </Badge>
-                {profile.account_number && (
+                {profile.ref_id && (
                   <Badge variant="outline" className="text-[10px] px-1.5 py-0 gap-0.5 font-mono">
-                    <Hash className="w-2.5 h-2.5" />{profile.account_number}
+                    <Hash className="w-2.5 h-2.5" />{profile.ref_id}
+                  </Badge>
+                )}
+                {profile.account_number && (
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 gap-0.5 font-mono opacity-60">
+                    #{profile.account_number}
                   </Badge>
                 )}
                 {/* Role badges */}
@@ -172,8 +199,34 @@ const UserCard = React.memo(({ profile, roles, isCurrentUser, canManageUser, isS
                     </div>
                   );
                 })}
-                {roles.length === 0 && <span className="text-[10px] text-muted-foreground">{isRTL ? 'بدون صلاحيات' : 'No roles'}</span>}
+                {roles.length === 0 && (
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 text-muted-foreground border-dashed">
+                    <Shield className="w-2.5 h-2.5 me-0.5" />{isRTL ? 'عضو عادي' : 'Member'}
+                  </Badge>
+                )}
               </div>
+
+              {/* ─── Business Card (linked entity) ─── */}
+              {biz && (
+                <div className="mt-2.5 flex items-center gap-2 rounded-xl bg-muted/40 border border-border/30 px-3 py-2">
+                  <Building2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-xs font-bold text-foreground truncate">{isRTL ? biz.name_ar : (biz.name_en || biz.name_ar)}</span>
+                      {biz.is_verified && <Check className="w-3 h-3 text-emerald-500" />}
+                    </div>
+                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                      <span className="text-[10px] font-mono text-accent flex items-center gap-0.5">
+                        <Link2 className="w-2.5 h-2.5" />{biz.ref_id}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground">@{biz.username}</span>
+                    </div>
+                  </div>
+                  <Badge variant="outline" className="text-[9px] px-1.5 py-0 shrink-0">
+                    {isRTL ? 'مالك' : 'Owner'}
+                  </Badge>
+                </div>
+              )}
             </div>
           </div>
 
@@ -246,6 +299,7 @@ const AdminUsers = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [deferredSearch, setDeferredSearch] = useState('');
   const [filterRole, setFilterRole] = useState<string>('all');
+  const [filterAccountType, setFilterAccountType] = useState<string>('all');
   const [addingRoleFor, setAddingRoleFor] = useState<string | null>(null);
   const [selectedRole, setSelectedRole] = useState<string>('user');
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
@@ -282,6 +336,25 @@ const AdminUsers = () => {
     },
     enabled: !!user,
   });
+
+  const { data: businesses = [] } = useQuery({
+    queryKey: ['admin-businesses-map'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('businesses')
+        .select('id, user_id, name_ar, name_en, ref_id, username, is_active, is_verified, membership_tier, business_number');
+      if (error) throw error;
+      return data as BusinessInfo[];
+    },
+    enabled: !!user,
+  });
+
+  // ─── Business map by user_id ───
+  const businessMap = useMemo(() => {
+    const map = new Map<string, BusinessInfo>();
+    businesses.forEach(b => map.set(b.user_id, b));
+    return map;
+  }, [businesses]);
 
   // ─── Mutations ───
   const addRoleMutation = useMutation({
@@ -423,11 +496,21 @@ const AdminUsers = () => {
   }, [userRoles]);
 
   const filtered = useMemo(() => profiles.filter(p => {
-    const matchesSearch = !deferredSearch || p.full_name?.toLowerCase().includes(deferredSearch.toLowerCase()) || p.email?.toLowerCase().includes(deferredSearch.toLowerCase()) || p.phone?.includes(deferredSearch);
+    const lowerSearch = deferredSearch.toLowerCase();
+    const biz = businessMap.get(p.user_id);
+    const matchesSearch = !deferredSearch
+      || p.full_name?.toLowerCase().includes(lowerSearch)
+      || p.email?.toLowerCase().includes(lowerSearch)
+      || p.phone?.includes(deferredSearch)
+      || p.ref_id?.toLowerCase().includes(lowerSearch)
+      || biz?.ref_id?.toLowerCase().includes(lowerSearch)
+      || biz?.name_ar?.toLowerCase().includes(lowerSearch)
+      || biz?.username?.toLowerCase().includes(lowerSearch);
     const roles = roleMap.get(p.user_id) || [];
     const matchesRole = filterRole === 'all' || (filterRole === 'no_role' && roles.length === 0) || roles.some(r => r.role === filterRole);
-    return matchesSearch && matchesRole;
-  }), [profiles, deferredSearch, filterRole, roleMap]);
+    const matchesType = filterAccountType === 'all' || p.account_type === filterAccountType;
+    return matchesSearch && matchesRole && matchesType;
+  }), [profiles, deferredSearch, filterRole, filterAccountType, roleMap, businessMap]);
 
   const stats = useMemo(() => {
     const totalUsers = profiles.length;
@@ -435,24 +518,30 @@ const AdminUsers = () => {
     const admins = userRoles.filter(r => r.role === 'admin').length;
     const moderators = userRoles.filter(r => r.role === 'moderator').length;
     const bannedCount = profiles.filter(p => (p as any).is_banned).length;
+    const providers = profiles.filter(p => p.account_type === 'business' || p.account_type === 'company').length;
     const tierDist = { free: 0, basic: 0, premium: 0, enterprise: 0 };
     profiles.forEach(p => {
       const t = p.membership_tier as keyof typeof tierDist;
       if (t in tierDist) tierDist[t]++;
     });
-    // Recent (last 7 days)
     const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    const recentUsers = profiles.filter(p => new Date(p.created_at).getTime() > weekAgo).length;
-    return { totalUsers, superAdmins, admins, moderators, bannedCount, tierDist, recentUsers };
+    const recentUsers = profiles.filter(p => {
+      const d = new Date(p.created_at);
+      return !isNaN(d.getTime()) && d.getTime() > weekAgo;
+    }).length;
+    return { totalUsers, superAdmins, admins, moderators, bannedCount, tierDist, recentUsers, providers };
   }, [profiles, userRoles]);
 
   const exportCSV = () => {
-    const headers = ['Name', 'Email', 'Phone', 'Account Type', 'Membership', 'Roles', 'Banned', 'Created At'];
+    const headers = ['Ref ID', 'Name', 'Email', 'Phone', 'Account Type', 'Business Ref', 'Business Name', 'Membership', 'Roles', 'Banned', 'Created At'];
     const rows = filtered.map(p => {
       const roles = (roleMap.get(p.user_id) || []).map(r => r.role).join(', ') || 'none';
       const accType = accountTypeConfig[p.account_type as keyof typeof accountTypeConfig]?.labelEn || p.account_type;
       const tier = tierConfig[p.membership_tier as keyof typeof tierConfig]?.labelEn || p.membership_tier;
-      return [p.full_name || '', p.email || '', p.phone || '', accType, tier, roles, (p as any).is_banned ? 'Yes' : 'No', new Date(p.created_at).toISOString().split('T')[0]]
+      const biz = businessMap.get(p.user_id);
+      const createdAt = p.created_at ? new Date(p.created_at) : null;
+      const createdStr = createdAt && !isNaN(createdAt.getTime()) ? createdAt.toISOString().split('T')[0] : '';
+      return [p.ref_id || '', p.full_name || '', p.email || '', p.phone || '', accType, biz?.ref_id || '', biz?.name_ar || '', tier, roles, (p as any).is_banned ? 'Yes' : 'No', createdStr]
         .map(v => `"${String(v).replace(/"/g, '""')}"`).join(',');
     });
     const csv = '\uFEFF' + [headers.join(','), ...rows].join('\n');
@@ -486,7 +575,7 @@ const AdminUsers = () => {
               {isRTL ? 'إدارة المستخدمين والصلاحيات' : 'Users & Roles Management'}
             </h1>
             <p className="text-muted-foreground font-body mt-1 text-sm">
-              {isRTL ? `${stats.totalUsers} مستخدم مسجّل • ${stats.recentUsers} جديد هذا الأسبوع` : `${stats.totalUsers} registered users • ${stats.recentUsers} new this week`}
+              {isRTL ? `${stats.totalUsers} مستخدم مسجّل • ${stats.providers} مزود خدمة • ${stats.recentUsers} جديد هذا الأسبوع` : `${stats.totalUsers} users • ${stats.providers} providers • ${stats.recentUsers} new this week`}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -504,12 +593,13 @@ const AdminUsers = () => {
         </div>
 
         {/* ─── Stats Grid ─── */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-6 gap-3">
           <StatCard icon={Users} label={isRTL ? 'إجمالي المستخدمين' : 'Total Users'} value={stats.totalUsers} gradient="from-primary/10 to-primary/5" iconBg="bg-primary/15 text-primary" />
-          <StatCard icon={ShieldAlert} label={isRTL ? 'مشرف أعلى' : 'Super Admins'} value={stats.superAdmins} gradient="from-purple-500/10 to-purple-500/5" iconBg="bg-purple-500/15 text-purple-600" percentage={stats.totalUsers ? (stats.superAdmins / stats.totalUsers) * 100 : 0} />
-          <StatCard icon={Crown} label={isRTL ? 'المشرفين' : 'Admins'} value={stats.admins} gradient="from-red-500/10 to-red-500/5" iconBg="bg-red-500/15 text-red-600" percentage={stats.totalUsers ? (stats.admins / stats.totalUsers) * 100 : 0} />
-          <StatCard icon={ShieldCheck} label={isRTL ? 'مشرفي المحتوى' : 'Moderators'} value={stats.moderators} gradient="from-amber-500/10 to-amber-500/5" iconBg="bg-amber-500/15 text-amber-600" percentage={stats.totalUsers ? (stats.moderators / stats.totalUsers) * 100 : 0} />
-          <StatCard icon={TrendingUp} label={isRTL ? 'جديد هذا الأسبوع' : 'New This Week'} value={stats.recentUsers} gradient="from-emerald-500/10 to-emerald-500/5" iconBg="bg-emerald-500/15 text-emerald-600" />
+          <StatCard icon={Briefcase} label={isRTL ? 'مزودي الخدمات' : 'Providers'} value={stats.providers} gradient="from-emerald-500/10 to-emerald-500/5" iconBg="bg-emerald-500/15 text-emerald-600" percentage={stats.totalUsers ? (stats.providers / stats.totalUsers) * 100 : 0} />
+          <StatCard icon={ShieldAlert} label={isRTL ? 'مشرف أعلى' : 'Super Admins'} value={stats.superAdmins} gradient="from-purple-500/10 to-purple-500/5" iconBg="bg-purple-500/15 text-purple-600" />
+          <StatCard icon={Crown} label={isRTL ? 'المشرفين' : 'Admins'} value={stats.admins} gradient="from-red-500/10 to-red-500/5" iconBg="bg-red-500/15 text-red-600" />
+          <StatCard icon={ShieldCheck} label={isRTL ? 'مشرفي المحتوى' : 'Moderators'} value={stats.moderators} gradient="from-amber-500/10 to-amber-500/5" iconBg="bg-amber-500/15 text-amber-600" />
+          <StatCard icon={TrendingUp} label={isRTL ? 'جديد هذا الأسبوع' : 'New This Week'} value={stats.recentUsers} gradient="from-blue-500/10 to-blue-500/5" iconBg="bg-blue-500/15 text-blue-600" />
         </div>
 
         {/* ─── Membership Distribution ─── */}
@@ -554,17 +644,17 @@ const AdminUsers = () => {
               <Input
                 value={searchTerm}
                 onChange={e => handleSearchChange(e.target.value)}
-                placeholder={isRTL ? 'بحث بالاسم أو البريد أو الهاتف...' : 'Search by name, email, or phone...'}
+                placeholder={isRTL ? 'بحث بالاسم أو البريد أو الهاتف أو المفتاح التعريفي...' : 'Search name, email, phone, or ref ID...'}
                 className="ps-10 h-10 rounded-xl bg-muted/30 border-border/20 focus:bg-background transition-colors"
               />
             </div>
             <Select value={filterRole} onValueChange={setFilterRole}>
-              <SelectTrigger className="w-full md:w-48 h-10 rounded-xl">
+              <SelectTrigger className="w-full md:w-44 h-10 rounded-xl">
                 <Filter className="w-4 h-4 me-2 text-muted-foreground" />
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="rounded-xl">
-                <SelectItem value="all">{isRTL ? 'جميع المستخدمين' : 'All Users'}</SelectItem>
+                <SelectItem value="all">{isRTL ? 'جميع الصلاحيات' : 'All Roles'}</SelectItem>
                 <SelectItem value="super_admin">{isRTL ? 'مشرف أعلى' : 'Super Admin'}</SelectItem>
                 <SelectItem value="admin">{isRTL ? 'المشرفين' : 'Admins'}</SelectItem>
                 <SelectItem value="moderator">{isRTL ? 'مشرفي المحتوى' : 'Moderators'}</SelectItem>
@@ -572,14 +662,31 @@ const AdminUsers = () => {
                 <SelectItem value="no_role">{isRTL ? 'بدون صلاحيات' : 'No Role'}</SelectItem>
               </SelectContent>
             </Select>
+            <Select value={filterAccountType} onValueChange={setFilterAccountType}>
+              <SelectTrigger className="w-full md:w-44 h-10 rounded-xl">
+                <Building2 className="w-4 h-4 me-2 text-muted-foreground" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl">
+                <SelectItem value="all">{isRTL ? 'جميع الأنواع' : 'All Types'}</SelectItem>
+                <SelectItem value="individual">{isRTL ? 'أفراد' : 'Individuals'}</SelectItem>
+                <SelectItem value="business">{isRTL ? 'مزودي خدمات' : 'Providers'}</SelectItem>
+                <SelectItem value="company">{isRTL ? 'شركات' : 'Companies'}</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           {/* Active filters */}
-          {(filterRole !== 'all' || deferredSearch) && (
+          {(filterRole !== 'all' || filterAccountType !== 'all' || deferredSearch) && (
             <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/20">
               <span className="text-[11px] text-muted-foreground">{isRTL ? 'النتائج:' : 'Results:'} {filtered.length}</span>
               {filterRole !== 'all' && (
                 <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-lg" onClick={() => setFilterRole('all')}>
                   {filterRole} <X className="w-2.5 h-2.5" />
+                </Badge>
+              )}
+              {filterAccountType !== 'all' && (
+                <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-lg" onClick={() => setFilterAccountType('all')}>
+                  {accountTypeConfig[filterAccountType]?.labelAr || filterAccountType} <X className="w-2.5 h-2.5" />
                 </Badge>
               )}
               {deferredSearch && (
@@ -600,6 +707,9 @@ const AdminUsers = () => {
                   <Pencil className="w-4 h-4 text-accent" />
                 </div>
                 {isRTL ? 'تعديل بيانات المستخدم' : 'Edit User Profile'}
+                {activePanel.profile.ref_id && (
+                  <Badge variant="outline" className="font-mono text-xs">{activePanel.profile.ref_id}</Badge>
+                )}
               </h3>
               <Button variant="ghost" size="icon" onClick={closePanel} className="rounded-xl"><X className="w-4 h-4" /></Button>
             </div>
@@ -622,7 +732,7 @@ const AdminUsers = () => {
                   <SelectTrigger className="h-10 rounded-xl"><SelectValue /></SelectTrigger>
                   <SelectContent className="rounded-xl">
                     <SelectItem value="individual">{isRTL ? 'فرد' : 'Individual'}</SelectItem>
-                    <SelectItem value="business">{isRTL ? 'أعمال' : 'Business'}</SelectItem>
+                    <SelectItem value="business">{isRTL ? 'مزود خدمة' : 'Provider'}</SelectItem>
                     <SelectItem value="company">{isRTL ? 'شركة' : 'Company'}</SelectItem>
                   </SelectContent>
                 </Select>
@@ -640,6 +750,26 @@ const AdminUsers = () => {
                 </Select>
               </div>
             </div>
+
+            {/* Show linked business in edit panel */}
+            {(() => {
+              const biz = businessMap.get(activePanel.profile.user_id);
+              if (!biz) return null;
+              return (
+                <div className="mt-4 p-3 rounded-xl bg-muted/40 border border-border/30">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="w-4 h-4 text-emerald-600" />
+                    <span className="text-xs font-bold">{isRTL ? 'الحساب التجاري المرتبط' : 'Linked Business Account'}</span>
+                  </div>
+                  <div className="flex items-center gap-3 mt-2 flex-wrap">
+                    <Badge variant="outline" className="font-mono text-xs gap-1"><Link2 className="w-3 h-3" />{biz.ref_id}</Badge>
+                    <span className="text-xs text-muted-foreground">{biz.name_ar}</span>
+                    <span className="text-xs text-muted-foreground">@{biz.username}</span>
+                  </div>
+                </div>
+              );
+            })()}
+
             <Separator className="my-4" />
             <div className="flex items-center gap-2 justify-end">
               <Button variant="outline" onClick={closePanel} className="rounded-xl">{isRTL ? 'إلغاء' : 'Cancel'}</Button>
@@ -757,6 +887,7 @@ const AdminUsers = () => {
                   key={profile.id}
                   profile={profile}
                   roles={roles}
+                  business={businessMap.get(profile.user_id) || null}
                   isCurrentUser={isCurrentUser}
                   canManageUser={canManageUser}
                   isSuperAdmin={isSuperAdmin}
