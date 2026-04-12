@@ -357,6 +357,12 @@
 .sidebar-mobile-content [data-sidebar="menu-item"]:nth-child(14) { animation-delay: 0.43s; }
 .sidebar-mobile-content [data-sidebar="menu-item"]:nth-child(15) { animation-delay: 0.46s; }
 
+/* content-visibility for below-fold sections — skip layout/paint until near viewport */
+.cv-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 600px;
+}
+
 @keyframes progress {
   from { width: 0%; }
   to { width: 100%; }
