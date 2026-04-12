@@ -111,15 +111,36 @@ export const BookingWidget = ({ businessId, businessName, open, onOpenChange }: 
       const slot = timeSlots.find(s => s.time === selectedSlot);
       if (!slot) throw new Error('invalid slot');
 
-      const { error } = await supabase.from('bookings').insert({
+      const bookingId = crypto.randomUUID();
+      const dateStr = selectedDate.toISOString().split('T')[0];
+      const { data: inserted, error } = await supabase.from('bookings').insert({
+        id: bookingId,
         business_id: businessId,
         client_id: user.id,
-        booking_date: selectedDate.toISOString().split('T')[0],
+        booking_date: dateStr,
         start_time: slot.time,
         end_time: slot.endTime,
         notes: notes.trim() || null,
-      });
+      }).select('ref_id').single();
       if (error) throw error;
+
+      // Send booking confirmation email (fire-and-forget)
+      if (user.email) {
+        supabase.functions.invoke('send-transactional-email', {
+          body: {
+            templateName: 'booking-confirmation',
+            recipientEmail: user.email,
+            idempotencyKey: `booking-confirm-${bookingId}`,
+            templateData: {
+              clientName: user.user_metadata?.full_name || '',
+              businessName,
+              bookingDate: dateStr,
+              startTime: slot.time,
+              refId: inserted?.ref_id || '',
+            },
+          },
+        }).catch(console.error);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-bookings'] });
