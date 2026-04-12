@@ -105,7 +105,7 @@ const UserCard = React.memo(({ profile, roles, business, isCurrentUser, canManag
   const AccIcon = accType.icon;
   const createdDate = formatDate(profile.created_at, language);
   const isBanned = (profile as any).is_banned;
-  const biz = business as BusinessInfo | null;
+  const bizList = (business as BusinessInfo[] | null) || [];
 
   const highestRole = roles.length > 0
     ? roles.reduce((best: any, r: any) => {
@@ -206,25 +206,29 @@ const UserCard = React.memo(({ profile, roles, business, isCurrentUser, canManag
                 )}
               </div>
 
-              {/* ─── Business Card (linked entity) ─── */}
-              {biz && (
-                <div className="mt-2.5 flex items-center gap-2 rounded-xl bg-muted/40 border border-border/30 px-3 py-2">
-                  <Building2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-xs font-bold text-foreground truncate">{isRTL ? biz.name_ar : (biz.name_en || biz.name_ar)}</span>
-                      {biz.is_verified && <Check className="w-3 h-3 text-emerald-500" />}
+              {/* ─── Business Cards (linked entities) ─── */}
+              {bizList.length > 0 && (
+                <div className="mt-2.5 space-y-1.5">
+                  {bizList.map(biz => (
+                    <div key={biz.id} className="flex items-center gap-2 rounded-xl bg-muted/40 border border-border/30 px-3 py-2">
+                      <Building2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-xs font-bold text-foreground truncate">{isRTL ? biz.name_ar : (biz.name_en || biz.name_ar)}</span>
+                          {biz.is_verified && <Check className="w-3 h-3 text-emerald-500" />}
+                        </div>
+                        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                          <span className="text-[10px] font-mono text-accent flex items-center gap-0.5">
+                            <Link2 className="w-2.5 h-2.5" />{biz.ref_id}
+                          </span>
+                          <span className="text-[10px] text-muted-foreground">@{biz.username}</span>
+                        </div>
+                      </div>
+                      <Badge variant="outline" className="text-[9px] px-1.5 py-0 shrink-0">
+                        {isRTL ? 'مالك' : 'Owner'}
+                      </Badge>
                     </div>
-                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                      <span className="text-[10px] font-mono text-accent flex items-center gap-0.5">
-                        <Link2 className="w-2.5 h-2.5" />{biz.ref_id}
-                      </span>
-                      <span className="text-[10px] text-muted-foreground">@{biz.username}</span>
-                    </div>
-                  </div>
-                  <Badge variant="outline" className="text-[9px] px-1.5 py-0 shrink-0">
-                    {isRTL ? 'مالك' : 'Owner'}
-                  </Badge>
+                  ))}
                 </div>
               )}
             </div>
@@ -349,10 +353,14 @@ const AdminUsers = () => {
     enabled: !!user,
   });
 
-  // ─── Business map by user_id ───
+  // ─── Business map by user_id (supports multiple businesses per user) ───
   const businessMap = useMemo(() => {
-    const map = new Map<string, BusinessInfo>();
-    businesses.forEach(b => map.set(b.user_id, b));
+    const map = new Map<string, BusinessInfo[]>();
+    businesses.forEach(b => {
+      const arr = map.get(b.user_id) || [];
+      arr.push(b);
+      map.set(b.user_id, arr);
+    });
     return map;
   }, [businesses]);
 
@@ -497,15 +505,15 @@ const AdminUsers = () => {
 
   const filtered = useMemo(() => profiles.filter(p => {
     const lowerSearch = deferredSearch.toLowerCase();
-    const biz = businessMap.get(p.user_id);
+    const bizList = businessMap.get(p.user_id) || [];
     const matchesSearch = !deferredSearch
       || p.full_name?.toLowerCase().includes(lowerSearch)
       || p.email?.toLowerCase().includes(lowerSearch)
       || p.phone?.includes(deferredSearch)
       || p.ref_id?.toLowerCase().includes(lowerSearch)
-      || biz?.ref_id?.toLowerCase().includes(lowerSearch)
-      || biz?.name_ar?.toLowerCase().includes(lowerSearch)
-      || biz?.username?.toLowerCase().includes(lowerSearch);
+      || bizList.some(b => b.ref_id?.toLowerCase().includes(lowerSearch))
+      || bizList.some(b => b.name_ar?.toLowerCase().includes(lowerSearch))
+      || bizList.some(b => b.username?.toLowerCase().includes(lowerSearch));
     const roles = roleMap.get(p.user_id) || [];
     const matchesRole = filterRole === 'all' || (filterRole === 'no_role' && roles.length === 0) || roles.some(r => r.role === filterRole);
     const matchesType = filterAccountType === 'all' || p.account_type === filterAccountType;
@@ -538,10 +546,12 @@ const AdminUsers = () => {
       const roles = (roleMap.get(p.user_id) || []).map(r => r.role).join(', ') || 'none';
       const accType = accountTypeConfig[p.account_type as keyof typeof accountTypeConfig]?.labelEn || p.account_type;
       const tier = tierConfig[p.membership_tier as keyof typeof tierConfig]?.labelEn || p.membership_tier;
-      const biz = businessMap.get(p.user_id);
+      const bizList = businessMap.get(p.user_id) || [];
+      const bizRefs = bizList.map(b => b.ref_id).join(' | ');
+      const bizNames = bizList.map(b => b.name_ar).join(' | ');
       const createdAt = p.created_at ? new Date(p.created_at) : null;
       const createdStr = createdAt && !isNaN(createdAt.getTime()) ? createdAt.toISOString().split('T')[0] : '';
-      return [p.ref_id || '', p.full_name || '', p.email || '', p.phone || '', accType, biz?.ref_id || '', biz?.name_ar || '', tier, roles, (p as any).is_banned ? 'Yes' : 'No', createdStr]
+      return [p.ref_id || '', p.full_name || '', p.email || '', p.phone || '', accType, bizRefs, bizNames, tier, roles, (p as any).is_banned ? 'Yes' : 'No', createdStr]
         .map(v => `"${String(v).replace(/"/g, '""')}"`).join(',');
     });
     const csv = '\uFEFF' + [headers.join(','), ...rows].join('\n');
@@ -753,18 +763,22 @@ const AdminUsers = () => {
 
             {/* Show linked business in edit panel */}
             {(() => {
-              const biz = businessMap.get(activePanel.profile.user_id);
-              if (!biz) return null;
+              const bizList = businessMap.get(activePanel.profile.user_id) || [];
+              if (bizList.length === 0) return null;
               return (
                 <div className="mt-4 p-3 rounded-xl bg-muted/40 border border-border/30">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 mb-2">
                     <Building2 className="w-4 h-4 text-emerald-600" />
-                    <span className="text-xs font-bold">{isRTL ? 'الحساب التجاري المرتبط' : 'Linked Business Account'}</span>
+                    <span className="text-xs font-bold">{isRTL ? 'الحسابات التجارية المرتبطة' : 'Linked Business Accounts'} ({bizList.length})</span>
                   </div>
-                  <div className="flex items-center gap-3 mt-2 flex-wrap">
-                    <Badge variant="outline" className="font-mono text-xs gap-1"><Link2 className="w-3 h-3" />{biz.ref_id}</Badge>
-                    <span className="text-xs text-muted-foreground">{biz.name_ar}</span>
-                    <span className="text-xs text-muted-foreground">@{biz.username}</span>
+                  <div className="space-y-1.5">
+                    {bizList.map(biz => (
+                      <div key={biz.id} className="flex items-center gap-3 flex-wrap">
+                        <Badge variant="outline" className="font-mono text-xs gap-1"><Link2 className="w-3 h-3" />{biz.ref_id}</Badge>
+                        <span className="text-xs text-muted-foreground">{biz.name_ar}</span>
+                        <span className="text-xs text-muted-foreground">@{biz.username}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               );
