@@ -89,9 +89,9 @@ const DashboardAnalytics = () => {
           .gte('created_at', start),
         supabase.from('business_services').select('id')
           .eq('business_id', business.id).eq('is_active', true),
-        supabase.from('projects').select('id, status, views_count, created_at')
+        supabase.from('projects').select('id, status, created_at')
           .eq('business_id', business.id),
-        supabase.from('portfolio_items').select('id, views_count')
+        supabase.from('portfolio_items').select('id')
           .eq('business_id', business.id),
       ]);
 
@@ -100,8 +100,8 @@ const DashboardAnalytics = () => {
         bookings: bookings.data || [],
         reviews: reviews.data || [],
         servicesCount: services.data?.length || 0,
-        projects: projects.data || [],
-        portfolio: portfolio.data || [],
+        projectsCount: projects.data?.length || 0,
+        portfolioCount: portfolio.data?.length || 0,
       };
     },
     enabled: !!business,
@@ -111,7 +111,7 @@ const DashboardAnalytics = () => {
   // Computed stats
   const stats = useMemo(() => {
     if (!analytics) return null;
-    const { contracts, bookings, reviews, projects, portfolio } = analytics;
+    const { contracts, bookings, reviews } = analytics;
 
     const totalRevenue = contracts
       .filter(c => ['completed', 'active'].includes(c.status))
@@ -126,14 +126,12 @@ const DashboardAnalytics = () => {
     const avgRating = reviews.length > 0
       ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)
       : '0';
-    const totalViews = projects.reduce((s, p) => s + (p.views_count || 0), 0)
-      + portfolio.reduce((s, p) => s + (p.views_count || 0), 0);
 
     return {
       totalRevenue, completedContracts, activeContracts, totalContracts: contracts.length,
       totalBookings: bookings.length, pendingBookings, confirmedBookings, completedBookings, cancelledBookings,
       totalReviews: reviews.length, avgRating,
-      totalViews, servicesCount: analytics.servicesCount,
+      projectsCount: analytics.projectsCount, servicesCount: analytics.servicesCount,
     };
   }, [analytics]);
 
