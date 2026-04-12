@@ -447,6 +447,33 @@ const AdminDashboardView = React.memo(({ isRTL }: { isRTL: boolean }) => {
             )}
           </CardContent>
         </Card>
+
+        {/* User Growth */}
+        <Card className="border-border/40">
+          <CardHeader className="pb-1 px-4 pt-3">
+            <CardTitle className="text-xs flex items-center gap-2">
+              <TrendingUp className="w-3.5 h-3.5 text-primary" />{isRTL ? 'نمو المستخدمين' : 'User Growth'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-4 pb-3">
+            <div className="h-[170px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={stats?.monthlyUsers || []}>
+                  <defs>
+                    <linearGradient id="userGrowthGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="month" tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} width={24} allowDecimals={false} />
+                  <Tooltip contentStyle={ChartTooltipStyle} />
+                  <Area type="monotone" dataKey="count" stroke="hsl(var(--primary))" fill="url(#userGrowthGrad)" strokeWidth={2} name={isRTL ? 'مستخدمين' : 'Users'} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Activity + Users */}
