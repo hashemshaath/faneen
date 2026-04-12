@@ -71,6 +71,7 @@ interface ContractForm {
   terms_ar: string; terms_en: string;
   supervisor_name: string; supervisor_phone: string; supervisor_email: string;
   client_email: string;
+  vat_inclusive: boolean; vat_rate: string;
 }
 
 const emptyForm: ContractForm = {
@@ -78,7 +79,7 @@ const emptyForm: ContractForm = {
   total_amount: '', currency_code: 'SAR', start_date: '', end_date: '',
   terms_ar: '', terms_en: '',
   supervisor_name: '', supervisor_phone: '', supervisor_email: '',
-  client_email: '',
+  client_email: '', vat_inclusive: false, vat_rate: '15',
 };
 
 type ViewSection = 'list' | 'create' | 'templates' | 'template-preview';
@@ -350,10 +351,19 @@ const DashboardContracts = () => {
   const [showAddMeasurement, setShowAddMeasurement] = useState<string | null>(null);
   const [showAddMilestone, setShowAddMilestone] = useState<string | null>(null);
   const [showAddAmendment, setShowAddAmendment] = useState<string | null>(null);
+  const [showAddMaintenance, setShowAddMaintenance] = useState<string | null>(null);
+  const [showAddPayment, setShowAddPayment] = useState<string | null>(null);
+  const [showAddLineItem, setShowAddLineItem] = useState<string | null>(null);
+  const [editingMilestoneId, setEditingMilestoneId] = useState<string | null>(null);
   const [measurementForm, setMeasurementForm] = useState({ name_ar: '', piece_number: '', floor_label: 'ground_floor', location_ar: '', length_mm: '', width_mm: '', quantity: '1', unit_price: '' });
   const [milestoneForm, setMilestoneForm] = useState({ title_ar: '', amount: '', due_date: '' });
   const [amendmentForm, setAmendmentForm] = useState({ title_ar: '', description_ar: '', amendment_type: 'scope_change', new_amount: '' });
+  const [maintenanceForm, setMaintenanceForm] = useState({ title_ar: '', description_ar: '', priority: 'normal' as string, scheduled_date: '' });
+  const [paymentForm, setPaymentForm] = useState({ amount: '', due_date: '', notes: '' });
+  const [lineItemForm, setLineItemForm] = useState({ name_ar: '', description_ar: '', quantity: '1', unit_price: '', item_type: 'service' });
+  const [maintenanceImages, setMaintenanceImages] = useState<File[]>([]);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const maintenanceImageRef = React.useRef<HTMLInputElement>(null);
   const [uploadingContractId, setUploadingContractId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'cards' | 'compact'>('cards');
 
