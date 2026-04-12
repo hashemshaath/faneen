@@ -56,12 +56,25 @@ const BusinessProfile = () => {
 
   const businessName = business ? getLocalizedValue(language, business.name_ar, business.name_en) : '';
   const businessDesc = business ? (getLocalizedValue(language, business.description_ar, business.description_en) || getLocalizedValue(language, business.short_description_ar, business.short_description_en) || '') : '';
+  const categoryName = business?.categories ? getLocalizedValue(language, business.categories.name_ar, business.categories.name_en) : '';
+  const cityName = business?.cities ? getLocalizedValue(language, business.cities.name_ar, business.cities.name_en) : '';
+
+  const seoTitle = business
+    ? `${businessName}${categoryName ? ` — ${categoryName}` : ''}${cityName ? ` في ${cityName}` : ''} | فنيين`
+    : (isRTL ? 'جاري التحميل... | فنيين' : 'Loading... | Faneen');
+
+  const seoDesc = business
+    ? (businessDesc.substring(0, 140) || `${businessName}${categoryName ? ` - ${categoryName}` : ''}${cityName ? ` في ${cityName}` : ''} — مزود خدمات معتمد على منصة فنيين`)
+    + (business.phone ? ` | ${business.phone}` : '')
+    : undefined;
 
   usePageMeta({
-    title: business ? `${businessName} | فنيين Faneen` : (isRTL ? 'جاري التحميل... | فنيين' : 'Loading... | Faneen'),
-    description: business ? (businessDesc.substring(0, 160) || `${businessName} - مزود خدمات معتمد على منصة فنيين`) : undefined,
+    title: seoTitle,
+    description: seoDesc,
     ogType: 'business.business',
-    ogImage: business?.logo_url || undefined,
+    ogImage: business?.logo_url || business?.cover_url || undefined,
+    canonical: business ? `https://faneen.com/${business.username}` : undefined,
+    keywords: business ? [businessName, categoryName, cityName, 'فنيين', 'دليل أعمال'].filter(Boolean).join(', ') : undefined,
   });
 
   useJsonLd(useMemo(() => business ? ({
@@ -71,13 +84,17 @@ const BusinessProfile = () => {
     alternateName: business.name_en,
     description: business.description_ar,
     url: `https://faneen.com/${business.username}`,
-    image: business.logo_url,
+    image: business.logo_url || business.cover_url,
+    logo: business.logo_url,
     telephone: business.phone,
     email: business.email,
-    address: business.address ? {
+    address: {
       '@type': 'PostalAddress',
-      streetAddress: business.address,
-    } : undefined,
+      streetAddress: business.address || undefined,
+      addressRegion: business.region || undefined,
+      addressLocality: cityName || undefined,
+      addressCountry: business.countries?.code || 'SA',
+    },
     geo: business.latitude && business.longitude ? {
       '@type': 'GeoCoordinates',
       latitude: business.latitude,
@@ -87,7 +104,9 @@ const BusinessProfile = () => {
       '@type': 'AggregateRating',
       ratingValue: business.rating_avg,
       reviewCount: business.rating_count,
+      bestRating: 5,
     } : undefined,
+    priceRange: business.membership_tier === 'free' ? '$$' : '$$$',
   }) : null, [business]));
 
   const contactMutation = useMutation({
