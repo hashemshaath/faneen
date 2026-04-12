@@ -1286,42 +1286,21 @@ const AdminBusinesses = () => {
 
         {/* ─── Business List ─── */}
         {isLoading ? (
-          <div className="space-y-3">
-            {[1, 2, 3, 4, 5].map(i => (
-              <Card key={i} className="border-border/40">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <Skeleton className="w-12 h-12 rounded-xl" />
-                    <div className="flex-1 space-y-2">
-                      <Skeleton className="h-4 w-48" />
-                      <Skeleton className="h-3 w-72" />
-                    </div>
-                    <div className="flex gap-2">
-                      <Skeleton className="h-7 w-20" />
-                      <Skeleton className="h-7 w-16" />
-                      <Skeleton className="h-7 w-7" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <div className="space-y-3">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-2xl" />)}</div>
         ) : filtered.length === 0 ? (
-          <Card className="border-dashed border-2">
-            <CardContent className="p-16 text-center text-muted-foreground">
-              <div className="p-4 rounded-full bg-muted/30 w-fit mx-auto mb-4">
-                <Building2 className="w-10 h-10 opacity-30" />
-              </div>
-              <p className="font-heading font-bold text-lg mb-1">{isRTL ? 'لا توجد نتائج' : 'No results found'}</p>
-              <p className="text-sm">{isRTL ? 'جرّب تعديل معايير البحث' : 'Try adjusting your search criteria'}</p>
-              {(search || filterStatus !== 'all' || filterTier !== 'all') && (
-                <Button variant="outline" size="sm" className="mt-4 gap-1.5"
-                  onClick={() => { setSearch(''); setFilterStatus('all'); setFilterTier('all'); }}>
-                  <X className="w-3.5 h-3.5" /> {isRTL ? 'مسح الفلاتر' : 'Clear Filters'}
-                </Button>
-              )}
-            </CardContent>
-          </Card>
+          <div className="rounded-2xl border border-border/30 bg-card p-12 text-center">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-accent/10 to-primary/10 flex items-center justify-center">
+              <Building2 className="w-8 h-8 text-accent/30" />
+            </div>
+            <p className="font-heading font-bold text-sm mb-1">{isRTL ? 'لا توجد نتائج' : 'No results found'}</p>
+            <p className="text-xs text-muted-foreground">{isRTL ? 'جرّب تعديل معايير البحث' : 'Try adjusting your search criteria'}</p>
+            {(search || filterStatus !== 'all' || filterTier !== 'all') && (
+              <Button variant="outline" size="sm" className="mt-4 gap-1.5 rounded-xl"
+                onClick={() => { setSearch(''); setFilterStatus('all'); setFilterTier('all'); }}>
+                <X className="w-3.5 h-3.5" /> {isRTL ? 'مسح الفلاتر' : 'Clear Filters'}
+              </Button>
+            )}
+          </div>
         ) : viewMode === 'table' ? (
           /* ─── Table View ─── */
           <Card className="border-border/40">
