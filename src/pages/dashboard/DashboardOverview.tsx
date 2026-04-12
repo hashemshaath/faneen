@@ -249,7 +249,6 @@ const MembershipWidget = React.memo(({ isRTL, userId }: { isRTL: boolean; userId
     ? Math.max(0, Math.ceil((new Date(sub.expires_at).getTime() - Date.now()) / 86400000))
     : null;
 
-  const tierIcons: Record<string, React.ElementType> = { free: Zap, basic: Star, premium: Crown, enterprise: Building2 };
   const plan = sub?.plan as any;
   const tier = plan?.tier || 'free';
   const Icon = tierIcons[tier] || Zap;

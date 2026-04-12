@@ -3,18 +3,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Clock, AlertTriangle, Loader2, Ban, Zap, Star, Crown, Building2 } from 'lucide-react';
+import { Clock, AlertTriangle, Loader2, Ban } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-const tierIcons: Record<string, React.ElementType> = {
-  free: Zap, basic: Star, premium: Crown, enterprise: Building2,
-};
-const tierGradients: Record<string, string> = {
-  free: 'from-muted-foreground/60 to-muted-foreground/40',
-  basic: 'from-primary to-primary/70',
-  premium: 'from-accent to-accent/80',
-  enterprise: 'from-secondary-foreground/80 to-secondary-foreground/50',
-};
+import { tierIcons, tierGradients } from '@/lib/membership-tiers';
 
 interface CurrentSubscriptionCardProps {
   isRTL: boolean;
