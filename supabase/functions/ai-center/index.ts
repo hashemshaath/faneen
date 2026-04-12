@@ -9,7 +9,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { action, text, sourceLang, targetLang, tone, model, context, knowledgeContext, systemPromptOverride, responseStyle, translationInstructions, contentInstructions } = await req.json();
+    const { action, text, sourceLang, targetLang, tone, model, context, knowledgeContext, systemPromptOverride, responseStyle, translationInstructions, contentInstructions, stream: doStream } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
@@ -103,6 +103,7 @@ serve(async (req) => {
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
         ],
+        ...(doStream ? { stream: true } : {}),
       }),
     });
 
@@ -120,6 +121,13 @@ serve(async (req) => {
       const t = await response.text();
       console.error("AI error:", response.status, t);
       throw new Error("AI gateway error");
+    }
+
+    // Streaming mode: pass through SSE
+    if (doStream) {
+      return new Response(response.body, {
+        headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
+      });
     }
 
     const data = await response.json();

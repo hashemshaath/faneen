@@ -392,23 +392,106 @@ const DashboardAiCenter: React.FC = () => {
     } catch {} finally { setReverseTranslateLoading(false); }
   }, [blogResult, localSettings, t]);
 
-  /* ─── Chat ─── */
+  /* ─── Chat (Streaming) ─── */
   const handleChat = useCallback(async () => {
     if (!chatInput.trim()) return;
     const userMsg: ChatMessage = { id: uid(), role: 'user', content: chatInput, timestamp: new Date() };
     setChatMessages(prev => [...prev, userMsg]); setChatInput(''); setChatLoading(true);
+    const assistantId = uid();
+    let assistantSoFar = '';
+
     try {
       const knowledgeCtx = getKnowledgeContext();
-      const result = await callAiCenter({
-        action: 'chat', text: chatInput, model: localSettings.default_model, tone: localSettings.default_tone,
-        context: chatMessages.slice(-10).map(m => `${m.role}: ${m.content}`).join('\n'),
-        knowledgeContext: knowledgeCtx || undefined,
-        systemPromptOverride: localSettings.system_prompt || undefined, responseStyle: localSettings.response_style,
+      const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-center`;
+      const resp = await fetch(CHAT_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({
+          action: 'chat', text: chatInput, model: localSettings.default_model, tone: localSettings.default_tone,
+          context: chatMessages.slice(-10).map(m => `${m.role}: ${m.content}`).join('\n'),
+          knowledgeContext: knowledgeCtx || undefined,
+          systemPromptOverride: localSettings.system_prompt || undefined, responseStyle: localSettings.response_style,
+          stream: true,
+        }),
       });
-      setChatMessages(prev => [...prev, { id: uid(), role: 'assistant', content: result, timestamp: new Date() }]);
-      addHistory('chat', chatInput, result);
+
+      if (!resp.ok || !resp.body) {
+        const errText = await resp.text().catch(() => '');
+        if (resp.status === 429) toast.error(t('تم تجاوز الحد، حاول لاحقاً', 'Rate limited, try later'));
+        else if (resp.status === 402) toast.error(t('الرصيد غير كافٍ', 'Credits exhausted'));
+        else toast.error('AI Error');
+        throw new Error(errText || 'Stream failed');
+      }
+
+      // Create empty assistant message
+      setChatMessages(prev => [...prev, { id: assistantId, role: 'assistant', content: '', timestamp: new Date() }]);
+
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let textBuffer = '';
+      let streamDone = false;
+
+      while (!streamDone) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        textBuffer += decoder.decode(value, { stream: true });
+
+        let newlineIndex: number;
+        while ((newlineIndex = textBuffer.indexOf('\n')) !== -1) {
+          let line = textBuffer.slice(0, newlineIndex);
+          textBuffer = textBuffer.slice(newlineIndex + 1);
+
+          if (line.endsWith('\r')) line = line.slice(0, -1);
+          if (line.startsWith(':') || line.trim() === '') continue;
+          if (!line.startsWith('data: ')) continue;
+
+          const jsonStr = line.slice(6).trim();
+          if (jsonStr === '[DONE]') { streamDone = true; break; }
+
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+            if (content) {
+              assistantSoFar += content;
+              const snapshot = assistantSoFar;
+              setChatMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: snapshot } : m));
+            }
+          } catch {
+            textBuffer = line + '\n' + textBuffer;
+            break;
+          }
+        }
+      }
+
+      // Final flush
+      if (textBuffer.trim()) {
+        for (let raw of textBuffer.split('\n')) {
+          if (!raw) continue;
+          if (raw.endsWith('\r')) raw = raw.slice(0, -1);
+          if (raw.startsWith(':') || raw.trim() === '') continue;
+          if (!raw.startsWith('data: ')) continue;
+          const jsonStr = raw.slice(6).trim();
+          if (jsonStr === '[DONE]') continue;
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+            if (content) assistantSoFar += content;
+          } catch {}
+        }
+        if (assistantSoFar) {
+          const finalText = assistantSoFar;
+          setChatMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: finalText } : m));
+        }
+      }
+
+      addHistory('chat', chatInput, assistantSoFar);
     } catch {
-      setChatMessages(prev => [...prev, { id: uid(), role: 'assistant', content: t('حدث خطأ.', 'An error occurred.'), timestamp: new Date() }]);
+      if (!assistantSoFar) {
+        setChatMessages(prev => [...prev.filter(m => m.id !== assistantId), { id: uid(), role: 'assistant', content: t('حدث خطأ.', 'An error occurred.'), timestamp: new Date() }]);
+      }
     } finally { setChatLoading(false); }
   }, [chatInput, localSettings, chatMessages, t, getKnowledgeContext, addHistory]);
 
