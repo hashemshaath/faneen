@@ -186,9 +186,9 @@
       margin-bottom: 0.4em;
     }
 
-    /* Better touch targets */
+    /* Better touch targets — 44px per Apple/Google HIG */
     button, a, [role="button"] {
-      min-height: 36px;
+      min-height: 44px;
     }
 
     /* Tighter container padding on mobile */
