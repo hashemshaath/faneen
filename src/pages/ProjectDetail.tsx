@@ -15,6 +15,7 @@ import { RelatedProjects } from '@/components/project/RelatedProjects';
 import {
   FolderOpen, ArrowRight, ArrowLeft, Tag, MapPin, Building2, Share2, Bookmark
 } from 'lucide-react';
+import { usePageMeta, useJsonLd } from '@/hooks/usePageMeta';
 
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
