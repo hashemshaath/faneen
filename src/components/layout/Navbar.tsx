@@ -77,13 +77,16 @@ export const Navbar = () => {
 
   return (
     <>
-      <nav className={`fixed top-0 end-0 start-0 z-50 transition-all duration-500 ${
-        scrolled
-          ? 'bg-surface-nav/98 backdrop-blur-xl shadow-xl shadow-black/10 border-b border-gold/10'
-          : isHome
-            ? 'bg-transparent border-b border-transparent'
-            : 'bg-surface-nav/95 backdrop-blur-md border-b border-gold/20'
-      }`}>
+      <nav
+        role="navigation"
+        aria-label={language === 'ar' ? 'التنقل الرئيسي' : 'Main navigation'}
+        className={`fixed top-0 end-0 start-0 z-50 transition-all duration-500 ${
+          scrolled
+            ? 'bg-surface-nav/98 backdrop-blur-xl shadow-xl shadow-black/10 border-b border-gold/10'
+            : isHome
+              ? 'bg-transparent border-b border-transparent'
+              : 'bg-surface-nav/95 backdrop-blur-md border-b border-gold/20'
+        }`}>
         <div className="container flex items-center justify-between h-16 sm:h-[4.5rem] px-4 sm:px-6">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2.5 sm:gap-3 group">
