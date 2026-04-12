@@ -1,6 +1,9 @@
 import { createRoot } from "react-dom/client";
+import { validateEnv } from "./utils/validateEnv";
 import App from "./App.tsx";
 import "./index.css";
+
+validateEnv();
 
 // Prevent SW from running inside Lovable preview iframe
 const isInIframe = (() => {

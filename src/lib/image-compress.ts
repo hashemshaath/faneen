@@ -62,9 +62,11 @@ export async function compressImage(
             lastModified: Date.now(),
           });
 
-          console.log(
-            `Image compressed: ${(file.size / 1024).toFixed(0)}KB → ${(compressed.size / 1024).toFixed(0)}KB (${Math.round((1 - compressed.size / file.size) * 100)}% reduction)`
-          );
+          if (import.meta.env.DEV) {
+            console.log(
+              `Image compressed: ${(file.size / 1024).toFixed(0)}KB → ${(compressed.size / 1024).toFixed(0)}KB (${Math.round((1 - compressed.size / file.size) * 100)}% reduction)`
+            );
+          }
 
           resolve(compressed);
         },
