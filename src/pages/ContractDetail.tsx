@@ -1854,28 +1854,46 @@ const ContractDetail = () => {
 
           {/* ── Attachments ── */}
           <TabsContent value="attachments">
-            <div className="mb-4">
-              <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileUpload} accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" />
+            <div className="flex flex-wrap items-center gap-2 mb-4">
+              <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileUpload} accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" multiple />
               <Button variant="outline" className="gap-1.5 text-xs" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
                 {uploading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
-                {uploading ? (isRTL ? 'جاري الرفع...' : 'Uploading...') : (isRTL ? 'رفع مرفق' : 'Upload')}
+                {uploading ? (isRTL ? 'جاري الرفع...' : 'Uploading...') : (isRTL ? 'رفع مرفق' : 'Upload File')}
               </Button>
+              {attachments && attachments.length > 0 && (
+                <span className="text-[10px] text-muted-foreground font-body ms-auto">
+                  {attachments.length} {isRTL ? 'ملف' : 'files'} — {attachments.filter(a => a.file_type.startsWith('image')).length} {isRTL ? 'صور' : 'images'}, {attachments.filter(a => !a.file_type.startsWith('image')).length} {isRTL ? 'مستندات' : 'docs'}
+                </span>
+              )}
             </div>
             {attachments && attachments.length > 0 ? (
-              <div className="space-y-4">
+              <div className="space-y-5">
                 {/* Image gallery */}
                 {attachments.filter(a => a.file_type.startsWith('image')).length > 0 && (
                   <div>
-                    <h3 className="font-heading font-bold text-xs mb-2 flex items-center gap-1.5"><FileImage className="w-3.5 h-3.5 text-accent" />{isRTL ? 'الصور' : 'Images'}</h3>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <h3 className="font-heading font-bold text-xs mb-3 flex items-center gap-1.5">
+                      <FileImage className="w-3.5 h-3.5 text-accent" />
+                      {isRTL ? 'معرض الصور' : 'Photo Gallery'} ({attachments.filter(a => a.file_type.startsWith('image')).length})
+                    </h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                       {attachments.filter(a => a.file_type.startsWith('image')).map(att => (
-                        <a key={att.id} href={att.file_url} target="_blank" rel="noopener noreferrer" className="group relative aspect-square rounded-xl overflow-hidden border border-border bg-muted hover:border-accent/50 transition-all">
-                          <img src={att.file_url} alt={att.file_name} className="w-full h-full object-cover" loading="lazy" />
-                          <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/30 transition-colors flex items-center justify-center">
-                            <Eye className="w-5 h-5 text-primary-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <div key={att.id} className="group relative rounded-xl overflow-hidden border border-border bg-muted hover:border-accent/50 hover:shadow-md transition-all">
+                          <div className="aspect-[4/3]">
+                            <img src={att.file_url} alt={att.file_name} className="w-full h-full object-cover" loading="lazy" />
                           </div>
-                          <p className="absolute bottom-0 left-0 right-0 bg-foreground/60 text-primary-foreground text-[9px] p-1.5 truncate font-body">{att.file_name}</p>
-                        </a>
+                          <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/40 transition-colors flex items-center justify-center gap-2">
+                            <a href={att.file_url} target="_blank" rel="noopener noreferrer">
+                              <Button variant="secondary" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"><Eye className="w-4 h-4" /></Button>
+                            </a>
+                            <a href={att.file_url} download={att.file_name}>
+                              <Button variant="secondary" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"><Download className="w-4 h-4" /></Button>
+                            </a>
+                          </div>
+                          <div className="p-2 bg-card border-t border-border">
+                            <p className="font-heading font-medium text-[10px] truncate">{att.file_name}</p>
+                            <p className="text-[9px] text-muted-foreground font-body">{formatDate(att.created_at)}</p>
+                          </div>
+                        </div>
                       ))}
                     </div>
                   </div>
@@ -1883,28 +1901,30 @@ const ContractDetail = () => {
                 {/* Document list */}
                 {attachments.filter(a => !a.file_type.startsWith('image')).length > 0 && (
                   <div>
-                    <h3 className="font-heading font-bold text-xs mb-2 flex items-center gap-1.5"><Paperclip className="w-3.5 h-3.5 text-accent" />{isRTL ? 'المستندات' : 'Documents'}</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <h3 className="font-heading font-bold text-xs mb-3 flex items-center gap-1.5"><Paperclip className="w-3.5 h-3.5 text-accent" />{isRTL ? 'المستندات والملفات' : 'Documents & Files'} ({attachments.filter(a => !a.file_type.startsWith('image')).length})</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {attachments.filter(a => !a.file_type.startsWith('image')).map(att => {
                         const linkedMilestone = milestones?.find(m => m.id === att.milestone_id);
+                        const ext = att.file_name.split('.').pop()?.toUpperCase() || 'FILE';
+                        const extColors: Record<string, string> = { PDF: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400', DOC: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400', DOCX: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400', XLS: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400', XLSX: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' };
                         return (
-                          <div key={att.id} className="p-3 rounded-xl bg-card border border-border flex items-center gap-3 hover:border-accent/30 transition-all group">
-                            <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
-                              <FileText className="w-5 h-5 text-accent" />
+                          <div key={att.id} className="p-3.5 rounded-xl bg-card border border-border flex items-center gap-3 hover:border-accent/30 hover:shadow-sm transition-all group">
+                            <div className={`w-11 h-11 rounded-lg flex items-center justify-center shrink-0 font-heading font-bold text-[10px] ${extColors[ext] || 'bg-muted text-muted-foreground'}`}>
+                              {ext}
                             </div>
                             <div className="min-w-0 flex-1">
                               <p className="font-heading font-medium text-xs truncate">{att.file_name}</p>
                               <div className="flex items-center gap-2 text-[10px] text-muted-foreground font-body mt-0.5">
                                 <span>{formatDate(att.created_at)}</span>
                                 {linkedMilestone && (
-                                  <span className="flex items-center gap-0.5 text-accent">
-                                    <ListChecks className="w-2.5 h-2.5" />{(language === 'ar' ? linkedMilestone.title_ar : (linkedMilestone.title_en || linkedMilestone.title_ar)).slice(0, 25)}
-                                  </span>
+                                  <Badge variant="outline" className="text-[8px] gap-0.5">
+                                    <ListChecks className="w-2.5 h-2.5" />{(language === 'ar' ? linkedMilestone.title_ar : (linkedMilestone.title_en || linkedMilestone.title_ar)).slice(0, 20)}
+                                  </Badge>
                                 )}
                               </div>
                             </div>
-                            <a href={att.file_url} target="_blank" rel="noopener noreferrer"><Button variant="ghost" size="icon" className="h-8 w-8"><Eye className="w-3.5 h-3.5" /></Button></a>
-                            <a href={att.file_url} download><Button variant="ghost" size="icon" className="h-8 w-8"><Download className="w-3.5 h-3.5" /></Button></a>
+                            <a href={att.file_url} target="_blank" rel="noopener noreferrer"><Button variant="ghost" size="icon" className="h-8 w-8"><ExternalLink className="w-3.5 h-3.5" /></Button></a>
+                            <a href={att.file_url} download={att.file_name}><Button variant="outline" size="icon" className="h-8 w-8"><Download className="w-3.5 h-3.5" /></Button></a>
                           </div>
                         );
                       })}
@@ -1913,7 +1933,11 @@ const ContractDetail = () => {
                 )}
               </div>
             ) : (
-              <div className="text-center py-12"><Paperclip className="w-10 h-10 mx-auto text-muted-foreground/20 mb-3" /><p className="text-muted-foreground font-body text-sm">{isRTL ? 'لا توجد مرفقات' : 'No attachments'}</p></div>
+              <div className="text-center py-12 rounded-xl border border-dashed border-border">
+                <Paperclip className="w-10 h-10 mx-auto text-muted-foreground/20 mb-3" />
+                <p className="text-muted-foreground font-body text-sm mb-1">{isRTL ? 'لا توجد مرفقات بعد' : 'No attachments yet'}</p>
+                <p className="text-[10px] text-muted-foreground/60 font-body">{isRTL ? 'ارفع الصور والمستندات المتعلقة بالعقد' : 'Upload photos and documents related to the contract'}</p>
+              </div>
             )}
           </TabsContent>
 
