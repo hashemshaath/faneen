@@ -88,6 +88,18 @@ export const SearchResults = ({
           </div>
           <h3 className="font-heading font-bold text-lg sm:text-xl text-foreground mb-2">{t('search.no_results')}</h3>
           <p className="text-sm text-muted-foreground font-body mb-4 sm:mb-6">{t('search.no_results_desc')}</p>
+          {didYouMean && (
+            <p className="text-sm text-muted-foreground font-body mb-4">
+              {isRTL ? 'هل تقصد: ' : 'Did you mean: '}
+              <button
+                onClick={() => onDidYouMeanClick?.(didYouMean)}
+                className="text-accent font-semibold hover:underline"
+              >
+                {didYouMean}
+              </button>
+              ؟
+            </p>
+          )}
           <Button variant="outline" onClick={onClearFilters} className="rounded-xl dark:border-border/20">
             {t('search.clear_filters')}
           </Button>

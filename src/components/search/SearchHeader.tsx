@@ -32,6 +32,7 @@ export const SearchHeader = ({ query, onQueryChange, onSearch, totalResults, cat
           <SearchAutocomplete
             query={query}
             onQueryChange={onQueryChange}
+            onSearch={onSearch}
             businesses={businesses}
             categories={categories}
           />
