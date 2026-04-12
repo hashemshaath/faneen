@@ -17,6 +17,7 @@ export const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const menuRef = useRef<HTMLDivElement>(null);
+  useGlobalSearch();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10);
