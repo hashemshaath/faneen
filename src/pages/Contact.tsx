@@ -45,7 +45,17 @@ const Contact = () => {
     try {
       const id = crypto.randomUUID();
 
-      // Send confirmation email to the user
+      // 1. Save message to database
+      await supabase.from('contact_messages').insert({
+        id,
+        user_id: user?.id || null,
+        name: form.name.trim(),
+        email: form.email.trim().toLowerCase(),
+        subject: form.subject.trim(),
+        message: form.message.trim(),
+      });
+
+      // 2. Send confirmation email to user
       await supabase.functions.invoke('send-transactional-email', {
         body: {
           templateName: 'contact-confirmation',
@@ -54,6 +64,21 @@ const Contact = () => {
           templateData: {
             name: form.name.trim(),
             subject: form.subject.trim(),
+          },
+        },
+      });
+
+      // 3. Send notification email to admin
+      await supabase.functions.invoke('send-transactional-email', {
+        body: {
+          templateName: 'contact-admin-notification',
+          recipientEmail: 'info@faneen.com', // fallback; template.to overrides
+          idempotencyKey: `contact-admin-${id}`,
+          templateData: {
+            name: form.name.trim(),
+            email: form.email.trim().toLowerCase(),
+            subject: form.subject.trim(),
+            message: form.message.trim(),
           },
         },
       });
