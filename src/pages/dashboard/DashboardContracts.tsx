@@ -761,7 +761,7 @@ const DashboardContracts = () => {
       const ms = allMilestones.filter((m: any) => m.contract_id === c.id);
       const data: ContractExportData = {
         contractNumber: c.contract_number, title: isRTL ? c.title_ar : (c.title_en || c.title_ar),
-        status: c.status, totalAmount: Number(c.total_amount), currency: c.currency_code,
+        totalAmount: Number(c.total_amount), currency: c.currency_code,
         startDate: c.start_date ? formatDate(c.start_date) : undefined,
         endDate: c.end_date ? formatDate(c.end_date) : undefined,
         clientName: clientP?.full_name || '-', providerName: providerP?.full_name || '-',
@@ -1053,14 +1053,14 @@ const DashboardContracts = () => {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between flex-wrap gap-1">
                     <Label className="text-xs">{isRTL ? 'عنوان العقد (عربي)' : 'Title (Arabic)'} <span className="text-destructive">*</span></Label>
-                    <FieldAiActions value={form.title_ar} onResult={v => setForm(f => ({ ...f, title_ar: v }))} fieldName="title_ar" />
+                    <FieldAiActions value={form.title_ar} lang="ar" onImproved={v => setForm(f => ({ ...f, title_ar: v }))} fieldType="title" />
                   </div>
                   <Input value={form.title_ar} onChange={e => setForm({ ...form, title_ar: e.target.value })} className="h-10" />
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between flex-wrap gap-1">
                     <Label className="text-xs">{isRTL ? 'عنوان العقد (إنجليزي)' : 'Title (English)'}</Label>
-                    <FieldAiActions value={form.title_en} onResult={v => setForm(f => ({ ...f, title_en: v }))} fieldName="title_en" sourceValue={form.title_ar} />
+                    <FieldAiActions value={form.title_en} lang="en" onTranslated={v => setForm(f => ({ ...f, title_en: v }))} onImproved={v => setForm(f => ({ ...f, title_en: v }))} fieldType="title" />
                   </div>
                   <Input value={form.title_en} onChange={e => setForm({ ...form, title_en: e.target.value })} dir="ltr" className="h-10" />
                 </div>
@@ -1071,14 +1071,14 @@ const DashboardContracts = () => {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between flex-wrap gap-1">
                     <Label className="text-xs">{isRTL ? 'الوصف (عربي)' : 'Description (Arabic)'}</Label>
-                    <FieldAiActions value={form.description_ar} onResult={v => setForm(f => ({ ...f, description_ar: v }))} fieldName="description_ar" />
+                    <FieldAiActions value={form.description_ar} lang="ar" onImproved={v => setForm(f => ({ ...f, description_ar: v }))} fieldType="description" />
                   </div>
                   <Textarea value={form.description_ar} onChange={e => setForm({ ...form, description_ar: e.target.value })} rows={3} className="text-xs" />
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between flex-wrap gap-1">
                     <Label className="text-xs">{isRTL ? 'الوصف (إنجليزي)' : 'Description (English)'}</Label>
-                    <FieldAiActions value={form.description_en} onResult={v => setForm(f => ({ ...f, description_en: v }))} fieldName="description_en" sourceValue={form.description_ar} />
+                    <FieldAiActions value={form.description_en} lang="en" onTranslated={v => setForm(f => ({ ...f, description_en: v }))} onImproved={v => setForm(f => ({ ...f, description_en: v }))} fieldType="description" />
                   </div>
                   <Textarea value={form.description_en} onChange={e => setForm({ ...form, description_en: e.target.value })} rows={3} dir="ltr" className="text-xs" />
                 </div>
@@ -1126,14 +1126,14 @@ const DashboardContracts = () => {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between flex-wrap gap-1">
                     <Label className="text-xs">{isRTL ? 'الشروط والأحكام (عربي)' : 'Terms (Arabic)'}</Label>
-                    <FieldAiActions value={form.terms_ar} onResult={v => setForm(f => ({ ...f, terms_ar: v }))} fieldName="terms_ar" />
+                    <FieldAiActions value={form.terms_ar} lang="ar" onImproved={v => setForm(f => ({ ...f, terms_ar: v }))} fieldType="content" />
                   </div>
                   <Textarea value={form.terms_ar} onChange={e => setForm({ ...form, terms_ar: e.target.value })} rows={6} className="text-xs" />
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between flex-wrap gap-1">
                     <Label className="text-xs">{isRTL ? 'الشروط والأحكام (إنجليزي)' : 'Terms (English)'}</Label>
-                    <FieldAiActions value={form.terms_en} onResult={v => setForm(f => ({ ...f, terms_en: v }))} fieldName="terms_en" sourceValue={form.terms_ar} />
+                    <FieldAiActions value={form.terms_en} lang="en" onTranslated={v => setForm(f => ({ ...f, terms_en: v }))} onImproved={v => setForm(f => ({ ...f, terms_en: v }))} fieldType="content" />
                   </div>
                   <Textarea value={form.terms_en} onChange={e => setForm({ ...form, terms_en: e.target.value })} rows={6} dir="ltr" className="text-xs" />
                 </div>
