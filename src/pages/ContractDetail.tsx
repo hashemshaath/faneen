@@ -1343,6 +1343,7 @@ const ContractDetail = () => {
                   <div className="ms-auto" />
                   <Button variant="outline" size="sm" className="gap-1.5 text-[10px] h-8" onClick={handleExportMeasurementsExcel}><Download className="w-3 h-3" />{isRTL ? 'تصدير Excel' : 'Export CSV'}</Button>
                   <Button variant="outline" size="sm" className="gap-1.5 text-[10px] h-8" onClick={handleExportMeasurementsPDF}><Download className="w-3 h-3" />{isRTL ? 'تصدير PDF' : 'Export PDF'}</Button>
+                  <Button variant="outline" size="sm" className="gap-1.5 text-[10px] h-8" onClick={handlePrintMeasurements}><Printer className="w-3 h-3" />{isRTL ? 'طباعة' : 'Print'}</Button>
                 </>
               )}
             </div>
