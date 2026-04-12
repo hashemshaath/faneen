@@ -48,6 +48,7 @@ const providerGroups: MenuGroup[] = [
     icon: LayoutDashboard,
     items: [
       { label: { ar: 'لوحة التحكم', en: 'Dashboard' }, url: '/dashboard', icon: LayoutDashboard, end: true },
+      { label: { ar: 'التحليلات', en: 'Analytics' }, url: '/dashboard/analytics', icon: BarChart3 },
     ],
   },
   {
