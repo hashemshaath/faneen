@@ -3021,11 +3021,14 @@ export type Database = {
           is_featured: boolean
           project_cost: number | null
           ref_id: string | null
+          saves_count: number
+          shares_count: number
           sort_order: number
           status: string
           title_ar: string
           title_en: string | null
           updated_at: string
+          views_count: number
         }
         Insert: {
           business_id: string
@@ -3043,11 +3046,14 @@ export type Database = {
           is_featured?: boolean
           project_cost?: number | null
           ref_id?: string | null
+          saves_count?: number
+          shares_count?: number
           sort_order?: number
           status?: string
           title_ar: string
           title_en?: string | null
           updated_at?: string
+          views_count?: number
         }
         Update: {
           business_id?: string
@@ -3065,11 +3071,14 @@ export type Database = {
           is_featured?: boolean
           project_cost?: number | null
           ref_id?: string | null
+          saves_count?: number
+          shares_count?: number
           sort_order?: number
           status?: string
           title_ar?: string
           title_en?: string | null
           updated_at?: string
+          views_count?: number
         }
         Relationships: [
           {
