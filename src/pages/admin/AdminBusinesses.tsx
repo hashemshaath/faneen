@@ -125,27 +125,26 @@ const exportCSV = (businesses: any[], language: string) => {
 };
 
 /* ─── Stat Card Component ─── */
-const StatCard = React.memo(({ label, value, icon: Icon, trend, color }: {
-  label: string; value: number; icon: any; trend?: string; color: string;
+const StatCard = React.memo(({ label, value, icon: Icon, trend, gradient, iconBg }: {
+  label: string; value: number; icon: any; trend?: string; gradient: string; iconBg: string;
 }) => (
-  <Card className="border-border/40 hover-lift overflow-hidden relative group">
-    <div className={`absolute inset-0 ${color} opacity-[0.03] group-hover:opacity-[0.06] transition-opacity`} />
-    <CardContent className="p-4 flex items-center gap-3 relative">
-      <div className={`p-2.5 rounded-xl ${color} shrink-0`}>
-        <Icon className="w-4 h-4" />
+  <div className={`relative overflow-hidden rounded-2xl border border-border/30 bg-gradient-to-br ${gradient} p-4 transition-all hover:shadow-md group`}>
+    <div className="flex items-center gap-3">
+      <div className={`w-10 h-10 rounded-xl ${iconBg} flex items-center justify-center transition-transform group-hover:scale-110 shrink-0`}>
+        <Icon className="w-5 h-5" />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-2xl font-heading font-bold leading-tight">{value}</p>
-        <p className="text-[11px] text-muted-foreground truncate">{label}</p>
+        <p className="text-2xl font-heading font-bold leading-none">{value}</p>
+        <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{label}</p>
       </div>
       {trend && (
-        <div className="flex items-center gap-0.5 text-[10px] text-green-600 bg-green-500/10 px-1.5 py-0.5 rounded-full">
+        <div className="flex items-center gap-0.5 text-[10px] text-emerald-600 bg-emerald-500/10 px-1.5 py-0.5 rounded-full font-medium">
           <TrendingUp className="w-3 h-3" />
           {trend}
         </div>
       )}
-    </CardContent>
-  </Card>
+    </div>
+  </div>
 ));
 StatCard.displayName = 'StatCard';
 
