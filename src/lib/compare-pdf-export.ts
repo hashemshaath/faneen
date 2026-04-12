@@ -1,4 +1,5 @@
-// Dynamic PDF export - heavy libraries loaded on demand
+import { registerArabicFont } from './pdf-arabic-font';
+
 interface ExportBusiness {
   name: string;
   rating: string;
@@ -17,19 +18,19 @@ interface ExportData {
 }
 
 export const exportComparePDF = async (data: ExportData) => {
-  // Dynamically import heavy PDF libraries
   const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
     import('jspdf'),
     import('jspdf-autotable'),
   ]);
 
-  const doc = new jsPDF({
-    orientation: 'landscape',
-    unit: 'mm',
-    format: 'a4',
-  });
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+  // Register Arabic font
+  await registerArabicFont(doc);
+  if (data.isRTL) doc.setFont('Amiri');
 
   const pageWidth = doc.internal.pageSize.getWidth();
+  const rtlStyles = data.isRTL ? { font: 'Amiri', halign: 'right' as const } : {};
 
   // Title
   doc.setFontSize(18);
@@ -59,8 +60,8 @@ export const exportComparePDF = async (data: ExportData) => {
     head: [overviewHeaders],
     body: overviewRows,
     theme: 'grid',
-    headStyles: { fillColor: [200, 167, 103], textColor: [30, 30, 30], fontStyle: 'bold', halign: 'center' },
-    styles: { halign: 'center', fontSize: 9, cellPadding: 3 },
+    headStyles: { fillColor: [200, 167, 103], textColor: [30, 30, 30], fontStyle: 'bold', halign: 'center', ...( data.isRTL ? { font: 'Amiri' } : {}) },
+    styles: { halign: 'center', fontSize: 9, cellPadding: 3, ...(data.isRTL ? { font: 'Amiri' } : {}) },
     alternateRowStyles: { fillColor: [248, 248, 248] },
   });
 
@@ -86,8 +87,8 @@ export const exportComparePDF = async (data: ExportData) => {
       head: [serviceHeaders],
       body: serviceRows,
       theme: 'grid',
-      headStyles: { fillColor: [200, 167, 103], textColor: [30, 30, 30], fontStyle: 'bold', halign: 'center' },
-      styles: { halign: 'center', fontSize: 9, cellPadding: 3 },
+      headStyles: { fillColor: [200, 167, 103], textColor: [30, 30, 30], fontStyle: 'bold', halign: 'center', ...(data.isRTL ? { font: 'Amiri' } : {}) },
+      styles: { halign: 'center', fontSize: 9, cellPadding: 3, ...(data.isRTL ? { font: 'Amiri' } : {}) },
       alternateRowStyles: { fillColor: [248, 248, 248] },
     });
   }
@@ -98,7 +99,7 @@ export const exportComparePDF = async (data: ExportData) => {
     doc.setPage(i);
     doc.setFontSize(8);
     doc.setTextColor(180, 180, 180);
-    doc.text(`faneen.com`, 14, doc.internal.pageSize.getHeight() - 8);
+    doc.text('faneen.com', 14, doc.internal.pageSize.getHeight() - 8);
     doc.text(`${i} / ${pageCount}`, pageWidth - 14, doc.internal.pageSize.getHeight() - 8, { align: 'right' });
   }
 

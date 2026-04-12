@@ -1,3 +1,5 @@
+import { registerArabicFont } from './pdf-arabic-font';
+
 export interface ContractExportData {
   contractNumber: string;
   title: string;
@@ -21,6 +23,16 @@ export interface ContractExportData {
   isRTL: boolean;
 }
 
+const setupDoc = async (doc: any, isRTL: boolean) => {
+  await registerArabicFont(doc);
+  if (isRTL) doc.setFont('Amiri');
+};
+
+const getTableStyles = (isRTL: boolean) => ({
+  font: isRTL ? 'Amiri' : undefined,
+  halign: isRTL ? 'right' as const : 'left' as const,
+});
+
 export const exportContractPDF = async (data: ContractExportData) => {
   const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
     import('jspdf'),
@@ -28,17 +40,19 @@ export const exportContractPDF = async (data: ContractExportData) => {
   ]);
 
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  await setupDoc(doc, data.isRTL);
+
   const w = doc.internal.pageSize.getWidth();
   const h = doc.internal.pageSize.getHeight();
   let y = 15;
 
   const accentR = 180, accentG = 140, accentB = 60;
   const darkR = 24, darkG = 24, darkB = 32;
+  const rtlStyles = getTableStyles(data.isRTL);
 
   // ── Header ──
   doc.setFillColor(darkR, darkG, darkB);
   doc.rect(0, 0, w, 40, 'F');
-  // Gold accent line
   doc.setFillColor(accentR, accentG, accentB);
   doc.rect(0, 40, w, 1.5, 'F');
 
@@ -47,7 +61,9 @@ export const exportContractPDF = async (data: ContractExportData) => {
   doc.text(data.isRTL ? 'عقد رسمي' : 'Official Contract', w / 2, 16, { align: 'center' });
   doc.setFontSize(11);
   doc.setTextColor(accentR, accentG, accentB);
+  if (!data.isRTL) doc.setFont('helvetica');
   doc.text(`#${data.contractNumber}`, w / 2, 24, { align: 'center' });
+  if (data.isRTL) doc.setFont('Amiri');
   doc.setFontSize(9);
   doc.setTextColor(200, 200, 200);
   doc.text(data.title.slice(0, 80), w / 2, 31, { align: 'center' });
@@ -62,10 +78,17 @@ export const exportContractPDF = async (data: ContractExportData) => {
   const sectionTitle = (text: string) => {
     if (y > h - 30) { doc.addPage(); y = 15; }
     doc.setFillColor(accentR, accentG, accentB);
-    doc.rect(15, y - 3, 3, 8, 'F');
-    doc.setFontSize(13);
-    doc.setTextColor(darkR, darkG, darkB);
-    doc.text(text, 22, y + 2);
+    if (data.isRTL) {
+      doc.rect(w - 18, y - 3, 3, 8, 'F');
+      doc.setFontSize(13);
+      doc.setTextColor(darkR, darkG, darkB);
+      doc.text(text, w - 22, y + 2, { align: 'right' });
+    } else {
+      doc.rect(15, y - 3, 3, 8, 'F');
+      doc.setFontSize(13);
+      doc.setTextColor(darkR, darkG, darkB);
+      doc.text(text, 22, y + 2);
+    }
     y += 10;
   };
 
@@ -81,8 +104,10 @@ export const exportContractPDF = async (data: ContractExportData) => {
 
   autoTable(doc, {
     startY: y, body: partiesData, theme: 'plain',
-    styles: { fontSize: 9, cellPadding: 3.5, halign: data.isRTL ? 'right' : 'left', lineColor: [230, 230, 230], lineWidth: 0.2 },
-    columnStyles: { 0: { fontStyle: 'bold', cellWidth: 45, textColor: [100, 100, 100] } },
+    styles: { fontSize: 9, cellPadding: 3.5, ...rtlStyles, lineColor: [230, 230, 230], lineWidth: 0.2 },
+    columnStyles: data.isRTL
+      ? { 1: { fontStyle: 'bold', cellWidth: 45, textColor: [100, 100, 100] } }
+      : { 0: { fontStyle: 'bold', cellWidth: 45, textColor: [100, 100, 100] } },
     margin: { left: 15, right: 15 },
     alternateRowStyles: { fillColor: [248, 248, 248] },
   });
@@ -96,10 +121,12 @@ export const exportContractPDF = async (data: ContractExportData) => {
   const subtotal = vatInclusive ? data.totalAmount - vatAmount : data.totalAmount;
   const grandTotal = vatInclusive ? data.totalAmount : data.totalAmount + vatAmount;
 
+  const fmtNum = (n: number) => n.toLocaleString(data.isRTL ? 'ar-SA' : 'en-US', { minimumFractionDigits: 2 });
+
   const finData: string[][] = [
-    [data.isRTL ? 'المبلغ قبل الضريبة' : 'Subtotal (excl. VAT)', `${subtotal.toLocaleString(undefined, { minimumFractionDigits: 2 })} ${data.currency}`],
-    [data.isRTL ? `ضريبة القيمة المضافة (${vatRate}%)` : `VAT (${vatRate}%)`, `${vatAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })} ${data.currency}`],
-    [data.isRTL ? 'الإجمالي شامل الضريبة' : 'Grand Total (incl. VAT)', `${grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })} ${data.currency}`],
+    [data.isRTL ? 'المبلغ قبل الضريبة' : 'Subtotal (excl. VAT)', `${fmtNum(subtotal)} ${data.currency}`],
+    [data.isRTL ? `ضريبة القيمة المضافة (${vatRate}%)` : `VAT (${vatRate}%)`, `${fmtNum(vatAmount)} ${data.currency}`],
+    [data.isRTL ? 'الإجمالي شامل الضريبة' : 'Grand Total (incl. VAT)', `${fmtNum(grandTotal)} ${data.currency}`],
     [data.isRTL ? 'حالة الضريبة' : 'VAT Status', vatInclusive ? (data.isRTL ? 'الأسعار شاملة الضريبة' : 'Prices include VAT') : (data.isRTL ? 'الضريبة تضاف على المجموع' : 'VAT added to total')],
     [data.isRTL ? 'تاريخ البداية' : 'Start Date', data.startDate || '-'],
     [data.isRTL ? 'تاريخ النهاية' : 'End Date', data.endDate || '-'],
@@ -107,8 +134,10 @@ export const exportContractPDF = async (data: ContractExportData) => {
 
   autoTable(doc, {
     startY: y, body: finData, theme: 'plain',
-    styles: { fontSize: 9, cellPadding: 3.5, halign: data.isRTL ? 'right' : 'left', lineColor: [230, 230, 230], lineWidth: 0.2 },
-    columnStyles: { 0: { fontStyle: 'bold', cellWidth: 55, textColor: [100, 100, 100] } },
+    styles: { fontSize: 9, cellPadding: 3.5, ...rtlStyles, lineColor: [230, 230, 230], lineWidth: 0.2 },
+    columnStyles: data.isRTL
+      ? { 1: { fontStyle: 'bold', cellWidth: 55, textColor: [100, 100, 100] } }
+      : { 0: { fontStyle: 'bold', cellWidth: 55, textColor: [100, 100, 100] } },
     margin: { left: 15, right: 15 },
     didParseCell: (hookData: any) => {
       if (hookData.row.index === 2) {
@@ -122,24 +151,27 @@ export const exportContractPDF = async (data: ContractExportData) => {
   // ── Milestones ──
   if (data.milestones.length > 0) {
     sectionTitle(data.isRTL ? 'مراحل التنفيذ' : 'Milestones');
-    autoTable(doc, {
-      startY: y,
-      head: [[
-        '#',
-        data.isRTL ? 'المرحلة' : 'Milestone',
-        data.isRTL ? 'المبلغ' : 'Amount',
-        data.isRTL ? 'التاريخ' : 'Due Date',
-        data.isRTL ? 'الحالة' : 'Status',
-      ]],
-      body: data.milestones.map((m, i) => [
+    const msHeaders = data.isRTL
+      ? ['الحالة', 'التاريخ', 'المبلغ', 'المرحلة', '#']
+      : ['#', 'Milestone', 'Amount', 'Due Date', 'Status'];
+
+    const msBody = data.milestones.map((m, i) => {
+      const row = [
         String(i + 1),
         m.title,
-        `${m.amount.toLocaleString()} ${data.currency}`,
+        `${m.amount.toLocaleString(data.isRTL ? 'ar-SA' : 'en-US')} ${data.currency}`,
         m.dueDate || '-',
         m.status,
-      ]),
+      ];
+      return data.isRTL ? row.reverse() : row;
+    });
+
+    autoTable(doc, {
+      startY: y,
+      head: [msHeaders],
+      body: msBody,
       theme: 'grid',
-      styles: { fontSize: 8, cellPadding: 3, halign: data.isRTL ? 'right' : 'left' },
+      styles: { fontSize: 8, cellPadding: 3, ...rtlStyles },
       headStyles: { fillColor: [darkR, darkG, darkB], textColor: [255, 255, 255], fontStyle: 'bold' },
       alternateRowStyles: { fillColor: [250, 250, 250] },
       margin: { left: 15, right: 15 },
@@ -150,47 +182,52 @@ export const exportContractPDF = async (data: ContractExportData) => {
   // ── Measurements ──
   if (data.measurements && data.measurements.length > 0) {
     sectionTitle(data.isRTL ? 'جدول المقاسات' : 'Measurements Schedule');
-    autoTable(doc, {
-      startY: y,
-      head: [[
-        '#',
-        data.isRTL ? 'القطعة' : 'Piece',
-        data.isRTL ? 'الموقع' : 'Location',
-        data.isRTL ? 'الدور' : 'Floor',
-        data.isRTL ? 'الأبعاد (مم)' : 'Dims (mm)',
-        data.isRTL ? 'المساحة م²' : 'Area m²',
-        data.isRTL ? 'سعر/وحدة' : 'Unit $',
-        data.isRTL ? 'الكمية' : 'Qty',
-        data.isRTL ? 'التكلفة' : 'Cost',
-      ]],
-      body: data.measurements.map(m => [
+
+    const mHead = data.isRTL
+      ? ['التكلفة', 'الكمية', 'سعر/وحدة', 'المساحة م²', 'الأبعاد (مم)', 'الدور', 'الموقع', 'القطعة', '#']
+      : ['#', 'Piece', 'Location', 'Floor', 'Dims (mm)', 'Area m²', 'Unit $', 'Qty', 'Cost'];
+
+    const mBody = data.measurements.map(m => {
+      const row = [
         m.pieceNumber,
         m.name,
         m.location || '-',
         m.floor || '-',
         `${m.lengthMm}×${m.widthMm}`,
         m.areaSqm.toFixed(3),
-        m.unitPrice.toLocaleString(),
+        m.unitPrice.toLocaleString(data.isRTL ? 'ar-SA' : 'en-US'),
         String(m.quantity),
-        m.totalCost.toLocaleString(),
-      ]),
+        m.totalCost.toLocaleString(data.isRTL ? 'ar-SA' : 'en-US'),
+      ];
+      return data.isRTL ? row.reverse() : row;
+    });
+
+    const totalArea = data.measurements.reduce((s, m) => s + m.areaSqm, 0);
+    const totalCost = data.measurements.reduce((s, m) => s + m.totalCost, 0);
+    const mVat = vatInclusive ? totalCost * vatRate / (100 + vatRate) : totalCost * vatRate / 100;
+    const mGrand = vatInclusive ? totalCost : totalCost + mVat;
+
+    const footRow1 = data.isRTL
+      ? [totalCost.toLocaleString('ar-SA'), String(data.measurements.length), '', totalArea.toFixed(3), '', '', '', data.isRTL ? 'المجموع' : 'Subtotal', '']
+      : ['', 'Subtotal', '', '', '', totalArea.toFixed(3), '', String(data.measurements.length), totalCost.toLocaleString()];
+    const footRow2 = data.isRTL
+      ? [mVat.toLocaleString('ar-SA', { maximumFractionDigits: 2 }), '', '', '', '', '', '', `ضريبة ${vatRate}%`, '']
+      : ['', `VAT ${vatRate}%`, '', '', '', '', '', '', mVat.toLocaleString(undefined, { maximumFractionDigits: 2 })];
+    const footRow3 = data.isRTL
+      ? [mGrand.toLocaleString('ar-SA', { maximumFractionDigits: 2 }), '', '', '', '', '', '', 'الإجمالي شامل الضريبة', '']
+      : ['', 'Grand Total', '', '', '', '', '', '', mGrand.toLocaleString(undefined, { maximumFractionDigits: 2 })];
+
+    autoTable(doc, {
+      startY: y,
+      head: [mHead],
+      body: mBody,
+      foot: [footRow1, footRow2, footRow3],
       theme: 'grid',
-      styles: { fontSize: 7, cellPadding: 2.5, halign: data.isRTL ? 'right' : 'left' },
+      styles: { fontSize: 7, cellPadding: 2.5, ...rtlStyles },
       headStyles: { fillColor: [darkR, darkG, darkB], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7 },
       alternateRowStyles: { fillColor: [250, 250, 250] },
-      margin: { left: 10, right: 10 },
-      foot: (() => {
-        const totalArea = data.measurements.reduce((s, m) => s + m.areaSqm, 0);
-        const totalCost = data.measurements.reduce((s, m) => s + m.totalCost, 0);
-        const mVat = vatInclusive ? totalCost * vatRate / (100 + vatRate) : totalCost * vatRate / 100;
-        const mGrand = vatInclusive ? totalCost : totalCost + mVat;
-        return [
-          ['', data.isRTL ? 'المجموع' : 'Subtotal', '', '', '', totalArea.toFixed(3), '', String(data.measurements.length), totalCost.toLocaleString()],
-          ['', data.isRTL ? `ضريبة ${vatRate}%` : `VAT ${vatRate}%`, '', '', '', '', '', '', mVat.toLocaleString(undefined, { maximumFractionDigits: 2 })],
-          ['', data.isRTL ? 'الإجمالي شامل الضريبة' : 'Grand Total', '', '', '', '', '', '', mGrand.toLocaleString(undefined, { maximumFractionDigits: 2 })],
-        ];
-      })(),
       footStyles: { fillColor: [255, 248, 230], fontStyle: 'bold', fontSize: 7 },
+      margin: { left: 10, right: 10 },
     });
     y = (doc as any).lastAutoTable.finalY + 12;
   }
@@ -202,7 +239,11 @@ export const exportContractPDF = async (data: ContractExportData) => {
     doc.setTextColor(80, 80, 80);
     const lines = doc.splitTextToSize(data.terms, w - 30);
     if (y + lines.length * 4 > h - 20) { doc.addPage(); y = 15; }
-    doc.text(lines, 15, y);
+    if (data.isRTL) {
+      doc.text(lines, w - 15, y, { align: 'right' });
+    } else {
+      doc.text(lines, 15, y);
+    }
     y += lines.length * 4 + 12;
   }
 
@@ -217,21 +258,28 @@ export const exportContractPDF = async (data: ContractExportData) => {
   doc.line(w - 85, y + 25, w - 25, y + 25);
   doc.setFontSize(8);
   doc.setTextColor(100, 100, 100);
-  doc.text(data.isRTL ? 'توقيع العميل' : 'Client Signature', 55, y + 30, { align: 'center' });
-  doc.text(data.isRTL ? 'توقيع المزود' : 'Provider Signature', w - 55, y + 30, { align: 'center' });
+
+  const leftLabel = data.isRTL ? 'توقيع المزود' : 'Client Signature';
+  const rightLabel = data.isRTL ? 'توقيع العميل' : 'Provider Signature';
+  doc.text(leftLabel, 55, y + 30, { align: 'center' });
+  doc.text(rightLabel, w - 55, y + 30, { align: 'center' });
 
   // ── Footer on all pages ──
   const pageCount = doc.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
-    // Bottom accent line
     doc.setFillColor(accentR, accentG, accentB);
     doc.rect(0, h - 10, w, 0.5, 'F');
     doc.setFontSize(7);
     doc.setTextColor(150, 150, 150);
     doc.text(`${data.isRTL ? 'صفحة' : 'Page'} ${i}/${pageCount}`, w / 2, h - 5, { align: 'center' });
-    doc.text(data.contractNumber, 15, h - 5);
-    doc.text(new Date().toLocaleDateString(), w - 15, h - 5, { align: 'right' });
+    if (data.isRTL) {
+      doc.text(new Date().toLocaleDateString('ar-SA'), 15, h - 5);
+      doc.text(data.contractNumber, w - 15, h - 5, { align: 'right' });
+    } else {
+      doc.text(data.contractNumber, 15, h - 5);
+      doc.text(new Date().toLocaleDateString(), w - 15, h - 5, { align: 'right' });
+    }
   }
 
   doc.save(`contract-${data.contractNumber}.pdf`);
@@ -249,8 +297,11 @@ export const exportMeasurementsPDF = async (opts: {
 }) => {
   const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([import('jspdf'), import('jspdf-autotable')]);
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+  await setupDoc(doc, opts.isRTL);
+
   const w = doc.internal.pageSize.getWidth();
   const h = doc.internal.pageSize.getHeight();
+  const rtlStyles = getTableStyles(opts.isRTL);
 
   // Header
   doc.setFillColor(24, 24, 32);
@@ -268,29 +319,45 @@ export const exportMeasurementsPDF = async (opts: {
   const totalCost = opts.measurements.reduce((s, m) => s + m.totalCost, 0);
   const vat = opts.vatInclusive ? totalCost * opts.vatRate / (100 + opts.vatRate) : totalCost * opts.vatRate / 100;
   const grand = opts.vatInclusive ? totalCost : totalCost + vat;
+  const locale = opts.isRTL ? 'ar-SA' : 'en-US';
+
+  const head = opts.isRTL
+    ? ['الحالة', 'التكلفة', 'سعر/وحدة', 'الكمية', 'المساحة م²', 'العرض مم', 'الطول مم', 'الدور', 'الموقع', 'الاسم', 'رقم القطعة', '#']
+    : ['#', 'Piece #', 'Name', 'Location', 'Floor', 'L mm', 'W mm', 'Area m²', 'Qty', 'Unit $', 'Cost', 'Status'];
+
+  const body = opts.measurements.map((m, i) => {
+    const row = [
+      String(i + 1), m.pieceNumber, m.name, m.location || '-', m.floor || '-',
+      String(m.lengthMm), String(m.widthMm), m.areaSqm.toFixed(3), String(m.quantity),
+      m.unitPrice.toLocaleString(locale), m.totalCost.toLocaleString(locale), m.status,
+    ];
+    return opts.isRTL ? row.reverse() : row;
+  });
+
+  const mkFoot = (label: string, val: string) => {
+    const r = Array(12).fill('');
+    if (opts.isRTL) { r[11] = ''; r[10] = label; r[0] = val; }
+    else { r[2] = label; r[10] = val; }
+    return r;
+  };
 
   autoTable(doc, {
     startY: 25,
-    head: [['#', opts.isRTL ? 'رقم القطعة' : 'Piece #', opts.isRTL ? 'الاسم' : 'Name', opts.isRTL ? 'الموقع' : 'Location', opts.isRTL ? 'الدور' : 'Floor', opts.isRTL ? 'الطول مم' : 'L mm', opts.isRTL ? 'العرض مم' : 'W mm', opts.isRTL ? 'المساحة م²' : 'Area m²', opts.isRTL ? 'الكمية' : 'Qty', opts.isRTL ? 'سعر/وحدة' : 'Unit $', opts.isRTL ? 'التكلفة' : 'Cost', opts.isRTL ? 'الحالة' : 'Status']],
-    body: opts.measurements.map((m, i) => [
-      String(i + 1), m.pieceNumber, m.name, m.location || '-', m.floor || '-',
-      String(m.lengthMm), String(m.widthMm), m.areaSqm.toFixed(3), String(m.quantity),
-      m.unitPrice.toLocaleString(), m.totalCost.toLocaleString(), m.status,
-    ]),
+    head: [head],
+    body,
     foot: [
-      ['', '', opts.isRTL ? 'المجموع' : 'Subtotal', '', '', '', '', totalArea.toFixed(3), String(opts.measurements.length), '', totalCost.toLocaleString(), ''],
-      ['', '', opts.isRTL ? `ضريبة ${opts.vatRate}%` : `VAT ${opts.vatRate}%`, '', '', '', '', '', '', '', vat.toLocaleString(undefined, { maximumFractionDigits: 2 }), ''],
-      ['', '', opts.isRTL ? 'الإجمالي' : 'Grand Total', '', '', '', '', '', '', '', grand.toLocaleString(undefined, { maximumFractionDigits: 2 }) + ' ' + opts.currency, ''],
+      mkFoot(opts.isRTL ? 'المجموع' : 'Subtotal', totalCost.toLocaleString(locale)),
+      mkFoot(opts.isRTL ? `ضريبة ${opts.vatRate}%` : `VAT ${opts.vatRate}%`, vat.toLocaleString(locale, { maximumFractionDigits: 2 })),
+      mkFoot(opts.isRTL ? 'الإجمالي' : 'Grand Total', grand.toLocaleString(locale, { maximumFractionDigits: 2 }) + ' ' + opts.currency),
     ],
     theme: 'grid',
-    styles: { fontSize: 7, cellPadding: 2.5, halign: opts.isRTL ? 'right' : 'left' },
+    styles: { fontSize: 7, cellPadding: 2.5, ...rtlStyles },
     headStyles: { fillColor: [24, 24, 32], textColor: [255, 255, 255], fontStyle: 'bold' },
     footStyles: { fillColor: [255, 248, 230], fontStyle: 'bold' },
     alternateRowStyles: { fillColor: [250, 250, 250] },
     margin: { left: 10, right: 10 },
   });
 
-  // Footer
   const pages = doc.getNumberOfPages();
   for (let i = 1; i <= pages; i++) {
     doc.setPage(i);
@@ -315,6 +382,14 @@ export const exportMeasurementsExcel = (opts: {
     ? ['رقم القطعة', 'الاسم', 'الموقع', 'الدور', 'الطول (مم)', 'العرض (مم)', 'المساحة (م²)', 'الكمية', 'سعر الوحدة', 'التكلفة', 'الحالة']
     : ['Piece #', 'Name', 'Location', 'Floor', 'Length (mm)', 'Width (mm)', 'Area (m²)', 'Qty', 'Unit Price', 'Cost', 'Status'];
 
+  const escapeCSV = (val: any) => {
+    const str = String(val ?? '');
+    if (str.includes(',') || str.includes('"') || str.includes('\n') || /[\u0600-\u06FF]/.test(str)) {
+      return `"${str.replace(/"/g, '""')}"`;
+    }
+    return str;
+  };
+
   const rows = opts.measurements.map(m => [
     m.pieceNumber, m.name, m.location || '', m.floor || '',
     m.lengthMm, m.widthMm, m.areaSqm.toFixed(3), m.quantity,
@@ -331,7 +406,7 @@ export const exportMeasurementsExcel = (opts: {
   rows.push([opts.isRTL ? 'الإجمالي شامل الضريبة' : 'Grand Total', '', '', '', '', '', '', '', '', Number(grand.toFixed(2)), opts.currency]);
 
   const BOM = '\uFEFF';
-  const csv = BOM + [h.join(','), ...rows.map(r => r.join(','))].join('\n');
+  const csv = BOM + [h.map(escapeCSV).join(','), ...rows.map(r => (r as any[]).map(escapeCSV).join(','))].join('\n');
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
@@ -357,7 +432,6 @@ export const parseMeasurementsFromCSV = (text: string): ImportedMeasurement[] =>
   const lines = text.trim().split('\n').filter(l => l.trim());
   if (lines.length < 2) return [];
 
-  // Skip header
   const results: ImportedMeasurement[] = [];
   for (let i = 1; i < lines.length; i++) {
     const cols = lines[i].split(',').map(c => c.trim().replace(/^"|"$/g, ''));
