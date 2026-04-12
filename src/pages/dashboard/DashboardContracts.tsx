@@ -1404,12 +1404,19 @@ const DashboardContracts = () => {
                   const attachments = allAttachments.filter((a: any) => a.contract_id === c.id);
                   const payments = allPayments.filter((p: any) => p.contract_id === c.id);
                   const measurements = allMeasurements.filter((m: any) => m.contract_id === c.id);
+                  const lineItems = allLineItems.filter((li: any) => li.contract_id === c.id);
                   const warranties = allWarranties.filter((w: any) => w.contract_id === c.id);
                   const maintenance = allMaintenanceRequests.filter((r: any) => r.contract_id === c.id);
                   const amendments = allAmendments.filter((a: any) => a.contract_id === c.id);
                   const isExpanded = expandedId === c.id;
                   const locked = isContractLocked(c);
                   const isProvider = user?.id === c.provider_id;
+                  const measurementTotal = measurements.reduce((s: number, m: any) => s + Number(m.total_cost || 0), 0);
+                  const lineItemTotal = lineItems.reduce((s: number, l: any) => s + Number(l.total_cost || 0), 0);
+                  const subtotal = measurementTotal + lineItemTotal;
+                  const vatRate = Number(c.vat_rate || 15);
+                  const vatAmount = c.vat_inclusive ? (subtotal * vatRate) / (100 + vatRate) : (subtotal * vatRate) / 100;
+                  const grandTotal = c.vat_inclusive ? subtotal : subtotal + vatAmount;
 
                   return (
                     <div key={c.id} className="space-y-0">
