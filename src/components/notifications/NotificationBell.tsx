@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useNavigate } from 'react-router-dom';
 import { Bell, BellRing, CheckCheck, FileText, CreditCard, Megaphone, Settings2, Trash2, AlertTriangle, X, MessageSquare, Wrench } from 'lucide-react';
+import { toast } from 'sonner';
 import { useBrowserNotifications } from '@/hooks/useBrowserNotifications';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -62,8 +63,32 @@ export const NotificationBell = () => {
       return data;
     },
     enabled: !!user,
-    refetchInterval: 30000,
+    // No polling — realtime subscription handles updates
   });
+
+  const handleRealtimeNotification = useCallback((payload: any) => {
+    queryClient.invalidateQueries({ queryKey: ['notifications', user?.id] });
+    const n = payload.new as any;
+    const title = language === 'ar' ? n.title_ar : (n.title_en || n.title_ar);
+    const body = language === 'ar' ? n.body_ar : (n.body_en || n.body_ar);
+
+    // Browser notification when tab is hidden
+    showNotification(title, { body: body || undefined, tag: n.id });
+
+    // In-app toast when tab is visible
+    if (document.visibilityState === 'visible') {
+      const Icon = typeIcons[n.notification_type] || Bell;
+      toast(title, {
+        description: body || undefined,
+        icon: <Icon className="w-4 h-4" />,
+        action: n.action_url ? {
+          label: language === 'ar' ? 'عرض' : 'View',
+          onClick: () => navigate(n.action_url),
+        } : undefined,
+        duration: 5000,
+      });
+    }
+  }, [user?.id, language, queryClient, showNotification, navigate]);
 
   useEffect(() => {
     if (!user) return;
@@ -74,15 +99,9 @@ export const NotificationBell = () => {
         schema: 'public',
         table: 'notifications',
         filter: `user_id=eq.${user.id}`,
-      }, (payload) => {
-        queryClient.invalidateQueries({ queryKey: ['notifications', user.id] });
-        const n = payload.new as any;
-        const title = language === 'ar' ? n.title_ar : (n.title_en || n.title_ar);
-        const body = language === 'ar' ? n.body_ar : (n.body_en || n.body_ar);
-        showNotification(title, { body: body || undefined, tag: n.id });
-      })
+      }, handleRealtimeNotification)
       .on('postgres_changes', {
-        event: '*',
+        event: 'UPDATE',
         schema: 'public',
         table: 'notifications',
         filter: `user_id=eq.${user.id}`,
@@ -91,7 +110,7 @@ export const NotificationBell = () => {
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [user?.id, queryClient, language, showNotification]);
+  }, [user?.id, queryClient, handleRealtimeNotification]);
 
   const unreadCount = notifications.filter((n: any) => !n.is_read).length;
 
