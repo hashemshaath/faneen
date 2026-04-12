@@ -290,7 +290,7 @@ const DashboardAnalytics = () => {
                 { icon: FileText, label: isRTL ? 'العقود' : 'Contracts', value: stats.totalContracts, sub: `${stats.activeContracts} ${isRTL ? 'نشط' : 'active'}`, color: 'bg-accent/10 text-accent' },
                 { icon: CalendarClock, label: isRTL ? 'الحجوزات' : 'Bookings', value: stats.totalBookings, sub: `${stats.confirmedBookings} ${isRTL ? 'مؤكد' : 'confirmed'}`, color: 'bg-blue-500/10 text-blue-600' },
                 { icon: Star, label: isRTL ? 'التقييم' : 'Rating', value: stats.avgRating, sub: `${stats.totalReviews} ${isRTL ? 'تقييم' : 'reviews'}`, color: 'bg-amber-500/10 text-amber-600' },
-                { icon: Eye, label: isRTL ? 'المشاهدات' : 'Views', value: stats.totalViews.toLocaleString(), color: 'bg-purple-500/10 text-purple-600' },
+                { icon: Eye, label: isRTL ? 'المشاريع' : 'Projects', value: stats.projectsCount, color: 'bg-purple-500/10 text-purple-600' },
                 { icon: Activity, label: isRTL ? 'الخدمات' : 'Services', value: stats.servicesCount, color: 'bg-primary/10 text-primary' },
                 { icon: Users, label: isRTL ? 'حجوزات مكتملة' : 'Completed', value: stats.completedBookings, color: 'bg-emerald-500/10 text-emerald-600' },
                 { icon: TrendingUp, label: isRTL ? 'عقود مكتملة' : 'Done Contracts', value: stats.completedContracts, color: 'bg-accent/10 text-accent' },
