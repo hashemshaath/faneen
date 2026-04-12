@@ -170,29 +170,6 @@ const BlogPost = () => {
   const [totalMatches, setTotalMatches] = useState(0);
   const articleRef = useRef<HTMLDivElement>(null);
 
-  const postTitle = post ? (language === 'ar' ? post.title_ar : (post.title_en || post.title_ar)) : '';
-  const postDesc = post ? (language === 'ar' ? (post.meta_description_ar || post.excerpt_ar) : (post.meta_description_en || post.excerpt_en || post.meta_description_ar || post.excerpt_ar)) : '';
-
-  usePageMeta({
-    title: post ? `${postTitle} | مدونة فنيين` : 'جاري التحميل... | فنيين',
-    description: postDesc?.substring(0, 160) || undefined,
-    ogType: 'article',
-    ogImage: post?.cover_image_url || post?.og_image_url || undefined,
-  });
-
-  useJsonLd(useMemo(() => post ? ({
-    '@context': 'https://schema.org',
-    '@type': 'BlogPosting',
-    headline: post.title_ar,
-    alternativeHeadline: post.title_en,
-    description: post.meta_description_ar || post.excerpt_ar,
-    image: post.cover_image_url || post.og_image_url,
-    datePublished: post.published_at,
-    dateModified: post.updated_at,
-    url: `https://faneen.com/blog/${post.slug}`,
-    publisher: { '@type': 'Organization', name: 'فنيين Faneen', url: 'https://faneen.com' },
-  }) : null, [post]));
-
   const { data: post, isLoading } = useQuery({
     queryKey: ['blog-post', slug],
     queryFn: async () => {
