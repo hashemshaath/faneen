@@ -349,10 +349,14 @@ const AdminUsers = () => {
     enabled: !!user,
   });
 
-  // ─── Business map by user_id ───
+  // ─── Business map by user_id (supports multiple businesses per user) ───
   const businessMap = useMemo(() => {
-    const map = new Map<string, BusinessInfo>();
-    businesses.forEach(b => map.set(b.user_id, b));
+    const map = new Map<string, BusinessInfo[]>();
+    businesses.forEach(b => {
+      const arr = map.get(b.user_id) || [];
+      arr.push(b);
+      map.set(b.user_id, arr);
+    });
     return map;
   }, [businesses]);
 
