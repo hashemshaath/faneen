@@ -37,96 +37,196 @@ const PlanCard = React.memo(({ plan, isRTL, language, subsCount, onEdit }: { pla
   const limits = parseLimits(plan.limits as Record<string, any> | undefined);
   const enabledBoolLimits = LIMIT_FIELDS.filter(f => f.type === 'boolean' && limits[f.key] === true).length;
   const totalBoolLimits = LIMIT_FIELDS.filter(f => f.type === 'boolean').length;
+  const benefitPct = totalBoolLimits > 0 ? Math.round((enabledBoolLimits / totalBoolLimits) * 100) : 0;
+  const savingPct = plan.price_monthly > 0 && plan.price_yearly > 0
+    ? Math.round((1 - plan.price_yearly / (plan.price_monthly * 12)) * 100) : 0;
+
+  const isPremium = plan.tier === 'premium';
+  const isEnterprise = plan.tier === 'enterprise';
 
   return (
-    <Card className={cn('relative transition-all hover:shadow-lg group border', colors.border, colors.bg, !plan.is_active && 'opacity-40')}>
-      {plan.tier === 'premium' && (
-        <div className="absolute -top-2 start-4 px-2 py-0.5 bg-accent text-accent-foreground text-[8px] font-bold rounded-md shadow-sm">
-          {isRTL ? 'الأكثر شعبية' : 'Most Popular'}
+    <Card className={cn(
+      'relative transition-all duration-300 group border overflow-hidden',
+      colors.border, colors.bg,
+      isPremium && 'ring-1 ring-accent/30 shadow-md shadow-accent/5',
+      isEnterprise && 'ring-1 ring-purple-500/20',
+      !plan.is_active && 'opacity-40 grayscale',
+      'hover:shadow-xl hover:-translate-y-0.5'
+    )}>
+      {/* Top accent stripe */}
+      <div className={cn(
+        'absolute top-0 inset-x-0 h-1',
+        plan.tier === 'free' && 'bg-muted-foreground/30',
+        plan.tier === 'basic' && 'bg-blue-500',
+        isPremium && 'bg-gradient-to-r from-accent via-accent/80 to-accent',
+        isEnterprise && 'bg-gradient-to-r from-purple-500 via-purple-400 to-purple-600',
+      )} />
+
+      {/* Popular badge */}
+      {isPremium && (
+        <div className="absolute -top-0 end-4 z-10">
+          <div className="bg-accent text-accent-foreground text-[8px] font-bold px-3 py-1 rounded-b-lg shadow-lg shadow-accent/20 flex items-center gap-1">
+            <Sparkles className="w-2.5 h-2.5" />
+            {isRTL ? 'الأكثر شعبية' : 'Most Popular'}
+          </div>
         </div>
       )}
-      <CardContent className="p-4 sm:p-5">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className={cn('w-11 h-11 rounded-xl flex items-center justify-center shadow-sm', colors.badge)}>
-              <Icon className="w-5 h-5" />
+
+      <CardContent className="p-5 sm:p-6 pt-5">
+        {/* Header */}
+        <div className="flex items-start justify-between mb-5">
+          <div className="flex items-center gap-3.5">
+            <div className={cn(
+              'w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm transition-transform group-hover:scale-105',
+              colors.badge,
+              isPremium && 'shadow-accent/20',
+            )}>
+              <Icon className="w-5.5 h-5.5" />
             </div>
             <div>
-              <h3 className="font-heading font-bold text-base">{isRTL ? plan.name_ar : plan.name_en}</h3>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <Badge className={cn('text-[8px] px-1.5 py-0 h-3.5 uppercase font-bold', colors.badge)}>{plan.tier}</Badge>
-                {!plan.is_active && <Badge variant="outline" className="text-[8px] h-3.5 bg-destructive/5 text-destructive">{isRTL ? 'معطل' : 'Inactive'}</Badge>}
+              <h3 className="font-heading font-bold text-base leading-tight">{isRTL ? plan.name_ar : plan.name_en}</h3>
+              <div className="flex items-center gap-1.5 mt-1">
+                <Badge className={cn('text-[7px] px-1.5 py-0 h-3.5 uppercase font-bold tracking-wider', colors.badge)}>
+                  {plan.tier}
+                </Badge>
+                {!plan.is_active && (
+                  <Badge variant="outline" className="text-[7px] h-3.5 bg-destructive/5 text-destructive border-destructive/20">
+                    {isRTL ? 'معطل' : 'Inactive'}
+                  </Badge>
+                )}
               </div>
             </div>
           </div>
-          <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => onEdit(plan)}>
+          <Button variant="ghost" size="icon"
+            className="h-8 w-8 rounded-xl opacity-0 group-hover:opacity-100 transition-all hover:bg-accent/10"
+            onClick={() => onEdit(plan)}>
             <Pencil className="w-3.5 h-3.5" />
           </Button>
         </div>
 
-        <p className="text-[11px] text-muted-foreground mb-4 line-clamp-2 min-h-[2rem]">{isRTL ? plan.description_ar : plan.description_en}</p>
+        {/* Description */}
+        <p className="text-[11px] text-muted-foreground mb-5 line-clamp-2 min-h-[2.25rem] leading-relaxed">
+          {isRTL ? plan.description_ar : plan.description_en}
+        </p>
 
         {/* Pricing */}
+        <div className="grid grid-cols-2 gap-2.5 mb-5">
+          <div className={cn(
+            'p-3.5 rounded-xl border text-center transition-colors',
+            'bg-background/60 border-border/15 hover:bg-background/90'
+          )}>
+            <p className="text-[8px] text-muted-foreground mb-1 uppercase tracking-wider font-medium">
+              {isRTL ? 'شهري' : 'Monthly'}
+            </p>
+            <p className={cn('font-bold text-xl leading-none', colors.text)}>
+              {plan.price_monthly === 0
+                ? (isRTL ? 'مجاناً' : 'Free')
+                : <>{plan.price_monthly}<span className="text-[9px] text-muted-foreground font-normal ms-0.5">{plan.currency_code}</span></>
+              }
+            </p>
+          </div>
+          <div className={cn(
+            'p-3.5 rounded-xl border text-center relative transition-colors',
+            'bg-background/60 border-border/15 hover:bg-background/90'
+          )}>
+            <p className="text-[8px] text-muted-foreground mb-1 uppercase tracking-wider font-medium">
+              {isRTL ? 'سنوي' : 'Yearly'}
+            </p>
+            <p className={cn('font-bold text-xl leading-none', colors.text)}>
+              {plan.price_yearly === 0
+                ? (isRTL ? 'مجاناً' : 'Free')
+                : <>{plan.price_yearly}<span className="text-[9px] text-muted-foreground font-normal ms-0.5">{plan.currency_code}</span></>
+              }
+            </p>
+            {savingPct > 0 && (
+              <Badge className="absolute -top-1.5 -end-1.5 bg-emerald-500 text-white text-[7px] px-1.5 py-0 h-4 shadow-sm">
+                -{savingPct}%
+              </Badge>
+            )}
+          </div>
+        </div>
+
+        {/* Stats Row */}
         <div className="grid grid-cols-2 gap-2 mb-4">
-          <div className="p-3 rounded-xl bg-background/70 border border-border/20 text-center">
-            <p className="text-[9px] text-muted-foreground mb-0.5">{isRTL ? 'شهري' : 'Monthly'}</p>
-            <p className={cn('font-bold text-lg', colors.text)}>
-              {plan.price_monthly === 0 ? (isRTL ? 'مجاناً' : 'Free') : <>{plan.price_monthly}<span className="text-[9px] text-muted-foreground ms-0.5">{plan.currency_code}</span></>}
-            </p>
+          <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-muted/25 border border-border/10">
+            <div className="w-7 h-7 rounded-lg bg-background/80 flex items-center justify-center shadow-sm">
+              <Users className="w-3 h-3 text-muted-foreground" />
+            </div>
+            <div>
+              <p className={cn('text-sm font-bold leading-none', colors.text)}>{subsCount}</p>
+              <p className="text-[8px] text-muted-foreground mt-0.5">{isRTL ? 'مشترك' : 'Subscribers'}</p>
+            </div>
           </div>
-          <div className="p-3 rounded-xl bg-background/70 border border-border/20 text-center">
-            <p className="text-[9px] text-muted-foreground mb-0.5">{isRTL ? 'سنوي' : 'Yearly'}</p>
-            <p className={cn('font-bold text-lg', colors.text)}>
-              {plan.price_yearly === 0 ? (isRTL ? 'مجاناً' : 'Free') : <>{plan.price_yearly}<span className="text-[9px] text-muted-foreground ms-0.5">{plan.currency_code}</span></>}
-            </p>
-            {plan.price_monthly > 0 && plan.price_yearly > 0 && (
-              <p className="text-[8px] text-emerald-600 font-medium mt-0.5">
-                {isRTL ? 'وفّر' : 'Save'} {Math.round((1 - plan.price_yearly / (plan.price_monthly * 12)) * 100)}%
-              </p>
-            )}
+          <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-muted/25 border border-border/10">
+            <div className="w-7 h-7 rounded-lg bg-background/80 flex items-center justify-center shadow-sm">
+              <Settings2 className="w-3 h-3 text-muted-foreground" />
+            </div>
+            <div>
+              <p className={cn('text-sm font-bold leading-none', colors.text)}>{enabledBoolLimits}<span className="text-muted-foreground font-normal">/{totalBoolLimits}</span></p>
+              <p className="text-[8px] text-muted-foreground mt-0.5">{isRTL ? 'مزايا' : 'Benefits'}</p>
+            </div>
           </div>
         </div>
 
-        {/* Active subs count */}
-        <div className="flex items-center gap-2 mb-3 px-2 py-1.5 rounded-lg bg-muted/30">
-          <Users className="w-3 h-3 text-muted-foreground" />
-          <span className="text-[10px] text-muted-foreground">{isRTL ? 'مشتركين نشطين' : 'Active subscribers'}</span>
-          <span className={cn('text-xs font-bold ms-auto', colors.text)}>{subsCount}</span>
+        {/* Benefits progress */}
+        <div className="mb-4 px-1">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[8px] text-muted-foreground font-medium uppercase tracking-wider">
+              {isRTL ? 'المزايا المفعّلة' : 'Benefits Enabled'}
+            </span>
+            <span className={cn('text-[9px] font-bold', colors.text)}>{benefitPct}%</span>
+          </div>
+          <div className="h-1.5 bg-muted/40 rounded-full overflow-hidden">
+            <div
+              className={cn('h-full rounded-full transition-all duration-500',
+                plan.tier === 'free' ? 'bg-muted-foreground/40' :
+                plan.tier === 'basic' ? 'bg-blue-500' :
+                isPremium ? 'bg-accent' : 'bg-purple-500'
+              )}
+              style={{ width: `${benefitPct}%` }}
+            />
+          </div>
         </div>
 
-        {/* Benefits summary */}
-        <div className="flex items-center gap-2 mb-3 px-2 py-1.5 rounded-lg bg-muted/30">
-          <Settings2 className="w-3 h-3 text-muted-foreground" />
-          <span className="text-[10px] text-muted-foreground">{isRTL ? 'المزايا المفعّلة' : 'Active benefits'}</span>
-          <span className={cn('text-xs font-bold ms-auto', colors.text)}>{enabledBoolLimits}/{totalBoolLimits}</span>
-        </div>
-
-        {/* Features */}
+        {/* Features List */}
         {features.length > 0 && (
-          <div className="space-y-1.5">
-            <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">{isRTL ? 'المميزات' : 'Features'}</p>
-            {features.slice(0, 5).map((f: string, i: number) => (
-              <div key={i} className="flex items-center gap-2 text-[11px]">
-                <Check className="w-3 h-3 text-emerald-500 shrink-0" /><span className="truncate">{f}</span>
-              </div>
-            ))}
-            {features.length > 5 && (
-              <p className="text-[10px] text-muted-foreground ps-5">+{features.length - 5} {isRTL ? 'ميزة أخرى' : 'more'}</p>
-            )}
+          <div className="mb-4">
+            <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest mb-2">
+              {isRTL ? 'المميزات' : 'Features'}
+            </p>
+            <div className="space-y-1.5">
+              {features.slice(0, 5).map((f: string, i: number) => (
+                <div key={i} className="flex items-center gap-2 text-[11px] group/feat">
+                  <div className={cn('w-4 h-4 rounded-md flex items-center justify-center shrink-0', colors.badge)}>
+                    <Check className="w-2.5 h-2.5" />
+                  </div>
+                  <span className="truncate text-foreground/80 group-hover/feat:text-foreground transition-colors">{f}</span>
+                </div>
+              ))}
+              {features.length > 5 && (
+                <p className="text-[9px] text-muted-foreground ps-6 font-medium">
+                  +{features.length - 5} {isRTL ? 'ميزة أخرى' : 'more'}
+                </p>
+              )}
+            </div>
           </div>
         )}
 
-        {/* Key numeric limits */}
-        <div className="mt-3 pt-3 border-t border-border/20">
-          <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5">{isRTL ? 'الحدود الرئيسية' : 'Key Limits'}</p>
-          <div className="flex flex-wrap gap-1">
+        {/* Key Limits */}
+        <div className="pt-3 border-t border-border/15">
+          <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest mb-2">
+            {isRTL ? 'الحدود الرئيسية' : 'Key Limits'}
+          </p>
+          <div className="grid grid-cols-2 gap-1.5">
             {LIMIT_FIELDS.filter(f => f.type === 'number').slice(0, 6).map(field => {
               const val = limits[field.key] as number;
               return (
-                <Badge key={field.key} variant="outline" className="text-[8px] px-1.5 py-0.5 h-auto gap-1">
-                  <span className="text-muted-foreground">{isRTL ? field.label.ar : field.label.en}:</span>
-                  <span className="font-bold">{val === 0 ? '∞' : val}</span>
-                </Badge>
+                <div key={field.key} className="flex items-center justify-between px-2 py-1 rounded-lg bg-muted/15 border border-border/5">
+                  <span className="text-[8px] text-muted-foreground truncate">{isRTL ? field.label.ar : field.label.en}</span>
+                  <span className={cn('text-[10px] font-bold ms-1.5', val === 0 ? 'text-muted-foreground' : colors.text)}>
+                    {val === 0 ? '∞' : val}
+                  </span>
+                </div>
               );
             })}
           </div>
