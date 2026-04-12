@@ -138,6 +138,16 @@ const ContractDetail = () => {
   const [expandedMaint, setExpandedMaint] = useState<string | null>(null);
   const [measurementFilter, setMeasurementFilter] = useState<string>('all');
   const [uploading, setUploading] = useState(false);
+  // Measurement CRUD
+  const [showMeasurementForm, setShowMeasurementForm] = useState(false);
+  const [editingMeasurement, setEditingMeasurement] = useState<any>(null);
+  const [mForm, setMForm] = useState({ name_ar: '', piece_number: '', floor_label: 'ground_floor', location_ar: '', length_mm: '', width_mm: '', quantity: '1', unit_price: '', notes: '' });
+  // Milestone CRUD
+  const [showMilestoneForm, setShowMilestoneForm] = useState(false);
+  const [msForm, setMsForm] = useState({ title_ar: '', amount: '', due_date: '', description_ar: '' });
+  // Amendment
+  const [showAmendmentForm, setShowAmendmentForm] = useState(false);
+  const [amForm, setAmForm] = useState({ title_ar: '', description_ar: '', amendment_type: 'scope_change', new_amount: '' });
 
   /* ─── Queries ─── */
   const { data: contract, isLoading } = useQuery({
