@@ -105,7 +105,7 @@ const UserCard = React.memo(({ profile, roles, business, isCurrentUser, canManag
   const AccIcon = accType.icon;
   const createdDate = formatDate(profile.created_at, language);
   const isBanned = (profile as any).is_banned;
-  const biz = business as BusinessInfo | null;
+  const bizList = (business as BusinessInfo[] | null) || [];
 
   const highestRole = roles.length > 0
     ? roles.reduce((best: any, r: any) => {
