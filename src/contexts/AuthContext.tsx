@@ -13,7 +13,7 @@ interface UserProfile {
   phone_verified: boolean;
   country_code: string;
   avatar_url: string | null;
-  account_number: number | null;
+  account_number: number | null; // @deprecated – use ref_id only
   ref_id: string | null;
   membership_tier: string;
 }

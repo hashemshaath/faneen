@@ -371,7 +371,7 @@ const DashboardSettings = () => {
                           )}
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <Badge variant="outline" className="text-[8px] px-1.5 py-0 h-[14px] tech-content">
-                              <Hash className="w-2 h-2 me-0.5" />{profile?.account_number}
+                              <Hash className="w-2 h-2 me-0.5" />{profile?.ref_id}
                             </Badge>
                             <Badge variant="outline" className="text-[8px] px-1.5 py-0 h-[14px]">
                               {profile?.account_type === 'provider' ? (isRTL ? 'مزود خدمة' : 'Provider') : (isRTL ? 'عميل' : 'Client')}
@@ -396,11 +396,10 @@ const DashboardSettings = () => {
                   <h3 className="font-heading font-bold text-sm">{isRTL ? 'تفاصيل الحساب' : 'Account Details'}</h3>
                 </div>
                 {[
-                  { icon: Hash, label: isRTL ? 'رقم الحساب' : 'Account #', value: profile?.account_number, tech: true },
+                  { icon: Fingerprint, label: isRTL ? 'المعرف' : 'ID', value: profile?.ref_id, tech: true },
                   { icon: Globe, label: isRTL ? 'اللغة المفضلة' : 'Language', value: language === 'ar' ? 'العربية' : 'English' },
                   { icon: Mail, label: isRTL ? 'بريد تسجيل الدخول' : 'Login Email', value: user?.email, tech: true },
                   { icon: Mail, label: isRTL ? 'بريد الملف الشخصي' : 'Profile Email', value: profile?.email || '-', tech: true },
-                  { icon: Fingerprint, label: isRTL ? 'المعرف' : 'Ref ID', value: profile?.ref_id, tech: true },
                 ].map((item, i) => (
                   <div key={i} className="flex items-center justify-between p-2 rounded-lg bg-muted/20 hover:bg-muted/30 transition-colors">
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
