@@ -1324,6 +1324,14 @@ const DashboardMessages = () => {
                           </TooltipTrigger>
                           <TooltipContent side="top" className="text-xs">{isRTL ? 'قوالب' : 'Templates'}</TooltipContent>
                         </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" className={`shrink-0 h-9 w-9 rounded-xl text-muted-foreground hover:text-foreground ${showScheduler ? 'bg-muted text-accent' : ''}`} onClick={() => { setShowScheduler(!showScheduler); setShowEmoji(false); setShowTemplates(false); }}>
+                              <Timer className="w-4 h-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="text-xs">{isRTL ? 'جدولة' : 'Schedule'}</TooltipContent>
+                        </Tooltip>
                       </div>
 
                       <Input
@@ -1345,6 +1353,58 @@ const DashboardMessages = () => {
                         {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                       </Button>
                     </div>
+
+                    {/* Scheduler popup */}
+                    {showScheduler && (
+                      <div className="mt-2 p-3 bg-muted/30 rounded-xl border border-border/20 animate-in slide-in-from-bottom-1 duration-200">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Timer className="w-4 h-4 text-accent shrink-0" />
+                          <p className="text-xs font-bold text-foreground">{isRTL ? 'جدولة الرسالة' : 'Schedule Message'}</p>
+                        </div>
+                        <div className="flex gap-2 items-end">
+                          <div className="flex-1">
+                            <input
+                              type="datetime-local"
+                              value={scheduleTime}
+                              onChange={e => setScheduleTime(e.target.value)}
+                              min={new Date().toISOString().slice(0, 16)}
+                              className="w-full h-9 px-3 text-xs rounded-lg border border-border/30 bg-background focus:ring-2 focus:ring-accent/30 focus:border-accent outline-none transition-all"
+                            />
+                          </div>
+                          <Button size="sm" className="h-9 gap-1.5 rounded-lg text-xs" disabled={!messageText.trim() || !scheduleTime} onClick={handleScheduleMessage}>
+                            <Timer className="w-3.5 h-3.5" />
+                            {isRTL ? 'جدولة' : 'Schedule'}
+                          </Button>
+                          <Button variant="ghost" size="sm" className="h-9 rounded-lg text-xs" onClick={() => { setShowScheduler(false); setScheduleTime(''); }}>
+                            {isRTL ? 'إلغاء' : 'Cancel'}
+                          </Button>
+                        </div>
+                        {!messageText.trim() && (
+                          <p className="text-[10px] text-muted-foreground mt-1.5 flex items-center gap-1">
+                            <AlertCircle className="w-3 h-3" />
+                            {isRTL ? 'اكتب رسالة أولاً قبل الجدولة' : 'Write a message first to schedule'}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Scheduled messages indicator */}
+                    {scheduledMessages.filter(s => s.convId === selectedConversation).length > 0 && (
+                      <div className="mt-2 space-y-1">
+                        {scheduledMessages.filter(s => s.convId === selectedConversation).map(sm => (
+                          <div key={sm.id} className="flex items-center gap-2 px-2.5 py-1.5 bg-amber-500/5 border border-amber-500/20 rounded-lg">
+                            <Timer className="w-3 h-3 text-amber-600 shrink-0" />
+                            <p className="text-[10px] text-foreground truncate flex-1">{sm.text}</p>
+                            <span className="text-[9px] text-amber-600 font-medium shrink-0">
+                              {new Date(sm.time).toLocaleString(language === 'ar' ? 'ar-SA' : 'en', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                            <button onClick={() => cancelScheduledMessage(sm.id)} className="p-0.5 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors shrink-0">
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
 
                     {/* Character count */}
                     {messageText.length > 200 && (
