@@ -1303,8 +1303,8 @@ const AdminBusinesses = () => {
           </div>
         ) : viewMode === 'table' ? (
           /* ─── Table View ─── */
-          <Card className="border-border/40">
-            <CardContent className="p-0">
+          <div className="rounded-2xl border border-border/30 bg-card overflow-hidden">
+            <div className="p-0">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/30">
