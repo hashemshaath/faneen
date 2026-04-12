@@ -181,6 +181,15 @@ const BlogPost = () => {
     enabled: !!slug,
   });
 
+  // Increment view count once per session per post
+  useEffect(() => {
+    if (!post?.id) return;
+    const key = `blog_viewed_${post.id}`;
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, '1');
+    supabase.rpc('increment_blog_views' as any, { _post_id: post.id }).then(() => {});
+  }, [post?.id]);
+
   const { data: relatedPosts = [] } = useQuery({
     queryKey: ['related-posts', post?.category, post?.id],
     queryFn: async () => {
@@ -229,22 +238,41 @@ const BlogPost = () => {
   usePageMeta({
     title: post ? `${postTitle} | مدونة فنيين` : 'جاري التحميل... | فنيين',
     description: postDesc?.substring(0, 160) || undefined,
+    canonical: post ? `https://faneen.com/blog/${post.slug}` : undefined,
     ogType: 'article',
     ogImage: post?.cover_image_url || post?.og_image_url || undefined,
+    keywords: post?.keywords?.join(', ') || post?.tags?.join(', ') || undefined,
   });
 
-  useJsonLd(useMemo(() => post ? ({
-    '@context': 'https://schema.org',
-    '@type': 'BlogPosting',
-    headline: post.title_ar,
-    alternativeHeadline: post.title_en,
-    description: post.meta_description_ar || post.excerpt_ar,
-    image: post.cover_image_url || post.og_image_url,
-    datePublished: post.published_at,
-    dateModified: post.updated_at,
-    url: `https://faneen.com/blog/${post.slug}`,
-    publisher: { '@type': 'Organization', name: 'فنيين Faneen', url: 'https://faneen.com' },
-  }) : null, [post]));
+  useJsonLd(useMemo(() => {
+    if (!post) return null;
+    const wordCount = (post.content_ar || '').trim().split(/\s+/).length;
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'BlogPosting',
+      headline: post.title_ar,
+      alternativeHeadline: post.title_en,
+      description: post.meta_description_ar || post.excerpt_ar,
+      image: post.cover_image_url || post.og_image_url,
+      datePublished: post.published_at,
+      dateModified: post.updated_at,
+      url: `https://faneen.com/blog/${post.slug}`,
+      wordCount,
+      inLanguage: ['ar', 'en'],
+      keywords: post.tags?.join(', '),
+      articleSection: post.category,
+      publisher: { '@type': 'Organization', name: 'فنيين Faneen', url: 'https://faneen.com', logo: { '@type': 'ImageObject', url: 'https://faneen.com/og-image.jpg' } },
+      mainEntityOfPage: { '@type': 'WebPage', '@id': `https://faneen.com/blog/${post.slug}` },
+      breadcrumb: {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'فنيين', item: 'https://faneen.com' },
+          { '@type': 'ListItem', position: 2, name: language === 'ar' ? 'المدونة' : 'Blog', item: 'https://faneen.com/blog' },
+          { '@type': 'ListItem', position: 3, name: post.title_ar },
+        ],
+      },
+    };
+  }, [post, language]));
 
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
   const title = post ? (language === 'ar' ? post.title_ar : (post.title_en || post.title_ar)) : '';

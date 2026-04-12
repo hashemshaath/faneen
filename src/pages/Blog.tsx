@@ -171,10 +171,19 @@ const Blog = () => {
     return result;
   }, [posts, activeCategory, searchQuery, selectedTags, sortBy, commentCounts]);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const POSTS_PER_PAGE = 12;
+
+  // Reset page on filter change
+  const prevFilterKey = useMemo(() => `${activeCategory}-${searchQuery}-${selectedTags.join(',')}-${sortBy}`, [activeCategory, searchQuery, selectedTags, sortBy]);
+  useMemo(() => { setCurrentPage(1); }, [prevFilterKey]);
+
   const featuredPost = posts.length > 0 ? posts[0] : null;
   const regularPosts = filteredPosts.filter((p: any) => p.id !== featuredPost?.id);
   const showFeatured = featuredPost && activeCategory === 'all' && !searchQuery && selectedTags.length === 0 && sortBy === 'newest' && posts.length > 1;
-  const displayPosts = showFeatured ? regularPosts : filteredPosts;
+  const allDisplayPosts = showFeatured ? regularPosts : filteredPosts;
+  const totalPages = Math.ceil(allDisplayPosts.length / POSTS_PER_PAGE);
+  const displayPosts = allDisplayPosts.slice((currentPage - 1) * POSTS_PER_PAGE, currentPage * POSTS_PER_PAGE);
 
   const popularPosts = useMemo(() => {
     return [...posts].sort((a: any, b: any) => (b.views_count || 0) - (a.views_count || 0)).slice(0, 5);
@@ -577,6 +586,50 @@ const Blog = () => {
                     <X className="w-3.5 h-3.5" />
                     {isRTL ? 'مسح الفلاتر' : 'Clear filters'}
                   </Button>
+                </div>
+              )}
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-1.5 pt-6">
+                  <button
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1.5 rounded-lg text-xs font-medium bg-muted/50 text-muted-foreground hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                  >
+                    {isRTL ? 'السابق' : 'Previous'}
+                  </button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+                    .reduce((acc: (number | 'ellipsis')[], p, idx, arr) => {
+                      if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push('ellipsis');
+                      acc.push(p);
+                      return acc;
+                    }, [])
+                    .map((item, i) =>
+                      item === 'ellipsis' ? (
+                        <span key={`e${i}`} className="px-1 text-muted-foreground text-xs">…</span>
+                      ) : (
+                        <button
+                          key={item}
+                          onClick={() => setCurrentPage(item as number)}
+                          className={`w-8 h-8 rounded-lg text-xs font-medium transition-all ${
+                            currentPage === item
+                              ? 'bg-accent text-accent-foreground shadow-sm'
+                              : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                          }`}
+                        >
+                          {item}
+                        </button>
+                      )
+                    )}
+                  <button
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1.5 rounded-lg text-xs font-medium bg-muted/50 text-muted-foreground hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                  >
+                    {isRTL ? 'التالي' : 'Next'}
+                  </button>
                 </div>
               )}
             </div>
