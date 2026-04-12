@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { usePageMeta } from '@/hooks/usePageMeta';
+import { usePageMeta, useJsonLd } from '@/hooks/usePageMeta';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';

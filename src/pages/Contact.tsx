@@ -1,16 +1,26 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useLanguage } from '@/i18n/LanguageContext';
-import { usePageMeta } from '@/hooks/usePageMeta';
+import { usePageMeta, useJsonLd } from '@/hooks/usePageMeta';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { Mail, Phone, MapPin } from 'lucide-react';
 
 const Contact = () => {
-  const { isRTL } = useLanguage();
+  const { isRTL, language } = useLanguage();
   usePageMeta({
     title: isRTL ? 'تواصل معنا | فنيين' : 'Contact Us | Faneen',
     description: isRTL ? 'تواصل مع فريق فنيين للدعم الفني أو الاستفسارات أو الشراكات' : 'Contact Faneen team for support, inquiries or partnerships',
+    canonical: 'https://faneen.com/contact',
   });
+
+  useJsonLd(useMemo(() => ({
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'فنيين', item: 'https://faneen.com' },
+      { '@type': 'ListItem', position: 2, name: language === 'ar' ? 'تواصل معنا' : 'Contact', item: 'https://faneen.com/contact' },
+    ],
+  }), [language]));
 
   return (
     <div className="min-h-screen bg-background">
