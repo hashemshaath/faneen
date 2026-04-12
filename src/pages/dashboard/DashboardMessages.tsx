@@ -305,10 +305,10 @@ const DashboardMessages = () => {
       return data;
     },
     enabled: !!selectedConversation,
-    refetchInterval: 5000,
+    // No polling — realtime subscription handles updates
   });
 
-  /* ─── Realtime ─── */
+  /* ─── Realtime: messages in selected conversation ─── */
   useEffect(() => {
     if (!selectedConversation) return;
     const channel = supabase
@@ -321,6 +321,19 @@ const DashboardMessages = () => {
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [selectedConversation, user?.id, queryClient]);
+
+  /* ─── Realtime: conversations list (new conversations + updates) ─── */
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel('conversations-list')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'conversations' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['conversations', user.id] });
+        queryClient.invalidateQueries({ queryKey: ['unread-counts', user.id] });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user?.id, queryClient]);
 
   /* ─── Mark as read ─── */
   useEffect(() => {
