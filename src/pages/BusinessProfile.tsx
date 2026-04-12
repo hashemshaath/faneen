@@ -42,6 +42,7 @@ import {
   useServices,
 } from "@/components/business-profile/business-profile.data";
 import { BnplBadges } from "@/components/bnpl/BnplBadges";
+import { BookingWidget } from "@/components/booking/BookingWidget";
 
 const BusinessProfile = () => {
   const { username } = useParams<{ username: string }>();
