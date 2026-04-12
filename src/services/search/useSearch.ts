@@ -115,7 +115,7 @@ export const useBusinesses = () =>
     queryKey: ['businesses-all-with-services'],
     queryFn: async () => {
       const { data } = await supabase
-        .from('businesses')
+        .from('businesses_public')
         .select('*, categories(*), cities(*), business_services(price_from, price_to, is_active)')
         .eq('is_active', true)
         .order('rating_avg', { ascending: false })
