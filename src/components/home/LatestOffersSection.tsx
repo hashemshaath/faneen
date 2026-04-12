@@ -11,7 +11,7 @@ import { LazyImage } from "@/components/ui/lazy-image";
 const OfferSkeleton = () => (
   <div className="rounded-2xl overflow-hidden border border-border bg-card">
     <Skeleton className="aspect-video w-full" />
-    <div className="p-4 space-y-3">
+    <div className="p-5 space-y-3">
       <Skeleton className="h-5 w-16 rounded-full" />
       <Skeleton className="h-5 w-3/4" />
       <Skeleton className="h-4 w-full" />
@@ -43,21 +43,21 @@ export const LatestOffersSection = () => {
   const formatPrice = (n: number) => n?.toLocaleString();
 
   return (
-    <section ref={sectionRef} className="py-16 sm:py-24 bg-background">
+    <section ref={sectionRef} className="py-16 sm:py-28 bg-background">
       <div className="container px-4 sm:px-6">
-        <div className="flex items-center justify-between mb-8 sm:mb-12">
+        <div className="flex items-center justify-between mb-10 sm:mb-14">
           <div>
-            <span className="text-xs sm:text-sm font-body text-gold font-semibold">
+            <span className="text-xs sm:text-sm font-body text-gold font-semibold tracking-wide">
               {isRTL ? "عروض حصرية" : "Exclusive Deals"}
             </span>
-            <h2 className="font-heading font-bold text-xl sm:text-3xl md:text-4xl text-foreground mt-1 sm:mt-2">
+            <h2 className="font-heading font-bold text-xl sm:text-3xl md:text-4xl text-foreground mt-1.5 sm:mt-2.5">
               {isRTL ? "أحدث العروض والخصومات" : "Latest Offers & Discounts"}
             </h2>
           </div>
           <Link to="/offers">
-            <Button variant="outline" size="sm" className="gap-1 text-xs sm:text-sm">
+            <Button variant="outline" size="sm" className="gap-1.5 text-xs sm:text-sm">
               {isRTL ? "عرض الكل" : "View All"}
-              {isRTL ? <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
+              {isRTL ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
             </Button>
           </Link>
         </div>
@@ -78,7 +78,7 @@ export const LatestOffersSection = () => {
                   className={`group block ${isVisible ? "animate-fade-in" : ""}`}
                   style={{ animationDelay: `${i * 100}ms`, animationFillMode: "both" }}
                 >
-                  <div className="rounded-2xl overflow-hidden border border-border hover:border-gold/40 bg-card transition-all duration-500 hover:shadow-lg hover-scale h-full relative">
+                  <div className="rounded-2xl overflow-hidden border border-border hover:border-gold/40 bg-card transition-all duration-500 hover:shadow-xl hover:shadow-gold/5 sm:hover:-translate-y-2 h-full relative">
                     {hasDiscount && (
                       <div className="absolute top-3 start-3 z-10 bg-destructive text-destructive-foreground text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-md">
                         <Percent className="w-3 h-3" />
@@ -107,8 +107,8 @@ export const LatestOffersSection = () => {
                         </div>
                       )}
                     </div>
-                    <div className="p-3 sm:p-4 space-y-2">
-                      <span className="text-[10px] font-bold text-gold bg-gold/10 dark:bg-gold/15 px-2 py-0.5 rounded-full">
+                    <div className="p-4 sm:p-5 space-y-2.5">
+                      <span className="text-[10px] font-bold text-gold bg-gold/10 dark:bg-gold/15 px-2.5 py-0.5 rounded-full">
                         {offer.promotion_type === "offer"
                           ? isRTL ? "عرض خاص" : "Special Offer"
                           : isRTL ? "إعلان" : "Ad"}
@@ -117,14 +117,14 @@ export const LatestOffersSection = () => {
                         {language === "ar" ? offer.title_ar : offer.title_en || offer.title_ar}
                       </h3>
                       {(offer.description_ar || offer.description_en) && (
-                        <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">
+                        <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 leading-relaxed">
                           {language === "ar"
                             ? offer.description_ar
                             : offer.description_en || offer.description_ar}
                         </p>
                       )}
                       {(offer.original_price || offer.offer_price) && (
-                        <div className="flex items-center gap-2 pt-1">
+                        <div className="flex items-center gap-2.5 pt-1">
                           {offer.offer_price && (
                             <span className="text-base sm:text-lg font-bold text-gold">
                               {formatPrice(offer.offer_price)} {offer.currency_code}
@@ -137,7 +137,7 @@ export const LatestOffersSection = () => {
                           )}
                         </div>
                       )}
-                      <div className="flex items-center justify-between pt-2 border-t border-border/30">
+                      <div className="flex items-center justify-between pt-2.5 border-t border-border/30">
                         {offer.businesses && (
                           <Link
                             to={`/${offer.businesses.username}`}

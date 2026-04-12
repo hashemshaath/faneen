@@ -48,39 +48,39 @@ export const HowItWorksSection = () => {
         <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
       </div>
       <div className="container px-4 sm:px-6 relative">
-        <div className="text-center mb-10 sm:mb-16">
-          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-accent/10 text-accent text-xs sm:text-sm font-body font-semibold mb-3 sm:mb-4">
+        <div className="text-center mb-12 sm:mb-20">
+          <span className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-accent/10 text-accent text-xs sm:text-sm font-body font-semibold mb-4 sm:mb-5">
             {isRTL ? 'كيف يعمل' : 'How It Works'}
           </span>
-          <h2 className="font-heading font-bold text-2xl sm:text-3xl md:text-5xl text-foreground">
+          <h2 className="font-heading font-bold text-2xl sm:text-4xl md:text-5xl text-foreground leading-tight">
             {isRTL ? 'أربع خطوات بسيطة' : 'Four Simple Steps'}
           </h2>
-          <p className="font-body text-muted-foreground mt-3 sm:mt-5 max-w-xl mx-auto text-xs sm:text-base">
+          <p className="font-body text-muted-foreground mt-4 sm:mt-6 max-w-xl mx-auto text-sm sm:text-base leading-relaxed">
             {isRTL ? 'من البحث إلى التنفيذ، نجعل العملية سهلة وآمنة' : 'From search to delivery, we make the process easy and secure'}
           </p>
         </div>
 
-        <div ref={visRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 max-w-5xl mx-auto">
+        <div ref={visRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-7 max-w-5xl mx-auto">
           {steps.map((step, i) => (
             <div
               key={step.step}
-              className={`relative p-5 sm:p-6 rounded-2xl bg-card dark:bg-card/60 border border-border/50 dark:border-border/30 hover:border-accent/30 hover:shadow-lg hover:shadow-accent/5 sm:hover:-translate-y-1 transition-all duration-500 group text-center ${isVisible ? 'animate-card-slide-up' : 'opacity-0'}`}
+              className={`relative p-6 sm:p-8 rounded-2xl bg-card dark:bg-card/60 border border-border/50 dark:border-border/30 hover:border-accent/40 hover:shadow-xl hover:shadow-accent/5 sm:hover:-translate-y-2 transition-all duration-500 group text-center ${isVisible ? 'animate-card-slide-up' : 'opacity-0'}`}
               style={{ animationDelay: `${i * 120}ms`, animationFillMode: 'both' }}
             >
               {/* Step number */}
-              <div className="absolute -top-3 start-1/2 -translate-x-1/2 w-7 h-7 rounded-full bg-accent text-accent-foreground text-xs font-bold flex items-center justify-center shadow-md">
+              <div className="absolute -top-3.5 start-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-accent text-accent-foreground text-xs font-bold flex items-center justify-center shadow-lg shadow-accent/25 ring-4 ring-background">
                 {step.step}
               </div>
 
               {/* Connector line (hidden on last) */}
               {i < steps.length - 1 && (
-                <div className="hidden lg:block absolute top-8 end-0 translate-x-1/2 w-full h-px border-t border-dashed border-accent/30 z-0" />
+                <div className="hidden lg:block absolute top-10 end-0 translate-x-1/2 w-full h-px border-t-2 border-dashed border-accent/25 z-0" />
               )}
 
-              <div className="w-14 h-14 rounded-2xl bg-accent/10 dark:bg-accent/15 flex items-center justify-center mx-auto mb-4 group-hover:bg-accent/20 transition-colors">
-                <step.icon className="w-6 h-6 text-accent" />
+              <div className="w-16 h-16 rounded-2xl bg-accent/10 dark:bg-accent/15 flex items-center justify-center mx-auto mb-5 group-hover:bg-accent/20 group-hover:scale-110 transition-all duration-300">
+                <step.icon className="w-7 h-7 text-accent" />
               </div>
-              <h3 className="font-heading font-bold text-sm sm:text-base text-foreground mb-2 group-hover:text-accent transition-colors">
+              <h3 className="font-heading font-bold text-sm sm:text-lg text-foreground mb-2.5 group-hover:text-accent transition-colors">
                 {language === 'ar' ? step.titleAr : step.titleEn}
               </h3>
               <p className="font-body text-xs sm:text-sm text-muted-foreground leading-relaxed">
