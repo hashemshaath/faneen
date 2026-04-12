@@ -112,7 +112,7 @@ export const BusinessCard = memo(({ business: b, viewMode }: BusinessCardProps) 
     <Link
       to={`/${b.username}`}
       {...touchHandlers}
-      className={`group relative rounded-2xl bg-card dark:bg-card/80 border border-border/30 dark:border-border/15 hover:border-accent/25 transition-all duration-300 flex flex-col overflow-hidden active:scale-[0.97] ${pressed ? 'scale-[0.97] shadow-xl' : 'hover:shadow-lg hover:shadow-accent/5 dark:hover:shadow-accent/5'}`}
+      className={`group relative rounded-2xl bg-card dark:bg-card/80 border border-border/30 dark:border-border/15 hover:border-accent/25 transition-all duration-300 flex flex-col overflow-hidden active:scale-[0.97] hover-lift ${pressed ? 'scale-[0.97] shadow-xl' : 'dark:hover:shadow-accent/5'}`}
     >
       {/* Cover area */}
       <div className="relative h-24 sm:h-28 bg-gradient-to-br from-accent/8 via-muted/40 to-accent/5 dark:from-accent/5 dark:via-muted/20 dark:to-accent/8 overflow-hidden">
