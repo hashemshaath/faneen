@@ -16,7 +16,7 @@ import { Progress } from '@/components/ui/progress';
 import { toast } from '@/hooks/use-toast';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
-import { exportContractPDF, exportMeasurementsPDF, exportMeasurementsExcel, parseMeasurementsFromCSV, type ImportedMeasurement } from '@/lib/contract-pdf-export';
+import { exportContractPDF, exportMeasurementsPDF, exportMeasurementsExcel, printMeasurements, parseMeasurementsFromCSV, type ImportedMeasurement } from '@/lib/contract-pdf-export';
 import {
   FileText, Shield, Wrench, CheckCircle2, Clock,
   Calendar, DollarSign, AlertTriangle, XCircle, ListChecks, Plus, Send,
