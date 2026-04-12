@@ -504,6 +504,13 @@ const ContractDetail = () => {
   const milestonePaid = milestones?.filter(m => m.status === 'completed').reduce((s, m) => s + Number(m.amount), 0) || 0;
   const progressPct = totalMilestones > 0 ? Math.round((completedMilestones / totalMilestones) * 100) : 0;
   const totalAmount = Number(contract?.total_amount || 0);
+  const vatRate = Number(contract?.vat_rate || 15);
+  const vatInclusive = contract?.vat_inclusive ?? false;
+  const vatAmount = vatInclusive
+    ? (totalAmount * vatRate) / (100 + vatRate)
+    : (totalAmount * vatRate) / 100;
+  const subtotalBeforeVat = vatInclusive ? totalAmount - vatAmount : totalAmount;
+  const grandTotalWithVat = vatInclusive ? totalAmount : totalAmount + vatAmount;
   const bizName = business ? (language === 'ar' ? business.name_ar : (business.name_en || business.name_ar)) : '';
 
   const copyContractNumber = () => {
@@ -795,7 +802,7 @@ const ContractDetail = () => {
         {/* ─── Quick Stats ─── */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5 sm:mb-6">
           <StatCard icon={StatusIcon} label={isRTL ? 'الحالة' : 'Status'} value={isRTL ? cfg.label_ar : cfg.label_en} />
-          <StatCard icon={Banknote} label={isRTL ? 'قيمة العقد' : 'Total Value'} value={`${totalAmount.toLocaleString()} ${contract.currency_code}`} accent />
+          <StatCard icon={Banknote} label={isRTL ? 'قيمة العقد' : 'Total Value'} value={`${grandTotalWithVat.toLocaleString()} ${contract.currency_code}`} accent sub={vatInclusive ? (isRTL ? 'شامل الضريبة' : 'VAT inclusive') : (isRTL ? `+ ${vatRate}% ضريبة` : `+ ${vatRate}% VAT`)} />
           <StatCard icon={ListChecks} label={isRTL ? 'المراحل' : 'Milestones'} value={`${completedMilestones}/${totalMilestones}`} sub={`${progressPct}% ${isRTL ? 'مكتمل' : 'complete'}`} />
           <StatCard icon={CreditCard} label={isRTL ? 'المسدد' : 'Paid'} value={`${paymentsTotals.paid.toLocaleString()}`} sub={`${paymentsTotals.paidCount}/${paymentsTotals.totalCount} ${isRTL ? 'دفعات' : 'payments'}`} />
         </div>
@@ -907,19 +914,45 @@ const ContractDetail = () => {
             <div className="flex items-center gap-2 mb-3">
               <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center"><Banknote className="w-4 h-4 text-accent" /></div>
               <span className="font-heading font-bold text-sm">{isRTL ? 'الملخص المالي' : 'Financial Summary'}</span>
+              {vatInclusive && (
+                <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-[9px] ms-auto">
+                  <Percent className="w-3 h-3 me-1" />{isRTL ? 'شامل الضريبة' : 'VAT Inclusive'}
+                </Badge>
+              )}
             </div>
             <div className="space-y-2.5">
-              <div className="flex items-center justify-between"><span className="text-[10px] text-muted-foreground font-body">{isRTL ? 'إجمالي العقد' : 'Total'}</span><span className="text-xs font-heading font-bold text-accent">{totalAmount.toLocaleString()} {contract.currency_code}</span></div>
-              <div className="flex items-center justify-between"><span className="text-[10px] text-muted-foreground font-body">{isRTL ? 'المسدد' : 'Paid'}</span><span className="text-xs font-heading font-semibold text-emerald-600 dark:text-emerald-400">{paymentsTotals.paid.toLocaleString()} {contract.currency_code}</span></div>
-              <div className="flex items-center justify-between"><span className="text-[10px] text-muted-foreground font-body">{isRTL ? 'المتبقي' : 'Remaining'}</span><span className="text-xs font-heading font-semibold">{(totalAmount - paymentsTotals.paid).toLocaleString()} {contract.currency_code}</span></div>
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] text-muted-foreground font-body">{isRTL ? 'المبلغ قبل الضريبة' : 'Subtotal (excl. VAT)'}</span>
+                <span className="text-xs font-heading font-semibold">{subtotalBeforeVat.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {contract.currency_code}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] text-muted-foreground font-body flex items-center gap-1">
+                  <Percent className="w-3 h-3" />
+                  {isRTL ? `ضريبة القيمة المضافة (${vatRate}%)` : `VAT (${vatRate}%)`}
+                </span>
+                <span className="text-xs font-heading font-semibold text-amber-600 dark:text-amber-400">{vatAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {contract.currency_code}</span>
+              </div>
               <Separator />
-              {totalAmount > 0 && (
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-body font-semibold text-foreground">{isRTL ? 'الإجمالي شامل الضريبة' : 'Grand Total (incl. VAT)'}</span>
+                <span className="text-sm font-heading font-bold text-accent">{grandTotalWithVat.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {contract.currency_code}</span>
+              </div>
+              <Separator />
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] text-muted-foreground font-body">{isRTL ? 'المسدد' : 'Paid'}</span>
+                <span className="text-xs font-heading font-semibold text-emerald-600 dark:text-emerald-400">{paymentsTotals.paid.toLocaleString()} {contract.currency_code}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] text-muted-foreground font-body">{isRTL ? 'المتبقي' : 'Remaining'}</span>
+                <span className="text-xs font-heading font-semibold">{(grandTotalWithVat - paymentsTotals.paid).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {contract.currency_code}</span>
+              </div>
+              {grandTotalWithVat > 0 && (
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-[10px] text-muted-foreground font-body">{isRTL ? 'نسبة السداد' : 'Payment Progress'}</span>
-                    <span className="text-[10px] font-heading font-semibold text-accent">{Math.round((paymentsTotals.paid / totalAmount) * 100)}%</span>
+                    <span className="text-[10px] font-heading font-semibold text-accent">{Math.round((paymentsTotals.paid / grandTotalWithVat) * 100)}%</span>
                   </div>
-                  <Progress value={(paymentsTotals.paid / totalAmount) * 100} className="h-1.5" />
+                  <Progress value={(paymentsTotals.paid / grandTotalWithVat) * 100} className="h-1.5" />
                 </div>
               )}
             </div>
@@ -1238,10 +1271,17 @@ const ContractDetail = () => {
 
             {/* Info banner: total = contract value */}
             {measurements && measurements.length > 0 && (
-              <div className="flex items-center gap-2 p-3 mb-4 rounded-xl bg-accent/5 border border-accent/10">
-                <Info className="w-4 h-4 text-accent shrink-0" />
-                <p className="text-[10px] font-body text-muted-foreground">{isRTL ? 'المجموع النهائي للمقاسات يحدد تلقائياً قيمة العقد الإجمالية' : 'The final measurements total automatically determines the contract total value'}</p>
-                <span className="font-heading font-bold text-sm text-accent ms-auto">{measurementsTotals.totalCost.toLocaleString()} {contract.currency_code}</span>
+              <div className="p-3 mb-4 rounded-xl bg-accent/5 border border-accent/10 space-y-2">
+                <div className="flex items-center gap-2">
+                  <Info className="w-4 h-4 text-accent shrink-0" />
+                  <p className="text-[10px] font-body text-muted-foreground">{isRTL ? 'المجموع النهائي للمقاسات يحدد تلقائياً قيمة العقد الإجمالية' : 'The final measurements total automatically determines the contract total value'}</p>
+                  <span className="font-heading font-bold text-sm text-accent ms-auto">{measurementsTotals.totalCost.toLocaleString()} {contract.currency_code}</span>
+                </div>
+                <div className="flex items-center gap-3 flex-wrap text-[10px] font-body text-muted-foreground border-t border-accent/10 pt-2">
+                  <span>{isRTL ? 'المبلغ قبل الضريبة:' : 'Before VAT:'} <strong className="text-foreground">{(vatInclusive ? measurementsTotals.totalCost - (measurementsTotals.totalCost * vatRate / (100 + vatRate)) : measurementsTotals.totalCost).toLocaleString(undefined, { maximumFractionDigits: 2 })}</strong></span>
+                  <span>{isRTL ? `ضريبة ${vatRate}%:` : `VAT ${vatRate}%:`} <strong className="text-amber-600 dark:text-amber-400">{(vatInclusive ? measurementsTotals.totalCost * vatRate / (100 + vatRate) : measurementsTotals.totalCost * vatRate / 100).toLocaleString(undefined, { maximumFractionDigits: 2 })}</strong></span>
+                  <span>{isRTL ? 'الإجمالي شامل الضريبة:' : 'Total incl. VAT:'} <strong className="text-accent">{(vatInclusive ? measurementsTotals.totalCost : measurementsTotals.totalCost + measurementsTotals.totalCost * vatRate / 100).toLocaleString(undefined, { maximumFractionDigits: 2 })}</strong> {contract.currency_code}</span>
+                </div>
               </div>
             )}
 
