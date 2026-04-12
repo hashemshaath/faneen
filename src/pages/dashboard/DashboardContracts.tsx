@@ -483,6 +483,16 @@ const DashboardContracts = () => {
     enabled: contractIds.length > 0,
   });
 
+  const { data: allLineItems = [] } = useQuery({
+    queryKey: ['dashboard-contract-line-items', contractIds],
+    queryFn: async () => {
+      if (contractIds.length === 0) return [];
+      const { data } = await supabase.from('contract_line_items').select('*').in('contract_id', contractIds).order('sort_order');
+      return data ?? [];
+    },
+    enabled: contractIds.length > 0,
+  });
+
   const { data: profiles = [] } = useQuery({
     queryKey: ['contract-profiles', contractIds],
     queryFn: async () => {
