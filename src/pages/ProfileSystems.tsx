@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import { usePageMeta } from '@/hooks/usePageMeta';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
