@@ -1313,10 +1313,108 @@ const ContractDetail = () => {
 
           {/* ── Measurements ── */}
           <TabsContent value="measurements">
+            {/* Toolbar */}
+            <div className="flex flex-wrap items-center gap-2 mb-4">
+              {!isContractLocked && (isProvider || isClient) && (
+                <>
+                  <Button variant="outline" className="gap-1.5 text-xs" onClick={() => setShowMeasurementForm(true)}><Plus className="w-3.5 h-3.5" />{isRTL ? 'إضافة قطعة' : 'Add'}</Button>
+                  <input ref={importFileRef} type="file" className="hidden" onChange={handleImportMeasurements} accept=".csv,.txt,.xlsx" />
+                  <Button variant="outline" className="gap-1.5 text-xs" onClick={() => importFileRef.current?.click()}><Upload className="w-3.5 h-3.5" />{isRTL ? 'استيراد من ملف' : 'Import CSV'}</Button>
+                </>
+              )}
+              {measurements && measurements.length > 0 && (
+                <>
+                  <div className="ms-auto" />
+                  <Button variant="outline" size="sm" className="gap-1.5 text-[10px] h-8" onClick={handleExportMeasurementsExcel}><Download className="w-3 h-3" />{isRTL ? 'تصدير Excel' : 'Export CSV'}</Button>
+                  <Button variant="outline" size="sm" className="gap-1.5 text-[10px] h-8" onClick={handleExportMeasurementsPDF}><Download className="w-3 h-3" />{isRTL ? 'تصدير PDF' : 'Export PDF'}</Button>
+                </>
+              )}
+            </div>
+
+            {/* Import Preview */}
+            {showImportPreview && importedMeasurements.length > 0 && (
+              <div className="mb-4 p-4 rounded-xl border-2 border-dashed border-accent/40 bg-accent/5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-heading font-bold text-sm flex items-center gap-2">
+                    <Upload className="w-4 h-4 text-accent" />
+                    {isRTL ? `معاينة الاستيراد (${importedMeasurements.length} قطعة)` : `Import Preview (${importedMeasurements.length} items)`}
+                  </h3>
+                  <Button variant="ghost" size="sm" className="text-xs text-destructive" onClick={() => { setShowImportPreview(false); setImportedMeasurements([]); }}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+                </div>
+                <p className="text-[10px] text-muted-foreground font-body">{isRTL ? 'راجع البيانات وعدّلها قبل التأكيد' : 'Review and edit data before confirming'}</p>
+                <div className="border border-border rounded-xl overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="bg-muted/50">
+                          <th className="p-2 text-start font-heading font-semibold">#</th>
+                          <th className="p-2 text-start font-heading font-semibold">{isRTL ? 'الاسم' : 'Name'}</th>
+                          <th className="p-2 text-start font-heading font-semibold">{isRTL ? 'رقم القطعة' : 'Piece #'}</th>
+                          <th className="p-2 text-start font-heading font-semibold">{isRTL ? 'الطول' : 'L (mm)'}</th>
+                          <th className="p-2 text-start font-heading font-semibold">{isRTL ? 'العرض' : 'W (mm)'}</th>
+                          <th className="p-2 text-start font-heading font-semibold">{isRTL ? 'السعر' : 'Price'}</th>
+                          <th className="p-2 text-start font-heading font-semibold">{isRTL ? 'التكلفة' : 'Cost'}</th>
+                          <th className="p-2"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {importedMeasurements.map((m, idx) => (
+                          <tr key={idx} className="border-t border-border hover:bg-muted/20">
+                            <td className="p-2 text-muted-foreground">{idx + 1}</td>
+                            <td className="p-2">
+                              {editingImportIdx === idx ? (
+                                <Input className="h-7 text-xs" value={m.name_ar} onChange={e => updateImportedRow(idx, 'name_ar', e.target.value)} />
+                              ) : (
+                                <button onClick={() => setEditingImportIdx(idx)} className="text-start hover:text-accent">{m.name_ar}</button>
+                              )}
+                            </td>
+                            <td className="p-2 font-heading" dir="ltr">{m.piece_number}</td>
+                            <td className="p-2" dir="ltr">
+                              {editingImportIdx === idx ? (
+                                <Input type="number" className="h-7 text-xs w-20" value={m.length_mm} onChange={e => updateImportedRow(idx, 'length_mm', Number(e.target.value))} />
+                              ) : m.length_mm}
+                            </td>
+                            <td className="p-2" dir="ltr">
+                              {editingImportIdx === idx ? (
+                                <Input type="number" className="h-7 text-xs w-20" value={m.width_mm} onChange={e => updateImportedRow(idx, 'width_mm', Number(e.target.value))} />
+                              ) : m.width_mm}
+                            </td>
+                            <td className="p-2" dir="ltr">
+                              {editingImportIdx === idx ? (
+                                <Input type="number" className="h-7 text-xs w-24" value={m.unit_price} onChange={e => updateImportedRow(idx, 'unit_price', Number(e.target.value))} />
+                              ) : m.unit_price.toLocaleString()}
+                            </td>
+                            <td className="p-2 font-heading font-bold text-accent" dir="ltr">{(m.unit_price * m.quantity).toLocaleString()}</td>
+                            <td className="p-2">
+                              <div className="flex gap-1">
+                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setEditingImportIdx(editingImportIdx === idx ? null : idx)}>
+                                  <PenTool className="w-3 h-3 text-muted-foreground" />
+                                </Button>
+                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeImportedRow(idx)}>
+                                  <Trash2 className="w-3 h-3 text-destructive" />
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Button variant="hero" size="sm" className="gap-1.5 text-xs" onClick={confirmImportMeasurements}>
+                    <CheckCircle2 className="w-3.5 h-3.5" />{isRTL ? 'تأكيد الاستيراد' : 'Confirm Import'}
+                  </Button>
+                  <span className="text-[10px] text-muted-foreground font-body">
+                    {isRTL ? `إجمالي: ${importedMeasurements.reduce((s, m) => s + m.unit_price * m.quantity, 0).toLocaleString()} ${contract.currency_code}` 
+                      : `Total: ${importedMeasurements.reduce((s, m) => s + m.unit_price * m.quantity, 0).toLocaleString()} ${contract.currency_code}`}
+                  </span>
+                </div>
+              </div>
+            )}
+
             {/* Add/Edit Form */}
-            {!isContractLocked && (isProvider || isClient) && (
-              <div className="mb-4">
-                {showMeasurementForm ? (
+            {!isContractLocked && (isProvider || isClient) && showMeasurementForm && (
                   <div className="p-4 rounded-xl bg-card border-2 border-dashed border-accent/30 space-y-3">
                     <h3 className="font-heading font-bold text-sm flex items-center gap-2">
                       <Plus className="w-4 h-4 text-accent" />
