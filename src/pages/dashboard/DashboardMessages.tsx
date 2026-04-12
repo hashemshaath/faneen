@@ -16,7 +16,9 @@ import {
   Paperclip, Image as ImageIcon, FileText, X, Download, Loader2, Eye, ExternalLink,
   Upload, Sparkles, Reply, MoreVertical, Users, Clock, Archive, Smile, Pin,
   Star, Trash2, Copy, ChevronDown, Phone, Video, Info, StarOff, Hash,
-  BarChart3, MessageCircle, TrendingUp, Zap, Shield,
+  BarChart3, MessageCircle, TrendingUp, Zap, Shield, Forward, Mic, MicOff,
+  Volume2, VolumeX, Bell, BellOff, AlertCircle, UserPlus, AtSign, Link2,
+  Bookmark, BookmarkCheck, Filter, LayoutList, Calendar, Globe,
 } from 'lucide-react';
 import { format, formatDistanceToNow, isToday, isYesterday, differenceInMinutes } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
@@ -26,10 +28,12 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Progress } from '@/components/ui/progress';
 
 const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
-const EMOJI_QUICK = ['👍', '❤️', '😊', '👏', '🙏', '✅', '🎉', '💯', '🔥', '😂', '😍', '🤝'];
+const EMOJI_QUICK = ['👍', '❤️', '😊', '👏', '🙏', '✅', '🎉', '💯', '🔥', '😂', '😍', '🤝', '💪', '👀', '🙌', '🥳', '🤔', '💬'];
 const EMOJI_REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
 
 const formatFileSize = (bytes: number) => {
@@ -53,10 +57,7 @@ const ConversationSkeleton = () => (
       <div key={i} className="flex items-center gap-2.5 p-3">
         <Skeleton className="w-11 h-11 rounded-full shrink-0" />
         <div className="flex-1 space-y-1.5">
-          <div className="flex justify-between">
-            <Skeleton className="h-3.5 w-24" />
-            <Skeleton className="h-2.5 w-10" />
-          </div>
+          <div className="flex justify-between"><Skeleton className="h-3.5 w-24" /><Skeleton className="h-2.5 w-10" /></div>
           <Skeleton className="h-3 w-36" />
         </div>
       </div>
@@ -92,7 +93,7 @@ const AttachmentPreview = React.memo(({ url, type, name }: { url: string; type: 
     return (
       <a href={url} target="_blank" rel="noopener noreferrer" className="block mt-2 group/img">
         <div className="relative overflow-hidden rounded-xl border border-border/20 shadow-sm">
-          <img src={url} alt={name || 'attachment'} className="max-w-[240px] max-h-[200px] object-cover transition-transform duration-300 group-hover/img:scale-105" loading="lazy" />
+          <img src={url} alt={name || 'attachment'} className="max-w-[260px] max-h-[220px] object-cover transition-transform duration-300 group-hover/img:scale-105" loading="lazy" />
           <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/10 transition-colors flex items-center justify-center">
             <Eye className="w-5 h-5 text-white opacity-0 group-hover/img:opacity-100 transition-opacity drop-shadow-lg" />
           </div>
@@ -110,8 +111,8 @@ const AttachmentPreview = React.memo(({ url, type, name }: { url: string; type: 
         )}
         <div className="flex items-center gap-1.5">
           <button onClick={() => setShowPdf(!showPdf)} className="flex items-center gap-2 p-2.5 rounded-xl bg-background/80 border border-border/20 hover:bg-muted/50 hover:border-border/40 transition-all flex-1 min-w-0 shadow-sm">
-            <div className="w-7 h-7 rounded-lg bg-red-500/10 flex items-center justify-center shrink-0">
-              <FileText className="w-3.5 h-3.5 text-red-500" />
+            <div className="w-7 h-7 rounded-lg bg-destructive/10 flex items-center justify-center shrink-0">
+              <FileText className="w-3.5 h-3.5 text-destructive" />
             </div>
             <span className="text-[11px] truncate flex-1 text-start font-medium">{name || 'PDF'}</span>
             <Eye className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
@@ -137,7 +138,7 @@ const AttachmentPreview = React.memo(({ url, type, name }: { url: string; type: 
 AttachmentPreview.displayName = 'AttachmentPreview';
 
 /* ─── Conversation Item (memo) ─── */
-const ConversationItem = React.memo(({ conv, isSelected, unread, isRTL, language, isSuperAdmin, isPinned, isStarred, onClick, onPin, onStar }: any) => {
+const ConversationItem = React.memo(({ conv, isSelected, unread, isRTL, language, isSuperAdmin, isPinned, isStarred, isMuted, onClick, onPin, onStar, onMute }: any) => {
   const timeAgo = conv.last_message_at
     ? formatDistanceToNow(new Date(conv.last_message_at), { addSuffix: false, locale: language === 'ar' ? ar : enUS })
     : '';
@@ -154,7 +155,7 @@ const ConversationItem = React.memo(({ conv, isSelected, unread, isRTL, language
       {/* Pin indicator */}
       {isPinned && (
         <div className="absolute top-1.5 end-2">
-          <Pin className="w-2.5 h-2.5 text-muted-foreground/60 fill-current" />
+          <Pin className="w-2.5 h-2.5 text-accent/60 fill-current" />
         </div>
       )}
 
@@ -165,7 +166,6 @@ const ConversationItem = React.memo(({ conv, isSelected, unread, isRTL, language
             {conv.other_profile?.full_name?.charAt(0) || '؟'}
           </AvatarFallback>
         </Avatar>
-        {/* Online indicator */}
         {isOnline && (
           <span className="absolute -bottom-0.5 -end-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-card" />
         )}
@@ -180,6 +180,7 @@ const ConversationItem = React.memo(({ conv, isSelected, unread, isRTL, language
               {conv.other_profile?.full_name || (isRTL ? 'مستخدم' : 'User')}
             </h4>
             {isStarred && <Star className="w-3 h-3 text-amber-500 fill-amber-500 shrink-0" />}
+            {isMuted && <VolumeX className="w-3 h-3 text-muted-foreground/50 shrink-0" />}
           </div>
           <span className={`text-[10px] shrink-0 ${unread > 0 ? 'text-accent font-semibold' : 'text-muted-foreground'}`}>{timeAgo}</span>
         </div>
@@ -203,10 +204,13 @@ const ConversationItem = React.memo(({ conv, isSelected, unread, isRTL, language
       {/* Hover actions */}
       <div className="absolute end-2 bottom-2 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
         <button onClick={(e) => { e.stopPropagation(); onPin?.(conv.id); }} className="p-1 rounded-md hover:bg-muted/60 text-muted-foreground" title={isRTL ? 'تثبيت' : 'Pin'}>
-          <Pin className={`w-2.5 h-2.5 ${isPinned ? 'fill-current' : ''}`} />
+          <Pin className={`w-2.5 h-2.5 ${isPinned ? 'fill-current text-accent' : ''}`} />
         </button>
         <button onClick={(e) => { e.stopPropagation(); onStar?.(conv.id); }} className="p-1 rounded-md hover:bg-muted/60 text-muted-foreground" title={isRTL ? 'مفضلة' : 'Star'}>
           <Star className={`w-2.5 h-2.5 ${isStarred ? 'fill-amber-500 text-amber-500' : ''}`} />
+        </button>
+        <button onClick={(e) => { e.stopPropagation(); onMute?.(conv.id); }} className="p-1 rounded-md hover:bg-muted/60 text-muted-foreground" title={isRTL ? 'كتم' : 'Mute'}>
+          {isMuted ? <Volume2 className="w-2.5 h-2.5" /> : <VolumeX className="w-2.5 h-2.5" />}
         </button>
       </div>
     </div>
@@ -215,7 +219,7 @@ const ConversationItem = React.memo(({ conv, isSelected, unread, isRTL, language
 ConversationItem.displayName = 'ConversationItem';
 
 /* ─── Message Bubble (memo) ─── */
-const MessageBubble = React.memo(({ msg, isMine, language, isRTL, onReply, onCopy, onReact, onStar }: any) => {
+const MessageBubble = React.memo(({ msg, isMine, language, isRTL, onReply, onCopy, onReact, onStar, onForward }: any) => {
   const [showReactions, setShowReactions] = useState(false);
   const isReply = msg.content?.startsWith('↩️');
   let replyPreview = '';
@@ -227,6 +231,7 @@ const MessageBubble = React.memo(({ msg, isMine, language, isRTL, onReply, onCop
   }
 
   const reaction = msg._reaction;
+  const isBookmarked = msg._starred;
 
   return (
     <div className={`flex group/msg ${isMine ? 'justify-end' : 'justify-start'} mb-2 animate-in fade-in-0 slide-in-from-bottom-1 duration-200`}>
@@ -242,14 +247,17 @@ const MessageBubble = React.memo(({ msg, isMine, language, isRTL, onReply, onCop
           <button onClick={() => onReply(msg)} className="p-1 rounded-lg hover:bg-muted/60 text-muted-foreground transition-colors" title={isRTL ? 'رد' : 'Reply'}>
             <Reply className="w-3 h-3" />
           </button>
-          <button onClick={() => onStar?.(msg.id)} className="p-1 rounded-lg hover:bg-muted/60 text-muted-foreground transition-colors" title={isRTL ? 'مفضلة' : 'Star'}>
-            <Star className={`w-3 h-3 ${msg._starred ? 'fill-amber-500 text-amber-500' : ''}`} />
+          <button onClick={() => onForward?.(msg)} className="p-1 rounded-lg hover:bg-muted/60 text-muted-foreground transition-colors" title={isRTL ? 'تحويل' : 'Forward'}>
+            <Forward className="w-3 h-3" />
+          </button>
+          <button onClick={() => onStar?.(msg.id)} className="p-1 rounded-lg hover:bg-muted/60 text-muted-foreground transition-colors" title={isRTL ? 'حفظ' : 'Bookmark'}>
+            {isBookmarked ? <BookmarkCheck className="w-3 h-3 text-accent" /> : <Bookmark className="w-3 h-3" />}
           </button>
         </div>
       )}
 
-      <div className="relative">
-        <div className={`max-w-[70%] relative group/bubble
+      <div className="relative max-w-[70%]">
+        <div className={`relative group/bubble
           ${isMine
             ? 'bg-gradient-to-br from-primary to-primary/90 text-primary-foreground rounded-2xl rounded-ee-md shadow-md shadow-primary/10'
             : 'bg-card border border-border/30 rounded-2xl rounded-es-md shadow-sm'}`}>
@@ -298,9 +306,16 @@ const MessageBubble = React.memo(({ msg, isMine, language, isRTL, onReply, onCop
           </div>
         )}
 
+        {/* Bookmark indicator */}
+        {isBookmarked && (
+          <div className={`absolute -top-1 ${isMine ? 'start-1' : 'end-1'}`}>
+            <BookmarkCheck className="w-3 h-3 text-accent" />
+          </div>
+        )}
+
         {/* Reactions picker */}
         {showReactions && (
-          <div className={`absolute bottom-full mb-1 ${isMine ? 'end-0' : 'start-0'} bg-card border border-border/30 rounded-xl shadow-xl p-1.5 flex gap-0.5 animate-in fade-in-0 slide-in-from-bottom-2 duration-200 z-10`}>
+          <div className={`absolute bottom-full mb-1 ${isMine ? 'end-0' : 'start-0'} bg-card border border-border/30 rounded-2xl shadow-xl p-1.5 flex gap-0.5 animate-in fade-in-0 slide-in-from-bottom-2 duration-200 z-10`}>
             {EMOJI_REACTIONS.map(e => (
               <button key={e} onClick={() => { onReact?.(msg.id, e); setShowReactions(false); }}
                 className="w-7 h-7 rounded-lg hover:bg-muted/60 flex items-center justify-center text-sm transition-all hover:scale-125">
@@ -314,14 +329,12 @@ const MessageBubble = React.memo(({ msg, isMine, language, isRTL, onReply, onCop
       {/* Actions - other */}
       {!isMine && (
         <div className="flex items-center gap-0.5 opacity-0 group-hover/msg:opacity-100 transition-all ms-1 self-center">
-          <button onClick={() => onReply(msg)} className="p-1 rounded-lg hover:bg-muted/60 text-muted-foreground transition-colors" title={isRTL ? 'رد' : 'Reply'}>
-            <Reply className="w-3 h-3" />
-          </button>
-          <button onClick={() => setShowReactions(!showReactions)} className="p-1 rounded-lg hover:bg-muted/60 text-muted-foreground transition-colors" title={isRTL ? 'تفاعل' : 'React'}>
-            <Smile className="w-3 h-3" />
-          </button>
-          <button onClick={() => onCopy?.(msg.content)} className="p-1 rounded-lg hover:bg-muted/60 text-muted-foreground transition-colors" title={isRTL ? 'نسخ' : 'Copy'}>
-            <Copy className="w-3 h-3" />
+          <button onClick={() => onReply(msg)} className="p-1 rounded-lg hover:bg-muted/60 text-muted-foreground transition-colors"><Reply className="w-3 h-3" /></button>
+          <button onClick={() => setShowReactions(!showReactions)} className="p-1 rounded-lg hover:bg-muted/60 text-muted-foreground transition-colors"><Smile className="w-3 h-3" /></button>
+          <button onClick={() => onCopy?.(msg.content)} className="p-1 rounded-lg hover:bg-muted/60 text-muted-foreground transition-colors"><Copy className="w-3 h-3" /></button>
+          <button onClick={() => onForward?.(msg)} className="p-1 rounded-lg hover:bg-muted/60 text-muted-foreground transition-colors"><Forward className="w-3 h-3" /></button>
+          <button onClick={() => onStar?.(msg.id)} className="p-1 rounded-lg hover:bg-muted/60 text-muted-foreground transition-colors">
+            {isBookmarked ? <BookmarkCheck className="w-3 h-3 text-accent" /> : <Bookmark className="w-3 h-3" />}
           </button>
         </div>
       )}
@@ -332,8 +345,8 @@ MessageBubble.displayName = 'MessageBubble';
 
 /* ─── Emoji Quick Picker ─── */
 const EmojiQuickPicker = React.memo(({ onSelect, isRTL }: { onSelect: (e: string) => void; isRTL: boolean }) => (
-  <div className="absolute bottom-full mb-2 start-0 bg-card border border-border/40 rounded-2xl shadow-xl p-2.5 animate-in fade-in-0 slide-in-from-bottom-2 duration-200">
-    <p className="text-[9px] text-muted-foreground font-medium mb-1.5 px-1">{isRTL ? 'رموز سريعة' : 'Quick Emoji'}</p>
+  <div className="absolute bottom-full mb-2 start-0 bg-card border border-border/40 rounded-2xl shadow-xl p-3 animate-in fade-in-0 slide-in-from-bottom-2 duration-200 z-20">
+    <p className="text-[9px] text-muted-foreground font-medium mb-2 px-1">{isRTL ? 'رموز سريعة' : 'Quick Emoji'}</p>
     <div className="grid grid-cols-6 gap-0.5">
       {EMOJI_QUICK.map(e => (
         <button key={e} onClick={() => onSelect(e)} className="w-8 h-8 rounded-lg hover:bg-muted/60 flex items-center justify-center text-base transition-all hover:scale-110">
@@ -346,16 +359,31 @@ const EmojiQuickPicker = React.memo(({ onSelect, isRTL }: { onSelect: (e: string
 EmojiQuickPicker.displayName = 'EmojiQuickPicker';
 
 /* ─── Chat Info Panel ─── */
-const ChatInfoPanel = React.memo(({ conv, messages, isRTL, onClose }: { conv: any; messages: any[]; isRTL: boolean; onClose: () => void }) => {
+const ChatInfoPanel = React.memo(({ conv, messages, isRTL, language, onClose }: { conv: any; messages: any[]; isRTL: boolean; language: string; onClose: () => void }) => {
   const totalMsgs = messages.length;
-  const myMsgs = messages.filter((m: any) => m.sender_id !== conv?.participant_1 && m.sender_id !== conv?.participant_2).length;
   const attachments = messages.filter((m: any) => m.attachment_url);
   const images = attachments.filter((m: any) => m.message_type === 'image');
   const files = attachments.filter((m: any) => m.message_type === 'file');
   const firstMsg = messages[0];
+  const lastMsg = messages[messages.length - 1];
+
+  // Activity heatmap data (messages per day of week)
+  const activityByDay = useMemo(() => {
+    const days = [0, 0, 0, 0, 0, 0, 0];
+    messages.forEach((m: any) => {
+      const d = new Date(m.created_at).getDay();
+      days[d]++;
+    });
+    const max = Math.max(...days, 1);
+    return days.map(v => Math.round((v / max) * 100));
+  }, [messages]);
+
+  const dayLabels = isRTL
+    ? ['أحد', 'اثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة', 'سبت']
+    : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   return (
-    <div className="w-72 border-s border-border/30 bg-card flex flex-col animate-in slide-in-from-end duration-300 shrink-0 hidden lg:flex">
+    <div className="w-80 border-s border-border/30 bg-card flex flex-col animate-in slide-in-from-end duration-300 shrink-0 hidden lg:flex">
       <div className="p-4 border-b border-border/20 flex items-center justify-between">
         <h3 className="font-heading font-bold text-sm flex items-center gap-1.5">
           <Info className="w-4 h-4 text-primary" />
@@ -365,10 +393,10 @@ const ChatInfoPanel = React.memo(({ conv, messages, isRTL, onClose }: { conv: an
       </div>
 
       <ScrollArea className="flex-1">
-        <div className="p-4 space-y-4">
+        <div className="p-4 space-y-5">
           {/* Profile */}
-          <div className="text-center space-y-2">
-            <Avatar className="w-20 h-20 mx-auto ring-4 ring-border/10">
+          <div className="text-center space-y-3">
+            <Avatar className="w-20 h-20 mx-auto ring-4 ring-border/10 shadow-lg">
               <AvatarImage src={conv?.other_profile?.avatar_url} />
               <AvatarFallback className="bg-gradient-to-br from-accent/20 to-primary/10 text-accent font-bold text-xl">
                 {conv?.other_profile?.full_name?.charAt(0) || '؟'}
@@ -377,37 +405,90 @@ const ChatInfoPanel = React.memo(({ conv, messages, isRTL, onClose }: { conv: an
             <div>
               <h4 className="font-heading font-bold text-sm">{conv?.other_profile?.full_name}</h4>
               <p className="text-[11px] text-muted-foreground">{conv?.other_profile?.email || ''}</p>
+              <Badge variant="outline" className="text-[9px] mt-1.5 gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                {isRTL ? 'متصل' : 'Online'}
+              </Badge>
             </div>
           </div>
 
           {/* Stats */}
           <div className="grid grid-cols-2 gap-2">
             {[
-              { label: isRTL ? 'الرسائل' : 'Messages', value: totalMsgs, icon: MessageCircle },
-              { label: isRTL ? 'المرفقات' : 'Attachments', value: attachments.length, icon: Paperclip },
-              { label: isRTL ? 'الصور' : 'Images', value: images.length, icon: ImageIcon },
-              { label: isRTL ? 'الملفات' : 'Files', value: files.length, icon: FileText },
+              { label: isRTL ? 'الرسائل' : 'Messages', value: totalMsgs, icon: MessageCircle, color: 'text-primary bg-primary/10' },
+              { label: isRTL ? 'المرفقات' : 'Attachments', value: attachments.length, icon: Paperclip, color: 'text-amber-600 bg-amber-500/10' },
+              { label: isRTL ? 'الصور' : 'Images', value: images.length, icon: ImageIcon, color: 'text-blue-600 bg-blue-500/10' },
+              { label: isRTL ? 'الملفات' : 'Files', value: files.length, icon: FileText, color: 'text-emerald-600 bg-emerald-500/10' },
             ].map((s, i) => (
               <div key={i} className="p-2.5 rounded-xl bg-muted/20 border border-border/20 text-center">
-                <s.icon className="w-3.5 h-3.5 text-muted-foreground mx-auto mb-1" />
+                <div className={`w-7 h-7 rounded-lg mx-auto mb-1 flex items-center justify-center ${s.color}`}>
+                  <s.icon className="w-3.5 h-3.5" />
+                </div>
                 <p className="text-sm font-bold">{s.value}</p>
                 <p className="text-[9px] text-muted-foreground">{s.label}</p>
               </div>
             ))}
           </div>
 
-          {/* First message date */}
+          {/* Activity Heatmap */}
+          <div className="p-3 rounded-xl bg-muted/10 border border-border/20">
+            <p className="text-[10px] font-bold text-muted-foreground mb-2 flex items-center gap-1.5">
+              <TrendingUp className="w-3 h-3" />
+              {isRTL ? 'نشاط المحادثة' : 'Chat Activity'}
+            </p>
+            <div className="flex items-end gap-1 h-12">
+              {activityByDay.map((pct, i) => (
+                <Tooltip key={i}>
+                  <TooltipTrigger asChild>
+                    <div className="flex-1 flex flex-col items-center gap-1">
+                      <div className="w-full rounded-sm bg-accent/20 relative" style={{ height: `${Math.max(pct * 0.4, 2)}px` }}>
+                        <div className="absolute inset-0 rounded-sm bg-accent" style={{ height: '100%' }} />
+                      </div>
+                      <span className="text-[8px] text-muted-foreground">{dayLabels[i]}</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent className="text-[10px]">{pct}%</TooltipContent>
+                </Tooltip>
+              ))}
+            </div>
+          </div>
+
+          {/* Timeline */}
           {firstMsg && (
-            <div className="text-center p-3 rounded-xl bg-muted/10 border border-border/20">
-              <p className="text-[10px] text-muted-foreground">{isRTL ? 'بداية المحادثة' : 'Conversation started'}</p>
-              <p className="text-xs font-medium mt-0.5">{format(new Date(firstMsg.created_at), 'PPP', { locale: isRTL ? ar : enUS })}</p>
+            <div className="space-y-2">
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{isRTL ? 'التسلسل الزمني' : 'Timeline'}</p>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-xs">
+                  <div className="w-6 h-6 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0">
+                    <Calendar className="w-3 h-3 text-emerald-500" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-muted-foreground">{isRTL ? 'بداية المحادثة' : 'Started'}</p>
+                    <p className="text-[11px] font-medium">{format(new Date(firstMsg.created_at), 'PP', { locale: isRTL ? ar : enUS })}</p>
+                  </div>
+                </div>
+                {lastMsg && lastMsg.id !== firstMsg.id && (
+                  <div className="flex items-center gap-2 text-xs">
+                    <div className="w-6 h-6 rounded-full bg-blue-500/10 flex items-center justify-center shrink-0">
+                      <Clock className="w-3 h-3 text-blue-500" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-muted-foreground">{isRTL ? 'آخر رسالة' : 'Last message'}</p>
+                      <p className="text-[11px] font-medium">{format(new Date(lastMsg.created_at), 'PP p', { locale: isRTL ? ar : enUS })}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
           {/* Shared media */}
           {images.length > 0 && (
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">{isRTL ? 'الصور المشتركة' : 'Shared Images'}</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2 flex items-center gap-1">
+                <ImageIcon className="w-3 h-3" />
+                {isRTL ? 'الصور المشتركة' : 'Shared Images'}
+              </p>
               <div className="grid grid-cols-3 gap-1.5">
                 {images.slice(0, 9).map((m: any) => (
                   <a key={m.id} href={m.attachment_url} target="_blank" rel="noopener noreferrer"
@@ -425,13 +506,17 @@ const ChatInfoPanel = React.memo(({ conv, messages, isRTL, onClose }: { conv: an
           {/* Shared files */}
           {files.length > 0 && (
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">{isRTL ? 'الملفات المشتركة' : 'Shared Files'}</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2 flex items-center gap-1">
+                <FileText className="w-3 h-3" />
+                {isRTL ? 'الملفات المشتركة' : 'Shared Files'}
+              </p>
               <div className="space-y-1">
                 {files.slice(0, 5).map((m: any) => (
                   <a key={m.id} href={m.attachment_url} target="_blank" rel="noopener noreferrer"
                     className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/30 transition-colors">
                     <FileText className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                     <span className="text-[11px] truncate">{m.content?.replace('📎 ', '') || 'File'}</span>
+                    <Download className="w-3 h-3 text-muted-foreground ms-auto shrink-0" />
                   </a>
                 ))}
               </div>
@@ -466,13 +551,15 @@ const DashboardMessages = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
   const [replyTo, setReplyTo] = useState<any>(null);
-  const [convFilter, setConvFilter] = useState<'all' | 'unread' | 'starred'>('all');
+  const [convFilter, setConvFilter] = useState<'all' | 'unread' | 'starred' | 'pinned'>('all');
   const [showEmoji, setShowEmoji] = useState(false);
   const [showInfoPanel, setShowInfoPanel] = useState(false);
+  const [forwardMsg, setForwardMsg] = useState<any>(null);
 
-  // Local state for pinned/starred conversations and message reactions/stars
+  // Local state for pinned/starred/muted conversations and message reactions/stars
   const [pinnedConvs, setPinnedConvs] = useState<Set<string>>(new Set());
   const [starredConvs, setStarredConvs] = useState<Set<string>>(new Set());
+  const [mutedConvs, setMutedConvs] = useState<Set<string>>(new Set());
   const [messageReactions, setMessageReactions] = useState<Record<string, string>>({});
   const [starredMessages, setStarredMessages] = useState<Set<string>>(new Set());
 
@@ -494,6 +581,10 @@ const DashboardMessages = () => {
   const toggleStarConv = useCallback((id: string) => {
     setStarredConvs(prev => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next; });
   }, []);
+  const toggleMuteConv = useCallback((id: string) => {
+    setMutedConvs(prev => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next; });
+    toast.success(isRTL ? 'تم تحديث الإشعارات' : 'Notifications updated');
+  }, [isRTL]);
   const handleReactMessage = useCallback((msgId: string, emoji: string | null) => {
     setMessageReactions(prev => {
       const next = { ...prev };
@@ -505,21 +596,20 @@ const DashboardMessages = () => {
   const toggleStarMessage = useCallback((msgId: string) => {
     setStarredMessages(prev => { const next = new Set(prev); next.has(msgId) ? next.delete(msgId) : next.add(msgId); return next; });
   }, []);
+  const handleForwardMessage = useCallback((msg: any) => {
+    setForwardMsg(msg);
+    toast.info(isRTL ? 'اختر محادثة لتحويل الرسالة إليها' : 'Select a conversation to forward to');
+  }, [isRTL]);
 
   /* ─── Drag & Drop ─── */
   const handleDragFile = useCallback((file: File) => {
-    if (file.size > MAX_FILE_SIZE) {
-      toast.error(isRTL ? 'حجم الملف يتجاوز 10 ميجابايت' : 'File size exceeds 10MB');
-      return;
-    }
+    if (file.size > MAX_FILE_SIZE) { toast.error(isRTL ? 'حجم الملف يتجاوز 10 ميجابايت' : 'File size exceeds 10MB'); return; }
     setAttachedFile(file);
     if (IMAGE_TYPES.includes(file.type)) {
       const reader = new FileReader();
       reader.onload = (ev) => setAttachedPreview(ev.target?.result as string);
       reader.readAsDataURL(file);
-    } else {
-      setAttachedPreview(null);
-    }
+    } else { setAttachedPreview(null); }
   }, [isRTL]);
 
   const handleDragEnter = useCallback((e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); dragCounter.current++; if (e.dataTransfer.types.includes('Files')) setIsDragging(true); }, []);
@@ -544,11 +634,11 @@ const DashboardMessages = () => {
       allIds.delete(user!.id);
 
       if (allIds.size > 0) {
-        const { data: profiles } = await supabase.from('profiles').select('user_id, full_name, avatar_url').in('user_id', Array.from(allIds));
+        const { data: profiles } = await supabase.from('profiles').select('user_id, full_name, avatar_url, email').in('user_id', Array.from(allIds));
         const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
 
         if (isSuperAdmin) {
-          const { data: allProfiles } = await supabase.from('profiles').select('user_id, full_name, avatar_url').in('user_id', Array.from(new Set(data.flatMap((c: any) => [c.participant_1, c.participant_2]))));
+          const { data: allProfiles } = await supabase.from('profiles').select('user_id, full_name, avatar_url, email').in('user_id', Array.from(new Set(data.flatMap((c: any) => [c.participant_1, c.participant_2]))));
           (allProfiles || []).forEach((p: any) => { if (!profileMap.has(p.user_id)) profileMap.set(p.user_id, p); });
         }
 
@@ -593,7 +683,7 @@ const DashboardMessages = () => {
     enabled: !!selectedConversation,
   });
 
-  /* ─── Realtime: messages in selected conversation ─── */
+  /* ─── Realtime ─── */
   useEffect(() => {
     if (!selectedConversation) return;
     const channel = supabase
@@ -607,7 +697,6 @@ const DashboardMessages = () => {
     return () => { supabase.removeChannel(channel); };
   }, [selectedConversation, user?.id, queryClient]);
 
-  /* ─── Realtime: conversations list ─── */
   useEffect(() => {
     if (!user) return;
     const channel = supabase
@@ -632,13 +721,8 @@ const DashboardMessages = () => {
     }
   }, [messages, selectedConversation, user, queryClient]);
 
-  /* ─── Scroll to bottom ─── */
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
-
-  /* ─── Focus input when conversation selected ─── */
-  useEffect(() => {
-    if (selectedConversation) setTimeout(() => inputRef.current?.focus(), 100);
-  }, [selectedConversation]);
+  useEffect(() => { if (selectedConversation) setTimeout(() => inputRef.current?.focus(), 100); }, [selectedConversation]);
 
   /* ─── File handling ─── */
   const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -694,25 +778,18 @@ const DashboardMessages = () => {
       setReplyTo(null);
       setIsUploading(false);
       setShowEmoji(false);
+      setForwardMsg(null);
       queryClient.invalidateQueries({ queryKey: ['messages', selectedConversation] });
       queryClient.invalidateQueries({ queryKey: ['conversations', user?.id] });
     },
-    onError: () => { setIsUploading(false); toast.error(isRTL ? 'فشل إرسال الرسالة' : 'Failed to send message'); },
+    onError: () => { setIsUploading(false); toast.error(isRTL ? 'فشل إرسال الرسالة' : 'Failed to send'); },
   });
 
   const handleSend = useCallback(() => { if ((!messageText.trim() && !attachedFile) || !selectedConversation) return; sendMutation.mutate(); }, [messageText, attachedFile, selectedConversation, sendMutation]);
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }, [handleSend]);
   const handleReply = useCallback((msg: any) => { setReplyTo(msg); inputRef.current?.focus(); }, []);
-  const handleCopy = useCallback((text: string) => {
-    if (!text) return;
-    navigator.clipboard.writeText(text);
-    toast.success(isRTL ? 'تم النسخ' : 'Copied');
-  }, [isRTL]);
-  const handleEmojiSelect = useCallback((emoji: string) => {
-    setMessageText(prev => prev + emoji);
-    setShowEmoji(false);
-    inputRef.current?.focus();
-  }, []);
+  const handleCopy = useCallback((text: string) => { if (!text) return; navigator.clipboard.writeText(text); toast.success(isRTL ? 'تم النسخ' : 'Copied'); }, [isRTL]);
+  const handleEmojiSelect = useCallback((emoji: string) => { setMessageText(prev => prev + emoji); setShowEmoji(false); inputRef.current?.focus(); }, []);
 
   /* ─── Filter & Select ─── */
   const filteredConversations = useMemo(() => {
@@ -720,8 +797,8 @@ const DashboardMessages = () => {
     if (deferredSearch) result = result.filter((c: any) => c.other_profile?.full_name?.toLowerCase().includes(deferredSearch.toLowerCase()));
     if (convFilter === 'unread') result = result.filter((c: any) => (unreadCounts as Record<string, number>)[c.id] > 0);
     if (convFilter === 'starred') result = result.filter((c: any) => starredConvs.has(c.id));
+    if (convFilter === 'pinned') result = result.filter((c: any) => pinnedConvs.has(c.id));
 
-    // Sort: pinned first
     result = [...result].sort((a: any, b: any) => {
       const aPinned = pinnedConvs.has(a.id) ? 1 : 0;
       const bPinned = pinnedConvs.has(b.id) ? 1 : 0;
@@ -738,28 +815,19 @@ const DashboardMessages = () => {
     return messages.filter((m: any) => m.content?.toLowerCase().includes(chatSearchTerm.toLowerCase()));
   }, [messages, chatSearchTerm]);
 
-  // Enrich messages with reaction/star state
   const enrichedMessages = useMemo(() => {
     const source = chatSearchTerm ? filteredMessages : messages;
-    return source.map((m: any) => ({
-      ...m,
-      _reaction: messageReactions[m.id] || null,
-      _starred: starredMessages.has(m.id),
-    }));
+    return source.map((m: any) => ({ ...m, _reaction: messageReactions[m.id] || null, _starred: starredMessages.has(m.id) }));
   }, [messages, filteredMessages, chatSearchTerm, messageReactions, starredMessages]);
 
-  /* ─── Date-grouped messages ─── */
   const groupedMessages = useMemo(() => {
     const groups: { date: string; label: string; messages: any[] }[] = [];
     enrichedMessages.forEach((msg: any) => {
       const d = new Date(msg.created_at);
       const dateKey = format(d, 'yyyy-MM-dd');
       const last = groups[groups.length - 1];
-      if (last && last.date === dateKey) {
-        last.messages.push(msg);
-      } else {
-        groups.push({ date: dateKey, label: getDateLabel(msg.created_at, language), messages: [msg] });
-      }
+      if (last && last.date === dateKey) last.messages.push(msg);
+      else groups.push({ date: dateKey, label: getDateLabel(msg.created_at, language), messages: [msg] });
     });
     return groups;
   }, [enrichedMessages, language]);
@@ -774,23 +842,31 @@ const DashboardMessages = () => {
 
   return (
     <DashboardLayout>
-      <TooltipProvider>
+      <TooltipProvider delayDuration={200}>
         <div className="h-[calc(100vh-8rem)]">
           {/* ─── Stats Bar ─── */}
           <div className="flex items-center gap-2 mb-3 overflow-x-auto pb-1 no-scrollbar">
             {[
-              { icon: MessageSquare, label: isRTL ? 'المحادثات' : 'Conversations', value: stats.total, gradient: 'from-primary/15 to-primary/5', iconBg: 'bg-primary/15 text-primary' },
-              { icon: Clock, label: isRTL ? 'غير مقروءة' : 'Unread', value: stats.unread, gradient: 'from-amber-500/15 to-amber-500/5', iconBg: 'bg-amber-500/15 text-amber-600' },
-              { icon: Star, label: isRTL ? 'مميزة' : 'Starred', value: stats.starred, gradient: 'from-yellow-500/15 to-yellow-500/5', iconBg: 'bg-yellow-500/15 text-yellow-600' },
-              { icon: Pin, label: isRTL ? 'مثبتة' : 'Pinned', value: stats.pinned, gradient: 'from-blue-500/15 to-blue-500/5', iconBg: 'bg-blue-500/15 text-blue-600' },
+              { icon: MessageSquare, label: isRTL ? 'المحادثات' : 'Chats', value: stats.total, color: 'text-primary bg-primary/10', filter: 'all' as const },
+              { icon: Clock, label: isRTL ? 'غير مقروءة' : 'Unread', value: stats.unread, color: 'text-amber-600 bg-amber-500/10', filter: 'unread' as const },
+              { icon: Star, label: isRTL ? 'مميزة' : 'Starred', value: stats.starred, color: 'text-yellow-600 bg-yellow-500/10', filter: 'starred' as const },
+              { icon: Pin, label: isRTL ? 'مثبتة' : 'Pinned', value: stats.pinned, color: 'text-blue-600 bg-blue-500/10', filter: 'pinned' as const },
             ].map((s, i) => (
-              <div key={i} className={`flex items-center gap-2.5 px-3 py-2 rounded-xl border border-border/30 bg-gradient-to-r ${s.gradient} shrink-0 transition-all hover:shadow-sm`}>
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${s.iconBg}`}><s.icon className="w-4 h-4" /></div>
+              <button
+                key={i}
+                onClick={() => setConvFilter(s.filter)}
+                className={`flex items-center gap-2.5 px-3 py-2 rounded-xl border shrink-0 transition-all hover:shadow-sm cursor-pointer ${
+                  convFilter === s.filter
+                    ? 'border-accent/40 bg-accent/5 shadow-sm'
+                    : 'border-border/30 bg-card hover:bg-muted/30'
+                }`}
+              >
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${s.color}`}><s.icon className="w-4 h-4" /></div>
                 <div>
                   <p className="text-base font-bold leading-none">{s.value}</p>
                   <p className="text-[10px] text-muted-foreground mt-0.5">{s.label}</p>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
 
@@ -801,7 +877,7 @@ const DashboardMessages = () => {
               <div className="p-3 border-b border-border/30 space-y-2.5">
                 <div className="flex items-center justify-between">
                   <h2 className="font-heading font-bold text-base flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-lg bg-accent/10 flex items-center justify-center">
+                    <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-accent/20 to-primary/10 flex items-center justify-center">
                       <MessageSquare className="w-4 h-4 text-accent" />
                     </div>
                     {isRTL ? 'المحادثات' : 'Messages'}
@@ -817,10 +893,11 @@ const DashboardMessages = () => {
                     { key: 'all' as const, icon: Users, label: isRTL ? 'الكل' : 'All' },
                     { key: 'unread' as const, icon: Archive, label: isRTL ? 'غير مقروء' : 'Unread' },
                     { key: 'starred' as const, icon: Star, label: isRTL ? 'مميزة' : 'Starred' },
+                    { key: 'pinned' as const, icon: Pin, label: isRTL ? 'مثبتة' : 'Pinned' },
                   ].map(f => (
                     <button
                       key={f.key}
-                      className={`flex-1 px-2 py-1.5 text-[10px] font-medium transition-all rounded-lg flex items-center justify-center gap-1
+                      className={`flex-1 px-1.5 py-1.5 text-[10px] font-medium transition-all rounded-lg flex items-center justify-center gap-1
                         ${convFilter === f.key ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                       onClick={() => setConvFilter(f.key)}
                     >
@@ -838,8 +915,27 @@ const DashboardMessages = () => {
                     placeholder={isRTL ? 'بحث في المحادثات...' : 'Search conversations...'}
                     className="ps-9 h-9 text-xs bg-muted/30 border-border/20 rounded-xl focus:bg-background transition-colors"
                   />
+                  {searchTerm && (
+                    <button onClick={() => handleSearchChange('')} className="absolute top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" style={{ [isRTL ? 'left' : 'right']: '10px' }}>
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                 </div>
               </div>
+
+              {/* Forward mode banner */}
+              {forwardMsg && (
+                <div className="px-3 py-2 bg-accent/10 border-b border-accent/20 flex items-center gap-2">
+                  <Forward className="w-4 h-4 text-accent shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-semibold text-accent">{isRTL ? 'اختر محادثة للتحويل' : 'Select conversation to forward'}</p>
+                    <p className="text-[10px] text-muted-foreground truncate">{forwardMsg.content?.substring(0, 40)}</p>
+                  </div>
+                  <Button variant="ghost" size="icon" className="w-6 h-6 shrink-0" onClick={() => setForwardMsg(null)}>
+                    <X className="w-3 h-3" />
+                  </Button>
+                </div>
+              )}
 
               {/* List */}
               <ScrollArea className="flex-1">
@@ -861,8 +957,7 @@ const DashboardMessages = () => {
                         { emoji: '⭐', text: isRTL ? 'ميّز المحادثات المهمة بنجمة' : 'Star important conversations' },
                       ].map((tip, i) => (
                         <div key={i} className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                          <span>{tip.emoji}</span>
-                          <span>{tip.text}</span>
+                          <span>{tip.emoji}</span><span>{tip.text}</span>
                         </div>
                       ))}
                     </div>
@@ -874,18 +969,27 @@ const DashboardMessages = () => {
                   <div className="divide-y divide-border/10">
                     {filteredConversations.map((conv: any) => (
                       <ConversationItem
-                        key={conv.id}
-                        conv={conv}
+                        key={conv.id} conv={conv}
                         isSelected={conv.id === selectedConversation}
                         unread={(unreadCounts as Record<string, number>)[conv.id] || 0}
-                        isRTL={isRTL}
-                        language={language}
-                        isSuperAdmin={isSuperAdmin}
+                        isRTL={isRTL} language={language} isSuperAdmin={isSuperAdmin}
                         isPinned={pinnedConvs.has(conv.id)}
                         isStarred={starredConvs.has(conv.id)}
-                        onClick={() => setSelectedConversation(conv.id)}
+                        isMuted={mutedConvs.has(conv.id)}
+                        onClick={() => {
+                          if (forwardMsg) {
+                            // Forward to this conversation
+                            setSelectedConversation(conv.id);
+                            setMessageText(`↪️ ${forwardMsg.content || ''}`);
+                            setForwardMsg(null);
+                            setTimeout(() => inputRef.current?.focus(), 100);
+                          } else {
+                            setSelectedConversation(conv.id);
+                          }
+                        }}
                         onPin={togglePinConv}
                         onStar={toggleStarConv}
+                        onMute={toggleMuteConv}
                       />
                     ))}
                   </div>
@@ -927,9 +1031,9 @@ const DashboardMessages = () => {
                         { icon: Shield, label: isRTL ? 'مشفّرة' : 'Encrypted', desc: isRTL ? 'محادثات آمنة' : 'Secure chats' },
                         { icon: Paperclip, label: isRTL ? 'مرفقات' : 'Attachments', desc: isRTL ? 'صور وملفات' : 'Images & files' },
                         { icon: Sparkles, label: isRTL ? 'قوالب' : 'Templates', desc: isRTL ? 'ردود جاهزة' : 'Quick replies' },
-                        { icon: Star, label: isRTL ? 'مفضلة' : 'Favorites', desc: isRTL ? 'محادثات مميزة' : 'Star chats' },
+                        { icon: Forward, label: isRTL ? 'تحويل' : 'Forward', desc: isRTL ? 'إعادة توجيه' : 'Forward msgs' },
                       ].map((feat, i) => (
-                        <div key={i} className="p-3 rounded-xl bg-card border border-border/30 text-center">
+                        <div key={i} className="p-3 rounded-xl bg-card border border-border/30 text-center hover:border-accent/30 transition-colors">
                           <feat.icon className="w-5 h-5 text-accent mx-auto mb-1.5" />
                           <p className="text-xs font-heading font-bold">{feat.label}</p>
                           <p className="text-[9px] text-muted-foreground">{feat.desc}</p>
@@ -956,7 +1060,8 @@ const DashboardMessages = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-heading font-bold text-sm truncate">{selectedConv?.other_profile?.full_name || (isRTL ? 'مستخدم' : 'User')}</h3>
-                      <p className="text-[10px] text-emerald-500 font-medium">
+                      <p className="text-[10px] text-emerald-500 font-medium flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                         {isRTL ? 'متصل الآن' : 'Online'}
                       </p>
                     </div>
@@ -967,7 +1072,7 @@ const DashboardMessages = () => {
                             <Search className="w-4 h-4" />
                           </Button>
                         </TooltipTrigger>
-                        <TooltipContent side="bottom" className="text-xs">{isRTL ? 'بحث' : 'Search'}</TooltipContent>
+                        <TooltipContent side="bottom" className="text-xs">{isRTL ? 'بحث في الرسائل' : 'Search messages'}</TooltipContent>
                       </Tooltip>
                       <Tooltip>
                         <TooltipTrigger asChild>
@@ -975,27 +1080,32 @@ const DashboardMessages = () => {
                             <Info className="w-4 h-4" />
                           </Button>
                         </TooltipTrigger>
-                        <TooltipContent side="bottom" className="text-xs">{isRTL ? 'تفاصيل' : 'Details'}</TooltipContent>
+                        <TooltipContent side="bottom" className="text-xs">{isRTL ? 'تفاصيل المحادثة' : 'Chat details'}</TooltipContent>
                       </Tooltip>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon" className="w-8 h-8 rounded-xl"><MoreVertical className="w-4 h-4" /></Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align={isRTL ? 'start' : 'end'} className="rounded-xl min-w-[180px]">
-                          <DropdownMenuItem onClick={() => navigate(`/${selectedConv?.other_profile?.username || ''}`)} className="rounded-lg text-xs">
-                            <Eye className="w-3.5 h-3.5 me-2" />{isRTL ? 'عرض الملف الشخصي' : 'View profile'}
+                          <DropdownMenuItem onClick={() => navigate(`/${selectedConv?.other_profile?.username || ''}`)} className="rounded-lg text-xs gap-2">
+                            <Eye className="w-3.5 h-3.5" />{isRTL ? 'عرض الملف الشخصي' : 'View profile'}
                           </DropdownMenuItem>
-                          <DropdownMenuItem className="rounded-lg text-xs" onClick={() => togglePinConv(selectedConversation!)}>
-                            <Pin className={`w-3.5 h-3.5 me-2 ${pinnedConvs.has(selectedConversation!) ? 'fill-current' : ''}`} />
-                            {pinnedConvs.has(selectedConversation!) ? (isRTL ? 'إلغاء التثبيت' : 'Unpin') : (isRTL ? 'تثبيت المحادثة' : 'Pin conversation')}
+                          <DropdownMenuItem className="rounded-lg text-xs gap-2" onClick={() => togglePinConv(selectedConversation!)}>
+                            <Pin className={`w-3.5 h-3.5 ${pinnedConvs.has(selectedConversation!) ? 'fill-current text-accent' : ''}`} />
+                            {pinnedConvs.has(selectedConversation!) ? (isRTL ? 'إلغاء التثبيت' : 'Unpin') : (isRTL ? 'تثبيت' : 'Pin')}
                           </DropdownMenuItem>
-                          <DropdownMenuItem className="rounded-lg text-xs" onClick={() => toggleStarConv(selectedConversation!)}>
-                            <Star className={`w-3.5 h-3.5 me-2 ${starredConvs.has(selectedConversation!) ? 'fill-amber-500 text-amber-500' : ''}`} />
-                            {starredConvs.has(selectedConversation!) ? (isRTL ? 'إزالة من المميزة' : 'Unstar') : (isRTL ? 'تمييز بنجمة' : 'Star conversation')}
+                          <DropdownMenuItem className="rounded-lg text-xs gap-2" onClick={() => toggleStarConv(selectedConversation!)}>
+                            <Star className={`w-3.5 h-3.5 ${starredConvs.has(selectedConversation!) ? 'fill-amber-500 text-amber-500' : ''}`} />
+                            {starredConvs.has(selectedConversation!) ? (isRTL ? 'إزالة النجمة' : 'Unstar') : (isRTL ? 'تمييز بنجمة' : 'Star')}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="rounded-lg text-xs gap-2" onClick={() => toggleMuteConv(selectedConversation!)}>
+                            {mutedConvs.has(selectedConversation!)
+                              ? <><Bell className="w-3.5 h-3.5" />{isRTL ? 'تفعيل الإشعارات' : 'Unmute'}</>
+                              : <><BellOff className="w-3.5 h-3.5" />{isRTL ? 'كتم الإشعارات' : 'Mute'}</>}
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem className="rounded-lg text-xs" onClick={() => setShowInfoPanel(true)}>
-                            <BarChart3 className="w-3.5 h-3.5 me-2" />{isRTL ? 'إحصائيات المحادثة' : 'Chat statistics'}
+                          <DropdownMenuItem className="rounded-lg text-xs gap-2" onClick={() => setShowInfoPanel(true)}>
+                            <BarChart3 className="w-3.5 h-3.5" />{isRTL ? 'إحصائيات المحادثة' : 'Chat statistics'}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -1041,7 +1151,7 @@ const DashboardMessages = () => {
                             </div>
                             {group.messages.map((msg: any) => (
                               <MessageBubble key={msg.id} msg={msg} isMine={msg.sender_id === user?.id} language={language} isRTL={isRTL}
-                                onReply={handleReply} onCopy={handleCopy} onReact={handleReactMessage} onStar={toggleStarMessage} />
+                                onReply={handleReply} onCopy={handleCopy} onReact={handleReactMessage} onStar={toggleStarMessage} onForward={handleForwardMessage} />
                             ))}
                           </React.Fragment>
                         ))}
@@ -1050,7 +1160,7 @@ const DashboardMessages = () => {
                     )}
                   </ScrollArea>
 
-                  {/* ─── Scroll to bottom button ─── */}
+                  {/* ─── Scroll to bottom ─── */}
                   {messages.length > 20 && (
                     <button
                       onClick={() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })}
@@ -1115,23 +1225,23 @@ const DashboardMessages = () => {
                               <Paperclip className="w-4 h-4" />
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent side="top" className="text-xs">{isRTL ? 'إرفاق ملف' : 'Attach file'}</TooltipContent>
+                          <TooltipContent side="top" className="text-xs">{isRTL ? 'إرفاق ملف' : 'Attach'}</TooltipContent>
                         </Tooltip>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" className="shrink-0 h-9 w-9 rounded-xl text-muted-foreground hover:text-foreground" onClick={() => { setShowEmoji(!showEmoji); setShowTemplates(false); }}>
+                            <Button variant="ghost" size="icon" className={`shrink-0 h-9 w-9 rounded-xl text-muted-foreground hover:text-foreground ${showEmoji ? 'bg-muted text-foreground' : ''}`} onClick={() => { setShowEmoji(!showEmoji); setShowTemplates(false); }}>
                               <Smile className="w-4 h-4" />
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent side="top" className="text-xs">{isRTL ? 'رموز تعبيرية' : 'Emoji'}</TooltipContent>
+                          <TooltipContent side="top" className="text-xs">{isRTL ? 'رموز' : 'Emoji'}</TooltipContent>
                         </Tooltip>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" className="shrink-0 h-9 w-9 rounded-xl text-muted-foreground hover:text-accent" onClick={() => { setShowTemplates(!showTemplates); setShowEmoji(false); }}>
+                            <Button variant="ghost" size="icon" className={`shrink-0 h-9 w-9 rounded-xl text-muted-foreground hover:text-accent ${showTemplates ? 'bg-muted text-accent' : ''}`} onClick={() => { setShowTemplates(!showTemplates); setShowEmoji(false); }}>
                               <Sparkles className="w-4 h-4" />
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent side="top" className="text-xs">{isRTL ? 'قوالب الرسائل' : 'Templates'}</TooltipContent>
+                          <TooltipContent side="top" className="text-xs">{isRTL ? 'قوالب' : 'Templates'}</TooltipContent>
                         </Tooltip>
                       </div>
 
@@ -1168,7 +1278,7 @@ const DashboardMessages = () => {
 
             {/* ═══ Info Panel ═══ */}
             {showInfoPanel && selectedConversation && (
-              <ChatInfoPanel conv={selectedConv} messages={messages} isRTL={isRTL} onClose={() => setShowInfoPanel(false)} />
+              <ChatInfoPanel conv={selectedConv} messages={messages} isRTL={isRTL} language={language} onClose={() => setShowInfoPanel(false)} />
             )}
           </div>
         </div>
