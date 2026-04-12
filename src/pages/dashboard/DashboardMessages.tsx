@@ -19,6 +19,7 @@ import {
   BarChart3, MessageCircle, TrendingUp, Zap, Shield, Forward, Mic, MicOff,
   Volume2, VolumeX, Bell, BellOff, AlertCircle, UserPlus, AtSign, Link2,
   Bookmark, BookmarkCheck, Filter, LayoutList, Calendar, Globe,
+  Timer, Tag, Palette, FileDown, ClockIcon,
 } from 'lucide-react';
 import { format, formatDistanceToNow, isToday, isYesterday, differenceInMinutes } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
