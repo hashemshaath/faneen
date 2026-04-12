@@ -58,8 +58,8 @@ export const exportComparePDF = async (data: ExportData) => {
     head: [overviewHeaders],
     body: overviewRows,
     theme: 'grid',
-    headStyles: { fillColor: [200, 167, 103], textColor: [30, 30, 30], fontStyle: 'bold', halign: 'center', ...( data.isRTL ? { font: 'Amiri' } : {}) },
-    styles: { halign: 'center', fontSize: 9, cellPadding: 3, ...(data.isRTL ? { font: 'Amiri' } : {}) },
+    headStyles: { fillColor: [200, 167, 103], textColor: [30, 30, 30], fontStyle: 'bold', halign: 'center', ...( data.isRTL ? { font: 'ArabicFont' } : {}) },
+    styles: { halign: 'center', fontSize: 9, cellPadding: 3, ...(data.isRTL ? { font: 'ArabicFont' } : {}) },
     alternateRowStyles: { fillColor: [248, 248, 248] },
   });
 
@@ -85,8 +85,8 @@ export const exportComparePDF = async (data: ExportData) => {
       head: [serviceHeaders],
       body: serviceRows,
       theme: 'grid',
-      headStyles: { fillColor: [200, 167, 103], textColor: [30, 30, 30], fontStyle: 'bold', halign: 'center', ...(data.isRTL ? { font: 'Amiri' } : {}) },
-      styles: { halign: 'center', fontSize: 9, cellPadding: 3, ...(data.isRTL ? { font: 'Amiri' } : {}) },
+      headStyles: { fillColor: [200, 167, 103], textColor: [30, 30, 30], fontStyle: 'bold', halign: 'center', ...(data.isRTL ? { font: 'ArabicFont' } : {}) },
+      styles: { halign: 'center', fontSize: 9, cellPadding: 3, ...(data.isRTL ? { font: 'ArabicFont' } : {}) },
       alternateRowStyles: { fillColor: [248, 248, 248] },
     });
   }
