@@ -171,10 +171,19 @@ const Blog = () => {
     return result;
   }, [posts, activeCategory, searchQuery, selectedTags, sortBy, commentCounts]);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const POSTS_PER_PAGE = 12;
+
+  // Reset page on filter change
+  const prevFilterKey = useMemo(() => `${activeCategory}-${searchQuery}-${selectedTags.join(',')}-${sortBy}`, [activeCategory, searchQuery, selectedTags, sortBy]);
+  useMemo(() => { setCurrentPage(1); }, [prevFilterKey]);
+
   const featuredPost = posts.length > 0 ? posts[0] : null;
   const regularPosts = filteredPosts.filter((p: any) => p.id !== featuredPost?.id);
   const showFeatured = featuredPost && activeCategory === 'all' && !searchQuery && selectedTags.length === 0 && sortBy === 'newest' && posts.length > 1;
-  const displayPosts = showFeatured ? regularPosts : filteredPosts;
+  const allDisplayPosts = showFeatured ? regularPosts : filteredPosts;
+  const totalPages = Math.ceil(allDisplayPosts.length / POSTS_PER_PAGE);
+  const displayPosts = allDisplayPosts.slice((currentPage - 1) * POSTS_PER_PAGE, currentPage * POSTS_PER_PAGE);
 
   const popularPosts = useMemo(() => {
     return [...posts].sort((a: any, b: any) => (b.views_count || 0) - (a.views_count || 0)).slice(0, 5);
