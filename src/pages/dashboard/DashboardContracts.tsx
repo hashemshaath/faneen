@@ -71,6 +71,7 @@ interface ContractForm {
   terms_ar: string; terms_en: string;
   supervisor_name: string; supervisor_phone: string; supervisor_email: string;
   client_email: string;
+  vat_inclusive: boolean; vat_rate: string;
 }
 
 const emptyForm: ContractForm = {
@@ -78,7 +79,7 @@ const emptyForm: ContractForm = {
   total_amount: '', currency_code: 'SAR', start_date: '', end_date: '',
   terms_ar: '', terms_en: '',
   supervisor_name: '', supervisor_phone: '', supervisor_email: '',
-  client_email: '',
+  client_email: '', vat_inclusive: false, vat_rate: '15',
 };
 
 type ViewSection = 'list' | 'create' | 'templates' | 'template-preview';
@@ -350,10 +351,19 @@ const DashboardContracts = () => {
   const [showAddMeasurement, setShowAddMeasurement] = useState<string | null>(null);
   const [showAddMilestone, setShowAddMilestone] = useState<string | null>(null);
   const [showAddAmendment, setShowAddAmendment] = useState<string | null>(null);
+  const [showAddMaintenance, setShowAddMaintenance] = useState<string | null>(null);
+  const [showAddPayment, setShowAddPayment] = useState<string | null>(null);
+  const [showAddLineItem, setShowAddLineItem] = useState<string | null>(null);
+  const [editingMilestoneId, setEditingMilestoneId] = useState<string | null>(null);
   const [measurementForm, setMeasurementForm] = useState({ name_ar: '', piece_number: '', floor_label: 'ground_floor', location_ar: '', length_mm: '', width_mm: '', quantity: '1', unit_price: '' });
   const [milestoneForm, setMilestoneForm] = useState({ title_ar: '', amount: '', due_date: '' });
   const [amendmentForm, setAmendmentForm] = useState({ title_ar: '', description_ar: '', amendment_type: 'scope_change', new_amount: '' });
+  const [maintenanceForm, setMaintenanceForm] = useState({ title_ar: '', description_ar: '', priority: 'normal' as string, scheduled_date: '' });
+  const [paymentForm, setPaymentForm] = useState({ amount: '', due_date: '', notes: '' });
+  const [lineItemForm, setLineItemForm] = useState({ name_ar: '', description_ar: '', quantity: '1', unit_price: '', item_type: 'service' });
+  const [maintenanceImages, setMaintenanceImages] = useState<File[]>([]);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const maintenanceImageRef = React.useRef<HTMLInputElement>(null);
   const [uploadingContractId, setUploadingContractId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'cards' | 'compact'>('cards');
 
@@ -473,6 +483,16 @@ const DashboardContracts = () => {
     enabled: contractIds.length > 0,
   });
 
+  const { data: allLineItems = [] } = useQuery({
+    queryKey: ['dashboard-contract-line-items', contractIds],
+    queryFn: async () => {
+      if (contractIds.length === 0) return [];
+      const { data } = await supabase.from('contract_line_items').select('*').in('contract_id', contractIds).order('sort_order');
+      return data ?? [];
+    },
+    enabled: contractIds.length > 0,
+  });
+
   const { data: profiles = [] } = useQuery({
     queryKey: ['contract-profiles', contractIds],
     queryFn: async () => {
@@ -527,11 +547,14 @@ const DashboardContracts = () => {
         area_sqm: area, total_cost: totalCost,
       });
       if (error) throw error;
-      // Update contract total from measurements
+      // Update contract total from measurements + line items
       const { data: fresh } = await supabase.from('contract_measurements').select('total_cost').eq('contract_id', contractId);
+      const { data: freshLi } = await supabase.from('contract_line_items').select('total_cost').eq('contract_id', contractId);
       if (fresh) {
-        const newTotal = fresh.reduce((s, m) => s + Number(m.total_cost || 0), 0);
-        if (newTotal > 0) await supabase.from('contracts').update({ total_amount: newTotal }).eq('id', contractId);
+        const msTotal = fresh.reduce((s, m) => s + Number(m.total_cost || 0), 0);
+        const liTotal = (freshLi ?? []).reduce((s, l) => s + Number(l.total_cost || 0), 0);
+        const grandTotal = msTotal + liTotal;
+        if (grandTotal > 0) await supabase.from('contracts').update({ total_amount: grandTotal }).eq('id', contractId);
       }
     },
     onSuccess: () => {
@@ -603,6 +626,147 @@ const DashboardContracts = () => {
     },
   });
 
+  /* ── Maintenance Request Mutation ── */
+  const addMaintenanceMutation = useMutation({
+    mutationFn: async ({ contractId }: { contractId: string }) => {
+      const contract = contracts.find((c: any) => c.id === contractId);
+      if (!contract) throw new Error('Contract not found');
+      const { data: mainReq, error } = await supabase.from('maintenance_requests').insert({
+        contract_id: contractId, client_id: contract.client_id, provider_id: contract.provider_id,
+        title_ar: maintenanceForm.title_ar, description_ar: maintenanceForm.description_ar || null,
+        priority: maintenanceForm.priority as any,
+        scheduled_date: maintenanceForm.scheduled_date || null,
+      }).select('id').single();
+      if (error) throw error;
+      // Upload maintenance images as attachments
+      for (const file of maintenanceImages) {
+        const ext = file.name.split('.').pop();
+        const path = `maintenance/${mainReq.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+        const { error: upErr } = await supabase.storage.from('contract-attachments').upload(path, file);
+        if (!upErr) {
+          const { data: urlData } = supabase.storage.from('contract-attachments').getPublicUrl(path);
+          await supabase.from('contract_attachments').insert({
+            contract_id: contractId, user_id: user!.id, file_name: file.name,
+            file_url: urlData.publicUrl, file_type: 'image',
+          });
+        }
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard-contract-maintenance'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-contract-attachments'] });
+      setShowAddMaintenance(null);
+      setMaintenanceForm({ title_ar: '', description_ar: '', priority: 'normal', scheduled_date: '' });
+      setMaintenanceImages([]);
+      toast.success(isRTL ? 'تم إرسال طلب الصيانة' : 'Maintenance request submitted');
+    },
+    onError: (err: any) => toast.error(err.message),
+  });
+
+  /* ── Add Payment Mutation ── */
+  const addPaymentMutation = useMutation({
+    mutationFn: async ({ contractId }: { contractId: string }) => {
+      // Find or create installment plan
+      let { data: plan } = await supabase.from('installment_plans').select('id').eq('contract_id', contractId).maybeSingle();
+      if (!plan) {
+        const contract = contracts.find((c: any) => c.id === contractId);
+        const { data: newPlan, error: planErr } = await supabase.from('installment_plans').insert({
+          contract_id: contractId, total_amount: Number(contract?.total_amount || 0),
+          installment_amount: Number(paymentForm.amount), number_of_installments: 1,
+          start_date: paymentForm.due_date || new Date().toISOString().split('T')[0],
+        }).select('id').single();
+        if (planErr) throw planErr;
+        plan = newPlan;
+      }
+      const existing = allPayments.filter((p: any) => p.contract_id === contractId);
+      const { error } = await supabase.from('installment_payments').insert({
+        plan_id: plan!.id, installment_number: existing.length + 1,
+        amount: Number(paymentForm.amount), due_date: paymentForm.due_date,
+        notes: paymentForm.notes || null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard-contract-payments'] });
+      setShowAddPayment(null);
+      setPaymentForm({ amount: '', due_date: '', notes: '' });
+      toast.success(isRTL ? 'تمت إضافة الدفعة' : 'Payment added');
+    },
+    onError: (err: any) => toast.error(err.message),
+  });
+
+  /* ── Mark Payment as Paid ── */
+  const markPaidMutation = useMutation({
+    mutationFn: async ({ paymentId }: { paymentId: string }) => {
+      const { error } = await supabase.from('installment_payments').update({ status: 'paid', paid_at: new Date().toISOString() }).eq('id', paymentId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard-contract-payments'] });
+      toast.success(isRTL ? 'تم تسجيل الدفع' : 'Payment recorded');
+    },
+  });
+
+  /* ── Add Line Item Mutation ── */
+  const addLineItemMutation = useMutation({
+    mutationFn: async ({ contractId }: { contractId: string }) => {
+      const existing = allLineItems.filter((li: any) => li.contract_id === contractId);
+      const { error } = await supabase.from('contract_line_items').insert({
+        contract_id: contractId, name_ar: lineItemForm.name_ar,
+        description_ar: lineItemForm.description_ar || null,
+        quantity: Number(lineItemForm.quantity), unit_price: Number(lineItemForm.unit_price),
+        item_type: lineItemForm.item_type, sort_order: existing.length + 1,
+      });
+      if (error) throw error;
+      // Recalculate contract total: measurements + line items
+      const { data: freshMs } = await supabase.from('contract_measurements').select('total_cost').eq('contract_id', contractId);
+      const { data: freshLi } = await supabase.from('contract_line_items').select('total_cost').eq('contract_id', contractId);
+      const msTotal = (freshMs ?? []).reduce((s, m) => s + Number(m.total_cost || 0), 0);
+      const liTotal = (freshLi ?? []).reduce((s, l) => s + Number(l.total_cost || 0), 0);
+      const grandTotal = msTotal + liTotal;
+      if (grandTotal > 0) await supabase.from('contracts').update({ total_amount: grandTotal }).eq('id', contractId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard-contract-line-items'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-contracts'] });
+      setShowAddLineItem(null);
+      setLineItemForm({ name_ar: '', description_ar: '', quantity: '1', unit_price: '', item_type: 'service' });
+      toast.success(isRTL ? 'تمت إضافة البند وتحديث قيمة العقد' : 'Item added & total updated');
+    },
+    onError: (err: any) => toast.error(err.message),
+  });
+
+  /* ── Delete Line Item ── */
+  const deleteLineItemMutation = useMutation({
+    mutationFn: async ({ id, contractId }: { id: string; contractId: string }) => {
+      const { error } = await supabase.from('contract_line_items').delete().eq('id', id);
+      if (error) throw error;
+      const { data: freshMs } = await supabase.from('contract_measurements').select('total_cost').eq('contract_id', contractId);
+      const { data: freshLi } = await supabase.from('contract_line_items').select('total_cost').eq('contract_id', contractId);
+      const total = (freshMs ?? []).reduce((s, m) => s + Number(m.total_cost || 0), 0) + (freshLi ?? []).reduce((s, l) => s + Number(l.total_cost || 0), 0);
+      if (total > 0) await supabase.from('contracts').update({ total_amount: total }).eq('id', contractId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard-contract-line-items'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-contracts'] });
+      toast.success(isRTL ? 'تم حذف البند' : 'Item deleted');
+    },
+  });
+
+  /* ── Update Milestone Status ── */
+  const updateMilestoneMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      const update: any = { status };
+      if (status === 'completed') update.completed_at = new Date().toISOString();
+      const { error } = await supabase.from('contract_milestones').update(update).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard-milestones'] });
+      toast.success(isRTL ? 'تم تحديث المرحلة' : 'Milestone updated');
+    },
+  });
+
   const uploadAttachmentMutation = useMutation({
     mutationFn: async ({ contractId, file }: { contractId: string; file: File }) => {
       const ext = file.name.split('.').pop();
@@ -640,6 +804,7 @@ const DashboardContracts = () => {
         terms_ar: form.terms_ar || null, terms_en: form.terms_en || null,
         supervisor_name: form.supervisor_name || null, supervisor_phone: form.supervisor_phone || null,
         supervisor_email: form.supervisor_email || null, status: 'draft',
+        vat_inclusive: form.vat_inclusive, vat_rate: Number(form.vat_rate),
       };
 
       if (editingId) {
@@ -823,6 +988,7 @@ const DashboardContracts = () => {
       terms_ar: c.terms_ar || '', terms_en: c.terms_en || '',
       supervisor_name: c.supervisor_name || '', supervisor_phone: c.supervisor_phone || '',
       supervisor_email: c.supervisor_email || '', client_email: '',
+      vat_inclusive: c.vat_inclusive || false, vat_rate: c.vat_rate?.toString() || '15',
     });
     setViewSection('create');
   }, []);
@@ -1111,6 +1277,22 @@ const DashboardContracts = () => {
                 </div>
               </div>
 
+              {/* VAT Settings */}
+              <div className="p-4 rounded-xl bg-muted/30 border border-border/40 space-y-3">
+                <h4 className="text-xs font-semibold flex items-center gap-1.5"><Percent className="w-3.5 h-3.5 text-primary" />{isRTL ? 'ضريبة القيمة المضافة' : 'Value Added Tax (VAT)'}</h4>
+                <div className="flex items-center gap-4 flex-wrap">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={form.vat_inclusive} onChange={e => setForm(f => ({ ...f, vat_inclusive: e.target.checked }))} className="w-4 h-4 rounded border-border accent-accent" />
+                    <span className="text-xs">{isRTL ? 'الأسعار شاملة الضريبة' : 'Prices include VAT'}</span>
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <Label className="text-xs text-muted-foreground">{isRTL ? 'نسبة الضريبة' : 'VAT Rate'}</Label>
+                    <Input type="number" value={form.vat_rate} onChange={e => setForm(f => ({ ...f, vat_rate: e.target.value }))} dir="ltr" className="h-8 w-20 text-xs" />
+                    <span className="text-xs text-muted-foreground">%</span>
+                  </div>
+                </div>
+                <p className="text-[9px] text-muted-foreground">{form.vat_inclusive ? (isRTL ? 'جميع الأسعار والمبالغ في العقد شاملة ضريبة القيمة المضافة' : 'All prices and amounts include VAT') : (isRTL ? 'ستُضاف ضريبة القيمة المضافة على المجموع النهائي' : 'VAT will be added to the final total')}</p>
+              </div>
               {/* Supervisor */}
               <div className="p-4 rounded-xl bg-muted/30 border border-border/40 space-y-3">
                 <h4 className="text-xs font-semibold flex items-center gap-1.5"><User className="w-3.5 h-3.5 text-primary" />{isRTL ? 'مشرف المشروع' : 'Project Supervisor'}</h4>
@@ -1222,12 +1404,19 @@ const DashboardContracts = () => {
                   const attachments = allAttachments.filter((a: any) => a.contract_id === c.id);
                   const payments = allPayments.filter((p: any) => p.contract_id === c.id);
                   const measurements = allMeasurements.filter((m: any) => m.contract_id === c.id);
+                  const lineItems = allLineItems.filter((li: any) => li.contract_id === c.id);
                   const warranties = allWarranties.filter((w: any) => w.contract_id === c.id);
                   const maintenance = allMaintenanceRequests.filter((r: any) => r.contract_id === c.id);
                   const amendments = allAmendments.filter((a: any) => a.contract_id === c.id);
                   const isExpanded = expandedId === c.id;
                   const locked = isContractLocked(c);
                   const isProvider = user?.id === c.provider_id;
+                  const measurementTotal = measurements.reduce((s: number, m: any) => s + Number(m.total_cost || 0), 0);
+                  const lineItemTotal = lineItems.reduce((s: number, l: any) => s + Number(l.total_cost || 0), 0);
+                  const subtotal = measurementTotal + lineItemTotal;
+                  const vatRate = Number(c.vat_rate || 15);
+                  const vatAmount = c.vat_inclusive ? (subtotal * vatRate) / (100 + vatRate) : (subtotal * vatRate) / 100;
+                  const grandTotal = c.vat_inclusive ? subtotal : subtotal + vatAmount;
 
                   return (
                     <div key={c.id} className="space-y-0">
@@ -1317,7 +1506,19 @@ const DashboardContracts = () => {
                                             <div className={`p-3 rounded-xl border transition-all ${isCompleted ? 'border-emerald-200/50 bg-emerald-50/30 dark:border-emerald-800/20 dark:bg-emerald-950/10' : isInProgress ? 'border-accent/30 bg-accent/5' : 'border-border/40 bg-card hover:border-border'}`}>
                                               <div className="flex items-center justify-between gap-2">
                                                 <h4 className="font-semibold text-xs">{mTitle}</h4>
-                                                <Badge variant={isCompleted ? 'default' : isInProgress ? 'secondary' : 'outline'} className="text-[8px] shrink-0">{isCompleted ? (isRTL ? 'مكتمل' : 'Done') : isInProgress ? (isRTL ? 'جاري' : 'Progress') : (isRTL ? 'قادم' : 'Pending')}</Badge>
+                                                <div className="flex items-center gap-1">
+                                                  {isProvider && !isCompleted && (
+                                                    <Select value={m.status} onValueChange={v => updateMilestoneMutation.mutate({ id: m.id, status: v })}>
+                                                      <SelectTrigger className="h-6 text-[8px] w-20 px-1.5 border-0 bg-transparent"><SelectValue /></SelectTrigger>
+                                                      <SelectContent>
+                                                        <SelectItem value="pending" className="text-[10px]">{isRTL ? 'قادم' : 'Pending'}</SelectItem>
+                                                        <SelectItem value="in_progress" className="text-[10px]">{isRTL ? 'جاري' : 'In Progress'}</SelectItem>
+                                                        <SelectItem value="completed" className="text-[10px]">{isRTL ? 'مكتمل' : 'Done'}</SelectItem>
+                                                      </SelectContent>
+                                                    </Select>
+                                                  )}
+                                                  <Badge variant={isCompleted ? 'default' : isInProgress ? 'secondary' : 'outline'} className="text-[8px] shrink-0">{isCompleted ? (isRTL ? 'مكتمل' : 'Done') : isInProgress ? (isRTL ? 'جاري' : 'Progress') : (isRTL ? 'قادم' : 'Pending')}</Badge>
+                                                </div>
                                               </div>
                                               <div className="flex items-center gap-3 mt-1.5 text-[10px] text-muted-foreground">
                                                 <span className="font-medium text-foreground"><DollarSign className="w-3 h-3 inline text-accent" />{Number(m.amount).toLocaleString()} {c.currency_code}</span>
@@ -1335,6 +1536,30 @@ const DashboardContracts = () => {
 
                               {/* ═══ Payments Tab ═══ */}
                               <TabsContent value="payments" className="mt-0">
+                                {isProvider && (
+                                  <div className="mb-3">
+                                    {showAddPayment === c.id ? (
+                                      <div className="p-4 rounded-xl border-2 border-dashed border-accent/30 bg-accent/5 space-y-3">
+                                        <h4 className="text-xs font-semibold">{isRTL ? 'إضافة دفعة جديدة' : 'Add Payment'}</h4>
+                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                                          <Input type="number" placeholder={isRTL ? 'المبلغ' : 'Amount'} value={paymentForm.amount} onChange={e => setPaymentForm(f => ({ ...f, amount: e.target.value }))} dir="ltr" className="h-9 text-xs" />
+                                          <Input type="date" placeholder={isRTL ? 'تاريخ الاستحقاق' : 'Due Date'} value={paymentForm.due_date} onChange={e => setPaymentForm(f => ({ ...f, due_date: e.target.value }))} dir="ltr" className="h-9 text-xs" />
+                                          <Input placeholder={isRTL ? 'ملاحظات' : 'Notes'} value={paymentForm.notes} onChange={e => setPaymentForm(f => ({ ...f, notes: e.target.value }))} className="h-9 text-xs" />
+                                        </div>
+                                        <div className="flex gap-2">
+                                          <Button size="sm" className="h-8 text-xs gap-1" disabled={!paymentForm.amount || !paymentForm.due_date || addPaymentMutation.isPending} onClick={() => addPaymentMutation.mutate({ contractId: c.id })}>
+                                            {addPaymentMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}{isRTL ? 'إضافة' : 'Add'}
+                                          </Button>
+                                          <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => setShowAddPayment(null)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5" onClick={() => setShowAddPayment(c.id)}>
+                                        <Plus className="w-3.5 h-3.5" />{isRTL ? 'إضافة دفعة' : 'Add Payment'}
+                                      </Button>
+                                    )}
+                                  </div>
+                                )}
                                 {payments.length > 0 ? (
                                   <div className="space-y-2">
                                     {payments.sort((a: any, b: any) => a.installment_number - b.installment_number).map((p: any) => (
@@ -1347,47 +1572,60 @@ const DashboardContracts = () => {
                                             <div>
                                               <p className="text-xs font-semibold">{isRTL ? `الدفعة ${p.installment_number}` : `Payment #${p.installment_number}`}</p>
                                               <p className="text-[10px] text-muted-foreground">{isRTL ? 'استحقاق:' : 'Due:'} {formatDate(p.due_date)}</p>
+                                              {p.paid_at && <p className="text-[9px] text-emerald-600">{isRTL ? 'دفع:' : 'Paid:'} {formatDate(p.paid_at)}</p>}
+                                              {p.notes && <p className="text-[9px] text-muted-foreground mt-0.5">{p.notes}</p>}
                                             </div>
                                           </div>
-                                          <div className="text-end">
-                                            <p className="text-sm font-bold">{Number(p.amount).toLocaleString()} {c.currency_code}</p>
-                                            <Badge variant={p.status === 'paid' ? 'default' : p.status === 'overdue' ? 'destructive' : 'secondary'} className="text-[8px] mt-0.5">
-                                              {p.status === 'paid' ? (isRTL ? 'مدفوع' : 'Paid') : p.status === 'overdue' ? (isRTL ? 'متأخر' : 'Overdue') : (isRTL ? 'معلق' : 'Pending')}
-                                            </Badge>
+                                          <div className="flex items-center gap-2">
+                                            <div className="text-end">
+                                              <p className="text-sm font-bold">{Number(p.amount).toLocaleString()} {c.currency_code}</p>
+                                              <Badge variant={p.status === 'paid' ? 'default' : p.status === 'overdue' ? 'destructive' : 'secondary'} className="text-[8px] mt-0.5">
+                                                {p.status === 'paid' ? (isRTL ? 'مدفوع' : 'Paid') : p.status === 'overdue' ? (isRTL ? 'متأخر' : 'Overdue') : (isRTL ? 'معلق' : 'Pending')}
+                                              </Badge>
+                                            </div>
+                                            {p.status !== 'paid' && isProvider && (
+                                              <Button variant="ghost" size="icon" className="h-8 w-8 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/20" onClick={() => markPaidMutation.mutate({ paymentId: p.id })}>
+                                                <Banknote className="w-4 h-4" />
+                                              </Button>
+                                            )}
                                           </div>
                                         </div>
                                       </div>
                                     ))}
                                     {/* Payment Summary */}
-                                    <div className="p-3 rounded-xl bg-muted/30 border border-border/30 flex items-center justify-between">
-                                      <span className="text-[10px] text-muted-foreground">{isRTL ? 'الإجمالي المدفوع' : 'Total Paid'}</span>
-                                      <span className="text-xs font-bold text-emerald-600">{payments.filter((p:any)=>p.status==='paid').reduce((s:number,p:any)=>s+Number(p.amount),0).toLocaleString()} / {Number(c.total_amount).toLocaleString()} {c.currency_code}</span>
+                                    <div className="p-3 rounded-xl bg-muted/30 border border-border/30">
+                                      <div className="flex items-center justify-between mb-1">
+                                        <span className="text-[10px] text-muted-foreground">{isRTL ? 'الإجمالي المدفوع' : 'Total Paid'}</span>
+                                        <span className="text-xs font-bold text-emerald-600">{payments.filter((p:any)=>p.status==='paid').reduce((s:number,p:any)=>s+Number(p.amount),0).toLocaleString()} / {Number(c.total_amount).toLocaleString()} {c.currency_code}</span>
+                                      </div>
+                                      <Progress value={Number(c.total_amount) > 0 ? (payments.filter((p:any)=>p.status==='paid').reduce((s:number,p:any)=>s+Number(p.amount),0) / Number(c.total_amount)) * 100 : 0} className="h-1.5 [&>div]:bg-emerald-500" />
                                     </div>
                                   </div>
                                 ) : <p className="text-center py-8 text-muted-foreground text-xs">{isRTL ? 'لا توجد دفعات' : 'No payments yet'}</p>}
                               </TabsContent>
 
-                              {/* ═══ Measurements Tab ═══ */}
-                              <TabsContent value="measurements" className="mt-0">
+                              {/* ═══ Measurements & Line Items Tab ═══ */}
+                              <TabsContent value="measurements" className="mt-0 space-y-4">
+                                {/* Measurement Form */}
                                 {!locked && isProvider && (
                                   <div className="mb-3">
                                     {showAddMeasurement === c.id ? (
                                       <div className="p-4 rounded-xl border-2 border-dashed border-accent/30 bg-accent/5 space-y-3">
-                                        <h4 className="text-xs font-semibold">{isRTL ? 'إضافة قطعة مقاس جديدة' : 'Add New Measurement'}</h4>
+                                        <h4 className="text-xs font-semibold">{isRTL ? 'إضافة قطعة مقاس' : 'Add Measurement'}</h4>
                                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                                           <Input placeholder={isRTL ? 'اسم القطعة' : 'Piece Name'} value={measurementForm.name_ar} onChange={e => setMeasurementForm(f => ({ ...f, name_ar: e.target.value }))} className="h-9 text-xs" />
                                           <Input placeholder={isRTL ? 'رقم القطعة' : 'Piece #'} value={measurementForm.piece_number} onChange={e => setMeasurementForm(f => ({ ...f, piece_number: e.target.value }))} dir="ltr" className="h-9 text-xs" />
                                           <Select value={measurementForm.floor_label} onValueChange={v => setMeasurementForm(f => ({ ...f, floor_label: v }))}>
                                             <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
                                             <SelectContent>
-                                              <SelectItem value="ground_floor">{isRTL ? 'الدور الأرضي' : 'Ground'}</SelectItem>
-                                              <SelectItem value="first_floor">{isRTL ? 'الدور الأول' : '1st Floor'}</SelectItem>
-                                              <SelectItem value="second_floor">{isRTL ? 'الدور الثاني' : '2nd Floor'}</SelectItem>
-                                              <SelectItem value="third_floor">{isRTL ? 'الدور الثالث' : '3rd Floor'}</SelectItem>
-                                              <SelectItem value="roof">{isRTL ? 'السطح' : 'Roof'}</SelectItem>
+                                              <SelectItem value="ground_floor">{isRTL ? 'أرضي' : 'Ground'}</SelectItem>
+                                              <SelectItem value="first_floor">{isRTL ? 'أول' : '1st'}</SelectItem>
+                                              <SelectItem value="second_floor">{isRTL ? 'ثاني' : '2nd'}</SelectItem>
+                                              <SelectItem value="third_floor">{isRTL ? 'ثالث' : '3rd'}</SelectItem>
+                                              <SelectItem value="roof">{isRTL ? 'سطح' : 'Roof'}</SelectItem>
                                             </SelectContent>
                                           </Select>
-                                          <Input placeholder={isRTL ? 'الموقع (صالة، مطبخ)' : 'Location'} value={measurementForm.location_ar} onChange={e => setMeasurementForm(f => ({ ...f, location_ar: e.target.value }))} className="h-9 text-xs" />
+                                          <Input placeholder={isRTL ? 'الموقع' : 'Location'} value={measurementForm.location_ar} onChange={e => setMeasurementForm(f => ({ ...f, location_ar: e.target.value }))} className="h-9 text-xs" />
                                         </div>
                                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                                           <Input type="number" placeholder={isRTL ? 'الطول (مم)' : 'Length mm'} value={measurementForm.length_mm} onChange={e => setMeasurementForm(f => ({ ...f, length_mm: e.target.value }))} dir="ltr" className="h-9 text-xs" />
@@ -1398,25 +1636,58 @@ const DashboardContracts = () => {
                                         {measurementForm.length_mm && measurementForm.width_mm && measurementForm.unit_price && (
                                           <div className="flex items-center gap-4 text-[11px] p-2.5 bg-muted/40 rounded-lg border border-border/30">
                                             <span>{isRTL ? 'المساحة:' : 'Area:'} <strong className="text-accent">{((Number(measurementForm.length_mm) * Number(measurementForm.width_mm)) / 1000000).toFixed(2)} م²</strong></span>
-                                            <span>{isRTL ? 'التكلفة:' : 'Cost:'} <strong className="text-accent">{(Number(measurementForm.unit_price) * Number(measurementForm.quantity || 1)).toLocaleString()} SAR</strong></span>
+                                            <span>{isRTL ? 'التكلفة:' : 'Cost:'} <strong className="text-accent">{(Number(measurementForm.unit_price) * Number(measurementForm.quantity || 1)).toLocaleString()} {c.currency_code}</strong></span>
                                           </div>
                                         )}
                                         <div className="flex gap-2">
                                           <Button size="sm" className="h-8 text-xs gap-1" disabled={!measurementForm.name_ar || !measurementForm.piece_number || !measurementForm.length_mm || addMeasurementMutation.isPending} onClick={() => addMeasurementMutation.mutate({ contractId: c.id })}>
-                                            {addMeasurementMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}{isRTL ? 'إضافة وتحديث قيمة العقد' : 'Add & Update Total'}
+                                            {addMeasurementMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}{isRTL ? 'إضافة' : 'Add'}
                                           </Button>
                                           <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => setShowAddMeasurement(null)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
                                         </div>
                                       </div>
                                     ) : (
-                                      <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5" onClick={() => setShowAddMeasurement(c.id)}>
-                                        <Plus className="w-3.5 h-3.5" />{isRTL ? 'إضافة مقاس' : 'Add Measurement'}
-                                      </Button>
+                                      <div className="flex gap-2">
+                                        <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5" onClick={() => setShowAddMeasurement(c.id)}><Plus className="w-3.5 h-3.5" />{isRTL ? 'مقاس' : 'Measurement'}</Button>
+                                        <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5" onClick={() => setShowAddLineItem(c.id)}><Plus className="w-3.5 h-3.5" />{isRTL ? 'بند إضافي' : 'Line Item'}</Button>
+                                      </div>
                                     )}
                                   </div>
                                 )}
-                                {measurements.length > 0 ? (
-                                  <div className="space-y-2 max-h-72 overflow-y-auto">
+
+                                {/* Line Item Form */}
+                                {showAddLineItem === c.id && !locked && isProvider && (
+                                  <div className="p-4 rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 space-y-3">
+                                    <h4 className="text-xs font-semibold">{isRTL ? 'إضافة بند إضافي (خدمة/مادة)' : 'Add Line Item (Service/Material)'}</h4>
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                                      <Input placeholder={isRTL ? 'اسم البند' : 'Item Name'} value={lineItemForm.name_ar} onChange={e => setLineItemForm(f => ({ ...f, name_ar: e.target.value }))} className="h-9 text-xs" />
+                                      <Select value={lineItemForm.item_type} onValueChange={v => setLineItemForm(f => ({ ...f, item_type: v }))}>
+                                        <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="service">{isRTL ? 'خدمة' : 'Service'}</SelectItem>
+                                          <SelectItem value="material">{isRTL ? 'مادة' : 'Material'}</SelectItem>
+                                          <SelectItem value="installation">{isRTL ? 'تركيب' : 'Installation'}</SelectItem>
+                                          <SelectItem value="other">{isRTL ? 'أخرى' : 'Other'}</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                      <Input type="number" placeholder={isRTL ? 'الكمية' : 'Qty'} value={lineItemForm.quantity} onChange={e => setLineItemForm(f => ({ ...f, quantity: e.target.value }))} dir="ltr" className="h-9 text-xs" />
+                                      <Input type="number" placeholder={isRTL ? 'سعر الوحدة' : 'Unit Price'} value={lineItemForm.unit_price} onChange={e => setLineItemForm(f => ({ ...f, unit_price: e.target.value }))} dir="ltr" className="h-9 text-xs" />
+                                    </div>
+                                    <Input placeholder={isRTL ? 'وصف البند (اختياري)' : 'Description (optional)'} value={lineItemForm.description_ar} onChange={e => setLineItemForm(f => ({ ...f, description_ar: e.target.value }))} className="h-9 text-xs" />
+                                    {lineItemForm.unit_price && <p className="text-[11px] text-muted-foreground">{isRTL ? 'التكلفة:' : 'Cost:'} <strong className="text-accent">{(Number(lineItemForm.unit_price) * Number(lineItemForm.quantity || 1)).toLocaleString()} {c.currency_code}</strong></p>}
+                                    <div className="flex gap-2">
+                                      <Button size="sm" className="h-8 text-xs gap-1" disabled={!lineItemForm.name_ar || !lineItemForm.unit_price || addLineItemMutation.isPending} onClick={() => addLineItemMutation.mutate({ contractId: c.id })}>
+                                        {addLineItemMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}{isRTL ? 'إضافة' : 'Add'}
+                                      </Button>
+                                      <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => setShowAddLineItem(null)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Measurements List */}
+                                {measurements.length > 0 && (
+                                  <div className="space-y-2">
+                                    <h5 className="text-[10px] font-semibold text-muted-foreground flex items-center gap-1"><Ruler className="w-3 h-3" />{isRTL ? 'المقاسات' : 'Measurements'}</h5>
                                     {measurements.map((m: any) => (
                                       <div key={m.id} className="p-3 rounded-xl bg-card border border-border/30 flex items-center justify-between gap-3 hover:border-accent/20 transition-colors">
                                         <div className="flex items-center gap-3 min-w-0">
@@ -1428,17 +1699,76 @@ const DashboardContracts = () => {
                                         </div>
                                         <div className="text-end shrink-0">
                                           <p className="text-[10px] font-mono text-muted-foreground">{m.length_mm}×{m.width_mm} mm</p>
-                                          <p className="text-xs font-bold">{Number(m.total_cost || 0).toLocaleString()} {m.currency_code}</p>
-                                          <Badge variant={m.status === 'installed' ? 'default' : m.status === 'manufactured' ? 'secondary' : 'outline'} className="text-[7px] mt-0.5">{m.status === 'installed' ? (isRTL ? 'مركّب' : 'Installed') : m.status === 'manufactured' ? (isRTL ? 'مصنّع' : 'Made') : (isRTL ? 'معلق' : 'Pending')}</Badge>
+                                          <p className="text-xs font-bold">{Number(m.total_cost || 0).toLocaleString()} {c.currency_code}</p>
                                         </div>
                                       </div>
                                     ))}
-                                    <div className="flex items-center justify-between px-3 pt-3 border-t border-border/30 text-xs font-bold">
-                                      <span>{measurements.length} {isRTL ? 'قطعة' : 'pieces'}</span>
-                                      <span className="text-accent">{measurements.reduce((s: number, m: any) => s + Number(m.total_cost || 0), 0).toLocaleString()} {c.currency_code}</span>
+                                  </div>
+                                )}
+
+                                {/* Line Items List */}
+                                {lineItems.length > 0 && (
+                                  <div className="space-y-2">
+                                    <h5 className="text-[10px] font-semibold text-muted-foreground flex items-center gap-1"><ClipboardList className="w-3 h-3" />{isRTL ? 'بنود إضافية' : 'Additional Items'}</h5>
+                                    {lineItems.map((li: any) => {
+                                      const typeLabels: Record<string, string> = { service: isRTL ? 'خدمة' : 'Service', material: isRTL ? 'مادة' : 'Material', installation: isRTL ? 'تركيب' : 'Install', other: isRTL ? 'أخرى' : 'Other' };
+                                      return (
+                                        <div key={li.id} className="p-3 rounded-xl bg-card border border-border/30 flex items-center justify-between gap-3 hover:border-primary/20 transition-colors">
+                                          <div className="flex items-center gap-3 min-w-0">
+                                            <Badge variant="secondary" className="text-[8px] shrink-0">{typeLabels[li.item_type] || li.item_type}</Badge>
+                                            <div className="min-w-0">
+                                              <p className="text-xs font-medium truncate">{li.name_ar}</p>
+                                              {li.description_ar && <p className="text-[9px] text-muted-foreground truncate">{li.description_ar}</p>}
+                                            </div>
+                                          </div>
+                                          <div className="flex items-center gap-2">
+                                            <div className="text-end shrink-0">
+                                              <p className="text-[10px] text-muted-foreground">{li.quantity} × {Number(li.unit_price).toLocaleString()}</p>
+                                              <p className="text-xs font-bold">{Number(li.total_cost || 0).toLocaleString()} {c.currency_code}</p>
+                                            </div>
+                                            {!locked && isProvider && (
+                                              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/10" onClick={() => deleteLineItemMutation.mutate({ id: li.id, contractId: c.id })}>
+                                                <X className="w-3 h-3" />
+                                              </Button>
+                                            )}
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+
+                                {measurements.length === 0 && lineItems.length === 0 && <p className="text-center py-8 text-muted-foreground text-xs">{isRTL ? 'لا توجد مقاسات أو بنود' : 'No measurements or items'}</p>}
+
+                                {/* Financial Summary with VAT */}
+                                {(measurements.length > 0 || lineItems.length > 0) && (
+                                  <div className="p-4 rounded-xl bg-gradient-to-br from-accent/5 to-accent/10 border border-accent/20 space-y-2">
+                                    <div className="flex items-center justify-between text-[11px]">
+                                      <span className="text-muted-foreground">{isRTL ? 'المقاسات' : 'Measurements'} ({measurements.length})</span>
+                                      <span className="font-semibold">{measurementTotal.toLocaleString()} {c.currency_code}</span>
+                                    </div>
+                                    {lineItems.length > 0 && (
+                                      <div className="flex items-center justify-between text-[11px]">
+                                        <span className="text-muted-foreground">{isRTL ? 'بنود إضافية' : 'Line Items'} ({lineItems.length})</span>
+                                        <span className="font-semibold">{lineItemTotal.toLocaleString()} {c.currency_code}</span>
+                                      </div>
+                                    )}
+                                    <Separator className="my-1" />
+                                    <div className="flex items-center justify-between text-[11px]">
+                                      <span className="text-muted-foreground">{isRTL ? 'المجموع الفرعي' : 'Subtotal'}</span>
+                                      <span className="font-bold">{subtotal.toLocaleString()} {c.currency_code}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between text-[11px]">
+                                      <span className="text-muted-foreground flex items-center gap-1"><Percent className="w-3 h-3" />{isRTL ? `ضريبة القيمة المضافة (${vatRate}%)` : `VAT (${vatRate}%)`} {c.vat_inclusive ? (isRTL ? '(شاملة)' : '(incl.)') : ''}</span>
+                                      <span className="font-semibold">{vatAmount.toFixed(2)} {c.currency_code}</span>
+                                    </div>
+                                    <Separator className="my-1" />
+                                    <div className="flex items-center justify-between text-sm font-bold text-accent">
+                                      <span>{isRTL ? 'الإجمالي النهائي' : 'Grand Total'}</span>
+                                      <span>{grandTotal.toLocaleString()} {c.currency_code}</span>
                                     </div>
                                   </div>
-                                ) : <p className="text-center py-8 text-muted-foreground text-xs">{isRTL ? 'لا توجد مقاسات' : 'No measurements'}</p>}
+                                )}
                               </TabsContent>
 
                               {/* ═══ Warranty Tab ═══ */}
