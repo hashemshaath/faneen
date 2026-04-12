@@ -16,7 +16,7 @@ import { Progress } from '@/components/ui/progress';
 import { toast } from '@/hooks/use-toast';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
-import { exportContractPDF } from '@/lib/contract-pdf-export';
+import { exportContractPDF, exportMeasurementsPDF, exportMeasurementsExcel, parseMeasurementsFromCSV, type ImportedMeasurement } from '@/lib/contract-pdf-export';
 import {
   FileText, Shield, Wrench, CheckCircle2, Clock,
   Calendar, DollarSign, AlertTriangle, XCircle, ListChecks, Plus, Send,
@@ -148,6 +148,11 @@ const ContractDetail = () => {
   // Amendment
   const [showAmendmentForm, setShowAmendmentForm] = useState(false);
   const [amForm, setAmForm] = useState({ title_ar: '', description_ar: '', amendment_type: 'scope_change', new_amount: '' });
+  // Import measurements
+  const importFileRef = useRef<HTMLInputElement>(null);
+  const [importedMeasurements, setImportedMeasurements] = useState<ImportedMeasurement[]>([]);
+  const [showImportPreview, setShowImportPreview] = useState(false);
+  const [editingImportIdx, setEditingImportIdx] = useState<number | null>(null);
 
   /* ─── Queries ─── */
   const { data: contract, isLoading } = useQuery({
@@ -612,14 +617,108 @@ const ContractDetail = () => {
       supervisorPhone: contract.supervisor_phone || undefined,
       supervisorEmail: contract.supervisor_email || undefined,
       terms: terms || undefined,
+      vatRate,
+      vatInclusive,
+      businessName: bizName || undefined,
       milestones: (milestones || []).map(m => ({
         title: language === 'ar' ? m.title_ar : (m.title_en || m.title_ar),
         amount: Number(m.amount),
         dueDate: m.due_date || undefined,
         status: m.status,
       })),
+      measurements: (measurements || []).map(m => ({
+        pieceNumber: m.piece_number, name: language === 'ar' ? m.name_ar : (m.name_en || m.name_ar),
+        location: (language === 'ar' ? m.location_ar : (m.location_en || m.location_ar)) || '',
+        floor: m.floor_label || '', lengthMm: Number(m.length_mm), widthMm: Number(m.width_mm),
+        areaSqm: Number(m.area_sqm), unitPrice: Number(m.unit_price), quantity: Number(m.quantity),
+        totalCost: Number(m.total_cost), status: m.status,
+      })),
       isRTL,
     });
+  };
+
+  const handleExportMeasurementsPDF = () => {
+    if (!contract || !measurements || measurements.length === 0) return;
+    exportMeasurementsPDF({
+      contractNumber: contract.contract_number, businessName: bizName, currency: contract.currency_code,
+      vatRate, vatInclusive,
+      measurements: measurements.map(m => ({
+        pieceNumber: m.piece_number, name: language === 'ar' ? m.name_ar : (m.name_en || m.name_ar),
+        location: (language === 'ar' ? m.location_ar : (m.location_en || m.location_ar)) || '',
+        floor: m.floor_label || '', lengthMm: Number(m.length_mm), widthMm: Number(m.width_mm),
+        areaSqm: Number(m.area_sqm), unitPrice: Number(m.unit_price), quantity: Number(m.quantity),
+        totalCost: Number(m.total_cost), status: m.status,
+      })),
+      isRTL,
+    });
+  };
+
+  const handleExportMeasurementsExcel = () => {
+    if (!contract || !measurements || measurements.length === 0) return;
+    exportMeasurementsExcel({
+      contractNumber: contract.contract_number, currency: contract.currency_code,
+      vatRate, vatInclusive,
+      measurements: measurements.map(m => ({
+        pieceNumber: m.piece_number, name: language === 'ar' ? m.name_ar : (m.name_en || m.name_ar),
+        location: (language === 'ar' ? m.location_ar : (m.location_en || m.location_ar)) || '',
+        floor: m.floor_label || '', lengthMm: Number(m.length_mm), widthMm: Number(m.width_mm),
+        areaSqm: Number(m.area_sqm), unitPrice: Number(m.unit_price), quantity: Number(m.quantity),
+        totalCost: Number(m.total_cost), status: m.status,
+      })),
+      isRTL,
+    });
+  };
+
+  const handleImportMeasurements = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const text = ev.target?.result as string;
+      const parsed = parseMeasurementsFromCSV(text);
+      if (parsed.length === 0) {
+        toast({ title: isRTL ? 'لم يتم العثور على بيانات صالحة' : 'No valid data found', variant: 'destructive' });
+        return;
+      }
+      setImportedMeasurements(parsed);
+      setShowImportPreview(true);
+    };
+    reader.readAsText(file);
+  };
+
+  const confirmImportMeasurements = async () => {
+    if (!id || importedMeasurements.length === 0) return;
+    const startOrder = (measurements?.length || 0) + 1;
+    const records = importedMeasurements.map((m, i) => {
+      const area = (m.length_mm * m.width_mm) / 1000000;
+      return {
+        contract_id: id, name_ar: m.name_ar, piece_number: m.piece_number,
+        floor_label: m.floor_label, location_ar: m.location_ar,
+        length_mm: m.length_mm, width_mm: m.width_mm,
+        quantity: m.quantity, unit_price: m.unit_price,
+        area_sqm: area, total_cost: m.unit_price * m.quantity,
+        notes: m.notes || null, sort_order: startOrder + i,
+      };
+    });
+    const { error } = await supabase.from('contract_measurements').insert(records);
+    if (error) {
+      toast({ title: error.message, variant: 'destructive' });
+      return;
+    }
+    queryClient.invalidateQueries({ queryKey: ['contract-measurements', id] });
+    setShowImportPreview(false);
+    setImportedMeasurements([]);
+    toast({ title: isRTL ? `تم استيراد ${records.length} مقاس بنجاح` : `${records.length} measurements imported` });
+    setTimeout(() => updateContractTotalFromMeasurements(), 500);
+  };
+
+  const updateImportedRow = (idx: number, field: keyof ImportedMeasurement, value: string | number) => {
+    setImportedMeasurements(prev => prev.map((m, i) => i === idx ? { ...m, [field]: value } : m));
+  };
+
+  const removeImportedRow = (idx: number) => {
+    setImportedMeasurements(prev => prev.filter((_, i) => i !== idx));
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1214,11 +1313,110 @@ const ContractDetail = () => {
 
           {/* ── Measurements ── */}
           <TabsContent value="measurements">
+            {/* Toolbar */}
+            <div className="flex flex-wrap items-center gap-2 mb-4">
+              {!isContractLocked && (isProvider || isClient) && (
+                <>
+                  <Button variant="outline" className="gap-1.5 text-xs" onClick={() => setShowMeasurementForm(true)}><Plus className="w-3.5 h-3.5" />{isRTL ? 'إضافة قطعة' : 'Add'}</Button>
+                  <input ref={importFileRef} type="file" className="hidden" onChange={handleImportMeasurements} accept=".csv,.txt,.xlsx" />
+                  <Button variant="outline" className="gap-1.5 text-xs" onClick={() => importFileRef.current?.click()}><Upload className="w-3.5 h-3.5" />{isRTL ? 'استيراد من ملف' : 'Import CSV'}</Button>
+                </>
+              )}
+              {measurements && measurements.length > 0 && (
+                <>
+                  <div className="ms-auto" />
+                  <Button variant="outline" size="sm" className="gap-1.5 text-[10px] h-8" onClick={handleExportMeasurementsExcel}><Download className="w-3 h-3" />{isRTL ? 'تصدير Excel' : 'Export CSV'}</Button>
+                  <Button variant="outline" size="sm" className="gap-1.5 text-[10px] h-8" onClick={handleExportMeasurementsPDF}><Download className="w-3 h-3" />{isRTL ? 'تصدير PDF' : 'Export PDF'}</Button>
+                </>
+              )}
+            </div>
+
+            {/* Import Preview */}
+            {showImportPreview && importedMeasurements.length > 0 && (
+              <div className="mb-4 p-4 rounded-xl border-2 border-dashed border-accent/40 bg-accent/5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-heading font-bold text-sm flex items-center gap-2">
+                    <Upload className="w-4 h-4 text-accent" />
+                    {isRTL ? `معاينة الاستيراد (${importedMeasurements.length} قطعة)` : `Import Preview (${importedMeasurements.length} items)`}
+                  </h3>
+                  <Button variant="ghost" size="sm" className="text-xs text-destructive" onClick={() => { setShowImportPreview(false); setImportedMeasurements([]); }}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+                </div>
+                <p className="text-[10px] text-muted-foreground font-body">{isRTL ? 'راجع البيانات وعدّلها قبل التأكيد' : 'Review and edit data before confirming'}</p>
+                <div className="border border-border rounded-xl overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="bg-muted/50">
+                          <th className="p-2 text-start font-heading font-semibold">#</th>
+                          <th className="p-2 text-start font-heading font-semibold">{isRTL ? 'الاسم' : 'Name'}</th>
+                          <th className="p-2 text-start font-heading font-semibold">{isRTL ? 'رقم القطعة' : 'Piece #'}</th>
+                          <th className="p-2 text-start font-heading font-semibold">{isRTL ? 'الطول' : 'L (mm)'}</th>
+                          <th className="p-2 text-start font-heading font-semibold">{isRTL ? 'العرض' : 'W (mm)'}</th>
+                          <th className="p-2 text-start font-heading font-semibold">{isRTL ? 'السعر' : 'Price'}</th>
+                          <th className="p-2 text-start font-heading font-semibold">{isRTL ? 'التكلفة' : 'Cost'}</th>
+                          <th className="p-2"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {importedMeasurements.map((m, idx) => (
+                          <tr key={idx} className="border-t border-border hover:bg-muted/20">
+                            <td className="p-2 text-muted-foreground">{idx + 1}</td>
+                            <td className="p-2">
+                              {editingImportIdx === idx ? (
+                                <Input className="h-7 text-xs" value={m.name_ar} onChange={e => updateImportedRow(idx, 'name_ar', e.target.value)} />
+                              ) : (
+                                <button onClick={() => setEditingImportIdx(idx)} className="text-start hover:text-accent">{m.name_ar}</button>
+                              )}
+                            </td>
+                            <td className="p-2 font-heading" dir="ltr">{m.piece_number}</td>
+                            <td className="p-2" dir="ltr">
+                              {editingImportIdx === idx ? (
+                                <Input type="number" className="h-7 text-xs w-20" value={m.length_mm} onChange={e => updateImportedRow(idx, 'length_mm', Number(e.target.value))} />
+                              ) : m.length_mm}
+                            </td>
+                            <td className="p-2" dir="ltr">
+                              {editingImportIdx === idx ? (
+                                <Input type="number" className="h-7 text-xs w-20" value={m.width_mm} onChange={e => updateImportedRow(idx, 'width_mm', Number(e.target.value))} />
+                              ) : m.width_mm}
+                            </td>
+                            <td className="p-2" dir="ltr">
+                              {editingImportIdx === idx ? (
+                                <Input type="number" className="h-7 text-xs w-24" value={m.unit_price} onChange={e => updateImportedRow(idx, 'unit_price', Number(e.target.value))} />
+                              ) : m.unit_price.toLocaleString()}
+                            </td>
+                            <td className="p-2 font-heading font-bold text-accent" dir="ltr">{(m.unit_price * m.quantity).toLocaleString()}</td>
+                            <td className="p-2">
+                              <div className="flex gap-1">
+                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setEditingImportIdx(editingImportIdx === idx ? null : idx)}>
+                                  <PenTool className="w-3 h-3 text-muted-foreground" />
+                                </Button>
+                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeImportedRow(idx)}>
+                                  <Trash2 className="w-3 h-3 text-destructive" />
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Button variant="hero" size="sm" className="gap-1.5 text-xs" onClick={confirmImportMeasurements}>
+                    <CheckCircle2 className="w-3.5 h-3.5" />{isRTL ? 'تأكيد الاستيراد' : 'Confirm Import'}
+                  </Button>
+                  <span className="text-[10px] text-muted-foreground font-body">
+                    {isRTL ? `إجمالي: ${importedMeasurements.reduce((s, m) => s + m.unit_price * m.quantity, 0).toLocaleString()} ${contract.currency_code}` 
+                      : `Total: ${importedMeasurements.reduce((s, m) => s + m.unit_price * m.quantity, 0).toLocaleString()} ${contract.currency_code}`}
+                  </span>
+                </div>
+              </div>
+            )}
+
             {/* Add/Edit Form */}
-            {!isContractLocked && (isProvider || isClient) && (
+            {!isContractLocked && (isProvider || isClient) && showMeasurementForm && (
               <div className="mb-4">
-                {showMeasurementForm ? (
-                  <div className="p-4 rounded-xl bg-card border-2 border-dashed border-accent/30 space-y-3">
+                <div className="p-4 rounded-xl bg-card border-2 border-dashed border-accent/30 space-y-3">
                     <h3 className="font-heading font-bold text-sm flex items-center gap-2">
                       <Plus className="w-4 h-4 text-accent" />
                       {editingMeasurement ? (isRTL ? 'تعديل المقاس' : 'Edit Measurement') : (isRTL ? 'إضافة قطعة جديدة' : 'Add Measurement')}
@@ -1245,7 +1443,6 @@ const ContractDetail = () => {
                       <Input type="number" placeholder={isRTL ? 'الكمية' : 'Qty'} value={mForm.quantity} onChange={e => setMForm(f => ({ ...f, quantity: e.target.value }))} dir="ltr" className="text-sm" />
                       <Input type="number" placeholder={isRTL ? 'سعر الوحدة *' : 'Unit price *'} value={mForm.unit_price} onChange={e => setMForm(f => ({ ...f, unit_price: e.target.value }))} dir="ltr" className="text-sm" />
                     </div>
-                    {/* Live calc preview */}
                     {mForm.length_mm && mForm.width_mm && mForm.unit_price && (
                       <div className="flex items-center gap-4 p-2.5 rounded-lg bg-accent/5 border border-accent/10 text-xs font-heading">
                         <span>{isRTL ? 'المساحة:' : 'Area:'} <strong>{((Number(mForm.length_mm) * Number(mForm.width_mm)) / 1000000).toFixed(3)} م²</strong></span>
@@ -1259,10 +1456,7 @@ const ContractDetail = () => {
                       </Button>
                       <Button variant="outline" size="sm" className="text-xs" onClick={resetMForm}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
                     </div>
-                  </div>
-                ) : (
-                  <Button variant="outline" className="gap-1.5 text-xs" onClick={() => setShowMeasurementForm(true)}><Plus className="w-3.5 h-3.5" />{isRTL ? 'إضافة قطعة' : 'Add Measurement'}</Button>
-                )}
+                </div>
               </div>
             )}
             {isContractLocked && (
@@ -1660,28 +1854,46 @@ const ContractDetail = () => {
 
           {/* ── Attachments ── */}
           <TabsContent value="attachments">
-            <div className="mb-4">
-              <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileUpload} accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" />
+            <div className="flex flex-wrap items-center gap-2 mb-4">
+              <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileUpload} accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" multiple />
               <Button variant="outline" className="gap-1.5 text-xs" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
                 {uploading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
-                {uploading ? (isRTL ? 'جاري الرفع...' : 'Uploading...') : (isRTL ? 'رفع مرفق' : 'Upload')}
+                {uploading ? (isRTL ? 'جاري الرفع...' : 'Uploading...') : (isRTL ? 'رفع مرفق' : 'Upload File')}
               </Button>
+              {attachments && attachments.length > 0 && (
+                <span className="text-[10px] text-muted-foreground font-body ms-auto">
+                  {attachments.length} {isRTL ? 'ملف' : 'files'} — {attachments.filter(a => a.file_type.startsWith('image')).length} {isRTL ? 'صور' : 'images'}, {attachments.filter(a => !a.file_type.startsWith('image')).length} {isRTL ? 'مستندات' : 'docs'}
+                </span>
+              )}
             </div>
             {attachments && attachments.length > 0 ? (
-              <div className="space-y-4">
+              <div className="space-y-5">
                 {/* Image gallery */}
                 {attachments.filter(a => a.file_type.startsWith('image')).length > 0 && (
                   <div>
-                    <h3 className="font-heading font-bold text-xs mb-2 flex items-center gap-1.5"><FileImage className="w-3.5 h-3.5 text-accent" />{isRTL ? 'الصور' : 'Images'}</h3>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <h3 className="font-heading font-bold text-xs mb-3 flex items-center gap-1.5">
+                      <FileImage className="w-3.5 h-3.5 text-accent" />
+                      {isRTL ? 'معرض الصور' : 'Photo Gallery'} ({attachments.filter(a => a.file_type.startsWith('image')).length})
+                    </h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                       {attachments.filter(a => a.file_type.startsWith('image')).map(att => (
-                        <a key={att.id} href={att.file_url} target="_blank" rel="noopener noreferrer" className="group relative aspect-square rounded-xl overflow-hidden border border-border bg-muted hover:border-accent/50 transition-all">
-                          <img src={att.file_url} alt={att.file_name} className="w-full h-full object-cover" loading="lazy" />
-                          <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/30 transition-colors flex items-center justify-center">
-                            <Eye className="w-5 h-5 text-primary-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <div key={att.id} className="group relative rounded-xl overflow-hidden border border-border bg-muted hover:border-accent/50 hover:shadow-md transition-all">
+                          <div className="aspect-[4/3]">
+                            <img src={att.file_url} alt={att.file_name} className="w-full h-full object-cover" loading="lazy" />
                           </div>
-                          <p className="absolute bottom-0 left-0 right-0 bg-foreground/60 text-primary-foreground text-[9px] p-1.5 truncate font-body">{att.file_name}</p>
-                        </a>
+                          <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/40 transition-colors flex items-center justify-center gap-2">
+                            <a href={att.file_url} target="_blank" rel="noopener noreferrer">
+                              <Button variant="secondary" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"><Eye className="w-4 h-4" /></Button>
+                            </a>
+                            <a href={att.file_url} download={att.file_name}>
+                              <Button variant="secondary" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"><Download className="w-4 h-4" /></Button>
+                            </a>
+                          </div>
+                          <div className="p-2 bg-card border-t border-border">
+                            <p className="font-heading font-medium text-[10px] truncate">{att.file_name}</p>
+                            <p className="text-[9px] text-muted-foreground font-body">{formatDate(att.created_at)}</p>
+                          </div>
+                        </div>
                       ))}
                     </div>
                   </div>
@@ -1689,28 +1901,30 @@ const ContractDetail = () => {
                 {/* Document list */}
                 {attachments.filter(a => !a.file_type.startsWith('image')).length > 0 && (
                   <div>
-                    <h3 className="font-heading font-bold text-xs mb-2 flex items-center gap-1.5"><Paperclip className="w-3.5 h-3.5 text-accent" />{isRTL ? 'المستندات' : 'Documents'}</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <h3 className="font-heading font-bold text-xs mb-3 flex items-center gap-1.5"><Paperclip className="w-3.5 h-3.5 text-accent" />{isRTL ? 'المستندات والملفات' : 'Documents & Files'} ({attachments.filter(a => !a.file_type.startsWith('image')).length})</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {attachments.filter(a => !a.file_type.startsWith('image')).map(att => {
                         const linkedMilestone = milestones?.find(m => m.id === att.milestone_id);
+                        const ext = att.file_name.split('.').pop()?.toUpperCase() || 'FILE';
+                        const extColors: Record<string, string> = { PDF: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400', DOC: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400', DOCX: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400', XLS: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400', XLSX: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' };
                         return (
-                          <div key={att.id} className="p-3 rounded-xl bg-card border border-border flex items-center gap-3 hover:border-accent/30 transition-all group">
-                            <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
-                              <FileText className="w-5 h-5 text-accent" />
+                          <div key={att.id} className="p-3.5 rounded-xl bg-card border border-border flex items-center gap-3 hover:border-accent/30 hover:shadow-sm transition-all group">
+                            <div className={`w-11 h-11 rounded-lg flex items-center justify-center shrink-0 font-heading font-bold text-[10px] ${extColors[ext] || 'bg-muted text-muted-foreground'}`}>
+                              {ext}
                             </div>
                             <div className="min-w-0 flex-1">
                               <p className="font-heading font-medium text-xs truncate">{att.file_name}</p>
                               <div className="flex items-center gap-2 text-[10px] text-muted-foreground font-body mt-0.5">
                                 <span>{formatDate(att.created_at)}</span>
                                 {linkedMilestone && (
-                                  <span className="flex items-center gap-0.5 text-accent">
-                                    <ListChecks className="w-2.5 h-2.5" />{(language === 'ar' ? linkedMilestone.title_ar : (linkedMilestone.title_en || linkedMilestone.title_ar)).slice(0, 25)}
-                                  </span>
+                                  <Badge variant="outline" className="text-[8px] gap-0.5">
+                                    <ListChecks className="w-2.5 h-2.5" />{(language === 'ar' ? linkedMilestone.title_ar : (linkedMilestone.title_en || linkedMilestone.title_ar)).slice(0, 20)}
+                                  </Badge>
                                 )}
                               </div>
                             </div>
-                            <a href={att.file_url} target="_blank" rel="noopener noreferrer"><Button variant="ghost" size="icon" className="h-8 w-8"><Eye className="w-3.5 h-3.5" /></Button></a>
-                            <a href={att.file_url} download><Button variant="ghost" size="icon" className="h-8 w-8"><Download className="w-3.5 h-3.5" /></Button></a>
+                            <a href={att.file_url} target="_blank" rel="noopener noreferrer"><Button variant="ghost" size="icon" className="h-8 w-8"><ExternalLink className="w-3.5 h-3.5" /></Button></a>
+                            <a href={att.file_url} download={att.file_name}><Button variant="outline" size="icon" className="h-8 w-8"><Download className="w-3.5 h-3.5" /></Button></a>
                           </div>
                         );
                       })}
@@ -1719,7 +1933,11 @@ const ContractDetail = () => {
                 )}
               </div>
             ) : (
-              <div className="text-center py-12"><Paperclip className="w-10 h-10 mx-auto text-muted-foreground/20 mb-3" /><p className="text-muted-foreground font-body text-sm">{isRTL ? 'لا توجد مرفقات' : 'No attachments'}</p></div>
+              <div className="text-center py-12 rounded-xl border border-dashed border-border">
+                <Paperclip className="w-10 h-10 mx-auto text-muted-foreground/20 mb-3" />
+                <p className="text-muted-foreground font-body text-sm mb-1">{isRTL ? 'لا توجد مرفقات بعد' : 'No attachments yet'}</p>
+                <p className="text-[10px] text-muted-foreground/60 font-body">{isRTL ? 'ارفع الصور والمستندات المتعلقة بالعقد' : 'Upload photos and documents related to the contract'}</p>
+              </div>
             )}
           </TabsContent>
 
