@@ -361,6 +361,132 @@ const ContractDetail = () => {
     },
   });
 
+  /* ─── Measurement CRUD ─── */
+  const resetMForm = () => { setMForm({ name_ar: '', piece_number: '', floor_label: 'ground_floor', location_ar: '', length_mm: '', width_mm: '', quantity: '1', unit_price: '', notes: '' }); setEditingMeasurement(null); setShowMeasurementForm(false); };
+
+  const addMeasurementMutation = useMutation({
+    mutationFn: async () => {
+      const area = (Number(mForm.length_mm) * Number(mForm.width_mm)) / 1000000;
+      const totalCost = Number(mForm.unit_price) * Number(mForm.quantity);
+      const payload: any = {
+        contract_id: id!, name_ar: mForm.name_ar, piece_number: mForm.piece_number,
+        floor_label: mForm.floor_label, location_ar: mForm.location_ar,
+        length_mm: Number(mForm.length_mm), width_mm: Number(mForm.width_mm),
+        quantity: Number(mForm.quantity), unit_price: Number(mForm.unit_price),
+        area_sqm: area, total_cost: totalCost, notes: mForm.notes || null,
+        sort_order: (measurements?.length || 0) + 1,
+      };
+      if (editingMeasurement) {
+        const { error } = await supabase.from('contract_measurements').update(payload).eq('id', editingMeasurement.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from('contract_measurements').insert(payload);
+        if (error) throw error;
+      }
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['contract-measurements', id] });
+      resetMForm();
+      toast({ title: isRTL ? (editingMeasurement ? 'تم تحديث المقاس' : 'تم إضافة المقاس') : (editingMeasurement ? 'Measurement updated' : 'Measurement added') });
+      // Auto-update contract total from measurements
+      setTimeout(() => updateContractTotalFromMeasurements(), 500);
+    },
+    onError: (err: any) => toast({ title: err.message, variant: 'destructive' }),
+  });
+
+  const deleteMeasurementMutation = useMutation({
+    mutationFn: async (measurementId: string) => {
+      const { error } = await supabase.from('contract_measurements').delete().eq('id', measurementId);
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['contract-measurements', id] });
+      toast({ title: isRTL ? 'تم حذف المقاس' : 'Measurement deleted' });
+      setTimeout(() => updateContractTotalFromMeasurements(), 500);
+    },
+  });
+
+  const updateContractTotalFromMeasurements = async () => {
+    const { data: freshMeasurements } = await supabase.from('contract_measurements').select('total_cost').eq('contract_id', id!);
+    if (freshMeasurements && freshMeasurements.length > 0) {
+      const newTotal = freshMeasurements.reduce((s, m) => s + Number(m.total_cost || 0), 0);
+      if (newTotal > 0) {
+        await supabase.from('contracts').update({ total_amount: newTotal }).eq('id', id!);
+        queryClient.invalidateQueries({ queryKey: ['contract', id] });
+      }
+    }
+  };
+
+  const startEditMeasurement = (m: any) => {
+    setMForm({
+      name_ar: m.name_ar || '', piece_number: m.piece_number || '', floor_label: m.floor_label || 'ground_floor',
+      location_ar: m.location_ar || '', length_mm: String(m.length_mm || ''), width_mm: String(m.width_mm || ''),
+      quantity: String(m.quantity || 1), unit_price: String(m.unit_price || ''), notes: m.notes || '',
+    });
+    setEditingMeasurement(m);
+    setShowMeasurementForm(true);
+  };
+
+  /* ─── Milestone Add ─── */
+  const addMilestoneMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from('contract_milestones').insert({
+        contract_id: id!, title_ar: msForm.title_ar,
+        amount: Number(msForm.amount), due_date: msForm.due_date || null,
+        description_ar: msForm.description_ar || null,
+        sort_order: (milestones?.length || 0) + 1,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['milestones', id] });
+      setShowMilestoneForm(false);
+      setMsForm({ title_ar: '', amount: '', due_date: '', description_ar: '' });
+      toast({ title: isRTL ? 'تم إضافة المرحلة' : 'Milestone added' });
+    },
+    onError: (err: any) => toast({ title: err.message, variant: 'destructive' }),
+  });
+
+  /* ─── Amendment ─── */
+  const addAmendmentMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from('contract_amendments').insert({
+        contract_id: id!, requested_by: user!.id,
+        title_ar: amForm.title_ar, description_ar: amForm.description_ar || null,
+        amendment_type: amForm.amendment_type,
+        new_amount: amForm.new_amount ? Number(amForm.new_amount) : null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contract-amendments', id] });
+      setShowAmendmentForm(false);
+      setAmForm({ title_ar: '', description_ar: '', amendment_type: 'scope_change', new_amount: '' });
+      toast({ title: isRTL ? 'تم إرسال طلب الملحق' : 'Amendment request sent' });
+    },
+    onError: (err: any) => toast({ title: err.message, variant: 'destructive' }),
+  });
+
+  const approveAmendmentMutation = useMutation({
+    mutationFn: async (amendment: any) => {
+      const isClientUser = user?.id === contract?.client_id;
+      const field = isClientUser ? 'client_approved_at' : 'provider_approved_at';
+      const update: any = { [field]: new Date().toISOString() };
+      const otherApproved = isClientUser ? amendment.provider_approved_at : amendment.client_approved_at;
+      if (otherApproved) update.status = 'approved';
+      const { error } = await supabase.from('contract_amendments').update(update).eq('id', amendment.id);
+      if (error) throw error;
+      if (otherApproved && amendment.new_amount) {
+        await supabase.from('contracts').update({ total_amount: amendment.new_amount }).eq('id', contract!.id);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contract-amendments', id] });
+      queryClient.invalidateQueries({ queryKey: ['contract', id] });
+      toast({ title: isRTL ? 'تمت الموافقة على الملحق' : 'Amendment approved' });
+    },
+  });
+
   /* ─── Derived ─── */
   const title = contract ? (language === 'ar' ? contract.title_ar : (contract.title_en || contract.title_ar)) : '';
   const desc = contract ? (language === 'ar' ? contract.description_ar : (contract.description_en || contract.description_ar)) : '';
@@ -369,6 +495,7 @@ const ContractDetail = () => {
   const StatusIcon = cfg.icon;
   const isClient = user?.id === contract?.client_id;
   const isProvider = user?.id === contract?.provider_id;
+  const isContractLocked = contract ? ['active', 'completed', 'cancelled'].includes(contract.status) : false;
   const canAccept = contract && ((isClient && !contract.client_accepted_at) || (isProvider && !contract.provider_accepted_at));
   const formatDate = (d: string | null) => d ? new Date(d).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '-';
 
