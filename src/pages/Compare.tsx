@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { usePageMeta } from '@/hooks/usePageMeta';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,6 +16,10 @@ import { exportComparePDF } from '@/lib/compare-pdf-export';
 
 const Compare = () => {
   const { isRTL } = useLanguage();
+  usePageMeta({
+    title: isRTL ? 'مقارنة مزودي الخدمات | فنيين' : 'Compare Service Providers | Faneen',
+    description: isRTL ? 'قارن بين مزودي خدمات الألمنيوم والحديد من حيث الأسعار والتقييمات والخدمات.' : 'Compare aluminum and iron service providers by price, ratings and services.',
+  });
   const [searchParams, setSearchParams] = useSearchParams();
   const ArrowIcon = isRTL ? ArrowLeft : ArrowRight;
 

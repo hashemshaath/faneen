@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { usePageMeta } from '@/hooks/usePageMeta';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -35,6 +36,10 @@ const ProjectSkeleton = () => (
 
 const Projects = () => {
   const { isRTL, language } = useLanguage();
+  usePageMeta({
+    title: language === 'ar' ? 'المشاريع - معرض أعمال الألمنيوم والحديد | فنيين' : 'Projects - Aluminum & Iron Portfolio | Faneen',
+    description: language === 'ar' ? 'تصفح مشاريع وأعمال مصانع ومحلات الألمنيوم والحديد والزجاج والخشب.' : 'Browse aluminum, iron, glass and wood projects and portfolios.',
+  });
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedCity, setSelectedCity] = useState('all');

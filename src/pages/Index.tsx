@@ -1,9 +1,10 @@
-import { lazy, Suspense, ComponentType } from "react";
+import { lazy, Suspense, ComponentType, useMemo } from "react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { HeroSection } from "@/components/home/HeroSection";
 import { StatsSection } from "@/components/home/StatsSection";
 import { ScrollToTop } from "@/components/ScrollToTop";
+import { usePageMeta, useJsonLd } from "@/hooks/usePageMeta";
 
 // Retry wrapper for lazy imports to handle stale chunk errors after deploys
 function lazyRetry<T extends ComponentType<any>>(
@@ -40,6 +41,27 @@ const SectionFallback = () => (
 );
 
 const Index = () => {
+  usePageMeta({
+    title: 'فنيين Faneen - دليل أعمال الألمنيوم والحديد والزجاج والخشب',
+    description: 'فنيين هي المنصة الأولى للبحث عن مصانع ومحلات الألمنيوم والحديد والاستيل والزجاج والخشب. تقييمات، عقود محمية، تقسيط، ضمانات.',
+    canonical: 'https://faneen.com/',
+    ogType: 'website',
+  });
+
+  useJsonLd(useMemo(() => ({
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'فنيين Faneen',
+    url: 'https://faneen.com',
+    description: 'المنصة الأولى للبحث عن مصانع ومحلات الألمنيوم والحديد والاستيل والزجاج والخشب',
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: 'https://faneen.com/search?q={search_term_string}',
+      'query-input': 'required name=search_term_string',
+    },
+    inLanguage: ['ar', 'en'],
+  }), []));
+
   return (
     <div className="min-h-screen">
       <Navbar />

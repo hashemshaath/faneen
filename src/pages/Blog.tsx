@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
+import { usePageMeta } from '@/hooks/usePageMeta';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -57,6 +58,10 @@ const MobileCardSkeleton = () => (
 
 const Blog = () => {
   const { isRTL, language } = useLanguage();
+  usePageMeta({
+    title: language === 'ar' ? 'المدونة - مقالات ونصائح عن الألمنيوم والحديد | فنيين' : 'Blog - Aluminum & Iron Industry Articles | Faneen',
+    description: language === 'ar' ? 'اقرأ أحدث المقالات والنصائح حول صناعة الألمنيوم والحديد والزجاج والخشب. أدلة مهنية وأخبار الصناعة.' : 'Read the latest articles and tips about aluminum, iron, glass and wood industries.',
+  });
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('newest');

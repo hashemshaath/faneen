@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { usePageMeta } from '@/hooks/usePageMeta';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,6 +16,10 @@ import { ScrollToTop } from '@/components/ScrollToTop';
 
 const Offers = () => {
   const { isRTL, language } = useLanguage();
+  usePageMeta({
+    title: language === 'ar' ? 'العروض والتخفيضات - خصومات على خدمات الألمنيوم والحديد | فنيين' : 'Offers & Deals - Aluminum & Iron Discounts | Faneen',
+    description: language === 'ar' ? 'اكتشف أحدث العروض والتخفيضات من مزودي خدمات الألمنيوم والحديد والزجاج والخشب.' : 'Discover the latest offers and deals from aluminum, iron, glass and wood service providers.',
+  });
   const [activeTab, setActiveTab] = useState<string>('all');
   const [trackedIds, setTrackedIds] = useState<Set<string>>(new Set());
 

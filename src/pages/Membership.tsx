@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { usePageMeta } from '@/hooks/usePageMeta';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -33,6 +34,10 @@ const tierOrder = ['free', 'basic', 'premium', 'enterprise'];
 
 const Membership = () => {
   const { language, isRTL } = useLanguage();
+  usePageMeta({
+    title: language === 'ar' ? 'باقات العضوية - اشترك واحصل على مميزات حصرية | فنيين' : 'Membership Plans - Subscribe for Exclusive Benefits | Faneen',
+    description: language === 'ar' ? 'اختر باقة العضوية المناسبة لعملك واحصل على مميزات حصرية لتطوير أعمالك.' : 'Choose the right membership plan for your business and get exclusive benefits.',
+  });
   const { user, profile } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();

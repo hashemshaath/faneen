@@ -1,4 +1,5 @@
 import React, { useMemo, useEffect, useState, useRef, useCallback } from 'react';
+import { usePageMeta, useJsonLd } from '@/hooks/usePageMeta';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -220,6 +221,29 @@ const BlogPost = () => {
       toast.success(isBookmarked ? (isRTL ? 'تمت إزالة المقال من المحفوظات' : 'Removed from bookmarks') : (isRTL ? 'تم حفظ المقال' : 'Article bookmarked'));
     },
   });
+
+  const postTitle = post ? (language === 'ar' ? post.title_ar : (post.title_en || post.title_ar)) : '';
+  const postDesc = post ? (language === 'ar' ? (post.meta_description_ar || post.excerpt_ar) : (post.meta_description_en || post.excerpt_en || post.meta_description_ar || post.excerpt_ar)) : '';
+
+  usePageMeta({
+    title: post ? `${postTitle} | مدونة فنيين` : 'جاري التحميل... | فنيين',
+    description: postDesc?.substring(0, 160) || undefined,
+    ogType: 'article',
+    ogImage: post?.cover_image_url || post?.og_image_url || undefined,
+  });
+
+  useJsonLd(useMemo(() => post ? ({
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: post.title_ar,
+    alternativeHeadline: post.title_en,
+    description: post.meta_description_ar || post.excerpt_ar,
+    image: post.cover_image_url || post.og_image_url,
+    datePublished: post.published_at,
+    dateModified: post.updated_at,
+    url: `https://faneen.com/blog/${post.slug}`,
+    publisher: { '@type': 'Organization', name: 'فنيين Faneen', url: 'https://faneen.com' },
+  }) : null, [post]));
 
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
   const title = post ? (language === 'ar' ? post.title_ar : (post.title_en || post.title_ar)) : '';
