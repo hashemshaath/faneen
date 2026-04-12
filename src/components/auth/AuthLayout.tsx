@@ -50,7 +50,7 @@ export const AuthLayout: React.FC<{ children: React.ReactNode }> = ({ children }
   return (
     <div className="min-h-screen flex bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Image Slider */}
-      <div className="hidden lg:flex lg:w-[55%] relative overflow-hidden">
+      <div className="hidden md:flex md:w-[50%] lg:w-[55%] relative overflow-hidden">
         {slides.map((slide, i) => (
           <div
             key={i}
