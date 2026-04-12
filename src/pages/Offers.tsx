@@ -19,7 +19,18 @@ const Offers = () => {
   usePageMeta({
     title: language === 'ar' ? 'العروض والتخفيضات - خصومات على خدمات الألمنيوم والحديد | فنيين' : 'Offers & Deals - Aluminum & Iron Discounts | Faneen',
     description: language === 'ar' ? 'اكتشف أحدث العروض والتخفيضات من مزودي خدمات الألمنيوم والحديد والزجاج والخشب.' : 'Discover the latest offers and deals from aluminum, iron, glass and wood service providers.',
+    canonical: 'https://faneen.com/offers',
   });
+
+  useJsonLd(useMemo(() => ({
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'فنيين', item: 'https://faneen.com' },
+      { '@type': 'ListItem', position: 2, name: language === 'ar' ? 'العروض' : 'Offers', item: 'https://faneen.com/offers' },
+    ],
+  }), [language]));
+
   const [activeTab, setActiveTab] = useState<string>('all');
   const [trackedIds, setTrackedIds] = useState<Set<string>>(new Set());
 
