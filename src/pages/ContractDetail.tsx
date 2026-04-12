@@ -16,7 +16,7 @@ import { Progress } from '@/components/ui/progress';
 import { toast } from '@/hooks/use-toast';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
-import { exportContractPDF } from '@/lib/contract-pdf-export';
+import { exportContractPDF, exportMeasurementsPDF, exportMeasurementsExcel, parseMeasurementsFromCSV, type ImportedMeasurement } from '@/lib/contract-pdf-export';
 import {
   FileText, Shield, Wrench, CheckCircle2, Clock,
   Calendar, DollarSign, AlertTriangle, XCircle, ListChecks, Plus, Send,
@@ -148,6 +148,11 @@ const ContractDetail = () => {
   // Amendment
   const [showAmendmentForm, setShowAmendmentForm] = useState(false);
   const [amForm, setAmForm] = useState({ title_ar: '', description_ar: '', amendment_type: 'scope_change', new_amount: '' });
+  // Import measurements
+  const importFileRef = useRef<HTMLInputElement>(null);
+  const [importedMeasurements, setImportedMeasurements] = useState<ImportedMeasurement[]>([]);
+  const [showImportPreview, setShowImportPreview] = useState(false);
+  const [editingImportIdx, setEditingImportIdx] = useState<number | null>(null);
 
   /* ─── Queries ─── */
   const { data: contract, isLoading } = useQuery({
