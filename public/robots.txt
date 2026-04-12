@@ -1,16 +1,28 @@
+User-agent: *
+Allow: /
+Allow: /categories/
+Allow: /businesses/
+Allow: /city/
+Allow: /search
+
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /profile/settings
+Disallow: /add-business/success
+
 User-agent: Googlebot
 Allow: /
 
-User-agent: Bingbot
+User-agent: GPTBot
 Allow: /
 
-User-agent: Twitterbot
+User-agent: ChatGPT-User
 Allow: /
 
-User-agent: facebookexternalhit
+User-agent: Claude-Web
 Allow: /
 
-User-agent: *
+User-agent: PerplexityBot
 Allow: /
 
 Sitemap: https://faneen.com/sitemap.xml
