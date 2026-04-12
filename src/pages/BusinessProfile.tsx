@@ -1,5 +1,6 @@
+import { useMemo } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { usePageMeta, useJsonLd } from "@/hooks/usePageMeta";
 import {
   CreditCard,
   FolderOpen,
@@ -144,6 +145,40 @@ const BusinessProfile = () => {
   }
 
   const businessName = getLocalizedValue(language, business.name_ar, business.name_en);
+  const businessDesc = getLocalizedValue(language, business.description_ar, business.description_en) || getLocalizedValue(language, business.short_description_ar, business.short_description_en) || '';
+
+  usePageMeta({
+    title: `${businessName} | فنيين Faneen`,
+    description: businessDesc.substring(0, 160) || `${businessName} - مزود خدمات معتمد على منصة فنيين`,
+    ogType: 'business.business',
+    ogImage: business.logo_url || undefined,
+  });
+
+  useJsonLd(useMemo(() => ({
+    '@context': 'https://schema.org',
+    '@type': 'LocalBusiness',
+    name: business.name_ar,
+    alternateName: business.name_en,
+    description: business.description_ar,
+    url: `https://faneen.com/${business.username}`,
+    image: business.logo_url,
+    telephone: business.phone,
+    email: business.email,
+    address: business.address ? {
+      '@type': 'PostalAddress',
+      streetAddress: business.address,
+    } : undefined,
+    geo: business.latitude && business.longitude ? {
+      '@type': 'GeoCoordinates',
+      latitude: business.latitude,
+      longitude: business.longitude,
+    } : undefined,
+    aggregateRating: Number(business.rating_count) > 0 ? {
+      '@type': 'AggregateRating',
+      ratingValue: business.rating_avg,
+      reviewCount: business.rating_count,
+    } : undefined,
+  }), [business]));
   const sectionIntroTitle =
     language === "ar"
       ? "كل ما تحتاجه للتعامل مع المزود في صفحة واحدة"
