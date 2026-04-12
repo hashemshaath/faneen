@@ -109,7 +109,7 @@ const Contact = () => {
           <div className="md:col-span-3">
             {sent ? (
               <div className="flex flex-col items-center justify-center p-10 rounded-xl border border-border/50 bg-card text-center gap-4">
-                <CheckCircle className="w-16 h-16 text-green-500" />
+                <CheckCircle className="w-16 h-16 text-secondary" />
                 <h2 className="text-xl font-heading font-bold text-foreground">
                   {isRTL ? 'تم إرسال رسالتك بنجاح!' : 'Message sent successfully!'}
                 </h2>
