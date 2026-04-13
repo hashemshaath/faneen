@@ -115,7 +115,7 @@ export const BnplBadges = ({ businessId, compact = false }: Props) => {
   );
 };
 
-const BnplDialog = ({ providers }: { providers: Array<Record<string, unknown>> }) => {
+const BnplDialog = ({ providers }: { providers: any[] }) => {
   const { isRTL } = useLanguage();
   return (
     <DialogContent className="max-w-lg">
@@ -138,7 +138,7 @@ const BnplDialog = ({ providers }: { providers: Array<Record<string, unknown>> }
   );
 };
 
-const ProviderCard = ({ provider: p, linked }: { provider: Record<string, unknown>; linked: Record<string, unknown> | null }) => {
+const ProviderCard = ({ provider: p, linked }: { provider: any; linked: any }) => {
   const { isRTL } = useLanguage();
   const name = isRTL ? p.name_ar : p.name_en;
   const desc = isRTL ? p.description_ar : p.description_en;
@@ -185,7 +185,7 @@ const ProviderCard = ({ provider: p, linked }: { provider: Record<string, unknow
   );
 };
 
-const BnplProviderDetail = ({ provider: p, linked }: { provider: Record<string, unknown>; linked: Record<string, unknown> | null }) => {
+const BnplProviderDetail = ({ provider: p, linked }: { provider: any; linked: any }) => {
   const { isRTL } = useLanguage();
   const name = isRTL ? p.name_ar : p.name_en;
   const desc = isRTL ? p.description_ar : p.description_en;

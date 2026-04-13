@@ -45,7 +45,7 @@ const preloadImage = (src: string) => {
   img.src = src;
 };
 
-const SearchBar = memo(({ categories, cities, language, isRTL, t, onSearch }: { categories: Array<Record<string, unknown>>; cities: Array<Record<string, unknown>>; language: string; isRTL: boolean; t: (key: string) => string; onSearch: (params: Record<string, string>) => void }) => {
+const SearchBar = memo(({ categories, cities, language, isRTL, t, onSearch }: any) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedCity, setSelectedCity] = useState('');
@@ -108,7 +108,7 @@ const SearchBar = memo(({ categories, cities, language, isRTL, t, onSearch }: { 
 });
 SearchBar.displayName = 'SearchBar';
 
-const HeroTitle = memo(({ slides, current, language, t }: { slides: typeof slidesData; current: number; language: string; t: (key: string) => string }) => {
+const HeroTitle = memo(({ slides, current, language, t }: { slides: typeof slidesData; current: number; language: string; t: any }) => {
   const slide = slides[current];
   const line1 = 'titleKey1' in slide && slide.titleKey1
     ? t(slide.titleKey1 as string)
