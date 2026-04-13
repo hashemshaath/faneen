@@ -110,7 +110,7 @@ export const NotificationBell = () => {
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [user?.id, queryClient, handleRealtimeNotification]);
+  }, [user, queryClient, handleRealtimeNotification]);
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 

@@ -749,7 +749,7 @@ const DashboardMessages = () => {
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [user?.id, queryClient]);
+  }, [user, queryClient]);
 
   /* ─── Mark as read ─── */
   useEffect(() => {

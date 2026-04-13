@@ -174,7 +174,7 @@ const DashboardNotifications = () => {
         queryClient.invalidateQueries({ queryKey: ['notifications', user.id] });
       }).subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [queryClient, user?.id]);
+  }, [queryClient, user]);
 
   const filtered = useMemo(() => {
     return notifications.filter((n) => {
