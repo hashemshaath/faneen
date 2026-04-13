@@ -9,6 +9,18 @@ import {
   clearSearchHistory,
 } from '@/services/search/useSearch';
 
+/* ── Industry-specific default suggestions ── */
+const industryDefaults = [
+  { label_ar: 'مصانع ألمنيوم في الرياض', label_en: 'Aluminum factories in Riyadh', category_ar: 'ألمنيوم', category_en: 'Aluminum', icon: '🪟' },
+  { label_ar: 'تركيب نوافذ ألمنيوم', label_en: 'Aluminum window installation', category_ar: 'ألمنيوم', category_en: 'Aluminum', icon: '🪟' },
+  { label_ar: 'بوابات حديدية', label_en: 'Iron gates', category_ar: 'حديد وستيل', category_en: 'Iron & Steel', icon: '⚙️' },
+  { label_ar: 'مطابخ خشبية', label_en: 'Wooden kitchens', category_ar: 'خشب', category_en: 'Wood', icon: '🪵' },
+  { label_ar: 'واجهات زجاجية', label_en: 'Glass facades', category_ar: 'زجاج', category_en: 'Glass', icon: '🔷' },
+  { label_ar: 'مظلات ألمنيوم', label_en: 'Aluminum canopies', category_ar: 'ألمنيوم', category_en: 'Aluminum', icon: '🌂' },
+  { label_ar: 'درابزين حديد', label_en: 'Iron railings', category_ar: 'حديد وستيل', category_en: 'Iron & Steel', icon: '⚙️' },
+  { label_ar: 'أبواب خشبية داخلية', label_en: 'Interior wooden doors', category_ar: 'خشب', category_en: 'Wood', icon: '🚪' },
+];
+
 interface SearchAutocompleteProps {
   query: string;
   onQueryChange: (q: string) => void;
@@ -19,6 +31,7 @@ interface SearchAutocompleteProps {
 
 export const SearchAutocomplete = ({ query, onQueryChange, onSearch, businesses, categories }: SearchAutocompleteProps) => {
   const { t, language } = useLanguage();
+  const isAr = language === 'ar';
   const [isOpen, setIsOpen] = useState(false);
   const [inputFocused, setInputFocused] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
@@ -26,12 +39,10 @@ export const SearchAutocomplete = ({ query, onQueryChange, onSearch, businesses,
   const containerRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
-  // Load history on focus
   useEffect(() => {
     if (inputFocused) setHistory(getSearchHistory());
   }, [inputFocused]);
 
-  // Close on outside click
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
@@ -45,53 +56,67 @@ export const SearchAutocomplete = ({ query, onQueryChange, onSearch, businesses,
   const suggestions = useMemo(() => {
     if (!query.trim() || query.length < 2) return [];
     const q = query.toLowerCase();
-    const results: { type: 'business' | 'category' | 'history'; label: string; id: string }[] = [];
+    const results: { type: 'business' | 'category' | 'history' | 'industry'; label: string; id: string; icon?: string; category?: string }[] = [];
 
-    // History matches first
+    // History matches
     history.forEach(h => {
       if (h.toLowerCase().includes(q) && h !== query) {
         results.push({ type: 'history', label: h, id: `h-${h}` });
       }
     });
 
+    // Industry suggestions matching query
+    industryDefaults.forEach((ind, idx) => {
+      const label = isAr ? ind.label_ar : ind.label_en;
+      if (label.toLowerCase().includes(q)) {
+        results.push({ type: 'industry', label, id: `ind-${idx}`, icon: ind.icon, category: isAr ? ind.category_ar : ind.category_en });
+      }
+    });
+
     categories?.forEach(c => {
-      const name = language === 'ar' ? c.name_ar : c.name_en;
+      const name = isAr ? c.name_ar : c.name_en;
       if (name.toLowerCase().includes(q)) {
         results.push({ type: 'category', label: name, id: c.id });
       }
     });
 
     businesses?.slice(0, 100).forEach(b => {
-      const name = language === 'ar' ? b.name_ar : (b.name_en || b.name_ar);
+      const name = isAr ? b.name_ar : (b.name_en || b.name_ar);
       if (name.toLowerCase().includes(q)) {
         results.push({ type: 'business', label: name, id: b.username });
       }
     });
 
-    return results.slice(0, 8);
-  }, [query, businesses, categories, language, history]);
+    return results.slice(0, 10);
+  }, [query, businesses, categories, isAr, history]);
 
-  // Build flat items list for keyboard nav
+  // Build flat items list for keyboard nav + empty state
   const allItems = useMemo(() => {
     if (suggestions.length > 0) return suggestions;
     if (!query) {
-      const trendingSearches = language === 'ar'
-        ? ['نوافذ ألمنيوم', 'أبواب حديد', 'زجاج سيكوريت', 'مطابخ']
-        : ['Aluminum windows', 'Iron doors', 'Securit glass', 'Kitchens'];
-      const items: { type: 'history' | 'trending'; label: string; id: string }[] = [];
+      const items: { type: string; label: string; id: string; icon?: string; category?: string }[] = [];
+      // Recent history
       history.slice(0, 5).forEach(h => items.push({ type: 'history', label: h, id: `h-${h}` }));
-      trendingSearches.forEach(t => items.push({ type: 'trending', label: t, id: `t-${t}` }));
+      // Industry trending grouped by category
+      industryDefaults.forEach((ind, idx) => {
+        items.push({
+          type: 'trending',
+          label: isAr ? ind.label_ar : ind.label_en,
+          id: `t-${idx}`,
+          icon: ind.icon,
+          category: isAr ? ind.category_ar : ind.category_en,
+        });
+      });
       return items;
     }
     return [];
-  }, [suggestions, query, history, language]);
+  }, [suggestions, query, history, isAr]);
 
   const showDropdown = inputFocused && allItems.length > 0;
 
-  // Reset active index when items change
   useEffect(() => { setActiveIndex(-1); }, [allItems.length]);
 
-  const handleSelect = useCallback((item: typeof allItems[0]) => {
+  const handleSelect = useCallback((item: { type: string; label: string; id: string }) => {
     if (item.type === 'business') {
       window.location.href = `/${item.id}`;
     } else {
@@ -117,7 +142,6 @@ export const SearchAutocomplete = ({ query, onQueryChange, onSearch, businesses,
       if (e.key === 'Enter') { handleSubmit(); return; }
       return;
     }
-
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault();
@@ -138,7 +162,6 @@ export const SearchAutocomplete = ({ query, onQueryChange, onSearch, businesses,
     }
   }, [showDropdown, allItems.length, handleSubmit]);
 
-  // Scroll active item into view
   useEffect(() => {
     if (activeIndex >= 0 && listRef.current) {
       const el = listRef.current.children[activeIndex] as HTMLElement;
@@ -161,10 +184,26 @@ export const SearchAutocomplete = ({ query, onQueryChange, onSearch, businesses,
   }, []);
 
   const typeLabel = (type: string) => {
-    if (type === 'category') return language === 'ar' ? 'قسم' : 'Category';
-    if (type === 'business') return language === 'ar' ? 'مزود' : 'Provider';
+    if (type === 'category') return isAr ? 'قسم' : 'Category';
+    if (type === 'business') return isAr ? 'مزود' : 'Provider';
     return '';
   };
+
+  // Group trending items by category for empty-state display
+  const trendingGroups = useMemo(() => {
+    if (query || suggestions.length > 0) return null;
+    const trending = allItems.filter(i => i.type === 'trending');
+    const groups: Record<string, typeof trending> = {};
+    trending.forEach(t => {
+      const cat = t.category || (isAr ? 'أخرى' : 'Other');
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(t);
+    });
+    return groups;
+  }, [allItems, query, suggestions.length, isAr]);
+
+  // Flat index counter for keyboard nav across grouped items
+  let flatIndex = !query ? history.filter(() => true).slice(0, 5).length : 0;
 
   return (
     <div ref={containerRef} className="max-w-2xl mx-auto relative group" role="combobox" aria-expanded={showDropdown} aria-haspopup="listbox">
@@ -194,79 +233,158 @@ export const SearchAutocomplete = ({ query, onQueryChange, onSearch, businesses,
       {/* Dropdown */}
       {showDropdown && isOpen && (
         <div
-          className="absolute top-full mt-2 inset-x-0 bg-card rounded-2xl border border-border shadow-xl overflow-hidden z-50 animate-fade-in max-h-[360px] overflow-y-auto"
+          className="absolute top-full mt-2 inset-x-0 bg-card rounded-2xl border border-border shadow-xl overflow-hidden z-50 animate-fade-in max-h-[420px] overflow-y-auto"
           role="listbox"
           ref={listRef}
         >
-          {/* History header when no query */}
-          {!query && history.length > 0 && (
-            <div className="flex items-center justify-between px-4 pt-3 pb-1">
-              <p className="text-xs text-muted-foreground font-body flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5" />
-                {language === 'ar' ? 'عمليات بحث سابقة' : 'Recent searches'}
-              </p>
-              <button
-                onMouseDown={handleClearHistory}
-                className="text-[10px] text-destructive hover:underline font-body"
-              >
-                {language === 'ar' ? 'مسح الكل' : 'Clear all'}
-              </button>
-            </div>
-          )}
+          {/* ─── When query is empty: show history + grouped industry trending ─── */}
+          {!query && (
+            <>
+              {/* History section */}
+              {history.length > 0 && (
+                <>
+                  <div className="flex items-center justify-between px-4 pt-3 pb-1">
+                    <p className="text-xs text-muted-foreground font-body flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5" />
+                      {isAr ? 'عمليات بحث سابقة' : 'Recent searches'}
+                    </p>
+                    <button
+                      onMouseDown={handleClearHistory}
+                      className="text-[10px] text-destructive hover:underline font-body"
+                    >
+                      {isAr ? 'مسح الكل' : 'Clear all'}
+                    </button>
+                  </div>
+                  {history.slice(0, 5).map((h, i) => (
+                    <ItemButton
+                      key={`h-${h}`}
+                      item={{ type: 'history', label: h, id: `h-${h}` }}
+                      index={i}
+                      isActive={activeIndex === i}
+                      onSelect={handleSelect}
+                      typeLabel=""
+                      icon={<Clock className="w-4 h-4 text-muted-foreground/60 flex-shrink-0" />}
+                      endAction={
+                        <button
+                          onMouseDown={(e) => handleRemoveHistory(e, h)}
+                          className="opacity-0 group-hover/item:opacity-100 p-1 hover:bg-destructive/10 rounded transition-all"
+                          aria-label="Remove from history"
+                        >
+                          <Trash2 className="w-3 h-3 text-muted-foreground" />
+                        </button>
+                      }
+                    />
+                  ))}
+                </>
+              )}
 
-          {allItems.map((item, i) => {
-            const isHistory = item.type === 'history';
-            const isTrending = (item as Record<string, string>).type === 'trending';
-            
-            // Show trending header
-            if (isTrending && i === history.filter(() => !query).length) {
-              return (
-                <div key={`header-trending`}>
-                  <div className="px-4 pt-2 pb-1">
+              {/* Trending grouped by category */}
+              {trendingGroups && (
+                <>
+                  <div className="px-4 pt-3 pb-1">
                     <p className="text-xs text-muted-foreground font-body flex items-center gap-1.5">
                       <TrendingUp className="w-3.5 h-3.5" />
-                      {language === 'ar' ? 'عمليات بحث رائجة' : 'Trending searches'}
+                      {isAr ? 'الأكثر بحثاً' : 'Most searched'}
                     </p>
                   </div>
-                  <ItemButton
-                    item={item}
-                    index={i}
-                    isActive={activeIndex === i}
-                    onSelect={handleSelect}
-                    typeLabel=""
-                    icon={<TrendingUp className="w-4 h-4 text-accent/60 flex-shrink-0" />}
-                  />
-                </div>
-              );
-            }
+                  {Object.entries(trendingGroups).map(([category, items]) => (
+                    <div key={category}>
+                      <div className="px-4 py-1.5">
+                        <p className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-wider border-b border-border/40 pb-1">
+                          {category}
+                        </p>
+                      </div>
+                      {items.map((item) => {
+                        const idx = allItems.indexOf(item);
+                        return (
+                          <ItemButton
+                            key={item.id}
+                            item={item}
+                            index={idx}
+                            isActive={activeIndex === idx}
+                            onSelect={handleSelect}
+                            typeLabel=""
+                            icon={<span className="text-sm flex-shrink-0">{item.icon}</span>}
+                          />
+                        );
+                      })}
+                    </div>
+                  ))}
+                </>
+              )}
+            </>
+          )}
+
+          {/* ─── When query has results ─── */}
+          {query && suggestions.length > 0 && (() => {
+            // Group industry suggestions by category, render others inline
+            const industryItems = suggestions.filter(s => s.type === 'industry');
+            const otherItems = suggestions.filter(s => s.type !== 'industry');
+            const industryGroups: Record<string, typeof industryItems> = {};
+            industryItems.forEach(item => {
+              const cat = item.category || (isAr ? 'أخرى' : 'Other');
+              if (!industryGroups[cat]) industryGroups[cat] = [];
+              industryGroups[cat].push(item);
+            });
 
             return (
-              <ItemButton
-                key={`${item.type}-${item.id}-${i}`}
-                item={item}
-                index={i}
-                isActive={activeIndex === i}
-                onSelect={handleSelect}
-                typeLabel={typeLabel(item.type)}
-                icon={
-                  isHistory
-                    ? <Clock className="w-4 h-4 text-muted-foreground/60 flex-shrink-0" />
-                    : isTrending
-                    ? <TrendingUp className="w-4 h-4 text-accent/60 flex-shrink-0" />
-                    : <SearchIcon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                }
-                endAction={isHistory ? (
-                  <button
-                    onMouseDown={(e) => handleRemoveHistory(e, item.label)}
-                    className="opacity-0 group-hover/item:opacity-100 p-1 hover:bg-destructive/10 rounded transition-all"
-                    aria-label="Remove from history"
-                  >
-                    <Trash2 className="w-3 h-3 text-muted-foreground" />
-                  </button>
-                ) : undefined}
-              />
+              <>
+                {/* Non-industry items first */}
+                {otherItems.map((item, i) => {
+                  const idx = suggestions.indexOf(item);
+                  return (
+                    <ItemButton
+                      key={`${item.type}-${item.id}`}
+                      item={item}
+                      index={idx}
+                      isActive={activeIndex === idx}
+                      onSelect={handleSelect}
+                      typeLabel={typeLabel(item.type)}
+                      icon={
+                        item.type === 'history'
+                          ? <Clock className="w-4 h-4 text-muted-foreground/60 flex-shrink-0" />
+                          : <SearchIcon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                      }
+                      endAction={item.type === 'history' ? (
+                        <button
+                          onMouseDown={(e) => handleRemoveHistory(e, item.label)}
+                          className="opacity-0 group-hover/item:opacity-100 p-1 hover:bg-destructive/10 rounded transition-all"
+                          aria-label="Remove from history"
+                        >
+                          <Trash2 className="w-3 h-3 text-muted-foreground" />
+                        </button>
+                      ) : undefined}
+                    />
+                  );
+                })}
+
+                {/* Industry items grouped */}
+                {Object.entries(industryGroups).map(([category, items]) => (
+                  <div key={category}>
+                    <div className="px-4 py-1.5">
+                      <p className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-wider border-b border-border/40 pb-1">
+                        {category}
+                      </p>
+                    </div>
+                    {items.map(item => {
+                      const idx = suggestions.indexOf(item);
+                      return (
+                        <ItemButton
+                          key={item.id}
+                          item={item}
+                          index={idx}
+                          isActive={activeIndex === idx}
+                          onSelect={handleSelect}
+                          typeLabel=""
+                          icon={<span className="text-sm flex-shrink-0">{item.icon}</span>}
+                        />
+                      );
+                    })}
+                  </div>
+                ))}
+              </>
             );
-          })}
+          })()}
         </div>
       )}
     </div>
@@ -280,7 +398,7 @@ const ItemButton = ({
   item: { type: string; label: string; id: string };
   index: number;
   isActive: boolean;
-  onSelect: (item) => void;
+  onSelect: (item: { type: string; label: string; id: string }) => void;
   typeLabel: string;
   icon: React.ReactNode;
   endAction?: React.ReactNode;
