@@ -37,14 +37,25 @@ jobs:
         run: npm audit --audit-level=high
         continue-on-error: true
 
-      - name: Check for .env in git
+      - name: Check for secret keys in code
         run: |
-          if git ls-files | grep -q "^\.env$"; then
-            echo "CRITICAL: .env file is tracked by git!"
+          echo "Checking for hardcoded secrets..."
+
+          if grep -r "service_role" src/ --include="*.ts" --include="*.tsx" 2>/dev/null; then
+            echo "CRITICAL: service_role key found in source code!"
             exit 1
           else
-            echo "OK: .env file is not tracked by git"
+            echo "OK: No service_role keys in source code"
           fi
+
+          if grep -r "sk-[a-zA-Z0-9]" src/ --include="*.ts" --include="*.tsx" 2>/dev/null; then
+            echo "CRITICAL: Possible OpenAI API key found in source code!"
+            exit 1
+          else
+            echo "OK: No OpenAI keys in source code"
+          fi
+
+          echo "Secret check passed"
 
       - name: Bundle Size Check
         run: |
