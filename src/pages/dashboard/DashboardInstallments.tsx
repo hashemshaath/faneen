@@ -663,7 +663,7 @@ const DashboardInstallments = () => {
       if (statusFilter !== 'all' && p.status !== statusFilter) return false;
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
-        const title = (language === 'ar' ? p.contract?.title_ar : (p.contract?.title_en || p.contract?.title_ar) || '').toLowerCase();
+        const title = (language === 'ar' ? (p.contract?.title_ar ?? '') : (p.contract?.title_en || p.contract?.title_ar || '')).toLowerCase();
         if (!title.includes(q) && !(p.ref_id || '').toLowerCase().includes(q) && !(p.contract?.contract_number || '').toLowerCase().includes(q)) return false;
       }
       return true;

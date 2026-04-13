@@ -140,7 +140,7 @@ const ContractDetail = () => {
   const [uploading, setUploading] = useState(false);
   // Measurement CRUD
   const [showMeasurementForm, setShowMeasurementForm] = useState(false);
-  const [editingMeasurement, setEditingMeasurement] = useState<Record<string, unknown> | null>(null);
+  const [editingMeasurement, setEditingMeasurement] = useState<any>(null);
   const [mForm, setMForm] = useState({ name_ar: '', piece_number: '', floor_label: 'ground_floor', location_ar: '', length_mm: '', width_mm: '', quantity: '1', unit_price: '', notes: '' });
   // Milestone CRUD
   const [showMilestoneForm, setShowMilestoneForm] = useState(false);
@@ -277,7 +277,7 @@ const ContractDetail = () => {
     mutationFn: async () => {
       const isClientUser = user?.id === contract?.client_id;
       const updateField = isClientUser ? 'client_accepted_at' : 'provider_accepted_at';
-      const update: Record<string, unknown> = { [updateField]: new Date().toISOString() };
+      const update: any = { [updateField]: new Date().toISOString() };
       const otherAccepted = isClientUser ? contract?.provider_accepted_at : contract?.client_accepted_at;
       if (otherAccepted) update.status = 'active';
       else if (contract?.status === 'draft') update.status = 'pending_approval';
@@ -373,7 +373,7 @@ const ContractDetail = () => {
     mutationFn: async () => {
       const area = (Number(mForm.length_mm) * Number(mForm.width_mm)) / 1000000;
       const totalCost = Number(mForm.unit_price) * Number(mForm.quantity);
-      const payload: Record<string, unknown> = {
+      const payload: any = {
         contract_id: id!, name_ar: mForm.name_ar, piece_number: mForm.piece_number,
         floor_label: mForm.floor_label, location_ar: mForm.location_ar,
         length_mm: Number(mForm.length_mm), width_mm: Number(mForm.width_mm),
@@ -422,7 +422,7 @@ const ContractDetail = () => {
     }
   };
 
-  const startEditMeasurement = (m: Record<string, unknown>) => {
+  const startEditMeasurement = (m: any) => {
     setMForm({
       name_ar: m.name_ar || '', piece_number: m.piece_number || '', floor_label: m.floor_label || 'ground_floor',
       location_ar: m.location_ar || '', length_mm: String(m.length_mm || ''), width_mm: String(m.width_mm || ''),
@@ -473,10 +473,10 @@ const ContractDetail = () => {
   });
 
   const approveAmendmentMutation = useMutation({
-    mutationFn: async (amendment: Record<string, unknown>) => {
+    mutationFn: async (amendment: any) => {
       const isClientUser = user?.id === contract?.client_id;
       const field = isClientUser ? 'client_approved_at' : 'provider_approved_at';
-      const update: Record<string, unknown> = { [field]: new Date().toISOString() };
+      const update: any = { [field]: new Date().toISOString() };
       const otherApproved = isClientUser ? amendment.provider_approved_at : amendment.client_approved_at;
       if (otherApproved) update.status = 'approved';
       const { error } = await supabase.from('contract_amendments').update(update).eq('id', amendment.id);
@@ -525,9 +525,9 @@ const ContractDetail = () => {
     }
   };
 
-  const getProfileName = (p: Record<string, unknown> | null) => p?.full_name || '-';
-  const getCountryName = (p: Record<string, unknown> | null) => p?.countries ? (language === 'ar' ? p.countries.name_ar : p.countries.name_en) : null;
-  const getCityName = (p: Record<string, unknown> | null) => p?.cities ? (language === 'ar' ? p.cities.name_ar : p.cities.name_en) : null;
+  const getProfileName = (p: any) => p?.full_name || '-';
+  const getCountryName = (p: any) => p?.countries ? (language === 'ar' ? p.countries.name_ar : p.countries.name_en) : null;
+  const getCityName = (p: any) => p?.cities ? (language === 'ar' ? p.cities.name_ar : p.cities.name_en) : null;
 
   const getWarrantyDuration = (start: string, end: string) => {
     const s = new Date(start);
@@ -787,7 +787,7 @@ const ContractDetail = () => {
 
   /* ─── Party Card ─── */
   const PartyCard = ({ profile, partyLabel, partyIcon: PIcon, biz, acceptedAt, isBiz }: {
-    profile: Record<string, unknown> | null; partyLabel: string; partyIcon: React.ElementType; biz?: Record<string, unknown> | null; acceptedAt?: string | null; isBiz?: boolean;
+    profile: any; partyLabel: string; partyIcon: React.ElementType; biz?: any; acceptedAt?: string | null; isBiz?: boolean;
   }) => (
     <div className="rounded-xl border border-border bg-card overflow-hidden">
       <div className="bg-muted/30 dark:bg-muted/10 px-4 py-3 flex items-center justify-between border-b border-border">
@@ -2039,3 +2039,4 @@ const ContractDetail = () => {
 };
 
 export default ContractDetail;
+

@@ -257,3 +257,4 @@ const BnplProviderDetail = ({ provider: p, linked }: { provider: any; linked: an
     </DialogContent>
   );
 };
+

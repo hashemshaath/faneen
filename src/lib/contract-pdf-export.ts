@@ -97,7 +97,7 @@ export const exportContractPDF = async (data: ContractExportData) => {
     margin: { left: 15, right: 15 },
     alternateRowStyles: { fillColor: [248, 248, 248] },
   });
-  y = (doc as Record<string, unknown> & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 12;
+  y = (doc as any).lastAutoTable.finalY + 12;
 
   // ── Financial ──
   sectionTitle(data.isRTL ? 'البيانات المالية' : 'Financial Summary');
@@ -130,7 +130,7 @@ export const exportContractPDF = async (data: ContractExportData) => {
       }
     },
   });
-  y = (doc as Record<string, unknown> & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 12;
+  y = (doc as any).lastAutoTable.finalY + 12;
 
   // ── Milestones ──
   if (data.milestones.length > 0) {
@@ -149,7 +149,7 @@ export const exportContractPDF = async (data: ContractExportData) => {
       alternateRowStyles: { fillColor: [250, 250, 250] },
       margin: { left: 15, right: 15 },
     });
-    y = (doc as Record<string, unknown> & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 12;
+    y = (doc as any).lastAutoTable.finalY + 12;
   }
 
   // ── Measurements ──
@@ -181,7 +181,7 @@ export const exportContractPDF = async (data: ContractExportData) => {
       footStyles: { fillColor: [255, 248, 230], fontStyle: 'bold', fontSize: 7 },
       margin: { left: 10, right: 10 },
     });
-    y = (doc as Record<string, unknown> & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 12;
+    y = (doc as any).lastAutoTable.finalY + 12;
   }
 
   // ── Terms ──
@@ -437,3 +437,4 @@ function mapFloorLabel(raw: string): string {
   if (lower.includes('external') || lower.includes('خارجي')) return 'external';
   return raw || 'ground_floor';
 }
+

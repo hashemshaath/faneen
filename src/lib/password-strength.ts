@@ -38,7 +38,7 @@ export function validateEmail(email: string): boolean {
 
 export function validatePhone(phone: string): boolean {
   // International: 7-15 digits after removing formatting
-  const clean = phone.replace(/[\s\-\(\)]/g, '');
+  const clean = phone.replace(/[\s\-()]/g, '');
   return /^\d{7,15}$/.test(clean);
 }
 

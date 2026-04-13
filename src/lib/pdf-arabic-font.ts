@@ -99,3 +99,4 @@ export const printContractSection = (title: string, contentHtml: string, isRTL: 
 </html>`);
   win.document.close();
 };
+
