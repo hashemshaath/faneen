@@ -648,7 +648,7 @@ const DashboardContracts = () => {
     mutationFn: async ({ amendmentId, contract }: { amendmentId: string; contract: ContractWithRole }) => {
       const isClient = user?.id === contract.client_id;
       const field = isClient ? 'client_approved_at' : 'provider_approved_at';
-      const update: Record<string, unknown> = { [field]: new Date().toISOString() };
+      const update: any = { [field]: new Date().toISOString() };
       const amendment = allAmendments.find((a) => a.id === amendmentId);
       const otherApproved = isClient ? amendment?.provider_approved_at : amendment?.client_approved_at;
       if (otherApproved) update.status = 'approved';
@@ -795,7 +795,7 @@ const DashboardContracts = () => {
   /* ── Update Milestone Status ── */
   const updateMilestoneMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const update: Record<string, unknown> = { status };
+      const update: any = { status };
       if (status === 'completed') update.completed_at = new Date().toISOString();
       const { error } = await supabase.from('contract_milestones').update(update).eq('id', id);
       if (error) throw error;
@@ -834,7 +834,7 @@ const DashboardContracts = () => {
       if (clientProfileError) throw clientProfileError;
       if (!clientProfile) throw new Error(isRTL ? 'لم يتم العثور على العميل بهذا البريد الإلكتروني' : 'Client not found with this email');
 
-      const payload = {
+      const payload: any = {
         provider_id: user!.id, client_id: clientProfile.user_id, business_id: businessId || null,
         title_ar: form.title_ar, title_en: form.title_en || null,
         description_ar: form.description_ar || null, description_en: form.description_en || null,
@@ -866,7 +866,7 @@ const DashboardContracts = () => {
     mutationFn: async (contract: ContractWithRole) => {
       const isClient = user?.id === contract.client_id;
       const updateField = isClient ? 'client_accepted_at' : 'provider_accepted_at';
-      const update: Record<string, unknown> = { [updateField]: new Date().toISOString() };
+      const update: any = { [updateField]: new Date().toISOString() };
       const otherAccepted = isClient ? contract.provider_accepted_at : contract.client_accepted_at;
       if (otherAccepted) update.status = 'active';
       else if (contract.status === 'draft') update.status = 'pending_approval';
@@ -1830,7 +1830,7 @@ const DashboardContracts = () => {
                                             <div><span className="text-muted-foreground">{isRTL ? 'البداية:' : 'Start:'}</span> {formatDate(w.start_date)}</div>
                                             <div><span className="text-muted-foreground">{isRTL ? 'النهاية:' : 'End:'}</span> {formatDate(w.end_date)}</div>
                                           </div>
-                                          {w.coverage_description_ar && <p className="text-[10px] text-muted-foreground mt-2 line-clamp-2">{isRTL ? w.coverage_description_ar : (w.coverage_description_en || w.coverage_description_ar)}</p>}
+                                          {(w as any).coverage_description_ar && <p className="text-[10px] text-muted-foreground mt-2 line-clamp-2">{isRTL ? (w as any).coverage_description_ar : ((w as any).coverage_description_en || (w as any).coverage_description_ar)}</p>}
                                         </div>
                                       );
                                     })}

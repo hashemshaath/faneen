@@ -165,8 +165,8 @@ const DashboardBlog = () => {
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState({ ...defaultForm });
   const [aiLoading, setAiLoading] = useState<string | null>(null);
-  const [seoAnalysis, setSeoAnalysis] = useState<Record<string, unknown> | null>(null);
-  const [competitorAnalysis, setCompetitorAnalysis] = useState<Record<string, unknown> | null>(null);
+  const [seoAnalysis, setSeoAnalysis] = useState<any | null>(null);
+  const [competitorAnalysis, setCompetitorAnalysis] = useState<any | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [previewLang, setPreviewLang] = useState<'ar' | 'en'>('ar');

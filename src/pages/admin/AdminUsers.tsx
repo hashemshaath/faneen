@@ -486,7 +486,7 @@ const AdminUsers = () => {
     if (!trimmed) { toast.error(isRTL ? 'الاسم مطلوب' : 'Name is required'); return; }
     updateProfileMutation.mutate({
       profileId: p.id, userId: p.user_id,
-      data: { full_name: trimmed, account_type: editForm.account_type, membership_tier: editForm.membership_tier, phone: editForm.phone.trim() || null, email: editForm.email.trim() || null },
+      data: { full_name: trimmed, account_type: editForm.account_type as any, membership_tier: editForm.membership_tier as any, phone: editForm.phone.trim() || null, email: editForm.email.trim() || null },
       oldData: { full_name: p.full_name, account_type: p.account_type, membership_tier: p.membership_tier, phone: p.phone, email: p.email },
     });
   };
