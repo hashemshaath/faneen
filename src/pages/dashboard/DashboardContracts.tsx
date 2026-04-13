@@ -133,7 +133,7 @@ interface ContractCardProps {
   payments: PaymentRow[];
   measurements: Array<{ id: string; total_cost: number | null; [key: string]: unknown }>;
   profiles: Array<{ user_id: string; full_name: string | null; avatar_url: string | null; email?: string }>;
-  onExpand: () => void;
+  onExpand: (id: string | null) => void;
   isExpanded: boolean;
   onNavigate: (id: string) => void;
   onExportPDF: (c: ContractWithRole) => void;
@@ -1404,7 +1404,7 @@ const DashboardContracts = () => {
                 ))}
               </div>
               <div className="flex items-center gap-2">
-                <Select value={sortBy} onValueChange={(v) => setSortBy(v)}>
+                <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
                   <SelectTrigger className="h-8 text-[10px] w-28 px-2.5 rounded-lg"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="date" className="text-xs">{isRTL ? 'التاريخ' : 'Date'}</SelectItem>
@@ -1536,7 +1536,7 @@ const DashboardContracts = () => {
                                       {milestones.map((m, idx) => {
                                         const mTitle = isRTL ? m.title_ar : (m.title_en || m.title_ar);
                                         const isCompleted = m.status === 'completed';
-                                        const isInProgress = m.status === 'in_progress';
+                                        const isInProgress = (m.status as string) === 'in_progress';
                                         return (
                                           <div key={m.id} className={`relative ${isRTL ? 'pr-10' : 'pl-10'}`}>
                                             <div className={`absolute top-2 ${isRTL ? 'right-1' : 'left-1'} w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold z-10 transition-all ${isCompleted ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' : isInProgress ? 'bg-accent text-accent-foreground ring-2 ring-accent/30 shadow-md' : 'bg-card text-muted-foreground border-2 border-border'}`}>
