@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useTransition } from 'react';
+import React, { useState, useMemo, useCallback, useTransition } from 'react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useQuery } from '@tanstack/react-query';
@@ -301,11 +301,11 @@ const AdminActivityLog = () => {
 
   const SYSTEM_USER_ID = '00000000-0000-0000-0000-000000000000';
 
-  const getProfileName = (userId: string) => {
+  const getProfileName = useCallback((userId: string) => {
     if (userId === SYSTEM_USER_ID) return 'النظام (تلقائي)';
     const profile = profiles?.find(p => p.user_id === userId);
     return profile?.full_name || profile?.email || `مستخدم #${userId.slice(0, 6)}`;
-  };
+  }, [profiles]);
 
   const filteredLogs = useMemo(() => {
     if (!logs) return [];
@@ -317,7 +317,7 @@ const AdminActivityLog = () => {
       const entityLabel = log.entity_type ? (entityLabels[log.entity_type] || log.entity_type).toLowerCase() : '';
       return name.includes(q) || actionLabel.includes(q) || entityLabel.includes(q);
     });
-  }, [logs, searchQuery, profiles]);
+  }, [logs, searchQuery, getProfileName]);
 
   const groupedLogs = useMemo(() => {
     const groups: { label: string; logs: typeof filteredLogs }[] = [];

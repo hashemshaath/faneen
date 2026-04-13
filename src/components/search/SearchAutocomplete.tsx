@@ -71,21 +71,20 @@ export const SearchAutocomplete = ({ query, onQueryChange, onSearch, businesses,
     return results.slice(0, 8);
   }, [query, businesses, categories, language, history]);
 
-  const trendingSearches = language === 'ar'
-    ? ['نوافذ ألمنيوم', 'أبواب حديد', 'زجاج سيكوريت', 'مطابخ']
-    : ['Aluminum windows', 'Iron doors', 'Securit glass', 'Kitchens'];
-
   // Build flat items list for keyboard nav
   const allItems = useMemo(() => {
     if (suggestions.length > 0) return suggestions;
     if (!query) {
+      const trendingSearches = language === 'ar'
+        ? ['نوافذ ألمنيوم', 'أبواب حديد', 'زجاج سيكوريت', 'مطابخ']
+        : ['Aluminum windows', 'Iron doors', 'Securit glass', 'Kitchens'];
       const items: { type: 'history' | 'trending'; label: string; id: string }[] = [];
       history.slice(0, 5).forEach(h => items.push({ type: 'history', label: h, id: `h-${h}` }));
       trendingSearches.forEach(t => items.push({ type: 'trending', label: t, id: `t-${t}` }));
       return items;
     }
     return [];
-  }, [suggestions, query, history, trendingSearches]);
+  }, [suggestions, query, history, language]);
 
   const showDropdown = inputFocused && allItems.length > 0;
 

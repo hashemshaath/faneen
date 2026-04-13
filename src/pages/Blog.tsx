@@ -175,8 +175,14 @@ const Blog = () => {
   const POSTS_PER_PAGE = 12;
 
   // Reset page on filter change
-  const prevFilterKey = useMemo(() => `${activeCategory}-${searchQuery}-${selectedTags.join(',')}-${sortBy}`, [activeCategory, searchQuery, selectedTags, sortBy]);
-  useMemo(() => { setCurrentPage(1); }, [prevFilterKey]);
+  const filterKey = `${activeCategory}-${searchQuery}-${selectedTags.join(',')}-${sortBy}`;
+  const prevFilterKeyRef = React.useRef(filterKey);
+  React.useEffect(() => {
+    if (prevFilterKeyRef.current !== filterKey) {
+      prevFilterKeyRef.current = filterKey;
+      setCurrentPage(1);
+    }
+  }, [filterKey]);
 
   const featuredPost = posts.length > 0 ? posts[0] : null;
   const regularPosts = filteredPosts.filter((p) => p.id !== featuredPost?.id);

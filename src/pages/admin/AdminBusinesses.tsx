@@ -85,6 +85,7 @@ const LocationPicker = ({ lat, lng, onPick, isRTL }: { lat: number; lng: number;
 
     mapRef.current = map;
     return () => { map.remove(); mapRef.current = null; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return <div ref={containerRef} className="w-full h-[250px] rounded-lg border border-border/50" />;
