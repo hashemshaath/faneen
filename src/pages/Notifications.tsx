@@ -39,12 +39,12 @@ const typeColors: Record<string, string> = {
   system: 'bg-muted text-muted-foreground',
 };
 
-const getNotificationIcon = (n: any) => {
+const getNotificationIcon = (n: Record<string, unknown>) => {
   if (n.reference_type?.startsWith('overdue_')) return AlertTriangle;
   return typeIcons[n.notification_type] || Bell;
 };
 
-const getNotificationColor = (n: any) => {
+const getNotificationColor = (n: Record<string, unknown>) => {
   if (n.reference_type?.startsWith('overdue_')) return 'bg-red-100 text-red-600';
   return typeColors[n.notification_type] || typeColors.system;
 };
@@ -131,7 +131,7 @@ const Notifications = () => {
     },
   });
 
-  const handleClick = (n: any) => {
+  const handleClick = (n: Record<string, unknown>) => {
     if (!n.is_read) markRead.mutate(n.id);
     if (n.action_url) navigate(n.action_url);
   };
@@ -215,7 +215,7 @@ const Notifications = () => {
               </Select>
 
               {/* Read/Unread filter */}
-              <Tabs value={readFilter} onValueChange={(v) => setReadFilter(v as any)}>
+              <Tabs value={readFilter} onValueChange={(v) => setReadFilter(v as 'all' | 'unread' | 'read')}>
                 <TabsList className="h-9">
                   <TabsTrigger value="all" className="text-xs px-3">{isRTL ? 'الكل' : 'All'}</TabsTrigger>
                   <TabsTrigger value="unread" className="text-xs px-3">{isRTL ? 'غير مقروء' : 'Unread'}</TabsTrigger>

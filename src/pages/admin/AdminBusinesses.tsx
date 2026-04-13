@@ -107,7 +107,7 @@ const reverseGeocode = async (lat: number, lng: number) => {
 };
 
 /* ─── CSV Export ─── */
-const exportCSV = (businesses: any[], language: string) => {
+const exportCSV = (businesses: Array<Record<string, unknown>>, language: string) => {
   const headers = ['Ref ID', 'Name (AR)', 'Name (EN)', 'Username', 'Phone', 'Email', 'Category', 'Tier', 'Verified', 'Active', 'Rating', 'Created'];
   const rows = businesses.map((b) => [
     b.ref_id, b.name_ar, b.name_en || '', `@${b.username}`, b.phone || '', b.email || '',
@@ -126,7 +126,7 @@ const exportCSV = (businesses: any[], language: string) => {
 
 /* ─── Stat Card Component ─── */
 const StatCard = React.memo(({ label, value, icon: Icon, trend, gradient, iconBg }: {
-  label: string; value: number; icon: any; trend?: string; gradient: string; iconBg: string;
+  label: string; value: number; icon: React.ElementType; trend?: string; gradient: string; iconBg: string;
 }) => (
   <div className={`relative overflow-hidden rounded-2xl border border-border/30 bg-gradient-to-br ${gradient} p-4 transition-all hover:shadow-md group`}>
     <div className="flex items-center gap-3">
@@ -156,7 +156,7 @@ const AdminBusinesses = () => {
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterTier, setFilterTier] = useState('all');
   const [editingBiz, setEditingBiz] = useState<Record<string, unknown> | null>(null);
-  const [editForm, setEditForm] = useState<any>({});
+  const [editForm, setEditForm] = useState<Record<string, unknown>>({});
   const [servicesPanel, setServicesPanel] = useState<string | null>(null);
   const [portfolioImages, setPortfolioImages] = useState<string[]>([]);
   const [newService, setNewService] = useState({ name_ar: '', name_en: '', description_ar: '', description_en: '', price_from: '', price_to: '', is_active: true });
@@ -166,11 +166,11 @@ const AdminBusinesses = () => {
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
   const [isPending, startTransition] = useTransition();
 
-  const setField = useCallback((key: string, value: any) => {
+  const setField = useCallback((key: string, value: string | number | boolean | null) => {
     setEditForm((f) => ({ ...f, [key]: value }));
   }, []);
 
-  const setServiceField = useCallback((key: string, value: any) => {
+  const setServiceField = useCallback((key: string, value: string | number | boolean | null) => {
     setNewService(s => ({ ...s, [key]: value }));
   }, []);
 
@@ -255,7 +255,7 @@ const AdminBusinesses = () => {
   });
 
   /* ─── Mutations ─── */
-  const logAction = async (action: string, entityId: string, details: any) => {
+  const logAction = async (action: string, entityId: string, details: Record<string, unknown>) => {
     await supabase.from('admin_activity_log').insert({
       user_id: user!.id, action, entity_type: 'business', entity_id: entityId, details,
     });
@@ -263,7 +263,7 @@ const AdminBusinesses = () => {
 
   const toggleMutation = useMutation({
     mutationFn: async ({ id, field, value }: { id: string; field: string; value: boolean }) => {
-      const { error } = await supabase.from('businesses').update({ [field]: value } as any).eq('id', id);
+      const { error } = await supabase.from('businesses').update({ [field]: value } ).eq('id', id);
       if (error) throw error;
       await logAction(`business_${field}_${value}`, id, { field, value });
     },
@@ -276,7 +276,7 @@ const AdminBusinesses = () => {
 
   const tierMutation = useMutation({
     mutationFn: async ({ id, tier }: { id: string; tier: string }) => {
-      const { error } = await supabase.from('businesses').update({ membership_tier: tier } as any).eq('id', id);
+      const { error } = await supabase.from('businesses').update({ membership_tier: tier } ).eq('id', id);
       if (error) throw error;
       await logAction('business_tier_change', id, { new_tier: tier });
     },
@@ -452,7 +452,7 @@ const AdminBusinesses = () => {
   };
 
   /* ─── Edit Open ─── */
-  const openEdit = (biz: any) => {
+  const openEdit = (biz: Record<string, unknown>) => {
     setServicesPanel(null);
     setEditForm({
       name_ar: biz.name_ar, name_en: biz.name_en || '',
@@ -1317,7 +1317,7 @@ const AdminBusinesses = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filtered.map((biz: any, idx: number) => {
+                  {filtered.map((biz, idx) => {
                     const tierInfo = tiers.find(t => t.value === biz.membership_tier) || tiers[0];
                     return (
                       <TableRow key={biz.id} className={`hover:bg-muted/30 ${!biz.is_active ? 'opacity-50' : ''}`}
@@ -1376,7 +1376,7 @@ const AdminBusinesses = () => {
         ) : (
           /* ─── Cards View ─── */
           <div className="space-y-3">
-            {filtered.map((biz: any, idx: number) => {
+            {filtered.map((biz, idx) => {
               const tierInfo = tiers.find(t => t.value === biz.membership_tier) || tiers[0];
               const hasContract = contractBusinessIds.includes(biz.id);
               const svcCount = allServices.filter((s) => s.business_id === biz.id).length;

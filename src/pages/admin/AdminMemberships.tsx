@@ -30,7 +30,7 @@ import { LIMIT_FIELDS, LIMIT_CATEGORIES, parseLimits, limitsToJson } from '@/lib
 type Tab = 'overview' | 'plans' | 'subscriptions' | 'businesses';
 
 /* ─── Plan Card ─── */
-const PlanCard = React.memo(({ plan, isRTL, language, subsCount, onEdit }: { plan: any; isRTL: boolean; language: string; subsCount: number; onEdit: (p: any) => void }) => {
+const PlanCard = React.memo(({ plan, isRTL, language, subsCount, onEdit }: { plan: Record<string, unknown>; isRTL: boolean; language: string; subsCount: number; onEdit: (p: Record<string, unknown>) => void }) => {
   const Icon = tierIcons[plan.tier] || Zap;
   const colors = tierColors[plan.tier] || tierColors.free;
   const features = Array.isArray(plan.features) ? plan.features : [];
@@ -295,7 +295,7 @@ LimitsEditor.displayName = 'LimitsEditor';
 
 /* ─── Subscription Row ─── */
 const SubRow = React.memo(({ sub, isRTL, language, plans, onCancel, onRenew, onUpgrade }: {
-  sub: any; isRTL: boolean; language: string; plans: any[]; onCancel: (id: string) => void; onRenew: (sub: any) => void; onUpgrade: (sub: any) => void;
+  sub: Record<string, unknown>; isRTL: boolean; language: string; plans: Array<Record<string, unknown>>; onCancel: (id: string) => void; onRenew: (sub: Record<string, unknown>) => void; onUpgrade: (sub: Record<string, unknown>) => void;
 }) => {
   const plan = sub.plan;
   const Icon = tierIcons[plan?.tier] || Zap;
@@ -577,12 +577,12 @@ const AdminMemberships = () => {
       setEditingPlan(null);
       toast.success(isRTL ? 'تم تحديث الخطة بنجاح' : 'Plan updated successfully');
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: Error) => toast.error(e.message),
   });
 
   const cancelSubMutation = useMutation({
     mutationFn: async (subId: string) => {
-      const { error } = await supabase.rpc('cancel_subscription' as any, { _subscription_id: subId });
+      const { error } = await supabase.rpc('cancel_subscription' , { _subscription_id: subId });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -590,13 +590,13 @@ const AdminMemberships = () => {
       queryClient.invalidateQueries({ queryKey: ['admin-all-businesses-tiers'] });
       toast.success(isRTL ? 'تم إلغاء الاشتراك' : 'Subscription cancelled');
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: Error) => toast.error(e.message),
   });
 
   const upgradeMutation = useMutation({
     mutationFn: async () => {
       if (!upgradeSub || !upgradeTargetPlan) return;
-      const { error } = await supabase.rpc('admin_upgrade_subscription' as any, {
+      const { error } = await supabase.rpc('admin_upgrade_subscription' , {
         _subscription_id: upgradeSub.id,
         _new_plan_id: upgradeTargetPlan,
         _billing_cycle: upgradeCycle,
@@ -610,13 +610,13 @@ const AdminMemberships = () => {
       setUpgradeTargetPlan('');
       toast.success(isRTL ? 'تمت الترقية بنجاح' : 'Upgrade completed');
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: Error) => toast.error(e.message),
   });
 
-  const handleRenew = useCallback(async (sub: any) => {
+  const handleRenew = useCallback(async (sub: Record<string, unknown>) => {
     if (!sub.plan_id || !sub.user_id) return;
     try {
-      const { error } = await supabase.rpc('subscribe_to_plan' as any, {
+      const { error } = await supabase.rpc('subscribe_to_plan' , {
         _user_id: sub.user_id,
         _plan_id: sub.plan_id,
         _business_id: sub.business_id || null,
@@ -626,10 +626,10 @@ const AdminMemberships = () => {
       queryClient.invalidateQueries({ queryKey: ['admin-subscriptions'] });
       queryClient.invalidateQueries({ queryKey: ['admin-all-businesses-tiers'] });
       toast.success(isRTL ? 'تم تجديد الاشتراك' : 'Subscription renewed');
-    } catch (e: any) { toast.error(e.message); }
+    } catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'Error'); }
   }, [isRTL, queryClient]);
 
-  const openEdit = useCallback((plan: any) => {
+  const openEdit = useCallback((plan: Record<string, unknown>) => {
     setEditingPlan(plan);
     const features = Array.isArray(plan.features) ? (plan.features as string[]).join('\n') : '';
     setFeaturesText(features);

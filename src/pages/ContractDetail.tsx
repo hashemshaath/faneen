@@ -297,7 +297,7 @@ const ContractDetail = () => {
         provider_id: contract!.provider_id,
         title_ar: maintTitle,
         description_ar: maintDesc,
-        priority: maintPriority as any,
+        priority: maintPriority as 'low' | 'normal' | 'high' | 'urgent',
         warranty_id: maintWarrantyId || null,
       });
       if (error) throw error;
@@ -396,7 +396,7 @@ const ContractDetail = () => {
       // Auto-update contract total from measurements
       setTimeout(() => updateContractTotalFromMeasurements(), 500);
     },
-    onError: (err: any) => toast({ title: err.message, variant: 'destructive' }),
+    onError: (err: Error) => toast({ title: err.message, variant: 'destructive' }),
   });
 
   const deleteMeasurementMutation = useMutation({
@@ -422,7 +422,7 @@ const ContractDetail = () => {
     }
   };
 
-  const startEditMeasurement = (m: any) => {
+  const startEditMeasurement = (m: Record<string, unknown>) => {
     setMForm({
       name_ar: m.name_ar || '', piece_number: m.piece_number || '', floor_label: m.floor_label || 'ground_floor',
       location_ar: m.location_ar || '', length_mm: String(m.length_mm || ''), width_mm: String(m.width_mm || ''),
@@ -449,7 +449,7 @@ const ContractDetail = () => {
       setMsForm({ title_ar: '', amount: '', due_date: '', description_ar: '' });
       toast({ title: isRTL ? 'تم إضافة المرحلة' : 'Milestone added' });
     },
-    onError: (err: any) => toast({ title: err.message, variant: 'destructive' }),
+    onError: (err: Error) => toast({ title: err.message, variant: 'destructive' }),
   });
 
   /* ─── Amendment ─── */
@@ -469,11 +469,11 @@ const ContractDetail = () => {
       setAmForm({ title_ar: '', description_ar: '', amendment_type: 'scope_change', new_amount: '' });
       toast({ title: isRTL ? 'تم إرسال طلب الملحق' : 'Amendment request sent' });
     },
-    onError: (err: any) => toast({ title: err.message, variant: 'destructive' }),
+    onError: (err: Error) => toast({ title: err.message, variant: 'destructive' }),
   });
 
   const approveAmendmentMutation = useMutation({
-    mutationFn: async (amendment: any) => {
+    mutationFn: async (amendment: Record<string, unknown>) => {
       const isClientUser = user?.id === contract?.client_id;
       const field = isClientUser ? 'client_approved_at' : 'provider_approved_at';
       const update: Record<string, unknown> = { [field]: new Date().toISOString() };
@@ -525,9 +525,9 @@ const ContractDetail = () => {
     }
   };
 
-  const getProfileName = (p: any) => p?.full_name || '-';
-  const getCountryName = (p: any) => p?.countries ? (language === 'ar' ? p.countries.name_ar : p.countries.name_en) : null;
-  const getCityName = (p: any) => p?.cities ? (language === 'ar' ? p.cities.name_ar : p.cities.name_en) : null;
+  const getProfileName = (p: Record<string, unknown> | null) => p?.full_name || '-';
+  const getCountryName = (p: Record<string, unknown> | null) => p?.countries ? (language === 'ar' ? p.countries.name_ar : p.countries.name_en) : null;
+  const getCityName = (p: Record<string, unknown> | null) => p?.cities ? (language === 'ar' ? p.cities.name_ar : p.cities.name_en) : null;
 
   const getWarrantyDuration = (start: string, end: string) => {
     const s = new Date(start);
@@ -787,7 +787,7 @@ const ContractDetail = () => {
 
   /* ─── Party Card ─── */
   const PartyCard = ({ profile, partyLabel, partyIcon: PIcon, biz, acceptedAt, isBiz }: {
-    profile: any; partyLabel: string; partyIcon: React.ElementType; biz?: any; acceptedAt?: string | null; isBiz?: boolean;
+    profile: Record<string, unknown> | null; partyLabel: string; partyIcon: React.ElementType; biz?: Record<string, unknown> | null; acceptedAt?: string | null; isBiz?: boolean;
   }) => (
     <div className="rounded-xl border border-border bg-card overflow-hidden">
       <div className="bg-muted/30 dark:bg-muted/10 px-4 py-3 flex items-center justify-between border-b border-border">

@@ -206,7 +206,7 @@ const Blog = () => {
             {isRTL ? 'الأكثر قراءة' : 'Most Read'}
           </h3>
           <div className="space-y-2.5 sm:space-y-3">
-            {popularPosts.map((post: any, i: number) => (
+            {popularPosts.map((post, i) => (
               <Link key={post.id} to={`/blog/${post.slug}`} className="group flex items-start gap-2.5 sm:gap-3">
                 <span className="shrink-0 w-7 h-7 rounded-lg bg-accent/10 dark:bg-accent/15 text-accent font-bold text-sm flex items-center justify-center group-hover:bg-accent group-hover:text-accent-foreground transition-all duration-300 group-hover:scale-110">
                   {i + 1}
@@ -468,7 +468,7 @@ const Blog = () => {
                 <>
                   {/* Mobile: horizontal compact cards */}
                   <div className="sm:hidden space-y-2.5">
-                    {displayPosts.map((post: any, i: number) => (
+                    {displayPosts.map((post, i) => (
                       <Link key={post.id} to={`/blog/${post.slug}`} className="group block">
                         <div
                           className="flex gap-3 p-3 rounded-xl border border-border/50 dark:border-border/30 bg-card dark:bg-card/80 hover:border-accent/30 transition-all duration-300 hover:shadow-md active:scale-[0.98]"
@@ -517,7 +517,7 @@ const Blog = () => {
 
                   {/* Desktop: grid cards */}
                   <div className="hidden sm:grid grid-cols-2 gap-4 sm:gap-5">
-                    {displayPosts.map((post: any, i: number) => (
+                    {displayPosts.map((post, i) => (
                       <Link key={post.id} to={`/blog/${post.slug}`} className="group block">
                         <Card
                           className="overflow-hidden h-full border-border/50 dark:border-border/30 hover:border-accent/30 transition-all duration-500 hover:shadow-xl hover:-translate-y-1 dark:bg-card/80"

@@ -77,7 +77,7 @@ const accountTypeLabels: Record<string, string> = {
 };
 
 /* ─── Format detail value ─── */
-const formatValue = (value: any): string => {
+const formatValue = (value: unknown): string => {
   if (value === null || value === undefined || value === '') return '—';
   if (value === true) return 'نعم';
   if (value === false) return 'لا';
@@ -94,7 +94,7 @@ interface DetailItem {
   value?: string;
 }
 
-const buildDetailItems = (details: any, action: string): DetailItem[] => {
+const buildDetailItems = (details: Record<string, unknown> | null, action: string): DetailItem[] => {
   if (!details || typeof details !== 'object') return [];
   const items: DetailItem[] = [];
 
@@ -102,8 +102,8 @@ const buildDetailItems = (details: any, action: string): DetailItem[] => {
   if (details.changes && typeof details.changes === 'object') {
     for (const [field, change] of Object.entries(details.changes)) {
       const label = fieldLabels[field] || field;
-      if (change && typeof change === 'object' && 'old' in (change as any)) {
-        const c = change as { old: any; new: any };
+      if (change && typeof change === 'object' && 'old' in (change as Record<string, unknown>)) {
+        const c = change as { old: unknown; new: unknown };
         items.push({ label, oldVal: formatValue(c.old), newVal: formatValue(c.new) });
       } else {
         items.push({ label, value: formatValue(change) });
@@ -144,7 +144,7 @@ const buildDetailItems = (details: any, action: string): DetailItem[] => {
 };
 
 /* ─── Build a human-readable summary ─── */
-const buildSummary = (log: any, getProfileName: (id: string) => string): string => {
+const buildSummary = (log: Record<string, unknown>, getProfileName: (id: string) => string): string => {
   const details = log.details;
   const action = log.action;
   const entityLabel = log.entity_type ? entityLabels[log.entity_type] || log.entity_type : '';
@@ -190,7 +190,7 @@ const getDateGroup = (dateStr: string): string => {
 
 /* ─── Log Item Component ─── */
 const LogItem = React.memo(({ log, getProfileName, isRTL }: {
-  log: any; getProfileName: (id: string) => string; isRTL: boolean;
+  log: Record<string, unknown>; getProfileName: (id: string) => string; isRTL: boolean;
 }) => {
   const [expanded, setExpanded] = useState(false);
   const config = actionConfig[log.action] || { ar: log.action, color: 'text-muted-foreground', iconBg: 'bg-muted', icon: Activity };

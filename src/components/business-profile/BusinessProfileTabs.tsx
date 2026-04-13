@@ -35,7 +35,7 @@ import {
 } from "./business-profile.data";
 import { Stars } from "./BusinessProfileHeader";
 
-const EmptyState = ({ icon: Icon, text }: { icon: any; text: string }) => (
+const EmptyState = ({ icon: Icon, text }: { icon: React.ElementType; text: string }) => (
   <div className="py-12 text-center sm:py-16">
     <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-muted/30 dark:bg-muted/15">
       <Icon className="h-8 w-8 text-muted-foreground/20" />
@@ -182,7 +182,7 @@ export const ProjectsTab = ({ businessId }: { businessId: string }) => {
 
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 sm:gap-5">
-      {projects.map((project: any, index: number) => {
+      {projects.map((project, index) => {
         const title = getLocalizedValue(language, project.title_ar, project.title_en);
         const description = getLocalizedValue(language, project.description_ar, project.description_en);
         const cityName = getLocalizedValue(language, project.cities?.name_ar, project.cities?.name_en);
@@ -424,7 +424,7 @@ export const PortfolioTab = ({ businessId }: { businessId: string }) => {
   );
 };
 
-export const ReviewsTab = ({ business }: { business: any }) => {
+export const ReviewsTab = ({ business }: { business: Record<string, unknown> }) => {
   const { language } = useLanguage();
   const { data: reviews, isLoading } = useReviews(business.id);
 
@@ -489,8 +489,8 @@ export const ReviewsTab = ({ business }: { business: any }) => {
       </section>
 
       <div className="space-y-3 sm:space-y-4">
-        {reviews.map((review: any, index: number) => {
-          const profile = review.profiles as any;
+        {reviews.map((review, index) => {
+          const profile = review.profiles as Record<string, unknown> | null;
           const reviewerName = profile?.full_name || (language === "ar" ? "مستخدم" : "User");
           const reviewDate = new Date(review.created_at).toLocaleDateString(language === "ar" ? "ar-SA" : "en-US", {
             year: "numeric",
@@ -553,7 +553,7 @@ export const BranchesTab = ({ businessId }: { businessId: string }) => {
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
-      {branches.map((branch: any, index: number) => {
+      {branches.map((branch, index) => {
         const name = getLocalizedValue(language, branch.name_ar, branch.name_en);
         const cityName = getLocalizedValue(language, branch.cities?.name_ar, branch.cities?.name_en);
         const countryName = getLocalizedValue(language, branch.countries?.name_ar, branch.countries?.name_en);
@@ -571,7 +571,7 @@ export const BranchesTab = ({ businessId }: { businessId: string }) => {
           branch.customer_service_phone && { icon: PhoneCall, label: language === "ar" ? "خدمة العملاء" : "Customer Service", value: branch.customer_service_phone, dir: "ltr" as const, href: `tel:${branch.customer_service_phone}` },
           branch.email && { icon: Mail, label: language === "ar" ? "البريد" : "Email", value: branch.email, dir: "ltr" as const, href: `mailto:${branch.email}` },
           branch.website && { icon: Globe, label: language === "ar" ? "الموقع" : "Website", value: branch.website.replace(/^https?:\/\//, ""), dir: "ltr" as const, href: branch.website, external: true },
-        ].filter(Boolean) as Array<{ icon: any; label: string; value: string; dir?: "ltr"; href?: string; external?: boolean }>;
+        ].filter(Boolean) as Array<{ icon: React.ElementType; label: string; value: string; dir?: "ltr"; href?: string; external?: boolean }>;
 
         return (
           <article
@@ -612,7 +612,7 @@ export const BranchesTab = ({ businessId }: { businessId: string }) => {
             {contactItems.length > 0 && (
               <div className="space-y-2.5 p-4 sm:p-5">
                 {contactItems.map((item, contactIndex) => {
-                  const Wrapper: any = item.href ? "a" : "div";
+                  const Wrapper = item.href ? "a" : ("div" as const);
                   const wrapperProps = item.href
                     ? { href: item.href, ...(item.external ? { target: "_blank", rel: "noopener noreferrer" } : {}) }
                     : {};
@@ -665,7 +665,7 @@ export const BranchesTab = ({ businessId }: { businessId: string }) => {
   );
 };
 
-export const ContactTab = ({ business }: { business: any }) => {
+export const ContactTab = ({ business }: { business: Record<string, unknown> }) => {
   const { language } = useLanguage();
   const cityName = getLocalizedValue(language, business.cities?.name_ar, business.cities?.name_en);
   const countryName = getLocalizedValue(language, business.countries?.name_ar, business.countries?.name_en);
@@ -678,7 +678,7 @@ export const ContactTab = ({ business }: { business: any }) => {
     business.customer_service_phone && { icon: PhoneCall, label: language === "ar" ? "خدمة العملاء" : "Customer Service", value: business.customer_service_phone, href: `tel:${business.customer_service_phone}`, dir: "ltr" as const },
     business.email && { icon: Mail, label: language === "ar" ? "راسلنا" : "Email us", value: business.email, href: `mailto:${business.email}`, dir: "ltr" as const },
     business.website && { icon: Globe, label: language === "ar" ? "الموقع" : "Website", value: business.website.replace(/^https?:\/\//, ""), href: business.website, dir: "ltr" as const, external: true },
-  ].filter(Boolean) as Array<{ icon: any; label: string; value: string; href?: string; dir?: "ltr"; external?: boolean }>;
+  ].filter(Boolean) as Array<{ icon: React.ElementType; label: string; value: string; href?: string; dir?: "ltr"; external?: boolean }>;
 
   const addressParts = [
     business.district,
@@ -691,7 +691,7 @@ export const ContactTab = ({ business }: { business: any }) => {
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 sm:gap-6">
       <div className="space-y-3">
         {contactItems.map((item, index) => {
-          const Wrapper: any = item.href ? "a" : "div";
+          const Wrapper = item.href ? "a" : ("div" as const);
           const wrapperProps = item.href
             ? { href: item.href, ...(item.external ? { target: "_blank", rel: "noopener noreferrer" } : {}) }
             : {};

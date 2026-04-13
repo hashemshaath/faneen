@@ -97,7 +97,7 @@ export const exportContractPDF = async (data: ContractExportData) => {
     margin: { left: 15, right: 15 },
     alternateRowStyles: { fillColor: [248, 248, 248] },
   });
-  y = (doc as any).lastAutoTable.finalY + 12;
+  y = (doc as Record<string, unknown> & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 12;
 
   // ── Financial ──
   sectionTitle(data.isRTL ? 'البيانات المالية' : 'Financial Summary');
@@ -123,14 +123,14 @@ export const exportContractPDF = async (data: ContractExportData) => {
     styles: { fontSize: 9, cellPadding: 3.5, ...rtlStyles, lineColor: [230, 230, 230], lineWidth: 0.2 },
     columnStyles: { 0: { fontStyle: 'bold', cellWidth: 55, textColor: [100, 100, 100] } },
     margin: { left: 15, right: 15 },
-    didParseCell: (hookData: any) => {
+    didParseCell: (hookData: Record<string, unknown>) => {
       if (hookData.row.index === 2) {
         hookData.cell.styles.fontStyle = 'bold';
         hookData.cell.styles.fillColor = [255, 248, 230];
       }
     },
   });
-  y = (doc as any).lastAutoTable.finalY + 12;
+  y = (doc as Record<string, unknown> & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 12;
 
   // ── Milestones ──
   if (data.milestones.length > 0) {
@@ -149,7 +149,7 @@ export const exportContractPDF = async (data: ContractExportData) => {
       alternateRowStyles: { fillColor: [250, 250, 250] },
       margin: { left: 15, right: 15 },
     });
-    y = (doc as any).lastAutoTable.finalY + 12;
+    y = (doc as Record<string, unknown> & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 12;
   }
 
   // ── Measurements ──
@@ -181,7 +181,7 @@ export const exportContractPDF = async (data: ContractExportData) => {
       footStyles: { fillColor: [255, 248, 230], fontStyle: 'bold', fontSize: 7 },
       margin: { left: 10, right: 10 },
     });
-    y = (doc as any).lastAutoTable.finalY + 12;
+    y = (doc as Record<string, unknown> & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 12;
   }
 
   // ── Terms ──
@@ -355,7 +355,7 @@ export const exportMeasurementsExcel = (opts: {
     ? ['رقم القطعة', 'الاسم', 'الموقع', 'الدور', 'الطول (مم)', 'العرض (مم)', 'المساحة (م²)', 'الكمية', 'سعر الوحدة', 'التكلفة', 'الحالة']
     : ['Piece #', 'Name', 'Location', 'Floor', 'Length (mm)', 'Width (mm)', 'Area (m²)', 'Qty', 'Unit Price', 'Cost', 'Status'];
 
-  const escapeCSV = (val: any) => {
+  const escapeCSV = (val: unknown) => {
     const str = String(val ?? '');
     if (str.includes(',') || str.includes('"') || str.includes('\n') || /[\u0600-\u06FF]/.test(str)) {
       return `"${str.replace(/"/g, '""')}"`;
@@ -363,7 +363,7 @@ export const exportMeasurementsExcel = (opts: {
     return str;
   };
 
-  const rows: any[][] = opts.measurements.map(m => [
+  const rows: unknown[][] = opts.measurements.map(m => [
     m.pieceNumber, m.name, m.location || '', m.floor || '',
     m.lengthMm, m.widthMm, m.areaSqm.toFixed(3), m.quantity,
     m.unitPrice, m.totalCost, m.status,

@@ -120,7 +120,7 @@ const CompareProfiles = () => {
     return Array.from(feats);
   }, [selectedProfiles, language]);
 
-  const getName = (p: any) => language === 'ar' ? p.name_ar : (p.name_en || p.name_ar);
+  const getName = (p: Record<string, unknown>) => language === 'ar' ? p.name_ar : (p.name_en || p.name_ar);
 
   return (
     <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>

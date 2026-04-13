@@ -128,7 +128,7 @@ const Compare = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{isRTL ? b.name_ar : (b.name_en || b.name_ar)}</p>
-                      <p className="text-xs text-muted-foreground">{(b as any).categories?.name_ar}</p>
+                      <p className="text-xs text-muted-foreground">{(b as Record<string, unknown> & { categories?: { name_ar?: string } }).categories?.name_ar}</p>
                     </div>
                     <div className="flex items-center gap-1 text-xs"><Star className="w-3 h-3 fill-gold text-gold" />{Number(b.rating_avg).toFixed(1)}</div>
                     <Plus className="w-4 h-4 text-muted-foreground" />

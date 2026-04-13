@@ -45,7 +45,7 @@ const preloadImage = (src: string) => {
   img.src = src;
 };
 
-const SearchBar = memo(({ categories, cities, language, isRTL, t, onSearch }: any) => {
+const SearchBar = memo(({ categories, cities, language, isRTL, t, onSearch }: { categories: Array<Record<string, unknown>>; cities: Array<Record<string, unknown>>; language: string; isRTL: boolean; t: (key: string) => string; onSearch: (params: Record<string, string>) => void }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedCity, setSelectedCity] = useState('');
@@ -108,17 +108,17 @@ const SearchBar = memo(({ categories, cities, language, isRTL, t, onSearch }: an
 });
 SearchBar.displayName = 'SearchBar';
 
-const HeroTitle = memo(({ slides, current, language, t }: { slides: typeof slidesData; current: number; language: string; t: any }) => {
+const HeroTitle = memo(({ slides, current, language, t }: { slides: typeof slidesData; current: number; language: string; t: (key: string) => string }) => {
   const slide = slides[current];
   const line1 = 'titleKey1' in slide && slide.titleKey1
-    ? t(slide.titleKey1 as any)
-    : (slide as any)[`title1${language === 'ar' ? 'Ar' : 'En'}`];
+    ? t(slide.titleKey1 as string)
+    : (slide as Record<string, string>)[`title1${language === 'ar' ? 'Ar' : 'En'}`];
   const line2 = 'titleKey2' in slide && slide.titleKey2
-    ? t(slide.titleKey2 as any)
-    : (slide as any)[`title2${language === 'ar' ? 'Ar' : 'En'}`];
+    ? t(slide.titleKey2 as string)
+    : (slide as Record<string, string>)[`title2${language === 'ar' ? 'Ar' : 'En'}`];
   const desc = 'descKey' in slide && slide.descKey
-    ? t(slide.descKey as any)
-    : (slide as any)[`desc${language === 'ar' ? 'Ar' : 'En'}`];
+    ? t(slide.descKey as string)
+    : (slide as Record<string, string>)[`desc${language === 'ar' ? 'Ar' : 'En'}`];
 
   const { displayedText: typedLine1, isComplete: line1Done } = useTypingAnimation({ text: line1, speed: 40, delay: 200 });
   const { displayedText: typedLine2 } = useTypingAnimation({ text: line2, speed: 40, delay: 0, enabled: line1Done });
