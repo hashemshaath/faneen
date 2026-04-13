@@ -55,8 +55,8 @@ export const AuthLayout: React.FC<{ children: React.ReactNode }> = ({ children }
           <div
             key={i}
             className="absolute inset-0 transition-all ease-in-out"
-            style={{ transitionDuration: '1500ms' }}
             style={{
+              transitionDuration: '1500ms',
               opacity: currentSlide === i ? 1 : 0,
               transform: currentSlide === i ? 'scale(1)' : 'scale(1.08)',
             }}
