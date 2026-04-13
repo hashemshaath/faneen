@@ -149,7 +149,7 @@ const AttachmentPreview = React.memo(({ url, type, name }: { url: string; type: 
 AttachmentPreview.displayName = 'AttachmentPreview';
 
 /* ─── Conversation Item (memo) ─── */
-const ConversationItem = React.memo(({ conv, isSelected, unread, isRTL, language, isSuperAdmin, isPinned, isStarred, isMuted, convLabel, onClick, onPin, onStar, onMute, onSetLabel }: { conv: any; isSelected: boolean; unread: number; isRTL: boolean; language: string; isSuperAdmin: boolean; isPinned: boolean; isStarred: boolean; isMuted: boolean; convLabel: string | undefined; onClick: () => void; onPin: () => void; onStar: () => void; onMute: () => void; onSetLabel: (label: string) => void }) => {
+const ConversationItem = React.memo(({ conv, isSelected, unread, isRTL, language, isSuperAdmin, isPinned, isStarred, isMuted, convLabel, onClick, onPin, onStar, onMute, onSetLabel }: { conv: any; isSelected: boolean; unread: number; isRTL: boolean; language: string; isSuperAdmin: boolean; isPinned: boolean; isStarred: boolean; isMuted: boolean; convLabel: string | undefined; onClick: () => void; onPin: (id: string) => void; onStar: (id: string) => void; onMute: (id: string) => void; onSetLabel: (id: string, label: string) => void }) => {
   const timeAgo = conv.last_message_at
     ? formatDistanceToNow(new Date(conv.last_message_at), { addSuffix: false, locale: language === 'ar' ? ar : enUS })
     : '';
