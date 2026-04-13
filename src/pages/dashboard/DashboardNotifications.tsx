@@ -47,11 +47,11 @@ const typeLabels: Record<string, { ar: string; en: string }> = {
   system: { ar: 'النظام', en: 'System' },
 };
 
-const getNotificationIcon = (n: any) => {
+const getNotificationIcon = (n) => {
   if (n.reference_type?.startsWith('overdue_')) return AlertTriangle;
   return typeIcons[n.notification_type] || Bell;
 };
-const getNotificationColor = (n: any) => {
+const getNotificationColor = (n) => {
   if (n.reference_type?.startsWith('overdue_')) return typeColors.security;
   return typeColors[n.notification_type] || typeColors.system;
 };
@@ -59,7 +59,7 @@ const getNotificationColor = (n: any) => {
 /* ── Notification Item (memo) ── */
 const NotificationItem = React.memo(({ notification, isRTL, language, onRead, onDelete, onNavigate }: {
   notification: any; isRTL: boolean; language: string;
-  onRead: (id: string) => void; onDelete: (id: string) => void; onNavigate: (n: any) => void;
+  onRead: (id: string) => void; onDelete: (id: string) => void; onNavigate: (n) => void;
 }) => {
   const Icon = getNotificationIcon(notification);
   const color = getNotificationColor(notification);
@@ -177,7 +177,7 @@ const DashboardNotifications = () => {
   }, [queryClient, user?.id]);
 
   const filtered = useMemo(() => {
-    return notifications.filter((n: any) => {
+    return notifications.filter((n) => {
       if (typeFilter !== 'all' && n.notification_type !== typeFilter) return false;
       if (readFilter === 'unread' && n.is_read) return false;
       if (readFilter === 'read' && !n.is_read) return false;
@@ -195,7 +195,7 @@ const DashboardNotifications = () => {
   const grouped = useMemo(() => {
     const groups: { label: string; items: any[] }[] = [];
     let current = '';
-    filtered.slice(0, visibleCount).forEach((n: any) => {
+    filtered.slice(0, visibleCount).forEach((n) => {
       const d = new Date(n.created_at);
       let label: string;
       if (isToday(d)) label = isRTL ? 'اليوم' : 'Today';
@@ -208,12 +208,12 @@ const DashboardNotifications = () => {
     return groups;
   }, [filtered, visibleCount, isRTL, language]);
 
-  const unreadCount = notifications.filter((n: any) => !n.is_read).length;
+  const unreadCount = notifications.filter((n) => !n.is_read).length;
 
   const stats = useMemo(() => {
-    const today = notifications.filter((n: any) => isToday(new Date(n.created_at))).length;
+    const today = notifications.filter((n) => isToday(new Date(n.created_at))).length;
     const byType: Record<string, number> = {};
-    notifications.forEach((n: any) => { byType[n.notification_type] = (byType[n.notification_type] || 0) + 1; });
+    notifications.forEach((n) => { byType[n.notification_type] = (byType[n.notification_type] || 0) + 1; });
     return { total: notifications.length, unread: unreadCount, today, byType };
   }, [notifications, unreadCount]);
 
@@ -232,7 +232,7 @@ const DashboardNotifications = () => {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['all-notifications'] }); queryClient.invalidateQueries({ queryKey: ['notifications'] }); },
   });
 
-  const handleClick = useCallback((n: any) => {
+  const handleClick = useCallback((n) => {
     if (!n.is_read) markRead.mutate(n.id);
     if (n.action_url) navigate(n.action_url);
   }, [markRead, navigate]);
@@ -373,7 +373,7 @@ const DashboardNotifications = () => {
             {grouped.map(group => (
               <div key={group.label} className="space-y-1">
                 <DateGroup label={group.label} count={group.items.length} />
-                {group.items.map((n: any) => (
+                {group.items.map((n) => (
                   <NotificationItem key={n.id} notification={n} isRTL={isRTL} language={language} onRead={handleRead} onDelete={handleDelete} onNavigate={handleClick} />
                 ))}
               </div>

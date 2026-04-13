@@ -41,8 +41,8 @@ const SortableProjectCard = React.memo(({
   onEdit, onGallery, onDelete, onToggleFeatured, onDuplicate, onPreview, onSelect,
 }: {
   project: any; rtl: boolean; language: string; viewMode: ViewMode; isSelected: boolean;
-  onEdit: (p: any) => void; onGallery: (id: string) => void; onDelete: (id: string) => void;
-  onToggleFeatured: (p: any) => void; onDuplicate: (p: any) => void;
+  onEdit: (p) => void; onGallery: (id: string) => void; onDelete: (id: string) => void;
+  onToggleFeatured: (p) => void; onDuplicate: (p) => void;
   onPreview: (url: string) => void; onSelect: (id: string) => void;
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: p.id });
@@ -257,27 +257,27 @@ const DashboardProjects = () => {
   /* ─── Derived ─── */
   const stats = useMemo(() => {
     const total = projects.length;
-    const published = projects.filter((p: any) => p.status === 'published').length;
+    const published = projects.filter((p) => p.status === 'published').length;
     const draft = total - published;
-    const featured = projects.filter((p: any) => p.is_featured).length;
+    const featured = projects.filter((p) => p.is_featured).length;
     const totalCost = projects.reduce((sum: number, p: any) => sum + (Number(p.project_cost) || 0), 0);
-    const complete = projects.filter((p: any) => p.title_ar && p.description_ar && p.cover_image_url).length;
+    const complete = projects.filter((p) => p.title_ar && p.description_ar && p.cover_image_url).length;
     const completeness = total > 0 ? Math.round((complete / total) * 100) : 0;
     return { total, published, draft, featured, totalCost, completeness };
   }, [projects]);
 
-  const usedCategoryIds = useMemo(() => [...new Set(projects.map((p: any) => p.category_id).filter(Boolean))], [projects]);
-  const usedCategories = categories.filter((c: any) => usedCategoryIds.includes(c.id));
+  const usedCategoryIds = useMemo(() => [...new Set(projects.map((p) => p.category_id).filter(Boolean))], [projects]);
+  const usedCategories = categories.filter((c) => usedCategoryIds.includes(c.id));
 
   const filteredProjects = useMemo(() => {
     let result = [...projects];
-    if (statusFilter === 'published') result = result.filter((p: any) => p.status === 'published');
-    else if (statusFilter === 'draft') result = result.filter((p: any) => p.status === 'draft');
-    else if (statusFilter === 'featured') result = result.filter((p: any) => p.is_featured);
-    if (categoryFilter !== 'all') result = result.filter((p: any) => p.category_id === categoryFilter);
+    if (statusFilter === 'published') result = result.filter((p) => p.status === 'published');
+    else if (statusFilter === 'draft') result = result.filter((p) => p.status === 'draft');
+    else if (statusFilter === 'featured') result = result.filter((p) => p.is_featured);
+    if (categoryFilter !== 'all') result = result.filter((p) => p.category_id === categoryFilter);
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      result = result.filter((p: any) => p.title_ar.toLowerCase().includes(q) || (p.title_en || '').toLowerCase().includes(q) || (p.client_name || '').toLowerCase().includes(q));
+      result = result.filter((p) => p.title_ar.toLowerCase().includes(q) || (p.title_en || '').toLowerCase().includes(q) || (p.client_name || '').toLowerCase().includes(q));
     }
     return result;
   }, [projects, statusFilter, categoryFilter, searchQuery]);
@@ -314,7 +314,7 @@ const DashboardProjects = () => {
   });
 
   const toggleFeaturedMut = useMutation({
-    mutationFn: async (p: any) => { const { error } = await supabase.from('projects').update({ is_featured: !p.is_featured }).eq('id', p.id); if (error) throw error; },
+    mutationFn: async (p) => { const { error } = await supabase.from('projects').update({ is_featured: !p.is_featured }).eq('id', p.id); if (error) throw error; },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['dashboard-projects'] }); toast.success(isRTL ? 'تم التحديث' : 'Updated'); },
   });
 
@@ -339,7 +339,7 @@ const DashboardProjects = () => {
   const closeForm = useCallback(() => { setShowForm(false); setEditId(null); setForm(emptyForm); }, []);
   const scrollToForm = useCallback(() => { requestAnimationFrame(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })); }, []);
 
-  const openEdit = useCallback((p: any) => {
+  const openEdit = useCallback((p) => {
     setForm({
       title_ar: p.title_ar, title_en: p.title_en || '', description_ar: p.description_ar || '',
       description_en: p.description_en || '', cover_image_url: p.cover_image_url || '',
@@ -353,7 +353,7 @@ const DashboardProjects = () => {
     scrollToForm();
   }, [scrollToForm]);
 
-  const duplicateProject = useCallback((p: any) => {
+  const duplicateProject = useCallback((p) => {
     setEditId(null);
     setForm({
       title_ar: p.title_ar + (isRTL ? ' (نسخة)' : ' (copy)'),
@@ -372,12 +372,12 @@ const DashboardProjects = () => {
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
-    const oldIdx = filteredProjects.findIndex((i: any) => i.id === active.id);
-    const newIdx = filteredProjects.findIndex((i: any) => i.id === over.id);
+    const oldIdx = filteredProjects.findIndex((i) => i.id === active.id);
+    const newIdx = filteredProjects.findIndex((i) => i.id === over.id);
     if (oldIdx === -1 || newIdx === -1) return;
     const reordered = arrayMove([...filteredProjects], oldIdx, newIdx);
     queryClient.setQueryData(['dashboard-projects', businessId], reordered);
-    reorderMut.mutate(reordered.map((item: any, i: number) => ({ id: item.id, sort_order: i })));
+    reorderMut.mutate(reordered.map((item, i: number) => ({ id: item.id, sort_order: i })));
   }, [filteredProjects, businessId, queryClient, reorderMut]);
 
   const handleGalleryChange = useCallback(async (urls: string[]) => {
@@ -393,12 +393,12 @@ const DashboardProjects = () => {
 
   const toggleSelect = useCallback((id: string) => setSelectedIds(prev => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n; }), []);
   const toggleSelectAll = useCallback(() => {
-    setSelectedIds(prev => prev.size === filteredProjects.length ? new Set() : new Set(filteredProjects.map((p: any) => p.id)));
+    setSelectedIds(prev => prev.size === filteredProjects.length ? new Set() : new Set(filteredProjects.map((p) => p.id)));
   }, [filteredProjects]);
 
   const exportCSV = useCallback(() => {
     const rows = [['Title AR', 'Title EN', 'Client', 'Cost', 'Duration', 'Status', 'Featured', 'Date'].join(','),
-      ...projects.map((p: any) => [`"${p.title_ar}"`, `"${p.title_en || ''}"`, `"${p.client_name || ''}"`, p.project_cost || '', p.duration_days || '', p.status, p.is_featured, p.completion_date || ''].join(','))
+      ...projects.map((p) => [`"${p.title_ar}"`, `"${p.title_en || ''}"`, `"${p.client_name || ''}"`, p.project_cost || '', p.duration_days || '', p.status, p.is_featured, p.completion_date || ''].join(','))
     ].join('\n');
     const blob = new Blob(['\ufeff' + rows], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -414,7 +414,7 @@ const DashboardProjects = () => {
     { key: 'featured' as const, label: isRTL ? 'مميز' : 'Featured', count: stats.featured, icon: Star },
   ], [isRTL, stats]);
 
-  const galleryProject = projects.find((p: any) => p.id === galleryProjectId);
+  const galleryProject = projects.find((p) => p.id === galleryProjectId);
 
   return (
     <DashboardLayout>
@@ -524,7 +524,7 @@ const DashboardProjects = () => {
                       <SelectTrigger className="h-9"><SelectValue placeholder={isRTL ? 'اختر' : 'Select'} /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="none">{isRTL ? 'بدون' : 'None'}</SelectItem>
-                        {categories.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.parent_id ? '  └ ' : ''}{language === 'ar' ? c.name_ar : c.name_en}</SelectItem>)}
+                        {categories.map((c) => <SelectItem key={c.id} value={c.id}>{c.parent_id ? '  └ ' : ''}{language === 'ar' ? c.name_ar : c.name_en}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
@@ -534,7 +534,7 @@ const DashboardProjects = () => {
                       <SelectTrigger className="h-9"><SelectValue placeholder={isRTL ? 'اختر' : 'Select'} /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="none">{isRTL ? 'بدون' : 'None'}</SelectItem>
-                        {cities.map((c: any) => <SelectItem key={c.id} value={c.id}>{language === 'ar' ? c.name_ar : c.name_en}</SelectItem>)}
+                        {cities.map((c) => <SelectItem key={c.id} value={c.id}>{language === 'ar' ? c.name_ar : c.name_en}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
@@ -640,7 +640,7 @@ const DashboardProjects = () => {
               {galleryProject && <p className="text-xs text-muted-foreground">{language === 'ar' ? (galleryProject as any).title_ar : ((galleryProject as any).title_en || (galleryProject as any).title_ar)}</p>}
             </CardHeader>
             <CardContent className="pb-5">
-              <MultiImageUpload bucket="project-images" images={galleryImages.map((img: any) => img.image_url)} onChange={handleGalleryChange} folder="gallery" maxImages={20} maxSizeMB={5} />
+              <MultiImageUpload bucket="project-images" images={galleryImages.map((img) => img.image_url)} onChange={handleGalleryChange} folder="gallery" maxImages={20} maxSizeMB={5} />
               <p className="text-[10px] text-muted-foreground mt-2">{isRTL ? `${galleryImages.length} / 20 صورة` : `${galleryImages.length} / 20 images`}</p>
             </CardContent>
           </Card>
@@ -663,7 +663,7 @@ const DashboardProjects = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">{isRTL ? 'الكل' : 'All'}</SelectItem>
-                    {usedCategories.map((c: any) => <SelectItem key={c.id} value={c.id}>{language === 'ar' ? c.name_ar : c.name_en}</SelectItem>)}
+                    {usedCategories.map((c) => <SelectItem key={c.id} value={c.id}>{language === 'ar' ? c.name_ar : c.name_en}</SelectItem>)}
                   </SelectContent>
                 </Select>
               )}
@@ -738,9 +738,9 @@ const DashboardProjects = () => {
           </div>
         ) : (
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={filteredProjects.map((p: any) => p.id)} strategy={viewMode === 'grid' ? rectSortingStrategy : verticalListSortingStrategy}>
+            <SortableContext items={filteredProjects.map((p) => p.id)} strategy={viewMode === 'grid' ? rectSortingStrategy : verticalListSortingStrategy}>
               <div className={viewMode === 'grid' ? 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5' : 'space-y-1.5'}>
-                {filteredProjects.map((p: any) => (
+                {filteredProjects.map((p) => (
                   <SortableProjectCard key={p.id} project={p} rtl={isRTL} language={language} viewMode={viewMode}
                     isSelected={selectedIds.has(p.id)}
                     onEdit={openEdit} onGallery={setGalleryProjectId}

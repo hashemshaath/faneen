@@ -86,8 +86,8 @@ const SortableProfileRow = React.memo(({
   profile, isRTL, language, onEdit, onDelete, onDuplicate, onToggleStatus,
 }: {
   profile: any; isRTL: boolean; language: string;
-  onEdit: (p: any) => void; onDelete: (id: string) => void;
-  onDuplicate: (p: any) => void; onToggleStatus: (id: string, status: string) => void;
+  onEdit: (p) => void; onDelete: (id: string) => void;
+  onDuplicate: (p) => void; onToggleStatus: (id: string, status: string) => void;
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: profile.id });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.3 : 1 };
@@ -239,16 +239,16 @@ const DashboardProfileSystems = () => {
 
   // Stats
   const stats = useMemo(() => {
-    const published = profiles.filter((p: any) => p.status === 'published').length;
-    const draft = profiles.filter((p: any) => p.status === 'draft').length;
-    const categoryCounts = profiles.reduce((acc: any, p: any) => { acc[p.category] = (acc[p.category] || 0) + 1; return acc; }, {} as Record<string, number>);
+    const published = profiles.filter((p) => p.status === 'published').length;
+    const draft = profiles.filter((p) => p.status === 'draft').length;
+    const categoryCounts = profiles.reduce((acc, p: any) => { acc[p.category] = (acc[p.category] || 0) + 1; return acc; }, {} as Record<string, number>);
     const avgRating = profiles.length > 0 ? Math.round(profiles.reduce((sum: number, p: any) => sum + ((p.thermal_insulation_rating || 0) + (p.sound_insulation_rating || 0) + (p.strength_rating || 0)) / 3, 0) / profiles.length) : 0;
     return { total: profiles.length, published, draft, categoryCounts, avgRating };
   }, [profiles]);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
-    return profiles.filter((p: any) =>
+    return profiles.filter((p) =>
       (!search || p.name_ar.includes(search) || (p.name_en || '').toLowerCase().includes(q) || p.slug.includes(q)) &&
       (filterCategory === 'all' || p.category === filterCategory) &&
       (filterStatus === 'all' || p.status === filterStatus)
@@ -260,7 +260,7 @@ const DashboardProfileSystems = () => {
 
   const closeForm = useCallback(() => { setShowForm(false); setForm(initialForm); setEditId(null); setFormTab('basic'); }, []);
 
-  const openEdit = useCallback((p: any) => {
+  const openEdit = useCallback((p) => {
     setForm({
       name_ar: p.name_ar, name_en: p.name_en || '', slug: p.slug,
       description_ar: p.description_ar || '', description_en: p.description_en || '',
@@ -280,7 +280,7 @@ const DashboardProfileSystems = () => {
     setFormTab('basic');
   }, []);
 
-  const handleDuplicate = useCallback((p: any) => {
+  const handleDuplicate = useCallback((p) => {
     setForm({
       name_ar: p.name_ar + (isRTL ? ' (نسخة)' : ' (copy)'),
       name_en: (p.name_en || '') + ' (copy)', slug: p.slug + '-copy',
@@ -365,14 +365,14 @@ const DashboardProfileSystems = () => {
     setActiveId(null);
     const { active, over } = e;
     if (!over || active.id === over.id) return;
-    const oldIdx = filtered.findIndex((p: any) => p.id === active.id);
-    const newIdx = filtered.findIndex((p: any) => p.id === over.id);
+    const oldIdx = filtered.findIndex((p) => p.id === active.id);
+    const newIdx = filtered.findIndex((p) => p.id === over.id);
     if (oldIdx === -1 || newIdx === -1) return;
-    const updates = filtered.map((p: any, i: number) => ({ id: p.id, sort_order: p.id === active.id ? newIdx : i }));
+    const updates = filtered.map((p, i: number) => ({ id: p.id, sort_order: p.id === active.id ? newIdx : i }));
     reorderMutation.mutate(updates);
   }, [filtered, reorderMutation]);
 
-  const activeProfile = activeId ? filtered.find((p: any) => p.id === activeId) : null;
+  const activeProfile = activeId ? filtered.find((p) => p.id === activeId) : null;
 
   // Form completion
   const formCompletion = useMemo(() => {
@@ -622,7 +622,7 @@ const DashboardProfileSystems = () => {
             </CardContent></Card>
           ) : viewMode === 'grid' ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filtered.map((p: any) => {
+              {filtered.map((p) => {
                 const cat = getCategoryInfo(p.category);
                 const rec = recommendationStyles[p.recommendation_level] || recommendationStyles.standard;
                 const avgRating = Math.round(((p.thermal_insulation_rating || 0) + (p.sound_insulation_rating || 0) + (p.strength_rating || 0)) / 3);
@@ -677,9 +677,9 @@ const DashboardProfileSystems = () => {
                 <span className="w-[64px]" />
               </div>
               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-                <SortableContext items={filtered.map((p: any) => p.id)} strategy={verticalListSortingStrategy}>
+                <SortableContext items={filtered.map((p) => p.id)} strategy={verticalListSortingStrategy}>
                   <div>
-                    {filtered.map((p: any) => (
+                    {filtered.map((p) => (
                       <SortableProfileRow
                         key={p.id} profile={p} isRTL={isRTL} language={language}
                         onEdit={openEdit} onDelete={setDeletingId} onDuplicate={handleDuplicate}

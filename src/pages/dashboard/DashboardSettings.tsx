@@ -143,7 +143,7 @@ const DashboardSettings = () => {
       setEditingProfile(false);
       toast.success(isRTL ? 'تم تحديث الملف الشخصي بنجاح' : 'Profile updated successfully');
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e) => toast.error(e.message),
   });
 
   const handleSignOut = async () => {
@@ -490,7 +490,7 @@ const DashboardSettings = () => {
                   <Smartphone className="w-4 h-4 text-accent" />
                   <h3 className="font-heading font-bold text-sm">{isRTL ? 'الجلسات النشطة' : 'Active Sessions'}</h3>
                 </div>
-                {sessions?.map((s: any, i: number) => (
+                {sessions?.map((s, i: number) => (
                   <div key={i} className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/20">
                     <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
                       <Monitor className="w-3.5 h-3.5 text-accent" />
