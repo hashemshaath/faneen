@@ -325,7 +325,7 @@ const DashboardServices = () => {
   });
 
   /* ─── Callbacks ─── */
-  const closeForm = useCallback(() => { setShowForm(false); setEditing(null); setForm(emptyForm); }, []);
+  const closeForm = useCallback(() => { setShowForm(false); setEditing(null); setForm(emptyForm); }, [emptyForm]);
   const scrollToForm = useCallback(() => { requestAnimationFrame(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })); }, []);
 
   const openEdit = useCallback((s: Tables<'business_services'>) => {
@@ -343,7 +343,7 @@ const DashboardServices = () => {
   const quickAddFromCatalog = useCallback((item: ServiceItem) => {
     setForm({ ...emptyForm, name_ar: item.name_ar, name_en: item.name_en, description_ar: item.description_ar, description_en: item.description_en });
     setShowForm(true); scrollToForm();
-  }, [scrollToForm]);
+  }, [emptyForm, scrollToForm]);
 
   const toggleGroup = useCallback((id: string) => setExpandedGroups(prev => prev.includes(id) ? prev.filter(g => g !== id) : [...prev, id]), []);
   const isServiceAdded = useCallback((name_ar: string) => services.some(s => s.name_ar === name_ar), [services]);
