@@ -12,7 +12,8 @@ describe("cn (class merging)", () => {
   });
 
   it("handles conditional classes", () => {
-    const result = cn("base", false && "hidden", "extra");
+    const condition = false as boolean;
+    const result = cn("base", condition && "hidden", "extra");
     expect(result).toBe("base extra");
   });
 
