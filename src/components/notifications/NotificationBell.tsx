@@ -68,7 +68,7 @@ export const NotificationBell = () => {
 
   const handleRealtimeNotification = useCallback((payload) => {
     queryClient.invalidateQueries({ queryKey: ['notifications', user?.id] });
-    const n = payload.new as any;
+    const n = payload.new;
     const title = language === 'ar' ? n.title_ar : (n.title_en || n.title_ar);
     const body = language === 'ar' ? n.body_ar : (n.body_en || n.body_ar);
 

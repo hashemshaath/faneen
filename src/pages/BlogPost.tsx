@@ -187,7 +187,7 @@ const BlogPost = () => {
     const key = `blog_viewed_${post.id}`;
     if (sessionStorage.getItem(key)) return;
     sessionStorage.setItem(key, '1');
-    supabase.rpc('increment_blog_views' as any, { _post_id: post.id }).then(() => {});
+    supabase.rpc('increment_blog_views', { _post_id: post.id }).then(() => {});
   }, [post?.id]);
 
   const { data: relatedPosts = [] } = useQuery({

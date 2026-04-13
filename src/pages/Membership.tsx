@@ -66,7 +66,7 @@ const Membership = () => {
   const subscribeMutation = useMutation({
     mutationFn: async (planId: string) => {
       if (!user || !myBusiness) throw new Error(isRTL ? 'يجب تسجيل الدخول وإنشاء نشاط تجاري أولاً' : 'Login and create a business first');
-      const { error } = await supabase.rpc('subscribe_to_plan' as any, {
+      const { error } = await supabase.rpc('subscribe_to_plan' , {
         _user_id: user.id,
         _plan_id: planId,
         _business_id: myBusiness.id,
@@ -81,13 +81,13 @@ const Membership = () => {
       setSubscribingPlanId(null);
       toast.success(isRTL ? 'تم تفعيل الاشتراك بنجاح! 🎉' : 'Subscription activated! 🎉');
     },
-    onError: (e) => { setSubscribingPlanId(null); toast.error(e.message); },
+    onError: (e: Error) => { setSubscribingPlanId(null); toast.error(e.message); },
   });
 
   const cancelMutation = useMutation({
     mutationFn: async () => {
       if (!mySubscription) throw new Error('No active subscription');
-      const { error } = await supabase.rpc('cancel_subscription' as any, { _subscription_id: mySubscription.id });
+      const { error } = await supabase.rpc('cancel_subscription' , { _subscription_id: mySubscription.id });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -95,13 +95,13 @@ const Membership = () => {
       queryClient.invalidateQueries({ queryKey: ['my-business-membership'] });
       toast.success(isRTL ? 'تم إلغاء الاشتراك' : 'Subscription cancelled');
     },
-    onError: (e) => toast.error(e.message),
+    onError: (e: Error) => toast.error(e.message),
   });
 
   const currentTier = myBusiness?.membership_tier || 'free';
   const currentTierIndex = tierOrder.indexOf(currentTier);
 
-  const handleSubscribe = (plan) => {
+  const handleSubscribe = (plan: { id: string; tier: string }) => {
     if (!user) { navigate('/auth'); return; }
     if (!myBusiness) {
       toast.error(isRTL ? 'يجب إنشاء نشاط تجاري أولاً من لوحة التحكم' : 'Create a business profile first from dashboard');

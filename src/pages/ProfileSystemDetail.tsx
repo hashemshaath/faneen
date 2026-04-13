@@ -101,7 +101,7 @@ const InteractiveStarInput = ({ value, onChange }: { value: number; onChange: (v
 };
 
 // ─── Lightbox (mobile-optimized) ───
-const Lightbox = ({ images, index, onClose, onNav, isRTL, language }: any) => {
+const Lightbox = ({ images, index, onClose, onNav, isRTL, language }: { images: string[]; index: number; onClose: () => void; onNav: (dir: number) => void; isRTL: boolean; language: string }) => {
   const [touchStart, setTouchStart] = useState<number | null>(null);
 
   useEffect(() => {
@@ -779,15 +779,15 @@ const ProfileSystemDetail = () => {
                       <CardContent className="p-3.5 sm:p-5">
                         <div className="flex items-start gap-2.5 sm:gap-3">
                           <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gold/10 flex items-center justify-center text-gold font-bold text-xs sm:text-sm shrink-0">
-                            {(r.profiles as any)?.avatar_url ? (
-                              <img src={(r.profiles as any).avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
+                            {((r as any).profiles)?.avatar_url ? (
+                              <img src={((r as any).profiles).avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
                             ) : (
-                              (r.profiles as any)?.full_name?.charAt(0) || '؟'
+                              ((r as any).profiles)?.full_name?.charAt(0) || '؟'
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between mb-0.5 sm:mb-1">
-                              <p className="font-heading font-bold text-xs sm:text-sm truncate">{(r.profiles as any)?.full_name || (isRTL ? 'مستخدم' : 'User')}</p>
+                              <p className="font-heading font-bold text-xs sm:text-sm truncate">{((r as any).profiles)?.full_name || (isRTL ? 'مستخدم' : 'User')}</p>
                               <span className="text-[10px] sm:text-[11px] text-muted-foreground flex items-center gap-0.5 shrink-0 ms-2">
                                 <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3" />{new Date(r.created_at).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')}
                               </span>
