@@ -513,7 +513,7 @@ const BnplShowcaseCard = React.memo(({ provider, isRTL }: { provider: any; isRTL
 BnplShowcaseCard.displayName = 'BnplShowcaseCard';
 
 /* ── Admin BNPL Provider Form ── */
-const AdminBnplForm = React.memo(({ provider, isRTL, language, onSave, onCancel, saving }: { provider: any | null; isRTL: boolean; language: string; onSave: (form: any, id?: string) => void; onCancel: () => void; saving: boolean }) => {
+const AdminBnplForm = React.memo(({ provider = null, isRTL, language, onSave, onCancel, saving }: { provider?: any | null; isRTL: boolean; language: string; onSave: (form: any, id?: string) => void; onCancel: () => void; saving: boolean }) => {
   const isNew = !provider;
   const [form, setForm] = useState({
     name_ar: provider?.name_ar || '',
@@ -1011,7 +1011,7 @@ const DashboardInstallments = () => {
 
                 {/* Recent paid */}
                 {(() => {
-                  const recentPaid = [] as Array<typeof providerContracts[number] & { _role: string }>;
+                  const recentPaid = [] as Array<any>;
                   plans.forEach((plan) => {
                     (plan.installment_payments || []).forEach((p) => {
                       if (p.status === 'paid' && p.paid_at) {
