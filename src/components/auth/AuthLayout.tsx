@@ -54,7 +54,7 @@ export const AuthLayout: React.FC<{ children: React.ReactNode }> = ({ children }
         {slides.map((slide, i) => (
           <div
             key={i}
-            className="absolute inset-0 transition-all duration-[1.5s] ease-in-out"
+            className="absolute inset-0 transition-all duration-[1500ms] ease-in-out"
             style={{
               opacity: currentSlide === i ? 1 : 0,
               transform: currentSlide === i ? 'scale(1)' : 'scale(1.08)',
