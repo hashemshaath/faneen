@@ -265,7 +265,7 @@ const DashboardBlog = () => {
       setLastAutoSave(new Date());
       queryClient.invalidateQueries({ queryKey: ['blog-drafts', editId] });
       toast.success(isRTL ? 'تم حفظ النسخة' : 'Version saved');
-    } catch (_e) { // auto-save failed silently } finally { setIsAutoSaving(false); }
+    } catch (_e) { /* auto-save failed silently */ } finally { setIsAutoSaving(false); }
   };
 
   const handleRestoreDraft = async (draftId: string) => {
@@ -372,7 +372,7 @@ const DashboardBlog = () => {
       if (src.c) { const r = await callBlogAi({ action: 'translate', text: src.c, sourceLang: sLang, targetLang: tLang }); setField(tgt.c, r.trim()); }
       if (src.e) { const r = await callBlogAi({ action: 'translate', text: src.e, sourceLang: sLang, targetLang: tLang }); setField(tgt.e, stripMarkdown(r)); }
       toast.success(isRTL ? 'تمت الترجمة' : 'Translation done');
-    } catch (_e) { // AI operation failed } finally { setAiLoading(null); }
+    } catch (_e) { /* AI operation failed */ } finally { setAiLoading(null); }
   };
 
   const handleGenerateKeywords = async () => {
@@ -385,7 +385,7 @@ const DashboardBlog = () => {
         if (!form.focus_keyword && parsed[0]) setField('focus_keyword', parsed[0]);
         toast.success(isRTL ? 'تم استخراج الكلمات المفتاحية' : 'Keywords extracted');
       }
-    } catch (_e) { // AI operation failed } finally { setAiLoading(null); }
+    } catch (_e) { /* AI operation failed */ } finally { setAiLoading(null); }
   };
 
   const handleGenerateMeta = async () => {
@@ -402,7 +402,7 @@ const DashboardBlog = () => {
         if (parsed.slug_suggestion && !form.slug) setField('slug', parsed.slug_suggestion);
         toast.success(isRTL ? 'تم توليد بيانات الميتا' : 'Meta generated');
       }
-    } catch (_e) { // AI operation failed } finally { setAiLoading(null); }
+    } catch (_e) { /* AI operation failed */ } finally { setAiLoading(null); }
   };
 
   const handleAnalyzeSeo = async () => {
@@ -412,7 +412,7 @@ const DashboardBlog = () => {
       const parsed = parseJsonResponse(raw);
       if (parsed) setSeoAnalysis(parsed);
       toast.success(isRTL ? 'تم التحليل' : 'Analysis done');
-    } catch (_e) { // AI operation failed } finally { setAiLoading(null); }
+    } catch (_e) { /* AI operation failed */ } finally { setAiLoading(null); }
   };
 
   const handleCompetitorAnalysis = async () => {
@@ -426,7 +426,7 @@ const DashboardBlog = () => {
       const parsed = parseJsonResponse(raw);
       if (parsed) setCompetitorAnalysis(parsed);
       toast.success(isRTL ? 'تم تحليل المنافسين' : 'Competitor analysis done');
-    } catch (_e) { // AI operation failed } finally { setAiLoading(null); }
+    } catch (_e) { /* AI operation failed */ } finally { setAiLoading(null); }
   };
 
   const handleGenerateExcerpt = async (lang: 'ar' | 'en') => {
@@ -435,7 +435,7 @@ const DashboardBlog = () => {
       const raw = await callBlogAi({ action: 'generate_excerpt', title: lang === 'ar' ? form.title_ar : form.title_en, content: lang === 'ar' ? form.content_ar : form.content_en, keywords: [form.focus_keyword] });
       setField(lang === 'ar' ? 'excerpt_ar' : 'excerpt_en', stripMarkdown(raw));
       toast.success(isRTL ? 'تم توليد المقتطف' : 'Excerpt generated');
-    } catch (_e) { // AI operation failed } finally { setAiLoading(null); }
+    } catch (_e) { /* AI operation failed */ } finally { setAiLoading(null); }
   };
 
   const handleImproveContent = async (lang: 'ar' | 'en') => {
@@ -444,7 +444,7 @@ const DashboardBlog = () => {
       const raw = await callBlogAi({ action: 'improve_content', text: lang === 'ar' ? form.content_ar : form.content_en, keywords: [form.focus_keyword] });
       setField(lang === 'ar' ? 'content_ar' : 'content_en', raw.trim());
       toast.success(isRTL ? 'تم تحسين المحتوى' : 'Content improved');
-    } catch (_e) { // AI operation failed } finally { setAiLoading(null); }
+    } catch (_e) { /* AI operation failed */ } finally { setAiLoading(null); }
   };
 
   /* Filters */
