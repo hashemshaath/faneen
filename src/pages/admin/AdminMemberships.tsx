@@ -30,7 +30,6 @@ import { LIMIT_FIELDS, LIMIT_CATEGORIES, parseLimits, limitsToJson } from '@/lib
 type Tab = 'overview' | 'plans' | 'subscriptions' | 'businesses';
 
 /* ─── Plan Card ─── */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const PlanCard = React.memo(({ plan, isRTL, language, subsCount, onEdit }: { plan: any; isRTL: boolean; language: string; subsCount: number; onEdit: (p: any) => void }) => {
   const Icon = tierIcons[plan.tier] || Zap;
   const colors = tierColors[plan.tier] || tierColors.free;

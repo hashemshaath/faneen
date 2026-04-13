@@ -207,7 +207,7 @@ const DashboardServices = () => {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showCatalog, setShowCatalog] = useState(false);
 
-  const emptyForm = { name_ar: '', name_en: '', description_ar: '', description_en: '', price_from: '', price_to: '', is_active: true, currency_code: 'SAR' };
+  const emptyForm = useMemo(() => ({ name_ar: '', name_en: '', description_ar: '', description_en: '', price_from: '', price_to: '', is_active: true, currency_code: 'SAR' }), []);
   const [form, setForm] = useState(emptyForm);
 
   const sensors = useSensors(
