@@ -309,28 +309,12 @@ const ProfileSystemDetail = () => {
     </div>
   );
 
-  const name = language === 'ar' ? profile.name_ar : (profile.name_en || profile.name_ar);
-  const desc = language === 'ar' ? (profile.description_ar || '') : (profile.description_en || profile.description_ar || '');
+  const name = profileName;
+  const desc = profileDesc;
   const apps = language === 'ar' ? (profile.applications_ar || '') : (profile.applications_en || profile.applications_ar || '');
   const features = language === 'ar' ? (profile.features_ar || []) : (profile.features_en?.length ? profile.features_en : (profile.features_ar || []));
   const rec = recommendationLabels[profile.recommendation_level] || recommendationLabels.standard;
   const RecIcon = rec.icon;
-
-  usePageMeta({
-    title: name,
-    description: desc?.slice(0, 160) || '',
-    ogImage: profile.cover_image_url || undefined,
-    ogType: 'article',
-  });
-
-  useJsonLd({
-    '@context': 'https://schema.org',
-    '@type': 'Product',
-    name,
-    description: desc?.slice(0, 300),
-    image: profile.cover_image_url,
-    url: `https://faneen.com/profile-systems/${slug}`,
-  });
   const avgRating = reviews.length ? (reviews.reduce((s: number, r: any) => s + r.rating, 0) / reviews.length) : 0;
   const ratingDistribution = [5, 4, 3, 2, 1].map(star => ({
     star,
