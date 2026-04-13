@@ -1,10 +1,11 @@
-name: Code Audit
+name: Code Quality & Security Audit
 
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   audit:
@@ -18,32 +19,35 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: npm
+          node-version: '20'
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
 
-      # 1. ESLint
-      - name: ESLint check
-        run: npx eslint . --format compact
-        continue-on-error: true
-
-      # 2. TypeScript type checking
-      - name: TypeScript check
+      - name: TypeScript Check
         run: npx tsc --noEmit
         continue-on-error: true
 
-      # 3. Security audit
-      - name: npm audit
+      - name: ESLint Check
+        run: npx eslint src --ext .ts,.tsx --max-warnings 50
+        continue-on-error: true
+
+      - name: Security Audit
         run: npm audit --audit-level=high
         continue-on-error: true
 
-      # 4. Bundle size analysis
-      - name: Build & analyze bundle
+      - name: Check for .env in git
         run: |
-          npx vite build 2>&1 | tee /tmp/build-output.txt
-          echo "## Bundle Size Report" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          cat /tmp/build-output.txt | grep -E '(dist/|\.js|\.css|kB|Total)' >> $GITHUB_STEP_SUMMARY || true
-          echo '```' >> $GITHUB_STEP_SUMMARY
+          if git ls-files | grep -q "^\.env$"; then
+            echo "CRITICAL: .env file is tracked by git!"
+            exit 1
+          else
+            echo "OK: .env file is not tracked by git"
+          fi
+
+      - name: Bundle Size Check
+        run: |
+          npm run build
+          echo "Build completed successfully"
+          du -sh dist/ 2>/dev/null || echo "No dist folder found"
