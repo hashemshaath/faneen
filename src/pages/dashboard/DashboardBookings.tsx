@@ -112,7 +112,7 @@ const DashboardBookings = () => {
   // Update booking status
   const updateStatus = useMutation({
     mutationFn: async ({ id, status, reason }: { id: string; status: BookingStatus; reason?: string }) => {
-      const updateData: Record<string, string> = { status };
+      const updateData: any = { status };
       if (status === 'cancelled') {
         updateData.cancellation_reason = reason || null;
         updateData.cancelled_by = user!.id;

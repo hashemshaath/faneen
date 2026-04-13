@@ -101,7 +101,7 @@ const InteractiveStarInput = ({ value, onChange }: { value: number; onChange: (v
 };
 
 // ─── Lightbox (mobile-optimized) ───
-const Lightbox = ({ images, index, onClose, onNav, isRTL, language }: { images: string[]; index: number; onClose: () => void; onNav: (dir: number) => void; isRTL: boolean; language: string }) => {
+const Lightbox = ({ images, index, onClose, onNav, isRTL, language }: { images: any[]; index: number; onClose: () => void; onNav: (dir: number) => void; isRTL: boolean; language: string }) => {
   const [touchStart, setTouchStart] = useState<number | null>(null);
 
   useEffect(() => {
@@ -809,7 +809,7 @@ const ProfileSystemDetail = () => {
       {/* ═══ Lightbox ═══ */}
       {lightboxIdx !== null && (
         <Lightbox
-          images={images}
+          images={images as any}
           index={lightboxIdx}
           onClose={() => setLightboxIdx(null)}
           onNav={(dir: number) => setLightboxIdx((prev: number) => (prev! + dir + images.length) % images.length)}

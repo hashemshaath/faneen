@@ -81,9 +81,10 @@ const formatValue = (value: unknown): string => {
   if (value === null || value === undefined || value === '') return '—';
   if (value === true) return 'نعم';
   if (value === false) return 'لا';
-  if (accountTypeLabels[value]) return accountTypeLabels[value];
-  if (roleLabels[value]) return roleLabels[value];
-  return String(value);
+  const strVal = String(value);
+  if (accountTypeLabels[strVal]) return accountTypeLabels[strVal];
+  if (roleLabels[strVal]) return roleLabels[strVal];
+  return strVal;
 };
 
 /* ─── Build readable detail items from log details ─── */

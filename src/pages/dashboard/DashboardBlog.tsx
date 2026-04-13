@@ -83,8 +83,9 @@ const seoScoreColor = (score: number) => {
 
 /* ─── Post Card ─── */
 const PostCard = React.memo(({ post, language, isRTL, onEdit, onDelete }: {
-  post: Record<string, unknown>; language: string; isRTL: boolean;
-  onEdit: (p: Record<string, unknown>) => void; onDelete: (id: string) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  post: any; language: string; isRTL: boolean;
+  onEdit: (p: any) => void; onDelete: (id: string) => void;
 }) => {
   const status = post.scheduled_at && post.status === 'draft' ? 'scheduled' : post.status;
   const cfg = statusConfig[status] || statusConfig.draft;
@@ -164,8 +165,8 @@ const DashboardBlog = () => {
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState({ ...defaultForm });
   const [aiLoading, setAiLoading] = useState<string | null>(null);
-  const [seoAnalysis, setSeoAnalysis] = useState<Record<string, unknown> | null>(null);
-  const [competitorAnalysis, setCompetitorAnalysis] = useState<Record<string, unknown> | null>(null);
+  const [seoAnalysis, setSeoAnalysis] = useState<any | null>(null);
+  const [competitorAnalysis, setCompetitorAnalysis] = useState<any | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [previewLang, setPreviewLang] = useState<'ar' | 'en'>('ar');
@@ -227,9 +228,9 @@ const DashboardBlog = () => {
           title_ar: form.title_ar, title_en: form.title_en || null,
           content_ar: form.content_ar || null, content_en: form.content_en || null,
           excerpt_ar: form.excerpt_ar || null, excerpt_en: form.excerpt_en || null,
-          form_snapshot: form as Record<string, unknown>,
+          form_snapshot: form as any,
           version_number: nextVersion, auto_saved: true,
-        });
+        } as any);
         setLastAutoSave(new Date());
       } catch (e) { console.error('Auto-save failed', e); }
       setIsAutoSaving(false);
@@ -259,9 +260,9 @@ const DashboardBlog = () => {
         title_ar: form.title_ar, title_en: form.title_en || null,
         content_ar: form.content_ar || null, content_en: form.content_en || null,
         excerpt_ar: form.excerpt_ar || null, excerpt_en: form.excerpt_en || null,
-        form_snapshot: form as Record<string, unknown>,
+        form_snapshot: form as any,
         version_number: (count || 0) + 1, auto_saved: false,
-      });
+      } as any);
       setLastAutoSave(new Date());
       queryClient.invalidateQueries({ queryKey: ['blog-drafts', editId] });
       toast.success(isRTL ? 'تم حفظ النسخة' : 'Version saved');
@@ -299,7 +300,7 @@ const DashboardBlog = () => {
       const keywordsArr = form.keywords ? form.keywords.split(',').map(t => t.trim()).filter(Boolean) : [];
       const readingTime = calculateReadingTime(form.content_ar || form.content_en || '');
       const isScheduled = form.status === 'scheduled' && scheduledDate;
-      const payload: Record<string, unknown> = {
+      const payload: any = {
         author_id: user!.id, slug,
         title_ar: form.title_ar, title_en: form.title_en || null,
         content_ar: form.content_ar || null, content_en: form.content_en || null,
@@ -341,7 +342,7 @@ const DashboardBlog = () => {
     },
   });
 
-  const openEdit = (p: Record<string, unknown>) => {
+  const openEdit = (p: any) => {
     setForm({
       title_ar: p.title_ar, title_en: p.title_en || '', content_ar: p.content_ar || '',
       content_en: p.content_en || '', excerpt_ar: p.excerpt_ar || '', excerpt_en: p.excerpt_en || '',
@@ -891,7 +892,7 @@ const DashboardBlog = () => {
                   </h3>
                 </div>
                 <div className="p-4">
-                  <SeoScorePanel isRTL={isRTL} analysis={seoAnalysis} localScore={localScore}
+                  <SeoScorePanel isRTL={isRTL} analysis={seoAnalysis as any} localScore={localScore}
                     isAnalyzing={aiLoading === 'analyze'} contentStats={contentStats} focusKeyword={form.focus_keyword} />
                 </div>
               </div>
@@ -929,7 +930,7 @@ const DashboardBlog = () => {
                     </h3>
                   </div>
                   <div className="p-4">
-                    <DraftVersions isRTL={isRTL} versions={draftVersions as Array<Record<string, unknown>>} onRestore={handleRestoreDraft}
+                    <DraftVersions isRTL={isRTL} versions={draftVersions as any} onRestore={handleRestoreDraft}
                       onDelete={handleDeleteDraft} lastSaved={lastAutoSave} isSaving={isAutoSaving} onManualSave={handleManualSaveDraft} />
                   </div>
                 </div>

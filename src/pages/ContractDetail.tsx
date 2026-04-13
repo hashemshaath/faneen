@@ -297,9 +297,9 @@ const ContractDetail = () => {
         provider_id: contract!.provider_id,
         title_ar: maintTitle,
         description_ar: maintDesc,
-        priority: maintPriority as 'low' | 'normal' | 'high' | 'urgent',
+        priority: maintPriority as 'low' | 'medium' | 'high' | 'urgent',
         warranty_id: maintWarrantyId || null,
-      });
+      } as any);
       if (error) throw error;
     },
     onSuccess: () => {

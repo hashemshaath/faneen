@@ -107,14 +107,15 @@ const reverseGeocode = async (lat: number, lng: number) => {
 };
 
 /* ─── CSV Export ─── */
-const exportCSV = (businesses: Array<Record<string, unknown>>, language: string) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const exportCSV = (businesses: any[], language: string) => {
   const headers = ['Ref ID', 'Name (AR)', 'Name (EN)', 'Username', 'Phone', 'Email', 'Category', 'Tier', 'Verified', 'Active', 'Rating', 'Created'];
-  const rows = businesses.map((b) => [
+  const rows = businesses.map((b: any) => [
     b.ref_id, b.name_ar, b.name_en || '', `@${b.username}`, b.phone || '', b.email || '',
     b.category_id || '', b.membership_tier, b.is_verified ? 'Yes' : 'No', b.is_active ? 'Yes' : 'No',
     `${b.rating_avg} (${b.rating_count})`, new Date(b.created_at).toLocaleDateString(),
   ]);
-  const csv = [headers, ...rows].map(r => r.map((c: string) => `"${c}"`).join(',')).join('\n');
+  const csv = [headers, ...rows].map(r => r.map((c: any) => `"${c}"`).join(',')).join('\n');
   const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -155,13 +156,16 @@ const AdminBusinesses = () => {
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterTier, setFilterTier] = useState('all');
-  const [editingBiz, setEditingBiz] = useState<Record<string, unknown> | null>(null);
-  const [editForm, setEditForm] = useState<Record<string, unknown>>({});
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [editingBiz, setEditingBiz] = useState<any | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [editForm, setEditForm] = useState<any>({});
   const [servicesPanel, setServicesPanel] = useState<string | null>(null);
   const [portfolioImages, setPortfolioImages] = useState<string[]>([]);
   const [newService, setNewService] = useState({ name_ar: '', name_en: '', description_ar: '', description_en: '', price_from: '', price_to: '', is_active: true });
   const [geocoding, setGeocoding] = useState(false);
-  const [branchForm, setBranchForm] = useState<Record<string, unknown> | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [branchForm, setBranchForm] = useState<any | null>(null);
   const [editingBranchId, setEditingBranchId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
   const [isPending, startTransition] = useTransition();
@@ -258,12 +262,12 @@ const AdminBusinesses = () => {
   const logAction = async (action: string, entityId: string, details: Record<string, unknown>) => {
     await supabase.from('admin_activity_log').insert({
       user_id: user!.id, action, entity_type: 'business', entity_id: entityId, details,
-    });
+    } as any);
   };
 
   const toggleMutation = useMutation({
     mutationFn: async ({ id, field, value }: { id: string; field: string; value: boolean }) => {
-      const { error } = await supabase.from('businesses').update({ [field]: value } ).eq('id', id);
+      const { error } = await supabase.from('businesses').update({ [field]: value } as any).eq('id', id);
       if (error) throw error;
       await logAction(`business_${field}_${value}`, id, { field, value });
     },
@@ -276,7 +280,7 @@ const AdminBusinesses = () => {
 
   const tierMutation = useMutation({
     mutationFn: async ({ id, tier }: { id: string; tier: string }) => {
-      const { error } = await supabase.from('businesses').update({ membership_tier: tier } ).eq('id', id);
+      const { error } = await supabase.from('businesses').update({ membership_tier: tier } as any).eq('id', id);
       if (error) throw error;
       await logAction('business_tier_change', id, { new_tier: tier });
     },
@@ -289,7 +293,7 @@ const AdminBusinesses = () => {
   const updateBizMutation = useMutation({
     mutationFn: async () => {
       const id = editingBiz.id;
-      const payload: Record<string, unknown> = {
+      const payload: any = {
         name_ar: editForm.name_ar, name_en: editForm.name_en || null,
         short_description_ar: editForm.short_description_ar || null, short_description_en: editForm.short_description_en || null,
         description_ar: editForm.description_ar || null, description_en: editForm.description_en || null,
@@ -359,7 +363,7 @@ const AdminBusinesses = () => {
     mutationFn: async (url: string) => {
       const { error } = await supabase.from('portfolio_items').insert({
         business_id: editingBiz.id, title_ar: 'صورة', media_url: url, media_type: 'image',
-      });
+      } as any);
       if (error) throw error;
     },
     onSuccess: () => refetchPortfolio(),
@@ -385,7 +389,7 @@ const AdminBusinesses = () => {
   const saveBranchMutation = useMutation({
     mutationFn: async () => {
       if (!branchForm || !editingBiz) return;
-      const payload: Record<string, unknown> = {
+      const payload: any = {
         business_id: editingBiz.id,
         name_ar: branchForm.name_ar, name_en: branchForm.name_en || null,
         is_main: branchForm.is_main, is_active: branchForm.is_active,
