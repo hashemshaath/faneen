@@ -110,7 +110,7 @@ const Blog = () => {
     queryFn: async () => {
       const { data } = await supabase.from('blog_comments').select('post_id');
       const counts: Record<string, number> = {};
-      data?.forEach((c: any) => { counts[c.post_id] = (counts[c.post_id] || 0) + 1; });
+      data?.forEach((c) => { counts[c.post_id] = (counts[c.post_id] || 0) + 1; });
       return counts;
     },
   });
@@ -120,14 +120,14 @@ const Blog = () => {
     queryFn: async () => {
       const { data } = await supabase.from('blog_bookmarks').select('post_id');
       const counts: Record<string, number> = {};
-      data?.forEach((b: any) => { counts[b.post_id] = (counts[b.post_id] || 0) + 1; });
+      data?.forEach((b) => { counts[b.post_id] = (counts[b.post_id] || 0) + 1; });
       return counts;
     },
   });
 
   const allTags = useMemo(() => {
     const tagSet = new Set<string>();
-    posts.forEach((p: any) => p.tags?.forEach((t: string) => tagSet.add(t)));
+    posts.forEach((p) => p.tags?.forEach((t: string) => tagSet.add(t)));
     return Array.from(tagSet).slice(0, 15);
   }, [posts]);
 
@@ -145,7 +145,7 @@ const Blog = () => {
   const hasActiveFilters = activeCategory !== 'all' || searchQuery || selectedTags.length > 0 || sortBy !== 'newest';
 
   const filteredPosts = useMemo(() => {
-    let result = posts.filter((post: any) => {
+    let result = posts.filter((post) => {
       const matchCategory = activeCategory === 'all' || post.category === activeCategory;
       const matchTags = selectedTags.length === 0 || selectedTags.some(t => post.tags?.includes(t));
       if (!searchQuery.trim()) return matchCategory && matchTags;
@@ -179,14 +179,14 @@ const Blog = () => {
   useMemo(() => { setCurrentPage(1); }, [prevFilterKey]);
 
   const featuredPost = posts.length > 0 ? posts[0] : null;
-  const regularPosts = filteredPosts.filter((p: any) => p.id !== featuredPost?.id);
+  const regularPosts = filteredPosts.filter((p) => p.id !== featuredPost?.id);
   const showFeatured = featuredPost && activeCategory === 'all' && !searchQuery && selectedTags.length === 0 && sortBy === 'newest' && posts.length > 1;
   const allDisplayPosts = showFeatured ? regularPosts : filteredPosts;
   const totalPages = Math.ceil(allDisplayPosts.length / POSTS_PER_PAGE);
   const displayPosts = allDisplayPosts.slice((currentPage - 1) * POSTS_PER_PAGE, currentPage * POSTS_PER_PAGE);
 
   const popularPosts = useMemo(() => {
-    return [...posts].sort((a: any, b: any) => (b.views_count || 0) - (a.views_count || 0)).slice(0, 5);
+    return [...posts].sort((a, b) => (b.views_count || 0) - (a.views_count || 0)).slice(0, 5);
   }, [posts]);
 
   const sortLabels: Record<SortOption, { ar: string; en: string }> = {

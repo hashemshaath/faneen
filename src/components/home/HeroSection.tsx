@@ -79,7 +79,7 @@ const SearchBar = memo(({ categories, cities, language, isRTL, t, onSearch }: an
             className="sm:w-44 py-3.5 sm:py-4 px-3 sm:px-4 rounded-xl sm:rounded-2xl bg-white/[0.06] text-white/80 font-body text-sm border-0 outline-none focus:ring-2 focus:ring-gold/40 appearance-none cursor-pointer"
           >
             <option value="" className="bg-surface-nav text-surface-nav-foreground">{isRTL ? 'جميع الأقسام' : 'All Categories'}</option>
-            {categories.map((c: any) => (
+            {categories.map((c) => (
               <option key={c.id} value={c.id} className="bg-surface-nav text-surface-nav-foreground">
                 {language === 'ar' ? c.name_ar : c.name_en}
               </option>
@@ -91,7 +91,7 @@ const SearchBar = memo(({ categories, cities, language, isRTL, t, onSearch }: an
             className="sm:w-40 py-3.5 sm:py-4 px-3 sm:px-4 rounded-xl sm:rounded-2xl bg-white/[0.06] text-white/80 font-body text-sm border-0 outline-none focus:ring-2 focus:ring-gold/40 appearance-none cursor-pointer hidden sm:block"
           >
             <option value="" className="bg-surface-nav text-surface-nav-foreground">{isRTL ? 'جميع المدن' : 'All Cities'}</option>
-            {cities.map((c: any) => (
+            {cities.map((c) => (
               <option key={c.id} value={c.id} className="bg-surface-nav text-surface-nav-foreground">
                 {language === 'ar' ? c.name_ar : c.name_en}
               </option>
@@ -277,7 +277,7 @@ export const HeroSection = () => {
 
         {/* Quick tags */}
         <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2.5 mt-4 sm:mt-6">
-          {categories.slice(0, 5).map((cat: any) => (
+          {categories.slice(0, 5).map((cat) => (
             <button
               key={cat.id}
               type="button"

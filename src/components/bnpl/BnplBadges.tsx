@@ -27,7 +27,7 @@ export const BnplBadges = ({ businessId, compact = false }: Props) => {
   });
 
   // Fetch provider details separately (public table)
-  const providerIds = publicLinks.map((l: any) => l.bnpl_provider_id);
+  const providerIds = publicLinks.map((l) => l.bnpl_provider_id);
   const { data: providers = [] } = useQuery({
     queryKey: ['bnpl-providers', providerIds],
     queryFn: async () => {
@@ -41,9 +41,9 @@ export const BnplBadges = ({ businessId, compact = false }: Props) => {
     enabled: providerIds.length > 0,
   });
 
-  const linkedProviders = publicLinks.map((link: any) => ({
+  const linkedProviders = publicLinks.map((link) => ({
     ...link,
-    bnpl_providers: providers.find((p: any) => p.id === link.bnpl_provider_id) || null,
+    bnpl_providers: providers.find((p) => p.id === link.bnpl_provider_id) || null,
   }));
 
   if (linkedProviders.length === 0) return null;
@@ -73,7 +73,7 @@ export const BnplBadges = ({ businessId, compact = false }: Props) => {
       </div>
       
       <div className="grid gap-2 sm:grid-cols-2">
-        {linkedProviders.map((lp: any) => {
+        {linkedProviders.map((lp) => {
           const p = lp.bnpl_providers;
           if (!p) return null;
           const name = isRTL ? p.name_ar : p.name_en;
@@ -127,7 +127,7 @@ const BnplDialog = ({ providers }: { providers: any[] }) => {
       </DialogHeader>
       <ScrollArea className="max-h-[60vh]">
         <div className="space-y-3 p-1">
-          {providers.map((lp: any) => {
+          {providers.map((lp) => {
             const p = lp.bnpl_providers;
             if (!p) return null;
             return <ProviderCard key={lp.id} provider={p} linked={lp} />;

@@ -140,7 +140,7 @@ const ContractDetail = () => {
   const [uploading, setUploading] = useState(false);
   // Measurement CRUD
   const [showMeasurementForm, setShowMeasurementForm] = useState(false);
-  const [editingMeasurement, setEditingMeasurement] = useState<any>(null);
+  const [editingMeasurement, setEditingMeasurement] = useState<Record<string, unknown> | null>(null);
   const [mForm, setMForm] = useState({ name_ar: '', piece_number: '', floor_label: 'ground_floor', location_ar: '', length_mm: '', width_mm: '', quantity: '1', unit_price: '', notes: '' });
   // Milestone CRUD
   const [showMilestoneForm, setShowMilestoneForm] = useState(false);
@@ -277,7 +277,7 @@ const ContractDetail = () => {
     mutationFn: async () => {
       const isClientUser = user?.id === contract?.client_id;
       const updateField = isClientUser ? 'client_accepted_at' : 'provider_accepted_at';
-      const update: any = { [updateField]: new Date().toISOString() };
+      const update: Record<string, unknown> = { [updateField]: new Date().toISOString() };
       const otherAccepted = isClientUser ? contract?.provider_accepted_at : contract?.client_accepted_at;
       if (otherAccepted) update.status = 'active';
       else if (contract?.status === 'draft') update.status = 'pending_approval';
@@ -373,7 +373,7 @@ const ContractDetail = () => {
     mutationFn: async () => {
       const area = (Number(mForm.length_mm) * Number(mForm.width_mm)) / 1000000;
       const totalCost = Number(mForm.unit_price) * Number(mForm.quantity);
-      const payload: any = {
+      const payload: Record<string, unknown> = {
         contract_id: id!, name_ar: mForm.name_ar, piece_number: mForm.piece_number,
         floor_label: mForm.floor_label, location_ar: mForm.location_ar,
         length_mm: Number(mForm.length_mm), width_mm: Number(mForm.width_mm),
@@ -476,7 +476,7 @@ const ContractDetail = () => {
     mutationFn: async (amendment: any) => {
       const isClientUser = user?.id === contract?.client_id;
       const field = isClientUser ? 'client_approved_at' : 'provider_approved_at';
-      const update: any = { [field]: new Date().toISOString() };
+      const update: Record<string, unknown> = { [field]: new Date().toISOString() };
       const otherApproved = isClientUser ? amendment.provider_approved_at : amendment.client_approved_at;
       if (otherApproved) update.status = 'approved';
       const { error } = await supabase.from('contract_amendments').update(update).eq('id', amendment.id);
@@ -1996,7 +1996,7 @@ const ContractDetail = () => {
             {!isContractLocked && <p className="text-center py-4 text-muted-foreground text-xs">{isRTL ? 'العقد لم يُعتمد بعد - يمكنك تعديله مباشرة من الأقسام الأخرى' : 'Contract not yet approved - you can edit it directly'}</p>}
             {amendments && amendments.length > 0 ? (
               <div className="space-y-3">
-                {amendments.map((a: any) => {
+                {amendments.map((a) => {
                   const canApprove = a.status === 'pending' && ((isClient && !a.client_approved_at) || (isProvider && !a.provider_approved_at));
                   const typeLabels: Record<string, string> = { scope_change: isRTL ? 'نطاق العمل' : 'Scope', financial: isRTL ? 'مالي' : 'Financial', extension: isRTL ? 'تمديد' : 'Extension', other: isRTL ? 'أخرى' : 'Other' };
                   return (

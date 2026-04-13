@@ -86,7 +86,7 @@ const Notifications = () => {
   });
 
   const filtered = useMemo(() => {
-    return notifications.filter((n: any) => {
+    return notifications.filter((n) => {
       if (typeFilter !== 'all' && n.notification_type !== typeFilter) return false;
       if (readFilter === 'unread' && n.is_read) return false;
       if (readFilter === 'read' && !n.is_read) return false;
@@ -102,7 +102,7 @@ const Notifications = () => {
     });
   }, [notifications, typeFilter, readFilter, searchQuery, dateFrom, dateTo, language]);
 
-  const unreadCount = notifications.filter((n: any) => !n.is_read).length;
+  const unreadCount = notifications.filter((n) => !n.is_read).length;
 
   const markRead = useMutation({
     mutationFn: async (id: string) => {
@@ -264,8 +264,8 @@ const Notifications = () => {
           {[
             { label: isRTL ? 'الكل' : 'Total', count: notifications.length, color: 'text-foreground' },
             { label: isRTL ? 'غير مقروء' : 'Unread', count: unreadCount, color: 'text-primary' },
-            { label: isRTL ? 'العقود' : 'Contracts', count: notifications.filter((n: any) => n.notification_type === 'contract').length, color: 'text-blue-600' },
-            { label: isRTL ? 'الأقساط' : 'Installments', count: notifications.filter((n: any) => n.notification_type === 'installment').length, color: 'text-amber-600' },
+            { label: isRTL ? 'العقود' : 'Contracts', count: notifications.filter((n) => n.notification_type === 'contract').length, color: 'text-blue-600' },
+            { label: isRTL ? 'الأقساط' : 'Installments', count: notifications.filter((n) => n.notification_type === 'installment').length, color: 'text-amber-600' },
           ].map((s) => (
             <Card key={s.label}>
               <CardContent className="p-3 text-center">
@@ -293,7 +293,7 @@ const Notifications = () => {
           </Card>
         ) : (
           <div className="space-y-2">
-            {filtered.map((n: any) => {
+            {filtered.map((n) => {
               const Icon = getNotificationIcon(n);
               const color = getNotificationColor(n);
               const title = language === 'ar' ? n.title_ar : (n.title_en || n.title_ar);

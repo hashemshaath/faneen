@@ -432,7 +432,7 @@ export const ReviewsTab = ({ business }: { business: any }) => {
     if (!reviews?.length) return [0, 0, 0, 0, 0];
 
     const counts = [0, 0, 0, 0, 0];
-    reviews.forEach((review: any) => {
+    reviews.forEach((review) => {
       if (review.rating >= 1 && review.rating <= 5) counts[review.rating - 1] += 1;
     });
     return counts;

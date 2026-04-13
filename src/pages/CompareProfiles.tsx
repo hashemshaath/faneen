@@ -99,8 +99,8 @@ const CompareProfiles = () => {
   // Collect all unique spec names
   const allSpecs = useMemo(() => {
     const specsMap = new Map<string, string>();
-    selectedProfiles.forEach((p: any) => {
-      (p.profile_specifications ?? []).forEach((s: any) => {
+    selectedProfiles.forEach((p) => {
+      (p.profile_specifications ?? []).forEach((s) => {
         const key = s.spec_name_ar;
         if (!specsMap.has(key)) {
           specsMap.set(key, language === 'ar' ? s.spec_name_ar : (s.spec_name_en || s.spec_name_ar));
@@ -113,7 +113,7 @@ const CompareProfiles = () => {
   // Collect all unique features
   const allFeatures = useMemo(() => {
     const feats = new Set<string>();
-    selectedProfiles.forEach((p: any) => {
+    selectedProfiles.forEach((p) => {
       const features = language === 'ar' ? p.features_ar : (p.features_en || p.features_ar);
       (features ?? []).forEach((f: string) => feats.add(f));
     });
@@ -176,7 +176,7 @@ const CompareProfiles = () => {
             )}
             {selectedIds.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-3">
-                {selectedProfiles.map((p: any) => (
+                {selectedProfiles.map((p) => (
                   <Badge key={p.id} variant="secondary" className="gap-1 pe-1">
                     {getName(p)}
                     <button onClick={() => removeProfile(p.id)} className="rounded-full hover:bg-destructive/20 p-0.5">
@@ -228,7 +228,7 @@ const CompareProfiles = () => {
               <thead>
                 <tr>
                   <th className="sticky start-0 z-10 bg-card p-4 text-start min-w-[160px] border-b border-border" />
-                  {selectedProfiles.map((p: any) => {
+                  {selectedProfiles.map((p) => {
                     const rec = recommendationLabels[p.recommendation_level] || recommendationLabels.standard;
                     return (
                       <th key={p.id} className="p-4 min-w-[220px] border-b border-border bg-card">
@@ -264,7 +264,7 @@ const CompareProfiles = () => {
                   <td className="sticky start-0 bg-background p-3 text-sm font-medium flex items-center gap-2">
                     <Thermometer className="w-4 h-4 text-orange-500" />{isRTL ? 'العزل الحراري' : 'Thermal Insulation'}
                   </td>
-                  {selectedProfiles.map((p: any) => (
+                  {selectedProfiles.map((p) => (
                     <td key={p.id} className="p-3 border-b border-border/50"><RatingCell value={p.thermal_insulation_rating || 0} /></td>
                   ))}
                 </tr>
@@ -273,7 +273,7 @@ const CompareProfiles = () => {
                   <td className="sticky start-0 bg-muted/20 p-3 text-sm font-medium flex items-center gap-2">
                     <Volume2 className="w-4 h-4 text-blue-500" />{isRTL ? 'العزل الصوتي' : 'Sound Insulation'}
                   </td>
-                  {selectedProfiles.map((p: any) => (
+                  {selectedProfiles.map((p) => (
                     <td key={p.id} className="p-3 border-b border-border/50"><RatingCell value={p.sound_insulation_rating || 0} /></td>
                   ))}
                 </tr>
@@ -282,7 +282,7 @@ const CompareProfiles = () => {
                   <td className="sticky start-0 bg-background p-3 text-sm font-medium flex items-center gap-2">
                     <Shield className="w-4 h-4 text-green-500" />{isRTL ? 'قوة التحمل' : 'Strength'}
                   </td>
-                  {selectedProfiles.map((p: any) => (
+                  {selectedProfiles.map((p) => (
                     <td key={p.id} className="p-3 border-b border-border/50"><RatingCell value={p.strength_rating || 0} /></td>
                   ))}
                 </tr>
@@ -295,7 +295,7 @@ const CompareProfiles = () => {
                   <td className="sticky start-0 bg-background p-3 text-sm font-medium flex items-center gap-2">
                     <Ruler className="w-4 h-4" />{isRTL ? 'أقصى ارتفاع' : 'Max Height'}
                   </td>
-                  {selectedProfiles.map((p: any) => (
+                  {selectedProfiles.map((p) => (
                     <td key={p.id} className="p-3 text-center text-sm border-b border-border/50">
                       {p.max_height_mm ? <span className="font-mono">{p.max_height_mm} mm</span> : '-'}
                     </td>
@@ -305,7 +305,7 @@ const CompareProfiles = () => {
                   <td className="sticky start-0 bg-muted/20 p-3 text-sm font-medium flex items-center gap-2">
                     <Ruler className="w-4 h-4" />{isRTL ? 'أقصى عرض' : 'Max Width'}
                   </td>
-                  {selectedProfiles.map((p: any) => (
+                  {selectedProfiles.map((p) => (
                     <td key={p.id} className="p-3 text-center text-sm border-b border-border/50">
                       {p.max_width_mm ? <span className="font-mono">{p.max_width_mm} mm</span> : '-'}
                     </td>
@@ -315,7 +315,7 @@ const CompareProfiles = () => {
                 {/* Colors */}
                 <tr>
                   <td className="sticky start-0 bg-background p-3 text-sm font-medium">{isRTL ? 'الألوان المتاحة' : 'Available Colors'}</td>
-                  {selectedProfiles.map((p: any) => (
+                  {selectedProfiles.map((p) => (
                     <td key={p.id} className="p-3 text-center border-b border-border/50">
                       <div className="flex flex-wrap justify-center gap-1">
                         {(p.available_colors ?? []).map((c: string, i: number) => (
@@ -335,8 +335,8 @@ const CompareProfiles = () => {
                     {allSpecs.map(([specKey, specLabel], i) => (
                       <tr key={specKey} className={i % 2 === 0 ? '' : 'bg-muted/20'}>
                         <td className={`sticky start-0 ${i % 2 === 0 ? 'bg-background' : 'bg-muted/20'} p-3 text-sm font-medium`}>{specLabel}</td>
-                        {selectedProfiles.map((p: any) => {
-                          const spec = (p.profile_specifications ?? []).find((s: any) => s.spec_name_ar === specKey);
+                        {selectedProfiles.map((p) => {
+                          const spec = (p.profile_specifications ?? []).find((s) => s.spec_name_ar === specKey);
                           return (
                             <td key={p.id} className="p-3 text-center text-sm border-b border-border/50">
                               {spec ? (
@@ -361,7 +361,7 @@ const CompareProfiles = () => {
                     {allFeatures.map((feat, i) => (
                       <tr key={feat} className={i % 2 === 0 ? '' : 'bg-muted/20'}>
                         <td className={`sticky start-0 ${i % 2 === 0 ? 'bg-background' : 'bg-muted/20'} p-3 text-sm`}>{feat}</td>
-                        {selectedProfiles.map((p: any) => {
+                        {selectedProfiles.map((p) => {
                           const features = language === 'ar' ? p.features_ar : (p.features_en || p.features_ar);
                           const has = (features ?? []).includes(feat);
                           return (
@@ -383,11 +383,11 @@ const CompareProfiles = () => {
                 </td></tr>
                 <tr>
                   <td className="sticky start-0 bg-background p-3 text-sm font-medium">{isRTL ? 'نطاق السعر' : 'Price Range'}</td>
-                  {selectedProfiles.map((p: any) => {
+                  {selectedProfiles.map((p) => {
                     const suppliers = p.profile_suppliers ?? [];
                     if (!suppliers.length) return <td key={p.id} className="p-3 text-center text-muted-foreground text-sm">-</td>;
-                    const minPrice = Math.min(...suppliers.map((s: any) => s.price_range_from || Infinity));
-                    const maxPrice = Math.max(...suppliers.map((s: any) => s.price_range_to || 0));
+                    const minPrice = Math.min(...suppliers.map((s) => s.price_range_from || Infinity));
+                    const maxPrice = Math.max(...suppliers.map((s) => s.price_range_to || 0));
                     return (
                       <td key={p.id} className="p-3 text-center text-sm">
                         <span className="font-mono font-medium text-green-600">
@@ -399,7 +399,7 @@ const CompareProfiles = () => {
                 </tr>
                 <tr className="bg-muted/20">
                   <td className="sticky start-0 bg-muted/20 p-3 text-sm font-medium">{isRTL ? 'عدد الموردين' : 'Suppliers Count'}</td>
-                  {selectedProfiles.map((p: any) => (
+                  {selectedProfiles.map((p) => (
                     <td key={p.id} className="p-3 text-center text-sm font-medium">
                       {(p.profile_suppliers ?? []).length}
                     </td>
@@ -412,7 +412,7 @@ const CompareProfiles = () => {
                 </td></tr>
                 <tr>
                   <td className="sticky start-0 bg-background p-3 text-sm font-medium">{isRTL ? 'التطبيقات' : 'Applications'}</td>
-                  {selectedProfiles.map((p: any) => (
+                  {selectedProfiles.map((p) => (
                     <td key={p.id} className="p-3 text-center text-sm">
                       {(language === 'ar' ? p.applications_ar : (p.applications_en || p.applications_ar)) || '-'}
                     </td>
@@ -422,7 +422,7 @@ const CompareProfiles = () => {
                 {/* View detail links */}
                 <tr>
                   <td className="sticky start-0 bg-background p-4" />
-                  {selectedProfiles.map((p: any) => (
+                  {selectedProfiles.map((p) => (
                     <td key={p.id} className="p-4 text-center">
                       <Link to={`/profile-systems/${p.slug}`}>
                         <Button size="sm" variant="outline" className="gap-1">

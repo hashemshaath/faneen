@@ -416,14 +416,14 @@ const AdminMemberships = () => {
   const [, startTransition] = useTransition();
 
   const [activeTab, setActiveTab] = useState<Tab>('overview');
-  const [editingPlan, setEditingPlan] = useState<any>(null);
+  const [editingPlan, setEditingPlan] = useState<Record<string, unknown> | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [deferredSearch, setDeferredSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [tierFilter, setTierFilter] = useState('all');
   const [featuresText, setFeaturesText] = useState('');
   const [editLimits, setEditLimits] = useState<Record<string, number | boolean>>({});
-  const [upgradeSub, setUpgradeSub] = useState<any>(null);
+  const [upgradeSub, setUpgradeSub] = useState<Record<string, unknown> | null>(null);
   const [upgradeTargetPlan, setUpgradeTargetPlan] = useState('');
   const [upgradeCycle, setUpgradeCycle] = useState('monthly');
   const [form, setForm] = useState({
@@ -459,8 +459,8 @@ const AdminMemberships = () => {
     },
   });
 
-  const userIds = useMemo(() => [...new Set(subscriptions.map((s: any) => s.user_id))], [subscriptions]);
-  const businessIds = useMemo(() => [...new Set(subscriptions.filter((s: any) => s.business_id).map((s: any) => s.business_id))], [subscriptions]);
+  const userIds = useMemo(() => [...new Set(subscriptions.map((s) => s.user_id))], [subscriptions]);
+  const businessIds = useMemo(() => [...new Set(subscriptions.filter((s) => s.business_id).map((s) => s.business_id))], [subscriptions]);
 
   const { data: profiles = [] } = useQuery({
     queryKey: ['admin-sub-profiles', userIds],
@@ -496,9 +496,9 @@ const AdminMemberships = () => {
 
   /* ─── Enriched subscriptions ─── */
   const enrichedSubs = useMemo(() => {
-    const profileMap = new Map(profiles.map((p: any) => [p.user_id, p]));
-    const bizMap = new Map(businesses.map((b: any) => [b.id, b]));
-    return subscriptions.map((s: any) => ({
+    const profileMap = new Map(profiles.map((p) => [p.user_id, p]));
+    const bizMap = new Map(businesses.map((b) => [b.id, b]));
+    return subscriptions.map((s) => ({
       ...s,
       profile: profileMap.get(s.user_id) || null,
       business: s.business_id ? bizMap.get(s.business_id) || null : null,
@@ -507,23 +507,23 @@ const AdminMemberships = () => {
 
   /* ─── Stats ─── */
   const stats = useMemo(() => {
-    const active = enrichedSubs.filter((s: any) => s.status === 'active');
-    const cancelled = enrichedSubs.filter((s: any) => s.status === 'cancelled').length;
-    const expired = enrichedSubs.filter((s: any) => s.status === 'expired').length;
-    const expiringSoon = active.filter((s: any) => s.expires_at && new Date(s.expires_at) < new Date(Date.now() + 7 * 86400000)).length;
-    const monthly = active.filter((s: any) => s.billing_cycle === 'monthly').length;
-    const yearly = active.filter((s: any) => s.billing_cycle === 'yearly').length;
+    const active = enrichedSubs.filter((s) => s.status === 'active');
+    const cancelled = enrichedSubs.filter((s) => s.status === 'cancelled').length;
+    const expired = enrichedSubs.filter((s) => s.status === 'expired').length;
+    const expiringSoon = active.filter((s) => s.expires_at && new Date(s.expires_at) < new Date(Date.now() + 7 * 86400000)).length;
+    const monthly = active.filter((s) => s.billing_cycle === 'monthly').length;
+    const yearly = active.filter((s) => s.billing_cycle === 'yearly').length;
     const tierDist = TIERS.map(t => ({
       tier: t,
-      count: active.filter((s: any) => s.plan?.tier === t).length,
+      count: active.filter((s) => s.plan?.tier === t).length,
     }));
-    const revenue = active.reduce((sum: number, s: any) => {
-      const plan = plans.find((p: any) => p.id === s.plan_id);
+    const revenue = active.reduce((sum: number, s) => {
+      const plan = plans.find((p) => p.id === s.plan_id);
       if (!plan) return sum;
       return sum + (s.billing_cycle === 'yearly' ? plan.price_yearly / 12 : plan.price_monthly);
     }, 0);
     const planSubCounts: Record<string, number> = {};
-    active.forEach((s: any) => {
+    active.forEach((s) => {
       planSubCounts[s.plan_id] = (planSubCounts[s.plan_id] || 0) + 1;
     });
     return { total: enrichedSubs.length, active: active.length, cancelled, expired, expiringSoon, monthly, yearly, tierDist, revenue, planSubCounts };
@@ -531,7 +531,7 @@ const AdminMemberships = () => {
 
   /* ─── Filtered subscriptions ─── */
   const filteredSubs = useMemo(() => {
-    return enrichedSubs.filter((s: any) => {
+    return enrichedSubs.filter((s) => {
       if (statusFilter !== 'all' && s.status !== statusFilter) return false;
       if (tierFilter !== 'all' && s.plan?.tier !== tierFilter) return false;
       if (deferredSearch) {
@@ -552,7 +552,7 @@ const AdminMemberships = () => {
   const filteredBiz = useMemo(() => {
     if (!deferredSearch) return allBusinesses;
     const q = deferredSearch.toLowerCase();
-    return allBusinesses.filter((b: any) => b.name_ar?.toLowerCase().includes(q) || b.name_en?.toLowerCase().includes(q) || b.username?.toLowerCase().includes(q));
+    return allBusinesses.filter((b) => b.name_ar?.toLowerCase().includes(q) || b.name_en?.toLowerCase().includes(q) || b.username?.toLowerCase().includes(q));
   }, [allBusinesses, deferredSearch]);
 
   /* ─── Mutations ─── */
@@ -646,7 +646,7 @@ const AdminMemberships = () => {
   const exportCSV = useCallback(() => {
     const bom = '\uFEFF';
     const headers = ['Ref ID', 'User', 'Email', 'Business', 'Plan', 'Tier', 'Status', 'Cycle', 'Starts', 'Expires'];
-    const rows = enrichedSubs.map((s: any) => [
+    const rows = enrichedSubs.map((s) => [
       s.ref_id, s.profile?.full_name || '', s.profile?.email || '',
       s.business?.name_ar || '', s.plan?.name_en || s.plan?.name_ar || '', s.plan?.tier || '',
       s.status, s.billing_cycle,
@@ -867,7 +867,7 @@ const AdminMemberships = () => {
                 <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
-                  {plans.map((plan: any) => (
+                  {plans.map((plan) => (
                     <PlanCard key={plan.id} plan={plan} isRTL={isRTL} language={language} subsCount={stats.planSubCounts[plan.id] || 0} onEdit={openEdit} />
                   ))}
                 </div>
@@ -907,7 +907,7 @@ const AdminMemberships = () => {
                         <Select value={upgradeTargetPlan} onValueChange={setUpgradeTargetPlan}>
                           <SelectTrigger className="h-9 text-xs mt-1"><SelectValue placeholder={isRTL ? 'اختر الخطة...' : 'Select plan...'} /></SelectTrigger>
                           <SelectContent>
-                            {plans.filter((p: any) => p.is_active && p.id !== upgradeSub.plan_id).map((p: any) => (
+                            {plans.filter((p) => p.is_active && p.id !== upgradeSub.plan_id).map((p) => (
                               <SelectItem key={p.id} value={p.id}>
                                 <div className="flex items-center gap-2">
                                   {React.createElement(tierIcons[p.tier] || Zap, { className: 'w-3 h-3' })}
@@ -977,7 +977,7 @@ const AdminMemberships = () => {
                 </CardContent></Card>
               ) : (
                 <div className="space-y-2">
-                  {filteredSubs.map((sub: any) => (
+                  {filteredSubs.map((sub) => (
                     <SubRow key={sub.id} sub={sub} isRTL={isRTL} language={language} plans={plans}
                       onCancel={(id) => cancelSubMutation.mutate(id)}
                       onRenew={handleRenew}
@@ -1006,7 +1006,7 @@ const AdminMemberships = () => {
                 {TIERS.map(tier => {
                   const Icon = tierIcons[tier];
                   const colors = tierColors[tier];
-                  const count = allBusinesses.filter((b: any) => b.membership_tier === tier).length;
+                  const count = allBusinesses.filter((b) => b.membership_tier === tier).length;
                   return (
                     <Card key={tier} className={cn('border', colors.border, colors.bg)}>
                       <CardContent className="p-3 text-center">
@@ -1025,7 +1025,7 @@ const AdminMemberships = () => {
                 <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
               ) : (
                 <div className="space-y-1.5">
-                  {filteredBiz.map((biz: any) => {
+                  {filteredBiz.map((biz) => {
                     const colors = tierColors[biz.membership_tier] || tierColors.free;
                     const Icon = tierIcons[biz.membership_tier] || Zap;
                     return (
