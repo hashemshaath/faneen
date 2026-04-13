@@ -241,8 +241,8 @@ const DashboardProfileSystems = () => {
   const stats = useMemo(() => {
     const published = profiles.filter((p) => p.status === 'published').length;
     const draft = profiles.filter((p) => p.status === 'draft').length;
-    const categoryCounts = profiles.reduce((acc, p: any) => { acc[p.category] = (acc[p.category] || 0) + 1; return acc; }, {} as Record<string, number>);
-    const avgRating = profiles.length > 0 ? Math.round(profiles.reduce((sum: number, p: any) => sum + ((p.thermal_insulation_rating || 0) + (p.sound_insulation_rating || 0) + (p.strength_rating || 0)) / 3, 0) / profiles.length) : 0;
+    const categoryCounts = profiles.reduce((acc, p) => { acc[p.category] = (acc[p.category] || 0) + 1; return acc; }, {} as Record<string, number>);
+    const avgRating = profiles.length > 0 ? Math.round(profiles.reduce((sum: number, p) => sum + ((p.thermal_insulation_rating || 0) + (p.sound_insulation_rating || 0) + (p.strength_rating || 0)) / 3, 0) / profiles.length) : 0;
     return { total: profiles.length, published, draft, categoryCounts, avgRating };
   }, [profiles]);
 

@@ -112,7 +112,7 @@ const DashboardBookings = () => {
   // Update booking status
   const updateStatus = useMutation({
     mutationFn: async ({ id, status, reason }: { id: string; status: BookingStatus; reason?: string }) => {
-      const updateData: any = { status };
+      const updateData: Record<string, string> = { status };
       if (status === 'cancelled') {
         updateData.cancellation_reason = reason || null;
         updateData.cancelled_by = user!.id;
@@ -131,7 +131,7 @@ const DashboardBookings = () => {
 
   // Save availability
   const saveAvailability = useMutation({
-    mutationFn: async (slots: any[]) => {
+    mutationFn: async (slots: { day_of_week: number; is_active: boolean; start_time: string; end_time: string; slot_duration_minutes: number; max_bookings_per_slot: number }[]) => {
       if (!business) return;
       // Delete existing then insert
       await supabase.from('business_availability').delete().eq('business_id', business.id);
@@ -409,8 +409,8 @@ const AvailabilityDialog = ({
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  availability: any[];
-  onSave: (slots: any[]) => void;
+  availability: { day_of_week: number; is_active: boolean; start_time: string; end_time: string; slot_duration_minutes: number; max_bookings_per_slot: number }[];
+  onSave: (slots: { day_of_week: number; is_active: boolean; start_time: string; end_time: string; slot_duration_minutes: number; max_bookings_per_slot: number }[]) => void;
   saving: boolean;
   language: string;
   isRTL: boolean;
@@ -442,7 +442,7 @@ const AvailabilityDialog = ({
     return defaults;
   });
 
-  const updateSlot = (day: number, field: string, value: any) => {
+  const updateSlot = (day: number, field: string, value: string | number | boolean) => {
     setSlots(prev => prev.map(s => s.day_of_week === day ? { ...s, [field]: value } : s));
   };
 

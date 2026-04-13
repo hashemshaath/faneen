@@ -260,7 +260,7 @@ const DashboardProjects = () => {
     const published = projects.filter((p) => p.status === 'published').length;
     const draft = total - published;
     const featured = projects.filter((p) => p.is_featured).length;
-    const totalCost = projects.reduce((sum: number, p: any) => sum + (Number(p.project_cost) || 0), 0);
+    const totalCost = projects.reduce((sum: number, p) => sum + (Number(p.project_cost) || 0), 0);
     const complete = projects.filter((p) => p.title_ar && p.description_ar && p.cover_image_url).length;
     const completeness = total > 0 ? Math.round((complete / total) * 100) : 0;
     return { total, published, draft, featured, totalCost, completeness };
@@ -285,7 +285,7 @@ const DashboardProjects = () => {
   /* ─── Mutations ─── */
   const saveMut = useMutation({
     mutationFn: async () => {
-      const payload: any = {
+      const payload = {
         business_id: businessId!, title_ar: form.title_ar.trim(), title_en: form.title_en.trim() || null,
         description_ar: form.description_ar.trim() || null, description_en: form.description_en.trim() || null,
         cover_image_url: form.cover_image_url || null, client_name: form.client_name.trim() || null,
@@ -637,7 +637,7 @@ const DashboardProjects = () => {
                 </CardTitle>
                 <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setGalleryProjectId(null)}><X className="w-4 h-4" /></Button>
               </div>
-              {galleryProject && <p className="text-xs text-muted-foreground">{language === 'ar' ? (galleryProject as any).title_ar : ((galleryProject as any).title_en || (galleryProject as any).title_ar)}</p>}
+              {galleryProject && <p className="text-xs text-muted-foreground">{language === 'ar' ? galleryProject.title_ar : (galleryProject.title_en || galleryProject.title_ar)}</p>}
             </CardHeader>
             <CardContent className="pb-5">
               <MultiImageUpload bucket="project-images" images={galleryImages.map((img) => img.image_url)} onChange={handleGalleryChange} folder="gallery" maxImages={20} maxSizeMB={5} />

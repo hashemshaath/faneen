@@ -89,7 +89,7 @@ const DashboardWarranties = () => {
     mutationFn: async () => {
       const payload = {
         contract_id: form.contract_id,
-        warranty_type: form.warranty_type as any,
+        warranty_type: form.warranty_type as Database["public"]["Enums"]["warranty_type"],
         title_ar: form.title_ar, title_en: form.title_en || null,
         description_ar: form.description_ar || null, description_en: form.description_en || null,
         coverage_ar: form.coverage_ar || null, coverage_en: form.coverage_en || null,

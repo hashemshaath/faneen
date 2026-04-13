@@ -258,7 +258,7 @@ const DashboardPromotions = () => {
   const saveMut = useMutation({
     mutationFn: async () => {
       if (!businessId) throw new Error('No business');
-      const payload: any = {
+      const payload = {
         business_id: businessId, title_ar: form.title_ar, title_en: form.title_en || null,
         description_ar: form.description_ar || null, description_en: form.description_en || null,
         promotion_type: form.promotion_type,
@@ -304,7 +304,7 @@ const DashboardPromotions = () => {
   });
 
   const reorderMut = useMutation({
-    mutationFn: async (reordered: any[]) => { await Promise.all(reordered.map((item, idx) => supabase.from('promotions').update({ sort_order: idx }).eq('id', item.id))); },
+    mutationFn: async (reordered: { id: string }[]) => { await Promise.all(reordered.map((item, idx) => supabase.from('promotions').update({ sort_order: idx }).eq('id', item.id))); },
     onError: () => { queryClient.invalidateQueries({ queryKey: ['my-promotions'] }); },
   });
 

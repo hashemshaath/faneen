@@ -193,7 +193,7 @@ const DashboardNotifications = () => {
 
   // Grouped by date
   const grouped = useMemo(() => {
-    const groups: { label: string; items: any[] }[] = [];
+    const groups: { label: string; items: typeof notifications[number][] }[] = [];
     let current = '';
     filtered.slice(0, visibleCount).forEach((n) => {
       const d = new Date(n.created_at);

@@ -188,7 +188,7 @@ const DashboardOperations = () => {
 
   // Group by date
   const grouped = useMemo(() => {
-    const groups: { label: string; items: any[] }[] = [];
+    const groups: { label: string; items: typeof operations[number][] }[] = [];
     let currentLabel = '';
     filtered.slice(0, visibleCount).forEach((op) => {
       const date = new Date(op.created_at);
