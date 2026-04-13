@@ -53,7 +53,7 @@ const Offers = () => {
     setTrackedIds(prev => new Set(prev).add(id));
     try {
       await supabase.rpc('increment_promotion_views', { _promotion_id: id });
-    } catch {}
+    } catch (_e) { // share API unsupported }
   }, [trackedIds]);
 
   // Intersection observer for view tracking

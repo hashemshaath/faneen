@@ -17,7 +17,7 @@ const getStoredTheme = (): Theme => {
   try {
     const stored = localStorage.getItem('faneen-theme');
     if (stored === 'light' || stored === 'dark' || stored === 'system') return stored;
-  } catch {}
+  } catch (_e) { // localStorage may be unavailable }
   return 'light';
 };
 
@@ -36,7 +36,7 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     void root.offsetHeight;
     setThemeState(newTheme);
     setIsDark(resolveIsDark(newTheme));
-    try { localStorage.setItem('faneen-theme', newTheme); } catch {}
+    try { localStorage.setItem('faneen-theme', newTheme); } catch (_e) { // localStorage may be unavailable }
     // Re-enable transitions after a frame
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
