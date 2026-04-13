@@ -109,7 +109,7 @@ export const authService = {
     } else if (response.token_hash) {
       const { error } = await supabase.auth.verifyOtp({
         token_hash: response.token_hash,
-        type: (response.token_type as 'magiclink' | 'sms' | 'email') || 'magiclink',
+        type: (response.token_type || 'magiclink') as 'magiclink' | 'email' | 'signup' | 'invite' | 'recovery',
       });
       if (error) throw error;
     } else {
