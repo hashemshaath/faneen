@@ -381,10 +381,10 @@ const DashboardContracts = () => {
   const [viewSection, setViewSection] = useState<ViewSection>('list');
   const [form, setForm] = useState<ContractForm>(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [selectedTemplate, setSelectedTemplate] = useState<Record<string, unknown> | null>(null);
-  const [templatePreview, setTemplatePreview] = useState<Record<string, unknown> | null>(null);
-  const [approveConfirm, setApproveConfirm] = useState<Record<string, unknown> | null>(null);
-  const [sendConfirm, setSendConfirm] = useState<Record<string, unknown> | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<any | null>(null);
+  const [templatePreview, setTemplatePreview] = useState<any | null>(null);
+  const [approveConfirm, setApproveConfirm] = useState<any | null>(null);
+  const [sendConfirm, setSendConfirm] = useState<any | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [sortBy, setSortBy] = useState<'date' | 'amount' | 'status' | 'health'>('date');
   const [showAddMeasurement, setShowAddMeasurement] = useState<string | null>(null);

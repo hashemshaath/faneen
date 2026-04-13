@@ -417,14 +417,14 @@ const AdminMemberships = () => {
   const [, startTransition] = useTransition();
 
   const [activeTab, setActiveTab] = useState<Tab>('overview');
-  const [editingPlan, setEditingPlan] = useState<Record<string, unknown> | null>(null);
+  const [editingPlan, setEditingPlan] = useState<any | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [deferredSearch, setDeferredSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [tierFilter, setTierFilter] = useState('all');
   const [featuresText, setFeaturesText] = useState('');
   const [editLimits, setEditLimits] = useState<Record<string, number | boolean>>({});
-  const [upgradeSub, setUpgradeSub] = useState<Record<string, unknown> | null>(null);
+  const [upgradeSub, setUpgradeSub] = useState<any | null>(null);
   const [upgradeTargetPlan, setUpgradeTargetPlan] = useState('');
   const [upgradeCycle, setUpgradeCycle] = useState('monthly');
   const [form, setForm] = useState({

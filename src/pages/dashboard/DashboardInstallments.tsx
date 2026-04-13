@@ -175,7 +175,7 @@ const InstallmentCalc = React.memo(({ isRTL }: { isRTL: boolean }) => {
 InstallmentCalc.displayName = 'InstallmentCalc';
 
 /* ── Payment Timeline ──────────────────────────── */
-const PaymentTimeline = React.memo(({ plans, isRTL, language }: { plans: Array<Record<string, unknown>>; isRTL: boolean; language: string }) => {
+const PaymentTimeline = React.memo(({ plans, isRTL, language }: { plans: Array<any>; isRTL: boolean; language: string }) => {
   const upcoming = useMemo(() => {
     const all = [] as Array<typeof providerContracts[number] & { _role: string }>;
     plans.forEach((plan) => {
@@ -266,7 +266,7 @@ const PaymentTimeline = React.memo(({ plans, isRTL, language }: { plans: Array<R
 PaymentTimeline.displayName = 'PaymentTimeline';
 
 /* ── Payment Item ── */
-const PaymentItem = React.memo(({ payment, plan, isProvider, isRTL, language, onMarkPaid, isPending }: { payment: Record<string, unknown>; plan: Record<string, unknown>; isProvider: boolean; isRTL: boolean; language: string; onMarkPaid: (id: string) => void; isPending: boolean }) => {
+const PaymentItem = React.memo(({ payment, plan, isProvider, isRTL, language, onMarkPaid, isPending }: { payment: any; plan: any; isProvider: boolean; isRTL: boolean; language: string; onMarkPaid: (id: string) => void; isPending: boolean }) => {
   const isPaid = payment.status === 'paid';
   const isOverdue = payment.status === 'overdue';
 
@@ -307,7 +307,7 @@ const PaymentItem = React.memo(({ payment, plan, isProvider, isRTL, language, on
 PaymentItem.displayName = 'PaymentItem';
 
 /* ── Plan Card ── */
-const PlanCard = React.memo(({ plan, user, isRTL, language, onMarkPaid, isPending }: { plan: Record<string, unknown>; user: { id: string } | null; isRTL: boolean; language: string; onMarkPaid: (id: string) => void; isPending: boolean }) => {
+const PlanCard = React.memo(({ plan, user, isRTL, language, onMarkPaid, isPending }: { plan: any; user: { id: string } | null; isRTL: boolean; language: string; onMarkPaid: (id: string) => void; isPending: boolean }) => {
   const [expanded, setExpanded] = useState(false);
   const payments = useMemo(() =>
     (plan.installment_payments || []).sort((a, b) => a.installment_number - b.installment_number), [plan.installment_payments]);
@@ -416,7 +416,7 @@ const PlanCard = React.memo(({ plan, user, isRTL, language, onMarkPaid, isPendin
 PlanCard.displayName = 'PlanCard';
 
 /* ── BNPL Provider Showcase Card ── */
-const BnplShowcaseCard = React.memo(({ provider, isRTL }: { provider: Record<string, unknown>; isRTL: boolean }) => {
+const BnplShowcaseCard = React.memo(({ provider, isRTL }: { provider: any; isRTL: boolean }) => {
   const [showDetails, setShowDetails] = useState(false);
   const name = isRTL ? provider.name_ar : provider.name_en;
   const desc = isRTL ? provider.description_ar : provider.description_en;
@@ -513,7 +513,7 @@ const BnplShowcaseCard = React.memo(({ provider, isRTL }: { provider: Record<str
 BnplShowcaseCard.displayName = 'BnplShowcaseCard';
 
 /* ── Admin BNPL Provider Form ── */
-const AdminBnplForm = React.memo(({ provider, isRTL, language, onSave, onCancel, saving }: { provider: Record<string, unknown> | null; isRTL: boolean; language: string; onSave: (form: Record<string, unknown>, id?: string) => void; onCancel: () => void; saving: boolean }) => {
+const AdminBnplForm = React.memo(({ provider, isRTL, language, onSave, onCancel, saving }: { provider: any | null; isRTL: boolean; language: string; onSave: (form: any, id?: string) => void; onCancel: () => void; saving: boolean }) => {
   const isNew = !provider;
   const [form, setForm] = useState({
     name_ar: provider?.name_ar || '',
@@ -615,7 +615,7 @@ const DashboardInstallments = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [visibleCount, setVisibleCount] = useState(20);
-  const [editingProvider, setEditingProvider] = useState<Record<string, unknown> | null>(null);
+  const [editingProvider, setEditingProvider] = useState<any | null>(null);
   const [showNewProvider, setShowNewProvider] = useState(false);
   const [showCalc, setShowCalc] = useState(false);
 
@@ -700,7 +700,7 @@ const DashboardInstallments = () => {
   });
 
   const saveProviderMutation = useMutation({
-    mutationFn: async ({ form, id }: { form: Record<string, unknown>; id?: string }) => {
+    mutationFn: async ({ form, id }: { form: any; id?: string }) => {
       if (id) {
         const { error } = await supabase.from('bnpl_providers').update(form).eq('id', id);
         if (error) throw error;
@@ -729,7 +729,7 @@ const DashboardInstallments = () => {
     },
   });
 
-  const handleSaveProvider = useCallback((form: Record<string, unknown>, id?: string) => {
+  const handleSaveProvider = useCallback((form: any, id?: string) => {
     saveProviderMutation.mutate({ form, id });
   }, [saveProviderMutation]);
   const handleMarkPaid = useCallback((id: string) => markPaidMutation.mutate(id), [markPaidMutation]);
