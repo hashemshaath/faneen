@@ -57,7 +57,7 @@ const fmtDate = (d: string | null, lang: string) =>
 const fmtNum = (n: number) => Number(n).toLocaleString();
 
 /* ── Donut Chart ────────────────────────────────── */
-const PaymentDonut = React.memo(({ stats, isRTL }: { stats: { total: number; paid: number; overdue: number; upcoming: number; paidAmount: number; overdueAmount: number; totalAmount: number; pendingAmount: number }; isRTL: boolean }) => {
+const PaymentDonut = React.memo(({ stats, isRTL }: { stats: any; isRTL: boolean }) => {
   const data = [
     { name: isRTL ? 'مدفوع' : 'Paid', value: stats.paidAmount, color: '#10b981' },
     { name: isRTL ? 'معلق' : 'Pending', value: stats.pendingAmount, color: '#f59e0b' },

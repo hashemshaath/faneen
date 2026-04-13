@@ -299,8 +299,8 @@ const DashboardProjects = () => {
         const { error } = await supabase.from('projects').update(payload).eq('id', editId);
         if (error) throw error;
       } else {
-        payload.sort_order = projects.length;
-        const { error } = await supabase.from('projects').insert(payload);
+        (payload as any).sort_order = projects.length;
+        const { error } = await supabase.from('projects').insert(payload as any);
         if (error) throw error;
       }
     },
@@ -314,7 +314,7 @@ const DashboardProjects = () => {
   });
 
   const toggleFeaturedMut = useMutation({
-    mutationFn: async (p) => { const { error } = await supabase.from('projects').update({ is_featured: !p.is_featured }).eq('id', p.id); if (error) throw error; },
+    mutationFn: async (p: any) => { const { error } = await supabase.from('projects').update({ is_featured: !p.is_featured }).eq('id', p.id); if (error) throw error; },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['dashboard-projects'] }); toast.success(isRTL ? 'تم التحديث' : 'Updated'); },
   });
 

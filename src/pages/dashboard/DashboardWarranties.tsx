@@ -89,7 +89,7 @@ const DashboardWarranties = () => {
     mutationFn: async () => {
       const payload = {
         contract_id: form.contract_id,
-        warranty_type: form.warranty_type as Database["public"]["Enums"]["warranty_type"],
+        warranty_type: form.warranty_type as any,
         title_ar: form.title_ar, title_en: form.title_en || null,
         description_ar: form.description_ar || null, description_en: form.description_en || null,
         coverage_ar: form.coverage_ar || null, coverage_en: form.coverage_en || null,
@@ -355,7 +355,7 @@ const DashboardWarranties = () => {
                             {isRTL ? cfg.label_ar : cfg.label_en}
                           </Badge>
                           <Badge variant="outline" className="text-[9px]">
-                            {w.warranty_type === 'standard' ? (isRTL ? 'قياسي' : 'Standard') :
+                            {(w.warranty_type as string) === 'standard' ? (isRTL ? 'قياسي' : 'Standard') :
                              w.warranty_type === 'extended' ? (isRTL ? 'ممتد' : 'Extended') : (isRTL ? 'محدود' : 'Limited')}
                           </Badge>
                         </div>

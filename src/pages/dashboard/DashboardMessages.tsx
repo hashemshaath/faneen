@@ -695,7 +695,7 @@ const DashboardMessages = () => {
           return { ...c, other_profile: otherProfile };
         });
       }
-      return data.map((c) => ({ ...c, other_profile: { full_name: isRTL ? 'مستخدم' : 'User' } }));
+      return data.map((c: any) => ({ ...c, other_profile: { full_name: isRTL ? 'مستخدم' : 'User' } as any }));
     },
     enabled: !!user,
   });

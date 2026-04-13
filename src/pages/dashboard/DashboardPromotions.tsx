@@ -274,8 +274,8 @@ const DashboardPromotions = () => {
         const { error } = await supabase.from('promotions').update(payload).eq('id', editingId);
         if (error) throw error;
       } else {
-        payload.sort_order = promotions.length;
-        const { error } = await supabase.from('promotions').insert(payload);
+        (payload as any).sort_order = promotions.length;
+        const { error } = await supabase.from('promotions').insert(payload as any);
         if (error) throw error;
       }
     },
@@ -289,15 +289,15 @@ const DashboardPromotions = () => {
   });
 
   const toggleMut = useMutation({
-    mutationFn: async (p) => { const { error } = await supabase.from('promotions').update({ is_active: !p.is_active }).eq('id', p.id); if (error) throw error; },
+    mutationFn: async (p: any) => { const { error } = await supabase.from('promotions').update({ is_active: !p.is_active }).eq('id', p.id); if (error) throw error; },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['my-promotions'] }); toast.success(rtl ? 'تم التحديث' : 'Updated'); },
   });
 
   const duplicateMut = useMutation({
-    mutationFn: async (p) => {
+    mutationFn: async (p: any) => {
       if (!businessId) throw new Error('No business');
       const { id, ref_id, created_at, updated_at, views_count, ...rest } = p;
-      const { error } = await supabase.from('promotions').insert({ ...rest, business_id: businessId, title_ar: `${p.title_ar} (${rtl ? 'نسخة' : 'copy'})`, sort_order: promotions.length, views_count: 0 });
+      const { error } = await supabase.from('promotions').insert({ ...rest, business_id: businessId, title_ar: `${p.title_ar} (${rtl ? 'نسخة' : 'copy'})`, sort_order: promotions.length, views_count: 0 } as any);
       if (error) throw error;
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['my-promotions'] }); toast.success(rtl ? 'تم النسخ' : 'Duplicated'); },
