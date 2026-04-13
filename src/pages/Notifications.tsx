@@ -15,48 +15,13 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  Bell, Check, CheckCheck, FileText, CreditCard, Megaphone, Settings2,
-  Trash2, ArrowLeft, ArrowRight, CalendarIcon, Search, Filter, MessageSquare,
-  Eye, X, AlertTriangle,
+  Bell, Check, CheckCheck, Trash2, ArrowLeft, ArrowRight, CalendarIcon, Search, Filter,
+  Eye, X,
 } from 'lucide-react';
 import { formatDistanceToNow, format, isAfter, isBefore, startOfDay, endOfDay } from 'date-fns';
 import { ar as arLocale, enUS } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-
-const typeIcons: Record<string, React.ElementType> = {
-  contract: FileText,
-  installment: CreditCard,
-  promotion: Megaphone,
-  message: MessageSquare,
-  system: Settings2,
-};
-
-const typeColors: Record<string, string> = {
-  contract: 'bg-blue-100 text-blue-600',
-  installment: 'bg-amber-100 text-amber-600',
-  promotion: 'bg-green-100 text-green-600',
-  message: 'bg-purple-100 text-purple-600',
-  system: 'bg-muted text-muted-foreground',
-};
-
-const getNotificationIcon = (n) => {
-  if (n.reference_type?.startsWith('overdue_')) return AlertTriangle;
-  return typeIcons[n.notification_type] || Bell;
-};
-
-const getNotificationColor = (n) => {
-  if (n.reference_type?.startsWith('overdue_')) return 'bg-red-100 text-red-600';
-  return typeColors[n.notification_type] || typeColors.system;
-};
-
-const typeLabels: Record<string, { ar: string; en: string }> = {
-  all: { ar: 'الكل', en: 'All' },
-  contract: { ar: 'العقود', en: 'Contracts' },
-  installment: { ar: 'الأقساط', en: 'Installments' },
-  promotion: { ar: 'العروض', en: 'Promotions' },
-  message: { ar: 'الرسائل', en: 'Messages' },
-  system: { ar: 'النظام', en: 'System' },
-};
+import { getNotificationMeta, isUrgentNotification, typeFilterLabels } from '@/components/notifications/notification-types';
 
 const Notifications = () => {
   const { user } = useAuth();
@@ -86,7 +51,7 @@ const Notifications = () => {
   });
 
   const filtered = useMemo(() => {
-    return notifications.filter((n) => {
+    return notifications.filter((n: any) => {
       if (typeFilter !== 'all' && n.notification_type !== typeFilter) return false;
       if (readFilter === 'unread' && n.is_read) return false;
       if (readFilter === 'read' && !n.is_read) return false;
@@ -102,7 +67,7 @@ const Notifications = () => {
     });
   }, [notifications, typeFilter, readFilter, searchQuery, dateFrom, dateTo, language]);
 
-  const unreadCount = notifications.filter((n) => !n.is_read).length;
+  const unreadCount = notifications.filter((n: any) => !n.is_read).length;
 
   const markRead = useMutation({
     mutationFn: async (id: string) => {
@@ -131,7 +96,7 @@ const Notifications = () => {
     },
   });
 
-  const handleClick = (n) => {
+  const handleClick = (n: any) => {
     if (!n.is_read) markRead.mutate(n.id);
     if (n.action_url) navigate(n.action_url);
   };
@@ -187,7 +152,6 @@ const Notifications = () => {
         {/* Filters */}
         <Card>
           <CardContent className="p-4 space-y-3">
-            {/* Search */}
             <div className="relative">
               <Search className="absolute start-3 top-3 w-4 h-4 text-muted-foreground" />
               <Input
@@ -199,14 +163,13 @@ const Notifications = () => {
             </div>
 
             <div className="flex flex-wrap gap-3 items-center">
-              {/* Type filter */}
               <Select value={typeFilter} onValueChange={setTypeFilter}>
                 <SelectTrigger className="w-[160px]">
                   <Filter className="w-4 h-4 me-1" />
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.entries(typeLabels).map(([key, label]) => (
+                  {Object.entries(typeFilterLabels).map(([key, label]) => (
                     <SelectItem key={key} value={key}>
                       {language === 'ar' ? label.ar : label.en}
                     </SelectItem>
@@ -214,7 +177,6 @@ const Notifications = () => {
                 </SelectContent>
               </Select>
 
-              {/* Read/Unread filter */}
               <Tabs value={readFilter} onValueChange={(v) => setReadFilter(v as 'all' | 'unread' | 'read')}>
                 <TabsList className="h-9">
                   <TabsTrigger value="all" className="text-xs px-3">{isRTL ? 'الكل' : 'All'}</TabsTrigger>
@@ -223,7 +185,6 @@ const Notifications = () => {
                 </TabsList>
               </Tabs>
 
-              {/* Date from */}
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" size="sm" className={cn("gap-1 text-xs", !dateFrom && "text-muted-foreground")}>
@@ -236,7 +197,6 @@ const Notifications = () => {
                 </PopoverContent>
               </Popover>
 
-              {/* Date to */}
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" size="sm" className={cn("gap-1 text-xs", !dateTo && "text-muted-foreground")}>
@@ -264,8 +224,8 @@ const Notifications = () => {
           {[
             { label: isRTL ? 'الكل' : 'Total', count: notifications.length, color: 'text-foreground' },
             { label: isRTL ? 'غير مقروء' : 'Unread', count: unreadCount, color: 'text-primary' },
-            { label: isRTL ? 'العقود' : 'Contracts', count: notifications.filter((n) => n.notification_type === 'contract').length, color: 'text-blue-600' },
-            { label: isRTL ? 'الأقساط' : 'Installments', count: notifications.filter((n) => n.notification_type === 'installment').length, color: 'text-amber-600' },
+            { label: isRTL ? 'العقود' : 'Contracts', count: notifications.filter((n: any) => n.notification_type === 'contract').length, color: 'text-blue-600' },
+            { label: isRTL ? 'الأقساط' : 'Installments', count: notifications.filter((n: any) => n.notification_type === 'installment').length, color: 'text-amber-600' },
           ].map((s) => (
             <Card key={s.label}>
               <CardContent className="p-3 text-center">
@@ -287,15 +247,16 @@ const Notifications = () => {
           <Card className="border-dashed">
             <CardContent className="flex flex-col items-center py-16 text-muted-foreground">
               <Bell className="w-16 h-16 mb-4 opacity-20" />
-              <p className="text-lg font-medium">{isRTL ? 'لا توجد إشعارات' : 'No notifications'}</p>
-              <p className="text-sm">{hasFilters ? (isRTL ? 'جرب تغيير الفلاتر' : 'Try changing the filters') : (isRTL ? 'ستظهر إشعاراتك هنا' : 'Your notifications will appear here')}</p>
+              <p className="text-lg font-medium">{isRTL ? 'لا إشعارات جديدة' : 'No notifications'}</p>
+              <p className="text-sm">{hasFilters ? (isRTL ? 'جرب تغيير الفلاتر' : 'Try changing the filters') : (isRTL ? 'ستظهر هنا تحديثات عقودك ومشاريعك' : 'Contract and project updates will appear here')}</p>
             </CardContent>
           </Card>
         ) : (
           <div className="space-y-2">
-            {filtered.map((n) => {
-              const Icon = getNotificationIcon(n);
-              const color = getNotificationColor(n);
+            {filtered.map((n: any) => {
+              const meta = getNotificationMeta(n);
+              const Icon = meta.icon;
+              const color = meta.colorClass;
               const title = language === 'ar' ? n.title_ar : (n.title_en || n.title_ar);
               const body = language === 'ar' ? n.body_ar : (n.body_en || n.body_ar);
               const timeAgo = formatDistanceToNow(new Date(n.created_at), {
@@ -303,14 +264,15 @@ const Notifications = () => {
                 locale: language === 'ar' ? arLocale : enUS,
               });
               const dateStr = format(new Date(n.created_at), 'dd/MM/yyyy HH:mm');
-              const typeLabel = typeLabels[n.notification_type] || typeLabels.system;
+              const isUrgent = isUrgentNotification(n);
 
               return (
                 <Card
                   key={n.id}
                   className={cn(
                     'cursor-pointer hover:shadow-md transition-all group',
-                    !n.is_read && 'border-primary/30 bg-primary/[0.02]'
+                    !n.is_read && isUrgent && 'border-destructive/30 bg-destructive/[0.02]',
+                    !n.is_read && !isUrgent && 'border-primary/30 bg-primary/[0.02]'
                   )}
                   onClick={() => handleClick(n)}
                 >
@@ -326,15 +288,36 @@ const Notifications = () => {
                               {title}
                             </p>
                             {!n.is_read && <div className="w-2 h-2 rounded-full bg-primary shrink-0" />}
+                            {isUrgent && !n.is_read && (
+                              <Badge variant="destructive" className="text-[9px] px-1.5 py-0">
+                                {isRTL ? 'عاجل' : 'Urgent'}
+                              </Badge>
+                            )}
                           </div>
                           {body && <p className="text-xs text-muted-foreground line-clamp-2">{body}</p>}
                           <div className="flex items-center gap-2 mt-1.5">
                             <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                              {language === 'ar' ? typeLabel.ar : typeLabel.en}
+                              {language === 'ar' ? meta.label.ar : meta.label.en}
                             </Badge>
                             <span className="text-[10px] text-muted-foreground">{timeAgo}</span>
                             <span className="text-[10px] text-muted-foreground/60 hidden sm:inline">({dateStr})</span>
                           </div>
+                          {/* Inline action for urgent notifications */}
+                          {n.action_url && !n.is_read && isUrgent && (
+                            <Button
+                              variant="default" size="sm"
+                              className="mt-2 h-7 text-xs gap-1"
+                              onClick={e => { e.stopPropagation(); handleClick(n); }}
+                            >
+                              {n.notification_type === 'contract_awaiting' || n.reference_type === 'contract_awaiting'
+                                ? (isRTL ? 'راجع العقد ووقّع' : 'Review & Sign')
+                                : n.notification_type === 'payment_due' || n.reference_type === 'payment_due'
+                                ? (isRTL ? 'عرض تفاصيل الدفعة' : 'View Payment')
+                                : n.notification_type === 'stage_awaiting' || n.reference_type === 'stage_awaiting'
+                                ? (isRTL ? 'أؤكد الإنجاز' : 'Confirm')
+                                : (isRTL ? 'عرض التفاصيل' : 'View Details')}
+                            </Button>
+                          )}
                         </div>
                         <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                           {!n.is_read && (
@@ -378,4 +361,3 @@ const Notifications = () => {
 };
 
 export default Notifications;
-
