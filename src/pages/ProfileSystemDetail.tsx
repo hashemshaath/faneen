@@ -260,6 +260,26 @@ const ProfileSystemDetail = () => {
 
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
 
+  // ─── SEO Hooks (must be before early returns) ───
+  const profileName = profile ? (language === 'ar' ? profile.name_ar : (profile.name_en || profile.name_ar)) : '';
+  const profileDesc = profile ? (language === 'ar' ? (profile.description_ar || '') : (profile.description_en || profile.description_ar || '')) : '';
+
+  usePageMeta({
+    title: profileName,
+    description: profileDesc?.slice(0, 160) || '',
+    ogImage: profile?.cover_image_url || undefined,
+    ogType: 'article',
+  });
+
+  useJsonLd(profile ? {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: profileName,
+    description: profileDesc?.slice(0, 300),
+    image: profile.cover_image_url,
+    url: `https://faneen.com/profile-systems/${slug}`,
+  } : null);
+
   // ─── Loading ───
   if (isLoading) return (
     <div className="min-h-screen bg-background">
