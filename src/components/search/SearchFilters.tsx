@@ -92,7 +92,7 @@ export const SearchFilters = ({
           {/* Category */}
           <FilterCard icon={Tag} label={t('search.category')}>
             <CategoryTree
-              categories={(categories || []) as any}
+              categories={(categories || [])}
               selectedId={filters.categoryId}
               onSelect={v => onFilterChange('categoryId', v)}
             />
@@ -178,7 +178,7 @@ export const SearchFilters = ({
 
           {/* Sort */}
           <FilterCard icon={ArrowUpDown} label={t('search.sort_by')}>
-            <Select value={filters.sortBy} onValueChange={(v: any) => onFilterChange('sortBy', v)}>
+            <Select value={filters.sortBy} onValueChange={(v) => onFilterChange('sortBy', v)}>
               <SelectTrigger className="w-full rounded-xl h-9 text-sm bg-muted/20 dark:bg-muted/10 border-border/20 dark:border-border/10">
                 <SelectValue />
               </SelectTrigger>
@@ -205,7 +205,7 @@ export const SearchFilters = ({
   );
 };
 
-const FilterCard = ({ icon: Icon, label, children }: { icon: any; label: string; children: React.ReactNode }) => (
+const FilterCard = ({ icon: Icon, label, children }: { icon: React.ElementType; label: string; children: React.ReactNode }) => (
   <div className="p-3 rounded-xl bg-card dark:bg-card/60 border border-border/20 dark:border-border/10 space-y-2.5 hover:border-accent/15 transition-colors">
     <div className="flex items-center gap-2">
       <Icon className="w-3.5 h-3.5 text-accent/60" />

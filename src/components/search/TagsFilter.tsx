@@ -27,7 +27,7 @@ export const TagsFilter = ({ selectedTags, onToggleTag, onClearTags }: TagsFilte
 
   if (tags.length === 0) return null;
 
-  const groupedTags = tags.reduce((acc: Record<string, any[]>, tag: any) => {
+  const groupedTags = tags.reduce((acc: Record<string, typeof tags[number][]>, tag: any) => {
     const group = tag.tag_group || 'general';
     if (!acc[group]) acc[group] = [];
     acc[group].push(tag);
@@ -64,7 +64,7 @@ export const TagsFilter = ({ selectedTags, onToggleTag, onClearTags }: TagsFilte
             {language === 'ar' ? groupLabels[group]?.ar || group : groupLabels[group]?.en || group}
           </p>
           <div className="flex flex-wrap gap-1.5">
-            {groupTags.map((tag: any) => {
+            {groupTags.map((tag) => {
               const isSelected = selectedTags.includes(tag.id);
               const name = language === 'ar' ? tag.name_ar : tag.name_en;
               return (

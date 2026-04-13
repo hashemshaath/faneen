@@ -18,7 +18,7 @@ const fmt = (n: number) => {
   return n.toString();
 };
 
-const tierConfig: Record<string, { label: string; labelEn: string; icon: any; cls: string }> = {
+const tierConfig: Record<string, { label: string; labelEn: string; icon: React.ElementType; cls: string }> = {
   enterprise: { label: 'بلاتيني', labelEn: 'Platinum', icon: Crown, cls: 'bg-purple-500/90 text-white' },
   premium:    { label: 'ذهبي',    labelEn: 'Gold',     icon: Star,  cls: 'bg-gold/90 text-secondary-foreground' },
   basic:      { label: 'أساسي',   labelEn: 'Basic',    icon: BadgeCheck, cls: 'bg-sky-500/90 text-white' },
@@ -95,7 +95,7 @@ export const LatestProjectsSection = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
           {isLoading
             ? Array.from({ length: 6 }).map((_, i) => <ProjectSkeleton key={i} />)
-            : projects.map((p: any, i: number) => {
+            : projects.map((p, i: number) => {
                 const biz = p.businesses;
                 const tier = biz?.membership_tier;
                 const tierCfg = tierConfig[tier];

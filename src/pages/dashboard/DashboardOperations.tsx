@@ -174,7 +174,7 @@ const DashboardOperations = () => {
   });
 
   const filtered = useMemo(() => {
-    return operations.filter((op: any) => {
+    return operations.filter((op) => {
       if (filterType !== 'all' && op.entity_type !== filterType) return false;
       if (filterOp !== 'all' && op.operation_type !== filterOp) return false;
       if (search) {
@@ -188,9 +188,9 @@ const DashboardOperations = () => {
 
   // Group by date
   const grouped = useMemo(() => {
-    const groups: { label: string; items: any[] }[] = [];
+    const groups: { label: string; items: typeof operations[number][] }[] = [];
     let currentLabel = '';
-    filtered.slice(0, visibleCount).forEach((op: any) => {
+    filtered.slice(0, visibleCount).forEach((op) => {
       const date = new Date(op.created_at);
       let label: string;
       if (isToday(date)) label = isRTL ? 'اليوم' : 'Today';
@@ -209,13 +209,13 @@ const DashboardOperations = () => {
   }, [filtered, visibleCount, isRTL, language]);
 
   const stats = useMemo(() => {
-    const today = operations.filter((o: any) => isToday(new Date(o.created_at))).length;
-    const thisWeek = operations.filter((o: any) => isThisWeek(new Date(o.created_at))).length;
-    const thisMonth = operations.filter((o: any) => isThisMonth(new Date(o.created_at))).length;
+    const today = operations.filter((o) => isToday(new Date(o.created_at))).length;
+    const thisWeek = operations.filter((o) => isThisWeek(new Date(o.created_at))).length;
+    const thisMonth = operations.filter((o) => isThisMonth(new Date(o.created_at))).length;
 
     // Entity type breakdown
     const byEntity: Record<string, number> = {};
-    operations.forEach((o: any) => { byEntity[o.entity_type] = (byEntity[o.entity_type] || 0) + 1; });
+    operations.forEach((o) => { byEntity[o.entity_type] = (byEntity[o.entity_type] || 0) + 1; });
     const topEntity = Object.entries(byEntity).sort((a, b) => b[1] - a[1])[0];
 
     return { total: operations.length, today, thisWeek, thisMonth, topEntity, byEntity };
@@ -363,7 +363,7 @@ const DashboardOperations = () => {
             {grouped.map((group) => (
               <div key={group.label} className="space-y-1.5">
                 <DateGroupHeader label={group.label} count={group.items.length} />
-                {group.items.map((op: any) => (
+                {group.items.map((op) => (
                   <TimelineItem
                     key={op.id} op={op} isRTL={isRTL} language={language}
                     isExpanded={expandedId === op.id}

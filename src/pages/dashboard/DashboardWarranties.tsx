@@ -74,22 +74,22 @@ const DashboardWarranties = () => {
   const filtered = useMemo(() => {
     if (!searchQuery.trim()) return warranties;
     const q = searchQuery.toLowerCase();
-    return warranties.filter((w: any) =>
+    return warranties.filter((w) =>
       w.title_ar.toLowerCase().includes(q) || (w.title_en || '').toLowerCase().includes(q)
     );
   }, [warranties, searchQuery]);
 
   const stats = useMemo(() => ({
     total: warranties.length,
-    active: warranties.filter((w: any) => w.status === 'active').length,
-    expired: warranties.filter((w: any) => w.status === 'expired').length,
+    active: warranties.filter((w) => w.status === 'active').length,
+    expired: warranties.filter((w) => w.status === 'expired').length,
   }), [warranties]);
 
   const saveMutation = useMutation({
     mutationFn: async () => {
       const payload = {
         contract_id: form.contract_id,
-        warranty_type: form.warranty_type as any,
+        warranty_type: form.warranty_type as Database["public"]["Enums"]["warranty_type"],
         title_ar: form.title_ar, title_en: form.title_en || null,
         description_ar: form.description_ar || null, description_en: form.description_en || null,
         coverage_ar: form.coverage_ar || null, coverage_en: form.coverage_en || null,
@@ -123,7 +123,7 @@ const DashboardWarranties = () => {
     },
   });
 
-  const openEdit = (w: any) => {
+  const openEdit = (w) => {
     setForm({
       title_ar: w.title_ar, title_en: w.title_en || '', description_ar: w.description_ar || '',
       description_en: w.description_en || '', coverage_ar: w.coverage_ar || '', coverage_en: w.coverage_en || '',
@@ -339,7 +339,7 @@ const DashboardWarranties = () => {
           </Card>
         ) : (
           <div className="space-y-3">
-            {filtered.map((w: any) => {
+            {filtered.map((w) => {
               const cfg = statusConfig[w.status] || statusConfig.active;
               const StatusIcon = cfg.icon;
               const contractData = contracts.find(c => c.id === w.contract_id);

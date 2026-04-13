@@ -84,7 +84,7 @@ const DashboardBookings = () => {
   // Fetch client profiles for provider view
   const clientIds = useMemo(() => {
     if (!isProvider) return [];
-    return [...new Set(bookings.map((b: any) => b.client_id))];
+    return [...new Set(bookings.map((b) => b.client_id))];
   }, [bookings, isProvider]);
 
   const { data: clientProfiles = {} } = useQuery({
@@ -93,7 +93,7 @@ const DashboardBookings = () => {
       if (clientIds.length === 0) return {};
       const { data } = await supabase.from('profiles').select('user_id, full_name, phone, avatar_url').in('user_id', clientIds);
       const map: Record<string, any> = {};
-      data?.forEach((p: any) => { map[p.user_id] = p; });
+      data?.forEach((p) => { map[p.user_id] = p; });
       return map;
     },
     enabled: clientIds.length > 0,
@@ -112,7 +112,7 @@ const DashboardBookings = () => {
   // Update booking status
   const updateStatus = useMutation({
     mutationFn: async ({ id, status, reason }: { id: string; status: BookingStatus; reason?: string }) => {
-      const updateData: any = { status };
+      const updateData: Record<string, string> = { status };
       if (status === 'cancelled') {
         updateData.cancellation_reason = reason || null;
         updateData.cancelled_by = user!.id;
@@ -131,7 +131,7 @@ const DashboardBookings = () => {
 
   // Save availability
   const saveAvailability = useMutation({
-    mutationFn: async (slots: any[]) => {
+    mutationFn: async (slots: { day_of_week: number; is_active: boolean; start_time: string; end_time: string; slot_duration_minutes: number; max_bookings_per_slot: number }[]) => {
       if (!business) return;
       // Delete existing then insert
       await supabase.from('business_availability').delete().eq('business_id', business.id);
@@ -152,16 +152,16 @@ const DashboardBookings = () => {
 
   const filteredBookings = useMemo(() => {
     if (statusFilter === 'all') return bookings;
-    return bookings.filter((b: any) => b.status === statusFilter);
+    return bookings.filter((b) => b.status === statusFilter);
   }, [bookings, statusFilter]);
 
   const stats = useMemo(() => {
     const today = new Date().toISOString().split('T')[0];
     return {
       total: bookings.length,
-      pending: bookings.filter((b: any) => b.status === 'pending').length,
-      confirmed: bookings.filter((b: any) => b.status === 'confirmed').length,
-      today: bookings.filter((b: any) => b.booking_date === today && ['pending', 'confirmed'].includes(b.status)).length,
+      pending: bookings.filter((b) => b.status === 'pending').length,
+      confirmed: bookings.filter((b) => b.status === 'confirmed').length,
+      today: bookings.filter((b) => b.booking_date === today && ['pending', 'confirmed'].includes(b.status)).length,
     };
   }, [bookings]);
 
@@ -257,7 +257,7 @@ const DashboardBookings = () => {
           </Card>
         ) : (
           <div className="space-y-3">
-            {filteredBookings.map((booking: any) => {
+            {filteredBookings.map((booking) => {
               const cfg = statusConfig[booking.status as BookingStatus];
               const StatusIcon = cfg.icon;
               const client = clientProfiles[booking.client_id];
@@ -409,8 +409,8 @@ const AvailabilityDialog = ({
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  availability: any[];
-  onSave: (slots: any[]) => void;
+  availability: { day_of_week: number; is_active: boolean; start_time: string; end_time: string; slot_duration_minutes: number; max_bookings_per_slot: number }[];
+  onSave: (slots: { day_of_week: number; is_active: boolean; start_time: string; end_time: string; slot_duration_minutes: number; max_bookings_per_slot: number }[]) => void;
   saving: boolean;
   language: string;
   isRTL: boolean;
@@ -425,7 +425,7 @@ const AvailabilityDialog = ({
       is_active: i >= 0 && i <= 4, // Sun-Thu active by default
     }));
     if (availability.length > 0) {
-      availability.forEach((a: any) => {
+      availability.forEach((a) => {
         const idx = defaults.findIndex(d => d.day_of_week === a.day_of_week);
         if (idx >= 0) {
           defaults[idx] = {
@@ -442,7 +442,7 @@ const AvailabilityDialog = ({
     return defaults;
   });
 
-  const updateSlot = (day: number, field: string, value: any) => {
+  const updateSlot = (day: number, field: string, value: string | number | boolean) => {
     setSlots(prev => prev.map(s => s.day_of_week === day ? { ...s, [field]: value } : s));
   };
 

@@ -355,7 +355,7 @@ export const exportMeasurementsExcel = (opts: {
     ? ['رقم القطعة', 'الاسم', 'الموقع', 'الدور', 'الطول (مم)', 'العرض (مم)', 'المساحة (م²)', 'الكمية', 'سعر الوحدة', 'التكلفة', 'الحالة']
     : ['Piece #', 'Name', 'Location', 'Floor', 'Length (mm)', 'Width (mm)', 'Area (m²)', 'Qty', 'Unit Price', 'Cost', 'Status'];
 
-  const escapeCSV = (val: any) => {
+  const escapeCSV = (val: string | number | boolean | null | undefined) => {
     const str = String(val ?? '');
     if (str.includes(',') || str.includes('"') || str.includes('\n') || /[\u0600-\u06FF]/.test(str)) {
       return `"${str.replace(/"/g, '""')}"`;
@@ -363,7 +363,7 @@ export const exportMeasurementsExcel = (opts: {
     return str;
   };
 
-  const rows: any[][] = opts.measurements.map(m => [
+  const rows: (string | number)[][] = opts.measurements.map(m => [
     m.pieceNumber, m.name, m.location || '', m.floor || '',
     m.lengthMm, m.widthMm, m.areaSqm.toFixed(3), m.quantity,
     m.unitPrice, m.totalCost, m.status,

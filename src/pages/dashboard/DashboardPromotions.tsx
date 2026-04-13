@@ -62,8 +62,8 @@ const typeConfig: Record<string, { ar: string; en: string; icon: React.ElementTy
 /* ── Sortable Promo Card ── */
 const SortablePromoCard = React.memo(({ promo: p, rtl, viewMode, isSelected, onEdit, onDelete, onToggle, onDuplicate, onPreview, onSelect }: {
   promo: any; rtl: boolean; viewMode: ViewMode; isSelected: boolean;
-  onEdit: (p: any) => void; onDelete: (id: string) => void; onToggle: (p: any) => void;
-  onDuplicate: (p: any) => void; onPreview: (url: string) => void; onSelect: (id: string) => void;
+  onEdit: (p) => void; onDelete: (id: string) => void; onToggle: (p) => void;
+  onDuplicate: (p) => void; onPreview: (url: string) => void; onSelect: (id: string) => void;
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: p.id });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1, zIndex: isDragging ? 50 : undefined };
@@ -232,24 +232,24 @@ const DashboardPromotions = () => {
   /* ─── Derived ─── */
   const stats = useMemo(() => {
     const total = promotions.length;
-    const active = promotions.filter((p: any) => p.is_active && !(p.end_date && new Date(p.end_date) < new Date())).length;
-    const expired = promotions.filter((p: any) => p.end_date && new Date(p.end_date) < new Date()).length;
-    const inactive = promotions.filter((p: any) => !p.is_active && !(p.end_date && new Date(p.end_date) < new Date())).length;
-    const totalViews = promotions.reduce((s: number, p: any) => s + (p.views_count || 0), 0);
-    const complete = promotions.filter((p: any) => p.title_ar && p.description_ar && p.image_url).length;
+    const active = promotions.filter((p) => p.is_active && !(p.end_date && new Date(p.end_date) < new Date())).length;
+    const expired = promotions.filter((p) => p.end_date && new Date(p.end_date) < new Date()).length;
+    const inactive = promotions.filter((p) => !p.is_active && !(p.end_date && new Date(p.end_date) < new Date())).length;
+    const totalViews = promotions.reduce((s: number, p) => s + (p.views_count || 0), 0);
+    const complete = promotions.filter((p) => p.title_ar && p.description_ar && p.image_url).length;
     const completeness = total > 0 ? Math.round((complete / total) * 100) : 0;
     return { total, active, expired, inactive, totalViews, completeness };
   }, [promotions]);
 
   const filteredPromotions = useMemo(() => {
     let result = [...promotions];
-    if (filterMode === 'active') result = result.filter((p: any) => p.is_active && !(p.end_date && new Date(p.end_date) < new Date()));
-    else if (filterMode === 'expired') result = result.filter((p: any) => p.end_date && new Date(p.end_date) < new Date());
-    else if (filterMode === 'inactive') result = result.filter((p: any) => !p.is_active && !(p.end_date && new Date(p.end_date) < new Date()));
-    if (typeFilter !== 'all') result = result.filter((p: any) => p.promotion_type === typeFilter);
+    if (filterMode === 'active') result = result.filter((p) => p.is_active && !(p.end_date && new Date(p.end_date) < new Date()));
+    else if (filterMode === 'expired') result = result.filter((p) => p.end_date && new Date(p.end_date) < new Date());
+    else if (filterMode === 'inactive') result = result.filter((p) => !p.is_active && !(p.end_date && new Date(p.end_date) < new Date()));
+    if (typeFilter !== 'all') result = result.filter((p) => p.promotion_type === typeFilter);
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      result = result.filter((p: any) => p.title_ar.toLowerCase().includes(q) || (p.title_en || '').toLowerCase().includes(q));
+      result = result.filter((p) => p.title_ar.toLowerCase().includes(q) || (p.title_en || '').toLowerCase().includes(q));
     }
     return result;
   }, [promotions, filterMode, typeFilter, searchQuery]);
@@ -258,7 +258,7 @@ const DashboardPromotions = () => {
   const saveMut = useMutation({
     mutationFn: async () => {
       if (!businessId) throw new Error('No business');
-      const payload: any = {
+      const payload = {
         business_id: businessId, title_ar: form.title_ar, title_en: form.title_en || null,
         description_ar: form.description_ar || null, description_en: form.description_en || null,
         promotion_type: form.promotion_type,
@@ -289,12 +289,12 @@ const DashboardPromotions = () => {
   });
 
   const toggleMut = useMutation({
-    mutationFn: async (p: any) => { const { error } = await supabase.from('promotions').update({ is_active: !p.is_active }).eq('id', p.id); if (error) throw error; },
+    mutationFn: async (p) => { const { error } = await supabase.from('promotions').update({ is_active: !p.is_active }).eq('id', p.id); if (error) throw error; },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['my-promotions'] }); toast.success(rtl ? 'تم التحديث' : 'Updated'); },
   });
 
   const duplicateMut = useMutation({
-    mutationFn: async (p: any) => {
+    mutationFn: async (p) => {
       if (!businessId) throw new Error('No business');
       const { id, ref_id, created_at, updated_at, views_count, ...rest } = p;
       const { error } = await supabase.from('promotions').insert({ ...rest, business_id: businessId, title_ar: `${p.title_ar} (${rtl ? 'نسخة' : 'copy'})`, sort_order: promotions.length, views_count: 0 });
@@ -304,7 +304,7 @@ const DashboardPromotions = () => {
   });
 
   const reorderMut = useMutation({
-    mutationFn: async (reordered: any[]) => { await Promise.all(reordered.map((item, idx) => supabase.from('promotions').update({ sort_order: idx }).eq('id', item.id))); },
+    mutationFn: async (reordered: { id: string }[]) => { await Promise.all(reordered.map((item, idx) => supabase.from('promotions').update({ sort_order: idx }).eq('id', item.id))); },
     onError: () => { queryClient.invalidateQueries({ queryKey: ['my-promotions'] }); },
   });
 
@@ -322,7 +322,7 @@ const DashboardPromotions = () => {
   const closeForm = useCallback(() => { setShowForm(false); setEditingId(null); setForm(emptyForm); }, []);
   const scrollToForm = useCallback(() => { requestAnimationFrame(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })); }, []);
 
-  const openEdit = useCallback((p: any) => {
+  const openEdit = useCallback((p) => {
     setEditingId(p.id);
     setForm({
       title_ar: p.title_ar, title_en: p.title_en || '', description_ar: p.description_ar || '',
@@ -338,8 +338,8 @@ const DashboardPromotions = () => {
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
-    const oldIdx = filteredPromotions.findIndex((i: any) => i.id === active.id);
-    const newIdx = filteredPromotions.findIndex((i: any) => i.id === over.id);
+    const oldIdx = filteredPromotions.findIndex((i) => i.id === active.id);
+    const newIdx = filteredPromotions.findIndex((i) => i.id === over.id);
     if (oldIdx === -1 || newIdx === -1) return;
     const reordered = arrayMove([...filteredPromotions], oldIdx, newIdx);
     queryClient.setQueryData(['my-promotions', businessId], reordered);
@@ -372,12 +372,12 @@ const DashboardPromotions = () => {
 
   const toggleSelect = useCallback((id: string) => setSelectedIds(prev => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n; }), []);
   const toggleSelectAll = useCallback(() => {
-    setSelectedIds(prev => prev.size === filteredPromotions.length ? new Set() : new Set(filteredPromotions.map((p: any) => p.id)));
+    setSelectedIds(prev => prev.size === filteredPromotions.length ? new Set() : new Set(filteredPromotions.map((p) => p.id)));
   }, [filteredPromotions]);
 
   const exportCSV = useCallback(() => {
     const rows = [['Title AR', 'Title EN', 'Type', 'Original Price', 'Offer Price', 'Discount%', 'Start', 'End', 'Active', 'Views'].join(','),
-      ...promotions.map((p: any) => [`"${p.title_ar}"`, `"${p.title_en || ''}"`, p.promotion_type, p.original_price || '', p.offer_price || '', p.discount_percentage || '', p.start_date, p.end_date || '', p.is_active, p.views_count || 0].join(','))
+      ...promotions.map((p) => [`"${p.title_ar}"`, `"${p.title_en || ''}"`, p.promotion_type, p.original_price || '', p.offer_price || '', p.discount_percentage || '', p.start_date, p.end_date || '', p.is_active, p.views_count || 0].join(','))
     ].join('\n');
     const blob = new Blob(['\ufeff' + rows], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -700,9 +700,9 @@ const DashboardPromotions = () => {
           </div>
         ) : (
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={filteredPromotions.map((p: any) => p.id)} strategy={viewMode === 'grid' ? rectSortingStrategy : verticalListSortingStrategy}>
+            <SortableContext items={filteredPromotions.map((p) => p.id)} strategy={viewMode === 'grid' ? rectSortingStrategy : verticalListSortingStrategy}>
               <div className={viewMode === 'grid' ? 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3' : 'space-y-2'}>
-                {filteredPromotions.map((p: any) => (
+                {filteredPromotions.map((p) => (
                   <SortablePromoCard key={p.id} promo={p} rtl={rtl} viewMode={viewMode}
                     isSelected={selectedIds.has(p.id)}
                     onEdit={openEdit} onDelete={id => setDeleteConfirm(id)}

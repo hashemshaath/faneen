@@ -180,7 +180,7 @@ const BusinessProfile = () => {
       if (result.isNew) toast.success(isRTL ? "تم بدء المحادثة" : "Conversation started");
       navigate("/dashboard/messages");
     },
-    onError: (errorResult: any) => {
+    onError: (errorResult: Error) => {
       if (errorResult.message === "not_authenticated") return;
       if (errorResult.message === "self_contact") {
         toast.error(isRTL ? "لا يمكنك مراسلة نفسك" : "You can't message yourself");

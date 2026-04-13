@@ -30,7 +30,7 @@ export const FeatureComparisonTable = ({ isRTL }: FeatureComparisonTableProps) =
   const planLimits = React.useMemo(() => {
     const map: Record<string, Record<string, number | boolean>> = {};
     for (const tier of TIERS) {
-      const plan = plans.find((p: any) => p.tier === tier);
+      const plan = plans.find((p) => p.tier === tier);
       map[tier] = parseLimits(plan?.limits as Record<string, any> | undefined);
     }
     return map;
@@ -40,7 +40,7 @@ export const FeatureComparisonTable = ({ isRTL }: FeatureComparisonTableProps) =
   const planFeatures = React.useMemo(() => {
     const map: Record<string, string[]> = {};
     for (const tier of TIERS) {
-      const plan = plans.find((p: any) => p.tier === tier);
+      const plan = plans.find((p) => p.tier === tier);
       map[tier] = Array.isArray(plan?.features) ? plan.features as string[] : [];
     }
     return map;

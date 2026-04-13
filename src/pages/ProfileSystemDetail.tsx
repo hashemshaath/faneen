@@ -101,7 +101,7 @@ const InteractiveStarInput = ({ value, onChange }: { value: number; onChange: (v
 };
 
 // ─── Lightbox (mobile-optimized) ───
-const Lightbox = ({ images, index, onClose, onNav, isRTL, language }: any) => {
+const Lightbox = ({ images, index, onClose, onNav, isRTL, language }: { images: string[]; index: number; onClose: () => void; onNav: (dir: number) => void; isRTL: boolean; language: string }) => {
   const [touchStart, setTouchStart] = useState<number | null>(null);
 
   useEffect(() => {
@@ -144,7 +144,7 @@ const Lightbox = ({ images, index, onClose, onNav, isRTL, language }: any) => {
         <img src={img?.image_url} alt="" className="max-w-full max-h-[75vh] sm:max-h-[80vh] object-contain rounded-lg mx-auto" />
         {img?.caption_ar && <p className="text-white/80 text-center text-xs sm:text-sm mt-3">{language === 'ar' ? img.caption_ar : (img.caption_en || img.caption_ar)}</p>}
         <div className="flex items-center justify-center gap-1.5 mt-2">
-          {images.map((_: any, i: number) => (
+          {images.map((_, i: number) => (
             <button key={i} onClick={() => onNav(i - index)} className={`w-2 h-2 rounded-full transition-all ${i === index ? 'bg-gold w-4' : 'bg-white/30'}`} />
           ))}
         </div>
@@ -315,11 +315,11 @@ const ProfileSystemDetail = () => {
   const features = language === 'ar' ? (profile.features_ar || []) : (profile.features_en?.length ? profile.features_en : (profile.features_ar || []));
   const rec = recommendationLabels[profile.recommendation_level] || recommendationLabels.standard;
   const RecIcon = rec.icon;
-  const avgRating = reviews.length ? (reviews.reduce((s: number, r: any) => s + r.rating, 0) / reviews.length) : 0;
+  const avgRating = reviews.length ? (reviews.reduce((s: number, r) => s + r.rating, 0) / reviews.length) : 0;
   const ratingDistribution = [5, 4, 3, 2, 1].map(star => ({
     star,
-    count: reviews.filter((r: any) => r.rating === star).length,
-    pct: reviews.length ? (reviews.filter((r: any) => r.rating === star).length / reviews.length) * 100 : 0,
+    count: reviews.filter((r) => r.rating === star).length,
+    pct: reviews.length ? (reviews.filter((r) => r.rating === star).length / reviews.length) * 100 : 0,
   }));
 
   return (
@@ -489,7 +489,7 @@ const ProfileSystemDetail = () => {
                         </Button>
                       </div>
                       <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
-                        {images.slice(0, 3).map((img: any, i: number) => (
+                        {images.slice(0, 3).map((img, i: number) => (
                           <div key={img.id} className="relative group rounded-lg sm:rounded-xl overflow-hidden aspect-[4/3] cursor-pointer" onClick={() => setLightboxIdx(i)}>
                             <img src={img.image_url} alt="" className="w-full h-full object-cover" loading="lazy" />
                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all flex items-center justify-center">
@@ -613,7 +613,7 @@ const ProfileSystemDetail = () => {
               <>
                 {/* Mobile: Cards layout */}
                 <div className="space-y-2 sm:hidden">
-                  {specs.map((s: any) => (
+                  {specs.map((s) => (
                     <div key={s.id} className="flex items-center justify-between p-3 rounded-xl bg-card border border-border/50">
                       <span className="text-xs font-medium">{language === 'ar' ? s.spec_name_ar : (s.spec_name_en || s.spec_name_ar)}</span>
                       <span className="text-xs font-heading font-bold">
@@ -636,7 +636,7 @@ const ProfileSystemDetail = () => {
                           </tr>
                         </thead>
                         <tbody>
-                          {specs.map((s: any, i: number) => (
+                          {specs.map((s, i: number) => (
                             <tr key={s.id} className={`border-b border-border/30 last:border-0 transition-colors hover:bg-muted/20 ${i % 2 === 0 ? 'bg-muted/5' : ''}`}>
                               <td className="p-4 text-sm font-medium">{language === 'ar' ? s.spec_name_ar : (s.spec_name_en || s.spec_name_ar)}</td>
                               <td className="p-4 text-sm font-heading font-bold">{s.spec_value}</td>
@@ -663,7 +663,7 @@ const ProfileSystemDetail = () => {
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
-                {images.map((img: any, i: number) => (
+                {images.map((img, i: number) => (
                   <div
                     key={img.id}
                     className="relative group rounded-xl sm:rounded-2xl overflow-hidden bg-muted aspect-square cursor-pointer ring-1 ring-border/50 active:ring-gold/50 sm:hover:ring-gold/30 transition-all"
@@ -690,7 +690,7 @@ const ProfileSystemDetail = () => {
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                {suppliers.map((s: any) => (
+                {suppliers.map((s) => (
                   <Link key={s.id} to={`/${s.businesses?.username}`}>
                     <Card className="border-border/50 hover:border-gold/30 active:border-gold/50 transition-all group overflow-hidden">
                       <CardContent className="p-3.5 sm:p-5 flex items-center gap-3 sm:gap-4">
@@ -774,20 +774,20 @@ const ProfileSystemDetail = () => {
                     <p className="font-heading font-bold text-sm sm:text-base">{isRTL ? 'كن أول من يقيّم!' : 'Be the first to review!'}</p>
                   </div>
                 ) : (
-                  reviews.map((r: any) => (
+                  reviews.map((r) => (
                     <Card key={r.id} className="border-border/50">
                       <CardContent className="p-3.5 sm:p-5">
                         <div className="flex items-start gap-2.5 sm:gap-3">
                           <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gold/10 flex items-center justify-center text-gold font-bold text-xs sm:text-sm shrink-0">
-                            {(r.profiles as any)?.avatar_url ? (
-                              <img src={(r.profiles as any).avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
+                            {((r as any).profiles)?.avatar_url ? (
+                              <img src={((r as any).profiles).avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
                             ) : (
-                              (r.profiles as any)?.full_name?.charAt(0) || '؟'
+                              ((r as any).profiles)?.full_name?.charAt(0) || '؟'
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between mb-0.5 sm:mb-1">
-                              <p className="font-heading font-bold text-xs sm:text-sm truncate">{(r.profiles as any)?.full_name || (isRTL ? 'مستخدم' : 'User')}</p>
+                              <p className="font-heading font-bold text-xs sm:text-sm truncate">{((r as any).profiles)?.full_name || (isRTL ? 'مستخدم' : 'User')}</p>
                               <span className="text-[10px] sm:text-[11px] text-muted-foreground flex items-center gap-0.5 shrink-0 ms-2">
                                 <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3" />{new Date(r.created_at).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')}
                               </span>

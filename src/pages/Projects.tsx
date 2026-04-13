@@ -79,7 +79,7 @@ const Projects = () => {
   });
 
   const filtered = useMemo(() => {
-    const result = allProjects.filter((p: any) => {
+    const result = allProjects.filter((p) => {
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
         const match = p.title_ar?.toLowerCase().includes(q) ||
@@ -99,11 +99,11 @@ const Projects = () => {
       return true;
     });
     if (sortBy === 'cost_high') {
-      result.sort((a: any, b: any) => (Number(b.project_cost) || 0) - (Number(a.project_cost) || 0));
+      result.sort((a, b) => (Number(b.project_cost) || 0) - (Number(a.project_cost) || 0));
     } else if (sortBy === 'cost_low') {
-      result.sort((a: any, b: any) => (Number(a.project_cost) || 0) - (Number(b.project_cost) || 0));
+      result.sort((a, b) => (Number(a.project_cost) || 0) - (Number(b.project_cost) || 0));
     } else if (sortBy === 'oldest') {
-      result.sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+      result.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
     }
     return result;
   }, [allProjects, searchQuery, selectedCategory, selectedCity, minCost, maxCost, sortBy]);
@@ -187,7 +187,7 @@ const Projects = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">{isRTL ? 'جميع الفئات' : 'All Categories'}</SelectItem>
-                  {categories.map((c: any) => (
+                  {categories.map((c) => (
                     <SelectItem key={c.id} value={c.id}>
                       {language === 'ar' ? c.name_ar : c.name_en}
                     </SelectItem>
@@ -203,7 +203,7 @@ const Projects = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">{isRTL ? 'جميع المدن' : 'All Cities'}</SelectItem>
-                  {cities.map((c: any) => (
+                  {cities.map((c) => (
                     <SelectItem key={c.id} value={c.id}>
                       {language === 'ar' ? c.name_ar : c.name_en}
                     </SelectItem>
@@ -276,7 +276,7 @@ const Projects = () => {
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-              {projects.map((p: any, index: number) => (
+              {projects.map((p, index: number) => (
                 <Link key={p.id} to={`/projects/${p.id}`} className="block animate-card-slide-up" style={{ animationDelay: `${index * 80}ms` }}>
                   <Card className="overflow-hidden border-border/50 dark:border-border/30 hover:border-accent/40 transition-all duration-500 hover:shadow-xl hover:shadow-accent/5 dark:hover:shadow-accent/10 group cursor-pointer h-full hover:-translate-y-1.5 dark:bg-card/80">
                     <div className="aspect-video bg-muted relative overflow-hidden">
