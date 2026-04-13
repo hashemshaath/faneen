@@ -51,7 +51,7 @@ export const BusinessCard = memo(({ business: b, viewMode }: BusinessCardProps) 
   const cityName = b.cities ? (language === 'ar' ? (b.cities as any).name_ar : (b.cities as any).name_en) : '';
   const catName = b.categories ? (language === 'ar' ? (b.categories as any).name_ar : (b.categories as any).name_en) : '';
   const tier = tierConfig[b.membership_tier];
-  const serviceCount = Array.isArray((b as any).business_services) ? (b as any).business_services.filter((s: any) => s.is_active).length : 0;
+  const serviceCount = Array.isArray((b as any).business_services) ? (b as any).business_services.filter((s) => s.is_active).length : 0;
   const rating = Number(b.rating_avg) || 0;
   const initial = name?.charAt(0) || 'ف';
   const hasBnpl = Array.isArray((b as any).business_bnpl_providers) && (b as any).business_bnpl_providers.length > 0;

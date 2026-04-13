@@ -107,9 +107,9 @@ const reverseGeocode = async (lat: number, lng: number) => {
 };
 
 /* ─── CSV Export ─── */
-const exportCSV = (businesses: any[], language: string) => {
+const exportCSV = (businesses: Array<Record<string, unknown>>, language: string) => {
   const headers = ['Ref ID', 'Name (AR)', 'Name (EN)', 'Username', 'Phone', 'Email', 'Category', 'Tier', 'Verified', 'Active', 'Rating', 'Created'];
-  const rows = businesses.map((b: any) => [
+  const rows = businesses.map((b) => [
     b.ref_id, b.name_ar, b.name_en || '', `@${b.username}`, b.phone || '', b.email || '',
     b.category_id || '', b.membership_tier, b.is_verified ? 'Yes' : 'No', b.is_active ? 'Yes' : 'No',
     `${b.rating_avg} (${b.rating_count})`, new Date(b.created_at).toLocaleDateString(),
@@ -126,7 +126,7 @@ const exportCSV = (businesses: any[], language: string) => {
 
 /* ─── Stat Card Component ─── */
 const StatCard = React.memo(({ label, value, icon: Icon, trend, gradient, iconBg }: {
-  label: string; value: number; icon: any; trend?: string; gradient: string; iconBg: string;
+  label: string; value: number; icon: React.ElementType; trend?: string; gradient: string; iconBg: string;
 }) => (
   <div className={`relative overflow-hidden rounded-2xl border border-border/30 bg-gradient-to-br ${gradient} p-4 transition-all hover:shadow-md group`}>
     <div className="flex items-center gap-3">
@@ -155,22 +155,22 @@ const AdminBusinesses = () => {
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterTier, setFilterTier] = useState('all');
-  const [editingBiz, setEditingBiz] = useState<any>(null);
-  const [editForm, setEditForm] = useState<any>({});
+  const [editingBiz, setEditingBiz] = useState<Record<string, unknown> | null>(null);
+  const [editForm, setEditForm] = useState<Record<string, unknown>>({});
   const [servicesPanel, setServicesPanel] = useState<string | null>(null);
   const [portfolioImages, setPortfolioImages] = useState<string[]>([]);
   const [newService, setNewService] = useState({ name_ar: '', name_en: '', description_ar: '', description_en: '', price_from: '', price_to: '', is_active: true });
   const [geocoding, setGeocoding] = useState(false);
-  const [branchForm, setBranchForm] = useState<any>(null);
+  const [branchForm, setBranchForm] = useState<Record<string, unknown> | null>(null);
   const [editingBranchId, setEditingBranchId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
   const [isPending, startTransition] = useTransition();
 
-  const setField = useCallback((key: string, value: any) => {
-    setEditForm((f: any) => ({ ...f, [key]: value }));
+  const setField = useCallback((key: string, value: string | number | boolean | null) => {
+    setEditForm((f) => ({ ...f, [key]: value }));
   }, []);
 
-  const setServiceField = useCallback((key: string, value: any) => {
+  const setServiceField = useCallback((key: string, value: string | number | boolean | null) => {
     setNewService(s => ({ ...s, [key]: value }));
   }, []);
 
@@ -250,12 +250,12 @@ const AdminBusinesses = () => {
     queryKey: ['contract-business-ids'],
     queryFn: async () => {
       const { data } = await supabase.from('contracts').select('business_id').not('business_id', 'is', null);
-      return [...new Set((data || []).map((c: any) => c.business_id).filter(Boolean))];
+      return [...new Set((data || []).map((c) => c.business_id).filter(Boolean))];
     },
   });
 
   /* ─── Mutations ─── */
-  const logAction = async (action: string, entityId: string, details: any) => {
+  const logAction = async (action: string, entityId: string, details: Record<string, unknown>) => {
     await supabase.from('admin_activity_log').insert({
       user_id: user!.id, action, entity_type: 'business', entity_id: entityId, details,
     });
@@ -263,7 +263,7 @@ const AdminBusinesses = () => {
 
   const toggleMutation = useMutation({
     mutationFn: async ({ id, field, value }: { id: string; field: string; value: boolean }) => {
-      const { error } = await supabase.from('businesses').update({ [field]: value } as any).eq('id', id);
+      const { error } = await supabase.from('businesses').update({ [field]: value } ).eq('id', id);
       if (error) throw error;
       await logAction(`business_${field}_${value}`, id, { field, value });
     },
@@ -276,7 +276,7 @@ const AdminBusinesses = () => {
 
   const tierMutation = useMutation({
     mutationFn: async ({ id, tier }: { id: string; tier: string }) => {
-      const { error } = await supabase.from('businesses').update({ membership_tier: tier } as any).eq('id', id);
+      const { error } = await supabase.from('businesses').update({ membership_tier: tier } ).eq('id', id);
       if (error) throw error;
       await logAction('business_tier_change', id, { new_tier: tier });
     },
@@ -289,7 +289,7 @@ const AdminBusinesses = () => {
   const updateBizMutation = useMutation({
     mutationFn: async () => {
       const id = editingBiz.id;
-      const payload: any = {
+      const payload: Record<string, unknown> = {
         name_ar: editForm.name_ar, name_en: editForm.name_en || null,
         short_description_ar: editForm.short_description_ar || null, short_description_en: editForm.short_description_en || null,
         description_ar: editForm.description_ar || null, description_en: editForm.description_en || null,
@@ -385,7 +385,7 @@ const AdminBusinesses = () => {
   const saveBranchMutation = useMutation({
     mutationFn: async () => {
       if (!branchForm || !editingBiz) return;
-      const payload: any = {
+      const payload: Record<string, unknown> = {
         business_id: editingBiz.id,
         name_ar: branchForm.name_ar, name_en: branchForm.name_en || null,
         is_main: branchForm.is_main, is_active: branchForm.is_active,
@@ -452,7 +452,7 @@ const AdminBusinesses = () => {
   };
 
   /* ─── Edit Open ─── */
-  const openEdit = (biz: any) => {
+  const openEdit = (biz: Record<string, unknown>) => {
     setServicesPanel(null);
     setEditForm({
       name_ar: biz.name_ar, name_en: biz.name_en || '',
@@ -480,7 +480,7 @@ const AdminBusinesses = () => {
   };
 
   /* ─── Filters ─── */
-  const filtered = useMemo(() => businesses.filter((b: any) => {
+  const filtered = useMemo(() => businesses.filter((b) => {
     const matchSearch = !search ||
       b.name_ar?.includes(search) || b.name_en?.toLowerCase().includes(search.toLowerCase()) ||
       b.username?.includes(search) || b.ref_id?.includes(search) ||
@@ -496,20 +496,20 @@ const AdminBusinesses = () => {
 
   const stats = useMemo(() => ({
     total: businesses.length,
-    verified: businesses.filter((b: any) => b.is_verified).length,
-    active: businesses.filter((b: any) => b.is_active).length,
+    verified: businesses.filter((b) => b.is_verified).length,
+    active: businesses.filter((b) => b.is_active).length,
     contracts: contractBusinessIds.length,
-    premium: businesses.filter((b: any) => b.membership_tier === 'premium' || b.membership_tier === 'enterprise').length,
+    premium: businesses.filter((b) => b.membership_tier === 'premium' || b.membership_tier === 'enterprise').length,
   }), [businesses, contractBusinessIds]);
 
   const tierDistribution = useMemo(() => {
     const dist: Record<string, number> = {};
-    tiers.forEach(t => { dist[t.value] = businesses.filter((b: any) => b.membership_tier === t.value).length; });
+    tiers.forEach(t => { dist[t.value] = businesses.filter((b) => b.membership_tier === t.value).length; });
     return dist;
   }, [businesses]);
 
   const filteredCities = editForm.country_id
-    ? cities.filter((c: any) => c.country_id === editForm.country_id)
+    ? cities.filter((c) => c.country_id === editForm.country_id)
     : cities;
 
   if (!isAdmin) return null;
@@ -698,7 +698,7 @@ const AdminBusinesses = () => {
                     <Select value={editForm.category_id} onValueChange={v => setField('category_id', v)}>
                       <SelectTrigger className="mt-1"><SelectValue placeholder={isRTL ? 'اختر' : 'Select'} /></SelectTrigger>
                       <SelectContent>
-                        {categories.map((c: any) => <SelectItem key={c.id} value={c.id}>{language === 'ar' ? c.name_ar : c.name_en}</SelectItem>)}
+                        {categories.map((c) => <SelectItem key={c.id} value={c.id}>{language === 'ar' ? c.name_ar : c.name_en}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
@@ -767,7 +767,7 @@ const AdminBusinesses = () => {
                       <Select value={editForm.country_id} onValueChange={v => { setField('country_id', v); setField('city_id', ''); }}>
                         <SelectTrigger className="mt-1"><SelectValue placeholder={isRTL ? 'اختر' : 'Select'} /></SelectTrigger>
                         <SelectContent>
-                          {countries.map((c: any) => <SelectItem key={c.id} value={c.id}>{language === 'ar' ? c.name_ar : c.name_en}</SelectItem>)}
+                          {countries.map((c) => <SelectItem key={c.id} value={c.id}>{language === 'ar' ? c.name_ar : c.name_en}</SelectItem>)}
                         </SelectContent>
                       </Select>
                     </div>
@@ -776,7 +776,7 @@ const AdminBusinesses = () => {
                       <Select value={editForm.city_id} onValueChange={v => setField('city_id', v)}>
                         <SelectTrigger className="mt-1"><SelectValue placeholder={isRTL ? 'اختر' : 'Select'} /></SelectTrigger>
                         <SelectContent>
-                          {filteredCities.map((c: any) => <SelectItem key={c.id} value={c.id}>{language === 'ar' ? c.name_ar : c.name_en}</SelectItem>)}
+                          {filteredCities.map((c) => <SelectItem key={c.id} value={c.id}>{language === 'ar' ? c.name_ar : c.name_en}</SelectItem>)}
                         </SelectContent>
                       </Select>
                     </div>
@@ -876,7 +876,7 @@ const AdminBusinesses = () => {
                       <Badge variant="secondary" className="text-[9px] ms-1">{portfolioData.length}</Badge>
                     </Label>
                     <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                      {portfolioData.map((item: any) => (
+                      {portfolioData.map((item) => (
                         <div key={item.id} className="relative aspect-square rounded-lg overflow-hidden border border-border/50 group">
                           <img src={item.media_url} alt="" className="w-full h-full object-cover" />
                           <button type="button"
@@ -939,11 +939,11 @@ const AdminBusinesses = () => {
                           <Settings className="w-3 h-3" /> {isRTL ? 'إدارة' : 'Manage'}
                         </Button>
                       </div>
-                      {allServices.filter((s: any) => s.business_id === editingBiz.id).length === 0 ? (
+                      {allServices.filter((s) => s.business_id === editingBiz.id).length === 0 ? (
                         <p className="text-[10px] text-muted-foreground">{isRTL ? 'لا توجد خدمات مسجلة' : 'No registered services'}</p>
                       ) : (
                         <div className="flex flex-wrap gap-1.5">
-                          {allServices.filter((s: any) => s.business_id === editingBiz.id).map((s: any) => (
+                          {allServices.filter((s) => s.business_id === editingBiz.id).map((s) => (
                             <Badge key={s.id} variant="outline" className="text-[9px]">
                               {language === 'ar' ? s.name_ar : (s.name_en || s.name_ar)}
                             </Badge>
@@ -957,7 +957,7 @@ const AdminBusinesses = () => {
                 {/* ── Branches Tab ── */}
                 <TabsContent value="branches" className="space-y-4 mt-3">
                   <div className="space-y-2">
-                    {branches.map((br: any) => (
+                    {branches.map((br) => (
                       <div key={br.id} className={`flex items-center gap-3 p-3 rounded-xl border border-border/40 hover:border-primary/20 transition-all ${!br.is_active ? 'opacity-50' : ''}`}>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5">
@@ -1014,46 +1014,46 @@ const AdminBusinesses = () => {
                       </div>
                       <div>
                         <Label className="text-xs">{isRTL ? 'اسم الفرع (عربي)' : 'Branch Name (AR)'} *</Label>
-                        <Input value={branchForm.name_ar} onChange={e => setBranchForm((f: any) => ({ ...f, name_ar: e.target.value }))} className="mt-1" />
+                        <Input value={branchForm.name_ar} onChange={e => setBranchForm((f) => ({ ...f, name_ar: e.target.value }))} className="mt-1" />
                       </div>
                       <div>
                         <Label className="text-xs">{isRTL ? 'اسم الفرع (إنجليزي)' : 'Branch Name (EN)'}</Label>
-                        <Input value={branchForm.name_en} onChange={e => setBranchForm((f: any) => ({ ...f, name_en: e.target.value }))} dir="ltr" className="mt-1" />
+                        <Input value={branchForm.name_en} onChange={e => setBranchForm((f) => ({ ...f, name_en: e.target.value }))} dir="ltr" className="mt-1" />
                       </div>
                       <Separator />
                       <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{isRTL ? 'بيانات التواصل' : 'Contact Info'}</p>
                       <div>
                         <Label className="text-xs">{isRTL ? 'اسم مسؤول التواصل' : 'Contact Person'}</Label>
-                        <Input value={branchForm.contact_person} onChange={e => setBranchForm((f: any) => ({ ...f, contact_person: e.target.value }))} className="mt-1" />
+                        <Input value={branchForm.contact_person} onChange={e => setBranchForm((f) => ({ ...f, contact_person: e.target.value }))} className="mt-1" />
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <Label className="text-xs">{isRTL ? 'الهاتف' : 'Phone'}</Label>
-                          <Input value={branchForm.phone} onChange={e => setBranchForm((f: any) => ({ ...f, phone: e.target.value }))} dir="ltr" className="mt-1" />
+                          <Input value={branchForm.phone} onChange={e => setBranchForm((f) => ({ ...f, phone: e.target.value }))} dir="ltr" className="mt-1" />
                         </div>
                         <div>
                           <Label className="text-xs">{isRTL ? 'الجوال' : 'Mobile'}</Label>
-                          <Input value={branchForm.mobile} onChange={e => setBranchForm((f: any) => ({ ...f, mobile: e.target.value }))} dir="ltr" className="mt-1" />
+                          <Input value={branchForm.mobile} onChange={e => setBranchForm((f) => ({ ...f, mobile: e.target.value }))} dir="ltr" className="mt-1" />
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <Label className="text-xs">{isRTL ? 'الرقم الموحد' : 'Unified Number'}</Label>
-                          <Input value={branchForm.unified_number} onChange={e => setBranchForm((f: any) => ({ ...f, unified_number: e.target.value }))} dir="ltr" className="mt-1" placeholder="920xxxxxxx" />
+                          <Input value={branchForm.unified_number} onChange={e => setBranchForm((f) => ({ ...f, unified_number: e.target.value }))} dir="ltr" className="mt-1" placeholder="920xxxxxxx" />
                         </div>
                         <div>
                           <Label className="text-xs">{isRTL ? 'خدمة العملاء' : 'Customer Service'}</Label>
-                          <Input value={branchForm.customer_service_phone} onChange={e => setBranchForm((f: any) => ({ ...f, customer_service_phone: e.target.value }))} dir="ltr" className="mt-1" />
+                          <Input value={branchForm.customer_service_phone} onChange={e => setBranchForm((f) => ({ ...f, customer_service_phone: e.target.value }))} dir="ltr" className="mt-1" />
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <Label className="text-xs">{isRTL ? 'البريد الإلكتروني' : 'Email'}</Label>
-                          <Input value={branchForm.email} onChange={e => setBranchForm((f: any) => ({ ...f, email: e.target.value }))} dir="ltr" className="mt-1" />
+                          <Input value={branchForm.email} onChange={e => setBranchForm((f) => ({ ...f, email: e.target.value }))} dir="ltr" className="mt-1" />
                         </div>
                         <div>
                           <Label className="text-xs">{isRTL ? 'الموقع الإلكتروني' : 'Website'}</Label>
-                          <Input value={branchForm.website} onChange={e => setBranchForm((f: any) => ({ ...f, website: e.target.value }))} dir="ltr" className="mt-1" />
+                          <Input value={branchForm.website} onChange={e => setBranchForm((f) => ({ ...f, website: e.target.value }))} dir="ltr" className="mt-1" />
                         </div>
                       </div>
                       <Separator />
@@ -1061,19 +1061,19 @@ const AdminBusinesses = () => {
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <Label className="text-xs">{isRTL ? 'الدولة' : 'Country'}</Label>
-                          <Select value={branchForm.country_id} onValueChange={v => setBranchForm((f: any) => ({ ...f, country_id: v, city_id: '' }))}>
+                          <Select value={branchForm.country_id} onValueChange={v => setBranchForm((f) => ({ ...f, country_id: v, city_id: '' }))}>
                             <SelectTrigger className="mt-1"><SelectValue placeholder={isRTL ? 'اختر' : 'Select'} /></SelectTrigger>
                             <SelectContent>
-                              {countries.map((c: any) => <SelectItem key={c.id} value={c.id}>{language === 'ar' ? c.name_ar : c.name_en}</SelectItem>)}
+                              {countries.map((c) => <SelectItem key={c.id} value={c.id}>{language === 'ar' ? c.name_ar : c.name_en}</SelectItem>)}
                             </SelectContent>
                           </Select>
                         </div>
                         <div>
                           <Label className="text-xs">{isRTL ? 'المدينة' : 'City'}</Label>
-                          <Select value={branchForm.city_id} onValueChange={v => setBranchForm((f: any) => ({ ...f, city_id: v }))}>
+                          <Select value={branchForm.city_id} onValueChange={v => setBranchForm((f) => ({ ...f, city_id: v }))}>
                             <SelectTrigger className="mt-1"><SelectValue placeholder={isRTL ? 'اختر' : 'Select'} /></SelectTrigger>
                             <SelectContent>
-                              {(branchForm.country_id ? cities.filter((c: any) => c.country_id === branchForm.country_id) : cities).map((c: any) => (
+                              {(branchForm.country_id ? cities.filter((c) => c.country_id === branchForm.country_id) : cities).map((c) => (
                                 <SelectItem key={c.id} value={c.id}>{language === 'ar' ? c.name_ar : c.name_en}</SelectItem>
                               ))}
                             </SelectContent>
@@ -1083,44 +1083,44 @@ const AdminBusinesses = () => {
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <Label className="text-xs">{isRTL ? 'المنطقة' : 'Region'}</Label>
-                          <Input value={branchForm.region} onChange={e => setBranchForm((f: any) => ({ ...f, region: e.target.value }))} className="mt-1" />
+                          <Input value={branchForm.region} onChange={e => setBranchForm((f) => ({ ...f, region: e.target.value }))} className="mt-1" />
                         </div>
                         <div>
                           <Label className="text-xs">{isRTL ? 'الحي' : 'District'}</Label>
-                          <Input value={branchForm.district} onChange={e => setBranchForm((f: any) => ({ ...f, district: e.target.value }))} className="mt-1" />
+                          <Input value={branchForm.district} onChange={e => setBranchForm((f) => ({ ...f, district: e.target.value }))} className="mt-1" />
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <Label className="text-xs">{isRTL ? 'اسم الشارع' : 'Street'}</Label>
-                          <Input value={branchForm.street_name} onChange={e => setBranchForm((f: any) => ({ ...f, street_name: e.target.value }))} className="mt-1" />
+                          <Input value={branchForm.street_name} onChange={e => setBranchForm((f) => ({ ...f, street_name: e.target.value }))} className="mt-1" />
                         </div>
                         <div>
                           <Label className="text-xs">{isRTL ? 'رقم المبنى' : 'Building No.'}</Label>
-                          <Input value={branchForm.building_number} onChange={e => setBranchForm((f: any) => ({ ...f, building_number: e.target.value }))} dir="ltr" className="mt-1" />
+                          <Input value={branchForm.building_number} onChange={e => setBranchForm((f) => ({ ...f, building_number: e.target.value }))} dir="ltr" className="mt-1" />
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <Label className="text-xs">{isRTL ? 'الرقم الوطني' : 'National ID'}</Label>
-                          <Input value={branchForm.national_id} onChange={e => setBranchForm((f: any) => ({ ...f, national_id: e.target.value }))} dir="ltr" className="mt-1" />
+                          <Input value={branchForm.national_id} onChange={e => setBranchForm((f) => ({ ...f, national_id: e.target.value }))} dir="ltr" className="mt-1" />
                         </div>
                         <div>
                           <Label className="text-xs">{isRTL ? 'الرقم الإضافي' : 'Additional No.'}</Label>
-                          <Input value={branchForm.additional_number} onChange={e => setBranchForm((f: any) => ({ ...f, additional_number: e.target.value }))} dir="ltr" className="mt-1" />
+                          <Input value={branchForm.additional_number} onChange={e => setBranchForm((f) => ({ ...f, additional_number: e.target.value }))} dir="ltr" className="mt-1" />
                         </div>
                       </div>
                       <div>
                         <Label className="text-xs">{isRTL ? 'العنوان الكامل' : 'Full Address'}</Label>
-                        <Textarea value={branchForm.address} onChange={e => setBranchForm((f: any) => ({ ...f, address: e.target.value }))} rows={2} className="mt-1" />
+                        <Textarea value={branchForm.address} onChange={e => setBranchForm((f) => ({ ...f, address: e.target.value }))} rows={2} className="mt-1" />
                       </div>
                       <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2">
-                          <Switch checked={branchForm.is_main} onCheckedChange={v => setBranchForm((f: any) => ({ ...f, is_main: v }))} />
+                          <Switch checked={branchForm.is_main} onCheckedChange={v => setBranchForm((f) => ({ ...f, is_main: v }))} />
                           <span className="text-xs">{isRTL ? 'فرع رئيسي' : 'Main Branch'}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Switch checked={branchForm.is_active} onCheckedChange={v => setBranchForm((f: any) => ({ ...f, is_active: v }))} />
+                          <Switch checked={branchForm.is_active} onCheckedChange={v => setBranchForm((f) => ({ ...f, is_active: v }))} />
                           <span className="text-xs">{isRTL ? 'مفعّل' : 'Active'}</span>
                         </div>
                       </div>
@@ -1199,7 +1199,7 @@ const AdminBusinesses = () => {
             </div>
             <div className="space-y-4">
               <div className="space-y-2">
-                {services.map((svc: any) => (
+                {services.map((svc) => (
                   <div key={svc.id} className={`flex items-center gap-3 p-3 rounded-xl border border-border/40 hover:border-primary/20 transition-all ${!svc.is_active ? 'opacity-50' : ''}`}>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{language === 'ar' ? svc.name_ar : (svc.name_en || svc.name_ar)}</p>
@@ -1317,7 +1317,7 @@ const AdminBusinesses = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filtered.map((biz: any, idx: number) => {
+                  {filtered.map((biz, idx) => {
                     const tierInfo = tiers.find(t => t.value === biz.membership_tier) || tiers[0];
                     return (
                       <TableRow key={biz.id} className={`hover:bg-muted/30 ${!biz.is_active ? 'opacity-50' : ''}`}
@@ -1376,10 +1376,10 @@ const AdminBusinesses = () => {
         ) : (
           /* ─── Cards View ─── */
           <div className="space-y-3">
-            {filtered.map((biz: any, idx: number) => {
+            {filtered.map((biz, idx) => {
               const tierInfo = tiers.find(t => t.value === biz.membership_tier) || tiers[0];
               const hasContract = contractBusinessIds.includes(biz.id);
-              const svcCount = allServices.filter((s: any) => s.business_id === biz.id).length;
+              const svcCount = allServices.filter((s) => s.business_id === biz.id).length;
               return (
                 <div key={biz.id}
                   className={`group relative rounded-2xl border bg-card transition-all duration-200 hover:shadow-md

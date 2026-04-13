@@ -77,8 +77,8 @@ const Compare = () => {
 
   const allServices = useMemo(() => {
     const serviceNames = new Set<string>();
-    selectedBusinesses.forEach((b: any) => {
-      (b.business_services ?? []).forEach((s: any) => {
+    selectedBusinesses.forEach((b) => {
+      (b.business_services ?? []).forEach((s) => {
         serviceNames.add(isRTL ? s.name_ar : (s.name_en || s.name_ar));
       });
     });
@@ -128,7 +128,7 @@ const Compare = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{isRTL ? b.name_ar : (b.name_en || b.name_ar)}</p>
-                      <p className="text-xs text-muted-foreground">{(b as any).categories?.name_ar}</p>
+                      <p className="text-xs text-muted-foreground">{(b as Record<string, unknown> & { categories?: { name_ar?: string } }).categories?.name_ar}</p>
                     </div>
                     <div className="flex items-center gap-1 text-xs"><Star className="w-3 h-3 fill-gold text-gold" />{Number(b.rating_avg).toFixed(1)}</div>
                     <Plus className="w-4 h-4 text-muted-foreground" />
@@ -178,7 +178,7 @@ const Compare = () => {
               size="sm"
               variant="outline"
               onClick={() => {
-                const businesses = selectedBusinesses.map((b: any) => ({
+                const businesses = selectedBusinesses.map((b) => ({
                   name: isRTL ? b.name_ar : (b.name_en || b.name_ar),
                   rating: Number(b.rating_avg).toFixed(1),
                   ratingCount: b.rating_count,
@@ -188,7 +188,7 @@ const Compare = () => {
                   installments: b.provider_installment_settings?.[0]?.is_enabled
                     ? (isRTL ? `حتى ${b.provider_installment_settings[0].max_installments} أقساط` : `Up to ${b.provider_installment_settings[0].max_installments}`)
                     : '-',
-                  services: (b.business_services ?? []).map((s: any) => {
+                  services: (b.business_services ?? []).map((s) => {
                     const name = isRTL ? s.name_ar : (s.name_en || s.name_ar);
                     let price = '';
                     if (s.price_from) price += Number(s.price_from).toLocaleString();
@@ -210,7 +210,7 @@ const Compare = () => {
               <thead>
                 <tr>
                   <th className="sticky start-0 bg-background z-10 p-3 text-start min-w-[140px] border-b border-border" />
-                  {selectedBusinesses.map((b: any) => (
+                  {selectedBusinesses.map((b) => (
                     <th key={b.id} className="p-3 min-w-[220px] border-b border-border">
                       <div className="flex flex-col items-center gap-2 relative">
                         <button onClick={() => removeBusiness(b.id)} className="absolute -top-1 -end-1 p-1 rounded-full bg-destructive/10 text-destructive hover:bg-destructive/20">
@@ -232,7 +232,7 @@ const Compare = () => {
                 {/* Rating */}
                 <tr className="bg-muted/30">
                   <td className="sticky start-0 bg-muted/30 p-3 font-medium text-sm">{isRTL ? 'التقييم' : 'Rating'}</td>
-                  {selectedBusinesses.map((b: any) => (
+                  {selectedBusinesses.map((b) => (
                     <td key={b.id} className="p-3 text-center">
                       <div className="flex items-center justify-center gap-1">
                         <Star className="w-4 h-4 fill-gold text-gold" />
@@ -245,7 +245,7 @@ const Compare = () => {
                 {/* Category */}
                 <tr>
                   <td className="sticky start-0 bg-background p-3 font-medium text-sm">{isRTL ? 'التخصص' : 'Category'}</td>
-                  {selectedBusinesses.map((b: any) => (
+                  {selectedBusinesses.map((b) => (
                     <td key={b.id} className="p-3 text-center text-sm">
                       {b.categories ? (isRTL ? b.categories.name_ar : b.categories.name_en) : '-'}
                     </td>
@@ -254,7 +254,7 @@ const Compare = () => {
                 {/* Location */}
                 <tr className="bg-muted/30">
                   <td className="sticky start-0 bg-muted/30 p-3 font-medium text-sm">{isRTL ? 'الموقع' : 'Location'}</td>
-                  {selectedBusinesses.map((b: any) => (
+                  {selectedBusinesses.map((b) => (
                     <td key={b.id} className="p-3 text-center text-sm">
                       <span className="flex items-center justify-center gap-1"><MapPin className="w-3 h-3" />{b.cities ? (isRTL ? b.cities.name_ar : b.cities.name_en) : '-'}</span>
                     </td>
@@ -263,7 +263,7 @@ const Compare = () => {
                 {/* Membership */}
                 <tr>
                   <td className="sticky start-0 bg-background p-3 font-medium text-sm">{isRTL ? 'العضوية' : 'Tier'}</td>
-                  {selectedBusinesses.map((b: any) => (
+                  {selectedBusinesses.map((b) => (
                     <td key={b.id} className="p-3 text-center">
                       <Badge variant={b.membership_tier === 'premium' || b.membership_tier === 'enterprise' ? 'default' : 'secondary'}>{b.membership_tier}</Badge>
                     </td>
@@ -272,7 +272,7 @@ const Compare = () => {
                 {/* Installments */}
                 <tr className="bg-muted/30">
                   <td className="sticky start-0 bg-muted/30 p-3 font-medium text-sm">{isRTL ? 'التقسيط' : 'Installments'}</td>
-                  {selectedBusinesses.map((b: any) => {
+                  {selectedBusinesses.map((b) => {
                     const s = b.provider_installment_settings?.[0];
                     return (
                       <td key={b.id} className="p-3 text-center text-sm">
@@ -290,8 +290,8 @@ const Compare = () => {
                 {allServices.map((serviceName, i) => (
                   <tr key={serviceName} className={i % 2 === 0 ? 'bg-muted/30' : ''}>
                     <td className={`sticky start-0 ${i % 2 === 0 ? 'bg-muted/30' : 'bg-background'} p-3 text-sm`}>{serviceName}</td>
-                    {selectedBusinesses.map((b: any) => {
-                      const svc = (b.business_services ?? []).find((s: any) => (isRTL ? s.name_ar : (s.name_en || s.name_ar)) === serviceName);
+                    {selectedBusinesses.map((b) => {
+                      const svc = (b.business_services ?? []).find((s) => (isRTL ? s.name_ar : (s.name_en || s.name_ar)) === serviceName);
                       return (
                         <td key={b.id} className="p-3 text-center text-sm">
                           {svc ? (
@@ -309,7 +309,7 @@ const Compare = () => {
                 {/* Visit profile */}
                 <tr>
                   <td className="sticky start-0 bg-background p-3" />
-                  {selectedBusinesses.map((b: any) => (
+                  {selectedBusinesses.map((b) => (
                     <td key={b.id} className="p-3 text-center">
                       <Link to={`/${b.username}`}>
                         <Button size="sm" variant="outline"><ArrowIcon className="w-3 h-3 me-1" />{isRTL ? 'زيارة الملف' : 'View Profile'}</Button>

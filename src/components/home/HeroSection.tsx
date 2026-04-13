@@ -45,7 +45,7 @@ const preloadImage = (src: string) => {
   img.src = src;
 };
 
-const SearchBar = memo(({ categories, cities, language, isRTL, t, onSearch }: any) => {
+const SearchBar = memo(({ categories, cities, language, isRTL, t, onSearch }: { categories: Array<Record<string, unknown>>; cities: Array<Record<string, unknown>>; language: string; isRTL: boolean; t: (key: string) => string; onSearch: (params: Record<string, string>) => void }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedCity, setSelectedCity] = useState('');
@@ -79,7 +79,7 @@ const SearchBar = memo(({ categories, cities, language, isRTL, t, onSearch }: an
             className="sm:w-44 py-3.5 sm:py-4 px-3 sm:px-4 rounded-xl sm:rounded-2xl bg-white/[0.06] text-white/80 font-body text-sm border-0 outline-none focus:ring-2 focus:ring-gold/40 appearance-none cursor-pointer"
           >
             <option value="" className="bg-surface-nav text-surface-nav-foreground">{isRTL ? 'جميع الأقسام' : 'All Categories'}</option>
-            {categories.map((c: any) => (
+            {categories.map((c) => (
               <option key={c.id} value={c.id} className="bg-surface-nav text-surface-nav-foreground">
                 {language === 'ar' ? c.name_ar : c.name_en}
               </option>
@@ -91,7 +91,7 @@ const SearchBar = memo(({ categories, cities, language, isRTL, t, onSearch }: an
             className="sm:w-40 py-3.5 sm:py-4 px-3 sm:px-4 rounded-xl sm:rounded-2xl bg-white/[0.06] text-white/80 font-body text-sm border-0 outline-none focus:ring-2 focus:ring-gold/40 appearance-none cursor-pointer hidden sm:block"
           >
             <option value="" className="bg-surface-nav text-surface-nav-foreground">{isRTL ? 'جميع المدن' : 'All Cities'}</option>
-            {cities.map((c: any) => (
+            {cities.map((c) => (
               <option key={c.id} value={c.id} className="bg-surface-nav text-surface-nav-foreground">
                 {language === 'ar' ? c.name_ar : c.name_en}
               </option>
@@ -108,17 +108,17 @@ const SearchBar = memo(({ categories, cities, language, isRTL, t, onSearch }: an
 });
 SearchBar.displayName = 'SearchBar';
 
-const HeroTitle = memo(({ slides, current, language, t }: { slides: typeof slidesData; current: number; language: string; t: any }) => {
+const HeroTitle = memo(({ slides, current, language, t }: { slides: typeof slidesData; current: number; language: string; t: (key: string) => string }) => {
   const slide = slides[current];
   const line1 = 'titleKey1' in slide && slide.titleKey1
-    ? t(slide.titleKey1 as any)
-    : (slide as any)[`title1${language === 'ar' ? 'Ar' : 'En'}`];
+    ? t(slide.titleKey1 as string)
+    : (slide as Record<string, string>)[`title1${language === 'ar' ? 'Ar' : 'En'}`];
   const line2 = 'titleKey2' in slide && slide.titleKey2
-    ? t(slide.titleKey2 as any)
-    : (slide as any)[`title2${language === 'ar' ? 'Ar' : 'En'}`];
+    ? t(slide.titleKey2 as string)
+    : (slide as Record<string, string>)[`title2${language === 'ar' ? 'Ar' : 'En'}`];
   const desc = 'descKey' in slide && slide.descKey
-    ? t(slide.descKey as any)
-    : (slide as any)[`desc${language === 'ar' ? 'Ar' : 'En'}`];
+    ? t(slide.descKey as string)
+    : (slide as Record<string, string>)[`desc${language === 'ar' ? 'Ar' : 'En'}`];
 
   const { displayedText: typedLine1, isComplete: line1Done } = useTypingAnimation({ text: line1, speed: 40, delay: 200 });
   const { displayedText: typedLine2 } = useTypingAnimation({ text: line2, speed: 40, delay: 0, enabled: line1Done });
@@ -277,7 +277,7 @@ export const HeroSection = () => {
 
         {/* Quick tags */}
         <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2.5 mt-4 sm:mt-6">
-          {categories.slice(0, 5).map((cat: any) => (
+          {categories.slice(0, 5).map((cat) => (
             <button
               key={cat.id}
               type="button"

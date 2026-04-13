@@ -128,8 +128,8 @@ const TodaySummary = React.memo(({ isRTL, userId }: { isRTL: boolean; userId: st
         supabase.from('messages').select('id', { count: 'exact', head: true }).eq('sender_id', userId).gte('created_at', `${today}T00:00:00Z`),
       ]);
       return {
-        todayNotifs: (notifs as any).count ?? 0,
-        todayMessages: (messages as any).count ?? 0,
+        todayNotifs: ((notifs as { count?: number }).count) ?? 0,
+        todayMessages: ((messages as { count?: number }).count) ?? 0,
       };
     },
     staleTime: 60000,
@@ -250,7 +250,7 @@ const MembershipWidget = React.memo(({ isRTL, userId }: { isRTL: boolean; userId
     ? Math.max(0, Math.ceil((new Date(sub.expires_at).getTime() - Date.now()) / 86400000))
     : null;
 
-  const plan = sub?.plan as any;
+  const plan = sub?.plan as Record<string, unknown> | null;
   const tier = plan?.tier || 'free';
   const Icon = tierIcons[tier] || Zap;
 
@@ -319,14 +319,14 @@ const AdminDashboardView = React.memo(({ isRTL }: { isRTL: boolean }) => {
       const statusCounts: Record<string, number> = {};
       allContracts.forEach(c => { statusCounts[c.status] = (statusCounts[c.status] || 0) + 1; });
       const roleCounts: Record<string, number> = {};
-      (roles.data || []).forEach((r: any) => { roleCounts[r.role] = (roleCounts[r.role] || 0) + 1; });
+      (roles.data || []).forEach((r) => { roleCounts[r.role] = (roleCounts[r.role] || 0) + 1; });
 
       return {
-        users: (users as any).count ?? 0, businesses: (businesses as any).count ?? 0,
+        users: ((users as { count?: number }).count) ?? 0, businesses: ((businesses as { count?: number }).count) ?? 0,
         contracts: allContracts.length, activeContracts, totalRevenue,
-        categories: (categories as any).count ?? 0, messages: (messages as any).count ?? 0,
-        subscriptions: (subscriptions as any).count ?? 0, blogPosts: (blogPosts as any).count ?? 0,
-        newContactMessages: (contactMessages as any).count ?? 0,
+        categories: ((categories as { count?: number }).count) ?? 0, messages: ((messages as { count?: number }).count) ?? 0,
+        subscriptions: ((subscriptions as { count?: number }).count) ?? 0, blogPosts: ((blogPosts as { count?: number }).count) ?? 0,
+        newContactMessages: ((contactMessages as { count?: number }).count) ?? 0,
         roleCounts, statusCounts,
         monthlyContracts: buildMonthlyData(allContracts, isRTL),
         monthlyUsers: buildMonthlyData(userGrowth.data || [], isRTL),
@@ -487,7 +487,7 @@ const AdminDashboardView = React.memo(({ isRTL }: { isRTL: boolean }) => {
           </CardHeader>
           <CardContent className="px-4 pb-3">
             <div className="space-y-1.5">
-              {(stats?.recentActivity || []).map((item: any) => (
+              {(stats?.recentActivity || []).map((item) => (
                 <div key={item.id} className="flex items-center gap-2.5 p-2 rounded-lg hover:bg-muted/30 transition-colors">
                   <div className="w-7 h-7 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
                     <Activity className="w-3 h-3 text-accent" />
@@ -512,7 +512,7 @@ const AdminDashboardView = React.memo(({ isRTL }: { isRTL: boolean }) => {
           </CardHeader>
           <CardContent className="px-4 pb-3">
             <div className="space-y-1.5">
-              {(stats?.recentUsers || []).map((u: any) => (
+              {(stats?.recentUsers || []).map((u) => (
                 <div key={u.id} className="flex items-center gap-2.5 p-2 rounded-lg hover:bg-muted/30 transition-colors">
                   <Avatar className="w-7 h-7">
                     <AvatarImage src={u.avatar_url || undefined} />
@@ -579,7 +579,7 @@ AdminDashboardView.displayName = 'AdminDashboardView';
 /* ═══════════════════════════════════════════════════
    PROVIDER Dashboard
    ═══════════════════════════════════════════════════ */
-const ProviderDashboardView = React.memo(({ isRTL, user, profile }: { isRTL: boolean; user: any; profile: any }) => {
+const ProviderDashboardView = React.memo(({ isRTL, user, profile }: { isRTL: boolean; user: { id: string }; profile: Record<string, unknown> | null }) => {
   const { data: business } = useQuery({
     queryKey: ['my-business', user?.id],
     queryFn: async () => {
@@ -611,10 +611,10 @@ const ProviderDashboardView = React.memo(({ isRTL, user, profile }: { isRTL: boo
       const completedContracts = contractsData.filter(c => c.status === 'completed');
       const totalRevenue = completedContracts.reduce((sum, c) => sum + Number(c.total_amount || 0), 0);
 
-      const reviewsData = (reviews as any).data || [];
-      const avgRating = reviewsData.length > 0 ? (reviewsData.reduce((s: number, r: any) => s + r.rating, 0) / reviewsData.length).toFixed(1) : '0.0';
+      const reviewsData = ((reviews as { data?: unknown[] }).data) || [];
+      const avgRating = reviewsData.length > 0 ? (reviewsData.reduce((s: number, r) => s + r.rating, 0) / reviewsData.length).toFixed(1) : '0.0';
       const ratingDist = [0, 0, 0, 0, 0];
-      reviewsData.forEach((r: any) => { if (r.rating >= 1 && r.rating <= 5) ratingDist[r.rating - 1]++; });
+      reviewsData.forEach((r) => { if (r.rating >= 1 && r.rating <= 5) ratingDist[r.rating - 1]++; });
 
       const statusCounts: Record<string, number> = {};
       contractsData.forEach(c => { statusCounts[c.status] = (statusCounts[c.status] || 0) + 1; });
@@ -629,12 +629,12 @@ const ProviderDashboardView = React.memo(({ isRTL, user, profile }: { isRTL: boo
       });
 
       return {
-        services: (services as any).count ?? 0, portfolio: (portfolio as any).count ?? 0,
+        services: ((services as { count?: number }).count) ?? 0, portfolio: ((portfolio as { count?: number }).count) ?? 0,
         reviews: reviewsData.length, avgRating, ratingDist,
         contracts: contractsData.length, activeContracts: activeContracts.length,
         completedContracts: completedContracts.length, totalRevenue,
-        projects: (projects as any).count ?? 0, operations: (operations as any).count ?? 0,
-        messages: (messages as any).count ?? 0, promotions: (promotions as any).count ?? 0,
+        projects: ((projects as { count?: number }).count) ?? 0, operations: ((operations as { count?: number }).count) ?? 0,
+        messages: ((messages as { count?: number }).count) ?? 0, promotions: ((promotions as { count?: number }).count) ?? 0,
         statusCounts,
         monthlyRevenue: Array.from(revenueMap.entries()).map(([month, revenue]) => ({ month, revenue })),
       };
@@ -772,7 +772,7 @@ const ProviderDashboardView = React.memo(({ isRTL, user, profile }: { isRTL: boo
           <CardContent className="px-4 pb-3">
             {recentContracts && recentContracts.length > 0 ? (
               <div className="space-y-1.5">
-                {recentContracts.map((c: any) => (
+                {recentContracts.map((c) => (
                   <Link key={c.id} to={`/contracts/${c.id}`}>
                     <div className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors">
                       <div className="min-w-0 flex-1">
@@ -869,7 +869,7 @@ ProviderDashboardView.displayName = 'ProviderDashboardView';
 /* ═══════════════════════════════════════════════════
    USER Dashboard
    ═══════════════════════════════════════════════════ */
-const UserDashboardView = React.memo(({ isRTL, user, profile }: { isRTL: boolean; user: any; profile: any }) => {
+const UserDashboardView = React.memo(({ isRTL, user, profile }: { isRTL: boolean; user: { id: string }; profile: Record<string, unknown> | null }) => {
   const { data: stats } = useQuery({
     queryKey: ['user-overview-stats', user?.id],
     queryFn: async () => {
@@ -889,10 +889,10 @@ const UserDashboardView = React.memo(({ isRTL, user, profile }: { isRTL: boolean
       allContracts.forEach(c => { statusCounts[c.status] = (statusCounts[c.status] || 0) + 1; });
 
       return {
-        totalContracts: (contracts as any).count ?? allContracts.length,
+        totalContracts: ((contracts as { count?: number }).count) ?? allContracts.length,
         activeContracts: activeContracts.length, completedContracts: completedContracts.length,
-        totalSpent, messages: (messages as any).count ?? 0,
-        bookmarks: (bookmarks as any).count ?? 0, unreadNotifications: (notifications as any).count ?? 0,
+        totalSpent, messages: ((messages as { count?: number }).count) ?? 0,
+        bookmarks: ((bookmarks as { count?: number }).count) ?? 0, unreadNotifications: ((notifications as { count?: number }).count) ?? 0,
         recentContracts: allContracts.slice(0, 5), statusCounts,
       };
     },
@@ -959,7 +959,7 @@ const UserDashboardView = React.memo(({ isRTL, user, profile }: { isRTL: boolean
           <CardContent className="px-4 pb-3">
             {stats?.recentContracts?.length ? (
               <div className="space-y-1.5">
-                {stats.recentContracts.map((c: any) => (
+                {stats.recentContracts.map((c) => (
                   <Link key={c.id} to={`/contracts/${c.id}`}>
                     <div className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors">
                       <div className="min-w-0 flex-1">

@@ -83,8 +83,8 @@ const seoScoreColor = (score: number) => {
 
 /* ─── Post Card ─── */
 const PostCard = React.memo(({ post, language, isRTL, onEdit, onDelete }: {
-  post: any; language: string; isRTL: boolean;
-  onEdit: (p: any) => void; onDelete: (id: string) => void;
+  post: Record<string, unknown>; language: string; isRTL: boolean;
+  onEdit: (p: Record<string, unknown>) => void; onDelete: (id: string) => void;
 }) => {
   const status = post.scheduled_at && post.status === 'draft' ? 'scheduled' : post.status;
   const cfg = statusConfig[status] || statusConfig.draft;
@@ -164,8 +164,8 @@ const DashboardBlog = () => {
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState({ ...defaultForm });
   const [aiLoading, setAiLoading] = useState<string | null>(null);
-  const [seoAnalysis, setSeoAnalysis] = useState<any>(null);
-  const [competitorAnalysis, setCompetitorAnalysis] = useState<any>(null);
+  const [seoAnalysis, setSeoAnalysis] = useState<Record<string, unknown> | null>(null);
+  const [competitorAnalysis, setCompetitorAnalysis] = useState<Record<string, unknown> | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [previewLang, setPreviewLang] = useState<'ar' | 'en'>('ar');
@@ -227,7 +227,7 @@ const DashboardBlog = () => {
           title_ar: form.title_ar, title_en: form.title_en || null,
           content_ar: form.content_ar || null, content_en: form.content_en || null,
           excerpt_ar: form.excerpt_ar || null, excerpt_en: form.excerpt_en || null,
-          form_snapshot: form as any,
+          form_snapshot: form as Record<string, unknown>,
           version_number: nextVersion, auto_saved: true,
         });
         setLastAutoSave(new Date());
@@ -259,7 +259,7 @@ const DashboardBlog = () => {
         title_ar: form.title_ar, title_en: form.title_en || null,
         content_ar: form.content_ar || null, content_en: form.content_en || null,
         excerpt_ar: form.excerpt_ar || null, excerpt_en: form.excerpt_en || null,
-        form_snapshot: form as any,
+        form_snapshot: form as Record<string, unknown>,
         version_number: (count || 0) + 1, auto_saved: false,
       });
       setLastAutoSave(new Date());
@@ -271,7 +271,7 @@ const DashboardBlog = () => {
   const handleRestoreDraft = async (draftId: string) => {
     const { data } = await supabase.from('blog_drafts').select('form_snapshot').eq('id', draftId).single();
     if (data?.form_snapshot) {
-      const snapshot = data.form_snapshot as any;
+      const snapshot = data.form_snapshot as Record<string, unknown>;
       setForm({ ...defaultForm, ...snapshot });
       toast.success(isRTL ? 'تم استعادة النسخة' : 'Version restored');
     }
@@ -299,7 +299,7 @@ const DashboardBlog = () => {
       const keywordsArr = form.keywords ? form.keywords.split(',').map(t => t.trim()).filter(Boolean) : [];
       const readingTime = calculateReadingTime(form.content_ar || form.content_en || '');
       const isScheduled = form.status === 'scheduled' && scheduledDate;
-      const payload: any = {
+      const payload: Record<string, unknown> = {
         author_id: user!.id, slug,
         title_ar: form.title_ar, title_en: form.title_en || null,
         content_ar: form.content_ar || null, content_en: form.content_en || null,
@@ -341,7 +341,7 @@ const DashboardBlog = () => {
     },
   });
 
-  const openEdit = (p: any) => {
+  const openEdit = (p: Record<string, unknown>) => {
     setForm({
       title_ar: p.title_ar, title_en: p.title_en || '', content_ar: p.content_ar || '',
       content_en: p.content_en || '', excerpt_ar: p.excerpt_ar || '', excerpt_en: p.excerpt_en || '',
@@ -448,7 +448,7 @@ const DashboardBlog = () => {
   };
 
   /* Filters */
-  const filteredPosts = posts.filter((p: any) => {
+  const filteredPosts = posts.filter((p) => {
     if (filterStatus !== 'all' && p.status !== filterStatus) return false;
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
@@ -459,11 +459,11 @@ const DashboardBlog = () => {
 
   const stats = {
     total: posts.length,
-    published: posts.filter((p: any) => p.status === 'published').length,
-    draft: posts.filter((p: any) => p.status === 'draft').length,
-    scheduled: posts.filter((p: any) => p.scheduled_at && p.status === 'draft').length,
-    totalViews: posts.reduce((s: number, p: any) => s + (p.views_count || 0), 0),
-    avgSeo: posts.length > 0 ? Math.round(posts.reduce((s: number, p: any) => s + (p.seo_score || 0), 0) / posts.length) : 0,
+    published: posts.filter((p) => p.status === 'published').length,
+    draft: posts.filter((p) => p.status === 'draft').length,
+    scheduled: posts.filter((p) => p.scheduled_at && p.status === 'draft').length,
+    totalViews: posts.reduce((s: number, p) => s + (p.views_count || 0), 0),
+    avgSeo: posts.length > 0 ? Math.round(posts.reduce((s: number, p) => s + (p.seo_score || 0), 0) / posts.length) : 0,
   };
 
   const charHint = (len: number, max: number) => {
@@ -929,7 +929,7 @@ const DashboardBlog = () => {
                     </h3>
                   </div>
                   <div className="p-4">
-                    <DraftVersions isRTL={isRTL} versions={draftVersions as any} onRestore={handleRestoreDraft}
+                    <DraftVersions isRTL={isRTL} versions={draftVersions as Array<Record<string, unknown>>} onRestore={handleRestoreDraft}
                       onDelete={handleDeleteDraft} lastSaved={lastAutoSave} isSaving={isAutoSaving} onManualSave={handleManualSaveDraft} />
                   </div>
                 </div>
@@ -1045,7 +1045,7 @@ const DashboardBlog = () => {
               </div>
             ) : (
               <div className="space-y-3">
-                {filteredPosts.map((p: any) => (
+                {filteredPosts.map((p) => (
                   <PostCard key={p.id} post={p} language={language} isRTL={isRTL}
                     onEdit={openEdit} onDelete={(id) => deleteMutation.mutate(id)} />
                 ))}

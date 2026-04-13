@@ -23,7 +23,7 @@ const goldIcon = new L.Icon({
 });
 
 interface SearchMapProps {
-  businesses: any[];
+  businesses: Array<Record<string, unknown>>;
   className?: string;
 }
 
@@ -63,7 +63,7 @@ export const SearchMap = ({ businesses, className }: SearchMapProps) => {
     // Add markers
     mappable.forEach(b => {
       const name = language === 'ar' ? b.name_ar : (b.name_en || b.name_ar);
-      const cityName = b.cities ? (language === 'ar' ? (b.cities as any).name_ar : (b.cities as any).name_en) : '';
+      const cityName = b.cities ? (language === 'ar' ? (b.cities as Record<string, string>).name_ar : (b.cities as Record<string, string>).name_en) : '';
       const rating = Number(b.rating_avg).toFixed(1);
       const verified = b.is_verified ? '✓' : '';
 

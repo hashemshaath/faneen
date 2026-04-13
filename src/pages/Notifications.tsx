@@ -39,12 +39,12 @@ const typeColors: Record<string, string> = {
   system: 'bg-muted text-muted-foreground',
 };
 
-const getNotificationIcon = (n: any) => {
+const getNotificationIcon = (n: Record<string, unknown>) => {
   if (n.reference_type?.startsWith('overdue_')) return AlertTriangle;
   return typeIcons[n.notification_type] || Bell;
 };
 
-const getNotificationColor = (n: any) => {
+const getNotificationColor = (n: Record<string, unknown>) => {
   if (n.reference_type?.startsWith('overdue_')) return 'bg-red-100 text-red-600';
   return typeColors[n.notification_type] || typeColors.system;
 };
@@ -86,7 +86,7 @@ const Notifications = () => {
   });
 
   const filtered = useMemo(() => {
-    return notifications.filter((n: any) => {
+    return notifications.filter((n) => {
       if (typeFilter !== 'all' && n.notification_type !== typeFilter) return false;
       if (readFilter === 'unread' && n.is_read) return false;
       if (readFilter === 'read' && !n.is_read) return false;
@@ -102,7 +102,7 @@ const Notifications = () => {
     });
   }, [notifications, typeFilter, readFilter, searchQuery, dateFrom, dateTo, language]);
 
-  const unreadCount = notifications.filter((n: any) => !n.is_read).length;
+  const unreadCount = notifications.filter((n) => !n.is_read).length;
 
   const markRead = useMutation({
     mutationFn: async (id: string) => {
@@ -131,7 +131,7 @@ const Notifications = () => {
     },
   });
 
-  const handleClick = (n: any) => {
+  const handleClick = (n: Record<string, unknown>) => {
     if (!n.is_read) markRead.mutate(n.id);
     if (n.action_url) navigate(n.action_url);
   };
@@ -215,7 +215,7 @@ const Notifications = () => {
               </Select>
 
               {/* Read/Unread filter */}
-              <Tabs value={readFilter} onValueChange={(v) => setReadFilter(v as any)}>
+              <Tabs value={readFilter} onValueChange={(v) => setReadFilter(v as 'all' | 'unread' | 'read')}>
                 <TabsList className="h-9">
                   <TabsTrigger value="all" className="text-xs px-3">{isRTL ? 'الكل' : 'All'}</TabsTrigger>
                   <TabsTrigger value="unread" className="text-xs px-3">{isRTL ? 'غير مقروء' : 'Unread'}</TabsTrigger>
@@ -264,8 +264,8 @@ const Notifications = () => {
           {[
             { label: isRTL ? 'الكل' : 'Total', count: notifications.length, color: 'text-foreground' },
             { label: isRTL ? 'غير مقروء' : 'Unread', count: unreadCount, color: 'text-primary' },
-            { label: isRTL ? 'العقود' : 'Contracts', count: notifications.filter((n: any) => n.notification_type === 'contract').length, color: 'text-blue-600' },
-            { label: isRTL ? 'الأقساط' : 'Installments', count: notifications.filter((n: any) => n.notification_type === 'installment').length, color: 'text-amber-600' },
+            { label: isRTL ? 'العقود' : 'Contracts', count: notifications.filter((n) => n.notification_type === 'contract').length, color: 'text-blue-600' },
+            { label: isRTL ? 'الأقساط' : 'Installments', count: notifications.filter((n) => n.notification_type === 'installment').length, color: 'text-amber-600' },
           ].map((s) => (
             <Card key={s.label}>
               <CardContent className="p-3 text-center">
@@ -293,7 +293,7 @@ const Notifications = () => {
           </Card>
         ) : (
           <div className="space-y-2">
-            {filtered.map((n: any) => {
+            {filtered.map((n) => {
               const Icon = getNotificationIcon(n);
               const color = getNotificationColor(n);
               const title = language === 'ar' ? n.title_ar : (n.title_en || n.title_ar);
