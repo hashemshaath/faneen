@@ -12,68 +12,34 @@ import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
-  Bell, Check, CheckCheck, FileText, CreditCard, Megaphone, Settings2,
-  Trash2, Search, Filter, MessageSquare, Eye, X, AlertTriangle, Wrench,
-  Zap, Calendar, TrendingUp, ArrowDownRight, ChevronDown, ChevronUp,
-  BarChart3, BellOff, BellRing, Clock,
+  Bell, Check, CheckCheck, Trash2, Search, Filter, Eye, X, AlertTriangle,
+  Zap, Calendar, TrendingUp, ArrowDownRight, BarChart3, BellOff, BellRing, Clock,
 } from 'lucide-react';
 import { formatDistanceToNow, format, isToday, isThisWeek, isThisMonth } from 'date-fns';
 import { ar as arLocale, enUS } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-
-const typeIcons: Record<string, React.ElementType> = {
-  contract: FileText, installment: CreditCard, promotion: Megaphone,
-  message: MessageSquare, maintenance: Wrench, security: AlertTriangle, system: Settings2,
-};
-
-const typeColors: Record<string, string> = {
-  contract: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
-  installment: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
-  promotion: 'bg-violet-500/10 text-violet-600 dark:text-violet-400',
-  message: 'bg-accent/10 text-accent',
-  maintenance: 'bg-orange-500/10 text-orange-600 dark:text-orange-400',
-  security: 'bg-destructive/10 text-destructive',
-  system: 'bg-muted text-muted-foreground',
-};
-
-const typeLabels: Record<string, { ar: string; en: string }> = {
-  all: { ar: 'الكل', en: 'All' },
-  contract: { ar: 'العقود', en: 'Contracts' },
-  installment: { ar: 'الأقساط', en: 'Installments' },
-  promotion: { ar: 'العروض', en: 'Promotions' },
-  message: { ar: 'الرسائل', en: 'Messages' },
-  maintenance: { ar: 'الصيانة', en: 'Maintenance' },
-  security: { ar: 'الأمان', en: 'Security' },
-  system: { ar: 'النظام', en: 'System' },
-};
-
-const getNotificationIcon = (n) => {
-  if (n.reference_type?.startsWith('overdue_')) return AlertTriangle;
-  return typeIcons[n.notification_type] || Bell;
-};
-const getNotificationColor = (n) => {
-  if (n.reference_type?.startsWith('overdue_')) return typeColors.security;
-  return typeColors[n.notification_type] || typeColors.system;
-};
+import { getNotificationMeta, isUrgentNotification, typeFilterLabels } from '@/components/notifications/notification-types';
 
 /* ── Notification Item (memo) ── */
 const NotificationItem = React.memo(({ notification, isRTL, language, onRead, onDelete, onNavigate }: {
   notification: any; isRTL: boolean; language: string;
-  onRead: (id: string) => void; onDelete: (id: string) => void; onNavigate: (n) => void;
+  onRead: (id: string) => void; onDelete: (id: string) => void; onNavigate: (n: any) => void;
 }) => {
-  const Icon = getNotificationIcon(notification);
-  const color = getNotificationColor(notification);
+  const meta = getNotificationMeta(notification);
+  const Icon = meta.icon;
+  const color = meta.colorClass;
   const title = language === 'ar' ? notification.title_ar : (notification.title_en || notification.title_ar);
   const body = language === 'ar' ? notification.body_ar : (notification.body_en || notification.body_ar);
   const timeAgo = formatDistanceToNow(new Date(notification.created_at), { addSuffix: true, locale: language === 'ar' ? arLocale : enUS });
-  const tLabel = typeLabels[notification.notification_type] || typeLabels.system;
   const isNew = isToday(new Date(notification.created_at)) && !notification.is_read;
+  const isUrgent = isUrgentNotification(notification);
 
   return (
     <Card
       className={cn(
         'cursor-pointer transition-all duration-200 group border-border/40 hover:shadow-sm hover:border-border/60',
-        !notification.is_read && 'border-accent/30 bg-accent/[0.02]'
+        !notification.is_read && isUrgent && 'border-destructive/30 bg-destructive/[0.02]',
+        !notification.is_read && !isUrgent && 'border-accent/30 bg-accent/[0.02]'
       )}
       onClick={() => onNavigate(notification)}
     >
@@ -95,14 +61,35 @@ const NotificationItem = React.memo(({ notification, isRTL, language, onRead, on
                     {isRTL ? 'جديد' : 'New'}
                   </Badge>
                 )}
+                {isUrgent && !notification.is_read && (
+                  <Badge variant="destructive" className="text-[7px] px-1 py-0 h-3">
+                    {isRTL ? 'عاجل' : 'Urgent'}
+                  </Badge>
+                )}
               </div>
               {body && <p className="text-[10px] text-muted-foreground line-clamp-1 mt-0.5">{body}</p>}
               <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                 <Badge variant="outline" className="text-[8px] px-1.5 py-0 h-[14px]">
-                  {language === 'ar' ? tLabel.ar : tLabel.en}
+                  {language === 'ar' ? meta.label.ar : meta.label.en}
                 </Badge>
                 <span className="text-[9px] text-muted-foreground">{timeAgo}</span>
               </div>
+              {/* Inline action for urgent actionable notifications */}
+              {notification.action_url && !notification.is_read && isUrgent && (
+                <Button
+                  variant="default" size="sm"
+                  className="mt-1.5 h-6 text-[9px] gap-1"
+                  onClick={e => { e.stopPropagation(); onNavigate(notification); }}
+                >
+                  {notification.notification_type === 'contract_awaiting' || notification.reference_type === 'contract_awaiting'
+                    ? (isRTL ? 'راجع العقد ووقّع' : 'Review & Sign')
+                    : notification.notification_type === 'payment_due' || notification.reference_type === 'payment_due'
+                    ? (isRTL ? 'عرض تفاصيل الدفعة' : 'View Payment')
+                    : notification.notification_type === 'stage_awaiting' || notification.reference_type === 'stage_awaiting'
+                    ? (isRTL ? 'أؤكد الإنجاز' : 'Confirm')
+                    : (isRTL ? 'عرض' : 'View')}
+                </Button>
+              )}
             </div>
 
             <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -177,7 +164,7 @@ const DashboardNotifications = () => {
   }, [queryClient, user]);
 
   const filtered = useMemo(() => {
-    return notifications.filter((n) => {
+    return notifications.filter((n: any) => {
       if (typeFilter !== 'all' && n.notification_type !== typeFilter) return false;
       if (readFilter === 'unread' && n.is_read) return false;
       if (readFilter === 'read' && !n.is_read) return false;
@@ -191,11 +178,10 @@ const DashboardNotifications = () => {
     });
   }, [notifications, typeFilter, readFilter, searchQuery, language]);
 
-  // Grouped by date
   const grouped = useMemo(() => {
-    const groups: { label: string; items: typeof notifications[number][] }[] = [];
+    const groups: { label: string; items: any[] }[] = [];
     let current = '';
-    filtered.slice(0, visibleCount).forEach((n) => {
+    filtered.slice(0, visibleCount).forEach((n: any) => {
       const d = new Date(n.created_at);
       let label: string;
       if (isToday(d)) label = isRTL ? 'اليوم' : 'Today';
@@ -208,12 +194,12 @@ const DashboardNotifications = () => {
     return groups;
   }, [filtered, visibleCount, isRTL, language]);
 
-  const unreadCount = notifications.filter((n) => !n.is_read).length;
+  const unreadCount = notifications.filter((n: any) => !n.is_read).length;
 
   const stats = useMemo(() => {
-    const today = notifications.filter((n) => isToday(new Date(n.created_at))).length;
+    const today = notifications.filter((n: any) => isToday(new Date(n.created_at))).length;
     const byType: Record<string, number> = {};
-    notifications.forEach((n) => { byType[n.notification_type] = (byType[n.notification_type] || 0) + 1; });
+    notifications.forEach((n: any) => { byType[n.notification_type] = (byType[n.notification_type] || 0) + 1; });
     return { total: notifications.length, unread: unreadCount, today, byType };
   }, [notifications, unreadCount]);
 
@@ -232,7 +218,7 @@ const DashboardNotifications = () => {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['all-notifications'] }); queryClient.invalidateQueries({ queryKey: ['notifications'] }); },
   });
 
-  const handleClick = useCallback((n) => {
+  const handleClick = useCallback((n: any) => {
     if (!n.is_read) markRead.mutate(n.id);
     if (n.action_url) navigate(n.action_url);
   }, [markRead, navigate]);
@@ -296,12 +282,13 @@ const DashboardNotifications = () => {
               </div>
               <div className="space-y-1.5">
                 {Object.entries(stats.byType).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([type, count]) => {
-                  const Icon = typeIcons[type] || Bell;
+                  const typeMeta = getNotificationMeta({ notification_type: type });
+                  const TypeIcon = typeMeta.icon;
                   const pct = stats.total > 0 ? Math.round((count / stats.total) * 100) : 0;
-                  const label = typeLabels[type]?.[isRTL ? 'ar' : 'en'] || type;
+                  const label = language === 'ar' ? typeMeta.label.ar : typeMeta.label.en;
                   return (
                     <div key={type} className="flex items-center gap-2">
-                      <Icon className="w-3 h-3 text-muted-foreground shrink-0" />
+                      <TypeIcon className="w-3 h-3 text-muted-foreground shrink-0" />
                       <span className="text-[9px] w-14 truncate">{label}</span>
                       <Progress value={pct} className="h-1.5 flex-1" />
                       <span className="text-[9px] font-semibold text-muted-foreground w-8 text-end tech-content">{count}</span>
@@ -324,7 +311,7 @@ const DashboardNotifications = () => {
               <Filter className="w-3 h-3 me-1" /><SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {Object.entries(typeLabels).map(([key, label]) => (
+              {Object.entries(typeFilterLabels).map(([key, label]) => (
                 <SelectItem key={key} value={key}>{language === 'ar' ? label.ar : label.en}</SelectItem>
               ))}
             </SelectContent>
@@ -364,8 +351,8 @@ const DashboardNotifications = () => {
               <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-3">
                 <Bell className="w-7 h-7 text-primary opacity-50" />
               </div>
-              <p className="font-heading font-bold text-foreground mb-1 text-sm">{isRTL ? 'لا توجد إشعارات' : 'No notifications'}</p>
-              <p className="text-xs">{hasFilters ? (isRTL ? 'جرّب تعديل الفلاتر' : 'Try adjusting filters') : (isRTL ? 'ستظهر إشعاراتك هنا' : 'Your notifications will appear here')}</p>
+              <p className="font-heading font-bold text-foreground mb-1 text-sm">{isRTL ? 'لا إشعارات جديدة' : 'No notifications'}</p>
+              <p className="text-xs">{hasFilters ? (isRTL ? 'جرّب تعديل الفلاتر' : 'Try adjusting filters') : (isRTL ? 'ستظهر هنا تحديثات عقودك ومشاريعك' : 'Contract and project updates will appear here')}</p>
             </CardContent>
           </Card>
         ) : (
@@ -373,7 +360,7 @@ const DashboardNotifications = () => {
             {grouped.map(group => (
               <div key={group.label} className="space-y-1">
                 <DateGroup label={group.label} count={group.items.length} />
-                {group.items.map((n) => (
+                {group.items.map((n: any) => (
                   <NotificationItem key={n.id} notification={n} isRTL={isRTL} language={language} onRead={handleRead} onDelete={handleDelete} onNavigate={handleClick} />
                 ))}
               </div>
