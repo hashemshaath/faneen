@@ -49,7 +49,7 @@ const StatItem = memo(({ end, suffix, labelKey, index, isVisible, icon: Icon }: 
       <div className="font-heading font-black text-2xl sm:text-4xl md:text-[2.75rem] text-gradient-gold mb-1.5 sm:mb-2 tracking-tight">
         {isVisible ? display + suffix : "0" + suffix}
       </div>
-      <div className="font-body text-[11px] sm:text-sm text-muted-foreground/80 font-medium">{t(labelKey as string)}</div>
+      <div className="font-body text-[11px] sm:text-sm text-muted-foreground/80 font-medium">{t(labelKey as any)}</div>
     </div>
   );
 });
