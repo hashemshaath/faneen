@@ -331,3 +331,4 @@ export const HeroSection = () => {
     </section>
   );
 };
+

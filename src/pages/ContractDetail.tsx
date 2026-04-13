@@ -2039,3 +2039,4 @@ const ContractDetail = () => {
 };
 
 export default ContractDetail;
+

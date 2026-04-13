@@ -103,3 +103,4 @@ export const exportComparePDF = async (data: ExportData) => {
 
   doc.save(`faneen-compare-${Date.now()}.pdf`);
 };
+

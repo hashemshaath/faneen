@@ -443,3 +443,4 @@ const CompareProfiles = () => {
 };
 
 export default CompareProfiles;
+

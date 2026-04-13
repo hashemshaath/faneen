@@ -437,3 +437,4 @@ function mapFloorLabel(raw: string): string {
   if (lower.includes('external') || lower.includes('خارجي')) return 'external';
   return raw || 'ground_floor';
 }
+
