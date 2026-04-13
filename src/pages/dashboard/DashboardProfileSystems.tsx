@@ -331,7 +331,7 @@ const DashboardProfileSystems = () => {
       }
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['admin-profile-systems'] }); toast.success(isRTL ? 'تم الحفظ بنجاح' : 'Saved'); closeForm(); },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: Error) => toast.error(err.message),
   });
 
   const deleteMutation = useMutation({

@@ -108,7 +108,7 @@ const DashboardWarranties = () => {
       toast.success(editId ? (isRTL ? 'تم تحديث الضمان' : 'Warranty updated') : (isRTL ? 'تم إضافة الضمان' : 'Warranty added'));
       closeForm();
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: Error) => toast.error(err.message),
   });
 
   const deleteMutation = useMutation({

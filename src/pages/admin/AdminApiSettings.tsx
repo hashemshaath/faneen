@@ -241,7 +241,7 @@ const AdminApiSettings = () => {
       queryClient.invalidateQueries({ queryKey: ['platform-settings'] });
       toast.success(isRTL ? 'تم الحفظ بنجاح' : 'Saved successfully');
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: Error) => toast.error(err.message),
   });
 
   const handleSave = useCallback((setting: PlatformSetting) => {

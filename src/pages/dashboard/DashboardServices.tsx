@@ -301,7 +301,7 @@ const DashboardServices = () => {
       }
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['dashboard-services'] }); closeForm(); toast.success(editing ? (rtl ? 'تم التحديث' : 'Updated') : (rtl ? 'تمت الإضافة' : 'Added')); },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: Error) => toast.error(err.message),
   });
 
   const deleteMut = useMutation({

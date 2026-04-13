@@ -63,10 +63,10 @@ export function useAiSettings() {
           language_preference: data.language_preference || 'auto',
           include_knowledge: data.include_knowledge ?? true,
           max_knowledge_entries: data.max_knowledge_entries ?? 5,
-          default_tone: ((data as any).default_tone as ToneType) || 'formal',
-          default_model: ((data as any).default_model as AiModel) || 'google/gemini-3-flash-preview',
-          translation_instructions: (data as any).translation_instructions || '',
-          content_instructions: (data as any).content_instructions || '',
+          default_tone: (data.default_tone as ToneType) || 'formal',
+          default_model: (data.default_model as AiModel) || 'google/gemini-3-flash-preview',
+          translation_instructions: data.translation_instructions || '',
+          content_instructions: data.content_instructions || '',
         };
         _cached = s;
         _cacheUserId = user.id;

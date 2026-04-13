@@ -66,8 +66,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
       });
       onEmailSent(email);
       toast.success(isRTL ? 'تم إرسال رابط التحقق إلى بريدك الإلكتروني' : 'Verification link sent to your email');
-    } catch (err: any) {
-      const msg = err.message || '';
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
       if (msg.includes('already registered')) {
         setEmailExists(true);
         toast.error(isRTL ? 'هذا البريد مسجل بالفعل' : 'This email is already registered');
@@ -81,7 +81,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
 
   const handleGoogle = async () => {
     setGoogleLoading(true);
-    try { await authService.signInWithGoogle(); } catch (err: any) { toast.error(err.message); } finally { setGoogleLoading(false); }
+    try { await authService.signInWithGoogle(); } catch (err: unknown) { toast.error(err instanceof Error ? err.message : 'Google sign-in failed'); } finally { setGoogleLoading(false); }
   };
 
   // ─── Step: Account Type ───

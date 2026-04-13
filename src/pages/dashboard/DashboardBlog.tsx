@@ -327,7 +327,7 @@ const DashboardBlog = () => {
       toast.success(isRTL ? 'تم الحفظ بنجاح' : 'Saved successfully');
       closeForm();
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: Error) => toast.error(err.message),
   });
 
   const deleteMutation = useMutation({

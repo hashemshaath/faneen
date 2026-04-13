@@ -116,7 +116,7 @@ const uid = () => crypto.randomUUID?.() || Math.random().toString(36).slice(2);
 const wordCount = (t: string) => t.split(/\s+/).filter(Boolean).length;
 const charEstimate = (t: string) => Math.ceil(t.length / 4); // rough token estimate
 
-async function callAiCenter(params: Record<string, any>): Promise<string> {
+async function callAiCenter(params: Record<string, string | number | boolean>): Promise<string> {
   const { data, error } = await supabase.functions.invoke('ai-center', { body: params });
   if (error) {
     const msg = error.message || '';
@@ -171,7 +171,7 @@ const DashboardAiCenter: React.FC = () => {
           default_model: localSettings.default_model,
           translation_instructions: localSettings.translation_instructions,
           content_instructions: localSettings.content_instructions,
-        } as any, { onConflict: 'user_id' });
+        }, { onConflict: 'user_id' });
       }
       invalidate();
       await reloadSettings();
@@ -257,7 +257,7 @@ const DashboardAiCenter: React.FC = () => {
 
   const loadKnowledge = async () => {
     const { data } = await supabase.from('ai_knowledge_entries').select('*').order('created_at', { ascending: false });
-    if (data) setKnowledgeEntries(data as any);
+    if (data) setKnowledgeEntries(data);
   };
 
   const addHistory = useCallback((action: string, input: string, output: string) => {
