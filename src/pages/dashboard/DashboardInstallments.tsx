@@ -57,7 +57,7 @@ const fmtDate = (d: string | null, lang: string) =>
 const fmtNum = (n: number) => Number(n).toLocaleString();
 
 /* ── Donut Chart ────────────────────────────────── */
-const PaymentDonut = React.memo(({ stats, isRTL }: { stats: { total: number; paid: number; overdue: number; upcoming: number; paidAmount: number; overdueAmount: number; totalAmount: number }; isRTL: boolean }) => {
+const PaymentDonut = React.memo(({ stats, isRTL }: { stats: { total: number; paid: number; overdue: number; upcoming: number; paidAmount: number; overdueAmount: number; totalAmount: number; pendingAmount: number }; isRTL: boolean }) => {
   const data = [
     { name: isRTL ? 'مدفوع' : 'Paid', value: stats.paidAmount, color: '#10b981' },
     { name: isRTL ? 'معلق' : 'Pending', value: stats.pendingAmount, color: '#f59e0b' },
@@ -177,9 +177,9 @@ InstallmentCalc.displayName = 'InstallmentCalc';
 /* ── Payment Timeline ──────────────────────────── */
 const PaymentTimeline = React.memo(({ plans, isRTL, language }: { plans: Array<any>; isRTL: boolean; language: string }) => {
   const upcoming = useMemo(() => {
-    const all = [] as Array<typeof providerContracts[number] & { _role: string }>;
-    plans.forEach((plan) => {
-      (plan.installment_payments || []).forEach((p) => {
+    const all = [] as Array<any>;
+    plans.forEach((plan: any) => {
+      (plan.installment_payments || []).forEach((p: any) => {
         if (p.status === 'pending' || p.status === 'overdue') {
           all.push({ ...p, contract: plan.contract, planId: plan.id, currency: plan.currency_code });
         }
@@ -307,7 +307,7 @@ const PaymentItem = React.memo(({ payment, plan, isProvider, isRTL, language, on
 PaymentItem.displayName = 'PaymentItem';
 
 /* ── Plan Card ── */
-const PlanCard = React.memo(({ plan, user, isRTL, language, onMarkPaid, isPending }: { plan: any; user: { id: string } | null; isRTL: boolean; language: string; onMarkPaid: (id: string) => void; isPending: boolean }) => {
+const PlanCard = React.memo(({ plan, user, isRTL, language, onMarkPaid, isPending }: { plan: any; user: { id: string } | null; isRTL: boolean; language: string; onMarkPaid: (id: string) => void; isPending: boolean }): React.ReactElement | null => {
   const [expanded, setExpanded] = useState(false);
   const payments = useMemo(() =>
     (plan.installment_payments || []).sort((a, b) => a.installment_number - b.installment_number), [plan.installment_payments]);
