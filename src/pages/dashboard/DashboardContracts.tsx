@@ -38,6 +38,15 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { exportContractPDF, type ContractExportData } from '@/lib/contract-pdf-export';
+import type { Database } from '@/integrations/supabase/types';
+
+type ContractRow = Database['public']['Tables']['contracts']['Row'];
+type MilestoneRow = Database['public']['Tables']['contract_milestones']['Row'];
+type PaymentRow = Database['public']['Tables']['installment_payments']['Row'];
+type TemplateRow = Database['public']['Tables']['contract_templates']['Row'];
+type AmendmentRow = Database['public']['Tables']['contract_amendments']['Row'];
+type ContractWithRole = ContractRow & { _role: string };
+
 import { FieldAiActions } from '@/components/blog/FieldAiActions';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -85,7 +94,7 @@ const emptyForm: ContractForm = {
 type ViewSection = 'list' | 'create' | 'templates' | 'template-preview';
 
 /* ── Contract Health Score ── */
-const getContractHealth = (contract: any, milestones: any[], payments: any[]) => {
+const getContractHealth = (contract: ContractRow, milestones: MilestoneRow[], payments: PaymentRow[]) => {
   let score = 0, max = 0;
   max += 10; if (contract.start_date && contract.end_date) score += 10;
   max += 10; if (contract.terms_ar) score += 10;
@@ -114,11 +123,41 @@ const CircularProgress = ({ value, size = 36, stroke = 3, color = 'text-accent' 
   );
 };
 
+interface ContractCardProps {
+  c: ContractWithRole;
+  isRTL: boolean;
+  user: { id: string } | null;
+  milestones: MilestoneRow[];
+  notes: Array<{ id: string; content: string; note_type: string; created_at: string; user_id: string }>;
+  attachments: Array<{ id: string; file_name: string; file_url: string; file_type: string; created_at: string }>;
+  payments: PaymentRow[];
+  measurements: Array<{ id: string; total_cost: number | null; [key: string]: unknown }>;
+  profiles: Array<{ user_id: string; full_name: string | null; avatar_url: string | null; email?: string }>;
+  onExpand: () => void;
+  isExpanded: boolean;
+  onNavigate: (id: string) => void;
+  onExportPDF: (c: ContractWithRole) => void;
+  onApprove: (c: ContractWithRole) => void;
+  onSendForApproval: (c: ContractWithRole) => void;
+  onDuplicate: (c: ContractWithRole) => void;
+  onShare: (c: ContractWithRole) => void;
+  onEdit: (c: ContractWithRole) => void;
+  lineItems?: Array<{ id: string; total_cost: number | null }>;
+  warranties?: Array<{ id: string }>;
+  maintenance?: Array<{ id: string }>;
+  amendments?: Array<{ id: string }>;
+  measurementTotal?: number;
+  lineItemTotal?: number;
+  locked?: boolean;
+  isProvider?: boolean;
+  [key: string]: unknown;
+}
+
 /* ── Enhanced Contract Card ── */
 const ContractCard = React.memo(({
   c, isRTL, user, milestones, notes, attachments, payments, measurements, profiles,
   onExpand, isExpanded, onNavigate, onExportPDF, onApprove, onSendForApproval, onDuplicate, onShare, onEdit,
-}: any) => {
+}: ContractCardProps) => {
   const cfg = statusConfig[c.status] || statusConfig.draft;
   const StatusIcon = cfg.icon;
   const clientP = profiles.find((p) => p.user_id === c.client_id);
@@ -392,7 +431,7 @@ const DashboardContracts = () => {
 
   const contracts = useMemo(() => {
     const seen = new Set<string>();
-    const result = [] as Array<typeof providerContracts[number] & { _role: string }>;
+    const result: ContractWithRole[] = [];
     providerContracts.forEach((c) => { if (!seen.has(c.id)) { seen.add(c.id); result.push({ ...c, _role: 'provider' }); } });
     clientContracts.forEach((c) => { if (!seen.has(c.id)) { seen.add(c.id); result.push({ ...c, _role: 'client' }); } });
     return result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
@@ -524,7 +563,7 @@ const DashboardContracts = () => {
   });
 
   /* ── Helper: isLocked ── */
-  const isContractLocked = (c: any) => ['active', 'completed', 'cancelled'].includes(c.status);
+  const isContractLocked = (c: ContractRow) => ['active', 'completed', 'cancelled'].includes(c.status);
 
   /* ── Mutations ── */
   const addNoteMutation = useMutation({
@@ -606,7 +645,7 @@ const DashboardContracts = () => {
   });
 
   const approveAmendmentMutation = useMutation({
-    mutationFn: async ({ amendmentId, contract }: { amendmentId: string; contract: any }) => {
+    mutationFn: async ({ amendmentId, contract }: { amendmentId: string; contract: ContractWithRole }) => {
       const isClient = user?.id === contract.client_id;
       const field = isClient ? 'client_approved_at' : 'provider_approved_at';
       const update: Record<string, unknown> = { [field]: new Date().toISOString() };
@@ -634,7 +673,7 @@ const DashboardContracts = () => {
       const { data: mainReq, error } = await supabase.from('maintenance_requests').insert({
         contract_id: contractId, client_id: contract.client_id, provider_id: contract.provider_id,
         title_ar: maintenanceForm.title_ar, description_ar: maintenanceForm.description_ar || null,
-        priority: maintenanceForm.priority as any,
+        priority: maintenanceForm.priority as Database['public']['Enums']['maintenance_priority'],
         scheduled_date: maintenanceForm.scheduled_date || null,
       }).select('id').single();
       if (error) throw error;
@@ -795,7 +834,7 @@ const DashboardContracts = () => {
       if (clientProfileError) throw clientProfileError;
       if (!clientProfile) throw new Error(isRTL ? 'لم يتم العثور على العميل بهذا البريد الإلكتروني' : 'Client not found with this email');
 
-      const payload: Record<string, unknown> = {
+      const payload = {
         provider_id: user!.id, client_id: clientProfile.user_id, business_id: businessId || null,
         title_ar: form.title_ar, title_en: form.title_en || null,
         description_ar: form.description_ar || null, description_en: form.description_en || null,
@@ -824,7 +863,7 @@ const DashboardContracts = () => {
   });
 
   const approveMutation = useMutation({
-    mutationFn: async (contract: any) => {
+    mutationFn: async (contract: ContractWithRole) => {
       const isClient = user?.id === contract.client_id;
       const updateField = isClient ? 'client_accepted_at' : 'provider_accepted_at';
       const update: Record<string, unknown> = { [updateField]: new Date().toISOString() };
@@ -842,7 +881,7 @@ const DashboardContracts = () => {
   });
 
   const sendForApprovalMutation = useMutation({
-    mutationFn: async (contract: any) => {
+    mutationFn: async (contract: ContractWithRole) => {
       const { error } = await supabase.from('contracts').update({ status: 'pending_approval' }).eq('id', contract.id);
       if (error) throw error;
       await supabase.from('notifications').insert({
@@ -918,7 +957,7 @@ const DashboardContracts = () => {
     return new Date(d).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   }, [isRTL]);
 
-  const handleExportPDF = useCallback(async (c: any) => {
+  const handleExportPDF = useCallback(async (c: ContractWithRole) => {
     setIsExporting(true);
     try {
       const clientP = profiles.find((p) => p.user_id === c.client_id);
@@ -949,7 +988,7 @@ const DashboardContracts = () => {
     } finally { setIsExporting(false); }
   }, [profiles, allMilestones, isRTL, formatDate]);
 
-  const handleDuplicate = useCallback(async (c: any) => {
+  const handleDuplicate = useCallback(async (c: ContractWithRole) => {
     try {
       const { error } = await supabase.from('contracts').insert({
         provider_id: c.provider_id, client_id: c.client_id, business_id: c.business_id,
@@ -968,7 +1007,7 @@ const DashboardContracts = () => {
     }
   }, [queryClient, isRTL]);
 
-  const applyTemplate = useCallback((tmpl: any) => {
+  const applyTemplate = useCallback((tmpl: TemplateRow) => {
     setForm(f => ({
       ...f,
       terms_ar: [tmpl.terms_ar, tmpl.scope_of_work_ar, tmpl.warranty_terms_ar, tmpl.payment_terms_ar, tmpl.penalties_ar, tmpl.notes_ar].filter(Boolean).join('\n\n'),
@@ -979,7 +1018,7 @@ const DashboardContracts = () => {
     toast.success(isRTL ? 'تم تطبيق القالب' : 'Template applied');
   }, [isRTL]);
 
-  const openEditContract = useCallback((c: any) => {
+  const openEditContract = useCallback((c: ContractWithRole) => {
     setEditingId(c.id);
     setForm({
       title_ar: c.title_ar, title_en: c.title_en || '', description_ar: c.description_ar || '',
@@ -997,7 +1036,7 @@ const DashboardContracts = () => {
     setViewSection('list'); setForm(emptyForm); setEditingId(null); setSelectedTemplate(null); setTemplatePreview(null);
   }, []);
 
-  const handleShareContract = useCallback(async (c: any) => {
+  const handleShareContract = useCallback(async (c: ContractWithRole) => {
     const url = `${window.location.origin}/contracts/${c.id}`;
     const title = isRTL ? c.title_ar : (c.title_en || c.title_ar);
     if (navigator.share) {
@@ -1425,8 +1464,8 @@ const DashboardContracts = () => {
                         attachments={attachments} payments={payments} measurements={measurements} profiles={profiles}
                         isExpanded={isExpanded} onExpand={setExpandedId} onNavigate={navigate}
                         onExportPDF={handleExportPDF}
-                        onApprove={(contract: any) => setApproveConfirm(contract)}
-                        onSendForApproval={(contract: any) => setSendConfirm(contract)}
+                        onApprove={(contract) => setApproveConfirm(contract)}
+                        onSendForApproval={(contract) => setSendConfirm(contract)}
                         onDuplicate={handleDuplicate}
                         onShare={handleShareContract}
                         onEdit={openEditContract}
@@ -1494,7 +1533,7 @@ const DashboardContracts = () => {
                                   <div className="relative">
                                     <div className={`absolute top-0 bottom-0 ${isRTL ? 'right-4' : 'left-4'} w-0.5 bg-gradient-to-b from-accent/40 via-border/40 to-transparent`} />
                                     <div className="space-y-2.5">
-                                      {milestones.map((m: any, idx: number) => {
+                                      {milestones.map((m, idx) => {
                                         const mTitle = isRTL ? m.title_ar : (m.title_en || m.title_ar);
                                         const isCompleted = m.status === 'completed';
                                         const isInProgress = m.status === 'in_progress';
