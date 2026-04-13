@@ -250,7 +250,7 @@ const MembershipWidget = React.memo(({ isRTL, userId }: { isRTL: boolean; userId
     ? Math.max(0, Math.ceil((new Date(sub.expires_at).getTime() - Date.now()) / 86400000))
     : null;
 
-  const plan = sub?.plan as Record<string, unknown> | null;
+  const plan = sub?.plan as any;
   const tier = plan?.tier || 'free';
   const Icon = tierIcons[tier] || Zap;
 
@@ -579,7 +579,7 @@ AdminDashboardView.displayName = 'AdminDashboardView';
 /* ═══════════════════════════════════════════════════
    PROVIDER Dashboard
    ═══════════════════════════════════════════════════ */
-const ProviderDashboardView = React.memo(({ isRTL, user, profile }: { isRTL: boolean; user: { id: string }; profile: Record<string, unknown> | null }) => {
+const ProviderDashboardView = React.memo(({ isRTL, user, profile }: { isRTL: boolean; user: { id: string }; profile: any }) => {
   const { data: business } = useQuery({
     queryKey: ['my-business', user?.id],
     queryFn: async () => {
@@ -611,7 +611,7 @@ const ProviderDashboardView = React.memo(({ isRTL, user, profile }: { isRTL: boo
       const completedContracts = contractsData.filter(c => c.status === 'completed');
       const totalRevenue = completedContracts.reduce((sum, c) => sum + Number(c.total_amount || 0), 0);
 
-      const reviewsData = ((reviews as { data?: unknown[] }).data) || [];
+      const reviewsData = ((reviews as any).data) || [];
       const avgRating = reviewsData.length > 0 ? (reviewsData.reduce((s: number, r) => s + r.rating, 0) / reviewsData.length).toFixed(1) : '0.0';
       const ratingDist = [0, 0, 0, 0, 0];
       reviewsData.forEach((r) => { if (r.rating >= 1 && r.rating <= 5) ratingDist[r.rating - 1]++; });
@@ -869,7 +869,7 @@ ProviderDashboardView.displayName = 'ProviderDashboardView';
 /* ═══════════════════════════════════════════════════
    USER Dashboard
    ═══════════════════════════════════════════════════ */
-const UserDashboardView = React.memo(({ isRTL, user, profile }: { isRTL: boolean; user: { id: string }; profile: Record<string, unknown> | null }) => {
+const UserDashboardView = React.memo(({ isRTL, user, profile }: { isRTL: boolean; user: { id: string }; profile: any }) => {
   const { data: stats } = useQuery({
     queryKey: ['user-overview-stats', user?.id],
     queryFn: async () => {
