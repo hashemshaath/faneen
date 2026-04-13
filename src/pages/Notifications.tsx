@@ -39,12 +39,12 @@ const typeColors: Record<string, string> = {
   system: 'bg-muted text-muted-foreground',
 };
 
-const getNotificationIcon = (n: Record<string, unknown>) => {
+const getNotificationIcon = (n: any) => {
   if (n.reference_type?.startsWith('overdue_')) return AlertTriangle;
   return typeIcons[n.notification_type] || Bell;
 };
 
-const getNotificationColor = (n: Record<string, unknown>) => {
+const getNotificationColor = (n: any) => {
   if (n.reference_type?.startsWith('overdue_')) return 'bg-red-100 text-red-600';
   return typeColors[n.notification_type] || typeColors.system;
 };
@@ -131,7 +131,7 @@ const Notifications = () => {
     },
   });
 
-  const handleClick = (n: Record<string, unknown>) => {
+  const handleClick = (n: any) => {
     if (!n.is_read) markRead.mutate(n.id);
     if (n.action_url) navigate(n.action_url);
   };
