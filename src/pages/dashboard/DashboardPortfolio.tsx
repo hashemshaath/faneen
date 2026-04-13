@@ -212,11 +212,11 @@ const DashboardPortfolio = () => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-  const emptyForm = {
+  const emptyForm = useMemo(() => ({
     title_ar: '', title_en: '', description_ar: '', description_en: '',
     media_url: '', media_type: 'image' as const, is_featured: false,
     category: 'general', project_location: '', completion_date: '',
-  };
+  }), []);
   const [form, setForm] = useState(emptyForm);
 
   const sensors = useSensors(

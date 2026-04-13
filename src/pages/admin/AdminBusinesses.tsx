@@ -107,7 +107,6 @@ const reverseGeocode = async (lat: number, lng: number) => {
 };
 
 /* ─── CSV Export ─── */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const exportCSV = (businesses: any[], language: string) => {
   const headers = ['Ref ID', 'Name (AR)', 'Name (EN)', 'Username', 'Phone', 'Email', 'Category', 'Tier', 'Verified', 'Active', 'Rating', 'Created'];
   const rows = businesses.map((b: any) => [
@@ -156,15 +155,12 @@ const AdminBusinesses = () => {
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterTier, setFilterTier] = useState('all');
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [editingBiz, setEditingBiz] = useState<any | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [editForm, setEditForm] = useState<any>({});
   const [servicesPanel, setServicesPanel] = useState<string | null>(null);
   const [portfolioImages, setPortfolioImages] = useState<string[]>([]);
   const [newService, setNewService] = useState({ name_ar: '', name_en: '', description_ar: '', description_en: '', price_from: '', price_to: '', is_active: true });
   const [geocoding, setGeocoding] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [branchForm, setBranchForm] = useState<any | null>(null);
   const [editingBranchId, setEditingBranchId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');

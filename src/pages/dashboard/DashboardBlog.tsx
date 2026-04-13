@@ -83,7 +83,6 @@ const seoScoreColor = (score: number) => {
 
 /* ─── Post Card ─── */
 const PostCard = React.memo(({ post, language, isRTL, onEdit, onDelete }: {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   post: any; language: string; isRTL: boolean;
   onEdit: (p: any) => void; onDelete: (id: string) => void;
 }) => {

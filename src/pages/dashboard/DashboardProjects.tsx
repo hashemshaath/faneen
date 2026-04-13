@@ -186,12 +186,12 @@ const DashboardProjects = () => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-  const emptyForm = {
+  const emptyForm = useMemo(() => ({
     title_ar: '', title_en: '', description_ar: '', description_en: '',
     cover_image_url: '', client_name: '', project_cost: '',
     duration_days: '', completion_date: '', status: 'published',
     category_id: '', city_id: '', is_featured: false, currency_code: 'SAR',
-  };
+  }), []);
   const [form, setForm] = useState(emptyForm);
 
   const sensors = useSensors(
