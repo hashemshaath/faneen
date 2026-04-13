@@ -336,7 +336,7 @@ const DashboardProjects = () => {
   });
 
   /* ─── Callbacks ─── */
-  const closeForm = useCallback(() => { setShowForm(false); setEditId(null); setForm(emptyForm); }, []);
+  const closeForm = useCallback(() => { setShowForm(false); setEditId(null); setForm(emptyForm); }, [emptyForm]);
   const scrollToForm = useCallback(() => { requestAnimationFrame(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })); }, []);
 
   const openEdit = useCallback((p) => {

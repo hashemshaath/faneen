@@ -326,7 +326,7 @@ const DashboardPortfolio = () => {
   });
 
   /* ─── Callbacks ─── */
-  const closeForm = useCallback(() => { setShowForm(false); setEditingItem(null); setForm(emptyForm); }, []);
+  const closeForm = useCallback(() => { setShowForm(false); setEditingItem(null); setForm(emptyForm); }, [emptyForm]);
   const scrollToForm = useCallback(() => { requestAnimationFrame(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })); }, []);
 
   const openEdit = useCallback((item: PortfolioItem) => {
