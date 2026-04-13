@@ -68,14 +68,14 @@ export const notificationTypeMeta: Record<string, NotificationTypeMeta> = {
 const fallbackMeta: NotificationTypeMeta = notificationTypeMeta.system;
 
 /* ── Helpers ── */
-export function getNotificationMeta(n: { notification_type: string; reference_type?: string | null }): NotificationTypeMeta {
+export function getNotificationMeta(n: { notification_type: string; reference_type?: string | null; [key: string]: any }): NotificationTypeMeta {
   // Overdue items always show as urgent/security
   if (n.reference_type?.startsWith('overdue_')) return notificationTypeMeta.security;
   // Try reference_type first (more specific), then notification_type
   return notificationTypeMeta[n.reference_type || ''] || notificationTypeMeta[n.notification_type] || fallbackMeta;
 }
 
-export function isUrgentNotification(n: { notification_type: string; reference_type?: string | null }): boolean {
+export function isUrgentNotification(n: { notification_type: string; reference_type?: string | null; [key: string]: any }): boolean {
   const meta = getNotificationMeta(n);
   return meta.urgency === 'urgent';
 }
