@@ -50,9 +50,9 @@ marked.use(markedHighlight({
   langPrefix: 'hljs language-',
   highlight(code: string, lang: string) {
     if (lang && hljs.getLanguage(lang)) {
-      try { return hljs.highlight(code, { language: lang }).value; } catch (_e) { // highlight fallback }
+      try { return hljs.highlight(code, { language: lang }).value; } catch (_e) { /* highlight fallback */ }
     }
-    try { return hljs.highlightAuto(code).value; } catch (_e) { // highlight fallback }
+    try { return hljs.highlightAuto(code).value; } catch (_e) { /* highlight fallback */ }
     return code;
   },
 }));

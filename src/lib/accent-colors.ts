@@ -21,7 +21,7 @@ export const applyAccent = (key: string) => {
   root.style.setProperty('--gold-light', preset.light);
   root.style.setProperty('--gold-dark', preset.dark);
   root.style.setProperty('--secondary', preset.hsl);
-  try { localStorage.setItem('faneen-accent', key); } catch (_e) { // localStorage unavailable }
+  try { localStorage.setItem('faneen-accent', key); } catch (_e) { /* localStorage unavailable */ }
 };
 
 // Apply on import (runs once at app startup)
