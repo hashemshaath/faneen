@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { authService } from '@/services/auth';
 import { PasswordField } from '@/components/auth/PasswordField';
+import { PasswordResetSuccessView } from '@/components/auth/PasswordResetSuccessView';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,6 +11,7 @@ import { checkPasswordStrength } from '@/lib/password-strength';
 import { toast } from 'sonner';
 import { Loader2, ShieldCheck } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
+import { useNavigate } from 'react-router-dom';
 
 const ResetPassword = () => {
   const { t, isRTL } = useLanguage();
@@ -22,17 +23,16 @@ const ResetPassword = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isRecovery, setIsRecovery] = useState(false);
+  const [resetSuccess, setResetSuccess] = useState(false);
 
   const strength = checkPasswordStrength(password);
 
   useEffect(() => {
-    // Check both hash and query params for recovery token
     const hash = window.location.hash;
     const search = window.location.search;
     if (hash.includes('type=recovery') || search.includes('type=recovery')) {
       setIsRecovery(true);
     }
-    // Also check if we have a valid session from recovery flow
     if (session && (hash.includes('access_token') || search.includes('access_token'))) {
       setIsRecovery(true);
     }
@@ -54,10 +54,8 @@ const ResetPassword = () => {
     setLoading(true);
     try {
       await authService.updatePassword(password);
-      toast.success(isRTL ? 'تم تغيير كلمة المرور بنجاح' : 'Password changed successfully');
-      // Sign out after password reset for security
       await authService.signOut();
-      navigate('/auth?mode=login', { replace: true });
+      setResetSuccess(true);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : '';
       if (msg.includes('same_password')) {
@@ -69,6 +67,10 @@ const ResetPassword = () => {
       setLoading(false);
     }
   };
+
+  if (resetSuccess) {
+    return <PasswordResetSuccessView />;
+  }
 
   if (!isRecovery) {
     return (

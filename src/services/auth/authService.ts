@@ -61,6 +61,18 @@ export const authService = {
     if (error) throw error;
   },
 
+  async resendConfirmation(email: string) {
+    const trimmedEmail = email.trim().toLowerCase();
+    if (!trimmedEmail) throw new Error('Email required');
+
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email: trimmedEmail,
+      options: { emailRedirectTo: window.location.origin },
+    });
+    if (error) throw error;
+  },
+
   async updatePassword(password: string) {
     if (!password || password.length < 8) throw new Error('Password must be at least 8 characters');
     const { error } = await supabase.auth.updateUser({ password });

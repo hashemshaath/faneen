@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRoleRedirect } from '@/hooks/useRoleRedirect';
 import { usePageMeta } from '@/hooks/usePageMeta';
@@ -7,7 +7,7 @@ import { AuthLayout } from '@/components/auth/AuthLayout';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { RegisterForm } from '@/components/auth/RegisterForm';
 import { ForgotPasswordForm } from '@/components/auth/ForgotPasswordForm';
-import { EmailSentView } from '@/components/auth/EmailSentView';
+import { RegistrationSuccessView } from '@/components/auth/RegistrationSuccessView';
 import type { AuthMode } from '@/services/auth/types';
 
 const Auth = () => {
@@ -60,7 +60,7 @@ const Auth = () => {
         <ForgotPasswordForm onBack={() => setMode('login')} />
       )}
       {mode === 'email-sent' && (
-        <EmailSentView email={sentEmail} onBackToLogin={() => setMode('login')} />
+        <RegistrationSuccessView email={sentEmail} onBackToLogin={() => setMode('login')} />
       )}
     </AuthLayout>
   );
