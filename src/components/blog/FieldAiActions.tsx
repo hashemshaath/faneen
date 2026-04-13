@@ -55,7 +55,7 @@ export const FieldAiActions: React.FC<Props> = ({
       });
       onTranslated?.(clean(result));
       toast.success(isRTL ? 'تمت الترجمة' : 'Translated');
-    } catch {} finally { setLoading(null); }
+    } catch (_e) { /* AI call failed */ } finally { setLoading(null); }
   };
 
   const handleImprove = async () => {
@@ -72,7 +72,7 @@ export const FieldAiActions: React.FC<Props> = ({
       });
       onImproved?.(clean(result));
       toast.success(isRTL ? 'تم التحسين' : 'Improved');
-    } catch {} finally { setLoading(null); }
+    } catch (_e) { /* AI call failed */ } finally { setLoading(null); }
   };
 
   const handleGenerateExcerpt = async () => {
@@ -88,7 +88,7 @@ export const FieldAiActions: React.FC<Props> = ({
       });
       onImproved?.(clean(result));
       toast.success(isRTL ? 'تم التوليد' : 'Generated');
-    } catch {} finally { setLoading(null); }
+    } catch (_e) { /* AI call failed */ } finally { setLoading(null); }
   };
 
   const btnClass = compact
