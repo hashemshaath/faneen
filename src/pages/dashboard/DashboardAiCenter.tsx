@@ -459,7 +459,7 @@ const DashboardAiCenter: React.FC = () => {
               const snapshot = assistantSoFar;
               setChatMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: snapshot } : m));
             }
-          } catch {
+          } catch (_e) {
             textBuffer = line + '\n' + textBuffer;
             break;
           }
@@ -479,7 +479,7 @@ const DashboardAiCenter: React.FC = () => {
             const parsed = JSON.parse(jsonStr);
             const content = parsed.choices?.[0]?.delta?.content as string | undefined;
             if (content) assistantSoFar += content;
-          } catch {}
+          } catch (_e) { /* incomplete JSON chunk, skip */ }
         }
         if (assistantSoFar) {
           const finalText = assistantSoFar;
@@ -488,7 +488,7 @@ const DashboardAiCenter: React.FC = () => {
       }
 
       addHistory('chat', chatInput, assistantSoFar);
-    } catch {
+    } catch (_e) {
       if (!assistantSoFar) {
         setChatMessages(prev => [...prev.filter(m => m.id !== assistantId), { id: uid(), role: 'assistant', content: t('حدث خطأ.', 'An error occurred.'), timestamp: new Date() }]);
       }

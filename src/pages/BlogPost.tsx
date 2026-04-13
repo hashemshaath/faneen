@@ -294,7 +294,7 @@ const BlogPost = () => {
     };
     try {
       return marked.parse(content, { renderer }) as string;
-    } catch {
+    } catch (_e) {
       return content.split('\n').filter(p => p.trim()).map(p => `<p>${p}</p>`).join('');
     }
   }, [content, headings]);
@@ -307,7 +307,7 @@ const BlogPost = () => {
 
   const handleShare = async () => {
     if (navigator.share) {
-      try { await navigator.share({ title, url: window.location.href }); } catch (_e) { // highlight fallback }
+      try { await navigator.share({ title, url: window.location.href }); } catch (_e) { /* share cancelled or unsupported */ }
     } else {
       handleCopyLink();
     }
