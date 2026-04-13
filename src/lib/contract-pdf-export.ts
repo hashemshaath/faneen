@@ -123,7 +123,7 @@ export const exportContractPDF = async (data: ContractExportData) => {
     styles: { fontSize: 9, cellPadding: 3.5, ...rtlStyles, lineColor: [230, 230, 230], lineWidth: 0.2 },
     columnStyles: { 0: { fontStyle: 'bold', cellWidth: 55, textColor: [100, 100, 100] } },
     margin: { left: 15, right: 15 },
-    didParseCell: (hookData: Record<string, unknown>) => {
+    didParseCell: (hookData: any) => {
       if (hookData.row.index === 2) {
         hookData.cell.styles.fontStyle = 'bold';
         hookData.cell.styles.fillColor = [255, 248, 230];
@@ -355,7 +355,7 @@ export const exportMeasurementsExcel = (opts: {
     ? ['رقم القطعة', 'الاسم', 'الموقع', 'الدور', 'الطول (مم)', 'العرض (مم)', 'المساحة (م²)', 'الكمية', 'سعر الوحدة', 'التكلفة', 'الحالة']
     : ['Piece #', 'Name', 'Location', 'Floor', 'Length (mm)', 'Width (mm)', 'Area (m²)', 'Qty', 'Unit Price', 'Cost', 'Status'];
 
-  const escapeCSV = (val: unknown) => {
+  const escapeCSV = (val: any) => {
     const str = String(val ?? '');
     if (str.includes(',') || str.includes('"') || str.includes('\n') || /[\u0600-\u06FF]/.test(str)) {
       return `"${str.replace(/"/g, '""')}"`;
@@ -363,7 +363,7 @@ export const exportMeasurementsExcel = (opts: {
     return str;
   };
 
-  const rows: unknown[][] = opts.measurements.map(m => [
+  const rows: any[][] = opts.measurements.map(m => [
     m.pieceNumber, m.name, m.location || '', m.floor || '',
     m.lengthMm, m.widthMm, m.areaSqm.toFixed(3), m.quantity,
     m.unitPrice, m.totalCost, m.status,

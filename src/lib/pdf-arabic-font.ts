@@ -10,7 +10,7 @@ const FONT_URLS = [
   'https://cdn.jsdelivr.net/npm/@fontsource/amiri@5.0.18/files/amiri-arabic-400-normal.woff',
 ];
 
-export const registerArabicFont = async (doc: Record<string, unknown>): Promise<boolean> => {
+export const registerArabicFont = async (doc: any): Promise<boolean> => {
   if (fontLoadFailed) return false;
   if (cachedFont) {
     try {
@@ -46,7 +46,7 @@ export const registerArabicFont = async (doc: Record<string, unknown>): Promise<
   return false;
 };
 
-export const setupArabicDoc = async (doc: Record<string, unknown>, isRTL: boolean) => {
+export const setupArabicDoc = async (doc: any, isRTL: boolean) => {
   const loaded = await registerArabicFont(doc);
   if (loaded && isRTL) {
     doc.setFont('ArabicFont');

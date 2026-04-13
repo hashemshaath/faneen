@@ -424,7 +424,7 @@ export const PortfolioTab = ({ businessId }: { businessId: string }) => {
   );
 };
 
-export const ReviewsTab = ({ business }: { business: Record<string, unknown> }) => {
+export const ReviewsTab = ({ business }: { business: any }) => {
   const { language } = useLanguage();
   const { data: reviews, isLoading } = useReviews(business.id);
 
@@ -490,7 +490,7 @@ export const ReviewsTab = ({ business }: { business: Record<string, unknown> }) 
 
       <div className="space-y-3 sm:space-y-4">
         {reviews.map((review, index) => {
-          const profile = review.profiles as Record<string, unknown> | null;
+          const profile = review.profiles as any;
           const reviewerName = profile?.full_name || (language === "ar" ? "مستخدم" : "User");
           const reviewDate = new Date(review.created_at).toLocaleDateString(language === "ar" ? "ar-SA" : "en-US", {
             year: "numeric",
@@ -612,7 +612,7 @@ export const BranchesTab = ({ businessId }: { businessId: string }) => {
             {contactItems.length > 0 && (
               <div className="space-y-2.5 p-4 sm:p-5">
                 {contactItems.map((item, contactIndex) => {
-                  const Wrapper = item.href ? "a" : ("div" as const);
+                  const Wrapper: any = item.href ? "a" : "div";
                   const wrapperProps = item.href
                     ? { href: item.href, ...(item.external ? { target: "_blank", rel: "noopener noreferrer" } : {}) }
                     : {};
@@ -665,7 +665,7 @@ export const BranchesTab = ({ businessId }: { businessId: string }) => {
   );
 };
 
-export const ContactTab = ({ business }: { business: Record<string, unknown> }) => {
+export const ContactTab = ({ business }: { business: any }) => {
   const { language } = useLanguage();
   const cityName = getLocalizedValue(language, business.cities?.name_ar, business.cities?.name_en);
   const countryName = getLocalizedValue(language, business.countries?.name_ar, business.countries?.name_en);
@@ -691,7 +691,7 @@ export const ContactTab = ({ business }: { business: Record<string, unknown> }) 
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 sm:gap-6">
       <div className="space-y-3">
         {contactItems.map((item, index) => {
-          const Wrapper = item.href ? "a" : ("div" as const);
+          const Wrapper: any = item.href ? "a" : "div";
           const wrapperProps = item.href
             ? { href: item.href, ...(item.external ? { target: "_blank", rel: "noopener noreferrer" } : {}) }
             : {};
