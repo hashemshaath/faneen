@@ -55,6 +55,7 @@ const Onboarding = () => {
     if (profile?.account_type && profile.account_type !== 'individual') {
       setAccountType(profile.account_type as 'individual' | 'business');
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, profile]);
 
   const completeOnboarding = async () => {

@@ -235,6 +235,7 @@ const DashboardBlog = () => {
       setIsAutoSaving(false);
     }, 30000);
     return () => { if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.content_ar, form.content_en, form.title_ar, editId, user]);
 
   const { data: draftVersions = [] } = useQuery({
