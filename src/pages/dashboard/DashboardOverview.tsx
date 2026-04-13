@@ -128,8 +128,8 @@ const TodaySummary = React.memo(({ isRTL, userId }: { isRTL: boolean; userId: st
         supabase.from('messages').select('id', { count: 'exact', head: true }).eq('sender_id', userId).gte('created_at', `${today}T00:00:00Z`),
       ]);
       return {
-        todayNotifs: (notifs as any).count ?? 0,
-        todayMessages: (messages as any).count ?? 0,
+        todayNotifs: ((notifs as { count?: number }).count) ?? 0,
+        todayMessages: ((messages as { count?: number }).count) ?? 0,
       };
     },
     staleTime: 60000,
@@ -250,7 +250,7 @@ const MembershipWidget = React.memo(({ isRTL, userId }: { isRTL: boolean; userId
     ? Math.max(0, Math.ceil((new Date(sub.expires_at).getTime() - Date.now()) / 86400000))
     : null;
 
-  const plan = sub?.plan as any;
+  const plan = sub?.plan as Record<string, unknown> | null;
   const tier = plan?.tier || 'free';
   const Icon = tierIcons[tier] || Zap;
 
@@ -322,11 +322,11 @@ const AdminDashboardView = React.memo(({ isRTL }: { isRTL: boolean }) => {
       (roles.data || []).forEach((r) => { roleCounts[r.role] = (roleCounts[r.role] || 0) + 1; });
 
       return {
-        users: (users as any).count ?? 0, businesses: (businesses as any).count ?? 0,
+        users: ((users as { count?: number }).count) ?? 0, businesses: ((businesses as { count?: number }).count) ?? 0,
         contracts: allContracts.length, activeContracts, totalRevenue,
-        categories: (categories as any).count ?? 0, messages: (messages as any).count ?? 0,
-        subscriptions: (subscriptions as any).count ?? 0, blogPosts: (blogPosts as any).count ?? 0,
-        newContactMessages: (contactMessages as any).count ?? 0,
+        categories: ((categories as { count?: number }).count) ?? 0, messages: ((messages as { count?: number }).count) ?? 0,
+        subscriptions: ((subscriptions as { count?: number }).count) ?? 0, blogPosts: ((blogPosts as { count?: number }).count) ?? 0,
+        newContactMessages: ((contactMessages as { count?: number }).count) ?? 0,
         roleCounts, statusCounts,
         monthlyContracts: buildMonthlyData(allContracts, isRTL),
         monthlyUsers: buildMonthlyData(userGrowth.data || [], isRTL),
@@ -579,7 +579,7 @@ AdminDashboardView.displayName = 'AdminDashboardView';
 /* ═══════════════════════════════════════════════════
    PROVIDER Dashboard
    ═══════════════════════════════════════════════════ */
-const ProviderDashboardView = React.memo(({ isRTL, user, profile }: { isRTL: boolean; user: any; profile: any }) => {
+const ProviderDashboardView = React.memo(({ isRTL, user, profile }: { isRTL: boolean; user: { id: string }; profile: Record<string, unknown> | null }) => {
   const { data: business } = useQuery({
     queryKey: ['my-business', user?.id],
     queryFn: async () => {
@@ -611,7 +611,7 @@ const ProviderDashboardView = React.memo(({ isRTL, user, profile }: { isRTL: boo
       const completedContracts = contractsData.filter(c => c.status === 'completed');
       const totalRevenue = completedContracts.reduce((sum, c) => sum + Number(c.total_amount || 0), 0);
 
-      const reviewsData = (reviews as any).data || [];
+      const reviewsData = ((reviews as { data?: unknown[] }).data) || [];
       const avgRating = reviewsData.length > 0 ? (reviewsData.reduce((s: number, r) => s + r.rating, 0) / reviewsData.length).toFixed(1) : '0.0';
       const ratingDist = [0, 0, 0, 0, 0];
       reviewsData.forEach((r) => { if (r.rating >= 1 && r.rating <= 5) ratingDist[r.rating - 1]++; });
@@ -629,12 +629,12 @@ const ProviderDashboardView = React.memo(({ isRTL, user, profile }: { isRTL: boo
       });
 
       return {
-        services: (services as any).count ?? 0, portfolio: (portfolio as any).count ?? 0,
+        services: ((services as { count?: number }).count) ?? 0, portfolio: ((portfolio as { count?: number }).count) ?? 0,
         reviews: reviewsData.length, avgRating, ratingDist,
         contracts: contractsData.length, activeContracts: activeContracts.length,
         completedContracts: completedContracts.length, totalRevenue,
-        projects: (projects as any).count ?? 0, operations: (operations as any).count ?? 0,
-        messages: (messages as any).count ?? 0, promotions: (promotions as any).count ?? 0,
+        projects: ((projects as { count?: number }).count) ?? 0, operations: ((operations as { count?: number }).count) ?? 0,
+        messages: ((messages as { count?: number }).count) ?? 0, promotions: ((promotions as { count?: number }).count) ?? 0,
         statusCounts,
         monthlyRevenue: Array.from(revenueMap.entries()).map(([month, revenue]) => ({ month, revenue })),
       };
@@ -869,7 +869,7 @@ ProviderDashboardView.displayName = 'ProviderDashboardView';
 /* ═══════════════════════════════════════════════════
    USER Dashboard
    ═══════════════════════════════════════════════════ */
-const UserDashboardView = React.memo(({ isRTL, user, profile }: { isRTL: boolean; user: any; profile: any }) => {
+const UserDashboardView = React.memo(({ isRTL, user, profile }: { isRTL: boolean; user: { id: string }; profile: Record<string, unknown> | null }) => {
   const { data: stats } = useQuery({
     queryKey: ['user-overview-stats', user?.id],
     queryFn: async () => {
@@ -889,10 +889,10 @@ const UserDashboardView = React.memo(({ isRTL, user, profile }: { isRTL: boolean
       allContracts.forEach(c => { statusCounts[c.status] = (statusCounts[c.status] || 0) + 1; });
 
       return {
-        totalContracts: (contracts as any).count ?? allContracts.length,
+        totalContracts: ((contracts as { count?: number }).count) ?? allContracts.length,
         activeContracts: activeContracts.length, completedContracts: completedContracts.length,
-        totalSpent, messages: (messages as any).count ?? 0,
-        bookmarks: (bookmarks as any).count ?? 0, unreadNotifications: (notifications as any).count ?? 0,
+        totalSpent, messages: ((messages as { count?: number }).count) ?? 0,
+        bookmarks: ((bookmarks as { count?: number }).count) ?? 0, unreadNotifications: ((notifications as { count?: number }).count) ?? 0,
         recentContracts: allContracts.slice(0, 5), statusCounts,
       };
     },

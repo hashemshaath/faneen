@@ -149,7 +149,7 @@ const AttachmentPreview = React.memo(({ url, type, name }: { url: string; type: 
 AttachmentPreview.displayName = 'AttachmentPreview';
 
 /* ─── Conversation Item (memo) ─── */
-const ConversationItem = React.memo(({ conv, isSelected, unread, isRTL, language, isSuperAdmin, isPinned, isStarred, isMuted, convLabel, onClick, onPin, onStar, onMute, onSetLabel }: any) => {
+const ConversationItem = React.memo(({ conv, isSelected, unread, isRTL, language, isSuperAdmin, isPinned, isStarred, isMuted, convLabel, onClick, onPin, onStar, onMute, onSetLabel }: { conv: Record<string, unknown>; isSelected: boolean; unread: number; isRTL: boolean; language: string; isSuperAdmin: boolean; isPinned: boolean; isStarred: boolean; isMuted: boolean; convLabel: string | undefined; onClick: () => void; onPin: () => void; onStar: () => void; onMute: () => void; onSetLabel: (label: string) => void }) => {
   const timeAgo = conv.last_message_at
     ? formatDistanceToNow(new Date(conv.last_message_at), { addSuffix: false, locale: language === 'ar' ? ar : enUS })
     : '';
@@ -239,7 +239,7 @@ const ConversationItem = React.memo(({ conv, isSelected, unread, isRTL, language
 ConversationItem.displayName = 'ConversationItem';
 
 /* ─── Message Bubble (memo) ─── */
-const MessageBubble = React.memo(({ msg, isMine, language, isRTL, onReply, onCopy, onReact, onStar, onForward }: any) => {
+const MessageBubble = React.memo(({ msg, isMine, language, isRTL, onReply, onCopy, onReact, onStar, onForward }: { msg: Record<string, unknown>; isMine: boolean; language: string; isRTL: boolean; onReply: (msg: Record<string, unknown>) => void; onCopy: (text: string) => void; onReact: (id: string, emoji: string | null) => void; onStar: (id: string) => void; onForward: (msg: Record<string, unknown>) => void }) => {
   const [showReactions, setShowReactions] = useState(false);
   const isReply = msg.content?.startsWith('↩️');
   let replyPreview = '';
@@ -379,7 +379,7 @@ const EmojiQuickPicker = React.memo(({ onSelect, isRTL }: { onSelect: (e: string
 EmojiQuickPicker.displayName = 'EmojiQuickPicker';
 
 /* ─── Chat Info Panel ─── */
-const ChatInfoPanel = React.memo(({ conv, messages, isRTL, language, onClose }: { conv: any; messages: any[]; isRTL: boolean; language: string; onClose: () => void }) => {
+const ChatInfoPanel = React.memo(({ conv, messages, isRTL, language, onClose }: { conv: Record<string, unknown>; messages: Array<Record<string, unknown>>; isRTL: boolean; language: string; onClose: () => void }) => {
   const totalMsgs = messages.length;
   const attachments = messages.filter((m) => m.attachment_url);
   const images = attachments.filter((m) => m.message_type === 'image');
@@ -638,7 +638,7 @@ const DashboardMessages = () => {
   const toggleStarMessage = useCallback((msgId: string) => {
     setStarredMessages(prev => { const next = new Set(prev); if (next.has(msgId)) next.delete(msgId); else next.add(msgId); return next; });
   }, []);
-  const handleForwardMessage = useCallback((msg: any) => {
+  const handleForwardMessage = useCallback((msg: Record<string, unknown>) => {
     setForwardMsg(msg);
     toast.info(isRTL ? 'اختر محادثة لتحويل الرسالة إليها' : 'Select a conversation to forward to');
   }, [isRTL]);
@@ -680,7 +680,7 @@ const DashboardMessages = () => {
         const profileMap = new Map((profiles || []).map((p) => [p.user_id, p]));
 
         if (isSuperAdmin) {
-          const { data: allProfiles } = await supabase.from('profiles').select('user_id, full_name, avatar_url, email').in('user_id', Array.from(new Set(data.flatMap((c: any) => [c.participant_1, c.participant_2]))));
+          const { data: allProfiles } = await supabase.from('profiles').select('user_id, full_name, avatar_url, email').in('user_id', Array.from(new Set(data.flatMap((c) => [c.participant_1, c.participant_2]))));
           (allProfiles || []).forEach((p) => { if (!profileMap.has(p.user_id)) profileMap.set(p.user_id, p); });
         }
 
@@ -829,7 +829,7 @@ const DashboardMessages = () => {
 
   const handleSend = useCallback(() => { if ((!messageText.trim() && !attachedFile) || !selectedConversation) return; sendMutation.mutate(); }, [messageText, attachedFile, selectedConversation, sendMutation]);
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }, [handleSend]);
-  const handleReply = useCallback((msg: any) => { setReplyTo(msg); inputRef.current?.focus(); }, []);
+  const handleReply = useCallback((msg: Record<string, unknown>) => { setReplyTo(msg); inputRef.current?.focus(); }, []);
   const handleCopy = useCallback((text: string) => { if (!text) return; navigator.clipboard.writeText(text); toast.success(isRTL ? 'تم النسخ' : 'Copied'); }, [isRTL]);
   const handleEmojiSelect = useCallback((emoji: string) => { setMessageText(prev => prev + emoji); setShowEmoji(false); inputRef.current?.focus(); }, []);
 
@@ -901,7 +901,7 @@ const DashboardMessages = () => {
   }, [messages, filteredMessages, chatSearchTerm, messageReactions, starredMessages]);
 
   const groupedMessages = useMemo(() => {
-    const groups: { date: string; label: string; messages: any[] }[] = [];
+    const groups: { date: string; label: string; messages: Array<Record<string, unknown>> }[] = [];
     enrichedMessages.forEach((msg) => {
       const d = new Date(msg.created_at);
       const dateKey = format(d, 'yyyy-MM-dd');

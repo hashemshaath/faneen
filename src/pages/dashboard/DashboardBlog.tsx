@@ -83,8 +83,8 @@ const seoScoreColor = (score: number) => {
 
 /* ─── Post Card ─── */
 const PostCard = React.memo(({ post, language, isRTL, onEdit, onDelete }: {
-  post: any; language: string; isRTL: boolean;
-  onEdit: (p: any) => void; onDelete: (id: string) => void;
+  post: Record<string, unknown>; language: string; isRTL: boolean;
+  onEdit: (p: Record<string, unknown>) => void; onDelete: (id: string) => void;
 }) => {
   const status = post.scheduled_at && post.status === 'draft' ? 'scheduled' : post.status;
   const cfg = statusConfig[status] || statusConfig.draft;
@@ -227,7 +227,7 @@ const DashboardBlog = () => {
           title_ar: form.title_ar, title_en: form.title_en || null,
           content_ar: form.content_ar || null, content_en: form.content_en || null,
           excerpt_ar: form.excerpt_ar || null, excerpt_en: form.excerpt_en || null,
-          form_snapshot: form as any,
+          form_snapshot: form as Record<string, unknown>,
           version_number: nextVersion, auto_saved: true,
         });
         setLastAutoSave(new Date());
@@ -259,7 +259,7 @@ const DashboardBlog = () => {
         title_ar: form.title_ar, title_en: form.title_en || null,
         content_ar: form.content_ar || null, content_en: form.content_en || null,
         excerpt_ar: form.excerpt_ar || null, excerpt_en: form.excerpt_en || null,
-        form_snapshot: form as any,
+        form_snapshot: form as Record<string, unknown>,
         version_number: (count || 0) + 1, auto_saved: false,
       });
       setLastAutoSave(new Date());
@@ -271,7 +271,7 @@ const DashboardBlog = () => {
   const handleRestoreDraft = async (draftId: string) => {
     const { data } = await supabase.from('blog_drafts').select('form_snapshot').eq('id', draftId).single();
     if (data?.form_snapshot) {
-      const snapshot = data.form_snapshot as any;
+      const snapshot = data.form_snapshot as Record<string, unknown>;
       setForm({ ...defaultForm, ...snapshot });
       toast.success(isRTL ? 'تم استعادة النسخة' : 'Version restored');
     }
@@ -341,7 +341,7 @@ const DashboardBlog = () => {
     },
   });
 
-  const openEdit = (p: any) => {
+  const openEdit = (p: Record<string, unknown>) => {
     setForm({
       title_ar: p.title_ar, title_en: p.title_en || '', content_ar: p.content_ar || '',
       content_en: p.content_en || '', excerpt_ar: p.excerpt_ar || '', excerpt_en: p.excerpt_en || '',
@@ -929,7 +929,7 @@ const DashboardBlog = () => {
                     </h3>
                   </div>
                   <div className="p-4">
-                    <DraftVersions isRTL={isRTL} versions={draftVersions as any} onRestore={handleRestoreDraft}
+                    <DraftVersions isRTL={isRTL} versions={draftVersions as Array<Record<string, unknown>>} onRestore={handleRestoreDraft}
                       onDelete={handleDeleteDraft} lastSaved={lastAutoSave} isSaving={isAutoSaving} onManualSave={handleManualSaveDraft} />
                   </div>
                 </div>
