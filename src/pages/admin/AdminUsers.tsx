@@ -370,7 +370,7 @@ const AdminUsers = () => {
       setAddingRoleFor(null);
       toast.success(isRTL ? 'تم إضافة الصلاحية بنجاح' : 'Role added successfully');
     },
-    onError: (err: any) => {
+    onError: (err: Error) => {
       toast.error(err.message?.includes('duplicate')
         ? (isRTL ? 'هذه الصلاحية موجودة بالفعل' : 'Role already exists')
         : (isRTL ? 'فشل إضافة الصلاحية' : 'Failed to add role'));
