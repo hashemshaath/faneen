@@ -47,7 +47,7 @@ export const NotificationBell = () => {
     enabled: !!user,
   });
 
-  const handleRealtimeNotification = useCallback((payload: { new: Record<string, any> }) => {
+  const handleRealtimeNotification = useCallback((payload: any) => {
     queryClient.invalidateQueries({ queryKey: ['notifications', user?.id] });
     const n = payload.new;
     const title = language === 'ar' ? n.title_ar : (n.title_en || n.title_ar);
