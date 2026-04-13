@@ -564,7 +564,7 @@ const DashboardContracts = () => {
       setMeasurementForm({ name_ar: '', piece_number: '', floor_label: 'ground_floor', location_ar: '', length_mm: '', width_mm: '', quantity: '1', unit_price: '' });
       toast.success(isRTL ? 'تمت إضافة المقاس وتحديث قيمة العقد' : 'Measurement added & contract updated');
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: Error) => toast.error(err.message),
   });
 
   const addMilestoneMutation = useMutation({
@@ -583,7 +583,7 @@ const DashboardContracts = () => {
       setMilestoneForm({ title_ar: '', amount: '', due_date: '' });
       toast.success(isRTL ? 'تمت إضافة المرحلة' : 'Milestone added');
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: Error) => toast.error(err.message),
   });
 
   const addAmendmentMutation = useMutation({
@@ -602,7 +602,7 @@ const DashboardContracts = () => {
       setAmendmentForm({ title_ar: '', description_ar: '', amendment_type: 'scope_change', new_amount: '' });
       toast.success(isRTL ? 'تم إرسال طلب التعديل' : 'Amendment request sent');
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: Error) => toast.error(err.message),
   });
 
   const approveAmendmentMutation = useMutation({
@@ -660,7 +660,7 @@ const DashboardContracts = () => {
       setMaintenanceImages([]);
       toast.success(isRTL ? 'تم إرسال طلب الصيانة' : 'Maintenance request submitted');
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: Error) => toast.error(err.message),
   });
 
   /* ── Add Payment Mutation ── */
@@ -692,7 +692,7 @@ const DashboardContracts = () => {
       setPaymentForm({ amount: '', due_date: '', notes: '' });
       toast.success(isRTL ? 'تمت إضافة الدفعة' : 'Payment added');
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: Error) => toast.error(err.message),
   });
 
   /* ── Mark Payment as Paid ── */
@@ -733,7 +733,7 @@ const DashboardContracts = () => {
       setLineItemForm({ name_ar: '', description_ar: '', quantity: '1', unit_price: '', item_type: 'service' });
       toast.success(isRTL ? 'تمت إضافة البند وتحديث قيمة العقد' : 'Item added & total updated');
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: Error) => toast.error(err.message),
   });
 
   /* ── Delete Line Item ── */
@@ -786,7 +786,7 @@ const DashboardContracts = () => {
       setUploadingContractId(null);
       toast.success(isRTL ? 'تم رفع المرفق' : 'Attachment uploaded');
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: Error) => toast.error(err.message),
   });
 
   const createContractMutation = useMutation({
@@ -820,7 +820,7 @@ const DashboardContracts = () => {
       setViewSection('list'); setForm(emptyForm); setEditingId(null);
       toast.success(editingId ? (isRTL ? 'تم تحديث العقد' : 'Contract updated') : (isRTL ? 'تم إنشاء العقد' : 'Contract created'));
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: Error) => toast.error(err.message),
   });
 
   const approveMutation = useMutation({

@@ -314,7 +314,7 @@ const AdminBusinesses = () => {
       toast.success(isRTL ? 'تم حفظ التعديلات' : 'Changes saved');
       setEditingBiz(null);
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: Error) => toast.error(err.message),
   });
 
   const addServiceMutation = useMutation({
@@ -414,7 +414,7 @@ const AdminBusinesses = () => {
       setEditingBranchId(null);
       toast.success(isRTL ? 'تم حفظ الفرع' : 'Branch saved');
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: Error) => toast.error(err.message),
   });
 
   const deleteBranchMutation = useMutation({
