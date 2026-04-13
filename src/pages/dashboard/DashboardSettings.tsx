@@ -122,7 +122,7 @@ const DashboardSettings = () => {
       if (error) throw error;
       toast.success(isRTL ? 'تم تحديث كلمة المرور بنجاح' : 'Password updated successfully');
       setNewPassword(''); setConfirmPassword('');
-    } catch (err: any) { toast.error(err.message); }
+    } catch (err: unknown) { toast.error(err instanceof Error ? err.message : 'Error'); }
     finally { setLoading(false); }
   };
 

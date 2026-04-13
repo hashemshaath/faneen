@@ -440,7 +440,7 @@ const AdminUsers = () => {
       closePanel();
       toast.success(isRTL ? 'تم تغيير كلمة المرور بنجاح' : 'Password changed successfully');
     },
-    onError: (err: any) => toast.error(err.message || (isRTL ? 'فشل تغيير كلمة المرور' : 'Failed to change password')),
+    onError: (err: Error) => toast.error(err.message || (isRTL ? 'فشل تغيير كلمة المرور' : 'Failed to change password')),
   });
 
   const sendResetLinkMutation = useMutation({
@@ -452,7 +452,7 @@ const AdminUsers = () => {
       if (res.data?.error) throw new Error(res.data.error);
     },
     onSuccess: () => toast.success(isRTL ? 'تم إرسال رابط إعادة تعيين كلمة المرور' : 'Password reset link sent'),
-    onError: (err: any) => toast.error(err.message || (isRTL ? 'فشل إرسال الرابط' : 'Failed to send reset link')),
+    onError: (err: Error) => toast.error(err.message || (isRTL ? 'فشل إرسال الرابط' : 'Failed to send reset link')),
   });
 
   const deleteUserMutation = useMutation({
