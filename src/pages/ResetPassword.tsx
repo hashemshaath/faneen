@@ -58,8 +58,8 @@ const ResetPassword = () => {
       // Sign out after password reset for security
       await authService.signOut();
       navigate('/auth?mode=login', { replace: true });
-    } catch (err: any) {
-      const msg = err.message || '';
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : '';
       if (msg.includes('same_password')) {
         toast.error(isRTL ? 'يرجى اختيار كلمة مرور مختلفة' : 'Please choose a different password');
       } else {

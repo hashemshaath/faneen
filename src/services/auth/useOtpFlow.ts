@@ -56,8 +56,8 @@ export function useOtpFlow({ onSendOtp, onVerifyOtp, isRTL }: UseOtpFlowOptions)
     try {
       await onVerifyOtp(otpCode);
       return true;
-    } catch (err: any) {
-      setError(err?.message || (isRTL ? 'تعذر التحقق من الرمز' : 'Could not verify the code'));
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : (isRTL ? 'تعذر التحقق من الرمز' : 'Could not verify the code'));
       return false;
     } finally {
       setLoading(false);

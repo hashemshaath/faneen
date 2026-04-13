@@ -80,8 +80,8 @@ const Onboarding = () => {
       } else {
         navigate('/');
       }
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setLoading(false);
     }
