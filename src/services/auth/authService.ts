@@ -21,7 +21,7 @@ export const authService = {
     return data;
   },
 
-  async signUp(email: string, password: string, metadata: Record<string, any>) {
+  async signUp(email: string, password: string, metadata: { full_name?: string; account_type?: string; phone?: string }) {
     const trimmedEmail = email.trim().toLowerCase();
     if (!trimmedEmail || !password) throw new Error('Email and password required');
     if (password.length < 8) throw new Error('Password must be at least 8 characters');
@@ -109,7 +109,7 @@ export const authService = {
     } else if (response.token_hash) {
       const { error } = await supabase.auth.verifyOtp({
         token_hash: response.token_hash,
-        type: (response.token_type as any) || 'magiclink',
+        type: (response.token_type as 'magiclink' | 'sms' | 'email') || 'magiclink',
       });
       if (error) throw error;
     } else {
@@ -173,7 +173,7 @@ export const authService = {
         user_id: userId,
         name_ar: sanitizedName,
         username: sanitizedUsername,
-      } as any);
+      });
     if (error && !error.message.includes('duplicate')) throw error;
   },
 
