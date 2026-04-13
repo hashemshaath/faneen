@@ -376,7 +376,7 @@ const DashboardProfileSystems = () => {
 
   // Form completion
   const formCompletion = useMemo(() => {
-    let filled = 0; let total = 8;
+    let filled = 0; const total = 8;
     if (form.name_ar) filled++;
     if (form.name_en) filled++;
     if (form.description_ar) filled++;

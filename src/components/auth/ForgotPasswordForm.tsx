@@ -30,7 +30,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
       await authService.resetPassword(email);
       setSent(true);
       toast.success(isRTL ? 'تم إرسال رابط إعادة التعيين' : 'Reset link sent');
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Don't reveal if email exists or not (security)
       setSent(true);
       toast.success(isRTL ? 'إذا كان الحساب موجوداً، سيتم إرسال رابط إعادة التعيين' : 'If an account exists, a reset link will be sent');

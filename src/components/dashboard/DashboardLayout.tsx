@@ -108,7 +108,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
       if (updateError) throw updateError;
       await refreshProfile();
       toast.success(isRTL ? 'تم تحديث الصورة الشخصية' : 'Avatar updated');
-    } catch (err: any) { toast.error(err.message); }
+    } catch (err: unknown) { toast.error(err instanceof Error ? err.message : 'Unknown error'); }
     finally { setAvatarUploading(false); }
   };
 
