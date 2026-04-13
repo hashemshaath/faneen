@@ -370,7 +370,7 @@ const DashboardPromotions = () => {
     });
   }, []);
 
-  const toggleSelect = useCallback((id: string) => setSelectedIds(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; }), []);
+  const toggleSelect = useCallback((id: string) => setSelectedIds(prev => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n; }), []);
   const toggleSelectAll = useCallback(() => {
     setSelectedIds(prev => prev.size === filteredPromotions.length ? new Set() : new Set(filteredPromotions.map((p: any) => p.id)));
   }, [filteredPromotions]);

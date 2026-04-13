@@ -391,7 +391,7 @@ const DashboardProjects = () => {
     queryClient.invalidateQueries({ queryKey: ['project-images', galleryProjectId] });
   }, [galleryProjectId, queryClient]);
 
-  const toggleSelect = useCallback((id: string) => setSelectedIds(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; }), []);
+  const toggleSelect = useCallback((id: string) => setSelectedIds(prev => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n; }), []);
   const toggleSelectAll = useCallback(() => {
     setSelectedIds(prev => prev.size === filteredProjects.length ? new Set() : new Set(filteredProjects.map((p: any) => p.id)));
   }, [filteredProjects]);

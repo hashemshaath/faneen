@@ -156,7 +156,7 @@ export const BnplProvidersManager = ({ businessId }: Props) => {
                     style={{ borderColor: isActive ? provider.color_hex + '30' : undefined }}>
                     {provider.logo_url ? (
                       <img src={provider.logo_url} alt={name} className="w-8 h-8 sm:w-10 sm:h-10 object-contain" loading="lazy"
-                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).nextElementSibling && ((e.target as HTMLImageElement).nextElementSibling as HTMLElement).classList.remove('hidden'); }}
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; const sib = (e.target as HTMLImageElement).nextElementSibling; if (sib) (sib as HTMLElement).classList.remove('hidden'); }}
                       />
                     ) : null}
                     <span className={`text-lg font-bold ${provider.logo_url ? 'hidden' : ''}`} style={{ color: provider.color_hex }}>
