@@ -24,7 +24,7 @@ function getParticleCount(): number {
   const cores = navigator.hardwareConcurrency || 2;
   const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)
     || (typeof window !== 'undefined' && window.innerWidth < 768);
-  const memGB = (navigator as any).deviceMemory || 4; // Device Memory API (Chrome)
+  const memGB = ('deviceMemory' in navigator ? (navigator as unknown as { deviceMemory: number }).deviceMemory : 4); // Device Memory API (Chrome)
 
   // Low-end: ≤2 cores, or ≤2 GB RAM, or mobile with ≤4 cores
   if (cores <= 2 || memGB <= 2 || (isMobile && cores <= 4)) {
