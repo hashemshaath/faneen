@@ -177,9 +177,9 @@ InstallmentCalc.displayName = 'InstallmentCalc';
 /* ── Payment Timeline ──────────────────────────── */
 const PaymentTimeline = React.memo(({ plans, isRTL, language }: { plans: any[]; isRTL: boolean; language: string }) => {
   const upcoming = useMemo(() => {
-    const all: any[] = [];
-    plans.forEach((plan: any) => {
-      (plan.installment_payments || []).forEach((p: any) => {
+    const all = [] as Array<typeof providerContracts[number] & { _role: string }>;
+    plans.forEach((plan) => {
+      (plan.installment_payments || []).forEach((p) => {
         if (p.status === 'pending' || p.status === 'overdue') {
           all.push({ ...p, contract: plan.contract, planId: plan.id, currency: plan.currency_code });
         }
@@ -310,14 +310,14 @@ PaymentItem.displayName = 'PaymentItem';
 const PlanCard = React.memo(({ plan, user, isRTL, language, onMarkPaid, isPending }: any) => {
   const [expanded, setExpanded] = useState(false);
   const payments = useMemo(() =>
-    (plan.installment_payments || []).sort((a: any, b: any) => a.installment_number - b.installment_number), [plan.installment_payments]);
-  const paidCount = payments.filter((p: any) => p.status === 'paid').length;
-  const overdueCount = payments.filter((p: any) => p.status === 'overdue').length;
+    (plan.installment_payments || []).sort((a, b) => a.installment_number - b.installment_number), [plan.installment_payments]);
+  const paidCount = payments.filter((p) => p.status === 'paid').length;
+  const overdueCount = payments.filter((p) => p.status === 'overdue').length;
   const progress = payments.length > 0 ? Math.round((paidCount / payments.length) * 100) : 0;
-  const paidAmount = payments.filter((p: any) => p.status === 'paid').reduce((s: number, p: any) => s + Number(p.amount), 0);
+  const paidAmount = payments.filter((p) => p.status === 'paid').reduce((s: number, p) => s + Number(p.amount), 0);
   const contract = plan.contract;
   const isUserProvider = user?.id === contract?.provider_id;
-  const nextPayment = payments.find((p: any) => p.status === 'pending' || p.status === 'overdue');
+  const nextPayment = payments.find((p) => p.status === 'pending' || p.status === 'overdue');
 
   return (
     <Card className={cn(
@@ -403,7 +403,7 @@ const PlanCard = React.memo(({ plan, user, isRTL, language, onMarkPaid, isPendin
 
           {expanded && (
             <div className="space-y-1 mt-3 animate-in slide-in-from-top-2 duration-200">
-              {payments.map((payment: any) => (
+              {payments.map((payment) => (
                 <PaymentItem key={payment.id} payment={payment} plan={plan} isProvider={isUserProvider} isRTL={isRTL} language={language} onMarkPaid={onMarkPaid} isPending={isPending} />
               ))}
             </div>
@@ -615,7 +615,7 @@ const DashboardInstallments = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [visibleCount, setVisibleCount] = useState(20);
-  const [editingProvider, setEditingProvider] = useState<any>(null);
+  const [editingProvider, setEditingProvider] = useState<Record<string, unknown> | null>(null);
   const [showNewProvider, setShowNewProvider] = useState(false);
   const [showCalc, setShowCalc] = useState(false);
 
@@ -656,10 +656,10 @@ const DashboardInstallments = () => {
     },
   });
 
-  const activeProviders = useMemo(() => allProviders.filter((p: any) => p.is_active), [allProviders]);
+  const activeProviders = useMemo(() => allProviders.filter((p) => p.is_active), [allProviders]);
 
   const filtered = useMemo(() => {
-    return plans.filter((p: any) => {
+    return plans.filter((p) => {
       if (statusFilter !== 'all' && p.status !== statusFilter) return false;
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
@@ -671,20 +671,20 @@ const DashboardInstallments = () => {
   }, [plans, statusFilter, searchQuery, language]);
 
   const stats = useMemo(() => {
-    const totalAmount = plans.reduce((s: number, p: any) => s + Number(p.total_amount), 0);
-    const paidAmount = plans.reduce((s: number, p: any) =>
-      s + (p.installment_payments || []).filter((pay: any) => pay.status === 'paid').reduce((sum: number, pay: any) => sum + Number(pay.amount), 0), 0);
-    const pendingAmount = plans.reduce((s: number, p: any) =>
-      s + (p.installment_payments || []).filter((pay: any) => pay.status === 'pending').reduce((sum: number, pay: any) => sum + Number(pay.amount), 0), 0);
-    const overdueAmount = plans.reduce((s: number, p: any) =>
-      s + (p.installment_payments || []).filter((pay: any) => pay.status === 'overdue').reduce((sum: number, pay: any) => sum + Number(pay.amount), 0), 0);
-    const pendingPayments = plans.reduce((s: number, p: any) =>
-      s + (p.installment_payments || []).filter((pay: any) => pay.status === 'pending').length, 0);
-    const overduePayments = plans.reduce((s: number, p: any) =>
-      s + (p.installment_payments || []).filter((pay: any) => pay.status === 'overdue').length, 0);
-    const totalPayments = plans.reduce((s: number, p: any) => s + (p.installment_payments || []).length, 0);
-    const paidPayments = plans.reduce((s: number, p: any) =>
-      s + (p.installment_payments || []).filter((pay: any) => pay.status === 'paid').length, 0);
+    const totalAmount = plans.reduce((s: number, p) => s + Number(p.total_amount), 0);
+    const paidAmount = plans.reduce((s: number, p) =>
+      s + (p.installment_payments || []).filter((pay) => pay.status === 'paid').reduce((sum: number, pay) => sum + Number(pay.amount), 0), 0);
+    const pendingAmount = plans.reduce((s: number, p) =>
+      s + (p.installment_payments || []).filter((pay) => pay.status === 'pending').reduce((sum: number, pay) => sum + Number(pay.amount), 0), 0);
+    const overdueAmount = plans.reduce((s: number, p) =>
+      s + (p.installment_payments || []).filter((pay) => pay.status === 'overdue').reduce((sum: number, pay) => sum + Number(pay.amount), 0), 0);
+    const pendingPayments = plans.reduce((s: number, p) =>
+      s + (p.installment_payments || []).filter((pay) => pay.status === 'pending').length, 0);
+    const overduePayments = plans.reduce((s: number, p) =>
+      s + (p.installment_payments || []).filter((pay) => pay.status === 'overdue').length, 0);
+    const totalPayments = plans.reduce((s: number, p) => s + (p.installment_payments || []).length, 0);
+    const paidPayments = plans.reduce((s: number, p) =>
+      s + (p.installment_payments || []).filter((pay) => pay.status === 'paid').length, 0);
     return { totalAmount, paidAmount, pendingAmount, overdueAmount, pendingPayments, overduePayments, totalPayments, paidPayments };
   }, [plans]);
 
@@ -737,7 +737,7 @@ const DashboardInstallments = () => {
   /* ── Export CSV ── */
   const exportCSV = useCallback(() => {
     const rows: string[][] = [['Plan Ref', 'Contract', 'Total', 'Down Payment', 'Installment', 'Status', 'Payments Paid', 'Payments Total']];
-    plans.forEach((p: any) => {
+    plans.forEach((p) => {
       const payments = p.installment_payments || [];
       rows.push([
         p.ref_id || '',
@@ -746,7 +746,7 @@ const DashboardInstallments = () => {
         String(p.down_payment),
         String(p.installment_amount),
         p.status,
-        String(payments.filter((pay: any) => pay.status === 'paid').length),
+        String(payments.filter((pay) => pay.status === 'paid').length),
         String(payments.length),
       ]);
     });
@@ -957,7 +957,7 @@ const DashboardInstallments = () => {
               </Card>
             ) : (
               <div className="space-y-2">
-                {filtered.slice(0, visibleCount).map((plan: any) => (
+                {filtered.slice(0, visibleCount).map((plan) => (
                   <PlanCard key={plan.id} plan={plan} user={user} isRTL={isRTL} language={language} onMarkPaid={handleMarkPaid} isPending={markPaidMutation.isPending} />
                 ))}
                 {visibleCount < filtered.length && (
@@ -1011,9 +1011,9 @@ const DashboardInstallments = () => {
 
                 {/* Recent paid */}
                 {(() => {
-                  const recentPaid: any[] = [];
-                  plans.forEach((plan: any) => {
-                    (plan.installment_payments || []).forEach((p: any) => {
+                  const recentPaid = [] as Array<typeof providerContracts[number] & { _role: string }>;
+                  plans.forEach((plan) => {
+                    (plan.installment_payments || []).forEach((p) => {
                       if (p.status === 'paid' && p.paid_at) {
                         recentPaid.push({ ...p, contract: plan.contract, currency: plan.currency_code });
                       }
@@ -1034,7 +1034,7 @@ const DashboardInstallments = () => {
                           {isRTL ? 'آخر المدفوعات' : 'Recent Payments'}
                         </h3>
                         <div className="space-y-1.5">
-                          {recent5.map((p: any) => (
+                          {recent5.map((p) => (
                             <div key={p.id} className="flex items-center justify-between p-2.5 rounded-lg bg-emerald-50/30 dark:bg-emerald-950/10 text-xs hover:bg-emerald-50/60 dark:hover:bg-emerald-950/20 transition-colors">
                               <div className="flex items-center gap-2 min-w-0">
                                 <CheckCircle className="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
@@ -1112,7 +1112,7 @@ const DashboardInstallments = () => {
               </Card>
             ) : (
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {activeProviders.map((provider: any) => (
+                {activeProviders.map((provider) => (
                   <BnplShowcaseCard key={provider.id} provider={provider} isRTL={isRTL} />
                 ))}
               </div>
@@ -1193,7 +1193,7 @@ const DashboardInstallments = () => {
                 </Card>
               ) : (
                 <div className="grid gap-3 sm:grid-cols-2">
-                  {allProviders.map((p: any) => {
+                  {allProviders.map((p) => {
                     const name = isRTL ? p.name_ar : p.name_en;
                     const nameSecondary = isRTL ? p.name_en : p.name_ar;
                     const desc = isRTL ? p.description_ar : p.description_en;

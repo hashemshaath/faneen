@@ -164,8 +164,8 @@ const DashboardBlog = () => {
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState({ ...defaultForm });
   const [aiLoading, setAiLoading] = useState<string | null>(null);
-  const [seoAnalysis, setSeoAnalysis] = useState<any>(null);
-  const [competitorAnalysis, setCompetitorAnalysis] = useState<any>(null);
+  const [seoAnalysis, setSeoAnalysis] = useState<Record<string, unknown> | null>(null);
+  const [competitorAnalysis, setCompetitorAnalysis] = useState<Record<string, unknown> | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [previewLang, setPreviewLang] = useState<'ar' | 'en'>('ar');
@@ -299,7 +299,7 @@ const DashboardBlog = () => {
       const keywordsArr = form.keywords ? form.keywords.split(',').map(t => t.trim()).filter(Boolean) : [];
       const readingTime = calculateReadingTime(form.content_ar || form.content_en || '');
       const isScheduled = form.status === 'scheduled' && scheduledDate;
-      const payload: any = {
+      const payload: Record<string, unknown> = {
         author_id: user!.id, slug,
         title_ar: form.title_ar, title_en: form.title_en || null,
         content_ar: form.content_ar || null, content_en: form.content_en || null,
@@ -448,7 +448,7 @@ const DashboardBlog = () => {
   };
 
   /* Filters */
-  const filteredPosts = posts.filter((p: any) => {
+  const filteredPosts = posts.filter((p) => {
     if (filterStatus !== 'all' && p.status !== filterStatus) return false;
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
@@ -459,11 +459,11 @@ const DashboardBlog = () => {
 
   const stats = {
     total: posts.length,
-    published: posts.filter((p: any) => p.status === 'published').length,
-    draft: posts.filter((p: any) => p.status === 'draft').length,
-    scheduled: posts.filter((p: any) => p.scheduled_at && p.status === 'draft').length,
-    totalViews: posts.reduce((s: number, p: any) => s + (p.views_count || 0), 0),
-    avgSeo: posts.length > 0 ? Math.round(posts.reduce((s: number, p: any) => s + (p.seo_score || 0), 0) / posts.length) : 0,
+    published: posts.filter((p) => p.status === 'published').length,
+    draft: posts.filter((p) => p.status === 'draft').length,
+    scheduled: posts.filter((p) => p.scheduled_at && p.status === 'draft').length,
+    totalViews: posts.reduce((s: number, p) => s + (p.views_count || 0), 0),
+    avgSeo: posts.length > 0 ? Math.round(posts.reduce((s: number, p) => s + (p.seo_score || 0), 0) / posts.length) : 0,
   };
 
   const charHint = (len: number, max: number) => {
@@ -1045,7 +1045,7 @@ const DashboardBlog = () => {
               </div>
             ) : (
               <div className="space-y-3">
-                {filteredPosts.map((p: any) => (
+                {filteredPosts.map((p) => (
                   <PostCard key={p.id} post={p} language={language} isRTL={isRTL}
                     onEdit={openEdit} onDelete={(id) => deleteMutation.mutate(id)} />
                 ))}

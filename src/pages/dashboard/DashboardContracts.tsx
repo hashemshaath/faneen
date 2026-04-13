@@ -121,22 +121,22 @@ const ContractCard = React.memo(({
 }: any) => {
   const cfg = statusConfig[c.status] || statusConfig.draft;
   const StatusIcon = cfg.icon;
-  const clientP = profiles.find((p: any) => p.user_id === c.client_id);
-  const providerP = profiles.find((p: any) => p.user_id === c.provider_id);
+  const clientP = profiles.find((p) => p.user_id === c.client_id);
+  const providerP = profiles.find((p) => p.user_id === c.provider_id);
   const isProvider = user?.id === c.provider_id;
   const title = isRTL ? c.title_ar : (c.title_en || c.title_ar);
-  const completedMs = milestones.filter((m: any) => m.status === 'completed').length;
+  const completedMs = milestones.filter((m) => m.status === 'completed').length;
   const totalMs = milestones.length;
   const progress = totalMs > 0 ? Math.round((completedMs / totalMs) * 100) : 0;
   const canAccept = (user?.id === c.client_id && !c.client_accepted_at) || (user?.id === c.provider_id && !c.provider_accepted_at);
   const formatDate = (d: string | null) => d ? new Date(d).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '-';
   const healthScore = getContractHealth(c, milestones, payments);
   const daysRemaining = getDaysRemaining(c.end_date);
-  const paidPayments = payments.filter((p: any) => p.status === 'paid');
-  const totalPaid = paidPayments.reduce((s: number, p: any) => s + Number(p.amount), 0);
+  const paidPayments = payments.filter((p) => p.status === 'paid');
+  const totalPaid = paidPayments.reduce((s: number, p) => s + Number(p.amount), 0);
   const paymentPercent = Number(c.total_amount) > 0 ? Math.round((totalPaid / Number(c.total_amount)) * 100) : 0;
   const locked = ['active', 'completed', 'cancelled'].includes(c.status);
-  const measurementTotal = measurements.reduce((s: number, m: any) => s + Number(m.total_cost || 0), 0);
+  const measurementTotal = measurements.reduce((s: number, m) => s + Number(m.total_cost || 0), 0);
 
   return (
     <Card className={`overflow-hidden transition-all duration-300 hover:shadow-lg group ${isExpanded ? 'ring-2 ring-accent/20 shadow-xl' : 'hover:border-accent/20'}`}>
@@ -342,10 +342,10 @@ const DashboardContracts = () => {
   const [viewSection, setViewSection] = useState<ViewSection>('list');
   const [form, setForm] = useState<ContractForm>(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
-  const [templatePreview, setTemplatePreview] = useState<any>(null);
-  const [approveConfirm, setApproveConfirm] = useState<any>(null);
-  const [sendConfirm, setSendConfirm] = useState<any>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<Record<string, unknown> | null>(null);
+  const [templatePreview, setTemplatePreview] = useState<Record<string, unknown> | null>(null);
+  const [approveConfirm, setApproveConfirm] = useState<Record<string, unknown> | null>(null);
+  const [sendConfirm, setSendConfirm] = useState<Record<string, unknown> | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [sortBy, setSortBy] = useState<'date' | 'amount' | 'status' | 'health'>('date');
   const [showAddMeasurement, setShowAddMeasurement] = useState<string | null>(null);
@@ -392,13 +392,13 @@ const DashboardContracts = () => {
 
   const contracts = useMemo(() => {
     const seen = new Set<string>();
-    const result: any[] = [];
-    providerContracts.forEach((c: any) => { if (!seen.has(c.id)) { seen.add(c.id); result.push({ ...c, _role: 'provider' }); } });
-    clientContracts.forEach((c: any) => { if (!seen.has(c.id)) { seen.add(c.id); result.push({ ...c, _role: 'client' }); } });
+    const result = [] as Array<typeof providerContracts[number] & { _role: string }>;
+    providerContracts.forEach((c) => { if (!seen.has(c.id)) { seen.add(c.id); result.push({ ...c, _role: 'provider' }); } });
+    clientContracts.forEach((c) => { if (!seen.has(c.id)) { seen.add(c.id); result.push({ ...c, _role: 'client' }); } });
     return result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   }, [providerContracts, clientContracts]);
 
-  const contractIds = useMemo(() => contracts.map((c: any) => c.id), [contracts]);
+  const contractIds = useMemo(() => contracts.map((c) => c.id), [contracts]);
 
   const { data: allMilestones = [] } = useQuery({
     queryKey: ['dashboard-milestones', contractIds],
@@ -497,7 +497,7 @@ const DashboardContracts = () => {
     queryKey: ['contract-profiles', contractIds],
     queryFn: async () => {
       const userIds = new Set<string>();
-      contracts.forEach((c: any) => { userIds.add(c.client_id); userIds.add(c.provider_id); });
+      contracts.forEach((c) => { userIds.add(c.client_id); userIds.add(c.provider_id); });
       if (userIds.size === 0) return [];
       const { data } = await supabase.from('profiles').select('user_id, full_name, avatar_url, phone, email').in('user_id', Array.from(userIds));
       return data ?? [];
@@ -609,8 +609,8 @@ const DashboardContracts = () => {
     mutationFn: async ({ amendmentId, contract }: { amendmentId: string; contract: any }) => {
       const isClient = user?.id === contract.client_id;
       const field = isClient ? 'client_approved_at' : 'provider_approved_at';
-      const update: any = { [field]: new Date().toISOString() };
-      const amendment = allAmendments.find((a: any) => a.id === amendmentId);
+      const update: Record<string, unknown> = { [field]: new Date().toISOString() };
+      const amendment = allAmendments.find((a) => a.id === amendmentId);
       const otherApproved = isClient ? amendment?.provider_approved_at : amendment?.client_approved_at;
       if (otherApproved) update.status = 'approved';
       const { error } = await supabase.from('contract_amendments').update(update).eq('id', amendmentId);
@@ -629,7 +629,7 @@ const DashboardContracts = () => {
   /* ── Maintenance Request Mutation ── */
   const addMaintenanceMutation = useMutation({
     mutationFn: async ({ contractId }: { contractId: string }) => {
-      const contract = contracts.find((c: any) => c.id === contractId);
+      const contract = contracts.find((c) => c.id === contractId);
       if (!contract) throw new Error('Contract not found');
       const { data: mainReq, error } = await supabase.from('maintenance_requests').insert({
         contract_id: contractId, client_id: contract.client_id, provider_id: contract.provider_id,
@@ -669,7 +669,7 @@ const DashboardContracts = () => {
       // Find or create installment plan
       let { data: plan } = await supabase.from('installment_plans').select('id').eq('contract_id', contractId).maybeSingle();
       if (!plan) {
-        const contract = contracts.find((c: any) => c.id === contractId);
+        const contract = contracts.find((c) => c.id === contractId);
         const { data: newPlan, error: planErr } = await supabase.from('installment_plans').insert({
           contract_id: contractId, total_amount: Number(contract?.total_amount || 0),
           installment_amount: Number(paymentForm.amount), number_of_installments: 1,
@@ -678,7 +678,7 @@ const DashboardContracts = () => {
         if (planErr) throw planErr;
         plan = newPlan;
       }
-      const existing = allPayments.filter((p: any) => p.contract_id === contractId);
+      const existing = allPayments.filter((p) => p.contract_id === contractId);
       const { error } = await supabase.from('installment_payments').insert({
         plan_id: plan!.id, installment_number: existing.length + 1,
         amount: Number(paymentForm.amount), due_date: paymentForm.due_date,
@@ -710,7 +710,7 @@ const DashboardContracts = () => {
   /* ── Add Line Item Mutation ── */
   const addLineItemMutation = useMutation({
     mutationFn: async ({ contractId }: { contractId: string }) => {
-      const existing = allLineItems.filter((li: any) => li.contract_id === contractId);
+      const existing = allLineItems.filter((li) => li.contract_id === contractId);
       const { error } = await supabase.from('contract_line_items').insert({
         contract_id: contractId, name_ar: lineItemForm.name_ar,
         description_ar: lineItemForm.description_ar || null,
@@ -756,7 +756,7 @@ const DashboardContracts = () => {
   /* ── Update Milestone Status ── */
   const updateMilestoneMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const update: any = { status };
+      const update: Record<string, unknown> = { status };
       if (status === 'completed') update.completed_at = new Date().toISOString();
       const { error } = await supabase.from('contract_milestones').update(update).eq('id', id);
       if (error) throw error;
@@ -795,7 +795,7 @@ const DashboardContracts = () => {
       if (clientProfileError) throw clientProfileError;
       if (!clientProfile) throw new Error(isRTL ? 'لم يتم العثور على العميل بهذا البريد الإلكتروني' : 'Client not found with this email');
 
-      const payload: any = {
+      const payload: Record<string, unknown> = {
         provider_id: user!.id, client_id: clientProfile.user_id, business_id: businessId || null,
         title_ar: form.title_ar, title_en: form.title_en || null,
         description_ar: form.description_ar || null, description_en: form.description_en || null,
@@ -827,7 +827,7 @@ const DashboardContracts = () => {
     mutationFn: async (contract: any) => {
       const isClient = user?.id === contract.client_id;
       const updateField = isClient ? 'client_accepted_at' : 'provider_accepted_at';
-      const update: any = { [updateField]: new Date().toISOString() };
+      const update: Record<string, unknown> = { [updateField]: new Date().toISOString() };
       const otherAccepted = isClient ? contract.provider_accepted_at : contract.client_accepted_at;
       if (otherAccepted) update.status = 'active';
       else if (contract.status === 'draft') update.status = 'pending_approval';
@@ -863,19 +863,19 @@ const DashboardContracts = () => {
   /* ── Helpers ── */
   const stats = useMemo(() => {
     const src = roleFilter === 'provider' ? providerContracts : roleFilter === 'client' ? clientContracts : contracts;
-    const totalAmount = src.reduce((s: number, c: any) => s + Number(c.total_amount), 0);
-    const totalPaid = allPayments.filter((p: any) => p.status === 'paid' && src.some((c: any) => c.id === p.contract_id)).reduce((s: number, p: any) => s + Number(p.amount), 0);
-    const overduePayments = allPayments.filter((p: any) => p.status === 'overdue' && src.some((c: any) => c.id === p.contract_id));
+    const totalAmount = src.reduce((s: number, c) => s + Number(c.total_amount), 0);
+    const totalPaid = allPayments.filter((p) => p.status === 'paid' && src.some((c) => c.id === p.contract_id)).reduce((s: number, p) => s + Number(p.amount), 0);
+    const overduePayments = allPayments.filter((p) => p.status === 'overdue' && src.some((c) => c.id === p.contract_id));
     return {
       total: src.length,
-      active: src.filter((c: any) => c.status === 'active').length,
-      completed: src.filter((c: any) => c.status === 'completed').length,
-      pendingApproval: src.filter((c: any) => c.status === 'pending_approval').length,
-      draft: src.filter((c: any) => c.status === 'draft').length,
-      cancelled: src.filter((c: any) => c.status === 'cancelled').length,
+      active: src.filter((c) => c.status === 'active').length,
+      completed: src.filter((c) => c.status === 'completed').length,
+      pendingApproval: src.filter((c) => c.status === 'pending_approval').length,
+      draft: src.filter((c) => c.status === 'draft').length,
+      cancelled: src.filter((c) => c.status === 'cancelled').length,
       totalAmount, totalPaid,
       overdueCount: overduePayments.length,
-      overdueAmount: overduePayments.reduce((s: number, p: any) => s + Number(p.amount), 0),
+      overdueAmount: overduePayments.reduce((s: number, p) => s + Number(p.amount), 0),
       asProvider: providerContracts.length,
       asClient: clientContracts.length,
       totalMilestones: allMilestones.length,
@@ -887,28 +887,28 @@ const DashboardContracts = () => {
   }, [contracts, providerContracts, clientContracts, allPayments, allMilestones, allAttachments, allMaintenanceRequests, allMeasurements, roleFilter]);
 
   const filtered = useMemo(() => {
-    let items = roleFilter === 'provider' ? providerContracts.map((c: any) => ({ ...c, _role: 'provider' })) :
-      roleFilter === 'client' ? clientContracts.map((c: any) => ({ ...c, _role: 'client' })) : contracts;
+    let items = roleFilter === 'provider' ? providerContracts.map((c) => ({ ...c, _role: 'provider' })) :
+      roleFilter === 'client' ? clientContracts.map((c) => ({ ...c, _role: 'client' })) : contracts;
 
-    if (statusFilter !== 'all') items = items.filter((c: any) => c.status === statusFilter);
+    if (statusFilter !== 'all') items = items.filter((c) => c.status === statusFilter);
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      items = items.filter((c: any) =>
+      items = items.filter((c) =>
         c.title_ar?.toLowerCase().includes(q) || c.title_en?.toLowerCase().includes(q) ||
         c.contract_number?.toLowerCase().includes(q) ||
-        profiles.some((p: any) => (p.full_name?.toLowerCase().includes(q)) && (p.user_id === c.client_id || p.user_id === c.provider_id))
+        profiles.some((p) => (p.full_name?.toLowerCase().includes(q)) && (p.user_id === c.client_id || p.user_id === c.provider_id))
       );
     }
 
-    if (sortBy === 'amount') items = [...items].sort((a: any, b: any) => Number(b.total_amount) - Number(a.total_amount));
-    else if (sortBy === 'status') items = [...items].sort((a: any, b: any) => a.status.localeCompare(b.status));
+    if (sortBy === 'amount') items = [...items].sort((a, b) => Number(b.total_amount) - Number(a.total_amount));
+    else if (sortBy === 'status') items = [...items].sort((a, b) => a.status.localeCompare(b.status));
     else if (sortBy === 'health') {
-      items = [...items].sort((a: any, b: any) => {
+      items = [...items].sort((a, b) => {
         const hA = getContractHealth(a, allMilestones.filter(m => m.contract_id === a.id), allPayments.filter(p => p.contract_id === a.id));
         const hB = getContractHealth(b, allMilestones.filter(m => m.contract_id === b.id), allPayments.filter(p => p.contract_id === b.id));
         return hB - hA;
       });
-    } else items = [...items].sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    } else items = [...items].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
     return items;
   }, [contracts, providerContracts, clientContracts, statusFilter, searchQuery, roleFilter, profiles, sortBy, allMilestones, allPayments]);
@@ -921,9 +921,9 @@ const DashboardContracts = () => {
   const handleExportPDF = useCallback(async (c: any) => {
     setIsExporting(true);
     try {
-      const clientP = profiles.find((p: any) => p.user_id === c.client_id);
-      const providerP = profiles.find((p: any) => p.user_id === c.provider_id);
-      const ms = allMilestones.filter((m: any) => m.contract_id === c.id);
+      const clientP = profiles.find((p) => p.user_id === c.client_id);
+      const providerP = profiles.find((p) => p.user_id === c.provider_id);
+      const ms = allMilestones.filter((m) => m.contract_id === c.id);
       const data: ContractExportData = {
         contractNumber: c.contract_number, title: isRTL ? c.title_ar : (c.title_en || c.title_ar),
         totalAmount: Number(c.total_amount), currency: c.currency_code,
@@ -934,7 +934,7 @@ const DashboardContracts = () => {
         supervisorPhone: c.supervisor_phone || undefined,
         supervisorEmail: c.supervisor_email || undefined,
         terms: isRTL ? c.terms_ar : (c.terms_en || c.terms_ar),
-        milestones: ms.map((m: any) => ({
+        milestones: ms.map((m) => ({
           title: isRTL ? m.title_ar : (m.title_en || m.title_ar),
           amount: Number(m.amount),
           dueDate: m.due_date ? formatDate(m.due_date) : undefined,
@@ -1122,7 +1122,7 @@ const DashboardContracts = () => {
             </CardHeader>
             <CardContent>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {templates.map((tmpl: any) => {
+                {templates.map((tmpl) => {
                   const cfg = templateCategoryConfig[tmpl.category];
                   const Icon = cfg?.icon || FileText;
                   return (
@@ -1365,7 +1365,7 @@ const DashboardContracts = () => {
                 ))}
               </div>
               <div className="flex items-center gap-2">
-                <Select value={sortBy} onValueChange={(v: any) => setSortBy(v)}>
+                <Select value={sortBy} onValueChange={(v) => setSortBy(v)}>
                   <SelectTrigger className="h-8 text-[10px] w-28 px-2.5 rounded-lg"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="date" className="text-xs">{isRTL ? 'التاريخ' : 'Date'}</SelectItem>
@@ -1398,21 +1398,21 @@ const DashboardContracts = () => {
               </Card>
             ) : (
               <div className="space-y-4">
-                {filtered.map((c: any) => {
-                  const milestones = allMilestones.filter((m: any) => m.contract_id === c.id);
-                  const notes = allNotes.filter((n: any) => n.contract_id === c.id);
-                  const attachments = allAttachments.filter((a: any) => a.contract_id === c.id);
-                  const payments = allPayments.filter((p: any) => p.contract_id === c.id);
-                  const measurements = allMeasurements.filter((m: any) => m.contract_id === c.id);
-                  const lineItems = allLineItems.filter((li: any) => li.contract_id === c.id);
-                  const warranties = allWarranties.filter((w: any) => w.contract_id === c.id);
-                  const maintenance = allMaintenanceRequests.filter((r: any) => r.contract_id === c.id);
-                  const amendments = allAmendments.filter((a: any) => a.contract_id === c.id);
+                {filtered.map((c) => {
+                  const milestones = allMilestones.filter((m) => m.contract_id === c.id);
+                  const notes = allNotes.filter((n) => n.contract_id === c.id);
+                  const attachments = allAttachments.filter((a) => a.contract_id === c.id);
+                  const payments = allPayments.filter((p) => p.contract_id === c.id);
+                  const measurements = allMeasurements.filter((m) => m.contract_id === c.id);
+                  const lineItems = allLineItems.filter((li) => li.contract_id === c.id);
+                  const warranties = allWarranties.filter((w) => w.contract_id === c.id);
+                  const maintenance = allMaintenanceRequests.filter((r) => r.contract_id === c.id);
+                  const amendments = allAmendments.filter((a) => a.contract_id === c.id);
                   const isExpanded = expandedId === c.id;
                   const locked = isContractLocked(c);
                   const isProvider = user?.id === c.provider_id;
-                  const measurementTotal = measurements.reduce((s: number, m: any) => s + Number(m.total_cost || 0), 0);
-                  const lineItemTotal = lineItems.reduce((s: number, l: any) => s + Number(l.total_cost || 0), 0);
+                  const measurementTotal = measurements.reduce((s: number, m) => s + Number(m.total_cost || 0), 0);
+                  const lineItemTotal = lineItems.reduce((s: number, l) => s + Number(l.total_cost || 0), 0);
                   const subtotal = measurementTotal + lineItemTotal;
                   const vatRate = Number(c.vat_rate || 15);
                   const vatAmount = c.vat_inclusive ? (subtotal * vatRate) / (100 + vatRate) : (subtotal * vatRate) / 100;
@@ -1562,7 +1562,7 @@ const DashboardContracts = () => {
                                 )}
                                 {payments.length > 0 ? (
                                   <div className="space-y-2">
-                                    {payments.sort((a: any, b: any) => a.installment_number - b.installment_number).map((p: any) => (
+                                    {payments.sort((a, b) => a.installment_number - b.installment_number).map((p) => (
                                       <div key={p.id} className={`p-3 rounded-xl border transition-all ${p.status === 'paid' ? 'border-emerald-200/50 bg-emerald-50/20 dark:border-emerald-800/20 dark:bg-emerald-950/10' : p.status === 'overdue' ? 'border-red-200/50 bg-red-50/20 dark:border-red-800/20' : 'border-border/40 bg-card'}`}>
                                         <div className="flex items-center justify-between gap-3">
                                           <div className="flex items-center gap-3">
@@ -1596,9 +1596,9 @@ const DashboardContracts = () => {
                                     <div className="p-3 rounded-xl bg-muted/30 border border-border/30">
                                       <div className="flex items-center justify-between mb-1">
                                         <span className="text-[10px] text-muted-foreground">{isRTL ? 'الإجمالي المدفوع' : 'Total Paid'}</span>
-                                        <span className="text-xs font-bold text-emerald-600">{payments.filter((p:any)=>p.status==='paid').reduce((s:number,p:any)=>s+Number(p.amount),0).toLocaleString()} / {Number(c.total_amount).toLocaleString()} {c.currency_code}</span>
+                                        <span className="text-xs font-bold text-emerald-600">{payments.filter((p)=>p.status==='paid').reduce((s:number, p)=>s+Number(p.amount),0).toLocaleString()} / {Number(c.total_amount).toLocaleString()} {c.currency_code}</span>
                                       </div>
-                                      <Progress value={Number(c.total_amount) > 0 ? (payments.filter((p:any)=>p.status==='paid').reduce((s:number,p:any)=>s+Number(p.amount),0) / Number(c.total_amount)) * 100 : 0} className="h-1.5 [&>div]:bg-emerald-500" />
+                                      <Progress value={Number(c.total_amount) > 0 ? (payments.filter((p)=>p.status==='paid').reduce((s:number, p)=>s+Number(p.amount),0) / Number(c.total_amount)) * 100 : 0} className="h-1.5 [&>div]:bg-emerald-500" />
                                     </div>
                                   </div>
                                 ) : <p className="text-center py-8 text-muted-foreground text-xs">{isRTL ? 'لا توجد دفعات' : 'No payments yet'}</p>}
@@ -1688,7 +1688,7 @@ const DashboardContracts = () => {
                                 {measurements.length > 0 && (
                                   <div className="space-y-2">
                                     <h5 className="text-[10px] font-semibold text-muted-foreground flex items-center gap-1"><Ruler className="w-3 h-3" />{isRTL ? 'المقاسات' : 'Measurements'}</h5>
-                                    {measurements.map((m: any) => (
+                                    {measurements.map((m) => (
                                       <div key={m.id} className="p-3 rounded-xl bg-card border border-border/30 flex items-center justify-between gap-3 hover:border-accent/20 transition-colors">
                                         <div className="flex items-center gap-3 min-w-0">
                                           <Badge variant="outline" className="text-[9px] shrink-0 font-mono px-2 py-0.5">{m.piece_number}</Badge>
@@ -1710,7 +1710,7 @@ const DashboardContracts = () => {
                                 {lineItems.length > 0 && (
                                   <div className="space-y-2">
                                     <h5 className="text-[10px] font-semibold text-muted-foreground flex items-center gap-1"><ClipboardList className="w-3 h-3" />{isRTL ? 'بنود إضافية' : 'Additional Items'}</h5>
-                                    {lineItems.map((li: any) => {
+                                    {lineItems.map((li) => {
                                       const typeLabels: Record<string, string> = { service: isRTL ? 'خدمة' : 'Service', material: isRTL ? 'مادة' : 'Material', installation: isRTL ? 'تركيب' : 'Install', other: isRTL ? 'أخرى' : 'Other' };
                                       return (
                                         <div key={li.id} className="p-3 rounded-xl bg-card border border-border/30 flex items-center justify-between gap-3 hover:border-primary/20 transition-colors">
@@ -1775,7 +1775,7 @@ const DashboardContracts = () => {
                               <TabsContent value="warranty" className="mt-0">
                                 {warranties.length > 0 ? (
                                   <div className="space-y-2.5">
-                                    {warranties.map((w: any) => {
+                                    {warranties.map((w) => {
                                       const daysLeft = w.end_date ? Math.ceil((new Date(w.end_date).getTime() - Date.now()) / (1000*60*60*24)) : null;
                                       return (
                                         <div key={w.id} className="p-3.5 rounded-xl border border-border/40 bg-card">
@@ -1803,7 +1803,7 @@ const DashboardContracts = () => {
                               <TabsContent value="maintenance" className="mt-0">
                                 {maintenance.length > 0 ? (
                                   <div className="space-y-2">
-                                    {maintenance.map((r: any) => (
+                                    {maintenance.map((r) => (
                                       <div key={r.id} className="p-3 rounded-xl border border-border/40 bg-card">
                                         <div className="flex items-center justify-between gap-2 mb-1.5">
                                           <h4 className="text-xs font-semibold truncate">{isRTL ? r.title_ar : (r.title_en || r.title_ar)}</h4>
@@ -1833,14 +1833,14 @@ const DashboardContracts = () => {
                                 </div>
                                 {notes.length > 0 ? (
                                   <div className="space-y-2 max-h-52 overflow-y-auto">
-                                    {notes.map((n: any) => (
+                                    {notes.map((n) => (
                                       <div key={n.id} className="p-3 rounded-xl bg-card border border-border/30">
                                         <div className="flex items-center justify-between mb-1">
                                           <div className="flex items-center gap-1.5">
                                             <Avatar className="w-5 h-5">
-                                              <AvatarFallback className="text-[7px] bg-accent/10">{(profiles.find((p: any) => p.user_id === n.user_id)?.full_name || '?').charAt(0)}</AvatarFallback>
+                                              <AvatarFallback className="text-[7px] bg-accent/10">{(profiles.find((p) => p.user_id === n.user_id)?.full_name || '?').charAt(0)}</AvatarFallback>
                                             </Avatar>
-                                            <span className="text-[10px] font-medium">{n.user_id === user?.id ? (isRTL ? 'أنت' : 'You') : (profiles.find((p: any) => p.user_id === n.user_id)?.full_name || '-')}</span>
+                                            <span className="text-[10px] font-medium">{n.user_id === user?.id ? (isRTL ? 'أنت' : 'You') : (profiles.find((p) => p.user_id === n.user_id)?.full_name || '-')}</span>
                                             {n.note_type !== 'note' && <Badge variant="outline" className="text-[7px] px-1 h-3.5">{n.note_type}</Badge>}
                                           </div>
                                           <span className="text-[9px] text-muted-foreground">{formatDate(n.created_at)}</span>
@@ -1863,7 +1863,7 @@ const DashboardContracts = () => {
                                 </div>
                                 {attachments.length > 0 ? (
                                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                    {attachments.map((a: any) => (
+                                    {attachments.map((a) => (
                                       <a key={a.id} href={a.file_url} target="_blank" rel="noopener noreferrer" className="p-3 rounded-xl border border-border/40 bg-card hover:border-accent/30 hover:shadow-sm transition-all flex items-center gap-3 group">
                                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-lg ${a.file_type === 'image' ? 'bg-blue-500/10' : 'bg-orange-500/10'}`}>
                                           {a.file_type === 'image' ? '🖼️' : '📄'}
@@ -1919,7 +1919,7 @@ const DashboardContracts = () => {
                                 {!locked && <p className="text-center py-4 text-muted-foreground text-[11px]">{isRTL ? 'العقد لم يُعتمد بعد — يمكنك تعديله مباشرة' : 'Contract not yet approved — you can edit it directly'}</p>}
                                 {amendments.length > 0 ? (
                                   <div className="space-y-2">
-                                    {amendments.map((a: any) => {
+                                    {amendments.map((a) => {
                                       const canApproveAmendment = a.status === 'pending' && (
                                         (user?.id === c.client_id && !a.client_approved_at) ||
                                         (user?.id === c.provider_id && !a.provider_approved_at)

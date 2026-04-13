@@ -319,7 +319,7 @@ const AdminDashboardView = React.memo(({ isRTL }: { isRTL: boolean }) => {
       const statusCounts: Record<string, number> = {};
       allContracts.forEach(c => { statusCounts[c.status] = (statusCounts[c.status] || 0) + 1; });
       const roleCounts: Record<string, number> = {};
-      (roles.data || []).forEach((r: any) => { roleCounts[r.role] = (roleCounts[r.role] || 0) + 1; });
+      (roles.data || []).forEach((r) => { roleCounts[r.role] = (roleCounts[r.role] || 0) + 1; });
 
       return {
         users: (users as any).count ?? 0, businesses: (businesses as any).count ?? 0,
@@ -487,7 +487,7 @@ const AdminDashboardView = React.memo(({ isRTL }: { isRTL: boolean }) => {
           </CardHeader>
           <CardContent className="px-4 pb-3">
             <div className="space-y-1.5">
-              {(stats?.recentActivity || []).map((item: any) => (
+              {(stats?.recentActivity || []).map((item) => (
                 <div key={item.id} className="flex items-center gap-2.5 p-2 rounded-lg hover:bg-muted/30 transition-colors">
                   <div className="w-7 h-7 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
                     <Activity className="w-3 h-3 text-accent" />
@@ -512,7 +512,7 @@ const AdminDashboardView = React.memo(({ isRTL }: { isRTL: boolean }) => {
           </CardHeader>
           <CardContent className="px-4 pb-3">
             <div className="space-y-1.5">
-              {(stats?.recentUsers || []).map((u: any) => (
+              {(stats?.recentUsers || []).map((u) => (
                 <div key={u.id} className="flex items-center gap-2.5 p-2 rounded-lg hover:bg-muted/30 transition-colors">
                   <Avatar className="w-7 h-7">
                     <AvatarImage src={u.avatar_url || undefined} />
@@ -612,9 +612,9 @@ const ProviderDashboardView = React.memo(({ isRTL, user, profile }: { isRTL: boo
       const totalRevenue = completedContracts.reduce((sum, c) => sum + Number(c.total_amount || 0), 0);
 
       const reviewsData = (reviews as any).data || [];
-      const avgRating = reviewsData.length > 0 ? (reviewsData.reduce((s: number, r: any) => s + r.rating, 0) / reviewsData.length).toFixed(1) : '0.0';
+      const avgRating = reviewsData.length > 0 ? (reviewsData.reduce((s: number, r) => s + r.rating, 0) / reviewsData.length).toFixed(1) : '0.0';
       const ratingDist = [0, 0, 0, 0, 0];
-      reviewsData.forEach((r: any) => { if (r.rating >= 1 && r.rating <= 5) ratingDist[r.rating - 1]++; });
+      reviewsData.forEach((r) => { if (r.rating >= 1 && r.rating <= 5) ratingDist[r.rating - 1]++; });
 
       const statusCounts: Record<string, number> = {};
       contractsData.forEach(c => { statusCounts[c.status] = (statusCounts[c.status] || 0) + 1; });
@@ -772,7 +772,7 @@ const ProviderDashboardView = React.memo(({ isRTL, user, profile }: { isRTL: boo
           <CardContent className="px-4 pb-3">
             {recentContracts && recentContracts.length > 0 ? (
               <div className="space-y-1.5">
-                {recentContracts.map((c: any) => (
+                {recentContracts.map((c) => (
                   <Link key={c.id} to={`/contracts/${c.id}`}>
                     <div className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors">
                       <div className="min-w-0 flex-1">
@@ -959,7 +959,7 @@ const UserDashboardView = React.memo(({ isRTL, user, profile }: { isRTL: boolean
           <CardContent className="px-4 pb-3">
             {stats?.recentContracts?.length ? (
               <div className="space-y-1.5">
-                {stats.recentContracts.map((c: any) => (
+                {stats.recentContracts.map((c) => (
                   <Link key={c.id} to={`/contracts/${c.id}`}>
                     <div className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors">
                       <div className="min-w-0 flex-1">

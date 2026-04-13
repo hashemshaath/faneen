@@ -381,16 +381,16 @@ EmojiQuickPicker.displayName = 'EmojiQuickPicker';
 /* ─── Chat Info Panel ─── */
 const ChatInfoPanel = React.memo(({ conv, messages, isRTL, language, onClose }: { conv: any; messages: any[]; isRTL: boolean; language: string; onClose: () => void }) => {
   const totalMsgs = messages.length;
-  const attachments = messages.filter((m: any) => m.attachment_url);
-  const images = attachments.filter((m: any) => m.message_type === 'image');
-  const files = attachments.filter((m: any) => m.message_type === 'file');
+  const attachments = messages.filter((m) => m.attachment_url);
+  const images = attachments.filter((m) => m.message_type === 'image');
+  const files = attachments.filter((m) => m.message_type === 'file');
   const firstMsg = messages[0];
   const lastMsg = messages[messages.length - 1];
 
   // Activity heatmap data (messages per day of week)
   const activityByDay = useMemo(() => {
     const days = [0, 0, 0, 0, 0, 0, 0];
-    messages.forEach((m: any) => {
+    messages.forEach((m) => {
       const d = new Date(m.created_at).getDay();
       days[d]++;
     });
@@ -517,7 +517,7 @@ const ChatInfoPanel = React.memo(({ conv, messages, isRTL, language, onClose }: 
                 {isRTL ? 'الصور المشتركة' : 'Shared Images'}
               </p>
               <div className="grid grid-cols-3 gap-1.5">
-                {images.slice(0, 9).map((m: any) => (
+                {images.slice(0, 9).map((m) => (
                   <a key={m.id} href={m.attachment_url} target="_blank" rel="noopener noreferrer"
                     className="aspect-square rounded-lg overflow-hidden border border-border/20 hover:opacity-80 transition-opacity">
                     <img src={m.attachment_url} alt="" className="w-full h-full object-cover" loading="lazy" />
@@ -538,7 +538,7 @@ const ChatInfoPanel = React.memo(({ conv, messages, isRTL, language, onClose }: 
                 {isRTL ? 'الملفات المشتركة' : 'Shared Files'}
               </p>
               <div className="space-y-1">
-                {files.slice(0, 5).map((m: any) => (
+                {files.slice(0, 5).map((m) => (
                   <a key={m.id} href={m.attachment_url} target="_blank" rel="noopener noreferrer"
                     className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/30 transition-colors">
                     <FileText className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
@@ -578,11 +578,11 @@ const DashboardMessages = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
-  const [replyTo, setReplyTo] = useState<any>(null);
+  const [replyTo, setReplyTo] = useState<Record<string, unknown> | null>(null);
   const [convFilter, setConvFilter] = useState<'all' | 'unread' | 'starred' | 'pinned'>('all');
   const [showEmoji, setShowEmoji] = useState(false);
   const [showInfoPanel, setShowInfoPanel] = useState(false);
-  const [forwardMsg, setForwardMsg] = useState<any>(null);
+  const [forwardMsg, setForwardMsg] = useState<Record<string, unknown> | null>(null);
 
   // Local state for pinned/starred/muted/labels and message reactions/stars
   const [pinnedConvs, setPinnedConvs] = useState<Set<string>>(new Set());
@@ -672,19 +672,19 @@ const DashboardMessages = () => {
       if (error) throw error;
 
       const allIds = new Set<string>();
-      data.forEach((c: any) => { if (c.participant_1) allIds.add(c.participant_1); if (c.participant_2) allIds.add(c.participant_2); });
+      data.forEach((c) => { if (c.participant_1) allIds.add(c.participant_1); if (c.participant_2) allIds.add(c.participant_2); });
       allIds.delete(user!.id);
 
       if (allIds.size > 0) {
         const { data: profiles } = await supabase.from('profiles').select('user_id, full_name, avatar_url, email').in('user_id', Array.from(allIds));
-        const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
+        const profileMap = new Map((profiles || []).map((p) => [p.user_id, p]));
 
         if (isSuperAdmin) {
           const { data: allProfiles } = await supabase.from('profiles').select('user_id, full_name, avatar_url, email').in('user_id', Array.from(new Set(data.flatMap((c: any) => [c.participant_1, c.participant_2]))));
-          (allProfiles || []).forEach((p: any) => { if (!profileMap.has(p.user_id)) profileMap.set(p.user_id, p); });
+          (allProfiles || []).forEach((p) => { if (!profileMap.has(p.user_id)) profileMap.set(p.user_id, p); });
         }
 
-        return data.map((c: any) => {
+        return data.map((c) => {
           const otherId = c.participant_1 === user!.id ? c.participant_2 : c.participant_1;
           const otherProfile = profileMap.get(otherId) || { full_name: isRTL ? 'مستخدم' : 'User' };
           if (isSuperAdmin) {
@@ -695,7 +695,7 @@ const DashboardMessages = () => {
           return { ...c, other_profile: otherProfile };
         });
       }
-      return data.map((c: any) => ({ ...c, other_profile: { full_name: isRTL ? 'مستخدم' : 'User' } }));
+      return data.map((c) => ({ ...c, other_profile: { full_name: isRTL ? 'مستخدم' : 'User' } }));
     },
     enabled: !!user,
   });
@@ -706,7 +706,7 @@ const DashboardMessages = () => {
     queryFn: async () => {
       const { data } = await supabase.from('messages').select('conversation_id').eq('is_read', false).neq('sender_id', user!.id);
       const counts: Record<string, number> = {};
-      (data || []).forEach((m: any) => { counts[m.conversation_id] = (counts[m.conversation_id] || 0) + 1; });
+      (data || []).forEach((m) => { counts[m.conversation_id] = (counts[m.conversation_id] || 0) + 1; });
       return counts;
     },
     enabled: !!user,
@@ -754,7 +754,7 @@ const DashboardMessages = () => {
   /* ─── Mark as read ─── */
   useEffect(() => {
     if (!selectedConversation || !user) return;
-    const unread = messages.filter((m: any) => !m.is_read && m.sender_id !== user.id);
+    const unread = messages.filter((m) => !m.is_read && m.sender_id !== user.id);
     if (unread.length > 0) {
       supabase.from('messages').update({ is_read: true }).eq('conversation_id', selectedConversation).neq('sender_id', user.id).eq('is_read', false).then(() => {
         queryClient.invalidateQueries({ queryKey: ['conversations', user.id] });
@@ -852,12 +852,12 @@ const DashboardMessages = () => {
   /* ─── Filter & Select ─── */
   const filteredConversations = useMemo(() => {
     let result = conversations;
-    if (deferredSearch) result = result.filter((c: any) => c.other_profile?.full_name?.toLowerCase().includes(deferredSearch.toLowerCase()));
-    if (convFilter === 'unread') result = result.filter((c: any) => (unreadCounts as Record<string, number>)[c.id] > 0);
-    if (convFilter === 'starred') result = result.filter((c: any) => starredConvs.has(c.id));
-    if (convFilter === 'pinned') result = result.filter((c: any) => pinnedConvs.has(c.id));
+    if (deferredSearch) result = result.filter((c) => c.other_profile?.full_name?.toLowerCase().includes(deferredSearch.toLowerCase()));
+    if (convFilter === 'unread') result = result.filter((c) => (unreadCounts as Record<string, number>)[c.id] > 0);
+    if (convFilter === 'starred') result = result.filter((c) => starredConvs.has(c.id));
+    if (convFilter === 'pinned') result = result.filter((c) => pinnedConvs.has(c.id));
 
-    result = [...result].sort((a: any, b: any) => {
+    result = [...result].sort((a, b) => {
       const aPinned = pinnedConvs.has(a.id) ? 1 : 0;
       const bPinned = pinnedConvs.has(b.id) ? 1 : 0;
       return bPinned - aPinned;
@@ -866,13 +866,13 @@ const DashboardMessages = () => {
     return result;
   }, [conversations, deferredSearch, convFilter, unreadCounts, starredConvs, pinnedConvs]);
 
-  const selectedConv = conversations.find((c: any) => c.id === selectedConversation);
+  const selectedConv = conversations.find((c) => c.id === selectedConversation);
 
   /* ─── Export Chat ─── */
   const handleExportChat = useCallback(() => {
     if (!messages.length || !selectedConv) return;
     const name = selectedConv.other_profile?.full_name || 'User';
-    const lines = messages.map((m: any) => {
+    const lines = messages.map((m) => {
       const time = new Date(m.created_at).toLocaleString(language === 'ar' ? 'ar-SA' : 'en');
       const sender = m.sender_id === user?.id ? (isRTL ? 'أنا' : 'Me') : name;
       return `[${time}] ${sender}: ${m.content || (m.attachment_url ? '📎 مرفق' : '')}`;
@@ -892,17 +892,17 @@ const DashboardMessages = () => {
 
   const filteredMessages = useMemo(() => {
     if (!chatSearchTerm) return messages;
-    return messages.filter((m: any) => m.content?.toLowerCase().includes(chatSearchTerm.toLowerCase()));
+    return messages.filter((m) => m.content?.toLowerCase().includes(chatSearchTerm.toLowerCase()));
   }, [messages, chatSearchTerm]);
 
   const enrichedMessages = useMemo(() => {
     const source = chatSearchTerm ? filteredMessages : messages;
-    return source.map((m: any) => ({ ...m, _reaction: messageReactions[m.id] || null, _starred: starredMessages.has(m.id) }));
+    return source.map((m) => ({ ...m, _reaction: messageReactions[m.id] || null, _starred: starredMessages.has(m.id) }));
   }, [messages, filteredMessages, chatSearchTerm, messageReactions, starredMessages]);
 
   const groupedMessages = useMemo(() => {
     const groups: { date: string; label: string; messages: any[] }[] = [];
-    enrichedMessages.forEach((msg: any) => {
+    enrichedMessages.forEach((msg) => {
       const d = new Date(msg.created_at);
       const dateKey = format(d, 'yyyy-MM-dd');
       const last = groups[groups.length - 1];
@@ -1047,7 +1047,7 @@ const DashboardMessages = () => {
                   </div>
                 ) : (
                   <div className="divide-y divide-border/10">
-                    {filteredConversations.map((conv: any) => (
+                    {filteredConversations.map((conv) => (
                       <ConversationItem
                         key={conv.id} conv={conv}
                         isSelected={conv.id === selectedConversation}
@@ -1299,7 +1299,7 @@ const DashboardMessages = () => {
                               </span>
                               <div className="flex-1 h-px bg-border/30" />
                             </div>
-                            {group.messages.map((msg: any) => {
+                            {group.messages.map((msg) => {
                               const isSearchMatch = chatSearchTerm && msg.content?.toLowerCase().includes(chatSearchTerm.toLowerCase());
                               return (
                                 <div key={msg.id} id={`msg-${msg.id}`} className={isSearchMatch ? 'bg-accent/10 rounded-xl -mx-1 px-1 transition-colors' : ''}>
