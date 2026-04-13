@@ -75,15 +75,15 @@ const Offers = () => {
 
   const filtered = useMemo(() => {
     if (activeTab === 'all') return promotions;
-    return promotions.filter((p: any) => p.promotion_type === activeTab);
+    return promotions.filter((p) => p.promotion_type === activeTab);
   }, [promotions, activeTab]);
 
   // Stats
   const stats = useMemo(() => {
     const total = promotions.length;
-    const offers = promotions.filter((p: any) => p.promotion_type === 'offer').length;
-    const ads = promotions.filter((p: any) => p.promotion_type === 'ad').length;
-    const videos = promotions.filter((p: any) => p.promotion_type === 'video').length;
+    const offers = promotions.filter((p) => p.promotion_type === 'offer').length;
+    const ads = promotions.filter((p) => p.promotion_type === 'ad').length;
+    const videos = promotions.filter((p) => p.promotion_type === 'video').length;
     const totalViews = promotions.reduce((s: number, p: any) => s + (p.views_count || 0), 0);
     return { total, offers, ads, videos, totalViews };
   }, [promotions]);
@@ -197,7 +197,7 @@ const Offers = () => {
               </div>
             ) : (
               <div className="grid gap-5 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {filtered.map((p: any, index: number) => {
+                {filtered.map((p, index: number) => {
                   const biz = p.businesses;
                   const embed = p.video_url ? getVideoEmbed(p.video_url) : null;
                   const expiringSoon = isExpiringSoon(p.end_date);

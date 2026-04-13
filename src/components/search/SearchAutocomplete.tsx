@@ -281,7 +281,7 @@ const ItemButton = ({
   item: { type: string; label: string; id: string };
   index: number;
   isActive: boolean;
-  onSelect: (item: any) => void;
+  onSelect: (item) => void;
   typeLabel: string;
   icon: React.ReactNode;
   endAction?: React.ReactNode;

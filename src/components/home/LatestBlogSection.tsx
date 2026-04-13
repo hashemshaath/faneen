@@ -43,9 +43,9 @@ export const LatestBlogSection = () => {
         supabase.from('blog_bookmarks').select('post_id'),
       ]);
       const comments: Record<string, number> = {};
-      commentsRes.data?.forEach((c: any) => { comments[c.post_id] = (comments[c.post_id] || 0) + 1; });
+      commentsRes.data?.forEach((c) => { comments[c.post_id] = (comments[c.post_id] || 0) + 1; });
       const bookmarks: Record<string, number> = {};
-      bookmarksRes.data?.forEach((b: any) => { bookmarks[b.post_id] = (bookmarks[b.post_id] || 0) + 1; });
+      bookmarksRes.data?.forEach((b) => { bookmarks[b.post_id] = (bookmarks[b.post_id] || 0) + 1; });
       return { comments, bookmarks };
     },
     staleTime: 10 * 60 * 1000,
@@ -82,7 +82,7 @@ export const LatestBlogSection = () => {
           {isLoading ? (
             Array.from({ length: 4 }).map((_, i) => <BlogSkeleton key={i} />)
           ) : (
-            posts.map((post: any, i: number) => (
+            posts.map((post, i: number) => (
               <Link key={post.id} to={`/blog/${post.slug}`} className="group block h-full">
                 <div
                   className={`rounded-2xl overflow-hidden border border-border bg-card transition-all duration-500 hover:shadow-xl hover:shadow-accent/5 hover:-translate-y-1.5 sm:hover:-translate-y-2.5 hover:border-accent/40 h-full flex flex-col ${isVisible ? 'animate-card-slide-up' : 'opacity-0'}`}

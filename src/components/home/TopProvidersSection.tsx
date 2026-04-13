@@ -74,7 +74,7 @@ export const TopProvidersSection = () => {
           {isLoading ? (
             Array.from({ length: 4 }).map((_, i) => <ProviderSkeleton key={i} />)
           ) : (
-            providers.map((biz: any, i: number) => {
+            providers.map((biz, i: number) => {
               const name = language === 'ar' ? biz.name_ar : (biz.name_en || biz.name_ar);
               const catName = biz.categories ? (language === 'ar' ? biz.categories.name_ar : biz.categories.name_en) : null;
               const cityName = biz.cities ? (language === 'ar' ? biz.cities.name_ar : biz.cities.name_en) : null;

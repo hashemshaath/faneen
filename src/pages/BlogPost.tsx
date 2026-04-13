@@ -700,7 +700,7 @@ const BlogPost = () => {
                   {isRTL ? 'مقالات ذات صلة' : 'Related Articles'}
                 </h3>
                 <div className="flex gap-3 sm:gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-2 sm:pb-0 -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-3 sm:overflow-visible">
-                  {relatedPosts.map((rp: any) => (
+                  {relatedPosts.map((rp) => (
                     <Link key={rp.id} to={`/blog/${rp.slug}`} className="group snap-start shrink-0 w-[72vw] sm:w-auto">
                       <Card className="overflow-hidden h-full border-border/50 hover:border-accent/30 hover:shadow-lg hover:-translate-y-1 transition-all duration-400 active:scale-[0.98]">
                         <CardContent className="p-0 flex flex-col h-full">
@@ -769,7 +769,7 @@ const BlogPost = () => {
                       {isRTL ? 'أحدث المقالات' : 'Latest Articles'}
                     </h3>
                     <div className="space-y-3">
-                      {latestPosts.map((lp: any) => (
+                      {latestPosts.map((lp) => (
                         <Link key={lp.id} to={`/blog/${lp.slug}`} className="group flex items-start gap-2.5">
                           <div className="w-12 h-12 rounded-lg bg-muted overflow-hidden shrink-0">
                             {lp.cover_image_url ? (

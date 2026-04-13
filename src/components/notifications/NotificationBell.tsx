@@ -66,7 +66,7 @@ export const NotificationBell = () => {
     // No polling — realtime subscription handles updates
   });
 
-  const handleRealtimeNotification = useCallback((payload: any) => {
+  const handleRealtimeNotification = useCallback((payload) => {
     queryClient.invalidateQueries({ queryKey: ['notifications', user?.id] });
     const n = payload.new as any;
     const title = language === 'ar' ? n.title_ar : (n.title_en || n.title_ar);
@@ -112,7 +112,7 @@ export const NotificationBell = () => {
     return () => { supabase.removeChannel(channel); };
   }, [user?.id, queryClient, handleRealtimeNotification]);
 
-  const unreadCount = notifications.filter((n: any) => !n.is_read).length;
+  const unreadCount = notifications.filter((n) => !n.is_read).length;
 
   const markRead = useMutation({
     mutationFn: async (id: string) => {
@@ -135,7 +135,7 @@ export const NotificationBell = () => {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notifications', user?.id] }),
   });
 
-  const handleClick = (n: any) => {
+  const handleClick = (n) => {
     if (!n.is_read) markRead.mutate(n.id);
     if (n.action_url) { navigate(n.action_url); setOpen(false); }
   };
@@ -197,7 +197,7 @@ export const NotificationBell = () => {
             </div>
           ) : (
             <div className="divide-y divide-border/50">
-              {notifications.map((n: any) => {
+              {notifications.map((n) => {
                 const Icon = n.reference_type?.startsWith('overdue_') ? AlertTriangle : (typeIcons[n.notification_type] || Bell);
                 const color = n.reference_type?.startsWith('overdue_') ? typeColors.security : (typeColors[n.notification_type] || typeColors.system);
                 const title = language === 'ar' ? n.title_ar : (n.title_en || n.title_ar);

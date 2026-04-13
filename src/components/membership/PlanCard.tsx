@@ -14,7 +14,7 @@ interface PlanCardProps {
   isUpgrade: boolean;
   isDowngrade: boolean;
   isSubscribing: boolean;
-  onSubscribe: (plan: any) => void;
+  onSubscribe: (plan) => void;
 }
 
 export const PlanCard = React.memo(({

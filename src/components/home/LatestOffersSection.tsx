@@ -66,7 +66,7 @@ export const LatestOffersSection = () => {
           {isLoading ? (
             Array.from({ length: 4 }).map((_, i) => <OfferSkeleton key={i} />)
           ) : (
-            offers.map((offer: any, i: number) => {
+            offers.map((offer, i: number) => {
               const hasDiscount = offer.discount_percentage || offer.discount_amount;
               const endDate = offer.end_date ? new Date(offer.end_date) : null;
               const isExpiringSoon = endDate && (endDate.getTime() - Date.now()) < 3 * 24 * 60 * 60 * 1000;

@@ -220,7 +220,7 @@ const AdminSystemSettings = () => {
   React.useEffect(() => {
     const merged: Record<string, string> = {};
     defaultSettings.forEach(s => {
-      const saved = savedSettings.find((sv: any) => sv.setting_key === s.key);
+      const saved = savedSettings.find((sv) => sv.setting_key === s.key);
       merged[s.key] = saved ? saved.setting_value : s.value;
     });
     setValues(merged);
@@ -233,7 +233,7 @@ const AdminSystemSettings = () => {
       for (const key of dirtyKeys) {
         const setting = defaultSettings.find(s => s.key === key);
         if (!setting) continue;
-        const existing = savedSettings.find((s: any) => s.setting_key === key);
+        const existing = savedSettings.find((s) => s.setting_key === key);
         if (existing) {
           await supabase.from('platform_settings').update({
             setting_value: values[key],

@@ -108,7 +108,7 @@ const UserCard = React.memo(({ profile, roles, business, isCurrentUser, canManag
   const bizList = (business as BusinessInfo[] | null) || [];
 
   const highestRole = roles.length > 0
-    ? roles.reduce((best: any, r) => {
+    ? roles.reduce((best, r) => {
         const order = ['super_admin', 'admin', 'moderator', 'user'];
         return order.indexOf(r.role) < order.indexOf(best.role) ? r : best;
       })

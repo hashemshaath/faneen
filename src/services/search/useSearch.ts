@@ -209,7 +209,7 @@ export const filterAndSort = (
     results = results.filter(b => {
       const services = b.business_services;
       if (!services || !Array.isArray(services) || services.length === 0) return false;
-      return services.some((s: any) => {
+      return services.some((s) => {
         if (!s.is_active) return false;
         const from = Number(s.price_from) || 0;
         const to = Number(s.price_to) || from;

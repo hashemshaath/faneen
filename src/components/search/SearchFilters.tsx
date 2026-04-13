@@ -178,7 +178,7 @@ export const SearchFilters = ({
 
           {/* Sort */}
           <FilterCard icon={ArrowUpDown} label={t('search.sort_by')}>
-            <Select value={filters.sortBy} onValueChange={(v: any) => onFilterChange('sortBy', v)}>
+            <Select value={filters.sortBy} onValueChange={(v) => onFilterChange('sortBy', v)}>
               <SelectTrigger className="w-full rounded-xl h-9 text-sm bg-muted/20 dark:bg-muted/10 border-border/20 dark:border-border/10">
                 <SelectValue />
               </SelectTrigger>
