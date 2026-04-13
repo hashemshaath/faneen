@@ -336,7 +336,7 @@ const DashboardAiCenter: React.FC = () => {
         translationInstructions: localSettings.translation_instructions || undefined,
       });
       setTransResult(result); addHistory('translate', transSource, result);
-    } catch {} finally { setTransLoading(false); }
+    } catch (_e) { // AI translation failed } finally { setTransLoading(false); }
   }, [transSource, transDir, localSettings, addHistory]);
 
   const swapTranslation = useCallback(() => {
@@ -354,7 +354,7 @@ const DashboardAiCenter: React.FC = () => {
         contentInstructions: localSettings.content_instructions || undefined,
       });
       setToolResult(result); addHistory(toolKey, toolInput, result);
-    } catch {} finally { setToolLoading(null); }
+    } catch (_e) { // AI tool call failed } finally { setToolLoading(null); }
   }, [toolInput, localSettings, addHistory]);
 
   /* ─── Blog Tools ─── */
@@ -378,7 +378,7 @@ const DashboardAiCenter: React.FC = () => {
         contentInstructions: localSettings.content_instructions || undefined,
       });
       setBlogResult(result); addHistory(`blog:${toolKey}`, blogInput, result);
-    } catch {} finally { setBlogLoading(null); }
+    } catch (_e) { // AI blog generation failed } finally { setBlogLoading(null); }
   }, [blogInput, localSettings, addHistory]);
 
   const handleReverseTranslate = useCallback(async () => {
@@ -389,7 +389,7 @@ const DashboardAiCenter: React.FC = () => {
       const result = await callAiCenter({ action: 'translate', text: blogResult, sourceLang: detectLang, targetLang: detectLang === 'ar' ? 'en' : 'ar', tone: localSettings.default_tone, model: localSettings.default_model });
       setBlogResult(prev => prev + '\n\n---\n\n' + result);
       toast.success(t('تمت الترجمة العكسية', 'Reverse translated'));
-    } catch {} finally { setReverseTranslateLoading(false); }
+    } catch (_e) { // reverse translation failed } finally { setReverseTranslateLoading(false); }
   }, [blogResult, localSettings, t]);
 
   /* ─── Chat (Streaming) ─── */
