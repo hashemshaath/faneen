@@ -4,6 +4,7 @@ import { authService, useOtpFlow } from '@/services/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { Phone, Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { PhoneInput } from './PhoneInput';
@@ -29,6 +30,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
 
   const { errors, validateEmailField, validatePhoneField, clearError } = useFieldValidation(isRTL);
 
@@ -51,6 +53,22 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
     },
   });
 
+  const getArabicErrorMessage = (msg: string): string => {
+    if (msg.includes('Invalid login')) {
+      return 'كلمة المرور غير صحيحة، حاول مرة أخرى';
+    }
+    if (msg.includes('Email not confirmed')) {
+      return 'يرجى تأكيد بريدك الإلكتروني أولاً';
+    }
+    if (msg.includes('too_many_requests') || msg.includes('rate_limit') || msg.includes('Too many')) {
+      return 'تم تجميد الحساب مؤقتاً، حاول بعد 5 دقائق';
+    }
+    if (msg.includes('User not found') || msg.includes('no user')) {
+      return 'لا يوجد حساب بهذا البريد الإلكتروني';
+    }
+    return msg;
+  };
+
   const handleEmailLogin = async () => {
     if (!email || !validateEmailField(email)) {
       if (!email) toast.error(isRTL ? 'يرجى إدخال البريد الإلكتروني' : 'Please enter your email');
@@ -66,13 +84,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
       toast.success(t('common.success'));
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
-      if (msg.includes('Invalid login')) {
-        toast.error(isRTL ? 'البريد الإلكتروني أو كلمة المرور غير صحيحة' : 'Invalid email or password');
-      } else if (msg.includes('Email not confirmed')) {
-        toast.error(isRTL ? 'يرجى تأكيد بريدك الإلكتروني أولاً' : 'Please confirm your email first');
-      } else {
-        toast.error(msg);
-      }
+      toast.error(isRTL ? getArabicErrorMessage(msg) : msg);
     } finally {
       setLoading(false);
     }
@@ -194,6 +206,20 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
               </button>
             </div>
           </div>
+
+          {/* Remember me checkbox */}
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="remember-me"
+              checked={rememberMe}
+              onCheckedChange={(checked) => setRememberMe(!!checked)}
+              className="h-4 w-4"
+            />
+            <label htmlFor="remember-me" className="text-xs text-muted-foreground cursor-pointer select-none">
+              {isRTL ? 'تذكرني لمدة 30 يوماً' : 'Remember me for 30 days'}
+            </label>
+          </div>
+
           <Button onClick={handleEmailLogin} disabled={loading || !!errors.email} className="w-full h-12 rounded-xl text-sm font-semibold" variant="hero">
             {loading && <Loader2 className="w-4 h-4 animate-spin me-2" />}
             {loading ? t('common.loading') : t('auth.login')}
