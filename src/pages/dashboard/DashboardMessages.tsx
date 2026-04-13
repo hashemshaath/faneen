@@ -608,13 +608,13 @@ const DashboardMessages = () => {
   }, []);
 
   const togglePinConv = useCallback((id: string) => {
-    setPinnedConvs(prev => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next; });
+    setPinnedConvs(prev => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; });
   }, []);
   const toggleStarConv = useCallback((id: string) => {
-    setStarredConvs(prev => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next; });
+    setStarredConvs(prev => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; });
   }, []);
   const toggleMuteConv = useCallback((id: string) => {
-    setMutedConvs(prev => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next; });
+    setMutedConvs(prev => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; });
     toast.success(isRTL ? 'تم تحديث الإشعارات' : 'Notifications updated');
   }, [isRTL]);
   const setConvLabel = useCallback((id: string, label: string) => {
@@ -636,7 +636,7 @@ const DashboardMessages = () => {
     });
   }, []);
   const toggleStarMessage = useCallback((msgId: string) => {
-    setStarredMessages(prev => { const next = new Set(prev); next.has(msgId) ? next.delete(msgId) : next.add(msgId); return next; });
+    setStarredMessages(prev => { const next = new Set(prev); if (next.has(msgId)) next.delete(msgId); else next.add(msgId); return next; });
   }, []);
   const handleForwardMessage = useCallback((msg: any) => {
     setForwardMsg(msg);
