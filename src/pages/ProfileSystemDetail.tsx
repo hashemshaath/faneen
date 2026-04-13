@@ -315,7 +315,7 @@ const ProfileSystemDetail = () => {
   const features = language === 'ar' ? (profile.features_ar || []) : (profile.features_en?.length ? profile.features_en : (profile.features_ar || []));
   const rec = recommendationLabels[profile.recommendation_level] || recommendationLabels.standard;
   const RecIcon = rec.icon;
-  const avgRating = reviews.length ? (reviews.reduce((s: number, r: any) => s + r.rating, 0) / reviews.length) : 0;
+  const avgRating = reviews.length ? (reviews.reduce((s: number, r) => s + r.rating, 0) / reviews.length) : 0;
   const ratingDistribution = [5, 4, 3, 2, 1].map(star => ({
     star,
     count: reviews.filter((r) => r.rating === star).length,

@@ -99,11 +99,11 @@ const Projects = () => {
       return true;
     });
     if (sortBy === 'cost_high') {
-      result.sort((a, b: any) => (Number(b.project_cost) || 0) - (Number(a.project_cost) || 0));
+      result.sort((a, b) => (Number(b.project_cost) || 0) - (Number(a.project_cost) || 0));
     } else if (sortBy === 'cost_low') {
-      result.sort((a, b: any) => (Number(a.project_cost) || 0) - (Number(b.project_cost) || 0));
+      result.sort((a, b) => (Number(a.project_cost) || 0) - (Number(b.project_cost) || 0));
     } else if (sortBy === 'oldest') {
-      result.sort((a, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+      result.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
     }
     return result;
   }, [allProjects, searchQuery, selectedCategory, selectedCity, minCost, maxCost, sortBy]);

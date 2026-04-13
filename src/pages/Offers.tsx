@@ -84,7 +84,7 @@ const Offers = () => {
     const offers = promotions.filter((p) => p.promotion_type === 'offer').length;
     const ads = promotions.filter((p) => p.promotion_type === 'ad').length;
     const videos = promotions.filter((p) => p.promotion_type === 'video').length;
-    const totalViews = promotions.reduce((s: number, p: any) => s + (p.views_count || 0), 0);
+    const totalViews = promotions.reduce((s: number, p) => s + (p.views_count || 0), 0);
     return { total, offers, ads, videos, totalViews };
   }, [promotions]);
 

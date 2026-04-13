@@ -235,7 +235,7 @@ const DashboardPromotions = () => {
     const active = promotions.filter((p) => p.is_active && !(p.end_date && new Date(p.end_date) < new Date())).length;
     const expired = promotions.filter((p) => p.end_date && new Date(p.end_date) < new Date()).length;
     const inactive = promotions.filter((p) => !p.is_active && !(p.end_date && new Date(p.end_date) < new Date())).length;
-    const totalViews = promotions.reduce((s: number, p: any) => s + (p.views_count || 0), 0);
+    const totalViews = promotions.reduce((s: number, p) => s + (p.views_count || 0), 0);
     const complete = promotions.filter((p) => p.title_ar && p.description_ar && p.image_url).length;
     const completeness = total > 0 ? Math.round((complete / total) * 100) : 0;
     return { total, active, expired, inactive, totalViews, completeness };
