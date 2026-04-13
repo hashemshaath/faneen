@@ -362,7 +362,7 @@ const AdminUsers = () => {
   // ─── Mutations ───
   const addRoleMutation = useMutation({
     mutationFn: async ({ userId, role }: { userId: string; role: string }) => {
-      const { error } = await supabase.from('user_roles').insert({ user_id: userId, role: role as any });
+      const { error } = await supabase.from('user_roles').insert({ user_id: userId, role: role as Database["public"]["Enums"]["app_role"] });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -393,7 +393,7 @@ const AdminUsers = () => {
     mutationFn: async ({ profileId, userId, data, oldData }: { profileId: string; userId: string; data: Partial<Profile>; oldData: Partial<Profile> }) => {
       const { error } = await supabase.from('profiles').update(data).eq('id', profileId);
       if (error) throw error;
-      const changes: Record<string, { old: any; new: any }> = {};
+      const changes: Record<string, { old: unknown; new: unknown }> = {};
       for (const key of Object.keys(data) as (keyof typeof data)[]) {
         if (data[key] !== oldData[key]) changes[key] = { old: oldData[key], new: data[key] };
       }
@@ -414,7 +414,7 @@ const AdminUsers = () => {
 
   const toggleBanMutation = useMutation({
     mutationFn: async ({ profileId, userId, isBanned }: { profileId: string; userId: string; isBanned: boolean }) => {
-      const { error } = await supabase.from('profiles').update({ is_banned: isBanned } as any).eq('id', profileId);
+      const { error } = await supabase.from('profiles').update({ is_banned: isBanned } as Record<string, boolean>).eq('id', profileId);
       if (error) throw error;
       await supabase.from('admin_activity_log').insert({
         user_id: user!.id, action: isBanned ? 'user_disabled' : 'user_enabled',
@@ -486,7 +486,7 @@ const AdminUsers = () => {
     if (!trimmed) { toast.error(isRTL ? 'الاسم مطلوب' : 'Name is required'); return; }
     updateProfileMutation.mutate({
       profileId: p.id, userId: p.user_id,
-      data: { full_name: trimmed, account_type: editForm.account_type as any, membership_tier: editForm.membership_tier as any, phone: editForm.phone.trim() || null, email: editForm.email.trim() || null },
+      data: { full_name: trimmed, account_type: editForm.account_type, membership_tier: editForm.membership_tier, phone: editForm.phone.trim() || null, email: editForm.email.trim() || null },
       oldData: { full_name: p.full_name, account_type: p.account_type, membership_tier: p.membership_tier, phone: p.phone, email: p.email },
     });
   };

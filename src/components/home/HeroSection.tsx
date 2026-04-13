@@ -108,7 +108,7 @@ const SearchBar = memo(({ categories, cities, language, isRTL, t, onSearch }: an
 });
 SearchBar.displayName = 'SearchBar';
 
-const HeroTitle = memo(({ slides, current, language, t }: { slides: typeof slidesData; current: number; language: string; t: any }) => {
+const HeroTitle = memo(({ slides, current, language, t }: { slides: typeof slidesData; current: number; language: string; t: (key: string) => string }) => {
   const slide = slides[current];
   const line1 = 'titleKey1' in slide && slide.titleKey1
     ? t(slide.titleKey1 as string)

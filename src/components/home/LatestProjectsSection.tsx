@@ -18,7 +18,7 @@ const fmt = (n: number) => {
   return n.toString();
 };
 
-const tierConfig: Record<string, { label: string; labelEn: string; icon: any; cls: string }> = {
+const tierConfig: Record<string, { label: string; labelEn: string; icon: React.ElementType; cls: string }> = {
   enterprise: { label: 'بلاتيني', labelEn: 'Platinum', icon: Crown, cls: 'bg-purple-500/90 text-white' },
   premium:    { label: 'ذهبي',    labelEn: 'Gold',     icon: Star,  cls: 'bg-gold/90 text-secondary-foreground' },
   basic:      { label: 'أساسي',   labelEn: 'Basic',    icon: BadgeCheck, cls: 'bg-sky-500/90 text-white' },

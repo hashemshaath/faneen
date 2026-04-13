@@ -217,7 +217,7 @@ export const SearchAutocomplete = ({ query, onQueryChange, onSearch, businesses,
 
           {allItems.map((item, i) => {
             const isHistory = item.type === 'history';
-            const isTrending = (item as any).type === 'trending';
+            const isTrending = (item as Record<string, string>).type === 'trending';
             
             // Show trending header
             if (isTrending && i === history.filter(() => !query).length) {

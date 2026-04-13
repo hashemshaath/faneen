@@ -27,7 +27,7 @@ export const TagsFilter = ({ selectedTags, onToggleTag, onClearTags }: TagsFilte
 
   if (tags.length === 0) return null;
 
-  const groupedTags = tags.reduce((acc: Record<string, any[]>, tag: any) => {
+  const groupedTags = tags.reduce((acc: Record<string, typeof tags[number][]>, tag: any) => {
     const group = tag.tag_group || 'general';
     if (!acc[group]) acc[group] = [];
     acc[group].push(tag);
