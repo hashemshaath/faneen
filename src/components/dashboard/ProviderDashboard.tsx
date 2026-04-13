@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
@@ -12,10 +12,14 @@ import {
   DollarSign, Plus, Send, BarChart3, ArrowUpRight, ArrowDownRight,
   FolderOpen, Users, Clock, CheckCircle2, AlertCircle, MessageSquare,
 } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell } from 'recharts';
 import { Link } from 'react-router-dom';
 import { useCountUp } from '@/hooks/useCountUp';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
+
+const LazyRecharts = lazy(() => import('recharts').then(m => ({ default: () => null })));
+// We import recharts components dynamically in the chart rendering sections
+let rechartsModule: typeof import('recharts') | null = null;
+const getRechartsModule = () => import('recharts').then(m => { rechartsModule = m; return m; });
 
 const CHART_COLORS = [
   'hsl(42 85% 55%)',

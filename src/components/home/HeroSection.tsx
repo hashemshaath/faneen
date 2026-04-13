@@ -7,9 +7,9 @@ import { useTypingAnimation } from "@/hooks/useTypingAnimation";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { HeroParticles } from "./HeroParticles";
-import heroBg1 from "@/assets/hero-bg.jpg";
-import heroBg2 from "@/assets/hero-slide-2.jpg";
-import heroBg3 from "@/assets/hero-slide-3.jpg";
+import heroBg1 from "@/assets/hero-bg.webp";
+import heroBg2 from "@/assets/hero-slide-2.webp";
+import heroBg3 from "@/assets/hero-slide-3.webp";
 
 const slidesData = [
   {
