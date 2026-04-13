@@ -92,7 +92,7 @@ export const SearchFilters = ({
           {/* Category */}
           <FilterCard icon={Tag} label={t('search.category')}>
             <CategoryTree
-              categories={(categories || [])}
+              categories={(categories || []) as any}
               selectedId={filters.categoryId}
               onSelect={v => onFilterChange('categoryId', v)}
             />
@@ -178,7 +178,7 @@ export const SearchFilters = ({
 
           {/* Sort */}
           <FilterCard icon={ArrowUpDown} label={t('search.sort_by')}>
-            <Select value={filters.sortBy} onValueChange={(v) => onFilterChange('sortBy', v)}>
+            <Select value={filters.sortBy} onValueChange={(v) => onFilterChange('sortBy', v as SearchFilterValues['sortBy'])}>
               <SelectTrigger className="w-full rounded-xl h-9 text-sm bg-muted/20 dark:bg-muted/10 border-border/20 dark:border-border/10">
                 <SelectValue />
               </SelectTrigger>

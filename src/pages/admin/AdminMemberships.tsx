@@ -30,7 +30,8 @@ import { LIMIT_FIELDS, LIMIT_CATEGORIES, parseLimits, limitsToJson } from '@/lib
 type Tab = 'overview' | 'plans' | 'subscriptions' | 'businesses';
 
 /* ─── Plan Card ─── */
-const PlanCard = React.memo(({ plan, isRTL, language, subsCount, onEdit }: { plan: Record<string, unknown>; isRTL: boolean; language: string; subsCount: number; onEdit: (p: Record<string, unknown>) => void }) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const PlanCard = React.memo(({ plan, isRTL, language, subsCount, onEdit }: { plan: any; isRTL: boolean; language: string; subsCount: number; onEdit: (p: any) => void }) => {
   const Icon = tierIcons[plan.tier] || Zap;
   const colors = tierColors[plan.tier] || tierColors.free;
   const features = Array.isArray(plan.features) ? plan.features : [];
@@ -295,7 +296,7 @@ LimitsEditor.displayName = 'LimitsEditor';
 
 /* ─── Subscription Row ─── */
 const SubRow = React.memo(({ sub, isRTL, language, plans, onCancel, onRenew, onUpgrade }: {
-  sub: Record<string, unknown>; isRTL: boolean; language: string; plans: Array<Record<string, unknown>>; onCancel: (id: string) => void; onRenew: (sub: Record<string, unknown>) => void; onUpgrade: (sub: Record<string, unknown>) => void;
+  sub: any; isRTL: boolean; language: string; plans: any[]; onCancel: (id: string) => void; onRenew: (sub: any) => void; onUpgrade: (sub: any) => void;
 }) => {
   const plan = sub.plan;
   const Icon = tierIcons[plan?.tier] || Zap;
@@ -567,7 +568,7 @@ const AdminMemberships = () => {
         price_monthly: form.price_monthly, price_yearly: form.price_yearly,
         is_active: form.is_active, sort_order: form.sort_order,
         features, limits,
-      }).eq('id', editingPlan.id);
+      }).eq('id', (editingPlan as any).id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -613,7 +614,7 @@ const AdminMemberships = () => {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const handleRenew = useCallback(async (sub: Record<string, unknown>) => {
+  const handleRenew = useCallback(async (sub: any) => {
     if (!sub.plan_id || !sub.user_id) return;
     try {
       const { error } = await supabase.rpc('subscribe_to_plan' , {
@@ -629,7 +630,7 @@ const AdminMemberships = () => {
     } catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'Error'); }
   }, [isRTL, queryClient]);
 
-  const openEdit = useCallback((plan: Record<string, unknown>) => {
+  const openEdit = useCallback((plan: any) => {
     setEditingPlan(plan);
     const features = Array.isArray(plan.features) ? (plan.features as string[]).join('\n') : '';
     setFeaturesText(features);

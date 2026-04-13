@@ -362,7 +362,7 @@ const AdminUsers = () => {
   // ─── Mutations ───
   const addRoleMutation = useMutation({
     mutationFn: async ({ userId, role }: { userId: string; role: string }) => {
-      const { error } = await supabase.from('user_roles').insert({ user_id: userId, role: role as Database["public"]["Enums"]["app_role"] });
+      const { error } = await supabase.from('user_roles').insert({ user_id: userId, role: role as any });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -401,7 +401,7 @@ const AdminUsers = () => {
         await supabase.from('admin_activity_log').insert({
           user_id: user!.id, action: 'update', entity_type: 'user', entity_id: userId,
           details: { target_user_id: userId, changes },
-        });
+        } as any);
       }
     },
     onSuccess: () => {
@@ -414,12 +414,12 @@ const AdminUsers = () => {
 
   const toggleBanMutation = useMutation({
     mutationFn: async ({ profileId, userId, isBanned }: { profileId: string; userId: string; isBanned: boolean }) => {
-      const { error } = await supabase.from('profiles').update({ is_banned: isBanned } as Record<string, boolean>).eq('id', profileId);
+      const { error } = await supabase.from('profiles').update({ is_banned: isBanned } as any).eq('id', profileId);
       if (error) throw error;
       await supabase.from('admin_activity_log').insert({
         user_id: user!.id, action: isBanned ? 'user_disabled' : 'user_enabled',
         entity_type: 'user', entity_id: userId, details: { target_user_id: userId, is_banned: isBanned },
-      });
+      } as any);
     },
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: ['admin-profiles'] });
