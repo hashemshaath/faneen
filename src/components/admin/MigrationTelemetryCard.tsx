@@ -14,6 +14,7 @@ import {
   CheckCircle2, XCircle, MinusCircle, Database, Smartphone,
   ShieldAlert, KeyRound, FileJson, HardDrive, WifiOff, AlertTriangle, Filter, X,
 } from 'lucide-react';
+import { CopyButton } from '@/components/ui/copy-button';
 
 interface TelemetryRow {
   id: string;
@@ -344,17 +345,23 @@ export const MigrationTelemetryCard = () => {
               <Filter className="w-3.5 h-3.5" />
               <span className="font-medium">{isRTL ? 'فلترة:' : 'Filter:'}</span>
             </div>
-            <Select value={filterKey} onValueChange={setFilterKey}>
-              <SelectTrigger className="h-8 text-xs w-auto min-w-[140px]">
-                <SelectValue placeholder={isRTL ? 'مفتاح الترحيل' : 'Migration key'} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{isRTL ? 'كل المفاتيح' : 'All keys'}</SelectItem>
-                {filterOptions.keys.map(k => (
-                  <SelectItem key={k} value={k} className="font-mono text-xs">{k}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex items-center gap-1">
+              <Select value={filterKey} onValueChange={setFilterKey}>
+                <SelectTrigger className="h-8 text-xs w-auto min-w-[140px]">
+                  <SelectValue placeholder={isRTL ? 'مفتاح الترحيل' : 'Migration key'} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{isRTL ? 'كل المفاتيح' : 'All keys'}</SelectItem>
+                  {filterOptions.keys.map(k => (
+                    <SelectItem key={k} value={k} className="font-mono text-xs">{k}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {/* Quick-copy of the currently filtered migration key for incident triage. */}
+              {filterKey !== 'all' && (
+                <CopyButton value={filterKey} size="sm" />
+              )}
+            </div>
             <Select value={filterStatus} onValueChange={setFilterStatus}>
               <SelectTrigger className="h-8 text-xs w-auto min-w-[120px]">
                 <SelectValue placeholder={isRTL ? 'الحالة' : 'Status'} />
@@ -445,9 +452,15 @@ export const MigrationTelemetryCard = () => {
                         {device}
                       </span>
                       {row.migration_key && (
-                        <code className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-muted text-muted-foreground truncate max-w-[140px]" title={row.migration_key}>
-                          {row.migration_key}
-                        </code>
+                        <span className="inline-flex items-center gap-0.5">
+                          <code
+                            className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-muted text-muted-foreground truncate max-w-[140px]"
+                            title={row.migration_key}
+                          >
+                            {row.migration_key}
+                          </code>
+                          <CopyButton value={row.migration_key} />
+                        </span>
                       )}
                       {row.keys_migrated > 0 && (
                         <span className="text-muted-foreground">

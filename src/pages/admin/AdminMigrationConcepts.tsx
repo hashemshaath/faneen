@@ -17,15 +17,26 @@ import {
   MIGRATION_FLAGS,
   PROTECTED_KEY_ENTRIES,
 } from '@/config/storageMigration';
+import { CopyButton } from '@/components/ui/copy-button';
 
 /* ────────────────────────────────────────────────────────────────
  *  صفحة "مفاهيم الترحيل" — توثيق داخلي للمشرفين فقط
  * ──────────────────────────────────────────────────────────────── */
 
-const CodeChip = ({ children }: { children: React.ReactNode }) => (
-  <code className="inline-flex items-center px-2 py-0.5 rounded-md bg-muted font-mono text-xs text-foreground/90 border border-border/60">
-    {children}
-  </code>
+const CodeChip = ({
+  children,
+  copyValue,
+}: {
+  children: React.ReactNode;
+  /** When provided, renders an inline copy button next to the chip. */
+  copyValue?: string;
+}) => (
+  <span className="inline-flex items-center gap-1">
+    <code className="inline-flex items-center px-2 py-0.5 rounded-md bg-muted font-mono text-xs text-foreground/90 border border-border/60">
+      {children}
+    </code>
+    {copyValue && <CopyButton value={copyValue} />}
+  </span>
 );
 
 const CodeBlock = ({ children }: { children: React.ReactNode }) => (
@@ -105,7 +116,7 @@ const AdminMigrationConcepts = () => {
               </div>
               <div className="rounded-lg border border-border/60 bg-muted/30 p-3">
                 <div className="text-xs text-muted-foreground mb-1">{isRTL ? 'مفتاح القفل' : 'Lock key'}</div>
-                <CodeChip>{MIGRATION_KEY}</CodeChip>
+                <CodeChip copyValue={MIGRATION_KEY}>{MIGRATION_KEY}</CodeChip>
               </div>
             </div>
           </CardContent>
@@ -129,7 +140,7 @@ const AdminMigrationConcepts = () => {
                   <Lock className="w-4 h-4 text-primary" />
                   <span className="font-semibold text-sm">{isRTL ? 'مفتاح القفل الرئيسي' : 'Main lock key'}</span>
                 </div>
-                <CodeChip>{MIGRATION_KEY}</CodeChip>
+                <CodeChip copyValue={MIGRATION_KEY}>{MIGRATION_KEY}</CodeChip>
                 <p className="text-xs text-muted-foreground">
                   {isRTL
                     ? 'يضمن عدم تشغيل خوارزمية الترحيل مرتين على نفس الجهاز قبل اكتمال إصدار جديد.'
@@ -253,7 +264,7 @@ if (serverEpoch > localEpoch) {
                 <div key={entry.key} className="rounded-lg border border-border/60 p-3 flex flex-col sm:flex-row sm:items-start gap-3">
                   <div className="flex items-center gap-2 shrink-0">
                     <Lock className="w-3.5 h-3.5 text-accent" />
-                    <CodeChip>{entry.key}</CodeChip>
+                    <CodeChip copyValue={entry.key}>{entry.key}</CodeChip>
                     <Badge variant="secondary" className="text-[10px] uppercase">{entry.category}</Badge>
                   </div>
                   <p className="text-xs text-muted-foreground leading-relaxed">
