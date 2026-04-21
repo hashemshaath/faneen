@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
+const insertSpy = vi.fn().mockResolvedValue({ error: null });
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
-    from: () => ({
-      insert: vi.fn().mockResolvedValue({ error: null }),
-    }),
+    from: () => ({ insert: insertSpy }),
+    rpc: vi.fn().mockResolvedValue({ data: null, error: null }),
   },
 }));
 
@@ -14,6 +14,8 @@ describe('migrateLegacyStorage', () => {
   beforeEach(() => {
     localStorage.clear();
     sessionStorage.clear();
+    insertSpy.mockClear();
+    insertSpy.mockResolvedValue({ error: null });
   });
 
   it('migrates known faneen_* localStorage keys to qitaat_*', () => {
