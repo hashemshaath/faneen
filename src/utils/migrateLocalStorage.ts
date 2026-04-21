@@ -916,6 +916,7 @@ async function logTelemetry(
     force?: boolean;
     errorCode?: SweepErrorCode | null;
     diagnostics?: SweepDiagnostic[];
+    rerunReason?: string | null;
   },
 ): Promise<void> {
   try {
@@ -925,6 +926,11 @@ async function logTelemetry(
     // column as compact JSON. We keep it under the 1000-char DB limit by
     // serialising progressively smaller subsets if needed.
     const composedMessage = composeTelemetryMessage(errorMessage, options?.diagnostics);
+    // Stamp the admin-provided reason so each per-device event is traceable
+    // back to the broadcast that triggered it. The DB caps this at 500 chars.
+    const trimmedReason = options?.rerunReason
+      ? options.rerunReason.trim().slice(0, 500)
+      : null;
     const { error } = await supabase.from('migration_telemetry').insert({
       migration_key: MIGRATION_KEY,
       status,
@@ -932,6 +938,7 @@ async function logTelemetry(
       user_agent: ua,
       error_message: composedMessage,
       error_code: options?.errorCode ? options.errorCode.slice(0, 64) : null,
+      rerun_reason: trimmedReason,
     });
     if (!error) {
       localStorage.setItem(TELEMETRY_FLAG, '1');
@@ -1068,10 +1075,17 @@ export function migrateLegacyStorage(): void {
  */
 async function checkServerEpochAndRerun(): Promise<void> {
   try {
-    const { data, error } = await supabase.rpc('get_migration_epoch');
+    // Pull epoch + reason in a single round-trip so each device can stamp the
+    // admin-provided reason on its own telemetry event.
+    const { data, error } = await (supabase.rpc as any)('get_current_migration_rerun');
     if (error || data == null) return;
-    const serverEpoch = Number(data);
+    const row = Array.isArray(data) ? data[0] : data;
+    if (!row) return;
+    const serverEpoch = Number(row.epoch);
     if (!Number.isFinite(serverEpoch) || serverEpoch < 1) return;
+    const rerunReason: string | null = typeof row.reason === 'string' && row.reason.trim().length > 0
+      ? row.reason.trim().slice(0, 500)
+      : null;
 
     const localEpochRaw = localStorage.getItem(EPOCH_KEY);
     const localEpoch = localEpochRaw ? Number(localEpochRaw) : 1;
@@ -1087,6 +1101,7 @@ async function checkServerEpochAndRerun(): Promise<void> {
     if (import.meta.env.DEV) {
       console.info(
         `[storage-migration] Server epoch ${serverEpoch} > local ${localEpoch}. Re-running…`,
+        rerunReason ? `Reason: ${rerunReason}` : '',
       );
     }
 
@@ -1099,7 +1114,7 @@ async function checkServerEpochAndRerun(): Promise<void> {
     localStorage.setItem(EPOCH_KEY, String(serverEpoch));
 
     // Re-run the migration synchronously; it will log a fresh telemetry event
-    runMigrationCore({ forced: true, epoch: serverEpoch });
+    runMigrationCore({ forced: true, epoch: serverEpoch, rerunReason });
   } catch {
     // Silent — never break boot
   }
@@ -1109,13 +1124,15 @@ async function checkServerEpochAndRerun(): Promise<void> {
  * Internal core that performs the migration steps and logs telemetry.
  * Extracted so it can be invoked both on first boot and on forced re-runs.
  */
-function runMigrationCore(opts: { forced?: boolean; epoch?: number } = {}): void {
+function runMigrationCore(
+  opts: { forced?: boolean; epoch?: number; rerunReason?: string | null } = {},
+): void {
   // Kick off async batched core; never await — boot must stay non-blocking
   void runMigrationCoreAsync(opts);
 }
 
 async function runMigrationCoreAsync(
-  opts: { forced?: boolean; epoch?: number } = {},
+  opts: { forced?: boolean; epoch?: number; rerunReason?: string | null } = {},
 ): Promise<void> {
   try {
     let migrated = 0;
@@ -1144,6 +1161,7 @@ async function runMigrationCoreAsync(
         force: !!opts.forced,
         errorCode: combined.code,
         diagnostics,
+        rerunReason: opts.rerunReason ?? null,
       });
     } else {
       const status = totalCleaned > 0 ? 'success' : 'no_legacy_data';
@@ -1151,7 +1169,7 @@ async function runMigrationCoreAsync(
         status,
         totalCleaned,
         opts.forced ? `forced re-run (epoch ${opts.epoch ?? '?'})` : undefined,
-        { force: !!opts.forced },
+        { force: !!opts.forced, rerunReason: opts.rerunReason ?? null },
       );
     }
   } catch (err) {
@@ -1159,6 +1177,7 @@ async function runMigrationCoreAsync(
     void logTelemetry('failed', 0, msg, {
       force: !!opts.forced,
       errorCode: 'unknown',
+      rerunReason: opts.rerunReason ?? null,
       diagnostics: [
         {
           ts: Date.now(),

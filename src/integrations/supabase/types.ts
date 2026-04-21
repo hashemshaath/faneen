@@ -2436,6 +2436,7 @@ export type Database = {
           id: string
           keys_migrated: number
           migration_key: string
+          rerun_reason: string | null
           status: string
           user_agent: string | null
           user_id: string | null
@@ -2447,6 +2448,7 @@ export type Database = {
           id?: string
           keys_migrated?: number
           migration_key: string
+          rerun_reason?: string | null
           status: string
           user_agent?: string | null
           user_id?: string | null
@@ -2458,6 +2460,7 @@ export type Database = {
           id?: string
           keys_migrated?: number
           migration_key?: string
+          rerun_reason?: string | null
           status?: string
           user_agent?: string | null
           user_id?: string | null
@@ -3876,6 +3879,14 @@ export type Database = {
           avatar_url: string
           full_name: string
           user_id: string
+        }[]
+      }
+      get_current_migration_rerun: {
+        Args: never
+        Returns: {
+          epoch: number
+          last_rerun_at: string
+          reason: string
         }[]
       }
       get_migration_epoch: { Args: never; Returns: number }

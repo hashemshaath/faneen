@@ -165,8 +165,17 @@ export function MigrationAlertSettingsCard() {
 
   const rerunMutation = useMutation({
     mutationFn: async (reason: string) => {
+      // Client-side guard mirrors the server check so admins get instant feedback.
+      const trimmed = reason.trim();
+      if (trimmed.length < 5) {
+        throw new Error(
+          isRTL
+            ? 'يجب إدخال سبب لا يقل عن 5 أحرف لإعادة بثّ الترحيل.'
+            : 'A reason of at least 5 characters is required to broadcast a migration re-run.',
+        );
+      }
       const { data, error } = await supabase.rpc('bump_migration_epoch', {
-        _reason: reason || null,
+        _reason: trimmed,
       });
       if (error) throw error;
       return data as number;
@@ -186,9 +195,13 @@ export function MigrationAlertSettingsCard() {
       // admins understand they cannot bypass it.
       const msg = String(err?.message || err || '');
       const isCooldown = /cooldown/i.test(msg);
+      const isReasonMissing =
+        /reason/i.test(msg) && /(required|at least)/i.test(msg);
       toast({
         title: isCooldown
           ? isRTL ? 'البثّ مقفل مؤقتاً' : 'Broadcast on cooldown'
+          : isReasonMissing
+            ? isRTL ? 'السبب مطلوب' : 'Reason required'
           : isRTL ? 'فشل البثّ' : 'Broadcast failed',
         description: msg,
         variant: 'destructive',
@@ -213,6 +226,10 @@ export function MigrationAlertSettingsCard() {
       minutesRemaining: Math.max(0, Math.ceil(remainingMs / 60_000)),
     };
   }, [rerunStatus]);
+
+  // Reason is mandatory. Mirror the server rule (≥ 5 chars after trim).
+  const trimmedReasonLen = rerunReason.trim().length;
+  const reasonValid = trimmedReasonLen >= 5;
 
   if (isLoading || !form) {
     return (
@@ -380,19 +397,35 @@ export function MigrationAlertSettingsCard() {
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <div className="space-y-1.5">
-                <Label className="text-xs">{isRTL ? 'سبب إعادة التشغيل (اختياري)' : 'Reason (optional)'}</Label>
+                <Label className="text-xs">
+                  {isRTL ? 'سبب إعادة التشغيل ' : 'Reason '}
+                  <span className="text-destructive">*</span>
+                  <span className="ms-1 text-muted-foreground font-normal">
+                    ({isRTL ? 'إلزامي' : 'required'})
+                  </span>
+                </Label>
                 <Textarea
                   rows={2}
                   value={rerunReason}
                   onChange={(e) => setRerunReason(e.target.value.slice(0, 500))}
                   placeholder={isRTL ? 'مثال: تنظيف بقايا قديمة بعد تحديث' : 'e.g. clean stale residue after release'}
+                  aria-invalid={!reasonValid}
+                  className={!reasonValid && trimmedReasonLen > 0 ? 'border-destructive focus-visible:ring-destructive' : undefined}
                 />
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className={!reasonValid ? 'text-destructive' : 'text-muted-foreground'}>
+                    {isRTL
+                      ? 'يلزم 5 أحرف على الأقل. سيُحفظ هذا السبب مع حدث كل جهاز يُعيد الترحيل.'
+                      : 'At least 5 characters required. This reason will be stamped on every device\'s telemetry event.'}
+                  </span>
+                  <span className="text-muted-foreground tabular-nums">{trimmedReasonLen}/500</span>
+                </div>
               </div>
               <AlertDialogFooter>
                 <AlertDialogCancel>{isRTL ? 'إلغاء' : 'Cancel'}</AlertDialogCancel>
                 <AlertDialogAction
                   onClick={() => rerunMutation.mutate(rerunReason)}
-                  disabled={cooldownInfo.onCooldown}
+                  disabled={cooldownInfo.onCooldown || !reasonValid}
                 >
                   {isRTL ? 'تأكيد البثّ' : 'Confirm broadcast'}
                 </AlertDialogAction>
