@@ -22,7 +22,7 @@ import {
   Layers, MessageSquare, Users, Newspaper, Building2, Bell, Activity,
   Bookmark, ShieldAlert, Crown, FolderTree, Tags, UserCog, Database,
   BarChart3, Cog, Eye, TrendingUp, AlertTriangle, Server, Brain,
-  CalendarClock, BookOpen,
+  CalendarClock,
 } from 'lucide-react';
 
 interface MenuItem {
@@ -142,8 +142,6 @@ const adminBaseGroups: MenuGroup[] = [
       { label: { ar: 'لوحة التحكم', en: 'Dashboard' }, url: '/dashboard', icon: LayoutDashboard, end: true },
       { label: { ar: 'سجل النشاط', en: 'Activity Log' }, url: '/admin/activity-log', icon: BarChart3 },
       { label: { ar: 'رسائل التواصل', en: 'Contact Messages' }, url: '/admin/contact-messages', icon: MessageSquare },
-      { label: { ar: 'تقرير ترحيل البيانات', en: 'Migration Report' }, url: '/admin/migration-report', icon: Database },
-      { label: { ar: 'مفاهيم الترحيل', en: 'Migration Concepts' }, url: '/admin/migration-concepts', icon: BookOpen },
     ],
   },
   {

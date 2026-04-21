@@ -71,8 +71,6 @@ const AdminTags = lazyRetry(() => import("./pages/admin/AdminTags"));
 const AdminBusinesses = lazyRetry(() => import("./pages/admin/AdminBusinesses"));
 const AdminMemberships = lazyRetry(() => import("./pages/admin/AdminMemberships"));
 const AdminContactMessages = lazyRetry(() => import("./pages/admin/AdminContactMessages"));
-const AdminMigrationReport = lazyRetry(() => import("./pages/admin/AdminMigrationReport"));
-const AdminMigrationConcepts = lazyRetry(() => import("./pages/admin/AdminMigrationConcepts"));
 const Notifications = lazyRetry(() => import("./pages/Notifications"));
 const Membership = lazyRetry(() => import("./pages/Membership"));
 const DashboardOperations = lazyRetry(() => import("./pages/dashboard/DashboardOperations"));
@@ -170,8 +168,6 @@ const AppRoutes = () => (
           <Route path="/admin/businesses" element={<ProtectedRoute requireAdmin><AdminBusinesses /></ProtectedRoute>} />
           <Route path="/admin/memberships" element={<ProtectedRoute requireAdmin><AdminMemberships /></ProtectedRoute>} />
           <Route path="/admin/contact-messages" element={<ProtectedRoute requireAdmin><AdminContactMessages /></ProtectedRoute>} />
-          <Route path="/admin/migration-report" element={<ProtectedRoute requireAdmin><AdminMigrationReport /></ProtectedRoute>} />
-          <Route path="/admin/migration-concepts" element={<ProtectedRoute requireAdmin><AdminMigrationConcepts /></ProtectedRoute>} />
 
           <Route path="/admin/users" element={<ProtectedRoute requireSuperAdmin><AdminUsers /></ProtectedRoute>} />
           <Route path="/admin/system-settings" element={<ProtectedRoute requireSuperAdmin><AdminSystemSettings /></ProtectedRoute>} />

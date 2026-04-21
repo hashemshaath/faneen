@@ -23,7 +23,6 @@ import {
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { BnplProvidersManager } from '@/components/bnpl/BnplProvidersManager';
 import { useThemeMode } from '@/components/ThemeToggle';
-import { MigrationStatusCard } from '@/components/dashboard/MigrationStatusCard';
 import { accentPresets, getStoredAccent, applyAccent } from '@/lib/accent-colors';
 import { checkPasswordStrength } from '@/lib/password-strength';
 import { useBrowserNotifications } from '@/hooks/useBrowserNotifications';
@@ -213,9 +212,6 @@ const DashboardSettings = () => {
         {/* ═══ APPEARANCE ═══ */}
         {activeTab === 'appearance' && (
           <div className="space-y-3">
-            {/* Migration status indicator */}
-            <MigrationStatusCard />
-
             {/* Theme Mode */}
             <Card className="border-border/40">
               <CardContent className="p-3 sm:p-4">
