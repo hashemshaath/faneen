@@ -6,7 +6,12 @@ import { Footer } from '@/components/layout/Footer';
 
 const Terms = () => {
   const { isRTL } = useLanguage();
-  usePageMeta({ title: isRTL ? 'الشروط والأحكام | قِطاعات' : 'Terms & Conditions | Qitaat', description: isRTL ? 'الشروط والأحكام لاستخدام منصة قِطاعات' : 'Terms and conditions for using Qitaat platform' });
+  usePageMeta({
+    title: isRTL ? 'الشروط والأحكام | قِطاعات' : 'Terms & Conditions | Qitaat',
+    description: isRTL
+      ? 'الشروط والأحكام لاستخدام منصة قِطاعات: قبول الشروط، إدارة الحسابات، المحتوى، العقود، وحدود المسؤولية.'
+      : 'Qitaat terms & conditions: acceptance, accounts, content rules, contracts & transactions, and liability limits.',
+  });
 
   return (
     <div className="min-h-screen bg-background">
