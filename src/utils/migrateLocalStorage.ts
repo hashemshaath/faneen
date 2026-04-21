@@ -760,20 +760,13 @@ function extractLegacyCookieNames(
  * percent-encoded cookie names. Cookies on unrelated origins cannot be
  * cleared from JS — that's a browser security boundary.
  */
-function sweepCookies(): { swept: number; sweptKeys: string[]; error?: SweepError } {
+function sweepCookies(
+  recorder?: DiagnosticRecorder,
+): { swept: number; sweptKeys: string[]; error?: SweepError } {
   const sweptKeys: string[] = [];
   try {
-    if (typeof document === 'undefined') {
-      return {
-        swept: 0,
-        sweptKeys,
-        error: {
-          code: 'cookie_unavailable',
-          message: 'document is undefined in this environment',
-          scope: 'cookies',
-        },
-      };
-    }
+    const probe = probeCookieAccess(recorder);
+    if (probe) return { swept: 0, sweptKeys, error: probe };
     if (!document.cookie) return { swept: 0, sweptKeys };
 
     const host = (window.location.hostname || '').toLowerCase();
@@ -814,10 +807,12 @@ function sweepCookies(): { swept: number; sweptKeys: string[]; error?: SweepErro
       sweptKeys.push(decoded);
     }
   } catch (err) {
+    const cls = classifySweepError(err, 'cookies');
+    recorder?.record({ scope: 'cookies', phase: 'unknown', code: 'cookie_unavailable', message: cls.message });
     return {
       swept: sweptKeys.length,
       sweptKeys,
-      error: { ...classifySweepError(err, 'cookies'), code: 'cookie_unavailable' },
+      error: { ...cls, code: 'cookie_unavailable' },
     };
   }
   return { swept: sweptKeys.length, sweptKeys };
@@ -829,14 +824,15 @@ function sweepCookies(): { swept: number; sweptKeys: string[]; error?: SweepErro
  * jank-prone part of the sweep. We yield every BATCH_SIZE *cookies* (not
  * writes) so the browser stays responsive even on deep paths.
  */
-async function sweepCookiesBatched(): Promise<{
+async function sweepCookiesBatched(
+  recorder?: DiagnosticRecorder,
+): Promise<{
   swept: number;
   sweptKeys: string[];
   error?: SweepError;
 }> {
-  if (typeof document === 'undefined') {
-    return sweepCookies();
-  }
+  const probe = probeCookieAccess(recorder);
+  if (probe) return { swept: 0, sweptKeys: [], error: probe };
   const cookieHeader = document.cookie;
   if (!cookieHeader) return { swept: 0, sweptKeys: [] };
 
@@ -845,7 +841,7 @@ async function sweepCookiesBatched(): Promise<{
       !isKeyProtected(decoded) && !isKeyProtected(raw),
   );
   if (candidates.length <= BATCH_THRESHOLD) {
-    return sweepCookies();
+    return sweepCookies(recorder);
   }
 
   const sweptKeys: string[] = [];
@@ -882,10 +878,12 @@ async function sweepCookiesBatched(): Promise<{
       }
     }
   } catch (err) {
+    const cls = classifySweepError(err, 'cookies');
+    recorder?.record({ scope: 'cookies', phase: 'unknown', code: 'cookie_unavailable', message: cls.message });
     return {
       swept: sweptKeys.length,
       sweptKeys,
-      error: { ...classifySweepError(err, 'cookies'), code: 'cookie_unavailable' },
+      error: { ...cls, code: 'cookie_unavailable' },
     };
   }
   return { swept: sweptKeys.length, sweptKeys };
