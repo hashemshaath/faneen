@@ -320,10 +320,12 @@ export function migrateLegacyStorage(): void {
     localStorage.setItem(MIGRATION_FLAG, '1');
 
     // Sweep any remaining unknown faneen_* orphans (e.g. from older app versions)
-    const { swept, sweptKeys } = sweepLegacyKeys();
+    const localResult = sweepLegacyKeys();
     const session = sweepSessionStorage();
     const cookies = sweepCookies();
+    const { swept, sweptKeys } = localResult;
     const totalCleaned = migrated + swept + session.swept + cookies.swept;
+    const combined = combineSweepErrors([localResult.error, session.error, cookies.error]);
 
     if (import.meta.env.DEV) {
       if (migrated > 0) {
@@ -338,15 +340,24 @@ export function migrateLegacyStorage(): void {
       if (cookies.swept > 0) {
         console.info(`[storage-migration] Swept ${cookies.swept} cookie(s):`, cookies.sweptKeys);
       }
+      if (combined.code) {
+        console.warn(`[storage-migration] Sweep encountered ${combined.code}:`, combined.message);
+      }
     }
 
-    void logTelemetry(totalCleaned > 0 ? 'success' : 'no_legacy_data', totalCleaned);
+    if (combined.code) {
+      void logTelemetry('failed', totalCleaned, combined.message ?? undefined, {
+        errorCode: combined.code,
+      });
+    } else {
+      void logTelemetry(totalCleaned > 0 ? 'success' : 'no_legacy_data', totalCleaned);
+    }
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     if (import.meta.env.DEV) {
       console.warn('[storage-migration] Failed:', err);
     }
-    void logTelemetry('failed', 0, msg);
+    void logTelemetry('failed', 0, msg, { errorCode: 'unknown' });
   }
 }
 
