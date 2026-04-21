@@ -208,3 +208,120 @@ describe('migrateLegacyStorage — partial & edge scenarios', () => {
     expect(localStorage.getItem('FANEEN_upper')).toBe('keep');
   });
 });
+
+describe('migrateLegacyStorage — value preservation, deletion & non-duplication', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+  });
+
+  it('preserves exact value bytes after migration (no transformation)', () => {
+    const langValue = 'en';
+    const historyValue = '["aluminium","glass","wood"]';
+    localStorage.setItem('faneen_lang', langValue);
+    localStorage.setItem('faneen_search_history', historyValue);
+
+    migrateLegacyStorage();
+
+    expect(localStorage.getItem('qitaat_lang')).toStrictEqual(langValue);
+    expect(localStorage.getItem('qitaat_search_history')).toStrictEqual(historyValue);
+  });
+
+  it('removes ALL legacy faneen_* keys after a successful migration', () => {
+    localStorage.setItem('faneen_lang', 'ar');
+    localStorage.setItem('faneen_search_history', '["x"]');
+    localStorage.setItem('faneen_random_orphan', 'zzz');
+
+    migrateLegacyStorage();
+
+    const remainingFaneen: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('faneen_')) remainingFaneen.push(k);
+    }
+    expect(remainingFaneen).toEqual([]);
+  });
+
+  it('does NOT create duplicate qitaat_* keys when run multiple times', () => {
+    localStorage.setItem('faneen_lang', 'en');
+    localStorage.setItem('faneen_search_history', '["a"]');
+
+    migrateLegacyStorage();
+    migrateLegacyStorage();
+    migrateLegacyStorage();
+
+    // Count qitaat_lang occurrences (must be exactly 1)
+    const qitaatKeys: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('qitaat_')) qitaatKeys.push(k);
+    }
+    const langCount = qitaatKeys.filter((k) => k === 'qitaat_lang').length;
+    const historyCount = qitaatKeys.filter((k) => k === 'qitaat_search_history').length;
+    expect(langCount).toBe(1);
+    expect(historyCount).toBe(1);
+    // Values remain stable across reruns
+    expect(localStorage.getItem('qitaat_lang')).toBe('en');
+    expect(localStorage.getItem('qitaat_search_history')).toBe('["a"]');
+  });
+
+  it('does NOT re-create deleted faneen_* keys on repeated runs', () => {
+    localStorage.setItem('faneen_lang', 'en');
+    migrateLegacyStorage();
+
+    // User clears qitaat_lang manually; rerun should not resurrect faneen_lang
+    localStorage.removeItem('qitaat_lang');
+    migrateLegacyStorage();
+
+    expect(localStorage.getItem('faneen_lang')).toBeNull();
+  });
+
+  it('preserves a fresher qitaat_* value and STILL deletes the legacy faneen_* counterpart', () => {
+    localStorage.setItem('qitaat_lang', 'ar'); // fresh
+    localStorage.setItem('faneen_lang', 'en'); // stale
+
+    migrateLegacyStorage();
+
+    expect(localStorage.getItem('qitaat_lang')).toBe('ar'); // preserved
+    expect(localStorage.getItem('faneen_lang')).toBeNull(); // deleted, no duplication
+  });
+
+  it('sets migration flags exactly once (no flag duplication)', () => {
+    localStorage.setItem('faneen_lang', 'en');
+
+    migrateLegacyStorage();
+    migrateLegacyStorage();
+    migrateLegacyStorage();
+
+    expect(localStorage.getItem('qitaat_migration_v1_done')).toBe('1');
+    expect(localStorage.getItem('qitaat_migration_v1_sweep_done')).toBe('1');
+  });
+
+  it('total qitaat_* keys after migration == count of original legacy keys + flags', () => {
+    localStorage.setItem('faneen_lang', 'ar');
+    localStorage.setItem('faneen_search_history', '[]');
+
+    migrateLegacyStorage();
+
+    const qitaatKeys = new Set<string>();
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('qitaat_')) qitaatKeys.add(k);
+    }
+    // Expected: qitaat_lang, qitaat_search_history + 3 migration flags (done, sweep_done, telemetry_sent)
+    expect(qitaatKeys.has('qitaat_lang')).toBe(true);
+    expect(qitaatKeys.has('qitaat_search_history')).toBe(true);
+    expect(qitaatKeys.has('qitaat_migration_v1_done')).toBe(true);
+    expect(qitaatKeys.has('qitaat_migration_v1_sweep_done')).toBe(true);
+  });
+
+  it('sessionStorage faneen_* keys are not duplicated into localStorage', () => {
+    sessionStorage.setItem('faneen_temp', 'x');
+
+    migrateLegacyStorage();
+
+    expect(sessionStorage.getItem('faneen_temp')).toBeNull();
+    expect(localStorage.getItem('faneen_temp')).toBeNull();
+    expect(localStorage.getItem('qitaat_temp')).toBeNull();
+  });
+});
