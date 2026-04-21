@@ -325,3 +325,156 @@ describe('migrateLegacyStorage — value preservation, deletion & non-duplicatio
     expect(localStorage.getItem('qitaat_temp')).toBeNull();
   });
 });
+
+/**
+ * Behavioral coverage for the internal `sweepLegacyKeys` step.
+ * The sweep is exercised through the public `migrateLegacyStorage` entrypoint:
+ *   - It MUST remove orphan `faneen_*` keys (anything left over)
+ *   - It MUST NOT touch `qitaat_*` keys (the new namespace)
+ *   - It MUST NOT touch unrelated app/auth keys (e.g. `sb-auth-token`, `app_*`)
+ *   - Core data covered by KEY_MAP must be migrated (preserved) before sweep removes the legacy key
+ */
+describe('sweepLegacyKeys (behavioral via migrateLegacyStorage)', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+  });
+
+  it('removes ONLY orphan faneen_* keys, leaves every other namespace intact', () => {
+    // Orphans (must be swept)
+    localStorage.setItem('faneen_orphan_a', '1');
+    localStorage.setItem('faneen_orphan_b', '2');
+    localStorage.setItem('faneen_legacy_filter', 'mosque');
+
+    // Core (must be migrated, then legacy removed)
+    localStorage.setItem('faneen_lang', 'ar');
+    localStorage.setItem('faneen_search_history', '["x"]');
+
+    // Foreign / unrelated (must be untouched)
+    localStorage.setItem('qitaat_user_pref', 'compact');
+    localStorage.setItem('sb-auth-token', 'jwt-abc');
+    localStorage.setItem('app_theme', 'dark');
+    localStorage.setItem('react-query-cache', '{"x":1}');
+
+    migrateLegacyStorage();
+
+    // Orphans gone
+    expect(localStorage.getItem('faneen_orphan_a')).toBeNull();
+    expect(localStorage.getItem('faneen_orphan_b')).toBeNull();
+    expect(localStorage.getItem('faneen_legacy_filter')).toBeNull();
+
+    // Core data preserved under new namespace, legacy removed
+    expect(localStorage.getItem('qitaat_lang')).toBe('ar');
+    expect(localStorage.getItem('qitaat_search_history')).toBe('["x"]');
+    expect(localStorage.getItem('faneen_lang')).toBeNull();
+    expect(localStorage.getItem('faneen_search_history')).toBeNull();
+
+    // Foreign keys completely untouched
+    expect(localStorage.getItem('qitaat_user_pref')).toBe('compact');
+    expect(localStorage.getItem('sb-auth-token')).toBe('jwt-abc');
+    expect(localStorage.getItem('app_theme')).toBe('dark');
+    expect(localStorage.getItem('react-query-cache')).toBe('{"x":1}');
+  });
+
+  it('preserves CORE data (KEY_MAP entries) — value bytes survive the sweep', () => {
+    const lang = 'en';
+    const history = JSON.stringify(['ألمنيوم', 'زجاج', 'حديد']);
+    localStorage.setItem('faneen_lang', lang);
+    localStorage.setItem('faneen_search_history', history);
+    // Mix in some orphans to ensure they don't interfere with core preservation
+    localStorage.setItem('faneen_old_v0', 'discard');
+    localStorage.setItem('faneen_temp_cache', 'discard');
+
+    migrateLegacyStorage();
+
+    // Bytes are identical — no transformation, no truncation, no encoding loss
+    expect(localStorage.getItem('qitaat_lang')).toStrictEqual(lang);
+    expect(localStorage.getItem('qitaat_search_history')).toStrictEqual(history);
+    // Orphans removed
+    expect(localStorage.getItem('faneen_old_v0')).toBeNull();
+    expect(localStorage.getItem('faneen_temp_cache')).toBeNull();
+  });
+
+  it('sweep does NOT touch any qitaat_* key, even when an orphan has a counterpart', () => {
+    // Orphan exists alongside a fresh qitaat_ counterpart with different value
+    localStorage.setItem('faneen_widget_state', 'OLD');
+    localStorage.setItem('qitaat_widget_state', 'NEW');
+    // Another qitaat_ key with NO faneen_ counterpart at all
+    localStorage.setItem('qitaat_independent', 'KEEP');
+
+    migrateLegacyStorage();
+
+    expect(localStorage.getItem('faneen_widget_state')).toBeNull(); // orphan removed
+    expect(localStorage.getItem('qitaat_widget_state')).toBe('NEW'); // counterpart preserved
+    expect(localStorage.getItem('qitaat_independent')).toBe('KEEP'); // untouched
+  });
+
+  it('sweep does NOT remove keys with similar-but-not-matching prefixes', () => {
+    // Edge cases that must NOT be considered legacy
+    localStorage.setItem('faneenx_typo', 'keep');     // extra char after prefix
+    localStorage.setItem('xfaneen_data', 'keep');     // prefix not at start
+    localStorage.setItem('FANEEN_upper', 'keep');     // wrong case
+    localStorage.setItem('faneen', 'keep');           // exact word, no underscore
+    localStorage.setItem('my_faneen_key', 'keep');    // contains substring only
+    // A real orphan to confirm sweep IS running
+    localStorage.setItem('faneen_real_orphan', 'remove');
+
+    migrateLegacyStorage();
+
+    expect(localStorage.getItem('faneenx_typo')).toBe('keep');
+    expect(localStorage.getItem('xfaneen_data')).toBe('keep');
+    expect(localStorage.getItem('FANEEN_upper')).toBe('keep');
+    expect(localStorage.getItem('faneen')).toBe('keep');
+    expect(localStorage.getItem('my_faneen_key')).toBe('keep');
+    expect(localStorage.getItem('faneen_real_orphan')).toBeNull();
+  });
+
+  it('sweep tolerates a large number of orphans without losing core data', () => {
+    // Core data
+    localStorage.setItem('faneen_lang', 'ar');
+    localStorage.setItem('faneen_search_history', '["a","b"]');
+    // 50 orphans
+    for (let i = 0; i < 50; i++) {
+      localStorage.setItem(`faneen_bulk_${i}`, `v${i}`);
+    }
+    // Foreign keys must stay
+    localStorage.setItem('sb-session', 'jwt');
+    localStorage.setItem('qitaat_keep_me', 'safe');
+
+    migrateLegacyStorage();
+
+    // Core preserved
+    expect(localStorage.getItem('qitaat_lang')).toBe('ar');
+    expect(localStorage.getItem('qitaat_search_history')).toBe('["a","b"]');
+    // All orphans gone
+    for (let i = 0; i < 50; i++) {
+      expect(localStorage.getItem(`faneen_bulk_${i}`)).toBeNull();
+    }
+    // Foreign keys intact
+    expect(localStorage.getItem('sb-session')).toBe('jwt');
+    expect(localStorage.getItem('qitaat_keep_me')).toBe('safe');
+
+    // Final invariant: zero faneen_* keys remain anywhere
+    const remaining: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('faneen_')) remaining.push(k);
+    }
+    expect(remaining).toEqual([]);
+  });
+
+  it('sweep marks its done-flag exactly once and skips on subsequent runs', () => {
+    localStorage.setItem('faneen_orphan_first', '1');
+    migrateLegacyStorage();
+
+    expect(localStorage.getItem('faneen_orphan_first')).toBeNull();
+    expect(localStorage.getItem('qitaat_migration_v1_sweep_done')).toBe('1');
+
+    // A new orphan added later: sweep is gated → it must NOT be removed on rerun
+    localStorage.setItem('faneen_orphan_second', '2');
+    migrateLegacyStorage();
+
+    expect(localStorage.getItem('faneen_orphan_second')).toBe('2');
+    expect(localStorage.getItem('qitaat_migration_v1_sweep_done')).toBe('1');
+  });
+});
