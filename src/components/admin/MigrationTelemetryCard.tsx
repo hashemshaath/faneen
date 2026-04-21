@@ -137,6 +137,11 @@ function detectDevice(ua: string | null): string {
 export const MigrationTelemetryCard = () => {
   const { isRTL } = useLanguage();
 
+  // Filters for the Recent events table — help admins triage problems fast
+  const [filterKey, setFilterKey] = useState<string>('all');
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [filterDevice, setFilterDevice] = useState<string>('all');
+
   const { data, isLoading } = useQuery({
     queryKey: ['migration-telemetry'],
     queryFn: async () => {
@@ -179,6 +184,39 @@ export const MigrationTelemetryCard = () => {
       .sort((a, b) => b.rows.length - a.rows.length);
     return ordered;
   }, [data]);
+
+  // Distinct values driving the filter dropdowns
+  const filterOptions = useMemo(() => {
+    const rows = data || [];
+    const keys = new Set<string>();
+    const devices = new Set<string>();
+    for (const r of rows) {
+      if (r.migration_key) keys.add(r.migration_key);
+      devices.add(detectDevice(r.user_agent));
+    }
+    return {
+      keys: Array.from(keys).sort(),
+      devices: Array.from(devices).sort(),
+    };
+  }, [data]);
+
+  // Apply selected filters to the latest 100 events
+  const filteredRows = useMemo(() => {
+    const rows = data || [];
+    return rows.filter(r => {
+      if (filterKey !== 'all' && r.migration_key !== filterKey) return false;
+      if (filterStatus !== 'all' && r.status !== filterStatus) return false;
+      if (filterDevice !== 'all' && detectDevice(r.user_agent) !== filterDevice) return false;
+      return true;
+    });
+  }, [data, filterKey, filterStatus, filterDevice]);
+
+  const filtersActive = filterKey !== 'all' || filterStatus !== 'all' || filterDevice !== 'all';
+  const resetFilters = () => {
+    setFilterKey('all');
+    setFilterStatus('all');
+    setFilterDevice('all');
+  };
 
   return (
     <Card>
