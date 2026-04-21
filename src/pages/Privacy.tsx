@@ -6,7 +6,7 @@ import { Footer } from '@/components/layout/Footer';
 
 const Privacy = () => {
   const { isRTL } = useLanguage();
-  usePageMeta({ title: isRTL ? 'سياسة الخصوصية | فنيين' : 'Privacy Policy | Faneen', description: isRTL ? 'سياسة الخصوصية لمنصة فنيين' : 'Faneen platform privacy policy' });
+  usePageMeta({ title: isRTL ? 'سياسة الخصوصية | قِطاعات' : 'Privacy Policy | Qitaat', description: isRTL ? 'سياسة الخصوصية لمنصة قِطاعات' : 'Qitaat platform privacy policy' });
 
   return (
     <div className="min-h-screen bg-background">
@@ -22,7 +22,7 @@ const Privacy = () => {
         <h2>{isRTL ? 'ملفات تعريف الارتباط' : 'Cookies'}</h2>
         <p>{isRTL ? 'نستخدم ملفات تعريف الارتباط لتحسين تجربة الاستخدام وتحليل حركة المرور على الموقع.' : 'We use cookies to improve user experience and analyze website traffic.'}</p>
         <h2>{isRTL ? 'التواصل' : 'Contact'}</h2>
-        <p>{isRTL ? 'لأي استفسارات حول سياسة الخصوصية، يرجى التواصل معنا على info@faneen.com' : 'For any privacy policy inquiries, please contact us at info@faneen.com'}</p>
+        <p>{isRTL ? 'لأي استفسارات حول سياسة الخصوصية، يرجى التواصل معنا على info@qitaat.com' : 'For any privacy policy inquiries, please contact us at info@qitaat.com'}</p>
       </div>
       <Footer />
     </div>

@@ -93,11 +93,11 @@ export const Navbar = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2.5 sm:gap-3 group">
             <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-gold flex items-center justify-center shadow-lg shadow-gold/20 group-hover:scale-105 group-hover:shadow-gold/40 transition-all duration-300">
-              <span className="font-heading font-black text-lg sm:text-xl text-secondary-foreground">ف</span>
+              <span className="font-heading font-black text-lg sm:text-xl text-secondary-foreground">ق</span>
             </div>
             <div className="hidden sm:block">
-              <h1 className="font-heading font-bold text-lg text-surface-nav-foreground leading-none">فنيين</h1>
-              <span className="text-[10px] text-gold/80 font-body tracking-wider">FANEEN</span>
+              <h1 className="font-heading font-bold text-lg text-surface-nav-foreground leading-none">قِطاعات</h1>
+              <span className="text-[10px] text-gold/80 font-body tracking-wider">QITAAT</span>
             </div>
           </Link>
 

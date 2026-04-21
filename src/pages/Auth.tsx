@@ -22,8 +22,8 @@ const Auth = () => {
   const [sentEmail, setSentEmail] = useState('');
 
   usePageMeta({
-    title: mode === 'register' ? 'إنشاء حساب | فنيين' : 'تسجيل الدخول | فنيين',
-    description: 'سجل دخولك أو أنشئ حساباً جديداً في منصة فنيين لدليل أعمال الألمنيوم والحديد',
+    title: mode === 'register' ? 'إنشاء حساب | قِطاعات' : 'تسجيل الدخول | قِطاعات',
+    description: 'سجل دخولك أو أنشئ حساباً جديداً في منصة قِطاعات لدليل أعمال الألمنيوم والحديد',
   });
 
   // Role-based redirect for authenticated users

@@ -701,7 +701,7 @@ const DashboardBlog = () => {
                           <p className="text-[10px] text-muted-foreground mb-2 font-bold uppercase tracking-wider flex items-center gap-1"><Globe className="w-3 h-3" /> Google AR</p>
                           <div className="space-y-0.5" dir="rtl">
                             <p className="text-primary text-sm font-medium truncate">{form.meta_title_ar || form.title_ar || 'عنوان الصفحة'}</p>
-                            <p className="text-[10px] text-emerald-600 truncate">faneen.lovable.app/blog/{form.slug || 'your-post-slug'}</p>
+                            <p className="text-[10px] text-emerald-600 truncate">qitaat.lovable.app/blog/{form.slug || 'your-post-slug'}</p>
                             <p className="text-[11px] text-muted-foreground line-clamp-2">{form.meta_description_ar || form.excerpt_ar || 'سيظهر الوصف هنا...'}</p>
                           </div>
                         </div>
@@ -709,7 +709,7 @@ const DashboardBlog = () => {
                           <p className="text-[10px] text-muted-foreground mb-2 font-bold uppercase tracking-wider flex items-center gap-1"><Globe className="w-3 h-3" /> Google EN</p>
                           <div className="space-y-0.5" dir="ltr">
                             <p className="text-primary text-sm font-medium truncate">{form.meta_title_en || form.title_en || 'Page Title'}</p>
-                            <p className="text-[10px] text-emerald-600 truncate">faneen.lovable.app/blog/{form.slug || 'your-post-slug'}</p>
+                            <p className="text-[10px] text-emerald-600 truncate">qitaat.lovable.app/blog/{form.slug || 'your-post-slug'}</p>
                             <p className="text-[11px] text-muted-foreground line-clamp-2">{form.meta_description_en || form.excerpt_en || 'Description here...'}</p>
                           </div>
                         </div>
@@ -760,7 +760,7 @@ const DashboardBlog = () => {
                             <img src={form.og_image_url} alt="OG" className="w-full h-full object-cover" />
                           </div>
                           <div className="p-3 bg-background">
-                            <p className="text-[10px] text-muted-foreground">faneen.lovable.app</p>
+                            <p className="text-[10px] text-muted-foreground">qitaat.lovable.app</p>
                             <p className="text-xs font-medium truncate">{form.meta_title_en || form.title_en || form.title_ar}</p>
                           </div>
                         </div>

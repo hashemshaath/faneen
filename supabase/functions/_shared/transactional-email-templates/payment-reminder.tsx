@@ -5,7 +5,7 @@ import {
 } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 
-const SITE_NAME = "فنين"
+const SITE_NAME = "قِطاعات"
 
 interface PaymentReminderProps {
   clientName?: string
@@ -30,7 +30,7 @@ const PaymentReminderEmail = ({
     <Body style={main}>
       <Container style={container}>
         <Section style={logoSection}>
-          <Text style={logoText}>فنين</Text>
+          <Text style={logoText}>قِطاعات</Text>
         </Section>
         <Hr style={hr} />
         <Heading style={h1}>تذكير بموعد سداد قسط 💳</Heading>
@@ -47,7 +47,7 @@ const PaymentReminderEmail = ({
           {dueDate && <Text style={detailRow}>تاريخ الاستحقاق: <strong>{dueDate}</strong></Text>}
         </Section>
         <Section style={{ textAlign: 'center' as const, margin: '24px 0' }}>
-          <Button style={button} href="https://faneen.com/dashboard/installments">
+          <Button style={button} href="https://qitaat.com/dashboard/installments">
             عرض الأقساط
           </Button>
         </Section>

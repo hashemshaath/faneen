@@ -1,7 +1,7 @@
-# Faneen — دليل الصناعات الخفيفة
+# Qitaat — دليل الصناعات الخفيفة
 
 ## About
-فنيين (Faneen) is the leading Arabic business directory for light industries
+قِطاعات (Qitaat) is the leading Arabic business directory for light industries
 in Saudi Arabia and the Gulf region. We connect customers with verified workshops
 and manufacturers specializing in aluminum, iron, glass, wood, kitchens, doors,
 windows, and decorations.
@@ -15,19 +15,19 @@ windows, and decorations.
 - Decoration (ديكورات): interior, gypsum, painting
 
 ## Key URLs
-- Homepage: https://faneen.com/
-- Search: https://faneen.com/search
-- Categories: https://faneen.com/categories
-- Blog: https://faneen.com/blog
-- Projects: https://faneen.com/projects
+- Homepage: https://qitaat.com/
+- Search: https://qitaat.com/search
+- Categories: https://qitaat.com/categories
+- Blog: https://qitaat.com/blog
+- Projects: https://qitaat.com/projects
 
 ## Data
 Business listings include: name (Arabic/English), description, services,
 city, phone, images, rating, reviews.
 
 ## API
-- Dynamic sitemap: https://faneen.com/sitemap.xml
+- Dynamic sitemap: https://qitaat.com/sitemap.xml
 - Edge function sitemap: https://hckpxwhjycmdflaneihd.supabase.co/functions/v1/sitemap
 
 ## Contact
-Website: https://faneen.com
+Website: https://qitaat.com

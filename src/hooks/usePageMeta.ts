@@ -12,9 +12,9 @@ interface PageMetaOptions {
   keywords?: string;
 }
 
-const BASE_URL = 'https://faneen.com';
-const DEFAULT_OG_IMAGE = 'https://faneen.com/og-image.jpg';
-const SITE_NAME = 'فنيين Faneen';
+const BASE_URL = 'https://qitaat.com';
+const DEFAULT_OG_IMAGE = 'https://qitaat.com/og-image.jpg';
+const SITE_NAME = 'قِطاعات Qitaat';
 
 function setMeta(name: string, content: string, attr: 'name' | 'property' = 'name') {
   let el = document.querySelector(`meta[${attr}="${name}"]`) as HTMLMetaElement | null;
@@ -38,7 +38,7 @@ function setCanonical(href: string) {
 
 export function usePageMeta(options: PageMetaOptions) {
   useEffect(() => {
-    const fullTitle = options.title.includes('فنيين') ? options.title : `${options.title} | ${SITE_NAME}`;
+    const fullTitle = options.title.includes('قِطاعات') ? options.title : `${options.title} | ${SITE_NAME}`;
     document.title = fullTitle;
 
     if (options.description) {

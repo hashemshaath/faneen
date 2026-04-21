@@ -47,8 +47,8 @@ const defaultSettings: SystemSetting[] = [
   { key: 'enable_phone_auth', value: 'true', labelAr: 'تسجيل الدخول بالهاتف', labelEn: 'Phone OTP Login', descAr: 'السماح بتسجيل الدخول عبر رقم الهاتف (OTP)', descEn: 'Allow login via phone OTP', type: 'toggle', category: 'auth' },
 
   // ── Platform ──
-  { key: 'platform_name_ar', value: 'فنيين', labelAr: 'اسم المنصة (عربي)', labelEn: 'Platform Name (Arabic)', descAr: 'اسم المنصة المعروض باللغة العربية', descEn: 'Platform name displayed in Arabic', type: 'text', category: 'platform' },
-  { key: 'platform_name_en', value: 'Faneen', labelAr: 'اسم المنصة (إنجليزي)', labelEn: 'Platform Name (English)', descAr: 'اسم المنصة المعروض بالإنجليزية', descEn: 'Platform name displayed in English', type: 'text', category: 'platform' },
+  { key: 'platform_name_ar', value: 'قِطاعات', labelAr: 'اسم المنصة (عربي)', labelEn: 'Platform Name (Arabic)', descAr: 'اسم المنصة المعروض باللغة العربية', descEn: 'Platform name displayed in Arabic', type: 'text', category: 'platform' },
+  { key: 'platform_name_en', value: 'Qitaat', labelAr: 'اسم المنصة (إنجليزي)', labelEn: 'Platform Name (English)', descAr: 'اسم المنصة المعروض بالإنجليزية', descEn: 'Platform name displayed in English', type: 'text', category: 'platform' },
   { key: 'maintenance_mode', value: 'false', labelAr: 'وضع الصيانة', labelEn: 'Maintenance Mode', descAr: 'تفعيل وضع الصيانة يمنع الوصول للمنصة مؤقتاً', descEn: 'Enabling maintenance mode blocks platform access', type: 'toggle', category: 'platform', importance: 'critical' },
   { key: 'default_language', value: 'ar', labelAr: 'اللغة الافتراضية', labelEn: 'Default Language', descAr: 'اللغة الافتراضية للمنصة', descEn: 'Default platform language', type: 'select', options: [{ value: 'ar', labelAr: 'العربية', labelEn: 'Arabic' }, { value: 'en', labelAr: 'الإنجليزية', labelEn: 'English' }], category: 'platform' },
   { key: 'contact_email', value: '', labelAr: 'البريد الإلكتروني للتواصل', labelEn: 'Contact Email', descAr: 'البريد الإلكتروني الرسمي للمنصة', descEn: 'Official platform contact email', type: 'text', category: 'platform' },
@@ -91,7 +91,7 @@ const defaultSettings: SystemSetting[] = [
 
   // ── SEO ──
   { key: 'google_analytics_id', value: '', labelAr: 'معرّف Google Analytics', labelEn: 'Google Analytics ID', descAr: 'معرّف GA4 للتتبع (G-XXXXXXXXXX)', descEn: 'GA4 tracking ID (G-XXXXXXXXXX)', type: 'text', category: 'seo' },
-  { key: 'meta_title_suffix', value: ' | فنيين', labelAr: 'لاحقة عنوان الصفحة', labelEn: 'Meta Title Suffix', descAr: 'النص المضاف بعد عنوان كل صفحة', descEn: 'Text appended to each page title', type: 'text', category: 'seo' },
+  { key: 'meta_title_suffix', value: ' | قِطاعات', labelAr: 'لاحقة عنوان الصفحة', labelEn: 'Meta Title Suffix', descAr: 'النص المضاف بعد عنوان كل صفحة', descEn: 'Text appended to each page title', type: 'text', category: 'seo' },
   { key: 'enable_sitemap', value: 'true', labelAr: 'خريطة الموقع (Sitemap)', labelEn: 'Enable Sitemap', descAr: 'إنشاء خريطة موقع XML تلقائياً', descEn: 'Auto-generate XML sitemap', type: 'toggle', category: 'seo' },
   { key: 'robots_txt_custom', value: '', labelAr: 'ملف Robots.txt مخصص', labelEn: 'Custom Robots.txt', descAr: 'محتوى مخصص لملف robots.txt', descEn: 'Custom robots.txt content', type: 'textarea', category: 'seo' },
 ];

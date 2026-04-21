@@ -42,37 +42,37 @@ const SectionFallback = () => (
 
 const Index = () => {
   usePageMeta({
-    title: 'فنيين — دليل ورش الألمنيوم والحديد والزجاج',
+    title: 'قِطاعات — دليل ورش الألمنيوم والحديد والزجاج',
     description: 'دليل شامل لأفضل ورش ومصانع الألمنيوم والحديد والزجاج والمطابخ في السعودية والخليج. ابحث وقارن بين مزودي الخدمات بسهولة.',
-    keywords: 'ألمنيوم, حديد, زجاج, مطابخ, أبواب, شبابيك, ديكورات, ورش, صناعات خفيفة, دليل أعمال, فنيين',
-    canonical: 'https://faneen.com/',
+    keywords: 'ألمنيوم, حديد, زجاج, مطابخ, أبواب, شبابيك, ديكورات, ورش, صناعات خفيفة, دليل أعمال, قِطاعات',
+    canonical: 'https://qitaat.com/',
     ogType: 'website',
-    ogTitle: 'فنيين Faneen — دليل الصناعات الخفيفة',
+    ogTitle: 'قِطاعات Qitaat — دليل الصناعات الخفيفة',
     ogDescription: 'دليل شامل لأفضل ورش ومصانع الألمنيوم والحديد والزجاج والديكورات في الخليج',
   });
 
   useJsonLd(useMemo(() => ({
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    name: 'فنيين Faneen',
-    url: 'https://faneen.com',
+    name: 'قِطاعات Qitaat',
+    url: 'https://qitaat.com',
     description: 'دليل شامل لأعمال الألمنيوم والحديد والزجاج والخشب والمطابخ والديكورات',
     inLanguage: 'ar',
     potentialAction: {
       '@type': 'SearchAction',
       target: {
         '@type': 'EntryPoint',
-        urlTemplate: 'https://faneen.com/search?q={search_term_string}',
+        urlTemplate: 'https://qitaat.com/search?q={search_term_string}',
       },
       'query-input': 'required name=search_term_string',
     },
     publisher: {
       '@type': 'Organization',
-      name: 'فنيين Faneen',
-      url: 'https://faneen.com',
+      name: 'قِطاعات Qitaat',
+      url: 'https://qitaat.com',
       logo: {
         '@type': 'ImageObject',
-        url: 'https://faneen.com/logo.png',
+        url: 'https://qitaat.com/logo.png',
       },
     },
   }), []));

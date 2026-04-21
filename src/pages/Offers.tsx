@@ -17,17 +17,17 @@ import { ScrollToTop } from '@/components/ScrollToTop';
 const Offers = () => {
   const { isRTL, language } = useLanguage();
   usePageMeta({
-    title: language === 'ar' ? 'العروض والتخفيضات - خصومات على خدمات الألمنيوم والحديد | فنيين' : 'Offers & Deals - Aluminum & Iron Discounts | Faneen',
+    title: language === 'ar' ? 'العروض والتخفيضات - خصومات على خدمات الألمنيوم والحديد | قِطاعات' : 'Offers & Deals - Aluminum & Iron Discounts | Qitaat',
     description: language === 'ar' ? 'اكتشف أحدث العروض والتخفيضات من مزودي خدمات الألمنيوم والحديد والزجاج والخشب.' : 'Discover the latest offers and deals from aluminum, iron, glass and wood service providers.',
-    canonical: 'https://faneen.com/offers',
+    canonical: 'https://qitaat.com/offers',
   });
 
   useJsonLd(useMemo(() => ({
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'فنيين', item: 'https://faneen.com' },
-      { '@type': 'ListItem', position: 2, name: language === 'ar' ? 'العروض' : 'Offers', item: 'https://faneen.com/offers' },
+      { '@type': 'ListItem', position: 1, name: 'قِطاعات', item: 'https://qitaat.com' },
+      { '@type': 'ListItem', position: 2, name: language === 'ar' ? 'العروض' : 'Offers', item: 'https://qitaat.com/offers' },
     ],
   }), [language]));
 

@@ -63,11 +63,11 @@ const BusinessProfile = () => {
   const cityName = business?.cities ? getLocalizedValue(language, business.cities.name_ar, business.cities.name_en) : '';
 
   const seoTitle = business
-    ? `${businessName}${categoryName ? ` — ${categoryName}` : ''}${cityName ? ` في ${cityName}` : ''} | فنيين`
-    : (isRTL ? 'جاري التحميل... | فنيين' : 'Loading... | Faneen');
+    ? `${businessName}${categoryName ? ` — ${categoryName}` : ''}${cityName ? ` في ${cityName}` : ''} | قِطاعات`
+    : (isRTL ? 'جاري التحميل... | قِطاعات' : 'Loading... | Qitaat');
 
   const seoDesc = business
-    ? (businessDesc.substring(0, 140) || `${businessName}${categoryName ? ` - ${categoryName}` : ''}${cityName ? ` في ${cityName}` : ''} — مزود خدمات معتمد على منصة فنيين`)
+    ? (businessDesc.substring(0, 140) || `${businessName}${categoryName ? ` - ${categoryName}` : ''}${cityName ? ` في ${cityName}` : ''} — مزود خدمات معتمد على منصة قِطاعات`)
     + (business.phone ? ` | ${business.phone}` : '')
     : undefined;
 
@@ -76,8 +76,8 @@ const BusinessProfile = () => {
     description: seoDesc,
     ogType: 'business.business',
     ogImage: business?.logo_url || business?.cover_url || undefined,
-    canonical: business ? `https://faneen.com/${business.username}` : undefined,
-    keywords: business ? [businessName, categoryName, cityName, 'فنيين', 'دليل أعمال'].filter(Boolean).join(', ') : undefined,
+    canonical: business ? `https://qitaat.com/${business.username}` : undefined,
+    keywords: business ? [businessName, categoryName, cityName, 'قِطاعات', 'دليل أعمال'].filter(Boolean).join(', ') : undefined,
   });
 
   const structuredDataArray = useMemo(() => {
@@ -85,11 +85,11 @@ const BusinessProfile = () => {
     const localBusiness: Record<string, any> = {
       '@context': 'https://schema.org',
       '@type': 'LocalBusiness',
-      '@id': `https://faneen.com/${business.username}`,
+      '@id': `https://qitaat.com/${business.username}`,
       name: business.name_ar,
       alternateName: business.name_en,
       description: business.description_ar,
-      url: `https://faneen.com/${business.username}`,
+      url: `https://qitaat.com/${business.username}`,
       image: business.logo_url || business.cover_url,
       logo: business.logo_url,
       telephone: business.phone,
@@ -122,9 +122,9 @@ const BusinessProfile = () => {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'فنيين', item: 'https://faneen.com' },
-        ...(categoryName ? [{ '@type': 'ListItem', position: 2, name: categoryName, item: `https://faneen.com/categories/${business.categories?.slug || ''}` }] : []),
-        { '@type': 'ListItem', position: categoryName ? 3 : 2, name: business.name_ar, item: `https://faneen.com/${business.username}` },
+        { '@type': 'ListItem', position: 1, name: 'قِطاعات', item: 'https://qitaat.com' },
+        ...(categoryName ? [{ '@type': 'ListItem', position: 2, name: categoryName, item: `https://qitaat.com/categories/${business.categories?.slug || ''}` }] : []),
+        { '@type': 'ListItem', position: categoryName ? 3 : 2, name: business.name_ar, item: `https://qitaat.com/${business.username}` },
       ],
     };
 

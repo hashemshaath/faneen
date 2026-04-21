@@ -5,7 +5,7 @@ export const FooterBrand = () => {
   const { t, isRTL } = useLanguage();
 
   const contactItems = [
-    { icon: Mail, text: "info@faneen.com", href: "mailto:info@faneen.com" },
+    { icon: Mail, text: "info@qitaat.com", href: "mailto:info@qitaat.com" },
     { icon: Phone, text: "+966 50 000 0000", href: "tel:+966500000000" },
     { icon: MapPin, text: isRTL ? 'المملكة العربية السعودية' : 'Saudi Arabia' },
   ];
@@ -20,11 +20,11 @@ export const FooterBrand = () => {
       {/* Logo */}
       <div className="flex items-center gap-3 group">
         <div className="w-12 h-12 rounded-2xl bg-gradient-gold flex items-center justify-center shadow-lg shadow-gold/20 group-hover:scale-110 group-hover:rotate-3 transition-all duration-400">
-          <span className="font-heading font-black text-lg text-secondary-foreground">ف</span>
+          <span className="font-heading font-black text-lg text-secondary-foreground">ق</span>
         </div>
         <div>
-          <h3 className="font-heading font-bold text-xl text-surface-nav-foreground tracking-tight">فنيين</h3>
-          <span className="text-[11px] text-gold/70 font-body tracking-wide">Faneen.com</span>
+          <h3 className="font-heading font-bold text-xl text-surface-nav-foreground tracking-tight">قِطاعات</h3>
+          <span className="text-[11px] text-gold/70 font-body tracking-wide">Qitaat.com</span>
         </div>
       </div>
 

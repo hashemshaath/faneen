@@ -76,7 +76,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="w-10 h-10 rounded-xl bg-gradient-gold flex items-center justify-center animate-pulse">
-          <span className="font-heading font-black text-lg text-secondary-foreground">ف</span>
+          <span className="font-heading font-black text-lg text-secondary-foreground">ق</span>
         </div>
       </div>
     );

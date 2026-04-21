@@ -6,7 +6,7 @@ const HEADERS = {
   "X-Robots-Tag": "noindex",
 };
 
-const BASE = "https://faneen.com";
+const BASE = "https://qitaat.com";
 
 function esc(s: string) {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/'/g, "&apos;").replace(/"/g, "&quot;");

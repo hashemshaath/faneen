@@ -37,8 +37,8 @@ const Categories = () => {
 
   usePageMeta({
     title: selectedCategory
-      ? (language === 'ar' ? `${catName} - دليل مزودي الخدمات | فنيين` : `${catName} - Service Providers | Faneen`)
-      : (language === 'ar' ? 'تصفح الأقسام والفئات | فنيين' : 'Browse Categories | Faneen'),
+      ? (language === 'ar' ? `${catName} - دليل مزودي الخدمات | قِطاعات` : `${catName} - Service Providers | Qitaat`)
+      : (language === 'ar' ? 'تصفح الأقسام والفئات | قِطاعات' : 'Browse Categories | Qitaat'),
     description: selectedCategory
       ? (language === 'ar' ? `تصفح أفضل مزودي خدمات ${catName} مع التقييمات والأسعار` : `Browse the best ${catName} service providers`)
       : (language === 'ar' ? 'تصفح جميع أقسام وفئات خدمات الألمنيوم والحديد والزجاج والخشب' : 'Browse all aluminum, iron, glass and wood categories'),
@@ -50,8 +50,8 @@ const Categories = () => {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'فنيين', item: 'https://faneen.com' },
-        { '@type': 'ListItem', position: 2, name: catName, item: `https://faneen.com/categories/${selectedCategory.slug}` },
+        { '@type': 'ListItem', position: 1, name: 'قِطاعات', item: 'https://qitaat.com' },
+        { '@type': 'ListItem', position: 2, name: catName, item: `https://qitaat.com/categories/${selectedCategory.slug}` },
       ],
     };
     const faq = {
@@ -61,17 +61,17 @@ const Categories = () => {
         {
           '@type': 'Question',
           name: `كيف أجد أفضل ورشة ${catName} في السعودية؟`,
-          acceptedAnswer: { '@type': 'Answer', text: `ابحث في دليل فنيين عن ورش ${catName}. يمكنك تصفية النتائج حسب التقييم والموقع ومقارنة الأسعار والخدمات.` },
+          acceptedAnswer: { '@type': 'Answer', text: `ابحث في دليل قِطاعات عن ورش ${catName}. يمكنك تصفية النتائج حسب التقييم والموقع ومقارنة الأسعار والخدمات.` },
         },
         {
           '@type': 'Question',
           name: `ما هي أسعار ${catName} في السعودية؟`,
-          acceptedAnswer: { '@type': 'Answer', text: `تتفاوت أسعار ${catName} حسب الجودة والمساحة والموقع. يمكنك طلب عروض أسعار مجانية من خلال دليل فنيين.` },
+          acceptedAnswer: { '@type': 'Answer', text: `تتفاوت أسعار ${catName} حسب الجودة والمساحة والموقع. يمكنك طلب عروض أسعار مجانية من خلال دليل قِطاعات.` },
         },
         {
           '@type': 'Question',
           name: `هل يمكنني الاطلاع على أعمال ورش ${catName} السابقة؟`,
-          acceptedAnswer: { '@type': 'Answer', text: `نعم، كل ورشة في دليل فنيين تملك معرض صور لأعمالها السابقة يمكنك الاطلاع عليه قبل التواصل.` },
+          acceptedAnswer: { '@type': 'Answer', text: `نعم، كل ورشة في دليل قِطاعات تملك معرض صور لأعمالها السابقة يمكنك الاطلاع عليه قبل التواصل.` },
         },
       ],
     };

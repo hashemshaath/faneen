@@ -17,7 +17,7 @@ import { exportComparePDF } from '@/lib/compare-pdf-export';
 const Compare = () => {
   const { isRTL } = useLanguage();
   usePageMeta({
-    title: isRTL ? 'مقارنة مزودي الخدمات | فنيين' : 'Compare Service Providers | Faneen',
+    title: isRTL ? 'مقارنة مزودي الخدمات | قِطاعات' : 'Compare Service Providers | Qitaat',
     description: isRTL ? 'قارن بين مزودي خدمات الألمنيوم والحديد من حيث الأسعار والتقييمات والخدمات.' : 'Compare aluminum and iron service providers by price, ratings and services.',
   });
   const [searchParams, setSearchParams] = useSearchParams();

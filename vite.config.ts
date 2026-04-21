@@ -80,8 +80,8 @@ export default defineConfig(({ mode }) => ({
         ],
       },
       manifest: {
-        name: "فنيين - دليل أعمال الألمنيوم والحديد",
-        short_name: "فنيين",
+        name: "قِطاعات - دليل أعمال الألمنيوم والحديد",
+        short_name: "قِطاعات",
         description: "المنصة الأولى للبحث عن مصانع ومحلات الألمنيوم والحديد والزجاج والخشب",
         theme_color: "#C8A767",
         background_color: "#0F1419",

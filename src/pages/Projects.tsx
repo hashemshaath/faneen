@@ -37,7 +37,7 @@ const ProjectSkeleton = () => (
 const Projects = () => {
   const { isRTL, language } = useLanguage();
   usePageMeta({
-    title: language === 'ar' ? 'المشاريع - معرض أعمال الألمنيوم والحديد | فنيين' : 'Projects - Aluminum & Iron Portfolio | Faneen',
+    title: language === 'ar' ? 'المشاريع - معرض أعمال الألمنيوم والحديد | قِطاعات' : 'Projects - Aluminum & Iron Portfolio | Qitaat',
     description: language === 'ar' ? 'تصفح مشاريع وأعمال مصانع ومحلات الألمنيوم والحديد والزجاج والخشب.' : 'Browse aluminum, iron, glass and wood projects and portfolios.',
   });
   const [searchQuery, setSearchQuery] = useState('');

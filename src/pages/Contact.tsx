@@ -20,17 +20,17 @@ const Contact = () => {
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
 
   usePageMeta({
-    title: isRTL ? 'تواصل معنا | فنيين' : 'Contact Us | Faneen',
-    description: isRTL ? 'تواصل مع فريق فنيين للدعم الفني أو الاستفسارات أو الشراكات' : 'Contact Faneen team for support, inquiries or partnerships',
-    canonical: 'https://faneen.com/contact',
+    title: isRTL ? 'تواصل معنا | قِطاعات' : 'Contact Us | Qitaat',
+    description: isRTL ? 'تواصل مع فريق قِطاعات للدعم الفني أو الاستفسارات أو الشراكات' : 'Contact Qitaat team for support, inquiries or partnerships',
+    canonical: 'https://qitaat.com/contact',
   });
 
   useJsonLd(useMemo(() => ({
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'فنيين', item: 'https://faneen.com' },
-      { '@type': 'ListItem', position: 2, name: language === 'ar' ? 'تواصل معنا' : 'Contact', item: 'https://faneen.com/contact' },
+      { '@type': 'ListItem', position: 1, name: 'قِطاعات', item: 'https://qitaat.com' },
+      { '@type': 'ListItem', position: 2, name: language === 'ar' ? 'تواصل معنا' : 'Contact', item: 'https://qitaat.com/contact' },
     ],
   }), [language]));
 
@@ -72,7 +72,7 @@ const Contact = () => {
       await supabase.functions.invoke('send-transactional-email', {
         body: {
           templateName: 'contact-admin-notification',
-          recipientEmail: 'info@faneen.com', // fallback; template.to overrides
+          recipientEmail: 'info@qitaat.com', // fallback; template.to overrides
           idempotencyKey: `contact-admin-${id}`,
           templateData: {
             name: form.name.trim(),
@@ -93,7 +93,7 @@ const Contact = () => {
   };
 
   const contactInfo = [
-    { icon: Mail, label: isRTL ? 'البريد الإلكتروني' : 'Email', value: 'info@faneen.com', href: 'mailto:info@faneen.com' },
+    { icon: Mail, label: isRTL ? 'البريد الإلكتروني' : 'Email', value: 'info@qitaat.com', href: 'mailto:info@qitaat.com' },
     { icon: Phone, label: isRTL ? 'الهاتف' : 'Phone', value: '+966 50 000 0000', href: 'tel:+966500000000' },
     { icon: MapPin, label: isRTL ? 'العنوان' : 'Address', value: isRTL ? 'المملكة العربية السعودية' : 'Saudi Arabia' },
   ];

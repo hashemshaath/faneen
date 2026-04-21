@@ -59,9 +59,9 @@ const MobileCardSkeleton = () => (
 const Blog = () => {
   const { isRTL, language } = useLanguage();
   usePageMeta({
-    title: language === 'ar' ? 'المدونة - مقالات ونصائح عن الألمنيوم والحديد | فنيين' : 'Blog - Aluminum & Iron Industry Articles | Faneen',
+    title: language === 'ar' ? 'المدونة - مقالات ونصائح عن الألمنيوم والحديد | قِطاعات' : 'Blog - Aluminum & Iron Industry Articles | Qitaat',
     description: language === 'ar' ? 'اقرأ أحدث المقالات والنصائح حول صناعة الألمنيوم والحديد والزجاج والخشب. أدلة مهنية وأخبار الصناعة.' : 'Read the latest articles and tips about aluminum, iron, glass and wood industries.',
-    canonical: 'https://faneen.com/blog',
+    canonical: 'https://qitaat.com/blog',
   });
 
   // Blog page JSON-LD: BreadcrumbList + CollectionPage
@@ -70,17 +70,17 @@ const Blog = () => {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'فنيين', item: 'https://faneen.com' },
-        { '@type': 'ListItem', position: 2, name: language === 'ar' ? 'المدونة' : 'Blog', item: 'https://faneen.com/blog' },
+        { '@type': 'ListItem', position: 1, name: 'قِطاعات', item: 'https://qitaat.com' },
+        { '@type': 'ListItem', position: 2, name: language === 'ar' ? 'المدونة' : 'Blog', item: 'https://qitaat.com/blog' },
       ],
     };
     const collection = {
       '@context': 'https://schema.org',
       '@type': 'CollectionPage',
-      name: language === 'ar' ? 'مدونة فنيين' : 'Faneen Blog',
-      url: 'https://faneen.com/blog',
+      name: language === 'ar' ? 'مدونة قِطاعات' : 'Qitaat Blog',
+      url: 'https://qitaat.com/blog',
       description: language === 'ar' ? 'مقالات ونصائح حول صناعة الألمنيوم والحديد والزجاج' : 'Articles and tips about aluminum, iron and glass industries',
-      publisher: { '@type': 'Organization', name: 'فنيين Faneen', url: 'https://faneen.com' },
+      publisher: { '@type': 'Organization', name: 'قِطاعات Qitaat', url: 'https://qitaat.com' },
     };
     return [breadcrumb, collection];
   }, [language]));

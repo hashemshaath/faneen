@@ -136,7 +136,7 @@ Deno.serve(async (req) => {
           body: new URLSearchParams({
             To: fullPhone,
             From: TWILIO_PHONE_NUMBER,
-            Body: `رمز الدخول لحسابك في فنيين: ${otp}\nYour Faneen login code: ${otp}\n\nينتهي خلال 5 دقائق | Expires in 5 minutes`,
+            Body: `رمز الدخول لحسابك في قِطاعات: ${otp}\nYour Qitaat login code: ${otp}\n\nينتهي خلال 5 دقائق | Expires in 5 minutes`,
           }),
         });
         smsSent = response.ok;

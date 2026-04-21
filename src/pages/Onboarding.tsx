@@ -113,7 +113,7 @@ const Onboarding = () => {
       <AuthLayout>
         <div className="space-y-6">
           <div className="text-center space-y-2">
-            <h2 className="font-heading font-bold text-2xl text-foreground">{isRTL ? 'مرحباً بك في فنيين' : 'Welcome to Faneen'}</h2>
+            <h2 className="font-heading font-bold text-2xl text-foreground">{isRTL ? 'مرحباً بك في قِطاعات' : 'Welcome to Qitaat'}</h2>
             <p className="text-sm text-muted-foreground">{isRTL ? 'اختر نوع حسابك للمتابعة' : 'Choose your account type to continue'}</p>
           </div>
           <div className="grid grid-cols-1 gap-4">
@@ -247,7 +247,7 @@ const Onboarding = () => {
               <Globe className="absolute top-3 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
               <Input value={username} onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ''))} placeholder="my-business" dir="ltr" style={{ paddingInlineStart: '40px' }} />
             </div>
-            {username && <p className="text-xs text-muted-foreground">faneen.com/{username}</p>}
+            {username && <p className="text-xs text-muted-foreground">qitaat.com/{username}</p>}
           </div>
           <Button onClick={async () => {
             if (!businessName.trim()) { toast.error(isRTL ? 'يرجى إدخال اسم النشاط' : 'Please enter business name'); return; }

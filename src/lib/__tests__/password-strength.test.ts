@@ -74,7 +74,7 @@ describe("validatePhone", () => {
 /* ────────── validateUsername ────────── */
 describe("validateUsername", () => {
   it("accepts valid usernames", () => {
-    expect(validateUsername("faneen")).toBe(true);
+    expect(validateUsername("qitaat")).toBe(true);
     expect(validateUsername("my-shop_01")).toBe(true);
   });
 

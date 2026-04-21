@@ -9,7 +9,7 @@ export const accentPresets = [
 ];
 
 export const getStoredAccent = (): string => {
-  try { return localStorage.getItem('faneen-accent') || 'gold'; } catch { return 'gold'; }
+  try { return localStorage.getItem('qitaat-accent') || 'gold'; } catch { return 'gold'; }
 };
 
 export const applyAccent = (key: string) => {
@@ -21,7 +21,7 @@ export const applyAccent = (key: string) => {
   root.style.setProperty('--gold-light', preset.light);
   root.style.setProperty('--gold-dark', preset.dark);
   root.style.setProperty('--secondary', preset.hsl);
-  try { localStorage.setItem('faneen-accent', key); } catch (_e) { /* localStorage unavailable */ }
+  try { localStorage.setItem('qitaat-accent', key); } catch (_e) { /* localStorage unavailable */ }
 };
 
 // Apply on import (runs once at app startup)
