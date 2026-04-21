@@ -552,20 +552,13 @@ async function sweepLegacyKeysBatched(
  * Sweeps legacy `faneen_*` keys from sessionStorage. No counterpart copy
  * needed — sessionStorage is per-tab and contains no critical persistent data.
  */
-function sweepSessionStorage(): { swept: number; sweptKeys: string[]; error?: SweepError } {
+function sweepSessionStorage(
+  recorder?: DiagnosticRecorder,
+): { swept: number; sweptKeys: string[]; error?: SweepError } {
   const sweptKeys: string[] = [];
   try {
-    if (typeof sessionStorage === 'undefined') {
-      return {
-        swept: 0,
-        sweptKeys,
-        error: {
-          code: 'storage_unavailable',
-          message: 'sessionStorage is undefined in this environment',
-          scope: 'sessionStorage',
-        },
-      };
-    }
+    const probe = probeStorageAccess('sessionStorage', recorder);
+    if (probe) return { swept: 0, sweptKeys, error: probe };
     const keys: string[] = [];
     for (let i = 0; i < sessionStorage.length; i++) {
       const k = sessionStorage.key(i);
@@ -574,14 +567,27 @@ function sweepSessionStorage(): { swept: number; sweptKeys: string[]; error?: Sw
     for (const key of keys) {
       if (!key.startsWith(LEGACY_PREFIX)) continue;
       if (isKeyProtected(key)) continue;
-      sessionStorage.removeItem(key);
-      sweptKeys.push(key);
+      try {
+        sessionStorage.removeItem(key);
+        sweptKeys.push(key);
+      } catch (rmErr) {
+        const cls = classifySweepError(rmErr, 'sessionStorage');
+        const code: SweepErrorCode = cls.code === 'unknown' ? 'removal_failed' : cls.code;
+        recorder?.record({ scope: 'sessionStorage', phase: 'remove', code, message: cls.message, key });
+        return {
+          swept: sweptKeys.length,
+          sweptKeys,
+          error: { ...cls, code },
+        };
+      }
     }
   } catch (err) {
+    const cls = classifySweepError(err, 'sessionStorage');
+    recorder?.record({ scope: 'sessionStorage', phase: 'unknown', code: cls.code, message: cls.message });
     return {
       swept: sweptKeys.length,
       sweptKeys,
-      error: classifySweepError(err, 'sessionStorage'),
+      error: cls,
     };
   }
   return { swept: sweptKeys.length, sweptKeys };
@@ -591,14 +597,15 @@ function sweepSessionStorage(): { swept: number; sweptKeys: string[]; error?: Sw
  * Async / batched twin of `sweepSessionStorage`. Yields between BATCH_SIZE
  * removals to prevent jank on devices with large session stores.
  */
-async function sweepSessionStorageBatched(): Promise<{
+async function sweepSessionStorageBatched(
+  recorder?: DiagnosticRecorder,
+): Promise<{
   swept: number;
   sweptKeys: string[];
   error?: SweepError;
 }> {
-  if (typeof sessionStorage === 'undefined') {
-    return sweepSessionStorage();
-  }
+  const probe = probeStorageAccess('sessionStorage', recorder);
+  if (probe) return { swept: 0, sweptKeys: [], error: probe };
   const keys: string[] = [];
   try {
     for (let i = 0; i < sessionStorage.length; i++) {
@@ -607,17 +614,19 @@ async function sweepSessionStorageBatched(): Promise<{
     }
   } catch (err) {
     const cls = classifySweepError(err, 'sessionStorage');
+    const code: SweepErrorCode = cls.code === 'unknown' ? 'iteration_failed' : cls.code;
+    recorder?.record({ scope: 'sessionStorage', phase: 'iterate', code, message: cls.message });
     return {
       swept: 0,
       sweptKeys: [],
-      error: { ...cls, code: cls.code === 'unknown' ? 'iteration_failed' : cls.code },
+      error: { ...cls, code },
     };
   }
   const candidates = keys.filter(
     (k) => k.startsWith(LEGACY_PREFIX) && !isKeyProtected(k),
   );
   if (candidates.length <= BATCH_THRESHOLD) {
-    return sweepSessionStorage();
+    return sweepSessionStorage(recorder);
   }
 
   const sweptKeys: string[] = [];
@@ -629,10 +638,18 @@ async function sweepSessionStorageBatched(): Promise<{
         sweptKeys.push(candidates[i]);
       } catch (err) {
         const cls = classifySweepError(err, 'sessionStorage');
+        const code: SweepErrorCode = cls.code === 'unknown' ? 'removal_failed' : cls.code;
+        recorder?.record({
+          scope: 'sessionStorage',
+          phase: 'remove',
+          code,
+          message: cls.message,
+          key: candidates[i],
+        });
         return {
           swept: sweptKeys.length,
           sweptKeys,
-          error: { ...cls, code: cls.code === 'unknown' ? 'removal_failed' : cls.code },
+          error: { ...cls, code },
         };
       }
     }
