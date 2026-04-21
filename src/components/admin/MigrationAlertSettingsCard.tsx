@@ -55,6 +55,10 @@ export function MigrationAlertSettingsCard() {
   const [form, setForm] = useState<AlertConfig | null>(null);
   const [emailsText, setEmailsText] = useState('');
   const [rerunReason, setRerunReason] = useState('');
+  // Explicit acknowledgement that the admin understands the broadcast
+  // affects every device and will produce a fresh telemetry event per user.
+  // Reset whenever the dialog is dismissed so it can't be left "checked" by accident.
+  const [rerunAcknowledged, setRerunAcknowledged] = useState(false);
 
   const { data: config, isLoading } = useQuery({
     queryKey: ['migration-alert-config'],
