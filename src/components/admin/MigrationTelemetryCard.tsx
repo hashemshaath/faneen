@@ -330,6 +330,56 @@ export const MigrationTelemetryCard = () => {
               </Badge>
             )}
           </div>
+          {/* Filters bar */}
+          <div className="flex flex-wrap items-center gap-2 mb-2 p-2 rounded-lg border bg-muted/20">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Filter className="w-3.5 h-3.5" />
+              <span className="font-medium">{isRTL ? 'فلترة:' : 'Filter:'}</span>
+            </div>
+            <Select value={filterKey} onValueChange={setFilterKey}>
+              <SelectTrigger className="h-8 text-xs w-auto min-w-[140px]">
+                <SelectValue placeholder={isRTL ? 'مفتاح الترحيل' : 'Migration key'} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{isRTL ? 'كل المفاتيح' : 'All keys'}</SelectItem>
+                {filterOptions.keys.map(k => (
+                  <SelectItem key={k} value={k} className="font-mono text-xs">{k}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="h-8 text-xs w-auto min-w-[120px]">
+                <SelectValue placeholder={isRTL ? 'الحالة' : 'Status'} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{isRTL ? 'كل الحالات' : 'All statuses'}</SelectItem>
+                <SelectItem value="success">{isRTL ? 'نجح' : 'Success'}</SelectItem>
+                <SelectItem value="failed">{isRTL ? 'فشل' : 'Failed'}</SelectItem>
+                <SelectItem value="skipped">{isRTL ? 'متخطى' : 'Skipped'}</SelectItem>
+                <SelectItem value="no_legacy_data">{isRTL ? 'لا بيانات قديمة' : 'No legacy data'}</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={filterDevice} onValueChange={setFilterDevice}>
+              <SelectTrigger className="h-8 text-xs w-auto min-w-[120px]">
+                <SelectValue placeholder={isRTL ? 'نوع الجهاز' : 'Device'} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{isRTL ? 'كل الأجهزة' : 'All devices'}</SelectItem>
+                {filterOptions.devices.map(d => (
+                  <SelectItem key={d} value={d}>{d}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Badge variant="outline" className="text-[10px] ms-auto">
+              {filteredRows.length} / {data?.length || 0}
+            </Badge>
+            {filtersActive && (
+              <Button variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={resetFilters}>
+                <X className="w-3 h-3 me-1" />
+                {isRTL ? 'مسح' : 'Clear'}
+              </Button>
+            )}
+          </div>
           {isLoading ? (
             <div className="space-y-2">
               {[1, 2, 3].map(i => <Skeleton key={i} className="h-12 w-full" />)}
@@ -338,10 +388,14 @@ export const MigrationTelemetryCard = () => {
             <p className="text-sm text-muted-foreground text-center py-6">
               {isRTL ? 'لا توجد سجلات بعد' : 'No records yet'}
             </p>
+          ) : filteredRows.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-6">
+              {isRTL ? 'لا توجد نتائج للفلاتر الحالية' : 'No results for current filters'}
+            </p>
           ) : (
             <ScrollArea className="h-64 rounded-lg border">
               <div className="divide-y">
-                {data.map(row => {
+                {filteredRows.map(row => {
                   const meta = STATUS_META[row.status];
                   const Icon = meta.icon;
                   const device = detectDevice(row.user_agent);
