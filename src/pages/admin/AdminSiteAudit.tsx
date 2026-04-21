@@ -266,6 +266,10 @@ const AdminSiteAudit = () => {
                     const a11y = scoreBadge(row.accessibility_score);
                     const bp = scoreBadge(row.best_practices_score);
                     const seo = scoreBadge(row.seo_score);
+                    const prev = (row as { previous: typeof row | null }).previous;
+                    const delta = prev?.performance_score != null && row.performance_score != null
+                      ? row.performance_score - prev.performance_score
+                      : null;
                     return (
                       <div key={row.id} className="rounded-lg border border-border/40 bg-card/50 p-2.5">
                         <div className="flex items-center justify-between flex-wrap gap-2">
@@ -273,6 +277,17 @@ const AdminSiteAudit = () => {
                             {row.url.replace('https://qitaat.com', '') || '/'}
                           </code>
                           <div className="flex gap-1">
+                            {delta != null && (
+                              <span className={cn(
+                                'text-[10px] px-1.5 py-0.5 rounded font-bold tabular-nums flex items-center gap-0.5',
+                                delta > 0 ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400'
+                                : delta < 0 ? 'bg-red-500/15 text-red-700 dark:text-red-400'
+                                : 'bg-muted text-muted-foreground'
+                              )} title={isRTL ? `السابق: ${prev?.performance_score}` : `Previous: ${prev?.performance_score}`}>
+                                {delta > 0 ? <TrendingUp className="w-2.5 h-2.5" /> : delta < 0 ? <TrendingDown className="w-2.5 h-2.5" /> : <Minus className="w-2.5 h-2.5" />}
+                                {delta > 0 ? '+' : ''}{delta}
+                              </span>
+                            )}
                             <span className={cn('text-[10px] px-1.5 py-0.5 rounded font-bold tabular-nums', perf.cls)}>P {perf.label}</span>
                             <span className={cn('text-[10px] px-1.5 py-0.5 rounded font-bold tabular-nums', a11y.cls)}>A {a11y.label}</span>
                             <span className={cn('text-[10px] px-1.5 py-0.5 rounded font-bold tabular-nums', bp.cls)}>BP {bp.label}</span>
