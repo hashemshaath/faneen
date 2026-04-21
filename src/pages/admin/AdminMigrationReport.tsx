@@ -26,6 +26,7 @@ import {
   AlertCircle, ArrowDownRight, ArrowUpRight, Calendar,
 } from 'lucide-react';
 import { MigrationAlertSettingsCard } from '@/components/admin/MigrationAlertSettingsCard';
+import { MigrationRerunHistoryCard } from '@/components/admin/MigrationRerunHistoryCard';
 import { ProtectedKeysCard } from '@/components/admin/ProtectedKeysCard';
 import { DevMigrationRetryCard } from '@/components/admin/DevMigrationRetryCard';
 
@@ -376,6 +377,9 @@ const AdminMigrationReport = () => {
 
             {/* Admin alert settings */}
             <MigrationAlertSettingsCard />
+
+            {/* Re-run history with per-broadcast device counts */}
+            <MigrationRerunHistoryCard />
 
             {/* Protected keys list (sweep-safe) */}
             <ProtectedKeysCard />
