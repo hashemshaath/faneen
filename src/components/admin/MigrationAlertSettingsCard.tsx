@@ -194,6 +194,7 @@ export function MigrationAlertSettingsCard() {
           : `New epoch #${newEpoch} — every device will re-run on next load and log a fresh event.`,
       });
       setRerunReason('');
+      setRerunAcknowledged(false);
       qc.invalidateQueries({ queryKey: ['migration-rerun-status'] });
     },
     onError: (err: any) => {
