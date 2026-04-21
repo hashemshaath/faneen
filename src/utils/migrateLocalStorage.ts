@@ -912,17 +912,25 @@ async function logTelemetry(
   status: MigrationStatus,
   keysMigrated: number,
   errorMessage?: string,
-  options?: { force?: boolean; errorCode?: SweepErrorCode | null },
+  options?: {
+    force?: boolean;
+    errorCode?: SweepErrorCode | null;
+    diagnostics?: SweepDiagnostic[];
+  },
 ): Promise<void> {
   try {
     if (!options?.force && localStorage.getItem(TELEMETRY_FLAG) === '1') return;
     const ua = (navigator?.userAgent || '').slice(0, 500);
+    // Pack the per-failure diagnostic trail into the existing error_message
+    // column as compact JSON. We keep it under the 1000-char DB limit by
+    // serialising progressively smaller subsets if needed.
+    const composedMessage = composeTelemetryMessage(errorMessage, options?.diagnostics);
     const { error } = await supabase.from('migration_telemetry').insert({
       migration_key: MIGRATION_KEY,
       status,
       keys_migrated: keysMigrated,
       user_agent: ua,
-      error_message: errorMessage?.slice(0, 1000) || null,
+      error_message: composedMessage,
       error_code: options?.errorCode ? options.errorCode.slice(0, 64) : null,
     });
     if (!error) {
@@ -933,6 +941,35 @@ async function logTelemetry(
   } catch {
     // Silent — telemetry must never break boot
   }
+}
+
+/**
+ * Builds the final `error_message` payload sent to telemetry. When per-
+ * failure diagnostics exist we emit a structured JSON envelope
+ * `{summary, diagnostics:[…]}` so admins can drill into the exact phase /
+ * scope / key that triggered the permission problem. Falls back to the
+ * plain summary string when no diagnostics were captured. Hard-capped at
+ * 1000 chars to satisfy the DB CHECK constraint.
+ */
+function composeTelemetryMessage(
+  summary: string | undefined,
+  diagnostics: SweepDiagnostic[] | undefined,
+): string | null {
+  const trimmedSummary = summary?.slice(0, 1000) ?? null;
+  if (!diagnostics || diagnostics.length === 0) return trimmedSummary;
+
+  // Try shrinking the diagnostic tail until it fits under the column cap.
+  let entries = diagnostics.slice(-20);
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const payload = JSON.stringify({
+      summary: trimmedSummary?.slice(0, 200) ?? null,
+      diagnostics: entries,
+    });
+    if (payload.length <= 1000) return payload;
+    entries = entries.slice(-Math.max(1, Math.floor(entries.length / 2)));
+  }
+  // Last-resort fallback — emit just the summary if nothing else fits.
+  return trimmedSummary;
 }
 
 export function migrateLegacyStorage(): void {
