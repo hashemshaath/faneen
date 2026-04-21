@@ -242,11 +242,24 @@ export function MigrationAlertSettingsCard() {
   }
 
   return (
+    <TooltipProvider delayDuration={200}>
     <Card className="border-amber-200/50 bg-amber-50/30 dark:bg-amber-950/10" dir={isRTL ? 'rtl' : 'ltr'}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
           <BellRing className="h-5 w-5 text-amber-600" />
           {isRTL ? 'تنبيهات فشل ترحيل البيانات' : 'Migration failure alerts'}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+            </TooltipTrigger>
+            <TooltipContent side={isRTL ? 'left' : 'right'} className="max-w-xs">
+              <p className="text-xs">
+                {isRTL
+                  ? 'يُراقب النظام نسبة فشل ترحيل البيانات من التخزين المحلي. عند تجاوز العتبة، يُرسل إشعار للمشرفين.'
+                  : 'System monitors localStorage migration failure rates. When threshold is exceeded, admins are notified.'}
+              </p>
+            </TooltipContent>
+          </Tooltip>
         </CardTitle>
         <CardDescription>
           {isRTL
