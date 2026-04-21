@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { MigrationAlertSettingsCard } from '@/components/admin/MigrationAlertSettingsCard';
 import { ProtectedKeysCard } from '@/components/admin/ProtectedKeysCard';
+import { DevMigrationRetryCard } from '@/components/admin/DevMigrationRetryCard';
 
 interface TelemetryRow {
   id: string;
@@ -378,6 +379,9 @@ const AdminMigrationReport = () => {
 
             {/* Protected keys list (sweep-safe) */}
             <ProtectedKeysCard />
+
+            {/* DEV-only manual retry + summary */}
+            <DevMigrationRetryCard />
           </>
         )}
       </div>
