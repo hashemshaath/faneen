@@ -116,7 +116,7 @@ const AdminMigrationConcepts = () => {
               </div>
               <div className="rounded-lg border border-border/60 bg-muted/30 p-3">
                 <div className="text-xs text-muted-foreground mb-1">{isRTL ? 'مفتاح القفل' : 'Lock key'}</div>
-                <CodeChip>{MIGRATION_KEY}</CodeChip>
+                <CodeChip copyValue={MIGRATION_KEY}>{MIGRATION_KEY}</CodeChip>
               </div>
             </div>
           </CardContent>
