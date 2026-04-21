@@ -25,6 +25,7 @@ interface AlertConfig {
   min_sample_size: number;
   cooldown_hours: number;
   evaluation_window_hours: number;
+  rerun_cooldown_minutes: number;
   notify_emails: string[];
 }
 
@@ -42,6 +43,7 @@ interface RerunStatus {
   migration_epoch: number;
   last_rerun_at: string | null;
   last_rerun_reason: string | null;
+  rerun_cooldown_minutes: number;
 }
 
 export function MigrationAlertSettingsCard() {
