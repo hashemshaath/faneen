@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
-const HISTORY_KEY = 'faneen_search_history';
+const HISTORY_KEY = 'qitaat_search_history';
 const MAX_HISTORY = 10;
 
 // ─── Search History ────────────────────────────────────

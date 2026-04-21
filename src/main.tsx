@@ -1,9 +1,11 @@
 import { createRoot } from "react-dom/client";
 import { validateEnv } from "./utils/validateEnv";
+import { migrateLegacyStorage } from "./utils/migrateLocalStorage";
 import App from "./App.tsx";
 import "./index.css";
 
 validateEnv();
+migrateLegacyStorage();
 
 // Prevent SW from running inside Lovable preview iframe
 const isInIframe = (() => {
