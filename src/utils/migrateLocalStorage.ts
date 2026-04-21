@@ -175,7 +175,9 @@ export function migrateLegacyStorage(): void {
 
     // Sweep any remaining unknown faneen_* orphans (e.g. from older app versions)
     const { swept, sweptKeys } = sweepLegacyKeys();
-    const totalCleaned = migrated + swept;
+    const session = sweepSessionStorage();
+    const cookies = sweepCookies();
+    const totalCleaned = migrated + swept + session.swept + cookies.swept;
 
     if (import.meta.env.DEV) {
       if (migrated > 0) {
@@ -183,6 +185,12 @@ export function migrateLegacyStorage(): void {
       }
       if (swept > 0) {
         console.info(`[storage-migration] Swept ${swept} orphan faneen_* key(s):`, sweptKeys);
+      }
+      if (session.swept > 0) {
+        console.info(`[storage-migration] Swept ${session.swept} sessionStorage key(s):`, session.sweptKeys);
+      }
+      if (cookies.swept > 0) {
+        console.info(`[storage-migration] Swept ${cookies.swept} cookie(s):`, cookies.sweptKeys);
       }
     }
 
