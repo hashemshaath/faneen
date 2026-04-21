@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 const insertSpy = vi.fn().mockResolvedValue({ error: null });
 vi.mock('@/integrations/supabase/client', () => ({
@@ -583,5 +583,152 @@ describe('sweepLegacyKeys — error classification → telemetry', () => {
     const payload = lastInsertPayload();
     expect(payload?.status).toBe('success');
     expect(payload?.error_code).toBeNull();
+  });
+});
+
+/**
+ * Verifies the cookie sweep handles encoded names and emits deletion
+ * `Set-Cookie` writes across all plausible (domain × path) combinations.
+ * jsdom doesn't actually persist cookies across paths/domains, so we
+ * intercept writes via a `document.cookie` setter spy.
+ */
+describe('sweepCookies — encoded names + domain/path coverage', () => {
+  let originalCookieDescriptor: PropertyDescriptor | undefined;
+  let originalLocation: PropertyDescriptor | undefined;
+  let cookieWrites: string[] = [];
+  let cookieReadValue = '';
+
+  beforeEach(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+    insertSpy.mockClear();
+    insertSpy.mockResolvedValue({ error: null });
+    cookieWrites = [];
+    cookieReadValue = '';
+
+    originalCookieDescriptor = Object.getOwnPropertyDescriptor(Document.prototype, 'cookie');
+    Object.defineProperty(document, 'cookie', {
+      configurable: true,
+      get: () => cookieReadValue,
+      set: (v: string) => {
+        cookieWrites.push(v);
+      },
+    });
+    originalLocation = Object.getOwnPropertyDescriptor(window, 'location');
+  });
+
+  afterEach(() => {
+    if (originalCookieDescriptor) {
+      Object.defineProperty(Document.prototype, 'cookie', originalCookieDescriptor);
+    }
+    if (originalLocation) {
+      Object.defineProperty(window, 'location', originalLocation);
+    }
+  });
+
+  function setLocation(hostname: string, pathname: string, protocol: 'http:' | 'https:') {
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      value: { ...window.location, hostname, pathname, protocol },
+    });
+  }
+
+  it('writes deletions across multiple domain scopes for a multi-level host', () => {
+    cookieReadValue = 'faneen_session=abc; other=keep';
+    setLocation('www.app.qitaat.com', '/dashboard', 'https:');
+
+    migrateLegacyStorage();
+
+    const targetWrites = cookieWrites.filter((w) => w.startsWith('faneen_session='));
+    const distinctDomains = new Set(
+      targetWrites.map((w) => /domain=([^;]+)/i.exec(w)?.[1]?.trim() ?? '<host-only>'),
+    );
+    expect(distinctDomains.has('qitaat.com')).toBe(true);
+    expect(distinctDomains.has('.qitaat.com')).toBe(true);
+    expect(distinctDomains.has('app.qitaat.com')).toBe(true);
+    expect(distinctDomains.has('www.app.qitaat.com')).toBe(true);
+    expect(distinctDomains.has('<host-only>')).toBe(true);
+  });
+
+  it('writes deletions across all parent path segments', () => {
+    cookieReadValue = 'faneen_token=xyz';
+    setLocation('qitaat.com', '/dashboard/admin/migration-report', 'https:');
+
+    migrateLegacyStorage();
+
+    const tokenWrites = cookieWrites.filter((w) => w.startsWith('faneen_token='));
+    const distinctPaths = new Set(
+      tokenWrites.map((w) => /path=([^;]+)/i.exec(w)?.[1]?.trim() ?? '').filter(Boolean),
+    );
+    expect(distinctPaths.has('/')).toBe(true);
+    expect(distinctPaths.has('/dashboard')).toBe(true);
+    expect(distinctPaths.has('/dashboard/admin')).toBe(true);
+    expect(distinctPaths.has('/dashboard/admin/migration-report')).toBe(true);
+  });
+
+  it('detects percent-encoded legacy cookie names', () => {
+    cookieReadValue = 'faneen%5Fsession=encoded; keep_me=yes';
+    setLocation('qitaat.com', '/', 'https:');
+
+    migrateLegacyStorage();
+
+    const rawWrites = cookieWrites.filter((w) => w.startsWith('faneen%5Fsession='));
+    const decodedWrites = cookieWrites.filter((w) => w.startsWith('faneen_session='));
+    expect(rawWrites.length).toBeGreaterThan(0);
+    expect(decodedWrites.length).toBeGreaterThan(0);
+
+    const stray = cookieWrites.filter((w) => w.startsWith('keep_me='));
+    expect(stray.length).toBe(0);
+  });
+
+  it('emits Secure + SameSite=None variants on HTTPS', () => {
+    cookieReadValue = 'faneen_pref=1';
+    setLocation('qitaat.com', '/', 'https:');
+
+    migrateLegacyStorage();
+
+    const secureWrites = cookieWrites.filter(
+      (w) => w.startsWith('faneen_pref=') && /Secure/i.test(w) && /SameSite=None/i.test(w),
+    );
+    expect(secureWrites.length).toBeGreaterThan(0);
+  });
+
+  it('does NOT emit Secure variant on HTTP (it would be rejected)', () => {
+    cookieReadValue = 'faneen_pref=1';
+    setLocation('localhost', '/', 'http:');
+
+    migrateLegacyStorage();
+
+    const secureWrites = cookieWrites.filter(
+      (w) => w.startsWith('faneen_pref=') && /Secure/i.test(w),
+    );
+    expect(secureWrites.length).toBe(0);
+  });
+
+  it('does NOT climb parent domains for IP literal hosts', () => {
+    cookieReadValue = 'faneen_x=1';
+    setLocation('192.168.1.10', '/', 'http:');
+
+    migrateLegacyStorage();
+
+    const writes = cookieWrites.filter((w) => w.startsWith('faneen_x='));
+    const domainsTried = new Set(
+      writes
+        .map((w) => /domain=([^;]+)/i.exec(w)?.[1]?.trim())
+        .filter((d): d is string => !!d),
+    );
+    for (const d of domainsTried) {
+      expect(d).toBe('192.168.1.10');
+    }
+  });
+
+  it('emits deletion writes for the decoded canonical name', () => {
+    cookieReadValue = 'faneen%5Fhistory=raw';
+    setLocation('qitaat.com', '/', 'https:');
+
+    migrateLegacyStorage();
+
+    const decodedWrites = cookieWrites.filter((w) => w.startsWith('faneen_history='));
+    expect(decodedWrites.length).toBeGreaterThan(0);
   });
 });
