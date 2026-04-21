@@ -18,6 +18,142 @@ const TELEMETRY_FLAG = MIGRATION_FLAGS.telemetrySent;
 const SWEEP_FLAG = MIGRATION_FLAGS.sweepDone;
 const EPOCH_KEY = MIGRATION_FLAGS.epoch;
 
+// ============================================================================
+// Runtime-extensible protected keys registry
+// ----------------------------------------------------------------------------
+// `PROTECTED_KEYS` from `@/config/storageMigration` is the static, version-
+// controlled source of truth. The registry below adds a *runtime* layer on
+// top of it so feature modules can register additional keys (or glob
+// patterns) without editing the central config.
+//
+// Use cases:
+//   • A new feature stores `faneen_my_feature_state` and wants to keep it
+//     during the migration window — call `registerProtectedKey(...)` when
+//     the feature module loads.
+//   • An entire prefix family (e.g. `faneen_widget_*`) should be exempt —
+//     call `registerProtectedPattern('faneen_widget_*')`.
+//
+// Both static and runtime entries are honoured by every sweep scope:
+// localStorage, sessionStorage, and cookies.
+// ============================================================================
+
+/** Runtime-added exact key names. Cleared per process; not persisted. */
+const runtimeProtectedKeys = new Set<string>();
+
+/** Runtime-added wildcard patterns (compiled to RegExp). */
+interface ProtectedPattern {
+  readonly source: string;
+  readonly regex: RegExp;
+}
+const runtimeProtectedPatterns: ProtectedPattern[] = [];
+
+/**
+ * Compiles a glob-like pattern into a RegExp. Supports:
+ *   `*`  → any sequence of characters (incl. empty)
+ *   `?`  → exactly one character
+ * Anything else is treated as literal text (regex meta-chars escaped).
+ */
+function compileProtectedPattern(glob: string): RegExp {
+  const escaped = glob
+    .replace(/[.+^${}()|[\]\\]/g, '\\$&') // escape regex specials
+    .replace(/\*/g, '.*')
+    .replace(/\?/g, '.');
+  return new RegExp(`^${escaped}$`);
+}
+
+/**
+ * Adds a key name to the runtime protected list. Idempotent.
+ * Returns `true` if the key was newly registered, `false` if already present.
+ */
+export function registerProtectedKey(key: string): boolean {
+  if (!key || typeof key !== 'string') return false;
+  if (PROTECTED_KEYS.has(key) || runtimeProtectedKeys.has(key)) return false;
+  runtimeProtectedKeys.add(key);
+  return true;
+}
+
+/**
+ * Bulk variant of `registerProtectedKey`. Returns the number of keys newly
+ * added (duplicates and entries already present in the static config are
+ * skipped silently).
+ */
+export function registerProtectedKeys(keys: readonly string[]): number {
+  let added = 0;
+  for (const k of keys) {
+    if (registerProtectedKey(k)) added++;
+  }
+  return added;
+}
+
+/**
+ * Adds a glob-like pattern (`*`, `?`) to the runtime protected list.
+ * Returns `true` if the pattern was newly registered.
+ */
+export function registerProtectedPattern(glob: string): boolean {
+  if (!glob || typeof glob !== 'string') return false;
+  if (runtimeProtectedPatterns.some((p) => p.source === glob)) return false;
+  runtimeProtectedPatterns.push({ source: glob, regex: compileProtectedPattern(glob) });
+  return true;
+}
+
+/**
+ * Removes a previously registered runtime key. Static config entries
+ * cannot be unregistered (they are intentionally immutable). Returns
+ * `true` if a runtime entry was removed.
+ */
+export function unregisterProtectedKey(key: string): boolean {
+  return runtimeProtectedKeys.delete(key);
+}
+
+/** Removes a previously registered runtime pattern. */
+export function unregisterProtectedPattern(glob: string): boolean {
+  const idx = runtimeProtectedPatterns.findIndex((p) => p.source === glob);
+  if (idx === -1) return false;
+  runtimeProtectedPatterns.splice(idx, 1);
+  return true;
+}
+
+/**
+ * Clears all RUNTIME registrations. Static config keys remain protected.
+ * Primarily useful in tests; never call from production code paths.
+ */
+export function _resetRuntimeProtectedKeys(): void {
+  runtimeProtectedKeys.clear();
+  runtimeProtectedPatterns.length = 0;
+}
+
+/**
+ * Snapshot of the effective protected-keys configuration — combines the
+ * static config with any runtime additions. Useful for admin UI and
+ * debugging; does not expose internal mutable references.
+ */
+export function getProtectedKeysSnapshot(): {
+  static: string[];
+  runtime: string[];
+  patterns: string[];
+} {
+  return {
+    static: Array.from(PROTECTED_KEYS),
+    runtime: Array.from(runtimeProtectedKeys),
+    patterns: runtimeProtectedPatterns.map((p) => p.source),
+  };
+}
+
+/**
+ * Single decision point used by every sweep loop. Checks (in order):
+ *   1. Static `PROTECTED_KEYS` from the central config.
+ *   2. Runtime exact-name registrations.
+ *   3. Runtime glob patterns.
+ */
+function isKeyProtected(key: string): boolean {
+  if (PROTECTED_KEYS.has(key)) return true;
+  if (runtimeProtectedKeys.has(key)) return true;
+  for (const p of runtimeProtectedPatterns) {
+    if (p.regex.test(key)) return true;
+  }
+  return false;
+}
+
 /**
  * Batch tuning. Sweeping large stores in one tight loop blocks the main thread
  * (every removeItem can force the browser to flush its storage index to disk).
