@@ -16,7 +16,9 @@ Deno.serve(async (req) => {
     // 1) Load config
     const { data: config, error: cfgErr } = await supabase
       .from("migration_alert_config")
-      .select("enabled, failure_rate_threshold, min_sample_size, cooldown_hours, notify_emails")
+      .select(
+        "enabled, failure_rate_threshold, min_sample_size, cooldown_hours, notify_emails, evaluation_window_hours",
+      )
       .eq("id", 1)
       .maybeSingle();
 
@@ -28,10 +30,13 @@ Deno.serve(async (req) => {
     const threshold = Number(config.failure_rate_threshold ?? 25);
     const minSample = Number(config.min_sample_size ?? 20);
     const cooldownH = Number(config.cooldown_hours ?? 6);
+    // New: configurable evaluation window. Defaults to 6h per requirement —
+    // detect spikes faster than the legacy 24h baseline.
+    const windowHours = Math.max(1, Math.min(168, Number(config.evaluation_window_hours ?? 6)));
 
-    // 2) Compute 24h failure stats
+    // 2) Compute failure stats over the configured window
     const { data: stats, error: stErr } = await supabase
-      .rpc("get_migration_failure_stats_24h");
+      .rpc("get_migration_failure_stats_window", { _hours: windowHours });
     if (stErr) throw new Error(`stats: ${stErr.message}`);
 
     const row = Array.isArray(stats) ? stats[0] : stats;
@@ -40,10 +45,10 @@ Deno.serve(async (req) => {
     const failureRate = Number(row?.failure_rate ?? 0);
 
     if (total < minSample) {
-      return json({ ok: true, skipped: "below min sample", total, minSample });
+      return json({ ok: true, skipped: "below min sample", total, minSample, windowHours });
     }
     if (failureRate < threshold) {
-      return json({ ok: true, skipped: "below threshold", failureRate, threshold });
+      return json({ ok: true, skipped: "below threshold", failureRate, threshold, windowHours });
     }
 
     // 3) Cooldown — skip if we already alerted recently
@@ -106,7 +111,7 @@ Deno.serve(async (req) => {
               threshold,
               totalEvents: total,
               failedEvents: failed,
-              windowHours: 24,
+              windowHours,
               reportUrl,
             },
           },
@@ -125,10 +130,20 @@ Deno.serve(async (req) => {
       threshold,
       recipients,
       channel: "email",
-      details: { sendResults },
+      details: { sendResults, windowHours },
     });
 
-    return json({ ok: true, alerted: true, failureRate, threshold, total, failed, recipients, sendResults });
+    return json({
+      ok: true,
+      alerted: true,
+      failureRate,
+      threshold,
+      windowHours,
+      total,
+      failed,
+      recipients,
+      sendResults,
+    });
   } catch (error: any) {
     console.error("[check-migration-alerts] error:", error);
     return json({ ok: false, error: error?.message || String(error) }, 500);
