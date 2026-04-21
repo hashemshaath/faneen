@@ -2341,6 +2341,75 @@ export type Database = {
           },
         ]
       }
+      migration_alert_config: {
+        Row: {
+          cooldown_hours: number
+          enabled: boolean
+          failure_rate_threshold: number
+          id: number
+          min_sample_size: number
+          notify_emails: string[]
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          cooldown_hours?: number
+          enabled?: boolean
+          failure_rate_threshold?: number
+          id?: number
+          min_sample_size?: number
+          notify_emails?: string[]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          cooldown_hours?: number
+          enabled?: boolean
+          failure_rate_threshold?: number
+          id?: number
+          min_sample_size?: number
+          notify_emails?: string[]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      migration_alerts_sent: {
+        Row: {
+          channel: string
+          details: Json | null
+          failed_events: number
+          failure_rate: number
+          id: string
+          recipients: string[]
+          sent_at: string
+          threshold: number
+          total_events: number
+        }
+        Insert: {
+          channel?: string
+          details?: Json | null
+          failed_events: number
+          failure_rate: number
+          id?: string
+          recipients?: string[]
+          sent_at?: string
+          threshold: number
+          total_events: number
+        }
+        Update: {
+          channel?: string
+          details?: Json | null
+          failed_events?: number
+          failure_rate?: number
+          id?: string
+          recipients?: string[]
+          sent_at?: string
+          threshold?: number
+          total_events?: number
+        }
+        Relationships: []
+      }
       migration_telemetry: {
         Row: {
           created_at: string
@@ -3785,6 +3854,14 @@ export type Database = {
           avatar_url: string
           full_name: string
           user_id: string
+        }[]
+      }
+      get_migration_failure_stats_24h: {
+        Args: never
+        Returns: {
+          failed_events: number
+          failure_rate: number
+          total_events: number
         }[]
       }
       get_public_bnpl_for_business: {

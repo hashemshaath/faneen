@@ -25,6 +25,7 @@ import {
   TrendingDown, TrendingUp, Database, Activity, CheckCircle2,
   AlertCircle, ArrowDownRight, ArrowUpRight, Calendar,
 } from 'lucide-react';
+import { MigrationAlertSettingsCard } from '@/components/admin/MigrationAlertSettingsCard';
 
 interface TelemetryRow {
   id: string;
@@ -370,6 +371,9 @@ const AdminMigrationReport = () => {
                 </ChartContainer>
               </CardContent>
             </Card>
+
+            {/* Admin alert settings */}
+            <MigrationAlertSettingsCard />
           </>
         )}
       </div>
