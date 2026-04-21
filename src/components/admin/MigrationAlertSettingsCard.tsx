@@ -10,7 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { BellRing, Mail, AlertTriangle, Save, Send, History, RefreshCw, HelpCircle } from 'lucide-react';
+import { BellRing, Mail, AlertTriangle, Save, Send, History, RefreshCw, HelpCircle, Users, Repeat2, ShieldAlert } from 'lucide-react';
 import { format } from 'date-fns';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface AlertConfig {
   enabled: boolean;
@@ -54,6 +55,10 @@ export function MigrationAlertSettingsCard() {
   const [form, setForm] = useState<AlertConfig | null>(null);
   const [emailsText, setEmailsText] = useState('');
   const [rerunReason, setRerunReason] = useState('');
+  // Explicit acknowledgement that the admin understands the broadcast
+  // affects every device and will produce a fresh telemetry event per user.
+  // Reset whenever the dialog is dismissed so it can't be left "checked" by accident.
+  const [rerunAcknowledged, setRerunAcknowledged] = useState(false);
 
   const { data: config, isLoading } = useQuery({
     queryKey: ['migration-alert-config'],
@@ -189,6 +194,7 @@ export function MigrationAlertSettingsCard() {
           : `New epoch #${newEpoch} — every device will re-run on next load and log a fresh event.`,
       });
       setRerunReason('');
+      setRerunAcknowledged(false);
       qc.invalidateQueries({ queryKey: ['migration-rerun-status'] });
     },
     onError: (err: any) => {
@@ -414,29 +420,82 @@ export function MigrationAlertSettingsCard() {
                 </TooltipContent>
               </Tooltip>
             </AlertDialogTrigger>
-            <AlertDialogContent dir={isRTL ? 'rtl' : 'ltr'}>
+            <AlertDialogContent
+              dir={isRTL ? 'rtl' : 'ltr'}
+              onEscapeKeyDown={() => setRerunAcknowledged(false)}
+            >
               <AlertDialogHeader>
-                <AlertDialogTitle>
-                  {isRTL ? 'إعادة تشغيل ترحيل localStorage على كل المستخدمين؟' : 'Re-run localStorage migration for all users?'}
+                <AlertDialogTitle className="flex items-center gap-2">
+                  <ShieldAlert className="h-5 w-5 text-destructive shrink-0" />
+                  {isRTL ? 'تحذير: إجراء عالي التأثير على كل الأجهزة' : 'Warning: high-impact action across all devices'}
                 </AlertDialogTitle>
-                <AlertDialogDescription>
-                  {isRTL
-                    ? 'سيتم رفع رقم نسخة الترحيل، وعند تحميل أي جهاز للموقع التالي سيُعيد تنفيذ منطق الترحيل ويُسجَّل حدث جديد في تقرير الترحيل لهذا الجهاز. لا يُفقد أي بيانات للمستخدم.'
-                    : 'This bumps the migration epoch. Every device will re-execute the migration on its next page load and log a fresh telemetry event. No user data is lost.'}
-                  {rerunStatus?.last_rerun_at && (
-                    <div className="mt-2 text-xs">
-                      {isRTL ? 'النسخة الحالية: ' : 'Current epoch: '}
-                      <strong>#{rerunStatus.migration_epoch}</strong> · {isRTL ? 'آخر بثّ: ' : 'Last broadcast: '}
-                      {format(new Date(rerunStatus.last_rerun_at), 'yyyy-MM-dd HH:mm')}
-                    </div>
-                  )}
-                  {cooldownInfo.onCooldown && cooldownInfo.nextAllowedAt && (
-                    <div className="mt-2 rounded-md border border-amber-300 bg-amber-50 p-2 text-xs text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
+                <AlertDialogDescription asChild>
+                  <div className="space-y-3 text-sm">
+                    <p>
                       {isRTL
-                        ? `⏳ البثّ مقفل بسبب فترة التهدئة (${rerunStatus?.rerun_cooldown_minutes ?? 60} دقيقة). متاح مجدداً في ${format(cooldownInfo.nextAllowedAt, 'yyyy-MM-dd HH:mm')} (~${cooldownInfo.minutesRemaining} دقيقة).`
-                        : `⏳ Broadcast is locked by the cooldown window (${rerunStatus?.rerun_cooldown_minutes ?? 60} min). Next allowed at ${format(cooldownInfo.nextAllowedAt, 'yyyy-MM-dd HH:mm')} (~${cooldownInfo.minutesRemaining} min).`}
+                        ? 'أنت على وشك بثّ "إعادة ترحيل" لكامل قاعدة المستخدمين. هذا الإجراء يرفع رقم نسخة الترحيل (Epoch) في الخادم، ويتسبب في إعادة تشغيل منطق الترحيل على متصفّح كل مستخدم عند زيارته القادمة.'
+                        : 'You are about to broadcast a "re-migration" to your entire user base. This bumps the server-side migration epoch and causes the migration logic to re-execute in every user\'s browser on their next visit.'}
+                    </p>
+
+                    {/* Scope of impact — explicit, scannable */}
+                    <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 space-y-2">
+                      <div className="flex items-center gap-2 text-destructive font-semibold text-xs uppercase tracking-wide">
+                        <AlertTriangle className="h-3.5 w-3.5" />
+                        {isRTL ? 'نطاق التنفيذ' : 'Scope of execution'}
+                      </div>
+                      <ul className="space-y-1.5 text-xs text-foreground/90">
+                        <li className="flex items-start gap-2">
+                          <Users className="h-3.5 w-3.5 mt-0.5 shrink-0 text-destructive" />
+                          <span>
+                            {isRTL
+                              ? 'يُطبَّق على كل الأجهزة (جوّال، حاسوب، تابلت) لكل المستخدمين — لا يمكن استثناء جهاز واحد.'
+                              : 'Applies to every device (mobile, desktop, tablet) of every user — no per-device opt-out.'}
+                          </span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <Repeat2 className="h-3.5 w-3.5 mt-0.5 shrink-0 text-destructive" />
+                          <span>
+                            {isRTL
+                              ? 'سيُسجَّل حدث Telemetry جديد لكل جهاز يُعيد التشغيل، مما يُضخّم عدد الأحداث في التقارير. تجنّب التكرار خلال فترة قصيرة لئلا تختلط النتائج.'
+                              : 'A fresh telemetry event is logged per re-running device, inflating event counts in reports. Avoid repeating within short windows to keep results comparable.'}
+                          </span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <RefreshCw className="h-3.5 w-3.5 mt-0.5 shrink-0 text-destructive" />
+                          <span>
+                            {isRTL
+                              ? 'لا يمكن إلغاء البثّ بعد الإرسال. الأجهزة التي زارت الموقع وتلقّت الـ Epoch الجديدة ستُنفّذ الترحيل حتماً.'
+                              : 'The broadcast cannot be revoked. Devices that pick up the new epoch will run the migration unconditionally.'}
+                          </span>
+                        </li>
+                      </ul>
                     </div>
-                  )}
+
+                    <p className="text-xs text-muted-foreground">
+                      {isRTL
+                        ? 'لا يُفقد أي بيانات للمستخدم — المفاتيح المحمية لا تُمسّ. الاستخدام الموصى به: بعد إصلاح خلل في منطق الترحيل أو لتنظيف بقايا قديمة.'
+                        : 'No user data is lost — protected keys are preserved. Recommended use: after fixing a migration logic bug or to clean stale residue.'}
+                    </p>
+
+                    {rerunStatus?.last_rerun_at && (
+                      <div className="text-xs text-muted-foreground border-t pt-2">
+                        {isRTL ? 'النسخة الحالية: ' : 'Current epoch: '}
+                        <strong className="text-foreground">#{rerunStatus.migration_epoch}</strong>
+                        {' · '}
+                        {isRTL ? 'آخر بثّ: ' : 'Last broadcast: '}
+                        <span dir="ltr" className="tabular-nums">
+                          {format(new Date(rerunStatus.last_rerun_at), 'yyyy-MM-dd HH:mm')}
+                        </span>
+                      </div>
+                    )}
+                    {cooldownInfo.onCooldown && cooldownInfo.nextAllowedAt && (
+                      <div className="rounded-md border border-amber-300 bg-amber-50 p-2 text-xs text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
+                        {isRTL
+                          ? `⏳ البثّ مقفل بسبب فترة التهدئة (${rerunStatus?.rerun_cooldown_minutes ?? 60} دقيقة). متاح مجدداً في ${format(cooldownInfo.nextAllowedAt, 'yyyy-MM-dd HH:mm')} (~${cooldownInfo.minutesRemaining} دقيقة).`
+                          : `⏳ Broadcast is locked by the cooldown window (${rerunStatus?.rerun_cooldown_minutes ?? 60} min). Next allowed at ${format(cooldownInfo.nextAllowedAt, 'yyyy-MM-dd HH:mm')} (~${cooldownInfo.minutesRemaining} min).`}
+                      </div>
+                    )}
+                  </div>
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <div className="space-y-1.5">
@@ -464,13 +523,33 @@ export function MigrationAlertSettingsCard() {
                   <span className="text-muted-foreground tabular-nums">{trimmedReasonLen}/500</span>
                 </div>
               </div>
+              {/* Final guard: explicit acknowledgement of broadcast scope. */}
+              <label
+                htmlFor="rerun-ack"
+                className="flex items-start gap-2 rounded-md border border-amber-300/60 bg-amber-50/60 p-2.5 cursor-pointer dark:bg-amber-950/20 dark:border-amber-700/40"
+              >
+                <Checkbox
+                  id="rerun-ack"
+                  checked={rerunAcknowledged}
+                  onCheckedChange={(v) => setRerunAcknowledged(v === true)}
+                  className="mt-0.5"
+                />
+                <span className="text-xs leading-relaxed text-foreground/90">
+                  {isRTL
+                    ? 'أُقرّ بأن هذا الإجراء سيُنفَّذ على كل أجهزة المستخدمين، وأن كل جهاز سيُسجّل حدثاً جديداً قد يُكرّر سجلات سابقة في التقارير.'
+                    : 'I understand this will execute on every user device and that each device will log a new event which may duplicate prior records in reports.'}
+                </span>
+              </label>
               <AlertDialogFooter>
-                <AlertDialogCancel>{isRTL ? 'إلغاء' : 'Cancel'}</AlertDialogCancel>
+                <AlertDialogCancel onClick={() => setRerunAcknowledged(false)}>
+                  {isRTL ? 'إلغاء' : 'Cancel'}
+                </AlertDialogCancel>
                 <AlertDialogAction
                   onClick={() => rerunMutation.mutate(rerunReason)}
-                  disabled={cooldownInfo.onCooldown || !reasonValid}
+                  disabled={cooldownInfo.onCooldown || !reasonValid || !rerunAcknowledged}
+                  className={!rerunAcknowledged || !reasonValid ? 'opacity-50' : undefined}
                 >
-                  {isRTL ? 'تأكيد البثّ' : 'Confirm broadcast'}
+                  {isRTL ? 'تأكيد البثّ على كل الأجهزة' : 'Confirm broadcast to all devices'}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
