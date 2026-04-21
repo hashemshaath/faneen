@@ -372,7 +372,7 @@ async function sweepLegacyKeysBatched(): Promise<{
 
   // Pre-filter to just the legacy candidates so the batch loop is tight
   const candidates = allKeys.filter(
-    (k) => k.startsWith(LEGACY_PREFIX) && !PROTECTED_KEYS.has(k),
+    (k) => k.startsWith(LEGACY_PREFIX) && !isKeyProtected(k),
   );
 
   // Small workload — skip the async overhead
