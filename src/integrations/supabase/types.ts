@@ -2428,45 +2428,6 @@ export type Database = {
         }
         Relationships: []
       }
-      migration_telemetry: {
-        Row: {
-          created_at: string
-          error_code: string | null
-          error_message: string | null
-          id: string
-          keys_migrated: number
-          migration_key: string
-          rerun_reason: string | null
-          status: string
-          user_agent: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          error_code?: string | null
-          error_message?: string | null
-          id?: string
-          keys_migrated?: number
-          migration_key: string
-          rerun_reason?: string | null
-          status: string
-          user_agent?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          error_code?: string | null
-          error_message?: string | null
-          id?: string
-          keys_migrated?: number
-          migration_key?: string
-          rerun_reason?: string | null
-          status?: string
-          user_agent?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       newsletter_subscribers: {
         Row: {
           email: string
