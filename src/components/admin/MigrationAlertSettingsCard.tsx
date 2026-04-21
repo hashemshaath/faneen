@@ -10,7 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { BellRing, Mail, AlertTriangle, Save, Send, History, RefreshCw, HelpCircle } from 'lucide-react';
+import { BellRing, Mail, AlertTriangle, Save, Send, History, RefreshCw, HelpCircle, Users, Repeat2, ShieldAlert } from 'lucide-react';
 import { format } from 'date-fns';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface AlertConfig {
   enabled: boolean;
