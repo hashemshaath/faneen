@@ -37,12 +37,19 @@ interface SentAlert {
   recipients: string[];
 }
 
+interface RerunStatus {
+  migration_epoch: number;
+  last_rerun_at: string | null;
+  last_rerun_reason: string | null;
+}
+
 export function MigrationAlertSettingsCard() {
   const { isRTL } = useLanguage();
   const { toast } = useToast();
   const qc = useQueryClient();
   const [form, setForm] = useState<AlertConfig | null>(null);
   const [emailsText, setEmailsText] = useState('');
+  const [rerunReason, setRerunReason] = useState('');
 
   const { data: config, isLoading } = useQuery({
     queryKey: ['migration-alert-config'],
@@ -67,6 +74,20 @@ export function MigrationAlertSettingsCard() {
         .limit(5);
       if (error) throw error;
       return (data || []) as SentAlert[];
+    },
+    refetchInterval: 60_000,
+  });
+
+  const { data: rerunStatus } = useQuery({
+    queryKey: ['migration-rerun-status'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('migration_alert_config')
+        .select('migration_epoch, last_rerun_at, last_rerun_reason')
+        .eq('id', 1)
+        .maybeSingle();
+      if (error) throw error;
+      return data as RerunStatus | null;
     },
     refetchInterval: 60_000,
   });
