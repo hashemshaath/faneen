@@ -12,7 +12,7 @@ import {
   Gauge, RefreshCw, CheckCircle2, XCircle, AlertTriangle,
   Smartphone, FileSearch, Globe, ListTree, Activity, Loader2,
 } from 'lucide-react';
-import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, Wrench, Lightbulb } from 'lucide-react';
 import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid,
 } from 'recharts';
