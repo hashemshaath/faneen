@@ -223,6 +223,130 @@ export interface SweepError {
 }
 
 /**
+ * Phase of the sweep where a failure occurred. Used in the per-failure
+ * diagnostic log so admins can pinpoint exactly which step broke (e.g.
+ * the iteration loop, an individual removeItem, or the initial probe
+ * that detected a permission-blocked storage backend).
+ */
+export type SweepPhase =
+  | 'access_probe' // initial typeof / read/write probe to detect blocked storage
+  | 'iterate'      // walking the storage index
+  | 'read'         // getItem / cookie read
+  | 'write'        // setItem (e.g. flag persistence) failed
+  | 'remove'       // removeItem / cookie expiry write failed
+  | 'flag'         // setting the SWEEP_FLAG sentinel
+  | 'unknown';
+
+/**
+ * A single per-failure diagnostic entry. We collect these across every
+ * sweep call so telemetry can ship a structured trail of *why* permission
+ * problems occurred — not just a single combined error string.
+ */
+export interface SweepDiagnostic {
+  ts: number;                     // epoch ms
+  scope: SweepError['scope'];
+  phase: SweepPhase;
+  code: SweepErrorCode;
+  message: string;
+  key?: string;                   // affected key when applicable
+  host?: string;                  // window.location.hostname snapshot
+  path?: string;                  // window.location.pathname snapshot
+}
+
+/** Compact recorder used by sweep loops. */
+interface DiagnosticRecorder {
+  record: (entry: Omit<SweepDiagnostic, 'ts' | 'host' | 'path'>) => void;
+  snapshot: () => SweepDiagnostic[];
+}
+
+function getLocationContext(): { host?: string; path?: string } {
+  try {
+    if (typeof window === 'undefined' || !window.location) return {};
+    return {
+      host: (window.location.hostname || '').toLowerCase() || undefined,
+      path: window.location.pathname || undefined,
+    };
+  } catch {
+    return {};
+  }
+}
+
+function createDiagnosticRecorder(): DiagnosticRecorder {
+  const log: SweepDiagnostic[] = [];
+  return {
+    record(entry) {
+      const ctx = getLocationContext();
+      log.push({
+        ts: Date.now(),
+        host: ctx.host,
+        path: ctx.path,
+        ...entry,
+        message: (entry.message || '').slice(0, 240),
+      });
+    },
+    snapshot: () => log.slice(),
+  };
+}
+
+/**
+ * Probes whether a Web Storage backend is actually usable. Some browsers
+ * (Safari private mode, Firefox with strict cookie blocking) expose the
+ * `localStorage` / `sessionStorage` global but throw on every read or
+ * write. We perform a tiny round-trip with a sentinel key so we can
+ * surface a `permission_denied` diagnostic *before* the main sweep loop
+ * tries (and silently fails) hundreds of operations.
+ */
+function probeStorageAccess(
+  scope: 'localStorage' | 'sessionStorage',
+  recorder?: DiagnosticRecorder,
+): SweepError | null {
+  const probeKey = '__qitaat_probe__';
+  try {
+    const store = scope === 'localStorage' ? localStorage : sessionStorage;
+    if (typeof store === 'undefined' || store === null) {
+      const err: SweepError = {
+        code: 'storage_unavailable',
+        message: `${scope} is undefined in this environment`,
+        scope,
+      };
+      recorder?.record({ scope, phase: 'access_probe', code: err.code, message: err.message });
+      return err;
+    }
+    store.setItem(probeKey, '1');
+    store.removeItem(probeKey);
+    return null;
+  } catch (err) {
+    const cls = classifySweepError(err, scope);
+    // A throw on probe is almost always an access problem, not a quota one.
+    const code: SweepErrorCode = cls.code === 'unknown' ? 'permission_denied' : cls.code;
+    recorder?.record({ scope, phase: 'access_probe', code, message: cls.message });
+    return { ...cls, code };
+  }
+}
+
+function probeCookieAccess(recorder?: DiagnosticRecorder): SweepError | null {
+  try {
+    if (typeof document === 'undefined') {
+      const err: SweepError = {
+        code: 'cookie_unavailable',
+        message: 'document is undefined in this environment',
+        scope: 'cookies',
+      };
+      recorder?.record({ scope: 'cookies', phase: 'access_probe', code: err.code, message: err.message });
+      return err;
+    }
+    // Touch document.cookie — some embed contexts throw here.
+    void document.cookie;
+    return null;
+  } catch (err) {
+    const cls = classifySweepError(err, 'cookies');
+    const code: SweepErrorCode = cls.code === 'unknown' ? 'permission_denied' : 'cookie_unavailable';
+    recorder?.record({ scope: 'cookies', phase: 'access_probe', code, message: cls.message });
+    return { ...cls, code };
+  }
+}
+
+/**
  * Inspects an unknown thrown value and maps it to a stable error code so
  * downstream telemetry can group failures meaningfully.
  */
