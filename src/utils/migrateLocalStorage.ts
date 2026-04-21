@@ -1001,12 +1001,14 @@ export function migrateLegacyStorage(): void {
     localStorage.setItem(MIGRATION_FLAG, '1');
 
     // Sweep any remaining unknown faneen_* orphans (e.g. from older app versions)
-    const localResult = sweepLegacyKeys();
-    const session = sweepSessionStorage();
-    const cookies = sweepCookies();
+    const recorder = createDiagnosticRecorder();
+    const localResult = sweepLegacyKeys(recorder);
+    const session = sweepSessionStorage(recorder);
+    const cookies = sweepCookies(recorder);
     const { swept, sweptKeys } = localResult;
     const totalCleaned = migrated + swept + session.swept + cookies.swept;
     const combined = combineSweepErrors([localResult.error, session.error, cookies.error]);
+    const diagnostics = recorder.snapshot();
 
     if (import.meta.env.DEV) {
       if (migrated > 0) {
@@ -1024,11 +1026,15 @@ export function migrateLegacyStorage(): void {
       if (combined.code) {
         console.warn(`[storage-migration] Sweep encountered ${combined.code}:`, combined.message);
       }
+      if (diagnostics.length > 0) {
+        console.warn('[storage-migration] Permission diagnostics:', diagnostics);
+      }
     }
 
     if (combined.code) {
       void logTelemetry('failed', totalCleaned, combined.message ?? undefined, {
         errorCode: combined.code,
+        diagnostics,
       });
     } else {
       void logTelemetry(totalCleaned > 0 ? 'success' : 'no_legacy_data', totalCleaned);
@@ -1038,7 +1044,19 @@ export function migrateLegacyStorage(): void {
     if (import.meta.env.DEV) {
       console.warn('[storage-migration] Failed:', err);
     }
-    void logTelemetry('failed', 0, msg, { errorCode: 'unknown' });
+    void logTelemetry('failed', 0, msg, {
+      errorCode: 'unknown',
+      diagnostics: [
+        {
+          ts: Date.now(),
+          scope: 'localStorage',
+          phase: 'unknown',
+          code: 'unknown',
+          message: msg.slice(0, 240),
+          ...getLocationContext(),
+        },
+      ],
+    });
   }
 }
 
