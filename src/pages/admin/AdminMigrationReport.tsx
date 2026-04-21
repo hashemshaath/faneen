@@ -378,6 +378,9 @@ const AdminMigrationReport = () => {
             {/* Admin alert settings */}
             <MigrationAlertSettingsCard />
 
+            {/* Re-run history with per-broadcast device counts */}
+            <MigrationRerunHistoryCard />
+
             {/* Protected keys list (sweep-safe) */}
             <ProtectedKeysCard />
 
