@@ -3895,6 +3895,23 @@ export type Database = {
           total_events: number
         }[]
       }
+      get_migration_rerun_history: {
+        Args: { _limit?: number }
+        Returns: {
+          cooldown_minutes: number
+          failed_events: number
+          new_epoch: number
+          reason: string
+          rerun_at: string
+          success_events: number
+          total_events: number
+          triggered_by: string
+          triggered_by_email: string
+          triggered_by_name: string
+          unique_users: number
+          window_until: string
+        }[]
+      }
       get_public_bnpl_for_business: {
         Args: { _business_id: string }
         Returns: {
