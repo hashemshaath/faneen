@@ -67,6 +67,7 @@ const ProjectDetail = () => {
     description: projectDesc?.slice(0, 160) || '',
     ogImage: project?.cover_image_url || undefined,
     ogType: 'article',
+    canonical: id ? `https://qitaat.com/projects/${id}` : undefined,
   });
 
   useJsonLd(project ? {

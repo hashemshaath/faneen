@@ -36,6 +36,24 @@ function setCanonical(href: string) {
   el.setAttribute('href', href);
 }
 
+function setHreflang(href: string) {
+  // Always point alternates to the canonical qitaat.com URL for the current path
+  const langs: Array<{ hreflang: string; href: string }> = [
+    { hreflang: 'ar', href },
+    { hreflang: 'en', href },
+    { hreflang: 'x-default', href },
+  ];
+  // Remove any stale alternates first
+  document.querySelectorAll('link[rel="alternate"][hreflang]').forEach(el => el.remove());
+  for (const l of langs) {
+    const el = document.createElement('link');
+    el.setAttribute('rel', 'alternate');
+    el.setAttribute('hreflang', l.hreflang);
+    el.setAttribute('href', l.href);
+    document.head.appendChild(el);
+  }
+}
+
 export function usePageMeta(options: PageMetaOptions) {
   useEffect(() => {
     const fullTitle = options.title.includes('قِطاعات') ? options.title : `${options.title} | ${SITE_NAME}`;
@@ -52,6 +70,7 @@ export function usePageMeta(options: PageMetaOptions) {
     // Canonical
     const canonicalUrl = options.canonical || `${BASE_URL}${window.location.pathname}`;
     setCanonical(canonicalUrl);
+    setHreflang(canonicalUrl);
 
     // Open Graph
     setMeta('og:title', options.ogTitle || fullTitle, 'property');
