@@ -14,6 +14,7 @@ const MIGRATION_FLAG = 'qitaat_migration_v1_done';
 const TELEMETRY_FLAG = 'qitaat_migration_v1_telemetry_sent';
 const SWEEP_FLAG = 'qitaat_migration_v1_sweep_done';
 const MIGRATION_KEY = 'localStorage_faneen_to_qitaat';
+const EPOCH_KEY = 'qitaat_migration_epoch';
 
 /**
  * Keys we never delete even if they appear orphaned — protected core data.
@@ -155,6 +156,8 @@ export function migrateLegacyStorage(): void {
     if (alreadyDone) {
       // Still attempt telemetry for previously-migrated devices that never reported
       void logTelemetry('skipped', 0);
+      // Check server-controlled epoch — if admin bumped it, force a re-run in background
+      void checkServerEpochAndRerun();
       return;
     }
 
