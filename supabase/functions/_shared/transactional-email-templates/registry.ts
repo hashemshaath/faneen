@@ -15,6 +15,7 @@ import { template as contactConfirmation } from './contact-confirmation.tsx'
 import { template as contactAdminNotification } from './contact-admin-notification.tsx'
 import { template as maintenanceStatusUpdate } from './maintenance-status-update.tsx'
 import { template as paymentReminder } from './payment-reminder.tsx'
+import { template as migrationFailureAlert } from './migration-failure-alert.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'booking-confirmation': bookingConfirmation,
@@ -23,4 +24,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'contact-admin-notification': contactAdminNotification,
   'maintenance-status-update': maintenanceStatusUpdate,
   'payment-reminder': paymentReminder,
+  'migration-failure-alert': migrationFailureAlert,
 }
