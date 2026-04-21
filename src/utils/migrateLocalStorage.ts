@@ -201,6 +201,85 @@ function sweepLegacyKeys(): { swept: number; sweptKeys: string[]; error?: SweepE
 }
 
 /**
+ * Async / batched twin of `sweepLegacyKeys`. Yields between BATCH_SIZE
+ * removals so the browser can paint and respond to input on low-end
+ * hardware. For small stores (≤ BATCH_THRESHOLD legacy keys) it falls
+ * through to the synchronous path to avoid scheduling overhead.
+ */
+async function sweepLegacyKeysBatched(): Promise<{
+  swept: number;
+  sweptKeys: string[];
+  error?: SweepError;
+}> {
+  if (typeof localStorage === 'undefined') {
+    return sweepLegacyKeys();
+  }
+  if (localStorage.getItem(SWEEP_FLAG) === '1') {
+    return { swept: 0, sweptKeys: [] };
+  }
+
+  // Snapshot first
+  const allKeys: string[] = [];
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k) allKeys.push(k);
+    }
+  } catch (iterErr) {
+    const cls = classifySweepError(iterErr, 'localStorage');
+    return {
+      swept: 0,
+      sweptKeys: [],
+      error: { ...cls, code: cls.code === 'unknown' ? 'iteration_failed' : cls.code },
+    };
+  }
+
+  // Pre-filter to just the legacy candidates so the batch loop is tight
+  const candidates = allKeys.filter(
+    (k) => k.startsWith(LEGACY_PREFIX) && !PROTECTED_KEYS.has(k),
+  );
+
+  // Small workload — skip the async overhead
+  if (candidates.length <= BATCH_THRESHOLD) {
+    return sweepLegacyKeys();
+  }
+
+  const sweptKeys: string[] = [];
+  for (let start = 0; start < candidates.length; start += BATCH_SIZE) {
+    const end = Math.min(start + BATCH_SIZE, candidates.length);
+    for (let i = start; i < end; i++) {
+      const key = candidates[i];
+      try {
+        localStorage.removeItem(key);
+        sweptKeys.push(key);
+      } catch (rmErr) {
+        const cls = classifySweepError(rmErr, 'localStorage');
+        return {
+          swept: sweptKeys.length,
+          sweptKeys,
+          error: { ...cls, code: cls.code === 'unknown' ? 'removal_failed' : cls.code },
+        };
+      }
+    }
+    if (end < candidates.length) {
+      // eslint-disable-next-line no-await-in-loop
+      await yieldToEventLoop();
+    }
+  }
+
+  try {
+    localStorage.setItem(SWEEP_FLAG, '1');
+  } catch (flagErr) {
+    return {
+      swept: sweptKeys.length,
+      sweptKeys,
+      error: classifySweepError(flagErr, 'localStorage'),
+    };
+  }
+  return { swept: sweptKeys.length, sweptKeys };
+}
+
+/**
  * Sweeps legacy `faneen_*` keys from sessionStorage. No counterpart copy
  * needed — sessionStorage is per-tab and contains no critical persistent data.
  */
