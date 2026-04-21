@@ -127,9 +127,10 @@ async function logTelemetry(
   status: MigrationStatus,
   keysMigrated: number,
   errorMessage?: string,
+  options?: { force?: boolean },
 ): Promise<void> {
   try {
-    if (localStorage.getItem(TELEMETRY_FLAG) === '1') return;
+    if (!options?.force && localStorage.getItem(TELEMETRY_FLAG) === '1') return;
     const ua = (navigator?.userAgent || '').slice(0, 500);
     const { error } = await supabase.from('migration_telemetry').insert({
       migration_key: MIGRATION_KEY,
