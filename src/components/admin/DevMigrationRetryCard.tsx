@@ -162,6 +162,57 @@ export const DevMigrationRetryCard = () => {
               </div>
             )}
 
+            {/* Per-failure diagnostics — shown whenever any storage permission
+                problem was captured, even if the run still succeeded overall. */}
+            {result.diagnostics.length > 0 && (
+              <details className="rounded-md border border-amber-500/30 bg-amber-500/5">
+                <summary className="px-2.5 py-1.5 text-xs font-medium cursor-pointer list-none flex items-center gap-2">
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                  <span>{isRTL ? 'سجل أخطاء التخزين/الكوكيز' : 'Storage / cookie permission log'}</span>
+                  <Badge variant="outline" className="text-[10px] ms-auto">
+                    {result.diagnostics.length}
+                  </Badge>
+                </summary>
+                <Separator />
+                <ScrollArea className="max-h-56">
+                  <div className="p-2.5 space-y-1.5 text-[11px]">
+                    {result.diagnostics.map((d, i) => (
+                      <div
+                        key={`${d.ts}-${i}`}
+                        className="rounded border border-amber-500/20 bg-background/60 p-1.5 font-mono"
+                      >
+                        <div className="flex flex-wrap items-center gap-1.5 mb-1">
+                          <span className="px-1 rounded bg-amber-500/20 text-amber-800 dark:text-amber-300 text-[10px]">
+                            {d.scope}
+                          </span>
+                          <span className="px-1 rounded bg-muted text-[10px]">{d.phase}</span>
+                          <span className="px-1 rounded bg-destructive/20 text-destructive text-[10px]">
+                            {d.code}
+                          </span>
+                          {d.key && (
+                            <span className="px-1 rounded bg-sky-500/20 text-sky-800 dark:text-sky-300 text-[10px] break-all">
+                              {d.key}
+                            </span>
+                          )}
+                          <span className="text-[10px] opacity-60 ms-auto">
+                            {new Date(d.ts).toLocaleTimeString(isRTL ? 'ar-SA' : 'en-US')}
+                          </span>
+                        </div>
+                        <div className="break-all whitespace-pre-wrap text-foreground/80">
+                          {d.message}
+                        </div>
+                        {(d.host || d.path) && (
+                          <div className="mt-1 text-[10px] opacity-60 break-all">
+                            {d.host || ''}{d.path || ''}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </details>
+            )}
+
             {/* Detailed key list, collapsible */}
             {(result.migratedKeys.length > 0 ||
               result.sweptLocalKeys.length > 0 ||
