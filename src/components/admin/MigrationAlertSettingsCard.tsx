@@ -366,24 +366,38 @@ export function MigrationAlertSettingsCard() {
           </Button>
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button
-                variant="destructive"
-                disabled={rerunMutation.isPending || cooldownInfo.onCooldown}
-                title={
-                  cooldownInfo.onCooldown && cooldownInfo.nextAllowedAt
-                    ? (isRTL
-                        ? `متاح بعد ${cooldownInfo.minutesRemaining} دقيقة`
-                        : `Available in ${cooldownInfo.minutesRemaining} min`)
-                    : undefined
-                }
-              >
-                <RefreshCw className={`h-4 w-4 me-2 ${rerunMutation.isPending ? 'animate-spin' : ''}`} />
-                {cooldownInfo.onCooldown
-                  ? isRTL
-                    ? `بثّ مقفل (${cooldownInfo.minutesRemaining}د)`
-                    : `Locked (${cooldownInfo.minutesRemaining}m)`
-                  : isRTL ? 'إعادة بث الترحيل' : 'Re-run migration'}
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="destructive"
+                    disabled={rerunMutation.isPending || cooldownInfo.onCooldown}
+                    title={
+                      cooldownInfo.onCooldown && cooldownInfo.nextAllowedAt
+                        ? (isRTL
+                            ? `متاح بعد ${cooldownInfo.minutesRemaining} دقيقة`
+                            : `Available in ${cooldownInfo.minutesRemaining} min`)
+                        : undefined
+                    }
+                  >
+                    <RefreshCw className={`h-4 w-4 me-2 ${rerunMutation.isPending ? 'animate-spin' : ''}`} />
+                    {cooldownInfo.onCooldown
+                      ? isRTL
+                        ? `بثّ مقفل (${cooldownInfo.minutesRemaining}د)`
+                        : `Locked (${cooldownInfo.minutesRemaining}m)`
+                      : isRTL ? 'إعادة بث الترحيل' : 'Re-run migration'}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-xs">
+                  <div className="space-y-1">
+                    <p className="text-xs font-medium">{isRTL ? 'ما هو إعادة البثّ؟' : 'What is re-run broadcast?'}</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {isRTL
+                        ? 'ترفع رقم النسخة (Epoch) لجميع المستخدمين، فيُعيد كل جهاز ترحيل بياناته تلقائياً. يُستخدم لتنظيف البيانات القديمة أو إصلاح مشاكل بعد تحديث.'
+                        : 'Bumps the version number (Epoch) for all users, causing every device to re-migrate its data automatically. Used to clean stale data or fix issues after updates.'}
+                    </p>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
             </AlertDialogTrigger>
             <AlertDialogContent dir={isRTL ? 'rtl' : 'ltr'}>
               <AlertDialogHeader>
