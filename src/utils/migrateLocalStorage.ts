@@ -1075,10 +1075,17 @@ export function migrateLegacyStorage(): void {
  */
 async function checkServerEpochAndRerun(): Promise<void> {
   try {
-    const { data, error } = await supabase.rpc('get_migration_epoch');
+    // Pull epoch + reason in a single round-trip so each device can stamp the
+    // admin-provided reason on its own telemetry event.
+    const { data, error } = await (supabase.rpc as any)('get_current_migration_rerun');
     if (error || data == null) return;
-    const serverEpoch = Number(data);
+    const row = Array.isArray(data) ? data[0] : data;
+    if (!row) return;
+    const serverEpoch = Number(row.epoch);
     if (!Number.isFinite(serverEpoch) || serverEpoch < 1) return;
+    const rerunReason: string | null = typeof row.reason === 'string' && row.reason.trim().length > 0
+      ? row.reason.trim().slice(0, 500)
+      : null;
 
     const localEpochRaw = localStorage.getItem(EPOCH_KEY);
     const localEpoch = localEpochRaw ? Number(localEpochRaw) : 1;
@@ -1094,6 +1101,7 @@ async function checkServerEpochAndRerun(): Promise<void> {
     if (import.meta.env.DEV) {
       console.info(
         `[storage-migration] Server epoch ${serverEpoch} > local ${localEpoch}. Re-running…`,
+        rerunReason ? `Reason: ${rerunReason}` : '',
       );
     }
 
@@ -1106,7 +1114,7 @@ async function checkServerEpochAndRerun(): Promise<void> {
     localStorage.setItem(EPOCH_KEY, String(serverEpoch));
 
     // Re-run the migration synchronously; it will log a fresh telemetry event
-    runMigrationCore({ forced: true, epoch: serverEpoch });
+    runMigrationCore({ forced: true, epoch: serverEpoch, rerunReason });
   } catch {
     // Silent — never break boot
   }
