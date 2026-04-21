@@ -440,6 +440,7 @@ function sweepSessionStorage(): { swept: number; sweptKeys: string[]; error?: Sw
     }
     for (const key of keys) {
       if (!key.startsWith(LEGACY_PREFIX)) continue;
+      if (isKeyProtected(key)) continue;
       sessionStorage.removeItem(key);
       sweptKeys.push(key);
     }
