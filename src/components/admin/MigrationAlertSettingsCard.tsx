@@ -250,7 +250,7 @@ export function MigrationAlertSettingsCard() {
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
           <div className="space-y-1.5">
             <Label className="text-xs">{isRTL ? 'عتبة الفشل (%)' : 'Failure threshold (%)'}</Label>
             <Input
@@ -291,6 +291,23 @@ export function MigrationAlertSettingsCard() {
               value={form.cooldown_hours}
               onChange={(e) => setForm({ ...form, cooldown_hours: Number(e.target.value) })}
             />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">
+              {isRTL ? 'تهدئة إعادة البثّ (دقيقة)' : 'Re-run cooldown (min)'}
+            </Label>
+            <Input
+              type="number" min={1} max={10080} step={1}
+              value={form.rerun_cooldown_minutes}
+              onChange={(e) =>
+                setForm({ ...form, rerun_cooldown_minutes: Number(e.target.value) })
+              }
+            />
+            <p className="text-[11px] text-muted-foreground">
+              {isRTL
+                ? 'أقل فاصل بين أي بثّين متتاليين. الافتراضي: 60.'
+                : 'Minimum gap between two broadcasts. Default: 60.'}
+            </p>
           </div>
         </div>
 
