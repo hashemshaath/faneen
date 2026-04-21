@@ -4,27 +4,19 @@
  * Logs telemetry to backend for monitoring migration health across devices.
  */
 import { supabase } from '@/integrations/supabase/client';
+import {
+  LEGACY_KEY_MAP as KEY_MAP,
+  PROTECTED_KEYS,
+  MIGRATION_FLAGS,
+  MIGRATION_KEY,
+  LEGACY_PREFIX,
+  NEW_PREFIX,
+} from '@/config/storageMigration';
 
-const KEY_MAP: Record<string, string> = {
-  faneen_lang: 'qitaat_lang',
-  faneen_search_history: 'qitaat_search_history',
-};
-
-const MIGRATION_FLAG = 'qitaat_migration_v1_done';
-const TELEMETRY_FLAG = 'qitaat_migration_v1_telemetry_sent';
-const SWEEP_FLAG = 'qitaat_migration_v1_sweep_done';
-const MIGRATION_KEY = 'localStorage_faneen_to_qitaat';
-const EPOCH_KEY = 'qitaat_migration_epoch';
-
-/**
- * Keys we never delete even if they appear orphaned — protected core data.
- * Add critical legacy keys here if discovered later.
- */
-const PROTECTED_KEYS = new Set<string>([
-  // Already handled via KEY_MAP, but keep as defense-in-depth
-  'faneen_lang',
-  'faneen_search_history',
-]);
+const MIGRATION_FLAG = MIGRATION_FLAGS.done;
+const TELEMETRY_FLAG = MIGRATION_FLAGS.telemetrySent;
+const SWEEP_FLAG = MIGRATION_FLAGS.sweepDone;
+const EPOCH_KEY = MIGRATION_FLAGS.epoch;
 
 /**
  * Sweeps any remaining `faneen_*` localStorage keys that weren't in KEY_MAP.
@@ -43,10 +35,10 @@ function sweepLegacyKeys(): { swept: number; sweptKeys: string[] } {
     }
 
     for (const key of allKeys) {
-      if (!key.startsWith('faneen_')) continue;
+      if (!key.startsWith(LEGACY_PREFIX)) continue;
       if (PROTECTED_KEYS.has(key)) continue;
       // Already handled by KEY_MAP — skip if a counterpart exists in qitaat_ namespace
-      const counterpart = 'qitaat_' + key.slice('faneen_'.length);
+      const counterpart = NEW_PREFIX + key.slice(LEGACY_PREFIX.length);
       if (localStorage.getItem(counterpart) !== null) {
         // Counterpart exists, safe to remove orphan
         localStorage.removeItem(key);
@@ -79,7 +71,7 @@ function sweepSessionStorage(): { swept: number; sweptKeys: string[] } {
       if (k) keys.push(k);
     }
     for (const key of keys) {
-      if (!key.startsWith('faneen_')) continue;
+      if (!key.startsWith(LEGACY_PREFIX)) continue;
       sessionStorage.removeItem(key);
       sweptKeys.push(key);
     }
@@ -107,7 +99,8 @@ function sweepCookies(): { swept: number; sweptKeys: string[] } {
     for (const raw of cookies) {
       const eq = raw.indexOf('=');
       const name = (eq > -1 ? raw.slice(0, eq) : raw).trim();
-      if (!name.startsWith('faneen_')) continue;
+      if (!name.startsWith(LEGACY_PREFIX)) continue;
+      if (PROTECTED_KEYS.has(name)) continue;
       // Try multiple path/domain combinations to maximize cleanup coverage
       const expiry = 'expires=Thu, 01 Jan 1970 00:00:00 GMT';
       document.cookie = `${name}=; ${expiry}; path=/`;

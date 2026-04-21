@@ -26,6 +26,7 @@ import {
   AlertCircle, ArrowDownRight, ArrowUpRight, Calendar,
 } from 'lucide-react';
 import { MigrationAlertSettingsCard } from '@/components/admin/MigrationAlertSettingsCard';
+import { ProtectedKeysCard } from '@/components/admin/ProtectedKeysCard';
 
 interface TelemetryRow {
   id: string;
@@ -374,6 +375,9 @@ const AdminMigrationReport = () => {
 
             {/* Admin alert settings */}
             <MigrationAlertSettingsCard />
+
+            {/* Protected keys list (sweep-safe) */}
+            <ProtectedKeysCard />
           </>
         )}
       </div>
