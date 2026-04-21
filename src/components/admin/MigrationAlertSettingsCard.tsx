@@ -324,8 +324,23 @@ export function MigrationAlertSettingsCard() {
             />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs">
+            <Label className="text-xs flex items-center gap-1">
               {isRTL ? 'تهدئة إعادة البثّ (دقيقة)' : 'Re-run cooldown (min)'}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <HelpCircle className="h-3 w-3 text-muted-foreground cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-xs">
+                  <div className="space-y-1">
+                    <p className="text-xs font-medium">{isRTL ? 'ما هو مفتاح الترحيل؟' : 'What is the Migration Key?'}</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {isRTL
+                        ? 'علامة في تخزين المتصفح تمنع تكرار الترحيل على نفس الجهاز. عند رفع الـ Epoch، يتجاوز الجهاز هذا القفل ويُعيد الترحيل.'
+                        : 'A flag in browser storage preventing duplicate migration on the same device. When Epoch is bumped, the device bypasses this lock and re-runs migration.'}
+                    </p>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
             </Label>
             <Input
               type="number" min={1} max={10080} step={1}
