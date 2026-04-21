@@ -264,7 +264,7 @@ if (serverEpoch > localEpoch) {
                 <div key={entry.key} className="rounded-lg border border-border/60 p-3 flex flex-col sm:flex-row sm:items-start gap-3">
                   <div className="flex items-center gap-2 shrink-0">
                     <Lock className="w-3.5 h-3.5 text-accent" />
-                    <CodeChip>{entry.key}</CodeChip>
+                    <CodeChip copyValue={entry.key}>{entry.key}</CodeChip>
                     <Badge variant="secondary" className="text-[10px] uppercase">{entry.category}</Badge>
                   </div>
                   <p className="text-xs text-muted-foreground leading-relaxed">
