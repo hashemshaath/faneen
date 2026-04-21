@@ -198,9 +198,103 @@ function sweepSessionStorage(): { swept: number; sweptKeys: string[]; error?: Sw
 }
 
 /**
+ * Computes every plausible domain scope a cookie may have been set on.
+ * Browsers set cookies under: the exact host, the parent eTLD+1, and any
+ * intermediate sub-domain. Trying them all maximises the chance the
+ * `Set-Cookie` deletion request actually matches the original scope.
+ *
+ * Examples:
+ *   www.app.qitaat.com → ['', 'www.app.qitaat.com', '.www.app.qitaat.com',
+ *                         'app.qitaat.com', '.app.qitaat.com',
+ *                         'qitaat.com', '.qitaat.com']
+ *   localhost          → ['', 'localhost']
+ *   192.168.1.10       → ['', '192.168.1.10']  (IP — no parent climb)
+ */
+function computeDomainScopes(host: string): string[] {
+  const scopes = new Set<string>();
+  scopes.add(''); // host-only cookie (no Domain attribute)
+  if (!host) return Array.from(scopes);
+
+  // IP literals: never climb parents
+  const isIp = /^\d{1,3}(\.\d{1,3}){3}$/.test(host) || host.includes(':');
+  if (isIp || host === 'localhost') {
+    scopes.add(host);
+    return Array.from(scopes);
+  }
+
+  const parts = host.split('.').filter(Boolean);
+  // Walk up the domain tree, but stop before single-label TLDs (e.g. ".com")
+  for (let i = 0; i <= parts.length - 2; i++) {
+    const candidate = parts.slice(i).join('.');
+    scopes.add(candidate);
+    scopes.add('.' + candidate); // legacy leading-dot form (RFC 2109)
+  }
+  return Array.from(scopes);
+}
+
+/**
+ * Computes plausible Path scopes a cookie may have been set on.
+ * Most cookies use `/`, but some scoped cookies use the current pathname
+ * or any of its ancestor segments.
+ *
+ * Examples:
+ *   /dashboard/admin/migration → ['/', '/dashboard', '/dashboard/admin',
+ *                                  '/dashboard/admin/migration']
+ */
+function computePathScopes(pathname: string): string[] {
+  const scopes = new Set<string>(['/']);
+  if (!pathname || pathname === '/') return Array.from(scopes);
+  const segments = pathname.split('/').filter(Boolean);
+  let current = '';
+  for (const seg of segments) {
+    current += '/' + seg;
+    scopes.add(current);
+  }
+  return Array.from(scopes);
+}
+
+/**
+ * Returns every cookie name that begins with the legacy prefix, supporting
+ * three encoding forms a server might have used:
+ *   1. raw bytes               → faneen_session
+ *   2. percent-encoded         → faneen%5Fsession (rare but valid)
+ *   3. fully encoded prefix    → %66%61%6E%65%65%6E_…  (defensive)
+ *
+ * Returns BOTH the decoded canonical name (for matching against
+ * PROTECTED_KEYS / sweptKeys) and the original raw name (so the
+ * deletion `Set-Cookie` byte-matches what the browser stored).
+ */
+function extractLegacyCookieNames(
+  cookieHeader: string,
+): Array<{ raw: string; decoded: string }> {
+  const out: Array<{ raw: string; decoded: string }> = [];
+  if (!cookieHeader) return out;
+
+  for (const segment of cookieHeader.split(';')) {
+    const eq = segment.indexOf('=');
+    const raw = (eq > -1 ? segment.slice(0, eq) : segment).trim();
+    if (!raw) continue;
+
+    // Try to decode; fall back to raw if malformed (decodeURIComponent throws on bad %)
+    let decoded = raw;
+    try {
+      decoded = decodeURIComponent(raw);
+    } catch {
+      decoded = raw;
+    }
+
+    if (raw.startsWith(LEGACY_PREFIX) || decoded.startsWith(LEGACY_PREFIX)) {
+      out.push({ raw, decoded });
+    }
+  }
+  return out;
+}
+
+/**
  * Sweeps legacy `faneen_*` cookies on the current domain. Sets expired Max-Age
- * across plausible path scopes. Cookies on unrelated origins cannot be cleared
- * from JS — that's a browser security boundary.
+ * across every plausible (domain × path) combination, and supports
+ * percent-encoded cookie names. Cookies on unrelated origins cannot be
+ * cleared from JS — that's a browser security boundary.
  */
 function sweepCookies(): { swept: number; sweptKeys: string[]; error?: SweepError } {
   const sweptKeys: string[] = [];
@@ -217,23 +311,43 @@ function sweepCookies(): { swept: number; sweptKeys: string[]; error?: SweepErro
       };
     }
     if (!document.cookie) return { swept: 0, sweptKeys };
-    const cookies = document.cookie.split(';');
-    const host = window.location.hostname;
-    // Compute parent domain for cookies set with a leading dot
-    const parts = host.split('.');
-    const parentDomain = parts.length > 1 ? '.' + parts.slice(-2).join('.') : host;
 
-    for (const raw of cookies) {
-      const eq = raw.indexOf('=');
-      const name = (eq > -1 ? raw.slice(0, eq) : raw).trim();
-      if (!name.startsWith(LEGACY_PREFIX)) continue;
-      if (PROTECTED_KEYS.has(name)) continue;
-      // Try multiple path/domain combinations to maximize cleanup coverage
-      const expiry = 'expires=Thu, 01 Jan 1970 00:00:00 GMT';
-      document.cookie = `${name}=; ${expiry}; path=/`;
-      document.cookie = `${name}=; ${expiry}; path=/; domain=${host}`;
-      document.cookie = `${name}=; ${expiry}; path=/; domain=${parentDomain}`;
-      sweptKeys.push(name);
+    const host = (window.location.hostname || '').toLowerCase();
+    const pathname = window.location.pathname || '/';
+    const domainScopes = computeDomainScopes(host);
+    const pathScopes = computePathScopes(pathname);
+    const expiry = 'expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    const isHttps =
+      typeof window.location !== 'undefined' && window.location.protocol === 'https:';
+
+    const candidates = extractLegacyCookieNames(document.cookie);
+
+    for (const { raw, decoded } of candidates) {
+      // Protect canonical decoded name against the central protected list
+      if (PROTECTED_KEYS.has(decoded) || PROTECTED_KEYS.has(raw)) continue;
+
+      // Try every domain × path combination so we hit whichever scope
+      // the original Set-Cookie actually used.
+      for (const domain of domainScopes) {
+        for (const path of pathScopes) {
+          const domainAttr = domain ? `; domain=${domain}` : '';
+          // Plain attempt
+          document.cookie = `${raw}=; ${expiry}; path=${path}${domainAttr}`;
+          // SameSite=Lax variant — modern browsers may otherwise ignore the deletion
+          document.cookie = `${raw}=; ${expiry}; path=${path}${domainAttr}; SameSite=Lax`;
+          // Secure variant for HTTPS-only cookies (must include Secure to overwrite)
+          if (isHttps) {
+            document.cookie = `${raw}=; ${expiry}; path=${path}${domainAttr}; SameSite=None; Secure`;
+          }
+          // Also overwrite the decoded form in case the browser stores it differently
+          if (decoded !== raw) {
+            document.cookie = `${decoded}=; ${expiry}; path=${path}${domainAttr}`;
+          }
+        }
+      }
+
+      // Record the canonical (decoded) name for telemetry & UI clarity
+      sweptKeys.push(decoded);
     }
   } catch (err) {
     return {
