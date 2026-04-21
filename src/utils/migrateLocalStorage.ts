@@ -480,7 +480,9 @@ async function sweepSessionStorageBatched(): Promise<{
       error: { ...cls, code: cls.code === 'unknown' ? 'iteration_failed' : cls.code },
     };
   }
-  const candidates = keys.filter((k) => k.startsWith(LEGACY_PREFIX));
+  const candidates = keys.filter(
+    (k) => k.startsWith(LEGACY_PREFIX) && !isKeyProtected(k),
+  );
   if (candidates.length <= BATCH_THRESHOLD) {
     return sweepSessionStorage();
   }
