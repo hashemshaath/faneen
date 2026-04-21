@@ -158,6 +158,33 @@ export function MigrationAlertSettingsCard() {
     },
   });
 
+  const rerunMutation = useMutation({
+    mutationFn: async (reason: string) => {
+      const { data, error } = await supabase.rpc('bump_migration_epoch', {
+        _reason: reason || null,
+      });
+      if (error) throw error;
+      return data as number;
+    },
+    onSuccess: (newEpoch) => {
+      toast({
+        title: isRTL ? 'تم بثّ إعادة الترحيل' : 'Migration re-run broadcast',
+        description: isRTL
+          ? `النسخة الجديدة #${newEpoch} — ستُنفَّذ على كل جهاز عند تحميله القادم وسيُسجَّل حدث جديد.`
+          : `New epoch #${newEpoch} — every device will re-run on next load and log a fresh event.`,
+      });
+      setRerunReason('');
+      qc.invalidateQueries({ queryKey: ['migration-rerun-status'] });
+    },
+    onError: (err: any) => {
+      toast({
+        title: isRTL ? 'فشل البثّ' : 'Broadcast failed',
+        description: err?.message || String(err),
+        variant: 'destructive',
+      });
+    },
+  });
+
   if (isLoading || !form) {
     return (
       <Card>
@@ -243,6 +270,48 @@ export function MigrationAlertSettingsCard() {
             <Send className="h-4 w-4 me-2" />
             {isRTL ? 'تشغيل الفحص الآن' : 'Run check now'}
           </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" disabled={rerunMutation.isPending}>
+                <RefreshCw className={`h-4 w-4 me-2 ${rerunMutation.isPending ? 'animate-spin' : ''}`} />
+                {isRTL ? 'إعادة بث الترحيل' : 'Re-run migration'}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent dir={isRTL ? 'rtl' : 'ltr'}>
+              <AlertDialogHeader>
+                <AlertDialogTitle>
+                  {isRTL ? 'إعادة تشغيل ترحيل localStorage على كل المستخدمين؟' : 'Re-run localStorage migration for all users?'}
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  {isRTL
+                    ? 'سيتم رفع رقم نسخة الترحيل، وعند تحميل أي جهاز للموقع التالي سيُعيد تنفيذ منطق الترحيل ويُسجَّل حدث جديد في تقرير الترحيل لهذا الجهاز. لا يُفقد أي بيانات للمستخدم.'
+                    : 'This bumps the migration epoch. Every device will re-execute the migration on its next page load and log a fresh telemetry event. No user data is lost.'}
+                  {rerunStatus?.last_rerun_at && (
+                    <div className="mt-2 text-xs">
+                      {isRTL ? 'النسخة الحالية: ' : 'Current epoch: '}
+                      <strong>#{rerunStatus.migration_epoch}</strong> · {isRTL ? 'آخر بثّ: ' : 'Last broadcast: '}
+                      {format(new Date(rerunStatus.last_rerun_at), 'yyyy-MM-dd HH:mm')}
+                    </div>
+                  )}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <div className="space-y-1.5">
+                <Label className="text-xs">{isRTL ? 'سبب إعادة التشغيل (اختياري)' : 'Reason (optional)'}</Label>
+                <Textarea
+                  rows={2}
+                  value={rerunReason}
+                  onChange={(e) => setRerunReason(e.target.value.slice(0, 500))}
+                  placeholder={isRTL ? 'مثال: تنظيف بقايا قديمة بعد تحديث' : 'e.g. clean stale residue after release'}
+                />
+              </div>
+              <AlertDialogFooter>
+                <AlertDialogCancel>{isRTL ? 'إلغاء' : 'Cancel'}</AlertDialogCancel>
+                <AlertDialogAction onClick={() => rerunMutation.mutate(rerunReason)}>
+                  {isRTL ? 'تأكيد البثّ' : 'Confirm broadcast'}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
 
         {history && history.length > 0 && (
