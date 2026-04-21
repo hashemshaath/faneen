@@ -6,7 +6,12 @@ import { Footer } from '@/components/layout/Footer';
 
 const Privacy = () => {
   const { isRTL } = useLanguage();
-  usePageMeta({ title: isRTL ? 'سياسة الخصوصية | قِطاعات' : 'Privacy Policy | Qitaat', description: isRTL ? 'سياسة الخصوصية لمنصة قِطاعات' : 'Qitaat platform privacy policy' });
+  usePageMeta({
+    title: isRTL ? 'سياسة الخصوصية | قِطاعات' : 'Privacy Policy | Qitaat',
+    description: isRTL
+      ? 'سياسة خصوصية قِطاعات: جمع البيانات، الكوكيز، تنظيف التخزين القديم faneen.com، مقاييس الأداء، وحقوق المستخدم.'
+      : 'Qitaat privacy policy: data collection, cookies, faneen.com legacy storage cleanup, performance metrics, and user rights.',
+  });
 
   return (
     <div className="min-h-screen bg-background">
