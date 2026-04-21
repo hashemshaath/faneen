@@ -2,6 +2,7 @@ import { createRoot } from "react-dom/client";
 import { validateEnv } from "./utils/validateEnv";
 import App from "./App.tsx";
 import "./index.css";
+import { startWebVitals } from "./utils/reportWebVitals";
 
 validateEnv();
 
@@ -48,6 +49,12 @@ if (isPreviewHost || isInIframe) {
   navigator.serviceWorker?.getRegistrations().then((regs) => {
     regs.forEach((r) => r.unregister());
   });
+}
+
+// RUM: collect Core Web Vitals from real visitors (skip Lovable preview to
+// keep dev signal clean).
+if (!isPreviewHost && !isInIframe) {
+  startWebVitals();
 }
 
 createRoot(document.getElementById("root")!).render(<App />);

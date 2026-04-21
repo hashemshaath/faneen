@@ -15,3 +15,7 @@ project_id = "hckpxwhjycmdflaneihd"
     verify_jwt = true
   [functions.ping-search-engines]
     verify_jwt = false
+  [functions.ingest-web-vitals]
+    verify_jwt = false
+  [functions.run-site-audit]
+    verify_jwt = false

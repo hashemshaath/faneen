@@ -2539,6 +2539,69 @@ export type Database = {
         }
         Relationships: []
       }
+      perf_audit_runs: {
+        Row: {
+          accessibility_score: number | null
+          best_practices_score: number | null
+          cls: number | null
+          created_at: string
+          error: string | null
+          fcp_ms: number | null
+          id: string
+          lcp_ms: number | null
+          performance_score: number | null
+          raw_summary: Json | null
+          seo_score: number | null
+          source: string
+          speed_index_ms: number | null
+          strategy: string
+          tbt_ms: number | null
+          triggered_by: string | null
+          ttfb_ms: number | null
+          url: string
+        }
+        Insert: {
+          accessibility_score?: number | null
+          best_practices_score?: number | null
+          cls?: number | null
+          created_at?: string
+          error?: string | null
+          fcp_ms?: number | null
+          id?: string
+          lcp_ms?: number | null
+          performance_score?: number | null
+          raw_summary?: Json | null
+          seo_score?: number | null
+          source?: string
+          speed_index_ms?: number | null
+          strategy?: string
+          tbt_ms?: number | null
+          triggered_by?: string | null
+          ttfb_ms?: number | null
+          url: string
+        }
+        Update: {
+          accessibility_score?: number | null
+          best_practices_score?: number | null
+          cls?: number | null
+          created_at?: string
+          error?: string | null
+          fcp_ms?: number | null
+          id?: string
+          lcp_ms?: number | null
+          performance_score?: number | null
+          raw_summary?: Json | null
+          seo_score?: number | null
+          source?: string
+          speed_index_ms?: number | null
+          strategy?: string
+          tbt_ms?: number | null
+          triggered_by?: string | null
+          ttfb_ms?: number | null
+          url?: string
+        }
+        Relationships: []
+      }
       phone_otps: {
         Row: {
           attempts: number
@@ -3403,6 +3466,54 @@ export type Database = {
           },
         ]
       }
+      seo_audit_runs: {
+        Row: {
+          created_at: string
+          error: string | null
+          id: string
+          page_results: Json | null
+          pages_checked: number | null
+          pages_passed: number | null
+          robots_has_sitemap: boolean | null
+          robots_ok: boolean | null
+          robots_status: number | null
+          sitemap_ok: boolean | null
+          sitemap_status: number | null
+          sitemap_url_count: number | null
+          triggered_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          page_results?: Json | null
+          pages_checked?: number | null
+          pages_passed?: number | null
+          robots_has_sitemap?: boolean | null
+          robots_ok?: boolean | null
+          robots_status?: number | null
+          sitemap_ok?: boolean | null
+          sitemap_status?: number | null
+          sitemap_url_count?: number | null
+          triggered_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          page_results?: Json | null
+          pages_checked?: number | null
+          pages_passed?: number | null
+          robots_has_sitemap?: boolean | null
+          robots_ok?: boolean | null
+          robots_status?: number | null
+          sitemap_ok?: boolean | null
+          sitemap_status?: number | null
+          sitemap_url_count?: number | null
+          triggered_by?: string | null
+        }
+        Relationships: []
+      }
       sitemap_submissions: {
         Row: {
           created_at: string
@@ -3587,6 +3698,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      web_vitals_events: {
+        Row: {
+          connection_type: string | null
+          created_at: string
+          device_type: string | null
+          id: string
+          metric_name: string
+          metric_rating: string | null
+          metric_value: number
+          page_path: string
+          user_agent: string | null
+        }
+        Insert: {
+          connection_type?: string | null
+          created_at?: string
+          device_type?: string | null
+          id?: string
+          metric_name: string
+          metric_rating?: string | null
+          metric_value: number
+          page_path: string
+          user_agent?: string | null
+        }
+        Update: {
+          connection_type?: string | null
+          created_at?: string
+          device_type?: string | null
+          id?: string
+          metric_name?: string
+          metric_rating?: string | null
+          metric_value?: number
+          page_path?: string
+          user_agent?: string | null
+        }
+        Relationships: []
       }
     }
     Views: {
@@ -3807,6 +3954,7 @@ export type Database = {
         Returns: boolean
       }
       cleanup_expired_otps: { Args: never; Returns: undefined }
+      cleanup_old_audit_data: { Args: never; Returns: undefined }
       cleanup_old_migration_telemetry: { Args: never; Returns: undefined }
       create_notification: {
         Args: {
@@ -3951,6 +4099,17 @@ export type Database = {
           user_id: string
           username: string
           website: string
+        }[]
+      }
+      get_web_vitals_summary: {
+        Args: { _hours?: number }
+        Returns: {
+          good_pct: number
+          metric_name: string
+          p50: number
+          p75: number
+          p95: number
+          sample_count: number
         }[]
       }
       has_admin_access: { Args: { _user_id: string }; Returns: boolean }
