@@ -64,6 +64,62 @@ function sweepLegacyKeys(): { swept: number; sweptKeys: string[] } {
   return { swept: sweptKeys.length, sweptKeys };
 }
 
+/**
+ * Sweeps legacy `faneen_*` keys from sessionStorage. No counterpart copy
+ * needed — sessionStorage is per-tab and contains no critical persistent data.
+ */
+function sweepSessionStorage(): { swept: number; sweptKeys: string[] } {
+  const sweptKeys: string[] = [];
+  try {
+    if (typeof sessionStorage === 'undefined') return { swept: 0, sweptKeys };
+    const keys: string[] = [];
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const k = sessionStorage.key(i);
+      if (k) keys.push(k);
+    }
+    for (const key of keys) {
+      if (!key.startsWith('faneen_')) continue;
+      sessionStorage.removeItem(key);
+      sweptKeys.push(key);
+    }
+  } catch {
+    // Silent
+  }
+  return { swept: sweptKeys.length, sweptKeys };
+}
+
+/**
+ * Sweeps legacy `faneen_*` cookies on the current domain. Sets expired Max-Age
+ * across plausible path scopes. Cookies on other domains (incl. .faneen.com)
+ * cannot be cleared from JS — that's a browser security boundary.
+ */
+function sweepCookies(): { swept: number; sweptKeys: string[] } {
+  const sweptKeys: string[] = [];
+  try {
+    if (typeof document === 'undefined' || !document.cookie) return { swept: 0, sweptKeys };
+    const cookies = document.cookie.split(';');
+    const host = window.location.hostname;
+    // Compute parent domain for cookies set with a leading dot
+    const parts = host.split('.');
+    const parentDomain = parts.length > 1 ? '.' + parts.slice(-2).join('.') : host;
+
+    for (const raw of cookies) {
+      const eq = raw.indexOf('=');
+      const name = (eq > -1 ? raw.slice(0, eq) : raw).trim();
+      if (!name.startsWith('faneen_')) continue;
+      // Try multiple path/domain combinations to maximize cleanup coverage
+      const expiry = 'expires=Thu, 01 Jan 1970 00:00:00 GMT';
+      document.cookie = `${name}=; ${expiry}; path=/`;
+      document.cookie = `${name}=; ${expiry}; path=/; domain=${host}`;
+      document.cookie = `${name}=; ${expiry}; path=/; domain=${parentDomain}`;
+      sweptKeys.push(name);
+    }
+  } catch {
+    // Silent
+  }
+  return { swept: sweptKeys.length, sweptKeys };
+}
+
 type MigrationStatus = 'success' | 'failed' | 'skipped' | 'no_legacy_data';
 
 async function logTelemetry(
