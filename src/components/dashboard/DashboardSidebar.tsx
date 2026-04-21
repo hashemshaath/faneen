@@ -22,7 +22,7 @@ import {
   Layers, MessageSquare, Users, Newspaper, Building2, Bell, Activity,
   Bookmark, ShieldAlert, Crown, FolderTree, Tags, UserCog, Database,
   BarChart3, Cog, Eye, TrendingUp, AlertTriangle, Server, Brain,
-  CalendarClock, BookOpen,
+  CalendarClock,
 } from 'lucide-react';
 
 interface MenuItem {
