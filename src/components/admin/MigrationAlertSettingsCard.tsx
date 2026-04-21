@@ -477,5 +477,6 @@ export function MigrationAlertSettingsCard() {
         )}
       </CardContent>
     </Card>
+    </TooltipProvider>
   );
 }
