@@ -28,12 +28,12 @@ export const CTASection = () => {
             </div>
 
             <h2 className="font-heading font-bold text-2xl sm:text-4xl md:text-5xl text-surface-nav-foreground mb-5 sm:mb-7 leading-tight">
-              {isRTL ? 'ابدأ رحلتك مع فنيين' : 'Start Your Journey with Faneen'}
+              {isRTL ? 'ابدأ رحلتك مع قِطاعات' : 'Start Your Journey with Qitaat'}
             </h2>
             <p className="font-body text-sm sm:text-lg text-surface-nav-foreground/55 mb-7 sm:mb-10 max-w-lg mx-auto leading-relaxed">
               {isRTL
-                ? 'سواء كنت تبحث عن مزود خدمة أو ترغب في عرض خدماتك، فنيين هو المكان الأمثل لك'
-                : 'Whether you\'re looking for a service provider or want to showcase your services, Faneen is the perfect place for you'}
+                ? 'سواء كنت تبحث عن مزود خدمة أو ترغب في عرض خدماتك، قِطاعات هو المكان الأمثل لك'
+                : 'Whether you\'re looking for a service provider or want to showcase your services, Qitaat is the perfect place for you'}
             </p>
 
             {/* Trust indicators */}

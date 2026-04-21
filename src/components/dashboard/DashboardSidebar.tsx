@@ -272,8 +272,8 @@ export const DashboardSidebar: React.FC = () => {
           </div>
           {!collapsed && (
             <div className="min-w-0">
-              <h1 className="font-heading font-bold text-lg leading-none text-sidebar-foreground">فنيين</h1>
-              <span className="text-[10px] text-accent/80 font-medium tracking-wider">Faneen</span>
+              <h1 className="font-heading font-bold text-lg leading-none text-sidebar-foreground">قِطاعات</h1>
+              <span className="text-[10px] text-accent/80 font-medium tracking-wider">Qitaat</span>
             </div>
           )}
         </div>

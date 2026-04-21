@@ -41,7 +41,7 @@ export const translations = {
   'cat.designers.desc': { ar: 'تصميم داخلي، رسومات هندسية', en: 'Interior design, engineering drawings' },
 
   // Features
-  'features.label': { ar: 'لماذا فنيين؟', en: 'Why Faneen?' },
+  'features.label': { ar: 'لماذا قِطاعات؟', en: 'Why Qitaat?' },
   'features.title': { ar: 'منصة متكاملة لكل ما تحتاجه', en: 'An Integrated Platform for Everything You Need' },
   'feat.search': { ar: 'بحث ذكي', en: 'Smart Search' },
   'feat.search.desc': { ar: 'محرك بحث متقدم للعثور على المصانع والمحلات حسب الموقع والتخصص والتقييم', en: 'Advanced search engine to find factories and shops by location, specialty, and rating' },
@@ -97,7 +97,7 @@ export const translations = {
   'footer.partnerships': { ar: 'الشراكات', en: 'Partnerships' },
   'footer.privacy': { ar: 'سياسة الخصوصية', en: 'Privacy Policy' },
   'footer.terms': { ar: 'الشروط والأحكام', en: 'Terms & Conditions' },
-  'footer.rights': { ar: '© 2026 فنيين Faneen. جميع الحقوق محفوظة.', en: '© 2026 Faneen. All rights reserved.' },
+  'footer.rights': { ar: '© 2026 قِطاعات Qitaat. جميع الحقوق محفوظة.', en: '© 2026 Qitaat. All rights reserved.' },
 
   // Auth
   'auth.login': { ar: 'تسجيل الدخول', en: 'Login' },
@@ -120,7 +120,7 @@ export const translations = {
   'auth.register_business': { ar: 'تسجيل كجهة أعمال', en: 'Register as Business' },
   'auth.business_name': { ar: 'اسم الجهة', en: 'Business Name' },
   'auth.business_username': { ar: 'اسم المستخدم (رابط الصفحة)', en: 'Username (Page URL)' },
-  'auth.business_username.hint': { ar: 'faneen.com/username', en: 'faneen.com/username' },
+  'auth.business_username.hint': { ar: 'qitaat.com/username', en: 'qitaat.com/username' },
   'auth.select_city': { ar: 'اختر المدينة', en: 'Select City' },
   'auth.select_category': { ar: 'اختر التخصص', en: 'Select Category' },
   'auth.next': { ar: 'التالي', en: 'Next' },

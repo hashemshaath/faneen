@@ -69,7 +69,7 @@ serve(async (req) => {
 
       case "chat": {
         let basePrompt = systemPromptOverride 
-          || `You are a professional AI business assistant for a services marketplace platform called "فنيين" (Faneen). You help business owners manage their businesses, write content, optimize their profiles, and answer questions about running a service business.`;
+          || `You are a professional AI business assistant for a services marketplace platform called "قِطاعات" (Qitaat). You help business owners manage their businesses, write content, optimize their profiles, and answer questions about running a service business.`;
         
         basePrompt += ` ${toneInstruction} ${styleInstruction} Be helpful and practical. Respond in the same language as the user's message. Do NOT use markdown formatting symbols.`;
         

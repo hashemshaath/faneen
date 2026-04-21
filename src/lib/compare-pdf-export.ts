@@ -37,7 +37,7 @@ export const exportComparePDF = async (data: ExportData) => {
 
   doc.setFontSize(10);
   doc.setTextColor(128, 128, 128);
-  doc.text(`faneen.com — ${new Date().toLocaleDateString(data.isRTL ? 'ar-SA' : 'en-US')}`, pageWidth / 2, 27, { align: 'center' });
+  doc.text(`qitaat.com — ${new Date().toLocaleDateString(data.isRTL ? 'ar-SA' : 'en-US')}`, pageWidth / 2, 27, { align: 'center' });
 
   // Overview Table
   const overviewHeaders = [
@@ -97,10 +97,10 @@ export const exportComparePDF = async (data: ExportData) => {
     doc.setPage(i);
     doc.setFontSize(8);
     doc.setTextColor(180, 180, 180);
-    doc.text('faneen.com', 14, doc.internal.pageSize.getHeight() - 8);
+    doc.text('qitaat.com', 14, doc.internal.pageSize.getHeight() - 8);
     doc.text(`${i} / ${pageCount}`, pageWidth - 14, doc.internal.pageSize.getHeight() - 8, { align: 'right' });
   }
 
-  doc.save(`faneen-compare-${Date.now()}.pdf`);
+  doc.save(`qitaat-compare-${Date.now()}.pdf`);
 };
 

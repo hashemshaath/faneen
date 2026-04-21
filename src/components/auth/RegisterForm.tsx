@@ -245,7 +245,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
             <Globe className="absolute top-3.5 text-muted-foreground/60 w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '14px' }} />
             <Input value={username} onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ''))} placeholder="my-business" dir="ltr" className="h-12 rounded-xl" style={{ paddingInlineStart: '42px' }} />
           </div>
-          {username && <p className="text-xs text-muted-foreground">faneen.com/{username}</p>}
+          {username && <p className="text-xs text-muted-foreground">qitaat.com/{username}</p>}
           {username && !validateUsername(username) && (
             <p className="text-xs text-destructive">{isRTL ? 'اسم المستخدم غير صحيح (3-50 حرف)' : 'Invalid username (3-50 chars)'}</p>
           )}

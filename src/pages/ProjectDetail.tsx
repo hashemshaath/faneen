@@ -75,7 +75,7 @@ const ProjectDetail = () => {
     name: projectTitle,
     description: projectDesc?.slice(0, 300),
     image: project.cover_image_url,
-    url: `https://faneen.com/projects/${id}`,
+    url: `https://qitaat.com/projects/${id}`,
   } : null);
 
   const { data: city } = useQuery({

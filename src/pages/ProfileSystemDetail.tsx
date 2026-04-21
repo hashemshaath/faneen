@@ -277,7 +277,7 @@ const ProfileSystemDetail = () => {
     name: profileName,
     description: profileDesc?.slice(0, 300),
     image: profile.cover_image_url,
-    url: `https://faneen.com/profile-systems/${slug}`,
+    url: `https://qitaat.com/profile-systems/${slug}`,
   } : null);
 
   // ─── Loading ───

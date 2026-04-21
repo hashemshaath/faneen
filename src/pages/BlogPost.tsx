@@ -236,9 +236,9 @@ const BlogPost = () => {
   const postDesc = post ? (language === 'ar' ? (post.meta_description_ar || post.excerpt_ar) : (post.meta_description_en || post.excerpt_en || post.meta_description_ar || post.excerpt_ar)) : '';
 
   usePageMeta({
-    title: post ? `${postTitle} | مدونة فنيين` : 'جاري التحميل... | فنيين',
+    title: post ? `${postTitle} | مدونة قِطاعات` : 'جاري التحميل... | قِطاعات',
     description: postDesc?.substring(0, 160) || undefined,
-    canonical: post ? `https://faneen.com/blog/${post.slug}` : undefined,
+    canonical: post ? `https://qitaat.com/blog/${post.slug}` : undefined,
     ogType: 'article',
     ogImage: post?.cover_image_url || post?.og_image_url || undefined,
     keywords: post?.keywords?.join(', ') || post?.tags?.join(', ') || undefined,
@@ -256,18 +256,18 @@ const BlogPost = () => {
       image: post.cover_image_url || post.og_image_url,
       datePublished: post.published_at,
       dateModified: post.updated_at,
-      url: `https://faneen.com/blog/${post.slug}`,
+      url: `https://qitaat.com/blog/${post.slug}`,
       wordCount,
       inLanguage: ['ar', 'en'],
       keywords: post.tags?.join(', '),
       articleSection: post.category,
-      publisher: { '@type': 'Organization', name: 'فنيين Faneen', url: 'https://faneen.com', logo: { '@type': 'ImageObject', url: 'https://faneen.com/og-image.jpg' } },
-      mainEntityOfPage: { '@type': 'WebPage', '@id': `https://faneen.com/blog/${post.slug}` },
+      publisher: { '@type': 'Organization', name: 'قِطاعات Qitaat', url: 'https://qitaat.com', logo: { '@type': 'ImageObject', url: 'https://qitaat.com/og-image.jpg' } },
+      mainEntityOfPage: { '@type': 'WebPage', '@id': `https://qitaat.com/blog/${post.slug}` },
       breadcrumb: {
         '@type': 'BreadcrumbList',
         itemListElement: [
-          { '@type': 'ListItem', position: 1, name: 'فنيين', item: 'https://faneen.com' },
-          { '@type': 'ListItem', position: 2, name: language === 'ar' ? 'المدونة' : 'Blog', item: 'https://faneen.com/blog' },
+          { '@type': 'ListItem', position: 1, name: 'قِطاعات', item: 'https://qitaat.com' },
+          { '@type': 'ListItem', position: 2, name: language === 'ar' ? 'المدونة' : 'Blog', item: 'https://qitaat.com/blog' },
           { '@type': 'ListItem', position: 3, name: post.title_ar },
         ],
       },

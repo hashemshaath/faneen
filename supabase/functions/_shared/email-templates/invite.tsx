@@ -33,7 +33,7 @@ export const InviteEmail = ({
     <Body style={main}>
       <Container style={container}>
         <Section style={logoSection}>
-          <Text style={logoText}>فنين</Text>
+          <Text style={logoText}>قِطاعات</Text>
         </Section>
         <Hr style={hr} />
         <Heading style={h1}>تمت دعوتك</Heading>

@@ -34,5 +34,5 @@ Allow: /
 User-agent: cohere-ai
 Allow: /
 
-Sitemap: https://faneen.com/sitemap.xml
+Sitemap: https://qitaat.com/sitemap.xml
 Sitemap: https://hckpxwhjycmdflaneihd.supabase.co/functions/v1/sitemap

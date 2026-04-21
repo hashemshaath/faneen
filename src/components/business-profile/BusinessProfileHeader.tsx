@@ -58,7 +58,7 @@ export const BusinessProfileTopBar = ({
               <span className="font-heading text-[10px] font-black text-secondary-foreground sm:text-xs">ف</span>
             </div>
             <span className="hidden font-heading text-sm font-bold text-primary-foreground sm:inline dark:text-foreground">
-              فنيين
+              قِطاعات
             </span>
           </div>
         </Link>

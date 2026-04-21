@@ -96,7 +96,7 @@ export const Navbar = () => {
               <span className="font-heading font-black text-lg sm:text-xl text-secondary-foreground">ف</span>
             </div>
             <div className="hidden sm:block">
-              <h1 className="font-heading font-bold text-lg text-surface-nav-foreground leading-none">فنيين</h1>
+              <h1 className="font-heading font-bold text-lg text-surface-nav-foreground leading-none">قِطاعات</h1>
               <span className="text-[10px] text-gold/80 font-body tracking-wider">FANEEN</span>
             </div>
           </Link>

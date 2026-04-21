@@ -31,10 +31,10 @@ const SearchPage = () => {
 
   usePageMeta({
     title: searchQuery
-      ? (language === 'ar' ? `نتائج البحث عن "${searchQuery}" | فنيين` : `Search results for "${searchQuery}" | Faneen`)
-      : (language === 'ar' ? 'البحث عن مزودي خدمات الألمنيوم والحديد | فنيين' : 'Search Aluminum & Iron Service Providers | Faneen'),
+      ? (language === 'ar' ? `نتائج البحث عن "${searchQuery}" | قِطاعات` : `Search results for "${searchQuery}" | Qitaat`)
+      : (language === 'ar' ? 'البحث عن مزودي خدمات الألمنيوم والحديد | قِطاعات' : 'Search Aluminum & Iron Service Providers | Qitaat'),
     description: searchQuery
-      ? (language === 'ar' ? `نتائج البحث عن ${searchQuery} في دليل فنيين للصناعات الخفيفة` : `Search results for ${searchQuery} in Faneen directory`)
+      ? (language === 'ar' ? `نتائج البحث عن ${searchQuery} في دليل قِطاعات للصناعات الخفيفة` : `Search results for ${searchQuery} in Qitaat directory`)
       : (language === 'ar' ? 'ابحث عن أفضل مصانع ومحلات الألمنيوم والحديد والزجاج والخشب. قارن الأسعار والتقييمات واختر المزود المناسب.' : 'Find the best aluminum, iron, glass and wood factories and shops.'),
     noindex: !!searchQuery,
   });
@@ -43,8 +43,8 @@ const SearchPage = () => {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'فنيين', item: 'https://faneen.com' },
-      { '@type': 'ListItem', position: 2, name: language === 'ar' ? 'البحث' : 'Search', item: 'https://faneen.com/search' },
+      { '@type': 'ListItem', position: 1, name: 'قِطاعات', item: 'https://qitaat.com' },
+      { '@type': 'ListItem', position: 2, name: language === 'ar' ? 'البحث' : 'Search', item: 'https://qitaat.com/search' },
     ],
   }), [language]));
 

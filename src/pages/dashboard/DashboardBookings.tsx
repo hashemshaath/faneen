@@ -49,7 +49,7 @@ const DashboardBookings = () => {
   const [availabilityDialog, setAvailabilityDialog] = useState(false);
 
   usePageMeta({
-    title: language === 'ar' ? 'حجز المواعيد | فنيين' : 'Bookings | Faneen',
+    title: language === 'ar' ? 'حجز المواعيد | قِطاعات' : 'Bookings | Qitaat',
     noindex: true,
   });
 

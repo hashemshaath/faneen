@@ -5,7 +5,7 @@ import {
 } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 
-const SITE_NAME = "فنين"
+const SITE_NAME = "قِطاعات"
 
 interface BookingConfirmationProps {
   clientName?: string
@@ -28,7 +28,7 @@ const BookingConfirmationEmail = ({
     <Body style={main}>
       <Container style={container}>
         <Section style={logoSection}>
-          <Text style={logoText}>فنين</Text>
+          <Text style={logoText}>قِطاعات</Text>
         </Section>
         <Hr style={hr} />
         <Heading style={h1}>

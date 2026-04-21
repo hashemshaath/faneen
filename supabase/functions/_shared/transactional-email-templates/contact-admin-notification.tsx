@@ -5,7 +5,7 @@ import {
 } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 
-const SITE_NAME = "فنين"
+const SITE_NAME = "قِطاعات"
 
 interface ContactAdminNotificationProps {
   name?: string
@@ -26,7 +26,7 @@ const ContactAdminNotificationEmail = ({
     <Body style={main}>
       <Container style={container}>
         <Section style={logoSection}>
-          <Text style={logoText}>فنين</Text>
+          <Text style={logoText}>قِطاعات</Text>
         </Section>
         <Hr style={hr} />
         <Heading style={h1}>📩 رسالة تواصل جديدة</Heading>
@@ -53,7 +53,7 @@ export const template = {
   component: ContactAdminNotificationEmail,
   subject: (data: Record<string, any>) =>
     `رسالة تواصل جديدة${data.subject ? ': ' + data.subject : ''} - ${SITE_NAME}`,
-  to: Deno.env.get('ADMIN_CONTACT_EMAIL') || 'info@faneen.com',
+  to: Deno.env.get('ADMIN_CONTACT_EMAIL') || 'info@qitaat.com',
   displayName: 'إشعار رسالة تواصل للإدارة',
   previewData: {
     name: 'أحمد محمد',

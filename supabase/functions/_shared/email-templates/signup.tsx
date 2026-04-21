@@ -35,7 +35,7 @@ export const SignupEmail = ({
     <Body style={main}>
       <Container style={container}>
         <Section style={logoSection}>
-          <Text style={logoText}>فنين</Text>
+          <Text style={logoText}>قِطاعات</Text>
         </Section>
         <Hr style={hr} />
         <Heading style={h1}>تأكيد بريدك الإلكتروني</Heading>

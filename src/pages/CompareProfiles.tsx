@@ -38,7 +38,7 @@ const RatingCell = ({ value, max = 10 }: { value: number; max?: number }) => {
 const CompareProfiles = () => {
   const { isRTL, language } = useLanguage();
   usePageMeta({
-    title: isRTL ? 'مقارنة أنظمة القطاعات | فنيين' : 'Compare Profile Systems | Faneen',
+    title: isRTL ? 'مقارنة أنظمة القطاعات | قِطاعات' : 'Compare Profile Systems | Qitaat',
     description: isRTL ? 'قارن بين أنظمة قطاعات الألمنيوم والحديد من حيث المواصفات والمزايا' : 'Compare aluminum and iron profile systems by specifications and features',
   });
   const [searchParams, setSearchParams] = useSearchParams();

@@ -43,7 +43,7 @@ const DashboardAnalytics = () => {
   const [period, setPeriod] = useState<Period>('30d');
 
   usePageMeta({
-    title: isRTL ? 'التحليلات | فنيين' : 'Analytics | Faneen',
+    title: isRTL ? 'التحليلات | قِطاعات' : 'Analytics | Qitaat',
     noindex: true,
   });
 

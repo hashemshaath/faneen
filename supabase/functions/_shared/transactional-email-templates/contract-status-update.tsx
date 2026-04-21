@@ -5,7 +5,7 @@ import {
 } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 
-const SITE_NAME = "فنين"
+const SITE_NAME = "قِطاعات"
 
 interface ContractStatusProps {
   recipientName?: string
@@ -37,7 +37,7 @@ const ContractStatusEmail = ({
     <Body style={main}>
       <Container style={container}>
         <Section style={logoSection}>
-          <Text style={logoText}>فنين</Text>
+          <Text style={logoText}>قِطاعات</Text>
         </Section>
         <Hr style={hr} />
         <Heading style={h1}>تحديث حالة العقد</Heading>
@@ -58,7 +58,7 @@ const ContractStatusEmail = ({
         </Section>
         {contractId && (
           <Section style={{ textAlign: 'center' as const, margin: '20px 0' }}>
-            <Button style={button} href={`https://faneen.lovable.app/contracts/${contractId}`}>
+            <Button style={button} href={`https://qitaat.lovable.app/contracts/${contractId}`}>
               عرض تفاصيل العقد
             </Button>
           </Section>

@@ -10,7 +10,7 @@ import { Home } from "lucide-react";
 const NotFound = () => {
   const location = useLocation();
   const { isRTL } = useLanguage();
-  usePageMeta({ title: isRTL ? 'الصفحة غير موجودة | فنيين' : 'Page Not Found | Faneen' });
+  usePageMeta({ title: isRTL ? 'الصفحة غير موجودة | قِطاعات' : 'Page Not Found | Qitaat' });
 
   useEffect(() => {
     console.error("404 Error: User attempted to access non-existent route:", location.pathname);
