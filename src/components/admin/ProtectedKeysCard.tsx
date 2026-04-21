@@ -59,6 +59,13 @@ const CONFIG_PATH = 'src/config/storageMigration.ts';
 export const ProtectedKeysCard = () => {
   const { isRTL } = useLanguage();
   const [copied, setCopied] = useState(false);
+  const [snapshot, setSnapshot] = useState(() => getProtectedKeysSnapshot());
+
+  // Refresh snapshot whenever the card mounts (modules registering keys at
+  // import time will already be captured by the time admin opens this page).
+  useEffect(() => {
+    setSnapshot(getProtectedKeysSnapshot());
+  }, []);
 
   const copyPath = async () => {
     try {
