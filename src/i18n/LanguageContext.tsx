@@ -1,6 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { translations, type Language, type TranslationKey } from './translations';
+import { readQitaatItem, writeQitaatItem } from '@/utils/qitaatStorage';
 
 interface LanguageContextType {
   language: Language;
@@ -14,13 +15,13 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [language, setLanguageState] = useState<Language>(() => {
-    const saved = localStorage.getItem('qitaat_lang') ?? localStorage.getItem('faneen_lang');
+    const saved = readQitaatItem('qitaat_lang');
     return (saved === 'en' || saved === 'ar') ? saved : 'ar';
   });
 
   const setLanguage = useCallback((lang: Language) => {
     setLanguageState(lang);
-    localStorage.setItem('qitaat_lang', lang);
+    writeQitaatItem('qitaat_lang', lang);
   }, []);
 
   const t = useCallback((key: TranslationKey): string => {

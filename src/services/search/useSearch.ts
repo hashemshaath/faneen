@@ -1,33 +1,30 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { readQitaatJSON, writeQitaatJSON, removeQitaatItem } from '@/utils/qitaatStorage';
 
 const HISTORY_KEY = 'qitaat_search_history';
 const MAX_HISTORY = 10;
 
 // ─── Search History ────────────────────────────────────
 export const getSearchHistory = (): string[] => {
-  try {
-    return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
-  } catch {
-    return [];
-  }
+  return readQitaatJSON<string[]>(HISTORY_KEY, []);
 };
 
 export const addToSearchHistory = (term: string) => {
   if (!term.trim() || term.length < 2) return;
   const history = getSearchHistory().filter(h => h !== term);
   history.unshift(term);
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, MAX_HISTORY)));
+  writeQitaatJSON(HISTORY_KEY, history.slice(0, MAX_HISTORY));
 };
 
 export const removeFromSearchHistory = (term: string) => {
   const history = getSearchHistory().filter(h => h !== term);
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+  writeQitaatJSON(HISTORY_KEY, history);
 };
 
 export const clearSearchHistory = () => {
-  localStorage.removeItem(HISTORY_KEY);
+  removeQitaatItem(HISTORY_KEY);
 };
 
 // ─── Debounce Hook ─────────────────────────────────────
