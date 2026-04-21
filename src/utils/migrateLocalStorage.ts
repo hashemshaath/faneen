@@ -99,7 +99,8 @@ function sweepCookies(): { swept: number; sweptKeys: string[] } {
     for (const raw of cookies) {
       const eq = raw.indexOf('=');
       const name = (eq > -1 ? raw.slice(0, eq) : raw).trim();
-      if (!name.startsWith('faneen_')) continue;
+      if (!name.startsWith(LEGACY_PREFIX)) continue;
+      if (PROTECTED_KEYS.has(name)) continue;
       // Try multiple path/domain combinations to maximize cleanup coverage
       const expiry = 'expires=Thu, 01 Jan 1970 00:00:00 GMT';
       document.cookie = `${name}=; ${expiry}; path=/`;
