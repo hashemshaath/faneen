@@ -22,6 +22,7 @@ interface TelemetryRow {
   keys_migrated: number;
   user_agent: string | null;
   error_message: string | null;
+  error_code: string | null;
   created_at: string;
 }
 
