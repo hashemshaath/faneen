@@ -19,6 +19,47 @@ const SWEEP_FLAG = MIGRATION_FLAGS.sweepDone;
 const EPOCH_KEY = MIGRATION_FLAGS.epoch;
 
 /**
+ * Batch tuning. Sweeping large stores in one tight loop blocks the main thread
+ * (every removeItem can force the browser to flush its storage index to disk).
+ * We process keys in fixed-size chunks and yield to the event loop between
+ * chunks so input/paint frames stay responsive on low-end devices.
+ *
+ * - BATCH_SIZE: number of keys handled per chunk before yielding.
+ * - BATCH_THRESHOLD: below this total, run synchronously (no yield overhead).
+ */
+const BATCH_SIZE = 25;
+const BATCH_THRESHOLD = 40;
+
+/**
+ * Yields control to the browser between batches so paint / input handlers
+ * can run. Prefers requestIdleCallback when available, then MessageChannel
+ * (microtask-faster than setTimeout(0)), then falls back to setTimeout.
+ * Awaiting the returned promise is a no-op on Node test environments.
+ */
+function yieldToEventLoop(): Promise<void> {
+  return new Promise((resolve) => {
+    if (typeof window === 'undefined') {
+      resolve();
+      return;
+    }
+    const w = window as unknown as {
+      requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+    };
+    if (typeof w.requestIdleCallback === 'function') {
+      w.requestIdleCallback(() => resolve(), { timeout: 50 });
+      return;
+    }
+    if (typeof MessageChannel !== 'undefined') {
+      const ch = new MessageChannel();
+      ch.port1.onmessage = () => resolve();
+      ch.port2.postMessage(null);
+      return;
+    }
+    setTimeout(resolve, 0);
+  });
+}
+
+/**
  * Classified error codes for sweep failures. Stored in `migration_telemetry.error_code`
  * so admins can filter and triage issues quickly without parsing free-text messages.
  *
