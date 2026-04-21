@@ -345,17 +345,23 @@ export const MigrationTelemetryCard = () => {
               <Filter className="w-3.5 h-3.5" />
               <span className="font-medium">{isRTL ? 'فلترة:' : 'Filter:'}</span>
             </div>
-            <Select value={filterKey} onValueChange={setFilterKey}>
-              <SelectTrigger className="h-8 text-xs w-auto min-w-[140px]">
-                <SelectValue placeholder={isRTL ? 'مفتاح الترحيل' : 'Migration key'} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{isRTL ? 'كل المفاتيح' : 'All keys'}</SelectItem>
-                {filterOptions.keys.map(k => (
-                  <SelectItem key={k} value={k} className="font-mono text-xs">{k}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex items-center gap-1">
+              <Select value={filterKey} onValueChange={setFilterKey}>
+                <SelectTrigger className="h-8 text-xs w-auto min-w-[140px]">
+                  <SelectValue placeholder={isRTL ? 'مفتاح الترحيل' : 'Migration key'} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{isRTL ? 'كل المفاتيح' : 'All keys'}</SelectItem>
+                  {filterOptions.keys.map(k => (
+                    <SelectItem key={k} value={k} className="font-mono text-xs">{k}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {/* Quick-copy of the currently filtered migration key for incident triage. */}
+              {filterKey !== 'all' && (
+                <CopyButton value={filterKey} size="sm" />
+              )}
+            </div>
             <Select value={filterStatus} onValueChange={setFilterStatus}>
               <SelectTrigger className="h-8 text-xs w-auto min-w-[120px]">
                 <SelectValue placeholder={isRTL ? 'الحالة' : 'Status'} />
