@@ -1124,13 +1124,15 @@ async function checkServerEpochAndRerun(): Promise<void> {
  * Internal core that performs the migration steps and logs telemetry.
  * Extracted so it can be invoked both on first boot and on forced re-runs.
  */
-function runMigrationCore(opts: { forced?: boolean; epoch?: number } = {}): void {
+function runMigrationCore(
+  opts: { forced?: boolean; epoch?: number; rerunReason?: string | null } = {},
+): void {
   // Kick off async batched core; never await — boot must stay non-blocking
   void runMigrationCoreAsync(opts);
 }
 
 async function runMigrationCoreAsync(
-  opts: { forced?: boolean; epoch?: number } = {},
+  opts: { forced?: boolean; epoch?: number; rerunReason?: string | null } = {},
 ): Promise<void> {
   try {
     let migrated = 0;
@@ -1159,6 +1161,7 @@ async function runMigrationCoreAsync(
         force: !!opts.forced,
         errorCode: combined.code,
         diagnostics,
+        rerunReason: opts.rerunReason ?? null,
       });
     } else {
       const status = totalCleaned > 0 ? 'success' : 'no_legacy_data';
@@ -1166,7 +1169,7 @@ async function runMigrationCoreAsync(
         status,
         totalCleaned,
         opts.forced ? `forced re-run (epoch ${opts.epoch ?? '?'})` : undefined,
-        { force: !!opts.forced },
+        { force: !!opts.forced, rerunReason: opts.rerunReason ?? null },
       );
     }
   } catch (err) {
@@ -1174,6 +1177,7 @@ async function runMigrationCoreAsync(
     void logTelemetry('failed', 0, msg, {
       force: !!opts.forced,
       errorCode: 'unknown',
+      rerunReason: opts.rerunReason ?? null,
       diagnostics: [
         {
           ts: Date.now(),
