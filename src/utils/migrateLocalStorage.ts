@@ -635,7 +635,7 @@ function sweepCookies(): { swept: number; sweptKeys: string[]; error?: SweepErro
 
     for (const { raw, decoded } of candidates) {
       // Protect canonical decoded name against the central protected list
-      if (PROTECTED_KEYS.has(decoded) || PROTECTED_KEYS.has(raw)) continue;
+      if (isKeyProtected(decoded) || isKeyProtected(raw)) continue;
 
       // Try every domain × path combination so we hit whichever scope
       // the original Set-Cookie actually used.
