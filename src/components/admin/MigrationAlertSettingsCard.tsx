@@ -523,13 +523,33 @@ export function MigrationAlertSettingsCard() {
                   <span className="text-muted-foreground tabular-nums">{trimmedReasonLen}/500</span>
                 </div>
               </div>
+              {/* Final guard: explicit acknowledgement of broadcast scope. */}
+              <label
+                htmlFor="rerun-ack"
+                className="flex items-start gap-2 rounded-md border border-amber-300/60 bg-amber-50/60 p-2.5 cursor-pointer dark:bg-amber-950/20 dark:border-amber-700/40"
+              >
+                <Checkbox
+                  id="rerun-ack"
+                  checked={rerunAcknowledged}
+                  onCheckedChange={(v) => setRerunAcknowledged(v === true)}
+                  className="mt-0.5"
+                />
+                <span className="text-xs leading-relaxed text-foreground/90">
+                  {isRTL
+                    ? 'أُقرّ بأن هذا الإجراء سيُنفَّذ على كل أجهزة المستخدمين، وأن كل جهاز سيُسجّل حدثاً جديداً قد يُكرّر سجلات سابقة في التقارير.'
+                    : 'I understand this will execute on every user device and that each device will log a new event which may duplicate prior records in reports.'}
+                </span>
+              </label>
               <AlertDialogFooter>
-                <AlertDialogCancel>{isRTL ? 'إلغاء' : 'Cancel'}</AlertDialogCancel>
+                <AlertDialogCancel onClick={() => setRerunAcknowledged(false)}>
+                  {isRTL ? 'إلغاء' : 'Cancel'}
+                </AlertDialogCancel>
                 <AlertDialogAction
                   onClick={() => rerunMutation.mutate(rerunReason)}
-                  disabled={cooldownInfo.onCooldown || !reasonValid}
+                  disabled={cooldownInfo.onCooldown || !reasonValid || !rerunAcknowledged}
+                  className={!rerunAcknowledged || !reasonValid ? 'opacity-50' : undefined}
                 >
-                  {isRTL ? 'تأكيد البثّ' : 'Confirm broadcast'}
+                  {isRTL ? 'تأكيد البثّ على كل الأجهزة' : 'Confirm broadcast to all devices'}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
