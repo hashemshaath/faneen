@@ -916,6 +916,7 @@ async function logTelemetry(
     force?: boolean;
     errorCode?: SweepErrorCode | null;
     diagnostics?: SweepDiagnostic[];
+    rerunReason?: string | null;
   },
 ): Promise<void> {
   try {
@@ -925,6 +926,11 @@ async function logTelemetry(
     // column as compact JSON. We keep it under the 1000-char DB limit by
     // serialising progressively smaller subsets if needed.
     const composedMessage = composeTelemetryMessage(errorMessage, options?.diagnostics);
+    // Stamp the admin-provided reason so each per-device event is traceable
+    // back to the broadcast that triggered it. The DB caps this at 500 chars.
+    const trimmedReason = options?.rerunReason
+      ? options.rerunReason.trim().slice(0, 500)
+      : null;
     const { error } = await supabase.from('migration_telemetry').insert({
       migration_key: MIGRATION_KEY,
       status,
@@ -932,6 +938,7 @@ async function logTelemetry(
       user_agent: ua,
       error_message: composedMessage,
       error_code: options?.errorCode ? options.errorCode.slice(0, 64) : null,
+      rerun_reason: trimmedReason,
     });
     if (!error) {
       localStorage.setItem(TELEMETRY_FLAG, '1');
