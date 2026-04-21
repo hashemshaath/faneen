@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 const insertSpy = vi.fn().mockResolvedValue({ error: null });
 vi.mock('@/integrations/supabase/client', () => ({
