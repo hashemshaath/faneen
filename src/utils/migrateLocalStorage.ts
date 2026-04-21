@@ -294,7 +294,7 @@ function sweepLegacyKeys(): { swept: number; sweptKeys: string[]; error?: SweepE
 
     for (const key of allKeys) {
       if (!key.startsWith(LEGACY_PREFIX)) continue;
-      if (PROTECTED_KEYS.has(key)) continue;
+      if (isKeyProtected(key)) continue;
       // Already handled by KEY_MAP — skip if a counterpart exists in qitaat_ namespace
       const counterpart = NEW_PREFIX + key.slice(LEGACY_PREFIX.length);
       try {
