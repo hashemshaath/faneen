@@ -165,8 +165,17 @@ export function MigrationAlertSettingsCard() {
 
   const rerunMutation = useMutation({
     mutationFn: async (reason: string) => {
+      // Client-side guard mirrors the server check so admins get instant feedback.
+      const trimmed = reason.trim();
+      if (trimmed.length < 5) {
+        throw new Error(
+          isRTL
+            ? 'يجب إدخال سبب لا يقل عن 5 أحرف لإعادة بثّ الترحيل.'
+            : 'A reason of at least 5 characters is required to broadcast a migration re-run.',
+        );
+      }
       const { data, error } = await supabase.rpc('bump_migration_epoch', {
-        _reason: reason || null,
+        _reason: trimmed,
       });
       if (error) throw error;
       return data as number;
@@ -186,9 +195,13 @@ export function MigrationAlertSettingsCard() {
       // admins understand they cannot bypass it.
       const msg = String(err?.message || err || '');
       const isCooldown = /cooldown/i.test(msg);
+      const isReasonMissing =
+        /reason/i.test(msg) && /(required|at least)/i.test(msg);
       toast({
         title: isCooldown
           ? isRTL ? 'البثّ مقفل مؤقتاً' : 'Broadcast on cooldown'
+          : isReasonMissing
+            ? isRTL ? 'السبب مطلوب' : 'Reason required'
           : isRTL ? 'فشل البثّ' : 'Broadcast failed',
         description: msg,
         variant: 'destructive',
