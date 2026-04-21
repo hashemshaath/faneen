@@ -266,7 +266,7 @@ const AdminSiteAudit = () => {
                     const a11y = scoreBadge(row.accessibility_score);
                     const bp = scoreBadge(row.best_practices_score);
                     const seo = scoreBadge(row.seo_score);
-                    const prev = (row as { previous: typeof row | null }).previous;
+                    const prev = row.previous;
                     const delta = prev?.performance_score != null && row.performance_score != null
                       ? row.performance_score - prev.performance_score
                       : null;
