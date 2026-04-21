@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -6,9 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Button } from '@/components/ui/button';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
 import {
   CheckCircle2, XCircle, MinusCircle, Database, Smartphone,
-  ShieldAlert, KeyRound, FileJson, HardDrive, WifiOff, AlertTriangle,
+  ShieldAlert, KeyRound, FileJson, HardDrive, WifiOff, AlertTriangle, Filter, X,
 } from 'lucide-react';
 
 interface TelemetryRow {
