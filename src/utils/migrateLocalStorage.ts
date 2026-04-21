@@ -689,7 +689,7 @@ async function sweepCookiesBatched(): Promise<{
 
   const candidates = extractLegacyCookieNames(cookieHeader).filter(
     ({ raw, decoded }) =>
-      !PROTECTED_KEYS.has(decoded) && !PROTECTED_KEYS.has(raw),
+      !isKeyProtected(decoded) && !isKeyProtected(raw),
   );
   if (candidates.length <= BATCH_THRESHOLD) {
     return sweepCookies();
