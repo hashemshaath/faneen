@@ -383,21 +383,15 @@ function classifySweepError(err: unknown, scope: SweepError['scope']): SweepErro
 /**
  * Sweeps any remaining `faneen_*` localStorage keys that weren't in KEY_MAP.
  * Runs once after the main migration. Returns count of swept keys.
+ * Pass an optional `recorder` to capture per-failure diagnostics.
  */
-function sweepLegacyKeys(): { swept: number; sweptKeys: string[]; error?: SweepError } {
+function sweepLegacyKeys(
+  recorder?: DiagnosticRecorder,
+): { swept: number; sweptKeys: string[]; error?: SweepError } {
   const sweptKeys: string[] = [];
   try {
-    if (typeof localStorage === 'undefined') {
-      return {
-        swept: 0,
-        sweptKeys,
-        error: {
-          code: 'storage_unavailable',
-          message: 'localStorage is undefined in this environment',
-          scope: 'localStorage',
-        },
-      };
-    }
+    const probe = probeStorageAccess('localStorage', recorder);
+    if (probe) return { swept: 0, sweptKeys, error: probe };
     if (localStorage.getItem(SWEEP_FLAG) === '1') return { swept: 0, sweptKeys };
 
     // Snapshot keys first — mutating localStorage while iterating is unsafe
@@ -409,10 +403,12 @@ function sweepLegacyKeys(): { swept: number; sweptKeys: string[]; error?: SweepE
       }
     } catch (iterErr) {
       const cls = classifySweepError(iterErr, 'localStorage');
+      const code: SweepErrorCode = cls.code === 'unknown' ? 'iteration_failed' : cls.code;
+      recorder?.record({ scope: 'localStorage', phase: 'iterate', code, message: cls.message });
       return {
         swept: sweptKeys.length,
         sweptKeys,
-        error: { ...cls, code: cls.code === 'unknown' ? 'iteration_failed' : cls.code },
+        error: { ...cls, code },
       };
     }
 
@@ -433,10 +429,12 @@ function sweepLegacyKeys(): { swept: number; sweptKeys: string[]; error?: SweepE
         sweptKeys.push(key);
       } catch (rmErr) {
         const cls = classifySweepError(rmErr, 'localStorage');
+        const code: SweepErrorCode = cls.code === 'unknown' ? 'removal_failed' : cls.code;
+        recorder?.record({ scope: 'localStorage', phase: 'remove', code, message: cls.message, key });
         return {
           swept: sweptKeys.length,
           sweptKeys,
-          error: { ...cls, code: cls.code === 'unknown' ? 'removal_failed' : cls.code },
+          error: { ...cls, code },
         };
       }
     }
@@ -444,17 +442,21 @@ function sweepLegacyKeys(): { swept: number; sweptKeys: string[]; error?: SweepE
     try {
       localStorage.setItem(SWEEP_FLAG, '1');
     } catch (flagErr) {
+      const cls = classifySweepError(flagErr, 'localStorage');
+      recorder?.record({ scope: 'localStorage', phase: 'flag', code: cls.code, message: cls.message, key: SWEEP_FLAG });
       return {
         swept: sweptKeys.length,
         sweptKeys,
-        error: classifySweepError(flagErr, 'localStorage'),
+        error: cls,
       };
     }
   } catch (err) {
+    const cls = classifySweepError(err, 'localStorage');
+    recorder?.record({ scope: 'localStorage', phase: 'unknown', code: cls.code, message: cls.message });
     return {
       swept: sweptKeys.length,
       sweptKeys,
-      error: classifySweepError(err, 'localStorage'),
+      error: cls,
     };
   }
   return { swept: sweptKeys.length, sweptKeys };
