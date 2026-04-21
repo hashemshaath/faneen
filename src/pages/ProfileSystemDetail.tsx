@@ -269,6 +269,7 @@ const ProfileSystemDetail = () => {
     description: profileDesc?.slice(0, 160) || '',
     ogImage: profile?.cover_image_url || undefined,
     ogType: 'article',
+    canonical: slug ? `https://qitaat.com/profile-systems/${slug}` : undefined,
   });
 
   useJsonLd(profile ? {
