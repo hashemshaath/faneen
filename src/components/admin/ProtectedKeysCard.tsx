@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -13,8 +13,9 @@ import {
   NEW_PREFIX,
   type ProtectedKeyCategory,
 } from '@/config/storageMigration';
+import { getProtectedKeysSnapshot } from '@/utils/migrateLocalStorage';
 import {
-  ShieldCheck, Lock, FileCode, Copy, CheckCheck, Info,
+  ShieldCheck, Lock, FileCode, Copy, CheckCheck, Info, Code2, Asterisk,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -58,6 +59,13 @@ const CONFIG_PATH = 'src/config/storageMigration.ts';
 export const ProtectedKeysCard = () => {
   const { isRTL } = useLanguage();
   const [copied, setCopied] = useState(false);
+  const [snapshot, setSnapshot] = useState(() => getProtectedKeysSnapshot());
+
+  // Refresh snapshot whenever the card mounts (modules registering keys at
+  // import time will already be captured by the time admin opens this page).
+  useEffect(() => {
+    setSnapshot(getProtectedKeysSnapshot());
+  }, []);
 
   const copyPath = async () => {
     try {
@@ -174,6 +182,55 @@ export const ProtectedKeysCard = () => {
             </TableBody>
           </Table>
         </div>
+
+        {/* Runtime registry — keys/patterns added programmatically at app boot */}
+        {(snapshot.runtime.length > 0 || snapshot.patterns.length > 0) && (
+          <div className="rounded-lg border border-blue-500/20 bg-blue-500/5 p-3 space-y-3">
+            <div className="flex items-center gap-2">
+              <Code2 className="w-4 h-4 text-blue-600" />
+              <h4 className="text-sm font-semibold">
+                {isRTL ? 'مفاتيح مسجَّلة برمجياً' : 'Runtime-registered keys'}
+              </h4>
+              <Badge variant="outline" className="ml-auto gap-1 text-[10px]">
+                {snapshot.runtime.length + snapshot.patterns.length}{' '}
+                {isRTL ? 'إدخال' : 'entries'}
+              </Badge>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              {isRTL
+                ? 'مفاتيح أو أنماط أضافتها وحدات الميزات عبر registerProtectedKey() / registerProtectedPattern() عند الإقلاع. تُحمى مثل المفاتيح الأساسية أثناء الكنس.'
+                : 'Keys / patterns added via registerProtectedKey() or registerProtectedPattern() at boot. Honoured by every sweep scope alongside the static config.'}
+            </p>
+
+            {snapshot.runtime.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {snapshot.runtime.map((k) => (
+                  <code
+                    key={k}
+                    className="text-[11px] font-mono bg-background border rounded px-2 py-0.5 inline-flex items-center gap-1"
+                  >
+                    <Lock className="w-3 h-3 opacity-60" />
+                    {k}
+                  </code>
+                ))}
+              </div>
+            )}
+
+            {snapshot.patterns.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {snapshot.patterns.map((p) => (
+                  <code
+                    key={p}
+                    className="text-[11px] font-mono bg-background border border-purple-500/30 text-purple-700 dark:text-purple-400 rounded px-2 py-0.5 inline-flex items-center gap-1"
+                  >
+                    <Asterisk className="w-3 h-3" />
+                    {p}
+                  </code>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
