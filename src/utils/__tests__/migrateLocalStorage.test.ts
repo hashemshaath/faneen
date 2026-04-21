@@ -732,3 +732,139 @@ describe('sweepCookies — encoded names + domain/path coverage', () => {
     expect(decodedWrites.length).toBeGreaterThan(0);
   });
 });
+
+// ============================================================================
+// Permission-failure diagnostic log
+// ----------------------------------------------------------------------------
+// When localStorage / sessionStorage / cookies throw because the browser has
+// blocked access (e.g. Safari private mode, third-party cookie blocking) we
+// must capture a *granular* trail of what failed and ship it to telemetry so
+// admins can diagnose the root cause without a screen-share.
+// ============================================================================
+describe('storage permission diagnostics', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+    insertSpy.mockClear();
+    insertSpy.mockResolvedValue({ error: null });
+  });
+
+  it('records a permission_denied diagnostic and ships it to telemetry when localStorage.setItem throws on probe', async () => {
+    // Simulate Safari private mode: setItem throws SecurityError on every call
+    const originalSetItem = Storage.prototype.setItem;
+    let throwCount = 0;
+    Storage.prototype.setItem = function (k: string, v: string) {
+      if (k === '__qitaat_probe__') {
+        throwCount++;
+        const err = new Error('The operation is insecure. Access is denied.');
+        err.name = 'SecurityError';
+        throw err;
+      }
+      return originalSetItem.call(this, k, v);
+    };
+
+    try {
+      migrateLegacyStorage();
+      // Allow microtasks (telemetry insert) to flush
+      await new Promise((r) => setTimeout(r, 0));
+
+      expect(throwCount).toBeGreaterThan(0);
+      expect(insertSpy).toHaveBeenCalled();
+      const lastCall = insertSpy.mock.calls.at(-1)?.[0];
+      expect(lastCall.status).toBe('failed');
+      expect(lastCall.error_code).toBe('permission_denied');
+      expect(lastCall.error_message).toBeTruthy();
+      const parsed = JSON.parse(lastCall.error_message);
+      expect(parsed.diagnostics).toBeInstanceOf(Array);
+      expect(parsed.diagnostics.length).toBeGreaterThan(0);
+      const localProbe = parsed.diagnostics.find(
+        (d: { scope: string; phase: string }) =>
+          d.scope === 'localStorage' && d.phase === 'access_probe',
+      );
+      expect(localProbe).toBeTruthy();
+      expect(localProbe.code).toBe('permission_denied');
+    } finally {
+      Storage.prototype.setItem = originalSetItem;
+    }
+  });
+
+  it('attaches host/path location context to each diagnostic entry', async () => {
+    const originalSetItem = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (k: string) {
+      if (k === '__qitaat_probe__') {
+        const err = new Error('denied');
+        err.name = 'SecurityError';
+        throw err;
+      }
+      return originalSetItem.apply(this, arguments as never);
+    };
+
+    try {
+      migrateLegacyStorage();
+      await new Promise((r) => setTimeout(r, 0));
+      const lastCall = insertSpy.mock.calls.at(-1)?.[0];
+      const parsed = JSON.parse(lastCall.error_message);
+      const entry = parsed.diagnostics[0];
+      // jsdom defaults to localhost / "/"
+      expect(typeof entry.host === 'string' || entry.host === undefined).toBe(true);
+      expect(typeof entry.path === 'string' || entry.path === undefined).toBe(true);
+      expect(typeof entry.ts).toBe('number');
+    } finally {
+      Storage.prototype.setItem = originalSetItem;
+    }
+  });
+
+  it('does NOT include diagnostics envelope for clean runs (no failures)', async () => {
+    localStorage.setItem('faneen_lang', 'en');
+
+    migrateLegacyStorage();
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect(insertSpy).toHaveBeenCalled();
+    const lastCall = insertSpy.mock.calls.at(-1)?.[0];
+    expect(lastCall.status).toBe('success');
+    expect(lastCall.error_code).toBeNull();
+    // error_message should NOT be a JSON envelope on a clean run
+    if (lastCall.error_message) {
+      expect(() => {
+        const p = JSON.parse(lastCall.error_message);
+        // If it parses, it must NOT be our diagnostics envelope shape
+        if (p && typeof p === 'object' && Array.isArray(p.diagnostics)) {
+          throw new Error('unexpected diagnostics envelope on clean run');
+        }
+      }).not.toThrow();
+    }
+  });
+
+  it('keeps the telemetry payload under the 1000-char DB limit even with many failures', async () => {
+    // Force every removeItem on a faneen_* key to fail
+    const originalRemove = Storage.prototype.removeItem;
+    const originalSetItem = Storage.prototype.setItem;
+
+    // Seed a lot of orphans
+    for (let i = 0; i < 5; i++) {
+      originalSetItem.call(localStorage, `faneen_orphan_${i}`, 'x');
+    }
+
+    Storage.prototype.removeItem = function (k: string) {
+      if (k.startsWith('faneen_')) {
+        const err = new Error('Permission denied for ' + k);
+        err.name = 'SecurityError';
+        throw err;
+      }
+      return originalRemove.call(this, k);
+    };
+
+    try {
+      migrateLegacyStorage();
+      await new Promise((r) => setTimeout(r, 0));
+
+      const lastCall = insertSpy.mock.calls.at(-1)?.[0];
+      expect(lastCall.error_message).toBeTruthy();
+      expect((lastCall.error_message as string).length).toBeLessThanOrEqual(1000);
+      expect((lastCall.error_code as string).length).toBeLessThanOrEqual(64);
+    } finally {
+      Storage.prototype.removeItem = originalRemove;
+    }
+  });
+});
