@@ -19,6 +19,47 @@ const SWEEP_FLAG = MIGRATION_FLAGS.sweepDone;
 const EPOCH_KEY = MIGRATION_FLAGS.epoch;
 
 /**
+ * Batch tuning. Sweeping large stores in one tight loop blocks the main thread
+ * (every removeItem can force the browser to flush its storage index to disk).
+ * We process keys in fixed-size chunks and yield to the event loop between
+ * chunks so input/paint frames stay responsive on low-end devices.
+ *
+ * - BATCH_SIZE: number of keys handled per chunk before yielding.
+ * - BATCH_THRESHOLD: below this total, run synchronously (no yield overhead).
+ */
+const BATCH_SIZE = 25;
+const BATCH_THRESHOLD = 40;
+
+/**
+ * Yields control to the browser between batches so paint / input handlers
+ * can run. Prefers requestIdleCallback when available, then MessageChannel
+ * (microtask-faster than setTimeout(0)), then falls back to setTimeout.
+ * Awaiting the returned promise is a no-op on Node test environments.
+ */
+function yieldToEventLoop(): Promise<void> {
+  return new Promise((resolve) => {
+    if (typeof window === 'undefined') {
+      resolve();
+      return;
+    }
+    const w = window as unknown as {
+      requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+    };
+    if (typeof w.requestIdleCallback === 'function') {
+      w.requestIdleCallback(() => resolve(), { timeout: 50 });
+      return;
+    }
+    if (typeof MessageChannel !== 'undefined') {
+      const ch = new MessageChannel();
+      ch.port1.onmessage = () => resolve();
+      ch.port2.postMessage(null);
+      return;
+    }
+    setTimeout(resolve, 0);
+  });
+}
+
+/**
  * Classified error codes for sweep failures. Stored in `migration_telemetry.error_code`
  * so admins can filter and triage issues quickly without parsing free-text messages.
  *
@@ -160,6 +201,85 @@ function sweepLegacyKeys(): { swept: number; sweptKeys: string[]; error?: SweepE
 }
 
 /**
+ * Async / batched twin of `sweepLegacyKeys`. Yields between BATCH_SIZE
+ * removals so the browser can paint and respond to input on low-end
+ * hardware. For small stores (≤ BATCH_THRESHOLD legacy keys) it falls
+ * through to the synchronous path to avoid scheduling overhead.
+ */
+async function sweepLegacyKeysBatched(): Promise<{
+  swept: number;
+  sweptKeys: string[];
+  error?: SweepError;
+}> {
+  if (typeof localStorage === 'undefined') {
+    return sweepLegacyKeys();
+  }
+  if (localStorage.getItem(SWEEP_FLAG) === '1') {
+    return { swept: 0, sweptKeys: [] };
+  }
+
+  // Snapshot first
+  const allKeys: string[] = [];
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k) allKeys.push(k);
+    }
+  } catch (iterErr) {
+    const cls = classifySweepError(iterErr, 'localStorage');
+    return {
+      swept: 0,
+      sweptKeys: [],
+      error: { ...cls, code: cls.code === 'unknown' ? 'iteration_failed' : cls.code },
+    };
+  }
+
+  // Pre-filter to just the legacy candidates so the batch loop is tight
+  const candidates = allKeys.filter(
+    (k) => k.startsWith(LEGACY_PREFIX) && !PROTECTED_KEYS.has(k),
+  );
+
+  // Small workload — skip the async overhead
+  if (candidates.length <= BATCH_THRESHOLD) {
+    return sweepLegacyKeys();
+  }
+
+  const sweptKeys: string[] = [];
+  for (let start = 0; start < candidates.length; start += BATCH_SIZE) {
+    const end = Math.min(start + BATCH_SIZE, candidates.length);
+    for (let i = start; i < end; i++) {
+      const key = candidates[i];
+      try {
+        localStorage.removeItem(key);
+        sweptKeys.push(key);
+      } catch (rmErr) {
+        const cls = classifySweepError(rmErr, 'localStorage');
+        return {
+          swept: sweptKeys.length,
+          sweptKeys,
+          error: { ...cls, code: cls.code === 'unknown' ? 'removal_failed' : cls.code },
+        };
+      }
+    }
+    if (end < candidates.length) {
+      // eslint-disable-next-line no-await-in-loop
+      await yieldToEventLoop();
+    }
+  }
+
+  try {
+    localStorage.setItem(SWEEP_FLAG, '1');
+  } catch (flagErr) {
+    return {
+      swept: sweptKeys.length,
+      sweptKeys,
+      error: classifySweepError(flagErr, 'localStorage'),
+    };
+  }
+  return { swept: sweptKeys.length, sweptKeys };
+}
+
+/**
  * Sweeps legacy `faneen_*` keys from sessionStorage. No counterpart copy
  * needed — sessionStorage is per-tab and contains no critical persistent data.
  */
@@ -193,6 +313,61 @@ function sweepSessionStorage(): { swept: number; sweptKeys: string[]; error?: Sw
       sweptKeys,
       error: classifySweepError(err, 'sessionStorage'),
     };
+  }
+  return { swept: sweptKeys.length, sweptKeys };
+}
+
+/**
+ * Async / batched twin of `sweepSessionStorage`. Yields between BATCH_SIZE
+ * removals to prevent jank on devices with large session stores.
+ */
+async function sweepSessionStorageBatched(): Promise<{
+  swept: number;
+  sweptKeys: string[];
+  error?: SweepError;
+}> {
+  if (typeof sessionStorage === 'undefined') {
+    return sweepSessionStorage();
+  }
+  const keys: string[] = [];
+  try {
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const k = sessionStorage.key(i);
+      if (k) keys.push(k);
+    }
+  } catch (err) {
+    const cls = classifySweepError(err, 'sessionStorage');
+    return {
+      swept: 0,
+      sweptKeys: [],
+      error: { ...cls, code: cls.code === 'unknown' ? 'iteration_failed' : cls.code },
+    };
+  }
+  const candidates = keys.filter((k) => k.startsWith(LEGACY_PREFIX));
+  if (candidates.length <= BATCH_THRESHOLD) {
+    return sweepSessionStorage();
+  }
+
+  const sweptKeys: string[] = [];
+  for (let start = 0; start < candidates.length; start += BATCH_SIZE) {
+    const end = Math.min(start + BATCH_SIZE, candidates.length);
+    for (let i = start; i < end; i++) {
+      try {
+        sessionStorage.removeItem(candidates[i]);
+        sweptKeys.push(candidates[i]);
+      } catch (err) {
+        const cls = classifySweepError(err, 'sessionStorage');
+        return {
+          swept: sweptKeys.length,
+          sweptKeys,
+          error: { ...cls, code: cls.code === 'unknown' ? 'removal_failed' : cls.code },
+        };
+      }
+    }
+    if (end < candidates.length) {
+      // eslint-disable-next-line no-await-in-loop
+      await yieldToEventLoop();
+    }
   }
   return { swept: sweptKeys.length, sweptKeys };
 }
@@ -348,6 +523,74 @@ function sweepCookies(): { swept: number; sweptKeys: string[]; error?: SweepErro
 
       // Record the canonical (decoded) name for telemetry & UI clarity
       sweptKeys.push(decoded);
+    }
+  } catch (err) {
+    return {
+      swept: sweptKeys.length,
+      sweptKeys,
+      error: { ...classifySweepError(err, 'cookies'), code: 'cookie_unavailable' },
+    };
+  }
+  return { swept: sweptKeys.length, sweptKeys };
+}
+
+/**
+ * Async / batched twin of `sweepCookies`. Each cookie expansion produces
+ * `domains × paths × variants` `document.cookie` writes — that's the most
+ * jank-prone part of the sweep. We yield every BATCH_SIZE *cookies* (not
+ * writes) so the browser stays responsive even on deep paths.
+ */
+async function sweepCookiesBatched(): Promise<{
+  swept: number;
+  sweptKeys: string[];
+  error?: SweepError;
+}> {
+  if (typeof document === 'undefined') {
+    return sweepCookies();
+  }
+  const cookieHeader = document.cookie;
+  if (!cookieHeader) return { swept: 0, sweptKeys: [] };
+
+  const candidates = extractLegacyCookieNames(cookieHeader).filter(
+    ({ raw, decoded }) =>
+      !PROTECTED_KEYS.has(decoded) && !PROTECTED_KEYS.has(raw),
+  );
+  if (candidates.length <= BATCH_THRESHOLD) {
+    return sweepCookies();
+  }
+
+  const sweptKeys: string[] = [];
+  try {
+    const host = (window.location.hostname || '').toLowerCase();
+    const pathname = window.location.pathname || '/';
+    const domainScopes = computeDomainScopes(host);
+    const pathScopes = computePathScopes(pathname);
+    const expiry = 'expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    const isHttps = window.location.protocol === 'https:';
+
+    for (let start = 0; start < candidates.length; start += BATCH_SIZE) {
+      const end = Math.min(start + BATCH_SIZE, candidates.length);
+      for (let i = start; i < end; i++) {
+        const { raw, decoded } = candidates[i];
+        for (const domain of domainScopes) {
+          for (const path of pathScopes) {
+            const domainAttr = domain ? `; domain=${domain}` : '';
+            document.cookie = `${raw}=; ${expiry}; path=${path}${domainAttr}`;
+            document.cookie = `${raw}=; ${expiry}; path=${path}${domainAttr}; SameSite=Lax`;
+            if (isHttps) {
+              document.cookie = `${raw}=; ${expiry}; path=${path}${domainAttr}; SameSite=None; Secure`;
+            }
+            if (decoded !== raw) {
+              document.cookie = `${decoded}=; ${expiry}; path=${path}${domainAttr}`;
+            }
+          }
+        }
+        sweptKeys.push(decoded);
+      }
+      if (end < candidates.length) {
+        // eslint-disable-next-line no-await-in-loop
+        await yieldToEventLoop();
+      }
     }
   } catch (err) {
     return {
@@ -525,6 +768,13 @@ async function checkServerEpochAndRerun(): Promise<void> {
  * Extracted so it can be invoked both on first boot and on forced re-runs.
  */
 function runMigrationCore(opts: { forced?: boolean; epoch?: number } = {}): void {
+  // Kick off async batched core; never await — boot must stay non-blocking
+  void runMigrationCoreAsync(opts);
+}
+
+async function runMigrationCoreAsync(
+  opts: { forced?: boolean; epoch?: number } = {},
+): Promise<void> {
   try {
     let migrated = 0;
     for (const [oldKey, newKey] of Object.entries(KEY_MAP)) {
@@ -539,9 +789,9 @@ function runMigrationCore(opts: { forced?: boolean; epoch?: number } = {}): void
     }
     localStorage.setItem(MIGRATION_FLAG, '1');
 
-    const localResult = sweepLegacyKeys();
-    const session = sweepSessionStorage();
-    const cookies = sweepCookies();
+    const localResult = await sweepLegacyKeysBatched();
+    const session = await sweepSessionStorageBatched();
+    const cookies = await sweepCookiesBatched();
     const totalCleaned = migrated + localResult.swept + session.swept + cookies.swept;
     const combined = combineSweepErrors([localResult.error, session.error, cookies.error]);
 
@@ -590,7 +840,7 @@ export interface ManualMigrationResult {
  * Resets gating flags first so the run is always a true retry.
  * INTENDED FOR DEV ADMIN UI ONLY — not called during normal boot.
  */
-export function runMigrationManually(): ManualMigrationResult {
+export async function runMigrationManually(): Promise<ManualMigrationResult> {
   const startedAt = Date.now();
   const ranAt = new Date(startedAt).toISOString();
 
@@ -640,9 +890,9 @@ export function runMigrationManually(): ManualMigrationResult {
     topLevelError = { code: cls.code, message: cls.message };
   }
 
-  const localResult = sweepLegacyKeys();
-  const session = sweepSessionStorage();
-  const cookies = sweepCookies();
+  const localResult = await sweepLegacyKeysBatched();
+  const session = await sweepSessionStorageBatched();
+  const cookies = await sweepCookiesBatched();
   const combined = combineSweepErrors([
     topLevelError ? { ...topLevelError, scope: 'localStorage' } : undefined,
     localResult.error,

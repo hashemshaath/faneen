@@ -31,9 +31,9 @@ export const DevMigrationRetryCard = () => {
 
   const handleRetry = async () => {
     setRunning(true);
-    // Defer one tick so the UI updates the spinner before the sync work
+    // Defer one tick so the UI updates the spinner before work starts
     await new Promise((r) => setTimeout(r, 0));
-    const next = runMigrationManually();
+    const next = await runMigrationManually();
     setResult(next);
     setRunning(false);
   };
