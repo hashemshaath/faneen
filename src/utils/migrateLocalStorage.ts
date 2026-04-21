@@ -1131,16 +1131,19 @@ async function runMigrationCoreAsync(
     }
     localStorage.setItem(MIGRATION_FLAG, '1');
 
-    const localResult = await sweepLegacyKeysBatched();
-    const session = await sweepSessionStorageBatched();
-    const cookies = await sweepCookiesBatched();
+    const recorder = createDiagnosticRecorder();
+    const localResult = await sweepLegacyKeysBatched(recorder);
+    const session = await sweepSessionStorageBatched(recorder);
+    const cookies = await sweepCookiesBatched(recorder);
     const totalCleaned = migrated + localResult.swept + session.swept + cookies.swept;
     const combined = combineSweepErrors([localResult.error, session.error, cookies.error]);
+    const diagnostics = recorder.snapshot();
 
     if (combined.code) {
       void logTelemetry('failed', totalCleaned, combined.message ?? undefined, {
         force: !!opts.forced,
         errorCode: combined.code,
+        diagnostics,
       });
     } else {
       const status = totalCleaned > 0 ? 'success' : 'no_legacy_data';
@@ -1153,7 +1156,20 @@ async function runMigrationCoreAsync(
     }
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    void logTelemetry('failed', 0, msg, { force: !!opts.forced, errorCode: 'unknown' });
+    void logTelemetry('failed', 0, msg, {
+      force: !!opts.forced,
+      errorCode: 'unknown',
+      diagnostics: [
+        {
+          ts: Date.now(),
+          scope: 'localStorage',
+          phase: 'unknown',
+          code: 'unknown',
+          message: msg.slice(0, 240),
+          ...getLocationContext(),
+        },
+      ],
+    });
   }
 }
 
