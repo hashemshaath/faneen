@@ -335,9 +335,23 @@ export function MigrationAlertSettingsCard() {
           </Button>
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="destructive" disabled={rerunMutation.isPending}>
+              <Button
+                variant="destructive"
+                disabled={rerunMutation.isPending || cooldownInfo.onCooldown}
+                title={
+                  cooldownInfo.onCooldown && cooldownInfo.nextAllowedAt
+                    ? (isRTL
+                        ? `متاح بعد ${cooldownInfo.minutesRemaining} دقيقة`
+                        : `Available in ${cooldownInfo.minutesRemaining} min`)
+                    : undefined
+                }
+              >
                 <RefreshCw className={`h-4 w-4 me-2 ${rerunMutation.isPending ? 'animate-spin' : ''}`} />
-                {isRTL ? 'إعادة بث الترحيل' : 'Re-run migration'}
+                {cooldownInfo.onCooldown
+                  ? isRTL
+                    ? `بثّ مقفل (${cooldownInfo.minutesRemaining}د)`
+                    : `Locked (${cooldownInfo.minutesRemaining}m)`
+                  : isRTL ? 'إعادة بث الترحيل' : 'Re-run migration'}
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent dir={isRTL ? 'rtl' : 'ltr'}>
@@ -356,6 +370,13 @@ export function MigrationAlertSettingsCard() {
                       {format(new Date(rerunStatus.last_rerun_at), 'yyyy-MM-dd HH:mm')}
                     </div>
                   )}
+                  {cooldownInfo.onCooldown && cooldownInfo.nextAllowedAt && (
+                    <div className="mt-2 rounded-md border border-amber-300 bg-amber-50 p-2 text-xs text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
+                      {isRTL
+                        ? `⏳ البثّ مقفل بسبب فترة التهدئة (${rerunStatus?.rerun_cooldown_minutes ?? 60} دقيقة). متاح مجدداً في ${format(cooldownInfo.nextAllowedAt, 'yyyy-MM-dd HH:mm')} (~${cooldownInfo.minutesRemaining} دقيقة).`
+                        : `⏳ Broadcast is locked by the cooldown window (${rerunStatus?.rerun_cooldown_minutes ?? 60} min). Next allowed at ${format(cooldownInfo.nextAllowedAt, 'yyyy-MM-dd HH:mm')} (~${cooldownInfo.minutesRemaining} min).`}
+                    </div>
+                  )}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <div className="space-y-1.5">
@@ -369,7 +390,10 @@ export function MigrationAlertSettingsCard() {
               </div>
               <AlertDialogFooter>
                 <AlertDialogCancel>{isRTL ? 'إلغاء' : 'Cancel'}</AlertDialogCancel>
-                <AlertDialogAction onClick={() => rerunMutation.mutate(rerunReason)}>
+                <AlertDialogAction
+                  onClick={() => rerunMutation.mutate(rerunReason)}
+                  disabled={cooldownInfo.onCooldown}
+                >
                   {isRTL ? 'تأكيد البثّ' : 'Confirm broadcast'}
                 </AlertDialogAction>
               </AlertDialogFooter>
