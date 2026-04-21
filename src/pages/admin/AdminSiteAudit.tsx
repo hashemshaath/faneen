@@ -12,6 +12,7 @@ import {
   Gauge, RefreshCw, CheckCircle2, XCircle, AlertTriangle,
   Smartphone, FileSearch, Globe, ListTree, Activity, Loader2,
 } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid,
 } from 'recharts';
@@ -62,19 +63,20 @@ const AdminSiteAudit = () => {
         .from('perf_audit_runs')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(50);
+        .limit(200);
       if (error) throw error;
-      // Keep only the latest per (url, strategy)
-      const seen = new Set<string>();
-      const latest: typeof data = [];
+      // Keep latest + previous per (url, strategy) for comparison
+      const grouped = new Map<string, typeof data>();
       for (const row of data ?? []) {
         const key = `${row.url}::${row.strategy}`;
-        if (!seen.has(key)) {
-          seen.add(key);
-          latest.push(row);
-        }
+        const arr = grouped.get(key) ?? [];
+        if (arr.length < 2) arr.push(row);
+        grouped.set(key, arr);
       }
-      return latest;
+      return Array.from(grouped.values()).map(([latest, previous]) => ({
+        ...latest,
+        previous: previous ?? null,
+      }));
     },
     staleTime: 60_000,
   });
