@@ -14,6 +14,7 @@ import {
   CheckCircle2, XCircle, MinusCircle, Database, Smartphone,
   ShieldAlert, KeyRound, FileJson, HardDrive, WifiOff, AlertTriangle, Filter, X,
 } from 'lucide-react';
+import { CopyButton } from '@/components/ui/copy-button';
 
 interface TelemetryRow {
   id: string;
