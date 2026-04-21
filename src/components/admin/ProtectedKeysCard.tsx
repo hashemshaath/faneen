@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -13,8 +13,9 @@ import {
   NEW_PREFIX,
   type ProtectedKeyCategory,
 } from '@/config/storageMigration';
+import { getProtectedKeysSnapshot } from '@/utils/migrateLocalStorage';
 import {
-  ShieldCheck, Lock, FileCode, Copy, CheckCheck, Info,
+  ShieldCheck, Lock, FileCode, Copy, CheckCheck, Info, Code2, Asterisk,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
