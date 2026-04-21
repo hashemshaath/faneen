@@ -163,10 +163,20 @@ function sweepLegacyKeys(): { swept: number; sweptKeys: string[]; error?: SweepE
  * Sweeps legacy `faneen_*` keys from sessionStorage. No counterpart copy
  * needed — sessionStorage is per-tab and contains no critical persistent data.
  */
-function sweepSessionStorage(): { swept: number; sweptKeys: string[] } {
+function sweepSessionStorage(): { swept: number; sweptKeys: string[]; error?: SweepError } {
   const sweptKeys: string[] = [];
   try {
-    if (typeof sessionStorage === 'undefined') return { swept: 0, sweptKeys };
+    if (typeof sessionStorage === 'undefined') {
+      return {
+        swept: 0,
+        sweptKeys,
+        error: {
+          code: 'storage_unavailable',
+          message: 'sessionStorage is undefined in this environment',
+          scope: 'sessionStorage',
+        },
+      };
+    }
     const keys: string[] = [];
     for (let i = 0; i < sessionStorage.length; i++) {
       const k = sessionStorage.key(i);
@@ -177,8 +187,12 @@ function sweepSessionStorage(): { swept: number; sweptKeys: string[] } {
       sessionStorage.removeItem(key);
       sweptKeys.push(key);
     }
-  } catch {
-    // Silent
+  } catch (err) {
+    return {
+      swept: sweptKeys.length,
+      sweptKeys,
+      error: classifySweepError(err, 'sessionStorage'),
+    };
   }
   return { swept: sweptKeys.length, sweptKeys };
 }
@@ -188,10 +202,21 @@ function sweepSessionStorage(): { swept: number; sweptKeys: string[] } {
  * across plausible path scopes. Cookies on unrelated origins cannot be cleared
  * from JS — that's a browser security boundary.
  */
-function sweepCookies(): { swept: number; sweptKeys: string[] } {
+function sweepCookies(): { swept: number; sweptKeys: string[]; error?: SweepError } {
   const sweptKeys: string[] = [];
   try {
-    if (typeof document === 'undefined' || !document.cookie) return { swept: 0, sweptKeys };
+    if (typeof document === 'undefined') {
+      return {
+        swept: 0,
+        sweptKeys,
+        error: {
+          code: 'cookie_unavailable',
+          message: 'document is undefined in this environment',
+          scope: 'cookies',
+        },
+      };
+    }
+    if (!document.cookie) return { swept: 0, sweptKeys };
     const cookies = document.cookie.split(';');
     const host = window.location.hostname;
     // Compute parent domain for cookies set with a leading dot
@@ -210,19 +235,40 @@ function sweepCookies(): { swept: number; sweptKeys: string[] } {
       document.cookie = `${name}=; ${expiry}; path=/; domain=${parentDomain}`;
       sweptKeys.push(name);
     }
-  } catch {
-    // Silent
+  } catch (err) {
+    return {
+      swept: sweptKeys.length,
+      sweptKeys,
+      error: { ...classifySweepError(err, 'cookies'), code: 'cookie_unavailable' },
+    };
   }
   return { swept: sweptKeys.length, sweptKeys };
 }
 
 type MigrationStatus = 'success' | 'failed' | 'skipped' | 'no_legacy_data';
 
+/**
+ * Combines multiple sweep errors into a single error_code + readable message.
+ * Priority: most-severe scope wins (localStorage > sessionStorage > cookies).
+ */
+function combineSweepErrors(errors: Array<SweepError | undefined>): {
+  code: SweepErrorCode | null;
+  message: string | null;
+} {
+  const real = errors.filter((e): e is SweepError => !!e);
+  if (real.length === 0) return { code: null, message: null };
+  const priority: SweepError['scope'][] = ['localStorage', 'sessionStorage', 'cookies'];
+  real.sort((a, b) => priority.indexOf(a.scope) - priority.indexOf(b.scope));
+  const primary = real[0];
+  const summary = real.map((e) => `[${e.scope}:${e.code}] ${e.message}`).join(' | ');
+  return { code: primary.code, message: summary.slice(0, 1000) };
+}
+
 async function logTelemetry(
   status: MigrationStatus,
   keysMigrated: number,
   errorMessage?: string,
-  options?: { force?: boolean },
+  options?: { force?: boolean; errorCode?: SweepErrorCode | null },
 ): Promise<void> {
   try {
     if (!options?.force && localStorage.getItem(TELEMETRY_FLAG) === '1') return;
@@ -233,6 +279,7 @@ async function logTelemetry(
       keys_migrated: keysMigrated,
       user_agent: ua,
       error_message: errorMessage?.slice(0, 1000) || null,
+      error_code: options?.errorCode ? options.errorCode.slice(0, 64) : null,
     });
     if (!error) {
       localStorage.setItem(TELEMETRY_FLAG, '1');
