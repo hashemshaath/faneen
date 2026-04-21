@@ -2341,6 +2341,39 @@ export type Database = {
           },
         ]
       }
+      migration_telemetry: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          keys_migrated: number
+          migration_key: string
+          status: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          keys_migrated?: number
+          migration_key: string
+          status: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          keys_migrated?: number
+          migration_key?: string
+          status?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       newsletter_subscribers: {
         Row: {
           email: string
@@ -3719,6 +3752,7 @@ export type Database = {
         Returns: boolean
       }
       cleanup_expired_otps: { Args: never; Returns: undefined }
+      cleanup_old_migration_telemetry: { Args: never; Returns: undefined }
       create_notification: {
         Args: {
           _action_url?: string
