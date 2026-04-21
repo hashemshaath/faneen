@@ -534,6 +534,74 @@ function sweepCookies(): { swept: number; sweptKeys: string[]; error?: SweepErro
   return { swept: sweptKeys.length, sweptKeys };
 }
 
+/**
+ * Async / batched twin of `sweepCookies`. Each cookie expansion produces
+ * `domains × paths × variants` `document.cookie` writes — that's the most
+ * jank-prone part of the sweep. We yield every BATCH_SIZE *cookies* (not
+ * writes) so the browser stays responsive even on deep paths.
+ */
+async function sweepCookiesBatched(): Promise<{
+  swept: number;
+  sweptKeys: string[];
+  error?: SweepError;
+}> {
+  if (typeof document === 'undefined') {
+    return sweepCookies();
+  }
+  const cookieHeader = document.cookie;
+  if (!cookieHeader) return { swept: 0, sweptKeys: [] };
+
+  const candidates = extractLegacyCookieNames(cookieHeader).filter(
+    ({ raw, decoded }) =>
+      !PROTECTED_KEYS.has(decoded) && !PROTECTED_KEYS.has(raw),
+  );
+  if (candidates.length <= BATCH_THRESHOLD) {
+    return sweepCookies();
+  }
+
+  const sweptKeys: string[] = [];
+  try {
+    const host = (window.location.hostname || '').toLowerCase();
+    const pathname = window.location.pathname || '/';
+    const domainScopes = computeDomainScopes(host);
+    const pathScopes = computePathScopes(pathname);
+    const expiry = 'expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    const isHttps = window.location.protocol === 'https:';
+
+    for (let start = 0; start < candidates.length; start += BATCH_SIZE) {
+      const end = Math.min(start + BATCH_SIZE, candidates.length);
+      for (let i = start; i < end; i++) {
+        const { raw, decoded } = candidates[i];
+        for (const domain of domainScopes) {
+          for (const path of pathScopes) {
+            const domainAttr = domain ? `; domain=${domain}` : '';
+            document.cookie = `${raw}=; ${expiry}; path=${path}${domainAttr}`;
+            document.cookie = `${raw}=; ${expiry}; path=${path}${domainAttr}; SameSite=Lax`;
+            if (isHttps) {
+              document.cookie = `${raw}=; ${expiry}; path=${path}${domainAttr}; SameSite=None; Secure`;
+            }
+            if (decoded !== raw) {
+              document.cookie = `${decoded}=; ${expiry}; path=${path}${domainAttr}`;
+            }
+          }
+        }
+        sweptKeys.push(decoded);
+      }
+      if (end < candidates.length) {
+        // eslint-disable-next-line no-await-in-loop
+        await yieldToEventLoop();
+      }
+    }
+  } catch (err) {
+    return {
+      swept: sweptKeys.length,
+      sweptKeys,
+      error: { ...classifySweepError(err, 'cookies'), code: 'cookie_unavailable' },
+    };
+  }
+  return { swept: sweptKeys.length, sweptKeys };
+}
+
 type MigrationStatus = 'success' | 'failed' | 'skipped' | 'no_legacy_data';
 
 /**
