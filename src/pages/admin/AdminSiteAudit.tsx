@@ -430,6 +430,9 @@ const AdminSiteAudit = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* ─── Actionable Issues Report ─── */}
+        <IssuesReport pageResults={pageResults} isRTL={isRTL} hasData={!!seoLatest} />
       </div>
     </DashboardLayout>
   );
