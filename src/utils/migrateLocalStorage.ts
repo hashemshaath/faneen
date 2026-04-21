@@ -450,3 +450,118 @@ function runMigrationCore(opts: { forced?: boolean; epoch?: number } = {}): void
     void logTelemetry('failed', 0, msg, { force: !!opts.forced, errorCode: 'unknown' });
   }
 }
+
+/**
+ * Result of a manual migration run, returned to the DEV-only admin UI.
+ */
+export interface ManualMigrationResult {
+  migrated: number;
+  migratedKeys: string[];
+  sweptLocal: number;
+  sweptLocalKeys: string[];
+  sweptSession: number;
+  sweptSessionKeys: string[];
+  sweptCookies: number;
+  sweptCookieKeys: string[];
+  totalCleaned: number;
+  status: MigrationStatus;
+  errorCode: SweepErrorCode | null;
+  errorMessage: string | null;
+  durationMs: number;
+  ranAt: string; // ISO timestamp
+}
+
+/**
+ * Runs the migration synchronously and returns a detailed summary.
+ * Resets gating flags first so the run is always a true retry.
+ * INTENDED FOR DEV ADMIN UI ONLY — not called during normal boot.
+ */
+export function runMigrationManually(): ManualMigrationResult {
+  const startedAt = Date.now();
+  const ranAt = new Date(startedAt).toISOString();
+
+  if (typeof window === 'undefined' || !window.localStorage) {
+    return {
+      migrated: 0, migratedKeys: [],
+      sweptLocal: 0, sweptLocalKeys: [],
+      sweptSession: 0, sweptSessionKeys: [],
+      sweptCookies: 0, sweptCookieKeys: [],
+      totalCleaned: 0,
+      status: 'failed',
+      errorCode: 'storage_unavailable',
+      errorMessage: 'window or localStorage is unavailable',
+      durationMs: 0,
+      ranAt,
+    };
+  }
+
+  // Force a fresh run — clear gating flags
+  try {
+    localStorage.removeItem(MIGRATION_FLAG);
+    localStorage.removeItem(SWEEP_FLAG);
+    localStorage.removeItem(TELEMETRY_FLAG);
+  } catch {
+    // Best effort — proceed even if removal fails
+  }
+
+  const migratedKeys: string[] = [];
+  let migrated = 0;
+  let topLevelError: { code: SweepErrorCode; message: string } | null = null;
+
+  try {
+    for (const [oldKey, newKey] of Object.entries(KEY_MAP)) {
+      const oldValue = localStorage.getItem(oldKey);
+      if (oldValue !== null) {
+        if (localStorage.getItem(newKey) === null) {
+          localStorage.setItem(newKey, oldValue);
+        }
+        localStorage.removeItem(oldKey);
+        migrated++;
+        migratedKeys.push(oldKey);
+      }
+    }
+    localStorage.setItem(MIGRATION_FLAG, '1');
+  } catch (err) {
+    const cls = classifySweepError(err, 'localStorage');
+    topLevelError = { code: cls.code, message: cls.message };
+  }
+
+  const localResult = sweepLegacyKeys();
+  const session = sweepSessionStorage();
+  const cookies = sweepCookies();
+  const combined = combineSweepErrors([
+    topLevelError ? { ...topLevelError, scope: 'localStorage' } : undefined,
+    localResult.error,
+    session.error,
+    cookies.error,
+  ]);
+  const totalCleaned = migrated + localResult.swept + session.swept + cookies.swept;
+
+  let status: MigrationStatus;
+  if (combined.code) status = 'failed';
+  else if (totalCleaned > 0) status = 'success';
+  else status = 'no_legacy_data';
+
+  // Log a fresh telemetry event so the admin dashboard reflects this manual run
+  void logTelemetry(status, totalCleaned, combined.message ?? undefined, {
+    force: true,
+    errorCode: combined.code,
+  });
+
+  return {
+    migrated,
+    migratedKeys,
+    sweptLocal: localResult.swept,
+    sweptLocalKeys: localResult.sweptKeys,
+    sweptSession: session.swept,
+    sweptSessionKeys: session.sweptKeys,
+    sweptCookies: cookies.swept,
+    sweptCookieKeys: cookies.sweptKeys,
+    totalCleaned,
+    status,
+    errorCode: combined.code,
+    errorMessage: combined.message,
+    durationMs: Date.now() - startedAt,
+    ranAt,
+  };
+}
