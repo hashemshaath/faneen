@@ -19,19 +19,100 @@ const SWEEP_FLAG = MIGRATION_FLAGS.sweepDone;
 const EPOCH_KEY = MIGRATION_FLAGS.epoch;
 
 /**
+ * Classified error codes for sweep failures. Stored in `migration_telemetry.error_code`
+ * so admins can filter and triage issues quickly without parsing free-text messages.
+ *
+ * - storage_unavailable: localStorage / sessionStorage object missing (SSR, locked browser).
+ * - permission_denied: Browser blocked access (Safari private mode, third-party cookie block).
+ * - quota_exceeded: Storage write failed because quota is full.
+ * - iteration_failed: Snapshotting keys via .key(i) threw unexpectedly.
+ * - removal_failed: removeItem() threw on a specific key.
+ * - cookie_unavailable: document or document.cookie inaccessible.
+ * - unknown: Anything else not matching the above.
+ */
+export type SweepErrorCode =
+  | 'storage_unavailable'
+  | 'permission_denied'
+  | 'quota_exceeded'
+  | 'iteration_failed'
+  | 'removal_failed'
+  | 'cookie_unavailable'
+  | 'unknown';
+
+export interface SweepError {
+  code: SweepErrorCode;
+  message: string;
+  scope: 'localStorage' | 'sessionStorage' | 'cookies';
+}
+
+/**
+ * Inspects an unknown thrown value and maps it to a stable error code so
+ * downstream telemetry can group failures meaningfully.
+ */
+function classifySweepError(err: unknown, scope: SweepError['scope']): SweepError {
+  const raw = err instanceof Error ? err : new Error(String(err));
+  const name = raw.name || '';
+  const msg = raw.message || '';
+  const lower = `${name} ${msg}`.toLowerCase();
+
+  let code: SweepErrorCode = 'unknown';
+  if (
+    name === 'QuotaExceededError' ||
+    name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
+    lower.includes('quota')
+  ) {
+    code = 'quota_exceeded';
+  } else if (
+    name === 'SecurityError' ||
+    lower.includes('denied') ||
+    lower.includes('permission') ||
+    lower.includes('access is denied')
+  ) {
+    code = 'permission_denied';
+  } else if (
+    lower.includes('is not defined') ||
+    lower.includes('undefined') ||
+    lower.includes('null') && lower.includes('storage')
+  ) {
+    code = 'storage_unavailable';
+  }
+  return { code, message: msg.slice(0, 500) || name || 'unknown error', scope };
+}
+
+/**
  * Sweeps any remaining `faneen_*` localStorage keys that weren't in KEY_MAP.
  * Runs once after the main migration. Returns count of swept keys.
  */
-function sweepLegacyKeys(): { swept: number; sweptKeys: string[] } {
+function sweepLegacyKeys(): { swept: number; sweptKeys: string[]; error?: SweepError } {
   const sweptKeys: string[] = [];
   try {
+    if (typeof localStorage === 'undefined') {
+      return {
+        swept: 0,
+        sweptKeys,
+        error: {
+          code: 'storage_unavailable',
+          message: 'localStorage is undefined in this environment',
+          scope: 'localStorage',
+        },
+      };
+    }
     if (localStorage.getItem(SWEEP_FLAG) === '1') return { swept: 0, sweptKeys };
 
     // Snapshot keys first — mutating localStorage while iterating is unsafe
     const allKeys: string[] = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      if (k) allKeys.push(k);
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k) allKeys.push(k);
+      }
+    } catch (iterErr) {
+      const cls = classifySweepError(iterErr, 'localStorage');
+      return {
+        swept: sweptKeys.length,
+        sweptKeys,
+        error: { ...cls, code: cls.code === 'unknown' ? 'iteration_failed' : cls.code },
+      };
     }
 
     for (const key of allKeys) {
@@ -39,20 +120,41 @@ function sweepLegacyKeys(): { swept: number; sweptKeys: string[] } {
       if (PROTECTED_KEYS.has(key)) continue;
       // Already handled by KEY_MAP — skip if a counterpart exists in qitaat_ namespace
       const counterpart = NEW_PREFIX + key.slice(LEGACY_PREFIX.length);
-      if (localStorage.getItem(counterpart) !== null) {
-        // Counterpart exists, safe to remove orphan
+      try {
+        if (localStorage.getItem(counterpart) !== null) {
+          // Counterpart exists, safe to remove orphan
+          localStorage.removeItem(key);
+          sweptKeys.push(key);
+          continue;
+        }
+        // No counterpart and not in KEY_MAP → unknown orphan, remove it
         localStorage.removeItem(key);
         sweptKeys.push(key);
-        continue;
+      } catch (rmErr) {
+        const cls = classifySweepError(rmErr, 'localStorage');
+        return {
+          swept: sweptKeys.length,
+          sweptKeys,
+          error: { ...cls, code: cls.code === 'unknown' ? 'removal_failed' : cls.code },
+        };
       }
-      // No counterpart and not in KEY_MAP → unknown orphan, remove it
-      localStorage.removeItem(key);
-      sweptKeys.push(key);
     }
 
-    localStorage.setItem(SWEEP_FLAG, '1');
-  } catch {
-    // Silent — sweep is best-effort
+    try {
+      localStorage.setItem(SWEEP_FLAG, '1');
+    } catch (flagErr) {
+      return {
+        swept: sweptKeys.length,
+        sweptKeys,
+        error: classifySweepError(flagErr, 'localStorage'),
+      };
+    }
+  } catch (err) {
+    return {
+      swept: sweptKeys.length,
+      sweptKeys,
+      error: classifySweepError(err, 'localStorage'),
+    };
   }
   return { swept: sweptKeys.length, sweptKeys };
 }
@@ -61,10 +163,20 @@ function sweepLegacyKeys(): { swept: number; sweptKeys: string[] } {
  * Sweeps legacy `faneen_*` keys from sessionStorage. No counterpart copy
  * needed — sessionStorage is per-tab and contains no critical persistent data.
  */
-function sweepSessionStorage(): { swept: number; sweptKeys: string[] } {
+function sweepSessionStorage(): { swept: number; sweptKeys: string[]; error?: SweepError } {
   const sweptKeys: string[] = [];
   try {
-    if (typeof sessionStorage === 'undefined') return { swept: 0, sweptKeys };
+    if (typeof sessionStorage === 'undefined') {
+      return {
+        swept: 0,
+        sweptKeys,
+        error: {
+          code: 'storage_unavailable',
+          message: 'sessionStorage is undefined in this environment',
+          scope: 'sessionStorage',
+        },
+      };
+    }
     const keys: string[] = [];
     for (let i = 0; i < sessionStorage.length; i++) {
       const k = sessionStorage.key(i);
@@ -75,8 +187,12 @@ function sweepSessionStorage(): { swept: number; sweptKeys: string[] } {
       sessionStorage.removeItem(key);
       sweptKeys.push(key);
     }
-  } catch {
-    // Silent
+  } catch (err) {
+    return {
+      swept: sweptKeys.length,
+      sweptKeys,
+      error: classifySweepError(err, 'sessionStorage'),
+    };
   }
   return { swept: sweptKeys.length, sweptKeys };
 }
@@ -86,10 +202,21 @@ function sweepSessionStorage(): { swept: number; sweptKeys: string[] } {
  * across plausible path scopes. Cookies on unrelated origins cannot be cleared
  * from JS — that's a browser security boundary.
  */
-function sweepCookies(): { swept: number; sweptKeys: string[] } {
+function sweepCookies(): { swept: number; sweptKeys: string[]; error?: SweepError } {
   const sweptKeys: string[] = [];
   try {
-    if (typeof document === 'undefined' || !document.cookie) return { swept: 0, sweptKeys };
+    if (typeof document === 'undefined') {
+      return {
+        swept: 0,
+        sweptKeys,
+        error: {
+          code: 'cookie_unavailable',
+          message: 'document is undefined in this environment',
+          scope: 'cookies',
+        },
+      };
+    }
+    if (!document.cookie) return { swept: 0, sweptKeys };
     const cookies = document.cookie.split(';');
     const host = window.location.hostname;
     // Compute parent domain for cookies set with a leading dot
@@ -108,19 +235,40 @@ function sweepCookies(): { swept: number; sweptKeys: string[] } {
       document.cookie = `${name}=; ${expiry}; path=/; domain=${parentDomain}`;
       sweptKeys.push(name);
     }
-  } catch {
-    // Silent
+  } catch (err) {
+    return {
+      swept: sweptKeys.length,
+      sweptKeys,
+      error: { ...classifySweepError(err, 'cookies'), code: 'cookie_unavailable' },
+    };
   }
   return { swept: sweptKeys.length, sweptKeys };
 }
 
 type MigrationStatus = 'success' | 'failed' | 'skipped' | 'no_legacy_data';
 
+/**
+ * Combines multiple sweep errors into a single error_code + readable message.
+ * Priority: most-severe scope wins (localStorage > sessionStorage > cookies).
+ */
+function combineSweepErrors(errors: Array<SweepError | undefined>): {
+  code: SweepErrorCode | null;
+  message: string | null;
+} {
+  const real = errors.filter((e): e is SweepError => !!e);
+  if (real.length === 0) return { code: null, message: null };
+  const priority: SweepError['scope'][] = ['localStorage', 'sessionStorage', 'cookies'];
+  real.sort((a, b) => priority.indexOf(a.scope) - priority.indexOf(b.scope));
+  const primary = real[0];
+  const summary = real.map((e) => `[${e.scope}:${e.code}] ${e.message}`).join(' | ');
+  return { code: primary.code, message: summary.slice(0, 1000) };
+}
+
 async function logTelemetry(
   status: MigrationStatus,
   keysMigrated: number,
   errorMessage?: string,
-  options?: { force?: boolean },
+  options?: { force?: boolean; errorCode?: SweepErrorCode | null },
 ): Promise<void> {
   try {
     if (!options?.force && localStorage.getItem(TELEMETRY_FLAG) === '1') return;
@@ -131,6 +279,7 @@ async function logTelemetry(
       keys_migrated: keysMigrated,
       user_agent: ua,
       error_message: errorMessage?.slice(0, 1000) || null,
+      error_code: options?.errorCode ? options.errorCode.slice(0, 64) : null,
     });
     if (!error) {
       localStorage.setItem(TELEMETRY_FLAG, '1');
@@ -171,10 +320,12 @@ export function migrateLegacyStorage(): void {
     localStorage.setItem(MIGRATION_FLAG, '1');
 
     // Sweep any remaining unknown faneen_* orphans (e.g. from older app versions)
-    const { swept, sweptKeys } = sweepLegacyKeys();
+    const localResult = sweepLegacyKeys();
     const session = sweepSessionStorage();
     const cookies = sweepCookies();
+    const { swept, sweptKeys } = localResult;
     const totalCleaned = migrated + swept + session.swept + cookies.swept;
+    const combined = combineSweepErrors([localResult.error, session.error, cookies.error]);
 
     if (import.meta.env.DEV) {
       if (migrated > 0) {
@@ -189,15 +340,24 @@ export function migrateLegacyStorage(): void {
       if (cookies.swept > 0) {
         console.info(`[storage-migration] Swept ${cookies.swept} cookie(s):`, cookies.sweptKeys);
       }
+      if (combined.code) {
+        console.warn(`[storage-migration] Sweep encountered ${combined.code}:`, combined.message);
+      }
     }
 
-    void logTelemetry(totalCleaned > 0 ? 'success' : 'no_legacy_data', totalCleaned);
+    if (combined.code) {
+      void logTelemetry('failed', totalCleaned, combined.message ?? undefined, {
+        errorCode: combined.code,
+      });
+    } else {
+      void logTelemetry(totalCleaned > 0 ? 'success' : 'no_legacy_data', totalCleaned);
+    }
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     if (import.meta.env.DEV) {
       console.warn('[storage-migration] Failed:', err);
     }
-    void logTelemetry('failed', 0, msg);
+    void logTelemetry('failed', 0, msg, { errorCode: 'unknown' });
   }
 }
 
@@ -265,20 +425,28 @@ function runMigrationCore(opts: { forced?: boolean; epoch?: number } = {}): void
     }
     localStorage.setItem(MIGRATION_FLAG, '1');
 
-    const { swept } = sweepLegacyKeys();
+    const localResult = sweepLegacyKeys();
     const session = sweepSessionStorage();
     const cookies = sweepCookies();
-    const totalCleaned = migrated + swept + session.swept + cookies.swept;
+    const totalCleaned = migrated + localResult.swept + session.swept + cookies.swept;
+    const combined = combineSweepErrors([localResult.error, session.error, cookies.error]);
 
-    const status = totalCleaned > 0 ? 'success' : 'no_legacy_data';
-    void logTelemetry(
-      status,
-      totalCleaned,
-      opts.forced ? `forced re-run (epoch ${opts.epoch ?? '?'})` : undefined,
-      { force: !!opts.forced },
-    );
+    if (combined.code) {
+      void logTelemetry('failed', totalCleaned, combined.message ?? undefined, {
+        force: !!opts.forced,
+        errorCode: combined.code,
+      });
+    } else {
+      const status = totalCleaned > 0 ? 'success' : 'no_legacy_data';
+      void logTelemetry(
+        status,
+        totalCleaned,
+        opts.forced ? `forced re-run (epoch ${opts.epoch ?? '?'})` : undefined,
+        { force: !!opts.forced },
+      );
+    }
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    void logTelemetry('failed', 0, msg, { force: !!opts.forced });
+    void logTelemetry('failed', 0, msg, { force: !!opts.forced, errorCode: 'unknown' });
   }
 }

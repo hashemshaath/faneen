@@ -22,6 +22,7 @@ interface TelemetryRow {
   keys_migrated: number;
   user_agent: string | null;
   error_message: string | null;
+  error_code: string | null;
   created_at: string;
 }
 
@@ -141,6 +142,7 @@ export const MigrationTelemetryCard = () => {
   const [filterKey, setFilterKey] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterDevice, setFilterDevice] = useState<string>('all');
+  const [filterErrorCode, setFilterErrorCode] = useState<string>('all');
 
   const { data, isLoading } = useQuery({
     queryKey: ['migration-telemetry'],
@@ -190,13 +192,16 @@ export const MigrationTelemetryCard = () => {
     const rows = data || [];
     const keys = new Set<string>();
     const devices = new Set<string>();
+    const errorCodes = new Set<string>();
     for (const r of rows) {
       if (r.migration_key) keys.add(r.migration_key);
       devices.add(detectDevice(r.user_agent));
+      if (r.error_code) errorCodes.add(r.error_code);
     }
     return {
       keys: Array.from(keys).sort(),
       devices: Array.from(devices).sort(),
+      errorCodes: Array.from(errorCodes).sort(),
     };
   }, [data]);
 
@@ -207,15 +212,18 @@ export const MigrationTelemetryCard = () => {
       if (filterKey !== 'all' && r.migration_key !== filterKey) return false;
       if (filterStatus !== 'all' && r.status !== filterStatus) return false;
       if (filterDevice !== 'all' && detectDevice(r.user_agent) !== filterDevice) return false;
+      if (filterErrorCode !== 'all' && (r.error_code || '') !== filterErrorCode) return false;
       return true;
     });
-  }, [data, filterKey, filterStatus, filterDevice]);
+  }, [data, filterKey, filterStatus, filterDevice, filterErrorCode]);
 
-  const filtersActive = filterKey !== 'all' || filterStatus !== 'all' || filterDevice !== 'all';
+  const filtersActive =
+    filterKey !== 'all' || filterStatus !== 'all' || filterDevice !== 'all' || filterErrorCode !== 'all';
   const resetFilters = () => {
     setFilterKey('all');
     setFilterStatus('all');
     setFilterDevice('all');
+    setFilterErrorCode('all');
   };
 
   return (
@@ -370,6 +378,19 @@ export const MigrationTelemetryCard = () => {
                 ))}
               </SelectContent>
             </Select>
+            {filterOptions.errorCodes.length > 0 && (
+              <Select value={filterErrorCode} onValueChange={setFilterErrorCode}>
+                <SelectTrigger className="h-8 text-xs w-auto min-w-[150px]">
+                  <SelectValue placeholder={isRTL ? 'رمز الخطأ' : 'Error code'} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{isRTL ? 'كل الرموز' : 'All codes'}</SelectItem>
+                  {filterOptions.errorCodes.map(c => (
+                    <SelectItem key={c} value={c} className="font-mono text-xs">{c}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
             <Badge variant="outline" className="text-[10px] ms-auto">
               {filteredRows.length} / {data?.length || 0}
             </Badge>
@@ -432,6 +453,14 @@ export const MigrationTelemetryCard = () => {
                         <span className="text-muted-foreground">
                           {row.keys_migrated} {isRTL ? 'مفتاح' : 'keys'}
                         </span>
+                      )}
+                      {row.error_code && (
+                        <code
+                          className="text-[10px] font-mono px-1.5 py-0.5 rounded border border-destructive/30 bg-destructive/10 text-destructive"
+                          title={isRTL ? 'رمز الخطأ المصنّف' : 'Classified error code'}
+                        >
+                          {row.error_code}
+                        </code>
                       )}
                       {row.error_message && (
                         <span className="text-destructive truncate max-w-xs" title={row.error_message}>

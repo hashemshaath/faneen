@@ -2425,6 +2425,7 @@ export type Database = {
       migration_telemetry: {
         Row: {
           created_at: string
+          error_code: string | null
           error_message: string | null
           id: string
           keys_migrated: number
@@ -2435,6 +2436,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          error_code?: string | null
           error_message?: string | null
           id?: string
           keys_migrated?: number
@@ -2445,6 +2447,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          error_code?: string | null
           error_message?: string | null
           id?: string
           keys_migrated?: number
