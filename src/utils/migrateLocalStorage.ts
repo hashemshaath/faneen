@@ -318,6 +318,61 @@ function sweepSessionStorage(): { swept: number; sweptKeys: string[]; error?: Sw
 }
 
 /**
+ * Async / batched twin of `sweepSessionStorage`. Yields between BATCH_SIZE
+ * removals to prevent jank on devices with large session stores.
+ */
+async function sweepSessionStorageBatched(): Promise<{
+  swept: number;
+  sweptKeys: string[];
+  error?: SweepError;
+}> {
+  if (typeof sessionStorage === 'undefined') {
+    return sweepSessionStorage();
+  }
+  const keys: string[] = [];
+  try {
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const k = sessionStorage.key(i);
+      if (k) keys.push(k);
+    }
+  } catch (err) {
+    const cls = classifySweepError(err, 'sessionStorage');
+    return {
+      swept: 0,
+      sweptKeys: [],
+      error: { ...cls, code: cls.code === 'unknown' ? 'iteration_failed' : cls.code },
+    };
+  }
+  const candidates = keys.filter((k) => k.startsWith(LEGACY_PREFIX));
+  if (candidates.length <= BATCH_THRESHOLD) {
+    return sweepSessionStorage();
+  }
+
+  const sweptKeys: string[] = [];
+  for (let start = 0; start < candidates.length; start += BATCH_SIZE) {
+    const end = Math.min(start + BATCH_SIZE, candidates.length);
+    for (let i = start; i < end; i++) {
+      try {
+        sessionStorage.removeItem(candidates[i]);
+        sweptKeys.push(candidates[i]);
+      } catch (err) {
+        const cls = classifySweepError(err, 'sessionStorage');
+        return {
+          swept: sweptKeys.length,
+          sweptKeys,
+          error: { ...cls, code: cls.code === 'unknown' ? 'removal_failed' : cls.code },
+        };
+      }
+    }
+    if (end < candidates.length) {
+      // eslint-disable-next-line no-await-in-loop
+      await yieldToEventLoop();
+    }
+  }
+  return { swept: sweptKeys.length, sweptKeys };
+}
+
+/**
  * Computes every plausible domain scope a cookie may have been set on.
  * Browsers set cookies under: the exact host, the parent eTLD+1, and any
  * intermediate sub-domain. Trying them all maximises the chance the
