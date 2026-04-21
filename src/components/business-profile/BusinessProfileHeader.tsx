@@ -55,7 +55,7 @@ export const BusinessProfileTopBar = ({
           <BackIcon className="h-4 w-4" />
           <div className="flex items-center gap-1.5">
             <div className="flex h-6 w-6 items-center justify-center rounded bg-gradient-gold sm:h-7 sm:w-7">
-              <span className="font-heading text-[10px] font-black text-secondary-foreground sm:text-xs">ف</span>
+              <span className="font-heading text-[10px] font-black text-secondary-foreground sm:text-xs">ق</span>
             </div>
             <span className="hidden font-heading text-sm font-bold text-primary-foreground sm:inline dark:text-foreground">
               قِطاعات
@@ -168,7 +168,7 @@ export const BusinessProfileHeader = ({
                 <img src={business.logo_url} alt={name} className="h-full w-full object-cover" />
               ) : (
                 <span className="font-heading text-3xl font-black text-accent sm:text-4xl">
-                  {name.charAt(0) || "ف"}
+                  {name.charAt(0) || "ق"}
                 </span>
               )}
             </div>

@@ -20,7 +20,7 @@ export const FooterBrand = () => {
       {/* Logo */}
       <div className="flex items-center gap-3 group">
         <div className="w-12 h-12 rounded-2xl bg-gradient-gold flex items-center justify-center shadow-lg shadow-gold/20 group-hover:scale-110 group-hover:rotate-3 transition-all duration-400">
-          <span className="font-heading font-black text-lg text-secondary-foreground">ف</span>
+          <span className="font-heading font-black text-lg text-secondary-foreground">ق</span>
         </div>
         <div>
           <h3 className="font-heading font-bold text-xl text-surface-nav-foreground tracking-tight">قِطاعات</h3>

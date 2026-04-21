@@ -90,7 +90,7 @@ const ResetPassword = () => {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="w-12 h-12 mx-auto rounded-xl bg-gradient-gold flex items-center justify-center mb-4">
-            <span className="font-heading font-black text-xl text-secondary-foreground">ف</span>
+            <span className="font-heading font-black text-xl text-secondary-foreground">ق</span>
           </div>
         </div>
         <div className="bg-card rounded-2xl border border-border p-8 shadow-sm space-y-6">

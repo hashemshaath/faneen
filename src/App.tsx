@@ -100,7 +100,7 @@ const queryClient = new QueryClient({
 const PageLoader = () => (
   <div className="flex min-h-screen items-center justify-center bg-background">
     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-gold animate-pulse">
-      <span className="font-heading text-lg font-black text-secondary-foreground">ف</span>
+      <span className="font-heading text-lg font-black text-secondary-foreground">ق</span>
     </div>
   </div>
 );
