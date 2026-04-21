@@ -60,7 +60,7 @@ export function MigrationAlertSettingsCard() {
       const { data, error } = await supabase
         .from('migration_alert_config')
         .select(
-          'enabled, failure_rate_threshold, min_sample_size, cooldown_hours, evaluation_window_hours, notify_emails',
+          'enabled, failure_rate_threshold, min_sample_size, cooldown_hours, evaluation_window_hours, rerun_cooldown_minutes, notify_emails',
         )
         .eq('id', 1)
         .maybeSingle();
@@ -88,7 +88,7 @@ export function MigrationAlertSettingsCard() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('migration_alert_config')
-        .select('migration_epoch, last_rerun_at, last_rerun_reason')
+        .select('migration_epoch, last_rerun_at, last_rerun_reason, rerun_cooldown_minutes')
         .eq('id', 1)
         .maybeSingle();
       if (error) throw error;
