@@ -2354,6 +2354,7 @@ export type Database = {
           migration_epoch: number
           min_sample_size: number
           notify_emails: string[]
+          rerun_cooldown_minutes: number
           updated_at: string
           updated_by: string | null
         }
@@ -2369,6 +2370,7 @@ export type Database = {
           migration_epoch?: number
           min_sample_size?: number
           notify_emails?: string[]
+          rerun_cooldown_minutes?: number
           updated_at?: string
           updated_by?: string | null
         }
@@ -2384,6 +2386,7 @@ export type Database = {
           migration_epoch?: number
           min_sample_size?: number
           notify_emails?: string[]
+          rerun_cooldown_minutes?: number
           updated_at?: string
           updated_by?: string | null
         }

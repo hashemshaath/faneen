@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -25,6 +25,7 @@ interface AlertConfig {
   min_sample_size: number;
   cooldown_hours: number;
   evaluation_window_hours: number;
+  rerun_cooldown_minutes: number;
   notify_emails: string[];
 }
 
@@ -42,6 +43,7 @@ interface RerunStatus {
   migration_epoch: number;
   last_rerun_at: string | null;
   last_rerun_reason: string | null;
+  rerun_cooldown_minutes: number;
 }
 
 export function MigrationAlertSettingsCard() {
@@ -58,7 +60,7 @@ export function MigrationAlertSettingsCard() {
       const { data, error } = await supabase
         .from('migration_alert_config')
         .select(
-          'enabled, failure_rate_threshold, min_sample_size, cooldown_hours, evaluation_window_hours, notify_emails',
+          'enabled, failure_rate_threshold, min_sample_size, cooldown_hours, evaluation_window_hours, rerun_cooldown_minutes, notify_emails',
         )
         .eq('id', 1)
         .maybeSingle();
@@ -86,7 +88,7 @@ export function MigrationAlertSettingsCard() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('migration_alert_config')
-        .select('migration_epoch, last_rerun_at, last_rerun_reason')
+        .select('migration_epoch, last_rerun_at, last_rerun_reason, rerun_cooldown_minutes')
         .eq('id', 1)
         .maybeSingle();
       if (error) throw error;
@@ -180,13 +182,37 @@ export function MigrationAlertSettingsCard() {
       qc.invalidateQueries({ queryKey: ['migration-rerun-status'] });
     },
     onError: (err: any) => {
+      // Server enforces a configurable cooldown; surface that explicitly so
+      // admins understand they cannot bypass it.
+      const msg = String(err?.message || err || '');
+      const isCooldown = /cooldown/i.test(msg);
       toast({
-        title: isRTL ? 'فشل البثّ' : 'Broadcast failed',
-        description: err?.message || String(err),
+        title: isCooldown
+          ? isRTL ? 'البثّ مقفل مؤقتاً' : 'Broadcast on cooldown'
+          : isRTL ? 'فشل البثّ' : 'Broadcast failed',
+        description: msg,
         variant: 'destructive',
       });
+      // Refresh status so the UI countdown reflects server reality.
+      qc.invalidateQueries({ queryKey: ['migration-rerun-status'] });
     },
   });
+
+  // Compute cooldown gating purely from server state.
+  const cooldownInfo = useMemo(() => {
+    if (!rerunStatus?.last_rerun_at) {
+      return { onCooldown: false, nextAllowedAt: null as Date | null, minutesRemaining: 0 };
+    }
+    const cooldownMin = Number(rerunStatus.rerun_cooldown_minutes ?? 60);
+    const lastAt = new Date(rerunStatus.last_rerun_at).getTime();
+    const nextAt = new Date(lastAt + cooldownMin * 60_000);
+    const remainingMs = nextAt.getTime() - Date.now();
+    return {
+      onCooldown: remainingMs > 0,
+      nextAllowedAt: nextAt,
+      minutesRemaining: Math.max(0, Math.ceil(remainingMs / 60_000)),
+    };
+  }, [rerunStatus]);
 
   if (isLoading || !form) {
     return (
@@ -224,7 +250,7 @@ export function MigrationAlertSettingsCard() {
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
           <div className="space-y-1.5">
             <Label className="text-xs">{isRTL ? 'عتبة الفشل (%)' : 'Failure threshold (%)'}</Label>
             <Input
@@ -266,6 +292,23 @@ export function MigrationAlertSettingsCard() {
               onChange={(e) => setForm({ ...form, cooldown_hours: Number(e.target.value) })}
             />
           </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">
+              {isRTL ? 'تهدئة إعادة البثّ (دقيقة)' : 'Re-run cooldown (min)'}
+            </Label>
+            <Input
+              type="number" min={1} max={10080} step={1}
+              value={form.rerun_cooldown_minutes}
+              onChange={(e) =>
+                setForm({ ...form, rerun_cooldown_minutes: Number(e.target.value) })
+              }
+            />
+            <p className="text-[11px] text-muted-foreground">
+              {isRTL
+                ? 'أقل فاصل بين أي بثّين متتاليين. الافتراضي: 60.'
+                : 'Minimum gap between two broadcasts. Default: 60.'}
+            </p>
+          </div>
         </div>
 
         <div className="space-y-1.5">
@@ -292,9 +335,23 @@ export function MigrationAlertSettingsCard() {
           </Button>
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="destructive" disabled={rerunMutation.isPending}>
+              <Button
+                variant="destructive"
+                disabled={rerunMutation.isPending || cooldownInfo.onCooldown}
+                title={
+                  cooldownInfo.onCooldown && cooldownInfo.nextAllowedAt
+                    ? (isRTL
+                        ? `متاح بعد ${cooldownInfo.minutesRemaining} دقيقة`
+                        : `Available in ${cooldownInfo.minutesRemaining} min`)
+                    : undefined
+                }
+              >
                 <RefreshCw className={`h-4 w-4 me-2 ${rerunMutation.isPending ? 'animate-spin' : ''}`} />
-                {isRTL ? 'إعادة بث الترحيل' : 'Re-run migration'}
+                {cooldownInfo.onCooldown
+                  ? isRTL
+                    ? `بثّ مقفل (${cooldownInfo.minutesRemaining}د)`
+                    : `Locked (${cooldownInfo.minutesRemaining}m)`
+                  : isRTL ? 'إعادة بث الترحيل' : 'Re-run migration'}
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent dir={isRTL ? 'rtl' : 'ltr'}>
@@ -313,6 +370,13 @@ export function MigrationAlertSettingsCard() {
                       {format(new Date(rerunStatus.last_rerun_at), 'yyyy-MM-dd HH:mm')}
                     </div>
                   )}
+                  {cooldownInfo.onCooldown && cooldownInfo.nextAllowedAt && (
+                    <div className="mt-2 rounded-md border border-amber-300 bg-amber-50 p-2 text-xs text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
+                      {isRTL
+                        ? `⏳ البثّ مقفل بسبب فترة التهدئة (${rerunStatus?.rerun_cooldown_minutes ?? 60} دقيقة). متاح مجدداً في ${format(cooldownInfo.nextAllowedAt, 'yyyy-MM-dd HH:mm')} (~${cooldownInfo.minutesRemaining} دقيقة).`
+                        : `⏳ Broadcast is locked by the cooldown window (${rerunStatus?.rerun_cooldown_minutes ?? 60} min). Next allowed at ${format(cooldownInfo.nextAllowedAt, 'yyyy-MM-dd HH:mm')} (~${cooldownInfo.minutesRemaining} min).`}
+                    </div>
+                  )}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <div className="space-y-1.5">
@@ -326,7 +390,10 @@ export function MigrationAlertSettingsCard() {
               </div>
               <AlertDialogFooter>
                 <AlertDialogCancel>{isRTL ? 'إلغاء' : 'Cancel'}</AlertDialogCancel>
-                <AlertDialogAction onClick={() => rerunMutation.mutate(rerunReason)}>
+                <AlertDialogAction
+                  onClick={() => rerunMutation.mutate(rerunReason)}
+                  disabled={cooldownInfo.onCooldown}
+                >
                   {isRTL ? 'تأكيد البثّ' : 'Confirm broadcast'}
                 </AlertDialogAction>
               </AlertDialogFooter>
