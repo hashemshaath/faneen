@@ -12,7 +12,57 @@ const KEY_MAP: Record<string, string> = {
 
 const MIGRATION_FLAG = 'qitaat_migration_v1_done';
 const TELEMETRY_FLAG = 'qitaat_migration_v1_telemetry_sent';
+const SWEEP_FLAG = 'qitaat_migration_v1_sweep_done';
 const MIGRATION_KEY = 'localStorage_faneen_to_qitaat';
+
+/**
+ * Keys we never delete even if they appear orphaned — protected core data.
+ * Add critical legacy keys here if discovered later.
+ */
+const PROTECTED_KEYS = new Set<string>([
+  // Already handled via KEY_MAP, but keep as defense-in-depth
+  'faneen_lang',
+  'faneen_search_history',
+]);
+
+/**
+ * Sweeps any remaining `faneen_*` localStorage keys that weren't in KEY_MAP.
+ * Runs once after the main migration. Returns count of swept keys.
+ */
+function sweepLegacyKeys(): { swept: number; sweptKeys: string[] } {
+  const sweptKeys: string[] = [];
+  try {
+    if (localStorage.getItem(SWEEP_FLAG) === '1') return { swept: 0, sweptKeys };
+
+    // Snapshot keys first — mutating localStorage while iterating is unsafe
+    const allKeys: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k) allKeys.push(k);
+    }
+
+    for (const key of allKeys) {
+      if (!key.startsWith('faneen_')) continue;
+      if (PROTECTED_KEYS.has(key)) continue;
+      // Already handled by KEY_MAP — skip if a counterpart exists in qitaat_ namespace
+      const counterpart = 'qitaat_' + key.slice('faneen_'.length);
+      if (localStorage.getItem(counterpart) !== null) {
+        // Counterpart exists, safe to remove orphan
+        localStorage.removeItem(key);
+        sweptKeys.push(key);
+        continue;
+      }
+      // No counterpart and not in KEY_MAP → unknown orphan, remove it
+      localStorage.removeItem(key);
+      sweptKeys.push(key);
+    }
+
+    localStorage.setItem(SWEEP_FLAG, '1');
+  } catch {
+    // Silent — sweep is best-effort
+  }
+  return { swept: sweptKeys.length, sweptKeys };
+}
 
 type MigrationStatus = 'success' | 'failed' | 'skipped' | 'no_legacy_data';
 
@@ -67,11 +117,20 @@ export function migrateLegacyStorage(): void {
 
     localStorage.setItem(MIGRATION_FLAG, '1');
 
-    if (migrated > 0 && import.meta.env.DEV) {
-      console.info(`[storage-migration] Migrated ${migrated} legacy faneen_* key(s) to qitaat_*`);
+    // Sweep any remaining unknown faneen_* orphans (e.g. from older app versions)
+    const { swept, sweptKeys } = sweepLegacyKeys();
+    const totalCleaned = migrated + swept;
+
+    if (import.meta.env.DEV) {
+      if (migrated > 0) {
+        console.info(`[storage-migration] Migrated ${migrated} legacy faneen_* key(s) to qitaat_*`);
+      }
+      if (swept > 0) {
+        console.info(`[storage-migration] Swept ${swept} orphan faneen_* key(s):`, sweptKeys);
+      }
     }
 
-    void logTelemetry(migrated > 0 ? 'success' : 'no_legacy_data', migrated);
+    void logTelemetry(totalCleaned > 0 ? 'success' : 'no_legacy_data', totalCleaned);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     if (import.meta.env.DEV) {
