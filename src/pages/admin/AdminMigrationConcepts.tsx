@@ -17,15 +17,26 @@ import {
   MIGRATION_FLAGS,
   PROTECTED_KEY_ENTRIES,
 } from '@/config/storageMigration';
+import { CopyButton } from '@/components/ui/copy-button';
 
 /* ────────────────────────────────────────────────────────────────
  *  صفحة "مفاهيم الترحيل" — توثيق داخلي للمشرفين فقط
  * ──────────────────────────────────────────────────────────────── */
 
-const CodeChip = ({ children }: { children: React.ReactNode }) => (
-  <code className="inline-flex items-center px-2 py-0.5 rounded-md bg-muted font-mono text-xs text-foreground/90 border border-border/60">
-    {children}
-  </code>
+const CodeChip = ({
+  children,
+  copyValue,
+}: {
+  children: React.ReactNode;
+  /** When provided, renders an inline copy button next to the chip. */
+  copyValue?: string;
+}) => (
+  <span className="inline-flex items-center gap-1">
+    <code className="inline-flex items-center px-2 py-0.5 rounded-md bg-muted font-mono text-xs text-foreground/90 border border-border/60">
+      {children}
+    </code>
+    {copyValue && <CopyButton value={copyValue} />}
+  </span>
 );
 
 const CodeBlock = ({ children }: { children: React.ReactNode }) => (
