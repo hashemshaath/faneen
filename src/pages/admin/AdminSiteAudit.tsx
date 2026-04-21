@@ -12,6 +12,7 @@ import {
   Gauge, RefreshCw, CheckCircle2, XCircle, AlertTriangle,
   Smartphone, FileSearch, Globe, ListTree, Activity, Loader2,
 } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid,
 } from 'recharts';
@@ -62,19 +63,20 @@ const AdminSiteAudit = () => {
         .from('perf_audit_runs')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(50);
+        .limit(200);
       if (error) throw error;
-      // Keep only the latest per (url, strategy)
-      const seen = new Set<string>();
-      const latest: typeof data = [];
+      // Keep latest + previous per (url, strategy) for comparison
+      const grouped = new Map<string, typeof data>();
       for (const row of data ?? []) {
         const key = `${row.url}::${row.strategy}`;
-        if (!seen.has(key)) {
-          seen.add(key);
-          latest.push(row);
-        }
+        const arr = grouped.get(key) ?? [];
+        if (arr.length < 2) arr.push(row);
+        grouped.set(key, arr);
       }
-      return latest;
+      return Array.from(grouped.values()).map(([latest, previous]) => ({
+        ...latest,
+        previous: previous ?? null,
+      }));
     },
     staleTime: 60_000,
   });
@@ -264,6 +266,10 @@ const AdminSiteAudit = () => {
                     const a11y = scoreBadge(row.accessibility_score);
                     const bp = scoreBadge(row.best_practices_score);
                     const seo = scoreBadge(row.seo_score);
+                    const prev = row.previous;
+                    const delta = prev?.performance_score != null && row.performance_score != null
+                      ? row.performance_score - prev.performance_score
+                      : null;
                     return (
                       <div key={row.id} className="rounded-lg border border-border/40 bg-card/50 p-2.5">
                         <div className="flex items-center justify-between flex-wrap gap-2">
@@ -271,6 +277,17 @@ const AdminSiteAudit = () => {
                             {row.url.replace('https://qitaat.com', '') || '/'}
                           </code>
                           <div className="flex gap-1">
+                            {delta != null && (
+                              <span className={cn(
+                                'text-[10px] px-1.5 py-0.5 rounded font-bold tabular-nums flex items-center gap-0.5',
+                                delta > 0 ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400'
+                                : delta < 0 ? 'bg-red-500/15 text-red-700 dark:text-red-400'
+                                : 'bg-muted text-muted-foreground'
+                              )} title={isRTL ? `السابق: ${prev?.performance_score}` : `Previous: ${prev?.performance_score}`}>
+                                {delta > 0 ? <TrendingUp className="w-2.5 h-2.5" /> : delta < 0 ? <TrendingDown className="w-2.5 h-2.5" /> : <Minus className="w-2.5 h-2.5" />}
+                                {delta > 0 ? '+' : ''}{delta}
+                              </span>
+                            )}
                             <span className={cn('text-[10px] px-1.5 py-0.5 rounded font-bold tabular-nums', perf.cls)}>P {perf.label}</span>
                             <span className={cn('text-[10px] px-1.5 py-0.5 rounded font-bold tabular-nums', a11y.cls)}>A {a11y.label}</span>
                             <span className={cn('text-[10px] px-1.5 py-0.5 rounded font-bold tabular-nums', bp.cls)}>BP {bp.label}</span>
