@@ -1189,6 +1189,12 @@ export interface ManualMigrationResult {
   status: MigrationStatus;
   errorCode: SweepErrorCode | null;
   errorMessage: string | null;
+  /**
+   * Per-failure diagnostic trail captured during this run. Empty when no
+   * permission / access problems were encountered. Useful for the
+   * DEV-only admin UI to render a human-readable breakdown.
+   */
+  diagnostics: SweepDiagnostic[];
   durationMs: number;
   ranAt: string; // ISO timestamp
 }
@@ -1212,6 +1218,15 @@ export async function runMigrationManually(): Promise<ManualMigrationResult> {
       status: 'failed',
       errorCode: 'storage_unavailable',
       errorMessage: 'window or localStorage is unavailable',
+      diagnostics: [
+        {
+          ts: Date.now(),
+          scope: 'localStorage',
+          phase: 'access_probe',
+          code: 'storage_unavailable',
+          message: 'window or localStorage is unavailable',
+        },
+      ],
       durationMs: 0,
       ranAt,
     };
@@ -1229,6 +1244,7 @@ export async function runMigrationManually(): Promise<ManualMigrationResult> {
   const migratedKeys: string[] = [];
   let migrated = 0;
   let topLevelError: { code: SweepErrorCode; message: string } | null = null;
+  const recorder = createDiagnosticRecorder();
 
   try {
     for (const [oldKey, newKey] of Object.entries(KEY_MAP)) {
@@ -1246,11 +1262,17 @@ export async function runMigrationManually(): Promise<ManualMigrationResult> {
   } catch (err) {
     const cls = classifySweepError(err, 'localStorage');
     topLevelError = { code: cls.code, message: cls.message };
+    recorder.record({
+      scope: 'localStorage',
+      phase: 'write',
+      code: cls.code,
+      message: cls.message,
+    });
   }
 
-  const localResult = await sweepLegacyKeysBatched();
-  const session = await sweepSessionStorageBatched();
-  const cookies = await sweepCookiesBatched();
+  const localResult = await sweepLegacyKeysBatched(recorder);
+  const session = await sweepSessionStorageBatched(recorder);
+  const cookies = await sweepCookiesBatched(recorder);
   const combined = combineSweepErrors([
     topLevelError ? { ...topLevelError, scope: 'localStorage' } : undefined,
     localResult.error,
@@ -1258,6 +1280,7 @@ export async function runMigrationManually(): Promise<ManualMigrationResult> {
     cookies.error,
   ]);
   const totalCleaned = migrated + localResult.swept + session.swept + cookies.swept;
+  const diagnostics = recorder.snapshot();
 
   let status: MigrationStatus;
   if (combined.code) status = 'failed';
@@ -1268,6 +1291,7 @@ export async function runMigrationManually(): Promise<ManualMigrationResult> {
   void logTelemetry(status, totalCleaned, combined.message ?? undefined, {
     force: true,
     errorCode: combined.code,
+    diagnostics,
   });
 
   return {
@@ -1283,6 +1307,7 @@ export async function runMigrationManually(): Promise<ManualMigrationResult> {
     status,
     errorCode: combined.code,
     errorMessage: combined.message,
+    diagnostics,
     durationMs: Date.now() - startedAt,
     ranAt,
   };
