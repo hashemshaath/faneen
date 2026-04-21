@@ -182,13 +182,37 @@ export function MigrationAlertSettingsCard() {
       qc.invalidateQueries({ queryKey: ['migration-rerun-status'] });
     },
     onError: (err: any) => {
+      // Server enforces a configurable cooldown; surface that explicitly so
+      // admins understand they cannot bypass it.
+      const msg = String(err?.message || err || '');
+      const isCooldown = /cooldown/i.test(msg);
       toast({
-        title: isRTL ? 'فشل البثّ' : 'Broadcast failed',
-        description: err?.message || String(err),
+        title: isCooldown
+          ? isRTL ? 'البثّ مقفل مؤقتاً' : 'Broadcast on cooldown'
+          : isRTL ? 'فشل البثّ' : 'Broadcast failed',
+        description: msg,
         variant: 'destructive',
       });
+      // Refresh status so the UI countdown reflects server reality.
+      qc.invalidateQueries({ queryKey: ['migration-rerun-status'] });
     },
   });
+
+  // Compute cooldown gating purely from server state.
+  const cooldownInfo = useMemo(() => {
+    if (!rerunStatus?.last_rerun_at) {
+      return { onCooldown: false, nextAllowedAt: null as Date | null, minutesRemaining: 0 };
+    }
+    const cooldownMin = Number(rerunStatus.rerun_cooldown_minutes ?? 60);
+    const lastAt = new Date(rerunStatus.last_rerun_at).getTime();
+    const nextAt = new Date(lastAt + cooldownMin * 60_000);
+    const remainingMs = nextAt.getTime() - Date.now();
+    return {
+      onCooldown: remainingMs > 0,
+      nextAllowedAt: nextAt,
+      minutesRemaining: Math.max(0, Math.ceil(remainingMs / 60_000)),
+    };
+  }, [rerunStatus]);
 
   if (isLoading || !form) {
     return (
