@@ -97,7 +97,7 @@ export const Navbar = () => {
             </div>
             <div className="hidden sm:block">
               <h1 className="font-heading font-bold text-lg text-surface-nav-foreground leading-none">قِطاعات</h1>
-              <span className="text-[10px] text-gold/80 font-body tracking-wider">FANEEN</span>
+              <span className="text-[10px] text-gold/80 font-body tracking-wider">QITAAT</span>
             </div>
           </Link>
 
