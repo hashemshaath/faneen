@@ -378,6 +378,19 @@ export const MigrationTelemetryCard = () => {
                 ))}
               </SelectContent>
             </Select>
+            {filterOptions.errorCodes.length > 0 && (
+              <Select value={filterErrorCode} onValueChange={setFilterErrorCode}>
+                <SelectTrigger className="h-8 text-xs w-auto min-w-[150px]">
+                  <SelectValue placeholder={isRTL ? 'رمز الخطأ' : 'Error code'} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{isRTL ? 'كل الرموز' : 'All codes'}</SelectItem>
+                  {filterOptions.errorCodes.map(c => (
+                    <SelectItem key={c} value={c} className="font-mono text-xs">{c}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
             <Badge variant="outline" className="text-[10px] ms-auto">
               {filteredRows.length} / {data?.length || 0}
             </Badge>
