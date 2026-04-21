@@ -397,19 +397,35 @@ export function MigrationAlertSettingsCard() {
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <div className="space-y-1.5">
-                <Label className="text-xs">{isRTL ? 'سبب إعادة التشغيل (اختياري)' : 'Reason (optional)'}</Label>
+                <Label className="text-xs">
+                  {isRTL ? 'سبب إعادة التشغيل ' : 'Reason '}
+                  <span className="text-destructive">*</span>
+                  <span className="ms-1 text-muted-foreground font-normal">
+                    ({isRTL ? 'إلزامي' : 'required'})
+                  </span>
+                </Label>
                 <Textarea
                   rows={2}
                   value={rerunReason}
                   onChange={(e) => setRerunReason(e.target.value.slice(0, 500))}
                   placeholder={isRTL ? 'مثال: تنظيف بقايا قديمة بعد تحديث' : 'e.g. clean stale residue after release'}
+                  aria-invalid={!reasonValid}
+                  className={!reasonValid && trimmedReasonLen > 0 ? 'border-destructive focus-visible:ring-destructive' : undefined}
                 />
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className={!reasonValid ? 'text-destructive' : 'text-muted-foreground'}>
+                    {isRTL
+                      ? 'يلزم 5 أحرف على الأقل. سيُحفظ هذا السبب مع حدث كل جهاز يُعيد الترحيل.'
+                      : 'At least 5 characters required. This reason will be stamped on every device\'s telemetry event.'}
+                  </span>
+                  <span className="text-muted-foreground tabular-nums">{trimmedReasonLen}/500</span>
+                </div>
               </div>
               <AlertDialogFooter>
                 <AlertDialogCancel>{isRTL ? 'إلغاء' : 'Cancel'}</AlertDialogCancel>
                 <AlertDialogAction
                   onClick={() => rerunMutation.mutate(rerunReason)}
-                  disabled={cooldownInfo.onCooldown}
+                  disabled={cooldownInfo.onCooldown || !reasonValid}
                 >
                   {isRTL ? 'تأكيد البثّ' : 'Confirm broadcast'}
                 </AlertDialogAction>
