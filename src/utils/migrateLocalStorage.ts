@@ -14,6 +14,7 @@ const MIGRATION_FLAG = 'qitaat_migration_v1_done';
 const TELEMETRY_FLAG = 'qitaat_migration_v1_telemetry_sent';
 const SWEEP_FLAG = 'qitaat_migration_v1_sweep_done';
 const MIGRATION_KEY = 'localStorage_faneen_to_qitaat';
+const EPOCH_KEY = 'qitaat_migration_epoch';
 
 /**
  * Keys we never delete even if they appear orphaned — protected core data.
@@ -126,9 +127,10 @@ async function logTelemetry(
   status: MigrationStatus,
   keysMigrated: number,
   errorMessage?: string,
+  options?: { force?: boolean },
 ): Promise<void> {
   try {
-    if (localStorage.getItem(TELEMETRY_FLAG) === '1') return;
+    if (!options?.force && localStorage.getItem(TELEMETRY_FLAG) === '1') return;
     const ua = (navigator?.userAgent || '').slice(0, 500);
     const { error } = await supabase.from('migration_telemetry').insert({
       migration_key: MIGRATION_KEY,
@@ -155,6 +157,8 @@ export function migrateLegacyStorage(): void {
     if (alreadyDone) {
       // Still attempt telemetry for previously-migrated devices that never reported
       void logTelemetry('skipped', 0);
+      // Check server-controlled epoch — if admin bumped it, force a re-run in background
+      void checkServerEpochAndRerun();
       return;
     }
 
@@ -201,5 +205,87 @@ export function migrateLegacyStorage(): void {
       console.warn('[storage-migration] Failed:', err);
     }
     void logTelemetry('failed', 0, msg);
+  }
+}
+
+/**
+ * Reads the server-controlled migration epoch and, if it is newer than the
+ * one stored locally, clears the migration flags and runs migration again.
+ * This lets an admin force every device to re-execute the migration on its
+ * next boot — and produces a fresh telemetry event per device.
+ */
+async function checkServerEpochAndRerun(): Promise<void> {
+  try {
+    const { data, error } = await supabase.rpc('get_migration_epoch');
+    if (error || data == null) return;
+    const serverEpoch = Number(data);
+    if (!Number.isFinite(serverEpoch) || serverEpoch < 1) return;
+
+    const localEpochRaw = localStorage.getItem(EPOCH_KEY);
+    const localEpoch = localEpochRaw ? Number(localEpochRaw) : 1;
+
+    // First boot after this feature ships: just record current epoch, don't re-run
+    if (localEpochRaw === null) {
+      localStorage.setItem(EPOCH_KEY, String(serverEpoch));
+      return;
+    }
+
+    if (serverEpoch <= localEpoch) return;
+
+    if (import.meta.env.DEV) {
+      console.info(
+        `[storage-migration] Server epoch ${serverEpoch} > local ${localEpoch}. Re-running…`,
+      );
+    }
+
+    // Reset all gating flags so the next call re-runs from scratch
+    localStorage.removeItem(MIGRATION_FLAG);
+    localStorage.removeItem(SWEEP_FLAG);
+    localStorage.removeItem(TELEMETRY_FLAG);
+
+    // Persist the new epoch BEFORE re-running so we don't loop on failure
+    localStorage.setItem(EPOCH_KEY, String(serverEpoch));
+
+    // Re-run the migration synchronously; it will log a fresh telemetry event
+    runMigrationCore({ forced: true, epoch: serverEpoch });
+  } catch {
+    // Silent — never break boot
+  }
+}
+
+/**
+ * Internal core that performs the migration steps and logs telemetry.
+ * Extracted so it can be invoked both on first boot and on forced re-runs.
+ */
+function runMigrationCore(opts: { forced?: boolean; epoch?: number } = {}): void {
+  try {
+    let migrated = 0;
+    for (const [oldKey, newKey] of Object.entries(KEY_MAP)) {
+      const oldValue = localStorage.getItem(oldKey);
+      if (oldValue !== null) {
+        if (localStorage.getItem(newKey) === null) {
+          localStorage.setItem(newKey, oldValue);
+        }
+        localStorage.removeItem(oldKey);
+        migrated++;
+      }
+    }
+    localStorage.setItem(MIGRATION_FLAG, '1');
+
+    const { swept } = sweepLegacyKeys();
+    const session = sweepSessionStorage();
+    const cookies = sweepCookies();
+    const totalCleaned = migrated + swept + session.swept + cookies.swept;
+
+    const status = totalCleaned > 0 ? 'success' : 'no_legacy_data';
+    void logTelemetry(
+      status,
+      totalCleaned,
+      opts.forced ? `forced re-run (epoch ${opts.epoch ?? '?'})` : undefined,
+      { force: !!opts.forced },
+    );
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    void logTelemetry('failed', 0, msg, { force: !!opts.forced });
   }
 }
