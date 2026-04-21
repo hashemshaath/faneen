@@ -140,7 +140,7 @@ const AdminMigrationConcepts = () => {
                   <Lock className="w-4 h-4 text-primary" />
                   <span className="font-semibold text-sm">{isRTL ? 'مفتاح القفل الرئيسي' : 'Main lock key'}</span>
                 </div>
-                <CodeChip>{MIGRATION_KEY}</CodeChip>
+                <CodeChip copyValue={MIGRATION_KEY}>{MIGRATION_KEY}</CodeChip>
                 <p className="text-xs text-muted-foreground">
                   {isRTL
                     ? 'يضمن عدم تشغيل خوارزمية الترحيل مرتين على نفس الجهاز قبل اكتمال إصدار جديد.'
