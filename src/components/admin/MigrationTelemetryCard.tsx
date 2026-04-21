@@ -454,6 +454,14 @@ export const MigrationTelemetryCard = () => {
                           {row.keys_migrated} {isRTL ? 'مفتاح' : 'keys'}
                         </span>
                       )}
+                      {row.error_code && (
+                        <code
+                          className="text-[10px] font-mono px-1.5 py-0.5 rounded border border-destructive/30 bg-destructive/10 text-destructive"
+                          title={isRTL ? 'رمز الخطأ المصنّف' : 'Classified error code'}
+                        >
+                          {row.error_code}
+                        </code>
+                      )}
                       {row.error_message && (
                         <span className="text-destructive truncate max-w-xs" title={row.error_message}>
                           {row.error_message}
