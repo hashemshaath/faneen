@@ -14,13 +14,13 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [language, setLanguageState] = useState<Language>(() => {
-    const saved = localStorage.getItem('faneen_lang');
+    const saved = localStorage.getItem('qitaat_lang') ?? localStorage.getItem('faneen_lang');
     return (saved === 'en' || saved === 'ar') ? saved : 'ar';
   });
 
   const setLanguage = useCallback((lang: Language) => {
     setLanguageState(lang);
-    localStorage.setItem('faneen_lang', lang);
+    localStorage.setItem('qitaat_lang', lang);
   }, []);
 
   const t = useCallback((key: TranslationKey): string => {
