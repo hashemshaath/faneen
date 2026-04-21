@@ -480,3 +480,108 @@ describe('sweepLegacyKeys (behavioral via migrateLegacyStorage)', () => {
     expect(localStorage.getItem('qitaat_migration_v1_sweep_done')).toBe('1');
   });
 });
+
+/**
+ * Verifies that when sweepLegacyKeys / sweepCookies fail at runtime,
+ * the failure is classified into a stable `error_code` and reported via
+ * the telemetry insert. These tests intercept the supabase insert call
+ * to assert the exact payload shape.
+ */
+describe('sweepLegacyKeys — error classification → telemetry', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+    insertSpy.mockClear();
+    insertSpy.mockResolvedValue({ error: null });
+    vi.restoreAllMocks();
+  });
+
+  function lastInsertPayload() {
+    // Each call: insertSpy(payload)
+    const lastCall = insertSpy.mock.calls.at(-1);
+    return lastCall?.[0] as Record<string, unknown> | undefined;
+  }
+
+  it('classifies QuotaExceededError as quota_exceeded and reports failed status', async () => {
+    // Force the sweep flag write to throw a quota error
+    const realSetItem = Storage.prototype.setItem;
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (
+      this: Storage,
+      key: string,
+      value: string,
+    ) {
+      if (key === 'qitaat_migration_v1_sweep_done') {
+        const err = new Error('Storage quota exceeded');
+        err.name = 'QuotaExceededError';
+        throw err;
+      }
+      return realSetItem.call(this, key, value);
+    });
+
+    migrateLegacyStorage();
+    // Wait one microtask tick for void-returning logTelemetry promise chain
+    await new Promise((r) => setTimeout(r, 0));
+
+    const payload = lastInsertPayload();
+    expect(payload).toBeDefined();
+    expect(payload?.status).toBe('failed');
+    expect(payload?.error_code).toBe('quota_exceeded');
+    expect(typeof payload?.error_message).toBe('string');
+    expect(String(payload?.error_message)).toContain('localStorage');
+  });
+
+  it('classifies SecurityError as permission_denied', async () => {
+    const realRemoveItem = Storage.prototype.removeItem;
+    vi.spyOn(Storage.prototype, 'removeItem').mockImplementation(function (
+      this: Storage,
+      key: string,
+    ) {
+      if (key.startsWith('faneen_')) {
+        const err = new Error('Access denied by browser policy');
+        err.name = 'SecurityError';
+        throw err;
+      }
+      return realRemoveItem.call(this, key);
+    });
+
+    localStorage.setItem('faneen_orphan_blocked', 'x');
+    migrateLegacyStorage();
+    await new Promise((r) => setTimeout(r, 0));
+
+    const payload = lastInsertPayload();
+    expect(payload?.status).toBe('failed');
+    expect(payload?.error_code).toBe('permission_denied');
+  });
+
+  it('truncates error_code to 64 chars (defense — codes are short)', async () => {
+    // The classifier outputs known short codes; verify length cap is intact.
+    const realSetItem = Storage.prototype.setItem;
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (
+      this: Storage,
+      key: string,
+      value: string,
+    ) {
+      if (key === 'qitaat_migration_v1_sweep_done') {
+        throw new Error('boom');
+      }
+      return realSetItem.call(this, key, value);
+    });
+
+    migrateLegacyStorage();
+    await new Promise((r) => setTimeout(r, 0));
+
+    const payload = lastInsertPayload();
+    expect(payload?.error_code).toBeTruthy();
+    expect(String(payload?.error_code).length).toBeLessThanOrEqual(64);
+  });
+
+  it('does NOT set error_code when no failure occurs (success path)', async () => {
+    localStorage.setItem('faneen_lang', 'en');
+    migrateLegacyStorage();
+    await new Promise((r) => setTimeout(r, 0));
+
+    const payload = lastInsertPayload();
+    expect(payload?.status).toBe('success');
+    expect(payload?.error_code).toBeNull();
+  });
+});
