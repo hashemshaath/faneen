@@ -227,6 +227,10 @@ export function MigrationAlertSettingsCard() {
     };
   }, [rerunStatus]);
 
+  // Reason is mandatory. Mirror the server rule (≥ 5 chars after trim).
+  const trimmedReasonLen = rerunReason.trim().length;
+  const reasonValid = trimmedReasonLen >= 5;
+
   if (isLoading || !form) {
     return (
       <Card>
