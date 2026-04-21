@@ -169,6 +169,7 @@ const AppRoutes = () => (
           <Route path="/admin/businesses" element={<ProtectedRoute requireAdmin><AdminBusinesses /></ProtectedRoute>} />
           <Route path="/admin/memberships" element={<ProtectedRoute requireAdmin><AdminMemberships /></ProtectedRoute>} />
           <Route path="/admin/contact-messages" element={<ProtectedRoute requireAdmin><AdminContactMessages /></ProtectedRoute>} />
+          <Route path="/admin/migration-report" element={<ProtectedRoute requireAdmin><AdminMigrationReport /></ProtectedRoute>} />
 
           <Route path="/admin/users" element={<ProtectedRoute requireSuperAdmin><AdminUsers /></ProtectedRoute>} />
           <Route path="/admin/system-settings" element={<ProtectedRoute requireSuperAdmin><AdminSystemSettings /></ProtectedRoute>} />
