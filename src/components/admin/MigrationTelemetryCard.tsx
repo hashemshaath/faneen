@@ -446,9 +446,15 @@ export const MigrationTelemetryCard = () => {
                         {device}
                       </span>
                       {row.migration_key && (
-                        <code className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-muted text-muted-foreground truncate max-w-[140px]" title={row.migration_key}>
-                          {row.migration_key}
-                        </code>
+                        <span className="inline-flex items-center gap-0.5">
+                          <code
+                            className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-muted text-muted-foreground truncate max-w-[140px]"
+                            title={row.migration_key}
+                          >
+                            {row.migration_key}
+                          </code>
+                          <CopyButton value={row.migration_key} />
+                        </span>
                       )}
                       {row.keys_migrated > 0 && (
                         <span className="text-muted-foreground">
