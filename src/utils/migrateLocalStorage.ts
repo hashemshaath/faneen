@@ -768,6 +768,13 @@ async function checkServerEpochAndRerun(): Promise<void> {
  * Extracted so it can be invoked both on first boot and on forced re-runs.
  */
 function runMigrationCore(opts: { forced?: boolean; epoch?: number } = {}): void {
+  // Kick off async batched core; never await — boot must stay non-blocking
+  void runMigrationCoreAsync(opts);
+}
+
+async function runMigrationCoreAsync(
+  opts: { forced?: boolean; epoch?: number } = {},
+): Promise<void> {
   try {
     let migrated = 0;
     for (const [oldKey, newKey] of Object.entries(KEY_MAP)) {
@@ -782,9 +789,9 @@ function runMigrationCore(opts: { forced?: boolean; epoch?: number } = {}): void
     }
     localStorage.setItem(MIGRATION_FLAG, '1');
 
-    const localResult = sweepLegacyKeys();
-    const session = sweepSessionStorage();
-    const cookies = sweepCookies();
+    const localResult = await sweepLegacyKeysBatched();
+    const session = await sweepSessionStorageBatched();
+    const cookies = await sweepCookiesBatched();
     const totalCleaned = migrated + localResult.swept + session.swept + cookies.swept;
     const combined = combineSweepErrors([localResult.error, session.error, cookies.error]);
 
