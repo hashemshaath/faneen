@@ -425,20 +425,28 @@ function runMigrationCore(opts: { forced?: boolean; epoch?: number } = {}): void
     }
     localStorage.setItem(MIGRATION_FLAG, '1');
 
-    const { swept } = sweepLegacyKeys();
+    const localResult = sweepLegacyKeys();
     const session = sweepSessionStorage();
     const cookies = sweepCookies();
-    const totalCleaned = migrated + swept + session.swept + cookies.swept;
+    const totalCleaned = migrated + localResult.swept + session.swept + cookies.swept;
+    const combined = combineSweepErrors([localResult.error, session.error, cookies.error]);
 
-    const status = totalCleaned > 0 ? 'success' : 'no_legacy_data';
-    void logTelemetry(
-      status,
-      totalCleaned,
-      opts.forced ? `forced re-run (epoch ${opts.epoch ?? '?'})` : undefined,
-      { force: !!opts.forced },
-    );
+    if (combined.code) {
+      void logTelemetry('failed', totalCleaned, combined.message ?? undefined, {
+        force: !!opts.forced,
+        errorCode: combined.code,
+      });
+    } else {
+      const status = totalCleaned > 0 ? 'success' : 'no_legacy_data';
+      void logTelemetry(
+        status,
+        totalCleaned,
+        opts.forced ? `forced re-run (epoch ${opts.epoch ?? '?'})` : undefined,
+        { force: !!opts.forced },
+      );
+    }
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    void logTelemetry('failed', 0, msg, { force: !!opts.forced });
+    void logTelemetry('failed', 0, msg, { force: !!opts.forced, errorCode: 'unknown' });
   }
 }
