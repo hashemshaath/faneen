@@ -13,3 +13,5 @@ project_id = "hckpxwhjycmdflaneihd"
     verify_jwt = true
   [functions.send-transactional-email]
     verify_jwt = true
+  [functions.ping-search-engines]
+    verify_jwt = false
