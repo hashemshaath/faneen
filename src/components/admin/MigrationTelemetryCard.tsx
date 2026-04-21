@@ -423,6 +423,11 @@ export const MigrationTelemetryCard = () => {
                         <Smartphone className="w-3 h-3" />
                         {device}
                       </span>
+                      {row.migration_key && (
+                        <code className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-muted text-muted-foreground truncate max-w-[140px]" title={row.migration_key}>
+                          {row.migration_key}
+                        </code>
+                      )}
                       {row.keys_migrated > 0 && (
                         <span className="text-muted-foreground">
                           {row.keys_migrated} {isRTL ? 'مفتاح' : 'keys'}
