@@ -4,27 +4,19 @@
  * Logs telemetry to backend for monitoring migration health across devices.
  */
 import { supabase } from '@/integrations/supabase/client';
+import {
+  LEGACY_KEY_MAP as KEY_MAP,
+  PROTECTED_KEYS,
+  MIGRATION_FLAGS,
+  MIGRATION_KEY,
+  LEGACY_PREFIX,
+  NEW_PREFIX,
+} from '@/config/storageMigration';
 
-const KEY_MAP: Record<string, string> = {
-  faneen_lang: 'qitaat_lang',
-  faneen_search_history: 'qitaat_search_history',
-};
-
-const MIGRATION_FLAG = 'qitaat_migration_v1_done';
-const TELEMETRY_FLAG = 'qitaat_migration_v1_telemetry_sent';
-const SWEEP_FLAG = 'qitaat_migration_v1_sweep_done';
-const MIGRATION_KEY = 'localStorage_faneen_to_qitaat';
-const EPOCH_KEY = 'qitaat_migration_epoch';
-
-/**
- * Keys we never delete even if they appear orphaned — protected core data.
- * Add critical legacy keys here if discovered later.
- */
-const PROTECTED_KEYS = new Set<string>([
-  // Already handled via KEY_MAP, but keep as defense-in-depth
-  'faneen_lang',
-  'faneen_search_history',
-]);
+const MIGRATION_FLAG = MIGRATION_FLAGS.done;
+const TELEMETRY_FLAG = MIGRATION_FLAGS.telemetrySent;
+const SWEEP_FLAG = MIGRATION_FLAGS.sweepDone;
+const EPOCH_KEY = MIGRATION_FLAGS.epoch;
 
 /**
  * Sweeps any remaining `faneen_*` localStorage keys that weren't in KEY_MAP.
