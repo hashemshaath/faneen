@@ -2347,6 +2347,10 @@ export type Database = {
           enabled: boolean
           failure_rate_threshold: number
           id: number
+          last_rerun_at: string | null
+          last_rerun_by: string | null
+          last_rerun_reason: string | null
+          migration_epoch: number
           min_sample_size: number
           notify_emails: string[]
           updated_at: string
@@ -2357,6 +2361,10 @@ export type Database = {
           enabled?: boolean
           failure_rate_threshold?: number
           id?: number
+          last_rerun_at?: string | null
+          last_rerun_by?: string | null
+          last_rerun_reason?: string | null
+          migration_epoch?: number
           min_sample_size?: number
           notify_emails?: string[]
           updated_at?: string
@@ -2367,6 +2375,10 @@ export type Database = {
           enabled?: boolean
           failure_rate_threshold?: number
           id?: number
+          last_rerun_at?: string | null
+          last_rerun_by?: string | null
+          last_rerun_reason?: string | null
+          migration_epoch?: number
           min_sample_size?: number
           notify_emails?: string[]
           updated_at?: string
@@ -3806,6 +3818,7 @@ export type Database = {
         }
         Returns: string
       }
+      bump_migration_epoch: { Args: { _reason?: string }; Returns: number }
       cancel_subscription: {
         Args: { _subscription_id: string }
         Returns: undefined
@@ -3856,6 +3869,7 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_migration_epoch: { Args: never; Returns: number }
       get_migration_failure_stats_24h: {
         Args: never
         Returns: {
