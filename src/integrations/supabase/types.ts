@@ -3316,6 +3316,48 @@ export type Database = {
           },
         ]
       }
+      sitemap_submissions: {
+        Row: {
+          created_at: string
+          duration_ms: number | null
+          http_status: number | null
+          id: string
+          message: string | null
+          provider: string
+          sitemap_url: string
+          status: string
+          trigger_source: string
+          triggered_by: string | null
+          url_count: number | null
+        }
+        Insert: {
+          created_at?: string
+          duration_ms?: number | null
+          http_status?: number | null
+          id?: string
+          message?: string | null
+          provider: string
+          sitemap_url: string
+          status: string
+          trigger_source?: string
+          triggered_by?: string | null
+          url_count?: number | null
+        }
+        Update: {
+          created_at?: string
+          duration_ms?: number | null
+          http_status?: number | null
+          id?: string
+          message?: string | null
+          provider?: string
+          sitemap_url?: string
+          status?: string
+          trigger_source?: string
+          triggered_by?: string | null
+          url_count?: number | null
+        }
+        Relationships: []
+      }
       suppressed_emails: {
         Row: {
           created_at: string
