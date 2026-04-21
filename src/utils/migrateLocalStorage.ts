@@ -90,8 +90,8 @@ function sweepSessionStorage(): { swept: number; sweptKeys: string[] } {
 
 /**
  * Sweeps legacy `faneen_*` cookies on the current domain. Sets expired Max-Age
- * across plausible path scopes. Cookies on other domains (incl. .faneen.com)
- * cannot be cleared from JS — that's a browser security boundary.
+ * across plausible path scopes. Cookies on unrelated origins cannot be cleared
+ * from JS — that's a browser security boundary.
  */
 function sweepCookies(): { swept: number; sweptKeys: string[] } {
   const sweptKeys: string[] = [];
