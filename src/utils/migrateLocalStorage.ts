@@ -840,7 +840,7 @@ export interface ManualMigrationResult {
  * Resets gating flags first so the run is always a true retry.
  * INTENDED FOR DEV ADMIN UI ONLY — not called during normal boot.
  */
-export function runMigrationManually(): ManualMigrationResult {
+export async function runMigrationManually(): Promise<ManualMigrationResult> {
   const startedAt = Date.now();
   const ranAt = new Date(startedAt).toISOString();
 
@@ -890,9 +890,9 @@ export function runMigrationManually(): ManualMigrationResult {
     topLevelError = { code: cls.code, message: cls.message };
   }
 
-  const localResult = sweepLegacyKeys();
-  const session = sweepSessionStorage();
-  const cookies = sweepCookies();
+  const localResult = await sweepLegacyKeysBatched();
+  const session = await sweepSessionStorageBatched();
+  const cookies = await sweepCookiesBatched();
   const combined = combineSweepErrors([
     topLevelError ? { ...topLevelError, scope: 'localStorage' } : undefined,
     localResult.error,
