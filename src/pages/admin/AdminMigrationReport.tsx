@@ -371,6 +371,9 @@ const AdminMigrationReport = () => {
                 </ChartContainer>
               </CardContent>
             </Card>
+
+            {/* Admin alert settings */}
+            <MigrationAlertSettingsCard />
           </>
         )}
       </div>
