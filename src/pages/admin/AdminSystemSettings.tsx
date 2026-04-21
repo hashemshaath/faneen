@@ -24,6 +24,7 @@ import {
   Zap, Activity, ChevronDown, RotateCcw, Hash, ExternalLink, Info, Layers,
 } from 'lucide-react';
 import { SitemapSubmissionsCard } from '@/components/admin/SitemapSubmissionsCard';
+import { SeoFilesPreviewCard } from '@/components/admin/SeoFilesPreviewCard';
 
 /* ═══════════ Types ═══════════ */
 interface SystemSetting {
@@ -549,6 +550,9 @@ const AdminSystemSettings = () => {
 
           {/* ── SEO: Search Engine Indexing Card ── */}
           {!search && activeCategory === 'seo' && <SitemapSubmissionsCard />}
+
+          {/* ── SEO: Live Preview of robots.txt + sitemap.xml ── */}
+          {!search && activeCategory === 'seo' && <SeoFilesPreviewCard />}
 
           {/* ── Warning ── */}
           <Card className="border-amber-200/50 dark:border-amber-800/30 bg-gradient-to-r from-amber-50/50 to-transparent dark:from-amber-950/10">

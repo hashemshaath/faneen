@@ -19,3 +19,5 @@ project_id = "hckpxwhjycmdflaneihd"
     verify_jwt = false
   [functions.run-site-audit]
     verify_jwt = false
+  [functions.robots]
+    verify_jwt = false
