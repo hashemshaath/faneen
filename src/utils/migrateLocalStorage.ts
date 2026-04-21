@@ -19,19 +19,100 @@ const SWEEP_FLAG = MIGRATION_FLAGS.sweepDone;
 const EPOCH_KEY = MIGRATION_FLAGS.epoch;
 
 /**
+ * Classified error codes for sweep failures. Stored in `migration_telemetry.error_code`
+ * so admins can filter and triage issues quickly without parsing free-text messages.
+ *
+ * - storage_unavailable: localStorage / sessionStorage object missing (SSR, locked browser).
+ * - permission_denied: Browser blocked access (Safari private mode, third-party cookie block).
+ * - quota_exceeded: Storage write failed because quota is full.
+ * - iteration_failed: Snapshotting keys via .key(i) threw unexpectedly.
+ * - removal_failed: removeItem() threw on a specific key.
+ * - cookie_unavailable: document or document.cookie inaccessible.
+ * - unknown: Anything else not matching the above.
+ */
+export type SweepErrorCode =
+  | 'storage_unavailable'
+  | 'permission_denied'
+  | 'quota_exceeded'
+  | 'iteration_failed'
+  | 'removal_failed'
+  | 'cookie_unavailable'
+  | 'unknown';
+
+export interface SweepError {
+  code: SweepErrorCode;
+  message: string;
+  scope: 'localStorage' | 'sessionStorage' | 'cookies';
+}
+
+/**
+ * Inspects an unknown thrown value and maps it to a stable error code so
+ * downstream telemetry can group failures meaningfully.
+ */
+function classifySweepError(err: unknown, scope: SweepError['scope']): SweepError {
+  const raw = err instanceof Error ? err : new Error(String(err));
+  const name = raw.name || '';
+  const msg = raw.message || '';
+  const lower = `${name} ${msg}`.toLowerCase();
+
+  let code: SweepErrorCode = 'unknown';
+  if (
+    name === 'QuotaExceededError' ||
+    name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
+    lower.includes('quota')
+  ) {
+    code = 'quota_exceeded';
+  } else if (
+    name === 'SecurityError' ||
+    lower.includes('denied') ||
+    lower.includes('permission') ||
+    lower.includes('access is denied')
+  ) {
+    code = 'permission_denied';
+  } else if (
+    lower.includes('is not defined') ||
+    lower.includes('undefined') ||
+    lower.includes('null') && lower.includes('storage')
+  ) {
+    code = 'storage_unavailable';
+  }
+  return { code, message: msg.slice(0, 500) || name || 'unknown error', scope };
+}
+
+/**
  * Sweeps any remaining `faneen_*` localStorage keys that weren't in KEY_MAP.
  * Runs once after the main migration. Returns count of swept keys.
  */
-function sweepLegacyKeys(): { swept: number; sweptKeys: string[] } {
+function sweepLegacyKeys(): { swept: number; sweptKeys: string[]; error?: SweepError } {
   const sweptKeys: string[] = [];
   try {
+    if (typeof localStorage === 'undefined') {
+      return {
+        swept: 0,
+        sweptKeys,
+        error: {
+          code: 'storage_unavailable',
+          message: 'localStorage is undefined in this environment',
+          scope: 'localStorage',
+        },
+      };
+    }
     if (localStorage.getItem(SWEEP_FLAG) === '1') return { swept: 0, sweptKeys };
 
     // Snapshot keys first — mutating localStorage while iterating is unsafe
     const allKeys: string[] = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      if (k) allKeys.push(k);
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k) allKeys.push(k);
+      }
+    } catch (iterErr) {
+      const cls = classifySweepError(iterErr, 'localStorage');
+      return {
+        swept: sweptKeys.length,
+        sweptKeys,
+        error: { ...cls, code: cls.code === 'unknown' ? 'iteration_failed' : cls.code },
+      };
     }
 
     for (const key of allKeys) {
@@ -39,20 +120,41 @@ function sweepLegacyKeys(): { swept: number; sweptKeys: string[] } {
       if (PROTECTED_KEYS.has(key)) continue;
       // Already handled by KEY_MAP — skip if a counterpart exists in qitaat_ namespace
       const counterpart = NEW_PREFIX + key.slice(LEGACY_PREFIX.length);
-      if (localStorage.getItem(counterpart) !== null) {
-        // Counterpart exists, safe to remove orphan
+      try {
+        if (localStorage.getItem(counterpart) !== null) {
+          // Counterpart exists, safe to remove orphan
+          localStorage.removeItem(key);
+          sweptKeys.push(key);
+          continue;
+        }
+        // No counterpart and not in KEY_MAP → unknown orphan, remove it
         localStorage.removeItem(key);
         sweptKeys.push(key);
-        continue;
+      } catch (rmErr) {
+        const cls = classifySweepError(rmErr, 'localStorage');
+        return {
+          swept: sweptKeys.length,
+          sweptKeys,
+          error: { ...cls, code: cls.code === 'unknown' ? 'removal_failed' : cls.code },
+        };
       }
-      // No counterpart and not in KEY_MAP → unknown orphan, remove it
-      localStorage.removeItem(key);
-      sweptKeys.push(key);
     }
 
-    localStorage.setItem(SWEEP_FLAG, '1');
-  } catch {
-    // Silent — sweep is best-effort
+    try {
+      localStorage.setItem(SWEEP_FLAG, '1');
+    } catch (flagErr) {
+      return {
+        swept: sweptKeys.length,
+        sweptKeys,
+        error: classifySweepError(flagErr, 'localStorage'),
+      };
+    }
+  } catch (err) {
+    return {
+      swept: sweptKeys.length,
+      sweptKeys,
+      error: classifySweepError(err, 'localStorage'),
+    };
   }
   return { swept: sweptKeys.length, sweptKeys };
 }
