@@ -71,7 +71,7 @@ function sweepSessionStorage(): { swept: number; sweptKeys: string[] } {
       if (k) keys.push(k);
     }
     for (const key of keys) {
-      if (!key.startsWith('faneen_')) continue;
+      if (!key.startsWith(LEGACY_PREFIX)) continue;
       sessionStorage.removeItem(key);
       sweptKeys.push(key);
     }
