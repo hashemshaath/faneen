@@ -468,14 +468,15 @@ function sweepLegacyKeys(
  * hardware. For small stores (≤ BATCH_THRESHOLD legacy keys) it falls
  * through to the synchronous path to avoid scheduling overhead.
  */
-async function sweepLegacyKeysBatched(): Promise<{
+async function sweepLegacyKeysBatched(
+  recorder?: DiagnosticRecorder,
+): Promise<{
   swept: number;
   sweptKeys: string[];
   error?: SweepError;
 }> {
-  if (typeof localStorage === 'undefined') {
-    return sweepLegacyKeys();
-  }
+  const probe = probeStorageAccess('localStorage', recorder);
+  if (probe) return { swept: 0, sweptKeys: [], error: probe };
   if (localStorage.getItem(SWEEP_FLAG) === '1') {
     return { swept: 0, sweptKeys: [] };
   }
@@ -489,10 +490,12 @@ async function sweepLegacyKeysBatched(): Promise<{
     }
   } catch (iterErr) {
     const cls = classifySweepError(iterErr, 'localStorage');
+    const code: SweepErrorCode = cls.code === 'unknown' ? 'iteration_failed' : cls.code;
+    recorder?.record({ scope: 'localStorage', phase: 'iterate', code, message: cls.message });
     return {
       swept: 0,
       sweptKeys: [],
-      error: { ...cls, code: cls.code === 'unknown' ? 'iteration_failed' : cls.code },
+      error: { ...cls, code },
     };
   }
 
@@ -503,7 +506,7 @@ async function sweepLegacyKeysBatched(): Promise<{
 
   // Small workload — skip the async overhead
   if (candidates.length <= BATCH_THRESHOLD) {
-    return sweepLegacyKeys();
+    return sweepLegacyKeys(recorder);
   }
 
   const sweptKeys: string[] = [];
@@ -516,10 +519,12 @@ async function sweepLegacyKeysBatched(): Promise<{
         sweptKeys.push(key);
       } catch (rmErr) {
         const cls = classifySweepError(rmErr, 'localStorage');
+        const code: SweepErrorCode = cls.code === 'unknown' ? 'removal_failed' : cls.code;
+        recorder?.record({ scope: 'localStorage', phase: 'remove', code, message: cls.message, key });
         return {
           swept: sweptKeys.length,
           sweptKeys,
-          error: { ...cls, code: cls.code === 'unknown' ? 'removal_failed' : cls.code },
+          error: { ...cls, code },
         };
       }
     }
@@ -532,10 +537,12 @@ async function sweepLegacyKeysBatched(): Promise<{
   try {
     localStorage.setItem(SWEEP_FLAG, '1');
   } catch (flagErr) {
+    const cls = classifySweepError(flagErr, 'localStorage');
+    recorder?.record({ scope: 'localStorage', phase: 'flag', code: cls.code, message: cls.message, key: SWEEP_FLAG });
     return {
       swept: sweptKeys.length,
       sweptKeys,
-      error: classifySweepError(flagErr, 'localStorage'),
+      error: cls,
     };
   }
   return { swept: sweptKeys.length, sweptKeys };
