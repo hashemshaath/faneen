@@ -10,7 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { BellRing, Mail, AlertTriangle, Save, Send, History, RefreshCw } from 'lucide-react';
+import { BellRing, Mail, AlertTriangle, Save, Send, History, RefreshCw, HelpCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -18,6 +18,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface AlertConfig {
   enabled: boolean;
@@ -241,11 +242,24 @@ export function MigrationAlertSettingsCard() {
   }
 
   return (
+    <TooltipProvider delayDuration={200}>
     <Card className="border-amber-200/50 bg-amber-50/30 dark:bg-amber-950/10" dir={isRTL ? 'rtl' : 'ltr'}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
           <BellRing className="h-5 w-5 text-amber-600" />
           {isRTL ? 'تنبيهات فشل ترحيل البيانات' : 'Migration failure alerts'}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+            </TooltipTrigger>
+            <TooltipContent side={isRTL ? 'left' : 'right'} className="max-w-xs">
+              <p className="text-xs">
+                {isRTL
+                  ? 'يُراقب النظام نسبة فشل ترحيل البيانات من التخزين المحلي. عند تجاوز العتبة، يُرسل إشعار للمشرفين.'
+                  : 'System monitors localStorage migration failure rates. When threshold is exceeded, admins are notified.'}
+              </p>
+            </TooltipContent>
+          </Tooltip>
         </CardTitle>
         <CardDescription>
           {isRTL
@@ -310,8 +324,23 @@ export function MigrationAlertSettingsCard() {
             />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs">
+            <Label className="text-xs flex items-center gap-1">
               {isRTL ? 'تهدئة إعادة البثّ (دقيقة)' : 'Re-run cooldown (min)'}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <HelpCircle className="h-3 w-3 text-muted-foreground cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-xs">
+                  <div className="space-y-1">
+                    <p className="text-xs font-medium">{isRTL ? 'ما هو مفتاح الترحيل؟' : 'What is the Migration Key?'}</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {isRTL
+                        ? 'علامة في تخزين المتصفح تمنع تكرار الترحيل على نفس الجهاز. عند رفع الـ Epoch، يتجاوز الجهاز هذا القفل ويُعيد الترحيل.'
+                        : 'A flag in browser storage preventing duplicate migration on the same device. When Epoch is bumped, the device bypasses this lock and re-runs migration.'}
+                    </p>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
             </Label>
             <Input
               type="number" min={1} max={10080} step={1}
@@ -352,24 +381,38 @@ export function MigrationAlertSettingsCard() {
           </Button>
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button
-                variant="destructive"
-                disabled={rerunMutation.isPending || cooldownInfo.onCooldown}
-                title={
-                  cooldownInfo.onCooldown && cooldownInfo.nextAllowedAt
-                    ? (isRTL
-                        ? `متاح بعد ${cooldownInfo.minutesRemaining} دقيقة`
-                        : `Available in ${cooldownInfo.minutesRemaining} min`)
-                    : undefined
-                }
-              >
-                <RefreshCw className={`h-4 w-4 me-2 ${rerunMutation.isPending ? 'animate-spin' : ''}`} />
-                {cooldownInfo.onCooldown
-                  ? isRTL
-                    ? `بثّ مقفل (${cooldownInfo.minutesRemaining}د)`
-                    : `Locked (${cooldownInfo.minutesRemaining}m)`
-                  : isRTL ? 'إعادة بث الترحيل' : 'Re-run migration'}
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="destructive"
+                    disabled={rerunMutation.isPending || cooldownInfo.onCooldown}
+                    title={
+                      cooldownInfo.onCooldown && cooldownInfo.nextAllowedAt
+                        ? (isRTL
+                            ? `متاح بعد ${cooldownInfo.minutesRemaining} دقيقة`
+                            : `Available in ${cooldownInfo.minutesRemaining} min`)
+                        : undefined
+                    }
+                  >
+                    <RefreshCw className={`h-4 w-4 me-2 ${rerunMutation.isPending ? 'animate-spin' : ''}`} />
+                    {cooldownInfo.onCooldown
+                      ? isRTL
+                        ? `بثّ مقفل (${cooldownInfo.minutesRemaining}د)`
+                        : `Locked (${cooldownInfo.minutesRemaining}m)`
+                      : isRTL ? 'إعادة بث الترحيل' : 'Re-run migration'}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-xs">
+                  <div className="space-y-1">
+                    <p className="text-xs font-medium">{isRTL ? 'ما هو إعادة البثّ؟' : 'What is re-run broadcast?'}</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {isRTL
+                        ? 'ترفع رقم النسخة (Epoch) لجميع المستخدمين، فيُعيد كل جهاز ترحيل بياناته تلقائياً. يُستخدم لتنظيف البيانات القديمة أو إصلاح مشاكل بعد تحديث.'
+                        : 'Bumps the version number (Epoch) for all users, causing every device to re-migrate its data automatically. Used to clean stale data or fix issues after updates.'}
+                    </p>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
             </AlertDialogTrigger>
             <AlertDialogContent dir={isRTL ? 'rtl' : 'ltr'}>
               <AlertDialogHeader>
@@ -463,5 +506,6 @@ export function MigrationAlertSettingsCard() {
         )}
       </CardContent>
     </Card>
+    </TooltipProvider>
   );
 }
