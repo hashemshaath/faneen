@@ -2345,6 +2345,7 @@ export type Database = {
         Row: {
           cooldown_hours: number
           enabled: boolean
+          evaluation_window_hours: number
           failure_rate_threshold: number
           id: number
           last_rerun_at: string | null
@@ -2359,6 +2360,7 @@ export type Database = {
         Insert: {
           cooldown_hours?: number
           enabled?: boolean
+          evaluation_window_hours?: number
           failure_rate_threshold?: number
           id?: number
           last_rerun_at?: string | null
@@ -2373,6 +2375,7 @@ export type Database = {
         Update: {
           cooldown_hours?: number
           enabled?: boolean
+          evaluation_window_hours?: number
           failure_rate_threshold?: number
           id?: number
           last_rerun_at?: string | null
@@ -3875,6 +3878,14 @@ export type Database = {
       get_migration_epoch: { Args: never; Returns: number }
       get_migration_failure_stats_24h: {
         Args: never
+        Returns: {
+          failed_events: number
+          failure_rate: number
+          total_events: number
+        }[]
+      }
+      get_migration_failure_stats_window: {
+        Args: { _hours: number }
         Returns: {
           failed_events: number
           failure_rate: number

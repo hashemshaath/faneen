@@ -24,6 +24,7 @@ interface AlertConfig {
   failure_rate_threshold: number;
   min_sample_size: number;
   cooldown_hours: number;
+  evaluation_window_hours: number;
   notify_emails: string[];
 }
 
@@ -56,7 +57,9 @@ export function MigrationAlertSettingsCard() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('migration_alert_config')
-        .select('enabled, failure_rate_threshold, min_sample_size, cooldown_hours, notify_emails')
+        .select(
+          'enabled, failure_rate_threshold, min_sample_size, cooldown_hours, evaluation_window_hours, notify_emails',
+        )
         .eq('id', 1)
         .maybeSingle();
       if (error) throw error;
@@ -203,8 +206,8 @@ export function MigrationAlertSettingsCard() {
         </CardTitle>
         <CardDescription>
           {isRTL
-            ? 'يتم فحص نسبة الفشل تلقائياً كل ساعة. عند تجاوز العتبة خلال آخر 24 ساعة يصلك بريد فوري.'
-            : 'Failure rate is checked hourly. When the 24h threshold is breached, an email alert is sent.'}
+            ? `يتم فحص نسبة الفشل تلقائياً كل ساعة. عند تجاوز العتبة خلال آخر ${form?.evaluation_window_hours ?? 6} ساعة يصلك بريد فوري.`
+            : `Failure rate is checked hourly. When the ${form?.evaluation_window_hours ?? 6}h threshold is breached, an email alert is sent.`}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
@@ -221,7 +224,7 @@ export function MigrationAlertSettingsCard() {
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
           <div className="space-y-1.5">
             <Label className="text-xs">{isRTL ? 'عتبة الفشل (%)' : 'Failure threshold (%)'}</Label>
             <Input
@@ -229,6 +232,23 @@ export function MigrationAlertSettingsCard() {
               value={form.failure_rate_threshold}
               onChange={(e) => setForm({ ...form, failure_rate_threshold: Number(e.target.value) })}
             />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">
+              {isRTL ? 'نافذة التقييم (ساعة)' : 'Evaluation window (hours)'}
+            </Label>
+            <Input
+              type="number" min={1} max={168} step={1}
+              value={form.evaluation_window_hours}
+              onChange={(e) =>
+                setForm({ ...form, evaluation_window_hours: Number(e.target.value) })
+              }
+            />
+            <p className="text-[11px] text-muted-foreground">
+              {isRTL
+                ? 'حساب النسبة عبر آخر N ساعة. الافتراضي: 6.'
+                : 'Computes failure rate over the last N hours. Default: 6.'}
+            </p>
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs">{isRTL ? 'الحد الأدنى للسجلات' : 'Min sample size'}</Label>

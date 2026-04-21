@@ -42,6 +42,7 @@ const MigrationFailureAlertEmail = ({
         <Section style={alertBox}>
           <Text style={metricRow}>نسبة الفشل الحالية: <strong style={bigNumber}>{failureRate}%</strong></Text>
           <Text style={metricRow}>العتبة المحددة: <strong>{threshold}%</strong></Text>
+          <Text style={metricRow}>نافذة التقييم: <strong>{windowHours} ساعة</strong></Text>
           <Text style={metricRow}>إجمالي العمليات: <strong>{totalEvents}</strong></Text>
           <Text style={metricRow}>عمليات فاشلة: <strong>{failedEvents}</strong></Text>
         </Section>
@@ -75,7 +76,7 @@ export const template = {
     threshold: 25,
     totalEvents: 120,
     failedEvents: 39,
-    windowHours: 24,
+    windowHours: 6,
     reportUrl: 'https://qitaat.lovable.app/admin/migration-report',
   },
 } satisfies TemplateEntry
