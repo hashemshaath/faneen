@@ -67,7 +67,7 @@ const SortableProjectCard = React.memo(({
           </button>
           <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted shrink-0 cursor-pointer border border-border/30" onClick={() => p.cover_image_url && onPreview(p.cover_image_url)}>
             {p.cover_image_url ? (
-              <img src={p.cover_image_url} alt="" className="w-full h-full object-cover" loading="lazy" />
+              <img src={p.cover_image_url} alt={p.title_ar} className="w-full h-full object-cover" loading="lazy" />
             ) : (
               <div className="w-full h-full flex items-center justify-center"><FolderOpen className="w-5 h-5 text-muted-foreground/30" /></div>
             )}

@@ -149,7 +149,7 @@ const SortablePromoCard = React.memo(({ promo: p, rtl, viewMode, isSelected, onE
         </button>
         <div className="w-12 h-12 rounded-xl overflow-hidden bg-muted shrink-0 cursor-pointer border border-border/30" onClick={() => p.image_url && onPreview(p.image_url)}>
           {p.image_url ? (
-            <img src={p.image_url} alt="" className="w-full h-full object-cover" loading="lazy" />
+             <img src={p.image_url} alt={p.title_ar} className="w-full h-full object-cover" loading="lazy" />
           ) : (
             <div className="w-full h-full flex items-center justify-center"><Icon className="w-5 h-5 text-muted-foreground/30" /></div>
           )}

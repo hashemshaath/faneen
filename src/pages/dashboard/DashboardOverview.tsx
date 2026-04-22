@@ -685,7 +685,7 @@ const ProviderDashboardView = React.memo(({ isRTL, user, profile }: { isRTL: boo
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div className="flex items-center gap-2.5">
             <div className="w-10 h-10 rounded-xl bg-accent/15 flex items-center justify-center shrink-0 overflow-hidden">
-              {business?.logo_url ? <img src={business.logo_url} alt="" className="w-full h-full object-cover" /> : <Building2 className="w-5 h-5 text-accent" />}
+              {business?.logo_url ? <img src={business.logo_url} alt={isRTL ? business.name_ar : (business.name_en || business.name_ar)} className="w-full h-full object-cover" /> : <Building2 className="w-5 h-5 text-accent" />}
             </div>
             <div>
               <h1 className="font-heading font-bold text-base sm:text-lg flex items-center gap-2">
