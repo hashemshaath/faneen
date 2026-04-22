@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { useLanguage } from '@/i18n/LanguageContext';
-import { usePageMeta, useJsonLd } from '@/hooks/usePageMeta';
+import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { Mail, Phone, MapPin, MessageSquare } from 'lucide-react';
@@ -13,14 +13,61 @@ const About = () => {
     canonical: 'https://qitaat.com/about',
   });
 
-  useJsonLd(useMemo(() => ({
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'قِطاعات', item: 'https://qitaat.com' },
-      { '@type': 'ListItem', position: 2, name: language === 'ar' ? 'من نحن' : 'About', item: 'https://qitaat.com/about' },
-    ],
-  }), [language]));
+  useMultiJsonLd(useMemo(() => {
+    const breadcrumb = {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'قِطاعات', item: 'https://qitaat.com' },
+        { '@type': 'ListItem', position: 2, name: language === 'ar' ? 'من نحن' : 'About', item: 'https://qitaat.com/about' },
+      ],
+    };
+
+    const faqPage = {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: [
+        {
+          '@type': 'Question',
+          name: language === 'ar' ? 'ما هي منصة قِطاعات؟' : 'What is Qitaat?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: language === 'ar'
+              ? 'قِطاعات هي المنصة الأولى المتخصصة في قطاع الألمنيوم والحديد والزجاج والخشب في العالم العربي. نربط بين أصحاب المشاريع ومزودي الخدمات بطريقة احترافية وآمنة.'
+              : 'Qitaat is the first platform specializing in the aluminum, iron, glass and wood sector in the Arab world, connecting project owners with service providers.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: language === 'ar' ? 'ما هي الأدوات التي توفرها قِطاعات؟' : 'What tools does Qitaat provide?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: language === 'ar'
+              ? 'نوفر أدوات متكاملة تشمل: نظام عقود محمية، تقسيط مرن، ضمانات، تقييمات حقيقية، ومقارنة بين المزودين لمساعدتك في اتخاذ القرار الأفضل.'
+              : 'We provide integrated tools including protected contracts, flexible installments, warranties, real reviews, and provider comparison.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: language === 'ar' ? 'أين يقع مقر قِطاعات؟' : 'Where is Qitaat located?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: language === 'ar' ? 'المملكة العربية السعودية' : 'Saudi Arabia',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: language === 'ar' ? 'كيف أتواصل مع قِطاعات؟' : 'How can I contact Qitaat?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: language === 'ar' ? 'يمكنك التواصل عبر البريد الإلكتروني info@qitaat.com أو من خلال صفحة التواصل في الموقع.' : 'You can contact us via email at info@qitaat.com or through the contact page.',
+          },
+        },
+      ],
+    };
+
+    return [breadcrumb, faqPage];
+  }, [language]));
 
   return (
     <div className="min-h-screen bg-background">
