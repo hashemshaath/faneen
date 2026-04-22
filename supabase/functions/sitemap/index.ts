@@ -44,6 +44,7 @@ Deno.serve(async () => {
       { loc: "/blog", priority: "0.8", changefreq: "daily" },
       { loc: "/profile-systems", priority: "0.7", changefreq: "weekly" },
       { loc: "/compare", priority: "0.6", changefreq: "weekly" },
+      { loc: "/compare-profiles", priority: "0.6", changefreq: "weekly" },
       { loc: "/membership", priority: "0.6", changefreq: "monthly" },
       { loc: "/about", priority: "0.5", changefreq: "monthly" },
       { loc: "/contact", priority: "0.5", changefreq: "monthly" },
@@ -89,11 +90,17 @@ Deno.serve(async () => {
       }
     }
 
-    // Cities
+    // City filter pages → /search?city=UUID (indexed, not noindex)
     if (cityRes.data) {
       for (const city of cityRes.data) {
-        const slug = city.name_en?.toLowerCase().replace(/\s+/g, "-") || city.id;
         entries.push(entry(`${BASE}/search?city=${encodeURIComponent(city.id)}`, { lastmod: toDate(city.created_at), changefreq: "daily", priority: "0.7" }));
+      }
+    }
+
+    // Category filter pages → /search?category=UUID (indexed)
+    if (catRes.data) {
+      for (const cat of catRes.data) {
+        entries.push(entry(`${BASE}/search?category=${encodeURIComponent(cat.id ?? cat.slug)}`, { lastmod: toDate(cat.created_at), changefreq: "daily", priority: "0.7" }));
       }
     }
 
