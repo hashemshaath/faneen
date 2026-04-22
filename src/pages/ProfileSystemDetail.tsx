@@ -294,7 +294,7 @@ const ProfileSystemDetail = () => {
     if (specs.length > 0) {
       for (const s of specs) {
         const specName = language === 'ar' ? s.spec_name_ar : (s.spec_name_en || s.spec_name_ar);
-        const specVal = language === 'ar' ? s.spec_value_ar : (s.spec_value_en || s.spec_value_ar);
+        const specVal = s.spec_value;
         if (specName && specVal) {
           faqEntries.push({
             q: language === 'ar' ? `ما هو ${specName} لهذا القطاع؟` : `What is the ${specName} of this profile?`,
