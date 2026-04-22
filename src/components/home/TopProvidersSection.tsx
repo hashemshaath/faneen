@@ -66,9 +66,32 @@ const RankBadge = ({ rank }: { rank: number }) => {
   );
 };
 
+/* ── Filter chip ── */
+const FilterChip = ({
+  label, active, onClick, icon,
+}: {
+  label: string; active: boolean; onClick: () => void; icon?: React.ReactNode;
+}) => (
+  <button
+    onClick={onClick}
+    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 border ${
+      active
+        ? "bg-accent/15 text-accent border-accent/30 shadow-sm shadow-accent/10"
+        : "bg-muted/30 dark:bg-muted/15 text-muted-foreground border-border/30 dark:border-border/15 hover:bg-muted/50 hover:text-foreground"
+    }`}
+  >
+    {icon}
+    {label}
+  </button>
+);
+
 export const TopProvidersSection = () => {
   const { language, isRTL } = useLanguage();
   const { ref: sectionRef, isVisible } = useScrollAnimation();
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [activeCity, setActiveCity] = useState<string | null>(null);
+  const [verifiedOnly, setVerifiedOnly] = useState(false);
+  const [premiumOnly, setPremiumOnly] = useState(false);
 
   const { data: providers = [], isLoading } = useQuery({
     queryKey: ["top-providers-home"],
