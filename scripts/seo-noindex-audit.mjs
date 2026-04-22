@@ -155,6 +155,68 @@ for (const dir of PRIVATE_DIRS) {
 }
 
 // ── Report ───────────────────────────────────────────────
+// ── robots.txt / sitemap.xml cross-check ─────────────────
+console.log(`\n${c.bold}🤖 فحص تطابق robots.txt مع sitemap.xml${c.reset}`);
+
+const robotsTxt = read('public/robots.txt');
+const sitemapXml = read('public/sitemap.xml');
+const robotsEdge = read('supabase/functions/robots/index.ts');
+const sitemapEdge = read('supabase/functions/sitemap/index.ts');
+
+// Check that disallowed paths in robots are not in sitemap
+if (robotsTxt && sitemapXml) {
+  const disallowedPaths = [...robotsTxt.matchAll(/^Disallow:\s*(.+)$/gm)]
+    .map(m => m[1].trim())
+    .filter(p => !p.includes('?')); // skip query-string rules
+
+  for (const path of disallowedPaths) {
+    const clean = path.replace(/\/$/, ''); // /admin/ → /admin
+    if (sitemapXml.includes(`qitaat.com${clean}`) && !sitemapXml.includes(`qitaat.com${clean}/`)) {
+      // Exact match of a disallowed page in sitemap (not a sub-path)
+      findings.push({ file: 'public/sitemap.xml', level: 'critical', msg: `sitemap يحتوي "${clean}" وهو محظور في robots.txt!` });
+    }
+  }
+
+  // Check that /search?q= is disallowed
+  if (!robotsTxt.includes('Disallow: /search?q=')) {
+    findings.push({ file: 'public/robots.txt', level: 'warn', msg: 'لا يمنع /search?q= (نتائج بحث noindex)' });
+  }
+
+  // Check that /compare?ids= is disallowed
+  if (!robotsTxt.includes('Disallow: /compare?ids=')) {
+    findings.push({ file: 'public/robots.txt', level: 'warn', msg: 'لا يمنع /compare?ids= (مقارنات مؤقتة noindex)' });
+  }
+
+  // Check sitemap has compare-profiles
+  if (!sitemapXml.includes('compare-profiles')) {
+    findings.push({ file: 'public/sitemap.xml', level: 'warn', msg: 'sitemap لا يحتوي /compare-profiles' });
+  }
+
+  const issueCount = findings.filter(f => f.file.startsWith('public/')).length;
+  if (issueCount === 0) {
+    console.log(`   ${c.green}✓${c.reset}  robots.txt و sitemap.xml متطابقان`);
+  } else {
+    console.log(`   ${c.yellow}⚠${c.reset}  ${issueCount} ملاحظة`);
+  }
+}
+
+// Check edge function robots has same disallows
+if (robotsEdge) {
+  if (!robotsEdge.includes('Disallow: /search?q=')) {
+    findings.push({ file: 'supabase/functions/robots/index.ts', level: 'warn', msg: 'edge function لا يمنع /search?q=' });
+  }
+  if (!robotsEdge.includes('Disallow: /compare?ids=')) {
+    findings.push({ file: 'supabase/functions/robots/index.ts', level: 'warn', msg: 'edge function لا يمنع /compare?ids=' });
+  }
+}
+
+// Check edge sitemap has compare-profiles
+if (sitemapEdge) {
+  if (!sitemapEdge.includes('compare-profiles')) {
+    findings.push({ file: 'supabase/functions/sitemap/index.ts', level: 'warn', msg: 'edge sitemap لا يحتوي compare-profiles' });
+  }
+}
+
 console.log(`\n${c.bold}${'═'.repeat(55)}${c.reset}`);
 const criticals = findings.filter(f => f.level === 'critical');
 const warns = findings.filter(f => f.level === 'warn');
