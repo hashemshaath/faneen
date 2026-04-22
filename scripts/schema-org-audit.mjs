@@ -87,6 +87,24 @@ const pages = [
     ],
     critical: false,
   },
+  {
+    name: "صفحة القطاع (ProfileSystemDetail)",
+    file: "src/pages/ProfileSystemDetail.tsx",
+    required: [
+      { type: "Product", label: "Product schema" },
+      { type: "FAQPage", label: "FAQPage schema" },
+    ],
+    critical: true,
+  },
+  {
+    name: "صفحة من نحن (About)",
+    file: "src/pages/About.tsx",
+    required: [
+      { type: "BreadcrumbList", label: "BreadcrumbList schema" },
+      { type: "FAQPage", label: "FAQPage schema" },
+    ],
+    critical: true,
+  },
 ];
 
 /* ── Hooks file validation ── */
