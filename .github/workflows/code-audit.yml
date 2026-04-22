@@ -28,6 +28,9 @@ jobs:
       - name: Brand Audit (faneen residue check)
         run: node scripts/brand-audit.mjs
 
+      - name: Broken Internal Links Audit
+        run: node scripts/broken-links-audit.mjs
+
       - name: SEO NoIndex/Canonical Audit
         run: node scripts/seo-noindex-audit.mjs
 
