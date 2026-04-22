@@ -10,6 +10,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Layers, Search, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  ALL_SECTORS,
+  detectSectorFromCategorySlug,
+  getSectorMeta,
+} from '@/lib/sector-keywords';
 
 const Categories = () => {
   const { slug } = useParams<{ slug?: string }>();
@@ -26,6 +31,20 @@ const Categories = () => {
   const selectedCategory = slug ? categories.find(c => c.slug === slug) : null;
   const catName = selectedCategory ? (language === 'ar' ? selectedCategory.name_ar : selectedCategory.name_en) : '';
 
+  // Detect sector from the category slug (or the loaded category's slug) so we
+  // can hydrate the page with industry-specific title/description/keywords.
+  const sectorSlug = detectSectorFromCategorySlug(selectedCategory?.slug ?? slug);
+  const sectorMeta = sectorSlug ? getSectorMeta(sectorSlug, isRTL) : null;
+
+  // For the categories index (no slug) we mix the top keywords across sectors.
+  const allSectorKeywords = useMemo(
+    () =>
+      ALL_SECTORS.flatMap((s) => (isRTL ? s.keywords_ar : s.keywords_en))
+        .slice(0, 24)
+        .join(', '),
+    [isRTL],
+  );
+
   const { data: businesses = [], isLoading: bizLoading } = useQuery({
     queryKey: ['businesses-by-category', selectedCategory?.id],
     queryFn: async () => {
@@ -37,11 +56,23 @@ const Categories = () => {
 
   usePageMeta({
     title: selectedCategory
-      ? (language === 'ar' ? `${catName} - دليل مزودي الخدمات | قِطاعات` : `${catName} - Service Providers | Qitaat`)
+      ? sectorMeta
+        ? (isRTL
+            ? `${catName} — ${sectorMeta.tagline} | قِطاعات`
+            : `${catName} — ${sectorMeta.tagline} | Qitaat`)
+        : (language === 'ar' ? `${catName} - دليل مزودي الخدمات | قِطاعات` : `${catName} - Service Providers | Qitaat`)
       : (language === 'ar' ? 'تصفح الأقسام والفئات | قِطاعات' : 'Browse Categories | Qitaat'),
     description: selectedCategory
-      ? (language === 'ar' ? `تصفح أفضل مزودي خدمات ${catName} مع التقييمات والأسعار` : `Browse the best ${catName} service providers`)
+      ? sectorMeta
+        ? sectorMeta.description
+        : (language === 'ar' ? `تصفح أفضل مزودي خدمات ${catName} مع التقييمات والأسعار` : `Browse the best ${catName} service providers`)
       : (language === 'ar' ? 'تصفح جميع أقسام وفئات خدمات الألمنيوم والحديد والزجاج والخشب' : 'Browse all aluminum, iron, glass and wood categories'),
+    keywords: selectedCategory
+      ? (sectorMeta ? sectorMeta.keywords : `${catName}, قِطاعات, دليل, مزودي خدمات`)
+      : allSectorKeywords,
+    canonical: selectedCategory
+      ? `https://qitaat.com/categories/${selectedCategory.slug}`
+      : 'https://qitaat.com/categories',
   });
 
   useMultiJsonLd(useMemo(() => {
