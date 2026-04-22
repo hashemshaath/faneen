@@ -216,7 +216,7 @@ const ProjectDetail = () => {
               <Button variant="ghost" size="icon" className="text-primary-foreground/60 hover:text-primary-foreground hover:bg-primary-foreground/10 rounded-full">
                 <Bookmark className="w-5 h-5" />
               </Button>
-              <Button variant="ghost" size="icon" className="text-primary-foreground/60 hover:text-primary-foreground hover:bg-primary-foreground/10 rounded-full" onClick={() => navigator.share?.({ title, url: window.location.href }).catch(() => {})}>
+              <Button variant="ghost" size="icon" className="text-primary-foreground/60 hover:text-primary-foreground hover:bg-primary-foreground/10 rounded-full" onClick={() => { navigator.share?.({ title, url: window.location.href }).catch(() => {}); trackShare(); }}>
                 <Share2 className="w-5 h-5" />
               </Button>
             </div>
