@@ -73,13 +73,11 @@ export const HowItWorksSection = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-5 relative z-10">
             {steps.map((step, i) => {
-              const displaySteps = isRTL ? [...steps].reverse() : steps;
-              const displayStep = displaySteps[i];
-              const StepIcon = displayStep.icon;
+              const StepIcon = step.icon;
 
               return (
                 <div
-                  key={displayStep.step}
+                  key={step.step}
                   className={cn(
                     'relative flex flex-col items-center text-center',
                     isVisible ? 'animate-card-slide-up' : 'opacity-0'
@@ -89,7 +87,7 @@ export const HowItWorksSection = () => {
                   {/* Step number badge */}
                   <div className="relative mb-5">
                     <div className="w-10 h-10 rounded-full bg-accent text-accent-foreground text-sm font-heading font-bold flex items-center justify-center shadow-lg shadow-accent/25 ring-[3px] ring-background z-10 relative">
-                      {displayStep.step}
+                      {step.step}
                     </div>
                   </div>
 
@@ -102,12 +100,12 @@ export const HowItWorksSection = () => {
 
                     {/* Title */}
                     <h3 className="font-heading font-bold text-sm sm:text-base text-foreground mb-2.5 group-hover:text-accent transition-colors leading-snug">
-                      {language === 'ar' ? displayStep.titleAr : displayStep.titleEn}
+                      {language === 'ar' ? step.titleAr : step.titleEn}
                     </h3>
 
                     {/* Description */}
                     <p className="font-body text-xs sm:text-[13px] text-muted-foreground leading-relaxed max-w-[220px]">
-                      {language === 'ar' ? displayStep.descAr : displayStep.descEn}
+                      {language === 'ar' ? step.descAr : step.descEn}
                     </p>
                   </div>
                 </div>
