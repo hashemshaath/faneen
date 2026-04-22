@@ -43,23 +43,6 @@ const SearchPage = () => {
     isRTL ? s.keywords_ar : s.keywords_en,
   ).slice(0, 24).join(', ');
 
-  usePageMeta({
-    title: sectorMeta
-      ? (isRTL
-          ? `${sectorMeta.name} — نتائج "${searchQuery}" | قِطاعات`
-          : `${sectorMeta.name} — results for "${searchQuery}" | Qitaat`)
-      : searchQuery
-        ? (isRTL ? `نتائج البحث عن "${searchQuery}" | قِطاعات` : `Search results for "${searchQuery}" | Qitaat`)
-        : (isRTL ? 'البحث عن مزودي خدمات الألمنيوم والحديد والزجاج والخشب والخزائن | قِطاعات' : 'Search Aluminum, Iron, Glass, Wood & Cabinet Providers | Qitaat'),
-    description: sectorMeta
-      ? sectorMeta.description
-      : searchQuery
-        ? (isRTL ? `نتائج البحث عن ${searchQuery} في دليل قِطاعات للصناعات الخفيفة` : `Search results for ${searchQuery} in Qitaat directory`)
-        : (isRTL ? 'ابحث عن أفضل مصانع ومحلات الألمنيوم والحديد والزجاج والخشب والخزائن. قارن الأسعار والتقييمات واختر المزود المناسب.' : 'Find the best aluminum, iron, glass, wood and cabinet factories and shops.'),
-    keywords: sectorMeta ? sectorMeta.keywords : allSectorKeywords,
-    noindex: !!searchQuery,
-  });
-
   const isMobile = useIsMobile();
 
   const { data: categories } = useCategories();
