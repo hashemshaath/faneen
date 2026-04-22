@@ -60,6 +60,10 @@ const pages = [
       { type: "WebSite", label: "WebSite schema" },
       { type: "Organization", label: "Organization (publisher or standalone)" },
     ],
+    requiredFields: [
+      { field: "sameAs", label: "sameAs social links" },
+      { field: "contactPoint", label: "contactPoint info" },
+    ],
     critical: true,
   },
   {
@@ -195,6 +199,18 @@ for (const page of pages) {
   console.log(`   ${ctxIcon}${c.reset} References schema.org context`);
   results.push({ page: page.name, label: "schema.org context", pass: hasContext, critical: page.critical });
   if (!hasContext && page.critical) criticalFail = true;
+
+  // Check required fields (e.g. sameAs, contactPoint)
+  if (page.requiredFields) {
+    for (const rf of page.requiredFields) {
+      const fieldRegex = new RegExp(`['"]?${rf.field}['"]?\\s*:`);
+      const found = fieldRegex.test(source);
+      const icon = found ? `${c.green}✓` : page.critical ? `${c.red}✗` : `${c.yellow}⚠`;
+      console.log(`   ${icon}${c.reset} ${rf.label}`);
+      results.push({ page: page.name, label: rf.label, pass: found, critical: page.critical });
+      if (!found && page.critical) criticalFail = true;
+    }
+  }
 }
 
 /* ── Summary ── */
