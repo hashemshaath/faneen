@@ -57,7 +57,7 @@ Deno.serve(async () => {
       supabase.from("blog_posts").select("slug, updated_at").eq("status", "published").order("published_at", { ascending: false }).limit(10000),
       supabase.from("categories").select("slug, created_at").eq("is_active", true),
       supabase.from("cities").select("id, name_en, created_at").eq("is_active", true),
-      supabase.from("profile_systems").select("slug, updated_at").eq("is_active", true).limit(10000),
+      supabase.from("profile_systems").select("slug, updated_at").eq("status", "published").limit(10000),
       supabase.from("projects").select("id, updated_at").eq("status", "published").order("created_at", { ascending: false }).limit(10000),
     ]);
 
