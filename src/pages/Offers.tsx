@@ -70,7 +70,7 @@ const Offers = () => {
         if (id) trackPromoView(id);
       }
     });
-  }, [trackView]);
+  }, [trackPromoView]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(observerCallback, { threshold: 0.5 });
