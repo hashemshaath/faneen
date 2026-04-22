@@ -37,10 +37,6 @@ const RatingCell = ({ value, max = 10 }: { value: number; max?: number }) => {
 
 const CompareProfiles = () => {
   const { isRTL, language } = useLanguage();
-  usePageMeta({
-    title: isRTL ? 'مقارنة أنظمة القطاعات | قِطاعات' : 'Compare Profile Systems | Qitaat',
-    description: isRTL ? 'قارن بين أنظمة قطاعات الألمنيوم والحديد من حيث المواصفات والمزايا' : 'Compare aluminum and iron profile systems by specifications and features',
-  });
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
@@ -49,6 +45,15 @@ const CompareProfiles = () => {
     const ids = searchParams.get('ids');
     return ids ? ids.split(',').filter(Boolean) : [];
   }, [searchParams]);
+
+  usePageMeta({
+    title: isRTL ? 'مقارنة أنظمة القطاعات | قِطاعات' : 'Compare Profile Systems | Qitaat',
+    description: isRTL ? 'قارن بين أنظمة قطاعات الألمنيوم والحديد من حيث المواصفات والمزايا' : 'Compare aluminum and iron profile systems by specifications and features',
+    canonical: selectedIds.length
+      ? `https://qitaat.com/compare-profiles?ids=${[...selectedIds].sort().join(',')}`
+      : 'https://qitaat.com/compare-profiles',
+    noindex: selectedIds.length > 0,
+  });
 
   // Fetch all published profiles for search
   const { data: allProfiles = [] } = useQuery({
