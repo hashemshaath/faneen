@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useLanguage } from '@/i18n/LanguageContext';
-import { usePageMeta } from '@/hooks/usePageMeta';
+import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 
@@ -9,9 +9,62 @@ const Privacy = () => {
   usePageMeta({
     title: isRTL ? 'سياسة الخصوصية | قِطاعات' : 'Privacy Policy | Qitaat',
     description: isRTL
-      ? 'سياسة خصوصية قِطاعات: جمع البيانات، الكوكيز، تنظيف التخزين القديم faneen.com، مقاييس الأداء، وحقوق المستخدم.'
-      : 'Qitaat privacy policy: data collection, cookies, faneen.com legacy storage cleanup, performance metrics, and user rights.',
+      ? 'سياسة خصوصية قِطاعات الكاملة: ما البيانات التي نجمعها عند التسجيل، كيف نحمي معلوماتك، استخدام الكوكيز، تنظيف التخزين القديم لـ faneen.com تلقائياً، جمع مؤشرات الأداء بدون معرّفات شخصية، وكيفية الوصول لبياناتك أو حذفها وضبط متصفحك. آخر تحديث 2026.'
+      : 'Full Qitaat privacy policy: what data we collect at signup, how we protect your information, our use of cookies, automatic cleanup of legacy faneen.com storage, anonymous performance telemetry, and how to access, delete or block your data from your browser. Updated 2026.',
+    canonical: 'https://qitaat.com/privacy',
   });
+
+  useMultiJsonLd(useMemo(() => {
+    const faqAr = [
+      { q: 'ما البيانات الشخصية التي يجمعها موقع قِطاعات؟', a: 'نجمع فقط ما تقدمه أنت مباشرة عند التسجيل أو إنشاء ملف تجاري: الاسم، البريد الإلكتروني، رقم الجوال، ومعلومات المنشأة. لا نجمع بيانات تصفحك خارج المنصة.' },
+      { q: 'هل يستخدم قِطاعات ملفات تعريف الارتباط (Cookies)؟', a: 'نعم، نستخدم كوكيز ضرورية لحفظ جلسة تسجيل الدخول وتفضيلات اللغة، وأخرى تحليلية مجهولة الهوية لقياس أداء الموقع. يمكنك حذف الكوكيز من إعدادات متصفحك في أي وقت.' },
+      { q: 'ماذا حدث للبيانات المخزّنة من نطاق faneen.com القديم؟', a: 'عند زيارتك التالية يقوم الموقع تلقائياً بحذف جميع المفاتيح التي تبدأ بـ "faneen_" من localStorage و sessionStorage والكوكيز. تتم العملية داخل متصفحك دون إرسال أي بيانات لخوادمنا، ويتم تعيين علامة (qitaat_legacy_cleanup_v1_done) لمنع تكرارها.' },
+      { q: 'هل تجمعون بيانات أداء الموقع؟ وهل تتضمن معرّفي؟', a: 'نعم نجمع مؤشرات Core Web Vitals (LCP، CLS، INP، FCP، TTFB) مع مسار الصفحة ونوع الجهاز فقط. لا نسجل عنوان IP ولا أي معرّف شخصي ولا محتوى تتصفحه. تُستخدم البيانات داخلياً لتحسين السرعة فقط.' },
+      { q: 'كيف أطلب حذف بياناتي من قِطاعات؟', a: 'راسلنا على info@qitaat.com من البريد المسجّل في حسابك وسنحذف بياناتك خلال 30 يوماً، باستثناء ما يلزمنا الاحتفاظ به قانونياً (مثل سجلات الفواتير).' },
+      { q: 'هل تشاركون بياناتي مع جهات خارجية؟', a: 'لا نبيع بياناتك. نشاركها فقط مع مزودي البنية التحتية (الاستضافة، البريد، التحليلات) وفق اتفاقيات معالجة بيانات صارمة، أو عند طلب رسمي من جهة قضائية مختصة.' },
+    ];
+    const faqEn = [
+      { q: 'What personal data does Qitaat collect?', a: 'Only what you provide directly at signup or while creating a business profile: name, email, phone, and business information. We do not track your browsing outside the platform.' },
+      { q: 'Does Qitaat use cookies?', a: 'Yes — strictly-necessary cookies for the login session and language preferences, plus anonymous analytics cookies for performance. You can clear cookies anytime from your browser settings.' },
+      { q: 'What happened to data stored under the old faneen.com domain?', a: 'On your next visit the site automatically removes every key prefixed with "faneen_" from localStorage, sessionStorage, and cookies. This runs inside your browser; no data is sent to our servers. A flag (qitaat_legacy_cleanup_v1_done) prevents repeats.' },
+      { q: 'Do you collect performance data, and does it identify me?', a: 'We collect Core Web Vitals (LCP, CLS, INP, FCP, TTFB) along with page path and device type only. No IP address, no personal identifier, no browsed content is recorded. Used internally to improve speed.' },
+      { q: 'How do I request deletion of my data?', a: 'Email info@qitaat.com from the address registered to your account; we delete your data within 30 days, except where retention is legally required (e.g. billing records).' },
+      { q: 'Do you share my data with third parties?', a: 'We never sell your data. We share it only with infrastructure providers (hosting, email, analytics) under strict data-processing agreements, or upon a lawful request from a competent authority.' },
+    ];
+    const items = isRTL ? faqAr : faqEn;
+    const faq = {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: items.map((it) => ({
+        '@type': 'Question',
+        name: it.q,
+        acceptedAnswer: { '@type': 'Answer', text: it.a },
+      })),
+    };
+    const article = {
+      '@context': 'https://schema.org',
+      '@type': 'PrivacyPolicy',
+      name: isRTL ? 'سياسة الخصوصية — قِطاعات' : 'Privacy Policy — Qitaat',
+      url: 'https://qitaat.com/privacy',
+      inLanguage: isRTL ? 'ar' : 'en',
+      dateModified: '2026-04-22',
+      publisher: {
+        '@type': 'Organization',
+        name: 'قِطاعات Qitaat',
+        url: 'https://qitaat.com',
+        logo: { '@type': 'ImageObject', url: 'https://qitaat.com/logo.png' },
+      },
+    };
+    const breadcrumb = {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: isRTL ? 'الرئيسية' : 'Home', item: 'https://qitaat.com' },
+        { '@type': 'ListItem', position: 2, name: isRTL ? 'سياسة الخصوصية' : 'Privacy Policy', item: 'https://qitaat.com/privacy' },
+      ],
+    };
+    return [article, faq, breadcrumb];
+  }, [isRTL]));
 
   return (
     <div className="min-h-screen bg-background">
