@@ -21,6 +21,7 @@ import {
   type SearchFilterValues,
 } from '@/services/search';
 import { detectSectorFromQuery, getSectorMeta, ALL_SECTORS } from '@/lib/sector-keywords';
+import { findCityKeywords, getCityKeywordsString, mergeKeywords } from '@/lib/city-keywords';
 
 const ITEMS_PER_PAGE = 12;
 
