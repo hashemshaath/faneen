@@ -11,12 +11,12 @@ import catAccessories from "@/assets/cat-accessories.jpg";
 import catDesigners from "@/assets/cat-designers.jpg";
 
 const categories = [
-  { icon: Layers, image: catAluminum, titleKey: 'cat.aluminum' as const, descKey: 'cat.aluminum.desc' as const, slug: 'aluminum' },
-  { icon: Shield, image: catIron, titleKey: 'cat.iron' as const, descKey: 'cat.iron.desc' as const, slug: 'iron-steel' },
-  { icon: Layers, image: catGlass, titleKey: 'cat.glass' as const, descKey: 'cat.glass.desc' as const, slug: 'glass' },
-  { icon: Building2, image: catWood, titleKey: 'cat.wood' as const, descKey: 'cat.wood.desc' as const, slug: 'wood-cabinets' },
-  { icon: Wrench, image: catAccessories, titleKey: 'cat.accessories' as const, descKey: 'cat.accessories.desc' as const, slug: 'accessories' },
-  { icon: Users, image: catDesigners, titleKey: 'cat.designers' as const, descKey: 'cat.designers.desc' as const, slug: 'designers' },
+  { icon: Layers, image: catAluminum, titleKey: 'cat.aluminum' as const, descKey: 'cat.aluminum.desc' as const, categoryId: '50cdcb8d-3ec3-4cdc-98ad-1c699d6c1abf' },
+  { icon: Shield, image: catIron, titleKey: 'cat.iron' as const, descKey: 'cat.iron.desc' as const, categoryId: '9bbdbf31-b6e3-45ad-b565-941152ff1699' },
+  { icon: Layers, image: catGlass, titleKey: 'cat.glass' as const, descKey: 'cat.glass.desc' as const, categoryId: '9abffeee-d88c-4fd8-8b8f-469d65ee0942' },
+  { icon: Building2, image: catWood, titleKey: 'cat.wood' as const, descKey: 'cat.wood.desc' as const, categoryId: 'a49e779f-58d3-4003-a825-9bc161af8286' },
+  { icon: Wrench, image: catAccessories, titleKey: 'cat.accessories' as const, descKey: 'cat.accessories.desc' as const, categoryId: '6995ec61-e346-4d3d-ae93-35a9a80b77c6' },
+  { icon: Users, image: catDesigners, titleKey: 'cat.designers' as const, descKey: 'cat.designers.desc' as const, categoryId: 'f7ed2200-a91f-4a11-b783-748317fd5903' },
 ];
 
 export const CategoriesSection = () => {
