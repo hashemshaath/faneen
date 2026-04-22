@@ -37,6 +37,9 @@ jobs:
       - name: Schema.org Structured Data Audit
         run: node scripts/schema-org-audit.mjs
 
+      - name: JSON-LD Parse & Validation Audit
+        run: node scripts/jsonld-parse-audit.mjs
+
       - name: Page Meta (Title/Description) Audit
         run: node scripts/meta-titles-audit.mjs
 
