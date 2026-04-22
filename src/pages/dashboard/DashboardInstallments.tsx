@@ -206,7 +206,7 @@ const PaymentTimeline = React.memo(({ plans, isRTL, language }: { plans: Array<a
 
         <div className="relative">
           {/* Timeline line */}
-          <div className={cn("absolute top-0 bottom-0 w-px bg-gradient-to-b from-accent/40 via-border to-transparent", isRTL ? "right-3" : "left-3")} />
+          <div className={cn("absolute top-0 bottom-0 w-px bg-gradient-to-b from-accent/40 via-border to-transparent start-3")} />
 
           <div className="space-y-2.5">
             {upcoming.map((p, i) => {
@@ -215,12 +215,12 @@ const PaymentTimeline = React.memo(({ plans, isRTL, language }: { plans: Array<a
               const daysLeft = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
               return (
-                <div key={p.id} className={cn("relative flex items-start gap-3", isRTL ? "pr-8" : "pl-8")}>
+                <div key={p.id} className={cn("relative flex items-start gap-3 ps-8")}>
                   {/* Dot */}
                   <div className={cn(
                     "absolute top-1.5 w-2.5 h-2.5 rounded-full border-2 border-background z-10 transition-all",
                     isOverdue ? "bg-destructive ring-2 ring-destructive/20" : daysLeft <= 7 ? "bg-amber-500 ring-2 ring-amber-500/20" : "bg-accent",
-                    isRTL ? "right-[7px]" : "left-[7px]"
+                    "start-[7px]"
                   )} />
 
                   <div className={cn(

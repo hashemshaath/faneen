@@ -1531,15 +1531,15 @@ const DashboardContracts = () => {
                                 )}
                                 {milestones.length > 0 ? (
                                   <div className="relative">
-                                    <div className={`absolute top-0 bottom-0 ${isRTL ? 'right-4' : 'left-4'} w-0.5 bg-gradient-to-b from-accent/40 via-border/40 to-transparent`} />
+                                    <div className="absolute top-0 bottom-0 start-4 w-0.5 bg-gradient-to-b from-accent/40 via-border/40 to-transparent" />
                                     <div className="space-y-2.5">
                                       {milestones.map((m, idx) => {
                                         const mTitle = isRTL ? m.title_ar : (m.title_en || m.title_ar);
                                         const isCompleted = m.status === 'completed';
                                         const isInProgress = (m.status as string) === 'in_progress';
                                         return (
-                                          <div key={m.id} className={`relative ${isRTL ? 'pr-10' : 'pl-10'}`}>
-                                            <div className={`absolute top-2 ${isRTL ? 'right-1' : 'left-1'} w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold z-10 transition-all ${isCompleted ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' : isInProgress ? 'bg-accent text-accent-foreground ring-2 ring-accent/30 shadow-md' : 'bg-card text-muted-foreground border-2 border-border'}`}>
+                                          <div key={m.id} className="relative ps-10">
+                                            <div className={`absolute top-2 start-1 w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold z-10 transition-all ${isCompleted ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' : isInProgress ? 'bg-accent text-accent-foreground ring-2 ring-accent/30 shadow-md' : 'bg-card text-muted-foreground border-2 border-border'}`}>
                                               {isCompleted ? <CheckCircle2 className="w-3.5 h-3.5" /> : idx + 1}
                                             </div>
                                             <div className={`p-3 rounded-xl border transition-all ${isCompleted ? 'border-emerald-200/50 bg-emerald-50/30 dark:border-emerald-800/20 dark:bg-emerald-950/10' : isInProgress ? 'border-accent/30 bg-accent/5' : 'border-border/40 bg-card hover:border-border'}`}>
