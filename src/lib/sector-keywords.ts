@@ -209,3 +209,38 @@ export const detectSectorFromQuery = (query: string): SectorSlug | null => {
   }
   return null;
 };
+
+/**
+ * Maps a category slug (from `public.categories.slug`) to a sector slug.
+ * Used by `/categories/:slug` to inject sector-specific meta.
+ * Falls back to keyword detection on the raw slug when no explicit map hits.
+ */
+const CATEGORY_SLUG_TO_SECTOR: Record<string, SectorSlug> = {
+  // Aluminum family
+  'aluminum': 'aluminum',
+  'aluminum-windows': 'aluminum',
+  'aluminum-doors': 'aluminum',
+  'aluminum-facades': 'aluminum',
+  'aluminum-shutters': 'aluminum',
+  'aluminum-profiles': 'aluminum',
+  // Iron family
+  'iron-steel': 'iron',
+  // Glass family
+  'glass': 'glass',
+  'securit-glass': 'glass',
+  'double-glass': 'glass',
+  'colored-glass': 'glass',
+  'mirrors': 'glass',
+  // Wood & cabinets
+  'wood-cabinets': 'cabinets',
+};
+
+export const detectSectorFromCategorySlug = (
+  categorySlug: string | null | undefined,
+): SectorSlug | null => {
+  if (!categorySlug) return null;
+  const explicit = CATEGORY_SLUG_TO_SECTOR[categorySlug];
+  if (explicit) return explicit;
+  // Fall back to free-text heuristic on the slug itself ("aluminum-…", etc.)
+  return detectSectorFromQuery(categorySlug.replace(/-/g, ' '));
+};

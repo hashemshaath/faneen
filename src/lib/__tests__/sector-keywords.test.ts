@@ -5,6 +5,7 @@ import {
   getSectorKeywords,
   getSectorMeta,
   detectSectorFromQuery,
+  detectSectorFromCategorySlug,
 } from '@/lib/sector-keywords';
 
 describe('sector-keywords', () => {
@@ -72,5 +73,21 @@ describe('sector-keywords', () => {
         expect(rel).not.toBe(s.slug); // no self-reference
       }
     }
+  });
+
+  it('detectSectorFromCategorySlug maps real DB slugs to sectors', () => {
+    // explicit map
+    expect(detectSectorFromCategorySlug('aluminum')).toBe('aluminum');
+    expect(detectSectorFromCategorySlug('aluminum-windows')).toBe('aluminum');
+    expect(detectSectorFromCategorySlug('aluminum-facades')).toBe('aluminum');
+    expect(detectSectorFromCategorySlug('iron-steel')).toBe('iron');
+    expect(detectSectorFromCategorySlug('securit-glass')).toBe('glass');
+    expect(detectSectorFromCategorySlug('double-glass')).toBe('glass');
+    expect(detectSectorFromCategorySlug('mirrors')).toBe('glass');
+    expect(detectSectorFromCategorySlug('wood-cabinets')).toBe('cabinets');
+    // graceful fallback
+    expect(detectSectorFromCategorySlug(null)).toBeNull();
+    expect(detectSectorFromCategorySlug('')).toBeNull();
+    expect(detectSectorFromCategorySlug('handles')).toBeNull();
   });
 });
