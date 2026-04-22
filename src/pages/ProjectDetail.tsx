@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { useContentTracking } from '@/hooks/useContentTracking';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
@@ -49,6 +50,10 @@ const ProjectDetail = () => {
     },
     enabled: !!id,
   });
+
+  // Unified tracking
+  const { trackView, trackShare } = useContentTracking('project', project?.id);
+  useEffect(() => { if (project?.id) trackView(); }, [project?.id, trackView]);
 
   const { data: category } = useQuery({
     queryKey: ['category', project?.category_id],
