@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Shield, Star, Trophy, CheckCircle2 } from 'lucide-react';
@@ -74,7 +75,7 @@ export const AuthLayout: React.FC<{ children: React.ReactNode }> = ({ children }
         ))}
 
         {/* Logo */}
-        <div className="absolute top-8 start-10 z-10 flex items-center gap-3">
+        <Link to="/" className="absolute top-8 start-10 z-10 flex items-center gap-3 hover:opacity-80 transition-opacity">
           <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-2xl flex items-center justify-center border border-white/15 shadow-2xl">
             <span className="font-heading font-black text-2xl text-white">ق</span>
           </div>
@@ -82,7 +83,7 @@ export const AuthLayout: React.FC<{ children: React.ReactNode }> = ({ children }
             <h1 className="font-heading font-bold text-xl text-white leading-none tracking-tight">قِطاعات</h1>
             <span className="text-[11px] text-white/40 tracking-widest uppercase">Qitaat</span>
           </div>
-        </div>
+        </Link>
 
         {/* Feature badges */}
         <div className="absolute top-8 end-10 z-10 flex flex-col gap-2">
@@ -153,13 +154,15 @@ export const AuthLayout: React.FC<{ children: React.ReactNode }> = ({ children }
         {/* Top bar */}
         <div className="flex items-center justify-between px-6 sm:px-10 py-6">
           <div className="flex items-center gap-2.5 md:hidden">
-            <div className="w-10 h-10 rounded-xl bg-gradient-gold flex items-center justify-center shadow-md">
-              <span className="font-heading font-black text-lg text-secondary-foreground">ق</span>
-            </div>
-            <div>
-              <h1 className="font-heading font-bold text-base text-foreground leading-none">قِطاعات</h1>
-              <span className="text-[10px] text-accent tracking-wider">Qitaat</span>
-            </div>
+            <Link to="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
+              <div className="w-10 h-10 rounded-xl bg-gradient-gold flex items-center justify-center shadow-md">
+                <span className="font-heading font-black text-lg text-secondary-foreground">ق</span>
+              </div>
+              <div>
+                <h1 className="font-heading font-bold text-base text-foreground leading-none">قِطاعات</h1>
+                <span className="text-[10px] text-accent tracking-wider">Qitaat</span>
+              </div>
+            </Link>
           </div>
           <div className="hidden md:block" />
 
