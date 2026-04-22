@@ -21,6 +21,7 @@ import {
   type SearchFilterValues,
 } from '@/services/search';
 import { detectSectorFromQuery, getSectorMeta, ALL_SECTORS } from '@/lib/sector-keywords';
+import { findCityKeywords, getCityKeywordsString, mergeKeywords } from '@/lib/city-keywords';
 
 const ITEMS_PER_PAGE = 12;
 
@@ -41,23 +42,6 @@ const SearchPage = () => {
   const allSectorKeywords = ALL_SECTORS.flatMap((s) =>
     isRTL ? s.keywords_ar : s.keywords_en,
   ).slice(0, 24).join(', ');
-
-  usePageMeta({
-    title: sectorMeta
-      ? (isRTL
-          ? `${sectorMeta.name} — نتائج "${searchQuery}" | قِطاعات`
-          : `${sectorMeta.name} — results for "${searchQuery}" | Qitaat`)
-      : searchQuery
-        ? (isRTL ? `نتائج البحث عن "${searchQuery}" | قِطاعات` : `Search results for "${searchQuery}" | Qitaat`)
-        : (isRTL ? 'البحث عن مزودي خدمات الألمنيوم والحديد والزجاج والخشب والخزائن | قِطاعات' : 'Search Aluminum, Iron, Glass, Wood & Cabinet Providers | Qitaat'),
-    description: sectorMeta
-      ? sectorMeta.description
-      : searchQuery
-        ? (isRTL ? `نتائج البحث عن ${searchQuery} في دليل قِطاعات للصناعات الخفيفة` : `Search results for ${searchQuery} in Qitaat directory`)
-        : (isRTL ? 'ابحث عن أفضل مصانع ومحلات الألمنيوم والحديد والزجاج والخشب والخزائن. قارن الأسعار والتقييمات واختر المزود المناسب.' : 'Find the best aluminum, iron, glass, wood and cabinet factories and shops.'),
-    keywords: sectorMeta ? sectorMeta.keywords : allSectorKeywords,
-    noindex: !!searchQuery,
-  });
 
   const isMobile = useIsMobile();
 
@@ -86,6 +70,60 @@ const SearchPage = () => {
     sortBy: (searchParams.get('sort') as SearchFilterValues['sortBy']) || 'rating',
     priceMin: Number(searchParams.get('price_min')) || 0,
     priceMax: Number(searchParams.get('price_max')) || 0,
+  });
+
+  // Resolve the selected city (from filter or URL) into a localized name and
+  // a dedicated keyword bag so meta keywords reflect the user's geo choice.
+  const selectedCity = useMemo(() => {
+    if (!filters.cityId || filters.cityId === 'all' || !cities) return null;
+    return cities.find((c) => c.id === filters.cityId) || null;
+  }, [filters.cityId, cities]);
+
+  const cityMeta = useMemo(() => {
+    if (!selectedCity) return null;
+    const entry =
+      findCityKeywords(isRTL ? selectedCity.name_ar : selectedCity.name_en) ||
+      findCityKeywords(selectedCity.name_en) ||
+      findCityKeywords(selectedCity.name_ar);
+    if (!entry) return null;
+    return {
+      name: isRTL ? entry.name_ar : entry.name_en,
+      region: isRTL ? entry.region_ar : entry.region_en,
+      keywords: getCityKeywordsString(entry),
+    };
+  }, [selectedCity, isRTL]);
+
+  // Title segment that surfaces the city in the page title (e.g. "— الرياض").
+  const cityTitleSuffix = cityMeta ? (isRTL ? ` — ${cityMeta.name}` : ` — ${cityMeta.name}`) : '';
+
+  usePageMeta({
+    title: sectorMeta
+      ? (isRTL
+          ? `${sectorMeta.name}${cityTitleSuffix} — نتائج "${searchQuery}" | قِطاعات`
+          : `${sectorMeta.name}${cityTitleSuffix} — results for "${searchQuery}" | Qitaat`)
+      : searchQuery
+        ? (isRTL ? `نتائج البحث عن "${searchQuery}"${cityTitleSuffix} | قِطاعات` : `Search results for "${searchQuery}"${cityTitleSuffix} | Qitaat`)
+        : cityMeta
+          ? (isRTL ? `مزودو الخدمات في ${cityMeta.name} | قِطاعات` : `Service providers in ${cityMeta.name} | Qitaat`)
+          : (isRTL ? 'البحث عن مزودي خدمات الألمنيوم والحديد والزجاج والخشب والخزائن | قِطاعات' : 'Search Aluminum, Iron, Glass, Wood & Cabinet Providers | Qitaat'),
+    description: sectorMeta
+      ? (cityMeta
+          ? (isRTL
+              ? `${sectorMeta.description} — متوفر في ${cityMeta.name} (${cityMeta.region}).`
+              : `${sectorMeta.description} — available in ${cityMeta.name} (${cityMeta.region}).`)
+          : sectorMeta.description)
+      : searchQuery
+        ? (isRTL ? `نتائج البحث عن ${searchQuery}${cityMeta ? ` في ${cityMeta.name}` : ''} في دليل قِطاعات` : `Search results for ${searchQuery}${cityMeta ? ` in ${cityMeta.name}` : ''} in Qitaat directory`)
+        : cityMeta
+          ? (isRTL
+              ? `استعرض أفضل مصانع وورش الألمنيوم والحديد والزجاج والخشب والخزائن في ${cityMeta.name} و${cityMeta.region}.`
+              : `Browse the best aluminum, iron, glass, wood and cabinet providers in ${cityMeta.name} and the ${cityMeta.region}.`)
+          : (isRTL ? 'ابحث عن أفضل مصانع ومحلات الألمنيوم والحديد والزجاج والخشب والخزائن. قارن الأسعار والتقييمات واختر المزود المناسب.' : 'Find the best aluminum, iron, glass, wood and cabinet factories and shops.'),
+    keywords: mergeKeywords(
+      sectorMeta ? sectorMeta.keywords : allSectorKeywords,
+      cityMeta?.keywords,
+    ),
+    noindex: !!searchQuery,
   });
 
   const handleQueryChange = useCallback((q: string) => {
