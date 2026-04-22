@@ -22,7 +22,9 @@ function flag(name, fallback) {
 }
 
 const BASE = flag("base", "https://qitaat.com").replace(/\/$/, "");
-const SITEMAP_INDEX = `${BASE}/functions/v1/sitemap`;
+// The sitemap edge function may be proxied through the main domain or served
+// directly from Supabase. We allow overriding via --sitemap-url.
+const SITEMAP_INDEX = flag("sitemap-url", `${BASE}/functions/v1/sitemap`);
 const CONCURRENCY = parseInt(flag("concurrency", "10"), 10);
 const TIMEOUT_MS = parseInt(flag("timeout", "10000"), 10);
 
@@ -55,11 +57,61 @@ async function safeFetch(url) {
 
 console.log(`\n${c.bold}${c.cyan}🌐 Sitemap Live HTTP Audit${c.reset}`);
 console.log(`   Base: ${BASE}`);
+console.log(`   Sitemap index: ${SITEMAP_INDEX}`);
 console.log(`   Concurrency: ${CONCURRENCY}\n`);
 
 const indexRes = await safeFetch(SITEMAP_INDEX);
-if (indexRes.status !== 200) {
-  console.error(`${c.red}✗ Failed to fetch sitemap index: HTTP ${indexRes.status || indexRes.error}${c.reset}`);
+if (indexRes.status !== 200 || !indexRes.body.includes("<loc>")) {
+  // Fallback: try the static sitemap.xml at the base domain
+  console.log(`   ${c.yellow}⚠${c.reset} Primary sitemap returned ${indexRes.status}, trying ${BASE}/sitemap.xml...`);
+  const fallbackRes = await safeFetch(`${BASE}/sitemap.xml`);
+  if (fallbackRes.status !== 200 || !fallbackRes.body.includes("<loc>")) {
+    console.error(`${c.red}✗ Failed to fetch sitemap: both endpoints returned non-XML${c.reset}`);
+    process.exit(1);
+  }
+  indexRes.body = fallbackRes.body;
+  indexRes.status = fallbackRes.status;
+}
+
+// The sitemap index may reference edge function URLs like
+// https://qitaat.com/functions/v1/sitemap?type=X — but that domain
+// might serve the SPA instead. Detect and rewrite to use Supabase URL.
+const subSitemapUrls = extractLocs(indexRes.body);
+
+// Resolve sub-sitemap URLs: if they fail (return HTML), try via SUPABASE_URL
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL || "";
+
+async function fetchSubSitemap(url) {
+  const res = await safeFetch(url);
+  if (res.status === 200 && res.body.includes("<url>")) return res;
+
+  // Rewrite: qitaat.com/functions/v1/sitemap → supabase-url/functions/v1/sitemap
+  if (SUPABASE_URL) {
+    const rewritten = url.replace(/^https?:\/\/[^/]+\/functions\/v1\//, `${SUPABASE_URL}/functions/v1/`);
+    if (rewritten !== url) {
+      const res2 = await safeFetch(rewritten);
+      if (res2.status === 200 && res2.body.includes("<url>")) return res2;
+    }
+  }
+  return res; // return original (may be HTML)
+}
+
+console.log(`   Sub-sitemaps found: ${subSitemapUrls.length}`);
+
+/* ── 2. Fetch all sub-sitemaps and collect URLs ── */
+
+const allUrls = new Set();
+
+for (const subUrl of subSitemapUrls) {
+  const res = await fetchSubSitemap(subUrl);
+  if (res.status !== 200 || !res.body.includes("<url>")) {
+    console.error(`   ${c.red}✗${c.reset} Sub-sitemap failed: ${subUrl} → ${res.status || res.error}`);
+    continue;
+  }
+  const locs = extractLocs(res.body);
+  for (const loc of locs) allUrls.add(loc);
+  console.log(`   ${c.green}✓${c.reset} ${subUrl.split("type=")[1] || subUrl} → ${locs.length} URLs`);
+}
   process.exit(1);
 }
 
