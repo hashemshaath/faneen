@@ -4,21 +4,92 @@ import { supabase } from '@/integrations/supabase/client';
 
 const HISTORY_KEY = 'qitaat_search_history';
 const MAX_HISTORY = 10;
+const LEGACY_HISTORY_KEYS = [
+  'faneen_search_history',
+  'faneen_searchHistory',
+  'faneen_recent_searches',
+  'faneen_history',
+];
+
+/**
+ * Defensive cleanup: even though `main.tsx` wipes all `faneen_*` keys on
+ * first load, we run a tiny per-call guard so the search history can NEVER
+ * surface legacy data — e.g. if a tab opened before the cleanup ran, or if
+ * someone restored an old backup. Idempotent and cheap (a flag short-circuits
+ * after the first call).
+ */
+const LEGACY_PURGE_FLAG = 'qitaat_search_history_legacy_purged_v1';
+let legacyPurgedThisSession = false;
+
+const purgeLegacySearchHistory = () => {
+  if (legacyPurgedThisSession) return;
+  legacyPurgedThisSession = true;
+  try {
+    if (localStorage.getItem(LEGACY_PURGE_FLAG) === '1') return;
+    for (const key of LEGACY_HISTORY_KEYS) {
+      try { localStorage.removeItem(key); } catch { /* ignore */ }
+      try { sessionStorage.removeItem(key); } catch { /* ignore */ }
+    }
+    // Also sweep any other faneen_* key whose name hints at search/history,
+    // covering older variants we may have forgotten.
+    try {
+      const toRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('faneen_') && /search|history|recent/i.test(k)) {
+          toRemove.push(k);
+        }
+      }
+      toRemove.forEach((k) => localStorage.removeItem(k));
+    } catch { /* ignore */ }
+    try { localStorage.setItem(LEGACY_PURGE_FLAG, '1'); } catch { /* ignore */ }
+  } catch { /* storage unavailable */ }
+};
+
+/** Strict shape validation — rejects anything that isn't a clean string[]. */
+const sanitizeHistory = (raw: unknown): string[] => {
+  if (!Array.isArray(raw)) return [];
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const item of raw) {
+    if (typeof item !== 'string') continue;
+    const trimmed = item.trim();
+    if (trimmed.length < 2 || trimmed.length > 200) continue;
+    if (seen.has(trimmed)) continue;
+    seen.add(trimmed);
+    out.push(trimmed);
+    if (out.length >= MAX_HISTORY) break;
+  }
+  return out;
+};
 
 // ─── Search History ────────────────────────────────────
 export const getSearchHistory = (): string[] => {
+  purgeLegacySearchHistory();
   try {
     const raw = localStorage.getItem(HISTORY_KEY);
-    return raw ? (JSON.parse(raw) as string[]) : [];
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    const clean = sanitizeHistory(parsed);
+    // If the stored value was malformed, rewrite it cleanly so we never
+    // re-validate the bad payload on every read.
+    if (clean.length !== (Array.isArray(parsed) ? parsed.length : -1)) {
+      try { localStorage.setItem(HISTORY_KEY, JSON.stringify(clean)); } catch { /* ignore */ }
+    }
+    return clean;
   } catch {
+    // Corrupt JSON — wipe it so future reads don't keep throwing.
+    try { localStorage.removeItem(HISTORY_KEY); } catch { /* ignore */ }
     return [];
   }
 };
 
 export const addToSearchHistory = (term: string) => {
-  if (!term.trim() || term.length < 2) return;
-  const history = getSearchHistory().filter(h => h !== term);
-  history.unshift(term);
+  const trimmed = term.trim();
+  if (trimmed.length < 2 || trimmed.length > 200) return;
+  purgeLegacySearchHistory();
+  const history = getSearchHistory().filter(h => h !== trimmed);
+  history.unshift(trimmed);
   try { localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, MAX_HISTORY))); } catch { /* ignore */ }
 };
 
@@ -28,6 +99,7 @@ export const removeFromSearchHistory = (term: string) => {
 };
 
 export const clearSearchHistory = () => {
+  purgeLegacySearchHistory();
   try { localStorage.removeItem(HISTORY_KEY); } catch { /* ignore */ }
 };
 
