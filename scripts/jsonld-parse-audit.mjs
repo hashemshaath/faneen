@@ -39,14 +39,7 @@ function walk(dir) {
 function extractJsonLdBlocks(source, filePath) {
   const blocks = [];
 
-  // Strategy 1: Find template-literal or string JSON-LD in application/ld+json
-  const scriptRegex = /application\/ld\+json[^`]*`([^`]+)`/g;
-  let m;
-  while ((m = scriptRegex.exec(source)) !== null) {
-    blocks.push({ raw: m[1].trim(), source: "ld+json script", file: filePath });
-  }
-  // Strategy 1: Find template-literal JSON-LD in application/ld+json
-  // Only match backtick templates that look like actual JSON (start with {)
+  // Strategy 1: Find template-literal JSON-LD in application/ld+json (must start with {)
   const scriptRegex = /application\/ld\+json[^`]*`(\s*\{[^`]+)`/g;
   let m;
   while ((m = scriptRegex.exec(source)) !== null) {
