@@ -86,6 +86,13 @@ for (const file of walk(SRC)) {
   while ((match = urlRe.exec(source))) {
     let url = match[0].replace(/[.)]+$/, ""); // trim trailing punctuation
     if (SKIP_PATTERNS.some((p) => p.test(url))) continue;
+    // Skip template literals (contain ${), SVG namespaces, and incomplete URLs
+    if (/\$\{/.test(url)) continue;
+    if (/w3\.org/.test(url)) continue;
+    if (/\{[a-z]/.test(url)) continue;
+    if (url === "https://" || url === "http://") continue;
+    // Skip URLs that are clearly part of code patterns
+    if (url.length < 12) continue;
     if (!urlMap.has(url)) urlMap.set(url, new Set());
     urlMap.get(url).add(relFile);
   }
