@@ -28,6 +28,9 @@ jobs:
       - name: Brand Audit (faneen residue check)
         run: node scripts/brand-audit.mjs
 
+      - name: SEO NoIndex/Canonical Audit
+        run: node scripts/seo-noindex-audit.mjs
+
       - name: TypeScript Check
         run: npx tsc --noEmit
         continue-on-error: true
