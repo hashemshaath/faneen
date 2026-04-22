@@ -222,24 +222,13 @@ const conflictChecks = staticAllow
 
 let conflictCount = 0;
 for (const allow of conflictChecks) {
-  // Check if the same base path (without query) is in Disallow
-  const basePath = allow.split('?')[0];
-  const conflicting = staticDisallow.find(d => {
-    const dBase = d.split('?')[0].replace(/\/$/, '');
-    return dBase === basePath;
-  });
+  const conflicting = staticDisallow.find(d => d === allow);
   if (conflicting) {
-    // This is OK if Allow has no query and Disallow has a query (e.g. Allow /search, Disallow /search?q=)
-    const allowHasQuery = allow.includes('?');
-    const disallowHasQuery = conflicting.includes('?');
-    if (allowHasQuery && disallowHasQuery) {
-      // Both have queries — real conflict
-      findings.push({ level: 'critical', msg: `تعارض: Allow "${allow}" و Disallow "${conflicting}" على نفس المسار` });
-      report.conflicts.push({ allow, disallow: conflicting });
-      console.log(`   ${c.red}✗${c.reset}  Allow "${allow}" ↔ Disallow "${conflicting}"`);
-      conflictCount++;
-    }
-    // Allow /search + Disallow /search?q= is a valid pattern (not a conflict)
+    // Exact same rule in both Allow and Disallow — real conflict
+    findings.push({ level: 'critical', msg: `تعارض: Allow "${allow}" و Disallow "${conflicting}" نفس القاعدة بالضبط` });
+    report.conflicts.push({ allow, disallow: conflicting });
+    console.log(`   ${c.red}✗${c.reset}  Allow "${allow}" ↔ Disallow "${conflicting}"`);
+    conflictCount++;
   }
 }
 if (conflictCount === 0) {
