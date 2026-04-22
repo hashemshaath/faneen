@@ -42,6 +42,7 @@ import {
   useProjects,
   useServices,
 } from "@/components/business-profile/business-profile.data";
+import { useReviews } from "@/components/business-profile/business-profile.data";
 import { BnplBadges } from "@/components/bnpl/BnplBadges";
 import { BookingWidget } from "@/components/booking/BookingWidget";
 
@@ -56,6 +57,7 @@ const BusinessProfile = () => {
   const { data: projects = [] } = useProjects(business?.id);
   const { data: services = [] } = useServices(business?.id);
   const { data: branches = [] } = useBranches(business?.id);
+  const { data: reviews = [] } = useReviews(business?.id);
 
   const businessName = business ? getLocalizedValue(language, business.name_ar, business.name_en) : '';
   const businessDesc = business ? (getLocalizedValue(language, business.description_ar, business.description_en) || getLocalizedValue(language, business.short_description_ar, business.short_description_en) || '') : '';
@@ -128,8 +130,31 @@ const BusinessProfile = () => {
       ],
     };
 
-    return [localBusiness, breadcrumb];
-  }, [business, services, categoryName, cityName]);
+    // Individual Review entities (up to 5 most recent)
+    const reviewEntities = reviews.slice(0, 5).map((review: any) => ({
+      '@context': 'https://schema.org',
+      '@type': 'Review',
+      itemReviewed: {
+        '@type': 'LocalBusiness',
+        name: business.name_ar,
+        '@id': `https://qitaat.com/${business.username}`,
+      },
+      author: {
+        '@type': 'Person',
+        name: review.profiles?.full_name || (language === 'ar' ? 'عميل' : 'Customer'),
+      },
+      reviewRating: {
+        '@type': 'Rating',
+        ratingValue: String(review.rating),
+        bestRating: '5',
+        worstRating: '1',
+      },
+      ...(review.comment ? { reviewBody: review.comment } : {}),
+      datePublished: review.created_at ? new Date(review.created_at).toISOString().split('T')[0] : undefined,
+    }));
+
+    return [localBusiness, breadcrumb, ...reviewEntities];
+  }, [business, services, reviews, categoryName, cityName, language]);
 
   useMultiJsonLd(structuredDataArray);
 

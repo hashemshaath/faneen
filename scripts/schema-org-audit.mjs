@@ -72,6 +72,12 @@ const pages = [
     required: [
       { type: "LocalBusiness", label: "LocalBusiness schema" },
       { type: "BreadcrumbList", label: "BreadcrumbList schema" },
+      { type: "Review", label: "Review schema" },
+      { type: "AggregateRating", label: "AggregateRating schema" },
+    ],
+    requiredFields: [
+      { field: "reviewRating", label: "reviewRating in Review entities" },
+      { field: "itemReviewed", label: "itemReviewed in Review entities" },
     ],
     critical: true,
   },
