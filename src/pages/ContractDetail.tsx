@@ -799,8 +799,8 @@ const ContractDetail = () => {
       </div>
       <div className="p-4 space-y-0.5">
         <div className="flex items-center gap-3 mb-3">
-          {profile?.avatar_url ? <img src={profile.avatar_url} alt="" className="w-12 h-12 rounded-full object-cover border-2 border-border shrink-0" />
-           : isBiz && biz?.logo_url ? <img src={biz.logo_url} alt="" className="w-12 h-12 rounded-xl object-cover border-2 border-border shrink-0" />
+          {profile?.avatar_url ? <img src={profile.avatar_url} alt={getProfileName(profile)} className="w-12 h-12 rounded-full object-cover border-2 border-border shrink-0" />
+           : isBiz && biz?.logo_url ? <img src={biz.logo_url} alt={bizName || ''} className="w-12 h-12 rounded-xl object-cover border-2 border-border shrink-0" />
            : <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center shrink-0"><PIcon className="w-6 h-6 text-muted-foreground" /></div>}
           <div className="min-w-0 flex-1">
             <p className="font-heading font-bold text-sm truncate">{getProfileName(profile)}</p>
