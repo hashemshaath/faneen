@@ -70,7 +70,7 @@ export const MembershipSection = () => {
                     <div className="absolute inset-0 rounded-2xl sm:rounded-3xl overflow-hidden pointer-events-none">
                       <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
                     </div>
-                    <div className="absolute -top-4 right-1/2 translate-x-1/2 px-5 py-1.5 rounded-full bg-gradient-gold text-xs font-heading font-bold text-secondary-foreground shadow-lg shadow-gold/20">
+                    <div className="absolute -top-4 end-1/2 translate-x-1/2 px-5 py-1.5 rounded-full bg-gradient-gold text-xs font-heading font-bold text-secondary-foreground shadow-lg shadow-gold/20">
                       <Sparkles className="w-3 h-3 inline me-1" />
                       {t('membership.popular')}
                     </div>
