@@ -20,6 +20,7 @@ import {
   defaultFilters,
   type SearchFilterValues,
 } from '@/services/search';
+import { detectSectorFromQuery, getSectorMeta, ALL_SECTORS } from '@/lib/sector-keywords';
 
 const ITEMS_PER_PAGE = 12;
 
@@ -28,14 +29,33 @@ const SearchPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const searchQuery = searchParams.get('q') || '';
+  const isRTL = language === 'ar';
+
+  // Detect a sector from the query (e.g. "ألمنيوم" → aluminum) and lift its
+  // meta into the page so search results inherit sector-specific keywords,
+  // OG titles and descriptions.
+  const detectedSector = detectSectorFromQuery(searchQuery);
+  const sectorMeta = detectedSector ? getSectorMeta(detectedSector, isRTL) : null;
+
+  // Default keyword bag = all sectors (the search hub touches every vertical).
+  const allSectorKeywords = ALL_SECTORS.flatMap((s) =>
+    isRTL ? s.keywords_ar : s.keywords_en,
+  ).slice(0, 24).join(', ');
 
   usePageMeta({
-    title: searchQuery
-      ? (language === 'ar' ? `نتائج البحث عن "${searchQuery}" | قِطاعات` : `Search results for "${searchQuery}" | Qitaat`)
-      : (language === 'ar' ? 'البحث عن مزودي خدمات الألمنيوم والحديد | قِطاعات' : 'Search Aluminum & Iron Service Providers | Qitaat'),
-    description: searchQuery
-      ? (language === 'ar' ? `نتائج البحث عن ${searchQuery} في دليل قِطاعات للصناعات الخفيفة` : `Search results for ${searchQuery} in Qitaat directory`)
-      : (language === 'ar' ? 'ابحث عن أفضل مصانع ومحلات الألمنيوم والحديد والزجاج والخشب. قارن الأسعار والتقييمات واختر المزود المناسب.' : 'Find the best aluminum, iron, glass and wood factories and shops.'),
+    title: sectorMeta
+      ? (isRTL
+          ? `${sectorMeta.name} — نتائج "${searchQuery}" | قِطاعات`
+          : `${sectorMeta.name} — results for "${searchQuery}" | Qitaat`)
+      : searchQuery
+        ? (isRTL ? `نتائج البحث عن "${searchQuery}" | قِطاعات` : `Search results for "${searchQuery}" | Qitaat`)
+        : (isRTL ? 'البحث عن مزودي خدمات الألمنيوم والحديد والزجاج والخشب والخزائن | قِطاعات' : 'Search Aluminum, Iron, Glass, Wood & Cabinet Providers | Qitaat'),
+    description: sectorMeta
+      ? sectorMeta.description
+      : searchQuery
+        ? (isRTL ? `نتائج البحث عن ${searchQuery} في دليل قِطاعات للصناعات الخفيفة` : `Search results for ${searchQuery} in Qitaat directory`)
+        : (isRTL ? 'ابحث عن أفضل مصانع ومحلات الألمنيوم والحديد والزجاج والخشب والخزائن. قارن الأسعار والتقييمات واختر المزود المناسب.' : 'Find the best aluminum, iron, glass, wood and cabinet factories and shops.'),
+    keywords: sectorMeta ? sectorMeta.keywords : allSectorKeywords,
     noindex: !!searchQuery,
   });
 
