@@ -55,6 +55,8 @@ const PRIVATE_PAGES = [
 // Search page has conditional noindex (noindex when query present) — special case.
 const CONDITIONAL_NOINDEX_PAGES = [
   'src/pages/Search.tsx',
+  'src/pages/Compare.tsx',
+  'src/pages/CompareProfiles.tsx',
 ];
 
 // Dashboard & admin: glob-matched patterns (files under these dirs should have noindex).
