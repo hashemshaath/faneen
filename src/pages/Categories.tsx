@@ -85,6 +85,35 @@ const Categories = () => {
         { '@type': 'ListItem', position: 2, name: catName, item: `https://qitaat.com/categories/${selectedCategory.slug}` },
       ],
     };
+    const website = {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      url: 'https://qitaat.com',
+      name: 'قِطاعات Qitaat',
+      inLanguage: isRTL ? 'ar' : 'en',
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: {
+          '@type': 'EntryPoint',
+          urlTemplate: 'https://qitaat.com/search?q={search_term_string}',
+        },
+        'query-input': 'required name=search_term_string',
+      },
+      keywords: sectorMeta ? sectorMeta.keywords : `${catName}, قِطاعات`,
+    };
+    const itemList = businesses.length > 0 ? {
+      '@context': 'https://schema.org',
+      '@type': 'ItemList',
+      name: isRTL ? `أفضل مزودي ${catName}` : `Top ${catName} providers`,
+      numberOfItems: Math.min(businesses.length, 10),
+      keywords: sectorMeta ? sectorMeta.keywords : `${catName}, قِطاعات`,
+      itemListElement: businesses.slice(0, 10).map((b, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        url: `https://qitaat.com/${b.username}`,
+        name: language === 'ar' ? b.name_ar : (b.name_en || b.name_ar),
+      })),
+    } : null;
     const faq = {
       '@context': 'https://schema.org',
       '@type': 'FAQPage',
@@ -106,8 +135,8 @@ const Categories = () => {
         },
       ],
     };
-    return [breadcrumb, faq];
-  }, [selectedCategory, catName]));
+    return itemList ? [breadcrumb, website, itemList, faq] : [breadcrumb, website, faq];
+  }, [selectedCategory, catName, sectorMeta, businesses, isRTL, language]));
 
   if (slug && selectedCategory) {
     return (
