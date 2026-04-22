@@ -93,3 +93,7 @@ jobs:
         env:
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL || '' }}
         continue-on-error: true
+
+      - name: Business & Category Links Audit
+        run: node scripts/business-links-audit.mjs --base https://qitaat.com --concurrency 10
+        continue-on-error: true
