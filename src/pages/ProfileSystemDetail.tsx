@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { usePageMeta, useJsonLd } from '@/hooks/usePageMeta';
+import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -272,14 +272,90 @@ const ProfileSystemDetail = () => {
     canonical: slug ? `https://qitaat.com/profile-systems/${slug}` : undefined,
   });
 
-  useJsonLd(profile ? {
-    '@context': 'https://schema.org',
-    '@type': 'Product',
-    name: profileName,
-    description: profileDesc?.slice(0, 300),
-    image: profile.cover_image_url,
-    url: `https://qitaat.com/profile-systems/${slug}`,
-  } : null);
+  // Build structured data array: Product + FAQPage
+  const structuredDataArray = React.useMemo(() => {
+    if (!profile) return null;
+
+    const product: Record<string, any> = {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: profileName,
+      description: profileDesc?.slice(0, 300),
+      image: profile.cover_image_url,
+      url: `https://qitaat.com/profile-systems/${slug}`,
+    };
+
+    const result: Record<string, any>[] = [product];
+
+    // Build FAQPage from specs + features + applications
+    const faqEntries: Array<{ q: string; a: string }> = [];
+
+    // Specs as FAQ
+    if (specs.length > 0) {
+      for (const s of specs) {
+        const specName = language === 'ar' ? s.spec_name_ar : (s.spec_name_en || s.spec_name_ar);
+        const specVal = language === 'ar' ? s.spec_value_ar : (s.spec_value_en || s.spec_value_ar);
+        if (specName && specVal) {
+          faqEntries.push({
+            q: language === 'ar' ? `ما هو ${specName} لهذا القطاع؟` : `What is the ${specName} of this profile?`,
+            a: specVal,
+          });
+        }
+      }
+    }
+
+    // Features as FAQ
+    const feats = language === 'ar' ? (profile.features_ar || []) : (profile.features_en?.length ? profile.features_en : (profile.features_ar || []));
+    if (feats.length > 0) {
+      faqEntries.push({
+        q: language === 'ar' ? `ما هي مميزات ${profileName}؟` : `What are the key features of ${profileName}?`,
+        a: feats.join(language === 'ar' ? '، ' : ', '),
+      });
+    }
+
+    // Applications as FAQ
+    const appsText = language === 'ar' ? (profile.applications_ar || '') : (profile.applications_en || profile.applications_ar || '');
+    if (appsText) {
+      faqEntries.push({
+        q: language === 'ar' ? `ما هي مجالات استخدام ${profileName}؟` : `What are the applications of ${profileName}?`,
+        a: appsText.slice(0, 500),
+      });
+    }
+
+    // Thermal/Sound/Strength ratings as FAQ
+    if (profile.thermal_insulation_rating || profile.sound_insulation_rating || profile.strength_rating) {
+      const ratings = [
+        profile.thermal_insulation_rating ? (language === 'ar' ? `العزل الحراري: ${profile.thermal_insulation_rating}/10` : `Thermal: ${profile.thermal_insulation_rating}/10`) : null,
+        profile.sound_insulation_rating ? (language === 'ar' ? `العزل الصوتي: ${profile.sound_insulation_rating}/10` : `Sound: ${profile.sound_insulation_rating}/10`) : null,
+        profile.strength_rating ? (language === 'ar' ? `المتانة: ${profile.strength_rating}/10` : `Strength: ${profile.strength_rating}/10`) : null,
+      ].filter(Boolean);
+      if (ratings.length > 0) {
+        faqEntries.push({
+          q: language === 'ar' ? `ما هو التقييم الفني لـ ${profileName}؟` : `What is the technical rating of ${profileName}?`,
+          a: ratings.join(language === 'ar' ? '، ' : ', '),
+        });
+      }
+    }
+
+    if (faqEntries.length > 0) {
+      result.push({
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: faqEntries.map((e) => ({
+          '@type': 'Question',
+          name: e.q,
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: e.a,
+          },
+        })),
+      });
+    }
+
+    return result;
+  }, [profile, profileName, profileDesc, slug, specs, language]);
+
+  useMultiJsonLd(structuredDataArray);
 
   // ─── Loading ───
   if (isLoading) return (
