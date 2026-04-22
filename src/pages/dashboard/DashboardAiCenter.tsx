@@ -929,7 +929,7 @@ const DashboardAiCenter: React.FC = () => {
                         placeholder={t('ستظهر الترجمة هنا...', 'Translation appears here...')}
                         className="min-h-[200px] rounded-xl resize-none text-sm leading-relaxed" dir={targetDir} />
                       {transResult && (
-                        <div className={`absolute top-2 ${isRTL ? 'left-2' : 'right-2'} flex gap-1`}>
+                        <div className="absolute top-2 end-2 flex gap-1">
                           <Tooltip><TooltipTrigger asChild>
                             <Button variant="secondary" size="sm" className="h-7 w-7 rounded-lg" onClick={() => copyText(transResult)}><Copy className="w-3 h-3" /></Button>
                           </TooltipTrigger><TooltipContent className="text-[10px]">{t('نسخ', 'Copy')}</TooltipContent></Tooltip>
@@ -1024,7 +1024,7 @@ const DashboardAiCenter: React.FC = () => {
                         placeholder={t('ستظهر النتيجة هنا...', 'Result appears here...')}
                         className={`${toolFullscreen ? 'min-h-[300px]' : 'min-h-[240px]'} rounded-xl resize-none text-sm leading-relaxed`} dir="auto" />
                       {toolResult && (
-                        <div className={`absolute top-2 ${isRTL ? 'left-2' : 'right-2'} flex gap-1`}>
+                        <div className="absolute top-2 end-2 flex gap-1">
                           <Button variant="secondary" size="sm" className="h-7 w-7 rounded-lg" onClick={() => copyText(toolResult)}><Copy className="w-3 h-3" /></Button>
                           <Button variant="secondary" size="sm" className="h-7 w-7 rounded-lg" onClick={() => exportText(toolResult, 'result.txt')}><Download className="w-3 h-3" /></Button>
                           <Button variant="secondary" size="sm" className="h-7 w-7 rounded-lg" onClick={() => { setToolInput(toolResult); setToolResult(''); }}>
@@ -1095,7 +1095,7 @@ const DashboardAiCenter: React.FC = () => {
                         placeholder={t('ستظهر النتيجة هنا...', 'Result appears here...')}
                         className="min-h-[240px] rounded-xl resize-none text-sm leading-relaxed" dir="auto" />
                       {blogResult && (
-                        <div className={`absolute top-2 ${isRTL ? 'left-2' : 'right-2'} flex gap-1`}>
+                        <div className="absolute top-2 end-2 flex gap-1">
                           <Button variant="secondary" size="sm" className="h-7 w-7 rounded-lg" onClick={() => copyText(blogResult)}><Copy className="w-3 h-3" /></Button>
                           <Button variant="secondary" size="sm" className="h-7 w-7 rounded-lg" onClick={() => exportText(blogResult, 'blog-content.txt')}><Download className="w-3 h-3" /></Button>
                         </div>
