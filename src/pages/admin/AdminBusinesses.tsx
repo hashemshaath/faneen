@@ -879,7 +879,7 @@ const AdminBusinesses = () => {
                     <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                       {portfolioData.map((item) => (
                         <div key={item.id} className="relative aspect-square rounded-lg overflow-hidden border border-border/50 group">
-                          <img src={item.media_url} alt="" className="w-full h-full object-cover" />
+                          <img src={item.media_url} alt={isRTL ? 'صورة من معرض الأعمال' : 'Portfolio image'} className="w-full h-full object-cover" />
                           <button type="button"
                             onClick={() => { if (confirm(isRTL ? 'حذف هذه الصورة؟' : 'Delete this image?')) deletePortfolioMutation.mutate(item.id); }}
                             className="absolute top-1 end-1 bg-destructive text-destructive-foreground rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
