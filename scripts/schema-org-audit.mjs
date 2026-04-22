@@ -60,6 +60,10 @@ const pages = [
       { type: "WebSite", label: "WebSite schema" },
       { type: "Organization", label: "Organization (publisher or standalone)" },
     ],
+    requiredFields: [
+      { field: "sameAs", label: "sameAs social links" },
+      { field: "contactPoint", label: "contactPoint info" },
+    ],
     critical: true,
   },
   {
