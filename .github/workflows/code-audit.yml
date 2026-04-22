@@ -71,3 +71,6 @@ jobs:
           npm run build
           echo "Build completed successfully"
           du -sh dist/ 2>/dev/null || echo "No dist folder found"
+
+      - name: Sitemap HTTP Audit
+        run: node scripts/sitemap-http-audit.mjs --skip-build
