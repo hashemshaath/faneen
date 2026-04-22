@@ -29,6 +29,9 @@ function read(rel) {
 const findings = [];
 
 // ── 1. Parse static sitemap.xml (sitemap index) ─────────
+const report = { forbidden: [], missingAllowed: [], domainErrors: [], supabaseLeaks: [], typeMismatches: [] };
+
+// ──────────────────────────────────────────────────────────
 console.log(`\n${c.bold}${c.cyan}🗺️  Sitemap ↔ Robots Integrity Audit${c.reset}\n`);
 
 const sitemapXml = read('public/sitemap.xml');
