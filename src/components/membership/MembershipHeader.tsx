@@ -1,15 +1,26 @@
 import { Badge } from '@/components/ui/badge';
 import { Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useMemo } from 'react';
 
 interface MembershipHeaderProps {
   isRTL: boolean;
   billingCycle: 'monthly' | 'yearly';
   setBillingCycle: (cycle: 'monthly' | 'yearly') => void;
+  plans?: Array<{ price_monthly: number; price_yearly: number }>;
 }
 
-export const MembershipHeader = ({ isRTL, billingCycle, setBillingCycle }: MembershipHeaderProps) => (
-  <div className="text-center mb-8 sm:mb-14 max-w-2xl mx-auto">
+export const MembershipHeader = ({ isRTL, billingCycle, setBillingCycle, plans = [] }: MembershipHeaderProps) => {
+  // Calculate average yearly savings from actual plan prices
+  const savingsPct = useMemo(() => {
+    const paid = plans.filter(p => p.price_monthly > 0 && p.price_yearly > 0);
+    if (paid.length === 0) return 0;
+    const totalSaving = paid.reduce((sum, p) => sum + (1 - p.price_yearly / (p.price_monthly * 12)), 0);
+    return Math.round((totalSaving / paid.length) * 100);
+  }, [plans]);
+
+  return (
+    <div className="text-center mb-8 sm:mb-14 max-w-2xl mx-auto">
     <Badge variant="secondary" className="mb-3 bg-accent/10 text-accent gap-1">
       <Sparkles className="w-3 h-3" />{isRTL ? 'خطط العضوية' : 'Membership Plans'}
     </Badge>
@@ -30,10 +41,13 @@ export const MembershipHeader = ({ isRTL, billingCycle, setBillingCycle }: Membe
         className={cn('px-4 py-1.5 rounded-full text-xs font-medium transition-all',
           billingCycle === 'yearly' ? 'bg-accent text-accent-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground')}>
         {isRTL ? 'سنوي' : 'Yearly'}
-        <span className="ms-1 text-[10px] bg-emerald-500/15 text-emerald-600 px-1.5 py-0.5 rounded-full">
-          {isRTL ? 'وفّر 17%' : 'Save 17%'}
-        </span>
+        {savingsPct > 0 && (
+          <span className="ms-1 text-[10px] bg-emerald-500/15 text-emerald-600 px-1.5 py-0.5 rounded-full">
+            {isRTL ? `وفّر ${savingsPct}%` : `Save ${savingsPct}%`}
+          </span>
+        )}
       </button>
     </div>
   </div>
-);
+  );
+};
