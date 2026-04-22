@@ -73,7 +73,7 @@ export const LatestOffersSection = () => {
               return (
                 <Link
                   key={offer.id}
-                  to={`/offers`}
+                  to={offer.businesses?.username ? `/${offer.businesses.username}` : `/offers`}
                   className={`group block ${isVisible ? "animate-fade-in" : ""}`}
                   style={{ animationDelay: `${i * 100}ms`, animationFillMode: "both" }}
                 >
