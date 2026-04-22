@@ -157,6 +157,111 @@ export const SECTOR_KEYWORDS: Record<SectorSlug, SectorKeywordEntry> = {
 export const ALL_SECTORS: SectorKeywordEntry[] = Object.values(SECTOR_KEYWORDS);
 
 /**
+ * تطبيع النص العربي قبل المطابقة:
+ *  - إزالة التشكيل والتنوين (الفتحة/الكسرة/الضمة/الشدة/السكون...).
+ *  - توحيد الهمزات: أ/إ/آ → ا، ؤ → و، ئ → ي.
+ *  - توحيد الألف المقصورة (ى → ي) والتاء المربوطة (ة → ه).
+ *  - إزالة "ال" التعريف من بداية الكلمات (الألمنيوم → ألمنيوم).
+ *  - حذف الفواصل العربية والأرقام العربية المحوّلة لإنجليزية.
+ *  - تحويل لحروف صغيرة وضغط المسافات.
+ */
+export const normalizeArabic = (input: string): string => {
+  if (!input) return '';
+  let s = input.toLowerCase().trim();
+  // Strip Arabic diacritics (Tashkeel) U+064B..U+065F + U+0670 + tatweel U+0640
+  s = s.replace(/[\u064B-\u065F\u0670\u0640]/g, '');
+  // Unify hamza forms
+  s = s.replace(/[إأآٱ]/g, 'ا');
+  s = s.replace(/ؤ/g, 'و');
+  s = s.replace(/ئ/g, 'ي');
+  s = s.replace(/ء/g, '');
+  // Alef maksura → ya, ta marbuta → ha
+  s = s.replace(/ى/g, 'ي');
+  s = s.replace(/ة/g, 'ه');
+  // Convert Arabic-Indic digits to ASCII
+  s = s.replace(/[٠-٩]/g, (d) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)));
+  // Strip leading "ال" definite article on whole words
+  s = s.replace(/(^|\s)ال(?=\S)/g, '$1');
+  // Collapse runs of repeated alef (e.g. "إأ" → "اا" → "ا")
+  s = s.replace(/ا{2,}/g, 'ا');
+  // Re-apply leading "ال" stripping in case the collapse exposed a new one
+  s = s.replace(/(^|\s)ال(?=\S)/g, '$1');
+  // Collapse non-alphanumeric (keep latin/arabic letters + space)
+  s = s.replace(/[^\p{L}\p{N}\s]/gu, ' ');
+  // Collapse whitespace
+  s = s.replace(/\s+/g, ' ').trim();
+  return s;
+};
+
+/**
+ * معجم مرادفات شائعة → قطاع. تُطبَّق قبل البحث في keywords حتى تُلتقط
+ * كتابات عامية/تجارية شائعة لا تظهر في القائمة الأساسية.
+ * المفتاح هنا يجب أن يكون **مطبَّعاً** مسبقاً (normalizeArabic).
+ */
+const SYNONYM_MAP: Record<string, SectorSlug> = {
+  // Aluminum
+  'المنيوم': 'aluminum',
+  'المونيوم': 'aluminum',
+  'الومنيوم': 'aluminum',
+  'الومينيوم': 'aluminum',
+  'كلادنج': 'aluminum',
+  'كلادينغ': 'aluminum',
+  'سكاي لايت': 'aluminum',
+  'سكايلايت': 'aluminum',
+  'برجولات': 'aluminum',
+  'برجوله': 'aluminum',
+  'شيش حصيره': 'aluminum',
+  'رول اب': 'aluminum',
+  // Iron
+  'حداد': 'iron',
+  'حداده': 'iron',
+  'مشغوله يدويه': 'iron',
+  'بوابه': 'iron',
+  'بوابات': 'iron',
+  'هنجر': 'iron',
+  'هناجر': 'iron',
+  'مظله حديد': 'iron',
+  // Glass
+  'سكوريت': 'glass',
+  'سيكورت': 'glass',
+  'دبل قلاس': 'glass',
+  'تمبرد': 'glass',
+  'مرايا حمام': 'glass',
+  'قاطع زجاج': 'glass',
+  'كابينه شاور': 'glass',
+  // Wood
+  'خشاب': 'wood',
+  'منجور': 'wood',
+  'منجوره': 'wood',
+  'ام دي اف': 'wood',
+  'اتش دي اف': 'wood',
+  'لامينيت': 'wood',
+  'باركيه ارضيات': 'wood',
+  // Cabinets
+  'مطبخ': 'cabinets',
+  'مطابخ': 'cabinets',
+  'دولاب': 'cabinets',
+  'دواليب': 'cabinets',
+  'دريسنج': 'cabinets',
+  'كاونتر': 'cabinets',
+  'هاي قلوس': 'cabinets',
+};
+
+/** Pre-normalized lookup tables for fast matching (built once at module load). */
+const SECTOR_NORMALIZED_KEYS: Array<{ slug: SectorSlug; tokens: string[] }> = ALL_SECTORS.map(
+  (s) => ({
+    slug: s.slug,
+    tokens: Array.from(
+      new Set(
+        [s.name_ar, s.name_en, ...s.keywords_ar, ...s.keywords_en]
+          .map((k) => normalizeArabic(k))
+          .filter((k) => k.length >= 2),
+      ),
+    ),
+  }),
+);
+
+/**
  * Returns the merged keyword string (AR + EN) ready for `<meta name="keywords">`.
  * De-duplicates and preserves order; safe to pass to `usePageMeta({ keywords })`.
  */
@@ -199,13 +304,19 @@ export const getSectorMeta = (
  */
 export const detectSectorFromQuery = (query: string): SectorSlug | null => {
   if (!query || query.trim().length < 2) return null;
-  const q = query.toLowerCase().trim();
-  for (const sector of ALL_SECTORS) {
-    const all = [
-      sector.name_ar, sector.name_en,
-      ...sector.keywords_ar, ...sector.keywords_en,
-    ].map((k) => k.toLowerCase());
-    if (all.some((k) => q.includes(k) || k.includes(q))) return sector.slug;
+  const q = normalizeArabic(query);
+  if (q.length < 2) return null;
+
+  // 1) Synonym fast-path (exact or substring match against the normalized query).
+  for (const [syn, slug] of Object.entries(SYNONYM_MAP)) {
+    if (q === syn || q.includes(syn)) return slug;
+  }
+
+  // 2) Token match against the pre-normalized keyword bank.
+  for (const sector of SECTOR_NORMALIZED_KEYS) {
+    if (sector.tokens.some((k) => q === k || q.includes(k) || k.includes(q))) {
+      return sector.slug;
+    }
   }
   return null;
 };
