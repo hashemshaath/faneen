@@ -320,7 +320,7 @@ export const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
       <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
         {images.map((url, i) => (
           <div key={i} className="relative aspect-square rounded-lg overflow-hidden border border-border/50 group">
-            <img src={url} alt={`${placeholder || 'Image'} ${i + 1}`} className="w-full h-full object-cover" />
+            <img src={url} alt={`Image ${i + 1}`} className="w-full h-full object-cover" />
             <button
               type="button"
               onClick={() => removeImage(i)}
