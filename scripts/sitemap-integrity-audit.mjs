@@ -89,12 +89,14 @@ if (sitemapEdge) {
     if (missingInStatic.length > 0) {
       for (const t of missingInStatic) {
         findings.push({ level: 'critical', msg: `نوع "${t}" موجود في edge function لكن مفقود في sitemap.xml الثابت` });
+        report.typeMismatches.push({ type: t, direction: 'missing_in_static' });
       }
       console.log(`   ${c.red}✗${c.reset}  أنواع مفقودة في sitemap.xml: ${missingInStatic.join(', ')}`);
     }
     if (extraInStatic.length > 0) {
       for (const t of extraInStatic) {
         findings.push({ level: 'warn', msg: `نوع "${t}" في sitemap.xml الثابت لكن غير موجود في edge function` });
+        report.typeMismatches.push({ type: t, direction: 'extra_in_static' });
       }
       console.log(`   ${c.yellow}⚠${c.reset}  أنواع زائدة في sitemap.xml: ${extraInStatic.join(', ')}`);
     }
@@ -114,6 +116,7 @@ if (sitemapEdge) {
       if (p.includes(seg)) {
         findings.push({ level: 'critical', msg: `مسار محظور "${p}" في sitemap edge function` });
         console.log(`   ${c.red}✗${c.reset}  ${p} → يحتوي ${seg}`);
+        report.forbidden.push({ path: p, reason: `contains ${seg}` });
         pathIssues++;
       }
     }
