@@ -14,7 +14,7 @@
  *   0 → نظيف ✅
  *   1 → تعارضات حرجة ❌
  */
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync as _readdirSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -214,6 +214,55 @@ if (robotsEdge) {
 if (sitemapEdge) {
   if (!sitemapEdge.includes('compare-profiles')) {
     findings.push({ file: 'supabase/functions/sitemap/index.ts', level: 'warn', msg: 'edge sitemap لا يحتوي compare-profiles' });
+  }
+}
+
+// ── Duplicate canonical detection ────────────────────────
+console.log(`\n${c.bold}🔗 فحص canonical مكرّر في الصفحات${c.reset}`);
+{
+  const allPages = [
+    ...PUBLIC_PAGES,
+    ...CONDITIONAL_NOINDEX_PAGES,
+  ];
+  const canonicalMap = new Map(); // canonical domain → [files]
+
+  for (const filePath of allPages) {
+    const content = read(filePath);
+    if (!content) continue;
+
+    // Extract all hardcoded canonical strings: canonical: 'URL' or canonical: "URL"
+    const hardCanonicals = [...content.matchAll(/canonical:\s*['"`]([^'"`]+)['"`]/g)].map(m => m[1]);
+    // Extract canonical from template literals: canonical: `URL`
+    const templateCanonicals = [...content.matchAll(/canonical:\s*`([^`]+)`/g)].map(m => m[1]);
+    // Also look for conditional canonical with base path
+    const ternaryCanonicals = [...content.matchAll(/canonical:.*?['"`](https:\/\/qitaat\.com\/[^'"`?]*)['"`]/g)].map(m => m[1]);
+
+    const allCanonicals = [...new Set([...hardCanonicals, ...templateCanonicals, ...ternaryCanonicals])];
+
+    for (const canon of allCanonicals) {
+      // Normalize: strip query strings for grouping (base path comparison)
+      const basePath = canon.split('?')[0];
+      if (!canonicalMap.has(basePath)) canonicalMap.set(basePath, []);
+      const entry = canonicalMap.get(basePath);
+      if (!entry.includes(filePath)) entry.push(filePath);
+    }
+  }
+
+  let dupCount = 0;
+  for (const [canon, files] of canonicalMap) {
+    if (files.length > 1) {
+      // Same canonical base in multiple page files is a conflict
+      findings.push({
+        file: files.join(', '),
+        level: 'critical',
+        msg: `canonical مكرّر "${canon}" في ${files.length} ملفات: ${files.join(', ')}`,
+      });
+      console.log(`   ${c.red}✗${c.reset}  ${c.cyan}${canon}${c.reset} → ${files.join(', ')}`);
+      dupCount++;
+    }
+  }
+  if (dupCount === 0) {
+    console.log(`   ${c.green}✓${c.reset}  لا canonical مكرّر`);
   }
 }
 
