@@ -87,3 +87,7 @@ jobs:
       - name: Sitemap Performance Audit
         run: node scripts/sitemap-perf-audit.mjs --threshold 3000
         continue-on-error: true
+
+      - name: Sitemap Live HTTP Audit
+        run: node scripts/sitemap-live-http-audit.mjs --base https://qitaat.com --concurrency 10 --timeout 10000
+        continue-on-error: true
