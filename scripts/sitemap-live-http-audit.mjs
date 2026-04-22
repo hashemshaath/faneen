@@ -104,8 +104,12 @@ const allUrls = new Set();
 
 for (const subUrl of subSitemapUrls) {
   const res = await fetchSubSitemap(subUrl);
-  if (res.status !== 200 || !res.body.includes("<url>")) {
-    console.error(`   ${c.red}✗${c.reset} Sub-sitemap failed: ${subUrl} → ${res.status || res.error}`);
+  if (res.status !== 200) {
+    console.error(`   ${c.red}✗${c.reset} Sub-sitemap failed: ${subUrl} → HTTP ${res.status || res.error}`);
+    continue;
+  }
+  if (!res.body.includes("<url>")) {
+    console.log(`   ${c.yellow}⚠${c.reset} ${subUrl.split("type=")[1] || subUrl} → empty (0 URLs)`);
     continue;
   }
   const locs = extractLocs(res.body);
