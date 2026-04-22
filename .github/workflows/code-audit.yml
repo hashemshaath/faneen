@@ -103,3 +103,15 @@ jobs:
       - name: Business & Category Links Audit
         run: node scripts/business-links-audit.mjs --base https://qitaat.com --concurrency 10
         continue-on-error: true
+
+      - name: Install Chrome for Lighthouse
+        uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: stable
+        id: setup-chrome
+
+      - name: Lighthouse CI Audit
+        run: node scripts/lighthouse-ci-audit.mjs --skip-build --perf 60 --seo 85 --a11y 65 --bp 75
+        env:
+          CHROME_PATH: ${{ steps.setup-chrome.outputs.chrome-path }}
+        continue-on-error: true
