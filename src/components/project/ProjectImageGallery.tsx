@@ -104,7 +104,7 @@ export const ProjectImageGallery = ({ images, title }: Props) => {
             <div className="flex gap-1.5 overflow-x-auto px-4 pb-4 justify-center">
               {images.map((img, idx) => (
                 <button key={img.id} onClick={() => setCurrentImageIndex(idx)} className={`shrink-0 w-14 h-14 rounded-lg overflow-hidden border-2 transition-all ${idx === currentImageIndex ? 'border-accent ring-1 ring-accent' : 'border-transparent opacity-50 hover:opacity-80'}`}>
-                  <img src={img.image_url} alt="" className="w-full h-full object-cover" />
+                  <img src={img.image_url} alt={img.caption_ar || img.caption_en || `${title} - ${idx + 1}`} className="w-full h-full object-cover" />
                 </button>
               ))}
             </div>
