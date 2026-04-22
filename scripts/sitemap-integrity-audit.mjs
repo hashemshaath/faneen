@@ -142,6 +142,7 @@ if (sitemapDirectives.length === 0) {
     if (/supabase\.co/i.test(s)) {
       findings.push({ level: 'critical', msg: `Sitemap directive يكشف نطاق Supabase الداخلي: ${s}` });
       console.log(`   ${c.red}✗${c.reset}  ${s} → يكشف نطاق Supabase`);
+      report.supabaseLeaks.push(s);
     } else {
       console.log(`   ${c.green}✓${c.reset}  ${s}`);
     }
@@ -153,6 +154,7 @@ if (robotsEdge) {
   if (/supabase\.co.*sitemap/i.test(robotsEdge)) {
     findings.push({ level: 'critical', msg: 'edge robots يكشف نطاق Supabase في Sitemap directive' });
     console.log(`   ${c.red}✗${c.reset}  edge robots: يكشف نطاق Supabase`);
+    report.supabaseLeaks.push('edge-robots-function');
   }
 }
 
@@ -169,6 +171,7 @@ for (const url of subSitemapUrls) {
     if (url.includes(`qitaat.com${cleanDp}`) && !dp.includes('?')) {
       findings.push({ level: 'critical', msg: `sitemap URL "${url}" يتعارض مع Disallow: ${dp}` });
       console.log(`   ${c.red}✗${c.reset}  ${url} ↔ Disallow: ${dp}`);
+      report.forbidden.push({ path: url, reason: `conflicts with Disallow: ${dp}` });
       crossIssues++;
     }
   }
@@ -184,6 +187,7 @@ for (const url of subSitemapUrls) {
   if (!url.startsWith('https://qitaat.com/')) {
     findings.push({ level: 'critical', msg: `sub-sitemap URL يستخدم نطاقاً خاطئاً: ${url}` });
     console.log(`   ${c.red}✗${c.reset}  ${url}`);
+    report.domainErrors.push(url);
     domainIssues++;
   }
 }
