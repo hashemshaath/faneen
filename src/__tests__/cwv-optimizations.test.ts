@@ -23,7 +23,7 @@ describe('Core Web Vitals optimizations for public routes', () => {
     );
     expect(src).not.toMatch(/^import\s+\{\s*SearchMap\s*\}/m);
     expect(src).toMatch(/lazy\(\(\)\s*=>\s*import\(['"]\.\/SearchMap['"]\)/);
-    expect(src).toMatch(/<Suspense[^>]*>\s*<SearchMap/);
+    expect(src).toMatch(/<Suspense[\s\S]*?<SearchMap/);
   });
 
   it('respects prefers-reduced-motion in the hero parallax + typing', () => {
