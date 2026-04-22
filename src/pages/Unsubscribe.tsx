@@ -53,7 +53,7 @@ const Unsubscribe = () => {
               <h2 className="text-xl font-bold text-foreground">إلغاء الاشتراك</h2>
               <p className="text-muted-foreground">هل أنت متأكد أنك تريد إلغاء الاشتراك في الإشعارات البريدية؟</p>
               <Button onClick={handleUnsubscribe} disabled={busy} variant="destructive" className="mt-2">
-                {busy ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : null}
+                {busy ? <Loader2 className="h-4 w-4 animate-spin ms-2" /> : null}
                 تأكيد إلغاء الاشتراك
               </Button>
             </>
