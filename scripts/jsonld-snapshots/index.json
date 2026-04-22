@@ -1,0 +1,137 @@
+{
+  "src/pages/Index.tsx": [
+    {
+      "@type": "WebSite",
+      "requiredFields": ["@context", "@type", "name", "url", "description", "inLanguage", "potentialAction", "publisher"],
+      "nestedTypes": {
+        "potentialAction": { "@type": "SearchAction", "requiredFields": ["target", "query-input"] },
+        "publisher": {
+          "@type": "Organization",
+          "requiredFields": ["name", "url", "logo", "sameAs", "contactPoint"],
+          "nestedTypes": {
+            "logo": { "@type": "ImageObject", "requiredFields": ["url"] },
+            "contactPoint": { "@type": "ContactPoint", "requiredFields": ["contactType", "url", "availableLanguage"] }
+          }
+        }
+      }
+    }
+  ],
+  "src/pages/BusinessProfile.tsx": [
+    {
+      "@type": "LocalBusiness",
+      "requiredFields": ["@context", "@type", "@id", "name", "url", "address", "priceRange"],
+      "optionalFields": ["alternateName", "description", "image", "logo", "telephone", "email", "geo", "aggregateRating", "areaServed", "serviceType"],
+      "nestedTypes": {
+        "address": { "@type": "PostalAddress", "requiredFields": ["addressCountry"] },
+        "aggregateRating": { "@type": "AggregateRating", "requiredFields": ["ratingValue", "reviewCount", "bestRating", "worstRating"] },
+        "geo": { "@type": "GeoCoordinates", "requiredFields": ["latitude", "longitude"] },
+        "areaServed": { "@type": "City", "requiredFields": ["name"] }
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "requiredFields": ["@context", "@type", "itemListElement"]
+    },
+    {
+      "@type": "Review",
+      "requiredFields": ["@context", "@type", "itemReviewed", "author", "reviewRating"],
+      "optionalFields": ["reviewBody", "datePublished"],
+      "nestedTypes": {
+        "itemReviewed": { "@type": "LocalBusiness", "requiredFields": ["name", "@id"] },
+        "author": { "@type": "Person", "requiredFields": ["name"] },
+        "reviewRating": { "@type": "Rating", "requiredFields": ["ratingValue", "bestRating", "worstRating"] }
+      }
+    }
+  ],
+  "src/pages/BlogPost.tsx": [
+    {
+      "@type": "BlogPosting",
+      "requiredFields": ["@context", "@type", "headline", "description", "datePublished", "url", "publisher", "mainEntityOfPage", "breadcrumb"],
+      "optionalFields": ["alternativeHeadline", "image", "dateModified", "wordCount", "inLanguage", "keywords", "articleSection"],
+      "nestedTypes": {
+        "publisher": { "@type": "Organization", "requiredFields": ["name", "url", "logo"] },
+        "mainEntityOfPage": { "@type": "WebPage", "requiredFields": ["@id"] },
+        "breadcrumb": { "@type": "BreadcrumbList", "requiredFields": ["itemListElement"] }
+      }
+    }
+  ],
+  "src/pages/ProjectDetail.tsx": [
+    {
+      "@type": "CreativeWork",
+      "requiredFields": ["@context", "@type", "name", "url"],
+      "optionalFields": ["description", "image"]
+    }
+  ],
+  "src/pages/ProfileSystemDetail.tsx": [
+    {
+      "@type": "Product",
+      "requiredFields": ["@context", "@type", "name", "url"],
+      "optionalFields": ["description", "image"]
+    },
+    {
+      "@type": "FAQPage",
+      "requiredFields": ["@context", "@type", "mainEntity"],
+      "nestedTypes": {
+        "mainEntity[]": { "@type": "Question", "requiredFields": ["name", "acceptedAnswer"] }
+      }
+    }
+  ],
+  "src/pages/About.tsx": [
+    {
+      "@type": "BreadcrumbList",
+      "requiredFields": ["@context", "@type", "itemListElement"]
+    },
+    {
+      "@type": "FAQPage",
+      "requiredFields": ["@context", "@type", "mainEntity"]
+    }
+  ],
+  "src/pages/Categories.tsx": [
+    {
+      "@type": "BreadcrumbList",
+      "requiredFields": ["@context", "@type", "itemListElement"]
+    },
+    {
+      "@type": "ItemList",
+      "requiredFields": ["@context", "@type", "itemListElement"]
+    },
+    {
+      "@type": "FAQPage",
+      "requiredFields": ["@context", "@type", "mainEntity"]
+    }
+  ],
+  "src/pages/Search.tsx": [
+    {
+      "@type": "BreadcrumbList",
+      "requiredFields": ["@context", "@type", "itemListElement"]
+    },
+    {
+      "@type": "ItemList",
+      "requiredFields": ["@context", "@type", "itemListElement"]
+    }
+  ],
+  "src/pages/Contact.tsx": [
+    {
+      "@type": "BreadcrumbList",
+      "requiredFields": ["@context", "@type", "itemListElement"]
+    }
+  ],
+  "src/pages/Offers.tsx": [
+    {
+      "@type": "BreadcrumbList",
+      "requiredFields": ["@context", "@type", "itemListElement"]
+    }
+  ],
+  "src/pages/Privacy.tsx": [
+    {
+      "@type": "FAQPage",
+      "requiredFields": ["@context", "@type", "mainEntity"]
+    }
+  ],
+  "src/pages/Terms.tsx": [
+    {
+      "@type": "FAQPage",
+      "requiredFields": ["@context", "@type", "mainEntity"]
+    }
+  ]
+}
