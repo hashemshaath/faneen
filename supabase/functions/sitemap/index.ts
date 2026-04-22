@@ -44,6 +44,7 @@ Deno.serve(async () => {
       { loc: "/blog", priority: "0.8", changefreq: "daily" },
       { loc: "/profile-systems", priority: "0.7", changefreq: "weekly" },
       { loc: "/compare", priority: "0.6", changefreq: "weekly" },
+      { loc: "/compare-profiles", priority: "0.6", changefreq: "weekly" },
       { loc: "/membership", priority: "0.6", changefreq: "monthly" },
       { loc: "/about", priority: "0.5", changefreq: "monthly" },
       { loc: "/contact", priority: "0.5", changefreq: "monthly" },
@@ -55,7 +56,7 @@ Deno.serve(async () => {
     const [bizRes, postRes, catRes, cityRes, profileRes, projectRes] = await Promise.all([
       supabase.from("businesses").select("username, updated_at").eq("is_active", true).order("rating_avg", { ascending: false }).limit(50000),
       supabase.from("blog_posts").select("slug, updated_at").eq("status", "published").order("published_at", { ascending: false }).limit(10000),
-      supabase.from("categories").select("slug, created_at").eq("is_active", true),
+      supabase.from("categories").select("id, slug, created_at").eq("is_active", true),
       supabase.from("cities").select("id, name_en, created_at").eq("is_active", true),
       supabase.from("profile_systems").select("slug, updated_at").eq("status", "published").limit(10000),
       supabase.from("projects").select("id, updated_at").eq("status", "published").order("created_at", { ascending: false }).limit(10000),
@@ -89,11 +90,17 @@ Deno.serve(async () => {
       }
     }
 
-    // Cities
+    // City filter pages → /search?city=UUID (indexed, not noindex)
     if (cityRes.data) {
       for (const city of cityRes.data) {
-        const slug = city.name_en?.toLowerCase().replace(/\s+/g, "-") || city.id;
         entries.push(entry(`${BASE}/search?city=${encodeURIComponent(city.id)}`, { lastmod: toDate(city.created_at), changefreq: "daily", priority: "0.7" }));
+      }
+    }
+
+    // Category filter pages → /search?category=UUID (indexed)
+    if (catRes.data) {
+      for (const cat of catRes.data) {
+        entries.push(entry(`${BASE}/search?category=${encodeURIComponent(cat.id)}`, { lastmod: toDate(cat.created_at), changefreq: "daily", priority: "0.7" }));
       }
     }
 

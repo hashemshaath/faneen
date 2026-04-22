@@ -1,15 +1,51 @@
-User-agent: *
-Allow: /
-Allow: /categories/
-Allow: /businesses/
-Allow: /city/
-Allow: /search
+# ═══════════════════════════════════════════════════════════
+# robots.txt — qitaat.com
+# الملف الثابت (fallback). النسخة الديناميكية تُقدّم من
+# supabase/functions/robots/index.ts عبر edge function.
+# ═══════════════════════════════════════════════════════════
 
+User-agent: *
+
+# الصفحات العامة المسموح فهرستها
+Allow: /
+Allow: /search$
+Allow: /search?city=
+Allow: /search?category=
+Allow: /categories/
+Allow: /projects
+Allow: /projects/
+Allow: /offers
+Allow: /blog
+Allow: /blog/
+Allow: /profile-systems
+Allow: /profile-systems/
+Allow: /compare$
+Allow: /compare-profiles$
+Allow: /membership
+Allow: /about
+Allow: /contact
+Allow: /privacy
+Allow: /terms
+
+# منع فهرسة نتائج البحث (query strings)
+Disallow: /search?q=
+
+# صفحات المقارنة مع بارامترات (مؤقتة/noindex)
+Disallow: /compare?ids=
+Disallow: /compare-profiles?ids=
+
+# الصفحات الخاصة والإدارية
 Disallow: /admin/
 Disallow: /dashboard/
+Disallow: /auth
+Disallow: /reset-password
+Disallow: /onboarding
+Disallow: /forbidden
+Disallow: /unsubscribe
 Disallow: /profile/settings
 Disallow: /add-business/success
 
+# AI bots — سماح كامل للمحتوى العام
 User-agent: Googlebot
 Allow: /
 
