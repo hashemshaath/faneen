@@ -94,7 +94,8 @@ describe('sector-keywords', () => {
 
   describe('normalizeArabic', () => {
     it('strips diacritics and tatweel', () => {
-      expect(normalizeArabic('الأَلُمنيُوم')).toBe('المنيوم');
+      // tashkeel removed → الألمنيوم → hamza unified → اال... → collapse → ال... → stripped → "منيوم"
+      expect(normalizeArabic('الأَلُمنيُوم')).toBe('منيوم');
       expect(normalizeArabic('حـــديد')).toBe('حديد');
     });
     it('unifies hamza, alef-maksura, ta-marbuta', () => {
