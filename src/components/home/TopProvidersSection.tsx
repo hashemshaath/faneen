@@ -16,6 +16,7 @@ import {
   Sparkles,
   Filter,
   ShieldCheck,
+  ExternalLink,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -331,7 +332,7 @@ export const TopProvidersSection = () => {
                     </div>
 
                     {/* Tags footer */}
-                    <div className="flex flex-wrap items-center gap-1.5">
+                    <div className="flex flex-wrap items-center gap-1.5 mb-4">
                       {cityName && (
                         <span className="flex items-center gap-1 text-[10px] sm:text-[11px] text-muted-foreground bg-muted/40 dark:bg-muted/25 px-2.5 py-1 rounded-lg">
                           <MapPin className="w-2.5 h-2.5" />
@@ -354,6 +355,12 @@ export const TopProvidersSection = () => {
                         </Badge>
                       )}
                     </div>
+
+                    {/* View profile CTA */}
+                    <span className="flex items-center justify-center gap-1.5 w-full py-2 rounded-xl text-xs font-semibold bg-accent/10 text-accent border border-accent/20 group-hover:bg-accent group-hover:text-accent-foreground transition-all duration-300">
+                      <ExternalLink className="w-3 h-3" />
+                      {isRTL ? "عرض الملف" : "View Profile"}
+                    </span>
                   </Link>
                 );
               })}
