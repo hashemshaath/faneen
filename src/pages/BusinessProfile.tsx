@@ -57,6 +57,7 @@ const BusinessProfile = () => {
   const { data: projects = [] } = useProjects(business?.id);
   const { data: services = [] } = useServices(business?.id);
   const { data: branches = [] } = useBranches(business?.id);
+  const { data: reviews = [] } = useReviews(business?.id);
 
   const businessName = business ? getLocalizedValue(language, business.name_ar, business.name_en) : '';
   const businessDesc = business ? (getLocalizedValue(language, business.description_ar, business.description_en) || getLocalizedValue(language, business.short_description_ar, business.short_description_en) || '') : '';
