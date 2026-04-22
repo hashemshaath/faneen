@@ -45,6 +45,16 @@ function extractJsonLdBlocks(source, filePath) {
   while ((m = scriptRegex.exec(source)) !== null) {
     blocks.push({ raw: m[1].trim(), source: "ld+json script", file: filePath });
   }
+  // Strategy 1: Find template-literal JSON-LD in application/ld+json
+  // Only match backtick templates that look like actual JSON (start with {)
+  const scriptRegex = /application\/ld\+json[^`]*`(\s*\{[^`]+)`/g;
+  let m;
+  while ((m = scriptRegex.exec(source)) !== null) {
+    const raw = m[1].trim();
+    // Skip if it contains JS expressions like ${...} — those are dynamic
+    if (/\$\{/.test(raw)) continue;
+    blocks.push({ raw, source: "ld+json script", file: filePath });
+  }
 
   // Strategy 2: Find object literals passed to useJsonLd / useMultiJsonLd
   // We look for '@context' references and try to extract the surrounding object.
