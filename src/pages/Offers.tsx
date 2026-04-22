@@ -1,8 +1,8 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { usePageMeta, useJsonLd } from '@/hooks/usePageMeta';
 import { Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
@@ -48,11 +48,17 @@ const Offers = () => {
   });
 
   // Track view for a single promotion (intersection observer based)
-  const trackView = useCallback(async (id: string) => {
+  const trackPromoView = useCallback(async (id: string) => {
     if (trackedIds.has(id)) return;
     setTrackedIds(prev => new Set(prev).add(id));
     try {
-      await supabase.rpc('increment_promotion_views', { _promotion_id: id });
+      await supabase.rpc('track_content_interaction', {
+        _content_type: 'promotion',
+        _content_id: id,
+        _event_type: 'view',
+        _session_id: sessionStorage.getItem('qi_session_id') || crypto.randomUUID(),
+        _metadata: {},
+      });
     } catch (_e) { /* view tracking failed */ }
   }, [trackedIds]);
 
@@ -61,7 +67,7 @@ const Offers = () => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
         const id = entry.target.getAttribute('data-promo-id');
-        if (id) trackView(id);
+        if (id) trackPromoView(id);
       }
     });
   }, [trackView]);
