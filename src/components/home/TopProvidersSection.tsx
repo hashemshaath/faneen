@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { useState, useMemo } from "react";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useMultiJsonLd } from "@/hooks/usePageMeta";
+import { useProviderTracking } from "@/hooks/useProviderTracking";
+import { useEffect } from "react";
 import {
   Star,
   ArrowLeft,
@@ -90,6 +92,7 @@ const FilterChip = ({
 export const TopProvidersSection = () => {
   const { language, isRTL } = useLanguage();
   const { ref: sectionRef, isVisible } = useScrollAnimation();
+  const { track } = useProviderTracking();
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [activeCity, setActiveCity] = useState<string | null>(null);
   const [verifiedOnly, setVerifiedOnly] = useState(false);
@@ -212,6 +215,13 @@ export const TopProvidersSection = () => {
 
   useMultiJsonLd(jsonLdArray);
 
+  // Track section view once visible
+  useEffect(() => {
+    if (isVisible && providers.length > 0) {
+      track('section_view');
+    }
+  }, [isVisible, providers.length, track]);
+
   return (
     <section
       ref={sectionRef}
@@ -244,6 +254,7 @@ export const TopProvidersSection = () => {
           </div>
           <Link to="/search">
             <Button
+              onClick={() => track('view_all_click')}
               variant="outline"
               size="sm"
               className="gap-1.5 text-xs sm:text-sm rounded-xl border-border/60 hover:border-accent/40 hover:text-accent hover:bg-accent/5"
@@ -313,6 +324,7 @@ export const TopProvidersSection = () => {
                   <Link
                     key={biz.id}
                     to={`/${biz.username}`}
+                    onClick={() => track('card_click', biz.id, biz.username)}
                     className={`group relative block rounded-2xl border bg-card dark:bg-card/60 p-5 sm:p-6 transition-all duration-500 sm:hover:-translate-y-2 ${
                       isTopThree
                         ? "border-accent/20 dark:border-accent/15 shadow-sm shadow-accent/[0.04] hover:shadow-xl hover:shadow-accent/10 hover:border-accent/40"
