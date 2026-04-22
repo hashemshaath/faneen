@@ -39,6 +39,12 @@ export const translations = {
   'cat.accessories.desc': { ar: 'مقابض، مفصلات، إغلاقات', en: 'Handles, hinges, closures' },
   'cat.designers': { ar: 'المصممين', en: 'Designers' },
   'cat.designers.desc': { ar: 'تصميم داخلي، رسومات هندسية', en: 'Interior design, engineering drawings' },
+  'cat.energy': { ar: 'الطاقة والاستدامة', en: 'Energy & Sustainability' },
+  'cat.energy.desc': { ar: 'كفاءة الطاقة، طاقة متجددة، حلول ذكية', en: 'Energy efficiency, renewables, smart solutions' },
+  'cat.gypsum': { ar: 'الديكورات الجبسية', en: 'Gypsum Decorations' },
+  'cat.gypsum.desc': { ar: 'أسقف معلقة، زخارف جبسية، ديكورات', en: 'Suspended ceilings, gypsum moldings, decor' },
+  'cat.facades': { ar: 'الواجهات وتلبيس الواجهات', en: 'Facades & Cladding' },
+  'cat.facades.desc': { ar: 'واجهات خارجية، تلبيس مباني، كلادينج', en: 'Exterior facades, building cladding, curtain walls' },
 
   // Features
   'features.label': { ar: 'لماذا قِطاعات؟', en: 'Why Qitaat?' },

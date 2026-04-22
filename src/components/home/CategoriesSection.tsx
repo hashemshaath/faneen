@@ -1,4 +1,4 @@
-import { Layers, Shield, Building2, Wrench, Users, ArrowRight, ArrowLeft } from "lucide-react";
+import { Layers, Shield, Building2, Wrench, Users, ArrowRight, ArrowLeft, Zap, Paintbrush } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { Link } from "react-router-dom";
@@ -9,6 +9,9 @@ import catGlass from "@/assets/cat-glass.jpg";
 import catWood from "@/assets/cat-wood.jpg";
 import catAccessories from "@/assets/cat-accessories.jpg";
 import catDesigners from "@/assets/cat-designers.jpg";
+import catEnergy from "@/assets/cat-energy.jpg";
+import catGypsum from "@/assets/cat-gypsum.jpg";
+import catFacades from "@/assets/cat-facades.jpg";
 
 const categories = [
   { icon: Layers, image: catAluminum, titleKey: 'cat.aluminum' as const, descKey: 'cat.aluminum.desc' as const, categoryId: '50cdcb8d-3ec3-4cdc-98ad-1c699d6c1abf' },
@@ -17,6 +20,9 @@ const categories = [
   { icon: Building2, image: catWood, titleKey: 'cat.wood' as const, descKey: 'cat.wood.desc' as const, categoryId: 'a49e779f-58d3-4003-a825-9bc161af8286' },
   { icon: Wrench, image: catAccessories, titleKey: 'cat.accessories' as const, descKey: 'cat.accessories.desc' as const, categoryId: '6995ec61-e346-4d3d-ae93-35a9a80b77c6' },
   { icon: Users, image: catDesigners, titleKey: 'cat.designers' as const, descKey: 'cat.designers.desc' as const, categoryId: 'f7ed2200-a91f-4a11-b783-748317fd5903' },
+  { icon: Zap, image: catEnergy, titleKey: 'cat.energy' as const, descKey: 'cat.energy.desc' as const, categoryId: 'b1c2d3e4-f5a6-7b8c-9d0e-1f2a3b4c5d6e' },
+  { icon: Paintbrush, image: catGypsum, titleKey: 'cat.gypsum' as const, descKey: 'cat.gypsum.desc' as const, categoryId: 'c2d3e4f5-a6b7-8c9d-0e1f-2a3b4c5d6e7f' },
+  { icon: Building2, image: catFacades, titleKey: 'cat.facades' as const, descKey: 'cat.facades.desc' as const, categoryId: 'd3e4f5a6-b7c8-9d0e-1f2a-3b4c5d6e7f80' },
 ];
 
 export const CategoriesSection = () => {
