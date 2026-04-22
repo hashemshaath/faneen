@@ -1,6 +1,7 @@
 import React, { useMemo, useEffect, useState, useRef, useCallback } from 'react';
 import DOMPurify from 'dompurify';
 import { usePageMeta, useJsonLd } from '@/hooks/usePageMeta';
+import { useContentTracking } from '@/hooks/useContentTracking';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -181,14 +182,9 @@ const BlogPost = () => {
     enabled: !!slug,
   });
 
-  // Increment view count once per session per post
-  useEffect(() => {
-    if (!post?.id) return;
-    const key = `blog_viewed_${post.id}`;
-    if (sessionStorage.getItem(key)) return;
-    sessionStorage.setItem(key, '1');
-    supabase.rpc('increment_blog_views', { _post_id: post.id }).then(() => {});
-  }, [post?.id]);
+  // Unified tracking
+  const { trackView, trackShare, trackSave } = useContentTracking('blog', post?.id);
+  useEffect(() => { if (post?.id) trackView(); }, [post?.id, trackView]);
 
   const { data: relatedPosts = [] } = useQuery({
     queryKey: ['related-posts', post?.category, post?.id],
@@ -228,6 +224,7 @@ const BlogPost = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['blog-bookmark', post?.id, user?.id] });
+      if (!isBookmarked) trackSave();
       toast.success(isBookmarked ? (isRTL ? 'تمت إزالة المقال من المحفوظات' : 'Removed from bookmarks') : (isRTL ? 'تم حفظ المقال' : 'Article bookmarked'));
     },
   });
@@ -311,6 +308,7 @@ const BlogPost = () => {
     } else {
       handleCopyLink();
     }
+    trackShare();
   };
 
   const shareToSocial = (platform: string) => {
