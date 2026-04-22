@@ -322,9 +322,9 @@ const BusinessProfile = () => {
           </section>
 
           <section className="mt-5 rounded-[1.75rem] border border-border/30 bg-card/60 p-2 shadow-sm dark:border-border/20 dark:bg-card/40 sm:mt-6 sm:p-3">
-            <Tabs defaultValue="services" className="w-full">
-              <div className="overflow-x-auto px-1 no-scrollbar">
-                <TabsList className="h-auto w-max min-w-full justify-start gap-1 rounded-2xl bg-muted/40 p-1.5 dark:bg-muted/20">
+            <Tabs defaultValue="services" dir={isRTL ? "rtl" : "ltr"} className="w-full">
+              <div className="overflow-x-auto px-1 no-scrollbar" dir={isRTL ? "rtl" : "ltr"}>
+                <TabsList className="h-auto w-max min-w-full justify-start gap-1 rounded-2xl bg-muted/40 p-1.5 dark:bg-muted/20" dir={isRTL ? "rtl" : "ltr"}>
                   {tabs.map((tab) => (
                     <TabsTrigger
                       key={tab.value}
