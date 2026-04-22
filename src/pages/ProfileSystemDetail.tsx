@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
+import { useContentTracking } from '@/hooks/useContentTracking';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -256,6 +257,7 @@ const ProfileSystemDetail = () => {
       await navigator.clipboard.writeText(window.location.href);
       toast.success(isRTL ? 'تم نسخ الرابط' : 'Link copied');
     }
+    trackShare();
   };
 
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;

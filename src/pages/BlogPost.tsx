@@ -224,6 +224,7 @@ const BlogPost = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['blog-bookmark', post?.id, user?.id] });
+      if (!isBookmarked) trackSave();
       toast.success(isBookmarked ? (isRTL ? 'تمت إزالة المقال من المحفوظات' : 'Removed from bookmarks') : (isRTL ? 'تم حفظ المقال' : 'Article bookmarked'));
     },
   });
