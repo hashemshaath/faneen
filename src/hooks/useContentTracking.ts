@@ -34,7 +34,7 @@ export function useContentTracking(contentType: ContentType, contentId?: string)
           _content_id: contentId,
           _event_type: eventType,
           _session_id: getSessionId(),
-          _metadata: metadata ?? {},
+          _metadata: (metadata ?? {}) as any,
         })
         .then(() => {});
     },
