@@ -1163,6 +1163,39 @@ export type Database = {
         }
         Relationships: []
       }
+      content_interactions: {
+        Row: {
+          content_id: string
+          content_type: string
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json | null
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          content_id: string
+          content_type: string
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          content_id?: string
+          content_type?: string
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       contract_amendments: {
         Row: {
           amendment_type: string
@@ -4258,6 +4291,16 @@ export type Database = {
           _business_id?: string
           _plan_id: string
           _user_id: string
+        }
+        Returns: string
+      }
+      track_content_interaction: {
+        Args: {
+          _content_id: string
+          _content_type: string
+          _event_type: string
+          _metadata?: Json
+          _session_id?: string
         }
         Returns: string
       }
