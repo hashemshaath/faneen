@@ -40,6 +40,9 @@ jobs:
       - name: JSON-LD Parse & Validation Audit
         run: node scripts/jsonld-parse-audit.mjs
 
+      - name: JSON-LD Snapshot Audit
+        run: node scripts/jsonld-snapshot-audit.mjs
+
       - name: Page Meta (Title/Description) Audit
         run: node scripts/meta-titles-audit.mjs
 
