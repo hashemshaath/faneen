@@ -66,41 +66,6 @@ const SearchPage = () => {
   const { data: businesses, isLoading } = useBusinesses();
   const { data: entityTags } = useEntityTags();
 
-  // Build JSON-LD: BreadcrumbList + SearchAction + (when we have results) an
-  // ItemList of the top providers so Google can surface a sitelinks-style
-  // result for sector queries. Keywords carry the sector context.
-  useMultiJsonLd(useMemo(() => {
-    const breadcrumb = {
-      '@context': 'https://schema.org',
-      '@type': 'BreadcrumbList',
-      itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'قِطاعات', item: 'https://qitaat.com' },
-        { '@type': 'ListItem', position: 2, name: language === 'ar' ? 'البحث' : 'Search', item: 'https://qitaat.com/search' },
-        ...(sectorMeta
-          ? [{ '@type': 'ListItem', position: 3, name: sectorMeta.name, item: `https://qitaat.com/search?q=${encodeURIComponent(sectorMeta.name)}` }]
-          : []),
-      ],
-    };
-    const website = {
-      '@context': 'https://schema.org',
-      '@type': 'WebSite',
-      url: 'https://qitaat.com',
-      name: 'قِطاعات Qitaat',
-      inLanguage: isRTL ? 'ar' : 'en',
-      potentialAction: {
-        '@type': 'SearchAction',
-        target: {
-          '@type': 'EntryPoint',
-          urlTemplate: 'https://qitaat.com/search?q={search_term_string}',
-        },
-        'query-input': 'required name=search_term_string',
-      },
-      keywords: sectorMeta ? sectorMeta.keywords : allSectorKeywords,
-    };
-    const blocks: Record<string, unknown>[] = [breadcrumb, website];
-    return blocks;
-  }, [language, isRTL, sectorMeta, allSectorKeywords]));
-
   const [query, setQuery] = useState(searchParams.get('q') || '');
   React.useEffect(() => {
     const urlQ = searchParams.get('q') || '';
@@ -171,28 +136,58 @@ const SearchPage = () => {
     return filterAndSort(businesses, debouncedQuery, filters, selectedTags, entityTags, language);
   }, [businesses, debouncedQuery, filters, language, selectedTags, entityTags]);
 
-  // Top-N ItemList JSON-LD for the visible results — emitted as a separate
-  // multi-LD block so Google can pick it up alongside the page schema.
+  // Consolidated JSON-LD: BreadcrumbList + WebSite/SearchAction + ItemList of
+  // the top providers (when results exist). All keywords carry sector context
+  // so Google can map the page to the right vertical.
   useMultiJsonLd(useMemo(() => {
-    if (!filtered || filtered.length === 0) return null;
-    const top = filtered.slice(0, 10);
-    const itemList = {
+    const breadcrumb = {
       '@context': 'https://schema.org',
-      '@type': 'ItemList',
-      name: sectorMeta
-        ? (isRTL ? `أفضل مزودي ${sectorMeta.name}` : `Top ${sectorMeta.name} providers`)
-        : (isRTL ? 'أفضل مزودي الخدمات' : 'Top service providers'),
-      numberOfItems: top.length,
-      keywords: sectorMeta ? sectorMeta.keywords : allSectorKeywords,
-      itemListElement: top.map((b, i) => ({
-        '@type': 'ListItem',
-        position: i + 1,
-        url: `https://qitaat.com/${b.username}`,
-        name: language === 'ar' ? b.name_ar : (b.name_en || b.name_ar),
-      })),
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'قِطاعات', item: 'https://qitaat.com' },
+        { '@type': 'ListItem', position: 2, name: isRTL ? 'البحث' : 'Search', item: 'https://qitaat.com/search' },
+        ...(sectorMeta
+          ? [{ '@type': 'ListItem', position: 3, name: sectorMeta.name, item: `https://qitaat.com/search?q=${encodeURIComponent(sectorMeta.name)}` }]
+          : []),
+      ],
     };
-    return [itemList];
-  }, [filtered, sectorMeta, allSectorKeywords, isRTL, language]));
+    const website = {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      url: 'https://qitaat.com',
+      name: 'قِطاعات Qitaat',
+      inLanguage: isRTL ? 'ar' : 'en',
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: {
+          '@type': 'EntryPoint',
+          urlTemplate: 'https://qitaat.com/search?q={search_term_string}',
+        },
+        'query-input': 'required name=search_term_string',
+      },
+      keywords: sectorMeta ? sectorMeta.keywords : allSectorKeywords,
+    };
+    const blocks: Record<string, unknown>[] = [breadcrumb, website];
+    if (filtered && filtered.length > 0) {
+      const top = filtered.slice(0, 10);
+      blocks.push({
+        '@context': 'https://schema.org',
+        '@type': 'ItemList',
+        name: sectorMeta
+          ? (isRTL ? `أفضل مزودي ${sectorMeta.name}` : `Top ${sectorMeta.name} providers`)
+          : (isRTL ? 'أفضل مزودي الخدمات' : 'Top service providers'),
+        numberOfItems: top.length,
+        keywords: sectorMeta ? sectorMeta.keywords : allSectorKeywords,
+        itemListElement: top.map((b, i) => ({
+          '@type': 'ListItem',
+          position: i + 1,
+          url: `https://qitaat.com/${b.username}`,
+          name: language === 'ar' ? b.name_ar : (b.name_en || b.name_ar),
+        })),
+      });
+    }
+    return blocks;
+  }, [isRTL, language, sectorMeta, allSectorKeywords, filtered]));
 
   const didYouMean = useMemo(() => {
     if (!debouncedQuery.trim() || filtered.length > 0 || !businesses) return null;
