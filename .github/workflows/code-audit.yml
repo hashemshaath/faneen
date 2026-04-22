@@ -34,6 +34,9 @@ jobs:
       - name: SEO NoIndex/Canonical Audit
         run: node scripts/seo-noindex-audit.mjs
 
+      - name: Schema.org Structured Data Audit
+        run: node scripts/schema-org-audit.mjs
+
       - name: Canonical ↔ Sitemap Audit
         run: node scripts/canonical-sitemap-audit.mjs
 
