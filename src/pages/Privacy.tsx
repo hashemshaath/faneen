@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useLanguage } from '@/i18n/LanguageContext';
-import { usePageMeta } from '@/hooks/usePageMeta';
+import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 
