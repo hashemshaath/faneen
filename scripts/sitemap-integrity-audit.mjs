@@ -219,4 +219,80 @@ if (warns.length > 0) {
 }
 
 console.log();
+
+// ── 9. Check allowed public paths present in sitemap ─────
+const EXPECTED_PUBLIC_PATHS = [
+  '/', '/search', '/categories', '/offers', '/projects',
+  '/blog', '/profile-systems', '/compare', '/compare-profiles',
+  '/membership', '/about', '/contact', '/privacy', '/terms',
+];
+if (sitemapEdge) {
+  for (const ep of EXPECTED_PUBLIC_PATHS) {
+    const escaped = ep.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    if (!new RegExp(escaped).test(sitemapEdge)) {
+      report.missingAllowed.push(ep);
+      findings.push({ level: 'warn', msg: `مسار عام "${ep}" غير موجود في sitemap edge function` });
+    }
+  }
+  if (report.missingAllowed.length > 0) {
+    console.log(`${c.yellow}⚠${c.reset}  مسارات عامة مفقودة: ${report.missingAllowed.join(', ')}`);
+  }
+}
+
+// ── GitHub Actions Job Summary ───────────────────────────
+if (process.env.GITHUB_STEP_SUMMARY) {
+  const { appendFileSync } = await import('node:fs');
+  const md = buildGitHubSummary();
+  appendFileSync(process.env.GITHUB_STEP_SUMMARY, md);
+  console.log(`📝 GitHub Job Summary written`);
+}
+
+function buildGitHubSummary() {
+  const cr = findings.filter(f => f.level === 'critical');
+  const wr = findings.filter(f => f.level === 'warn');
+  const icon = cr.length > 0 ? '❌' : wr.length > 0 ? '⚠️' : '✅';
+  let md = `## ${icon} Sitemap Integrity Report\n\n`;
+  md += `| Metric | Count |\n|---|---|\n`;
+  md += `| Critical issues | ${cr.length} |\n`;
+  md += `| Warnings | ${wr.length} |\n`;
+  md += `| Sub-sitemap types | ${staticTypes.length} |\n\n`;
+
+  if (report.forbidden.length > 0) {
+    md += `### 🚫 Forbidden Paths in Sitemap\n\n`;
+    md += `| Path | Reason |\n|---|---|\n`;
+    for (const f of report.forbidden) md += `| \`${f.path}\` | ${f.reason} |\n`;
+    md += `\n`;
+  }
+
+  if (report.missingAllowed.length > 0) {
+    md += `### 📭 Missing Allowed Paths\n\nThese public paths are not in the sitemap:\n\n`;
+    for (const p of report.missingAllowed) md += `- \`${p}\`\n`;
+    md += `\n`;
+  }
+
+  if (report.typeMismatches.length > 0) {
+    md += `### 🔀 Type Mismatches\n\n| Type | Issue |\n|---|---|\n`;
+    for (const t of report.typeMismatches) md += `| \`${t.type}\` | ${t.direction === 'missing_in_static' ? 'In edge fn, missing in static' : 'In static, missing in edge fn'} |\n`;
+    md += `\n`;
+  }
+
+  if (report.domainErrors.length > 0) {
+    md += `### 🌐 Domain Errors\n\n`;
+    for (const u of report.domainErrors) md += `- \`${u}\`\n`;
+    md += `\n`;
+  }
+
+  if (report.supabaseLeaks.length > 0) {
+    md += `### 🔒 Supabase Domain Leaks\n\n`;
+    for (const s of report.supabaseLeaks) md += `- \`${s}\`\n`;
+    md += `\n`;
+  }
+
+  if (cr.length === 0 && wr.length === 0) {
+    md += `> ✅ All checks passed. Sitemap and robots.txt are consistent.\n`;
+  }
+
+  return md;
+}
+
 process.exit(criticals.length > 0 ? 1 : 0);
