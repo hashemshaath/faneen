@@ -6,6 +6,7 @@ import {
   getSectorMeta,
   detectSectorFromQuery,
   detectSectorFromCategorySlug,
+  normalizeArabic,
 } from '@/lib/sector-keywords';
 
 describe('sector-keywords', () => {
@@ -89,5 +90,46 @@ describe('sector-keywords', () => {
     expect(detectSectorFromCategorySlug(null)).toBeNull();
     expect(detectSectorFromCategorySlug('')).toBeNull();
     expect(detectSectorFromCategorySlug('handles')).toBeNull();
+  });
+
+  describe('normalizeArabic', () => {
+    it('strips diacritics and tatweel', () => {
+      expect(normalizeArabic('الأَلُمنيُوم')).toBe('المنيوم');
+      expect(normalizeArabic('حـــديد')).toBe('حديد');
+    });
+    it('unifies hamza, alef-maksura, ta-marbuta', () => {
+      expect(normalizeArabic('إألمنيوم')).toBe('المنيوم');
+      expect(normalizeArabic('مرايى')).toBe('مرايي');
+      expect(normalizeArabic('نجارة')).toBe('نجاره');
+    });
+    it('drops the "ال" definite article', () => {
+      expect(normalizeArabic('الزجاج')).toBe('زجاج');
+      expect(normalizeArabic('الخشب الطبيعي')).toBe('خشب طبيعي');
+    });
+    it('returns empty for empty / null-like input', () => {
+      expect(normalizeArabic('')).toBe('');
+      expect(normalizeArabic('   ')).toBe('');
+    });
+  });
+
+  describe('detectSectorFromQuery — Arabic robustness', () => {
+    it('matches diacritized & alef variants', () => {
+      expect(detectSectorFromQuery('أَلُمنيُوم')).toBe('aluminum');
+      expect(detectSectorFromQuery('الإلمنيوم')).toBe('aluminum');
+      expect(detectSectorFromQuery('زجـــاج سيكوريت')).toBe('glass');
+    });
+    it('matches common synonyms / misspellings', () => {
+      expect(detectSectorFromQuery('المنيوم')).toBe('aluminum');
+      expect(detectSectorFromQuery('الومنيوم')).toBe('aluminum');
+      expect(detectSectorFromQuery('كلادنج')).toBe('aluminum');
+      expect(detectSectorFromQuery('سكوريت')).toBe('glass');
+      expect(detectSectorFromQuery('دواليب غرف')).toBe('cabinets');
+      expect(detectSectorFromQuery('حداد فني')).toBe('iron');
+      expect(detectSectorFromQuery('ام دي اف')).toBe('wood');
+    });
+    it('matches ta-marbuta variants ("نجارة" → wood)', () => {
+      expect(detectSectorFromQuery('نجارة')).toBe('wood');
+      expect(detectSectorFromQuery('ورشة نجاره')).toBe('wood');
+    });
   });
 });
