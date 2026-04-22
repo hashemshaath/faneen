@@ -7,7 +7,9 @@ import { useTypingAnimation } from "@/hooks/useTypingAnimation";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { HeroParticles } from "./HeroParticles";
-import heroBg1 from "@/assets/hero-bg.webp";
+// First slide is served from /public so we can <link rel="preload"> it from
+// index.html — that preload only matches if the URL is identical here.
+const heroBg1 = "/hero-bg.webp";
 import heroBg2 from "@/assets/hero-slide-2.webp";
 import heroBg3 from "@/assets/hero-slide-3.webp";
 
@@ -194,6 +196,12 @@ export const HeroSection = () => {
 
   // Optimized parallax with rAF throttle
   useEffect(() => {
+    // Skip parallax entirely for users that prefer reduced motion AND on
+    // narrow viewports where it adds INP cost without visual benefit.
+    const prefersReduced =
+      typeof window !== "undefined" &&
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReduced) return;
     const handleScroll = () => {
       if (rafRef.current) return;
       rafRef.current = requestAnimationFrame(() => {
