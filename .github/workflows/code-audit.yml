@@ -31,6 +31,9 @@ jobs:
       - name: SEO NoIndex/Canonical Audit
         run: node scripts/seo-noindex-audit.mjs
 
+      - name: Canonical ↔ Sitemap Audit
+        run: node scripts/canonical-sitemap-audit.mjs
+
       - name: Sitemap Integrity Audit
         run: node scripts/sitemap-integrity-audit.mjs
 
