@@ -173,7 +173,6 @@ const ProfileSystemDetail = () => {
   const { isRTL, language } = useLanguage();
   const { user } = useAuth();
   const [reviewText, setReviewText] = useState('');
-  const profile_id_for_tracking = undefined as string | undefined; // placeholder, set after query
   const [reviewRating, setReviewRating] = useState(5);
   const [isFav, setIsFav] = useState(false);
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
@@ -194,6 +193,9 @@ const ProfileSystemDetail = () => {
     },
     enabled: !!slug,
   });
+
+  const { trackView, trackShare } = useContentTracking('profile_system', profile?.id);
+  useEffect(() => { if (profile?.id) trackView(); }, [profile?.id, trackView]);
 
   const { data: specs = [] } = useQuery({
     queryKey: ['profile-specs', profile?.id],
