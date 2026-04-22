@@ -173,6 +173,7 @@ const ProfileSystemDetail = () => {
   const { isRTL, language } = useLanguage();
   const { user } = useAuth();
   const [reviewText, setReviewText] = useState('');
+  const profile_id_for_tracking = undefined as string | undefined; // placeholder, set after query
   const [reviewRating, setReviewRating] = useState(5);
   const [isFav, setIsFav] = useState(false);
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
