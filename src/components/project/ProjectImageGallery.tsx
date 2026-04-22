@@ -45,7 +45,7 @@ export const ProjectImageGallery = ({ images, title }: Props) => {
           onClick={() => openLightbox(0)}
         >
           <div className="aspect-[16/9] md:aspect-[2/1]">
-            <img src={images[0].image_url} alt={title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+          <img src={images[0].image_url} alt={title || 'Project image'} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
           </div>
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
             <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 backdrop-blur-sm rounded-full p-3">
@@ -64,7 +64,7 @@ export const ProjectImageGallery = ({ images, title }: Props) => {
           <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2">
             {images.slice(1, 7).map((img, idx) => (
               <button key={img.id} onClick={() => openLightbox(idx + 1)} className="relative aspect-square rounded-lg overflow-hidden bg-muted group">
-                <img src={img.image_url} alt="" className="w-full h-full object-cover transition-transform group-hover:scale-110" />
+                <img src={img.image_url} alt={`${title} - ${idx + 2}`} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
                 {idx === 5 && images.length > 7 && (
                   <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white font-bold text-lg">+{images.length - 7}</div>
                 )}
@@ -80,7 +80,7 @@ export const ProjectImageGallery = ({ images, title }: Props) => {
             <X className="w-5 h-5" />
           </Button>
           <div className="flex-1 flex items-center justify-center p-4 relative">
-            <img src={images[currentImageIndex]?.image_url} alt="" className="max-w-full max-h-full object-contain rounded-lg" />
+            <img src={images[currentImageIndex]?.image_url} alt={images[currentImageIndex]?.caption_ar || images[currentImageIndex]?.caption_en || `${title} - ${currentImageIndex + 1}`} className="max-w-full max-h-full object-contain rounded-lg" />
             {images.length > 1 && (
               <>
                 <Button variant="ghost" size="icon" className="absolute start-2 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 rounded-full w-10 h-10" onClick={isRTL ? goNext : goPrev}>
