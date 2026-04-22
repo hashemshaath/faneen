@@ -112,26 +112,6 @@ for (const subUrl of subSitemapUrls) {
   for (const loc of locs) allUrls.add(loc);
   console.log(`   ${c.green}✓${c.reset} ${subUrl.split("type=")[1] || subUrl} → ${locs.length} URLs`);
 }
-  process.exit(1);
-}
-
-const subSitemapUrls = extractLocs(indexRes.body);
-console.log(`   Sub-sitemaps found: ${subSitemapUrls.length}`);
-
-/* ── 2. Fetch all sub-sitemaps and collect URLs ── */
-
-const allUrls = new Set();
-
-for (const subUrl of subSitemapUrls) {
-  const res = await safeFetch(subUrl);
-  if (res.status !== 200) {
-    console.error(`   ${c.red}✗${c.reset} Sub-sitemap failed: ${subUrl} → ${res.status || res.error}`);
-    continue;
-  }
-  const locs = extractLocs(res.body);
-  for (const loc of locs) allUrls.add(loc);
-  console.log(`   ${c.green}✓${c.reset} ${subUrl.split("type=")[1] || subUrl} → ${locs.length} URLs`);
-}
 
 console.log(`\n   ${c.bold}Total unique URLs to test: ${allUrls.size}${c.reset}\n`);
 
