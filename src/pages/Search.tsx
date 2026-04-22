@@ -124,6 +124,18 @@ const SearchPage = () => {
       cityMeta?.keywords,
     ),
     noindex: !!searchQuery,
+    // When there's a search query the page is noindex → canonical = bare /search.
+    // When there's no query but there are geo/category filters the page IS indexed
+    // → canonical must include those filters so Google sees each combination as
+    // a distinct indexable page (e.g. /search?city=X&category=Y).
+    canonical: (() => {
+      if (searchQuery) return 'https://qitaat.com/search'; // noindex anyway
+      const cp = new URLSearchParams();
+      if (filters.categoryId && filters.categoryId !== 'all') cp.set('category', filters.categoryId);
+      if (filters.cityId && filters.cityId !== 'all') cp.set('city', filters.cityId);
+      const qs = cp.toString();
+      return qs ? `https://qitaat.com/search?${qs}` : 'https://qitaat.com/search';
+    })(),
   });
 
   const handleQueryChange = useCallback((q: string) => {
