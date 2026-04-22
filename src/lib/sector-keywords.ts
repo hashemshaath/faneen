@@ -182,6 +182,10 @@ export const normalizeArabic = (input: string): string => {
   s = s.replace(/[٠-٩]/g, (d) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)));
   // Strip leading "ال" definite article on whole words
   s = s.replace(/(^|\s)ال(?=\S)/g, '$1');
+  // Collapse runs of repeated alef (e.g. "إأ" → "اا" → "ا")
+  s = s.replace(/ا{2,}/g, 'ا');
+  // Re-apply leading "ال" stripping in case the collapse exposed a new one
+  s = s.replace(/(^|\s)ال(?=\S)/g, '$1');
   // Collapse non-alphanumeric (keep latin/arabic letters + space)
   s = s.replace(/[^\p{L}\p{N}\s]/gu, ' ');
   // Collapse whitespace
