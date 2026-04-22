@@ -771,7 +771,7 @@ const BlogPost = () => {
                         <Link key={lp.id} to={`/blog/${lp.slug}`} className="group flex items-start gap-2.5">
                           <div className="w-12 h-12 rounded-lg bg-muted overflow-hidden shrink-0">
                             {lp.cover_image_url ? (
-                              <img src={lp.cover_image_url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                              <img src={lp.cover_image_url} alt={language === 'ar' ? lp.title_ar : (lp.title_en || lp.title_ar)} className="w-full h-full object-cover" loading="lazy" />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center"><BookOpen className="w-4 h-4 text-muted-foreground/20" /></div>
                             )}
