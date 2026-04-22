@@ -189,8 +189,15 @@ for (const subUrl of indexLocs) {
   const typeMatch = subUrl.match(/type=(\w+)/);
   const label = typeMatch ? typeMatch[1] : subUrl.split("/").pop();
 
-  const res = await safeFetch(subUrl);
-  if (res.status !== 200) {
+  // Try original URL first; if it returns HTML (SPA fallback), rewrite to Supabase URL
+  let res = await safeFetch(subUrl);
+  if (res.status === 200 && !res.body.includes("<urlset") && !res.body.includes("<sitemapindex") && SUPABASE_URL) {
+    const rewritten = subUrl.replace(/^https?:\/\/[^/]+\/functions\/v1\//, `${SUPABASE_URL}/functions/v1/`);
+    if (rewritten !== subUrl) {
+      res = await safeFetch(rewritten);
+    }
+  }
+  if (res.status !== 200 || res.error) {
     allFindings.push({ label, issues: [{ level: "critical", msg: `${label}: HTTP ${res.status || res.error}` }], urlCount: 0 });
     console.log(`   ${c.red}✗${c.reset} ${label} — fetch failed (${res.status || res.error})`);
     continue;
