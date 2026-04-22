@@ -1,0 +1,76 @@
+import { describe, it, expect } from 'vitest';
+import {
+  SECTOR_KEYWORDS,
+  ALL_SECTORS,
+  getSectorKeywords,
+  getSectorMeta,
+  detectSectorFromQuery,
+} from '@/lib/sector-keywords';
+
+describe('sector-keywords', () => {
+  it('exposes all 5 expected sectors', () => {
+    expect(ALL_SECTORS).toHaveLength(5);
+    expect(Object.keys(SECTOR_KEYWORDS).sort()).toEqual(
+      ['aluminum', 'cabinets', 'glass', 'iron', 'wood'],
+    );
+  });
+
+  it('every sector has bilingual content + ≥8 keywords each', () => {
+    for (const s of ALL_SECTORS) {
+      expect(s.name_ar.length).toBeGreaterThan(0);
+      expect(s.name_en.length).toBeGreaterThan(0);
+      expect(s.tagline_ar.length).toBeLessThanOrEqual(80);
+      expect(s.tagline_en.length).toBeLessThanOrEqual(80);
+      expect(s.description_ar.length).toBeGreaterThanOrEqual(120);
+      expect(s.description_ar.length).toBeLessThanOrEqual(200);
+      expect(s.keywords_ar.length).toBeGreaterThanOrEqual(8);
+      expect(s.keywords_en.length).toBeGreaterThanOrEqual(8);
+    }
+  });
+
+  it('getSectorKeywords merges AR+EN and de-duplicates', () => {
+    const merged = getSectorKeywords('aluminum');
+    const parts = merged.split(', ');
+    expect(parts).toContain('ألمنيوم');
+    expect(parts).toContain('aluminum');
+    expect(new Set(parts).size).toBe(parts.length); // no duplicates
+  });
+
+  it('getSectorMeta returns localized title/description/tagline', () => {
+    const ar = getSectorMeta('glass', true);
+    expect(ar.title).toContain('الزجاج');
+    expect(ar.title).toContain('قِطاعات');
+    expect(ar.description).toMatch(/زجاج/);
+    expect(ar.tagline.length).toBeGreaterThan(0);
+
+    const en = getSectorMeta('glass', false);
+    expect(en.title).toContain('Glass');
+    expect(en.title).toContain('Qitaat');
+    expect(en.description).toMatch(/glass/i);
+  });
+
+  it('detectSectorFromQuery matches Arabic & English queries', () => {
+    expect(detectSectorFromQuery('ألمنيوم')).toBe('aluminum');
+    expect(detectSectorFromQuery('aluminum doors')).toBe('aluminum');
+    expect(detectSectorFromQuery('تركيب درابزين حديد')).toBe('iron');
+    expect(detectSectorFromQuery('tempered glass')).toBe('glass');
+    expect(detectSectorFromQuery('باركيه')).toBe('wood');
+    expect(detectSectorFromQuery('kitchen cabinets')).toBe('cabinets');
+    expect(detectSectorFromQuery('مطابخ ألمنيوم')).not.toBeNull(); // matches one of them
+  });
+
+  it('detectSectorFromQuery returns null for unrelated/empty queries', () => {
+    expect(detectSectorFromQuery('')).toBeNull();
+    expect(detectSectorFromQuery('   ')).toBeNull();
+    expect(detectSectorFromQuery('xyz random nonsense 12345')).toBeNull();
+  });
+
+  it('relatedSlugs all reference valid sectors', () => {
+    for (const s of ALL_SECTORS) {
+      for (const rel of s.relatedSlugs) {
+        expect(SECTOR_KEYWORDS[rel]).toBeDefined();
+        expect(rel).not.toBe(s.slug); // no self-reference
+      }
+    }
+  });
+});
