@@ -228,7 +228,7 @@ const Offers = () => {
                           </div>
                         ) : p.image_url ? (
                           <div className="h-52 overflow-hidden">
-                            <img src={p.image_url} alt="" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" />
+                            <img src={p.image_url} alt={isRTL ? p.title_ar : (p.title_en || p.title_ar)} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" />
                           </div>
                         ) : (
                           <div className="h-52 bg-gradient-to-br from-accent/20 to-accent/5 flex items-center justify-center">
@@ -301,7 +301,7 @@ const Offers = () => {
                           <Link to={`/${biz.username}`} className="flex items-center gap-2.5 group/biz">
                             <div className="w-9 h-9 rounded-full bg-muted overflow-hidden ring-2 ring-transparent transition-all duration-300 group-hover/biz:ring-accent/30 shrink-0">
                               {biz.logo_url ? (
-                                <img src={biz.logo_url} className="w-full h-full object-cover" alt="" />
+                                <img src={biz.logo_url} alt={isRTL ? biz.name_ar : (biz.name_en || biz.name_ar)} className="w-full h-full object-cover" />
                               ) : (
                                 <span className="flex items-center justify-center w-full h-full text-xs font-bold bg-accent/10 text-accent">
                                   {biz.name_ar[0]}
