@@ -31,6 +31,9 @@ jobs:
       - name: Broken Internal Links Audit
         run: node scripts/broken-links-audit.mjs
 
+      - name: External Links Audit
+        run: node scripts/external-links-audit.mjs
+
       - name: SEO NoIndex/Canonical Audit
         run: node scripts/seo-noindex-audit.mjs
 
