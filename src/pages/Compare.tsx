@@ -19,6 +19,14 @@ const Compare = () => {
   usePageMeta({
     title: isRTL ? 'مقارنة مزودي الخدمات | قِطاعات' : 'Compare Service Providers | Qitaat',
     description: isRTL ? 'قارن بين مزودي خدمات الألمنيوم والحديد من حيث الأسعار والتقييمات والخدمات.' : 'Compare aluminum and iron service providers by price, ratings and services.',
+    // Each set of compared businesses is a unique page.
+    // With no IDs selected → canonical = bare /compare (landing state).
+    // With IDs → canonical includes sorted ids so the same set always resolves
+    // to the same canonical regardless of param order.
+    canonical: selectedIds.length
+      ? `https://qitaat.com/compare?ids=${[...selectedIds].sort().join(',')}`
+      : 'https://qitaat.com/compare',
+    noindex: selectedIds.length > 0, // individual comparisons are ephemeral
   });
   const [searchParams, setSearchParams] = useSearchParams();
   const ArrowIcon = isRTL ? ArrowLeft : ArrowRight;
