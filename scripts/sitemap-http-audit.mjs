@@ -11,7 +11,7 @@
  *
  * Exit codes: 0 = pass, 1 = failures found
  */
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createServer } from 'node:http';
@@ -80,25 +80,15 @@ function serveDist() {
       const url = new URL(req.url, `http://localhost:${PORT}`);
       let filePath = join(DIST, url.pathname);
 
-      // SPA fallback: if file doesn't exist, serve index.html
-      if (!existsSync(filePath) || (existsSync(filePath) && readFileSync(filePath).length === 0)) {
-        // Check if it's a directory
-        const indexPath = join(filePath, 'index.html');
-        if (existsSync(indexPath)) {
-          filePath = indexPath;
-        } else {
-          filePath = join(DIST, 'index.html');
-        }
-      }
-
-      // If the path points to a directory, serve index.html
+      // Resolve file: directory → index.html, missing → SPA fallback
       try {
-        const { statSync } = await import('node:fs');
-        if (statSync(filePath).isDirectory()) {
-          const indexPath = join(filePath, 'index.html');
-          filePath = existsSync(indexPath) ? indexPath : join(DIST, 'index.html');
+        if (!existsSync(filePath) || statSync(filePath).isDirectory()) {
+          const idx = join(filePath, 'index.html');
+          filePath = existsSync(idx) ? idx : join(DIST, 'index.html');
         }
-      } catch { /* noop */ }
+      } catch {
+        filePath = join(DIST, 'index.html');
+      }
 
       if (!existsSync(filePath)) {
         res.writeHead(404);
