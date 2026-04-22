@@ -195,6 +195,62 @@ if (domainIssues === 0) {
   console.log(`   ${c.green}✓${c.reset}  جميع URLs تستخدم qitaat.com`);
 }
 
+// ── 10. Validate lastmod fields use updated_at ──────────
+console.log(`\n${c.bold}📅 فحص حقول lastmod و updated_at${c.reset}`);
+if (sitemapEdge) {
+  const DYNAMIC_TYPES = ['businesses', 'blog', 'categories', 'cities', 'profiles', 'projects'];
+  const lastmodIssues = [];
+
+  for (const dtype of DYNAMIC_TYPES) {
+    const blockRegex = new RegExp(`type\\s*===\\s*["']${dtype}["']`);
+    if (!blockRegex.test(sitemapEdge)) continue;
+
+    const afterType = sitemapEdge.split(new RegExp(`type\\s*===\\s*["']${dtype}["']`))[1] || '';
+    const selectBlock = afterType.slice(0, 600);
+    const selectMatch = selectBlock.match(/\.select\(["']([^"']+)["']\)/);
+
+    if (selectMatch) {
+      const fields = selectMatch[1];
+      if (!fields.includes('updated_at')) {
+        lastmodIssues.push({ type: dtype, issue: 'select() does not include updated_at' });
+        findings.push({ level: 'critical', msg: `نوع "${dtype}": الاستعلام لا يتضمن updated_at` });
+        console.log(`   ${c.red}✗${c.reset}  ${dtype}: select() لا يتضمن updated_at`);
+      } else {
+        console.log(`   ${c.green}✓${c.reset}  ${dtype}: يستخدم updated_at في select()`);
+      }
+    }
+
+    const toDateCalls = [...selectBlock.matchAll(/toDate\(([^)]+)\)/g)].map(m => m[1]);
+    const usesUpdatedAt = toDateCalls.some(arg => arg.includes('updated_at'));
+    const usesOnlyCreatedAt = toDateCalls.length > 0 && toDateCalls.every(arg => !arg.includes('updated_at') && arg.includes('created_at'));
+
+    if (usesOnlyCreatedAt) {
+      lastmodIssues.push({ type: dtype, issue: 'lastmod uses only created_at, not updated_at' });
+      findings.push({ level: 'critical', msg: `نوع "${dtype}": lastmod يستخدم created_at فقط بدون updated_at` });
+      console.log(`   ${c.red}✗${c.reset}  ${dtype}: lastmod يستخدم created_at فقط`);
+    } else if (usesUpdatedAt) {
+      console.log(`   ${c.green}✓${c.reset}  ${dtype}: lastmod يستخدم updated_at`);
+    }
+  }
+
+  const toDateFn = sitemapEdge.match(/function toDate[^}]+}/s);
+  if (toDateFn) {
+    const hasISOSplit = toDateFn[0].includes('toISOString') && toDateFn[0].includes('split');
+    if (hasISOSplit) {
+      console.log(`   ${c.green}✓${c.reset}  toDate() ينتج تواريخ ISO (YYYY-MM-DD)`);
+    } else {
+      findings.push({ level: 'warn', msg: 'toDate() قد لا ينتج تنسيق YYYY-MM-DD' });
+      console.log(`   ${c.yellow}⚠${c.reset}  toDate() قد لا ينتج تنسيق YYYY-MM-DD`);
+    }
+  }
+
+  if (lastmodIssues.length > 0) {
+    report.lastmodIssues = lastmodIssues;
+  }
+} else {
+  console.log(`   ${c.yellow}⚠${c.reset}  لم يُعثر على edge function للفحص`);
+}
+
 // ── Report ───────────────────────────────────────────────
 console.log(`\n${c.bold}${'═'.repeat(55)}${c.reset}`);
 const criticals = findings.filter(f => f.level === 'critical');
@@ -239,7 +295,7 @@ if (sitemapEdge) {
   }
 }
 
-// ── GitHub Actions Job Summary ───────────────────────────
+ // ── GitHub Actions Job Summary ───────────────────────────
 if (process.env.GITHUB_STEP_SUMMARY) {
   const { appendFileSync } = await import('node:fs');
   const md = buildGitHubSummary();
@@ -288,6 +344,12 @@ function buildGitHubSummary() {
     md += `\n`;
   }
 
+   if (report.lastmodIssues && report.lastmodIssues.length > 0) {
+     md += `### 📅 Lastmod / updated_at Issues\n\n| Type | Issue |\n|---|---|\n`;
+     for (const i of report.lastmodIssues) md += `| \`${i.type}\` | ${i.issue} |\n`;
+     md += `\n`;
+   }
+ 
   if (cr.length === 0 && wr.length === 0) {
     md += `> ✅ All checks passed. Sitemap and robots.txt are consistent.\n`;
   }
