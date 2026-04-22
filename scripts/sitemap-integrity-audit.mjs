@@ -29,6 +29,9 @@ function read(rel) {
 const findings = [];
 
 // ── 1. Parse static sitemap.xml (sitemap index) ─────────
+const report = { forbidden: [], missingAllowed: [], domainErrors: [], supabaseLeaks: [], typeMismatches: [] };
+
+// ──────────────────────────────────────────────────────────
 console.log(`\n${c.bold}${c.cyan}🗺️  Sitemap ↔ Robots Integrity Audit${c.reset}\n`);
 
 const sitemapXml = read('public/sitemap.xml');
@@ -86,12 +89,14 @@ if (sitemapEdge) {
     if (missingInStatic.length > 0) {
       for (const t of missingInStatic) {
         findings.push({ level: 'critical', msg: `نوع "${t}" موجود في edge function لكن مفقود في sitemap.xml الثابت` });
+        report.typeMismatches.push({ type: t, direction: 'missing_in_static' });
       }
       console.log(`   ${c.red}✗${c.reset}  أنواع مفقودة في sitemap.xml: ${missingInStatic.join(', ')}`);
     }
     if (extraInStatic.length > 0) {
       for (const t of extraInStatic) {
         findings.push({ level: 'warn', msg: `نوع "${t}" في sitemap.xml الثابت لكن غير موجود في edge function` });
+        report.typeMismatches.push({ type: t, direction: 'extra_in_static' });
       }
       console.log(`   ${c.yellow}⚠${c.reset}  أنواع زائدة في sitemap.xml: ${extraInStatic.join(', ')}`);
     }
@@ -111,6 +116,7 @@ if (sitemapEdge) {
       if (p.includes(seg)) {
         findings.push({ level: 'critical', msg: `مسار محظور "${p}" في sitemap edge function` });
         console.log(`   ${c.red}✗${c.reset}  ${p} → يحتوي ${seg}`);
+        report.forbidden.push({ path: p, reason: `contains ${seg}` });
         pathIssues++;
       }
     }
@@ -136,6 +142,7 @@ if (sitemapDirectives.length === 0) {
     if (/supabase\.co/i.test(s)) {
       findings.push({ level: 'critical', msg: `Sitemap directive يكشف نطاق Supabase الداخلي: ${s}` });
       console.log(`   ${c.red}✗${c.reset}  ${s} → يكشف نطاق Supabase`);
+      report.supabaseLeaks.push(s);
     } else {
       console.log(`   ${c.green}✓${c.reset}  ${s}`);
     }
@@ -147,6 +154,7 @@ if (robotsEdge) {
   if (/supabase\.co.*sitemap/i.test(robotsEdge)) {
     findings.push({ level: 'critical', msg: 'edge robots يكشف نطاق Supabase في Sitemap directive' });
     console.log(`   ${c.red}✗${c.reset}  edge robots: يكشف نطاق Supabase`);
+    report.supabaseLeaks.push('edge-robots-function');
   }
 }
 
@@ -163,6 +171,7 @@ for (const url of subSitemapUrls) {
     if (url.includes(`qitaat.com${cleanDp}`) && !dp.includes('?')) {
       findings.push({ level: 'critical', msg: `sitemap URL "${url}" يتعارض مع Disallow: ${dp}` });
       console.log(`   ${c.red}✗${c.reset}  ${url} ↔ Disallow: ${dp}`);
+      report.forbidden.push({ path: url, reason: `conflicts with Disallow: ${dp}` });
       crossIssues++;
     }
   }
@@ -178,6 +187,7 @@ for (const url of subSitemapUrls) {
   if (!url.startsWith('https://qitaat.com/')) {
     findings.push({ level: 'critical', msg: `sub-sitemap URL يستخدم نطاقاً خاطئاً: ${url}` });
     console.log(`   ${c.red}✗${c.reset}  ${url}`);
+    report.domainErrors.push(url);
     domainIssues++;
   }
 }
@@ -209,4 +219,80 @@ if (warns.length > 0) {
 }
 
 console.log();
+
+// ── 9. Check allowed public paths present in sitemap ─────
+const EXPECTED_PUBLIC_PATHS = [
+  '/', '/search', '/categories', '/offers', '/projects',
+  '/blog', '/profile-systems', '/compare', '/compare-profiles',
+  '/membership', '/about', '/contact', '/privacy', '/terms',
+];
+if (sitemapEdge) {
+  for (const ep of EXPECTED_PUBLIC_PATHS) {
+    const escaped = ep.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    if (!new RegExp(escaped).test(sitemapEdge)) {
+      report.missingAllowed.push(ep);
+      findings.push({ level: 'warn', msg: `مسار عام "${ep}" غير موجود في sitemap edge function` });
+    }
+  }
+  if (report.missingAllowed.length > 0) {
+    console.log(`${c.yellow}⚠${c.reset}  مسارات عامة مفقودة: ${report.missingAllowed.join(', ')}`);
+  }
+}
+
+// ── GitHub Actions Job Summary ───────────────────────────
+if (process.env.GITHUB_STEP_SUMMARY) {
+  const { appendFileSync } = await import('node:fs');
+  const md = buildGitHubSummary();
+  appendFileSync(process.env.GITHUB_STEP_SUMMARY, md);
+  console.log(`📝 GitHub Job Summary written`);
+}
+
+function buildGitHubSummary() {
+  const cr = findings.filter(f => f.level === 'critical');
+  const wr = findings.filter(f => f.level === 'warn');
+  const icon = cr.length > 0 ? '❌' : wr.length > 0 ? '⚠️' : '✅';
+  let md = `## ${icon} Sitemap Integrity Report\n\n`;
+  md += `| Metric | Count |\n|---|---|\n`;
+  md += `| Critical issues | ${cr.length} |\n`;
+  md += `| Warnings | ${wr.length} |\n`;
+  md += `| Sub-sitemap types | ${staticTypes.length} |\n\n`;
+
+  if (report.forbidden.length > 0) {
+    md += `### 🚫 Forbidden Paths in Sitemap\n\n`;
+    md += `| Path | Reason |\n|---|---|\n`;
+    for (const f of report.forbidden) md += `| \`${f.path}\` | ${f.reason} |\n`;
+    md += `\n`;
+  }
+
+  if (report.missingAllowed.length > 0) {
+    md += `### 📭 Missing Allowed Paths\n\nThese public paths are not in the sitemap:\n\n`;
+    for (const p of report.missingAllowed) md += `- \`${p}\`\n`;
+    md += `\n`;
+  }
+
+  if (report.typeMismatches.length > 0) {
+    md += `### 🔀 Type Mismatches\n\n| Type | Issue |\n|---|---|\n`;
+    for (const t of report.typeMismatches) md += `| \`${t.type}\` | ${t.direction === 'missing_in_static' ? 'In edge fn, missing in static' : 'In static, missing in edge fn'} |\n`;
+    md += `\n`;
+  }
+
+  if (report.domainErrors.length > 0) {
+    md += `### 🌐 Domain Errors\n\n`;
+    for (const u of report.domainErrors) md += `- \`${u}\`\n`;
+    md += `\n`;
+  }
+
+  if (report.supabaseLeaks.length > 0) {
+    md += `### 🔒 Supabase Domain Leaks\n\n`;
+    for (const s of report.supabaseLeaks) md += `- \`${s}\`\n`;
+    md += `\n`;
+  }
+
+  if (cr.length === 0 && wr.length === 0) {
+    md += `> ✅ All checks passed. Sitemap and robots.txt are consistent.\n`;
+  }
+
+  return md;
+}
+
 process.exit(criticals.length > 0 ? 1 : 0);
