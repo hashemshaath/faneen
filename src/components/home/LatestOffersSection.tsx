@@ -31,7 +31,6 @@ export const LatestOffersSection = () => {
         .from("promotions")
         .select("*, businesses(username, name_ar, name_en, logo_url)")
         .eq("is_active", true)
-        .in("promotion_type", ["offer", "ad"])
         .order("created_at", { ascending: false })
         .limit(4);
       return data || [];
