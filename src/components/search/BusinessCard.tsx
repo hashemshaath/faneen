@@ -117,7 +117,7 @@ export const BusinessCard = memo(({ business: b, viewMode }: BusinessCardProps) 
       {/* Cover area */}
       <div className="relative h-24 sm:h-28 bg-gradient-to-br from-accent/8 via-muted/40 to-accent/5 dark:from-accent/5 dark:via-muted/20 dark:to-accent/8 overflow-hidden">
         {b.cover_url ? (
-          <img src={b.cover_url} alt="" className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-70 group-hover:scale-105 transition-all duration-700" loading="lazy" />
+          <img src={b.cover_url} alt={language === 'ar' ? b.name_ar : (b.name_en || b.name_ar)} className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-70 group-hover:scale-105 transition-all duration-700" loading="lazy" />
         ) : (
           <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'repeating-linear-gradient(45deg, currentColor 0, currentColor 1px, transparent 0, transparent 50%)', backgroundSize: '12px 12px' }} />
         )}

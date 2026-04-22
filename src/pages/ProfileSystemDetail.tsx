@@ -142,7 +142,7 @@ const Lightbox = ({ images, index, onClose, onNav, isRTL, language }: { images: 
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-        <img src={img?.image_url} alt="" className="max-w-full max-h-[75vh] sm:max-h-[80vh] object-contain rounded-lg mx-auto" />
+        <img src={img?.image_url} alt={language === 'ar' ? (img?.caption_ar || name) : (img?.caption_en || img?.caption_ar || name)} className="max-w-full max-h-[75vh] sm:max-h-[80vh] object-contain rounded-lg mx-auto" />
         {img?.caption_ar && <p className="text-white/80 text-center text-xs sm:text-sm mt-3">{language === 'ar' ? img.caption_ar : (img.caption_en || img.caption_ar)}</p>}
         <div className="flex items-center justify-center gap-1.5 mt-2">
           {images.map((_, i: number) => (
@@ -434,7 +434,7 @@ const ProfileSystemDetail = () => {
               <div className="flex items-start gap-3 sm:gap-4">
                 {profile.logo_url && (
                   <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl bg-background/90 backdrop-blur-sm p-1.5 sm:p-2.5 border border-border/50 shadow-lg shrink-0">
-                    <img src={profile.logo_url} alt="" className="w-full h-full object-contain" />
+                    <img src={profile.logo_url} alt={name} className="w-full h-full object-contain" />
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
@@ -573,7 +573,7 @@ const ProfileSystemDetail = () => {
                       <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
                         {images.slice(0, 3).map((img, i: number) => (
                           <div key={img.id} className="relative group rounded-lg sm:rounded-xl overflow-hidden aspect-[4/3] cursor-pointer" onClick={() => setLightboxIdx(i)}>
-                            <img src={img.image_url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                            <img src={img.image_url} alt={language === 'ar' ? (img.caption_ar || name) : (img.caption_en || img.caption_ar || name)} className="w-full h-full object-cover" loading="lazy" />
                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all flex items-center justify-center">
                               <Maximize2 className="w-4 h-4 sm:w-5 sm:h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
                             </div>
@@ -777,7 +777,7 @@ const ProfileSystemDetail = () => {
                     <Card className="border-border/50 hover:border-gold/30 active:border-gold/50 transition-all group overflow-hidden">
                       <CardContent className="p-3.5 sm:p-5 flex items-center gap-3 sm:gap-4">
                         {s.businesses?.logo_url ? (
-                          <img src={s.businesses.logo_url} alt="" className="w-11 h-11 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl object-cover ring-1 ring-border/50" />
+                          <img src={s.businesses.logo_url} alt={language === 'ar' ? s.businesses.name_ar : (s.businesses.name_en || s.businesses.name_ar)} className="w-11 h-11 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl object-cover ring-1 ring-border/50" />
                         ) : (
                           <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl bg-gold/10 flex items-center justify-center shrink-0"><Building2 className="w-5 h-5 sm:w-7 sm:h-7 text-gold" /></div>
                         )}
@@ -862,7 +862,7 @@ const ProfileSystemDetail = () => {
                         <div className="flex items-start gap-2.5 sm:gap-3">
                           <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gold/10 flex items-center justify-center text-gold font-bold text-xs sm:text-sm shrink-0">
                             {((r as any).profiles)?.avatar_url ? (
-                              <img src={((r as any).profiles).avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
+                              <img src={((r as any).profiles).avatar_url} alt={((r as any).profiles)?.full_name || ''} className="w-full h-full rounded-full object-cover" />
                             ) : (
                               ((r as any).profiles)?.full_name?.charAt(0) || '؟'
                             )}

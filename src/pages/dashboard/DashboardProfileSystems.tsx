@@ -104,7 +104,7 @@ const SortableProfileRow = React.memo(({
       {/* Cover image */}
       {profile.cover_image_url ? (
         <div className="w-16 h-11 rounded-lg overflow-hidden bg-muted shrink-0">
-          <img src={profile.cover_image_url} alt="" className="w-full h-full object-cover" loading="lazy" />
+          <img src={profile.cover_image_url} alt={isRTL ? profile.name_ar : (profile.name_en || profile.name_ar)} className="w-full h-full object-cover" loading="lazy" />
         </div>
       ) : (
         <div className="w-16 h-11 rounded-lg bg-muted/60 flex items-center justify-center shrink-0">
@@ -565,13 +565,13 @@ const DashboardProfileSystems = () => {
                     <div className="space-y-1.5"><Label className="text-xs flex items-center gap-1"><Image className="w-3 h-3" />{isRTL ? 'رابط صورة الغلاف' : 'Cover Image URL'}</Label><Input value={form.cover_image_url} onChange={e => setForm(f => ({ ...f, cover_image_url: e.target.value }))} className="h-9" dir="ltr" /></div>
                     {form.cover_image_url && (
                       <div className="w-full h-40 rounded-xl overflow-hidden bg-muted">
-                        <img src={form.cover_image_url} alt="" className="w-full h-full object-cover" />
+                        <img src={form.cover_image_url} alt={isRTL ? 'معاينة صورة الغلاف' : 'Cover image preview'} className="w-full h-full object-cover" />
                       </div>
                     )}
                     <div className="space-y-1.5"><Label className="text-xs flex items-center gap-1"><Package className="w-3 h-3" />{isRTL ? 'رابط الشعار' : 'Logo URL'}</Label><Input value={form.logo_url} onChange={e => setForm(f => ({ ...f, logo_url: e.target.value }))} className="h-9" dir="ltr" /></div>
                     {form.logo_url && (
                       <div className="w-20 h-20 rounded-xl overflow-hidden bg-muted border">
-                        <img src={form.logo_url} alt="" className="w-full h-full object-contain p-2" />
+                        <img src={form.logo_url} alt={isRTL ? 'معاينة الشعار' : 'Logo preview'} className="w-full h-full object-contain p-2" />
                       </div>
                     )}
                   </TabsContent>
@@ -631,7 +631,7 @@ const DashboardProfileSystems = () => {
                     {/* Cover */}
                     <div className="relative h-36 bg-muted">
                       {p.cover_image_url ? (
-                        <img src={p.cover_image_url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                         <img src={p.cover_image_url} alt={isRTL ? p.name_ar : (p.name_en || p.name_ar)} className="w-full h-full object-cover" loading="lazy" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-4xl">{cat.icon}</div>
                       )}

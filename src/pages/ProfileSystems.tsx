@@ -226,7 +226,7 @@ const ProfileSystems = () => {
                     <CardContent className="p-3 sm:p-4 space-y-2.5 sm:space-y-3">
                       {/* Title row */}
                       <div className="flex items-start gap-2">
-                        {p.logo_url && <img src={p.logo_url} alt="" className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg object-contain bg-muted p-1 shrink-0" />}
+                        {p.logo_url && <img src={p.logo_url} alt={language === 'ar' ? p.name_ar : (p.name_en || p.name_ar)} className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg object-contain bg-muted p-1 shrink-0" />}
                         <div className="min-w-0">
                           <h3 className="font-heading font-bold text-sm sm:text-base group-hover:text-accent transition-colors truncate">
                             {language === 'ar' ? p.name_ar : (p.name_en || p.name_ar)}

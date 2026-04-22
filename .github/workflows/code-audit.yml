@@ -34,6 +34,9 @@ jobs:
       - name: External Links Audit
         run: node scripts/external-links-audit.mjs
 
+      - name: Image & Alt-Text Audit
+        run: node scripts/image-alt-audit.mjs
+
       - name: SEO NoIndex/Canonical Audit
         run: node scripts/seo-noindex-audit.mjs
 

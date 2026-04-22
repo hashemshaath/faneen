@@ -483,7 +483,7 @@ const Blog = () => {
                           {/* Thumbnail */}
                           <div className="w-24 h-24 rounded-lg overflow-hidden bg-muted shrink-0 relative">
                             {post.cover_image_url ? (
-                              <img src={post.cover_image_url} alt="" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" />
+                              <img src={post.cover_image_url} alt={language === 'ar' ? post.title_ar : (post.title_en || post.title_ar)} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-accent/5 dark:from-muted/80 dark:to-accent/10">
                                 <BookOpen className="w-6 h-6 text-muted-foreground/15" />

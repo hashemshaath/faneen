@@ -167,7 +167,7 @@ const CompareProfiles = () => {
                   >
                     <div className="w-10 h-10 rounded-lg bg-muted overflow-hidden">
                       {p.cover_image_url
-                        ? <img src={p.cover_image_url} className="w-full h-full object-cover" alt="" />
+                        ? <img src={p.cover_image_url} alt={language === 'ar' ? p.name_ar : (p.name_en || p.name_ar)} className="w-full h-full object-cover" />
                         : <div className="w-full h-full flex items-center justify-center"><Layers className="w-5 h-5 text-muted-foreground/40" /></div>}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -243,7 +243,7 @@ const CompareProfiles = () => {
                           </button>
                           <div className="w-16 h-16 rounded-xl bg-muted overflow-hidden">
                             {p.cover_image_url
-                              ? <img src={p.cover_image_url} className="w-full h-full object-cover" alt="" />
+                              ? <img src={p.cover_image_url} alt={language === 'ar' ? p.name_ar : (p.name_en || p.name_ar)} className="w-full h-full object-cover" />
                               : <div className="w-full h-full flex items-center justify-center"><Layers className="w-8 h-8 text-muted-foreground/30" /></div>}
                           </div>
                           <Link to={`/profile-systems/${p.slug}`} className="font-heading font-bold text-sm hover:text-gold transition-colors text-center">

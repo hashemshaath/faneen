@@ -200,7 +200,7 @@ export const LatestProjectsSection = () => {
                       {biz && (
                         <div className="flex items-center gap-2.5 pt-3 border-t border-border/30">
                           {biz.logo_url ? (
-                            <img src={biz.logo_url} alt="" className="w-7 h-7 rounded-full object-cover ring-1 ring-border/30" />
+                            <img src={biz.logo_url} alt={language === 'ar' ? biz.name_ar : (biz.name_en || biz.name_ar)} className="w-7 h-7 rounded-full object-cover ring-1 ring-border/30" />
                           ) : (
                             <div className="w-7 h-7 rounded-full bg-accent/10 flex items-center justify-center">
                               <Building2 className="w-3.5 h-3.5 text-accent" />
