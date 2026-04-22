@@ -34,6 +34,9 @@ jobs:
       - name: Canonical ↔ Sitemap Audit
         run: node scripts/canonical-sitemap-audit.mjs
 
+      - name: Robots ↔ Sitemap Sync Audit
+        run: node scripts/robots-sitemap-sync-audit.mjs
+
       - name: Sitemap Integrity Audit
         run: node scripts/sitemap-integrity-audit.mjs
 

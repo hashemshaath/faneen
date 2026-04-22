@@ -10,20 +10,38 @@ const BASE = "https://qitaat.com";
 
 const DEFAULT_ROBOTS = `User-agent: *
 Allow: /
+Allow: /search$
+Allow: /search?city=
+Allow: /search?category=
 Allow: /categories/
-Allow: /businesses/
-Allow: /city/
-Allow: /search
+Allow: /projects
+Allow: /projects/
+Allow: /offers
+Allow: /blog
+Allow: /blog/
+Allow: /profile-systems
+Allow: /profile-systems/
+Allow: /compare$
+Allow: /compare-profiles$
+Allow: /membership
+Allow: /about
+Allow: /contact
+Allow: /privacy
+Allow: /terms
+
+Disallow: /search?q=
+Disallow: /compare?ids=
+Disallow: /compare-profiles?ids=
 
 Disallow: /admin/
 Disallow: /dashboard/
-Disallow: /profile/settings
-Disallow: /add-business/success
 Disallow: /auth
 Disallow: /reset-password
 Disallow: /onboarding
 Disallow: /forbidden
 Disallow: /unsubscribe
+Disallow: /profile/settings
+Disallow: /add-business/success
 
 User-agent: Googlebot
 Allow: /
