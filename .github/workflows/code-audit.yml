@@ -74,3 +74,7 @@ jobs:
 
       - name: Sitemap HTTP Audit
         run: node scripts/sitemap-http-audit.mjs --skip-build
+
+      - name: Sitemap Performance Audit
+        run: node scripts/sitemap-perf-audit.mjs --threshold 3000
+        continue-on-error: true
