@@ -5,6 +5,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { useState, useMemo } from "react";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
+import { useMultiJsonLd } from "@/hooks/usePageMeta";
 import {
   Star,
   ArrowLeft,
@@ -149,6 +150,67 @@ export const TopProvidersSection = () => {
   }, [providers, activeCategory, activeCity, verifiedOnly, premiumOnly, language]);
 
   const hasActiveFilter = !!(activeCategory || activeCity || verifiedOnly || premiumOnly);
+
+  /* ── Structured Data: ItemList + LocalBusiness entries ── */
+  const jsonLdArray = useMemo(() => {
+    if (!providers.length) return null;
+    const BASE = 'https://qitaat.com';
+    const itemList: Record<string, any> = {
+      '@context': 'https://schema.org',
+      '@type': 'ItemList',
+      name: 'مزودو خدمة مميزون — قِطاعات',
+      description: 'أفضل مزودي خدمات الألمنيوم والحديد والزجاج بناءً على تقييمات العملاء',
+      url: `${BASE}/`,
+      numberOfItems: providers.length,
+      itemListElement: providers.map((biz: any, idx: number) => {
+        const bizName = biz.name_ar || biz.name_en;
+        const cityName = biz.cities ? biz.cities.name_ar : undefined;
+        const catName = biz.categories ? biz.categories.name_ar : undefined;
+        const entry: Record<string, any> = {
+          '@type': 'ListItem',
+          position: idx + 1,
+          url: `${BASE}/${biz.username}`,
+          item: {
+            '@type': 'LocalBusiness',
+            '@id': `${BASE}/${biz.username}#business`,
+            name: bizName,
+            url: `${BASE}/${biz.username}`,
+            ...(biz.logo_url && { image: biz.logo_url }),
+            ...(catName && { serviceType: catName }),
+            ...(cityName && {
+              address: {
+                '@type': 'PostalAddress',
+                addressLocality: cityName,
+                addressCountry: 'SA',
+              },
+              areaServed: { '@type': 'City', name: cityName },
+            }),
+            ...(biz.rating_count > 0 && {
+              aggregateRating: {
+                '@type': 'AggregateRating',
+                ratingValue: Number(biz.rating_avg).toFixed(1),
+                reviewCount: biz.rating_count,
+                bestRating: 5,
+                worstRating: 1,
+              },
+            }),
+            ...(biz.is_verified && { 'isVerified': true }),
+            ...(biz.membership_tier && biz.membership_tier !== 'free' && {
+              memberOf: {
+                '@type': 'ProgramMembership',
+                programName: biz.membership_tier === 'enterprise' ? 'Enterprise' : 'Premium',
+              },
+            }),
+            priceRange: '$$',
+          },
+        };
+        return entry;
+      }),
+    };
+    return [itemList];
+  }, [providers]);
+
+  useMultiJsonLd(jsonLdArray);
 
   return (
     <section
