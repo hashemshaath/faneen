@@ -1,15 +1,28 @@
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { BusinessCard } from './BusinessCard';
-import { SearchMap } from './SearchMap';
 import { SearchPagination } from './SearchPagination';
 import { SearchResultsSkeleton } from './SearchResultsSkeleton';
 import {
   Search as SearchIcon, LayoutGrid, List, Map, Columns,
   Bookmark, Share2, ArrowUpDown,
 } from 'lucide-react';
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { toast } from 'sonner';
+
+// Leaflet weighs ~150KB gzipped — only load it when the user actually opens
+// a map view. Grid/list searchers (the majority) never pay that cost, which
+// improves LCP/INP on /search significantly.
+const SearchMap = lazy(() =>
+  import('./SearchMap').then((m) => ({ default: m.SearchMap })),
+);
+
+const MapFallback = ({ className }: { className?: string }) => (
+  <div
+    className={`bg-muted/30 dark:bg-muted/15 rounded-xl animate-pulse ${className ?? ''}`}
+    aria-hidden="true"
+  />
+);
 
 export type ViewMode = 'grid' | 'list' | 'map' | 'split';
 
@@ -156,11 +169,15 @@ export const SearchResults = ({
             ))}
           </div>
           <div className="lg:w-1/2">
-            <SearchMap businesses={businesses} className="h-[350px] sm:h-[600px] sticky top-4" />
+            <Suspense fallback={<MapFallback className="h-[350px] sm:h-[600px] sticky top-4" />}>
+              <SearchMap businesses={businesses} className="h-[350px] sm:h-[600px] sticky top-4" />
+            </Suspense>
           </div>
         </div>
       ) : viewMode === 'map' ? (
-        <SearchMap businesses={businesses} className="h-[400px] sm:h-[600px]" />
+        <Suspense fallback={<MapFallback className="h-[400px] sm:h-[600px]" />}>
+          <SearchMap businesses={businesses} className="h-[400px] sm:h-[600px]" />
+        </Suspense>
       ) : (
         <>
           <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5' : 'space-y-3'}>

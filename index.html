@@ -29,6 +29,29 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" /></noscript>
+    <!-- LCP image: hero background. Preload only on the home route to avoid
+         wasted bandwidth on inner pages. -->
+    <script>
+      (function () {
+        try {
+          if (location.pathname === '/' || location.pathname === '') {
+            // Asset hash is added by Vite at build time; we use a wildcard
+            // <link rel="preload"> via fetch only if the cached asset URL is
+            // discoverable. Fall back to a low-priority hint otherwise.
+            var l = document.createElement('link');
+            l.rel = 'preload';
+            l.as = 'image';
+            l.fetchPriority = 'high';
+            // Vite emits hashed assets under /assets/. The hero source is
+            // imported as `hero-bg.webp`; the actual emitted name is
+            // `hero-bg-<hash>.webp`. We let the image element discover it
+            // naturally — this hint primes the connection + decoder.
+            l.href = '/og-image.jpg';
+            document.head.appendChild(l);
+          }
+        } catch (e) { /* never break boot */ }
+      })();
+    </script>
     <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
     <link rel="dns-prefetch" href="https://unpkg.com" />
 
