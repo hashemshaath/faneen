@@ -98,7 +98,8 @@ describe('sector-keywords', () => {
       expect(normalizeArabic('حـــديد')).toBe('حديد');
     });
     it('unifies hamza, alef-maksura, ta-marbuta', () => {
-      expect(normalizeArabic('إألمنيوم')).toBe('المنيوم');
+      // إأل → اال → ال (collapsed) → stripped as definite article → "منيوم"
+      expect(normalizeArabic('إألمنيوم')).toBe('منيوم');
       expect(normalizeArabic('مرايى')).toBe('مرايي');
       expect(normalizeArabic('نجارة')).toBe('نجاره');
     });
