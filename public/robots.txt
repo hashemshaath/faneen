@@ -71,4 +71,4 @@ User-agent: cohere-ai
 Allow: /
 
 Sitemap: https://qitaat.com/sitemap.xml
-Sitemap: https://hckpxwhjycmdflaneihd.supabase.co/functions/v1/sitemap
+Sitemap: https://qitaat.com/functions/v1/sitemap
