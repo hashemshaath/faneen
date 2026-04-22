@@ -111,6 +111,44 @@ export const TopProvidersSection = () => {
 
   if (!isLoading && providers.length === 0) return null;
 
+  /* ── Derive unique categories & cities from loaded data ── */
+  const uniqueCategories = useMemo(() => {
+    const map = new Map<string, string>();
+    providers.forEach((b: any) => {
+      if (b.categories && b.category_id) {
+        const n = language === "ar" ? b.categories.name_ar : b.categories.name_en;
+        if (n) map.set(b.category_id, n);
+      }
+    });
+    return Array.from(map, ([id, name]) => ({ id, name }));
+  }, [providers, language]);
+
+  const uniqueCities = useMemo(() => {
+    const map = new Map<string, string>();
+    providers.forEach((b: any) => {
+      if (b.cities) {
+        const n = language === "ar" ? b.cities.name_ar : b.cities.name_en;
+        if (n && !map.has(n)) map.set(n, n);
+      }
+    });
+    return Array.from(map.keys());
+  }, [providers, language]);
+
+  const filtered = useMemo(() => {
+    return providers.filter((b: any) => {
+      if (activeCategory && b.category_id !== activeCategory) return false;
+      if (activeCity) {
+        const cn = b.cities ? (language === "ar" ? b.cities.name_ar : b.cities.name_en) : null;
+        if (cn !== activeCity) return false;
+      }
+      if (verifiedOnly && !b.is_verified) return false;
+      if (premiumOnly && !(b.membership_tier === "premium" || b.membership_tier === "enterprise")) return false;
+      return true;
+    });
+  }, [providers, activeCategory, activeCity, verifiedOnly, premiumOnly, language]);
+
+  const hasActiveFilter = !!(activeCategory || activeCity || verifiedOnly || premiumOnly);
+
   return (
     <section
       ref={sectionRef}
@@ -158,12 +196,36 @@ export const TopProvidersSection = () => {
         </div>
 
         {/* Grid */}
+        {/* Quick filter chips */}
+        {!isLoading && providers.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 mb-6 sm:mb-8">
+            <span className="flex items-center gap-1.5 text-xs text-muted-foreground me-1">
+              <Filter className="w-3 h-3" />
+              {isRTL ? "تصفية:" : "Filter:"}
+            </span>
+            {uniqueCategories.map((cat) => (
+              <FilterChip key={cat.id} label={cat.name} active={activeCategory === cat.id} onClick={() => setActiveCategory(activeCategory === cat.id ? null : cat.id)} />
+            ))}
+            {uniqueCities.map((city) => (
+              <FilterChip key={city} label={city} active={activeCity === city} onClick={() => setActiveCity(activeCity === city ? null : city)} icon={<MapPin className="w-2.5 h-2.5" />} />
+            ))}
+            <FilterChip label={isRTL ? "موثق" : "Verified"} active={verifiedOnly} onClick={() => setVerifiedOnly(!verifiedOnly)} icon={<ShieldCheck className="w-3 h-3" />} />
+            <FilterChip label={isRTL ? "بريميوم" : "Premium"} active={premiumOnly} onClick={() => setPremiumOnly(!premiumOnly)} icon={<Crown className="w-3 h-3" />} />
+            {hasActiveFilter && (
+              <button onClick={() => { setActiveCategory(null); setActiveCity(null); setVerifiedOnly(false); setPremiumOnly(false); }} className="text-[11px] text-destructive hover:underline underline-offset-2 ms-1 transition-colors">
+                {isRTL ? "مسح الكل" : "Clear all"}
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
           {isLoading
             ? Array.from({ length: 8 }).map((_, i) => (
                 <ProviderSkeleton key={i} />
               ))
-            : providers.map((biz, i: number) => {
+            : filtered.map((biz, i: number) => {
                 const name =
                   language === "ar"
                     ? biz.name_ar
