@@ -3466,6 +3466,54 @@ export type Database = {
           },
         ]
       }
+      sector_seo_snapshots: {
+        Row: {
+          captured_by: string | null
+          created_at: string
+          description: string
+          description_length: number
+          id: string
+          keywords: string
+          keywords_count: number
+          language: string
+          note: string | null
+          sector_slug: string
+          tagline: string | null
+          title: string
+          title_length: number
+        }
+        Insert: {
+          captured_by?: string | null
+          created_at?: string
+          description: string
+          description_length: number
+          id?: string
+          keywords: string
+          keywords_count: number
+          language?: string
+          note?: string | null
+          sector_slug: string
+          tagline?: string | null
+          title: string
+          title_length: number
+        }
+        Update: {
+          captured_by?: string | null
+          created_at?: string
+          description?: string
+          description_length?: number
+          id?: string
+          keywords?: string
+          keywords_count?: number
+          language?: string
+          note?: string | null
+          sector_slug?: string
+          tagline?: string | null
+          title?: string
+          title_length?: number
+        }
+        Relationships: []
+      }
       seo_audit_runs: {
         Row: {
           created_at: string
