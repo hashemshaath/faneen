@@ -125,7 +125,7 @@ const Membership = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       <div className="container px-4 py-10 sm:py-16">
-        <MembershipHeader isRTL={isRTL} billingCycle={billingCycle} setBillingCycle={setBillingCycle} />
+        <MembershipHeader isRTL={isRTL} billingCycle={billingCycle} setBillingCycle={setBillingCycle} plans={plans} />
 
         {user && mySubscription && (
           <CurrentSubscriptionCard

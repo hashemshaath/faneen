@@ -37,6 +37,9 @@ jobs:
       - name: Image & Alt-Text Audit
         run: node scripts/image-alt-audit.mjs
 
+      - name: Membership Data Integrity Audit
+        run: node scripts/membership-data-audit.mjs
+
       - name: SEO NoIndex/Canonical Audit
         run: node scripts/seo-noindex-audit.mjs
 
