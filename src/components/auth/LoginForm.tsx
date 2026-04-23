@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { authService, useOtpFlow } from '@/services/auth';
+import { useLoginLockout } from '@/hooks/useLoginLockout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { Phone, Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Phone, Mail, Lock, Eye, EyeOff, Loader2, ShieldAlert } from 'lucide-react';
 import { PhoneInput } from './PhoneInput';
 import { OtpInput } from './OtpInput';
 import { GoogleAuthButton } from './GoogleAuthButton';
@@ -33,6 +34,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
   const [rememberMe, setRememberMe] = useState(false);
 
   const { errors, validateEmailField, validatePhoneField, clearError } = useFieldValidation(isRTL);
+  const lockout = useLoginLockout();
 
   const otp = useOtpFlow({
     isRTL,
@@ -120,10 +122,12 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
     setLoading(true);
     try {
       await authService.signInWithEmail(email, password);
+      lockout.recordSuccess();
       toast.success(t('common.success'));
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       const friendlyMsg = isRTL ? getArabicErrorMessage(msg) : getEnglishErrorMessage(msg);
+      lockout.recordFailure();
       toast.error(friendlyMsg);
     } finally {
       setLoading(false);
@@ -260,7 +264,36 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
             </label>
           </div>
 
-          <Button onClick={handleEmailLogin} disabled={loading || !!errors.email} className="w-full h-12 rounded-xl text-sm font-semibold" variant="hero">
+          {/* Lockout warning */}
+          {lockout.isLocked && (
+            <div className="flex items-start gap-2.5 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 animate-in fade-in duration-300">
+              <ShieldAlert className="w-4 h-4 text-destructive mt-0.5 shrink-0" />
+              <div className="space-y-0.5">
+                <p className="text-xs text-destructive font-semibold">
+                  {isRTL
+                    ? `تم قفل تسجيل الدخول مؤقتاً. أعد المحاولة بعد ${lockout.remainingSeconds} ثانية.`
+                    : `Login temporarily locked. Try again in ${lockout.remainingSeconds}s.`}
+                </p>
+                <p className="text-[11px] text-muted-foreground">
+                  {isRTL
+                    ? 'تم تجاوز الحد الأقصى للمحاولات الفاشلة. هذا الإجراء لحماية حسابك.'
+                    : 'Maximum failed attempts exceeded. This is to protect your account.'}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Attempts warning (near limit) */}
+          {!lockout.isLocked && lockout.failedAttempts >= 3 && (
+            <p className="text-[11px] text-amber-600 dark:text-amber-400 flex items-center gap-1">
+              <ShieldAlert className="w-3 h-3" />
+              {isRTL
+                ? `تبقى ${lockout.maxAttempts - lockout.failedAttempts} محاولة قبل القفل المؤقت`
+                : `${lockout.maxAttempts - lockout.failedAttempts} attempt(s) remaining before lockout`}
+            </p>
+          )}
+
+          <Button onClick={handleEmailLogin} disabled={loading || !!errors.email || lockout.isLocked} className="w-full h-12 rounded-xl text-sm font-semibold" variant="hero">
             {loading && <Loader2 className="w-4 h-4 animate-spin me-2" />}
             {loading ? t('common.loading') : t('auth.login')}
           </Button>

@@ -3,11 +3,12 @@ import { useCallback, useEffect, useRef } from 'react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { authService } from '@/services/auth';
 import { supabase } from '@/integrations/supabase/client';
+import { useLoginLockout } from '@/hooks/useLoginLockout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Mail, Loader2, ArrowLeft, ArrowRight, CheckCircle, RefreshCw, Inbox, AlertTriangle, LogIn, Pencil, ShieldCheck } from 'lucide-react';
+import { Mail, Loader2, ArrowLeft, ArrowRight, CheckCircle, RefreshCw, Inbox, AlertTriangle, LogIn, Pencil, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { FieldError as FieldErrorDisplay } from './FieldError';
 import { useFieldValidation } from '@/hooks/useFieldValidation';
 
@@ -29,6 +30,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
   const BackArrow = isRTL ? ArrowRight : ArrowLeft;
   const { errors, validateEmailField, clearError } = useFieldValidation(isRTL);
   const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const lockout = useLoginLockout();
 
   // Cleanup interval on unmount
   useEffect(() => {
@@ -76,10 +78,12 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
       await logResetRequest('failed');
 
       if (lower.includes('rate_limit') || lower.includes('too_many') || lower.includes('too many') || lower.includes('429')) { 
+        lockout.recordFailure();
         setSubmitError(isRTL
           ? 'تم تجاوز الحد المسموح من المحاولات. يرجى الانتظار بضع دقائق ثم إعادة المحاولة.'
           : 'Too many attempts. Please wait a few minutes and try again.');
       } else if (lower.includes('network') || lower.includes('fetch') || lower.includes('failed to fetch')) {
+        lockout.recordFailure();
         setSubmitError(isRTL
           ? 'حدث خطأ في الاتصال بالخادم. تأكد من اتصالك بالإنترنت وأعد المحاولة.'
           : 'Connection error. Check your internet and try again.');
@@ -317,7 +321,24 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
           </div>
           <FieldErrorDisplay message={errors.email} />
         </div>
-        <Button onClick={handleSubmit} disabled={loading || !!errors.email} className="w-full h-11" variant="hero">
+        {/* Lockout warning */}
+        {lockout.isLocked && (
+          <div className="flex items-start gap-2.5 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 animate-in fade-in duration-300">
+            <ShieldAlert className="w-4 h-4 text-destructive mt-0.5 shrink-0" />
+            <div className="space-y-0.5">
+              <p className="text-xs text-destructive font-semibold">
+                {isRTL
+                  ? `تم قفل الطلبات مؤقتاً. أعد المحاولة بعد ${lockout.remainingSeconds} ثانية.`
+                  : `Requests temporarily locked. Try again in ${lockout.remainingSeconds}s.`}
+              </p>
+              <p className="text-[11px] text-muted-foreground">
+                {isRTL ? 'هذا الإجراء لحماية حسابك من الاستخدام غير المصرح.' : 'This protects your account from unauthorized use.'}
+              </p>
+            </div>
+          </div>
+        )}
+
+        <Button onClick={handleSubmit} disabled={loading || !!errors.email || lockout.isLocked} className="w-full h-11" variant="hero">
           {loading && <Loader2 className="w-4 h-4 animate-spin me-2" />}
           {loading ? t('common.loading') : t('auth.reset_password')}
         </Button>
