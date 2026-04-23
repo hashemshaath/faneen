@@ -72,6 +72,10 @@ export const RegistrationSuccessView: React.FC<RegistrationSuccessViewProps> = (
             : <>We sent a confirmation email to <span className="inline-flex items-center gap-1"><strong className="text-foreground">{email}</strong><CopyButton value={email} label="Email" size="xs" /></span> — check your inbox</>
           }
         </p>
+            ? <>أرسلنا رسالة تأكيد إلى <span className="inline-flex items-center gap-1"><strong className="text-foreground" dir="ltr">{email}</strong><CopyButton value={email} label="البريد الإلكتروني" size="xs" /></span> — تحقق من بريدك</>
+            : <>We sent a confirmation email to <span className="inline-flex items-center gap-1"><strong className="text-foreground">{email}</strong><CopyButton value={email} label="Email" size="xs" /></span> — check your inbox</>
+          }
+        </p>
       </div>
 
       {/* Open email button */}
