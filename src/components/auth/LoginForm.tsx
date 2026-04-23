@@ -32,6 +32,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
+  const [loginError, setLoginError] = useState('');
 
   const { errors, validateEmailField, validatePhoneField, clearError } = useFieldValidation(isRTL);
   const lockout = useLoginLockout();
@@ -111,12 +113,14 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
   };
 
   const handleEmailLogin = async () => {
+    setLoginError('');
+    setPasswordError('');
     if (!email || !validateEmailField(email)) {
-      if (!email) toast.error(isRTL ? 'يرجى إدخال البريد الإلكتروني' : 'Please enter your email');
+      if (!email) clearError('email');
       return;
     }
     if (!password) {
-      toast.error(isRTL ? 'يرجى إدخال كلمة المرور' : 'Please enter your password');
+      setPasswordError(isRTL ? 'يرجى إدخال كلمة المرور' : 'Please enter your password');
       return;
     }
     setLoading(true);
@@ -128,7 +132,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
       const msg = err instanceof Error ? err.message : String(err);
       const friendlyMsg = isRTL ? getArabicErrorMessage(msg) : getEnglishErrorMessage(msg);
       lockout.recordFailure();
-      toast.error(friendlyMsg);
+      setLoginError(friendlyMsg);
     } finally {
       setLoading(false);
     }
@@ -224,11 +228,11 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
               <Mail className="absolute top-3.5 text-muted-foreground/60 w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '14px' }} />
               <Input
                 type="email" placeholder="example@email.com" value={email}
-                onChange={(e) => { setEmail(e.target.value); clearError('email'); }}
+                onChange={(e) => { setEmail(e.target.value); clearError('email'); setLoginError(''); }}
                 onBlur={() => email && validateEmailField(email)}
                 dir="ltr"
                 style={{ paddingInlineStart: '42px' }}
-                className={`h-12 rounded-xl ${errors.email ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+                className={`h-12 rounded-xl ${errors.email || loginError ? 'border-destructive focus-visible:ring-destructive' : ''}`}
                 onKeyDown={(e) => e.key === 'Enter' && handleEmailLogin()}
               />
             </div>
@@ -241,14 +245,16 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
             </div>
             <div className="relative">
               <Lock className="absolute top-3.5 text-muted-foreground/60 w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '14px' }} />
-              <Input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)}
-                className="h-12 rounded-xl"
+              <Input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => { setPassword(e.target.value); setPasswordError(''); setLoginError(''); }}
+                className={`h-12 rounded-xl ${passwordError || loginError ? 'border-destructive focus-visible:ring-destructive' : ''}`}
                 style={{ paddingInlineStart: '42px', paddingInlineEnd: '42px' }}
                 onKeyDown={(e) => e.key === 'Enter' && handleEmailLogin()} />
               <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute top-3.5 text-muted-foreground/60 hover:text-foreground transition-colors" style={{ [isRTL ? 'left' : 'right']: '14px' }}>
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
+            <FieldError message={passwordError} />
+            <FieldError message={loginError} />
           </div>
 
           {/* Remember me checkbox */}
