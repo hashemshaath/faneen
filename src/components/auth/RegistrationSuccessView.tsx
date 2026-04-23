@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { authService } from '@/services/auth';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,15 @@ export const RegistrationSuccessView: React.FC<RegistrationSuccessViewProps> = (
   const { isRTL } = useLanguage();
   const [resendCooldown, setResendCooldown] = useState(0);
   const [resending, setResending] = useState(false);
+  const prevEmailRef = useRef(email);
+
+  // Reset cooldown when email changes so resend is immediately available
+  useEffect(() => {
+    if (prevEmailRef.current !== email) {
+      prevEmailRef.current = email;
+      setResendCooldown(0);
+    }
+  }, [email]);
 
   const handleResend = async () => {
     if (resendCooldown > 0) return;
