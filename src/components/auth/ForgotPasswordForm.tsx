@@ -4,6 +4,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { authService } from '@/services/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { useLoginLockout } from '@/hooks/useLoginLockout';
+import { translateAuthError, isRateLimitError, isNetworkError } from '@/services/auth/errorMessages';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -74,19 +75,14 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
       startCooldown(60);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : '';
-      const lower = msg.toLowerCase();
       await logResetRequest('failed');
 
-      if (lower.includes('rate_limit') || lower.includes('too_many') || lower.includes('too many') || lower.includes('429')) { 
+      if (isRateLimitError(msg)) {
         lockout.recordFailure();
-        setSubmitError(isRTL
-          ? 'تم تجاوز الحد المسموح من المحاولات. يرجى الانتظار بضع دقائق ثم إعادة المحاولة.'
-          : 'Too many attempts. Please wait a few minutes and try again.');
-      } else if (lower.includes('network') || lower.includes('fetch') || lower.includes('failed to fetch')) {
+        setSubmitError(translateAuthError(msg, isRTL));
+      } else if (isNetworkError(msg)) {
         lockout.recordFailure();
-        setSubmitError(isRTL
-          ? 'حدث خطأ في الاتصال بالخادم. تأكد من اتصالك بالإنترنت وأعد المحاولة.'
-          : 'Connection error. Check your internet and try again.');
+        setSubmitError(translateAuthError(msg, isRTL));
       } else {
         // Always show sent state for security (don't reveal if email exists or not)
         await logResetRequest('requested');
@@ -118,11 +114,8 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
       setTimeout(() => setResendSuccess(false), 5000);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : '';
-      const lower = msg.toLowerCase();
-      if (lower.includes('rate_limit') || lower.includes('too_many') || lower.includes('too many')) {
-        toast.error(isRTL ? 'محاولات كثيرة، انتظر قليلاً ثم أعد المحاولة' : 'Too many attempts, please wait and try again');
-      } else if (lower.includes('network') || lower.includes('fetch')) {
-        toast.error(isRTL ? 'خطأ في الاتصال، تحقق من الإنترنت' : 'Connection error, check your internet');
+      if (isRateLimitError(msg) || isNetworkError(msg)) {
+        toast.error(translateAuthError(msg, isRTL));
       } else {
         toast.error(isRTL ? 'فشل إعادة الإرسال، حاول مجدداً' : 'Failed to resend, please try again');
       }
