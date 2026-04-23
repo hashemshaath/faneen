@@ -16,6 +16,7 @@ import {
   Loader2, Clock, CheckCircle2, XCircle, AlertTriangle, RefreshCw,
   Hash, Ban, UserCheck, History, Shield,
 } from 'lucide-react';
+import { PasswordResetLogPanel } from '@/components/admin/PasswordResetLogPanel';
 
 const formatDate = (dateStr: string | null | undefined, lang: string): string => {
   if (!dateStr) return lang === 'ar' ? 'غير محدد' : 'N/A';
@@ -36,6 +37,7 @@ const AdminAccessManagement = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeTab, setActiveTab] = useState<'accounts' | 'reset-log'>('accounts');
 
   // Fetch profiles
   const { data: profiles = [], isLoading: loadingProfiles } = useQuery({
@@ -132,6 +134,32 @@ const AdminAccessManagement = () => {
           </p>
         </div>
 
+        {/* Tabs */}
+        <div className="flex rounded-2xl bg-muted/40 p-1 gap-1">
+          <button
+            onClick={() => setActiveTab('accounts')}
+            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium transition-all duration-300 ${
+              activeTab === 'accounts' ? 'bg-card text-foreground shadow-sm ring-1 ring-border/30' : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Users className="w-4 h-4" />
+            {isRTL ? 'الحسابات' : 'Accounts'}
+          </button>
+          <button
+            onClick={() => setActiveTab('reset-log')}
+            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium transition-all duration-300 ${
+              activeTab === 'reset-log' ? 'bg-card text-foreground shadow-sm ring-1 ring-border/30' : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <History className="w-4 h-4" />
+            {isRTL ? 'سجل إعادة التعيين' : 'Reset Log'}
+          </button>
+        </div>
+
+        {activeTab === 'reset-log' ? (
+          <PasswordResetLogPanel />
+        ) : (
+        <>
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
           {[
@@ -295,7 +323,9 @@ const AdminAccessManagement = () => {
             </div>
           </div>
         )}
-      </div>
+        </>
+        )}
+       </div>
     </DashboardLayout>
   );
 };
