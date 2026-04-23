@@ -3,6 +3,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { authService, useOtpFlow } from '@/services/auth';
 import { useLoginLockout } from '@/hooks/useLoginLockout';
 import { translateAuthError } from '@/services/auth/errorMessages';
+import { getAuthErrorHelpLinks } from '@/services/auth/errorMessages';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,6 +15,7 @@ import { OtpInput } from './OtpInput';
 import { GoogleAuthButton } from './GoogleAuthButton';
 import { AuthDivider } from './AuthDivider';
 import { FieldError } from './FieldError';
+import { AuthErrorHelpLinks } from './AuthErrorHelpLinks';
 import { useFieldValidation } from '@/hooks/useFieldValidation';
 
 interface LoginFormProps {
@@ -35,6 +37,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
   const [rememberMe, setRememberMe] = useState(false);
   const [passwordError, setPasswordError] = useState('');
   const [loginError, setLoginError] = useState('');
+  const [loginErrorRaw, setLoginErrorRaw] = useState('');
 
   const { errors, validateEmailField, validatePhoneField, clearError } = useFieldValidation(isRTL);
   const lockout = useLoginLockout();
@@ -60,6 +63,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
 
   const handleEmailLogin = async () => {
     setLoginError('');
+    setLoginErrorRaw('');
     setPasswordError('');
     if (!email || !validateEmailField(email)) {
       if (!email) clearError('email');
@@ -79,6 +83,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
       const friendlyMsg = translateAuthError(msg, isRTL);
       lockout.recordFailure();
       setLoginError(friendlyMsg);
+      setLoginErrorRaw(msg);
     } finally {
       setLoading(false);
     }
@@ -174,7 +179,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
               <Mail className="absolute top-3.5 text-muted-foreground/60 w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '14px' }} />
               <Input
                 type="email" placeholder="example@email.com" value={email}
-                onChange={(e) => { setEmail(e.target.value); clearError('email'); setLoginError(''); }}
+                onChange={(e) => { setEmail(e.target.value); clearError('email'); setLoginError(''); setLoginErrorRaw(''); }}
                 onBlur={() => email && validateEmailField(email)}
                 dir="ltr"
                 style={{ paddingInlineStart: '42px' }}
@@ -191,7 +196,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
             </div>
             <div className="relative">
               <Lock className="absolute top-3.5 text-muted-foreground/60 w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '14px' }} />
-              <Input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => { setPassword(e.target.value); setPasswordError(''); setLoginError(''); }}
+              <Input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => { setPassword(e.target.value); setPasswordError(''); setLoginError(''); setLoginErrorRaw(''); }}
                 className={`h-12 rounded-xl ${passwordError || loginError ? 'border-destructive focus-visible:ring-destructive' : ''}`}
                 style={{ paddingInlineStart: '42px', paddingInlineEnd: '42px' }}
                 onKeyDown={(e) => e.key === 'Enter' && handleEmailLogin()} />
@@ -201,6 +206,21 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
             </div>
             <FieldError message={passwordError} />
             <FieldError message={loginError} />
+            {loginErrorRaw && (
+              <AuthErrorHelpLinks
+                links={getAuthErrorHelpLinks(loginErrorRaw, isRTL)}
+                onAction={(action) => {
+                  if (action === 'forgot-password') onForgotPassword();
+                  else if (action === 'register') onSwitchToRegister();
+                  else if (action === 'contact') window.location.href = '/contact';
+                  else if (action === 'resend-confirmation' && email) {
+                    authService.resendConfirmation(email)
+                      .then(() => toast.success(isRTL ? 'تم إعادة إرسال رابط التحقق' : 'Verification link resent'))
+                      .catch(() => toast.error(isRTL ? 'فشل إعادة الإرسال' : 'Failed to resend'));
+                  }
+                }}
+              />
+            )}
           </div>
 
           {/* Remember me checkbox */}
