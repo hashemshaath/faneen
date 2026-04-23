@@ -78,10 +78,12 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
       await logResetRequest('failed');
 
       if (lower.includes('rate_limit') || lower.includes('too_many') || lower.includes('too many') || lower.includes('429')) { 
+        lockout.recordFailure();
         setSubmitError(isRTL
           ? 'تم تجاوز الحد المسموح من المحاولات. يرجى الانتظار بضع دقائق ثم إعادة المحاولة.'
           : 'Too many attempts. Please wait a few minutes and try again.');
       } else if (lower.includes('network') || lower.includes('fetch') || lower.includes('failed to fetch')) {
+        lockout.recordFailure();
         setSubmitError(isRTL
           ? 'حدث خطأ في الاتصال بالخادم. تأكد من اتصالك بالإنترنت وأعد المحاولة.'
           : 'Connection error. Check your internet and try again.');
