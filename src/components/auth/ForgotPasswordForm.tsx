@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Mail, Loader2, ArrowLeft, ArrowRight, CheckCircle, RefreshCw, Inbox, AlertTriangle, LogIn } from 'lucide-react';
+import { Mail, Loader2, ArrowLeft, ArrowRight, CheckCircle, RefreshCw, Inbox, AlertTriangle, LogIn, Pencil } from 'lucide-react';
 import { FieldError as FieldErrorDisplay } from './FieldError';
 import { useFieldValidation } from '@/hooks/useFieldValidation';
 
@@ -24,6 +24,8 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
   const [resendCount, setResendCount] = useState(0);
   const [resendSuccess, setResendSuccess] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [editingEmail, setEditingEmail] = useState(false);
+  const [editedEmail, setEditedEmail] = useState('');
   const BackArrow = isRTL ? ArrowRight : ArrowLeft;
   const { errors, validateEmailField, clearError } = useFieldValidation(isRTL);
   const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -146,6 +148,60 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
               : <>We sent a password reset link to:<br /><strong className="text-foreground">{email}</strong></>
             }
           </p>
+
+          {/* Inline email edit */}
+          {!editingEmail ? (
+            <button
+              onClick={() => { setEditedEmail(email); setEditingEmail(true); }}
+              className="inline-flex items-center gap-1 text-xs text-accent hover:underline mx-auto"
+            >
+              <Pencil className="w-3 h-3" />
+              {isRTL ? 'تعديل البريد الإلكتروني' : 'Change email'}
+            </button>
+          ) : (
+            <div className="flex items-center gap-2 max-w-xs mx-auto w-full">
+              <Input
+                type="email"
+                value={editedEmail}
+                onChange={(e) => setEditedEmail(e.target.value)}
+                dir="ltr"
+                className="h-9 text-sm"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && editedEmail.trim() && editedEmail !== email) {
+                    setEmail(editedEmail.trim());
+                    setEditingEmail(false);
+                    setResendCooldown(0);
+                    if (cooldownRef.current) clearInterval(cooldownRef.current);
+                    setResendSuccess(false);
+                    setResendCount(0);
+                  }
+                }}
+              />
+              <Button
+                size="sm"
+                variant="hero"
+                className="h-9 px-3 shrink-0"
+                disabled={!editedEmail.trim() || editedEmail.trim() === email}
+                onClick={() => {
+                  setEmail(editedEmail.trim());
+                  setEditingEmail(false);
+                  setResendCooldown(0);
+                  if (cooldownRef.current) clearInterval(cooldownRef.current);
+                  setResendSuccess(false);
+                  setResendCount(0);
+                }}
+              >
+                {isRTL ? 'تحديث' : 'Update'}
+              </Button>
+              <button
+                onClick={() => setEditingEmail(false)}
+                className="text-xs text-muted-foreground hover:text-foreground shrink-0"
+              >
+                {isRTL ? 'إلغاء' : 'Cancel'}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Email status tips */}
