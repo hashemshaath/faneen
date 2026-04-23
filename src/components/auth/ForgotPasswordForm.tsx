@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { authService } from '@/services/auth';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -22,6 +23,18 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
   const BackArrow = isRTL ? ArrowRight : ArrowLeft;
   const { errors, validateEmailField, clearError } = useFieldValidation(isRTL);
 
+  const logResetRequest = async (status: string) => {
+    try {
+      await supabase.from('password_reset_log').insert({
+        email: email.trim().toLowerCase(),
+        status,
+        user_agent: navigator.userAgent?.substring(0, 200) || null,
+      });
+    } catch {
+      // silent — logging should never block the user
+    }
+  };
+
   const handleSubmit = async () => {
     if (!email || !validateEmailField(email)) {
       return;
@@ -29,6 +42,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
     setLoading(true);
     try {
       await authService.resetPassword(email);
+      await logResetRequest('requested');
       setSent(true);
       toast.success(isRTL ? 'تم إرسال رابط إعادة التعيين' : 'Reset link sent');
       // Start cooldown
@@ -41,6 +55,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
       }, 1000);
     } catch {
       // Don't reveal if email exists or not (security) — still show sent state
+      await logResetRequest('requested');
       setSent(true);
       toast.success(isRTL ? 'إذا كان الحساب موجوداً، سيتم إرسال رابط إعادة التعيين' : 'If an account exists, a reset link will be sent');
     } finally {
@@ -53,6 +68,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
     setLoading(true);
     try {
       await authService.resetPassword(email);
+      await logResetRequest('resend');
       toast.success(isRTL ? 'تم إعادة إرسال الرابط' : 'Link resent');
       setResendCooldown(60);
       const interval = setInterval(() => {
