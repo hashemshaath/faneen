@@ -5,12 +5,14 @@ import { authService } from '@/services/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { useLoginLockout } from '@/hooks/useLoginLockout';
 import { translateAuthError, isRateLimitError, isNetworkError } from '@/services/auth/errorMessages';
+import { getAuthErrorHelpLinks } from '@/services/auth/errorMessages';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Mail, Loader2, ArrowLeft, ArrowRight, CheckCircle, RefreshCw, Inbox, AlertTriangle, LogIn, Pencil, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { FieldError as FieldErrorDisplay } from './FieldError';
+import { AuthErrorHelpLinks } from './AuthErrorHelpLinks';
 import { useFieldValidation } from '@/hooks/useFieldValidation';
 
 interface ForgotPasswordFormProps {
@@ -26,6 +28,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
   const [resendCount, setResendCount] = useState(0);
   const [resendSuccess, setResendSuccess] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitErrorRaw, setSubmitErrorRaw] = useState('');
   const [editingEmail, setEditingEmail] = useState(false);
   const [editedEmail, setEditedEmail] = useState('');
   const BackArrow = isRTL ? ArrowRight : ArrowLeft;
