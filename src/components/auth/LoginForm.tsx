@@ -54,17 +54,56 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
   });
 
   const getArabicErrorMessage = (msg: string): string => {
-    if (msg.includes('Invalid login')) {
-      return 'كلمة المرور غير صحيحة، حاول مرة أخرى';
+    const lower = msg.toLowerCase();
+    if (lower.includes('invalid login') || lower.includes('invalid_credentials')) {
+      return 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
     }
-    if (msg.includes('Email not confirmed')) {
+    if (lower.includes('email not confirmed') || lower.includes('email_not_confirmed')) {
       return 'يرجى تأكيد بريدك الإلكتروني أولاً';
     }
-    if (msg.includes('too_many_requests') || msg.includes('rate_limit') || msg.includes('Too many')) {
-      return 'تم تجميد الحساب مؤقتاً، حاول بعد 5 دقائق';
+    if (lower.includes('too_many_requests') || lower.includes('rate_limit') || lower.includes('too many') || lower.includes('over_request_rate_limit')) {
+      return 'محاولات كثيرة جداً، يرجى الانتظار بضع دقائق ثم المحاولة مرة أخرى';
     }
-    if (msg.includes('User not found') || msg.includes('no user')) {
-      return 'لا يوجد حساب بهذا البريد الإلكتروني';
+    if (lower.includes('user not found') || lower.includes('no user')) {
+      return 'لا يوجد حساب مسجّل بهذا البريد الإلكتروني';
+    }
+    if (lower.includes('user already registered') || lower.includes('already_exists')) {
+      return 'هذا البريد الإلكتروني مسجّل مسبقاً، جرّب تسجيل الدخول';
+    }
+    if (lower.includes('network') || lower.includes('fetch') || lower.includes('failed to fetch')) {
+      return 'خطأ في الاتصال بالإنترنت، تحقق من اتصالك وحاول مجدداً';
+    }
+    if (lower.includes('user banned') || lower.includes('banned')) {
+      return 'تم تعليق هذا الحساب، يرجى التواصل مع الدعم';
+    }
+    if (lower.includes('password') && lower.includes('weak')) {
+      return 'كلمة المرور ضعيفة جداً، استخدم كلمة مرور أقوى';
+    }
+    if (lower.includes('signups not allowed') || lower.includes('signup_disabled')) {
+      return 'التسجيل غير متاح حالياً';
+    }
+    return msg;
+  };
+
+  const getEnglishErrorMessage = (msg: string): string => {
+    const lower = msg.toLowerCase();
+    if (lower.includes('invalid login') || lower.includes('invalid_credentials')) {
+      return 'Incorrect email or password';
+    }
+    if (lower.includes('email not confirmed') || lower.includes('email_not_confirmed')) {
+      return 'Please confirm your email first';
+    }
+    if (lower.includes('too_many_requests') || lower.includes('rate_limit') || lower.includes('too many') || lower.includes('over_request_rate_limit')) {
+      return 'Too many attempts, please wait a few minutes and try again';
+    }
+    if (lower.includes('user not found') || lower.includes('no user')) {
+      return 'No account found with this email';
+    }
+    if (lower.includes('network') || lower.includes('fetch') || lower.includes('failed to fetch')) {
+      return 'Connection error, check your internet and try again';
+    }
+    if (lower.includes('user banned') || lower.includes('banned')) {
+      return 'This account has been suspended, please contact support';
     }
     return msg;
   };
@@ -84,7 +123,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
       toast.success(t('common.success'));
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
-      toast.error(isRTL ? getArabicErrorMessage(msg) : msg);
+      const friendlyMsg = isRTL ? getArabicErrorMessage(msg) : getEnglishErrorMessage(msg);
+      toast.error(friendlyMsg);
     } finally {
       setLoading(false);
     }

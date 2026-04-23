@@ -61,8 +61,16 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
           return prev - 1;
         });
       }, 1000);
-    } catch {
-      toast.error(isRTL ? 'فشل إعادة الإرسال' : 'Failed to resend');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : '';
+      const lower = msg.toLowerCase();
+      if (lower.includes('rate_limit') || lower.includes('too_many') || lower.includes('too many')) {
+        toast.error(isRTL ? 'محاولات كثيرة، انتظر قليلاً ثم أعد المحاولة' : 'Too many attempts, please wait and try again');
+      } else if (lower.includes('network') || lower.includes('fetch')) {
+        toast.error(isRTL ? 'خطأ في الاتصال، تحقق من الإنترنت' : 'Connection error, check your internet');
+      } else {
+        toast.error(isRTL ? 'فشل إعادة الإرسال، حاول مجدداً' : 'Failed to resend, please try again');
+      }
     } finally {
       setLoading(false);
     }
