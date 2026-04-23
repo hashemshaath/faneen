@@ -1,6 +1,14 @@
-/* Font loaded via <link> in index.html for faster FCP */
-
-/* Typography improvements */
+/* Font loaded via <link> in index.html for faster FCP.
+   The fallback below uses size-adjust to match IBM Plex Sans Arabic metrics,
+   preventing CLS when the web font swaps in. */
+@font-face {
+  font-family: 'IBM Plex Sans Arabic Fallback';
+  src: local('Segoe UI'), local('Tahoma'), local('Arial');
+  size-adjust: 100%;
+  ascent-override: 100%;
+  descent-override: 25%;
+  line-gap-override: 0%;
+}
 
 @tailwind base;
 @tailwind components;
