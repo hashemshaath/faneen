@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { authService, useOtpFlow } from '@/services/auth';
 import { useLoginLockout } from '@/hooks/useLoginLockout';
+import { translateAuthError } from '@/services/auth/errorMessages';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -57,61 +58,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
     },
   });
 
-  const getArabicErrorMessage = (msg: string): string => {
-    const lower = msg.toLowerCase();
-    if (lower.includes('invalid login') || lower.includes('invalid_credentials')) {
-      return 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
-    }
-    if (lower.includes('email not confirmed') || lower.includes('email_not_confirmed')) {
-      return 'يرجى تأكيد بريدك الإلكتروني أولاً';
-    }
-    if (lower.includes('too_many_requests') || lower.includes('rate_limit') || lower.includes('too many') || lower.includes('over_request_rate_limit')) {
-      return 'محاولات كثيرة جداً، يرجى الانتظار بضع دقائق ثم المحاولة مرة أخرى';
-    }
-    if (lower.includes('user not found') || lower.includes('no user')) {
-      return 'لا يوجد حساب مسجّل بهذا البريد الإلكتروني';
-    }
-    if (lower.includes('user already registered') || lower.includes('already_exists')) {
-      return 'هذا البريد الإلكتروني مسجّل مسبقاً، جرّب تسجيل الدخول';
-    }
-    if (lower.includes('network') || lower.includes('fetch') || lower.includes('failed to fetch')) {
-      return 'خطأ في الاتصال بالإنترنت، تحقق من اتصالك وحاول مجدداً';
-    }
-    if (lower.includes('user banned') || lower.includes('banned')) {
-      return 'تم تعليق هذا الحساب، يرجى التواصل مع الدعم';
-    }
-    if (lower.includes('password') && lower.includes('weak')) {
-      return 'كلمة المرور ضعيفة جداً، استخدم كلمة مرور أقوى';
-    }
-    if (lower.includes('signups not allowed') || lower.includes('signup_disabled')) {
-      return 'التسجيل غير متاح حالياً';
-    }
-    return msg;
-  };
-
-  const getEnglishErrorMessage = (msg: string): string => {
-    const lower = msg.toLowerCase();
-    if (lower.includes('invalid login') || lower.includes('invalid_credentials')) {
-      return 'Incorrect email or password';
-    }
-    if (lower.includes('email not confirmed') || lower.includes('email_not_confirmed')) {
-      return 'Please confirm your email first';
-    }
-    if (lower.includes('too_many_requests') || lower.includes('rate_limit') || lower.includes('too many') || lower.includes('over_request_rate_limit')) {
-      return 'Too many attempts, please wait a few minutes and try again';
-    }
-    if (lower.includes('user not found') || lower.includes('no user')) {
-      return 'No account found with this email';
-    }
-    if (lower.includes('network') || lower.includes('fetch') || lower.includes('failed to fetch')) {
-      return 'Connection error, check your internet and try again';
-    }
-    if (lower.includes('user banned') || lower.includes('banned')) {
-      return 'This account has been suspended, please contact support';
-    }
-    return msg;
-  };
-
   const handleEmailLogin = async () => {
     setLoginError('');
     setPasswordError('');
@@ -130,7 +76,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
       toast.success(t('common.success'));
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
-      const friendlyMsg = isRTL ? getArabicErrorMessage(msg) : getEnglishErrorMessage(msg);
+      const friendlyMsg = translateAuthError(msg, isRTL);
       lockout.recordFailure();
       setLoginError(friendlyMsg);
     } finally {
