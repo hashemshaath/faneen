@@ -1,0 +1,1 @@
+ALTER TABLE public.password_reset_log ADD COLUMN IF NOT EXISTS request_id text;
