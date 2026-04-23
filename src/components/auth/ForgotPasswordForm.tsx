@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { authService } from '@/services/auth';
 import { supabase } from '@/integrations/supabase/client';
@@ -20,8 +21,27 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
+  const [resendCount, setResendCount] = useState(0);
+  const [resendSuccess, setResendSuccess] = useState(false);
   const BackArrow = isRTL ? ArrowRight : ArrowLeft;
   const { errors, validateEmailField, clearError } = useFieldValidation(isRTL);
+  const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Cleanup interval on unmount
+  useEffect(() => {
+    return () => { if (cooldownRef.current) clearInterval(cooldownRef.current); };
+  }, []);
+
+  const startCooldown = useCallback((seconds: number) => {
+    if (cooldownRef.current) clearInterval(cooldownRef.current);
+    setResendCooldown(seconds);
+    cooldownRef.current = setInterval(() => {
+      setResendCooldown(prev => {
+        if (prev <= 1) { if (cooldownRef.current) clearInterval(cooldownRef.current); return 0; }
+        return prev - 1;
+      });
+    }, 1000);
+  }, []);
 
   const logResetRequest = async (status: string) => {
     try {
@@ -45,19 +65,13 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
       await logResetRequest('requested');
       setSent(true);
       toast.success(isRTL ? 'تم إرسال رابط إعادة التعيين' : 'Reset link sent');
-      // Start cooldown
-      setResendCooldown(60);
-      const interval = setInterval(() => {
-        setResendCooldown((prev) => {
-          if (prev <= 1) { clearInterval(interval); return 0; }
-          return prev - 1;
-        });
-      }, 1000);
+      startCooldown(60);
     } catch {
       // Don't reveal if email exists or not (security) — still show sent state
       await logResetRequest('requested');
       setSent(true);
       toast.success(isRTL ? 'إذا كان الحساب موجوداً، سيتم إرسال رابط إعادة التعيين' : 'If an account exists, a reset link will be sent');
+      startCooldown(60);
     } finally {
       setLoading(false);
     }
@@ -66,17 +80,18 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
   const handleResend = async () => {
     if (resendCooldown > 0) return;
     setLoading(true);
+    setResendSuccess(false);
     try {
       await authService.resetPassword(email);
       await logResetRequest('resend');
-      toast.success(isRTL ? 'تم إعادة إرسال الرابط' : 'Link resent');
-      setResendCooldown(60);
-      const interval = setInterval(() => {
-        setResendCooldown((prev) => {
-          if (prev <= 1) { clearInterval(interval); return 0; }
-          return prev - 1;
-        });
-      }, 1000);
+      setResendCount(prev => prev + 1);
+      setResendSuccess(true);
+      toast.success(isRTL ? 'تم إعادة إرسال الرابط بنجاح ✓' : 'Link resent successfully ✓');
+      // Increase cooldown with each resend (60s, 90s, 120s)
+      const nextCooldown = Math.min(60 + resendCount * 30, 180);
+      startCooldown(nextCooldown);
+      // Hide success banner after 5s
+      setTimeout(() => setResendSuccess(false), 5000);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : '';
       const lower = msg.toLowerCase();
@@ -138,11 +153,24 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
           </div>
         </div>
 
-        {/* Resend button with cooldown */}
+        {/* Resend success confirmation */}
+        {resendSuccess && (
+          <div className="flex items-center gap-2 rounded-lg border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20 px-4 py-3 animate-in fade-in slide-in-from-top-2 duration-300">
+            <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <p className="text-xs text-emerald-700 dark:text-emerald-300 font-medium">
+              {isRTL
+                ? `تم إعادة إرسال الرابط بنجاح (المرة ${resendCount}). تحقق من بريدك.`
+                : `Link resent successfully (attempt ${resendCount}). Check your email.`}
+            </p>
+          </div>
+        )}
+
+        {/* Resend button with cooldown and reason */}
+        <div className="text-center space-y-1.5">
         <button
           onClick={handleResend}
           disabled={resendCooldown > 0 || loading}
-          className="w-full text-center text-sm text-accent hover:underline font-medium disabled:text-muted-foreground disabled:no-underline inline-flex items-center justify-center gap-1.5 py-2"
+          className="w-full text-center text-sm text-accent hover:underline font-medium disabled:text-muted-foreground disabled:no-underline disabled:cursor-not-allowed inline-flex items-center justify-center gap-1.5 py-2 transition-colors"
         >
           {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
           {resendCooldown > 0
@@ -150,6 +178,22 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
             : (isRTL ? 'أعد الإرسال' : 'Resend')
           }
         </button>
+        {resendCooldown > 0 && (
+          <p className="text-[11px] text-muted-foreground">
+            {isRTL
+              ? 'لحماية حسابك، يرجى الانتظار قبل إعادة المحاولة'
+              : 'For your security, please wait before retrying'}
+          </p>
+        )}
+        {resendCount >= 3 && resendCooldown === 0 && (
+          <p className="text-[11px] text-amber-600 dark:text-amber-400 flex items-center justify-center gap-1">
+            <AlertTriangle className="w-3 h-3" />
+            {isRTL
+              ? 'إذا لم تصلك الرسالة، تواصل مع الدعم الفني'
+              : "If you still haven't received it, contact support"}
+          </p>
+        )}
+        </div>
 
         <button onClick={onBack} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
           <BackArrow className="w-4 h-4" />
