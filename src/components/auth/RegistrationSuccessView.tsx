@@ -77,6 +77,17 @@ export const RegistrationSuccessView: React.FC<RegistrationSuccessViewProps> = (
           }
         </p>
       </div>
+      <div className="space-y-3">
+        <h2 className="font-heading font-bold text-2xl text-foreground">
+          {isRTL ? 'تم إنشاء حسابك بنجاح!' : 'Account created successfully!'}
+        </h2>
+        <p className="text-sm text-muted-foreground max-w-xs mx-auto leading-relaxed">
+          {isRTL
+            ? <>أرسلنا رسالة تأكيد إلى <span className="inline-flex items-center gap-1"><strong className="text-foreground" dir="ltr">{email}</strong><CopyButton value={email} label="البريد الإلكتروني" size="xs" /></span> — تحقق من بريدك</>
+            : <>We sent a confirmation email to <span className="inline-flex items-center gap-1"><strong className="text-foreground">{email}</strong><CopyButton value={email} label="Email" size="xs" /></span> — check your inbox</>
+          }
+        </p>
+      </div>
 
       {/* Open email button */}
       <Button onClick={handleOpenEmail} className="w-full h-12 rounded-xl text-sm font-semibold gap-2" variant="hero">
