@@ -10,13 +10,21 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Mail, Loader2, ArrowLeft, ArrowRight, CheckCircle, RefreshCw, Inbox, AlertTriangle, LogIn, Pencil, ShieldCheck, ShieldAlert } from 'lucide-react';
+import { Mail, Loader2, ArrowLeft, ArrowRight, CheckCircle, RefreshCw, Inbox, AlertTriangle, LogIn, Pencil, ShieldCheck, ShieldAlert, Clock, History } from 'lucide-react';
 import { FieldError as FieldErrorDisplay } from './FieldError';
 import { AuthErrorHelpLinks } from './AuthErrorHelpLinks';
 import { useFieldValidation } from '@/hooks/useFieldValidation';
+import { CopyButton } from '@/components/ui/copy-button';
 
 interface ForgotPasswordFormProps {
   onBack: () => void;
+}
+
+interface ActivityEvent {
+  id: string;
+  type: 'sent' | 'resend' | 'email_changed' | 'auto_retry';
+  timestamp: Date;
+  detail?: string;
 }
 
 export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }) => {
@@ -31,6 +39,8 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
   const [submitErrorRaw, setSubmitErrorRaw] = useState('');
   const [editingEmail, setEditingEmail] = useState(false);
   const [editedEmail, setEditedEmail] = useState('');
+  const [autoRetrying, setAutoRetrying] = useState(false);
+  const [activityLog, setActivityLog] = useState<ActivityEvent[]>([]);
   const BackArrow = isRTL ? ArrowRight : ArrowLeft;
   const { errors, validateEmailField, clearError } = useFieldValidation(isRTL);
   const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -39,6 +49,15 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
   // Cleanup interval on unmount
   useEffect(() => {
     return () => { if (cooldownRef.current) clearInterval(cooldownRef.current); };
+  }, []);
+
+  const addActivity = useCallback((type: ActivityEvent['type'], detail?: string) => {
+    setActivityLog(prev => [{
+      id: crypto.randomUUID?.() ?? `${Date.now()}-${Math.random()}`,
+      type,
+      timestamp: new Date(),
+      detail,
+    }, ...prev].slice(0, 20));
   }, []);
 
   const startCooldown = useCallback((seconds: number) => {
@@ -52,11 +71,14 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
     }, 1000);
   }, []);
 
-  const logResetRequest = async (status: string) => {
+  const generateRequestId = () => `RST-${Date.now().toString(36).toUpperCase()}`;
+
+  const logResetRequest = async (status: string, requestId: string) => {
     try {
       await supabase.from('password_reset_log').insert({
         email: email.trim().toLowerCase(),
         status,
+        request_id: requestId,
         user_agent: navigator.userAgent?.substring(0, 200) || null,
       });
     } catch {
@@ -71,15 +93,17 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
     setLoading(true);
     setSubmitError(null);
     setSubmitErrorRaw('');
+    const reqId = generateRequestId();
     try {
       await authService.resetPassword(email);
-      await logResetRequest('requested');
+      await logResetRequest('requested', reqId);
       setSent(true);
+      addActivity('sent', email);
       toast.success(isRTL ? 'تم إرسال رابط إعادة التعيين' : 'Reset link sent');
       startCooldown(60);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : '';
-      await logResetRequest('failed');
+      await logResetRequest('failed', reqId);
 
       if (isRateLimitError(msg)) {
         lockout.recordFailure();
@@ -89,10 +113,13 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
         lockout.recordFailure();
         setSubmitError(translateAuthError(msg, isRTL));
         setSubmitErrorRaw(msg);
+        // Auto-retry after network error
+        scheduleAutoRetry();
       } else {
         // Always show sent state for security (don't reveal if email exists or not)
-        await logResetRequest('requested');
+        await logResetRequest('requested', reqId);
         setSent(true);
+        addActivity('sent', email);
         toast.success(isRTL
           ? 'إذا كان الحساب موجوداً، سيتم إرسال رابط إعادة التعيين'
           : 'If an account exists, a reset link will be sent');
@@ -103,15 +130,41 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
     }
   };
 
+  const scheduleAutoRetry = useCallback(() => {
+    setAutoRetrying(true);
+    const timer = setTimeout(async () => {
+      const retryReqId = generateRequestId();
+      try {
+        await authService.resetPassword(email);
+        await logResetRequest('auto_retry_success', retryReqId);
+        setSubmitError(null);
+        setSubmitErrorRaw('');
+        setSent(true);
+        addActivity('auto_retry', email);
+        toast.success(isRTL ? 'تم إعادة الإرسال تلقائياً بنجاح ✓' : 'Auto-retry succeeded ✓');
+        startCooldown(60);
+      } catch {
+        toast.error(isRTL ? 'فشلت المحاولة التلقائية، أعد المحاولة يدوياً' : 'Auto-retry failed, please try manually');
+        await logResetRequest('auto_retry_failed', retryReqId);
+      } finally {
+        setAutoRetrying(false);
+      }
+    }, 5000);
+    return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [email, isRTL]);
+
   const handleResend = async () => {
     if (resendCooldown > 0) return;
     setLoading(true);
     setResendSuccess(false);
+    const reqId = generateRequestId();
     try {
       await authService.resetPassword(email);
-      await logResetRequest('resend');
+      await logResetRequest('resend', reqId);
       setResendCount(prev => prev + 1);
       setResendSuccess(true);
+      addActivity('resend', email);
       toast.success(isRTL ? 'تم إعادة إرسال الرابط بنجاح ✓' : 'Link resent successfully ✓');
       // Increase cooldown with each resend (60s, 90s, 120s)
       const nextCooldown = Math.min(60 + resendCount * 30, 180);
@@ -120,6 +173,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
       setTimeout(() => setResendSuccess(false), 5000);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : '';
+      await logResetRequest('resend_failed', reqId);
       if (isRateLimitError(msg) || isNetworkError(msg)) {
         toast.error(translateAuthError(msg, isRTL));
       } else {
@@ -127,6 +181,39 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleEmailUpdate = (newEmail: string) => {
+    setEmail(newEmail);
+    setEditingEmail(false);
+    setResendCooldown(0);
+    if (cooldownRef.current) clearInterval(cooldownRef.current);
+    setResendSuccess(false);
+    setResendCount(0);
+    addActivity('email_changed', newEmail);
+  };
+
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString(isRTL ? 'ar-SA' : 'en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    });
+  };
+
+  const getActivityLabel = (ev: ActivityEvent) => {
+    switch (ev.type) {
+      case 'sent':
+        return isRTL ? 'تم إرسال رابط الاستعادة' : 'Reset link sent';
+      case 'resend':
+        return isRTL ? 'تم إعادة إرسال الرابط' : 'Link resent';
+      case 'email_changed':
+        return isRTL ? 'تم تعديل البريد الإلكتروني' : 'Email updated';
+      case 'auto_retry':
+        return isRTL ? 'إعادة إرسال تلقائية (بعد خطأ الشبكة)' : 'Auto-retry after network error';
+      default:
+        return '';
     }
   };
 
@@ -142,8 +229,8 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
           </h2>
           <p className="text-sm text-muted-foreground max-w-sm mx-auto">
             {isRTL
-              ? <>أرسلنا رابط إعادة تعيين كلمة المرور إلى:<br /><strong className="text-foreground" dir="ltr">{email}</strong></>
-              : <>We sent a password reset link to:<br /><strong className="text-foreground">{email}</strong></>
+              ? <>أرسلنا رابط إعادة تعيين كلمة المرور إلى:<br /><span className="inline-flex items-center gap-1"><strong className="text-foreground" dir="ltr">{email}</strong><CopyButton value={email} label="البريد الإلكتروني" size="xs" /></span></>
+              : <>We sent a password reset link to:<br /><span className="inline-flex items-center gap-1"><strong className="text-foreground">{email}</strong><CopyButton value={email} label="Email" size="xs" /></span></>
             }
           </p>
 
@@ -157,47 +244,46 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
               {isRTL ? 'تعديل البريد الإلكتروني' : 'Change email'}
             </button>
           ) : (
-            <div className="flex items-center gap-2 max-w-xs mx-auto w-full">
-              <Input
-                type="email"
-                value={editedEmail}
-                onChange={(e) => setEditedEmail(e.target.value)}
-                dir="ltr"
-                className="h-9 text-sm"
-                autoFocus
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && editedEmail.trim() && editedEmail !== email) {
-                    setEmail(editedEmail.trim());
-                    setEditingEmail(false);
-                    setResendCooldown(0);
-                    if (cooldownRef.current) clearInterval(cooldownRef.current);
-                    setResendSuccess(false);
-                    setResendCount(0);
-                  }
-                }}
-              />
-              <Button
-                size="sm"
-                variant="hero"
-                className="h-9 px-3 shrink-0"
-                disabled={!editedEmail.trim() || editedEmail.trim() === email}
-                onClick={() => {
-                  setEmail(editedEmail.trim());
-                  setEditingEmail(false);
-                  setResendCooldown(0);
-                  if (cooldownRef.current) clearInterval(cooldownRef.current);
-                  setResendSuccess(false);
-                  setResendCount(0);
-                }}
-              >
-                {isRTL ? 'تحديث' : 'Update'}
-              </Button>
-              <button
-                onClick={() => setEditingEmail(false)}
-                className="text-xs text-muted-foreground hover:text-foreground shrink-0"
-              >
-                {isRTL ? 'إلغاء' : 'Cancel'}
-              </button>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 max-w-xs mx-auto w-full">
+                <Input
+                  type="email"
+                  value={editedEmail}
+                  onChange={(e) => setEditedEmail(e.target.value)}
+                  dir="ltr"
+                  className="h-9 text-sm"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && editedEmail.trim() && editedEmail !== email) {
+                      handleEmailUpdate(editedEmail.trim());
+                    }
+                  }}
+                />
+                <Button
+                  size="sm"
+                  variant="hero"
+                  className="h-9 px-3 shrink-0"
+                  disabled={!editedEmail.trim() || editedEmail.trim() === email}
+                  onClick={() => handleEmailUpdate(editedEmail.trim())}
+                >
+                  {isRTL ? 'تحديث' : 'Update'}
+                </Button>
+                <button
+                  onClick={() => setEditingEmail(false)}
+                  className="text-xs text-muted-foreground hover:text-foreground shrink-0"
+                >
+                  {isRTL ? 'إلغاء' : 'Cancel'}
+                </button>
+              </div>
+              {/* Privacy notice on email change */}
+              <div className="flex items-start gap-1.5 max-w-xs mx-auto">
+                <ShieldCheck className="w-3 h-3 text-accent mt-0.5 shrink-0" />
+                <p className="text-[10px] text-muted-foreground text-start leading-relaxed">
+                  {isRTL
+                    ? 'لن يُكشف لك ما إذا كان الحساب موجوداً. الرسالة تُرسل دائماً بطريقة آمنة.'
+                    : 'We won\'t reveal whether an account exists. The email is always sent securely.'}
+                </p>
+              </div>
             </div>
           )}
         </div>
@@ -304,6 +390,27 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
         )}
         </div>
 
+        {/* Activity log */}
+        {activityLog.length > 0 && (
+          <div className="rounded-xl border border-border bg-muted/10 p-4 space-y-2">
+            <div className="flex items-center gap-1.5">
+              <History className="w-3.5 h-3.5 text-muted-foreground" />
+              <p className="text-[11px] font-semibold text-muted-foreground">
+                {isRTL ? 'سجل النشاط' : 'Activity Log'}
+              </p>
+            </div>
+            <div className="space-y-1 max-h-32 overflow-y-auto">
+              {activityLog.map((ev) => (
+                <div key={ev.id} className="flex items-center gap-2 text-[11px]">
+                  <Clock className="w-3 h-3 text-muted-foreground shrink-0" />
+                  <span className="text-muted-foreground font-mono tabular-nums">{formatTime(ev.timestamp)}</span>
+                  <span className="text-foreground">{getActivityLabel(ev)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <Button onClick={onBack} variant="outline" className="w-full h-10 gap-2">
           <LogIn className="w-4 h-4" />
           {isRTL ? 'العودة لتسجيل الدخول' : 'Back to Login'}
@@ -361,7 +468,17 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
           </div>
         )}
 
-        <Button onClick={handleSubmit} disabled={loading || !!errors.email || lockout.isLocked} className="w-full h-11" variant="hero">
+        {/* Auto-retry indicator */}
+        {autoRetrying && (
+          <div className="flex items-center gap-2 rounded-lg border border-accent/30 bg-accent/5 px-4 py-3 animate-in fade-in duration-300">
+            <Loader2 className="w-4 h-4 text-accent animate-spin shrink-0" />
+            <p className="text-xs text-accent font-medium">
+              {isRTL ? 'جاري المحاولة تلقائياً...' : 'Auto-retrying...'}
+            </p>
+          </div>
+        )}
+
+        <Button onClick={handleSubmit} disabled={loading || !!errors.email || lockout.isLocked || autoRetrying} className="w-full h-11" variant="hero">
           {loading && <Loader2 className="w-4 h-4 animate-spin me-2" />}
           {loading ? t('common.loading') : t('auth.reset_password')}
         </Button>

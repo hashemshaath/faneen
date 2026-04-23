@@ -1,10 +1,16 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { authService } from '@/services/auth';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Mail, Loader2, RefreshCw } from 'lucide-react';
+import { CheckCircle, Mail, Loader2, RefreshCw, Clock, History, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { CopyButton } from '@/components/ui/copy-button';
+
+interface ActivityEvent {
+  id: string;
+  type: 'sent' | 'resend' | 'email_changed';
+  timestamp: Date;
+}
 
 interface RegistrationSuccessViewProps {
   email: string;
@@ -15,15 +21,27 @@ export const RegistrationSuccessView: React.FC<RegistrationSuccessViewProps> = (
   const { isRTL } = useLanguage();
   const [resendCooldown, setResendCooldown] = useState(0);
   const [resending, setResending] = useState(false);
+  const [activityLog, setActivityLog] = useState<ActivityEvent[]>([
+    { id: 'initial', type: 'sent', timestamp: new Date() },
+  ]);
   const prevEmailRef = useRef(email);
 
-  // Reset cooldown when email changes so resend is immediately available
+  const addActivity = useCallback((type: ActivityEvent['type']) => {
+    setActivityLog(prev => [{
+      id: crypto.randomUUID?.() ?? `${Date.now()}-${Math.random()}`,
+      type,
+      timestamp: new Date(),
+    }, ...prev].slice(0, 20));
+  }, []);
+
+  // Reset cooldown and log when email changes
   useEffect(() => {
     if (prevEmailRef.current !== email) {
       prevEmailRef.current = email;
       setResendCooldown(0);
+      addActivity('email_changed');
     }
-  }, [email]);
+  }, [email, addActivity]);
 
   const handleResend = async () => {
     if (resendCooldown > 0) return;
@@ -31,6 +49,7 @@ export const RegistrationSuccessView: React.FC<RegistrationSuccessViewProps> = (
     try {
       await authService.resendConfirmation(email);
       toast.success(isRTL ? 'تم إعادة إرسال رسالة التأكيد' : 'Confirmation email resent');
+      addActivity('resend');
       setResendCooldown(60);
       const interval = setInterval(() => {
         setResendCooldown((prev) => {
@@ -57,6 +76,27 @@ export const RegistrationSuccessView: React.FC<RegistrationSuccessViewProps> = (
     window.open(providers[domain] || `https://${domain}`, '_blank');
   };
 
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString(isRTL ? 'ar-SA' : 'en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    });
+  };
+
+  const getActivityLabel = (ev: ActivityEvent) => {
+    switch (ev.type) {
+      case 'sent':
+        return isRTL ? 'تم إرسال رسالة التأكيد' : 'Confirmation email sent';
+      case 'resend':
+        return isRTL ? 'تم إعادة إرسال التأكيد' : 'Confirmation resent';
+      case 'email_changed':
+        return isRTL ? 'تم تعديل البريد الإلكتروني' : 'Email updated';
+      default:
+        return '';
+    }
+  };
+
   return (
     <div className="space-y-8 text-center animate-fade-in">
       {/* Success icon */}
@@ -76,6 +116,16 @@ export const RegistrationSuccessView: React.FC<RegistrationSuccessViewProps> = (
             ? <>أرسلنا رسالة تأكيد إلى <span className="inline-flex items-center gap-1"><strong className="text-foreground" dir="ltr">{email}</strong><CopyButton value={email} label="البريد الإلكتروني" size="xs" /></span> — تحقق من بريدك</>
             : <>We sent a confirmation email to <span className="inline-flex items-center gap-1"><strong className="text-foreground">{email}</strong><CopyButton value={email} label="Email" size="xs" /></span> — check your inbox</>
           }
+        </p>
+      </div>
+
+      {/* Privacy notice */}
+      <div className="flex items-start gap-2 rounded-lg bg-muted/30 px-3 py-2.5 text-start max-w-xs mx-auto">
+        <ShieldCheck className="w-3.5 h-3.5 text-accent mt-0.5 shrink-0" />
+        <p className="text-[10px] text-muted-foreground leading-relaxed">
+          {isRTL
+            ? 'يتم إرسال الرسالة بطريقة آمنة ولن يُكشف وجود الحساب من عدمه.'
+            : 'The email is sent securely and account existence is never revealed.'}
         </p>
       </div>
 
@@ -103,6 +153,27 @@ export const RegistrationSuccessView: React.FC<RegistrationSuccessViewProps> = (
           {isRTL ? 'تحقق أيضاً من مجلد الرسائل غير المرغوب فيها' : 'Also check your spam folder'}
         </p>
       </div>
+
+      {/* Activity log */}
+      {activityLog.length > 0 && (
+        <div className="rounded-xl border border-border bg-muted/10 p-4 space-y-2 text-start max-w-xs mx-auto">
+          <div className="flex items-center gap-1.5">
+            <History className="w-3.5 h-3.5 text-muted-foreground" />
+            <p className="text-[11px] font-semibold text-muted-foreground">
+              {isRTL ? 'سجل النشاط' : 'Activity Log'}
+            </p>
+          </div>
+          <div className="space-y-1 max-h-24 overflow-y-auto">
+            {activityLog.map((ev) => (
+              <div key={ev.id} className="flex items-center gap-2 text-[11px]">
+                <Clock className="w-3 h-3 text-muted-foreground shrink-0" />
+                <span className="text-muted-foreground font-mono tabular-nums">{formatTime(ev.timestamp)}</span>
+                <span className="text-foreground">{getActivityLabel(ev)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Back to login */}
       <div className="pt-2 border-t border-border/50">
