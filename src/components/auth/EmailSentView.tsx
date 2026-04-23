@@ -2,6 +2,7 @@ import React from 'react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Mail } from 'lucide-react';
+import { CopyButton } from '@/components/ui/copy-button';
 
 interface EmailSentViewProps {
   email: string;
@@ -22,8 +23,8 @@ export const EmailSentView: React.FC<EmailSentViewProps> = ({ email, onBackToLog
         </h2>
         <p className="text-sm text-muted-foreground max-w-sm mx-auto">
           {isRTL
-            ? `أرسلنا رابط التحقق إلى ${email}. يرجى فتح بريدك والنقر على الرابط لتأكيد حسابك.`
-            : `We sent a verification link to ${email}. Please open your email and click the link.`}
+            ? <>أرسلنا رابط التحقق إلى <span className="inline-flex items-center gap-1"><strong className="text-foreground" dir="ltr">{email}</strong><CopyButton value={email} label="البريد الإلكتروني" size="xs" /></span>. يرجى فتح بريدك والنقر على الرابط لتأكيد حسابك.</>
+            : <>We sent a verification link to <span className="inline-flex items-center gap-1"><strong className="text-foreground">{email}</strong><CopyButton value={email} label="Email" size="xs" /></span>. Please open your email and click the link.</>}
         </p>
       </div>
       <Button onClick={onBackToLogin} className="w-full h-11" variant="hero">
