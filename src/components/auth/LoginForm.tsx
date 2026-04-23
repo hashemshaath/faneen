@@ -85,6 +85,29 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
     return msg;
   };
 
+  const getEnglishErrorMessage = (msg: string): string => {
+    const lower = msg.toLowerCase();
+    if (lower.includes('invalid login') || lower.includes('invalid_credentials')) {
+      return 'Incorrect email or password';
+    }
+    if (lower.includes('email not confirmed') || lower.includes('email_not_confirmed')) {
+      return 'Please confirm your email first';
+    }
+    if (lower.includes('too_many_requests') || lower.includes('rate_limit') || lower.includes('too many') || lower.includes('over_request_rate_limit')) {
+      return 'Too many attempts, please wait a few minutes and try again';
+    }
+    if (lower.includes('user not found') || lower.includes('no user')) {
+      return 'No account found with this email';
+    }
+    if (lower.includes('network') || lower.includes('fetch') || lower.includes('failed to fetch')) {
+      return 'Connection error, check your internet and try again';
+    }
+    if (lower.includes('user banned') || lower.includes('banned')) {
+      return 'This account has been suspended, please contact support';
+    }
+    return msg;
+  };
+
   const handleEmailLogin = async () => {
     if (!email || !validateEmailField(email)) {
       if (!email) toast.error(isRTL ? 'يرجى إدخال البريد الإلكتروني' : 'Please enter your email');
