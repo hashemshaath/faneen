@@ -1,0 +1,303 @@
+import React, { useState, useMemo } from 'react';
+import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
+import { useLanguage } from '@/i18n/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Separator } from '@/components/ui/separator';
+import { toast } from 'sonner';
+import {
+  ShieldCheck, Search, Send, KeyRound, Users, Mail, Phone, Calendar,
+  Loader2, Clock, CheckCircle2, XCircle, AlertTriangle, RefreshCw,
+  Hash, Ban, UserCheck, History, Shield,
+} from 'lucide-react';
+
+const formatDate = (dateStr: string | null | undefined, lang: string): string => {
+  if (!dateStr) return lang === 'ar' ? 'غير محدد' : 'N/A';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return lang === 'ar' ? 'غير محدد' : 'N/A';
+  return d.toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+};
+
+const statusConfig: Record<string, { icon: React.ElementType; color: string; labelAr: string; labelEn: string }> = {
+  requested: { icon: Clock, color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-800', labelAr: 'مطلوب', labelEn: 'Requested' },
+  resend: { icon: RefreshCw, color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800', labelAr: 'إعادة إرسال', labelEn: 'Resent' },
+  completed: { icon: CheckCircle2, color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800', labelAr: 'مكتمل', labelEn: 'Completed' },
+  failed: { icon: XCircle, color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800', labelAr: 'فشل', labelEn: 'Failed' },
+};
+
+const AdminAccessManagement = () => {
+  const { isRTL, language } = useLanguage();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Fetch profiles
+  const { data: profiles = [], isLoading: loadingProfiles } = useQuery({
+    queryKey: ['access-mgmt-profiles'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('profiles')
+        .select('id, user_id, full_name, email, phone, avatar_url, ref_id, account_type, is_onboarded, phone_verified, membership_tier, created_at, is_banned')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data as any[];
+    },
+    enabled: !!user,
+  });
+
+  // Fetch password reset logs
+  const { data: resetLogs = [], isLoading: loadingLogs } = useQuery({
+    queryKey: ['password-reset-logs'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('password_reset_log')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(200);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  // Send reset link mutation
+  const sendResetMutation = useMutation({
+    mutationFn: async (targetUserId: string) => {
+      const res = await supabase.functions.invoke('admin-reset-password', {
+        body: { target_user_id: targetUserId, action: 'send_reset_link' },
+      });
+      if (res.error) throw res.error;
+      if (res.data?.error) throw new Error(res.data.error);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['password-reset-logs'] });
+      toast.success(isRTL ? 'تم إرسال رابط إعادة التعيين بنجاح' : 'Reset link sent successfully');
+    },
+    onError: (err: Error) => toast.error(err.message || (isRTL ? 'فشل إرسال الرابط' : 'Failed to send link')),
+  });
+
+  // Filtered profiles
+  const filtered = useMemo(() => {
+    if (!searchTerm) return profiles;
+    const lower = searchTerm.toLowerCase();
+    return profiles.filter(p =>
+      p.full_name?.toLowerCase().includes(lower) ||
+      p.email?.toLowerCase().includes(lower) ||
+      p.phone?.includes(searchTerm) ||
+      p.ref_id?.toLowerCase().includes(lower)
+    );
+  }, [profiles, searchTerm]);
+
+  // Stats
+  const stats = useMemo(() => {
+    const total = profiles.length;
+    const verified = profiles.filter((p: any) => p.phone_verified).length;
+    const onboarded = profiles.filter((p: any) => p.is_onboarded).length;
+    const banned = profiles.filter((p: any) => p.is_banned).length;
+    const recentResets = resetLogs.filter(l => {
+      const d = new Date(l.created_at);
+      return d.getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000;
+    }).length;
+    return { total, verified, onboarded, banned, recentResets };
+  }, [profiles, resetLogs]);
+
+  // Reset log grouped by email
+  const resetLogsByEmail = useMemo(() => {
+    const map = new Map<string, typeof resetLogs>();
+    resetLogs.forEach(log => {
+      const arr = map.get(log.email) || [];
+      arr.push(log);
+      map.set(log.email, arr);
+    });
+    return map;
+  }, [resetLogs]);
+
+  return (
+    <DashboardLayout>
+      <div className="space-y-6">
+        {/* Header */}
+        <div>
+          <h1 className="font-heading font-bold text-2xl text-foreground flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/20 to-primary/10 flex items-center justify-center shadow-sm">
+              <ShieldCheck className="w-5 h-5 text-accent" />
+            </div>
+            {isRTL ? 'إدارة الوصول والحسابات' : 'Access & Account Management'}
+          </h1>
+          <p className="text-muted-foreground font-body mt-1 text-sm">
+            {isRTL ? 'عرض حالة الحسابات وإدارة إعادة تعيين كلمات المرور بأمان' : 'View account statuses and manage password resets securely'}
+          </p>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+          {[
+            { icon: Users, label: isRTL ? 'إجمالي الحسابات' : 'Total Accounts', value: stats.total, gradient: 'from-primary/10 to-primary/5', iconBg: 'bg-primary/15 text-primary' },
+            { icon: UserCheck, label: isRTL ? 'هاتف موثق' : 'Phone Verified', value: stats.verified, gradient: 'from-emerald-500/10 to-emerald-500/5', iconBg: 'bg-emerald-500/15 text-emerald-600' },
+            { icon: CheckCircle2, label: isRTL ? 'مكتمل التسجيل' : 'Onboarded', value: stats.onboarded, gradient: 'from-blue-500/10 to-blue-500/5', iconBg: 'bg-blue-500/15 text-blue-600' },
+            { icon: Ban, label: isRTL ? 'حسابات معطّلة' : 'Disabled', value: stats.banned, gradient: 'from-red-500/10 to-red-500/5', iconBg: 'bg-red-500/15 text-red-600' },
+            { icon: History, label: isRTL ? 'إعادة تعيين (أسبوع)' : 'Resets (7d)', value: stats.recentResets, gradient: 'from-amber-500/10 to-amber-500/5', iconBg: 'bg-amber-500/15 text-amber-600' },
+          ].map((s, i) => (
+            <div key={i} className={`relative overflow-hidden rounded-2xl border border-border/30 bg-gradient-to-br ${s.gradient} p-4 transition-all hover:shadow-md group`}>
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-xl ${s.iconBg} flex items-center justify-center transition-transform group-hover:scale-110`}>
+                  <s.icon className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold font-heading leading-none">{s.value}</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">{s.label}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Search */}
+        <div className="rounded-2xl border border-border/30 bg-card p-4">
+          <div className="relative">
+            <Search className="absolute top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
+            <Input
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              placeholder={isRTL ? 'بحث بالاسم أو البريد أو الهاتف أو المعرف...' : 'Search by name, email, phone, or ref ID...'}
+              className="ps-10 h-10 rounded-xl bg-muted/30 border-border/20 focus:bg-background transition-colors"
+            />
+          </div>
+        </div>
+
+        {/* Accounts List */}
+        {loadingProfiles ? (
+          <div className="space-y-3">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-2xl" />)}</div>
+        ) : filtered.length === 0 ? (
+          <div className="rounded-2xl border border-border/30 bg-card p-12 text-center">
+            <Shield className="w-10 h-10 mx-auto text-accent/30 mb-3" />
+            <p className="text-sm text-muted-foreground">{isRTL ? 'لا توجد نتائج' : 'No results found'}</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {filtered.map(profile => {
+              const isBanned = profile.is_banned;
+              const logs = resetLogsByEmail.get(profile.email?.toLowerCase()) || [];
+              const lastReset = logs[0];
+
+              return (
+                <div key={profile.id} className={`rounded-2xl border bg-card p-4 transition-all hover:shadow-md ${isBanned ? 'border-destructive/30 opacity-70' : 'border-border/30'}`}>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                    {/* User info */}
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <Avatar className="w-10 h-10 shrink-0 ring-2 ring-border/10">
+                        <AvatarImage src={profile.avatar_url || undefined} />
+                        <AvatarFallback className="bg-gradient-to-br from-accent/20 to-primary/10 text-accent font-bold text-sm">
+                          {(profile.full_name || '?').charAt(0)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-heading font-bold text-sm truncate">{profile.full_name || (isRTL ? 'بدون اسم' : 'No name')}</span>
+                          {profile.ref_id && <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-mono"><Hash className="w-2.5 h-2.5 me-0.5" />{profile.ref_id}</Badge>}
+                          {isBanned && <Badge variant="destructive" className="text-[9px] gap-0.5 px-1.5 py-0"><Ban className="w-2.5 h-2.5" />{isRTL ? 'معطّل' : 'Disabled'}</Badge>}
+                        </div>
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
+                          {profile.email && <span className="flex items-center gap-1 text-[11px] text-muted-foreground truncate max-w-[200px]"><Mail className="w-3 h-3 shrink-0" />{profile.email}</span>}
+                          {profile.phone && <span className="flex items-center gap-1 text-[11px] text-muted-foreground" dir="ltr"><Phone className="w-3 h-3 shrink-0" />{profile.phone}</span>}
+                          <span className="flex items-center gap-1 text-[11px] text-muted-foreground"><Calendar className="w-3 h-3 shrink-0" />{formatDate(profile.created_at, language)}</span>
+                        </div>
+                        {/* Account status badges */}
+                        <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                          <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${profile.is_onboarded ? 'border-emerald-300 text-emerald-600 dark:text-emerald-400' : 'border-amber-300 text-amber-600 dark:text-amber-400'}`}>
+                            {profile.is_onboarded ? (isRTL ? 'مكتمل التسجيل' : 'Onboarded') : (isRTL ? 'لم يكتمل' : 'Not onboarded')}
+                          </Badge>
+                          <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${profile.phone_verified ? 'border-emerald-300 text-emerald-600 dark:text-emerald-400' : 'border-muted text-muted-foreground'}`}>
+                            {profile.phone_verified ? (isRTL ? 'هاتف موثق' : 'Phone verified') : (isRTL ? 'هاتف غير موثق' : 'Phone not verified')}
+                          </Badge>
+                          {lastReset && (() => {
+                            const cfg = statusConfig[lastReset.status] || statusConfig.requested;
+                            const StatusIcon = cfg.icon;
+                            return (
+                              <Badge className={`${cfg.color} text-[10px] border px-1.5 py-0 gap-0.5`}>
+                                <StatusIcon className="w-2.5 h-2.5" />
+                                {isRTL ? `آخر تعيين: ${cfg.labelAr}` : `Last reset: ${cfg.labelEn}`}
+                              </Badge>
+                            );
+                          })()}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 gap-1.5 text-xs rounded-xl"
+                        onClick={() => sendResetMutation.mutate(profile.user_id)}
+                        disabled={sendResetMutation.isPending}
+                      >
+                        {sendResetMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
+                        {isRTL ? 'إرسال رابط تعيين' : 'Send Reset Link'}
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Reset history for this user */}
+                  {logs.length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-border/20">
+                      <p className="text-[11px] font-bold text-muted-foreground mb-2 flex items-center gap-1.5">
+                        <KeyRound className="w-3 h-3" />
+                        {isRTL ? `سجل إعادة التعيين (${logs.length})` : `Reset history (${logs.length})`}
+                      </p>
+                      <div className="space-y-1.5 max-h-32 overflow-y-auto">
+                        {logs.slice(0, 5).map(log => {
+                          const cfg = statusConfig[log.status] || statusConfig.requested;
+                          const LogIcon = cfg.icon;
+                          return (
+                            <div key={log.id} className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                              <LogIcon className="w-3 h-3 shrink-0" />
+                              <Badge className={`${cfg.color} text-[9px] border px-1.5 py-0`}>{isRTL ? cfg.labelAr : cfg.labelEn}</Badge>
+                              <span>{formatDate(log.created_at, language)}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Recent Reset Activity */}
+        {!loadingLogs && resetLogs.length > 0 && (
+          <div className="rounded-2xl border border-border/30 bg-card p-5">
+            <h3 className="font-heading font-bold text-sm flex items-center gap-2 mb-4">
+              <div className="w-7 h-7 rounded-lg bg-accent/15 flex items-center justify-center">
+                <History className="w-3.5 h-3.5 text-accent" />
+              </div>
+              {isRTL ? 'آخر عمليات إعادة التعيين' : 'Recent Reset Activity'}
+            </h3>
+            <div className="space-y-2">
+              {resetLogs.slice(0, 15).map(log => {
+                const cfg = statusConfig[log.status] || statusConfig.requested;
+                const LogIcon = cfg.icon;
+                return (
+                  <div key={log.id} className="flex items-center gap-3 rounded-xl bg-muted/30 px-3 py-2 text-sm">
+                    <LogIcon className="w-4 h-4 shrink-0 text-muted-foreground" />
+                    <span className="font-mono text-xs text-muted-foreground truncate max-w-[200px]">{log.email}</span>
+                    <Badge className={`${cfg.color} text-[9px] border px-1.5 py-0`}>{isRTL ? cfg.labelAr : cfg.labelEn}</Badge>
+                    <span className="text-[11px] text-muted-foreground ms-auto">{formatDate(log.created_at, language)}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+    </DashboardLayout>
+  );
+};
+
+export default AdminAccessManagement;
