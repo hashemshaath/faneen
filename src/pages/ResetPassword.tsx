@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { authService } from '@/services/auth';
+import { supabase } from '@/integrations/supabase/client';
 import { PasswordField } from '@/components/auth/PasswordField';
 import { PasswordResetSuccessView } from '@/components/auth/PasswordResetSuccessView';
 import { Button } from '@/components/ui/button';
@@ -54,10 +55,28 @@ const ResetPassword = () => {
     setLoading(true);
     try {
       await authService.updatePassword(password);
+      // Log successful reset
+      try {
+        await supabase.from('password_reset_log').insert({
+          user_id: session?.user?.id || null,
+          email: session?.user?.email || '',
+          status: 'completed',
+          user_agent: navigator.userAgent?.substring(0, 200) || null,
+        });
+      } catch { /* silent */ }
       await authService.signOut();
       setResetSuccess(true);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : '';
+      // Log failed reset
+      try {
+        await supabase.from('password_reset_log').insert({
+          user_id: session?.user?.id || null,
+          email: session?.user?.email || '',
+          status: 'failed',
+          user_agent: navigator.userAgent?.substring(0, 200) || null,
+        });
+      } catch { /* silent */ }
       if (msg.includes('same_password')) {
         toast.error(isRTL ? 'يرجى اختيار كلمة مرور مختلفة' : 'Please choose a different password');
       } else {
