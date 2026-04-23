@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Mail, Loader2, ArrowLeft, ArrowRight, CheckCircle, RefreshCw, Inbox, AlertTriangle, LogIn, Pencil, ShieldCheck, ShieldAlert, Clock, History } from 'lucide-react';
+import { HelpCircle, Timer } from 'lucide-react';
 import { FieldError as FieldErrorDisplay } from './FieldError';
 import { AuthErrorHelpLinks } from './AuthErrorHelpLinks';
 import { useFieldValidation } from '@/hooks/useFieldValidation';
@@ -41,6 +42,8 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
   const [editedEmail, setEditedEmail] = useState('');
   const [autoRetrying, setAutoRetrying] = useState(false);
   const [activityLog, setActivityLog] = useState<ActivityEvent[]>([]);
+  const [showPrivacyExplainer, setShowPrivacyExplainer] = useState(false);
+  const [deliveryCountdown, setDeliveryCountdown] = useState(0);
   const BackArrow = isRTL ? ArrowRight : ArrowLeft;
   const { errors, validateEmailField, clearError } = useFieldValidation(isRTL);
   const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -101,6 +104,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
       addActivity('sent', email);
       toast.success(isRTL ? 'تم إرسال رابط إعادة التعيين' : 'Reset link sent');
       startCooldown(60);
+      startDeliveryCountdown();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : '';
       await logResetRequest('failed', reqId);
@@ -124,6 +128,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
           ? 'إذا كان الحساب موجوداً، سيتم إرسال رابط إعادة التعيين'
           : 'If an account exists, a reset link will be sent');
         startCooldown(60);
+        startDeliveryCountdown();
       }
     } finally {
       setLoading(false);
@@ -154,6 +159,24 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [email, isRTL]);
 
+  const deliveryRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const startDeliveryCountdown = useCallback(() => {
+    if (deliveryRef.current) clearInterval(deliveryRef.current);
+    const seconds = 5 * 60; // 5 minutes
+    setDeliveryCountdown(seconds);
+    deliveryRef.current = setInterval(() => {
+      setDeliveryCountdown(prev => {
+        if (prev <= 1) { if (deliveryRef.current) clearInterval(deliveryRef.current); return 0; }
+        return prev - 1;
+      });
+    }, 1000);
+  }, []);
+
+  useEffect(() => {
+    return () => { if (deliveryRef.current) clearInterval(deliveryRef.current); };
+  }, []);
+
   const handleResend = async () => {
     if (resendCooldown > 0) return;
     setLoading(true);
@@ -169,6 +192,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
       // Increase cooldown with each resend (60s, 90s, 120s)
       const nextCooldown = Math.min(60 + resendCount * 30, 180);
       startCooldown(nextCooldown);
+      startDeliveryCountdown();
       // Hide success banner after 5s
       setTimeout(() => setResendSuccess(false), 5000);
     } catch (err: unknown) {
@@ -339,14 +363,52 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
         </div>
 
         {/* Privacy note */}
-        <div className="flex items-start gap-2 rounded-lg bg-muted/30 px-3 py-2.5">
+        <div className="flex items-start gap-2 rounded-lg bg-muted/30 px-3 py-2.5 transition-all">
           <ShieldCheck className="w-3.5 h-3.5 text-accent mt-0.5 shrink-0" />
-          <p className="text-[11px] text-muted-foreground leading-relaxed">
-            {isRTL
-              ? 'لحماية خصوصيتك، نعرض هذه الرسالة سواء كان البريد مسجلاً أم لا.'
-              : 'For your privacy, this message appears whether the email is registered or not.'}
-          </p>
+          <div className="space-y-1.5">
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              {isRTL
+                ? 'لحماية خصوصيتك، نعرض هذه الرسالة سواء كان البريد مسجلاً أم لا. الرسالة تُرسل دائماً بطريقة آمنة.'
+                : 'For your privacy, this message appears whether the email is registered or not. The email is always sent securely.'}
+            </p>
+            <button
+              onClick={() => setShowPrivacyExplainer(prev => !prev)}
+              className="inline-flex items-center gap-1 text-[11px] text-accent hover:underline font-medium"
+            >
+              <HelpCircle className="w-3 h-3" />
+              {isRTL ? 'لماذا نعرض رسالة عامة؟' : 'Why do we show a generic message?'}
+            </button>
+            {showPrivacyExplainer && (
+              <div className="text-[11px] text-muted-foreground leading-relaxed bg-muted/40 rounded-lg p-3 animate-in fade-in slide-in-from-top-1 duration-200">
+                {isRTL
+                  ? 'نعرض نفس الرسالة لجميع المستخدمين — سواء كان البريد مسجلاً أم لا — لمنع أي شخص من معرفة ما إذا كان بريد معين مرتبطاً بحساب. هذا إجراء أمني معياري يُعرف بـ "عدم الكشف عن وجود الحساب" لحماية خصوصية المستخدمين.'
+                  : 'We show the same message to everyone — whether or not the email is registered — to prevent anyone from discovering if a particular email has an account. This is a standard security practice known as "account enumeration prevention" to protect user privacy.'}
+              </div>
+            )}
+          </div>
         </div>
+
+        {/* Expected delivery countdown */}
+        {deliveryCountdown > 0 && (
+          <div className="flex items-center gap-2 rounded-lg border border-accent/20 bg-accent/5 px-4 py-3">
+            <Timer className="w-4 h-4 text-accent shrink-0" />
+            <p className="text-xs text-foreground font-medium">
+              {isRTL
+                ? `الوقت المتوقع لاستلام الرسالة: ${Math.floor(deliveryCountdown / 60)}:${(deliveryCountdown % 60).toString().padStart(2, '0')}`
+                : `Expected delivery: ${Math.floor(deliveryCountdown / 60)}:${(deliveryCountdown % 60).toString().padStart(2, '0')}`}
+            </p>
+          </div>
+        )}
+        {deliveryCountdown === 0 && activityLog.length > 0 && (
+          <div className="flex items-center gap-2 rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 px-4 py-3">
+            <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+            <p className="text-xs text-amber-700 dark:text-amber-300 font-medium">
+              {isRTL
+                ? 'انتهى الوقت المتوقع. إذا لم تصلك الرسالة، أعد الإرسال أو تحقق من البريد المهمل.'
+                : "Expected time has passed. If you haven't received it, resend or check your spam folder."}
+            </p>
+          </div>
+        )}
 
         {/* Resend success confirmation */}
         {resendSuccess && (

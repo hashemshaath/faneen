@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { authService } from '@/services/auth';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Mail, Loader2, RefreshCw, Clock, History, ShieldCheck } from 'lucide-react';
+import { CheckCircle, Mail, Loader2, RefreshCw, Clock, History, ShieldCheck, HelpCircle, Timer, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { CopyButton } from '@/components/ui/copy-button';
 
@@ -21,10 +21,35 @@ export const RegistrationSuccessView: React.FC<RegistrationSuccessViewProps> = (
   const { isRTL } = useLanguage();
   const [resendCooldown, setResendCooldown] = useState(0);
   const [resending, setResending] = useState(false);
+  const [showPrivacyExplainer, setShowPrivacyExplainer] = useState(false);
+  const [deliveryCountdown, setDeliveryCountdown] = useState(5 * 60);
   const [activityLog, setActivityLog] = useState<ActivityEvent[]>([
     { id: 'initial', type: 'sent', timestamp: new Date() },
   ]);
   const prevEmailRef = useRef(email);
+  const deliveryRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Start delivery countdown on mount
+  useEffect(() => {
+    deliveryRef.current = setInterval(() => {
+      setDeliveryCountdown(prev => {
+        if (prev <= 1) { if (deliveryRef.current) clearInterval(deliveryRef.current); return 0; }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => { if (deliveryRef.current) clearInterval(deliveryRef.current); };
+  }, []);
+
+  const restartDeliveryCountdown = useCallback(() => {
+    if (deliveryRef.current) clearInterval(deliveryRef.current);
+    setDeliveryCountdown(5 * 60);
+    deliveryRef.current = setInterval(() => {
+      setDeliveryCountdown(prev => {
+        if (prev <= 1) { if (deliveryRef.current) clearInterval(deliveryRef.current); return 0; }
+        return prev - 1;
+      });
+    }, 1000);
+  }, []);
 
   const addActivity = useCallback((type: ActivityEvent['type']) => {
     setActivityLog(prev => [{
@@ -50,6 +75,7 @@ export const RegistrationSuccessView: React.FC<RegistrationSuccessViewProps> = (
       await authService.resendConfirmation(email);
       toast.success(isRTL ? 'تم إعادة إرسال رسالة التأكيد' : 'Confirmation email resent');
       addActivity('resend');
+      restartDeliveryCountdown();
       setResendCooldown(60);
       const interval = setInterval(() => {
         setResendCooldown((prev) => {
@@ -120,14 +146,51 @@ export const RegistrationSuccessView: React.FC<RegistrationSuccessViewProps> = (
       </div>
 
       {/* Privacy notice */}
-      <div className="flex items-start gap-2 rounded-lg bg-muted/30 px-3 py-2.5 text-start max-w-xs mx-auto">
+      <div className="flex items-start gap-2 rounded-lg bg-muted/30 px-3 py-2.5 text-start max-w-xs mx-auto transition-all">
         <ShieldCheck className="w-3.5 h-3.5 text-accent mt-0.5 shrink-0" />
-        <p className="text-[10px] text-muted-foreground leading-relaxed">
-          {isRTL
-            ? 'يتم إرسال الرسالة بطريقة آمنة ولن يُكشف وجود الحساب من عدمه.'
-            : 'The email is sent securely and account existence is never revealed.'}
-        </p>
+        <div className="space-y-1.5">
+          <p className="text-[10px] text-muted-foreground leading-relaxed">
+            {isRTL
+              ? 'يتم إرسال الرسالة بطريقة آمنة ولن يُكشف وجود الحساب من عدمه.'
+              : 'The email is sent securely and account existence is never revealed.'}
+          </p>
+          <button
+            onClick={() => setShowPrivacyExplainer(prev => !prev)}
+            className="inline-flex items-center gap-1 text-[10px] text-accent hover:underline font-medium"
+          >
+            <HelpCircle className="w-3 h-3" />
+            {isRTL ? 'لماذا نعرض رسالة عامة؟' : 'Why do we show a generic message?'}
+          </button>
+          {showPrivacyExplainer && (
+            <div className="text-[10px] text-muted-foreground leading-relaxed bg-muted/40 rounded-lg p-2.5 animate-in fade-in slide-in-from-top-1 duration-200">
+              {isRTL
+                ? 'نعرض نفس الرسالة لجميع المستخدمين لمنع أي شخص من معرفة ما إذا كان بريد معين مرتبطاً بحساب. هذا إجراء أمني معياري لحماية خصوصيتك.'
+                : 'We show the same message to everyone to prevent anyone from discovering if an email has an account. This is a standard security practice.'}
+            </div>
+          )}
+        </div>
       </div>
+
+      {/* Expected delivery countdown */}
+      {deliveryCountdown > 0 ? (
+        <div className="flex items-center justify-center gap-2 rounded-lg border border-accent/20 bg-accent/5 px-4 py-3 max-w-xs mx-auto">
+          <Timer className="w-4 h-4 text-accent shrink-0" />
+          <p className="text-xs text-foreground font-medium">
+            {isRTL
+              ? `الوقت المتوقع لاستلام الرسالة: ${Math.floor(deliveryCountdown / 60)}:${(deliveryCountdown % 60).toString().padStart(2, '0')}`
+              : `Expected delivery: ${Math.floor(deliveryCountdown / 60)}:${(deliveryCountdown % 60).toString().padStart(2, '0')}`}
+          </p>
+        </div>
+      ) : (
+        <div className="flex items-center justify-center gap-2 rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 px-4 py-3 max-w-xs mx-auto">
+          <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+          <p className="text-xs text-amber-700 dark:text-amber-300 font-medium">
+            {isRTL
+              ? 'انتهى الوقت المتوقع. أعد الإرسال أو تحقق من البريد المهمل.'
+              : "Time's up. Resend or check your spam folder."}
+          </p>
+        </div>
+      )}
 
       {/* Open email button */}
       <Button onClick={handleOpenEmail} className="w-full h-12 rounded-xl text-sm font-semibold gap-2" variant="hero">
