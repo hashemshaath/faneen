@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Mail, Loader2, ArrowLeft, ArrowRight, CheckCircle, RefreshCw } from 'lucide-react';
+import { Mail, Loader2, ArrowLeft, ArrowRight, CheckCircle, RefreshCw, Inbox, AlertTriangle } from 'lucide-react';
 import { FieldError as FieldErrorDisplay } from './FieldError';
 import { useFieldValidation } from '@/hooks/useFieldValidation';
 
@@ -76,24 +76,49 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
             <CheckCircle className="w-8 h-8 text-accent" />
           </div>
           <h2 className="font-heading font-bold text-2xl text-foreground">
-            {isRTL ? 'تم الإرسال' : 'Email Sent'}
+            {isRTL ? 'تحقق من بريدك الإلكتروني' : 'Check Your Email'}
           </h2>
           <p className="text-sm text-muted-foreground max-w-sm mx-auto">
             {isRTL
-              ? <>أرسلنا رابط إعادة تعيين كلمة المرور إلى <strong className="text-foreground" dir="ltr">{email}</strong></>
-              : <>We sent a password reset link to <strong className="text-foreground">{email}</strong></>
+              ? <>أرسلنا رابط إعادة تعيين كلمة المرور إلى:<br /><strong className="text-foreground" dir="ltr">{email}</strong></>
+              : <>We sent a password reset link to:<br /><strong className="text-foreground">{email}</strong></>
             }
           </p>
-          <p className="text-xs text-muted-foreground">
-            {isRTL ? 'لم تصلك الرسالة؟ تحقق من مجلد الرسائل غير المرغوب فيها' : "Didn't receive it? Check your spam folder"}
-          </p>
+        </div>
+
+        {/* Email status tips */}
+        <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3 text-start">
+          <div className="flex items-start gap-2.5">
+            <Inbox className="w-4 h-4 text-accent mt-0.5 shrink-0" />
+            <p className="text-xs text-muted-foreground">
+              {isRTL
+                ? 'قد يستغرق وصول الرسالة بضع دقائق. تحقق من صندوق الوارد.'
+                : 'The email may take a few minutes. Check your inbox.'}
+            </p>
+          </div>
+          <div className="flex items-start gap-2.5">
+            <AlertTriangle className="w-4 h-4 text-yellow-500 mt-0.5 shrink-0" />
+            <p className="text-xs text-muted-foreground">
+              {isRTL
+                ? 'لم تجدها؟ تحقق من مجلد الرسائل غير المرغوب فيها (Spam) أو البريد المهمل (Junk).'
+                : "Can't find it? Check your Spam or Junk folder."}
+            </p>
+          </div>
+          <div className="flex items-start gap-2.5">
+            <Mail className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+            <p className="text-xs text-muted-foreground">
+              {isRTL
+                ? 'تأكد أن البريد الإلكتروني المُدخل صحيح. إذا لم تستلم الرسالة، يمكنك إعادة الإرسال.'
+                : 'Make sure the email is correct. If not received, you can resend below.'}
+            </p>
+          </div>
         </div>
 
         {/* Resend button with cooldown */}
         <button
           onClick={handleResend}
           disabled={resendCooldown > 0 || loading}
-          className="w-full text-center text-sm text-accent hover:underline font-medium disabled:text-muted-foreground disabled:no-underline inline-flex items-center justify-center gap-1.5"
+          className="w-full text-center text-sm text-accent hover:underline font-medium disabled:text-muted-foreground disabled:no-underline inline-flex items-center justify-center gap-1.5 py-2"
         >
           {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
           {resendCooldown > 0
