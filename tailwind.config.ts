@@ -26,8 +26,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        heading: ["IBM Plex Sans Arabic", "sans-serif"],
-        body: ["IBM Plex Sans Arabic", "sans-serif"],
+        heading: ["Noto Sans Arabic", "sans-serif"],
+        body: ["Noto Sans Arabic", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
