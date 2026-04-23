@@ -347,6 +347,14 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
                 <li>{isRTL ? 'جرّب البريد الآخر إذا كنت تستخدم أكثر من بريد' : 'Try another email if you have multiple'}</li>
                 <li>{isRTL ? 'إذا استمرت المشكلة، تواصل مع الدعم الفني' : 'Contact support if the issue persists'}</li>
               </ul>
+              {submitErrorRaw && (
+                <AuthErrorHelpLinks
+                  links={getAuthErrorHelpLinks(submitErrorRaw, isRTL)}
+                  onAction={(action) => {
+                    if (action === 'contact') window.location.href = '/contact';
+                  }}
+                />
+              )}
             </div>
           </div>
         )}
