@@ -21,7 +21,9 @@ const ContactAdminNotificationEmail = ({
   message,
 }: ContactAdminNotificationProps) => (
   <Html lang="ar" dir="rtl">
-    <Head />
+    <Head>
+          <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;600;700&display=swap" />
+        </Head>
     <Preview>رسالة تواصل جديدة من {name || 'زائر'}</Preview>
     <Body style={main}>
       <Container style={container}>

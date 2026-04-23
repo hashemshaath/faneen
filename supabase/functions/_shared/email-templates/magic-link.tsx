@@ -25,7 +25,9 @@ export const MagicLinkEmail = ({
   confirmationUrl,
 }: MagicLinkEmailProps) => (
   <Html lang="ar" dir="rtl">
-    <Head />
+    <Head>
+          <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;600;700&display=swap" />
+        </Head>
     <Preview>رابط تسجيل الدخول إلى {siteName}</Preview>
     <Body style={main}>
       <Container style={container}>

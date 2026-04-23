@@ -25,7 +25,9 @@ const PaymentReminderEmail = ({
   dueDate,
 }: PaymentReminderProps) => (
   <Html lang="ar" dir="rtl">
-    <Head />
+    <Head>
+          <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;600;700&display=swap" />
+        </Head>
     <Preview>تذكير بموعد سداد القسط {installmentNumber ? `رقم ${installmentNumber}` : ''}</Preview>
     <Body style={main}>
       <Container style={container}>

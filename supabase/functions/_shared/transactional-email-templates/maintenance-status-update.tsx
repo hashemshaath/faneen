@@ -31,7 +31,9 @@ const MaintenanceStatusUpdateEmail = ({
   newStatus,
 }: MaintenanceStatusUpdateProps) => (
   <Html lang="ar" dir="rtl">
-    <Head />
+    <Head>
+          <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;600;700&display=swap" />
+        </Head>
     <Preview>تحديث طلب الصيانة {requestNumber || ''}</Preview>
     <Body style={main}>
       <Container style={container}>
