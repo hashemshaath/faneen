@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Mail, Loader2, ArrowLeft, ArrowRight, CheckCircle, RefreshCw, Inbox, AlertTriangle } from 'lucide-react';
+import { Mail, Loader2, ArrowLeft, ArrowRight, CheckCircle, RefreshCw, Inbox, AlertTriangle, LogIn } from 'lucide-react';
 import { FieldError as FieldErrorDisplay } from './FieldError';
 import { useFieldValidation } from '@/hooks/useFieldValidation';
 
@@ -218,7 +218,12 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
         )}
         </div>
 
-        <button onClick={onBack} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
+        <Button onClick={onBack} variant="outline" className="w-full h-10 gap-2">
+          <LogIn className="w-4 h-4" />
+          {isRTL ? 'العودة لتسجيل الدخول' : 'Back to Login'}
+        </Button>
+
+        <button onClick={onBack} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mt-1">
           <BackArrow className="w-4 h-4" />
           {t('auth.back')}
         </button>
