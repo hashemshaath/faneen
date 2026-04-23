@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Mail, Loader2, ArrowLeft, ArrowRight, CheckCircle, RefreshCw, Inbox, AlertTriangle, LogIn, Pencil } from 'lucide-react';
+import { Mail, Loader2, ArrowLeft, ArrowRight, CheckCircle, RefreshCw, Inbox, AlertTriangle, LogIn, Pencil, ShieldCheck } from 'lucide-react';
 import { FieldError as FieldErrorDisplay } from './FieldError';
 import { useFieldValidation } from '@/hooks/useFieldValidation';
 
@@ -75,7 +75,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
       const lower = msg.toLowerCase();
       await logResetRequest('failed');
 
-      if (lower.includes('rate_limit') || lower.includes('too_many') || lower.includes('too many') || lower.includes('429')) {
+      if (lower.includes('rate_limit') || lower.includes('too_many') || lower.includes('too many') || lower.includes('429')) { 
         setSubmitError(isRTL
           ? 'تم تجاوز الحد المسموح من المحاولات. يرجى الانتظار بضع دقائق ثم إعادة المحاولة.'
           : 'Too many attempts. Please wait a few minutes and try again.');
@@ -83,13 +83,8 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
         setSubmitError(isRTL
           ? 'حدث خطأ في الاتصال بالخادم. تأكد من اتصالك بالإنترنت وأعد المحاولة.'
           : 'Connection error. Check your internet and try again.');
-      } else if (lower.includes('not found') || lower.includes('user_not_found') || lower.includes('no user')) {
-        // Show helpful message without confirming account existence
-        setSubmitError(isRTL
-          ? 'لم نتمكن من إرسال رابط إعادة التعيين. تأكد من صحة البريد الإلكتروني المُدخل أو سجّل حساباً جديداً.'
-          : 'Could not send reset link. Verify your email address or create a new account.');
       } else {
-        // Generic — still show sent state for security (don't reveal if email exists)
+        // Always show sent state for security (don't reveal if email exists or not)
         await logResetRequest('requested');
         setSent(true);
         toast.success(isRTL
@@ -207,6 +202,14 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
         {/* Email status tips */}
         <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3 text-start">
           <div className="flex items-start gap-2.5">
+            <ShieldCheck className="w-4 h-4 text-accent mt-0.5 shrink-0" />
+            <p className="text-xs text-muted-foreground">
+              {isRTL
+                ? 'لحماية خصوصيتك، نعرض هذه الرسالة سواء كان البريد مسجلاً أم لا. إذا كان لديك حساب ستصلك الرسالة.'
+                : 'For your privacy, this message appears whether the email is registered or not. If you have an account, you will receive the email.'}
+            </p>
+          </div>
+          <div className="flex items-start gap-2.5">
             <Inbox className="w-4 h-4 text-accent mt-0.5 shrink-0" />
             <p className="text-xs text-muted-foreground">
               {isRTL
@@ -226,8 +229,8 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
             <Mail className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
             <p className="text-xs text-muted-foreground">
               {isRTL
-                ? 'تأكد أن البريد الإلكتروني المُدخل صحيح. إذا لم تستلم الرسالة، يمكنك إعادة الإرسال.'
-                : 'Make sure the email is correct. If not received, you can resend below.'}
+                ? 'تأكد أن البريد الإلكتروني المُدخل صحيح. إذا لم تستلم الرسالة خلال 5 دقائق، جرّب بريداً آخر أو أنشئ حساباً جديداً.'
+                : "Verify your email is correct. If you don't receive it within 5 minutes, try another email or create a new account."}
             </p>
           </div>
         </div>
