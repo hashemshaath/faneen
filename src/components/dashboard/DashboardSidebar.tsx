@@ -153,6 +153,7 @@ const adminBaseGroups: MenuGroup[] = [
     icon: UserCog,
     items: [
       { label: { ar: 'المستخدمين', en: 'Users' }, url: '/admin/users', icon: Users, superAdminOnly: true },
+      { label: { ar: 'إدارة الوصول', en: 'Access Management' }, url: '/admin/access-management', icon: ShieldAlert, superAdminOnly: true },
       { label: { ar: 'المنشآت', en: 'Businesses' }, url: '/admin/businesses', icon: Building2 },
       { label: { ar: 'كل المحادثات', en: 'All Conversations' }, url: '/dashboard/messages', icon: MessageSquare, superAdminOnly: true },
     ],
