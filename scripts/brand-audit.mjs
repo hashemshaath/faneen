@@ -59,6 +59,11 @@ const SCAN_DIRS = [
 const SKIP_EXT = new Set(['.png', '.jpg', '.jpeg', '.webp', '.svg', '.ico', '.woff', '.woff2', '.ttf', '.otf', '.lock'])
 const SKIP_DIRS = new Set(['node_modules', 'dist', '.git', '.next', 'build', 'coverage'])
 
+// ملفات مُستثناة عمداً (تذكر تاريخياً النطاق القديم لشرح تنظيف البيانات)
+const ALLOWED_FILES = new Set([
+  'src/pages/Privacy.tsx',
+])
+
 // ── جامع الملفات ────────────────────────────────────────
 function* walk(dir) {
   if (!existsSync(dir)) return
@@ -83,6 +88,7 @@ function scanFile(absPath) {
   try { content = readFileSync(absPath, 'utf8') } catch { return }
 
   const rel = relative(ROOT, absPath)
+  if (ALLOWED_FILES.has(rel)) return
 
   for (const { pattern, label, critical } of FORBIDDEN_PATTERNS) {
     pattern.lastIndex = 0
