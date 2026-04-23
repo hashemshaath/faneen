@@ -371,6 +371,13 @@
   contain-intrinsic-size: auto 600px;
 }
 
+/* Low-end / data-saver devices: skip web font entirely, use system fallback */
+@media (prefers-reduced-data: reduce) {
+  body {
+    font-family: 'IBM Plex Sans Arabic Fallback', 'Segoe UI', Tahoma, Arial, sans-serif !important;
+  }
+}
+
 @keyframes progress {
   from { width: 0%; }
   to { width: 100%; }
