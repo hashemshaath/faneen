@@ -70,6 +70,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
     }
     setLoading(true);
     setSubmitError(null);
+    setSubmitErrorRaw('');
     try {
       await authService.resetPassword(email);
       await logResetRequest('requested');
@@ -83,9 +84,11 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
       if (isRateLimitError(msg)) {
         lockout.recordFailure();
         setSubmitError(translateAuthError(msg, isRTL));
+        setSubmitErrorRaw(msg);
       } else if (isNetworkError(msg)) {
         lockout.recordFailure();
         setSubmitError(translateAuthError(msg, isRTL));
+        setSubmitErrorRaw(msg);
       } else {
         // Always show sent state for security (don't reveal if email exists or not)
         await logResetRequest('requested');
