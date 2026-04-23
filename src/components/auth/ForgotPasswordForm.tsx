@@ -23,6 +23,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
   const [resendCooldown, setResendCooldown] = useState(0);
   const [resendCount, setResendCount] = useState(0);
   const [resendSuccess, setResendSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const BackArrow = isRTL ? ArrowRight : ArrowLeft;
   const { errors, validateEmailField, clearError } = useFieldValidation(isRTL);
   const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -60,18 +61,40 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
       return;
     }
     setLoading(true);
+    setSubmitError(null);
     try {
       await authService.resetPassword(email);
       await logResetRequest('requested');
       setSent(true);
       toast.success(isRTL ? 'تم إرسال رابط إعادة التعيين' : 'Reset link sent');
       startCooldown(60);
-    } catch {
-      // Don't reveal if email exists or not (security) — still show sent state
-      await logResetRequest('requested');
-      setSent(true);
-      toast.success(isRTL ? 'إذا كان الحساب موجوداً، سيتم إرسال رابط إعادة التعيين' : 'If an account exists, a reset link will be sent');
-      startCooldown(60);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : '';
+      const lower = msg.toLowerCase();
+      await logResetRequest('failed');
+
+      if (lower.includes('rate_limit') || lower.includes('too_many') || lower.includes('too many') || lower.includes('429')) {
+        setSubmitError(isRTL
+          ? 'تم تجاوز الحد المسموح من المحاولات. يرجى الانتظار بضع دقائق ثم إعادة المحاولة.'
+          : 'Too many attempts. Please wait a few minutes and try again.');
+      } else if (lower.includes('network') || lower.includes('fetch') || lower.includes('failed to fetch')) {
+        setSubmitError(isRTL
+          ? 'حدث خطأ في الاتصال بالخادم. تأكد من اتصالك بالإنترنت وأعد المحاولة.'
+          : 'Connection error. Check your internet and try again.');
+      } else if (lower.includes('not found') || lower.includes('user_not_found') || lower.includes('no user')) {
+        // Show helpful message without confirming account existence
+        setSubmitError(isRTL
+          ? 'لم نتمكن من إرسال رابط إعادة التعيين. تأكد من صحة البريد الإلكتروني المُدخل أو سجّل حساباً جديداً.'
+          : 'Could not send reset link. Verify your email address or create a new account.');
+      } else {
+        // Generic — still show sent state for security (don't reveal if email exists)
+        await logResetRequest('requested');
+        setSent(true);
+        toast.success(isRTL
+          ? 'إذا كان الحساب موجوداً، سيتم إرسال رابط إعادة التعيين'
+          : 'If an account exists, a reset link will be sent');
+        startCooldown(60);
+      }
     } finally {
       setLoading(false);
     }
@@ -234,6 +257,21 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
           {loading && <Loader2 className="w-4 h-4 animate-spin me-2" />}
           {loading ? t('common.loading') : t('auth.reset_password')}
         </Button>
+
+        {/* Inline error with guidance */}
+        {submitError && (
+          <div className="flex items-start gap-2.5 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 animate-in fade-in slide-in-from-top-2 duration-300">
+            <AlertTriangle className="w-4 h-4 text-destructive mt-0.5 shrink-0" />
+            <div className="space-y-1.5">
+              <p className="text-xs text-destructive font-medium">{submitError}</p>
+              <ul className="text-[11px] text-muted-foreground list-disc ps-4 space-y-0.5">
+                <li>{isRTL ? 'تحقق من كتابة البريد الإلكتروني بشكل صحيح' : 'Double-check your email spelling'}</li>
+                <li>{isRTL ? 'جرّب البريد الآخر إذا كنت تستخدم أكثر من بريد' : 'Try another email if you have multiple'}</li>
+                <li>{isRTL ? 'إذا استمرت المشكلة، تواصل مع الدعم الفني' : 'Contact support if the issue persists'}</li>
+              </ul>
+            </div>
+          </div>
+        )}
       </div>
       <button onClick={onBack} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
         <BackArrow className="w-4 h-4" />
