@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useTransition } from 'react';
+import React, { useState, useMemo, useCallback, useTransition, useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -13,45 +13,47 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import {
+  Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { toast } from 'sonner';
 import {
-  Users, Search, Shield, ShieldCheck, ShieldAlert, UserPlus, Trash2,
-  Mail, Phone, Calendar, Crown, Loader2, Pencil, Ban, UserX, Download,
-  KeyRound, Send, Lock, Eye, EyeOff, X, AlertTriangle, Check,
-  LayoutGrid, LayoutList, TrendingUp, UserCheck, Filter,
-  Hash, Sparkles, Building2, Briefcase, Link2, ExternalLink,
+  Users, Search, Shield, ShieldCheck, ShieldAlert, UserPlus, Mail, Phone, Calendar, Crown,
+  Loader2, Pencil, Ban, UserX, Download, KeyRound, Send, Lock, Eye, EyeOff, X, AlertTriangle,
+  Check, TrendingUp, UserCheck, Filter, Hash, Sparkles, Building2, Briefcase, Link2,
+  ChevronDown, ChevronUp, ChevronLeft, ChevronRight, BarChart3, Activity, FileText, MessageSquare,
+  Star, MoreHorizontal, RefreshCw, ArrowUpDown,
 } from 'lucide-react';
+import {
+  AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip as RTooltip,
+  PieChart, Pie, Cell, BarChart, Bar, CartesianGrid, Legend,
+} from 'recharts';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Profile = Tables<'profiles'>;
 type UserRole = Tables<'user_roles'>;
 
 interface BusinessInfo {
-  id: string;
-  user_id: string;
-  name_ar: string;
-  name_en: string | null;
-  ref_id: string;
-  username: string;
-  is_active: boolean;
-  is_verified: boolean;
-  membership_tier: string;
-  business_number: number;
+  id: string; user_id: string; name_ar: string; name_en: string | null;
+  ref_id: string; username: string; is_active: boolean; is_verified: boolean;
+  membership_tier: string; business_number: number;
 }
 
 const roleConfig = {
-  super_admin: { icon: ShieldAlert, gradient: 'from-purple-500/15 to-purple-500/5', iconBg: 'bg-purple-500/15 text-purple-600 dark:text-purple-400', badge: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 border-purple-200 dark:border-purple-800', labelAr: 'مشرف أعلى', labelEn: 'Super Admin' },
-  admin: { icon: Crown, gradient: 'from-red-500/15 to-red-500/5', iconBg: 'bg-red-500/15 text-red-600 dark:text-red-400', badge: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800', labelAr: 'مشرف', labelEn: 'Admin' },
-  moderator: { icon: ShieldCheck, gradient: 'from-amber-500/15 to-amber-500/5', iconBg: 'bg-amber-500/15 text-amber-600 dark:text-amber-400', badge: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800', labelAr: 'مشرف محتوى', labelEn: 'Moderator' },
-  user: { icon: Users, gradient: 'from-blue-500/15 to-blue-500/5', iconBg: 'bg-blue-500/15 text-blue-600 dark:text-blue-400', badge: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-800', labelAr: 'مستخدم', labelEn: 'User' },
-};
+  super_admin: { icon: ShieldAlert, badge: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 border-purple-200 dark:border-purple-800', iconBg: 'bg-purple-500/15 text-purple-600 dark:text-purple-400', labelAr: 'مشرف أعلى', labelEn: 'Super Admin', rank: 0 },
+  admin: { icon: Crown, badge: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800', iconBg: 'bg-red-500/15 text-red-600 dark:text-red-400', labelAr: 'مشرف', labelEn: 'Admin', rank: 1 },
+  moderator: { icon: ShieldCheck, badge: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800', iconBg: 'bg-amber-500/15 text-amber-600 dark:text-amber-400', labelAr: 'مشرف محتوى', labelEn: 'Moderator', rank: 2 },
+  user: { icon: Users, badge: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-800', iconBg: 'bg-blue-500/15 text-blue-600 dark:text-blue-400', labelAr: 'مستخدم', labelEn: 'User', rank: 3 },
+} as const;
 
 const tierConfig = {
   free: { labelAr: 'مجاني', labelEn: 'Free', color: 'bg-muted text-muted-foreground border-border' },
   basic: { labelAr: 'أساسي', labelEn: 'Basic', color: 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400 border-blue-200 dark:border-blue-800' },
   premium: { labelAr: 'مميز', labelEn: 'Premium', color: 'bg-accent/10 text-accent border-accent/30' },
   enterprise: { labelAr: 'مؤسسات', labelEn: 'Enterprise', color: 'bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400 border-purple-200 dark:border-purple-800' },
-};
+} as const;
 
 const accountTypeConfig: Record<string, { labelAr: string; labelEn: string; icon: React.ElementType; color: string }> = {
   individual: { labelAr: 'فرد', labelEn: 'Individual', icon: Users, color: 'text-blue-600 bg-blue-500/10 border-blue-200 dark:border-blue-800' },
@@ -65,7 +67,8 @@ type ActivePanel =
   | { type: 'password'; userId: string; userName: string }
   | { type: 'delete'; userId: string; userName: string };
 
-/** Safe date formatter — returns fallback for invalid/missing dates */
+type SortKey = 'created_at' | 'full_name' | 'membership_tier' | 'account_type';
+
 const formatDate = (dateStr: string | null | undefined, lang: string): string => {
   if (!dateStr) return lang === 'ar' ? 'غير محدد' : 'N/A';
   const d = new Date(dateStr);
@@ -73,207 +76,245 @@ const formatDate = (dateStr: string | null | undefined, lang: string): string =>
   return d.toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en', { year: 'numeric', month: 'short', day: 'numeric' });
 };
 
+const formatRelative = (dateStr: string | null | undefined, isRTL: boolean): string => {
+  if (!dateStr) return isRTL ? 'غير محدد' : 'N/A';
+  const d = new Date(dateStr); if (isNaN(d.getTime())) return isRTL ? 'غير محدد' : 'N/A';
+  const diff = (Date.now() - d.getTime()) / 1000;
+  if (diff < 60) return isRTL ? 'الآن' : 'now';
+  if (diff < 3600) return isRTL ? `منذ ${Math.floor(diff/60)} د` : `${Math.floor(diff/60)}m ago`;
+  if (diff < 86400) return isRTL ? `منذ ${Math.floor(diff/3600)} س` : `${Math.floor(diff/3600)}h ago`;
+  if (diff < 86400*30) return isRTL ? `منذ ${Math.floor(diff/86400)} يوم` : `${Math.floor(diff/86400)}d ago`;
+  return formatDate(dateStr, isRTL ? 'ar' : 'en');
+};
+
 const getPasswordValidationMessage = (password: string, isRTL: boolean): string | null => {
   if (!password) return null;
   if (password.length < 8) return isRTL ? 'كلمة المرور يجب أن تكون 8 حروف على الأقل' : 'Password must be at least 8 characters';
   if (/\s/.test(password)) return isRTL ? 'كلمة المرور يجب ألا تحتوي على مسافات' : 'Password must not contain spaces';
-  const categoryCount = [/[a-z]/, /[A-Z]/, /\d/, /[^A-Za-z0-9\s]/].filter((rule) => rule.test(password)).length;
-  if (categoryCount < 3) {
-    return isRTL
-      ? 'استخدم ثلاثة أنواع على الأقل: أحرف كبيرة، أحرف صغيرة، أرقام، رموز'
-      : 'Use at least three types: uppercase, lowercase, numbers, symbols';
-  }
-  if (['password', 'qwerty', 'admin', '123456', 'qitaat'].some((word) => password.toLowerCase().includes(word))) {
-    return isRTL ? 'كلمة المرور تحتوي على كلمة أو نمط شائع' : 'Password contains a common word or pattern';
-  }
+  const cnt = [/[a-z]/, /[A-Z]/, /\d/, /[^A-Za-z0-9\s]/].filter(r => r.test(password)).length;
+  if (cnt < 3) return isRTL ? 'استخدم 3 أنواع على الأقل: كبيرة، صغيرة، أرقام، رموز' : 'Use at least 3 of: upper, lower, numbers, symbols';
+  if (['password', 'qwerty', 'admin', '123456', 'qitaat'].some(w => password.toLowerCase().includes(w)))
+    return isRTL ? 'تجنب الكلمات الشائعة' : 'Avoid common words';
   return null;
 };
 
-/* ─── Stat Card ─── */
-const StatCard = React.memo(({ icon: Icon, label, value, gradient, iconBg, percentage }: {
-  icon: React.ElementType; label: string; value: number; gradient: string; iconBg: string; percentage?: number;
+/* ─── KPI card ─── */
+const KpiCard = React.memo(({ icon: Icon, label, value, gradient, iconBg, trend }: {
+  icon: React.ElementType; label: string; value: number | string; gradient: string; iconBg: string; trend?: string;
 }) => (
-  <div className={`relative overflow-hidden rounded-2xl border border-border/30 bg-gradient-to-br ${gradient} p-4 transition-all hover:shadow-md group`}>
+  <div className={`relative overflow-hidden rounded-2xl border border-border/30 bg-gradient-to-br ${gradient} p-4 transition-all hover:shadow-md hover-lift group`}>
     <div className="flex items-center gap-3">
       <div className={`w-10 h-10 rounded-xl ${iconBg} flex items-center justify-center transition-transform group-hover:scale-110`}>
         <Icon className="w-5 h-5" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-2xl font-bold font-heading leading-none">{value}</p>
+        <p className="text-2xl font-bold font-heading leading-none tech-content">{value}</p>
         <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{label}</p>
       </div>
+      {trend && <span className="text-[10px] text-emerald-600 font-bold">{trend}</span>}
     </div>
-    {percentage !== undefined && (
-      <div className="mt-2.5">
-        <Progress value={percentage} className="h-1.5" />
-      </div>
-    )}
   </div>
 ));
-StatCard.displayName = 'StatCard';
+KpiCard.displayName = 'KpiCard';
 
-/* ─── User Card (memo) ─── */
-const UserCard = React.memo(({ profile, roles, business, isCurrentUser, canManageUser, isSuperAdmin, isRTL, language,
-  onEdit, onPassword, onToggleBan, onDelete, onAddRole, onRemoveRole, addingRoleFor, selectedRole, setSelectedRole, addRoleMutation, setAddingRoleFor,
-}: any) => {
+/* ─── Per-user expanded detail card ─── */
+const UserDetailPanel = React.memo(({ userId, isRTL }: { userId: string; isRTL: boolean }) => {
+  const { data, isLoading } = useQuery({
+    queryKey: ['admin-user-detail', userId],
+    queryFn: async () => {
+      const [contracts, projects, messages, reviews, lastActivity] = await Promise.all([
+        supabase.from('contracts').select('id', { count: 'exact', head: true }).or(`client_id.eq.${userId},provider_id.eq.${userId}`),
+        supabase.from('projects').select('id', { count: 'exact', head: true }),
+        supabase.from('messages').select('id', { count: 'exact', head: true }).eq('sender_id', userId),
+        supabase.from('reviews').select('id', { count: 'exact', head: true }).eq('user_id', userId),
+        supabase.from('admin_activity_log').select('action, created_at, details').or(`user_id.eq.${userId},entity_id.eq.${userId}`).order('created_at', { ascending: false }).limit(5),
+      ]);
+      return {
+        contracts: contracts.count ?? 0,
+        projects: projects.count ?? 0,
+        messages: messages.count ?? 0,
+        reviews: reviews.count ?? 0,
+        recentActivity: lastActivity.data ?? [],
+      };
+    },
+    staleTime: 60_000,
+  });
+  if (isLoading) return <div className="px-4 pb-4"><Skeleton className="h-20 rounded-xl" /></div>;
+  if (!data) return null;
+  const stats = [
+    { label: isRTL ? 'العقود' : 'Contracts', val: data.contracts, icon: FileText, color: 'text-blue-600 bg-blue-500/10' },
+    { label: isRTL ? 'الرسائل' : 'Messages', val: data.messages, icon: MessageSquare, color: 'text-emerald-600 bg-emerald-500/10' },
+    { label: isRTL ? 'التقييمات' : 'Reviews', val: data.reviews, icon: Star, color: 'text-amber-600 bg-amber-500/10' },
+  ];
+  return (
+    <div className="border-t border-border/30 bg-muted/20 px-4 py-3 rounded-b-2xl space-y-3 animate-in slide-in-from-top-1 duration-200">
+      <div className="grid grid-cols-3 gap-2">
+        {stats.map(s => (
+          <div key={s.label} className="rounded-xl bg-card border border-border/30 p-2.5 flex items-center gap-2">
+            <div className={`w-8 h-8 rounded-lg ${s.color} flex items-center justify-center`}><s.icon className="w-4 h-4" /></div>
+            <div><p className="text-base font-bold leading-none tech-content">{s.val}</p><p className="text-[10px] text-muted-foreground">{s.label}</p></div>
+          </div>
+        ))}
+      </div>
+      {data.recentActivity.length > 0 && (
+        <div>
+          <p className="text-[11px] font-bold text-muted-foreground mb-1.5 flex items-center gap-1"><Activity className="w-3 h-3" />{isRTL ? 'آخر نشاط إداري' : 'Recent Admin Activity'}</p>
+          <div className="space-y-1">
+            {data.recentActivity.map((a, i) => (
+              <div key={i} className="flex items-center gap-2 text-[11px] rounded-lg bg-background/50 px-2 py-1.5">
+                <span className="font-mono text-muted-foreground truncate flex-1">{a.action}</span>
+                <span className="text-muted-foreground shrink-0">{formatRelative(a.created_at, isRTL)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+});
+UserDetailPanel.displayName = 'UserDetailPanel';
+
+/* ─── User Row ─── */
+interface UserRowProps {
+  profile: Profile;
+  roles: UserRole[];
+  business: BusinessInfo[];
+  isCurrentUser: boolean;
+  canManageUser: boolean;
+  isSuperAdmin: boolean;
+  isRTL: boolean;
+  language: string;
+  selected: boolean;
+  expanded: boolean;
+  onToggleSelect: () => void;
+  onToggleExpand: () => void;
+  onEdit: (p: Profile) => void;
+  onPassword: (p: Profile) => void;
+  onToggleBan: (p: Profile) => void;
+  onDelete: (p: Profile) => void;
+  onAddRole: (userId: string, role: string) => void;
+  onRemoveRole: (id: string) => void;
+}
+
+const UserRow = React.memo(({ profile, roles, business, isCurrentUser, canManageUser, isSuperAdmin,
+  isRTL, language, selected, expanded, onToggleSelect, onToggleExpand,
+  onEdit, onPassword, onToggleBan, onDelete, onAddRole, onRemoveRole }: UserRowProps) => {
+  const [addingRole, setAddingRole] = useState(false);
+  const [pickedRole, setPickedRole] = useState('user');
   const tier = tierConfig[profile.membership_tier as keyof typeof tierConfig] || tierConfig.free;
-  const accType = accountTypeConfig[profile.account_type as keyof typeof accountTypeConfig] || accountTypeConfig.individual;
+  const accType = accountTypeConfig[profile.account_type] || accountTypeConfig.individual;
   const AccIcon = accType.icon;
-  const createdDate = formatDate(profile.created_at, language);
-  const isBanned = (profile as any).is_banned;
-  const bizList = (business as BusinessInfo[] | null) || [];
-
-  const highestRole = roles.length > 0
-    ? roles.reduce((best, r) => {
-        const order = ['super_admin', 'admin', 'moderator', 'user'];
-        return order.indexOf(r.role) < order.indexOf(best.role) ? r : best;
-      })
-    : null;
-  const highestCfg = highestRole ? roleConfig[highestRole.role as keyof typeof roleConfig] : null;
+  const isBanned = profile.is_banned;
+  const highest = roles.length > 0 ? roles.reduce((b, r) => (roleConfig[r.role as keyof typeof roleConfig]?.rank ?? 99) < (roleConfig[b.role as keyof typeof roleConfig]?.rank ?? 99) ? r : b) : null;
+  const highestCfg = highest ? roleConfig[highest.role as keyof typeof roleConfig] : null;
 
   return (
     <div className={`group relative rounded-2xl border bg-card transition-all duration-200 hover:shadow-md
-      ${isCurrentUser ? 'border-accent/40 ring-1 ring-accent/20' : 'border-border/30'}
-      ${isBanned ? 'opacity-60 border-destructive/40' : ''}`}>
-      <div className="p-4">
-        <div className="flex flex-col sm:flex-row sm:items-start gap-4">
-          {/* Avatar & basic info */}
-          <div className="flex items-start gap-3 flex-1 min-w-0">
-            <div className="relative">
-              <Avatar className={`w-12 h-12 shrink-0 ring-2 ${isCurrentUser ? 'ring-accent/30' : 'ring-border/10'}`}>
-                <AvatarImage src={profile.avatar_url || undefined} />
-                <AvatarFallback className="bg-gradient-to-br from-accent/20 to-primary/10 text-accent font-bold text-sm">
-                  {(profile.full_name || '?').charAt(0)}
-                </AvatarFallback>
-              </Avatar>
-              {highestCfg && (
-                <div className={`absolute -bottom-1 -end-1 w-5 h-5 rounded-full ${highestCfg.iconBg} flex items-center justify-center ring-2 ring-card`}>
-                  <highestCfg.icon className="w-2.5 h-2.5" />
-                </div>
-              )}
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="font-heading font-bold text-foreground truncate text-sm">
-                  {profile.full_name || (isRTL ? 'بدون اسم' : 'No name')}
-                </h3>
-                {isCurrentUser && (
-                  <Badge variant="outline" className="text-[9px] border-accent text-accent px-1.5 py-0">{isRTL ? 'أنت' : 'You'}</Badge>
-                )}
-                {isBanned && (
-                  <Badge variant="destructive" className="text-[9px] gap-0.5 px-1.5 py-0"><Ban className="w-2.5 h-2.5" />{isRTL ? 'معطّل' : 'Disabled'}</Badge>
-                )}
+      ${selected ? 'ring-2 ring-accent border-accent/50' : isCurrentUser ? 'border-accent/40 ring-1 ring-accent/20' : 'border-border/30'}
+      ${isBanned ? 'opacity-70 border-destructive/40' : ''}`}>
+      <div className="p-3 sm:p-4 flex flex-col sm:flex-row sm:items-start gap-3">
+        <Checkbox checked={selected} onCheckedChange={onToggleSelect} className="mt-1 shrink-0" disabled={!canManageUser} />
+        <div className="flex items-start gap-3 flex-1 min-w-0">
+          <div className="relative shrink-0">
+            <Avatar className={`w-11 h-11 ring-2 ${isCurrentUser ? 'ring-accent/30' : 'ring-border/10'}`}>
+              <AvatarImage src={profile.avatar_url || undefined} />
+              <AvatarFallback className="bg-gradient-to-br from-accent/20 to-primary/10 text-accent font-bold text-sm">
+                {(profile.full_name || '?').charAt(0)}
+              </AvatarFallback>
+            </Avatar>
+            {highestCfg && (
+              <div className={`absolute -bottom-1 -end-1 w-5 h-5 rounded-full ${highestCfg.iconBg} flex items-center justify-center ring-2 ring-card`}>
+                <highestCfg.icon className="w-2.5 h-2.5" />
               </div>
-
-              {/* Contact info */}
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
-                {profile.email && (
-                  <span className="flex items-center gap-1 text-[11px] text-muted-foreground truncate max-w-[200px]">
-                    <Mail className="w-3 h-3 shrink-0" /> {profile.email}
-                  </span>
-                )}
-                {profile.phone && (
-                  <span className="flex items-center gap-1 text-[11px] text-muted-foreground" dir="ltr">
-                    <Phone className="w-3 h-3 shrink-0" /> {profile.phone}
-                  </span>
-                )}
-                <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                  <Calendar className="w-3 h-3 shrink-0" /> {createdDate}
-                </span>
-              </div>
-
-              {/* Badges row */}
-              <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                <Badge className={`${tier.color} text-[10px] border px-1.5 py-0`}>{isRTL ? tier.labelAr : tier.labelEn}</Badge>
-                <Badge className={`${accType.color} text-[10px] border px-1.5 py-0 gap-0.5`}>
-                  <AccIcon className="w-2.5 h-2.5" /> {isRTL ? accType.labelAr : accType.labelEn}
-                </Badge>
-                {profile.ref_id && (
-                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 gap-0.5 font-mono">
-                    <Hash className="w-2.5 h-2.5" />{profile.ref_id}
-                  </Badge>
-                )}
-                {/* Role badges */}
-                {roles.map((r) => {
-                  const cfg = roleConfig[r.role as keyof typeof roleConfig] || roleConfig.user;
-                  const RoleIcon = cfg.icon;
-                  return (
-                    <div key={r.id} className="flex items-center">
-                      <Badge className={`${cfg.badge} gap-0.5 text-[10px] border px-1.5 py-0`}>
-                        <RoleIcon className="w-2.5 h-2.5" />{isRTL ? cfg.labelAr : cfg.labelEn}
-                      </Badge>
-                      {!isCurrentUser && isSuperAdmin && (
-                        <button onClick={() => onRemoveRole(r.id)} className="ms-0.5 p-0.5 rounded hover:bg-destructive/10 text-destructive/60 hover:text-destructive transition-colors">
-                          <X className="w-3 h-3" />
-                        </button>
-                      )}
-                    </div>
-                  );
-                })}
-                {roles.length === 0 && (
-                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 text-muted-foreground border-dashed">
-                    <Shield className="w-2.5 h-2.5 me-0.5" />{isRTL ? 'عضو عادي' : 'Member'}
-                  </Badge>
-                )}
-              </div>
-
-              {/* ─── Business Cards (linked entities) ─── */}
-              {bizList.length > 0 && (
-                <div className="mt-2.5 space-y-1.5">
-                  {bizList.map(biz => (
-                    <div key={biz.id} className="flex items-center gap-2 rounded-xl bg-muted/40 border border-border/30 px-3 py-2">
-                      <Building2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="text-xs font-bold text-foreground truncate">{isRTL ? biz.name_ar : (biz.name_en || biz.name_ar)}</span>
-                          {biz.is_verified && <Check className="w-3 h-3 text-emerald-500" />}
-                        </div>
-                        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                          <span className="text-[10px] font-mono text-accent flex items-center gap-0.5">
-                            <Link2 className="w-2.5 h-2.5" />{biz.ref_id}
-                          </span>
-                          <span className="text-[10px] text-muted-foreground">@{biz.username}</span>
-                        </div>
-                      </div>
-                      <Badge variant="outline" className="text-[9px] px-1.5 py-0 shrink-0">
-                        {isRTL ? 'مالك' : 'Owner'}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Actions */}
-          <div className="flex items-center gap-1.5 flex-wrap sm:flex-nowrap shrink-0">
-            <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs rounded-xl" onClick={() => onEdit(profile)}>
-              <Pencil className="w-3 h-3" />{isRTL ? 'تعديل' : 'Edit'}
-            </Button>
-            {canManageUser && (
-              <>
-                {isSuperAdmin && (
-                  <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs rounded-xl"
-                    onClick={() => onPassword(profile)}>
-                    <KeyRound className="w-3 h-3" />{isRTL ? 'كلمة المرور' : 'Password'}
-                  </Button>
-                )}
-                <Button variant="outline" size="sm"
-                  className={`h-8 gap-1.5 text-xs rounded-xl ${isBanned ? 'text-emerald-600 hover:text-emerald-700 border-emerald-200' : 'text-amber-600 hover:text-amber-700 border-amber-200'}`}
-                  onClick={() => onToggleBan(profile)}>
-                  {isBanned ? <UserCheck className="w-3 h-3" /> : <Ban className="w-3 h-3" />}
-                  {isBanned ? (isRTL ? 'تفعيل' : 'Enable') : (isRTL ? 'تعطيل' : 'Disable')}
-                </Button>
-                <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs rounded-xl text-destructive hover:text-destructive border-destructive/30"
-                  onClick={() => onDelete(profile)}>
-                  <UserX className="w-3 h-3" />{isRTL ? 'حذف' : 'Delete'}
-                </Button>
-              </>
             )}
-            {/* Add role inline */}
-            {isSuperAdmin && (addingRoleFor === profile.user_id ? (
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <button onClick={onToggleExpand} className="font-heading font-bold text-sm hover:text-accent transition-colors text-start truncate">
+                {profile.full_name || (isRTL ? 'بدون اسم' : 'No name')}
+              </button>
+              {isCurrentUser && <Badge variant="outline" className="text-[9px] border-accent text-accent px-1.5 py-0">{isRTL ? 'أنت' : 'You'}</Badge>}
+              {isBanned && <Badge variant="destructive" className="text-[9px] gap-0.5 px-1.5 py-0"><Ban className="w-2.5 h-2.5" />{isRTL ? 'معطّل' : 'Disabled'}</Badge>}
+            </div>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
+              {profile.email && <span className="flex items-center gap-1 text-[11px] text-muted-foreground truncate max-w-[200px]"><Mail className="w-3 h-3 shrink-0" />{profile.email}</span>}
+              {profile.phone && <span className="flex items-center gap-1 text-[11px] text-muted-foreground tech-content"><Phone className="w-3 h-3 shrink-0" />{profile.phone}</span>}
+              <span className="flex items-center gap-1 text-[11px] text-muted-foreground"><Calendar className="w-3 h-3 shrink-0" />{formatDate(profile.created_at, language)}</span>
+            </div>
+            <div className="flex flex-wrap items-center gap-1.5 mt-2">
+              <Badge className={`${tier.color} text-[10px] border px-1.5 py-0`}>{isRTL ? tier.labelAr : tier.labelEn}</Badge>
+              <Badge className={`${accType.color} text-[10px] border px-1.5 py-0 gap-0.5`}>
+                <AccIcon className="w-2.5 h-2.5" />{isRTL ? accType.labelAr : accType.labelEn}
+              </Badge>
+              {profile.ref_id && <Badge variant="outline" className="text-[10px] px-1.5 py-0 gap-0.5 font-mono tech-content"><Hash className="w-2.5 h-2.5" />{profile.ref_id}</Badge>}
+              {roles.map(r => {
+                const cfg = roleConfig[r.role as keyof typeof roleConfig] || roleConfig.user;
+                const RIcon = cfg.icon;
+                return (
+                  <div key={r.id} className="flex items-center">
+                    <Badge className={`${cfg.badge} gap-0.5 text-[10px] border px-1.5 py-0`}><RIcon className="w-2.5 h-2.5" />{isRTL ? cfg.labelAr : cfg.labelEn}</Badge>
+                    {!isCurrentUser && isSuperAdmin && (
+                      <button onClick={() => onRemoveRole(r.id)} className="ms-0.5 p-0.5 rounded hover:bg-destructive/10 text-destructive/60 hover:text-destructive transition-colors">
+                        <X className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+              {roles.length === 0 && (
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0 text-muted-foreground border-dashed"><Shield className="w-2.5 h-2.5 me-0.5" />{isRTL ? 'عضو عادي' : 'Member'}</Badge>
+              )}
+            </div>
+            {business.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {business.map(biz => (
+                  <Badge key={biz.id} variant="outline" className="text-[10px] gap-1 px-1.5 py-0.5 bg-emerald-500/5 border-emerald-500/30">
+                    <Building2 className="w-2.5 h-2.5 text-emerald-600" />
+                    <span className="truncate max-w-[120px]">{isRTL ? biz.name_ar : (biz.name_en || biz.name_ar)}</span>
+                    <span className="font-mono text-emerald-600 tech-content">{biz.ref_id}</span>
+                    {biz.is_verified && <Check className="w-2.5 h-2.5 text-emerald-500" />}
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="flex items-center gap-1 flex-wrap sm:flex-nowrap shrink-0">
+          <TooltipProvider delayDuration={200}>
+            <Tooltip><TooltipTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl" onClick={onToggleExpand}>
+                {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </Button>
+            </TooltipTrigger><TooltipContent>{isRTL ? 'التفاصيل' : 'Details'}</TooltipContent></Tooltip>
+            <Tooltip><TooltipTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl" onClick={() => onEdit(profile)}>
+                <Pencil className="w-4 h-4" />
+              </Button>
+            </TooltipTrigger><TooltipContent>{isRTL ? 'تعديل' : 'Edit'}</TooltipContent></Tooltip>
+            {canManageUser && isSuperAdmin && (
+              <Tooltip><TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl" onClick={() => onPassword(profile)}>
+                  <KeyRound className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger><TooltipContent>{isRTL ? 'كلمة المرور' : 'Password'}</TooltipContent></Tooltip>
+            )}
+            {canManageUser && (
+              <Tooltip><TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className={`h-8 w-8 rounded-xl ${isBanned ? 'text-emerald-600' : 'text-amber-600'}`} onClick={() => onToggleBan(profile)}>
+                  {isBanned ? <UserCheck className="w-4 h-4" /> : <Ban className="w-4 h-4" />}
+                </Button>
+              </TooltipTrigger><TooltipContent>{isBanned ? (isRTL ? 'تفعيل' : 'Enable') : (isRTL ? 'تعطيل' : 'Disable')}</TooltipContent></Tooltip>
+            )}
+            {canManageUser && (
+              <Tooltip><TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl text-destructive hover:bg-destructive/10" onClick={() => onDelete(profile)}>
+                  <UserX className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger><TooltipContent>{isRTL ? 'حذف' : 'Delete'}</TooltipContent></Tooltip>
+            )}
+            {isSuperAdmin && (addingRole ? (
               <div className="flex items-center gap-1">
-                <Select value={selectedRole} onValueChange={setSelectedRole}>
+                <Select value={pickedRole} onValueChange={setPickedRole}>
                   <SelectTrigger className="h-8 w-28 text-xs rounded-xl"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="super_admin">{isRTL ? 'مشرف أعلى' : 'Super Admin'}</SelectItem>
@@ -282,42 +323,49 @@ const UserCard = React.memo(({ profile, roles, business, isCurrentUser, canManag
                     <SelectItem value="user">{isRTL ? 'مستخدم' : 'User'}</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button size="sm" className="h-8 w-8 p-0 rounded-xl"
-                  onClick={() => onAddRole(profile.user_id)} disabled={addRoleMutation.isPending}>
-                  {addRoleMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
+                <Button size="sm" className="h-8 w-8 p-0 rounded-xl" onClick={() => { onAddRole(profile.user_id, pickedRole); setAddingRole(false); }}>
+                  <Check className="w-3 h-3" />
                 </Button>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-xl" onClick={() => setAddingRoleFor(null)}>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-xl" onClick={() => setAddingRole(false)}>
                   <X className="w-3 h-3" />
                 </Button>
               </div>
             ) : (
-              <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs rounded-xl"
-                onClick={() => { setAddingRoleFor(profile.user_id); setSelectedRole('user'); }}>
-                <UserPlus className="w-3 h-3" />{isRTL ? 'صلاحية' : 'Role'}
-              </Button>
+              <Tooltip><TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl" onClick={() => setAddingRole(true)}>
+                  <UserPlus className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger><TooltipContent>{isRTL ? 'إضافة صلاحية' : 'Add Role'}</TooltipContent></Tooltip>
             ))}
-          </div>
+          </TooltipProvider>
         </div>
       </div>
+      {expanded && <UserDetailPanel userId={profile.user_id} isRTL={isRTL} />}
     </div>
   );
 });
-UserCard.displayName = 'UserCard';
+UserRow.displayName = 'UserRow';
 
 /* ─── Main Component ─── */
+const PAGE_SIZE = 20;
+
 const AdminUsers = () => {
   const { isRTL, language } = useLanguage();
   const { user, isSuperAdmin } = useAuth();
   const queryClient = useQueryClient();
   const [, startTransition] = useTransition();
 
+  const [tab, setTab] = useState<'overview' | 'users' | 'staff' | 'disabled' | 'analytics'>('overview');
   const [searchTerm, setSearchTerm] = useState('');
   const [deferredSearch, setDeferredSearch] = useState('');
-  const [filterRole, setFilterRole] = useState<string>('all');
-  const [filterAccountType, setFilterAccountType] = useState<string>('all');
-  const [addingRoleFor, setAddingRoleFor] = useState<string | null>(null);
-  const [selectedRole, setSelectedRole] = useState<string>('user');
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [filterRole, setFilterRole] = useState('all');
+  const [filterAccountType, setFilterAccountType] = useState('all');
+  const [filterTier, setFilterTier] = useState('all');
+  const [sortKey, setSortKey] = useState<SortKey>('created_at');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  const [page, setPage] = useState(1);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
   const [activePanel, setActivePanel] = useState<ActivePanel>(null);
   const [editForm, setEditForm] = useState({ full_name: '', account_type: '', membership_tier: '', phone: '', email: '' });
@@ -328,12 +376,12 @@ const AdminUsers = () => {
   const closePanel = () => { setActivePanel(null); setNewPassword(''); setShowNewPassword(false); };
 
   const handleSearchChange = useCallback((val: string) => {
-    setSearchTerm(val);
+    setSearchTerm(val); setPage(1);
     startTransition(() => setDeferredSearch(val));
   }, []);
 
   // ─── Queries ───
-  const { data: profiles = [], isLoading: loadingProfiles } = useQuery({
+  const { data: profiles = [], isLoading: loadingProfiles, refetch: refetchProfiles } = useQuery({
     queryKey: ['admin-profiles'],
     queryFn: async () => {
       const { data, error } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
@@ -356,8 +404,7 @@ const AdminUsers = () => {
   const { data: businesses = [] } = useQuery({
     queryKey: ['admin-businesses-map'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('businesses')
+      const { data, error } = await supabase.from('businesses')
         .select('id, user_id, name_ar, name_en, ref_id, username, is_active, is_verified, membership_tier, business_number');
       if (error) throw error;
       return data as BusinessInfo[];
@@ -365,111 +412,98 @@ const AdminUsers = () => {
     enabled: !!user,
   });
 
-  // ─── Business map by user_id (supports multiple businesses per user) ───
+  const { data: recentAdminActivity = [] } = useQuery({
+    queryKey: ['admin-recent-activity'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('admin_activity_log')
+        .select('id, user_id, action, entity_type, entity_id, created_at, details')
+        .order('created_at', { ascending: false }).limit(30);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!user && (tab === 'overview' || tab === 'analytics'),
+  });
+
   const businessMap = useMemo(() => {
-    const map = new Map<string, BusinessInfo[]>();
-    businesses.forEach(b => {
-      const arr = map.get(b.user_id) || [];
-      arr.push(b);
-      map.set(b.user_id, arr);
-    });
-    return map;
+    const m = new Map<string, BusinessInfo[]>();
+    businesses.forEach(b => { const arr = m.get(b.user_id) || []; arr.push(b); m.set(b.user_id, arr); });
+    return m;
   }, [businesses]);
+
+  const roleMap = useMemo(() => {
+    const m = new Map<string, UserRole[]>();
+    userRoles.forEach(r => { const arr = m.get(r.user_id) || []; arr.push(r); m.set(r.user_id, arr); });
+    return m;
+  }, [userRoles]);
 
   // ─── Mutations ───
   const addRoleMutation = useMutation({
     mutationFn: async ({ userId, role }: { userId: string; role: string }) => {
-      const { error } = await supabase.from('user_roles').insert({ user_id: userId, role: role as any });
+      const { error } = await supabase.from('user_roles').insert({ user_id: userId, role: role as Tables<'user_roles'>['role'] });
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-user-roles'] });
-      setAddingRoleFor(null);
-      toast.success(isRTL ? 'تم إضافة الصلاحية بنجاح' : 'Role added successfully');
-    },
-    onError: (err: Error) => {
-      toast.error(err.message?.includes('duplicate')
-        ? (isRTL ? 'هذه الصلاحية موجودة بالفعل' : 'Role already exists')
-        : (isRTL ? 'فشل إضافة الصلاحية' : 'Failed to add role'));
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['admin-user-roles'] }); toast.success(isRTL ? 'تم إضافة الصلاحية' : 'Role added'); },
+    onError: (err: unknown) => {
+      const msg = err instanceof Error ? err.message : '';
+      toast.error(msg.includes('duplicate') ? (isRTL ? 'الصلاحية موجودة' : 'Role exists') : (isRTL ? 'فشل إضافة الصلاحية' : 'Failed to add role'));
     },
   });
 
   const removeRoleMutation = useMutation({
-    mutationFn: async (roleId: string) => {
-      const { error } = await supabase.from('user_roles').delete().eq('id', roleId);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-user-roles'] });
-      toast.success(isRTL ? 'تم إزالة الصلاحية' : 'Role removed');
-    },
-    onError: () => toast.error(isRTL ? 'فشل إزالة الصلاحية' : 'Failed to remove role'),
+    mutationFn: async (id: string) => { const { error } = await supabase.from('user_roles').delete().eq('id', id); if (error) throw error; },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['admin-user-roles'] }); toast.success(isRTL ? 'تم إزالة الصلاحية' : 'Role removed'); },
+    onError: () => toast.error(isRTL ? 'فشل الإزالة' : 'Failed to remove'),
   });
 
   const updateProfileMutation = useMutation({
-    mutationFn: async ({ profileId, userId, data, oldData }: { profileId: string; userId: string; data: Partial<Profile>; oldData: Partial<Profile> }) => {
+    mutationFn: async ({ profileId, data }: { profileId: string; data: Partial<Profile> }) => {
       const { error } = await supabase.from('profiles').update(data).eq('id', profileId);
       if (error) throw error;
-      const changes: Record<string, { old: unknown; new: unknown }> = {};
-      for (const key of Object.keys(data) as (keyof typeof data)[]) {
-        if (data[key] !== oldData[key]) changes[key] = { old: oldData[key], new: data[key] };
-      }
-      if (Object.keys(changes).length > 0) {
-        await supabase.from('admin_activity_log').insert({
-          user_id: user!.id, action: 'update', entity_type: 'user', entity_id: userId,
-          details: { target_user_id: userId, changes },
-        } as any);
-      }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-profiles'] });
-      closePanel();
-      toast.success(isRTL ? 'تم تحديث بيانات المستخدم بنجاح' : 'User profile updated successfully');
-    },
-    onError: () => toast.error(isRTL ? 'فشل تحديث البيانات' : 'Failed to update profile'),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['admin-profiles'] }); closePanel(); toast.success(isRTL ? 'تم التحديث' : 'Updated'); },
+    onError: () => toast.error(isRTL ? 'فشل التحديث' : 'Failed to update'),
   });
 
   const toggleBanMutation = useMutation({
-    mutationFn: async ({ profileId, userId, isBanned }: { profileId: string; userId: string; isBanned: boolean }) => {
-      const { error } = await supabase.from('profiles').update({ is_banned: isBanned } as any).eq('id', profileId);
+    mutationFn: async ({ profileId, isBanned }: { profileId: string; isBanned: boolean }) => {
+      const { error } = await supabase.from('profiles').update({ is_banned: isBanned }).eq('id', profileId);
       if (error) throw error;
-      await supabase.from('admin_activity_log').insert({
-        user_id: user!.id, action: isBanned ? 'user_disabled' : 'user_enabled',
-        entity_type: 'user', entity_id: userId, details: { target_user_id: userId, is_banned: isBanned },
-      } as any);
     },
-    onSuccess: (_, vars) => {
+    onSuccess: (_, v) => { queryClient.invalidateQueries({ queryKey: ['admin-profiles'] }); toast.success(v.isBanned ? (isRTL ? 'تم التعطيل' : 'Disabled') : (isRTL ? 'تم التفعيل' : 'Enabled')); },
+    onError: () => toast.error(isRTL ? 'فشل' : 'Failed'),
+  });
+
+  const bulkBanMutation = useMutation({
+    mutationFn: async ({ ids, isBanned }: { ids: string[]; isBanned: boolean }) => {
+      const { error } = await supabase.from('profiles').update({ is_banned: isBanned }).in('id', ids);
+      if (error) throw error;
+    },
+    onSuccess: (_, v) => {
       queryClient.invalidateQueries({ queryKey: ['admin-profiles'] });
-      toast.success(vars.isBanned ? (isRTL ? 'تم تعطيل الحساب' : 'Account disabled') : (isRTL ? 'تم تفعيل الحساب' : 'Account enabled'));
+      setSelected(new Set());
+      toast.success(isRTL ? `تم ${v.isBanned ? 'تعطيل' : 'تفعيل'} ${v.ids.length} حساب` : `${v.ids.length} accounts ${v.isBanned ? 'disabled' : 'enabled'}`);
     },
-    onError: () => toast.error(isRTL ? 'فشل تحديث حالة الحساب' : 'Failed to update account status'),
+    onError: () => toast.error(isRTL ? 'فشلت العملية الجماعية' : 'Bulk action failed'),
   });
 
   const changePasswordMutation = useMutation({
     mutationFn: async ({ targetUserId, password }: { targetUserId: string; password: string }) => {
-      const res = await supabase.functions.invoke('admin-reset-password', {
-        body: { target_user_id: targetUserId, action: 'change_password', new_password: password },
-      });
+      const res = await supabase.functions.invoke('admin-reset-password', { body: { target_user_id: targetUserId, action: 'change_password', new_password: password } });
       if (res.error) throw res.error;
       if (res.data?.error) throw new Error(res.data.error);
     },
-    onSuccess: () => {
-      closePanel();
-      toast.success(isRTL ? 'تم تغيير كلمة المرور بنجاح' : 'Password changed successfully');
-    },
-    onError: (err: Error) => toast.error(err.message || (isRTL ? 'فشل تغيير كلمة المرور' : 'Failed to change password')),
+    onSuccess: () => { closePanel(); toast.success(isRTL ? 'تم تغيير كلمة المرور' : 'Password changed'); },
+    onError: (err: unknown) => toast.error(err instanceof Error ? err.message : (isRTL ? 'فشل' : 'Failed')),
   });
 
   const sendResetLinkMutation = useMutation({
     mutationFn: async (targetUserId: string) => {
-      const res = await supabase.functions.invoke('admin-reset-password', {
-        body: { target_user_id: targetUserId, action: 'send_reset_link' },
-      });
+      const res = await supabase.functions.invoke('admin-reset-password', { body: { target_user_id: targetUserId, action: 'send_reset_link' } });
       if (res.error) throw res.error;
       if (res.data?.error) throw new Error(res.data.error);
     },
-    onSuccess: () => toast.success(isRTL ? 'تم إرسال رابط إعادة تعيين كلمة المرور' : 'Password reset link sent'),
-    onError: (err: Error) => toast.error(err.message || (isRTL ? 'فشل إرسال الرابط' : 'Failed to send reset link')),
+    onSuccess: () => toast.success(isRTL ? 'تم إرسال الرابط' : 'Link sent'),
+    onError: (err: unknown) => toast.error(err instanceof Error ? err.message : (isRTL ? 'فشل' : 'Failed')),
   });
 
   const deleteUserMutation = useMutation({
@@ -478,16 +512,10 @@ const AdminUsers = () => {
       if (res.error) throw res.error;
       if (res.data?.error) throw new Error(res.data.error);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-profiles'] });
-      queryClient.invalidateQueries({ queryKey: ['admin-user-roles'] });
-      closePanel();
-      toast.success(isRTL ? 'تم حذف الحساب بنجاح' : 'Account deleted successfully');
-    },
-    onError: () => toast.error(isRTL ? 'فشل حذف الحساب' : 'Failed to delete account'),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['admin-profiles'] }); queryClient.invalidateQueries({ queryKey: ['admin-user-roles'] }); closePanel(); toast.success(isRTL ? 'تم الحذف' : 'Deleted'); },
+    onError: () => toast.error(isRTL ? 'فشل الحذف' : 'Failed to delete'),
   });
 
-  // ─── Handlers ───
   const openEdit = useCallback((profile: Profile) => {
     setActivePanel({ type: 'edit', profile });
     setEditForm({
@@ -498,446 +526,549 @@ const AdminUsers = () => {
 
   const handleSaveProfile = () => {
     if (activePanel?.type !== 'edit') return;
-    const p = activePanel.profile;
     const trimmed = editForm.full_name.trim();
-    if (!trimmed) { toast.error(isRTL ? 'الاسم مطلوب' : 'Name is required'); return; }
+    if (!trimmed) { toast.error(isRTL ? 'الاسم مطلوب' : 'Name required'); return; }
     updateProfileMutation.mutate({
-      profileId: p.id, userId: p.user_id,
-      data: { full_name: trimmed, account_type: editForm.account_type as any, membership_tier: editForm.membership_tier as any, phone: editForm.phone.trim() || null, email: editForm.email.trim() || null },
-      oldData: { full_name: p.full_name, account_type: p.account_type, membership_tier: p.membership_tier, phone: p.phone, email: p.email },
+      profileId: activePanel.profile.id,
+      data: {
+        full_name: trimmed,
+        account_type: editForm.account_type as Profile['account_type'],
+        membership_tier: editForm.membership_tier as Profile['membership_tier'],
+        phone: editForm.phone.trim() || '',
+        email: editForm.email.trim() || null,
+      },
     });
   };
 
-  // ─── Computed ───
-  const roleMap = useMemo(() => {
-    const map = new Map<string, UserRole[]>();
-    userRoles.forEach(r => { const arr = map.get(r.user_id) || []; arr.push(r); map.set(r.user_id, arr); });
-    return map;
-  }, [userRoles]);
+  // ─── Filtering ───
+  const baseFiltered = useMemo(() => {
+    const lower = deferredSearch.toLowerCase();
+    return profiles.filter(p => {
+      const bizList = businessMap.get(p.user_id) || [];
+      const matchesSearch = !deferredSearch
+        || p.full_name?.toLowerCase().includes(lower)
+        || p.email?.toLowerCase().includes(lower)
+        || p.phone?.includes(deferredSearch)
+        || p.ref_id?.toLowerCase().includes(lower)
+        || bizList.some(b => b.ref_id?.toLowerCase().includes(lower) || b.name_ar?.toLowerCase().includes(lower) || b.username?.toLowerCase().includes(lower));
+      const roles = roleMap.get(p.user_id) || [];
+      const matchesRole = filterRole === 'all' || (filterRole === 'no_role' && roles.length === 0) || roles.some(r => r.role === filterRole);
+      const matchesType = filterAccountType === 'all' || p.account_type === filterAccountType;
+      const matchesTier = filterTier === 'all' || p.membership_tier === filterTier;
+      return matchesSearch && matchesRole && matchesType && matchesTier;
+    });
+  }, [profiles, deferredSearch, filterRole, filterAccountType, filterTier, roleMap, businessMap]);
 
-  const filtered = useMemo(() => profiles.filter(p => {
-    const lowerSearch = deferredSearch.toLowerCase();
-    const bizList = businessMap.get(p.user_id) || [];
-    const matchesSearch = !deferredSearch
-      || p.full_name?.toLowerCase().includes(lowerSearch)
-      || p.email?.toLowerCase().includes(lowerSearch)
-      || p.phone?.includes(deferredSearch)
-      || p.ref_id?.toLowerCase().includes(lowerSearch)
-      || bizList.some(b => b.ref_id?.toLowerCase().includes(lowerSearch))
-      || bizList.some(b => b.name_ar?.toLowerCase().includes(lowerSearch))
-      || bizList.some(b => b.username?.toLowerCase().includes(lowerSearch));
-    const roles = roleMap.get(p.user_id) || [];
-    const matchesRole = filterRole === 'all' || (filterRole === 'no_role' && roles.length === 0) || roles.some(r => r.role === filterRole);
-    const matchesType = filterAccountType === 'all' || p.account_type === filterAccountType;
-    return matchesSearch && matchesRole && matchesType;
-  }), [profiles, deferredSearch, filterRole, filterAccountType, roleMap, businessMap]);
+  const tabFiltered = useMemo(() => {
+    if (tab === 'staff') return baseFiltered.filter(p => {
+      const r = roleMap.get(p.user_id) || [];
+      return r.some(x => x.role === 'super_admin' || x.role === 'admin' || x.role === 'moderator');
+    });
+    if (tab === 'disabled') return baseFiltered.filter(p => p.is_banned);
+    return baseFiltered;
+  }, [baseFiltered, tab, roleMap]);
+
+  const sorted = useMemo(() => {
+    const copy = [...tabFiltered];
+    copy.sort((a, b) => {
+      let av: string | number = '', bv: string | number = '';
+      if (sortKey === 'created_at') { av = new Date(a.created_at).getTime(); bv = new Date(b.created_at).getTime(); }
+      else if (sortKey === 'full_name') { av = (a.full_name || '').toLowerCase(); bv = (b.full_name || '').toLowerCase(); }
+      else if (sortKey === 'membership_tier') { av = a.membership_tier; bv = b.membership_tier; }
+      else if (sortKey === 'account_type') { av = a.account_type; bv = b.account_type; }
+      if (av < bv) return sortDir === 'asc' ? -1 : 1;
+      if (av > bv) return sortDir === 'asc' ? 1 : -1;
+      return 0;
+    });
+    return copy;
+  }, [tabFiltered, sortKey, sortDir]);
+
+  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+  useEffect(() => { if (page > totalPages) setPage(1); }, [totalPages, page]);
+  const paginated = useMemo(() => sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE), [sorted, page]);
 
   const stats = useMemo(() => {
     const totalUsers = profiles.length;
     const superAdmins = userRoles.filter(r => r.role === 'super_admin').length;
     const admins = userRoles.filter(r => r.role === 'admin').length;
     const moderators = userRoles.filter(r => r.role === 'moderator').length;
-    const bannedCount = profiles.filter(p => (p as any).is_banned).length;
+    const bannedCount = profiles.filter(p => p.is_banned).length;
     const providers = profiles.filter(p => p.account_type === 'business' || p.account_type === 'company').length;
+    const verified = profiles.filter(p => p.phone_verified).length;
+    const onboarded = profiles.filter(p => p.is_onboarded).length;
     const tierDist = { free: 0, basic: 0, premium: 0, enterprise: 0 };
-    profiles.forEach(p => {
-      const t = p.membership_tier as keyof typeof tierDist;
-      if (t in tierDist) tierDist[t]++;
-    });
-    const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    const recentUsers = profiles.filter(p => {
-      const d = new Date(p.created_at);
-      return !isNaN(d.getTime()) && d.getTime() > weekAgo;
-    }).length;
-    return { totalUsers, superAdmins, admins, moderators, bannedCount, tierDist, recentUsers, providers };
+    profiles.forEach(p => { const t = p.membership_tier as keyof typeof tierDist; if (t in tierDist) tierDist[t]++; });
+    const weekAgo = Date.now() - 7 * 86400000;
+    const recentUsers = profiles.filter(p => { const d = new Date(p.created_at); return !isNaN(d.getTime()) && d.getTime() > weekAgo; }).length;
+    return { totalUsers, superAdmins, admins, moderators, bannedCount, tierDist, recentUsers, providers, verified, onboarded };
   }, [profiles, userRoles]);
 
+  // ─── Analytics: signups over 30 days ───
+  const signupSeries = useMemo(() => {
+    const days: { date: string; total: number; providers: number; label: string }[] = [];
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(today); d.setDate(d.getDate() - i);
+      const key = d.toISOString().split('T')[0];
+      days.push({ date: key, total: 0, providers: 0, label: `${d.getDate()}/${d.getMonth() + 1}` });
+    }
+    const idx = new Map(days.map((d, i) => [d.date, i]));
+    profiles.forEach(p => {
+      const d = new Date(p.created_at); if (isNaN(d.getTime())) return;
+      const key = d.toISOString().split('T')[0];
+      const i = idx.get(key); if (i === undefined) return;
+      days[i].total++;
+      if (p.account_type === 'business' || p.account_type === 'company') days[i].providers++;
+    });
+    return days;
+  }, [profiles]);
+
+  const accountTypePie = useMemo(() => [
+    { name: isRTL ? 'أفراد' : 'Individuals', value: profiles.filter(p => p.account_type === 'individual').length, color: 'hsl(217 91% 60%)' },
+    { name: isRTL ? 'مزودي خدمة' : 'Providers', value: profiles.filter(p => p.account_type === 'business').length, color: 'hsl(160 84% 39%)' },
+    { name: isRTL ? 'شركات' : 'Companies', value: profiles.filter(p => p.account_type === 'company').length, color: 'hsl(271 91% 65%)' },
+  ], [profiles, isRTL]);
+
+  const tierBar = useMemo(() => Object.entries(stats.tierDist).map(([k, v]) => ({
+    name: isRTL ? tierConfig[k as keyof typeof tierConfig].labelAr : tierConfig[k as keyof typeof tierConfig].labelEn,
+    count: v,
+  })), [stats.tierDist, isRTL]);
+
   const exportCSV = () => {
-    const headers = ['Ref ID', 'Name', 'Email', 'Phone', 'Account Type', 'Business Ref', 'Business Name', 'Membership', 'Roles', 'Banned', 'Created At'];
-    const rows = filtered.map(p => {
+    const rows = sorted.map(p => {
       const roles = (roleMap.get(p.user_id) || []).map(r => r.role).join(', ') || 'none';
-      const accType = accountTypeConfig[p.account_type as keyof typeof accountTypeConfig]?.labelEn || p.account_type;
-      const tier = tierConfig[p.membership_tier as keyof typeof tierConfig]?.labelEn || p.membership_tier;
       const bizList = businessMap.get(p.user_id) || [];
       const bizRefs = bizList.map(b => b.ref_id).join(' | ');
       const bizNames = bizList.map(b => b.name_ar).join(' | ');
-      const createdAt = p.created_at ? new Date(p.created_at) : null;
-      const createdStr = createdAt && !isNaN(createdAt.getTime()) ? createdAt.toISOString().split('T')[0] : '';
-      return [p.ref_id || '', p.full_name || '', p.email || '', p.phone || '', accType, bizRefs, bizNames, tier, roles, (p as any).is_banned ? 'Yes' : 'No', createdStr]
+      const created = p.created_at ? new Date(p.created_at).toISOString().split('T')[0] : '';
+      return [p.ref_id, p.full_name || '', p.email || '', p.phone || '', p.account_type, bizRefs, bizNames, p.membership_tier, roles, p.is_banned ? 'Yes' : 'No', created]
         .map(v => `"${String(v).replace(/"/g, '""')}"`).join(',');
     });
-    const csv = '\uFEFF' + [headers.join(','), ...rows].join('\n');
+    const csv = '\uFEFF' + ['Ref,Name,Email,Phone,Type,BizRefs,BizNames,Tier,Roles,Banned,Created', ...rows].join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = `users_${new Date().toISOString().split('T')[0]}.csv`; a.click();
     URL.revokeObjectURL(url);
-    toast.success(isRTL ? 'تم تصدير القائمة بنجاح' : 'Users exported successfully');
+    toast.success(isRTL ? 'تم التصدير' : 'Exported');
+  };
+
+  const toggleSelect = useCallback((id: string) => {
+    setSelected(prev => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n; });
+  }, []);
+  const toggleExpand = useCallback((id: string) => {
+    setExpanded(prev => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n; });
+  }, []);
+
+  const allOnPageSelected = paginated.length > 0 && paginated.every(p => selected.has(p.id));
+  const toggleSelectPage = () => {
+    setSelected(prev => {
+      const n = new Set(prev);
+      if (allOnPageSelected) paginated.forEach(p => n.delete(p.id));
+      else paginated.forEach(p => n.add(p.id));
+      return n;
+    });
+  };
+
+  const cycleSort = (key: SortKey) => {
+    if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    else { setSortKey(key); setSortDir('desc'); }
   };
 
   if (!user) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center h-96">
-          <p className="text-muted-foreground">{isRTL ? 'يرجى تسجيل الدخول' : 'Please log in'}</p>
-        </div>
-      </DashboardLayout>
-    );
+    return <DashboardLayout><div className="flex items-center justify-center h-96"><p className="text-muted-foreground">{isRTL ? 'يرجى تسجيل الدخول' : 'Please log in'}</p></div></DashboardLayout>;
   }
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        {/* ─── Header ─── */}
+      <div className="space-y-5">
+        {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <h1 className="font-heading font-bold text-2xl text-foreground flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/20 to-primary/10 flex items-center justify-center shadow-sm">
                 <Users className="w-5 h-5 text-accent" />
               </div>
-              {isRTL ? 'إدارة المستخدمين والصلاحيات' : 'Users & Roles Management'}
+              {isRTL ? 'إدارة المستخدمين' : 'User Management'}
             </h1>
             <p className="text-muted-foreground font-body mt-1 text-sm">
-              {isRTL ? `${stats.totalUsers} مستخدم مسجّل • ${stats.providers} مزود خدمة • ${stats.recentUsers} جديد هذا الأسبوع` : `${stats.totalUsers} users • ${stats.providers} providers • ${stats.recentUsers} new this week`}
+              {isRTL ? `${stats.totalUsers} مستخدم • ${stats.providers} مزود • ${stats.recentUsers} جديد هذا الأسبوع` : `${stats.totalUsers} users • ${stats.providers} providers • ${stats.recentUsers} new this week`}
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <div className="flex bg-muted/50 border border-border/30 rounded-xl overflow-hidden p-0.5">
-              <button className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                onClick={() => setViewMode('list')}><LayoutList className="w-4 h-4" /></button>
-              <button className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                onClick={() => setViewMode('grid')}><LayoutGrid className="w-4 h-4" /></button>
-            </div>
-            <Button variant="outline" onClick={exportCSV} className="gap-2 rounded-xl h-9">
+            <Button variant="outline" size="sm" className="rounded-xl gap-2 h-9" onClick={() => refetchProfiles()}>
+              <RefreshCw className="w-4 h-4" />
+              <span className="hidden sm:inline">{isRTL ? 'تحديث' : 'Refresh'}</span>
+            </Button>
+            <Button variant="outline" size="sm" onClick={exportCSV} className="gap-2 rounded-xl h-9">
               <Download className="w-4 h-4" />
-              <span className="hidden sm:inline">{isRTL ? 'تصدير' : 'Export'}</span>
+              <span className="hidden sm:inline">{isRTL ? 'تصدير CSV' : 'Export CSV'}</span>
             </Button>
           </div>
         </div>
 
-        {/* ─── Stats Grid ─── */}
-        <div className="grid grid-cols-2 lg:grid-cols-6 gap-3">
-          <StatCard icon={Users} label={isRTL ? 'إجمالي المستخدمين' : 'Total Users'} value={stats.totalUsers} gradient="from-primary/10 to-primary/5" iconBg="bg-primary/15 text-primary" />
-          <StatCard icon={Briefcase} label={isRTL ? 'مزودي الخدمات' : 'Providers'} value={stats.providers} gradient="from-emerald-500/10 to-emerald-500/5" iconBg="bg-emerald-500/15 text-emerald-600" percentage={stats.totalUsers ? (stats.providers / stats.totalUsers) * 100 : 0} />
-          <StatCard icon={ShieldAlert} label={isRTL ? 'مشرف أعلى' : 'Super Admins'} value={stats.superAdmins} gradient="from-purple-500/10 to-purple-500/5" iconBg="bg-purple-500/15 text-purple-600" />
-          <StatCard icon={Crown} label={isRTL ? 'المشرفين' : 'Admins'} value={stats.admins} gradient="from-red-500/10 to-red-500/5" iconBg="bg-red-500/15 text-red-600" />
-          <StatCard icon={ShieldCheck} label={isRTL ? 'مشرفي المحتوى' : 'Moderators'} value={stats.moderators} gradient="from-amber-500/10 to-amber-500/5" iconBg="bg-amber-500/15 text-amber-600" />
-          <StatCard icon={TrendingUp} label={isRTL ? 'جديد هذا الأسبوع' : 'New This Week'} value={stats.recentUsers} gradient="from-blue-500/10 to-blue-500/5" iconBg="bg-blue-500/15 text-blue-600" />
-        </div>
+        {/* Tabs */}
+        <Tabs value={tab} onValueChange={(v) => { setTab(v as typeof tab); setPage(1); setSelected(new Set()); }}>
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 h-auto p-1 rounded-2xl bg-muted/40">
+            <TabsTrigger value="overview" className="rounded-xl gap-1.5 py-2"><Sparkles className="w-3.5 h-3.5" />{isRTL ? 'نظرة عامة' : 'Overview'}</TabsTrigger>
+            <TabsTrigger value="users" className="rounded-xl gap-1.5 py-2"><Users className="w-3.5 h-3.5" />{isRTL ? 'المستخدمون' : 'Users'}</TabsTrigger>
+            <TabsTrigger value="staff" className="rounded-xl gap-1.5 py-2"><Crown className="w-3.5 h-3.5" />{isRTL ? 'فريق الإدارة' : 'Staff'}</TabsTrigger>
+            <TabsTrigger value="disabled" className="rounded-xl gap-1.5 py-2"><Ban className="w-3.5 h-3.5" />{isRTL ? 'المعطّلون' : 'Disabled'}</TabsTrigger>
+            <TabsTrigger value="analytics" className="rounded-xl gap-1.5 py-2"><BarChart3 className="w-3.5 h-3.5" />{isRTL ? 'تحليلات' : 'Analytics'}</TabsTrigger>
+          </TabsList>
 
-        {/* ─── Membership Distribution ─── */}
-        <div className="rounded-2xl border border-border/30 bg-card p-4">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-heading font-bold text-sm flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-accent" />
-              {isRTL ? 'توزيع العضويات' : 'Membership Distribution'}
-            </h3>
-            {stats.bannedCount > 0 && (
-              <Badge variant="destructive" className="text-[10px] gap-1">
-                <Ban className="w-3 h-3" /> {stats.bannedCount} {isRTL ? 'معطّل' : 'disabled'}
-              </Badge>
-            )}
-          </div>
-          <div className="flex h-3 rounded-full overflow-hidden bg-muted/50">
-            {Object.entries(stats.tierDist).map(([tier, count]) => {
-              if (count === 0) return null;
-              const pct = (count / stats.totalUsers) * 100;
-              const colors: Record<string, string> = { free: 'bg-muted-foreground/30', basic: 'bg-blue-500', premium: 'bg-accent', enterprise: 'bg-purple-500' };
-              return <div key={tier} className={`${colors[tier]} transition-all`} style={{ width: `${pct}%` }} title={`${tier}: ${count}`} />;
-            })}
-          </div>
-          <div className="flex flex-wrap gap-3 mt-2">
-            {Object.entries(stats.tierDist).map(([tier, count]) => {
-              const cfg = tierConfig[tier as keyof typeof tierConfig];
-              return (
-                <span key={tier} className="text-[11px] text-muted-foreground flex items-center gap-1">
-                  <span className={`w-2.5 h-2.5 rounded-full ${tier === 'free' ? 'bg-muted-foreground/30' : tier === 'basic' ? 'bg-blue-500' : tier === 'premium' ? 'bg-accent' : 'bg-purple-500'}`} />
-                  {isRTL ? cfg.labelAr : cfg.labelEn}: {count}
-                </span>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* ─── Search & Filter ─── */}
-        <div className="rounded-2xl border border-border/30 bg-card p-4">
-          <div className="flex flex-col md:flex-row gap-3">
-            <div className="relative flex-1">
-              <Search className="absolute top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
-              <Input
-                value={searchTerm}
-                onChange={e => handleSearchChange(e.target.value)}
-                placeholder={isRTL ? 'بحث بالاسم أو البريد أو الهاتف أو المفتاح التعريفي...' : 'Search name, email, phone, or ref ID...'}
-                className="ps-10 h-10 rounded-xl bg-muted/30 border-border/20 focus:bg-background transition-colors"
-              />
+          {/* OVERVIEW */}
+          <TabsContent value="overview" className="space-y-5 mt-5">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              <KpiCard icon={Users} label={isRTL ? 'إجمالي المستخدمين' : 'Total Users'} value={stats.totalUsers} gradient="from-primary/10 to-primary/5" iconBg="bg-primary/15 text-primary" />
+              <KpiCard icon={Briefcase} label={isRTL ? 'مزودي الخدمات' : 'Providers'} value={stats.providers} gradient="from-emerald-500/10 to-emerald-500/5" iconBg="bg-emerald-500/15 text-emerald-600" />
+              <KpiCard icon={UserCheck} label={isRTL ? 'مكتمل التسجيل' : 'Onboarded'} value={stats.onboarded} gradient="from-blue-500/10 to-blue-500/5" iconBg="bg-blue-500/15 text-blue-600" />
+              <KpiCard icon={TrendingUp} label={isRTL ? 'جديد هذا الأسبوع' : 'New 7d'} value={stats.recentUsers} gradient="from-amber-500/10 to-amber-500/5" iconBg="bg-amber-500/15 text-amber-600" />
             </div>
-            <Select value={filterRole} onValueChange={setFilterRole}>
-              <SelectTrigger className="w-full md:w-44 h-10 rounded-xl">
-                <Filter className="w-4 h-4 me-2 text-muted-foreground" />
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="rounded-xl">
-                <SelectItem value="all">{isRTL ? 'جميع الصلاحيات' : 'All Roles'}</SelectItem>
-                <SelectItem value="super_admin">{isRTL ? 'مشرف أعلى' : 'Super Admin'}</SelectItem>
-                <SelectItem value="admin">{isRTL ? 'المشرفين' : 'Admins'}</SelectItem>
-                <SelectItem value="moderator">{isRTL ? 'مشرفي المحتوى' : 'Moderators'}</SelectItem>
-                <SelectItem value="user">{isRTL ? 'مستخدم عادي' : 'Regular User'}</SelectItem>
-                <SelectItem value="no_role">{isRTL ? 'بدون صلاحيات' : 'No Role'}</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={filterAccountType} onValueChange={setFilterAccountType}>
-              <SelectTrigger className="w-full md:w-44 h-10 rounded-xl">
-                <Building2 className="w-4 h-4 me-2 text-muted-foreground" />
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="rounded-xl">
-                <SelectItem value="all">{isRTL ? 'جميع الأنواع' : 'All Types'}</SelectItem>
-                <SelectItem value="individual">{isRTL ? 'أفراد' : 'Individuals'}</SelectItem>
-                <SelectItem value="business">{isRTL ? 'مزودي خدمات' : 'Providers'}</SelectItem>
-                <SelectItem value="company">{isRTL ? 'شركات' : 'Companies'}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          {/* Active filters */}
-          {(filterRole !== 'all' || filterAccountType !== 'all' || deferredSearch) && (
-            <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/20">
-              <span className="text-[11px] text-muted-foreground">{isRTL ? 'النتائج:' : 'Results:'} {filtered.length}</span>
-              {filterRole !== 'all' && (
-                <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-lg" onClick={() => setFilterRole('all')}>
-                  {filterRole} <X className="w-2.5 h-2.5" />
-                </Badge>
-              )}
-              {filterAccountType !== 'all' && (
-                <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-lg" onClick={() => setFilterAccountType('all')}>
-                  {accountTypeConfig[filterAccountType]?.labelAr || filterAccountType} <X className="w-2.5 h-2.5" />
-                </Badge>
-              )}
-              {deferredSearch && (
-                <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-lg" onClick={() => { setSearchTerm(''); setDeferredSearch(''); }}>
-                  "{deferredSearch}" <X className="w-2.5 h-2.5" />
-                </Badge>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* ═══ Inline Edit Panel ═══ */}
-        {activePanel?.type === 'edit' && (
-          <div className="rounded-2xl border border-accent/30 bg-gradient-to-r from-accent/5 to-transparent p-5 animate-in slide-in-from-top-2 duration-200">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-heading font-bold text-lg flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-accent/15 flex items-center justify-center">
-                  <Pencil className="w-4 h-4 text-accent" />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <div className="lg:col-span-2 rounded-2xl border border-border/30 bg-card p-5">
+                <h3 className="font-heading font-bold text-sm flex items-center gap-2 mb-3"><TrendingUp className="w-4 h-4 text-accent" />{isRTL ? 'تسجيلات آخر 30 يوم' : 'Signups (30 days)'}</h3>
+                <div className="h-56">
+                  <ResponsiveContainer>
+                    <AreaChart data={signupSeries}>
+                      <defs>
+                        <linearGradient id="colTotal" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="hsl(var(--accent))" stopOpacity={0.4} /><stop offset="95%" stopColor="hsl(var(--accent))" stopOpacity={0} /></linearGradient>
+                        <linearGradient id="colProv" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="hsl(160 84% 39%)" stopOpacity={0.4} /><stop offset="95%" stopColor="hsl(160 84% 39%)" stopOpacity={0} /></linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="label" tick={{ fontSize: 10 }} reversed={isRTL} />
+                      <YAxis tick={{ fontSize: 10 }} orientation={isRTL ? 'right' : 'left'} />
+                      <RTooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }} />
+                      <Area type="monotone" dataKey="total" stroke="hsl(var(--accent))" fill="url(#colTotal)" name={isRTL ? 'الكل' : 'Total'} />
+                      <Area type="monotone" dataKey="providers" stroke="hsl(160 84% 39%)" fill="url(#colProv)" name={isRTL ? 'مزودين' : 'Providers'} />
+                    </AreaChart>
+                  </ResponsiveContainer>
                 </div>
-                {isRTL ? 'تعديل بيانات المستخدم' : 'Edit User Profile'}
-                {activePanel.profile.ref_id && (
-                  <Badge variant="outline" className="font-mono text-xs">{activePanel.profile.ref_id}</Badge>
-                )}
-              </h3>
-              <Button variant="ghost" size="icon" onClick={closePanel} className="rounded-xl"><X className="w-4 h-4" /></Button>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div className="space-y-1.5">
-                <Label className="text-xs">{isRTL ? 'الاسم الكامل' : 'Full Name'}</Label>
-                <Input value={editForm.full_name} onChange={e => setEditForm(p => ({ ...p, full_name: e.target.value }))} maxLength={100} className="h-10 rounded-xl" />
               </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs">{isRTL ? 'البريد الإلكتروني' : 'Email'}</Label>
-                <Input type="email" value={editForm.email} onChange={e => setEditForm(p => ({ ...p, email: e.target.value }))} maxLength={255} className="h-10 rounded-xl" />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs">{isRTL ? 'رقم الهاتف' : 'Phone'}</Label>
-                <Input value={editForm.phone} onChange={e => setEditForm(p => ({ ...p, phone: e.target.value }))} dir="ltr" maxLength={20} className="h-10 rounded-xl" />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs">{isRTL ? 'نوع الحساب' : 'Account Type'}</Label>
-                <Select value={editForm.account_type} onValueChange={val => setEditForm(p => ({ ...p, account_type: val }))}>
-                  <SelectTrigger className="h-10 rounded-xl"><SelectValue /></SelectTrigger>
-                  <SelectContent className="rounded-xl">
-                    <SelectItem value="individual">{isRTL ? 'فرد' : 'Individual'}</SelectItem>
-                    <SelectItem value="business">{isRTL ? 'مزود خدمة' : 'Provider'}</SelectItem>
-                    <SelectItem value="company">{isRTL ? 'شركة' : 'Company'}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs">{isRTL ? 'مستوى العضوية' : 'Membership Tier'}</Label>
-                <Select value={editForm.membership_tier} onValueChange={val => setEditForm(p => ({ ...p, membership_tier: val }))}>
-                  <SelectTrigger className="h-10 rounded-xl"><SelectValue /></SelectTrigger>
-                  <SelectContent className="rounded-xl">
-                    <SelectItem value="free">{isRTL ? 'مجاني' : 'Free'}</SelectItem>
-                    <SelectItem value="basic">{isRTL ? 'أساسي' : 'Basic'}</SelectItem>
-                    <SelectItem value="premium">{isRTL ? 'مميز' : 'Premium'}</SelectItem>
-                    <SelectItem value="enterprise">{isRTL ? 'مؤسسات' : 'Enterprise'}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* Show linked business in edit panel */}
-            {(() => {
-              const bizList = businessMap.get(activePanel.profile.user_id) || [];
-              if (bizList.length === 0) return null;
-              return (
-                <div className="mt-4 p-3 rounded-xl bg-muted/40 border border-border/30">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Building2 className="w-4 h-4 text-emerald-600" />
-                    <span className="text-xs font-bold">{isRTL ? 'الحسابات التجارية المرتبطة' : 'Linked Business Accounts'} ({bizList.length})</span>
-                  </div>
-                  <div className="space-y-1.5">
-                    {bizList.map(biz => (
-                      <div key={biz.id} className="flex items-center gap-3 flex-wrap">
-                        <Badge variant="outline" className="font-mono text-xs gap-1"><Link2 className="w-3 h-3" />{biz.ref_id}</Badge>
-                        <span className="text-xs text-muted-foreground">{biz.name_ar}</span>
-                        <span className="text-xs text-muted-foreground">@{biz.username}</span>
+              <div className="rounded-2xl border border-border/30 bg-card p-5">
+                <h3 className="font-heading font-bold text-sm flex items-center gap-2 mb-3"><Activity className="w-4 h-4 text-accent" />{isRTL ? 'آخر النشاط الإداري' : 'Recent Admin Activity'}</h3>
+                <div className="space-y-2 max-h-56 overflow-y-auto no-scrollbar">
+                  {recentAdminActivity.length === 0 ? (
+                    <p className="text-xs text-muted-foreground text-center py-6">{isRTL ? 'لا يوجد نشاط' : 'No activity'}</p>
+                  ) : recentAdminActivity.slice(0, 12).map(a => (
+                    <div key={a.id} className="flex items-start gap-2 rounded-xl bg-muted/30 px-2.5 py-1.5">
+                      <div className="w-2 h-2 rounded-full bg-accent mt-1.5 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium truncate">{a.action}</p>
+                        <p className="text-[10px] text-muted-foreground">{formatRelative(a.created_at, isRTL)}</p>
                       </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* USERS / STAFF / DISABLED — shared list view */}
+          {(['users', 'staff', 'disabled'] as const).map(t => (
+            <TabsContent key={t} value={t} className="space-y-4 mt-5">
+              {/* Filters */}
+              <div className="rounded-2xl border border-border/30 bg-card p-4">
+                <div className="flex flex-col md:flex-row gap-3">
+                  <div className="relative flex-1">
+                    <Search className="absolute top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
+                    <Input value={searchTerm} onChange={e => handleSearchChange(e.target.value)}
+                      placeholder={isRTL ? 'بحث: اسم، بريد، هاتف، معرّف، أو نشاط تجاري...' : 'Search name, email, phone, ID, or business...'}
+                      className="ps-10 h-10 rounded-xl bg-muted/30 border-border/20 focus:bg-background" />
+                  </div>
+                  <Select value={filterRole} onValueChange={(v) => { setFilterRole(v); setPage(1); }}>
+                    <SelectTrigger className="w-full md:w-40 h-10 rounded-xl"><Filter className="w-4 h-4 me-2 text-muted-foreground" /><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">{isRTL ? 'كل الصلاحيات' : 'All Roles'}</SelectItem>
+                      <SelectItem value="super_admin">{isRTL ? 'مشرف أعلى' : 'Super Admin'}</SelectItem>
+                      <SelectItem value="admin">{isRTL ? 'مشرف' : 'Admin'}</SelectItem>
+                      <SelectItem value="moderator">{isRTL ? 'مشرف محتوى' : 'Moderator'}</SelectItem>
+                      <SelectItem value="user">{isRTL ? 'مستخدم' : 'User'}</SelectItem>
+                      <SelectItem value="no_role">{isRTL ? 'بدون صلاحيات' : 'No Role'}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={filterAccountType} onValueChange={(v) => { setFilterAccountType(v); setPage(1); }}>
+                    <SelectTrigger className="w-full md:w-40 h-10 rounded-xl"><Building2 className="w-4 h-4 me-2 text-muted-foreground" /><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">{isRTL ? 'كل الأنواع' : 'All Types'}</SelectItem>
+                      <SelectItem value="individual">{isRTL ? 'أفراد' : 'Individuals'}</SelectItem>
+                      <SelectItem value="business">{isRTL ? 'مزودين' : 'Providers'}</SelectItem>
+                      <SelectItem value="company">{isRTL ? 'شركات' : 'Companies'}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={filterTier} onValueChange={(v) => { setFilterTier(v); setPage(1); }}>
+                    <SelectTrigger className="w-full md:w-36 h-10 rounded-xl"><Sparkles className="w-4 h-4 me-2 text-muted-foreground" /><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">{isRTL ? 'كل العضويات' : 'All Tiers'}</SelectItem>
+                      <SelectItem value="free">{isRTL ? 'مجاني' : 'Free'}</SelectItem>
+                      <SelectItem value="basic">{isRTL ? 'أساسي' : 'Basic'}</SelectItem>
+                      <SelectItem value="premium">{isRTL ? 'مميز' : 'Premium'}</SelectItem>
+                      <SelectItem value="enterprise">{isRTL ? 'مؤسسات' : 'Enterprise'}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {/* Sort + select-all + counter */}
+                <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/20 flex-wrap">
+                  <Checkbox checked={allOnPageSelected} onCheckedChange={toggleSelectPage} />
+                  <span className="text-[11px] text-muted-foreground">
+                    {isRTL ? `${sorted.length} نتيجة • صفحة ${page}/${totalPages}` : `${sorted.length} results • Page ${page}/${totalPages}`}
+                  </span>
+                  <div className="ms-auto flex items-center gap-1.5 flex-wrap">
+                    <span className="text-[11px] text-muted-foreground">{isRTL ? 'ترتيب:' : 'Sort:'}</span>
+                    {([
+                      ['created_at', isRTL ? 'الأحدث' : 'Date'],
+                      ['full_name', isRTL ? 'الاسم' : 'Name'],
+                      ['membership_tier', isRTL ? 'العضوية' : 'Tier'],
+                      ['account_type', isRTL ? 'النوع' : 'Type'],
+                    ] as const).map(([k, lbl]) => (
+                      <button key={k} onClick={() => cycleSort(k)}
+                        className={`text-[11px] gap-1 inline-flex items-center px-2 py-1 rounded-lg border transition-colors
+                          ${sortKey === k ? 'border-accent text-accent bg-accent/10' : 'border-border/30 text-muted-foreground hover:border-border'}`}>
+                        {lbl}
+                        {sortKey === k ? (sortDir === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3" />}
+                      </button>
                     ))}
                   </div>
                 </div>
-              );
-            })()}
-
-            <Separator className="my-4" />
-            <div className="flex items-center gap-2 justify-end">
-              <Button variant="outline" onClick={closePanel} className="rounded-xl">{isRTL ? 'إلغاء' : 'Cancel'}</Button>
-              <Button onClick={handleSaveProfile} disabled={updateProfileMutation.isPending} className="rounded-xl gap-2">
-                {updateProfileMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-                {isRTL ? 'حفظ التغييرات' : 'Save Changes'}
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {/* ═══ Inline Password Panel ═══ */}
-        {activePanel?.type === 'password' && (
-          <div className="rounded-2xl border border-accent/30 bg-gradient-to-r from-accent/5 to-transparent p-5 animate-in slide-in-from-top-2 duration-200">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-heading font-bold text-lg flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-accent/15 flex items-center justify-center">
-                  <Lock className="w-4 h-4 text-accent" />
-                </div>
-                {isRTL ? 'تغيير كلمة المرور' : 'Change Password'}
-                <span className="text-sm font-normal text-muted-foreground">— {activePanel.userName}</span>
-              </h3>
-              <Button variant="ghost" size="icon" onClick={closePanel} className="rounded-xl"><X className="w-4 h-4" /></Button>
-            </div>
-            <div className="max-w-md space-y-3">
-              <div className="space-y-1.5">
-                <Label className="text-xs">{isRTL ? 'كلمة المرور الجديدة' : 'New Password'}</Label>
-                <div className="relative">
-                  <Input
-                    type={showNewPassword ? 'text' : 'password'}
-                    value={newPassword}
-                    onChange={e => setNewPassword(e.target.value)}
-                    placeholder={isRTL ? '8+ مع أرقام ورموز' : '8+ with numbers and symbols'}
-                    minLength={8}
-                    className="pe-10 h-10 rounded-xl"
-                  />
-                  <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute top-2.5 text-muted-foreground hover:text-foreground transition-colors" style={{ [isRTL ? 'left' : 'right']: '10px' }}>
-                    {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-                {passwordValidationMessage && (
-                  <p className="text-xs text-destructive leading-relaxed">{passwordValidationMessage}</p>
-                )}
               </div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <Button
-                  onClick={() => changePasswordMutation.mutate({ targetUserId: activePanel.userId, password: newPassword })}
-                  disabled={changePasswordMutation.isPending || !!passwordValidationMessage || newPassword.length === 0}
-                  className="rounded-xl gap-2"
-                >
-                  {changePasswordMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-                  {isRTL ? 'تغيير كلمة المرور' : 'Change Password'}
-                </Button>
-                <Button variant="outline" onClick={() => sendResetLinkMutation.mutate(activePanel.userId)} disabled={sendResetLinkMutation.isPending} className="gap-1.5 rounded-xl">
-                  <Send className="w-4 h-4" />
-                  {isRTL ? 'إرسال رابط إعادة تعيين' : 'Send Reset Link'}
-                </Button>
-                <Button variant="ghost" onClick={closePanel} className="rounded-xl">{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+
+              {/* Bulk action bar */}
+              {selected.size > 0 && isSuperAdmin && (
+                <div className="rounded-2xl border border-accent/40 bg-accent/5 p-3 flex items-center gap-3 flex-wrap animate-in slide-in-from-top-1">
+                  <Badge className="bg-accent text-accent-foreground gap-1"><Check className="w-3 h-3" />{selected.size}</Badge>
+                  <span className="text-xs text-foreground">{isRTL ? 'محدد' : 'selected'}</span>
+                  <div className="ms-auto flex items-center gap-2 flex-wrap">
+                    <Button variant="outline" size="sm" className="rounded-xl gap-1.5 h-8 text-amber-600 border-amber-300"
+                      onClick={() => bulkBanMutation.mutate({ ids: Array.from(selected), isBanned: true })}
+                      disabled={bulkBanMutation.isPending}>
+                      <Ban className="w-3.5 h-3.5" />{isRTL ? 'تعطيل' : 'Disable'}
+                    </Button>
+                    <Button variant="outline" size="sm" className="rounded-xl gap-1.5 h-8 text-emerald-600 border-emerald-300"
+                      onClick={() => bulkBanMutation.mutate({ ids: Array.from(selected), isBanned: false })}
+                      disabled={bulkBanMutation.isPending}>
+                      <UserCheck className="w-3.5 h-3.5" />{isRTL ? 'تفعيل' : 'Enable'}
+                    </Button>
+                    <Button variant="ghost" size="sm" className="rounded-xl h-8" onClick={() => setSelected(new Set())}>
+                      <X className="w-3.5 h-3.5" />{isRTL ? 'إلغاء' : 'Clear'}
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Inline panels */}
+              {activePanel?.type === 'edit' && (
+                <div className="rounded-2xl border border-accent/30 bg-gradient-to-r from-accent/5 to-transparent p-5 animate-in slide-in-from-top-2">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-heading font-bold text-lg flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-lg bg-accent/15 flex items-center justify-center"><Pencil className="w-4 h-4 text-accent" /></div>
+                      {isRTL ? 'تعديل المستخدم' : 'Edit User'}
+                      {activePanel.profile.ref_id && <Badge variant="outline" className="font-mono text-xs tech-content">{activePanel.profile.ref_id}</Badge>}
+                    </h3>
+                    <Button variant="ghost" size="icon" onClick={closePanel} className="rounded-xl"><X className="w-4 h-4" /></Button>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'الاسم الكامل' : 'Full Name'}</Label>
+                      <Input value={editForm.full_name} onChange={e => setEditForm(p => ({ ...p, full_name: e.target.value }))} maxLength={100} className="h-10 rounded-xl" /></div>
+                    <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'البريد' : 'Email'}</Label>
+                      <Input type="email" value={editForm.email} onChange={e => setEditForm(p => ({ ...p, email: e.target.value }))} maxLength={255} className="h-10 rounded-xl" /></div>
+                    <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'الهاتف' : 'Phone'}</Label>
+                      <Input value={editForm.phone} onChange={e => setEditForm(p => ({ ...p, phone: e.target.value }))} dir="ltr" maxLength={20} className="h-10 rounded-xl tech-content" /></div>
+                    <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'نوع الحساب' : 'Account Type'}</Label>
+                      <Select value={editForm.account_type} onValueChange={v => setEditForm(p => ({ ...p, account_type: v }))}>
+                        <SelectTrigger className="h-10 rounded-xl"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="individual">{isRTL ? 'فرد' : 'Individual'}</SelectItem>
+                          <SelectItem value="business">{isRTL ? 'مزود' : 'Provider'}</SelectItem>
+                          <SelectItem value="company">{isRTL ? 'شركة' : 'Company'}</SelectItem>
+                        </SelectContent>
+                      </Select></div>
+                    <div className="space-y-1.5"><Label className="text-xs">{isRTL ? 'العضوية' : 'Tier'}</Label>
+                      <Select value={editForm.membership_tier} onValueChange={v => setEditForm(p => ({ ...p, membership_tier: v }))}>
+                        <SelectTrigger className="h-10 rounded-xl"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="free">{isRTL ? 'مجاني' : 'Free'}</SelectItem>
+                          <SelectItem value="basic">{isRTL ? 'أساسي' : 'Basic'}</SelectItem>
+                          <SelectItem value="premium">{isRTL ? 'مميز' : 'Premium'}</SelectItem>
+                          <SelectItem value="enterprise">{isRTL ? 'مؤسسات' : 'Enterprise'}</SelectItem>
+                        </SelectContent>
+                      </Select></div>
+                  </div>
+                  <Separator className="my-4" />
+                  <div className="flex items-center gap-2 justify-end">
+                    <Button variant="outline" onClick={closePanel} className="rounded-xl">{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+                    <Button onClick={handleSaveProfile} disabled={updateProfileMutation.isPending} className="rounded-xl gap-2">
+                      {updateProfileMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}{isRTL ? 'حفظ' : 'Save'}
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {activePanel?.type === 'password' && (
+                <div className="rounded-2xl border border-accent/30 bg-gradient-to-r from-accent/5 to-transparent p-5 animate-in slide-in-from-top-2">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-heading font-bold text-lg flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-lg bg-accent/15 flex items-center justify-center"><Lock className="w-4 h-4 text-accent" /></div>
+                      {isRTL ? 'تغيير كلمة المرور' : 'Change Password'}
+                      <span className="text-sm font-normal text-muted-foreground">— {activePanel.userName}</span>
+                    </h3>
+                    <Button variant="ghost" size="icon" onClick={closePanel} className="rounded-xl"><X className="w-4 h-4" /></Button>
+                  </div>
+                  <div className="max-w-md space-y-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">{isRTL ? 'كلمة المرور الجديدة' : 'New Password'}</Label>
+                      <div className="relative">
+                        <Input type={showNewPassword ? 'text' : 'password'} value={newPassword} onChange={e => setNewPassword(e.target.value)}
+                          placeholder={isRTL ? '8+ مع أرقام ورموز' : '8+ with numbers and symbols'} minLength={8} className="pe-10 h-10 rounded-xl" />
+                        <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute top-2.5 text-muted-foreground hover:text-foreground" style={{ [isRTL ? 'left' : 'right']: '10px' }}>
+                          {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                      {passwordValidationMessage && <p className="text-xs text-destructive">{passwordValidationMessage}</p>}
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Button onClick={() => changePasswordMutation.mutate({ targetUserId: activePanel.userId, password: newPassword })}
+                        disabled={changePasswordMutation.isPending || !!passwordValidationMessage || !newPassword} className="rounded-xl gap-2">
+                        {changePasswordMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}{isRTL ? 'تغيير' : 'Change'}
+                      </Button>
+                      <Button variant="outline" onClick={() => sendResetLinkMutation.mutate(activePanel.userId)} disabled={sendResetLinkMutation.isPending} className="gap-1.5 rounded-xl">
+                        <Send className="w-4 h-4" />{isRTL ? 'إرسال رابط' : 'Send Link'}
+                      </Button>
+                      <Button variant="ghost" onClick={closePanel} className="rounded-xl">{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activePanel?.type === 'delete' && (
+                <div className="rounded-2xl border border-destructive/30 bg-gradient-to-r from-destructive/5 to-transparent p-5 animate-in slide-in-from-top-2">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-heading font-bold text-lg flex items-center gap-2 text-destructive">
+                      <div className="w-8 h-8 rounded-lg bg-destructive/15 flex items-center justify-center"><AlertTriangle className="w-4 h-4 text-destructive" /></div>
+                      {isRTL ? 'تأكيد حذف الحساب' : 'Confirm Deletion'}
+                    </h3>
+                    <Button variant="ghost" size="icon" onClick={closePanel} className="rounded-xl"><X className="w-4 h-4" /></Button>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-4 max-w-lg">
+                    {isRTL ? `هل أنت متأكد من حذف "${activePanel.userName}"؟ سيتم حذف جميع البيانات نهائياً.` : `Delete "${activePanel.userName}"? All data will be removed permanently.`}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Button variant="destructive" onClick={() => deleteUserMutation.mutate(activePanel.userId)} disabled={deleteUserMutation.isPending} className="rounded-xl gap-2">
+                      {deleteUserMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}{isRTL ? 'حذف نهائي' : 'Delete'}
+                    </Button>
+                    <Button variant="outline" onClick={closePanel} className="rounded-xl">{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+                  </div>
+                </div>
+              )}
+
+              {/* List */}
+              {(loadingProfiles || loadingRoles) ? (
+                <div className="space-y-3">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-2xl" />)}</div>
+              ) : paginated.length === 0 ? (
+                <div className="rounded-2xl border border-border/30 bg-card p-12 text-center">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-accent/10 to-primary/10 flex items-center justify-center">
+                    <Users className="w-8 h-8 text-accent/30" />
+                  </div>
+                  <p className="font-heading font-bold text-sm mb-1">{isRTL ? 'لا توجد نتائج' : 'No results'}</p>
+                  <p className="text-xs text-muted-foreground">{isRTL ? 'جرّب تغيير الفلاتر' : 'Try changing filters'}</p>
+                </div>
+              ) : (
+                <>
+                  <div className="space-y-3">
+                    {paginated.map(profile => {
+                      const roles = roleMap.get(profile.user_id) || [];
+                      const isCurrentUser = profile.user_id === user.id;
+                      const targetIsSuperAdmin = roles.some(r => r.role === 'super_admin');
+                      const targetIsAdmin = roles.some(r => r.role === 'admin' || r.role === 'super_admin');
+                      const canManageUser = !isCurrentUser && (isSuperAdmin || (!targetIsSuperAdmin && !targetIsAdmin));
+                      return (
+                        <UserRow key={profile.id} profile={profile} roles={roles}
+                          business={businessMap.get(profile.user_id) || []}
+                          isCurrentUser={isCurrentUser} canManageUser={canManageUser} isSuperAdmin={isSuperAdmin}
+                          isRTL={isRTL} language={language}
+                          selected={selected.has(profile.id)} expanded={expanded.has(profile.id)}
+                          onToggleSelect={() => toggleSelect(profile.id)} onToggleExpand={() => toggleExpand(profile.id)}
+                          onEdit={openEdit}
+                          onPassword={(p) => setActivePanel({ type: 'password', userId: p.user_id, userName: p.full_name || '' })}
+                          onToggleBan={(p) => toggleBanMutation.mutate({ profileId: p.id, isBanned: !p.is_banned })}
+                          onDelete={(p) => setActivePanel({ type: 'delete', userId: p.user_id, userName: p.full_name || '' })}
+                          onAddRole={(uid, role) => addRoleMutation.mutate({ userId: uid, role })}
+                          onRemoveRole={(rid) => removeRoleMutation.mutate(rid)}
+                        />
+                      );
+                    })}
+                  </div>
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-between gap-2 pt-2">
+                      <Button variant="outline" size="sm" className="rounded-xl gap-1" disabled={page === 1} onClick={() => setPage(p => Math.max(1, p - 1))}>
+                        {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+                        {isRTL ? 'السابق' : 'Prev'}
+                      </Button>
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: Math.min(7, totalPages) }, (_, i) => {
+                          let n = i + 1;
+                          if (totalPages > 7) {
+                            if (page > 4) n = page - 3 + i;
+                            if (n > totalPages - 6) n = totalPages - 6 + i;
+                          }
+                          return (
+                            <button key={n} onClick={() => setPage(n)}
+                              className={`w-8 h-8 rounded-lg text-xs font-bold transition-colors tech-content
+                                ${n === page ? 'bg-accent text-accent-foreground' : 'hover:bg-muted'}`}>
+                              {n}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <Button variant="outline" size="sm" className="rounded-xl gap-1" disabled={page === totalPages} onClick={() => setPage(p => Math.min(totalPages, p + 1))}>
+                        {isRTL ? 'التالي' : 'Next'}
+                        {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                      </Button>
+                    </div>
+                  )}
+                </>
+              )}
+            </TabsContent>
+          ))}
+
+          {/* ANALYTICS */}
+          <TabsContent value="analytics" className="space-y-5 mt-5">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              <KpiCard icon={ShieldAlert} label={isRTL ? 'مشرف أعلى' : 'Super Admins'} value={stats.superAdmins} gradient="from-purple-500/10 to-purple-500/5" iconBg="bg-purple-500/15 text-purple-600" />
+              <KpiCard icon={Crown} label={isRTL ? 'المشرفين' : 'Admins'} value={stats.admins} gradient="from-red-500/10 to-red-500/5" iconBg="bg-red-500/15 text-red-600" />
+              <KpiCard icon={ShieldCheck} label={isRTL ? 'مشرفي محتوى' : 'Moderators'} value={stats.moderators} gradient="from-amber-500/10 to-amber-500/5" iconBg="bg-amber-500/15 text-amber-600" />
+              <KpiCard icon={Ban} label={isRTL ? 'معطّلون' : 'Disabled'} value={stats.bannedCount} gradient="from-rose-500/10 to-rose-500/5" iconBg="bg-rose-500/15 text-rose-600" />
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="rounded-2xl border border-border/30 bg-card p-5">
+                <h3 className="font-heading font-bold text-sm mb-3">{isRTL ? 'توزيع أنواع الحسابات' : 'Account Type Distribution'}</h3>
+                <div className="h-64">
+                  <ResponsiveContainer>
+                    <PieChart>
+                      <Pie data={accountTypePie} dataKey="value" nameKey="name" innerRadius={50} outerRadius={90} paddingAngle={3}>
+                        {accountTypePie.map((e, i) => <Cell key={i} fill={e.color} />)}
+                      </Pie>
+                      <RTooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }} />
+                      <Legend wrapperStyle={{ fontSize: 11 }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+              <div className="rounded-2xl border border-border/30 bg-card p-5">
+                <h3 className="font-heading font-bold text-sm mb-3">{isRTL ? 'توزيع العضويات' : 'Membership Tiers'}</h3>
+                <div className="h-64">
+                  <ResponsiveContainer>
+                    <BarChart data={tierBar}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="name" tick={{ fontSize: 11 }} reversed={isRTL} />
+                      <YAxis tick={{ fontSize: 11 }} orientation={isRTL ? 'right' : 'left'} />
+                      <RTooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }} />
+                      <Bar dataKey="count" fill="hsl(var(--accent))" radius={[8, 8, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
             </div>
-          </div>
-        )}
-
-        {/* ═══ Inline Delete Confirmation ═══ */}
-        {activePanel?.type === 'delete' && (
-          <div className="rounded-2xl border border-destructive/30 bg-gradient-to-r from-destructive/5 to-transparent p-5 animate-in slide-in-from-top-2 duration-200">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-heading font-bold text-lg flex items-center gap-2 text-destructive">
-                <div className="w-8 h-8 rounded-lg bg-destructive/15 flex items-center justify-center">
-                  <AlertTriangle className="w-4 h-4 text-destructive" />
-                </div>
-                {isRTL ? 'تأكيد حذف الحساب' : 'Confirm Account Deletion'}
-              </h3>
-              <Button variant="ghost" size="icon" onClick={closePanel} className="rounded-xl"><X className="w-4 h-4" /></Button>
-            </div>
-            <p className="text-sm text-muted-foreground mb-4 max-w-lg">
-              {isRTL
-                ? `هل أنت متأكد من حذف حساب "${activePanel.userName}"؟ سيتم حذف جميع بيانات المستخدم نهائياً ولا يمكن التراجع عن هذا الإجراء.`
-                : `Are you sure you want to delete "${activePanel.userName}"? All user data will be permanently removed and this action cannot be undone.`}
-            </p>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="destructive"
-                onClick={() => deleteUserMutation.mutate(activePanel.userId)}
-                disabled={deleteUserMutation.isPending}
-                className="rounded-xl gap-2"
-              >
-                {deleteUserMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-                {isRTL ? 'حذف نهائي' : 'Delete Permanently'}
-              </Button>
-              <Button variant="outline" onClick={closePanel} className="rounded-xl">{isRTL ? 'إلغاء' : 'Cancel'}</Button>
-            </div>
-          </div>
-        )}
-
-        {/* ═══ Users List ═══ */}
-        {(loadingProfiles || loadingRoles) ? (
-          <div className="space-y-3">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-2xl" />)}</div>
-        ) : filtered.length === 0 ? (
-          <div className="rounded-2xl border border-border/30 bg-card p-12 text-center">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-accent/10 to-primary/10 flex items-center justify-center">
-              <Users className="w-8 h-8 text-accent/30" />
-            </div>
-            <p className="font-heading font-bold text-sm mb-1">{isRTL ? 'لا توجد نتائج' : 'No results found'}</p>
-            <p className="text-xs text-muted-foreground">{isRTL ? 'حاول تغيير معايير البحث' : 'Try changing your search criteria'}</p>
-          </div>
-        ) : (
-          <div className={viewMode === 'grid' ? 'grid grid-cols-1 lg:grid-cols-2 gap-3' : 'space-y-3'}>
-            {filtered.map(profile => {
-              const roles = roleMap.get(profile.user_id) || [];
-              const isCurrentUser = profile.user_id === user.id;
-              const targetIsSuperAdmin = roles.some(r => r.role === 'super_admin');
-              const targetIsAdmin = roles.some(r => r.role === 'admin' || r.role === 'super_admin');
-              const canManageUser = !isCurrentUser && (isSuperAdmin || (!targetIsSuperAdmin && !targetIsAdmin));
-
-              return (
-                <UserCard
-                  key={profile.id}
-                  profile={profile}
-                  roles={roles}
-                  business={businessMap.get(profile.user_id) || null}
-                  isCurrentUser={isCurrentUser}
-                  canManageUser={canManageUser}
-                  isSuperAdmin={isSuperAdmin}
-                  isRTL={isRTL}
-                  language={language}
-                  onEdit={openEdit}
-                  onPassword={(p: Profile) => setActivePanel({ type: 'password', userId: p.user_id, userName: p.full_name || '' })}
-                  onToggleBan={(p: Profile) => toggleBanMutation.mutate({ profileId: p.id, userId: p.user_id, isBanned: !(p as any).is_banned })}
-                  onDelete={(p: Profile) => setActivePanel({ type: 'delete', userId: p.user_id, userName: p.full_name || '' })}
-                  onAddRole={(userId: string) => addRoleMutation.mutate({ userId, role: selectedRole })}
-                  onRemoveRole={(roleId: string) => removeRoleMutation.mutate(roleId)}
-                  addingRoleFor={addingRoleFor}
-                  selectedRole={selectedRole}
-                  setSelectedRole={setSelectedRole}
-                  addRoleMutation={addRoleMutation}
-                  setAddingRoleFor={setAddingRoleFor}
-                />
-              );
-            })}
-          </div>
-        )}
+          </TabsContent>
+        </Tabs>
       </div>
     </DashboardLayout>
   );
