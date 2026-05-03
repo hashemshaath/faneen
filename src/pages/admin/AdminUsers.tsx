@@ -73,6 +73,22 @@ const formatDate = (dateStr: string | null | undefined, lang: string): string =>
   return d.toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en', { year: 'numeric', month: 'short', day: 'numeric' });
 };
 
+const getPasswordValidationMessage = (password: string, isRTL: boolean): string | null => {
+  if (!password) return null;
+  if (password.length < 12) return isRTL ? 'كلمة المرور يجب أن تكون 12 حرفاً على الأقل' : 'Password must be at least 12 characters';
+  if (/\s/.test(password)) return isRTL ? 'كلمة المرور يجب ألا تحتوي على مسافات' : 'Password must not contain spaces';
+  const categoryCount = [/[a-z]/, /[A-Z]/, /\d/, /[^A-Za-z0-9\s]/].filter((rule) => rule.test(password)).length;
+  if (categoryCount < 3) {
+    return isRTL
+      ? 'استخدم ثلاثة أنواع على الأقل: أحرف كبيرة، أحرف صغيرة، أرقام، رموز'
+      : 'Use at least three types: uppercase, lowercase, numbers, symbols';
+  }
+  if (['password', 'qwerty', 'admin', '123456', 'qitaat'].some((word) => password.toLowerCase().includes(word))) {
+    return isRTL ? 'كلمة المرور تحتوي على كلمة أو نمط شائع' : 'Password contains a common word or pattern';
+  }
+  return null;
+};
+
 /* ─── Stat Card ─── */
 const StatCard = React.memo(({ icon: Icon, label, value, gradient, iconBg, percentage }: {
   icon: React.ElementType; label: string; value: number; gradient: string; iconBg: string; percentage?: number;
@@ -307,6 +323,7 @@ const AdminUsers = () => {
   const [editForm, setEditForm] = useState({ full_name: '', account_type: '', membership_tier: '', phone: '', email: '' });
   const [newPassword, setNewPassword] = useState('');
   const [showNewPassword, setShowNewPassword] = useState(false);
+  const passwordValidationMessage = useMemo(() => getPasswordValidationMessage(newPassword, isRTL), [newPassword, isRTL]);
 
   const closePanel = () => { setActivePanel(null); setNewPassword(''); setShowNewPassword(false); };
 
@@ -811,19 +828,22 @@ const AdminUsers = () => {
                     type={showNewPassword ? 'text' : 'password'}
                     value={newPassword}
                     onChange={e => setNewPassword(e.target.value)}
-                    placeholder={isRTL ? '8 أحرف على الأقل' : 'Min 8 characters'}
-                    minLength={8}
+                    placeholder={isRTL ? '12+ مع أرقام ورموز' : '12+ with numbers and symbols'}
+                    minLength={12}
                     className="pe-10 h-10 rounded-xl"
                   />
                   <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute top-2.5 text-muted-foreground hover:text-foreground transition-colors" style={{ [isRTL ? 'left' : 'right']: '10px' }}>
                     {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
+                {passwordValidationMessage && (
+                  <p className="text-xs text-destructive leading-relaxed">{passwordValidationMessage}</p>
+                )}
               </div>
               <div className="flex items-center gap-2 flex-wrap">
                 <Button
                   onClick={() => changePasswordMutation.mutate({ targetUserId: activePanel.userId, password: newPassword })}
-                  disabled={changePasswordMutation.isPending || newPassword.length < 8}
+                  disabled={changePasswordMutation.isPending || !!passwordValidationMessage || newPassword.length === 0}
                   className="rounded-xl gap-2"
                 >
                   {changePasswordMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
