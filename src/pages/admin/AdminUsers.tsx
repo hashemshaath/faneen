@@ -828,19 +828,22 @@ const AdminUsers = () => {
                     type={showNewPassword ? 'text' : 'password'}
                     value={newPassword}
                     onChange={e => setNewPassword(e.target.value)}
-                    placeholder={isRTL ? '8 أحرف على الأقل' : 'Min 8 characters'}
-                    minLength={8}
+                    placeholder={isRTL ? '12+ مع أرقام ورموز' : '12+ with numbers and symbols'}
+                    minLength={12}
                     className="pe-10 h-10 rounded-xl"
                   />
                   <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute top-2.5 text-muted-foreground hover:text-foreground transition-colors" style={{ [isRTL ? 'left' : 'right']: '10px' }}>
                     {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
+                {passwordValidationMessage && (
+                  <p className="text-xs text-destructive leading-relaxed">{passwordValidationMessage}</p>
+                )}
               </div>
               <div className="flex items-center gap-2 flex-wrap">
                 <Button
                   onClick={() => changePasswordMutation.mutate({ targetUserId: activePanel.userId, password: newPassword })}
-                  disabled={changePasswordMutation.isPending || newPassword.length < 8}
+                  disabled={changePasswordMutation.isPending || !!passwordValidationMessage || newPassword.length === 0}
                   className="rounded-xl gap-2"
                 >
                   {changePasswordMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
