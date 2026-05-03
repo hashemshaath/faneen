@@ -764,8 +764,22 @@ const AdminUsers = () => {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               <KpiCard icon={Users} label={isRTL ? 'إجمالي المستخدمين' : 'Total Users'} value={stats.totalUsers} gradient="from-primary/10 to-primary/5" iconBg="bg-primary/15 text-primary" />
               <KpiCard icon={Briefcase} label={isRTL ? 'مزودي الخدمات' : 'Providers'} value={stats.providers} gradient="from-emerald-500/10 to-emerald-500/5" iconBg="bg-emerald-500/15 text-emerald-600" />
-              <KpiCard icon={UserCheck} label={isRTL ? 'مكتمل التسجيل' : 'Onboarded'} value={stats.onboarded} gradient="from-blue-500/10 to-blue-500/5" iconBg="bg-blue-500/15 text-blue-600" />
-              <KpiCard icon={TrendingUp} label={isRTL ? 'جديد هذا الأسبوع' : 'New 7d'} value={stats.recentUsers} gradient="from-amber-500/10 to-amber-500/5" iconBg="bg-amber-500/15 text-amber-600" />
+              <KpiCard
+                icon={UserCheck}
+                label={isRTL ? 'مكتمل التسجيل' : 'Onboarded'}
+                value={stats.onboarded}
+                gradient="from-blue-500/10 to-blue-500/5"
+                iconBg="bg-blue-500/15 text-blue-600"
+                trend={stats.totalUsers > 0 ? `${Math.round((stats.onboarded / stats.totalUsers) * 100)}%` : undefined}
+              />
+              <KpiCard
+                icon={TrendingUp}
+                label={isRTL ? `جديد هذا الأسبوع • ${stats.last24h} اليوم` : `New 7d • ${stats.last24h} today`}
+                value={stats.recentUsers}
+                gradient="from-amber-500/10 to-amber-500/5"
+                iconBg="bg-amber-500/15 text-amber-600"
+                trend={`${stats.wow >= 0 ? '' : '-'}${Math.abs(stats.wow)}%`}
+              />
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               <div className="lg:col-span-2 rounded-2xl border border-border/30 bg-card p-5">
