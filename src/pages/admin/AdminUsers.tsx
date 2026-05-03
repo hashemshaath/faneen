@@ -970,11 +970,29 @@ const AdminUsers = () => {
               </div>
 
               {/* Bulk action bar */}
-              {selected.size > 0 && isSuperAdmin && (
+              {selected.size > 0 && (
                 <div className="rounded-2xl border border-accent/40 bg-accent/5 p-3 flex items-center gap-3 flex-wrap animate-in slide-in-from-top-1">
                   <Badge className="bg-accent text-accent-foreground gap-1"><Check className="w-3 h-3" />{selected.size}</Badge>
                   <span className="text-xs text-foreground">{isRTL ? 'محدد' : 'selected'}</span>
                   <div className="ms-auto flex items-center gap-2 flex-wrap">
+                    <Button variant="outline" size="sm" className="rounded-xl gap-1.5 h-8" onClick={() => {
+                      const selectedProfiles = sorted.filter(p => selected.has(p.id));
+                      const rows = selectedProfiles.map(p => {
+                        const roles = (roleMap.get(p.user_id) || []).map(r => r.role).join(', ') || 'none';
+                        const created = p.created_at ? new Date(p.created_at).toISOString().split('T')[0] : '';
+                        return [p.ref_id, p.full_name || '', p.email || '', p.phone || '', p.account_type, p.membership_tier, roles, p.is_banned ? 'Yes' : 'No', created]
+                          .map(v => `"${String(v).replace(/"/g, '""')}"`).join(',');
+                      });
+                      const csv = '\uFEFF' + ['Ref,Name,Email,Phone,Type,Tier,Roles,Banned,Created', ...rows].join('\n');
+                      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a'); a.href = url; a.download = `users_selected_${new Date().toISOString().split('T')[0]}.csv`; a.click();
+                      URL.revokeObjectURL(url);
+                      toast.success(isRTL ? `تم تصدير ${selectedProfiles.length}` : `Exported ${selectedProfiles.length}`);
+                    }}>
+                      <Download className="w-3.5 h-3.5" />{isRTL ? 'تصدير المحدد' : 'Export'}
+                    </Button>
+                    {isSuperAdmin && (<>
                     <Button variant="outline" size="sm" className="rounded-xl gap-1.5 h-8 text-amber-600 border-amber-300"
                       onClick={() => bulkBanMutation.mutate({ ids: Array.from(selected), isBanned: true })}
                       disabled={bulkBanMutation.isPending}>
@@ -985,6 +1003,7 @@ const AdminUsers = () => {
                       disabled={bulkBanMutation.isPending}>
                       <UserCheck className="w-3.5 h-3.5" />{isRTL ? 'تفعيل' : 'Enable'}
                     </Button>
+                    </>)}
                     <Button variant="ghost" size="sm" className="rounded-xl h-8" onClick={() => setSelected(new Set())}>
                       <X className="w-3.5 h-3.5" />{isRTL ? 'إلغاء' : 'Clear'}
                     </Button>
