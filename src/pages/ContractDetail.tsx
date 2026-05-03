@@ -282,6 +282,43 @@ const ContractDetail = () => {
       if (otherAccepted) update.status = 'active';
       else if (contract?.status === 'draft') update.status = 'pending_approval';
       await supabase.from('contracts').update(update).eq('id', id!);
+
+      // When both parties have accepted → contract becomes active = signed.
+      // Send a bilingual signature confirmation to both client and provider.
+      if (update.status === 'active' && contract) {
+        const clientEmail = (clientProfile as any)?.email;
+        const providerEmail = (providerProfile as any)?.email;
+        const clientName = (clientProfile as any)?.full_name;
+        const providerName = (providerProfile as any)?.full_name;
+        const businessName = (business as any)?.name_ar || (business as any)?.name_en || providerName;
+        const refId = (contract as any).ref_id || (contract as any).id;
+        const title = (contract as any).title_ar || (contract as any).title || (contract as any).title_en;
+        const total = (contract as any).total_amount;
+        const currency = (contract as any).currency || 'SAR';
+        const url = `${window.location.origin}/contracts/${id}`;
+
+        const sendTo = (to?: string, name?: string, counterparty?: string) => {
+          if (!to) return;
+          void supabase.functions.invoke('send-transactional-email', {
+            body: {
+              templateName: 'contract-signed',
+              recipientEmail: to,
+              idempotencyKey: `contract-signed-${id}-${to}`,
+              templateData: {
+                recipientName: name,
+                contractRefId: refId,
+                contractTitle: title,
+                counterpartyName: counterparty,
+                totalAmount: total ? Number(total).toLocaleString('en-US', { minimumFractionDigits: 2 }) : undefined,
+                currency,
+                contractUrl: url,
+              },
+            },
+          }).catch(() => { /* queue retries */ });
+        };
+        sendTo(clientEmail, clientName, businessName);
+        sendTo(providerEmail, providerName, clientName);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contract', id] });
