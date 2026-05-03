@@ -379,21 +379,6 @@ const AdminUsers = () => {
 
   useEffect(() => { localStorage.setItem('qitaat_admin_users_density', density); }, [density]);
 
-  // Keyboard shortcuts: ⌘K / Ctrl+K to focus search, Esc to clear panel/selection
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
-        e.preventDefault();
-        searchInputRef.current?.focus();
-      } else if (e.key === 'Escape') {
-        if (activePanel) { setActivePanel(null); setNewPassword(''); setShowNewPassword(false); }
-        else if (selected.size > 0) setSelected(new Set());
-      }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  });
-
   const [activePanel, setActivePanel] = useState<ActivePanel>(null);
   const [editForm, setEditForm] = useState({ full_name: '', account_type: '', membership_tier: '', phone: '', email: '' });
   const [newPassword, setNewPassword] = useState('');
@@ -401,6 +386,24 @@ const AdminUsers = () => {
   const passwordValidationMessage = useMemo(() => getPasswordValidationMessage(newPassword, isRTL), [newPassword, isRTL]);
 
   const closePanel = () => { setActivePanel(null); setNewPassword(''); setShowNewPassword(false); };
+
+  // Keyboard shortcuts: ⌘K / Ctrl+K to focus search, Esc to clear panel/selection
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const isTyping = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable);
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+        searchInputRef.current?.select();
+      } else if (e.key === 'Escape' && !isTyping) {
+        if (activePanel) closePanel();
+        else if (selected.size > 0) setSelected(new Set());
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [activePanel, selected]);
 
   const handleSearchChange = useCallback((val: string) => {
     setSearchTerm(val); setPage(1);
