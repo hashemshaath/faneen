@@ -823,6 +823,26 @@ const AdminUsers = () => {
           {/* USERS / STAFF / DISABLED — shared list view */}
           {(['users', 'staff', 'disabled'] as const).map(t => (
             <TabsContent key={t} value={t} className="space-y-4 mt-5">
+              {/* Quick filter chips */}
+              <div className="flex items-center gap-2 flex-wrap">
+                {([
+                  { key: 'recent', icon: Zap, ar: 'أحدث 7 أيام', en: 'New 7d', active: false, onClick: () => { setSortKey('created_at'); setSortDir('desc'); } },
+                  { key: 'providers', icon: Briefcase, ar: 'مزودي الخدمات', en: 'Providers', active: filterAccountType === 'business', onClick: () => { setFilterAccountType(filterAccountType === 'business' ? 'all' : 'business'); setPage(1); } },
+                  { key: 'companies', icon: Building2, ar: 'الشركات', en: 'Companies', active: filterAccountType === 'company', onClick: () => { setFilterAccountType(filterAccountType === 'company' ? 'all' : 'company'); setPage(1); } },
+                  { key: 'premium', icon: Crown, ar: 'مميز فأعلى', en: 'Premium+', active: filterTier === 'premium' || filterTier === 'enterprise', onClick: () => { setFilterTier(filterTier === 'premium' ? 'enterprise' : filterTier === 'enterprise' ? 'all' : 'premium'); setPage(1); } },
+                  { key: 'no_role', icon: Shield, ar: 'بدون صلاحيات', en: 'No role', active: filterRole === 'no_role', onClick: () => { setFilterRole(filterRole === 'no_role' ? 'all' : 'no_role'); setPage(1); } },
+                ]).map(c => {
+                  const Icon = c.icon;
+                  return (
+                    <button key={c.key} onClick={c.onClick}
+                      className={`text-[11px] inline-flex items-center gap-1 px-2.5 py-1 rounded-full border transition-all
+                        ${c.active ? 'bg-accent text-accent-foreground border-accent shadow-sm' : 'bg-card border-border/40 text-muted-foreground hover:border-accent/40 hover:text-foreground'}`}>
+                      <Icon className="w-3 h-3" />{isRTL ? c.ar : c.en}
+                    </button>
+                  );
+                })}
+              </div>
+
               {/* Filters */}
               <div className="rounded-2xl border border-border/30 bg-card p-4">
                 <div className="flex flex-col md:flex-row gap-3">
