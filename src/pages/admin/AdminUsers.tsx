@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useTransition, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useTransition, useEffect, useRef } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -24,7 +24,7 @@ import {
   Loader2, Pencil, Ban, UserX, Download, KeyRound, Send, Lock, Eye, EyeOff, X, AlertTriangle,
   Check, TrendingUp, UserCheck, Filter, Hash, Sparkles, Building2, Briefcase, Link2,
   ChevronDown, ChevronUp, ChevronLeft, ChevronRight, BarChart3, Activity, FileText, MessageSquare,
-  Star, MoreHorizontal, RefreshCw, ArrowUpDown,
+  Star, MoreHorizontal, RefreshCw, ArrowUpDown, Copy, Clock, Rows3, LayoutList, Zap, TrendingDown, Command,
 } from 'lucide-react';
 import {
   AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip as RTooltip,
@@ -68,6 +68,7 @@ type ActivePanel =
   | { type: 'delete'; userId: string; userName: string };
 
 type SortKey = 'created_at' | 'full_name' | 'membership_tier' | 'account_type';
+type Density = 'comfortable' | 'compact';
 
 const formatDate = (dateStr: string | null | undefined, lang: string): string => {
   if (!dateStr) return lang === 'ar' ? 'غير محدد' : 'N/A';
@@ -111,7 +112,14 @@ const KpiCard = React.memo(({ icon: Icon, label, value, gradient, iconBg, trend 
         <p className="text-2xl font-bold font-heading leading-none tech-content">{value}</p>
         <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{label}</p>
       </div>
-      {trend && <span className="text-[10px] text-emerald-600 font-bold">{trend}</span>}
+      {trend && (
+        <span className={`text-[10px] font-bold tech-content shrink-0 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md ${
+          trend.startsWith('-') ? 'text-rose-600 bg-rose-500/10' : 'text-emerald-600 bg-emerald-500/10'
+        }`}>
+          {trend.startsWith('-') ? <TrendingDown className="w-2.5 h-2.5" /> : <TrendingUp className="w-2.5 h-2.5" />}
+          {trend.replace('-', '')}
+        </span>
+      )}
     </div>
   </div>
 ));
@@ -186,6 +194,7 @@ interface UserRowProps {
   language: string;
   selected: boolean;
   expanded: boolean;
+  density: Density;
   onToggleSelect: () => void;
   onToggleExpand: () => void;
   onEdit: (p: Profile) => void;
@@ -197,7 +206,7 @@ interface UserRowProps {
 }
 
 const UserRow = React.memo(({ profile, roles, business, isCurrentUser, canManageUser, isSuperAdmin,
-  isRTL, language, selected, expanded, onToggleSelect, onToggleExpand,
+  isRTL, language, selected, expanded, density, onToggleSelect, onToggleExpand,
   onEdit, onPassword, onToggleBan, onDelete, onAddRole, onRemoveRole }: UserRowProps) => {
   const [addingRole, setAddingRole] = useState(false);
   const [pickedRole, setPickedRole] = useState('user');
@@ -207,16 +216,24 @@ const UserRow = React.memo(({ profile, roles, business, isCurrentUser, canManage
   const isBanned = profile.is_banned;
   const highest = roles.length > 0 ? roles.reduce((b, r) => (roleConfig[r.role as keyof typeof roleConfig]?.rank ?? 99) < (roleConfig[b.role as keyof typeof roleConfig]?.rank ?? 99) ? r : b) : null;
   const highestCfg = highest ? roleConfig[highest.role as keyof typeof roleConfig] : null;
+  const compact = density === 'compact';
+
+  const handleCopy = useCallback((value: string, label: string) => {
+    navigator.clipboard?.writeText(value).then(
+      () => toast.success(isRTL ? `تم نسخ ${label}` : `${label} copied`),
+      () => toast.error(isRTL ? 'فشل النسخ' : 'Copy failed'),
+    );
+  }, [isRTL]);
 
   return (
     <div className={`group relative rounded-2xl border bg-card transition-all duration-200 hover:shadow-md
       ${selected ? 'ring-2 ring-accent border-accent/50' : isCurrentUser ? 'border-accent/40 ring-1 ring-accent/20' : 'border-border/30'}
       ${isBanned ? 'opacity-70 border-destructive/40' : ''}`}>
-      <div className="p-3 sm:p-4 flex flex-col sm:flex-row sm:items-start gap-3">
+      <div className={`${compact ? 'p-2.5 sm:p-3 gap-2' : 'p-3 sm:p-4 gap-3'} flex flex-col sm:flex-row sm:items-start`}>
         <Checkbox checked={selected} onCheckedChange={onToggleSelect} className="mt-1 shrink-0" disabled={!canManageUser} />
         <div className="flex items-start gap-3 flex-1 min-w-0">
           <div className="relative shrink-0">
-            <Avatar className={`w-11 h-11 ring-2 ${isCurrentUser ? 'ring-accent/30' : 'ring-border/10'}`}>
+            <Avatar className={`${compact ? 'w-9 h-9' : 'w-11 h-11'} ring-2 ${isCurrentUser ? 'ring-accent/30' : 'ring-border/10'}`}>
               <AvatarImage src={profile.avatar_url || undefined} />
               <AvatarFallback className="bg-gradient-to-br from-accent/20 to-primary/10 text-accent font-bold text-sm">
                 {(profile.full_name || '?').charAt(0)}
@@ -235,18 +252,46 @@ const UserRow = React.memo(({ profile, roles, business, isCurrentUser, canManage
               </button>
               {isCurrentUser && <Badge variant="outline" className="text-[9px] border-accent text-accent px-1.5 py-0">{isRTL ? 'أنت' : 'You'}</Badge>}
               {isBanned && <Badge variant="destructive" className="text-[9px] gap-0.5 px-1.5 py-0"><Ban className="w-2.5 h-2.5" />{isRTL ? 'معطّل' : 'Disabled'}</Badge>}
+              {!compact && (
+                <span className="text-[10px] text-muted-foreground inline-flex items-center gap-0.5">
+                  <Clock className="w-2.5 h-2.5" />{formatRelative(profile.updated_at, isRTL)}
+                </span>
+              )}
             </div>
+            {!compact && (
             <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
-              {profile.email && <span className="flex items-center gap-1 text-[11px] text-muted-foreground truncate max-w-[200px]"><Mail className="w-3 h-3 shrink-0" />{profile.email}</span>}
-              {profile.phone && <span className="flex items-center gap-1 text-[11px] text-muted-foreground tech-content"><Phone className="w-3 h-3 shrink-0" />{profile.phone}</span>}
+              {profile.email && (
+                <button onClick={() => handleCopy(profile.email!, isRTL ? 'البريد' : 'Email')}
+                  className="flex items-center gap-1 text-[11px] text-muted-foreground truncate max-w-[200px] hover:text-accent transition-colors group/cp"
+                  title={isRTL ? 'نسخ البريد' : 'Copy email'}>
+                  <Mail className="w-3 h-3 shrink-0" />
+                  <span className="truncate">{profile.email}</span>
+                  <Copy className="w-2.5 h-2.5 opacity-0 group-hover/cp:opacity-100 transition-opacity shrink-0" />
+                </button>
+              )}
+              {profile.phone && (
+                <button onClick={() => handleCopy(profile.phone!, isRTL ? 'الهاتف' : 'Phone')}
+                  className="flex items-center gap-1 text-[11px] text-muted-foreground tech-content hover:text-accent transition-colors group/cp"
+                  title={isRTL ? 'نسخ الهاتف' : 'Copy phone'}>
+                  <Phone className="w-3 h-3 shrink-0" />{profile.phone}
+                  <Copy className="w-2.5 h-2.5 opacity-0 group-hover/cp:opacity-100 transition-opacity shrink-0" />
+                </button>
+              )}
               <span className="flex items-center gap-1 text-[11px] text-muted-foreground"><Calendar className="w-3 h-3 shrink-0" />{formatDate(profile.created_at, language)}</span>
             </div>
-            <div className="flex flex-wrap items-center gap-1.5 mt-2">
+            )}
+            <div className={`flex flex-wrap items-center gap-1.5 ${compact ? 'mt-1' : 'mt-2'}`}>
               <Badge className={`${tier.color} text-[10px] border px-1.5 py-0`}>{isRTL ? tier.labelAr : tier.labelEn}</Badge>
               <Badge className={`${accType.color} text-[10px] border px-1.5 py-0 gap-0.5`}>
                 <AccIcon className="w-2.5 h-2.5" />{isRTL ? accType.labelAr : accType.labelEn}
               </Badge>
-              {profile.ref_id && <Badge variant="outline" className="text-[10px] px-1.5 py-0 gap-0.5 font-mono tech-content"><Hash className="w-2.5 h-2.5" />{profile.ref_id}</Badge>}
+              {profile.ref_id && (
+                <button onClick={() => handleCopy(profile.ref_id, isRTL ? 'المعرّف' : 'Ref ID')}
+                  title={isRTL ? 'نسخ المعرّف' : 'Copy Ref ID'}
+                  className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0 rounded-md border border-border/40 font-mono tech-content text-muted-foreground hover:text-accent hover:border-accent/40 transition-colors">
+                  <Hash className="w-2.5 h-2.5" />{profile.ref_id}
+                </button>
+              )}
               {roles.map(r => {
                 const cfg = roleConfig[r.role as keyof typeof roleConfig] || roleConfig.user;
                 const RIcon = cfg.icon;
@@ -366,6 +411,10 @@ const AdminUsers = () => {
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [density, setDensity] = useState<Density>(() => (localStorage.getItem('qitaat_admin_users_density') as Density) || 'comfortable');
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => { localStorage.setItem('qitaat_admin_users_density', density); }, [density]);
 
   const [activePanel, setActivePanel] = useState<ActivePanel>(null);
   const [editForm, setEditForm] = useState({ full_name: '', account_type: '', membership_tier: '', phone: '', email: '' });
@@ -374,6 +423,24 @@ const AdminUsers = () => {
   const passwordValidationMessage = useMemo(() => getPasswordValidationMessage(newPassword, isRTL), [newPassword, isRTL]);
 
   const closePanel = () => { setActivePanel(null); setNewPassword(''); setShowNewPassword(false); };
+
+  // Keyboard shortcuts: ⌘K / Ctrl+K to focus search, Esc to clear panel/selection
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const isTyping = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable);
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+        searchInputRef.current?.select();
+      } else if (e.key === 'Escape' && !isTyping) {
+        if (activePanel) closePanel();
+        else if (selected.size > 0) setSelected(new Set());
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [activePanel, selected]);
 
   const handleSearchChange = useCallback((val: string) => {
     setSearchTerm(val); setPage(1);
@@ -598,9 +665,22 @@ const AdminUsers = () => {
     const onboarded = profiles.filter(p => p.is_onboarded).length;
     const tierDist = { free: 0, basic: 0, premium: 0, enterprise: 0 };
     profiles.forEach(p => { const t = p.membership_tier as keyof typeof tierDist; if (t in tierDist) tierDist[t]++; });
-    const weekAgo = Date.now() - 7 * 86400000;
-    const recentUsers = profiles.filter(p => { const d = new Date(p.created_at); return !isNaN(d.getTime()) && d.getTime() > weekAgo; }).length;
-    return { totalUsers, superAdmins, admins, moderators, bannedCount, tierDist, recentUsers, providers, verified, onboarded };
+    const now = Date.now();
+    const weekAgo = now - 7 * 86400000;
+    const twoWeeksAgo = now - 14 * 86400000;
+    const dayAgo = now - 86400000;
+    let recentUsers = 0, prevWeekUsers = 0, last24h = 0;
+    profiles.forEach(p => {
+      const t = new Date(p.created_at).getTime();
+      if (isNaN(t)) return;
+      if (t > weekAgo) recentUsers++;
+      else if (t > twoWeeksAgo) prevWeekUsers++;
+      if (t > dayAgo) last24h++;
+    });
+    const wow = prevWeekUsers === 0
+      ? (recentUsers > 0 ? 100 : 0)
+      : Math.round(((recentUsers - prevWeekUsers) / prevWeekUsers) * 100);
+    return { totalUsers, superAdmins, admins, moderators, bannedCount, tierDist, recentUsers, prevWeekUsers, wow, last24h, providers, verified, onboarded };
   }, [profiles, userRoles]);
 
   // ─── Analytics: signups over 30 days ───
@@ -721,8 +801,22 @@ const AdminUsers = () => {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               <KpiCard icon={Users} label={isRTL ? 'إجمالي المستخدمين' : 'Total Users'} value={stats.totalUsers} gradient="from-primary/10 to-primary/5" iconBg="bg-primary/15 text-primary" />
               <KpiCard icon={Briefcase} label={isRTL ? 'مزودي الخدمات' : 'Providers'} value={stats.providers} gradient="from-emerald-500/10 to-emerald-500/5" iconBg="bg-emerald-500/15 text-emerald-600" />
-              <KpiCard icon={UserCheck} label={isRTL ? 'مكتمل التسجيل' : 'Onboarded'} value={stats.onboarded} gradient="from-blue-500/10 to-blue-500/5" iconBg="bg-blue-500/15 text-blue-600" />
-              <KpiCard icon={TrendingUp} label={isRTL ? 'جديد هذا الأسبوع' : 'New 7d'} value={stats.recentUsers} gradient="from-amber-500/10 to-amber-500/5" iconBg="bg-amber-500/15 text-amber-600" />
+              <KpiCard
+                icon={UserCheck}
+                label={isRTL ? 'مكتمل التسجيل' : 'Onboarded'}
+                value={stats.onboarded}
+                gradient="from-blue-500/10 to-blue-500/5"
+                iconBg="bg-blue-500/15 text-blue-600"
+                trend={stats.totalUsers > 0 ? `${Math.round((stats.onboarded / stats.totalUsers) * 100)}%` : undefined}
+              />
+              <KpiCard
+                icon={TrendingUp}
+                label={isRTL ? `جديد هذا الأسبوع • ${stats.last24h} اليوم` : `New 7d • ${stats.last24h} today`}
+                value={stats.recentUsers}
+                gradient="from-amber-500/10 to-amber-500/5"
+                iconBg="bg-amber-500/15 text-amber-600"
+                trend={`${stats.wow >= 0 ? '' : '-'}${Math.abs(stats.wow)}%`}
+              />
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               <div className="lg:col-span-2 rounded-2xl border border-border/30 bg-card p-5">
@@ -766,14 +860,38 @@ const AdminUsers = () => {
           {/* USERS / STAFF / DISABLED — shared list view */}
           {(['users', 'staff', 'disabled'] as const).map(t => (
             <TabsContent key={t} value={t} className="space-y-4 mt-5">
+              {/* Quick filter chips */}
+              <div className="flex items-center gap-2 flex-wrap">
+                {([
+                  { key: 'recent', icon: Zap, ar: 'أحدث 7 أيام', en: 'New 7d', active: false, onClick: () => { setSortKey('created_at'); setSortDir('desc'); } },
+                  { key: 'providers', icon: Briefcase, ar: 'مزودي الخدمات', en: 'Providers', active: filterAccountType === 'business', onClick: () => { setFilterAccountType(filterAccountType === 'business' ? 'all' : 'business'); setPage(1); } },
+                  { key: 'companies', icon: Building2, ar: 'الشركات', en: 'Companies', active: filterAccountType === 'company', onClick: () => { setFilterAccountType(filterAccountType === 'company' ? 'all' : 'company'); setPage(1); } },
+                  { key: 'premium', icon: Crown, ar: 'مميز فأعلى', en: 'Premium+', active: filterTier === 'premium' || filterTier === 'enterprise', onClick: () => { setFilterTier(filterTier === 'premium' ? 'enterprise' : filterTier === 'enterprise' ? 'all' : 'premium'); setPage(1); } },
+                  { key: 'no_role', icon: Shield, ar: 'بدون صلاحيات', en: 'No role', active: filterRole === 'no_role', onClick: () => { setFilterRole(filterRole === 'no_role' ? 'all' : 'no_role'); setPage(1); } },
+                ]).map(c => {
+                  const Icon = c.icon;
+                  return (
+                    <button key={c.key} onClick={c.onClick}
+                      className={`text-[11px] inline-flex items-center gap-1 px-2.5 py-1 rounded-full border transition-all
+                        ${c.active ? 'bg-accent text-accent-foreground border-accent shadow-sm' : 'bg-card border-border/40 text-muted-foreground hover:border-accent/40 hover:text-foreground'}`}>
+                      <Icon className="w-3 h-3" />{isRTL ? c.ar : c.en}
+                    </button>
+                  );
+                })}
+              </div>
+
               {/* Filters */}
               <div className="rounded-2xl border border-border/30 bg-card p-4">
                 <div className="flex flex-col md:flex-row gap-3">
                   <div className="relative flex-1">
                     <Search className="absolute top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
-                    <Input value={searchTerm} onChange={e => handleSearchChange(e.target.value)}
+                    <Input ref={searchInputRef} value={searchTerm} onChange={e => handleSearchChange(e.target.value)}
                       placeholder={isRTL ? 'بحث: اسم، بريد، هاتف، معرّف، أو نشاط تجاري...' : 'Search name, email, phone, ID, or business...'}
-                      className="ps-10 h-10 rounded-xl bg-muted/30 border-border/20 focus:bg-background" />
+                      className="ps-10 pe-16 h-10 rounded-xl bg-muted/30 border-border/20 focus:bg-background" dir="auto" />
+                    <kbd className="hidden sm:inline-flex absolute top-1/2 -translate-y-1/2 items-center gap-0.5 px-1.5 py-0.5 rounded-md border border-border/40 bg-background/80 text-[10px] text-muted-foreground font-mono pointer-events-none"
+                      style={{ [isRTL ? 'left' : 'right']: '10px' }}>
+                      <Command className="w-2.5 h-2.5" />K
+                    </kbd>
                   </div>
                   <Select value={filterRole} onValueChange={(v) => { setFilterRole(v); setPage(1); }}>
                     <SelectTrigger className="w-full md:w-40 h-10 rounded-xl"><Filter className="w-4 h-4 me-2 text-muted-foreground" /><SelectValue /></SelectTrigger>
@@ -812,7 +930,27 @@ const AdminUsers = () => {
                   <span className="text-[11px] text-muted-foreground">
                     {isRTL ? `${sorted.length} نتيجة • صفحة ${page}/${totalPages}` : `${sorted.length} results • Page ${page}/${totalPages}`}
                   </span>
+                  {(deferredSearch || filterRole !== 'all' || filterAccountType !== 'all' || filterTier !== 'all') && (
+                    <button
+                      onClick={() => { handleSearchChange(''); setFilterRole('all'); setFilterAccountType('all'); setFilterTier('all'); }}
+                      className="text-[11px] inline-flex items-center gap-1 px-2 py-1 rounded-lg border border-dashed border-border/50 text-muted-foreground hover:text-foreground hover:border-border transition-colors"
+                    >
+                      <X className="w-3 h-3" />{isRTL ? 'مسح الفلاتر' : 'Clear filters'}
+                    </button>
+                  )}
                   <div className="ms-auto flex items-center gap-1.5 flex-wrap">
+                    <div className="inline-flex rounded-lg border border-border/30 p-0.5 bg-muted/30">
+                      <button onClick={() => setDensity('comfortable')}
+                        className={`p-1 rounded ${density === 'comfortable' ? 'bg-card shadow-sm text-accent' : 'text-muted-foreground hover:text-foreground'}`}
+                        title={isRTL ? 'مريح' : 'Comfortable'} aria-label={isRTL ? 'مريح' : 'Comfortable'}>
+                        <LayoutList className="w-3.5 h-3.5" />
+                      </button>
+                      <button onClick={() => setDensity('compact')}
+                        className={`p-1 rounded ${density === 'compact' ? 'bg-card shadow-sm text-accent' : 'text-muted-foreground hover:text-foreground'}`}
+                        title={isRTL ? 'مضغوط' : 'Compact'} aria-label={isRTL ? 'مضغوط' : 'Compact'}>
+                        <Rows3 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                     <span className="text-[11px] text-muted-foreground">{isRTL ? 'ترتيب:' : 'Sort:'}</span>
                     {([
                       ['created_at', isRTL ? 'الأحدث' : 'Date'],
@@ -832,11 +970,29 @@ const AdminUsers = () => {
               </div>
 
               {/* Bulk action bar */}
-              {selected.size > 0 && isSuperAdmin && (
+              {selected.size > 0 && (
                 <div className="rounded-2xl border border-accent/40 bg-accent/5 p-3 flex items-center gap-3 flex-wrap animate-in slide-in-from-top-1">
                   <Badge className="bg-accent text-accent-foreground gap-1"><Check className="w-3 h-3" />{selected.size}</Badge>
                   <span className="text-xs text-foreground">{isRTL ? 'محدد' : 'selected'}</span>
                   <div className="ms-auto flex items-center gap-2 flex-wrap">
+                    <Button variant="outline" size="sm" className="rounded-xl gap-1.5 h-8" onClick={() => {
+                      const selectedProfiles = sorted.filter(p => selected.has(p.id));
+                      const rows = selectedProfiles.map(p => {
+                        const roles = (roleMap.get(p.user_id) || []).map(r => r.role).join(', ') || 'none';
+                        const created = p.created_at ? new Date(p.created_at).toISOString().split('T')[0] : '';
+                        return [p.ref_id, p.full_name || '', p.email || '', p.phone || '', p.account_type, p.membership_tier, roles, p.is_banned ? 'Yes' : 'No', created]
+                          .map(v => `"${String(v).replace(/"/g, '""')}"`).join(',');
+                      });
+                      const csv = '\uFEFF' + ['Ref,Name,Email,Phone,Type,Tier,Roles,Banned,Created', ...rows].join('\n');
+                      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a'); a.href = url; a.download = `users_selected_${new Date().toISOString().split('T')[0]}.csv`; a.click();
+                      URL.revokeObjectURL(url);
+                      toast.success(isRTL ? `تم تصدير ${selectedProfiles.length}` : `Exported ${selectedProfiles.length}`);
+                    }}>
+                      <Download className="w-3.5 h-3.5" />{isRTL ? 'تصدير المحدد' : 'Export'}
+                    </Button>
+                    {isSuperAdmin && (<>
                     <Button variant="outline" size="sm" className="rounded-xl gap-1.5 h-8 text-amber-600 border-amber-300"
                       onClick={() => bulkBanMutation.mutate({ ids: Array.from(selected), isBanned: true })}
                       disabled={bulkBanMutation.isPending}>
@@ -847,6 +1003,7 @@ const AdminUsers = () => {
                       disabled={bulkBanMutation.isPending}>
                       <UserCheck className="w-3.5 h-3.5" />{isRTL ? 'تفعيل' : 'Enable'}
                     </Button>
+                    </>)}
                     <Button variant="ghost" size="sm" className="rounded-xl h-8" onClick={() => setSelected(new Set())}>
                       <X className="w-3.5 h-3.5" />{isRTL ? 'إلغاء' : 'Clear'}
                     </Button>
@@ -984,7 +1141,7 @@ const AdminUsers = () => {
                           business={businessMap.get(profile.user_id) || []}
                           isCurrentUser={isCurrentUser} canManageUser={canManageUser} isSuperAdmin={isSuperAdmin}
                           isRTL={isRTL} language={language}
-                          selected={selected.has(profile.id)} expanded={expanded.has(profile.id)}
+                          selected={selected.has(profile.id)} expanded={expanded.has(profile.id)} density={density}
                           onToggleSelect={() => toggleSelect(profile.id)} onToggleExpand={() => toggleExpand(profile.id)}
                           onEdit={openEdit}
                           onPassword={(p) => setActivePanel({ type: 'password', userId: p.user_id, userName: p.full_name || '' })}
