@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
         });
       }
 
-      const { error } = await supabaseAdmin.auth.admin.updateUser(target_user_id, {
+      const { error } = await supabaseAdmin.auth.admin.updateUserById(target_user_id, {
         password: new_password,
       });
 
@@ -106,8 +106,10 @@ Deno.serve(async (req) => {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (err: any) {
-    return new Response(JSON.stringify({ error: err.message }), {
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Unexpected error";
+
+    return new Response(JSON.stringify({ error: message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
