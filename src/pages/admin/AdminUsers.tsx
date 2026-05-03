@@ -873,7 +873,27 @@ const AdminUsers = () => {
                   <span className="text-[11px] text-muted-foreground">
                     {isRTL ? `${sorted.length} نتيجة • صفحة ${page}/${totalPages}` : `${sorted.length} results • Page ${page}/${totalPages}`}
                   </span>
+                  {(deferredSearch || filterRole !== 'all' || filterAccountType !== 'all' || filterTier !== 'all') && (
+                    <button
+                      onClick={() => { handleSearchChange(''); setFilterRole('all'); setFilterAccountType('all'); setFilterTier('all'); }}
+                      className="text-[11px] inline-flex items-center gap-1 px-2 py-1 rounded-lg border border-dashed border-border/50 text-muted-foreground hover:text-foreground hover:border-border transition-colors"
+                    >
+                      <X className="w-3 h-3" />{isRTL ? 'مسح الفلاتر' : 'Clear filters'}
+                    </button>
+                  )}
                   <div className="ms-auto flex items-center gap-1.5 flex-wrap">
+                    <div className="inline-flex rounded-lg border border-border/30 p-0.5 bg-muted/30">
+                      <button onClick={() => setDensity('comfortable')}
+                        className={`p-1 rounded ${density === 'comfortable' ? 'bg-card shadow-sm text-accent' : 'text-muted-foreground hover:text-foreground'}`}
+                        title={isRTL ? 'مريح' : 'Comfortable'} aria-label={isRTL ? 'مريح' : 'Comfortable'}>
+                        <LayoutList className="w-3.5 h-3.5" />
+                      </button>
+                      <button onClick={() => setDensity('compact')}
+                        className={`p-1 rounded ${density === 'compact' ? 'bg-card shadow-sm text-accent' : 'text-muted-foreground hover:text-foreground'}`}
+                        title={isRTL ? 'مضغوط' : 'Compact'} aria-label={isRTL ? 'مضغوط' : 'Compact'}>
+                        <Rows3 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                     <span className="text-[11px] text-muted-foreground">{isRTL ? 'ترتيب:' : 'Sort:'}</span>
                     {([
                       ['created_at', isRTL ? 'الأحدث' : 'Date'],
