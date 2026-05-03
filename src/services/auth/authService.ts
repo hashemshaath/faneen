@@ -48,6 +48,22 @@ export const authService = {
       throw new Error('already registered');
     }
 
+    // Send welcome email (non-blocking, idempotent)
+    if (data.user?.id) {
+      const userId = data.user.id;
+      void supabase.functions.invoke('send-transactional-email', {
+        body: {
+          templateName: 'welcome-signup',
+          recipientEmail: trimmedEmail,
+          idempotencyKey: `welcome-${userId}`,
+          templateData: {
+            fullName: sanitizedMeta.full_name || undefined,
+            dashboardUrl: `${window.location.origin}/dashboard`,
+          },
+        },
+      }).catch(() => { /* swallow — handled by queue retries */ });
+    }
+
     return data;
   },
 
