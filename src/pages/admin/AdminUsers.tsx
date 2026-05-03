@@ -75,7 +75,7 @@ const formatDate = (dateStr: string | null | undefined, lang: string): string =>
 
 const getPasswordValidationMessage = (password: string, isRTL: boolean): string | null => {
   if (!password) return null;
-  if (password.length < 12) return isRTL ? 'كلمة المرور يجب أن تكون 12 حرفاً على الأقل' : 'Password must be at least 12 characters';
+  if (password.length < 8) return isRTL ? 'كلمة المرور يجب أن تكون 8 حروف على الأقل' : 'Password must be at least 8 characters';
   if (/\s/.test(password)) return isRTL ? 'كلمة المرور يجب ألا تحتوي على مسافات' : 'Password must not contain spaces';
   const categoryCount = [/[a-z]/, /[A-Z]/, /\d/, /[^A-Za-z0-9\s]/].filter((rule) => rule.test(password)).length;
   if (categoryCount < 3) {
@@ -828,8 +828,8 @@ const AdminUsers = () => {
                     type={showNewPassword ? 'text' : 'password'}
                     value={newPassword}
                     onChange={e => setNewPassword(e.target.value)}
-                    placeholder={isRTL ? '12+ مع أرقام ورموز' : '12+ with numbers and symbols'}
-                    minLength={12}
+                    placeholder={isRTL ? '8+ مع أرقام ورموز' : '8+ with numbers and symbols'}
+                    minLength={8}
                     className="pe-10 h-10 rounded-xl"
                   />
                   <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute top-2.5 text-muted-foreground hover:text-foreground transition-colors" style={{ [isRTL ? 'left' : 'right']: '10px' }}>
