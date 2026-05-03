@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useTransition, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useTransition, useEffect, useRef } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -68,6 +68,7 @@ type ActivePanel =
   | { type: 'delete'; userId: string; userName: string };
 
 type SortKey = 'created_at' | 'full_name' | 'membership_tier' | 'account_type';
+type Density = 'comfortable' | 'compact';
 
 const formatDate = (dateStr: string | null | undefined, lang: string): string => {
   if (!dateStr) return lang === 'ar' ? 'غير محدد' : 'N/A';
@@ -111,7 +112,14 @@ const KpiCard = React.memo(({ icon: Icon, label, value, gradient, iconBg, trend 
         <p className="text-2xl font-bold font-heading leading-none tech-content">{value}</p>
         <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{label}</p>
       </div>
-      {trend && <span className="text-[10px] text-emerald-600 font-bold">{trend}</span>}
+      {trend && (
+        <span className={`text-[10px] font-bold tech-content shrink-0 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md ${
+          trend.startsWith('-') ? 'text-rose-600 bg-rose-500/10' : 'text-emerald-600 bg-emerald-500/10'
+        }`}>
+          {trend.startsWith('-') ? <TrendingDown className="w-2.5 h-2.5" /> : <TrendingUp className="w-2.5 h-2.5" />}
+          {trend.replace('-', '')}
+        </span>
+      )}
     </div>
   </div>
 ));
