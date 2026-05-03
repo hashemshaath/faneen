@@ -1122,7 +1122,7 @@ const AdminUsers = () => {
                           business={businessMap.get(profile.user_id) || []}
                           isCurrentUser={isCurrentUser} canManageUser={canManageUser} isSuperAdmin={isSuperAdmin}
                           isRTL={isRTL} language={language}
-                          selected={selected.has(profile.id)} expanded={expanded.has(profile.id)}
+                          selected={selected.has(profile.id)} expanded={expanded.has(profile.id)} density={density}
                           onToggleSelect={() => toggleSelect(profile.id)} onToggleExpand={() => toggleExpand(profile.id)}
                           onEdit={openEdit}
                           onPassword={(p) => setActivePanel({ type: 'password', userId: p.user_id, userName: p.full_name || '' })}
