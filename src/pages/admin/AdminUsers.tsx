@@ -73,6 +73,22 @@ const formatDate = (dateStr: string | null | undefined, lang: string): string =>
   return d.toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en', { year: 'numeric', month: 'short', day: 'numeric' });
 };
 
+const getPasswordValidationMessage = (password: string, isRTL: boolean): string | null => {
+  if (!password) return null;
+  if (password.length < 12) return isRTL ? 'كلمة المرور يجب أن تكون 12 حرفاً على الأقل' : 'Password must be at least 12 characters';
+  if (/\s/.test(password)) return isRTL ? 'كلمة المرور يجب ألا تحتوي على مسافات' : 'Password must not contain spaces';
+  const categoryCount = [/[a-z]/, /[A-Z]/, /\d/, /[^A-Za-z0-9\s]/].filter((rule) => rule.test(password)).length;
+  if (categoryCount < 3) {
+    return isRTL
+      ? 'استخدم ثلاثة أنواع على الأقل: أحرف كبيرة، أحرف صغيرة، أرقام، رموز'
+      : 'Use at least three types: uppercase, lowercase, numbers, symbols';
+  }
+  if (['password', 'qwerty', 'admin', '123456', 'qitaat'].some((word) => password.toLowerCase().includes(word))) {
+    return isRTL ? 'كلمة المرور تحتوي على كلمة أو نمط شائع' : 'Password contains a common word or pattern';
+  }
+  return null;
+};
+
 /* ─── Stat Card ─── */
 const StatCard = React.memo(({ icon: Icon, label, value, gradient, iconBg, percentage }: {
   icon: React.ElementType; label: string; value: number; gradient: string; iconBg: string; percentage?: number;
@@ -307,6 +323,7 @@ const AdminUsers = () => {
   const [editForm, setEditForm] = useState({ full_name: '', account_type: '', membership_tier: '', phone: '', email: '' });
   const [newPassword, setNewPassword] = useState('');
   const [showNewPassword, setShowNewPassword] = useState(false);
+  const passwordValidationMessage = useMemo(() => getPasswordValidationMessage(newPassword, isRTL), [newPassword, isRTL]);
 
   const closePanel = () => { setActivePanel(null); setNewPassword(''); setShowNewPassword(false); };
 
