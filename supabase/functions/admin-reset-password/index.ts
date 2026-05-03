@@ -14,7 +14,7 @@ const isWeakPasswordError = (message: string) => {
 
 const getPasswordValidationError = (password: unknown) => {
   if (typeof password !== "string") return "Password is required";
-  if (password.length < 12) return "Password must be at least 12 characters";
+  if (password.length < 8) return "Password must be at least 8 characters";
   if (/\s/.test(password)) return "Password must not contain spaces";
   const categoryCount = [/[a-z]/, /[A-Z]/, /\d/, /[^A-Za-z0-9\s]/].filter((rule) => rule.test(password)).length;
   if (categoryCount < 3) return "Password must include at least three of: uppercase letters, lowercase letters, numbers, symbols";
