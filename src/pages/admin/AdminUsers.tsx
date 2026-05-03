@@ -628,9 +628,22 @@ const AdminUsers = () => {
     const onboarded = profiles.filter(p => p.is_onboarded).length;
     const tierDist = { free: 0, basic: 0, premium: 0, enterprise: 0 };
     profiles.forEach(p => { const t = p.membership_tier as keyof typeof tierDist; if (t in tierDist) tierDist[t]++; });
-    const weekAgo = Date.now() - 7 * 86400000;
-    const recentUsers = profiles.filter(p => { const d = new Date(p.created_at); return !isNaN(d.getTime()) && d.getTime() > weekAgo; }).length;
-    return { totalUsers, superAdmins, admins, moderators, bannedCount, tierDist, recentUsers, providers, verified, onboarded };
+    const now = Date.now();
+    const weekAgo = now - 7 * 86400000;
+    const twoWeeksAgo = now - 14 * 86400000;
+    const dayAgo = now - 86400000;
+    let recentUsers = 0, prevWeekUsers = 0, last24h = 0;
+    profiles.forEach(p => {
+      const t = new Date(p.created_at).getTime();
+      if (isNaN(t)) return;
+      if (t > weekAgo) recentUsers++;
+      else if (t > twoWeeksAgo) prevWeekUsers++;
+      if (t > dayAgo) last24h++;
+    });
+    const wow = prevWeekUsers === 0
+      ? (recentUsers > 0 ? 100 : 0)
+      : Math.round(((recentUsers - prevWeekUsers) / prevWeekUsers) * 100);
+    return { totalUsers, superAdmins, admins, moderators, bannedCount, tierDist, recentUsers, prevWeekUsers, wow, last24h, providers, verified, onboarded };
   }, [profiles, userRoles]);
 
   // ─── Analytics: signups over 30 days ───
