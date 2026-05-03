@@ -374,6 +374,25 @@ const AdminUsers = () => {
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [density, setDensity] = useState<Density>(() => (localStorage.getItem('qitaat_admin_users_density') as Density) || 'comfortable');
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => { localStorage.setItem('qitaat_admin_users_density', density); }, [density]);
+
+  // Keyboard shortcuts: ⌘K / Ctrl+K to focus search, Esc to clear panel/selection
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      } else if (e.key === 'Escape') {
+        if (activePanel) { setActivePanel(null); setNewPassword(''); setShowNewPassword(false); }
+        else if (selected.size > 0) setSelected(new Set());
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  });
 
   const [activePanel, setActivePanel] = useState<ActivePanel>(null);
   const [editForm, setEditForm] = useState({ full_name: '', account_type: '', membership_tier: '', phone: '', email: '' });
