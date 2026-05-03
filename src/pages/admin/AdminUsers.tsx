@@ -194,6 +194,7 @@ interface UserRowProps {
   language: string;
   selected: boolean;
   expanded: boolean;
+  density: Density;
   onToggleSelect: () => void;
   onToggleExpand: () => void;
   onEdit: (p: Profile) => void;
@@ -205,7 +206,7 @@ interface UserRowProps {
 }
 
 const UserRow = React.memo(({ profile, roles, business, isCurrentUser, canManageUser, isSuperAdmin,
-  isRTL, language, selected, expanded, onToggleSelect, onToggleExpand,
+  isRTL, language, selected, expanded, density, onToggleSelect, onToggleExpand,
   onEdit, onPassword, onToggleBan, onDelete, onAddRole, onRemoveRole }: UserRowProps) => {
   const [addingRole, setAddingRole] = useState(false);
   const [pickedRole, setPickedRole] = useState('user');
@@ -215,16 +216,24 @@ const UserRow = React.memo(({ profile, roles, business, isCurrentUser, canManage
   const isBanned = profile.is_banned;
   const highest = roles.length > 0 ? roles.reduce((b, r) => (roleConfig[r.role as keyof typeof roleConfig]?.rank ?? 99) < (roleConfig[b.role as keyof typeof roleConfig]?.rank ?? 99) ? r : b) : null;
   const highestCfg = highest ? roleConfig[highest.role as keyof typeof roleConfig] : null;
+  const compact = density === 'compact';
+
+  const handleCopy = useCallback((value: string, label: string) => {
+    navigator.clipboard?.writeText(value).then(
+      () => toast.success(isRTL ? `تم نسخ ${label}` : `${label} copied`),
+      () => toast.error(isRTL ? 'فشل النسخ' : 'Copy failed'),
+    );
+  }, [isRTL]);
 
   return (
     <div className={`group relative rounded-2xl border bg-card transition-all duration-200 hover:shadow-md
       ${selected ? 'ring-2 ring-accent border-accent/50' : isCurrentUser ? 'border-accent/40 ring-1 ring-accent/20' : 'border-border/30'}
       ${isBanned ? 'opacity-70 border-destructive/40' : ''}`}>
-      <div className="p-3 sm:p-4 flex flex-col sm:flex-row sm:items-start gap-3">
+      <div className={`${compact ? 'p-2.5 sm:p-3 gap-2' : 'p-3 sm:p-4 gap-3'} flex flex-col sm:flex-row sm:items-start`}>
         <Checkbox checked={selected} onCheckedChange={onToggleSelect} className="mt-1 shrink-0" disabled={!canManageUser} />
         <div className="flex items-start gap-3 flex-1 min-w-0">
           <div className="relative shrink-0">
-            <Avatar className={`w-11 h-11 ring-2 ${isCurrentUser ? 'ring-accent/30' : 'ring-border/10'}`}>
+            <Avatar className={`${compact ? 'w-9 h-9' : 'w-11 h-11'} ring-2 ${isCurrentUser ? 'ring-accent/30' : 'ring-border/10'}`}>
               <AvatarImage src={profile.avatar_url || undefined} />
               <AvatarFallback className="bg-gradient-to-br from-accent/20 to-primary/10 text-accent font-bold text-sm">
                 {(profile.full_name || '?').charAt(0)}
@@ -243,18 +252,46 @@ const UserRow = React.memo(({ profile, roles, business, isCurrentUser, canManage
               </button>
               {isCurrentUser && <Badge variant="outline" className="text-[9px] border-accent text-accent px-1.5 py-0">{isRTL ? 'أنت' : 'You'}</Badge>}
               {isBanned && <Badge variant="destructive" className="text-[9px] gap-0.5 px-1.5 py-0"><Ban className="w-2.5 h-2.5" />{isRTL ? 'معطّل' : 'Disabled'}</Badge>}
+              {!compact && (
+                <span className="text-[10px] text-muted-foreground inline-flex items-center gap-0.5">
+                  <Clock className="w-2.5 h-2.5" />{formatRelative(profile.updated_at, isRTL)}
+                </span>
+              )}
             </div>
+            {!compact && (
             <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
-              {profile.email && <span className="flex items-center gap-1 text-[11px] text-muted-foreground truncate max-w-[200px]"><Mail className="w-3 h-3 shrink-0" />{profile.email}</span>}
-              {profile.phone && <span className="flex items-center gap-1 text-[11px] text-muted-foreground tech-content"><Phone className="w-3 h-3 shrink-0" />{profile.phone}</span>}
+              {profile.email && (
+                <button onClick={() => handleCopy(profile.email!, isRTL ? 'البريد' : 'Email')}
+                  className="flex items-center gap-1 text-[11px] text-muted-foreground truncate max-w-[200px] hover:text-accent transition-colors group/cp"
+                  title={isRTL ? 'نسخ البريد' : 'Copy email'}>
+                  <Mail className="w-3 h-3 shrink-0" />
+                  <span className="truncate">{profile.email}</span>
+                  <Copy className="w-2.5 h-2.5 opacity-0 group-hover/cp:opacity-100 transition-opacity shrink-0" />
+                </button>
+              )}
+              {profile.phone && (
+                <button onClick={() => handleCopy(profile.phone!, isRTL ? 'الهاتف' : 'Phone')}
+                  className="flex items-center gap-1 text-[11px] text-muted-foreground tech-content hover:text-accent transition-colors group/cp"
+                  title={isRTL ? 'نسخ الهاتف' : 'Copy phone'}>
+                  <Phone className="w-3 h-3 shrink-0" />{profile.phone}
+                  <Copy className="w-2.5 h-2.5 opacity-0 group-hover/cp:opacity-100 transition-opacity shrink-0" />
+                </button>
+              )}
               <span className="flex items-center gap-1 text-[11px] text-muted-foreground"><Calendar className="w-3 h-3 shrink-0" />{formatDate(profile.created_at, language)}</span>
             </div>
-            <div className="flex flex-wrap items-center gap-1.5 mt-2">
+            )}
+            <div className={`flex flex-wrap items-center gap-1.5 ${compact ? 'mt-1' : 'mt-2'}`}>
               <Badge className={`${tier.color} text-[10px] border px-1.5 py-0`}>{isRTL ? tier.labelAr : tier.labelEn}</Badge>
               <Badge className={`${accType.color} text-[10px] border px-1.5 py-0 gap-0.5`}>
                 <AccIcon className="w-2.5 h-2.5" />{isRTL ? accType.labelAr : accType.labelEn}
               </Badge>
-              {profile.ref_id && <Badge variant="outline" className="text-[10px] px-1.5 py-0 gap-0.5 font-mono tech-content"><Hash className="w-2.5 h-2.5" />{profile.ref_id}</Badge>}
+              {profile.ref_id && (
+                <button onClick={() => handleCopy(profile.ref_id, isRTL ? 'المعرّف' : 'Ref ID')}
+                  title={isRTL ? 'نسخ المعرّف' : 'Copy Ref ID'}
+                  className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0 rounded-md border border-border/40 font-mono tech-content text-muted-foreground hover:text-accent hover:border-accent/40 transition-colors">
+                  <Hash className="w-2.5 h-2.5" />{profile.ref_id}
+                </button>
+              )}
               {roles.map(r => {
                 const cfg = roleConfig[r.role as keyof typeof roleConfig] || roleConfig.user;
                 const RIcon = cfg.icon;
