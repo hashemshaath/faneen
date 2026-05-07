@@ -4,6 +4,7 @@ import { Link, useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
+import { buildBreadcrumbList, ogImageFor } from '@/lib/seo/structured-data';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { Card, CardContent } from '@/components/ui/card';
@@ -74,18 +75,26 @@ const Categories = () => {
     canonical: selectedCategory
       ? `https://qitaat.com/categories/${selectedCategory.slug}`
       : 'https://qitaat.com/categories',
+    ogImage: ogImageFor(selectedCategory ? `category-${selectedCategory.slug}` : 'categories'),
+    ogTitle: selectedCategory
+      ? (isRTL ? `${catName} — قِطاعات` : `${catName} — Qitaat`)
+      : (isRTL ? 'تصفح الأقسام والفئات — قِطاعات' : 'Browse Categories — Qitaat'),
+    ogDescription: selectedCategory
+      ? (sectorMeta?.description || (isRTL ? `أفضل مزودي ${catName} في السعودية والخليج` : `Best ${catName} providers in Saudi & Gulf`))
+      : (isRTL ? 'دليل أقسام الصناعات الخفيفة في السعودية والخليج' : 'Light industries directory for Saudi & Gulf'),
   });
 
   useMultiJsonLd(useMemo(() => {
-    if (!selectedCategory) return null;
-    const breadcrumb = {
-      '@context': 'https://schema.org',
-      '@type': 'BreadcrumbList',
-      itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'قِطاعات', item: 'https://qitaat.com' },
-        { '@type': 'ListItem', position: 2, name: catName, item: `https://qitaat.com/categories/${selectedCategory.slug}` },
-      ],
-    };
+    if (!selectedCategory) {
+      const indexBreadcrumb = buildBreadcrumbList([
+        { name: isRTL ? 'الأقسام' : 'Categories', url: '/categories' },
+      ]);
+      return indexBreadcrumb ? [indexBreadcrumb] : null;
+    }
+    const breadcrumb = buildBreadcrumbList([
+      { name: isRTL ? 'الأقسام' : 'Categories', url: '/categories' },
+      { name: catName, url: `/categories/${selectedCategory.slug}` },
+    ])!;
     const website = {
       '@context': 'https://schema.org',
       '@type': 'WebSite',
