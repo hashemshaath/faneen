@@ -114,8 +114,6 @@ export const TopProvidersSection = () => {
     },
   });
 
-  if (!isLoading && providers.length === 0) return null;
-
   /* ── Derive unique categories & cities from loaded data ── */
   const uniqueCategories = useMemo(() => {
     const map = new Map<string, string>();
@@ -221,6 +219,8 @@ export const TopProvidersSection = () => {
       track('section_view');
     }
   }, [isVisible, providers.length, track]);
+
+  if (!isLoading && providers.length === 0) return null;
 
   return (
     <section
