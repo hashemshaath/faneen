@@ -457,3 +457,99 @@ describe('BusinessCard stable ordering of active services', () => {
     expect(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 });
+
+/**
+ * Non-boolean / nullish `is_active` values must be treated as "not active"
+ * (the component filters via `s.is_active` truthiness). The +N counter must
+ * only count entries whose `is_active` is strictly truthy.
+ */
+describe('BusinessCard +N counter with null/non-boolean is_active', () => {
+  it('treats is_active = null as inactive (no chip, no +N)', () => {
+    renderCard({
+      ...baseBiz,
+      business_services: [
+        { name_ar: 'خدمة-1', is_active: null },
+        { name_ar: 'خدمة-2', is_active: null },
+        { name_ar: 'خدمة-3', is_active: null },
+        { name_ar: 'خدمة-4', is_active: null },
+      ],
+    });
+    expect(screen.queryByText(/^خدمة-\d+$/)).toBeNull();
+    expect(screen.queryByText(/^\+\d+$/)).toBeNull();
+  });
+
+  it('treats is_active = undefined as inactive', () => {
+    renderCard({
+      ...baseBiz,
+      business_services: [
+        { name_ar: 'خدمة-1' },
+        { name_ar: 'خدمة-2' },
+        { name_ar: 'خدمة-3' },
+        { name_ar: 'خدمة-4' },
+      ],
+    });
+    expect(screen.queryByText(/^خدمة-\d+$/)).toBeNull();
+    expect(screen.queryByText(/^\+\d+$/)).toBeNull();
+  });
+
+  it('treats falsy non-boolean is_active (0, "", false) as inactive', () => {
+    renderCard({
+      ...baseBiz,
+      business_services: [
+        { name_ar: 'خدمة-1', is_active: 0 },
+        { name_ar: 'خدمة-2', is_active: '' },
+        { name_ar: 'خدمة-3', is_active: false },
+        { name_ar: 'خدمة-4', is_active: true },
+      ],
+    });
+    expect(screen.getByText('خدمة-4')).toBeInTheDocument();
+    expect(screen.queryByText('خدمة-1')).toBeNull();
+    expect(screen.queryByText('خدمة-2')).toBeNull();
+    expect(screen.queryByText('خدمة-3')).toBeNull();
+    expect(screen.queryByText(/^\+\d+$/)).toBeNull();
+  });
+
+  it('counts only truthy is_active when mixing null/undefined/true (5 truthy ⇒ +2)', () => {
+    renderCard({
+      ...baseBiz,
+      business_services: [
+        { name_ar: 'A', is_active: true },
+        { name_ar: 'B', is_active: null },
+        { name_ar: 'C', is_active: true },
+        { name_ar: 'D', is_active: undefined },
+        { name_ar: 'E', is_active: true },
+        { name_ar: 'F', is_active: false },
+        { name_ar: 'G', is_active: true },
+        { name_ar: 'H', is_active: true },
+      ],
+    });
+    // Visible chips: first 3 truthy in input order → A, C, E
+    expect(screen.getByText('A')).toBeInTheDocument();
+    expect(screen.getByText('C')).toBeInTheDocument();
+    expect(screen.getByText('E')).toBeInTheDocument();
+    expect(screen.queryByText('B')).toBeNull();
+    expect(screen.queryByText('D')).toBeNull();
+    expect(screen.queryByText('G')).toBeNull();
+    expect(screen.getByText('+2')).toBeInTheDocument();
+  });
+
+  it('does not throw when is_active is a malformed string like "false" (truthy ⇒ counted, documented JS behavior)', () => {
+    // NOTE: any non-empty string is truthy in JS, including "false". This
+    // test documents/locks the current safe behavior so a future change is
+    // intentional rather than accidental.
+    renderCard({
+      ...baseBiz,
+      business_services: [
+        { name_ar: 'خدمة-1', is_active: 'false' },
+        { name_ar: 'خدمة-2', is_active: 'true' },
+        { name_ar: 'خدمة-3', is_active: 'yes' },
+        { name_ar: 'خدمة-4', is_active: 'no' },
+      ],
+    });
+    expect(screen.getByText('خدمة-1')).toBeInTheDocument();
+    expect(screen.getByText('خدمة-2')).toBeInTheDocument();
+    expect(screen.getByText('خدمة-3')).toBeInTheDocument();
+    expect(screen.queryByText('خدمة-4')).toBeNull();
+    expect(screen.getByText('+1')).toBeInTheDocument();
+  });
+});
