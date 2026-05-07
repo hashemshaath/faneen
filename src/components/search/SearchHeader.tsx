@@ -2,7 +2,8 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { Badge } from '@/components/ui/badge';
 import { Navbar } from '@/components/layout/Navbar';
 import { SearchAutocomplete } from './SearchAutocomplete';
-import { Sparkles, TrendingUp } from 'lucide-react';
+import { TrendingUp, BadgeCheck, Star, Heart, CreditCard } from 'lucide-react';
+import { useBusinessFavorites } from '@/hooks/useBusinessFavorites';
 
 interface SearchHeaderProps {
   query: string;
@@ -12,10 +13,45 @@ interface SearchHeaderProps {
   categories?: { id: string; name_ar: string; name_en: string; slug: string }[];
   onCategoryClick?: (id: string) => void;
   businesses?: any[];
+  verifiedOnly?: boolean;
+  onToggleVerified?: () => void;
+  minRating?: number;
+  onSetMinRating?: (r: number) => void;
+  favoritesOnly?: boolean;
+  onToggleFavoritesOnly?: () => void;
 }
 
-export const SearchHeader = ({ query, onQueryChange, onSearch, totalResults, categories, onCategoryClick, businesses }: SearchHeaderProps) => {
+export const SearchHeader = ({
+  query, onQueryChange, onSearch, totalResults, categories, onCategoryClick, businesses,
+  verifiedOnly, onToggleVerified, minRating = 0, onSetMinRating,
+  favoritesOnly, onToggleFavoritesOnly,
+}: SearchHeaderProps) => {
   const { t, language, isRTL } = useLanguage();
+  const { count: favCount } = useBusinessFavorites();
+
+  const quickChips: { key: string; label: string; active: boolean; icon: React.ElementType; onClick: () => void }[] = [
+    ...(onToggleVerified ? [{
+      key: 'verified',
+      label: isRTL ? 'موثقة فقط' : 'Verified only',
+      active: !!verifiedOnly,
+      icon: BadgeCheck,
+      onClick: onToggleVerified,
+    }] : []),
+    ...(onSetMinRating ? ([5, 4, 3] as const).map((r) => ({
+      key: `r${r}`,
+      label: `${r}${r === 5 ? '' : '+'}★`,
+      active: minRating === r,
+      icon: Star,
+      onClick: () => onSetMinRating(minRating === r ? 0 : r),
+    })) : []),
+    ...(onToggleFavoritesOnly && favCount > 0 ? [{
+      key: 'fav',
+      label: isRTL ? `المفضلة (${favCount})` : `Favorites (${favCount})`,
+      active: !!favoritesOnly,
+      icon: Heart,
+      onClick: onToggleFavoritesOnly,
+    }] : []),
+  ];
 
   return (
     <>
@@ -43,6 +79,28 @@ export const SearchHeader = ({ query, onQueryChange, onSearch, totalResults, cat
             businesses={businesses}
             categories={categories}
           />
+
+          {/* Quick filter chips */}
+          {quickChips.length > 0 && (
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
+              {quickChips.map((chip) => (
+                <button
+                  key={chip.key}
+                  type="button"
+                  onClick={chip.onClick}
+                  aria-pressed={chip.active}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-heading font-semibold border transition-all ${
+                    chip.active
+                      ? 'bg-accent text-accent-foreground border-accent shadow-sm'
+                      : 'bg-surface-nav-foreground/[0.04] text-surface-nav-foreground/85 border-surface-nav-foreground/15 hover:bg-accent/15 hover:border-accent/40 hover:text-accent'
+                  }`}
+                >
+                  <chip.icon className={`w-3.5 h-3.5 ${chip.key === 'fav' && chip.active ? 'fill-accent-foreground' : ''}`} />
+                  {chip.label}
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* Category pills with scroll indicator */}
           {categories && categories.length > 0 && (
