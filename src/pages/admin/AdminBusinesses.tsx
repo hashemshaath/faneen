@@ -1128,30 +1128,30 @@ const AdminBusinesses = () => {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <Label className="text-xs flex items-center gap-1"><Phone className="w-3 h-3" /> {isRTL ? 'رقم الهاتف' : 'Phone'}</Label>
-                      <Input value={editForm.phone} onChange={e => setField('phone', e.target.value)} dir="ltr" className="mt-1" />
+                      <Input value={editForm.phone} onChange={e => setField('phone', e.target.value)} dir="ltr" className="mt-1 tech-content" />
                     </div>
                     <div>
                       <Label className="text-xs flex items-center gap-1"><Phone className="w-3 h-3" /> {isRTL ? 'رقم الجوال' : 'Mobile'}</Label>
-                      <Input value={editForm.mobile} onChange={e => setField('mobile', e.target.value)} dir="ltr" className="mt-1" />
+                      <Input value={editForm.mobile} onChange={e => setField('mobile', e.target.value)} dir="ltr" className="mt-1 tech-content" />
                     </div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <Label className="text-xs flex items-center gap-1"><Phone className="w-3 h-3" /> {isRTL ? 'الرقم الموحد' : 'Unified Number'}</Label>
-                      <Input value={editForm.unified_number} onChange={e => setField('unified_number', e.target.value)} dir="ltr" className="mt-1" placeholder="920xxxxxxx" />
+                      <Input value={editForm.unified_number} onChange={e => setField('unified_number', e.target.value)} dir="ltr" className="mt-1 tech-content" placeholder="920xxxxxxx" />
                     </div>
                     <div>
                       <Label className="text-xs flex items-center gap-1"><Phone className="w-3 h-3" /> {isRTL ? 'خدمة العملاء' : 'Customer Service'}</Label>
-                      <Input value={editForm.customer_service_phone} onChange={e => setField('customer_service_phone', e.target.value)} dir="ltr" className="mt-1" />
+                      <Input value={editForm.customer_service_phone} onChange={e => setField('customer_service_phone', e.target.value)} dir="ltr" className="mt-1 tech-content" />
                     </div>
                   </div>
                   <div>
                     <Label className="text-xs flex items-center gap-1"><Mail className="w-3 h-3" /> {isRTL ? 'البريد الإلكتروني' : 'Email'}</Label>
-                    <Input value={editForm.email} onChange={e => setField('email', e.target.value)} dir="ltr" className="mt-1" />
+                    <Input type="email" value={editForm.email} onChange={e => setField('email', e.target.value)} dir="ltr" className="mt-1 tech-content" />
                   </div>
                   <div>
                     <Label className="text-xs flex items-center gap-1"><Globe className="w-3 h-3" /> {isRTL ? 'الموقع الإلكتروني' : 'Website'}</Label>
-                    <Input value={editForm.website} onChange={e => setField('website', e.target.value)} dir="ltr" className="mt-1" placeholder="https://" />
+                    <Input type="url" value={editForm.website} onChange={e => setField('website', e.target.value)} dir="ltr" className="mt-1 tech-content" placeholder="https://" />
                   </div>
                   {editingBiz && (
                     <div className="mt-4">
