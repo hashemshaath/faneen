@@ -46,6 +46,19 @@ const AboutHero = ({ isRTL }: { isRTL: boolean }) => (
 );
 
 /* ───────── Live stats strip ───────── */
+const StatItem = ({ icon: Icon, end, label, isVisible }: { icon: React.ElementType; end: number; label: string; isVisible: boolean }) => {
+  const display = useCountUp(end, isVisible, 1800);
+  return (
+    <div className="text-center px-2">
+      <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 rounded-xl bg-accent/10 flex items-center justify-center">
+        <Icon className="w-5 h-5 text-accent" />
+      </div>
+      <div className="font-heading font-black text-2xl sm:text-3xl text-gradient-gold tracking-tight tech-content">{display}+</div>
+      <div className="text-[11px] sm:text-xs text-muted-foreground font-body mt-0.5">{label}</div>
+    </div>
+  );
+};
+
 const StatsStrip = ({ isRTL }: { isRTL: boolean }) => {
   const { ref, isVisible } = useScrollAnimation<HTMLDivElement>();
   const { data } = useQuery({
@@ -71,19 +84,9 @@ const StatsStrip = ({ isRTL }: { isRTL: boolean }) => {
     <section className="relative -mt-12 sm:-mt-16 z-10">
       <div className="container px-4 sm:px-6">
         <div ref={ref} className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 bg-card/95 backdrop-blur-xl border border-border/50 rounded-2xl p-4 sm:p-6 shadow-elev-3">
-          {items.map((s, i) => {
-            const Icon = s.icon;
-            const display = useCountUp(s.end, isVisible, 1800);
-            return (
-              <div key={i} className="text-center px-2">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 rounded-xl bg-accent/10 flex items-center justify-center">
-                  <Icon className="w-5 h-5 text-accent" />
-                </div>
-                <div className="font-heading font-black text-2xl sm:text-3xl text-gradient-gold tracking-tight tech-content">{display}+</div>
-                <div className="text-[11px] sm:text-xs text-muted-foreground font-body mt-0.5">{s.label}</div>
-              </div>
-            );
-          })}
+          {items.map((s, i) => (
+            <StatItem key={i} icon={s.icon} end={s.end} label={s.label} isVisible={isVisible} />
+          ))}
         </div>
       </div>
     </section>
