@@ -31,6 +31,7 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
         <select
           value={countryCode}
           onChange={(e) => onCountryCodeChange(e.target.value)}
+          aria-label={isRTL ? 'رمز الدولة' : 'Country code'}
           className="appearance-none h-10 w-[100px] rounded-lg border border-input bg-background px-3 pe-7 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         >
           {countryCodes.map(c => (
