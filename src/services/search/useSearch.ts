@@ -190,15 +190,7 @@ export const useBusinesses = () =>
       const today = new Date().toISOString().slice(0, 10);
       const { data } = await supabase
         .from('businesses_public')
-        .select(
-          [
-            '*',
-            'categories(id, name_ar, name_en, slug, icon)',
-            'cities(id, name_ar, name_en)',
-            'business_services(name_ar, name_en, price_from, price_to, is_active)',
-            'promotions(id, end_date)',
-          ].join(', ')
-        )
+        .select('*, categories(id, name_ar, name_en, slug, icon), cities(id, name_ar, name_en), business_services(name_ar, name_en, price_from, price_to, is_active), promotions(id, end_date)')
         .eq('is_active', true)
         // Only return active + non-expired service rows for tag chips & price filter
         .eq('business_services.is_active', true)
