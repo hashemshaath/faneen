@@ -741,16 +741,17 @@ const AdminBusinesses = () => {
         )}
 
         {/* ─── Filters ─── */}
-        <div className="rounded-2xl border border-border/30 bg-card p-4">
+        <div className="rounded-2xl border border-border/30 bg-card p-4 sticky top-0 z-20 backdrop-blur-md bg-card/95">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
               <Search className="absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
-              <Input value={search}
-                onChange={e => { const v = e.target.value; startTransition(() => setSearch(v)); }}
-                placeholder={isRTL ? 'بحث بالاسم، المعرف، الهاتف، البريد...' : 'Search by name, ID, phone, email...'}
+              <Input ref={searchRef} value={searchInput}
+                onChange={e => { const v = e.target.value; startTransition(() => setSearchInput(v)); }}
+                placeholder={isRTL ? 'بحث بالاسم، المعرف، الهاتف، البريد… ( / )' : 'Search by name, ID, phone, email… ( / )'}
+                dir="auto"
                 className="ps-10 h-10 rounded-xl bg-muted/30 border-border/20 focus:bg-background transition-colors" />
               {search && (
-                <button onClick={() => setSearch('')}
+                <button onClick={() => { setSearchInput(''); updateParam({ q: null }); }}
                   className="absolute top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" style={{ [isRTL ? 'left' : 'right']: '10px' }}>
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -776,20 +777,80 @@ const AdminBusinesses = () => {
                 {tiers.map(t => <SelectItem key={t.value} value={t.value}>{t.icon} {language === 'ar' ? t.label_ar : t.label_en}</SelectItem>)}
               </SelectContent>
             </Select>
+            <Select value={filterTranslation} onValueChange={(v) => updateParam({ translation: v === 'all' ? null : v, page: null })}>
+              <SelectTrigger className="w-full sm:w-44 h-10 rounded-xl">
+                <Languages className="w-4 h-4 me-2 text-muted-foreground" /><SelectValue />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl">
+                <SelectItem value="all">{isRTL ? 'كل الترجمات' : 'All Translations'}</SelectItem>
+                <SelectItem value="missing_en">{isRTL ? 'ينقص الإنجليزي' : 'Missing English'}</SelectItem>
+                <SelectItem value="missing_ar">{isRTL ? 'ينقص العربي' : 'Missing Arabic'}</SelectItem>
+                <SelectItem value="complete">{isRTL ? 'مكتملة الترجمة' : 'Translation Complete'}</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-full sm:w-40 h-10 rounded-xl">
+                <ArrowUpDown className="w-4 h-4 me-2 text-muted-foreground" /><SelectValue />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl">
+                <SelectItem value="recent">{isRTL ? 'الأحدث' : 'Most recent'}</SelectItem>
+                <SelectItem value="rating">{isRTL ? 'الأعلى تقييماً' : 'Top rated'}</SelectItem>
+                <SelectItem value="name">{isRTL ? 'الاسم (أ-ي)' : 'Name (A-Z)'}</SelectItem>
+                <SelectItem value="tier">{isRTL ? 'العضوية' : 'Tier'}</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-          {(search || filterStatus !== 'all' || filterTier !== 'all') && (
+          {(search || filterStatus !== 'all' || filterTier !== 'all' || filterTranslation !== 'all' || sortBy !== 'recent') && (
             <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/20">
               <span className="text-[11px] text-muted-foreground">{isRTL ? 'النتائج:' : 'Results:'} {filtered.length}</span>
-              {search && <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-lg" onClick={() => setSearch('')}>"{search}" <X className="w-2.5 h-2.5" /></Badge>}
+              {search && <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-lg" onClick={() => { setSearchInput(''); updateParam({ q: null }); }}>"{search}" <X className="w-2.5 h-2.5" /></Badge>}
               {filterStatus !== 'all' && <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-lg" onClick={() => setFilterStatus('all')}>{filterStatus} <X className="w-2.5 h-2.5" /></Badge>}
               {filterTier !== 'all' && <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-lg" onClick={() => setFilterTier('all')}>{filterTier} <X className="w-2.5 h-2.5" /></Badge>}
+              {filterTranslation !== 'all' && <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-lg" onClick={() => updateParam({ translation: null })}>{filterTranslation} <X className="w-2.5 h-2.5" /></Badge>}
+              {sortBy !== 'recent' && <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-lg" onClick={() => setSortBy('recent')}>{sortBy} <X className="w-2.5 h-2.5" /></Badge>}
               <button className="text-[10px] text-primary hover:underline ms-auto"
-                onClick={() => { setSearch(''); setFilterStatus('all'); setFilterTier('all'); }}>
+                onClick={() => { setSearchInput(''); setSearchParams(new URLSearchParams(), { replace: false }); }}>
                 {isRTL ? 'مسح الكل' : 'Clear all'}
               </button>
             </div>
           )}
         </div>
+
+        {/* ─── Bulk action bar ─── */}
+        {selected.size > 0 && (
+          <div className="rounded-2xl border border-accent/40 bg-accent/5 p-3 flex flex-wrap items-center gap-2 sticky top-[80px] z-10 backdrop-blur-md">
+            <Badge className="bg-accent text-accent-foreground gap-1 rounded-lg"><CheckSquare className="w-3 h-3" />
+              {isRTL ? `محدد: ${selected.size}` : `${selected.size} selected`}
+            </Badge>
+            <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5 rounded-xl"
+              onClick={() => bulkMutation.mutate({ ids: [...selected], patch: { is_active: true } })}>
+              <CheckCircle className="w-3.5 h-3.5" />{isRTL ? 'تفعيل' : 'Activate'}
+            </Button>
+            <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5 rounded-xl"
+              onClick={() => bulkMutation.mutate({ ids: [...selected], patch: { is_active: false } })}>
+              <Ban className="w-3.5 h-3.5" />{isRTL ? 'تعطيل' : 'Deactivate'}
+            </Button>
+            <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5 rounded-xl"
+              onClick={() => bulkMutation.mutate({ ids: [...selected], patch: { is_verified: true } })}>
+              <Shield className="w-3.5 h-3.5" />{isRTL ? 'توثيق' : 'Verify'}
+            </Button>
+            <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5 rounded-xl"
+              onClick={() => bulkMutation.mutate({ ids: [...selected], patch: { is_verified: false } })}>
+              <XCircle className="w-3.5 h-3.5" />{isRTL ? 'إلغاء التوثيق' : 'Unverify'}
+            </Button>
+            <Select onValueChange={(v) => bulkMutation.mutate({ ids: [...selected], patch: { membership_tier: v } })}>
+              <SelectTrigger className="h-8 w-36 text-xs rounded-xl"><Crown className="w-3.5 h-3.5 me-1" />
+                <SelectValue placeholder={isRTL ? 'تغيير العضوية' : 'Change tier'} />
+              </SelectTrigger>
+              <SelectContent>
+                {tiers.map(t => <SelectItem key={t.value} value={t.value}>{t.icon} {language === 'ar' ? t.label_ar : t.label_en}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Button size="sm" variant="ghost" className="h-8 text-xs gap-1.5 ms-auto rounded-xl" onClick={clearSelected}>
+              <X className="w-3.5 h-3.5" />{isRTL ? 'إلغاء التحديد' : 'Clear'}
+            </Button>
+          </div>
+        )}
 
         {/* ─── Inline Edit Panel ─── */}
         {editingBiz && (
