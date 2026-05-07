@@ -105,6 +105,81 @@ const Blog = () => {
     return Array.from(tagSet).slice(0, 15);
   }, [posts]);
 
+  // Aggregated stats (real numbers from DB)
+  const stats = useMemo(() => {
+    const totalViews = posts.reduce((s, p) => s + (p.views_count || 0), 0);
+    const totalComments = Object.values(commentCounts).reduce((s, n) => s + n, 0);
+    const totalSaves = Object.values(bookmarkCounts).reduce((s, n) => s + n, 0);
+    const authors = new Set(posts.map((p) => p.author_id).filter(Boolean)).size;
+    return { totalViews, totalComments, totalSaves, authors };
+  }, [posts, commentCounts, bookmarkCounts]);
+
+  // SEO meta + JSON-LD (Breadcrumb + CollectionPage + ItemList of latest articles + WebSite SearchAction)
+  usePageMeta({
+    title: language === 'ar'
+      ? 'مدونة قِطاعات - مقالات وأدلة في صناعة الألمنيوم والزجاج والحديد والخشب'
+      : 'Qitaat Blog - Aluminum, Glass, Iron & Wood Industry Articles',
+    description: language === 'ar'
+      ? `${posts.length}+ مقال احترافي في صناعة الألمنيوم والزجاج والحديد والخشب. أدلة شاملة، نصائح خبراء، وأخبار قطاعات السوق السعودي والخليجي.`
+      : `${posts.length}+ professional articles on aluminum, glass, iron and wood industries. Comprehensive guides, expert tips and sector news for the Saudi & Gulf market.`,
+    canonical: 'https://qitaat.com/blog',
+    ogType: 'website',
+    keywords: language === 'ar'
+      ? 'مدونة قِطاعات, مقالات ألمنيوم, مقالات زجاج, مقالات حديد, مقالات خشب, نصائح صناعية, أدلة المقاولين, تركيب واجهات, تصميم كلادينج'
+      : 'Qitaat blog, aluminum articles, glass articles, steel articles, wood articles, industrial tips, contractor guides, facade installation, cladding design',
+  });
+
+  useMultiJsonLd(useMemo(() => {
+    const breadcrumb = {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: language === 'ar' ? 'قِطاعات' : 'Qitaat', item: 'https://qitaat.com' },
+        { '@type': 'ListItem', position: 2, name: language === 'ar' ? 'المدونة' : 'Blog', item: 'https://qitaat.com/blog' },
+      ],
+    };
+    const collection = {
+      '@context': 'https://schema.org',
+      '@type': 'Blog',
+      name: language === 'ar' ? 'مدونة قِطاعات' : 'Qitaat Blog',
+      url: 'https://qitaat.com/blog',
+      inLanguage: language === 'ar' ? 'ar' : 'en',
+      description: language === 'ar'
+        ? 'مقالات وأدلة احترافية في صناعة الألمنيوم والزجاج والحديد والخشب'
+        : 'Professional articles and guides on aluminum, glass, iron and wood industries',
+      publisher: {
+        '@type': 'Organization',
+        name: 'قِطاعات Qitaat',
+        url: 'https://qitaat.com',
+        logo: { '@type': 'ImageObject', url: 'https://qitaat.com/og-image.jpg' },
+      },
+    };
+    const itemList = {
+      '@context': 'https://schema.org',
+      '@type': 'ItemList',
+      name: language === 'ar' ? 'أحدث المقالات' : 'Latest articles',
+      itemListOrder: 'https://schema.org/ItemListOrderDescending',
+      numberOfItems: posts.length,
+      itemListElement: posts.slice(0, 20).map((p, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        url: `https://qitaat.com/blog/${p.slug}`,
+        name: language === 'ar' ? p.title_ar : (p.title_en || p.title_ar),
+      })),
+    };
+    const website = {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      url: 'https://qitaat.com',
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: 'https://qitaat.com/blog?q={search_term_string}',
+        'query-input': 'required name=search_term_string',
+      },
+    };
+    return [breadcrumb, collection, itemList, website];
+  }, [language, posts]));
+
   const toggleTag = useCallback((tag: string) => {
     setSelectedTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
   }, []);
