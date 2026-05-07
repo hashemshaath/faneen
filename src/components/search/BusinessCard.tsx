@@ -4,7 +4,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { Badge } from '@/components/ui/badge';
 import {
   Star, MapPin, BadgeCheck, Phone, Crown, Globe, ChevronRight, ChevronLeft,
-  Briefcase, CreditCard, Heart,
+  Briefcase, CreditCard, Heart, TicketPercent, ShieldCheck,
 } from 'lucide-react';
 import { useBusinessFavorites } from '@/hooks/useBusinessFavorites';
 import { useRecentlyViewedBusinesses } from '@/hooks/useRecentlyViewedBusinesses';
@@ -74,6 +74,23 @@ export const BusinessCard = memo(({ business: b, viewMode }: BusinessCardProps) 
   const initial = name?.charAt(0) || 'ف';
   const hasBnpl = Array.isArray((b as any).business_bnpl_providers) && (b as any).business_bnpl_providers.length > 0;
 
+  // Service tag chips (saqf-style) — show top 3 active service names + remainder count.
+  const services: Array<Record<string, unknown>> = Array.isArray((b as any).business_services)
+    ? (b as any).business_services.filter((s: Record<string, unknown>) => s.is_active)
+    : [];
+  const serviceTags: string[] = services
+    .map((s) => (language === 'ar' ? (s.name_ar as string) : ((s.name_en as string) || (s.name_ar as string))))
+    .filter((n): n is string => !!n);
+  const visibleTags = serviceTags.slice(0, 3);
+  const remainingTags = Math.max(0, serviceTags.length - visibleTags.length);
+
+  // Active promotion (coupon/offer) badge.
+  const today = new Date().toISOString().slice(0, 10);
+  const hasOffer = Array.isArray((b as any).promotions)
+    && (b as any).promotions.some((p: Record<string, unknown>) =>
+      p.is_active && (!p.end_date || (p.end_date as string) >= today),
+    );
+
   const touchHandlers = {
     onTouchStart: () => setPressed(true),
     onTouchEnd: () => setPressed(false),
@@ -107,9 +124,20 @@ export const BusinessCard = memo(({ business: b, viewMode }: BusinessCardProps) 
         </div>
 
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 sm:gap-2 mb-0.5 flex-wrap">
+          <div className="flex items-center gap-1.5 sm:gap-2 mb-1 flex-wrap">
             <h3 className="font-heading font-bold text-sm sm:text-base text-foreground group-hover:text-accent transition-colors truncate">{name}</h3>
-            {b.is_verified && <BadgeCheck className="w-4 h-4 text-accent flex-shrink-0" />}
+            {b.is_verified && (
+              <span className="inline-flex items-center gap-1 px-1.5 py-0 h-4 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[9px] font-body font-semibold border border-emerald-500/20">
+                <ShieldCheck className="w-2.5 h-2.5" />
+                {isRTL ? 'موثقة' : 'Verified'}
+              </span>
+            )}
+            {hasOffer && (
+              <span className="inline-flex items-center gap-1 px-1.5 py-0 h-4 rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400 text-[9px] font-body font-semibold border border-rose-500/20">
+                <TicketPercent className="w-2.5 h-2.5" />
+                {isRTL ? 'كوبون' : 'Coupon'}
+              </span>
+            )}
             {tier && tier.label !== 'Basic' && (
               <Badge className={`${tier.color} text-[9px] px-1.5 py-0 h-4 gap-0.5`}>
                 <Crown className="w-2.5 h-2.5" />{language === 'ar' ? tier.labelAr : tier.label}
@@ -118,6 +146,18 @@ export const BusinessCard = memo(({ business: b, viewMode }: BusinessCardProps) 
           </div>
           {catName && <p className="text-[10px] sm:text-xs text-accent/70 font-body">{catName}</p>}
           {desc && <p className="text-xs text-muted-foreground font-body mt-0.5 line-clamp-1">{desc}</p>}
+          {visibleTags.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1 mt-1.5">
+              {visibleTags.map((tag, idx) => (
+                <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded-md bg-primary/5 text-primary border border-primary/15 text-[9px] sm:text-[10px] font-body truncate max-w-[110px]">
+                  {tag}
+                </span>
+              ))}
+              {remainingTags > 0 && (
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground text-[9px] sm:text-[10px] font-body tech-content">+{remainingTags}</span>
+              )}
+            </div>
+          )}
           <div className="flex items-center gap-2.5 mt-1.5 flex-wrap">
             <div className="flex items-center gap-1">
               <RatingStars rating={rating} size="xs" />
@@ -183,13 +223,50 @@ export const BusinessCard = memo(({ business: b, viewMode }: BusinessCardProps) 
 
       {/* Content */}
       <div className="px-4 sm:px-5 pt-2.5 sm:pt-3 pb-4 sm:pb-5 flex flex-col flex-1">
-        <div className="flex items-center gap-1.5 mb-0.5">
+        <div className="flex items-center gap-1.5 mb-1 flex-wrap">
           <h3 className="font-heading font-bold text-sm sm:text-[15px] text-foreground group-hover:text-accent transition-colors truncate">{name}</h3>
           {b.is_verified && <BadgeCheck className="w-4 h-4 text-accent flex-shrink-0" />}
         </div>
         {catName && <span className="text-[10px] sm:text-xs text-accent/70 font-body">{catName}</span>}
 
+        {/* saqf-style status badges */}
+        {(b.is_verified || hasOffer) && (
+          <div className="flex flex-wrap items-center gap-1.5 mt-2">
+            {b.is_verified && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-body font-semibold border border-emerald-500/20">
+                <ShieldCheck className="w-3 h-3" />
+                {isRTL ? 'شركة موثقة' : 'Verified'}
+              </span>
+            )}
+            {hasOffer && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400 text-[10px] font-body font-semibold border border-rose-500/20">
+                <TicketPercent className="w-3 h-3" />
+                {isRTL ? 'كوبون خصم' : 'Coupon'}
+              </span>
+            )}
+          </div>
+        )}
+
         {desc && <p className="text-xs text-muted-foreground font-body mt-2 line-clamp-2 leading-relaxed">{desc}</p>}
+
+        {/* Service tag chips */}
+        {visibleTags.length > 0 && (
+          <div className="flex flex-wrap items-center gap-1.5 mt-3">
+            {visibleTags.map((tag, idx) => (
+              <span
+                key={idx}
+                className="inline-flex items-center px-2 py-1 rounded-lg bg-primary/5 text-primary border border-primary/15 text-[10px] sm:text-[11px] font-body truncate max-w-[140px] hover:bg-primary/10 transition-colors"
+              >
+                {tag}
+              </span>
+            ))}
+            {remainingTags > 0 && (
+              <span className="inline-flex items-center px-2 py-1 rounded-lg bg-muted text-muted-foreground text-[10px] sm:text-[11px] font-body tech-content">
+                +{remainingTags}
+              </span>
+            )}
+          </div>
+        )}
 
         {/* Rating */}
         <div className="flex items-center gap-2 mt-3">
