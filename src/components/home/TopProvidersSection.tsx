@@ -24,6 +24,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { VerifiedBadge } from "@/components/common/VerifiedBadge";
 
 /* ── Skeleton ── */
 const ProviderSkeleton = () => (
@@ -366,9 +367,7 @@ export const TopProvidersSection = () => {
                           <h3 className="font-heading font-bold text-sm sm:text-[15px] truncate group-hover:text-accent transition-colors">
                             {name}
                           </h3>
-                          {biz.is_verified && (
-                            <CheckCircle2 className="w-3.5 h-3.5 text-accent shrink-0 fill-accent/10" />
-                          )}
+                          {biz.is_verified && <VerifiedBadge size="sm" iconOnly />}
                         </div>
                         {catName && (
                           <p className="text-[10px] sm:text-xs text-muted-foreground truncate mt-0.5">
