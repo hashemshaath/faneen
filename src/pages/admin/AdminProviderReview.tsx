@@ -3,10 +3,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import {
   ShieldCheck, ShieldAlert, Search, CheckCircle2, XCircle, Eye,
-  AlertCircle, Loader2, Send, Globe, Tag,
+  AlertCircle, Loader2, Send, Globe, Tag, Lock,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { maskEmail, maskPhone } from '@/lib/masking';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -72,6 +74,7 @@ interface ProviderRow {
 
 export default function AdminProviderReview() {
   const { language, isRTL } = useLanguage();
+  const { isSuperAdmin } = useAuth();
   usePageMeta({
     title: isRTL ? 'مراجعة المزودين | الإدارة' : 'Provider Review | Admin',
     noindex: true,
@@ -342,11 +345,19 @@ export default function AdminProviderReview() {
                   <div className="grid gap-3 sm:grid-cols-2 text-sm">
                     <div>
                       <div className="text-xs text-muted-foreground">{isRTL ? 'البريد' : 'Email'}</div>
-                      <div className="tech-content">{selected.email ?? '—'}</div>
+                      <div className="tech-content inline-flex items-center gap-1.5">
+                        {selected.email
+                          ? (isSuperAdmin ? selected.email : <>{maskEmail(selected.email)} <Lock className="w-3 h-3 opacity-60" aria-label={isRTL ? 'متاح فقط لمدير النظام' : 'Super Admin only'} /></>)
+                          : '—'}
+                      </div>
                     </div>
                     <div>
                       <div className="text-xs text-muted-foreground">{isRTL ? 'الجوال' : 'Phone'}</div>
-                      <div className="tech-content">{selected.phone ?? '—'}</div>
+                      <div className="tech-content inline-flex items-center gap-1.5">
+                        {selected.phone
+                          ? (isSuperAdmin ? selected.phone : <>{maskPhone(selected.phone)} <Lock className="w-3 h-3 opacity-60" aria-label={isRTL ? 'متاح فقط لمدير النظام' : 'Super Admin only'} /></>)
+                          : '—'}
+                      </div>
                     </div>
                     <div className="sm:col-span-2">
                       <div className="text-xs text-muted-foreground">{isRTL ? 'الوصف' : 'Description'}</div>
