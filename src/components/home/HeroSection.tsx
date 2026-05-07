@@ -183,6 +183,7 @@ export const HeroSection = () => {
   const parallaxY = useRef(0);
   const rafRef = useRef<number>();
   const imgRefs = useRef<(HTMLImageElement | null)[]>([]);
+  const sectionRef = useRef<HTMLElement | null>(null);
 
   const { data: categories = [] } = useQuery({
     queryKey: ['nav-categories'],
@@ -229,6 +230,8 @@ export const HeroSection = () => {
       typeof window !== "undefined" &&
       window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     if (prefersReduced) return;
+    const section = sectionRef.current;
+    if (!section) return;
     const handleScroll = () => {
       if (rafRef.current) return;
       rafRef.current = requestAnimationFrame(() => {
@@ -242,9 +245,28 @@ export const HeroSection = () => {
         rafRef.current = undefined;
       });
     };
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => {
+    // Only listen while hero is intersecting — saves work once user scrolls past
+    let attached = false;
+    const attach = () => {
+      if (attached) return;
+      window.addEventListener("scroll", handleScroll, { passive: true });
+      attached = true;
+    };
+    const detach = () => {
+      if (!attached) return;
       window.removeEventListener("scroll", handleScroll);
+      attached = false;
+    };
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries[0]?.isIntersecting ? attach() : detach();
+      },
+      { threshold: 0 },
+    );
+    io.observe(section);
+    return () => {
+      io.disconnect();
+      detach();
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
   }, []);
@@ -258,7 +280,7 @@ export const HeroSection = () => {
   }, [navigate]);
 
   return (
-    <section id="main-content" role="banner" aria-label={language === 'ar' ? 'القسم الرئيسي' : 'Hero section'} className="relative min-h-[85vh] sm:min-h-screen flex flex-col items-center justify-center overflow-hidden">
+    <section ref={sectionRef} id="main-content" role="banner" aria-label={language === 'ar' ? 'القسم الرئيسي' : 'Hero section'} className="relative min-h-[85vh] sm:min-h-screen flex flex-col items-center justify-center overflow-hidden">
       {/* Slides — only first image is eager, others lazy */}
       {slides.map((slide, i) => (
         <img
