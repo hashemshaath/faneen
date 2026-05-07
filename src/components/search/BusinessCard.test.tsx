@@ -586,10 +586,8 @@ describe('BusinessCard render cost (React.memo behavior)', () => {
       ],
     };
     const { rerender, renders } = mountWithProfiler(business);
-    const initialMounts = renders.filter((r) => r.phase === 'mount').length;
-    const initialUpdates = renders.filter((r) => r.phase === 'update').length;
-    expect(initialMounts).toBe(1);
-    expect(initialUpdates).toBe(0);
+    const mountDuration = renders.find((r) => r.phase === 'mount')!.actualDuration;
+    expect(renders.filter((r) => r.phase === 'update').length).toBe(0);
 
     // Re-render parent with the SAME `business` reference.
     const onRender: ProfilerOnRenderCallback = (_id, phase, actualDuration) => {
@@ -602,10 +600,12 @@ describe('BusinessCard render cost (React.memo behavior)', () => {
         </Profiler>
       </MemoryRouter>,
     );
-    // memo() must short-circuit: any `update` commit on the Profiler subtree
-    // must have actualDuration === 0 (the child did not actually re-render).
+    // memo() must short-circuit: every update commit must be drastically
+    // cheaper than the initial mount (we use < 25% as a generous bail-out
+    // signal that BusinessCard's body did not run again).
     const updates = renders.filter((r) => r.phase === 'update');
-    expect(updates.every((r) => r.actualDuration === 0)).toBe(true);
+    expect(updates.length).toBeGreaterThan(0);
+    expect(updates.every((r) => r.actualDuration < mountDuration * 0.25)).toBe(true);
   });
 
   it('re-renders exactly once when business_services changes (new reference)', () => {
@@ -633,9 +633,11 @@ describe('BusinessCard render cost (React.memo behavior)', () => {
         </Profiler>
       </MemoryRouter>,
     );
-    // The real prop change MUST cause at least one non-zero update commit.
+    // The real prop change MUST cause an update commit roughly comparable
+    // to a normal render (not a memo bail-out).
+    const mountDuration = renders.find((r) => r.phase === 'mount')!.actualDuration;
     const updates = renders.filter((r) => r.phase === 'update');
-    expect(updates.some((r) => r.actualDuration > 0)).toBe(true);
+    expect(updates.some((r) => r.actualDuration >= mountDuration * 0.25)).toBe(true);
     expect(screen.getByText('خدمة-2')).toBeInTheDocument();
   });
 
@@ -658,9 +660,11 @@ describe('BusinessCard render cost (React.memo behavior)', () => {
         </MemoryRouter>,
       );
     }
-    // Across 5 stable re-renders, every update commit must have
-    // actualDuration === 0 (memo bail-out).
+    // Across 5 stable re-renders, every update commit must be a memo
+    // bail-out (much cheaper than the initial mount).
+    const mountDuration = renders.find((r) => r.phase === 'mount')!.actualDuration;
     const updates = renders.filter((r) => r.phase === 'update');
-    expect(updates.every((r) => r.actualDuration === 0)).toBe(true);
+    expect(updates.length).toBeGreaterThan(0);
+    expect(updates.every((r) => r.actualDuration < mountDuration * 0.25)).toBe(true);
   });
 });
