@@ -267,7 +267,7 @@ export const HeroSection = () => {
           className={`absolute inset-0 w-full h-full object-cover will-change-transform scale-115 transition-opacity duration-1000 ${i === current ? 'opacity-100' : 'opacity-0'}`}
           width={1920}
           height={1080}
-          fetchPriority={i === 0 ? "high" : undefined}
+          {...(i === 0 ? { fetchpriority: "high" as const } : {})}
           decoding={i === 0 ? "sync" : "async"}
           loading={i === 0 ? "eager" : "lazy"}
           onError={(e) => {
