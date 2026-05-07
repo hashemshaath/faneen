@@ -124,9 +124,11 @@ Deno.serve(async (req) => {
   );
 
   let triggeredBy = "cron";
+  let dryRun = false;
   try {
     const body = await req.json();
     if (body?.triggeredBy) triggeredBy = String(body.triggeredBy);
+    if (body?.dryRun) dryRun = Boolean(body.dryRun);
   } catch { /* no body */ }
 
   // 1) Run endpoint checks
@@ -239,10 +241,12 @@ Deno.serve(async (req) => {
     }
   }
 
-  // 6) Persist run (use service role bypasses RLS)
-  const { data: inserted, error: insertError } = await supabase
-    .from("sitemap_audit_runs")
-    .insert({
+  // 6) Persist run (skip when dryRun for dashboard fallbacks)
+  let inserted: { id: string; created_at: string } | null = null;
+  if (!dryRun) {
+    const { data: ins, error: insertError } = await supabase
+      .from("sitemap_audit_runs")
+      .insert({
       triggered_by: triggeredBy,
       total_endpoints: results.length,
       ok_count: okCount,
@@ -254,16 +258,19 @@ Deno.serve(async (req) => {
       robots_check: robotsCheck,
       diff_from_previous: diff,
       alert_sent: alertSent,
-    })
-    .select("id, created_at")
-    .single();
-
-  if (insertError) console.error("sitemap_audit_runs insert error:", insertError);
+      })
+      .select("id, created_at")
+      .single();
+    if (insertError) console.error("sitemap_audit_runs insert error:", insertError);
+    inserted = ins ?? null;
+  }
 
   return new Response(JSON.stringify({
     ok: true,
     runId: inserted?.id,
     createdAt: inserted?.created_at,
+    results,
+    robotsCheck,
     summary: { totalEndpoints: results.length, okCount, errorCount, totalUrls, hasSpaFallback, hasFailures, robotsFailures, alertSent },
   }), {
     status: 200,
