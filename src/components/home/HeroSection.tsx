@@ -2,10 +2,14 @@ import { Link, useNavigate } from "react-router-dom";
 import { Search, Star, Shield, Building2, ChevronLeft, ChevronRight, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { useEffect, useRef, useState, useCallback, memo, useMemo } from "react";
+import { useEffect, useRef, useState, useCallback, memo, useMemo, lazy, Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { HeroParticles } from "./HeroParticles";
+// HeroParticles is purely decorative — defer it past LCP to keep the main
+// thread free during the initial paint (improves INP/TBT on mobile).
+const HeroParticles = lazy(() =>
+  import("./HeroParticles").then((m) => ({ default: m.HeroParticles })),
+);
 // First slide is served from /public so we can <link rel="preload"> it from
 // index.html — that preload only matches if the URL is identical here.
 const heroBg1 = "/hero-bg.webp";
@@ -279,8 +283,10 @@ export const HeroSection = () => {
       <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/35 to-black/85" />
       <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at 50% 25%, hsl(42 85% 55% / 0.04) 0%, transparent 50%), radial-gradient(ellipse at 50% 30%, transparent 20%, hsl(220 35% 6% / 0.7) 70%)" }} />
 
-      {/* Particles */}
-      <HeroParticles />
+      {/* Particles — deferred past first paint, no fallback (purely decorative) */}
+      <Suspense fallback={null}>
+        <HeroParticles />
+      </Suspense>
 
       {/* Content */}
       <div className="relative z-10 container text-center px-4 sm:px-6 pt-24 sm:pt-28 pb-8">

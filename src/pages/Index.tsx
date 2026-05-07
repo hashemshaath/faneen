@@ -33,10 +33,18 @@ const LatestBlogSection = lazyRetry(() => import("@/components/home/LatestBlogSe
 const MembershipSection = lazyRetry(() => import("@/components/home/MembershipSection").then(m => ({ default: m.MembershipSection })));
 const CTASection = lazyRetry(() => import("@/components/home/CTASection").then(m => ({ default: m.CTASection })));
 
-const SectionFallback = () => (
-  <div className="py-16 px-4 container space-y-4">
-    <div className="h-8 w-48 bg-muted animate-pulse rounded-lg mx-auto" />
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">{[1,2,3].map(i => <div key={i} className="h-40 bg-muted animate-pulse rounded-xl" />)}</div>
+/**
+ * Reserves a fixed vertical block while a lazy section loads, so layout
+ * doesn't jump (CLS). Height matches a typical section so content beneath
+ * doesn't shift when the real section mounts.
+ */
+const SectionFallback = ({ minH = 480 }: { minH?: number }) => (
+  <div
+    aria-hidden="true"
+    className="py-16 px-4 container"
+    style={{ minHeight: minH, contain: 'layout paint' }}
+  >
+    <div className="h-8 w-48 bg-muted/60 animate-pulse rounded-lg mx-auto" />
   </div>
 );
 
