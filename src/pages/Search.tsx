@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useDeferredValue } from 'react';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { useSearchParams } from 'react-router-dom';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -199,6 +199,10 @@ const SearchPage = () => {
     return res;
   }, [businesses, debouncedQuery, filters, language, selectedTags, entityTags, favoritesOnly]);
 
+  // Defer the heavy filtered list so typing/filter clicks stay responsive.
+  const deferredFiltered = useDeferredValue(filtered);
+  const isPending = deferredFiltered !== filtered;
+
   // Consolidated JSON-LD: BreadcrumbList + WebSite/SearchAction + ItemList of
   // the top providers (when results exist). All keywords carry sector context
   // so Google can map the page to the right vertical.
@@ -258,12 +262,12 @@ const SearchPage = () => {
     return getDidYouMean(debouncedQuery, allNames);
   }, [debouncedQuery, filtered.length, businesses, language]);
 
-  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(deferredFiltered.length / ITEMS_PER_PAGE);
   const paginatedResults = useMemo(() => {
-    if (viewMode === 'map' || viewMode === 'split') return filtered;
+    if (viewMode === 'map' || viewMode === 'split') return deferredFiltered;
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filtered.slice(start, start + ITEMS_PER_PAGE);
-  }, [filtered, currentPage, viewMode]);
+    return deferredFiltered.slice(start, start + ITEMS_PER_PAGE);
+  }, [deferredFiltered, currentPage, viewMode]);
 
   const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page);
@@ -337,10 +341,10 @@ const SearchPage = () => {
           />
           <SearchResults
             businesses={paginatedResults}
-            isLoading={isLoading}
+            isLoading={isLoading || (isPending && deferredFiltered.length === 0)}
             viewMode={viewMode}
             onViewModeChange={setViewMode}
-            totalCount={filtered.length}
+            totalCount={deferredFiltered.length}
             onClearFilters={clearFilters}
             currentPage={currentPage}
             totalPages={totalPages}
