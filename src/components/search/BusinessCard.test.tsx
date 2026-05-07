@@ -3,9 +3,15 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { BusinessCard } from './BusinessCard';
 
+const langState = vi.hoisted(() => ({ language: 'ar' as 'ar' | 'en', isRTL: true }));
 vi.mock('@/i18n/LanguageContext', () => ({
-  useLanguage: () => ({ language: 'ar', isRTL: true }),
+  useLanguage: () => ({ language: langState.language, isRTL: langState.isRTL }),
 }));
+const setLanguage = (lang: 'ar' | 'en') => {
+  langState.language = lang;
+  langState.isRTL = lang === 'ar';
+};
+afterEach(() => setLanguage('ar'));
 vi.mock('@/hooks/useBusinessFavorites', () => ({
   useBusinessFavorites: () => ({ isFavorite: () => false, toggleFavorite: () => false }),
 }));
