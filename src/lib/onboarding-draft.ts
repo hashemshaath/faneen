@@ -4,6 +4,7 @@
  * Per memory: use `qitaat_*` localStorage keys, plain JSON, never `any`.
  */
 import { supabase } from '@/integrations/supabase/client';
+import type { Json } from '@/integrations/supabase/types';
 
 const LOCAL_KEY = 'qitaat_onboarding_draft_v1';
 
@@ -67,7 +68,7 @@ export async function syncDraftToServer(userId: string): Promise<void> {
   try {
     await supabase
       .from('profiles')
-      .update({ onboarding_draft: draft as unknown as Record<string, unknown> })
+      .update({ onboarding_draft: draft as unknown as Json })
       .eq('user_id', userId);
   } catch {
     /* swallow — local copy is the source of truth */
