@@ -3,10 +3,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import {
   ShieldCheck, ShieldAlert, Search, CheckCircle2, XCircle, Eye,
-  AlertCircle, Loader2, Send, Globe, Tag,
+  AlertCircle, Loader2, Send, Globe, Tag, Lock,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { maskEmail, maskPhone } from '@/lib/masking';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -72,7 +74,7 @@ interface ProviderRow {
 
 export default function AdminProviderReview() {
   const { language, isRTL } = useLanguage();
-  // intentionally below other hooks
+  const { isSuperAdmin } = useAuth();
   usePageMeta({
     title: isRTL ? 'مراجعة المزودين | الإدارة' : 'Provider Review | Admin',
     noindex: true,
