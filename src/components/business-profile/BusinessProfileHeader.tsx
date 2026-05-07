@@ -185,12 +185,7 @@ export const BusinessProfileHeader = ({
                     <h1 className="truncate font-heading text-xl font-bold text-foreground sm:text-3xl">
                       {name}
                     </h1>
-                    {business.is_verified && (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[11px] font-body font-semibold border border-emerald-500/20">
-                        <ShieldCheck className="h-3.5 w-3.5" />
-                        {language === "ar" ? "شركة موثقة" : "Verified"}
-                      </span>
-                    )}
+                    {business.is_verified && <VerifiedBadge size="md" />}
                     {activeOffersCount > 0 && (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400 text-[11px] font-body font-semibold border border-rose-500/20">
                         <TicketPercent className="h-3.5 w-3.5" />
