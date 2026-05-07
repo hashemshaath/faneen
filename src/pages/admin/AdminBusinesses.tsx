@@ -468,6 +468,65 @@ const AdminBusinesses = () => {
     onSuccess: () => refetchBranches(),
   });
 
+  /* ─── Realtime ─── */
+  useEffect(() => {
+    const ch = supabase
+      .channel('admin-businesses-rt')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'businesses' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['admin-businesses'] });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [queryClient]);
+
+  /* ─── Bulk mutation ─── */
+  const bulkMutation = useMutation({
+    mutationFn: async ({ ids, patch }: { ids: string[]; patch: Record<string, unknown> }) => {
+      const { error } = await supabase.from('businesses').update(patch as any).in('id', ids);
+      if (error) throw error;
+    },
+    onSuccess: (_d, vars) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-businesses'] });
+      toast.success(isRTL ? `تم تحديث ${vars.ids.length} عنصر` : `Updated ${vars.ids.length} item(s)`);
+      clearSelected();
+    },
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : (isRTL ? 'فشل التحديث' : 'Update failed')),
+  });
+
+  /* ─── AI auto-translate missing field (single business) ─── */
+  const [autoTranslating, setAutoTranslating] = useState(false);
+  const autoFillTranslations = useCallback(async () => {
+    if (!editingBiz) return;
+    setAutoTranslating(true);
+    try {
+      const fields: Array<{ key: string; from: 'ar' | 'en'; to: 'ar' | 'en' }> = [];
+      const pairs: Array<[string, string]> = [
+        ['name_ar', 'name_en'],
+        ['short_description_ar', 'short_description_en'],
+        ['description_ar', 'description_en'],
+      ];
+      for (const [ar, en] of pairs) {
+        if ((editForm[ar] || '').trim() && !(editForm[en] || '').trim()) fields.push({ key: en, from: 'ar', to: 'en' });
+        else if ((editForm[en] || '').trim() && !(editForm[ar] || '').trim()) fields.push({ key: ar, from: 'en', to: 'ar' });
+      }
+      if (fields.length === 0) { toast.info(isRTL ? 'كل الحقول مكتملة' : 'All fields complete'); return; }
+      let done = 0;
+      for (const f of fields) {
+        const sourceKey = f.to === 'en' ? f.key.replace('_en', '_ar') : f.key.replace('_ar', '_en');
+        const text = editForm[sourceKey] as string;
+        const { data, error } = await supabase.functions.invoke('blog-ai-tools', {
+          body: { action: 'translate', text, sourceLang: f.from, targetLang: f.to },
+        });
+        if (error) throw error;
+        const translated = (data?.result || '').trim();
+        if (translated) { setField(f.key, translated); done += 1; }
+      }
+      toast.success(isRTL ? `تمت ترجمة ${done} حقل` : `Translated ${done} field(s)`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : (isRTL ? 'فشلت الترجمة التلقائية' : 'Auto-translate failed'));
+    } finally { setAutoTranslating(false); }
+  }, [editingBiz, editForm, isRTL, setField]);
+
   const handleMapPick = async (lat: number, lng: number) => {
     setField('latitude', lat);
     setField('longitude', lng);
