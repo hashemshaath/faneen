@@ -19,6 +19,8 @@ import {
   Filter,
   ShieldCheck,
   ArrowUpRight,
+  Award,
+  SearchX,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -27,16 +29,20 @@ import { VerifiedBadge } from "@/components/common/VerifiedBadge";
 
 /* ── Skeleton ── */
 const ProviderSkeleton = () => (
-  <div className="rounded-3xl border border-border/40 bg-card p-5 space-y-4">
-    <div className="h-20 rounded-2xl bg-muted/40 dark:bg-muted/15 relative overflow-hidden">
-      <Skeleton className="absolute -bottom-6 start-5 w-16 h-16 rounded-2xl" />
+  <div className="rounded-3xl border border-border/40 bg-card overflow-hidden">
+    <div className="h-20 bg-gradient-to-br from-muted/50 to-muted/20 dark:from-muted/20 dark:to-muted/5 relative">
+      <Skeleton className="absolute -bottom-8 start-5 w-16 h-16 rounded-2xl ring-4 ring-card" />
     </div>
-    <div className="pt-6 space-y-2">
+    <div className="px-5 pb-5 pt-10 space-y-3">
       <Skeleton className="h-4 w-3/4" />
       <Skeleton className="h-3 w-1/2" />
+      <Skeleton className="h-1.5 w-full rounded-full" />
+      <div className="flex gap-1.5">
+        <Skeleton className="h-5 w-16 rounded-lg" />
+        <Skeleton className="h-5 w-14 rounded-lg" />
+      </div>
+      <Skeleton className="h-9 w-full rounded-xl" />
     </div>
-    <Skeleton className="h-1.5 w-full rounded-full" />
-    <Skeleton className="h-9 w-full rounded-xl" />
   </div>
 );
 
@@ -59,13 +65,14 @@ const RankPill = ({ rank }: { rank: number }) => {
         "bg-gradient-to-br from-slate-300 to-slate-400 text-slate-800 shadow-slate-400/30",
         "bg-gradient-to-br from-orange-400 to-amber-600 text-orange-950 shadow-orange-400/25",
       ][rank - 1]
-    : "bg-card text-muted-foreground border border-border/60 shadow-sm";
+    : "bg-card/95 backdrop-blur text-muted-foreground border border-border/60 shadow-sm";
   return (
     <span
-      className={`absolute -top-2 -end-2 z-20 flex items-center justify-center min-w-[28px] h-7 px-2 rounded-full text-[11px] font-black shadow-lg ${palette}`}
+      className={`absolute top-2.5 start-2.5 z-20 inline-flex items-center gap-1 min-w-[30px] h-7 px-2 rounded-full text-[11px] font-black shadow-lg ${palette}`}
       aria-label={`Rank ${rank}`}
     >
-      {rank}
+      {isTopThree && <Award className="w-3 h-3" strokeWidth={2.5} />}
+      #{rank}
     </span>
   );
 };
