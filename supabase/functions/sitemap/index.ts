@@ -4,6 +4,10 @@ const HEADERS = {
   "Content-Type": "application/xml; charset=utf-8",
   "Cache-Control": "public, max-age=86400, s-maxage=86400",
   "X-Robots-Tag": "noindex",
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, OPTIONS",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Expose-Headers": "content-type, last-modified, etag",
 };
 
 const BASE = "https://qitaat.com";
