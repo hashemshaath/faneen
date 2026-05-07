@@ -559,3 +559,110 @@ html { transition: none; }
 /* Smooth scrollbar hide for split view */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ============================================================
+   Design System primitives — typography / surfaces / buttons
+   RTL-aware via logical properties. Prefer these in new code.
+   Placed outside @layer to allow compound selectors safely.
+   ============================================================ */
+
+/* Heading scale — `ds-` prefix avoids clashing with Tailwind's h-* height utilities */
+.ds-h-display {
+  font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans Arabic Fallback', sans-serif;
+  font-size: var(--fs-display); font-weight: 800; line-height: 1.05; letter-spacing: -0.02em;
+}
+.ds-h1 {
+  font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans Arabic Fallback', sans-serif;
+  font-size: var(--fs-3xl); font-weight: 700; line-height: 1.15; letter-spacing: -0.015em;
+}
+.ds-h2 {
+  font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans Arabic Fallback', sans-serif;
+  font-size: var(--fs-2xl); font-weight: 700; line-height: 1.2; letter-spacing: -0.01em;
+}
+.ds-h3 {
+  font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans Arabic Fallback', sans-serif;
+  font-size: var(--fs-xl); font-weight: 600; line-height: 1.3;
+}
+.ds-h4 {
+  font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans Arabic Fallback', sans-serif;
+  font-size: var(--fs-lg); font-weight: 600; line-height: 1.35;
+}
+.text-eyebrow {
+  font-size: var(--fs-2xs); font-weight: 600; letter-spacing: 0.08em;
+  text-transform: uppercase; color: hsl(var(--accent));
+}
+.text-body { font-size: var(--fs-base); line-height: 1.7; }
+.text-body-sm { font-size: var(--fs-sm); line-height: 1.6; }
+.text-caption { font-size: var(--fs-xs); line-height: 1.5; color: hsl(var(--muted-foreground)); }
+
+/* Surface (card) primitives — three elevation tiers */
+.surface {
+  background-color: hsl(var(--card));
+  border: 1px solid hsl(var(--border) / 0.4);
+  border-radius: var(--r-xl);
+  box-shadow: var(--elev-1);
+}
+.surface-raised {
+  background-color: hsl(var(--card));
+  border: 1px solid hsl(var(--border) / 0.3);
+  border-radius: var(--r-xl);
+  box-shadow: var(--elev-2);
+}
+.surface-floating {
+  background-color: hsl(var(--card));
+  border: 1px solid hsl(var(--border) / 0.25);
+  border-radius: var(--r-2xl);
+  box-shadow: var(--elev-3);
+}
+.surface-muted {
+  background-color: hsl(var(--muted) / 0.4);
+  border-radius: var(--r-lg);
+}
+
+/* Button tokens — RTL-aware (uses padding-inline), single source of truth */
+.btn-ds {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: var(--sp-2);
+  font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans Arabic Fallback', sans-serif;
+  font-weight: 600; line-height: 1;
+  border-radius: var(--r-md);
+  transition:
+    background-color var(--dur-base) var(--ease-standard),
+    color var(--dur-fast) var(--ease-standard),
+    box-shadow var(--dur-base) var(--ease-standard),
+    transform var(--dur-fast) var(--ease-emphasized);
+  cursor: pointer; user-select: none; white-space: nowrap;
+}
+.btn-ds:disabled { opacity: 0.55; pointer-events: none; }
+.btn-ds:active { transform: scale(0.97); }
+.btn-ds-sm { height: 2.25rem; padding-inline: var(--sp-3); font-size: var(--fs-xs); }
+.btn-ds-md { height: 2.75rem; padding-inline: var(--sp-4); font-size: var(--fs-sm); }
+.btn-ds-lg { height: 3rem; padding-inline: var(--sp-5); font-size: var(--fs-base); }
+.btn-primary { background-color: hsl(var(--accent)); color: hsl(var(--accent-foreground)); box-shadow: var(--elev-1); }
+.btn-primary:hover { background-color: hsl(var(--accent) / 0.9); box-shadow: var(--elev-2); }
+.btn-secondary { background-color: hsl(var(--secondary)); color: hsl(var(--secondary-foreground)); }
+.btn-outline-ds {
+  background-color: transparent;
+  border: 1px solid hsl(var(--border));
+  color: hsl(var(--foreground));
+}
+.btn-outline-ds:hover { background-color: hsl(var(--muted) / 0.5); }
+.btn-ghost-ds { background-color: transparent; color: hsl(var(--foreground)); }
+.btn-ghost-ds:hover { background-color: hsl(var(--muted) / 0.6); }
+
+/* Stack / Cluster helpers — token-driven, RTL-safe (block/inline logical) */
+.stack-2 > * + * { margin-block-start: var(--sp-2); }
+.stack-3 > * + * { margin-block-start: var(--sp-3); }
+.stack-4 > * + * { margin-block-start: var(--sp-4); }
+.stack-6 > * + * { margin-block-start: var(--sp-6); }
+.cluster { display: flex; flex-wrap: wrap; gap: var(--sp-2); align-items: center; }
+.cluster-3 { display: flex; flex-wrap: wrap; gap: var(--sp-3); align-items: center; }
+
+/* Logical-property shortcuts */
+.pad-block { padding-block: var(--sp-4); }
+.pad-block-lg { padding-block: var(--sp-8); }
+.pad-inline { padding-inline: var(--sp-4); }
+
+/* Section rhythm — consistent vertical pacing across pages */
+.section-ds { padding-block: var(--sp-12); }
+@media (min-width: 640px) { .section-ds { padding-block: var(--sp-20); } }
