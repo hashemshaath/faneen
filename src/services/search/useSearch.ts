@@ -187,10 +187,24 @@ export const useBusinesses = () =>
   useQuery({
     queryKey: ['businesses-all-with-services'],
     queryFn: async () => {
+      const today = new Date().toISOString().slice(0, 10);
       const { data } = await supabase
         .from('businesses_public')
-        .select('*, categories(*), cities(*), business_services(name_ar, name_en, price_from, price_to, is_active), promotions(id, is_active, end_date)')
+        .select(
+          [
+            '*',
+            'categories(id, name_ar, name_en, slug, icon)',
+            'cities(id, name_ar, name_en)',
+            'business_services(name_ar, name_en, price_from, price_to, is_active)',
+            'promotions(id, end_date)',
+          ].join(', ')
+        )
         .eq('is_active', true)
+        // Only return active + non-expired service rows for tag chips & price filter
+        .eq('business_services.is_active', true)
+        // Only return live promotions for the "كوبون" badge (active and not expired)
+        .eq('promotions.is_active', true)
+        .or(`end_date.is.null,end_date.gte.${today}`, { foreignTable: 'promotions' })
         .order('rating_avg', { ascending: false })
         .limit(500);
       return data ?? [];
