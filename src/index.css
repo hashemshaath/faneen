@@ -289,6 +289,47 @@
     text-align: start;
     unicode-bidi: plaintext;
   }
+
+  /* ============================================================
+     Direction utilities — RTL/LTR system
+     Use these instead of hardcoded left/right where possible.
+     ============================================================ */
+
+  /* Auto-flip directional icons when in RTL.
+     Apply to chevrons, arrows, back buttons, etc. */
+  [dir="rtl"] .icon-flip-rtl,
+  [dir="rtl"] .rtl-flip {
+    transform: scaleX(-1);
+  }
+
+  /* Mirror an entire element horizontally in RTL (e.g. carousels). */
+  [dir="rtl"] .mirror-rtl {
+    transform: scaleX(-1);
+  }
+  [dir="rtl"] .mirror-rtl > * {
+    transform: scaleX(-1);
+  }
+
+  /* Logical text alignment helpers — prefer these over text-left/right. */
+  .text-start { text-align: start; }
+  .text-end { text-align: end; }
+
+  /* Logical float helpers */
+  .float-start { float: inline-start; }
+  .float-end { float: inline-end; }
+
+  /* Flex direction reverses naturally with `dir`, but expose a helper
+     for cases where we want to FORCE LTR ordering even in RTL. */
+  .flex-ltr { direction: ltr; }
+  .flex-rtl { direction: rtl; }
+}
+
+/* Body class strategy — set by LanguageContext */
+body.rtl { direction: rtl; }
+body.ltr { direction: ltr; }
+
+/* Prevent layout shift on language switch */
+html { transition: none; }
 }
 
 @keyframes float {
