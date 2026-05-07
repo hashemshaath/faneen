@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef, useMemo, useTransition } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -28,7 +29,8 @@ import {
   GripVertical, ToggleLeft, ToggleRight, Save, Image, MapPinned,
   FileText, Users, Locate, Navigation, Download, LayoutGrid, List,
   TrendingUp, ArrowUpRight, Filter, RefreshCw, Copy, MoreHorizontal,
-  Activity, Zap,
+  Activity, Zap, Languages, ArrowUpDown, ChevronLeft, ChevronRight,
+  CheckSquare, Square, AlertTriangle,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import {
@@ -153,9 +155,39 @@ const AdminBusinesses = () => {
   const { isRTL, language } = useLanguage();
   const { isAdmin, user } = useAuth();
   const queryClient = useQueryClient();
-  const [search, setSearch] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [filterTier, setFilterTier] = useState('all');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const search = searchParams.get('q') || '';
+  const filterStatus = searchParams.get('status') || 'all';
+  const filterTier = searchParams.get('tier') || 'all';
+  const filterTranslation = searchParams.get('translation') || 'all'; // all|missing_en|missing_ar|complete
+  const sortBy = (searchParams.get('sort') || 'recent') as 'recent' | 'rating' | 'name' | 'tier';
+  const page = parseInt(searchParams.get('page') || '1', 10) || 1;
+  const viewMode = (searchParams.get('view') || 'cards') as 'cards' | 'table';
+  const PAGE_SIZE = 20;
+  const updateParam = useCallback((updates: Record<string, string | null>) => {
+    const sp = new URLSearchParams(searchParams);
+    Object.entries(updates).forEach(([k, v]) => {
+      if (v === null || v === '' || v === 'all') sp.delete(k);
+      else sp.set(k, v);
+    });
+    setSearchParams(sp, { replace: false });
+  }, [searchParams, setSearchParams]);
+  const [searchInput, setSearchInput] = useState(search);
+  useEffect(() => { setSearchInput(search); }, [search]);
+  useEffect(() => {
+    const t = setTimeout(() => { if (searchInput !== search) updateParam({ q: searchInput || null, page: null }); }, 300);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchInput]);
+  const setFilterStatus = (v: string) => updateParam({ status: v === 'all' ? null : v, page: null });
+  const setFilterTier = (v: string) => updateParam({ tier: v === 'all' ? null : v, page: null });
+  const setSortBy = (v: string) => updateParam({ sort: v === 'recent' ? null : v });
+  const setViewMode = (v: 'cards' | 'table') => updateParam({ view: v === 'cards' ? null : v });
+  const setSearch = (v: string) => { setSearchInput(v); };
+  const setPage = (n: number) => updateParam({ page: n <= 1 ? null : String(n) });
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const toggleSelect = (id: string) => setSelected(s => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const clearSelected = () => setSelected(new Set());
   const [editingBiz, setEditingBiz] = useState<any | null>(null);
   const [editForm, setEditForm] = useState<any>({});
   const [servicesPanel, setServicesPanel] = useState<string | null>(null);
@@ -164,7 +196,6 @@ const AdminBusinesses = () => {
   const [geocoding, setGeocoding] = useState(false);
   const [branchForm, setBranchForm] = useState<any | null>(null);
   const [editingBranchId, setEditingBranchId] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
   const [isPending, startTransition] = useTransition();
 
   const setField = useCallback((key: string, value: string | number | boolean | null) => {
@@ -437,6 +468,80 @@ const AdminBusinesses = () => {
     onSuccess: () => refetchBranches(),
   });
 
+  /* ─── Realtime ─── */
+  useEffect(() => {
+    const ch = supabase
+      .channel('admin-businesses-rt')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'businesses' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['admin-businesses'] });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [queryClient]);
+
+  /* ─── Bulk mutation ─── */
+  const bulkMutation = useMutation({
+    mutationFn: async ({ ids, patch }: { ids: string[]; patch: Record<string, unknown> }) => {
+      const { error } = await supabase.from('businesses').update(patch as any).in('id', ids);
+      if (error) throw error;
+    },
+    onSuccess: (_d, vars) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-businesses'] });
+      toast.success(isRTL ? `تم تحديث ${vars.ids.length} عنصر` : `Updated ${vars.ids.length} item(s)`);
+      clearSelected();
+    },
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : (isRTL ? 'فشل التحديث' : 'Update failed')),
+  });
+
+  /* ─── AI auto-translate missing field (single business) ─── */
+  const [autoTranslating, setAutoTranslating] = useState(false);
+  const searchRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      if (e.key === '/') { e.preventDefault(); searchRef.current?.focus(); }
+      if (e.key === 'Escape') {
+        if (editingBiz) setEditingBiz(null);
+        else if (servicesPanel) setServicesPanel(null);
+        else if (selected.size) clearSelected();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [editingBiz, servicesPanel, selected.size]);
+  const autoFillTranslations = useCallback(async () => {
+    if (!editingBiz) return;
+    setAutoTranslating(true);
+    try {
+      const fields: Array<{ key: string; from: 'ar' | 'en'; to: 'ar' | 'en' }> = [];
+      const pairs: Array<[string, string]> = [
+        ['name_ar', 'name_en'],
+        ['short_description_ar', 'short_description_en'],
+        ['description_ar', 'description_en'],
+      ];
+      for (const [ar, en] of pairs) {
+        if ((editForm[ar] || '').trim() && !(editForm[en] || '').trim()) fields.push({ key: en, from: 'ar', to: 'en' });
+        else if ((editForm[en] || '').trim() && !(editForm[ar] || '').trim()) fields.push({ key: ar, from: 'en', to: 'ar' });
+      }
+      if (fields.length === 0) { toast.info(isRTL ? 'كل الحقول مكتملة' : 'All fields complete'); return; }
+      let done = 0;
+      for (const f of fields) {
+        const sourceKey = f.to === 'en' ? f.key.replace('_en', '_ar') : f.key.replace('_ar', '_en');
+        const text = editForm[sourceKey] as string;
+        const { data, error } = await supabase.functions.invoke('blog-ai-tools', {
+          body: { action: 'translate', text, sourceLang: f.from, targetLang: f.to },
+        });
+        if (error) throw error;
+        const translated = (data?.result || '').trim();
+        if (translated) { setField(f.key, translated); done += 1; }
+      }
+      toast.success(isRTL ? `تمت ترجمة ${done} حقل` : `Translated ${done} field(s)`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : (isRTL ? 'فشلت الترجمة التلقائية' : 'Auto-translate failed'));
+    } finally { setAutoTranslating(false); }
+  }, [editingBiz, editForm, isRTL, setField]);
+
   const handleMapPick = async (lat: number, lng: number) => {
     setField('latitude', lat);
     setField('longitude', lng);
@@ -481,19 +586,60 @@ const AdminBusinesses = () => {
   };
 
   /* ─── Filters ─── */
-  const filtered = useMemo(() => businesses.filter((b) => {
-    const matchSearch = !search ||
-      b.name_ar?.includes(search) || b.name_en?.toLowerCase().includes(search.toLowerCase()) ||
-      b.username?.includes(search) || b.ref_id?.includes(search) ||
-      b.email?.includes(search) || b.phone?.includes(search);
-    const matchStatus = filterStatus === 'all' ||
-      (filterStatus === 'verified' && b.is_verified) ||
-      (filterStatus === 'unverified' && !b.is_verified) ||
-      (filterStatus === 'inactive' && !b.is_active) ||
-      (filterStatus === 'contract' && contractBusinessIds.includes(b.id));
-    const matchTier = filterTier === 'all' || b.membership_tier === filterTier;
-    return matchSearch && matchStatus && matchTier;
-  }), [businesses, search, filterStatus, filterTier, contractBusinessIds]);
+  const translationCompleteness = useCallback((b: Record<string, any>) => {
+    const ar = !!(b.name_ar && b.short_description_ar && b.description_ar);
+    const en = !!(b.name_en && b.short_description_en && b.description_en);
+    return { ar, en, full: ar && en };
+  }, []);
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const arr = businesses.filter((b) => {
+      const matchSearch = !q ||
+        b.name_ar?.toLowerCase().includes(q) || b.name_en?.toLowerCase().includes(q) ||
+        b.username?.toLowerCase().includes(q) || b.ref_id?.toLowerCase().includes(q) ||
+        b.email?.toLowerCase().includes(q) || b.phone?.toLowerCase().includes(q);
+      const matchStatus = filterStatus === 'all' ||
+        (filterStatus === 'verified' && b.is_verified) ||
+        (filterStatus === 'unverified' && !b.is_verified) ||
+        (filterStatus === 'inactive' && !b.is_active) ||
+        (filterStatus === 'contract' && contractBusinessIds.includes(b.id));
+      const matchTier = filterTier === 'all' || b.membership_tier === filterTier;
+      const tc = translationCompleteness(b);
+      const matchTrans = filterTranslation === 'all'
+        || (filterTranslation === 'missing_en' && !tc.en)
+        || (filterTranslation === 'missing_ar' && !tc.ar)
+        || (filterTranslation === 'complete' && tc.full);
+      return matchSearch && matchStatus && matchTier && matchTrans;
+    });
+    const tierRank: Record<string, number> = { enterprise: 0, premium: 1, basic: 2, free: 3 };
+    arr.sort((a, b) => {
+      switch (sortBy) {
+        case 'rating': return (b.rating_avg || 0) - (a.rating_avg || 0);
+        case 'name': {
+          const an = (language === 'ar' ? a.name_ar : (a.name_en || a.name_ar)) || '';
+          const bn = (language === 'ar' ? b.name_ar : (b.name_en || b.name_ar)) || '';
+          return an.localeCompare(bn, language === 'ar' ? 'ar' : 'en');
+        }
+        case 'tier': return (tierRank[a.membership_tier] ?? 9) - (tierRank[b.membership_tier] ?? 9);
+        default: return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }
+    });
+    return arr;
+  }, [businesses, search, filterStatus, filterTier, filterTranslation, sortBy, language, contractBusinessIds, translationCompleteness]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage = Math.min(Math.max(1, page), totalPages);
+  const paged = useMemo(() => filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE), [filtered, safePage]);
+  const allPagedSelected = paged.length > 0 && paged.every(b => selected.has(b.id));
+  const togglePageAll = () => {
+    setSelected(s => {
+      const n = new Set(s);
+      if (allPagedSelected) paged.forEach(b => n.delete(b.id));
+      else paged.forEach(b => n.add(b.id));
+      return n;
+    });
+  };
 
   const stats = useMemo(() => ({
     total: businesses.length,
@@ -595,16 +741,17 @@ const AdminBusinesses = () => {
         )}
 
         {/* ─── Filters ─── */}
-        <div className="rounded-2xl border border-border/30 bg-card p-4">
+        <div className="rounded-2xl border border-border/30 bg-card p-4 sticky top-0 z-20 backdrop-blur-md bg-card/95">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
               <Search className="absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
-              <Input value={search}
-                onChange={e => { const v = e.target.value; startTransition(() => setSearch(v)); }}
-                placeholder={isRTL ? 'بحث بالاسم، المعرف، الهاتف، البريد...' : 'Search by name, ID, phone, email...'}
+              <Input ref={searchRef} value={searchInput}
+                onChange={e => { const v = e.target.value; startTransition(() => setSearchInput(v)); }}
+                placeholder={isRTL ? 'بحث بالاسم، المعرف، الهاتف، البريد… ( / )' : 'Search by name, ID, phone, email… ( / )'}
+                dir="auto"
                 className="ps-10 h-10 rounded-xl bg-muted/30 border-border/20 focus:bg-background transition-colors" />
               {search && (
-                <button onClick={() => setSearch('')}
+                <button onClick={() => { setSearchInput(''); updateParam({ q: null }); }}
                   className="absolute top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" style={{ [isRTL ? 'left' : 'right']: '10px' }}>
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -630,20 +777,80 @@ const AdminBusinesses = () => {
                 {tiers.map(t => <SelectItem key={t.value} value={t.value}>{t.icon} {language === 'ar' ? t.label_ar : t.label_en}</SelectItem>)}
               </SelectContent>
             </Select>
+            <Select value={filterTranslation} onValueChange={(v) => updateParam({ translation: v === 'all' ? null : v, page: null })}>
+              <SelectTrigger className="w-full sm:w-44 h-10 rounded-xl">
+                <Languages className="w-4 h-4 me-2 text-muted-foreground" /><SelectValue />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl">
+                <SelectItem value="all">{isRTL ? 'كل الترجمات' : 'All Translations'}</SelectItem>
+                <SelectItem value="missing_en">{isRTL ? 'ينقص الإنجليزي' : 'Missing English'}</SelectItem>
+                <SelectItem value="missing_ar">{isRTL ? 'ينقص العربي' : 'Missing Arabic'}</SelectItem>
+                <SelectItem value="complete">{isRTL ? 'مكتملة الترجمة' : 'Translation Complete'}</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-full sm:w-40 h-10 rounded-xl">
+                <ArrowUpDown className="w-4 h-4 me-2 text-muted-foreground" /><SelectValue />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl">
+                <SelectItem value="recent">{isRTL ? 'الأحدث' : 'Most recent'}</SelectItem>
+                <SelectItem value="rating">{isRTL ? 'الأعلى تقييماً' : 'Top rated'}</SelectItem>
+                <SelectItem value="name">{isRTL ? 'الاسم (أ-ي)' : 'Name (A-Z)'}</SelectItem>
+                <SelectItem value="tier">{isRTL ? 'العضوية' : 'Tier'}</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-          {(search || filterStatus !== 'all' || filterTier !== 'all') && (
+          {(search || filterStatus !== 'all' || filterTier !== 'all' || filterTranslation !== 'all' || sortBy !== 'recent') && (
             <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/20">
               <span className="text-[11px] text-muted-foreground">{isRTL ? 'النتائج:' : 'Results:'} {filtered.length}</span>
-              {search && <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-lg" onClick={() => setSearch('')}>"{search}" <X className="w-2.5 h-2.5" /></Badge>}
+              {search && <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-lg" onClick={() => { setSearchInput(''); updateParam({ q: null }); }}>"{search}" <X className="w-2.5 h-2.5" /></Badge>}
               {filterStatus !== 'all' && <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-lg" onClick={() => setFilterStatus('all')}>{filterStatus} <X className="w-2.5 h-2.5" /></Badge>}
               {filterTier !== 'all' && <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-lg" onClick={() => setFilterTier('all')}>{filterTier} <X className="w-2.5 h-2.5" /></Badge>}
+              {filterTranslation !== 'all' && <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-lg" onClick={() => updateParam({ translation: null })}>{filterTranslation} <X className="w-2.5 h-2.5" /></Badge>}
+              {sortBy !== 'recent' && <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-lg" onClick={() => setSortBy('recent')}>{sortBy} <X className="w-2.5 h-2.5" /></Badge>}
               <button className="text-[10px] text-primary hover:underline ms-auto"
-                onClick={() => { setSearch(''); setFilterStatus('all'); setFilterTier('all'); }}>
+                onClick={() => { setSearchInput(''); setSearchParams(new URLSearchParams(), { replace: false }); }}>
                 {isRTL ? 'مسح الكل' : 'Clear all'}
               </button>
             </div>
           )}
         </div>
+
+        {/* ─── Bulk action bar ─── */}
+        {selected.size > 0 && (
+          <div className="rounded-2xl border border-accent/40 bg-accent/5 p-3 flex flex-wrap items-center gap-2 sticky top-[80px] z-10 backdrop-blur-md">
+            <Badge className="bg-accent text-accent-foreground gap-1 rounded-lg"><CheckSquare className="w-3 h-3" />
+              {isRTL ? `محدد: ${selected.size}` : `${selected.size} selected`}
+            </Badge>
+            <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5 rounded-xl"
+              onClick={() => bulkMutation.mutate({ ids: [...selected], patch: { is_active: true } })}>
+              <CheckCircle className="w-3.5 h-3.5" />{isRTL ? 'تفعيل' : 'Activate'}
+            </Button>
+            <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5 rounded-xl"
+              onClick={() => bulkMutation.mutate({ ids: [...selected], patch: { is_active: false } })}>
+              <Ban className="w-3.5 h-3.5" />{isRTL ? 'تعطيل' : 'Deactivate'}
+            </Button>
+            <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5 rounded-xl"
+              onClick={() => bulkMutation.mutate({ ids: [...selected], patch: { is_verified: true } })}>
+              <Shield className="w-3.5 h-3.5" />{isRTL ? 'توثيق' : 'Verify'}
+            </Button>
+            <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5 rounded-xl"
+              onClick={() => bulkMutation.mutate({ ids: [...selected], patch: { is_verified: false } })}>
+              <XCircle className="w-3.5 h-3.5" />{isRTL ? 'إلغاء التوثيق' : 'Unverify'}
+            </Button>
+            <Select onValueChange={(v) => bulkMutation.mutate({ ids: [...selected], patch: { membership_tier: v } })}>
+              <SelectTrigger className="h-8 w-36 text-xs rounded-xl"><Crown className="w-3.5 h-3.5 me-1" />
+                <SelectValue placeholder={isRTL ? 'تغيير العضوية' : 'Change tier'} />
+              </SelectTrigger>
+              <SelectContent>
+                {tiers.map(t => <SelectItem key={t.value} value={t.value}>{t.icon} {language === 'ar' ? t.label_ar : t.label_en}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Button size="sm" variant="ghost" className="h-8 text-xs gap-1.5 ms-auto rounded-xl" onClick={clearSelected}>
+              <X className="w-3.5 h-3.5" />{isRTL ? 'إلغاء التحديد' : 'Clear'}
+            </Button>
+          </div>
+        )}
 
         {/* ─── Inline Edit Panel ─── */}
         {editingBiz && (
@@ -660,10 +867,27 @@ const AdminBusinesses = () => {
                     {contractBusinessIds.includes(editingBiz.id) && (
                       <Badge variant="outline" className="text-[9px] gap-1"><FileText className="w-2.5 h-2.5" />{isRTL ? 'مرتبط بعقود' : 'Has Contracts'}</Badge>
                     )}
+                    {(() => {
+                      const tc = translationCompleteness(editForm);
+                      return (
+                        <Badge variant="outline" className={`text-[9px] gap-1 ${tc.full ? 'border-emerald-500/40 text-emerald-600' : 'border-amber-500/40 text-amber-600'}`}>
+                          <Languages className="w-2.5 h-2.5" />
+                          {tc.full ? (isRTL ? 'الترجمة مكتملة' : 'Bilingual ready')
+                            : (isRTL ? `ينقص: ${[!tc.ar && 'AR', !tc.en && 'EN'].filter(Boolean).join(' · ')}` : `Missing: ${[!tc.ar && 'AR', !tc.en && 'EN'].filter(Boolean).join(' · ')}`)}
+                        </Badge>
+                      );
+                    })()}
                   </div>
                 </div>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => setEditingBiz(null)} className="rounded-xl"><X className="w-4 h-4" /></Button>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 rounded-xl"
+                  onClick={autoFillTranslations} disabled={autoTranslating}>
+                  {autoTranslating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Languages className="w-3.5 h-3.5" />}
+                  {isRTL ? 'ترجمة تلقائية للناقص' : 'Auto-translate missing'}
+                </Button>
+                <Button variant="ghost" size="icon" onClick={() => setEditingBiz(null)} className="rounded-xl"><X className="w-4 h-4" /></Button>
+              </div>
             </div>
               <Tabs defaultValue="info" className="w-full">
                 <TabsList className="w-full grid grid-cols-7 h-9 rounded-xl">
@@ -684,7 +908,7 @@ const AdminBusinesses = () => {
                       <FieldAiActions compact value={editForm.name_ar} lang="ar" isRTL={isRTL} fieldType="title"
                         onTranslated={(v) => setField('name_en', v)} onImproved={(v) => setField('name_ar', v)} />
                     </div>
-                    <Input value={editForm.name_ar} onChange={e => setField('name_ar', e.target.value)} />
+                     <Input value={editForm.name_ar} onChange={e => setField('name_ar', e.target.value)} dir="auto" />
                   </div>
                   <div>
                     <div className="flex items-center justify-between mb-1">
@@ -904,30 +1128,30 @@ const AdminBusinesses = () => {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <Label className="text-xs flex items-center gap-1"><Phone className="w-3 h-3" /> {isRTL ? 'رقم الهاتف' : 'Phone'}</Label>
-                      <Input value={editForm.phone} onChange={e => setField('phone', e.target.value)} dir="ltr" className="mt-1" />
+                      <Input value={editForm.phone} onChange={e => setField('phone', e.target.value)} dir="ltr" className="mt-1 tech-content" />
                     </div>
                     <div>
                       <Label className="text-xs flex items-center gap-1"><Phone className="w-3 h-3" /> {isRTL ? 'رقم الجوال' : 'Mobile'}</Label>
-                      <Input value={editForm.mobile} onChange={e => setField('mobile', e.target.value)} dir="ltr" className="mt-1" />
+                      <Input value={editForm.mobile} onChange={e => setField('mobile', e.target.value)} dir="ltr" className="mt-1 tech-content" />
                     </div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <Label className="text-xs flex items-center gap-1"><Phone className="w-3 h-3" /> {isRTL ? 'الرقم الموحد' : 'Unified Number'}</Label>
-                      <Input value={editForm.unified_number} onChange={e => setField('unified_number', e.target.value)} dir="ltr" className="mt-1" placeholder="920xxxxxxx" />
+                      <Input value={editForm.unified_number} onChange={e => setField('unified_number', e.target.value)} dir="ltr" className="mt-1 tech-content" placeholder="920xxxxxxx" />
                     </div>
                     <div>
                       <Label className="text-xs flex items-center gap-1"><Phone className="w-3 h-3" /> {isRTL ? 'خدمة العملاء' : 'Customer Service'}</Label>
-                      <Input value={editForm.customer_service_phone} onChange={e => setField('customer_service_phone', e.target.value)} dir="ltr" className="mt-1" />
+                      <Input value={editForm.customer_service_phone} onChange={e => setField('customer_service_phone', e.target.value)} dir="ltr" className="mt-1 tech-content" />
                     </div>
                   </div>
                   <div>
                     <Label className="text-xs flex items-center gap-1"><Mail className="w-3 h-3" /> {isRTL ? 'البريد الإلكتروني' : 'Email'}</Label>
-                    <Input value={editForm.email} onChange={e => setField('email', e.target.value)} dir="ltr" className="mt-1" />
+                    <Input type="email" value={editForm.email} onChange={e => setField('email', e.target.value)} dir="ltr" className="mt-1 tech-content" />
                   </div>
                   <div>
                     <Label className="text-xs flex items-center gap-1"><Globe className="w-3 h-3" /> {isRTL ? 'الموقع الإلكتروني' : 'Website'}</Label>
-                    <Input value={editForm.website} onChange={e => setField('website', e.target.value)} dir="ltr" className="mt-1" placeholder="https://" />
+                    <Input type="url" value={editForm.website} onChange={e => setField('website', e.target.value)} dir="ltr" className="mt-1 tech-content" placeholder="https://" />
                   </div>
                   {editingBiz && (
                     <div className="mt-4">
@@ -1309,20 +1533,32 @@ const AdminBusinesses = () => {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/30">
+                    <TableHead className="w-8">
+                      <button onClick={togglePageAll} className="text-muted-foreground hover:text-foreground">
+                        {allPagedSelected ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
+                      </button>
+                    </TableHead>
                     <TableHead className="text-[11px] font-semibold">{isRTL ? 'النشاط' : 'Business'}</TableHead>
                     <TableHead className="text-[11px] font-semibold">{isRTL ? 'المعرف' : 'Username'}</TableHead>
                     <TableHead className="text-[11px] font-semibold">{isRTL ? 'العضوية' : 'Tier'}</TableHead>
                     <TableHead className="text-[11px] font-semibold">{isRTL ? 'التقييم' : 'Rating'}</TableHead>
+                    <TableHead className="text-[11px] font-semibold">{isRTL ? 'الترجمة' : 'Trans.'}</TableHead>
                     <TableHead className="text-[11px] font-semibold">{isRTL ? 'الحالة' : 'Status'}</TableHead>
                     <TableHead className="text-[11px] font-semibold text-center">{isRTL ? 'إجراءات' : 'Actions'}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filtered.map((biz, idx) => {
+                  {paged.map((biz, idx) => {
                     const tierInfo = tiers.find(t => t.value === biz.membership_tier) || tiers[0];
+                    const tc = translationCompleteness(biz);
                     return (
                       <TableRow key={biz.id} className={`hover:bg-muted/30 ${!biz.is_active ? 'opacity-50' : ''}`}
                         style={{ animationDelay: `${idx * 0.02}s` }}>
+                        <TableCell className="py-2.5">
+                          <button onClick={() => toggleSelect(biz.id)} className="text-muted-foreground hover:text-foreground">
+                            {selected.has(biz.id) ? <CheckSquare className="w-4 h-4 text-accent" /> : <Square className="w-4 h-4" />}
+                          </button>
+                        </TableCell>
                         <TableCell className="py-2.5">
                           <div className="flex items-center gap-2.5">
                             <Avatar className="w-8 h-8 border border-border/50">
@@ -1330,12 +1566,12 @@ const AdminBusinesses = () => {
                               <AvatarFallback className="bg-primary/5 text-primary font-bold text-[10px]">{biz.name_ar?.charAt(0)}</AvatarFallback>
                             </Avatar>
                             <div>
-                              <p className="text-xs font-semibold truncate max-w-[180px]">{language === 'ar' ? biz.name_ar : (biz.name_en || biz.name_ar)}</p>
-                              <p className="text-[10px] text-muted-foreground">{biz.ref_id}</p>
+                              <p className="text-xs font-semibold truncate max-w-[180px]" dir="auto">{language === 'ar' ? biz.name_ar : (biz.name_en || biz.name_ar)}</p>
+                              <p className="text-[10px] text-muted-foreground tech-content">{biz.ref_id}</p>
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell className="text-[11px] text-muted-foreground">@{biz.username}</TableCell>
+                        <TableCell className="text-[11px] text-muted-foreground tech-content">@{biz.username}</TableCell>
                         <TableCell>
                           <Badge className={`text-[9px] h-5 ${tierInfo.color} border-0`}>
                             {tierInfo.icon} {language === 'ar' ? tierInfo.label_ar : tierInfo.label_en}
@@ -1346,6 +1582,13 @@ const AdminBusinesses = () => {
                             <Star className="w-3 h-3 text-accent fill-accent" /> {biz.rating_avg}
                             <span className="text-muted-foreground">({biz.rating_count})</span>
                           </span>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className={`text-[9px] h-5 gap-1 ${tc.full ? 'border-emerald-500/30 text-emerald-600' : 'border-amber-500/30 text-amber-600'}`}
+                            title={tc.full ? (isRTL ? 'مكتملة' : 'Complete') : (isRTL ? 'ناقصة' : 'Incomplete')}>
+                            <Languages className="w-2.5 h-2.5" />
+                            {tc.ar ? 'AR' : '·'} / {tc.en ? 'EN' : '·'}
+                          </Badge>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1">
@@ -1377,18 +1620,32 @@ const AdminBusinesses = () => {
         ) : (
           /* ─── Cards View ─── */
           <div className="space-y-3">
-            {filtered.map((biz, idx) => {
+            <div className="flex items-center gap-2 px-1 text-[11px] text-muted-foreground">
+              <button onClick={togglePageAll} className="inline-flex items-center gap-1 hover:text-foreground">
+                {allPagedSelected ? <CheckSquare className="w-4 h-4 text-accent" /> : <Square className="w-4 h-4" />}
+                {isRTL ? 'تحديد الصفحة' : 'Select page'}
+              </button>
+              <span className="ms-auto tech-content">
+                {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, filtered.length)} / {filtered.length}
+              </span>
+            </div>
+            {paged.map((biz, idx) => {
               const tierInfo = tiers.find(t => t.value === biz.membership_tier) || tiers[0];
               const hasContract = contractBusinessIds.includes(biz.id);
               const svcCount = allServices.filter((s) => s.business_id === biz.id).length;
+              const tc = translationCompleteness(biz);
+              const isSel = selected.has(biz.id);
               return (
                 <div key={biz.id}
                   className={`group relative rounded-2xl border bg-card transition-all duration-200 hover:shadow-md
-                    ${!biz.is_active ? 'opacity-60 border-destructive/40' : 'border-border/30 hover:border-primary/20'}`}
+                    ${isSel ? 'border-accent ring-2 ring-accent/30' : (!biz.is_active ? 'opacity-60 border-destructive/40' : 'border-border/30 hover:border-primary/20')}`}
                   style={{ animationDelay: `${idx * 0.03}s` }}>
                   <div className="p-4">
                     <div className="flex flex-col sm:flex-row sm:items-start gap-4">
                       <div className="flex items-start gap-3 flex-1 min-w-0">
+                        <button onClick={() => toggleSelect(biz.id)} className="mt-1 text-muted-foreground hover:text-foreground" aria-label="select">
+                          {isSel ? <CheckSquare className="w-4 h-4 text-accent" /> : <Square className="w-4 h-4" />}
+                        </button>
                         <div className="relative">
                           <Avatar className="w-12 h-12 shrink-0 ring-2 ring-border/10">
                             <AvatarImage src={biz.logo_url || undefined} />
@@ -1404,16 +1661,22 @@ const AdminBusinesses = () => {
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="font-heading font-bold text-sm truncate">
+                            <h3 className="font-heading font-bold text-sm truncate" dir="auto">
                               {language === 'ar' ? biz.name_ar : (biz.name_en || biz.name_ar)}
                             </h3>
                             {!biz.is_active && <Badge variant="destructive" className="text-[9px] gap-0.5 px-1.5 py-0"><Ban className="w-2.5 h-2.5" />{isRTL ? 'معطل' : 'Disabled'}</Badge>}
                             {hasContract && <Badge variant="outline" className="text-[9px] gap-0.5 px-1.5 py-0"><FileText className="w-2.5 h-2.5" />{isRTL ? 'عقود' : 'Contracts'}</Badge>}
+                            {!tc.full && (
+                              <Badge variant="outline" className="text-[9px] gap-0.5 px-1.5 py-0 border-amber-500/40 text-amber-600" title={isRTL ? 'الترجمة غير مكتملة' : 'Translation incomplete'}>
+                                <AlertTriangle className="w-2.5 h-2.5" />{tc.ar ? 'EN' : 'AR'}
+                              </Badge>
+                            )}
                           </div>
                           <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
-                            <span className="text-[11px] text-muted-foreground font-mono">@{biz.username}</span>
-                            <span className="text-[11px] text-muted-foreground font-mono">{biz.ref_id}</span>
-                            {biz.phone && <span className="flex items-center gap-1 text-[11px] text-muted-foreground" dir="ltr"><Phone className="w-3 h-3 shrink-0" />{biz.phone}</span>}
+                            <span className="text-[11px] text-muted-foreground tech-content">@{biz.username}</span>
+                            <span className="text-[11px] text-muted-foreground tech-content">{biz.ref_id}</span>
+                            {biz.phone && <span className="flex items-center gap-1 text-[11px] text-muted-foreground tech-content" dir="ltr"><Phone className="w-3 h-3 shrink-0" />{biz.phone}</span>}
+                            {biz.email && <span className="flex items-center gap-1 text-[11px] text-muted-foreground tech-content truncate max-w-[200px]" dir="ltr"><Mail className="w-3 h-3 shrink-0" />{biz.email}</span>}
                           </div>
                           <div className="flex flex-wrap items-center gap-1.5 mt-2">
                             <Badge className={`${tierInfo.color} text-[10px] border px-1.5 py-0`}>
@@ -1475,11 +1738,26 @@ const AdminBusinesses = () => {
         )}
 
         {!isLoading && filtered.length > 0 && (
-          <div className="flex items-center justify-between pt-2 border-t border-border/30">
-            <p className="text-[11px] text-muted-foreground">
-              {isRTL ? `عرض ${filtered.length} من ${businesses.length} نشاط` : `Showing ${filtered.length} of ${businesses.length} businesses`}
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-border/30">
+            <p className="text-[11px] text-muted-foreground tech-content">
+              {isRTL
+                ? `الصفحة ${safePage}/${totalPages} · عرض ${(safePage - 1) * PAGE_SIZE + 1}–${Math.min(safePage * PAGE_SIZE, filtered.length)} من ${filtered.length} (إجمالي ${businesses.length})`
+                : `Page ${safePage}/${totalPages} · ${(safePage - 1) * PAGE_SIZE + 1}–${Math.min(safePage * PAGE_SIZE, filtered.length)} of ${filtered.length} (total ${businesses.length})`}
             </p>
             <div className="flex items-center gap-2">
+              {totalPages > 1 && (
+                <div className="flex items-center gap-1">
+                  <Button size="sm" variant="outline" className="h-8 w-8 p-0 rounded-xl" disabled={safePage <= 1}
+                    onClick={() => setPage(safePage - 1)}>
+                    {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+                  </Button>
+                  <span className="text-[11px] text-muted-foreground tech-content min-w-[3rem] text-center">{safePage}/{totalPages}</span>
+                  <Button size="sm" variant="outline" className="h-8 w-8 p-0 rounded-xl" disabled={safePage >= totalPages}
+                    onClick={() => setPage(safePage + 1)}>
+                    {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                  </Button>
+                </div>
+              )}
               <Badge variant="outline" className="text-[10px] h-5 gap-1">
                 <Activity className="w-3 h-3" />
                 {isRTL ? `${stats.active} نشط` : `${stats.active} active`}
