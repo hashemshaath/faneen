@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -16,7 +16,7 @@ import { RelatedProjects } from '@/components/project/RelatedProjects';
 import {
   FolderOpen, ArrowRight, ArrowLeft, Tag, MapPin, Building2, Share2, Bookmark
 } from 'lucide-react';
-import { usePageMeta, useJsonLd } from '@/hooks/usePageMeta';
+import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -75,14 +75,38 @@ const ProjectDetail = () => {
     canonical: id ? `https://qitaat.com/projects/${id}` : undefined,
   });
 
-  useJsonLd(project ? {
-    '@context': 'https://schema.org',
-    '@type': 'CreativeWork',
-    name: projectTitle,
-    description: projectDesc?.slice(0, 300),
-    image: project.cover_image_url,
-    url: `https://qitaat.com/projects/${id}`,
-  } : null);
+  const projectJsonLd = useMemo(() => {
+    if (!project) return null;
+    return [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'CreativeWork',
+        name: projectTitle,
+        description: projectDesc?.slice(0, 300),
+        image: project.cover_image_url,
+        url: `https://qitaat.com/projects/${id}`,
+        ...(project.businesses?.username
+          ? {
+              creator: {
+                '@type': 'Organization',
+                name: project.businesses.name_ar || project.businesses.name_en,
+                url: `https://qitaat.com/${project.businesses.username}`,
+              },
+            }
+          : {}),
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'قِطاعات', item: 'https://qitaat.com' },
+          { '@type': 'ListItem', position: 2, name: 'المشاريع', item: 'https://qitaat.com/projects' },
+          { '@type': 'ListItem', position: 3, name: projectTitle, item: `https://qitaat.com/projects/${id}` },
+        ],
+      },
+    ];
+  }, [project, projectTitle, projectDesc, id]);
+  useMultiJsonLd(projectJsonLd);
 
   const { data: city } = useQuery({
     queryKey: ['city', project?.city_id],
