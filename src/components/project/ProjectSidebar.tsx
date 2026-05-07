@@ -4,6 +4,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { VerifiedBadge } from '@/components/common/VerifiedBadge';
 import {
   DollarSign, Clock, Calendar, Building2, MapPin, Tag,
   Phone, Mail, Globe, MessageCircle, ExternalLink
@@ -66,9 +67,7 @@ export const ProjectSidebar = ({ project, category, city }: Props) => {
               )}
               <div className="min-w-0">
                 <p className="font-bold text-accent group-hover:underline truncate">{bizName}</p>
-                {biz.is_verified && (
-                  <Badge variant="secondary" className="text-[10px] mt-0.5">{isRTL ? 'موثّق' : 'Verified'}</Badge>
-                )}
+                {biz.is_verified && <VerifiedBadge size="sm" className="mt-0.5" />}
               </div>
             </Link>
 
