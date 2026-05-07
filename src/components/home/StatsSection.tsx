@@ -10,24 +10,25 @@ const useRealStats = () =>
   useQuery({
     queryKey: ['home-real-stats'],
     queryFn: async () => {
-      const [bizRes, reviewRes, projRes, ratingRes] = await Promise.all([
-        supabase.from('businesses').select('id', { count: 'exact', head: true }).eq('is_active', true),
-        supabase.from('reviews').select('id', { count: 'exact', head: true }),
-        supabase.from('projects').select('id', { count: 'exact', head: true }).eq('status', 'published'),
-        supabase.from('businesses').select('rating_avg').eq('is_active', true).gt('rating_count', 0),
-      ]);
-
-      const businessCount = bizRes.count ?? 0;
-      const reviewCount = reviewRes.count ?? 0;
-      const projectCount = projRes.count ?? 0;
-
-      // Calculate satisfaction as average of all rated businesses' rating_avg (out of 5 → percentage)
-      const ratings = ratingRes.data ?? [];
-      const satisfaction = ratings.length > 0
-        ? Math.round((ratings.reduce((sum, r) => sum + Number(r.rating_avg), 0) / ratings.length / 5) * 100)
-        : 0;
-
-      return { businessCount, reviewCount, projectCount, satisfaction };
+      try {
+        const { data, error } = await supabase.rpc('get_home_stats');
+        if (error) throw error;
+        const stats = (data ?? {}) as {
+          businessCount?: number;
+          reviewCount?: number;
+          projectCount?: number;
+          satisfaction?: number;
+        };
+        return {
+          businessCount: Number(stats.businessCount ?? 0),
+          reviewCount: Number(stats.reviewCount ?? 0),
+          projectCount: Number(stats.projectCount ?? 0),
+          satisfaction: Number(stats.satisfaction ?? 0),
+        };
+      } catch (err) {
+        if (import.meta.env.DEV) console.warn('get_home_stats failed', err);
+        return { businessCount: 0, reviewCount: 0, projectCount: 0, satisfaction: 0 };
+      }
     },
     staleTime: 5 * 60 * 1000,
   });
