@@ -161,3 +161,67 @@ describe('BusinessCard coupon end_date boundary (UTC)', () => {
     expect(screen.getAllByText('كوبون خصم').length).toBeGreaterThan(0);
   });
 });
+
+/**
+ * "+N" service-tag overflow counter.
+ *
+ * Visible chips = first 3 active services. The "+N" badge must equal
+ * (count of active services) - 3, ignoring inactive services entirely.
+ */
+describe('BusinessCard service-tag +N overflow counter', () => {
+  const mkServices = (active: number, inactive = 0) => [
+    ...Array.from({ length: active }, (_, i) => ({ name_ar: `خدمة-${i + 1}`, is_active: true })),
+    ...Array.from({ length: inactive }, (_, i) => ({ name_ar: `معطلة-${i + 1}`, is_active: false })),
+  ];
+
+  it('shows no +N when active services <= 3', () => {
+    renderCard({ ...baseBiz, business_services: mkServices(3) });
+    expect(screen.getByText('خدمة-1')).toBeInTheDocument();
+    expect(screen.getByText('خدمة-3')).toBeInTheDocument();
+    expect(screen.queryByText(/^\+\d+$/)).toBeNull();
+  });
+
+  it('shows +1 when there are 4 active services', () => {
+    renderCard({ ...baseBiz, business_services: mkServices(4) });
+    expect(screen.getByText('+1')).toBeInTheDocument();
+    expect(screen.queryByText('خدمة-4')).toBeNull();
+  });
+
+  it('shows +2 when there are 5 active services', () => {
+    renderCard({ ...baseBiz, business_services: mkServices(5) });
+    expect(screen.getByText('+2')).toBeInTheDocument();
+  });
+
+  it('shows +7 when there are 10 active services', () => {
+    renderCard({ ...baseBiz, business_services: mkServices(10) });
+    expect(screen.getByText('+7')).toBeInTheDocument();
+  });
+
+  it('ignores inactive services in the +N count (6 active + 50 inactive ⇒ +3)', () => {
+    renderCard({ ...baseBiz, business_services: mkServices(6, 50) });
+    expect(screen.getByText('+3')).toBeInTheDocument();
+    expect(screen.queryByText(/^معطلة-/)).toBeNull();
+  });
+
+  it('shows no +N when only inactive services exist', () => {
+    renderCard({ ...baseBiz, business_services: mkServices(0, 5) });
+    expect(screen.queryByText(/^\+\d+$/)).toBeNull();
+  });
+
+  it('skips services missing both name_ar and name_en when computing visible chips', () => {
+    // 5 entries marked active, but 2 have no usable name → only 3 valid tags
+    // → no overflow badge.
+    renderCard({
+      ...baseBiz,
+      business_services: [
+        { name_ar: 'تركيب', is_active: true },
+        { name_ar: 'صيانة', is_active: true },
+        { name_ar: 'تصميم', is_active: true },
+        { name_ar: null, name_en: null, is_active: true },
+        { name_ar: '', name_en: '', is_active: true },
+      ],
+    });
+    expect(screen.getByText('تركيب')).toBeInTheDocument();
+    expect(screen.queryByText(/^\+\d+$/)).toBeNull();
+  });
+});
