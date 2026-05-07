@@ -16,7 +16,7 @@ const FooterLinkColumn = ({ title, links }: FooterLinkColumnProps) => (
     <h4 className="font-heading font-bold text-sm text-surface-nav-foreground mb-5 pb-2 border-b border-surface-nav-foreground/[0.06]">
       {title}
     </h4>
-    <ul className="space-y-3 font-body text-[13px] text-surface-nav-foreground/40">
+    <ul className="space-y-3 font-body text-[13px] text-surface-nav-foreground/80">
       {links.map((item) => (
         <li key={item.to}>
           <PrefetchLink to={item.to} className="group flex items-center gap-1.5 hover:text-gold transition-all duration-200">

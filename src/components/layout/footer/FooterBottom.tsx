@@ -19,11 +19,11 @@ export const FooterBottom = ({ visible }: { visible: boolean }) => {
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           {/* Copyright & extra links */}
           <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 order-2 sm:order-1">
-            <p className="font-body text-[11px] sm:text-xs text-surface-nav-foreground/25">
+            <p className="font-body text-[11px] sm:text-xs text-surface-nav-foreground/70">
               {t('footer.rights')}
             </p>
             <div className="hidden sm:block w-px h-3 bg-surface-nav-foreground/10" />
-            <p className="font-body text-[10px] text-surface-nav-foreground/15">
+            <p className="font-body text-[10px] text-surface-nav-foreground/55">
               {isRTL ? 'صُنع بـ ❤️ في السعودية' : 'Made with ❤️ in Saudi Arabia'}
             </p>
           </div>
@@ -37,7 +37,7 @@ export const FooterBottom = ({ visible }: { visible: boolean }) => {
                 aria-label={s.label}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-9 h-9 rounded-xl bg-surface-nav-foreground/[0.04] border border-surface-nav-foreground/[0.06] flex items-center justify-center text-surface-nav-foreground/35 hover:bg-gold/15 hover:text-gold hover:border-gold/20 hover:scale-110 transition-all duration-300"
+                className="w-9 h-9 rounded-xl bg-surface-nav-foreground/[0.06] border border-surface-nav-foreground/15 flex items-center justify-center text-surface-nav-foreground/80 hover:bg-gold/15 hover:text-gold hover:border-gold/30 hover:scale-110 transition-all duration-300 focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none"
               >
                 <s.icon className="w-3.5 h-3.5" />
               </a>
