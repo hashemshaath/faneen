@@ -4087,6 +4087,44 @@ export type Database = {
           },
         ]
       }
+      reviews_public: {
+        Row: {
+          business_id: string | null
+          content: string | null
+          created_at: string | null
+          id: string | null
+          is_verified: boolean | null
+          project_id: string | null
+          rating: number | null
+          reviewer_avatar: string | null
+          reviewer_name: string | null
+          title: string | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       admin_upgrade_subscription: {
@@ -4101,6 +4139,10 @@ export type Database = {
       cancel_subscription: {
         Args: { _subscription_id: string }
         Returns: undefined
+      }
+      check_password_reset_rate_limit: {
+        Args: { _email: string }
+        Returns: boolean
       }
       check_rate_limit: {
         Args: {
