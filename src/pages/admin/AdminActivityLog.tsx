@@ -15,75 +15,121 @@ import {
   TrendingUp, Users, Zap, ArrowRight
 } from 'lucide-react';
 import { format, isToday, isYesterday, isThisWeek, isThisMonth } from 'date-fns';
-import { ar } from 'date-fns/locale';
+import { ar, enUS } from 'date-fns/locale';
 
 /* ─── Action Config ─── */
-const actionConfig: Record<string, { ar: string; color: string; icon: React.ElementType; iconBg: string }> = {
-  create:              { ar: 'إنشاء',                  color: 'text-emerald-600 dark:text-emerald-400', iconBg: 'bg-emerald-500/10', icon: FileText },
-  update:              { ar: 'تعديل بيانات',           color: 'text-blue-600 dark:text-blue-400',       iconBg: 'bg-blue-500/10',    icon: Edit },
-  delete:              { ar: 'حذف',                    color: 'text-red-600 dark:text-red-400',         iconBg: 'bg-red-500/10',     icon: Trash2 },
-  login:               { ar: 'تسجيل دخول',             color: 'text-purple-600 dark:text-purple-400',   iconBg: 'bg-purple-500/10',  icon: LogIn },
-  role_change:         { ar: 'تغيير صلاحية',           color: 'text-amber-600 dark:text-amber-400',     iconBg: 'bg-amber-500/10',   icon: Shield },
-  role_assigned:       { ar: 'منح صلاحية',             color: 'text-amber-600 dark:text-amber-400',     iconBg: 'bg-amber-500/10',   icon: UserPlus },
-  role_updated:        { ar: 'تحديث صلاحية',           color: 'text-amber-600 dark:text-amber-400',     iconBg: 'bg-amber-500/10',   icon: Shield },
-  role_removed:        { ar: 'سحب صلاحية',             color: 'text-red-600 dark:text-red-400',         iconBg: 'bg-red-500/10',     icon: UserMinus },
-  settings:            { ar: 'تعديل إعدادات',          color: 'text-teal-600 dark:text-teal-400',       iconBg: 'bg-teal-500/10',    icon: Settings },
-  setting_created:     { ar: 'إنشاء إعداد',            color: 'text-teal-600 dark:text-teal-400',       iconBg: 'bg-teal-500/10',    icon: Settings },
-  setting_updated:     { ar: 'تحديث إعداد',            color: 'text-blue-600 dark:text-blue-400',       iconBg: 'bg-blue-500/10',    icon: Settings },
-  setting_deleted:     { ar: 'حذف إعداد',              color: 'text-red-600 dark:text-red-400',         iconBg: 'bg-red-500/10',     icon: Settings },
-  user_disabled:       { ar: 'تعطيل حساب',             color: 'text-orange-600 dark:text-orange-400',   iconBg: 'bg-orange-500/10',  icon: Ban },
-  user_enabled:        { ar: 'تفعيل حساب',             color: 'text-emerald-600 dark:text-emerald-400', iconBg: 'bg-emerald-500/10', icon: CheckCircle },
-  unauthorized_access: { ar: 'محاولة وصول غير مصرح',   color: 'text-red-700 dark:text-red-400',         iconBg: 'bg-red-500/15',     icon: AlertTriangle },
+type Bi = { ar: string; en: string };
+const actionConfig: Record<string, Bi & { color: string; icon: React.ElementType; iconBg: string }> = {
+  create:              { ar: 'إنشاء',                  en: 'Create',              color: 'text-emerald-600 dark:text-emerald-400', iconBg: 'bg-emerald-500/10', icon: FileText },
+  update:              { ar: 'تعديل بيانات',           en: 'Update',              color: 'text-blue-600 dark:text-blue-400',       iconBg: 'bg-blue-500/10',    icon: Edit },
+  delete:              { ar: 'حذف',                    en: 'Delete',              color: 'text-red-600 dark:text-red-400',         iconBg: 'bg-red-500/10',     icon: Trash2 },
+  login:               { ar: 'تسجيل دخول',             en: 'Login',               color: 'text-purple-600 dark:text-purple-400',   iconBg: 'bg-purple-500/10',  icon: LogIn },
+  role_change:         { ar: 'تغيير صلاحية',           en: 'Role change',         color: 'text-amber-600 dark:text-amber-400',     iconBg: 'bg-amber-500/10',   icon: Shield },
+  role_assigned:       { ar: 'منح صلاحية',             en: 'Role assigned',       color: 'text-amber-600 dark:text-amber-400',     iconBg: 'bg-amber-500/10',   icon: UserPlus },
+  role_updated:        { ar: 'تحديث صلاحية',           en: 'Role updated',        color: 'text-amber-600 dark:text-amber-400',     iconBg: 'bg-amber-500/10',   icon: Shield },
+  role_removed:        { ar: 'سحب صلاحية',             en: 'Role removed',        color: 'text-red-600 dark:text-red-400',         iconBg: 'bg-red-500/10',     icon: UserMinus },
+  settings:            { ar: 'تعديل إعدادات',          en: 'Settings change',     color: 'text-teal-600 dark:text-teal-400',       iconBg: 'bg-teal-500/10',    icon: Settings },
+  setting_created:     { ar: 'إنشاء إعداد',            en: 'Setting created',     color: 'text-teal-600 dark:text-teal-400',       iconBg: 'bg-teal-500/10',    icon: Settings },
+  setting_updated:     { ar: 'تحديث إعداد',            en: 'Setting updated',     color: 'text-blue-600 dark:text-blue-400',       iconBg: 'bg-blue-500/10',    icon: Settings },
+  setting_deleted:     { ar: 'حذف إعداد',              en: 'Setting deleted',     color: 'text-red-600 dark:text-red-400',         iconBg: 'bg-red-500/10',     icon: Settings },
+  user_disabled:       { ar: 'تعطيل حساب',             en: 'Account disabled',    color: 'text-orange-600 dark:text-orange-400',   iconBg: 'bg-orange-500/10',  icon: Ban },
+  user_enabled:        { ar: 'تفعيل حساب',             en: 'Account enabled',     color: 'text-emerald-600 dark:text-emerald-400', iconBg: 'bg-emerald-500/10', icon: CheckCircle },
+  unauthorized_access: { ar: 'محاولة وصول غير مصرح',   en: 'Unauthorized access', color: 'text-red-700 dark:text-red-400',         iconBg: 'bg-red-500/15',     icon: AlertTriangle },
 };
 
-const entityLabels: Record<string, string> = {
-  user: 'مستخدم',
-  business: 'نشاط تجاري',
-  contract: 'عقد',
-  blog_post: 'مقال',
-  profile_system: 'نظام بروفايل',
-  setting: 'إعداد',
-  platform_setting: 'إعداد المنصة',
-  role: 'صلاحية',
-  user_role: 'صلاحية مستخدم',
-  route: 'مسار',
+const entityLabels: Record<string, Bi> = {
+  user:             { ar: 'مستخدم',         en: 'User' },
+  business:         { ar: 'نشاط تجاري',     en: 'Business' },
+  contract:         { ar: 'عقد',            en: 'Contract' },
+  blog_post:        { ar: 'مقال',           en: 'Blog post' },
+  profile_system:   { ar: 'نظام بروفايل',   en: 'Profile system' },
+  setting:          { ar: 'إعداد',          en: 'Setting' },
+  platform_setting: { ar: 'إعداد المنصة',   en: 'Platform setting' },
+  role:             { ar: 'صلاحية',         en: 'Role' },
+  user_role:        { ar: 'صلاحية مستخدم',  en: 'User role' },
+  route:            { ar: 'مسار',           en: 'Route' },
 };
 
-const roleLabels: Record<string, string> = {
-  admin: 'مشرف',
-  super_admin: 'مشرف أعلى',
-  user: 'مستخدم',
-  moderator: 'مراقب',
+const roleLabels: Record<string, Bi> = {
+  admin:       { ar: 'مشرف',       en: 'Admin' },
+  super_admin: { ar: 'مشرف أعلى',  en: 'Super Admin' },
+  user:        { ar: 'مستخدم',     en: 'User' },
+  moderator:   { ar: 'مراقب',      en: 'Moderator' },
 };
 
-const fieldLabels: Record<string, string> = {
-  full_name: 'الاسم الكامل',
-  email: 'البريد الإلكتروني',
-  phone: 'رقم الجوال',
-  account_type: 'نوع الحساب',
-  avatar_url: 'الصورة الشخصية',
-  is_active: 'حالة الحساب',
-  membership_tier: 'فئة العضوية',
-  name_ar: 'الاسم بالعربي',
-  name_en: 'الاسم بالإنجليزي',
-  status: 'الحالة',
-  is_verified: 'التوثيق',
-  category_id: 'التصنيف',
+const fieldLabels: Record<string, Bi> = {
+  full_name:       { ar: 'الاسم الكامل',       en: 'Full name' },
+  email:           { ar: 'البريد الإلكتروني',  en: 'Email' },
+  phone:           { ar: 'رقم الجوال',         en: 'Phone' },
+  account_type:    { ar: 'نوع الحساب',         en: 'Account type' },
+  avatar_url:      { ar: 'الصورة الشخصية',     en: 'Avatar' },
+  is_active:       { ar: 'حالة الحساب',        en: 'Active status' },
+  membership_tier: { ar: 'فئة العضوية',        en: 'Membership tier' },
+  name_ar:         { ar: 'الاسم بالعربي',      en: 'Name (AR)' },
+  name_en:         { ar: 'الاسم بالإنجليزي',  en: 'Name (EN)' },
+  status:          { ar: 'الحالة',             en: 'Status' },
+  is_verified:     { ar: 'التوثيق',            en: 'Verified' },
+  category_id:     { ar: 'التصنيف',            en: 'Category' },
 };
 
-const accountTypeLabels: Record<string, string> = {
-  individual: 'فردي',
-  business: 'تجاري',
+const accountTypeLabels: Record<string, Bi> = {
+  individual: { ar: 'فردي',  en: 'Individual' },
+  business:   { ar: 'تجاري', en: 'Business' },
+};
+
+const pick = (b: Bi | undefined, isRTL: boolean, fallback: string): string =>
+  b ? (isRTL ? b.ar : b.en) : fallback;
+
+const tx = {
+  yes: { ar: 'نعم', en: 'Yes' },
+  no: { ar: 'لا', en: 'No' },
+  role: { ar: 'الصلاحية', en: 'Role' },
+  key: { ar: 'المفتاح', en: 'Key' },
+  value: { ar: 'القيمة', en: 'Value' },
+  reason: { ar: 'السبب', en: 'Reason' },
+  businessName: { ar: 'اسم النشاط', en: 'Business name' },
+  system: { ar: 'النظام (تلقائي)', en: 'System (auto)' },
+  user: { ar: 'مستخدم', en: 'User' },
+  today: { ar: 'اليوم', en: 'Today' },
+  yesterday: { ar: 'أمس', en: 'Yesterday' },
+  thisWeek: { ar: 'هذا الأسبوع', en: 'This week' },
+  thisMonth: { ar: 'هذا الشهر', en: 'This month' },
+  title: { ar: 'سجل نشاط المشرفين', en: 'Admin Activity Log' },
+  subtitle: { ar: 'تتبع جميع العمليات الإدارية بالتفصيل', en: 'Track all admin operations in detail' },
+  exportCsv: { ar: 'تصدير CSV', en: 'Export CSV' },
+  totalOps: { ar: 'إجمالي العمليات', en: 'Total operations' },
+  todayOps: { ar: 'عمليات اليوم', en: "Today's operations" },
+  activeAdmins: { ar: 'مشرفون نشطون', en: 'Active admins' },
+  topAction: { ar: 'الأكثر تكراراً', en: 'Most frequent' },
+  searchPh: { ar: 'بحث بالاسم أو العملية...', en: 'Search by name or action...' },
+  allOps: { ar: 'جميع العمليات', en: 'All operations' },
+  results: { ar: 'النتائج', en: 'Results' },
+  clearAll: { ar: 'مسح الكل', en: 'Clear all' },
+  empty: { ar: 'لا توجد سجلات نشاط', en: 'No activity logs' },
+  emptySub: { ar: 'جرّب تعديل معايير البحث', en: 'Try adjusting your search' },
+  detailsHeader: { ar: 'تفاصيل التغييرات', en: 'Change details' },
+  csvDate: { ar: 'التاريخ', en: 'Date' },
+  csvAdmin: { ar: 'المشرف', en: 'Admin' },
+  csvDesc: { ar: 'الوصف', en: 'Description' },
+  csvDetails: { ar: 'التفاصيل', en: 'Details' },
+  csvFile: { ar: 'سجل-النشاط', en: 'activity-log' },
+  // Phrase builders (sentence templates)
+  granted: { ar: (r: string, t: string) => `تم منح صلاحية "${r}" ${t ? `للمستخدم ${t}` : ''}`, en: (r: string, t: string) => `Granted role "${r}"${t ? ` to ${t}` : ''}` },
+  revoked: { ar: (r: string, t: string) => `تم سحب صلاحية "${r}" ${t ? `من المستخدم ${t}` : ''}`, en: (r: string, t: string) => `Revoked role "${r}"${t ? ` from ${t}` : ''}` },
+  changedRole: { ar: (o: string, n: string, t: string) => `تم تغيير الصلاحية من "${o}" إلى "${n}" ${t ? `للمستخدم ${t}` : ''}`, en: (o: string, n: string, t: string) => `Changed role from "${o}" to "${n}"${t ? ` for ${t}` : ''}` },
+  edited: { ar: (f: string, t: string, e: string) => `تم تعديل ${f} ${t ? `للمستخدم ${t}` : ''} ${e ? `(${e})` : ''}`, en: (f: string, t: string, e: string) => `Edited ${f}${t ? ` for ${t}` : ''}${e ? ` (${e})` : ''}` },
+  disabled: { ar: (t: string) => `تم تعطيل حساب ${t || 'المستخدم'}`, en: (t: string) => `Disabled account ${t || 'user'}` },
+  enabled: { ar: (t: string) => `تم تفعيل حساب ${t || 'المستخدم'}`, en: (t: string) => `Enabled account ${t || 'user'}` },
 };
 
 /* ─── Format detail value ─── */
-const formatValue = (value: unknown): string => {
+const formatValue = (value: unknown, isRTL: boolean): string => {
   if (value === null || value === undefined || value === '') return '—';
-  if (value === true) return 'نعم';
-  if (value === false) return 'لا';
+  if (value === true) return isRTL ? tx.yes.ar : tx.yes.en;
+  if (value === false) return isRTL ? tx.no.ar : tx.no.en;
   const strVal = String(value);
-  if (accountTypeLabels[strVal]) return accountTypeLabels[strVal];
-  if (roleLabels[strVal]) return roleLabels[strVal];
+  if (accountTypeLabels[strVal]) return pick(accountTypeLabels[strVal], isRTL, strVal);
+  if (roleLabels[strVal]) return pick(roleLabels[strVal], isRTL, strVal);
   return strVal;
 };
 
@@ -95,98 +141,104 @@ interface DetailItem {
   value?: string;
 }
 
-const buildDetailItems = (details: any, action: string): DetailItem[] => {
+const buildDetailItems = (details: any, action: string, isRTL: boolean): DetailItem[] => {
   if (!details || typeof details !== 'object') return [];
   const items: DetailItem[] = [];
 
   // Handle "changes" object (update actions)
   if (details.changes && typeof details.changes === 'object') {
     for (const [field, change] of Object.entries(details.changes)) {
-      const label = fieldLabels[field] || field;
+      const label = pick(fieldLabels[field], isRTL, field);
       if (change && typeof change === 'object' && 'old' in (change as any)) {
         const c = change as { old: unknown; new: unknown };
-        items.push({ label, oldVal: formatValue(c.old), newVal: formatValue(c.new) });
+        items.push({ label, oldVal: formatValue(c.old, isRTL), newVal: formatValue(c.new, isRTL) });
       } else {
-        items.push({ label, value: formatValue(change) });
+        items.push({ label, value: formatValue(change, isRTL) });
       }
     }
   }
 
   // Handle role fields
   if (details.role) {
-    items.push({ label: 'الصلاحية', value: roleLabels[details.role] || details.role });
+    items.push({ label: pick(tx.role, isRTL, 'Role'), value: pick(roleLabels[details.role], isRTL, details.role) });
   }
   if (details.old_role && details.new_role) {
-    items.push({ label: 'الصلاحية', oldVal: roleLabels[details.old_role] || details.old_role, newVal: roleLabels[details.new_role] || details.new_role });
+    items.push({ label: pick(tx.role, isRTL, 'Role'), oldVal: pick(roleLabels[details.old_role], isRTL, details.old_role), newVal: pick(roleLabels[details.new_role], isRTL, details.new_role) });
   }
 
   // Handle setting fields
   if (details.setting_key) {
-    items.push({ label: 'المفتاح', value: details.setting_key });
+    items.push({ label: pick(tx.key, isRTL, 'Key'), value: details.setting_key });
   }
   if (details.setting_value !== undefined && details.setting_value !== null) {
-    items.push({ label: 'القيمة', value: formatValue(details.setting_value) });
+    items.push({ label: pick(tx.value, isRTL, 'Value'), value: formatValue(details.setting_value, isRTL) });
   }
   if (details.old_value !== undefined) {
-    items.push({ label: 'القيمة', oldVal: formatValue(details.old_value), newVal: formatValue(details.new_value) });
+    items.push({ label: pick(tx.value, isRTL, 'Value'), oldVal: formatValue(details.old_value, isRTL), newVal: formatValue(details.new_value, isRTL) });
   }
 
   // Handle reason
   if (details.reason) {
-    items.push({ label: 'السبب', value: details.reason });
+    items.push({ label: pick(tx.reason, isRTL, 'Reason'), value: details.reason });
   }
 
   // Handle business name
   if (details.business_name) {
-    items.push({ label: 'اسم النشاط', value: details.business_name });
+    items.push({ label: pick(tx.businessName, isRTL, 'Business name'), value: details.business_name });
   }
 
   return items;
 };
 
 /* ─── Build a human-readable summary ─── */
-const buildSummary = (log: any, getProfileName: (id: string) => string): string => {
+const buildSummary = (log: any, getProfileName: (id: string) => string, isRTL: boolean): string => {
   const details = log.details;
   const action = log.action;
-  const entityLabel = log.entity_type ? entityLabels[log.entity_type] || log.entity_type : '';
+  const entityLabel = log.entity_type ? pick(entityLabels[log.entity_type], isRTL, log.entity_type) : '';
 
   if (action === 'role_assigned' && details?.role) {
     const targetName = details.target_user_id ? getProfileName(details.target_user_id) : '';
-    return `تم منح صلاحية "${roleLabels[details.role] || details.role}" ${targetName ? `للمستخدم ${targetName}` : ''}`;
+    const r = pick(roleLabels[details.role], isRTL, details.role);
+    return (isRTL ? tx.granted.ar : tx.granted.en)(r, targetName);
   }
   if (action === 'role_removed' && details?.role) {
     const targetName = details.target_user_id ? getProfileName(details.target_user_id) : '';
-    return `تم سحب صلاحية "${roleLabels[details.role] || details.role}" ${targetName ? `من المستخدم ${targetName}` : ''}`;
+    const r = pick(roleLabels[details.role], isRTL, details.role);
+    return (isRTL ? tx.revoked.ar : tx.revoked.en)(r, targetName);
   }
   if (action === 'role_updated' && details?.old_role && details?.new_role) {
     const targetName = details.target_user_id ? getProfileName(details.target_user_id) : '';
-    return `تم تغيير الصلاحية من "${roleLabels[details.old_role] || details.old_role}" إلى "${roleLabels[details.new_role] || details.new_role}" ${targetName ? `للمستخدم ${targetName}` : ''}`;
+    const o = pick(roleLabels[details.old_role], isRTL, details.old_role);
+    const n = pick(roleLabels[details.new_role], isRTL, details.new_role);
+    return (isRTL ? tx.changedRole.ar : tx.changedRole.en)(o, n, targetName);
   }
   if (action === 'update' && details?.changes) {
-    const fields = Object.keys(details.changes).map(f => fieldLabels[f] || f);
+    const fields = Object.keys(details.changes).map(f => pick(fieldLabels[f], isRTL, f));
     const targetName = details.target_user_id ? getProfileName(details.target_user_id) : '';
-    return `تم تعديل ${fields.join('، ')} ${targetName ? `للمستخدم ${targetName}` : ''} ${entityLabel ? `(${entityLabel})` : ''}`;
+    const sep = isRTL ? '، ' : ', ';
+    return (isRTL ? tx.edited.ar : tx.edited.en)(fields.join(sep), targetName, entityLabel);
   }
   if (action === 'user_disabled') {
     const targetName = details?.target_user_id ? getProfileName(details.target_user_id) : '';
-    return `تم تعطيل حساب ${targetName || 'المستخدم'}`;
+    return (isRTL ? tx.disabled.ar : tx.disabled.en)(targetName);
   }
   if (action === 'user_enabled') {
     const targetName = details?.target_user_id ? getProfileName(details.target_user_id) : '';
-    return `تم تفعيل حساب ${targetName || 'المستخدم'}`;
+    return (isRTL ? tx.enabled.ar : tx.enabled.en)(targetName);
   }
 
-  return entityLabel ? `${actionConfig[action]?.ar || action} ${entityLabel}` : (actionConfig[action]?.ar || action);
+  const actLabel = pick(actionConfig[action], isRTL, action);
+  return entityLabel ? `${actLabel} ${entityLabel}` : actLabel;
 };
 
 /* ─── Timeline date grouping ─── */
-const getDateGroup = (dateStr: string): string => {
+const getDateGroup = (dateStr: string, isRTL: boolean): string => {
   const date = new Date(dateStr);
-  if (isToday(date)) return 'اليوم';
-  if (isYesterday(date)) return 'أمس';
-  if (isThisWeek(date)) return 'هذا الأسبوع';
-  if (isThisMonth(date)) return 'هذا الشهر';
-  return format(date, 'yyyy/MM/dd', { locale: ar });
+  if (isToday(date)) return isRTL ? tx.today.ar : tx.today.en;
+  if (isYesterday(date)) return isRTL ? tx.yesterday.ar : tx.yesterday.en;
+  if (isThisWeek(date)) return isRTL ? tx.thisWeek.ar : tx.thisWeek.en;
+  if (isThisMonth(date)) return isRTL ? tx.thisMonth.ar : tx.thisMonth.en;
+  return format(date, 'yyyy/MM/dd', { locale: isRTL ? ar : enUS });
 };
 
 /* ─── Log Item Component ─── */
@@ -194,10 +246,10 @@ const LogItem = React.memo(({ log, getProfileName, isRTL }: {
   log: any; getProfileName: (id: string) => string; isRTL: boolean;
 }) => {
   const [expanded, setExpanded] = useState(false);
-  const config = actionConfig[log.action] || { ar: log.action, color: 'text-muted-foreground', iconBg: 'bg-muted', icon: Activity };
+  const config = actionConfig[log.action] || { ar: log.action, en: log.action, color: 'text-muted-foreground', iconBg: 'bg-muted', icon: Activity };
   const ActionIcon = config.icon;
-  const summary = buildSummary(log, getProfileName);
-  const detailItems = buildDetailItems(log.details, log.action);
+  const summary = buildSummary(log, getProfileName, isRTL);
+  const detailItems = buildDetailItems(log.details, log.action, isRTL);
   const adminName = getProfileName(log.user_id);
   const hasDetails = detailItems.length > 0;
 
@@ -224,7 +276,7 @@ const LogItem = React.memo(({ log, getProfileName, isRTL }: {
           <div className="flex items-center gap-1.5 shrink-0 pt-1">
             <span className="text-[11px] text-muted-foreground flex items-center gap-1">
               <Clock className="w-3 h-3" />
-              {format(new Date(log.created_at), 'hh:mm a', { locale: ar })}
+              {format(new Date(log.created_at), 'hh:mm a', { locale: isRTL ? ar : enUS })}
             </span>
             {hasDetails && (
               <button
@@ -240,7 +292,7 @@ const LogItem = React.memo(({ log, getProfileName, isRTL }: {
         {/* Expanded details */}
         {expanded && hasDetails && (
           <div className="mt-2.5 rounded-xl bg-muted/20 border border-border/15 p-3 animate-in slide-in-from-top-1 duration-150">
-            <p className="text-[10px] font-bold text-muted-foreground mb-2 uppercase tracking-wider">تفاصيل التغييرات</p>
+            <p className="text-[10px] font-bold text-muted-foreground mb-2 uppercase tracking-wider">{isRTL ? tx.detailsHeader.ar : tx.detailsHeader.en}</p>
             <div className="space-y-2">
               {detailItems.map((item, idx) => (
                 <div key={idx} className="flex items-center gap-2 text-xs">
@@ -302,10 +354,10 @@ const AdminActivityLog = () => {
   const SYSTEM_USER_ID = '00000000-0000-0000-0000-000000000000';
 
   const getProfileName = useCallback((userId: string) => {
-    if (userId === SYSTEM_USER_ID) return 'النظام (تلقائي)';
+    if (userId === SYSTEM_USER_ID) return isRTL ? tx.system.ar : tx.system.en;
     const profile = profiles?.find(p => p.user_id === userId);
-    return profile?.full_name || profile?.email || `مستخدم #${userId.slice(0, 6)}`;
-  }, [profiles]);
+    return profile?.full_name || profile?.email || `${isRTL ? tx.user.ar : tx.user.en} #${userId.slice(0, 6)}`;
+  }, [profiles, isRTL]);
 
   const filteredLogs = useMemo(() => {
     if (!logs) return [];
@@ -313,17 +365,17 @@ const AdminActivityLog = () => {
     const q = searchQuery.toLowerCase();
     return logs.filter(log => {
       const name = getProfileName(log.user_id).toLowerCase();
-      const actionLabel = (actionConfig[log.action]?.ar || log.action).toLowerCase();
-      const entityLabel = log.entity_type ? (entityLabels[log.entity_type] || log.entity_type).toLowerCase() : '';
+      const actionLabel = pick(actionConfig[log.action], isRTL, log.action).toLowerCase();
+      const entityLabel = log.entity_type ? pick(entityLabels[log.entity_type], isRTL, log.entity_type).toLowerCase() : '';
       return name.includes(q) || actionLabel.includes(q) || entityLabel.includes(q);
     });
-  }, [logs, searchQuery, getProfileName]);
+  }, [logs, searchQuery, getProfileName, isRTL]);
 
   const groupedLogs = useMemo(() => {
     const groups: { label: string; logs: typeof filteredLogs }[] = [];
     let currentLabel = '';
     for (const log of filteredLogs) {
-      const label = getDateGroup(log.created_at);
+      const label = getDateGroup(log.created_at, isRTL);
       if (label !== currentLabel) {
         currentLabel = label;
         groups.push({ label, logs: [log] });
@@ -332,7 +384,7 @@ const AdminActivityLog = () => {
       }
     }
     return groups;
-  }, [filteredLogs]);
+  }, [filteredLogs, isRTL]);
 
   const stats = useMemo(() => {
     if (!logs) return { total: 0, today: 0, uniqueAdmins: 0, topAction: '' };
@@ -346,12 +398,17 @@ const AdminActivityLog = () => {
 
   const exportToCSV = () => {
     if (!filteredLogs?.length) return;
-    const headers = ['التاريخ', 'المشرف', 'الوصف', 'التفاصيل'];
+    const headers = [
+      isRTL ? tx.csvDate.ar : tx.csvDate.en,
+      isRTL ? tx.csvAdmin.ar : tx.csvAdmin.en,
+      isRTL ? tx.csvDesc.ar : tx.csvDesc.en,
+      isRTL ? tx.csvDetails.ar : tx.csvDetails.en,
+    ];
     const rows = filteredLogs.map(log => [
       format(new Date(log.created_at), 'yyyy-MM-dd HH:mm:ss'),
       getProfileName(log.user_id),
-      buildSummary(log, getProfileName),
-      buildDetailItems(log.details, log.action).map(d =>
+      buildSummary(log, getProfileName, isRTL),
+      buildDetailItems(log.details, log.action, isRTL).map(d =>
         d.oldVal !== undefined ? `${d.label}: ${d.oldVal} → ${d.newVal}` : `${d.label}: ${d.value}`
       ).join(' | ') || '',
     ]);
@@ -362,7 +419,7 @@ const AdminActivityLog = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `سجل-النشاط-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    a.download = `${isRTL ? tx.csvFile.ar : tx.csvFile.en}-${format(new Date(), 'yyyy-MM-dd')}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -377,24 +434,24 @@ const AdminActivityLog = () => {
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/15 to-accent/10 flex items-center justify-center shadow-sm">
                 <Activity className="w-5 h-5 text-primary" />
               </div>
-              سجل نشاط المشرفين
+              {isRTL ? tx.title.ar : tx.title.en}
             </h1>
-            <p className="text-muted-foreground text-sm mt-1">تتبع جميع العمليات الإدارية بالتفصيل</p>
+            <p className="text-muted-foreground text-sm mt-1">{isRTL ? tx.subtitle.ar : tx.subtitle.en}</p>
           </div>
           <Button variant="outline" size="sm" className="h-9 text-xs gap-1.5 rounded-xl"
             onClick={exportToCSV} disabled={!filteredLogs?.length}>
             <Download className="w-3.5 h-3.5" />
-            تصدير CSV
+            {isRTL ? tx.exportCsv.ar : tx.exportCsv.en}
           </Button>
         </div>
 
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {[
-            { icon: Activity, label: 'إجمالي العمليات', value: stats.total, gradient: 'from-primary/10 to-primary/5', iconBg: 'bg-primary/15 text-primary' },
-            { icon: TrendingUp, label: 'عمليات اليوم', value: stats.today, gradient: 'from-emerald-500/10 to-emerald-500/5', iconBg: 'bg-emerald-500/15 text-emerald-600' },
-            { icon: Users, label: 'مشرفون نشطون', value: stats.uniqueAdmins, gradient: 'from-blue-500/10 to-blue-500/5', iconBg: 'bg-blue-500/15 text-blue-600' },
-            { icon: Zap, label: 'الأكثر تكراراً', value: actionConfig[stats.topAction]?.ar || '—', gradient: 'from-accent/10 to-accent/5', iconBg: 'bg-accent/15 text-accent-foreground' },
+            { icon: Activity, label: isRTL ? tx.totalOps.ar : tx.totalOps.en, value: stats.total, gradient: 'from-primary/10 to-primary/5', iconBg: 'bg-primary/15 text-primary' },
+            { icon: TrendingUp, label: isRTL ? tx.todayOps.ar : tx.todayOps.en, value: stats.today, gradient: 'from-emerald-500/10 to-emerald-500/5', iconBg: 'bg-emerald-500/15 text-emerald-600' },
+            { icon: Users, label: isRTL ? tx.activeAdmins.ar : tx.activeAdmins.en, value: stats.uniqueAdmins, gradient: 'from-blue-500/10 to-blue-500/5', iconBg: 'bg-blue-500/15 text-blue-600' },
+            { icon: Zap, label: isRTL ? tx.topAction.ar : tx.topAction.en, value: pick(actionConfig[stats.topAction], isRTL, '—'), gradient: 'from-accent/10 to-accent/5', iconBg: 'bg-accent/15 text-accent-foreground' },
           ].map((stat, i) => (
             <div key={i} className={`rounded-2xl border border-border/30 bg-gradient-to-br ${stat.gradient} p-4 transition-all hover:shadow-md group`}>
               <div className="flex items-center gap-3">
@@ -416,7 +473,7 @@ const AdminActivityLog = () => {
             <div className="relative flex-1">
               <Search className="absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
               <Input
-                placeholder="بحث بالاسم أو العملية..."
+                placeholder={isRTL ? tx.searchPh.ar : tx.searchPh.en}
                 value={searchQuery}
                 onChange={e => { const v = e.target.value; startTransition(() => setSearchQuery(v)); }}
                 className="ps-10 h-10 rounded-xl bg-muted/30 border-border/20 focus:bg-background transition-colors"
@@ -434,12 +491,12 @@ const AdminActivityLog = () => {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="rounded-xl">
-                <SelectItem value="all">جميع العمليات</SelectItem>
+                <SelectItem value="all">{isRTL ? tx.allOps.ar : tx.allOps.en}</SelectItem>
                 {Object.entries(actionConfig).map(([key, val]) => (
                   <SelectItem key={key} value={key}>
                     <span className="flex items-center gap-2">
                       <val.icon className="w-3.5 h-3.5" />
-                      {val.ar}
+                      {isRTL ? val.ar : val.en}
                     </span>
                   </SelectItem>
                 ))}
@@ -448,12 +505,12 @@ const AdminActivityLog = () => {
           </div>
           {(searchQuery || actionFilter !== 'all') && (
             <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/20">
-              <span className="text-[11px] text-muted-foreground">النتائج: {filteredLogs.length}</span>
+              <span className="text-[11px] text-muted-foreground">{isRTL ? tx.results.ar : tx.results.en}: {filteredLogs.length}</span>
               {searchQuery && <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-lg" onClick={() => setSearchQuery('')}>"{searchQuery}" <X className="w-2.5 h-2.5" /></Badge>}
-              {actionFilter !== 'all' && <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-lg" onClick={() => setActionFilter('all')}>{actionConfig[actionFilter]?.ar} <X className="w-2.5 h-2.5" /></Badge>}
+              {actionFilter !== 'all' && <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-lg" onClick={() => setActionFilter('all')}>{pick(actionConfig[actionFilter], isRTL, actionFilter)} <X className="w-2.5 h-2.5" /></Badge>}
               <button className="text-[10px] text-primary hover:underline ms-auto"
                 onClick={() => { setSearchQuery(''); setActionFilter('all'); }}>
-                مسح الكل
+                {isRTL ? tx.clearAll.ar : tx.clearAll.en}
               </button>
             </div>
           )}
@@ -479,8 +536,8 @@ const AdminActivityLog = () => {
               <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-accent/10 to-primary/10 flex items-center justify-center mb-4">
                 <Activity className="w-8 h-8 opacity-30" />
               </div>
-              <p className="font-heading font-bold text-sm mb-1">لا توجد سجلات نشاط</p>
-              <p className="text-xs">جرّب تعديل معايير البحث</p>
+              <p className="font-heading font-bold text-sm mb-1">{isRTL ? tx.empty.ar : tx.empty.en}</p>
+              <p className="text-xs">{isRTL ? tx.emptySub.ar : tx.emptySub.en}</p>
             </div>
           ) : (
             <div>
