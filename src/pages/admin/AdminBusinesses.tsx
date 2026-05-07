@@ -1533,20 +1533,32 @@ const AdminBusinesses = () => {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/30">
+                    <TableHead className="w-8">
+                      <button onClick={togglePageAll} className="text-muted-foreground hover:text-foreground">
+                        {allPagedSelected ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
+                      </button>
+                    </TableHead>
                     <TableHead className="text-[11px] font-semibold">{isRTL ? 'النشاط' : 'Business'}</TableHead>
                     <TableHead className="text-[11px] font-semibold">{isRTL ? 'المعرف' : 'Username'}</TableHead>
                     <TableHead className="text-[11px] font-semibold">{isRTL ? 'العضوية' : 'Tier'}</TableHead>
                     <TableHead className="text-[11px] font-semibold">{isRTL ? 'التقييم' : 'Rating'}</TableHead>
+                    <TableHead className="text-[11px] font-semibold">{isRTL ? 'الترجمة' : 'Trans.'}</TableHead>
                     <TableHead className="text-[11px] font-semibold">{isRTL ? 'الحالة' : 'Status'}</TableHead>
                     <TableHead className="text-[11px] font-semibold text-center">{isRTL ? 'إجراءات' : 'Actions'}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filtered.map((biz, idx) => {
+                  {paged.map((biz, idx) => {
                     const tierInfo = tiers.find(t => t.value === biz.membership_tier) || tiers[0];
+                    const tc = translationCompleteness(biz);
                     return (
                       <TableRow key={biz.id} className={`hover:bg-muted/30 ${!biz.is_active ? 'opacity-50' : ''}`}
                         style={{ animationDelay: `${idx * 0.02}s` }}>
+                        <TableCell className="py-2.5">
+                          <button onClick={() => toggleSelect(biz.id)} className="text-muted-foreground hover:text-foreground">
+                            {selected.has(biz.id) ? <CheckSquare className="w-4 h-4 text-accent" /> : <Square className="w-4 h-4" />}
+                          </button>
+                        </TableCell>
                         <TableCell className="py-2.5">
                           <div className="flex items-center gap-2.5">
                             <Avatar className="w-8 h-8 border border-border/50">
@@ -1554,12 +1566,12 @@ const AdminBusinesses = () => {
                               <AvatarFallback className="bg-primary/5 text-primary font-bold text-[10px]">{biz.name_ar?.charAt(0)}</AvatarFallback>
                             </Avatar>
                             <div>
-                              <p className="text-xs font-semibold truncate max-w-[180px]">{language === 'ar' ? biz.name_ar : (biz.name_en || biz.name_ar)}</p>
-                              <p className="text-[10px] text-muted-foreground">{biz.ref_id}</p>
+                              <p className="text-xs font-semibold truncate max-w-[180px]" dir="auto">{language === 'ar' ? biz.name_ar : (biz.name_en || biz.name_ar)}</p>
+                              <p className="text-[10px] text-muted-foreground tech-content">{biz.ref_id}</p>
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell className="text-[11px] text-muted-foreground">@{biz.username}</TableCell>
+                        <TableCell className="text-[11px] text-muted-foreground tech-content">@{biz.username}</TableCell>
                         <TableCell>
                           <Badge className={`text-[9px] h-5 ${tierInfo.color} border-0`}>
                             {tierInfo.icon} {language === 'ar' ? tierInfo.label_ar : tierInfo.label_en}
@@ -1570,6 +1582,13 @@ const AdminBusinesses = () => {
                             <Star className="w-3 h-3 text-accent fill-accent" /> {biz.rating_avg}
                             <span className="text-muted-foreground">({biz.rating_count})</span>
                           </span>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className={`text-[9px] h-5 gap-1 ${tc.full ? 'border-emerald-500/30 text-emerald-600' : 'border-amber-500/30 text-amber-600'}`}
+                            title={tc.full ? (isRTL ? 'مكتملة' : 'Complete') : (isRTL ? 'ناقصة' : 'Incomplete')}>
+                            <Languages className="w-2.5 h-2.5" />
+                            {tc.ar ? 'AR' : '·'} / {tc.en ? 'EN' : '·'}
+                          </Badge>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1">
@@ -1601,18 +1620,32 @@ const AdminBusinesses = () => {
         ) : (
           /* ─── Cards View ─── */
           <div className="space-y-3">
-            {filtered.map((biz, idx) => {
+            <div className="flex items-center gap-2 px-1 text-[11px] text-muted-foreground">
+              <button onClick={togglePageAll} className="inline-flex items-center gap-1 hover:text-foreground">
+                {allPagedSelected ? <CheckSquare className="w-4 h-4 text-accent" /> : <Square className="w-4 h-4" />}
+                {isRTL ? 'تحديد الصفحة' : 'Select page'}
+              </button>
+              <span className="ms-auto tech-content">
+                {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, filtered.length)} / {filtered.length}
+              </span>
+            </div>
+            {paged.map((biz, idx) => {
               const tierInfo = tiers.find(t => t.value === biz.membership_tier) || tiers[0];
               const hasContract = contractBusinessIds.includes(biz.id);
               const svcCount = allServices.filter((s) => s.business_id === biz.id).length;
+              const tc = translationCompleteness(biz);
+              const isSel = selected.has(biz.id);
               return (
                 <div key={biz.id}
                   className={`group relative rounded-2xl border bg-card transition-all duration-200 hover:shadow-md
-                    ${!biz.is_active ? 'opacity-60 border-destructive/40' : 'border-border/30 hover:border-primary/20'}`}
+                    ${isSel ? 'border-accent ring-2 ring-accent/30' : (!biz.is_active ? 'opacity-60 border-destructive/40' : 'border-border/30 hover:border-primary/20')}`}
                   style={{ animationDelay: `${idx * 0.03}s` }}>
                   <div className="p-4">
                     <div className="flex flex-col sm:flex-row sm:items-start gap-4">
                       <div className="flex items-start gap-3 flex-1 min-w-0">
+                        <button onClick={() => toggleSelect(biz.id)} className="mt-1 text-muted-foreground hover:text-foreground" aria-label="select">
+                          {isSel ? <CheckSquare className="w-4 h-4 text-accent" /> : <Square className="w-4 h-4" />}
+                        </button>
                         <div className="relative">
                           <Avatar className="w-12 h-12 shrink-0 ring-2 ring-border/10">
                             <AvatarImage src={biz.logo_url || undefined} />
@@ -1628,16 +1661,22 @@ const AdminBusinesses = () => {
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="font-heading font-bold text-sm truncate">
+                            <h3 className="font-heading font-bold text-sm truncate" dir="auto">
                               {language === 'ar' ? biz.name_ar : (biz.name_en || biz.name_ar)}
                             </h3>
                             {!biz.is_active && <Badge variant="destructive" className="text-[9px] gap-0.5 px-1.5 py-0"><Ban className="w-2.5 h-2.5" />{isRTL ? 'معطل' : 'Disabled'}</Badge>}
                             {hasContract && <Badge variant="outline" className="text-[9px] gap-0.5 px-1.5 py-0"><FileText className="w-2.5 h-2.5" />{isRTL ? 'عقود' : 'Contracts'}</Badge>}
+                            {!tc.full && (
+                              <Badge variant="outline" className="text-[9px] gap-0.5 px-1.5 py-0 border-amber-500/40 text-amber-600" title={isRTL ? 'الترجمة غير مكتملة' : 'Translation incomplete'}>
+                                <AlertTriangle className="w-2.5 h-2.5" />{tc.ar ? 'EN' : 'AR'}
+                              </Badge>
+                            )}
                           </div>
                           <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
-                            <span className="text-[11px] text-muted-foreground font-mono">@{biz.username}</span>
-                            <span className="text-[11px] text-muted-foreground font-mono">{biz.ref_id}</span>
-                            {biz.phone && <span className="flex items-center gap-1 text-[11px] text-muted-foreground" dir="ltr"><Phone className="w-3 h-3 shrink-0" />{biz.phone}</span>}
+                            <span className="text-[11px] text-muted-foreground tech-content">@{biz.username}</span>
+                            <span className="text-[11px] text-muted-foreground tech-content">{biz.ref_id}</span>
+                            {biz.phone && <span className="flex items-center gap-1 text-[11px] text-muted-foreground tech-content" dir="ltr"><Phone className="w-3 h-3 shrink-0" />{biz.phone}</span>}
+                            {biz.email && <span className="flex items-center gap-1 text-[11px] text-muted-foreground tech-content truncate max-w-[200px]" dir="ltr"><Mail className="w-3 h-3 shrink-0" />{biz.email}</span>}
                           </div>
                           <div className="flex flex-wrap items-center gap-1.5 mt-2">
                             <Badge className={`${tierInfo.color} text-[10px] border px-1.5 py-0`}>
