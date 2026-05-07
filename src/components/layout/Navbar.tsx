@@ -128,9 +128,14 @@ export const Navbar = () => {
 
             {/* More dropdown */}
             <div className="relative group">
-              <button className="px-3.5 py-2 rounded-lg text-surface-nav-foreground/70 hover:text-gold hover:bg-gold/5 transition-all duration-300 flex items-center gap-1.5">
+              <button
+                type="button"
+                aria-haspopup="menu"
+                aria-label={isRTL ? 'قائمة المزيد' : 'More menu'}
+                className="px-3.5 py-2 rounded-lg text-surface-nav-foreground/85 hover:text-gold hover:bg-gold/5 transition-all duration-300 flex items-center gap-1.5 focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none"
+              >
                 {isRTL ? 'المزيد' : 'More'}
-                <ChevronDown className="w-3.5 h-3.5 transition-transform duration-300 group-hover:rotate-180" />
+                <ChevronDown aria-hidden="true" className="w-3.5 h-3.5 transition-transform duration-300 group-hover:rotate-180" />
               </button>
               <div className="absolute top-full start-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 translate-y-1 group-hover:translate-y-0">
                 <div className="bg-surface-nav/98 backdrop-blur-xl border border-gold/15 rounded-xl shadow-2xl shadow-black/20 p-2 min-w-[200px]">
@@ -153,10 +158,10 @@ export const Navbar = () => {
                     </PrefetchLink>
                   ))}
                   <div className="border-t border-surface-nav-foreground/10 mt-1.5 pt-1.5">
-                    <button onClick={() => scrollToSection('#categories')} className="w-full text-start px-3.5 py-2 rounded-lg text-surface-nav-foreground/50 hover:text-gold hover:bg-gold/5 text-sm transition-all">
+                    <button onClick={() => scrollToSection('#categories')} className="w-full text-start px-3.5 py-2 rounded-lg text-surface-nav-foreground/75 hover:text-gold hover:bg-gold/5 text-sm transition-all focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none">
                       {t('nav.sections')}
                     </button>
-                    <button onClick={() => scrollToSection('#features')} className="w-full text-start px-3.5 py-2 rounded-lg text-surface-nav-foreground/50 hover:text-gold hover:bg-gold/5 text-sm transition-all">
+                    <button onClick={() => scrollToSection('#features')} className="w-full text-start px-3.5 py-2 rounded-lg text-surface-nav-foreground/75 hover:text-gold hover:bg-gold/5 text-sm transition-all focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none">
                       {t('nav.features')}
                     </button>
                   </div>
@@ -170,7 +175,7 @@ export const Navbar = () => {
             <ThemeToggle variant="navbar" />
             <button
               onClick={() => setLanguage(language === 'ar' ? 'en' : 'ar')}
-              className="text-[10px] sm:text-xs text-surface-nav-foreground/50 hover:text-gold transition-colors px-2 py-1.5 rounded-lg border border-surface-nav-foreground/15 hover:border-gold/30 font-medium focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none"
+              className="text-[10px] sm:text-xs text-surface-nav-foreground/85 hover:text-gold transition-colors px-2 py-1.5 rounded-lg border border-surface-nav-foreground/20 hover:border-gold/30 font-medium focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none"
               aria-label={language === 'ar' ? 'تبديل اللغة إلى الإنجليزية' : 'Switch language to Arabic'}
             >
               {t('nav.language')}
@@ -269,10 +274,10 @@ export const Navbar = () => {
           ))}
 
           <div className="border-t border-surface-nav-foreground/10 pt-2 mt-2 space-y-0.5">
-            <button onClick={() => scrollToSection('#categories')} className="block w-full text-start text-surface-nav-foreground/50 hover:text-gold py-2.5 px-3 rounded-lg hover:bg-gold/5 text-sm transition-all">
+            <button onClick={() => scrollToSection('#categories')} className="block w-full text-start text-surface-nav-foreground/80 hover:text-gold py-2.5 px-3 rounded-lg hover:bg-gold/5 text-sm transition-all focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none">
               {t('nav.sections')}
             </button>
-            <button onClick={() => scrollToSection('#features')} className="block w-full text-start text-surface-nav-foreground/50 hover:text-gold py-2.5 px-3 rounded-lg hover:bg-gold/5 text-sm transition-all">
+            <button onClick={() => scrollToSection('#features')} className="block w-full text-start text-surface-nav-foreground/80 hover:text-gold py-2.5 px-3 rounded-lg hover:bg-gold/5 text-sm transition-all focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none">
               {t('nav.features')}
             </button>
           </div>
