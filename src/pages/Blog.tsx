@@ -3,7 +3,7 @@ import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { Card, CardContent } from '@/components/ui/card';
@@ -14,7 +14,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import {
   FileText, Calendar, Eye, Search, BookOpen, Clock, Tag, TrendingUp,
   MessageCircle, Heart, X, SlidersHorizontal, ArrowUpDown, ChevronDown,
-  ChevronUp, Sparkles,
+  ChevronUp, Sparkles, Rss, Users, BarChart3, Flame,
 } from 'lucide-react';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 
@@ -58,39 +58,29 @@ const MobileCardSkeleton = () => (
 
 const Blog = () => {
   const { isRTL, language } = useLanguage();
-  usePageMeta({
-    title: language === 'ar' ? 'المدونة - مقالات ونصائح عن الألمنيوم والحديد | قِطاعات' : 'Blog - Aluminum & Iron Industry Articles | Qitaat',
-    description: language === 'ar' ? 'اقرأ أحدث المقالات والنصائح حول صناعة الألمنيوم والحديد والزجاج والخشب. أدلة مهنية وأخبار الصناعة.' : 'Read the latest articles and tips about aluminum, iron, glass and wood industries.',
-    canonical: 'https://qitaat.com/blog',
-  });
-
-  // Blog page JSON-LD: BreadcrumbList + CollectionPage
-  useMultiJsonLd(useMemo(() => {
-    const breadcrumb = {
-      '@context': 'https://schema.org',
-      '@type': 'BreadcrumbList',
-      itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'قِطاعات', item: 'https://qitaat.com' },
-        { '@type': 'ListItem', position: 2, name: language === 'ar' ? 'المدونة' : 'Blog', item: 'https://qitaat.com/blog' },
-      ],
-    };
-    const collection = {
-      '@context': 'https://schema.org',
-      '@type': 'CollectionPage',
-      name: language === 'ar' ? 'مدونة قِطاعات' : 'Qitaat Blog',
-      url: 'https://qitaat.com/blog',
-      description: language === 'ar' ? 'مقالات ونصائح حول صناعة الألمنيوم والحديد والزجاج' : 'Articles and tips about aluminum, iron and glass industries',
-      publisher: { '@type': 'Organization', name: 'قِطاعات Qitaat', url: 'https://qitaat.com' },
-    };
-    return [breadcrumb, collection];
-  }, [language]));
   const [activeCategory, setActiveCategory] = useState('all');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   const [sortBy, setSortBy] = useState<SortOption>('newest');
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const { ref: heroRef, isVisible: heroVisible } = useScrollAnimation();
+
+  // Sync `q` param with the URL so SearchAction (Schema.org) and shareable search links work
+  React.useEffect(() => {
+    const current = searchParams.get('q') || '';
+    if (searchQuery && searchQuery !== current) {
+      const next = new URLSearchParams(searchParams);
+      next.set('q', searchQuery);
+      setSearchParams(next, { replace: true });
+    } else if (!searchQuery && current) {
+      const next = new URLSearchParams(searchParams);
+      next.delete('q');
+      setSearchParams(next, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery]);
 
   const { data: posts = [], isLoading } = useQuery({
     queryKey: ['public-blog'],
@@ -130,6 +120,81 @@ const Blog = () => {
     posts.forEach((p) => p.tags?.forEach((t: string) => tagSet.add(t)));
     return Array.from(tagSet).slice(0, 15);
   }, [posts]);
+
+  // Aggregated stats (real numbers from DB)
+  const stats = useMemo(() => {
+    const totalViews = posts.reduce((s, p) => s + (p.views_count || 0), 0);
+    const totalComments = Object.values(commentCounts).reduce((s, n) => s + n, 0);
+    const totalSaves = Object.values(bookmarkCounts).reduce((s, n) => s + n, 0);
+    const authors = new Set(posts.map((p) => p.author_id).filter(Boolean)).size;
+    return { totalViews, totalComments, totalSaves, authors };
+  }, [posts, commentCounts, bookmarkCounts]);
+
+  // SEO meta + JSON-LD (Breadcrumb + CollectionPage + ItemList of latest articles + WebSite SearchAction)
+  usePageMeta({
+    title: language === 'ar'
+      ? 'مدونة قِطاعات - مقالات وأدلة في صناعة الألمنيوم والزجاج والحديد والخشب'
+      : 'Qitaat Blog - Aluminum, Glass, Iron & Wood Industry Articles',
+    description: language === 'ar'
+      ? `${posts.length}+ مقال احترافي في صناعة الألمنيوم والزجاج والحديد والخشب. أدلة شاملة، نصائح خبراء، وأخبار قطاعات السوق السعودي والخليجي.`
+      : `${posts.length}+ professional articles on aluminum, glass, iron and wood industries. Comprehensive guides, expert tips and sector news for the Saudi & Gulf market.`,
+    canonical: 'https://qitaat.com/blog',
+    ogType: 'website',
+    keywords: language === 'ar'
+      ? 'مدونة قِطاعات, مقالات ألمنيوم, مقالات زجاج, مقالات حديد, مقالات خشب, نصائح صناعية, أدلة المقاولين, تركيب واجهات, تصميم كلادينج'
+      : 'Qitaat blog, aluminum articles, glass articles, steel articles, wood articles, industrial tips, contractor guides, facade installation, cladding design',
+  });
+
+  useMultiJsonLd(useMemo(() => {
+    const breadcrumb = {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: language === 'ar' ? 'قِطاعات' : 'Qitaat', item: 'https://qitaat.com' },
+        { '@type': 'ListItem', position: 2, name: language === 'ar' ? 'المدونة' : 'Blog', item: 'https://qitaat.com/blog' },
+      ],
+    };
+    const collection = {
+      '@context': 'https://schema.org',
+      '@type': 'Blog',
+      name: language === 'ar' ? 'مدونة قِطاعات' : 'Qitaat Blog',
+      url: 'https://qitaat.com/blog',
+      inLanguage: language === 'ar' ? 'ar' : 'en',
+      description: language === 'ar'
+        ? 'مقالات وأدلة احترافية في صناعة الألمنيوم والزجاج والحديد والخشب'
+        : 'Professional articles and guides on aluminum, glass, iron and wood industries',
+      publisher: {
+        '@type': 'Organization',
+        name: 'قِطاعات Qitaat',
+        url: 'https://qitaat.com',
+        logo: { '@type': 'ImageObject', url: 'https://qitaat.com/og-image.jpg' },
+      },
+    };
+    const itemList = {
+      '@context': 'https://schema.org',
+      '@type': 'ItemList',
+      name: language === 'ar' ? 'أحدث المقالات' : 'Latest articles',
+      itemListOrder: 'https://schema.org/ItemListOrderDescending',
+      numberOfItems: posts.length,
+      itemListElement: posts.slice(0, 20).map((p, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        url: `https://qitaat.com/blog/${p.slug}`,
+        name: language === 'ar' ? p.title_ar : (p.title_en || p.title_ar),
+      })),
+    };
+    const website = {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      url: 'https://qitaat.com',
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: 'https://qitaat.com/blog?q={search_term_string}',
+        'query-input': 'required name=search_term_string',
+      },
+    };
+    return [breadcrumb, collection, itemList, website];
+  }, [language, posts]));
 
   const toggleTag = useCallback((tag: string) => {
     setSelectedTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
@@ -261,21 +326,38 @@ const Blog = () => {
       {/* Stats */}
       <Card className="border-border/50 dark:border-border/30 bg-gradient-to-br from-primary/5 to-accent/5 dark:from-primary/10 dark:to-accent/10">
         <CardContent className="p-4 sm:p-5 text-center space-y-2 sm:space-y-3">
-          <FileText className="w-7 h-7 sm:w-8 sm:h-8 text-accent mx-auto" />
+          <BarChart3 className="w-7 h-7 sm:w-8 sm:h-8 text-accent mx-auto" />
           <div>
-            <div className="font-heading font-bold text-xl sm:text-2xl text-foreground">{posts.length}</div>
+            <div className="font-heading font-bold text-xl sm:text-2xl text-foreground tech-content">{posts.length}</div>
             <div className="text-[11px] sm:text-xs text-muted-foreground">{isRTL ? 'مقال منشور' : 'Published Articles'}</div>
           </div>
           <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/30">
             <div>
-              <div className="font-bold text-base sm:text-lg text-foreground">{Object.keys(blogCategories).length - 1}</div>
-              <div className="text-[10px] sm:text-[11px] text-muted-foreground">{isRTL ? 'تصنيفات' : 'Categories'}</div>
+              <div className="font-bold text-base sm:text-lg text-foreground tech-content">{stats.totalViews.toLocaleString()}</div>
+              <div className="text-[10px] sm:text-[11px] text-muted-foreground">{isRTL ? 'مشاهدة' : 'Views'}</div>
             </div>
             <div>
-              <div className="font-bold text-base sm:text-lg text-foreground">{allTags.length}</div>
+              <div className="font-bold text-base sm:text-lg text-foreground tech-content">{stats.totalComments}</div>
+              <div className="text-[10px] sm:text-[11px] text-muted-foreground">{isRTL ? 'تعليق' : 'Comments'}</div>
+            </div>
+            <div>
+              <div className="font-bold text-base sm:text-lg text-foreground tech-content">{stats.totalSaves}</div>
+              <div className="text-[10px] sm:text-[11px] text-muted-foreground">{isRTL ? 'حفظ' : 'Saves'}</div>
+            </div>
+            <div>
+              <div className="font-bold text-base sm:text-lg text-foreground tech-content">{allTags.length}</div>
               <div className="text-[10px] sm:text-[11px] text-muted-foreground">{isRTL ? 'وسوم' : 'Tags'}</div>
             </div>
           </div>
+          <a
+            href="/sitemap.xml"
+            target="_blank"
+            rel="noopener"
+            className="inline-flex items-center gap-1.5 text-[11px] text-accent hover:underline mt-1"
+          >
+            <Rss className="w-3 h-3" />
+            {isRTL ? 'خريطة الموقع' : 'Sitemap'}
+          </a>
         </CardContent>
       </Card>
     </div>
@@ -317,6 +399,29 @@ const Blog = () => {
                   <X className="w-4 h-4 text-muted-foreground" />
                 </button>
               )}
+            </div>
+
+            {/* Live Stats Strip */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 max-w-2xl mx-auto mt-5 sm:mt-7">
+              {[
+                { icon: FileText, label: isRTL ? 'مقال' : 'Articles', value: posts.length },
+                { icon: Eye, label: isRTL ? 'مشاهدة' : 'Views', value: stats.totalViews },
+                { icon: MessageCircle, label: isRTL ? 'تعليق' : 'Comments', value: stats.totalComments },
+                { icon: Users, label: isRTL ? 'كاتب' : 'Authors', value: stats.authors },
+              ].map((s, i) => (
+                <div
+                  key={i}
+                  className="rounded-xl bg-primary-foreground/5 backdrop-blur-md border border-primary-foreground/10 px-3 py-2.5 flex items-center gap-2.5 hover:bg-primary-foreground/10 transition-colors"
+                >
+                  <s.icon className="w-4 h-4 text-accent shrink-0" />
+                  <div className="text-start min-w-0">
+                    <div className="font-heading font-bold text-sm sm:text-base text-primary-foreground tech-content leading-tight">
+                      {s.value.toLocaleString()}
+                    </div>
+                    <div className="text-[10px] sm:text-[11px] text-primary-foreground/60 leading-tight">{s.label}</div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
