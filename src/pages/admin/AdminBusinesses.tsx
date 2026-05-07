@@ -1738,11 +1738,26 @@ const AdminBusinesses = () => {
         )}
 
         {!isLoading && filtered.length > 0 && (
-          <div className="flex items-center justify-between pt-2 border-t border-border/30">
-            <p className="text-[11px] text-muted-foreground">
-              {isRTL ? `عرض ${filtered.length} من ${businesses.length} نشاط` : `Showing ${filtered.length} of ${businesses.length} businesses`}
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-border/30">
+            <p className="text-[11px] text-muted-foreground tech-content">
+              {isRTL
+                ? `الصفحة ${safePage}/${totalPages} · عرض ${(safePage - 1) * PAGE_SIZE + 1}–${Math.min(safePage * PAGE_SIZE, filtered.length)} من ${filtered.length} (إجمالي ${businesses.length})`
+                : `Page ${safePage}/${totalPages} · ${(safePage - 1) * PAGE_SIZE + 1}–${Math.min(safePage * PAGE_SIZE, filtered.length)} of ${filtered.length} (total ${businesses.length})`}
             </p>
             <div className="flex items-center gap-2">
+              {totalPages > 1 && (
+                <div className="flex items-center gap-1">
+                  <Button size="sm" variant="outline" className="h-8 w-8 p-0 rounded-xl" disabled={safePage <= 1}
+                    onClick={() => setPage(safePage - 1)}>
+                    {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+                  </Button>
+                  <span className="text-[11px] text-muted-foreground tech-content min-w-[3rem] text-center">{safePage}/{totalPages}</span>
+                  <Button size="sm" variant="outline" className="h-8 w-8 p-0 rounded-xl" disabled={safePage >= totalPages}
+                    onClick={() => setPage(safePage + 1)}>
+                    {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                  </Button>
+                </div>
+              )}
               <Badge variant="outline" className="text-[10px] h-5 gap-1">
                 <Activity className="w-3 h-3" />
                 {isRTL ? `${stats.active} نشط` : `${stats.active} active`}
