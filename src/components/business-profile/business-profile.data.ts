@@ -103,3 +103,24 @@ export const useBranches = (businessId: string | undefined) =>
     },
     enabled: !!businessId,
   });
+
+/**
+ * Counts the business's currently active promotions (offers/coupons).
+ * Powers the "Coupon" badge on the profile header (saqf-style trust signal).
+ */
+export const useActivePromotionsCount = (businessId: string | undefined) =>
+  useQuery({
+    queryKey: ["promotions-active-count", businessId],
+    queryFn: async () => {
+      const today = new Date().toISOString().slice(0, 10);
+      const { count } = await supabase
+        .from("promotions")
+        .select("id", { count: "exact", head: true })
+        .eq("business_id", businessId!)
+        .eq("is_active", true)
+        .or(`end_date.is.null,end_date.gte.${today}`);
+      return count ?? 0;
+    },
+    enabled: !!businessId,
+    staleTime: 5 * 60 * 1000,
+  });
