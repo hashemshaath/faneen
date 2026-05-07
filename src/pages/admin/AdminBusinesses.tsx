@@ -495,6 +495,21 @@ const AdminBusinesses = () => {
 
   /* ─── AI auto-translate missing field (single business) ─── */
   const [autoTranslating, setAutoTranslating] = useState(false);
+  const searchRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      if (e.key === '/') { e.preventDefault(); searchRef.current?.focus(); }
+      if (e.key === 'Escape') {
+        if (editingBiz) setEditingBiz(null);
+        else if (servicesPanel) setServicesPanel(null);
+        else if (selected.size) clearSelected();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [editingBiz, servicesPanel, selected.size]);
   const autoFillTranslations = useCallback(async () => {
     if (!editingBiz) return;
     setAutoTranslating(true);
