@@ -1,11 +1,14 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { CheckCircle2, XCircle, AlertTriangle, RefreshCw, ExternalLink, FileText } from 'lucide-react';
+import { CheckCircle2, XCircle, AlertTriangle, RefreshCw, ExternalLink, FileText, Play, History, Shield, Mail } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
+import { useState } from 'react';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 const FUNC = `${SUPABASE_URL}/functions/v1/sitemap`;
@@ -56,6 +59,8 @@ async function checkUrl(url: string): Promise<CheckResult> {
 export default function AdminSitemapStatus() {
   const { language } = useLanguage();
   const isAr = language === 'ar';
+  const qc = useQueryClient();
+  const [expandedRun, setExpandedRun] = useState<string | null>(null);
 
   const { data, isLoading, refetch, isFetching } = useQuery({
     queryKey: ['sitemap-status'],
@@ -79,6 +84,41 @@ export default function AdminSitemapStatus() {
   const errorCount = (data ?? []).filter((r) => !r.result.ok).length;
   const okCount = (data ?? []).filter((r) => r.result.ok).length;
 
+  const history = useQuery({
+    queryKey: ['sitemap-audit-history'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('sitemap_audit_runs')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (error) throw error;
+      return data ?? [];
+    },
+    refetchOnWindowFocus: false,
+  });
+
+  const runAndSave = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke('audit-sitemap-status', {
+        body: { triggeredBy: 'manual' },
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast({ title: isAr ? 'تم تشغيل الفحص وحفظه' : 'Audit run saved' });
+      qc.invalidateQueries({ queryKey: ['sitemap-audit-history'] });
+      refetch();
+    },
+    onError: (e: unknown) => {
+      toast({ title: isAr ? 'فشل تشغيل الفحص' : 'Audit run failed', description: e instanceof Error ? e.message : '', variant: 'destructive' });
+    },
+  });
+
+  const latest = history.data?.[0];
+  const robotsRows = (latest?.robots_check as Array<{ path: string; expected: string; actual: string; matched: string | null; ok: boolean }> | undefined) ?? [];
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -89,10 +129,16 @@ export default function AdminSitemapStatus() {
               {isAr ? 'فحص مباشر لـ XML والروابط واكتشاف SPA fallback' : 'Live XML check, link counts, and SPA fallback detection'}
             </p>
           </div>
-          <Button onClick={() => refetch()} disabled={isFetching} variant="outline" className="gap-2">
-            <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
-            {isAr ? 'تحديث' : 'Refresh'}
-          </Button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button onClick={() => refetch()} disabled={isFetching} variant="outline" className="gap-2">
+              <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
+              {isAr ? 'تحديث' : 'Refresh'}
+            </Button>
+            <Button onClick={() => runAndSave.mutate()} disabled={runAndSave.isPending} className="gap-2">
+              <Play className={`h-4 w-4 ${runAndSave.isPending ? 'animate-pulse' : ''}`} />
+              {isAr ? 'تشغيل وحفظ فحص' : 'Run & save audit'}
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -149,6 +195,124 @@ export default function AdminSitemapStatus() {
                     <div><span className="opacity-60">Checked: </span>{new Date(r.fetchedAt).toLocaleTimeString()}</div>
                     {r.error && <div className="col-span-full text-red-600 dark:text-red-400">{r.error}</div>}
                   </div>
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
+
+        {/* Robots rules check */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5" />
+              {isAr ? 'فحص قواعد robots.txt' : 'Robots.txt rules check'}
+              {latest && <Badge variant="secondary" className="tech-content text-xs">{new Date(latest.created_at).toLocaleString()}</Badge>}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {!latest && <p className="text-sm text-muted-foreground">{isAr ? 'لا يوجد فحص محفوظ بعد. اضغط "تشغيل وحفظ فحص".' : 'No saved audit yet. Click "Run & save audit".'}</p>}
+            {latest && robotsRows.length === 0 && <p className="text-sm text-muted-foreground">{isAr ? 'تعذر قراءة robots.txt' : 'robots.txt could not be parsed'}</p>}
+            {robotsRows.length > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {robotsRows.map((r) => (
+                  <div key={r.path + r.expected} className={`flex items-center justify-between gap-2 border rounded-lg px-3 py-2 ${r.ok ? '' : 'border-red-500/40 bg-red-500/5'}`}>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-medium tech-content truncate">{r.path}</div>
+                      <div className="text-xs text-muted-foreground tech-content">
+                        {isAr ? 'متوقع' : 'expected'}: {r.expected}{r.matched ? ` · ${isAr ? 'القاعدة' : 'rule'}: ${r.matched}` : ''}
+                      </div>
+                    </div>
+                    <Badge variant={r.ok ? 'default' : 'destructive'} className="tech-content">{r.actual}</Badge>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Audit history */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <History className="h-5 w-5" />
+              {isAr ? 'سجل عمليات الفحص' : 'Audit history'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {history.isLoading && Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-14 w-full" />)}
+            {!history.isLoading && (history.data?.length ?? 0) === 0 && (
+              <p className="text-sm text-muted-foreground">{isAr ? 'لا توجد عمليات فحص محفوظة بعد.' : 'No saved audit runs yet.'}</p>
+            )}
+            {history.data?.map((run) => {
+              const isOpen = expandedRun === run.id;
+              const diff = (run.diff_from_previous ?? {}) as { firstRun?: boolean; statusFlips?: Array<{ url: string; from: boolean; to: boolean }>; urlCountDeltas?: Array<{ url: string; from: number; to: number; delta: number }>; totalUrlsDelta?: number };
+              return (
+                <div key={run.id} className="border rounded-xl">
+                  <button
+                    type="button"
+                    onClick={() => setExpandedRun(isOpen ? null : run.id)}
+                    className="w-full flex items-center justify-between gap-3 p-3 hover:bg-muted/40 transition rounded-xl"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      {run.has_failures || run.has_spa_fallback
+                        ? <XCircle className="h-5 w-5 text-red-600 dark:text-red-400 shrink-0" />
+                        : <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400 shrink-0" />}
+                      <div className="text-start min-w-0">
+                        <div className="text-sm font-semibold tech-content">{new Date(run.created_at).toLocaleString()}</div>
+                        <div className="text-xs text-muted-foreground tech-content">
+                          {run.triggered_by} · {run.ok_count}/{run.total_endpoints} ok · {run.total_urls} urls
+                          {typeof diff.totalUrlsDelta === 'number' && diff.totalUrlsDelta !== 0 && (
+                            <span className={diff.totalUrlsDelta > 0 ? ' text-emerald-600' : ' text-red-600'}> ({diff.totalUrlsDelta > 0 ? '+' : ''}{diff.totalUrlsDelta})</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {run.has_spa_fallback && <Badge variant="destructive">SPA</Badge>}
+                      {run.error_count > 0 && <Badge variant="destructive" className="tech-content">{run.error_count} err</Badge>}
+                      {run.alert_sent && <Badge variant="secondary" className="gap-1"><Mail className="h-3 w-3" />{isAr ? 'تنبيه' : 'alerted'}</Badge>}
+                    </div>
+                  </button>
+                  {isOpen && (
+                    <div className="border-t p-3 space-y-3 text-sm">
+                      {diff.firstRun && <div className="text-xs text-muted-foreground">{isAr ? 'هذه أول عملية فحص — لا توجد مقارنة.' : 'First audit — no diff available.'}</div>}
+                      {(diff.statusFlips?.length ?? 0) > 0 && (
+                        <div>
+                          <div className="font-semibold text-xs mb-1">{isAr ? 'تغيرات الحالة' : 'Status flips'}</div>
+                          <ul className="text-xs space-y-1 tech-content">
+                            {diff.statusFlips!.map((f) => (
+                              <li key={f.url} className={f.to ? 'text-emerald-600' : 'text-red-600'}>
+                                {f.url} : {String(f.from)} → {String(f.to)}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      {(diff.urlCountDeltas?.length ?? 0) > 0 && (
+                        <div>
+                          <div className="font-semibold text-xs mb-1">{isAr ? 'تغيّر عدد الروابط' : 'URL count changes'}</div>
+                          <ul className="text-xs space-y-1 tech-content">
+                            {diff.urlCountDeltas!.map((d) => (
+                              <li key={d.url}>
+                                {d.url} : {d.from} → {d.to} <span className={d.delta > 0 ? 'text-emerald-600' : 'text-red-600'}>({d.delta > 0 ? '+' : ''}{d.delta})</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      <div>
+                        <div className="font-semibold text-xs mb-1">{isAr ? 'النقاط' : 'Endpoints'}</div>
+                        <ul className="text-xs space-y-1 tech-content">
+                          {((run.results as Array<{ url: string; status: number; ok: boolean; urlCount: number; isSpaFallback: boolean }>) ?? []).map((r) => (
+                            <li key={r.url} className={r.ok ? '' : 'text-red-600'}>
+                              [{r.status || 'ERR'}] {r.url} — {r.urlCount} urls{r.isSpaFallback ? ' · SPA!' : ''}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })}
