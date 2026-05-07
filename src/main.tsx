@@ -3,8 +3,13 @@ import { validateEnv } from "./utils/validateEnv";
 import App from "./App.tsx";
 import "./index.css";
 import { startWebVitals } from "./utils/reportWebVitals";
+import { installDiagnostics } from "./lib/diagnostics";
 
 validateEnv();
+
+// Install in-browser diagnostics buffer (console errors, network failures,
+// unhandled rejections). Exposed at /diagnostics for developers.
+installDiagnostics();
 
 // One-time legacy storage cleanup: removes any leftover `faneen_*` keys
 // from beta-tester browsers. Safe no-op once it has run on a device.
