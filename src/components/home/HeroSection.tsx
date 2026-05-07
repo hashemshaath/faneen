@@ -3,7 +3,6 @@ import { Search, Star, Shield, Building2, ChevronLeft, ChevronRight, MapPin } fr
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useEffect, useRef, useState, useCallback, memo, useMemo } from "react";
-import { useTypingAnimation } from "@/hooks/useTypingAnimation";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { HeroParticles } from "./HeroParticles";
@@ -110,6 +109,23 @@ const SearchBar = memo(({ categories, cities, language, isRTL, t, onSearch }: an
 });
 SearchBar.displayName = 'SearchBar';
 
+// Splits text into <span class="hero-word"> tokens with staggered delay.
+// Adds non-breaking spaces between words to keep natural wrapping.
+const WordFade = memo(({ text, baseDelay = 0, stepMs = 110, className = '' }: { text: string; baseDelay?: number; stepMs?: number; className?: string }) => {
+  const words = useMemo(() => text.split(/\s+/).filter(Boolean), [text]);
+  return (
+    <span className={className}>
+      {words.map((w, i) => (
+        <span key={`${i}-${w}`} className="hero-word" style={{ animationDelay: `${baseDelay + i * stepMs}ms` }}>
+          {w}
+          {i < words.length - 1 ? '\u00A0' : ''}
+        </span>
+      ))}
+    </span>
+  );
+});
+WordFade.displayName = 'WordFade';
+
 const HeroTitle = memo(({ slides, current, language, t }: { slides: typeof slidesData; current: number; language: string; t: (key: string) => string }) => {
   const slide = slides[current];
   const line1 = 'titleKey1' in slide && slide.titleKey1
@@ -122,24 +138,28 @@ const HeroTitle = memo(({ slides, current, language, t }: { slides: typeof slide
     ? t(slide.descKey as string)
     : (slide as Record<string, string>)[`desc${language === 'ar' ? 'Ar' : 'En'}`];
 
-  const { displayedText: typedLine1, isComplete: line1Done } = useTypingAnimation({ text: line1, speed: 40, delay: 200 });
-  const { displayedText: typedLine2 } = useTypingAnimation({ text: line2, speed: 40, delay: 0, enabled: line1Done });
+  const line1Words = line1.split(/\s+/).filter(Boolean).length;
+  const stepMs = 130; // calm cadence
+  const baseDelay = 200;
+  const line2Delay = baseDelay + line1Words * stepMs + 250;
+  const line2Words = line2.split(/\s+/).filter(Boolean).length;
+  const descDelay = line2Delay + line2Words * stepMs + 200;
+
+  // Re-trigger animation per slide via key
+  const animKey = `${current}-${language}`;
 
   return (
     <div className="min-h-[130px] sm:min-h-[200px] flex flex-col items-center justify-center">
-      <div className="animate-fade-in">
+      <div key={animKey}>
         <h2 className="font-heading font-black text-[1.8rem] leading-[1.2] sm:text-[2.75rem] md:text-[3.25rem] lg:text-[3.75rem] text-white sm:leading-[1.15] mb-3 sm:mb-6 tracking-tight">
-          <span>{typedLine1}</span>
-          <span className="inline-block w-[3px] h-[0.9em] bg-gold/80 align-middle animate-pulse ms-1" style={{ opacity: line1Done ? 0 : 1, transition: 'opacity 0.3s' }} />
-          {line1Done && (
-            <>
-              <br />
-              <span className="text-gradient-gold">{typedLine2}</span>
-              <span className="inline-block w-[3px] h-[0.9em] bg-gold/80 align-middle animate-pulse ms-1" />
-            </>
-          )}
+          <WordFade text={line1} baseDelay={baseDelay} stepMs={stepMs} />
+          <br />
+          <WordFade text={line2} baseDelay={line2Delay} stepMs={stepMs} className="text-gradient-gold-shimmer" />
         </h2>
-        <p className={`font-body text-sm sm:text-lg text-white/50 max-w-2xl mx-auto leading-relaxed px-2 transition-opacity duration-700 ${line1Done ? 'opacity-100' : 'opacity-0'}`}>
+        <p
+          className="font-body text-sm sm:text-lg text-white/50 max-w-2xl mx-auto leading-relaxed px-2 hero-word"
+          style={{ animationDelay: `${descDelay}ms`, animationDuration: '1.1s' }}
+        >
           {desc}
         </p>
       </div>
