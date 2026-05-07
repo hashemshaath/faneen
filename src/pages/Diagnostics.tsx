@@ -15,6 +15,7 @@ import {
   AlertTriangle, AlertCircle, Info, Globe, Bug, Zap,
 } from "lucide-react";
 import { useNoIndex } from "@/hooks/useNoIndex";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const SOURCE_ICONS: Record<DiagSource, React.ReactNode> = {
   console: <Bug className="w-3.5 h-3.5" />,
@@ -40,6 +41,28 @@ type FilterKey = typeof FILTER_KEYS[number];
 
 const Diagnostics = () => {
   useNoIndex();
+  const { isRTL } = useLanguage();
+  const tx = isRTL ? {
+    title: 'تشخيص النظام',
+    sub: 'سجل مباشر للأخطاء والتحذيرات وطلبات الشبكة الفاشلة. يُجمع داخل المتصفح فقط.',
+    home: 'الرئيسية',
+    total: 'إجمالي', errors: 'أخطاء', warnings: 'تحذيرات', network: 'شبكة',
+    all: 'الكل', warn: 'تحذيرات', console: 'كونسول',
+    searchPh: 'بحث في السجل...',
+    copy: 'نسخ', export: 'تصدير',
+    empty: 'لا توجد سجلات',
+    emptySub: 'السجل فارغ — كل شيء يعمل بسلاسة.',
+  } : {
+    title: 'System Diagnostics',
+    sub: 'Live log of errors, warnings, and failed network requests. Collected in-browser only.',
+    home: 'Home',
+    total: 'Total', errors: 'Errors', warnings: 'Warnings', network: 'Network',
+    all: 'All', warn: 'Warnings', console: 'Console',
+    searchPh: 'Search log...',
+    copy: 'Copy', export: 'Export',
+    empty: 'No logs',
+    emptySub: 'The log is empty — everything is running smoothly.',
+  };
   const [entries, setEntries] = useState<DiagEntry[]>(getDiagEntries());
   const [filter, setFilter] = useState<FilterKey>("all");
   const [search, setSearch] = useState("");
@@ -105,16 +128,16 @@ const Diagnostics = () => {
               Developer Tools
             </span>
             <h1 className="font-heading font-bold text-2xl sm:text-3xl text-foreground tracking-tight">
-              تشخيص النظام
+              {tx.title}
             </h1>
             <p className="text-sm text-muted-foreground">
-              سجل مباشر للأخطاء والتحذيرات وطلبات الشبكة الفاشلة. يُجمع داخل المتصفح فقط.
+              {tx.sub}
             </p>
           </div>
           <Link to="/">
             <Button variant="outline" size="sm" className="gap-1.5 rounded-xl">
               <Home className="w-3.5 h-3.5" />
-              الرئيسية
+              {tx.home}
             </Button>
           </Link>
         </div>
@@ -122,10 +145,10 @@ const Diagnostics = () => {
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
           {[
-            { label: "إجمالي", value: counts.total, color: "text-foreground" },
-            { label: "أخطاء", value: counts.errors, color: "text-destructive" },
-            { label: "تحذيرات", value: counts.warnings, color: "text-amber-600 dark:text-amber-400" },
-            { label: "شبكة", value: counts.network, color: "text-sky-600 dark:text-sky-400" },
+            { label: tx.total, value: counts.total, color: "text-foreground" },
+            { label: tx.errors, value: counts.errors, color: "text-destructive" },
+            { label: tx.warnings, value: counts.warnings, color: "text-amber-600 dark:text-amber-400" },
+            { label: tx.network, value: counts.network, color: "text-sky-600 dark:text-sky-400" },
           ].map((s) => (
             <div key={s.label} className="rounded-2xl border border-border/40 bg-card px-4 py-3">
               <div className={`text-2xl font-bold tabular-nums tech-content ${s.color}`}>{s.value}</div>
@@ -145,7 +168,7 @@ const Diagnostics = () => {
                   filter === k ? "bg-card text-accent shadow-sm" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {k === "all" ? "الكل" : k === "error" ? "أخطاء" : k === "warn" ? "تحذيرات" : k === "network" ? "شبكة" : "كونسول"}
+                {k === "all" ? tx.all : k === "error" ? tx.errors : k === "warn" ? tx.warn : k === "network" ? tx.network : tx.console}
               </button>
             ))}
           </div>
@@ -153,16 +176,16 @@ const Diagnostics = () => {
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="بحث في السجل..."
+            placeholder={tx.searchPh}
             dir="auto"
             className="flex-1 h-10 px-4 rounded-xl bg-muted/30 border border-border/30 text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-accent/40"
           />
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" className="gap-1.5 rounded-xl" onClick={handleCopy}>
-              <Copy className="w-3.5 h-3.5" /> نسخ
+              <Copy className="w-3.5 h-3.5" /> {tx.copy}
             </Button>
             <Button variant="outline" size="sm" className="gap-1.5 rounded-xl" onClick={handleExport}>
-              <Download className="w-3.5 h-3.5" /> تصدير
+              <Download className="w-3.5 h-3.5" /> {tx.export}
             </Button>
             <Button variant="outline" size="sm" className="gap-1.5 rounded-xl" onClick={() => setEntries(getDiagEntries())}>
               <RefreshCw className="w-3.5 h-3.5" />
@@ -185,8 +208,8 @@ const Diagnostics = () => {
               <div className="mx-auto flex items-center justify-center w-12 h-12 rounded-2xl bg-muted/60 text-muted-foreground mb-3">
                 <Activity className="w-5 h-5" />
               </div>
-              <p className="text-sm font-semibold text-foreground">لا توجد سجلات</p>
-              <p className="text-xs text-muted-foreground mt-1">السجل فارغ — كل شيء يعمل بسلاسة.</p>
+              <p className="text-sm font-semibold text-foreground">{tx.empty}</p>
+              <p className="text-xs text-muted-foreground mt-1">{tx.emptySub}</p>
             </div>
           ) : (
             filtered.map((e) => {
