@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRoleRedirect } from '@/hooks/useRoleRedirect';
@@ -9,11 +9,35 @@ import { PhoneInput } from '@/components/auth/PhoneInput';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { User, Building2, Phone, Globe, Check, Loader2 } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
+import { SectorPicker } from '@/components/onboarding/SectorPicker';
+import type { SectorId } from '@/data/onboarding-sectors';
+import {
+  readDraft,
+  saveDraft,
+  clearDraft,
+  pullRemoteDraft,
+  syncDraftToServer,
+} from '@/lib/onboarding-draft';
 
-type OnboardingStep = 'account-type' | 'details' | 'phone-verify' | 'business-details';
+type OnboardingStep =
+  | 'account-type'
+  | 'details'
+  | 'phone-verify'
+  | 'business-details'
+  | 'business-sectors';
+
+const STEP_ORDER: OnboardingStep[] = [
+  'account-type',
+  'details',
+  'phone-verify',
+  'business-details',
+  'business-sectors',
+];
 
 const Onboarding = () => {
   const { t, language, isRTL } = useLanguage();
@@ -29,7 +53,24 @@ const Onboarding = () => {
   const [countryCode, setCountryCode] = useState('+966');
   const [businessName, setBusinessName] = useState('');
   const [username, setUsername] = useState('');
+  const [businessDescription, setBusinessDescription] = useState('');
+  const [sectors, setSectors] = useState<SectorId[]>([]);
+  const [subServices, setSubServices] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [draftLoaded, setDraftLoaded] = useState(false);
+
+  // Persist draft on every relevant change
+  useEffect(() => {
+    if (!draftLoaded) return;
+    saveDraft({
+      step, accountType, fullName, phone, countryCode,
+      businessName, username,
+      description: businessDescription,
+      sectors, subServices,
+    });
+    if (user?.id) void syncDraftToServer(user.id);
+  }, [step, accountType, fullName, phone, countryCode, businessName, username,
+      businessDescription, sectors, subServices, draftLoaded, user?.id]);
 
   const otp = useOtpFlow({
     isRTL,
@@ -50,13 +91,52 @@ const Onboarding = () => {
   useEffect(() => {
     if (!user) { navigate('/auth'); return; }
     if (profile?.is_onboarded) { navigate(getTargetRoute()); return; }
-    if (profile?.full_name) setFullName(profile.full_name);
-    else if (user?.user_metadata?.full_name) setFullName(user.user_metadata.full_name);
-    if (profile?.account_type && profile.account_type !== 'individual') {
-      setAccountType(profile.account_type as 'individual' | 'business');
-    }
+    let cancelled = false;
+    (async () => {
+      const draft = await pullRemoteDraft(user.id);
+      const local = readDraft();
+      const d = { ...local, ...draft };
+      if (cancelled) return;
+      // Profile takes precedence for identity fields
+      if (profile?.full_name) setFullName(profile.full_name);
+      else if (d.fullName) setFullName(d.fullName);
+      else if (user?.user_metadata?.full_name) setFullName(user.user_metadata.full_name);
+      if (profile?.account_type && profile.account_type !== 'individual') {
+        setAccountType(profile.account_type as 'individual' | 'business');
+      } else if (d.accountType) {
+        setAccountType(d.accountType);
+      }
+      if (d.phone) setPhone(d.phone);
+      if (d.countryCode) setCountryCode(d.countryCode);
+      if (d.businessName) setBusinessName(d.businessName);
+      if (d.username) setUsername(d.username);
+      if (d.description) setBusinessDescription(d.description);
+      if (d.sectors?.length) setSectors(d.sectors as SectorId[]);
+      if (d.subServices?.length) setSubServices(d.subServices);
+      if (d.step && STEP_ORDER.includes(d.step as OnboardingStep)) {
+        setStep(d.step as OnboardingStep);
+      }
+      setDraftLoaded(true);
+    })();
+    return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, profile]);
+
+  // Completion percentage for the header progress bar
+  const completionPct = useMemo(() => {
+    let total = 3; // account type, full name, account creation
+    let done = 1; // account type implicit
+    if (fullName.trim()) done++;
+    if (accountType === 'business') {
+      total += 4; // name, username, description, sectors
+      if (businessName.trim()) done++;
+      if (username.length >= 3) done++;
+      if (businessDescription.trim()) done++;
+      if (sectors.length > 0) done++;
+    }
+    if (phone && phone.length >= 7) { total += 1; done += 1; }
+    return Math.min(100, Math.round((done / total) * 100));
+  }, [fullName, accountType, businessName, username, businessDescription, sectors, phone]);
 
   const completeOnboarding = async () => {
     setLoading(true);
@@ -69,10 +149,15 @@ const Onboarding = () => {
       });
 
       if (accountType === 'business' && businessName && username) {
-        await authService.createBusiness(user!.id, businessName, username);
+        await authService.createBusiness(user!.id, businessName, username, {
+          sectors,
+          sub_services: subServices,
+          description_ar: businessDescription || undefined,
+        });
       }
 
       await refreshProfile();
+      clearDraft();
       toast.success(isRTL ? 'تم إكمال التسجيل بنجاح!' : 'Registration completed successfully!');
       
       // Role-based redirect after onboarding
