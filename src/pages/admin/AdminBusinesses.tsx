@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef, useMemo, useTransition } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -28,7 +29,8 @@ import {
   GripVertical, ToggleLeft, ToggleRight, Save, Image, MapPinned,
   FileText, Users, Locate, Navigation, Download, LayoutGrid, List,
   TrendingUp, ArrowUpRight, Filter, RefreshCw, Copy, MoreHorizontal,
-  Activity, Zap,
+  Activity, Zap, Languages, ArrowUpDown, ChevronLeft, ChevronRight,
+  Languages as LanguagesIcon, CheckSquare, Square, AlertTriangle,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import {
