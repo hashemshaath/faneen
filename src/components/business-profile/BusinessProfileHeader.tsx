@@ -11,6 +11,8 @@ import {
   MessageSquare,
   Share2,
   Star,
+  ShieldCheck,
+  TicketPercent,
   User,
   Wrench,
 } from "lucide-react";
@@ -90,6 +92,8 @@ interface BusinessProfileHeaderProps {
   projectCount: number;
   serviceCount: number;
   branchCount: number;
+  activeOffersCount?: number;
+  topServices?: Array<{ name_ar: string; name_en?: string | null }>;
 }
 
 export const BusinessProfileHeader = ({
@@ -99,6 +103,8 @@ export const BusinessProfileHeader = ({
   projectCount,
   serviceCount,
   branchCount,
+  activeOffersCount = 0,
+  topServices = [],
 }: BusinessProfileHeaderProps) => {
   const { t, language, isRTL } = useLanguage();
   const name = getLocalizedValue(language, business.name_ar, business.name_en);
@@ -181,10 +187,16 @@ export const BusinessProfileHeader = ({
                       {name}
                     </h1>
                     {business.is_verified && (
-                      <Badge className="gap-1 border-accent/30 bg-accent/10 text-accent dark:bg-accent/20">
-                        <BadgeCheck className="h-3.5 w-3.5" />
-                        {t("profile.verified")}
-                      </Badge>
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[11px] font-body font-semibold border border-emerald-500/20">
+                        <ShieldCheck className="h-3.5 w-3.5" />
+                        {language === "ar" ? "شركة موثقة" : "Verified"}
+                      </span>
+                    )}
+                    {activeOffersCount > 0 && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400 text-[11px] font-body font-semibold border border-rose-500/20">
+                        <TicketPercent className="h-3.5 w-3.5" />
+                        {language === "ar" ? "كوبون خصم" : "Coupon"}
+                      </span>
                     )}
                     {tier && (
                       <Badge className={`${tier.color} gap-1`}>
@@ -236,6 +248,28 @@ export const BusinessProfileHeader = ({
 
               {shortDesc && (
                 <p className="mt-3 max-w-3xl text-sm leading-relaxed text-muted-foreground">{shortDesc}</p>
+              )}
+
+              {topServices.length > 0 && (
+                <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                  {topServices.slice(0, 4).map((s, idx) => {
+                    const label = getLocalizedValue(language, s.name_ar, s.name_en);
+                    if (!label) return null;
+                    return (
+                      <span
+                        key={idx}
+                        className="inline-flex items-center px-2.5 py-1 rounded-lg bg-primary/5 text-primary border border-primary/15 text-[11px] sm:text-xs font-body truncate max-w-[180px]"
+                      >
+                        {label}
+                      </span>
+                    );
+                  })}
+                  {serviceCount > 4 && (
+                    <span className="inline-flex items-center px-2 py-1 rounded-lg bg-muted text-muted-foreground text-[11px] sm:text-xs font-body tech-content">
+                      +{serviceCount - 4}
+                    </span>
+                  )}
+                </div>
               )}
             </div>
           </div>
