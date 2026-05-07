@@ -3763,6 +3763,54 @@ export type Database = {
         }
         Relationships: []
       }
+      sitemap_audit_runs: {
+        Row: {
+          alert_sent: boolean
+          created_at: string
+          diff_from_previous: Json
+          error_count: number
+          has_failures: boolean
+          has_spa_fallback: boolean
+          id: string
+          ok_count: number
+          results: Json
+          robots_check: Json
+          total_endpoints: number
+          total_urls: number
+          triggered_by: string
+        }
+        Insert: {
+          alert_sent?: boolean
+          created_at?: string
+          diff_from_previous?: Json
+          error_count?: number
+          has_failures?: boolean
+          has_spa_fallback?: boolean
+          id?: string
+          ok_count?: number
+          results?: Json
+          robots_check?: Json
+          total_endpoints?: number
+          total_urls?: number
+          triggered_by?: string
+        }
+        Update: {
+          alert_sent?: boolean
+          created_at?: string
+          diff_from_previous?: Json
+          error_count?: number
+          has_failures?: boolean
+          has_spa_fallback?: boolean
+          id?: string
+          ok_count?: number
+          results?: Json
+          robots_check?: Json
+          total_endpoints?: number
+          total_urls?: number
+          triggered_by?: string
+        }
+        Relationships: []
+      }
       sitemap_submissions: {
         Row: {
           created_at: string
