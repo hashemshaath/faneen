@@ -67,7 +67,7 @@ export async function syncDraftToServer(userId: string): Promise<void> {
   try {
     await supabase
       .from('profiles')
-      .update({ onboarding_draft: draft })
+      .update({ onboarding_draft: draft as unknown as Record<string, unknown> })
       .eq('user_id', userId);
   } catch {
     /* swallow — local copy is the source of truth */
