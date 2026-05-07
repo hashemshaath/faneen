@@ -1159,8 +1159,13 @@ export type Database = {
           created_at: string
           email: string
           id: string
+          internal_notes: string | null
           message: string
           name: string
+          priority: string
+          replied_at: string | null
+          replied_by: string | null
+          starred: boolean
           status: string
           subject: string | null
           updated_at: string
@@ -1170,8 +1175,13 @@ export type Database = {
           created_at?: string
           email: string
           id?: string
+          internal_notes?: string | null
           message: string
           name: string
+          priority?: string
+          replied_at?: string | null
+          replied_by?: string | null
+          starred?: boolean
           status?: string
           subject?: string | null
           updated_at?: string
@@ -1181,8 +1191,13 @@ export type Database = {
           created_at?: string
           email?: string
           id?: string
+          internal_notes?: string | null
           message?: string
           name?: string
+          priority?: string
+          replied_at?: string | null
+          replied_by?: string | null
+          starred?: boolean
           status?: string
           subject?: string | null
           updated_at?: string
