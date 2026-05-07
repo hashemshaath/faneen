@@ -56,7 +56,9 @@
     <!-- Security -->
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
-    <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(self), interest-cohort=()" />
+    <!-- Geolocation API is not used in the app; deny it entirely. -->
+    <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), interest-cohort=(), browsing-topics=()" />
+    <meta http-equiv="X-Frame-Options" content="SAMEORIGIN" />
 
     <!-- AI crawler discovery -->
     <link rel="alternate" type="text/plain" title="LLM crawler manifest" href="/llms.txt" />
