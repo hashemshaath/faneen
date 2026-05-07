@@ -554,3 +554,109 @@ describe('BusinessCard +N counter with null/non-boolean is_active', () => {
     expect(screen.getByText('+1')).toBeInTheDocument();
   });
 });
+
+/**
+ * BusinessCard is wrapped in `React.memo`. When the parent re-renders with
+ * the SAME `business` reference and the SAME `viewMode`, the card must not
+ * re-render. When `business_services` actually changes (new reference), the
+ * card MUST re-render exactly once.
+ */
+describe('BusinessCard render cost (React.memo behavior)', () => {
+  const mountWithProfiler = (b: Record<string, unknown>) => {
+    const renders: Array<{ phase: string; actualDuration: number }> = [];
+    const onRender: ProfilerOnRenderCallback = (_id, phase, actualDuration) => {
+      renders.push({ phase, actualDuration });
+    };
+    const utils = render(
+      <MemoryRouter>
+        <Profiler id="card" onRender={onRender}>
+          <BusinessCard business={b} viewMode="grid" />
+        </Profiler>
+      </MemoryRouter>,
+    );
+    return { ...utils, renders };
+  };
+
+  it('does not re-render when parent re-renders with the same business reference', () => {
+    const business = {
+      ...baseBiz,
+      business_services: [
+        { name_ar: 'خدمة-1', is_active: true },
+        { name_ar: 'خدمة-2', is_active: true },
+      ],
+    };
+    const { rerender, renders } = mountWithProfiler(business);
+    const initialMounts = renders.filter((r) => r.phase === 'mount').length;
+    const initialUpdates = renders.filter((r) => r.phase === 'update').length;
+    expect(initialMounts).toBe(1);
+    expect(initialUpdates).toBe(0);
+
+    // Re-render parent with the SAME `business` reference.
+    const onRender: ProfilerOnRenderCallback = (_id, phase, actualDuration) => {
+      renders.push({ phase, actualDuration });
+    };
+    rerender(
+      <MemoryRouter>
+        <Profiler id="card" onRender={onRender}>
+          <BusinessCard business={business} viewMode="grid" />
+        </Profiler>
+      </MemoryRouter>,
+    );
+    // memo() must short-circuit — no extra `update` phase entries.
+    const updates = renders.filter((r) => r.phase === 'update').length;
+    expect(updates).toBe(0);
+  });
+
+  it('re-renders exactly once when business_services changes (new reference)', () => {
+    const initial = {
+      ...baseBiz,
+      business_services: [{ name_ar: 'خدمة-1', is_active: true }],
+    };
+    const { rerender, renders } = mountWithProfiler(initial);
+    expect(renders.filter((r) => r.phase === 'mount').length).toBe(1);
+
+    const next = {
+      ...initial,
+      business_services: [
+        { name_ar: 'خدمة-1', is_active: true },
+        { name_ar: 'خدمة-2', is_active: true },
+      ],
+    };
+    const onRender: ProfilerOnRenderCallback = (_id, phase, actualDuration) => {
+      renders.push({ phase, actualDuration });
+    };
+    rerender(
+      <MemoryRouter>
+        <Profiler id="card" onRender={onRender}>
+          <BusinessCard business={next} viewMode="grid" />
+        </Profiler>
+      </MemoryRouter>,
+    );
+    // Exactly one update for the real prop change.
+    expect(renders.filter((r) => r.phase === 'update').length).toBe(1);
+    expect(screen.getByText('خدمة-2')).toBeInTheDocument();
+  });
+
+  it('does not re-render across 5 parent re-renders with stable props', () => {
+    const business = {
+      ...baseBiz,
+      business_services: [{ name_ar: 'خدمة-1', is_active: true }],
+    };
+    const { rerender, renders } = mountWithProfiler(business);
+
+    for (let i = 0; i < 5; i++) {
+      const onRender: ProfilerOnRenderCallback = (_id, phase, actualDuration) => {
+        renders.push({ phase, actualDuration });
+      };
+      rerender(
+        <MemoryRouter>
+          <Profiler id="card" onRender={onRender}>
+            <BusinessCard business={business} viewMode="grid" />
+          </Profiler>
+        </MemoryRouter>,
+      );
+    }
+    // Still zero updates after 5 stable re-renders.
+    expect(renders.filter((r) => r.phase === 'update').length).toBe(0);
+  });
+});
