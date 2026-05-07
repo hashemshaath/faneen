@@ -5,10 +5,13 @@ import { SearchPagination } from './SearchPagination';
 import { SearchResultsSkeleton } from './SearchResultsSkeleton';
 import {
   Search as SearchIcon, LayoutGrid, List, Map, Columns,
-  Bookmark, Share2, ArrowUpDown,
+  Share2,
 } from 'lucide-react';
 import { lazy, Suspense, useState } from 'react';
 import { toast } from 'sonner';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
 
 // Leaflet weighs ~150KB gzipped — only load it when the user actually opens
 // a map view. Grid/list searchers (the majority) never pay that cost, which
@@ -26,6 +29,8 @@ const MapFallback = ({ className }: { className?: string }) => (
 
 export type ViewMode = 'grid' | 'list' | 'map' | 'split';
 
+export type SortKey = 'rating' | 'newest' | 'name' | 'relevance';
+
 interface SearchResultsProps {
   businesses: any[];
   isLoading: boolean;
@@ -39,11 +44,14 @@ interface SearchResultsProps {
   onPageChange: (page: number) => void;
   didYouMean?: string | null;
   onDidYouMeanClick?: (term: string) => void;
+  sortBy?: SortKey;
+  onSortChange?: (s: SortKey) => void;
 }
 
 export const SearchResults = ({
   businesses, isLoading, viewMode, onViewModeChange, totalCount, onClearFilters,
   currentPage, totalPages, itemsPerPage, onPageChange, didYouMean, onDidYouMeanClick,
+  sortBy, onSortChange,
 }: SearchResultsProps) => {
   const { t, isRTL } = useLanguage();
 
@@ -81,6 +89,21 @@ export const SearchResults = ({
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Quick sort */}
+          {sortBy && onSortChange && totalCount > 0 && (
+            <Select value={sortBy} onValueChange={(v) => onSortChange(v as SortKey)}>
+              <SelectTrigger className="h-9 rounded-xl text-xs bg-muted/40 dark:bg-muted/15 border-border/20 px-3 gap-1.5 w-auto min-w-[110px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent align="end">
+                <SelectItem value="relevance">{isRTL ? 'الأكثر صلة' : 'Relevance'}</SelectItem>
+                <SelectItem value="rating">{isRTL ? 'الأعلى تقييماً' : 'Top rated'}</SelectItem>
+                <SelectItem value="newest">{isRTL ? 'الأحدث' : 'Newest'}</SelectItem>
+                <SelectItem value="name">{isRTL ? 'الاسم' : 'Name'}</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+
           {/* Share button */}
           {totalCount > 0 && (
             <button

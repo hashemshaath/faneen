@@ -320,6 +320,8 @@ const SearchPage = () => {
             onPageChange={handlePageChange}
             didYouMean={didYouMean}
             onDidYouMeanClick={(term) => handleQueryChange(term)}
+            sortBy={filters.sortBy}
+            onSortChange={(s) => handleFilterChange('sortBy', s)}
           />
         </div>
       </div>
