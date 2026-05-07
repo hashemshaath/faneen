@@ -7,6 +7,7 @@ import {
   Briefcase, CreditCard, Heart,
 } from 'lucide-react';
 import { useBusinessFavorites } from '@/hooks/useBusinessFavorites';
+import { useRecentlyViewedBusinesses } from '@/hooks/useRecentlyViewedBusinesses';
 import { toast } from 'sonner';
 
 interface BusinessCardProps {
@@ -49,6 +50,8 @@ export const BusinessCard = memo(({ business: b, viewMode }: BusinessCardProps) 
   const Arrow = isRTL ? ChevronLeft : ChevronRight;
   const { isFavorite, toggleFavorite } = useBusinessFavorites();
   const fav = isFavorite(b.id);
+  const { track } = useRecentlyViewedBusinesses();
+  const handleOpen = () => track(b.id);
 
   const handleFav = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -81,6 +84,7 @@ export const BusinessCard = memo(({ business: b, viewMode }: BusinessCardProps) 
     return (
       <Link
         to={`/${b.username}`}
+        onClick={handleOpen}
         {...touchHandlers}
         className={`group relative flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-2xl bg-card dark:bg-card/80 border border-border/30 dark:border-border/15 hover:border-accent/30 transition-all duration-300 active:scale-[0.98] ${pressed ? 'scale-[0.98] shadow-lg' : 'hover:shadow-md dark:hover:shadow-accent/5'}`}
       >
@@ -135,6 +139,7 @@ export const BusinessCard = memo(({ business: b, viewMode }: BusinessCardProps) 
   return (
     <Link
       to={`/${b.username}`}
+      onClick={handleOpen}
       {...touchHandlers}
       className={`group relative rounded-2xl bg-card dark:bg-card/80 border border-border/30 dark:border-border/15 hover:border-accent/25 transition-all duration-300 flex flex-col overflow-hidden active:scale-[0.97] hover-lift ${pressed ? 'scale-[0.97] shadow-xl' : 'dark:hover:shadow-accent/5'}`}
     >
