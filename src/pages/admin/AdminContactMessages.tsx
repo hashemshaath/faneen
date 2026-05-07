@@ -21,6 +21,9 @@ import {
 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { ar } from 'date-fns/locale';
+import { useAuth } from '@/contexts/AuthContext';
+import { maskEmail } from '@/lib/masking';
+import { Lock } from 'lucide-react';
 
 type Status = 'new' | 'read' | 'replied' | 'archived';
 type Priority = 'low' | 'normal' | 'high' | 'urgent';
@@ -60,6 +63,7 @@ const PAGE_SIZE = 25;
 
 const AdminContactMessages = () => {
   const { isRTL } = useLanguage();
+  const { isSuperAdmin } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -233,6 +237,12 @@ const AdminContactMessages = () => {
   }, [focusedId, filtered]);
 
   const exportCSV = () => {
+    if (!isSuperAdmin) {
+      toast.error(isRTL
+        ? 'تصدير CSV يحتوي على بيانات حساسة — متاح فقط لمدير النظام (Super Admin).'
+        : 'CSV export contains sensitive data — Super Admin only.');
+      return;
+    }
     const headers = ['ID', 'Name', 'Email', 'Subject', 'Message', 'Status', 'Priority', 'Starred', 'Notes', 'Created'];
     const rows = filtered.map(m => [
       m.id, m.name, m.email, m.subject || '', m.message.replace(/[\n\r]/g, ' '),
@@ -427,10 +437,22 @@ const AdminContactMessages = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <Mail className="w-3.5 h-3.5 text-muted-foreground" />
-                  <a href={`mailto:${focused.email}`} className="text-accent hover:underline tech-content">{focused.email}</a>
-                  <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => { navigator.clipboard.writeText(focused.email); toast.success(isRTL ? 'تم النسخ' : 'Copied'); }}>
-                    <Copy className="w-3 h-3" />
-                  </Button>
+                  {isSuperAdmin ? (
+                    <>
+                      <a href={`mailto:${focused.email}`} className="text-accent hover:underline tech-content">{focused.email}</a>
+                      <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => { navigator.clipboard.writeText(focused.email); toast.success(isRTL ? 'تم النسخ' : 'Copied'); }}>
+                        <Copy className="w-3 h-3" />
+                      </Button>
+                    </>
+                  ) : (
+                    <span
+                      className="tech-content text-muted-foreground inline-flex items-center gap-1.5"
+                      title={isRTL ? 'البريد الكامل متاح فقط لمدير النظام (Super Admin)' : 'Full email visible to Super Admins only'}
+                    >
+                      {maskEmail(focused.email)}
+                      <Lock className="w-3 h-3 opacity-60" />
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -488,11 +510,23 @@ const AdminContactMessages = () => {
                     <Inbox className="w-3.5 h-3.5" />{isRTL ? 'استعادة' : 'Restore'}
                   </Button>
                 )}
-                <a href={`mailto:${focused.email}?subject=${encodeURIComponent('Re: ' + (focused.subject || ''))}&body=${encodeURIComponent('\n\n---\n' + focused.message.split('\n').map(l => '> ' + l).join('\n'))}`} className="ms-auto">
-                  <Button size="sm" className="h-8 gap-1.5 text-xs">
-                    <Mail className="w-3.5 h-3.5" />{isRTL ? 'رد بالبريد' : 'Reply via Email'}
+                {isSuperAdmin ? (
+                  <a href={`mailto:${focused.email}?subject=${encodeURIComponent('Re: ' + (focused.subject || ''))}&body=${encodeURIComponent('\n\n---\n' + focused.message.split('\n').map(l => '> ' + l).join('\n'))}`} className="ms-auto">
+                    <Button size="sm" className="h-8 gap-1.5 text-xs">
+                      <Mail className="w-3.5 h-3.5" />{isRTL ? 'رد بالبريد' : 'Reply via Email'}
+                    </Button>
+                  </a>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled
+                    className="ms-auto h-8 gap-1.5 text-xs"
+                    title={isRTL ? 'الرد بالبريد متاح فقط لمدير النظام (Super Admin)' : 'Reply by email available to Super Admins only'}
+                  >
+                    <Lock className="w-3.5 h-3.5" />{isRTL ? 'رد بالبريد (Super Admin فقط)' : 'Reply (Super Admin only)'}
                   </Button>
-                </a>
+                )}
               </div>
             </CardContent>
           </Card>
