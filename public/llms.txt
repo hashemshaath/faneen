@@ -32,8 +32,9 @@ Business listings include: name (Arabic/English), description, services,
 city, phone, images, rating, reviews.
 
 ## API
-- Dynamic sitemap: https://qitaat.com/sitemap.xml
-- Sitemap segments: https://qitaat.com/sitemap.xml?type=businesses | categories | blog | projects | offers | static
+- Sitemap index (XML): https://hckpxwhjycmdflaneihd.supabase.co/functions/v1/sitemap
+- Sitemap segments (XML): https://hckpxwhjycmdflaneihd.supabase.co/functions/v1/sitemap?type=businesses | categories | cities | blog | projects | profiles | static
+- Static fallback: https://qitaat.com/sitemap.xml
 
 ## Languages
 - Primary: Arabic (ar-SA), Right-to-Left
