@@ -13,13 +13,12 @@ import {
   ArrowLeft,
   ArrowRight,
   MapPin,
-  CheckCircle2,
   Crown,
   TrendingUp,
   Sparkles,
   Filter,
   ShieldCheck,
-  ExternalLink,
+  ArrowUpRight,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -28,19 +27,16 @@ import { VerifiedBadge } from "@/components/common/VerifiedBadge";
 
 /* ── Skeleton ── */
 const ProviderSkeleton = () => (
-  <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
-    <div className="flex items-center gap-3">
-      <Skeleton className="w-14 h-14 rounded-2xl" />
-      <div className="flex-1 space-y-2">
-        <Skeleton className="h-4 w-3/4" />
-        <Skeleton className="h-3 w-1/2" />
-      </div>
+  <div className="rounded-3xl border border-border/40 bg-card p-5 space-y-4">
+    <div className="h-20 rounded-2xl bg-muted/40 dark:bg-muted/15 relative overflow-hidden">
+      <Skeleton className="absolute -bottom-6 start-5 w-16 h-16 rounded-2xl" />
     </div>
-    <Skeleton className="h-2 w-full rounded-full" />
-    <div className="flex gap-2">
-      <Skeleton className="h-6 w-16 rounded-full" />
-      <Skeleton className="h-6 w-14 rounded-full" />
+    <div className="pt-6 space-y-2">
+      <Skeleton className="h-4 w-3/4" />
+      <Skeleton className="h-3 w-1/2" />
     </div>
+    <Skeleton className="h-1.5 w-full rounded-full" />
+    <Skeleton className="h-9 w-full rounded-xl" />
   </div>
 );
 
@@ -54,17 +50,20 @@ const RatingBar = ({ value }: { value: number }) => (
   </div>
 );
 
-/* ── Rank badge for top 3 ── */
-const RankBadge = ({ rank }: { rank: number }) => {
-  if (rank > 3) return null;
-  const styles = [
-    "from-amber-400 to-yellow-500 shadow-amber-400/30 text-amber-950",
-    "from-slate-300 to-slate-400 shadow-slate-400/30 text-slate-800",
-    "from-orange-400 to-amber-600 shadow-orange-400/25 text-orange-950",
-  ];
+/* ── Rank pill (number badge — used for all visible providers) ── */
+const RankPill = ({ rank }: { rank: number }) => {
+  const isTopThree = rank <= 3;
+  const palette = isTopThree
+    ? [
+        "bg-gradient-to-br from-amber-400 to-yellow-500 text-amber-950 shadow-amber-400/30",
+        "bg-gradient-to-br from-slate-300 to-slate-400 text-slate-800 shadow-slate-400/30",
+        "bg-gradient-to-br from-orange-400 to-amber-600 text-orange-950 shadow-orange-400/25",
+      ][rank - 1]
+    : "bg-card text-muted-foreground border border-border/60 shadow-sm";
   return (
     <span
-      className={`absolute -top-2 -start-2 z-10 flex items-center justify-center w-7 h-7 rounded-lg bg-gradient-to-br ${styles[rank - 1]} text-[11px] font-black shadow-lg`}
+      className={`absolute -top-2 -end-2 z-20 flex items-center justify-center min-w-[28px] h-7 px-2 rounded-full text-[11px] font-black shadow-lg ${palette}`}
+      aria-label={`Rank ${rank}`}
     >
       {rank}
     </span>
@@ -326,114 +325,115 @@ export const TopProvidersSection = () => {
                     key={biz.id}
                     to={`/${biz.username}`}
                     onClick={() => track('card_click', biz.id, biz.username)}
-                    className={`group relative block rounded-2xl border bg-card dark:bg-card/60 p-5 sm:p-6 transition-all duration-500 sm:hover:-translate-y-2 ${
+                    aria-label={`${name}${cityName ? ` — ${cityName}` : ''}`}
+                    className={`group relative block rounded-3xl border bg-card dark:bg-card/60 overflow-hidden transition-all duration-500 hover-lift focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
                       isTopThree
-                        ? "border-accent/20 dark:border-accent/15 shadow-sm shadow-accent/[0.04] hover:shadow-xl hover:shadow-accent/10 hover:border-accent/40"
-                        : "border-border/40 dark:border-border/20 hover:shadow-lg hover:shadow-accent/5 hover:border-accent/30"
+                        ? "border-accent/25 dark:border-accent/15 shadow-sm shadow-accent/[0.05] hover:shadow-xl hover:shadow-accent/10 hover:border-accent/40"
+                        : "border-border/40 dark:border-border/20 hover:shadow-lg hover:shadow-accent/5 hover:border-accent/25"
                     } ${isVisible ? "animate-card-slide-up" : "opacity-0"}`}
                     style={{
                       animationDelay: `${i * 70}ms`,
                       animationFillMode: "both",
                     }}
                   >
-                    {/* Rank badge */}
-                    <RankBadge rank={rank} />
+                    {/* Rank pill */}
+                    <RankPill rank={rank} />
 
-                    {/* Top-3 glow accent line */}
-                    {isTopThree && (
-                      <div className="absolute inset-x-0 top-0 h-[2px] rounded-t-2xl bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
-                    )}
+                    {/* Cover header with subtle gradient + decorative pattern */}
+                    <div className="relative h-20 bg-gradient-to-br from-accent/[0.10] via-accent/[0.04] to-transparent dark:from-accent/[0.14] dark:via-accent/[0.06]">
+                      <div className="absolute inset-0 opacity-[0.35] mix-blend-overlay [background-image:radial-gradient(circle_at_1px_1px,hsl(var(--accent)/0.4)_1px,transparent_0)] [background-size:14px_14px]" />
+                      {isTopThree && (
+                        <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
+                      )}
+                    </div>
 
-                    {/* Provider identity */}
-                    <div className="flex items-center gap-3.5 mb-4">
-                      <div className="relative">
-                        <Avatar className="w-14 h-14 rounded-2xl ring-2 ring-border/10 group-hover:ring-accent/30 transition-all shadow-sm">
-                          <AvatarImage
-                            src={biz.logo_url}
-                            className="object-cover"
-                          />
-                          <AvatarFallback className="rounded-2xl bg-gradient-to-br from-accent/10 to-accent/[0.04] text-accent font-bold text-lg">
-                            {name?.charAt(0)}
-                          </AvatarFallback>
-                        </Avatar>
-                        {isPremium && (
-                          <span className="absolute -bottom-1 -end-1 flex items-center justify-center w-5 h-5 rounded-full bg-accent text-accent-foreground shadow-md">
-                            <Crown className="w-2.5 h-2.5" />
+                    {/* Body */}
+                    <div className="px-5 pb-5 pt-0">
+                      {/* Overlapping avatar */}
+                      <div className="flex items-end justify-between -mt-9 mb-4">
+                        <div className="relative">
+                          <Avatar className="w-16 h-16 rounded-2xl ring-4 ring-card group-hover:ring-accent/20 transition-all shadow-md">
+                            <AvatarImage src={biz.logo_url} className="object-cover" />
+                            <AvatarFallback className="rounded-2xl bg-gradient-to-br from-accent/15 to-accent/[0.04] text-accent font-bold text-xl">
+                              {name?.charAt(0)}
+                            </AvatarFallback>
+                          </Avatar>
+                          {isPremium && (
+                            <span
+                              className="absolute -bottom-1 -end-1 flex items-center justify-center w-5 h-5 rounded-full bg-accent text-accent-foreground shadow-md ring-2 ring-card"
+                              title={isRTL ? 'عضوية بريميوم' : 'Premium membership'}
+                            >
+                              <Crown className="w-2.5 h-2.5" />
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1 mb-1">
+                          {Array.from({ length: 5 }).map((_, si) => (
+                            <Star
+                              key={si}
+                              className={`w-3 h-3 transition-colors ${
+                                si < Math.round(biz.rating_avg)
+                                  ? "text-accent fill-accent"
+                                  : "text-muted-foreground/20"
+                              }`}
+                            />
+                          ))}
+                          <span className="ms-1 text-xs font-bold text-foreground tabular-nums tech-content">
+                            {Number(biz.rating_avg).toFixed(1)}
                           </span>
-                        )}
+                          <span className="text-[10px] text-muted-foreground/60 tabular-nums tech-content">
+                            ({biz.rating_count})
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <h3 className="font-heading font-bold text-sm sm:text-[15px] truncate group-hover:text-accent transition-colors">
+
+                      {/* Identity */}
+                      <div className="mb-3 min-w-0">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <h3 className="font-heading font-bold text-[15px] sm:text-base truncate group-hover:text-accent transition-colors">
                             {name}
                           </h3>
                           {biz.is_verified && <VerifiedBadge size="sm" iconOnly />}
                         </div>
                         {catName && (
-                          <p className="text-[10px] sm:text-xs text-muted-foreground truncate mt-0.5">
+                          <p className="text-xs text-muted-foreground truncate mt-0.5">
                             {catName}
                           </p>
                         )}
                       </div>
-                    </div>
 
-                    {/* Rating section */}
-                    <div className="space-y-2.5 mb-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1">
-                          {Array.from({ length: 5 }).map((_, si) => (
-                            <Star
-                              key={si}
-                              className={`w-3.5 h-3.5 transition-colors ${
-                                si < Math.round(biz.rating_avg)
-                                  ? "text-accent fill-accent"
-                                  : "text-muted-foreground/15"
-                              }`}
-                            />
-                          ))}
-                        </div>
-                        <div className="flex items-baseline gap-1">
-                          <span className="text-sm font-bold text-foreground tabular-nums">
-                            {Number(biz.rating_avg).toFixed(1)}
-                          </span>
-                          <span className="text-[10px] text-muted-foreground/60">
-                            ({biz.rating_count})
-                          </span>
-                        </div>
+                      {/* Rating progress */}
+                      <div className="mb-4">
+                        <RatingBar value={Number(biz.rating_avg)} />
                       </div>
-                      <RatingBar value={Number(biz.rating_avg)} />
-                    </div>
 
-                    {/* Tags footer */}
-                    <div className="flex flex-wrap items-center gap-1.5 mb-4">
-                      {cityName && (
-                        <span className="flex items-center gap-1 text-[10px] sm:text-[11px] text-muted-foreground bg-muted/40 dark:bg-muted/25 px-2.5 py-1 rounded-lg">
-                          <MapPin className="w-2.5 h-2.5" />
-                          {cityName}
-                        </span>
-                      )}
-                      {isPremium && (
-                        <Badge
-                          variant="secondary"
-                          className="text-[10px] px-2 py-0.5 h-auto bg-gradient-to-r from-accent/15 to-accent/5 text-accent border-accent/20 font-semibold gap-1"
-                        >
-                          <Sparkles className="w-2.5 h-2.5" />
-                          {biz.membership_tier === "enterprise"
-                            ? isRTL
-                              ? "مؤسسات"
-                              : "Enterprise"
-                            : isRTL
-                              ? "بريميوم"
-                              : "Premium"}
-                        </Badge>
-                      )}
-                    </div>
+                      {/* Tags row */}
+                      <div className="flex flex-wrap items-center gap-1.5 mb-4 min-h-[26px]">
+                        {cityName && (
+                          <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground bg-muted/40 dark:bg-muted/20 px-2.5 py-1 rounded-lg border border-border/30">
+                            <MapPin className="w-2.5 h-2.5" />
+                            {cityName}
+                          </span>
+                        )}
+                        {isPremium && (
+                          <Badge
+                            variant="secondary"
+                            className="text-[10px] px-2 py-0.5 h-auto bg-gradient-to-r from-accent/15 to-accent/5 text-accent border border-accent/20 font-semibold gap-1"
+                          >
+                            <Sparkles className="w-2.5 h-2.5" />
+                            {biz.membership_tier === "enterprise"
+                              ? isRTL ? "مؤسسات" : "Enterprise"
+                              : isRTL ? "بريميوم" : "Premium"}
+                          </Badge>
+                        )}
+                      </div>
 
-                    {/* View profile CTA */}
-                    <span className="flex items-center justify-center gap-1.5 w-full py-2 rounded-xl text-xs font-semibold bg-accent/10 text-accent border border-accent/20 group-hover:bg-accent group-hover:text-accent-foreground transition-all duration-300">
-                      <ExternalLink className="w-3 h-3" />
-                      {isRTL ? "عرض الملف" : "View Profile"}
-                    </span>
+                      {/* CTA */}
+                      <span className="flex items-center justify-center gap-1.5 w-full py-2.5 rounded-xl text-xs font-semibold bg-accent/8 text-accent border border-accent/20 group-hover:bg-accent group-hover:text-accent-foreground group-hover:border-accent transition-all duration-300">
+                        {isRTL ? "عرض الملف" : "View Profile"}
+                        <ArrowUpRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 rtl:group-hover:-translate-x-0.5" />
+                      </span>
+                    </div>
                   </Link>
                 );
               })}
