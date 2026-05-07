@@ -143,23 +143,29 @@ export const SearchFilters = ({
           </FilterCard>
 
           {/* Rating */}
-          <FilterCard icon={Star} label={`${t('search.min_rating')}: ${filters.minRating > 0 ? `${filters.minRating}+` : t('profile.all')}`}>
-            <div className="flex items-center gap-3">
-              <Slider
-                value={[filters.minRating]}
-                onValueChange={([v]) => onFilterChange('minRating', v)}
-                max={5}
-                step={1}
-                className="flex-1"
-              />
-              <div className="flex items-center gap-px">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Star
-                    key={i}
-                    className={`w-3.5 h-3.5 transition-colors ${i < filters.minRating ? 'text-accent fill-accent' : 'text-border dark:text-border/20'}`}
-                  />
-                ))}
-              </div>
+          <FilterCard icon={Star} label={t('search.min_rating')}>
+            <div className="flex flex-wrap gap-1.5">
+              {[5, 4, 3, 2, 1, 0].map((r) => {
+                const active = filters.minRating === r;
+                const label = r === 0
+                  ? (isRTL ? 'الكل' : 'All')
+                  : `${r}${r === 5 ? '' : '+'}★`;
+                return (
+                  <button
+                    key={r}
+                    type="button"
+                    onClick={() => onFilterChange('minRating', r)}
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-heading font-semibold transition-all border ${
+                      active
+                        ? 'bg-accent text-accent-foreground border-accent shadow-sm'
+                        : 'bg-muted/30 dark:bg-muted/15 border-border/30 text-foreground/70 hover:border-accent/40 hover:text-accent'
+                    }`}
+                    aria-pressed={active}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
             </div>
           </FilterCard>
 
