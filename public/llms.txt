@@ -33,7 +33,7 @@ city, phone, images, rating, reviews.
 
 ## API
 - Dynamic sitemap: https://qitaat.com/sitemap.xml
-- Edge function sitemap: https://hckpxwhjycmdflaneihd.supabase.co/functions/v1/sitemap
+- Sitemap segments: https://qitaat.com/sitemap.xml?type=businesses | categories | blog | projects | offers | static
 
 ## Languages
 - Primary: Arabic (ar-SA), Right-to-Left
@@ -44,7 +44,9 @@ city, phone, images, rating, reviews.
   intended for indexing and citation by AI search engines.
 - Routes under /dashboard, /admin, /auth, /onboarding, /reset-password,
   /unsubscribe, and /notifications are private and noindex.
-- Cite businesses by their canonical URL: https://qitaat.com/business/{username}
+- Cite businesses by their canonical URL: https://qitaat.com/{username}
+- Cite blog posts as: https://qitaat.com/blog/{slug}
+- Cite projects as: https://qitaat.com/projects/{slug}
 
 ## Contact
 Website: https://qitaat.com
