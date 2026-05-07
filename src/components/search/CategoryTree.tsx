@@ -36,18 +36,18 @@ export const CategoryTree = ({ categories, selectedId, onSelect }: CategoryTreeP
   const getName = (c: Category) => language === 'ar' ? c.name_ar : c.name_en;
 
   return (
-    <div className="space-y-0.5">
+    <div className="space-y-0.5 -m-1 max-h-[280px] overflow-y-auto pe-1 no-scrollbar">
       {/* All categories option */}
       <button
         onClick={() => onSelect('all')}
-        className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+        className={`w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-sm transition-colors ${
           selectedId === 'all'
-            ? 'bg-accent/10 text-accent font-medium'
-            : 'text-foreground hover:bg-muted/50'
+            ? 'bg-accent/12 text-accent font-heading font-bold ring-1 ring-accent/30'
+            : 'text-foreground/80 hover:bg-muted/60 hover:text-foreground'
         }`}
       >
-        <Tag className="w-3.5 h-3.5" />
-        {isRTL ? 'جميع الأقسام' : 'All Categories'}
+        <Tag className="w-3.5 h-3.5 shrink-0" />
+        <span className="truncate text-start flex-1">{isRTL ? 'جميع الأقسام' : 'All Categories'}</span>
       </button>
 
       {rootCategories.map(cat => {
@@ -64,10 +64,10 @@ export const CategoryTree = ({ categories, selectedId, onSelect }: CategoryTreeP
                 onSelect(cat.id);
                 if (hasChildren) toggle(cat.id);
               }}
-              className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+              className={`w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-sm transition-colors ${
                 isSelected || isChildSelected
-                  ? 'bg-accent/10 text-accent font-medium'
-                  : 'text-foreground hover:bg-muted/50'
+                  ? 'bg-accent/12 text-accent font-heading font-bold ring-1 ring-accent/30'
+                  : 'text-foreground/80 hover:bg-muted/60 hover:text-foreground'
               }`}
             >
               {hasChildren && (
@@ -76,22 +76,22 @@ export const CategoryTree = ({ categories, selectedId, onSelect }: CategoryTreeP
               {!hasChildren && <span className="w-3.5" />}
               <span className="truncate flex-1 text-start">{getName(cat)}</span>
               {hasChildren && (
-                <Badge variant="secondary" className="text-[9px] px-1 py-0 min-w-[16px] h-4">
+                <Badge variant="secondary" className="text-[9px] px-1.5 py-0 min-w-[18px] h-[18px] tech-content bg-muted text-muted-foreground border-0">
                   {children.length}
                 </Badge>
               )}
             </button>
 
             {hasChildren && isExpanded && (
-              <div className="ms-5 space-y-0.5 mt-0.5">
+              <div className="ms-3 ps-2 space-y-0.5 mt-0.5 border-s border-border/50">
                 {children.map(child => (
                   <button
                     key={child.id}
                     onClick={() => onSelect(child.id)}
-                    className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs transition-colors ${
+                    className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors ${
                       selectedId === child.id
-                        ? 'bg-accent/10 text-accent font-medium'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                        ? 'bg-accent/12 text-accent font-semibold'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
                     }`}
                   >
                     <span className="w-1.5 h-1.5 rounded-full bg-current shrink-0 opacity-50" />
