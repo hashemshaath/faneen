@@ -7,7 +7,11 @@ const HEADERS = {
 };
 
 const BASE = "https://qitaat.com";
-const FUNC = `${BASE}/functions/v1/sitemap`;
+// Sitemap sub-files must be served from a host that returns XML.
+// qitaat.com is an SPA that returns HTML for unknown paths, so point
+// directly to the Supabase Functions host.
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "https://hckpxwhjycmdflaneihd.supabase.co";
+const FUNC = `${SUPABASE_URL}/functions/v1/sitemap`;
 
 const TYPES = ["static", "businesses", "blog", "categories", "cities", "profiles", "projects"] as const;
 type SitemapType = (typeof TYPES)[number];
