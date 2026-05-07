@@ -867,10 +867,27 @@ const AdminBusinesses = () => {
                     {contractBusinessIds.includes(editingBiz.id) && (
                       <Badge variant="outline" className="text-[9px] gap-1"><FileText className="w-2.5 h-2.5" />{isRTL ? 'مرتبط بعقود' : 'Has Contracts'}</Badge>
                     )}
+                    {(() => {
+                      const tc = translationCompleteness(editForm);
+                      return (
+                        <Badge variant="outline" className={`text-[9px] gap-1 ${tc.full ? 'border-emerald-500/40 text-emerald-600' : 'border-amber-500/40 text-amber-600'}`}>
+                          <Languages className="w-2.5 h-2.5" />
+                          {tc.full ? (isRTL ? 'الترجمة مكتملة' : 'Bilingual ready')
+                            : (isRTL ? `ينقص: ${[!tc.ar && 'AR', !tc.en && 'EN'].filter(Boolean).join(' · ')}` : `Missing: ${[!tc.ar && 'AR', !tc.en && 'EN'].filter(Boolean).join(' · ')}`)}
+                        </Badge>
+                      );
+                    })()}
                   </div>
                 </div>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => setEditingBiz(null)} className="rounded-xl"><X className="w-4 h-4" /></Button>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 rounded-xl"
+                  onClick={autoFillTranslations} disabled={autoTranslating}>
+                  {autoTranslating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Languages className="w-3.5 h-3.5" />}
+                  {isRTL ? 'ترجمة تلقائية للناقص' : 'Auto-translate missing'}
+                </Button>
+                <Button variant="ghost" size="icon" onClick={() => setEditingBiz(null)} className="rounded-xl"><X className="w-4 h-4" /></Button>
+              </div>
             </div>
               <Tabs defaultValue="info" className="w-full">
                 <TabsList className="w-full grid grid-cols-7 h-9 rounded-xl">
