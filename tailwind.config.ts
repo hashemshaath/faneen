@@ -109,5 +109,13 @@ export default {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [
+    require("tailwindcss-animate"),
+    // Direction-aware variants: rtl: and ltr:
+    // Drives off [dir="rtl"] / [dir="ltr"] set by LanguageContext on <html>.
+    function ({ addVariant }: { addVariant: (name: string, definition: string | string[]) => void }) {
+      addVariant("rtl", '&:where([dir="rtl"], [dir="rtl"] *)');
+      addVariant("ltr", '&:where([dir="ltr"], [dir="ltr"] *)');
+    },
+  ],
 } satisfies Config;
