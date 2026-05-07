@@ -58,6 +58,9 @@ ${sitemaps.join("\n")}
 }
 
 Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: HEADERS });
+  }
   try {
     const url = new URL(req.url);
     const type = url.searchParams.get("type") as SitemapType | null;
@@ -147,7 +150,7 @@ Deno.serve(async (req) => {
     console.error("Sitemap error:", error);
     return new Response(`<?xml version="1.0" encoding="UTF-8"?><sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></sitemapindex>`, {
       status: 500,
-      headers: { "Content-Type": "application/xml" },
+      headers: HEADERS,
     });
   }
 });
