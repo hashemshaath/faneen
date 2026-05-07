@@ -8,6 +8,7 @@ import {
   FolderOpen, Building2, DollarSign, Clock, ArrowLeft, ArrowRight,
   Eye, Bookmark, Share2, Crown, Star, BadgeCheck,
 } from "lucide-react";
+import { VerifiedBadge } from "@/components/common/VerifiedBadge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LazyImage } from "@/components/ui/lazy-image";
 import { cn } from "@/lib/utils";
@@ -208,7 +209,7 @@ export const LatestProjectsSection = () => {
                           )}
                           <span className="text-sm font-semibold text-accent flex items-center gap-1.5 truncate">
                             {language === 'ar' ? biz.name_ar : (biz.name_en || biz.name_ar)}
-                            {biz.is_verified && <BadgeCheck className="w-3.5 h-3.5 text-sky-500 shrink-0" />}
+                            {biz.is_verified && <VerifiedBadge size="sm" iconOnly />}
                           </span>
                         </div>
                       )}
