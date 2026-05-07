@@ -91,6 +91,7 @@ const Privacy = lazyRetry(() => import("./pages/Privacy"));
 const Terms = lazyRetry(() => import("./pages/Terms"));
 const Forbidden = lazyRetry(() => import("./pages/Forbidden"));
 const Unsubscribe = lazyRetry(() => import("./pages/Unsubscribe"));
+const Diagnostics = lazyRetry(() => import("./pages/Diagnostics"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -141,6 +142,7 @@ const AppRoutes = () => (
           <Route path="/terms" element={<Terms />} />
           <Route path="/forbidden" element={<Forbidden />} />
           <Route path="/unsubscribe" element={<Unsubscribe />} />
+          <Route path="/diagnostics" element={<Diagnostics />} />
 
           <Route path="/contracts" element={<ProtectedRoute><Contracts /></ProtectedRoute>} />
           <Route path="/contracts/:id" element={<ProtectedRoute><ContractDetail /></ProtectedRoute>} />
