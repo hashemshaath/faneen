@@ -75,6 +75,7 @@ const AdminEmailDeliverability = lazyRetry(() => import("./pages/admin/AdminEmai
 const AdminSiteAudit = lazyRetry(() => import("./pages/admin/AdminSiteAudit"));
 const AdminSectorSeo = lazyRetry(() => import("./pages/admin/AdminSectorSeo"));
 const AdminAccessManagement = lazyRetry(() => import("./pages/admin/AdminAccessManagement"));
+const AdminProviderReview = lazyRetry(() => import("./pages/admin/AdminProviderReview"));
 const Notifications = lazyRetry(() => import("./pages/Notifications"));
 const Membership = lazyRetry(() => import("./pages/Membership"));
 const DashboardOperations = lazyRetry(() => import("./pages/dashboard/DashboardOperations"));
