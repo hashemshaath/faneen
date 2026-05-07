@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useLanguage } from '@/i18n/LanguageContext';
-import { usePageMeta, useJsonLd } from '@/hooks/usePageMeta';
+import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
+import { buildBreadcrumbList, ogImageFor } from '@/lib/seo/structured-data';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
@@ -23,16 +24,18 @@ const Contact = () => {
     title: isRTL ? 'تواصل معنا | قِطاعات' : 'Contact Us | Qitaat',
     description: isRTL ? 'تواصل مع فريق قِطاعات للدعم الفني أو الاستفسارات أو الشراكات' : 'Contact Qitaat team for support, inquiries or partnerships',
     canonical: 'https://qitaat.com/contact',
+    ogTitle: isRTL ? 'تواصل مع قِطاعات' : 'Contact Qitaat',
+    ogDescription: isRTL ? 'تواصل مع فريق قِطاعات للدعم والشراكات والاستفسارات.' : 'Get in touch with the Qitaat team.',
+    ogImage: ogImageFor('contact'),
+    keywords: isRTL ? 'تواصل, قِطاعات, دعم, شراكات' : 'contact, qitaat, support, partnerships',
   });
 
-  useJsonLd(useMemo(() => ({
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'قِطاعات', item: 'https://qitaat.com' },
-      { '@type': 'ListItem', position: 2, name: language === 'ar' ? 'تواصل معنا' : 'Contact', item: 'https://qitaat.com/contact' },
-    ],
-  }), [language]));
+  useMultiJsonLd(useMemo(() => {
+    const crumbs = buildBreadcrumbList([
+      { name: language === 'ar' ? 'تواصل معنا' : 'Contact', url: '/contact' },
+    ]);
+    return crumbs ? [crumbs] : null;
+  }, [language]));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

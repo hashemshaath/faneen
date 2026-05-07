@@ -17,6 +17,7 @@ import {
   FolderOpen, ArrowRight, ArrowLeft, Tag, MapPin, Building2, Share2, Bookmark
 } from 'lucide-react';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
+import { buildBreadcrumbList, ogImageFor } from '@/lib/seo/structured-data';
 
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -70,9 +71,11 @@ const ProjectDetail = () => {
   usePageMeta({
     title: projectTitle || (isRTL ? 'تفاصيل المشروع' : 'Project Details'),
     description: projectDesc?.slice(0, 160) || '',
-    ogImage: project?.cover_image_url || undefined,
+    ogImage: project?.cover_image_url || ogImageFor('project'),
     ogType: 'article',
     canonical: id ? `https://qitaat.com/projects/${id}` : undefined,
+    ogTitle: projectTitle || undefined,
+    ogDescription: projectDesc?.slice(0, 160) || undefined,
   });
 
   const projectJsonLd = useMemo(() => {
@@ -95,15 +98,10 @@ const ProjectDetail = () => {
             }
           : {}),
       },
-      {
-        '@context': 'https://schema.org',
-        '@type': 'BreadcrumbList',
-        itemListElement: [
-          { '@type': 'ListItem', position: 1, name: 'قِطاعات', item: 'https://qitaat.com' },
-          { '@type': 'ListItem', position: 2, name: 'المشاريع', item: 'https://qitaat.com/projects' },
-          { '@type': 'ListItem', position: 3, name: projectTitle, item: `https://qitaat.com/projects/${id}` },
-        ],
-      },
+      buildBreadcrumbList([
+        { name: isRTL ? 'المشاريع' : 'Projects', url: '/projects' },
+        { name: projectTitle, url: `/projects/${id}` },
+      ])!,
     ];
   }, [project, projectTitle, projectDesc, id]);
   useMultiJsonLd(projectJsonLd);

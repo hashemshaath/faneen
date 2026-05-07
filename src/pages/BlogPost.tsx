@@ -1,6 +1,7 @@
 import React, { useMemo, useEffect, useState, useRef, useCallback } from 'react';
 import DOMPurify from 'dompurify';
 import { usePageMeta, useJsonLd } from '@/hooks/usePageMeta';
+import { buildBreadcrumbList, ogImageFor } from '@/lib/seo/structured-data';
 import { useContentTracking } from '@/hooks/useContentTracking';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useParams, Link } from 'react-router-dom';
@@ -237,7 +238,9 @@ const BlogPost = () => {
     description: postDesc?.substring(0, 160) || undefined,
     canonical: post ? `https://qitaat.com/blog/${post.slug}` : undefined,
     ogType: 'article',
-    ogImage: post?.cover_image_url || post?.og_image_url || undefined,
+    ogImage: post?.og_image_url || post?.cover_image_url || ogImageFor(post ? `blog-${post.slug}` : 'blog'),
+    ogTitle: post ? postTitle : undefined,
+    ogDescription: postDesc?.substring(0, 160) || undefined,
     keywords: post?.keywords?.join(', ') || post?.tags?.join(', ') || undefined,
   });
 

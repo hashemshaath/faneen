@@ -46,6 +46,7 @@ import {
 import { useReviews } from "@/components/business-profile/business-profile.data";
 import { BnplBadges } from "@/components/bnpl/BnplBadges";
 import { BookingWidget } from "@/components/booking/BookingWidget";
+import { buildBreadcrumbList, buildService, ogImageFor } from "@/lib/seo/structured-data";
 
 const BusinessProfile = () => {
   const { username } = useParams<{ username: string }>();
@@ -79,7 +80,7 @@ const BusinessProfile = () => {
     title: seoTitle,
     description: seoDesc,
     ogType: 'business.business',
-    ogImage: business?.logo_url || business?.cover_url || undefined,
+    ogImage: business?.cover_url || business?.logo_url || ogImageFor('business'),
     canonical: business ? `https://qitaat.com/${business.username}` : undefined,
     keywords: business ? [businessName, categoryName, cityName, 'قِطاعات', 'دليل أعمال'].filter(Boolean).join(', ') : undefined,
   });
@@ -122,15 +123,25 @@ const BusinessProfile = () => {
       serviceType: services.length > 0 ? services.map(s => s.name_ar) : undefined,
     };
 
-    const breadcrumb: Record<string, any> = {
-      '@context': 'https://schema.org',
-      '@type': 'BreadcrumbList',
-      itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'قِطاعات', item: 'https://qitaat.com' },
-        ...(categoryName ? [{ '@type': 'ListItem', position: 2, name: categoryName, item: `https://qitaat.com/categories/${business.categories?.slug || ''}` }] : []),
-        { '@type': 'ListItem', position: categoryName ? 3 : 2, name: business.name_ar, item: `https://qitaat.com/${business.username}` },
-      ],
-    };
+    const breadcrumb = buildBreadcrumbList([
+      ...(categoryName ? [{ name: categoryName, url: `/categories/${business.categories?.slug || ''}` }] : []),
+      { name: business.name_ar, url: `/${business.username}` },
+    ]);
+
+    // Up to 5 Service entries reflecting the provider's offered services so
+    // search and AI engines can index them as discrete offerings.
+    const serviceEntities = (services || []).slice(0, 5).map((s: any) =>
+      buildService({
+        name: language === 'ar' ? s.name_ar : (s.name_en || s.name_ar),
+        description: language === 'ar'
+          ? (s.description_ar || undefined)
+          : (s.description_en || s.description_ar || undefined),
+        providerName: business.name_ar,
+        providerUrl: `/${business.username}`,
+        areaServed: cityName || undefined,
+        serviceType: categoryName || undefined,
+      }),
+    ).filter(Boolean) as Record<string, unknown>[];
 
     // Individual Review entities (up to 5 most recent)
     const reviewEntities = reviews.slice(0, 5).map((review: any) => ({
@@ -155,7 +166,7 @@ const BusinessProfile = () => {
       datePublished: review.created_at ? new Date(review.created_at).toISOString().split('T')[0] : undefined,
     }));
 
-    return [localBusiness, breadcrumb, ...reviewEntities];
+    return [localBusiness, ...(breadcrumb ? [breadcrumb] : []), ...serviceEntities, ...reviewEntities];
   }, [business, services, reviews, categoryName, cityName, language]);
 
   useMultiJsonLd(structuredDataArray);
