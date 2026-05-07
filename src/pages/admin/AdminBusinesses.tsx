@@ -571,19 +571,60 @@ const AdminBusinesses = () => {
   };
 
   /* ─── Filters ─── */
-  const filtered = useMemo(() => businesses.filter((b) => {
-    const matchSearch = !search ||
-      b.name_ar?.includes(search) || b.name_en?.toLowerCase().includes(search.toLowerCase()) ||
-      b.username?.includes(search) || b.ref_id?.includes(search) ||
-      b.email?.includes(search) || b.phone?.includes(search);
-    const matchStatus = filterStatus === 'all' ||
-      (filterStatus === 'verified' && b.is_verified) ||
-      (filterStatus === 'unverified' && !b.is_verified) ||
-      (filterStatus === 'inactive' && !b.is_active) ||
-      (filterStatus === 'contract' && contractBusinessIds.includes(b.id));
-    const matchTier = filterTier === 'all' || b.membership_tier === filterTier;
-    return matchSearch && matchStatus && matchTier;
-  }), [businesses, search, filterStatus, filterTier, contractBusinessIds]);
+  const translationCompleteness = useCallback((b: Record<string, any>) => {
+    const ar = !!(b.name_ar && b.short_description_ar && b.description_ar);
+    const en = !!(b.name_en && b.short_description_en && b.description_en);
+    return { ar, en, full: ar && en };
+  }, []);
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const arr = businesses.filter((b) => {
+      const matchSearch = !q ||
+        b.name_ar?.toLowerCase().includes(q) || b.name_en?.toLowerCase().includes(q) ||
+        b.username?.toLowerCase().includes(q) || b.ref_id?.toLowerCase().includes(q) ||
+        b.email?.toLowerCase().includes(q) || b.phone?.toLowerCase().includes(q);
+      const matchStatus = filterStatus === 'all' ||
+        (filterStatus === 'verified' && b.is_verified) ||
+        (filterStatus === 'unverified' && !b.is_verified) ||
+        (filterStatus === 'inactive' && !b.is_active) ||
+        (filterStatus === 'contract' && contractBusinessIds.includes(b.id));
+      const matchTier = filterTier === 'all' || b.membership_tier === filterTier;
+      const tc = translationCompleteness(b);
+      const matchTrans = filterTranslation === 'all'
+        || (filterTranslation === 'missing_en' && !tc.en)
+        || (filterTranslation === 'missing_ar' && !tc.ar)
+        || (filterTranslation === 'complete' && tc.full);
+      return matchSearch && matchStatus && matchTier && matchTrans;
+    });
+    const tierRank: Record<string, number> = { enterprise: 0, premium: 1, basic: 2, free: 3 };
+    arr.sort((a, b) => {
+      switch (sortBy) {
+        case 'rating': return (b.rating_avg || 0) - (a.rating_avg || 0);
+        case 'name': {
+          const an = (language === 'ar' ? a.name_ar : (a.name_en || a.name_ar)) || '';
+          const bn = (language === 'ar' ? b.name_ar : (b.name_en || b.name_ar)) || '';
+          return an.localeCompare(bn, language === 'ar' ? 'ar' : 'en');
+        }
+        case 'tier': return (tierRank[a.membership_tier] ?? 9) - (tierRank[b.membership_tier] ?? 9);
+        default: return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }
+    });
+    return arr;
+  }, [businesses, search, filterStatus, filterTier, filterTranslation, sortBy, language, contractBusinessIds, translationCompleteness]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage = Math.min(Math.max(1, page), totalPages);
+  const paged = useMemo(() => filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE), [filtered, safePage]);
+  const allPagedSelected = paged.length > 0 && paged.every(b => selected.has(b.id));
+  const togglePageAll = () => {
+    setSelected(s => {
+      const n = new Set(s);
+      if (allPagedSelected) paged.forEach(b => n.delete(b.id));
+      else paged.forEach(b => n.add(b.id));
+      return n;
+    });
+  };
 
   const stats = useMemo(() => ({
     total: businesses.length,
