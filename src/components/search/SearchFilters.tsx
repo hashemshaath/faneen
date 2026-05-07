@@ -251,3 +251,53 @@ const FilterCard = ({
     <div className="p-3">{children}</div>
   </section>
 );
+
+/* Debounced price inputs — keeps typing snappy and only commits to the parent
+   filter state after the user pauses (300ms). */
+const PriceRangeInputs = ({
+  priceMin, priceMax, onChange, isRTL,
+}: {
+  priceMin: number;
+  priceMax: number;
+  onChange: (min: number, max: number) => void;
+  isRTL: boolean;
+}) => {
+  const [localMin, setLocalMin] = useState<string>(priceMin ? String(priceMin) : '');
+  const [localMax, setLocalMax] = useState<string>(priceMax ? String(priceMax) : '');
+  const timerRef = useRef<number | null>(null);
+
+  // Sync from parent when filters reset externally
+  useEffect(() => { setLocalMin(priceMin ? String(priceMin) : ''); }, [priceMin]);
+  useEffect(() => { setLocalMax(priceMax ? String(priceMax) : ''); }, [priceMax]);
+
+  const schedule = (minStr: string, maxStr: string) => {
+    if (timerRef.current) window.clearTimeout(timerRef.current);
+    timerRef.current = window.setTimeout(() => {
+      onChange(Number(minStr) || 0, Number(maxStr) || 0);
+    }, 350);
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+      <Input
+        type="number"
+        inputMode="numeric"
+        min={0}
+        placeholder={isRTL ? 'من' : 'Min'}
+        value={localMin}
+        onChange={e => { setLocalMin(e.target.value); schedule(e.target.value, localMax); }}
+        className="flex-1 rounded-xl text-sm h-10 bg-background border-border/60 hover:border-accent/40 focus-visible:border-accent tech-content text-center"
+      />
+      <span className="text-muted-foreground/50 text-xs font-bold select-none">—</span>
+      <Input
+        type="number"
+        inputMode="numeric"
+        min={0}
+        placeholder={isRTL ? 'إلى' : 'Max'}
+        value={localMax}
+        onChange={e => { setLocalMax(e.target.value); schedule(localMin, e.target.value); }}
+        className="flex-1 rounded-xl text-sm h-10 bg-background border-border/60 hover:border-accent/40 focus-visible:border-accent tech-content text-center"
+      />
+    </div>
+  );
+};
