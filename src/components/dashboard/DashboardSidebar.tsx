@@ -143,6 +143,7 @@ const adminBaseGroups: MenuGroup[] = [
       { label: { ar: 'لوحة التحكم', en: 'Dashboard' }, url: '/dashboard', icon: LayoutDashboard, end: true },
       { label: { ar: 'سجل النشاط', en: 'Activity Log' }, url: '/admin/activity-log', icon: BarChart3 },
       { label: { ar: 'رسائل التواصل', en: 'Contact Messages' }, url: '/admin/contact-messages', icon: MessageSquare },
+      { label: { ar: 'مراقبة البريد', en: 'Email Deliverability' }, url: '/admin/email-deliverability', icon: Mail },
       { label: { ar: 'تدقيق الأداء و SEO', en: 'Performance & SEO Audit' }, url: '/admin/site-audit', icon: Gauge },
       { label: { ar: 'سيو القطاعات', en: 'Sector SEO' }, url: '/admin/sector-seo', icon: SearchIcon },
       { label: { ar: 'تحليلات المزودين', en: 'Provider Analytics' }, url: '/admin/provider-analytics', icon: TrendingUp },
