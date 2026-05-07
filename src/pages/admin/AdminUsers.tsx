@@ -31,6 +31,7 @@ import {
   PieChart, Pie, Cell, BarChart, Bar, CartesianGrid, Legend,
 } from 'recharts';
 import type { Tables } from '@/integrations/supabase/types';
+import { maskEmail, maskPhone } from '@/lib/masking';
 
 type Profile = Tables<'profiles'>;
 type UserRole = Tables<'user_roles'>;
@@ -217,13 +218,23 @@ const UserRow = React.memo(({ profile, roles, business, isCurrentUser, canManage
   const highest = roles.length > 0 ? roles.reduce((b, r) => (roleConfig[r.role as keyof typeof roleConfig]?.rank ?? 99) < (roleConfig[b.role as keyof typeof roleConfig]?.rank ?? 99) ? r : b) : null;
   const highestCfg = highest ? roleConfig[highest.role as keyof typeof roleConfig] : null;
   const compact = density === 'compact';
+  // Super-admin only sees raw PII; other admins see masked values they can't copy.
+  const canSeePII = isSuperAdmin;
+  const displayedEmail = profile.email ? (canSeePII ? profile.email : maskEmail(profile.email)) : null;
+  const displayedPhone = profile.phone ? (canSeePII ? profile.phone : maskPhone(profile.phone)) : null;
 
   const handleCopy = useCallback((value: string, label: string) => {
+    if (!isSuperAdmin && (label.includes('بريد') || label.toLowerCase().includes('email') || label.includes('هاتف') || label.toLowerCase().includes('phone'))) {
+      toast.error(isRTL
+        ? 'هذه البيانات الحساسة متاحة فقط لمدير النظام (Super Admin).'
+        : 'This sensitive data is only available to Super Admins.');
+      return;
+    }
     navigator.clipboard?.writeText(value).then(
       () => toast.success(isRTL ? `تم نسخ ${label}` : `${label} copied`),
       () => toast.error(isRTL ? 'فشل النسخ' : 'Copy failed'),
     );
-  }, [isRTL]);
+  }, [isRTL, isSuperAdmin]);
 
   return (
     <div className={`group relative rounded-2xl border bg-card transition-all duration-200 hover:shadow-md
@@ -260,21 +271,25 @@ const UserRow = React.memo(({ profile, roles, business, isCurrentUser, canManage
             </div>
             {!compact && (
             <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
-              {profile.email && (
+              {displayedEmail && (
                 <button onClick={() => handleCopy(profile.email!, isRTL ? 'البريد' : 'Email')}
-                  className="flex items-center gap-1 text-[11px] text-muted-foreground truncate max-w-[200px] hover:text-accent transition-colors group/cp"
-                  title={isRTL ? 'نسخ البريد' : 'Copy email'}>
+                  className={`flex items-center gap-1 text-[11px] truncate max-w-[200px] transition-colors group/cp ${canSeePII ? 'text-muted-foreground hover:text-accent' : 'text-muted-foreground/70 cursor-not-allowed'}`}
+                  title={canSeePII ? (isRTL ? 'نسخ البريد' : 'Copy email') : (isRTL ? 'متاح فقط لمدير النظام' : 'Super Admin only')}>
                   <Mail className="w-3 h-3 shrink-0" />
-                  <span className="truncate">{profile.email}</span>
-                  <Copy className="w-2.5 h-2.5 opacity-0 group-hover/cp:opacity-100 transition-opacity shrink-0" />
+                  <span className="truncate">{displayedEmail}</span>
+                  {canSeePII
+                    ? <Copy className="w-2.5 h-2.5 opacity-0 group-hover/cp:opacity-100 transition-opacity shrink-0" />
+                    : <Lock className="w-2.5 h-2.5 shrink-0 opacity-60" />}
                 </button>
               )}
-              {profile.phone && (
+              {displayedPhone && (
                 <button onClick={() => handleCopy(profile.phone!, isRTL ? 'الهاتف' : 'Phone')}
-                  className="flex items-center gap-1 text-[11px] text-muted-foreground tech-content hover:text-accent transition-colors group/cp"
-                  title={isRTL ? 'نسخ الهاتف' : 'Copy phone'}>
-                  <Phone className="w-3 h-3 shrink-0" />{profile.phone}
-                  <Copy className="w-2.5 h-2.5 opacity-0 group-hover/cp:opacity-100 transition-opacity shrink-0" />
+                  className={`flex items-center gap-1 text-[11px] tech-content transition-colors group/cp ${canSeePII ? 'text-muted-foreground hover:text-accent' : 'text-muted-foreground/70 cursor-not-allowed'}`}
+                  title={canSeePII ? (isRTL ? 'نسخ الهاتف' : 'Copy phone') : (isRTL ? 'متاح فقط لمدير النظام' : 'Super Admin only')}>
+                  <Phone className="w-3 h-3 shrink-0" />{displayedPhone}
+                  {canSeePII
+                    ? <Copy className="w-2.5 h-2.5 opacity-0 group-hover/cp:opacity-100 transition-opacity shrink-0" />
+                    : <Lock className="w-2.5 h-2.5 shrink-0 opacity-60" />}
                 </button>
               )}
               <span className="flex items-center gap-1 text-[11px] text-muted-foreground"><Calendar className="w-3 h-3 shrink-0" />{formatDate(profile.created_at, language)}</span>
