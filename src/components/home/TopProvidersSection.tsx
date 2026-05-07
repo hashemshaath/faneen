@@ -50,17 +50,20 @@ const RatingBar = ({ value }: { value: number }) => (
   </div>
 );
 
-/* ── Rank badge for top 3 ── */
-const RankBadge = ({ rank }: { rank: number }) => {
-  if (rank > 3) return null;
-  const styles = [
-    "from-amber-400 to-yellow-500 shadow-amber-400/30 text-amber-950",
-    "from-slate-300 to-slate-400 shadow-slate-400/30 text-slate-800",
-    "from-orange-400 to-amber-600 shadow-orange-400/25 text-orange-950",
-  ];
+/* ── Rank pill (number badge — used for all visible providers) ── */
+const RankPill = ({ rank }: { rank: number }) => {
+  const isTopThree = rank <= 3;
+  const palette = isTopThree
+    ? [
+        "bg-gradient-to-br from-amber-400 to-yellow-500 text-amber-950 shadow-amber-400/30",
+        "bg-gradient-to-br from-slate-300 to-slate-400 text-slate-800 shadow-slate-400/30",
+        "bg-gradient-to-br from-orange-400 to-amber-600 text-orange-950 shadow-orange-400/25",
+      ][rank - 1]
+    : "bg-card text-muted-foreground border border-border/60 shadow-sm";
   return (
     <span
-      className={`absolute -top-2 -start-2 z-10 flex items-center justify-center w-7 h-7 rounded-lg bg-gradient-to-br ${styles[rank - 1]} text-[11px] font-black shadow-lg`}
+      className={`absolute -top-2 -end-2 z-20 flex items-center justify-center min-w-[28px] h-7 px-2 rounded-full text-[11px] font-black shadow-lg ${palette}`}
+      aria-label={`Rank ${rank}`}
     >
       {rank}
     </span>
