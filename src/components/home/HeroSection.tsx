@@ -75,12 +75,14 @@ const SearchBar = memo(({ categories, cities, language, isRTL, t, onSearch }: an
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder={t('search.placeholder')}
+              aria-label={isRTL ? 'كلمة البحث' : 'Search query'}
               className="w-full pe-11 ps-3 sm:pe-12 sm:ps-4 py-3.5 sm:py-4 rounded-xl sm:rounded-2xl bg-white/[0.06] text-white placeholder:text-white/25 font-body text-sm border-0 outline-none focus:ring-2 focus:ring-gold/40 focus:bg-white/[0.1] transition-all"
             />
           </div>
           <select
             value={selectedCategory}
             onChange={e => setSelectedCategory(e.target.value)}
+            aria-label={isRTL ? 'تصفية حسب القسم' : 'Filter by category'}
             className="sm:w-44 py-3.5 sm:py-4 px-3 sm:px-4 rounded-xl sm:rounded-2xl bg-white/[0.06] text-white/80 font-body text-sm border-0 outline-none focus:ring-2 focus:ring-gold/40 appearance-none cursor-pointer"
           >
             <option value="" className="bg-surface-nav text-surface-nav-foreground">{isRTL ? 'جميع الأقسام' : 'All Categories'}</option>
@@ -93,6 +95,7 @@ const SearchBar = memo(({ categories, cities, language, isRTL, t, onSearch }: an
           <select
             value={selectedCity}
             onChange={e => setSelectedCity(e.target.value)}
+            aria-label={isRTL ? 'تصفية حسب المدينة' : 'Filter by city'}
             className="sm:w-40 py-3.5 sm:py-4 px-3 sm:px-4 rounded-xl sm:rounded-2xl bg-white/[0.06] text-white/80 font-body text-sm border-0 outline-none focus:ring-2 focus:ring-gold/40 appearance-none cursor-pointer hidden sm:block"
           >
             <option value="" className="bg-surface-nav text-surface-nav-foreground">{isRTL ? 'جميع المدن' : 'All Cities'}</option>
