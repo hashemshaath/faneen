@@ -19,6 +19,8 @@ import {
   Filter,
   ShieldCheck,
   ArrowUpRight,
+  Award,
+  SearchX,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -27,16 +29,20 @@ import { VerifiedBadge } from "@/components/common/VerifiedBadge";
 
 /* ── Skeleton ── */
 const ProviderSkeleton = () => (
-  <div className="rounded-3xl border border-border/40 bg-card p-5 space-y-4">
-    <div className="h-20 rounded-2xl bg-muted/40 dark:bg-muted/15 relative overflow-hidden">
-      <Skeleton className="absolute -bottom-6 start-5 w-16 h-16 rounded-2xl" />
+  <div className="rounded-3xl border border-border/40 bg-card overflow-hidden">
+    <div className="h-20 bg-gradient-to-br from-muted/50 to-muted/20 dark:from-muted/20 dark:to-muted/5 relative">
+      <Skeleton className="absolute -bottom-8 start-5 w-16 h-16 rounded-2xl ring-4 ring-card" />
     </div>
-    <div className="pt-6 space-y-2">
+    <div className="px-5 pb-5 pt-10 space-y-3">
       <Skeleton className="h-4 w-3/4" />
       <Skeleton className="h-3 w-1/2" />
+      <Skeleton className="h-1.5 w-full rounded-full" />
+      <div className="flex gap-1.5">
+        <Skeleton className="h-5 w-16 rounded-lg" />
+        <Skeleton className="h-5 w-14 rounded-lg" />
+      </div>
+      <Skeleton className="h-9 w-full rounded-xl" />
     </div>
-    <Skeleton className="h-1.5 w-full rounded-full" />
-    <Skeleton className="h-9 w-full rounded-xl" />
   </div>
 );
 
@@ -59,13 +65,14 @@ const RankPill = ({ rank }: { rank: number }) => {
         "bg-gradient-to-br from-slate-300 to-slate-400 text-slate-800 shadow-slate-400/30",
         "bg-gradient-to-br from-orange-400 to-amber-600 text-orange-950 shadow-orange-400/25",
       ][rank - 1]
-    : "bg-card text-muted-foreground border border-border/60 shadow-sm";
+    : "bg-card/95 backdrop-blur text-muted-foreground border border-border/60 shadow-sm";
   return (
     <span
-      className={`absolute -top-2 -end-2 z-20 flex items-center justify-center min-w-[28px] h-7 px-2 rounded-full text-[11px] font-black shadow-lg ${palette}`}
+      className={`absolute top-2.5 start-2.5 z-20 inline-flex items-center gap-1 min-w-[30px] h-7 px-2 rounded-full text-[11px] font-black shadow-lg ${palette}`}
       aria-label={`Rank ${rank}`}
     >
-      {rank}
+      {isTopThree && <Award className="w-3 h-3" strokeWidth={2.5} />}
+      #{rank}
     </span>
   );
 };
@@ -235,35 +242,40 @@ export const TopProvidersSection = () => {
 
       <div className="container px-4 sm:px-6 relative">
         {/* Header */}
-        <div className="flex items-end justify-between mb-10 sm:mb-14">
-          <div className="space-y-2 sm:space-y-3">
-            <span className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-accent">
-              <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-accent/10">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-5 mb-8 sm:mb-12">
+          <div className="space-y-2.5 sm:space-y-3 max-w-2xl">
+            <span className="inline-flex items-center gap-2 text-[11px] sm:text-xs font-bold tracking-wider uppercase text-accent">
+              <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-accent/10 ring-1 ring-accent/20">
                 <TrendingUp className="w-3.5 h-3.5" />
               </span>
               {isRTL ? "الأعلى تقييماً" : "Top Rated"}
+              {!isLoading && providers.length > 0 && (
+                <span className="ms-1 inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-accent/10 text-accent text-[10px] font-black tabular-nums tech-content normal-case tracking-normal">
+                  {providers.length}
+                </span>
+              )}
             </span>
-            <h2 className="font-heading font-bold text-2xl sm:text-3xl md:text-4xl text-foreground tracking-tight leading-tight">
+            <h2 className="font-heading font-bold text-2xl sm:text-3xl md:text-4xl text-foreground tracking-tight leading-[1.15]">
               {isRTL ? "مزودو خدمة مميزون" : "Featured Providers"}
             </h2>
-            <p className="text-sm text-muted-foreground max-w-md">
+            <p className="text-sm sm:text-[15px] text-muted-foreground leading-relaxed">
               {isRTL
-                ? "اكتشف أفضل مزودي الخدمة بناءً على تقييمات العملاء الحقيقية"
-                : "Discover top-rated service providers based on real customer reviews"}
+                ? "اكتشف أفضل مزودي الخدمة بناءً على تقييمات العملاء الحقيقية والمشاريع المنجزة"
+                : "Discover top-rated service providers based on real customer reviews and completed projects"}
             </p>
           </div>
-          <Link to="/search">
+          <Link to="/search" className="self-start sm:self-end shrink-0">
             <Button
               onClick={() => track('view_all_click')}
               variant="outline"
               size="sm"
-              className="gap-1.5 text-xs sm:text-sm rounded-xl border-border/60 hover:border-accent/40 hover:text-accent hover:bg-accent/5"
+              className="gap-1.5 text-xs sm:text-sm rounded-xl h-10 px-4 border-border/60 hover:border-accent/40 hover:text-accent hover:bg-accent/5 group"
             >
               {isRTL ? "عرض الكل" : "View All"}
               {isRTL ? (
-                <ArrowLeft className="w-3.5 h-3.5" />
+                <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" />
               ) : (
-                <ArrowRight className="w-3.5 h-3.5" />
+                <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
               )}
             </Button>
           </Link>
@@ -272,24 +284,28 @@ export const TopProvidersSection = () => {
         {/* Grid */}
         {/* Quick filter chips */}
         {!isLoading && providers.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2 mb-6 sm:mb-8">
-            <span className="flex items-center gap-1.5 text-xs text-muted-foreground me-1">
+          <div className="flex items-center gap-2 mb-6 sm:mb-8 -mx-4 px-4 sm:mx-0 sm:px-0 overflow-x-auto no-scrollbar pb-1">
+            <span className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/80 me-1 shrink-0">
               <Filter className="w-3 h-3" />
-              {isRTL ? "تصفية:" : "Filter:"}
+              {isRTL ? "تصفية" : "Filter"}
             </span>
-            {uniqueCategories.map((cat) => (
-              <FilterChip key={cat.id} label={cat.name} active={activeCategory === cat.id} onClick={() => setActiveCategory(activeCategory === cat.id ? null : cat.id)} />
-            ))}
-            {uniqueCities.map((city) => (
-              <FilterChip key={city} label={city} active={activeCity === city} onClick={() => setActiveCity(activeCity === city ? null : city)} icon={<MapPin className="w-2.5 h-2.5" />} />
-            ))}
-            <FilterChip label={isRTL ? "موثق" : "Verified"} active={verifiedOnly} onClick={() => setVerifiedOnly(!verifiedOnly)} icon={<ShieldCheck className="w-3 h-3" />} />
-            <FilterChip label={isRTL ? "بريميوم" : "Premium"} active={premiumOnly} onClick={() => setPremiumOnly(!premiumOnly)} icon={<Crown className="w-3 h-3" />} />
-            {hasActiveFilter && (
-              <button onClick={() => { setActiveCategory(null); setActiveCity(null); setVerifiedOnly(false); setPremiumOnly(false); }} className="text-[11px] text-destructive hover:underline underline-offset-2 ms-1 transition-colors">
-                {isRTL ? "مسح الكل" : "Clear all"}
-              </button>
-            )}
+            <div className="flex items-center gap-2 shrink-0">
+              <FilterChip label={isRTL ? "موثق" : "Verified"} active={verifiedOnly} onClick={() => setVerifiedOnly(!verifiedOnly)} icon={<ShieldCheck className="w-3 h-3" />} />
+              <FilterChip label={isRTL ? "بريميوم" : "Premium"} active={premiumOnly} onClick={() => setPremiumOnly(!premiumOnly)} icon={<Crown className="w-3 h-3" />} />
+              {uniqueCategories.length > 0 && <span className="w-px h-5 bg-border/60 mx-0.5" />}
+              {uniqueCategories.map((cat) => (
+                <FilterChip key={cat.id} label={cat.name} active={activeCategory === cat.id} onClick={() => setActiveCategory(activeCategory === cat.id ? null : cat.id)} />
+              ))}
+              {uniqueCities.length > 0 && <span className="w-px h-5 bg-border/60 mx-0.5" />}
+              {uniqueCities.map((city) => (
+                <FilterChip key={city} label={city} active={activeCity === city} onClick={() => setActiveCity(activeCity === city ? null : city)} icon={<MapPin className="w-2.5 h-2.5" />} />
+              ))}
+              {hasActiveFilter && (
+                <button onClick={() => { setActiveCategory(null); setActiveCity(null); setVerifiedOnly(false); setPremiumOnly(false); }} className="inline-flex items-center text-[11px] font-semibold text-destructive hover:underline underline-offset-2 ms-1 transition-colors shrink-0">
+                  {isRTL ? "مسح الكل" : "Clear all"}
+                </button>
+              )}
+            </div>
           </div>
         )}
 
@@ -326,10 +342,12 @@ export const TopProvidersSection = () => {
                     to={`/${biz.username}`}
                     onClick={() => track('card_click', biz.id, biz.username)}
                     aria-label={`${name}${cityName ? ` — ${cityName}` : ''}`}
-                    className={`group relative block rounded-3xl border bg-card dark:bg-card/60 overflow-hidden transition-all duration-500 hover-lift focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
-                      isTopThree
-                        ? "border-accent/25 dark:border-accent/15 shadow-sm shadow-accent/[0.05] hover:shadow-xl hover:shadow-accent/10 hover:border-accent/40"
-                        : "border-border/40 dark:border-border/20 hover:shadow-lg hover:shadow-accent/5 hover:border-accent/25"
+                    className={`group relative flex flex-col rounded-3xl border bg-card dark:bg-card/60 overflow-hidden transition-all duration-500 hover-lift focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
+                      isPremium
+                        ? "border-accent/30 dark:border-accent/20 shadow-md shadow-accent/[0.08] hover:shadow-xl hover:shadow-accent/15 hover:border-accent/50"
+                        : isTopThree
+                          ? "border-accent/20 dark:border-accent/15 shadow-sm shadow-accent/[0.05] hover:shadow-lg hover:shadow-accent/10 hover:border-accent/35"
+                          : "border-border/40 dark:border-border/20 hover:shadow-lg hover:shadow-accent/5 hover:border-accent/25"
                     } ${isVisible ? "animate-card-slide-up" : "opacity-0"}`}
                     style={{
                       animationDelay: `${i * 70}ms`,
@@ -339,20 +357,25 @@ export const TopProvidersSection = () => {
                     {/* Rank pill */}
                     <RankPill rank={rank} />
 
-                    {/* Cover header with subtle gradient + decorative pattern */}
-                    <div className="relative h-20 bg-gradient-to-br from-accent/[0.10] via-accent/[0.04] to-transparent dark:from-accent/[0.14] dark:via-accent/[0.06]">
+                    {/* Cover header */}
+                    <div className={`relative h-20 overflow-hidden ${
+                      isPremium
+                        ? "bg-gradient-to-br from-accent/[0.18] via-accent/[0.08] to-transparent dark:from-accent/[0.22] dark:via-accent/[0.10]"
+                        : "bg-gradient-to-br from-accent/[0.10] via-accent/[0.04] to-transparent dark:from-accent/[0.14] dark:via-accent/[0.06]"
+                    }`}>
                       <div className="absolute inset-0 opacity-[0.35] mix-blend-overlay [background-image:radial-gradient(circle_at_1px_1px,hsl(var(--accent)/0.4)_1px,transparent_0)] [background-size:14px_14px]" />
-                      {isTopThree && (
-                        <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
+                      {isPremium && (
+                        <Sparkles className="absolute top-3 end-3 w-3.5 h-3.5 text-accent/50 animate-pulse" />
                       )}
+                      <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
                     </div>
 
                     {/* Body */}
-                    <div className="px-5 pb-5 pt-0">
+                    <div className="flex flex-col flex-1 px-5 pb-5 pt-0">
                       {/* Overlapping avatar */}
                       <div className="flex items-end justify-between -mt-9 mb-4">
                         <div className="relative">
-                          <Avatar className="w-16 h-16 rounded-2xl ring-4 ring-card group-hover:ring-accent/20 transition-all shadow-md">
+                          <Avatar className="w-16 h-16 rounded-2xl ring-4 ring-card group-hover:ring-accent/30 transition-all duration-300 shadow-lg group-hover:scale-105">
                             <AvatarImage src={biz.logo_url} className="object-cover" />
                             <AvatarFallback className="rounded-2xl bg-gradient-to-br from-accent/15 to-accent/[0.04] text-accent font-bold text-xl">
                               {name?.charAt(0)}
@@ -367,21 +390,12 @@ export const TopProvidersSection = () => {
                             </span>
                           )}
                         </div>
-                        <div className="flex items-center gap-1 mb-1">
-                          {Array.from({ length: 5 }).map((_, si) => (
-                            <Star
-                              key={si}
-                              className={`w-3 h-3 transition-colors ${
-                                si < Math.round(biz.rating_avg)
-                                  ? "text-accent fill-accent"
-                                  : "text-muted-foreground/20"
-                              }`}
-                            />
-                          ))}
-                          <span className="ms-1 text-xs font-bold text-foreground tabular-nums tech-content">
+                        <div className="flex items-center gap-1.5 mb-1 px-2 py-1 rounded-lg bg-muted/40 dark:bg-muted/20 border border-border/30">
+                          <Star className="w-3 h-3 text-accent fill-accent" />
+                          <span className="text-xs font-bold text-foreground tabular-nums tech-content leading-none">
                             {Number(biz.rating_avg).toFixed(1)}
                           </span>
-                          <span className="text-[10px] text-muted-foreground/60 tabular-nums tech-content">
+                          <span className="text-[10px] text-muted-foreground/70 tabular-nums tech-content leading-none">
                             ({biz.rating_count})
                           </span>
                         </div>
@@ -408,9 +422,9 @@ export const TopProvidersSection = () => {
                       </div>
 
                       {/* Tags row */}
-                      <div className="flex flex-wrap items-center gap-1.5 mb-4 min-h-[26px]">
+                      <div className="flex flex-wrap items-center gap-1.5 mb-4 min-h-[26px] mt-auto">
                         {cityName && (
-                          <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground bg-muted/40 dark:bg-muted/20 px-2.5 py-1 rounded-lg border border-border/30">
+                          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground bg-muted/40 dark:bg-muted/20 px-2.5 py-1 rounded-lg border border-border/30">
                             <MapPin className="w-2.5 h-2.5" />
                             {cityName}
                           </span>
@@ -429,7 +443,7 @@ export const TopProvidersSection = () => {
                       </div>
 
                       {/* CTA */}
-                      <span className="flex items-center justify-center gap-1.5 w-full py-2.5 rounded-xl text-xs font-semibold bg-accent/8 text-accent border border-accent/20 group-hover:bg-accent group-hover:text-accent-foreground group-hover:border-accent transition-all duration-300">
+                      <span className="flex items-center justify-center gap-1.5 w-full py-2.5 rounded-xl text-xs font-semibold bg-accent/[0.08] text-accent border border-accent/20 group-hover:bg-accent group-hover:text-accent-foreground group-hover:border-accent group-hover:shadow-md group-hover:shadow-accent/20 transition-all duration-300">
                         {isRTL ? "عرض الملف" : "View Profile"}
                         <ArrowUpRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 rtl:group-hover:-translate-x-0.5" />
                       </span>
@@ -438,6 +452,27 @@ export const TopProvidersSection = () => {
                 );
               })}
         </div>
+
+        {/* Empty state when filters yield no results */}
+        {!isLoading && providers.length > 0 && filtered.length === 0 && (
+          <div className="mt-8 flex flex-col items-center justify-center text-center py-12 px-6 rounded-3xl border border-dashed border-border/60 bg-muted/20">
+            <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-muted/60 text-muted-foreground mb-3">
+              <SearchX className="w-5 h-5" />
+            </div>
+            <h3 className="font-heading font-bold text-base text-foreground mb-1">
+              {isRTL ? "لا توجد نتائج مطابقة" : "No matching results"}
+            </h3>
+            <p className="text-sm text-muted-foreground mb-4 max-w-sm">
+              {isRTL ? "جرّب تعديل عوامل التصفية للعثور على مزودين آخرين." : "Try adjusting the filters to find other providers."}
+            </p>
+            <button
+              onClick={() => { setActiveCategory(null); setActiveCity(null); setVerifiedOnly(false); setPremiumOnly(false); }}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-accent hover:underline underline-offset-2"
+            >
+              {isRTL ? "مسح كل التصفية" : "Clear all filters"}
+            </button>
+          </div>
+        )}
       </div>
     </section>
   );
