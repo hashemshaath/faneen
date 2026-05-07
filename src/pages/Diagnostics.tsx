@@ -15,6 +15,7 @@ import {
   AlertTriangle, AlertCircle, Info, Globe, Bug, Zap,
 } from "lucide-react";
 import { useNoIndex } from "@/hooks/useNoIndex";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const SOURCE_ICONS: Record<DiagSource, React.ReactNode> = {
   console: <Bug className="w-3.5 h-3.5" />,
@@ -40,6 +41,28 @@ type FilterKey = typeof FILTER_KEYS[number];
 
 const Diagnostics = () => {
   useNoIndex();
+  const { isRTL } = useLanguage();
+  const tx = isRTL ? {
+    title: 'تشخيص النظام',
+    sub: 'سجل مباشر للأخطاء والتحذيرات وطلبات الشبكة الفاشلة. يُجمع داخل المتصفح فقط.',
+    home: 'الرئيسية',
+    total: 'إجمالي', errors: 'أخطاء', warnings: 'تحذيرات', network: 'شبكة',
+    all: 'الكل', warn: 'تحذيرات', console: 'كونسول',
+    searchPh: 'بحث في السجل...',
+    copy: 'نسخ', export: 'تصدير',
+    empty: 'لا توجد سجلات',
+    emptySub: 'السجل فارغ — كل شيء يعمل بسلاسة.',
+  } : {
+    title: 'System Diagnostics',
+    sub: 'Live log of errors, warnings, and failed network requests. Collected in-browser only.',
+    home: 'Home',
+    total: 'Total', errors: 'Errors', warnings: 'Warnings', network: 'Network',
+    all: 'All', warn: 'Warnings', console: 'Console',
+    searchPh: 'Search log...',
+    copy: 'Copy', export: 'Export',
+    empty: 'No logs',
+    emptySub: 'The log is empty — everything is running smoothly.',
+  };
   const [entries, setEntries] = useState<DiagEntry[]>(getDiagEntries());
   const [filter, setFilter] = useState<FilterKey>("all");
   const [search, setSearch] = useState("");
