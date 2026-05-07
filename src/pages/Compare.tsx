@@ -11,7 +11,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Star, MapPin, BadgeCheck, Plus, X, ArrowRight, ArrowLeft, Scale, Search, Download } from 'lucide-react';
+import { Star, MapPin, Plus, X, ArrowRight, ArrowLeft, Scale, Search, Download } from 'lucide-react';
+import { VerifiedBadge } from '@/components/common/VerifiedBadge';
 import { exportComparePDF } from '@/lib/compare-pdf-export';
 
 const Compare = () => {
@@ -227,7 +228,7 @@ const Compare = () => {
                         <Link to={`/${b.username}`} className="font-medium text-sm hover:text-gold transition-colors text-center">
                           {isRTL ? b.name_ar : (b.name_en || b.name_ar)}
                         </Link>
-                        {b.is_verified && <Badge variant="secondary" className="text-[10px]"><BadgeCheck className="w-3 h-3 me-1" />{isRTL ? 'موثق' : 'Verified'}</Badge>}
+                        {b.is_verified && <VerifiedBadge size="sm" />}
                       </div>
                     </th>
                   ))}
