@@ -4,6 +4,7 @@ import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { Mail, Phone, MapPin, MessageSquare } from 'lucide-react';
+import { WhyQitaatSection } from '@/components/home/WhyQitaatSection';
 
 const About = () => {
   const { isRTL, language } = useLanguage();
@@ -90,6 +91,7 @@ const About = () => {
           ))}
         </div>
       </div>
+      <WhyQitaatSection variant="about" />
       <Footer />
     </div>
   );
