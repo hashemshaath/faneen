@@ -28,6 +28,7 @@ import { useCountUp } from '@/hooks/useCountUp';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { cn } from '@/lib/utils';
 import { tierIcons } from '@/lib/membership-tiers';
+import { ProviderReadinessCard } from '@/components/dashboard/ProviderReadinessCard';
 
 // ═══ Shared utils ═══
 const CHART_COLORS = [
@@ -711,6 +712,9 @@ const ProviderDashboardView = React.memo(({ isRTL, user, profile }: { isRTL: boo
         <TodaySummary isRTL={isRTL} userId={user.id} />
         <MembershipWidget isRTL={isRTL} userId={user.id} />
       </div>
+
+      {/* Provider readiness — approval status, completion %, missing fields */}
+      <ProviderReadinessCard />
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">

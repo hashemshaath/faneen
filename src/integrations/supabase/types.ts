@@ -898,6 +898,8 @@ export type Database = {
         Row: {
           additional_number: string | null
           address: string | null
+          approval_notes: string | null
+          approval_status: Database["public"]["Enums"]["business_approval_status"]
           building_number: string | null
           business_number: number
           category_id: string | null
@@ -922,23 +924,30 @@ export type Database = {
           name_ar: string
           name_en: string | null
           national_id: string | null
+          onboarding_completion: number
           phone: string | null
           rating_avg: number
           rating_count: number
           ref_id: string
           region: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
           short_description_ar: string | null
           short_description_en: string | null
           street_name: string | null
+          submitted_at: string | null
           unified_number: string | null
           updated_at: string
           user_id: string
           username: string
+          username_status: Database["public"]["Enums"]["username_status"]
           website: string | null
         }
         Insert: {
           additional_number?: string | null
           address?: string | null
+          approval_notes?: string | null
+          approval_status?: Database["public"]["Enums"]["business_approval_status"]
           building_number?: string | null
           business_number?: number
           category_id?: string | null
@@ -963,23 +972,30 @@ export type Database = {
           name_ar: string
           name_en?: string | null
           national_id?: string | null
+          onboarding_completion?: number
           phone?: string | null
           rating_avg?: number
           rating_count?: number
           ref_id?: string
           region?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           short_description_ar?: string | null
           short_description_en?: string | null
           street_name?: string | null
+          submitted_at?: string | null
           unified_number?: string | null
           updated_at?: string
           user_id: string
           username: string
+          username_status?: Database["public"]["Enums"]["username_status"]
           website?: string | null
         }
         Update: {
           additional_number?: string | null
           address?: string | null
+          approval_notes?: string | null
+          approval_status?: Database["public"]["Enums"]["business_approval_status"]
           building_number?: string | null
           business_number?: number
           category_id?: string | null
@@ -1004,18 +1020,23 @@ export type Database = {
           name_ar?: string
           name_en?: string | null
           national_id?: string | null
+          onboarding_completion?: number
           phone?: string | null
           rating_avg?: number
           rating_count?: number
           ref_id?: string
           region?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           short_description_ar?: string | null
           short_description_en?: string | null
           street_name?: string | null
+          submitted_at?: string | null
           unified_number?: string | null
           updated_at?: string
           user_id?: string
           username?: string
+          username_status?: Database["public"]["Enums"]["username_status"]
           website?: string | null
         }
         Relationships: [
@@ -3171,6 +3192,8 @@ export type Database = {
           is_onboarded: boolean
           is_verified: boolean
           membership_tier: Database["public"]["Enums"]["membership_tier"]
+          onboarding_draft: Json
+          onboarding_draft_updated_at: string | null
           phone: string | null
           phone_verified: boolean
           preferred_language: string
@@ -3193,6 +3216,8 @@ export type Database = {
           is_onboarded?: boolean
           is_verified?: boolean
           membership_tier?: Database["public"]["Enums"]["membership_tier"]
+          onboarding_draft?: Json
+          onboarding_draft_updated_at?: string | null
           phone?: string | null
           phone_verified?: boolean
           preferred_language?: string
@@ -3215,6 +3240,8 @@ export type Database = {
           is_onboarded?: boolean
           is_verified?: boolean
           membership_tier?: Database["public"]["Enums"]["membership_tier"]
+          onboarding_draft?: Json
+          onboarding_draft_updated_at?: string | null
           phone?: string | null
           phone_verified?: boolean
           preferred_language?: string
@@ -4215,6 +4242,10 @@ export type Database = {
       cleanup_expired_otps: { Args: never; Returns: undefined }
       cleanup_old_audit_data: { Args: never; Returns: undefined }
       cleanup_old_migration_telemetry: { Args: never; Returns: undefined }
+      compute_business_onboarding_completion: {
+        Args: { _business_id: string }
+        Returns: number
+      }
       create_notification: {
         Args: {
           _action_url?: string
@@ -4434,6 +4465,10 @@ export type Database = {
           read_ct: number
         }[]
       }
+      submit_business_for_review: {
+        Args: { _business_id: string }
+        Returns: Database["public"]["Enums"]["business_approval_status"]
+      }
       subscribe_to_plan: {
         Args: {
           _billing_cycle?: string
@@ -4464,6 +4499,14 @@ export type Database = {
         | "cancelled"
         | "completed"
         | "no_show"
+      business_approval_status:
+        | "draft"
+        | "submitted"
+        | "under_review"
+        | "approved"
+        | "rejected"
+        | "needs_changes"
+        | "published"
       business_staff_role: "owner" | "manager" | "editor" | "viewer"
       contract_status:
         | "draft"
@@ -4482,6 +4525,7 @@ export type Database = {
       membership_tier: "free" | "basic" | "premium" | "enterprise"
       milestone_status: "pending" | "active" | "completed" | "disputed"
       promotion_type: "ad" | "offer" | "video"
+      username_status: "pending" | "approved" | "rejected"
       warranty_status: "active" | "expired" | "claimed" | "void"
       warranty_type: "comprehensive" | "limited" | "extended"
     }
@@ -4620,6 +4664,15 @@ export const Constants = {
         "completed",
         "no_show",
       ],
+      business_approval_status: [
+        "draft",
+        "submitted",
+        "under_review",
+        "approved",
+        "rejected",
+        "needs_changes",
+        "published",
+      ],
       business_staff_role: ["owner", "manager", "editor", "viewer"],
       contract_status: [
         "draft",
@@ -4640,6 +4693,7 @@ export const Constants = {
       membership_tier: ["free", "basic", "premium", "enterprise"],
       milestone_status: ["pending", "active", "completed", "disputed"],
       promotion_type: ["ad", "offer", "video"],
+      username_status: ["pending", "approved", "rejected"],
       warranty_status: ["active", "expired", "claimed", "void"],
       warranty_type: ["comprehensive", "limited", "extended"],
     },
