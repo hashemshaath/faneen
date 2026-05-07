@@ -55,6 +55,11 @@
 
     <!-- Security -->
     <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(self), interest-cohort=()" />
+
+    <!-- AI crawler discovery -->
+    <link rel="alternate" type="text/plain" title="LLM crawler manifest" href="/llms.txt" />
 
     <!-- Open Graph -->
     <meta property="og:type" content="website">
