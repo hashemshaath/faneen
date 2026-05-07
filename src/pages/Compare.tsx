@@ -219,7 +219,9 @@ const Compare = () => {
                     return { name, price };
                   }),
                 }));
-                exportComparePDF({ businesses, allServices, isRTL });
+                import('@/lib/compare-pdf-export').then(({ exportComparePDF }) =>
+                  exportComparePDF({ businesses, allServices, isRTL })
+                );
               }}
             >
               <Download className="w-4 h-4 me-1" />
