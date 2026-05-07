@@ -72,6 +72,38 @@ export default function AdminSitemapStatus() {
         ...TYPES.map((t) => ({ label: t, url: `${FUNC}?type=${t}` })),
       ];
       const results = await Promise.all(targets.map(async (t) => ({ ...t, result: await checkUrl(t.url) })));
+      // If any failed (likely cross-origin from preview), fall back to server-side audit
+      const anyFailed = results.some((r) => r.result.status === 0);
+      if (anyFailed) {
+        try {
+          const { data: serverData } = await supabase.functions.invoke('audit-sitemap-status', {
+            body: { triggeredBy: 'dashboard-fallback', dryRun: true },
+          });
+          const serverResults = (serverData?.results ?? []) as Array<{ url: string; status: number; ok: boolean; isXml: boolean; isSpaFallback: boolean; urlCount: number; lastmod: string | null; contentType: string; error?: string }>;
+          return results.map((row) => {
+            if (row.result.status !== 0) return row;
+            const s = serverResults.find((sr) => sr.url === row.url);
+            if (!s) return row;
+            return {
+              ...row,
+              result: {
+                url: row.url,
+                ok: s.ok,
+                status: s.status,
+                contentType: s.contentType ?? '',
+                isXml: s.isXml,
+                isSpaFallback: s.isSpaFallback,
+                urlCount: s.urlCount ?? 0,
+                lastmod: s.lastmod ?? null,
+                error: s.error,
+                fetchedAt: new Date().toISOString(),
+              },
+            };
+          });
+        } catch {
+          return results;
+        }
+      }
       return results;
     },
     refetchOnWindowFocus: false,
