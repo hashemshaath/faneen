@@ -7,6 +7,7 @@ const HEADERS = {
 };
 
 const BASE = "https://qitaat.com";
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "https://hckpxwhjycmdflaneihd.supabase.co";
 
 const DEFAULT_ROBOTS = `User-agent: *
 Allow: /
