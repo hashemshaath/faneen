@@ -277,20 +277,20 @@ describe('BusinessCard service tags & +N with name_en (English)', () => {
     renderCard({
       ...baseBiz,
       business_services: [
-        { name_ar: 'أ', name_en: 'A', is_active: true },
-        { name_ar: 'ب', name_en: 'B', is_active: true },
-        { name_ar: 'ج', name_en: 'C', is_active: true },
-        { name_ar: 'د', name_en: 'D', is_active: true },
-        { name_ar: 'هـ', name_en: 'E', is_active: true },
-        { name_ar: 'و', name_en: 'F', is_active: false },
-        { name_ar: 'ز', name_en: 'G', is_active: false },
+        { name_ar: 'أ', name_en: 'Svc-A', is_active: true },
+        { name_ar: 'ب', name_en: 'Svc-B', is_active: true },
+        { name_ar: 'ج', name_en: 'Svc-C', is_active: true },
+        { name_ar: 'د', name_en: 'Svc-D', is_active: true },
+        { name_ar: 'هـ', name_en: 'Svc-E', is_active: true },
+        { name_ar: 'و', name_en: 'Svc-F', is_active: false },
+        { name_ar: 'ز', name_en: 'Svc-G', is_active: false },
       ],
     });
-    expect(screen.getByText('A')).toBeInTheDocument();
-    expect(screen.getByText('B')).toBeInTheDocument();
-    expect(screen.getByText('C')).toBeInTheDocument();
-    expect(screen.queryByText('D')).toBeNull();
-    expect(screen.queryByText('F')).toBeNull();
+    expect(screen.getByText('Svc-A')).toBeInTheDocument();
+    expect(screen.getByText('Svc-B')).toBeInTheDocument();
+    expect(screen.getByText('Svc-C')).toBeInTheDocument();
+    expect(screen.queryByText('Svc-D')).toBeNull();
+    expect(screen.queryByText('Svc-F')).toBeNull();
     expect(screen.getByText('+2')).toBeInTheDocument();
   });
 
