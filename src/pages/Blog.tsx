@@ -400,6 +400,29 @@ const Blog = () => {
                 </button>
               )}
             </div>
+
+            {/* Live Stats Strip */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 max-w-2xl mx-auto mt-5 sm:mt-7">
+              {[
+                { icon: FileText, label: isRTL ? 'مقال' : 'Articles', value: posts.length },
+                { icon: Eye, label: isRTL ? 'مشاهدة' : 'Views', value: stats.totalViews },
+                { icon: MessageCircle, label: isRTL ? 'تعليق' : 'Comments', value: stats.totalComments },
+                { icon: Users, label: isRTL ? 'كاتب' : 'Authors', value: stats.authors },
+              ].map((s, i) => (
+                <div
+                  key={i}
+                  className="rounded-xl bg-primary-foreground/5 backdrop-blur-md border border-primary-foreground/10 px-3 py-2.5 flex items-center gap-2.5 hover:bg-primary-foreground/10 transition-colors"
+                >
+                  <s.icon className="w-4 h-4 text-accent shrink-0" />
+                  <div className="text-start min-w-0">
+                    <div className="font-heading font-bold text-sm sm:text-base text-primary-foreground tech-content leading-tight">
+                      {s.value.toLocaleString()}
+                    </div>
+                    <div className="text-[10px] sm:text-[11px] text-primary-foreground/60 leading-tight">{s.label}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
