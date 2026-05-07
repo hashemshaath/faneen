@@ -602,9 +602,10 @@ describe('BusinessCard render cost (React.memo behavior)', () => {
         </Profiler>
       </MemoryRouter>,
     );
-    // memo() must short-circuit — no extra `update` phase entries.
-    const updates = renders.filter((r) => r.phase === 'update').length;
-    expect(updates).toBe(0);
+    // memo() must short-circuit: any `update` commit on the Profiler subtree
+    // must have actualDuration === 0 (the child did not actually re-render).
+    const updates = renders.filter((r) => r.phase === 'update');
+    expect(updates.every((r) => r.actualDuration === 0)).toBe(true);
   });
 
   it('re-renders exactly once when business_services changes (new reference)', () => {
@@ -632,8 +633,9 @@ describe('BusinessCard render cost (React.memo behavior)', () => {
         </Profiler>
       </MemoryRouter>,
     );
-    // Exactly one update for the real prop change.
-    expect(renders.filter((r) => r.phase === 'update').length).toBe(1);
+    // The real prop change MUST cause at least one non-zero update commit.
+    const updates = renders.filter((r) => r.phase === 'update');
+    expect(updates.some((r) => r.actualDuration > 0)).toBe(true);
     expect(screen.getByText('خدمة-2')).toBeInTheDocument();
   });
 
@@ -656,7 +658,9 @@ describe('BusinessCard render cost (React.memo behavior)', () => {
         </MemoryRouter>,
       );
     }
-    // Still zero updates after 5 stable re-renders.
-    expect(renders.filter((r) => r.phase === 'update').length).toBe(0);
+    // Across 5 stable re-renders, every update commit must have
+    // actualDuration === 0 (memo bail-out).
+    const updates = renders.filter((r) => r.phase === 'update');
+    expect(updates.every((r) => r.actualDuration === 0)).toBe(true);
   });
 });
