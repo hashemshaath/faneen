@@ -41,6 +41,7 @@ import {
   useBusinessByUsername,
   useProjects,
   useServices,
+  useActivePromotionsCount,
 } from "@/components/business-profile/business-profile.data";
 import { useReviews } from "@/components/business-profile/business-profile.data";
 import { BnplBadges } from "@/components/bnpl/BnplBadges";
@@ -58,6 +59,7 @@ const BusinessProfile = () => {
   const { data: services = [] } = useServices(business?.id);
   const { data: branches = [] } = useBranches(business?.id);
   const { data: reviews = [] } = useReviews(business?.id);
+  const { data: activeOffersCount = 0 } = useActivePromotionsCount(business?.id);
 
   const businessName = business ? getLocalizedValue(language, business.name_ar, business.name_en) : '';
   const businessDesc = business ? (getLocalizedValue(language, business.description_ar, business.description_en) || getLocalizedValue(language, business.short_description_ar, business.short_description_en) || '') : '';
@@ -284,6 +286,8 @@ const BusinessProfile = () => {
           projectCount={projects.length}
           serviceCount={services.length}
           branchCount={branches.length}
+          activeOffersCount={activeOffersCount}
+          topServices={services}
         />
 
         <main className="container px-3 pb-10 pt-6 sm:px-4 sm:pb-16 sm:pt-8">
