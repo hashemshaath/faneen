@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import {
-  BadgeCheck,
   Clock,
   Crown,
   FolderOpen,
