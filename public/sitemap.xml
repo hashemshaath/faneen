@@ -1,12 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Static fallback sitemap index. The dynamic version is served
-     by the edge function at /functions/v1/sitemap -->
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <sitemap><loc>https://qitaat.com/functions/v1/sitemap?type=static</loc></sitemap>
-  <sitemap><loc>https://qitaat.com/functions/v1/sitemap?type=businesses</loc></sitemap>
-  <sitemap><loc>https://qitaat.com/functions/v1/sitemap?type=blog</loc></sitemap>
-  <sitemap><loc>https://qitaat.com/functions/v1/sitemap?type=categories</loc></sitemap>
-  <sitemap><loc>https://qitaat.com/functions/v1/sitemap?type=cities</loc></sitemap>
-  <sitemap><loc>https://qitaat.com/functions/v1/sitemap?type=profiles</loc></sitemap>
-  <sitemap><loc>https://qitaat.com/functions/v1/sitemap?type=projects</loc></sitemap>
+  <sitemap>
+    <loc>https://hckpxwhjycmdflaneihd.supabase.co/functions/v1/sitemap?type=static</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://hckpxwhjycmdflaneihd.supabase.co/functions/v1/sitemap?type=businesses</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://hckpxwhjycmdflaneihd.supabase.co/functions/v1/sitemap?type=blog</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://hckpxwhjycmdflaneihd.supabase.co/functions/v1/sitemap?type=categories</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://hckpxwhjycmdflaneihd.supabase.co/functions/v1/sitemap?type=cities</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://hckpxwhjycmdflaneihd.supabase.co/functions/v1/sitemap?type=profiles</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://hckpxwhjycmdflaneihd.supabase.co/functions/v1/sitemap?type=projects</loc>
+  </sitemap>
 </sitemapindex>
