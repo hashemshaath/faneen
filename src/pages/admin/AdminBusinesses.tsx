@@ -155,9 +155,39 @@ const AdminBusinesses = () => {
   const { isRTL, language } = useLanguage();
   const { isAdmin, user } = useAuth();
   const queryClient = useQueryClient();
-  const [search, setSearch] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [filterTier, setFilterTier] = useState('all');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const search = searchParams.get('q') || '';
+  const filterStatus = searchParams.get('status') || 'all';
+  const filterTier = searchParams.get('tier') || 'all';
+  const filterTranslation = searchParams.get('translation') || 'all'; // all|missing_en|missing_ar|complete
+  const sortBy = (searchParams.get('sort') || 'recent') as 'recent' | 'rating' | 'name' | 'tier';
+  const page = parseInt(searchParams.get('page') || '1', 10) || 1;
+  const viewMode = (searchParams.get('view') || 'cards') as 'cards' | 'table';
+  const PAGE_SIZE = 20;
+  const updateParam = useCallback((updates: Record<string, string | null>) => {
+    const sp = new URLSearchParams(searchParams);
+    Object.entries(updates).forEach(([k, v]) => {
+      if (v === null || v === '' || v === 'all') sp.delete(k);
+      else sp.set(k, v);
+    });
+    setSearchParams(sp, { replace: false });
+  }, [searchParams, setSearchParams]);
+  const [searchInput, setSearchInput] = useState(search);
+  useEffect(() => { setSearchInput(search); }, [search]);
+  useEffect(() => {
+    const t = setTimeout(() => { if (searchInput !== search) updateParam({ q: searchInput || null, page: null }); }, 300);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchInput]);
+  const setFilterStatus = (v: string) => updateParam({ status: v === 'all' ? null : v, page: null });
+  const setFilterTier = (v: string) => updateParam({ tier: v === 'all' ? null : v, page: null });
+  const setSortBy = (v: string) => updateParam({ sort: v === 'recent' ? null : v });
+  const setViewMode = (v: 'cards' | 'table') => updateParam({ view: v === 'cards' ? null : v });
+  const setSearch = (v: string) => { setSearchInput(v); };
+  const setPage = (n: number) => updateParam({ page: n <= 1 ? null : String(n) });
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const toggleSelect = (id: string) => setSelected(s => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const clearSelected = () => setSelected(new Set());
   const [editingBiz, setEditingBiz] = useState<any | null>(null);
   const [editForm, setEditForm] = useState<any>({});
   const [servicesPanel, setServicesPanel] = useState<string | null>(null);
@@ -166,7 +196,6 @@ const AdminBusinesses = () => {
   const [geocoding, setGeocoding] = useState(false);
   const [branchForm, setBranchForm] = useState<any | null>(null);
   const [editingBranchId, setEditingBranchId] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
   const [isPending, startTransition] = useTransition();
 
   const setField = useCallback((key: string, value: string | number | boolean | null) => {
