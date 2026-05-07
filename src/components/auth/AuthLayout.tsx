@@ -80,7 +80,7 @@ export const AuthLayout: React.FC<{ children: React.ReactNode }> = ({ children }
             <span className="font-heading font-black text-2xl text-white">ق</span>
           </div>
           <div>
-            <h1 className="font-heading font-bold text-xl text-white leading-none tracking-tight">قِطاعات</h1>
+            <span className="font-heading font-bold text-xl text-white leading-none tracking-tight block">قِطاعات</span>
             <span className="text-[11px] text-white/40 tracking-widest uppercase">Qitaat</span>
           </div>
         </Link>
@@ -159,7 +159,7 @@ export const AuthLayout: React.FC<{ children: React.ReactNode }> = ({ children }
                 <span className="font-heading font-black text-lg text-secondary-foreground">ق</span>
               </div>
               <div>
-                <h1 className="font-heading font-bold text-base text-foreground leading-none">قِطاعات</h1>
+                <span className="font-heading font-bold text-base text-foreground leading-none block">قِطاعات</span>
                 <span className="text-[10px] text-accent tracking-wider">Qitaat</span>
               </div>
             </Link>
