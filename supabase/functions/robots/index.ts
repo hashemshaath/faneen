@@ -69,7 +69,7 @@ User-agent: cohere-ai
 Allow: /
 
 Sitemap: ${BASE}/sitemap.xml
-Sitemap: ${BASE}/functions/v1/sitemap
+Sitemap: ${SUPABASE_URL}/functions/v1/sitemap
 `;
 
 Deno.serve(async () => {
