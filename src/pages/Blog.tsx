@@ -3,7 +3,7 @@ import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { Card, CardContent } from '@/components/ui/card';
@@ -59,12 +59,28 @@ const MobileCardSkeleton = () => (
 const Blog = () => {
   const { isRTL, language } = useLanguage();
   const [activeCategory, setActiveCategory] = useState('all');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   const [sortBy, setSortBy] = useState<SortOption>('newest');
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const { ref: heroRef, isVisible: heroVisible } = useScrollAnimation();
+
+  // Sync `q` param with the URL so SearchAction (Schema.org) and shareable search links work
+  React.useEffect(() => {
+    const current = searchParams.get('q') || '';
+    if (searchQuery && searchQuery !== current) {
+      const next = new URLSearchParams(searchParams);
+      next.set('q', searchQuery);
+      setSearchParams(next, { replace: true });
+    } else if (!searchQuery && current) {
+      const next = new URLSearchParams(searchParams);
+      next.delete('q');
+      setSearchParams(next, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery]);
 
   const { data: posts = [], isLoading } = useQuery({
     queryKey: ['public-blog'],
