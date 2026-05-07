@@ -80,6 +80,7 @@ export function usePageMeta(options: PageMetaOptions) {
     setMeta('og:url', canonicalUrl, 'property');
     setMeta('og:site_name', SITE_NAME, 'property');
     setMeta('og:locale', 'ar_SA', 'property');
+    setMeta('og:locale:alternate', 'en_US', 'property');
 
     // Twitter
     setMeta('twitter:title', options.ogTitle || fullTitle, 'name');
