@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useRecentlyViewedBusinesses } from '@/hooks/useRecentlyViewedBusinesses';
-import { Clock, X, BadgeCheck } from 'lucide-react';
+import { Clock, X } from 'lucide-react';
+import { VerifiedBadge } from '@/components/common/VerifiedBadge';
 
 interface Props {
   businesses?: Array<Record<string, any>>;
@@ -62,7 +63,7 @@ export const RecentlyViewedStrip = ({ businesses }: Props) => {
                   <span className="text-[11px] sm:text-xs font-heading font-bold text-foreground truncate group-hover:text-accent transition-colors">
                     {name}
                   </span>
-                  {b.is_verified && <BadgeCheck className="w-3 h-3 text-accent shrink-0" />}
+                  {b.is_verified && <VerifiedBadge size="xs" iconOnly />}
                 </div>
                 {b.rating_avg > 0 && (
                   <span className="text-[10px] text-muted-foreground tech-content">
