@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { Profiler, type ProfilerOnRenderCallback } from 'react';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { BusinessCard } from './BusinessCard';
@@ -551,5 +552,119 @@ describe('BusinessCard +N counter with null/non-boolean is_active', () => {
     expect(screen.getByText('خدمة-3')).toBeInTheDocument();
     expect(screen.queryByText('خدمة-4')).toBeNull();
     expect(screen.getByText('+1')).toBeInTheDocument();
+  });
+});
+
+/**
+ * BusinessCard is wrapped in `React.memo`. When the parent re-renders with
+ * the SAME `business` reference and the SAME `viewMode`, the card must not
+ * re-render. When `business_services` actually changes (new reference), the
+ * card MUST re-render exactly once.
+ */
+describe('BusinessCard render cost (React.memo behavior)', () => {
+  const mountWithProfiler = (b: Record<string, unknown>) => {
+    const renders: Array<{ phase: string; actualDuration: number }> = [];
+    const onRender: ProfilerOnRenderCallback = (_id, phase, actualDuration) => {
+      renders.push({ phase, actualDuration });
+    };
+    const utils = render(
+      <MemoryRouter>
+        <Profiler id="card" onRender={onRender}>
+          <BusinessCard business={b} viewMode="grid" />
+        </Profiler>
+      </MemoryRouter>,
+    );
+    return { ...utils, renders };
+  };
+
+  it('does not re-render when parent re-renders with the same business reference', () => {
+    const business = {
+      ...baseBiz,
+      business_services: [
+        { name_ar: 'خدمة-1', is_active: true },
+        { name_ar: 'خدمة-2', is_active: true },
+      ],
+    };
+    const { rerender, renders } = mountWithProfiler(business);
+    const mountDuration = renders.find((r) => r.phase === 'mount')!.actualDuration;
+    expect(renders.filter((r) => r.phase === 'update').length).toBe(0);
+
+    // Re-render parent with the SAME `business` reference.
+    const onRender: ProfilerOnRenderCallback = (_id, phase, actualDuration) => {
+      renders.push({ phase, actualDuration });
+    };
+    rerender(
+      <MemoryRouter>
+        <Profiler id="card" onRender={onRender}>
+          <BusinessCard business={business} viewMode="grid" />
+        </Profiler>
+      </MemoryRouter>,
+    );
+    // memo() must short-circuit: every update commit must be drastically
+    // cheaper than the initial mount (we use < 25% as a generous bail-out
+    // signal that BusinessCard's body did not run again).
+    const updates = renders.filter((r) => r.phase === 'update');
+    expect(updates.length).toBeGreaterThan(0);
+    expect(updates.every((r) => r.actualDuration < mountDuration * 0.25)).toBe(true);
+  });
+
+  it('re-renders exactly once when business_services changes (new reference)', () => {
+    const initial = {
+      ...baseBiz,
+      business_services: [{ name_ar: 'خدمة-1', is_active: true }],
+    };
+    const { rerender, renders } = mountWithProfiler(initial);
+    expect(renders.filter((r) => r.phase === 'mount').length).toBe(1);
+
+    const next = {
+      ...initial,
+      business_services: [
+        { name_ar: 'خدمة-1', is_active: true },
+        { name_ar: 'خدمة-2', is_active: true },
+      ],
+    };
+    const onRender: ProfilerOnRenderCallback = (_id, phase, actualDuration) => {
+      renders.push({ phase, actualDuration });
+    };
+    rerender(
+      <MemoryRouter>
+        <Profiler id="card" onRender={onRender}>
+          <BusinessCard business={next} viewMode="grid" />
+        </Profiler>
+      </MemoryRouter>,
+    );
+    // The real prop change MUST cause an update commit roughly comparable
+    // to a normal render (not a memo bail-out).
+    const mountDuration = renders.find((r) => r.phase === 'mount')!.actualDuration;
+    const updates = renders.filter((r) => r.phase === 'update');
+    expect(updates.some((r) => r.actualDuration >= mountDuration * 0.25)).toBe(true);
+    expect(screen.getByText('خدمة-2')).toBeInTheDocument();
+  });
+
+  it('does not re-render across 5 parent re-renders with stable props', () => {
+    const business = {
+      ...baseBiz,
+      business_services: [{ name_ar: 'خدمة-1', is_active: true }],
+    };
+    const { rerender, renders } = mountWithProfiler(business);
+
+    for (let i = 0; i < 5; i++) {
+      const onRender: ProfilerOnRenderCallback = (_id, phase, actualDuration) => {
+        renders.push({ phase, actualDuration });
+      };
+      rerender(
+        <MemoryRouter>
+          <Profiler id="card" onRender={onRender}>
+            <BusinessCard business={business} viewMode="grid" />
+          </Profiler>
+        </MemoryRouter>,
+      );
+    }
+    // Across 5 stable re-renders, every update commit must be a memo
+    // bail-out (much cheaper than the initial mount).
+    const mountDuration = renders.find((r) => r.phase === 'mount')!.actualDuration;
+    const updates = renders.filter((r) => r.phase === 'update');
+    expect(updates.length).toBeGreaterThan(0);
+    expect(updates.every((r) => r.actualDuration < mountDuration * 0.25)).toBe(true);
   });
 });
