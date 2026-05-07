@@ -4,8 +4,10 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { Badge } from '@/components/ui/badge';
 import {
   Star, MapPin, BadgeCheck, Phone, Crown, Globe, ChevronRight, ChevronLeft,
-  Briefcase, CreditCard,
+  Briefcase, CreditCard, Heart,
 } from 'lucide-react';
+import { useBusinessFavorites } from '@/hooks/useBusinessFavorites';
+import { toast } from 'sonner';
 
 interface BusinessCardProps {
   business: any;
@@ -45,6 +47,19 @@ export const BusinessCard = memo(({ business: b, viewMode }: BusinessCardProps) 
   const { language, isRTL } = useLanguage();
   const [pressed, setPressed] = useState(false);
   const Arrow = isRTL ? ChevronLeft : ChevronRight;
+  const { isFavorite, toggleFavorite } = useBusinessFavorites();
+  const fav = isFavorite(b.id);
+
+  const handleFav = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const nowFav = toggleFavorite(b.id);
+    toast.success(
+      nowFav
+        ? (isRTL ? 'تمت إضافته إلى المفضلة' : 'Added to favorites')
+        : (isRTL ? 'تمت إزالته من المفضلة' : 'Removed from favorites'),
+    );
+  };
 
   const name = language === 'ar' ? b.name_ar : (b.name_en || b.name_ar);
   const desc = language === 'ar' ? b.description_ar : (b.description_en || b.description_ar);
@@ -67,8 +82,17 @@ export const BusinessCard = memo(({ business: b, viewMode }: BusinessCardProps) 
       <Link
         to={`/${b.username}`}
         {...touchHandlers}
-        className={`group flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-2xl bg-card dark:bg-card/80 border border-border/30 dark:border-border/15 hover:border-accent/30 transition-all duration-300 active:scale-[0.98] ${pressed ? 'scale-[0.98] shadow-lg' : 'hover:shadow-md dark:hover:shadow-accent/5'}`}
+        className={`group relative flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-2xl bg-card dark:bg-card/80 border border-border/30 dark:border-border/15 hover:border-accent/30 transition-all duration-300 active:scale-[0.98] ${pressed ? 'scale-[0.98] shadow-lg' : 'hover:shadow-md dark:hover:shadow-accent/5'}`}
       >
+        <button
+          type="button"
+          onClick={handleFav}
+          aria-pressed={fav}
+          aria-label={isRTL ? (fav ? 'إزالة من المفضلة' : 'إضافة للمفضلة') : (fav ? 'Remove from favorites' : 'Add to favorites')}
+          className={`absolute top-2 end-2 z-10 w-8 h-8 rounded-full flex items-center justify-center transition-all backdrop-blur-sm border ${fav ? 'bg-destructive/15 border-destructive/40 text-destructive' : 'bg-card/70 border-border/40 text-muted-foreground hover:text-destructive hover:border-destructive/40'}`}
+        >
+          <Heart className={`w-4 h-4 ${fav ? 'fill-destructive' : ''}`} />
+        </button>
         {/* Logo */}
         <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden border border-border/20 dark:border-border/10 group-hover:border-accent/20 transition-all ${b.logo_url ? '' : `bg-gradient-to-br ${getPlaceholderGradient(name)}`}`}>
           {b.logo_url ? (
@@ -114,6 +138,17 @@ export const BusinessCard = memo(({ business: b, viewMode }: BusinessCardProps) 
       {...touchHandlers}
       className={`group relative rounded-2xl bg-card dark:bg-card/80 border border-border/30 dark:border-border/15 hover:border-accent/25 transition-all duration-300 flex flex-col overflow-hidden active:scale-[0.97] hover-lift ${pressed ? 'scale-[0.97] shadow-xl' : 'dark:hover:shadow-accent/5'}`}
     >
+      {/* Favorite button */}
+      <button
+        type="button"
+        onClick={handleFav}
+        aria-pressed={fav}
+        aria-label={isRTL ? (fav ? 'إزالة من المفضلة' : 'إضافة للمفضلة') : (fav ? 'Remove from favorites' : 'Add to favorites')}
+        className={`absolute top-3 start-3 z-20 w-9 h-9 rounded-full flex items-center justify-center transition-all backdrop-blur-md border shadow-sm ${fav ? 'bg-destructive/20 border-destructive/40 text-destructive' : 'bg-card/80 border-border/40 text-foreground/60 hover:text-destructive hover:border-destructive/40'}`}
+      >
+        <Heart className={`w-4 h-4 ${fav ? 'fill-destructive' : ''}`} />
+      </button>
+
       {/* Cover area */}
       <div className="relative h-24 sm:h-28 bg-gradient-to-br from-accent/8 via-muted/40 to-accent/5 dark:from-accent/5 dark:via-muted/20 dark:to-accent/8 overflow-hidden">
         {b.cover_url ? (
