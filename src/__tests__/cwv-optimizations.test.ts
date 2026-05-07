@@ -7,9 +7,11 @@ const root = process.cwd();
 describe('Core Web Vitals optimizations for public routes', () => {
   it('preloads the hero LCP image only on the home route', () => {
     const html = readFileSync(join(root, 'index.html'), 'utf8');
-    expect(html).toMatch(/rel\s*=\s*['"]preload['"]/);
-    expect(html).toContain('/hero-bg.webp');
-    expect(html).toMatch(/location\.pathname\s*===\s*['"]\/['"]/);
+    expect(html).toMatch(/preload-hero\.js/);
+    const preload = readFileSync(join(root, 'public/preload-hero.js'), 'utf8');
+    expect(preload).toMatch(/rel\s*=\s*['"]preload['"]/);
+    expect(preload).toContain('/hero-bg.webp');
+    expect(preload).toMatch(/location\.pathname\s*===\s*['"]\/['"]/);
   });
 
   it('serves the hero image from /public so the preload URL is stable', () => {

@@ -97,7 +97,7 @@ const SortableProfileRow = React.memo(({
 
   return (
     <div ref={setNodeRef} style={style} className="group flex items-center gap-3 py-3 px-3 border-b border-border/40 hover:bg-accent/5 transition-colors">
-      <button {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-accent/10 text-muted-foreground/40 hover:text-muted-foreground transition-colors touch-none">
+      <button {...attributes} {...listeners} aria-label="Drag to reorder" className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-accent/10 text-muted-foreground/40 hover:text-muted-foreground transition-colors touch-none">
         <GripVertical className="w-4 h-4" />
       </button>
 

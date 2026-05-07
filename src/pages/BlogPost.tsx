@@ -129,6 +129,8 @@ const FloatingActions: React.FC<{
   onShare: () => void; onBookmark: () => void; isBookmarked: boolean; bookmarkPending: boolean; showUser: boolean;
 }> = ({ onShare, onBookmark, isBookmarked, bookmarkPending, showUser }) => {
   const [showTop, setShowTop] = useState(false);
+  const { isRTL: _rtl } = useLanguage();
+  const isAr = _rtl;
   useEffect(() => {
     const handler = () => setShowTop(window.scrollY > 600);
     window.addEventListener('scroll', handler, { passive: true });
@@ -139,16 +141,20 @@ const FloatingActions: React.FC<{
     <div className="fixed bottom-4 end-4 z-40 flex flex-col gap-2 lg:hidden">
       {showTop && (
         <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          aria-label={isAr ? 'الانتقال للأعلى' : 'Scroll to top'}
           className="w-10 h-10 rounded-full bg-card border border-border shadow-lg flex items-center justify-center text-muted-foreground hover:text-accent active:scale-95 transition-all animate-fade-in">
           <ChevronUp className="w-5 h-5" />
         </button>
       )}
       <button onClick={onShare}
+        aria-label={isAr ? 'مشاركة' : 'Share'}
         className="w-10 h-10 rounded-full bg-card border border-border shadow-lg flex items-center justify-center text-muted-foreground hover:text-accent active:scale-95 transition-all">
         <Share2 className="w-4 h-4" />
       </button>
       {showUser && (
         <button onClick={onBookmark} disabled={bookmarkPending}
+          aria-label={isAr ? (isBookmarked ? 'إزالة من المحفوظات' : 'إضافة للمحفوظات') : (isBookmarked ? 'Remove bookmark' : 'Bookmark')}
+          aria-pressed={isBookmarked}
           className={`w-10 h-10 rounded-full bg-card border border-border shadow-lg flex items-center justify-center active:scale-95 transition-all ${isBookmarked ? 'text-accent' : 'text-muted-foreground hover:text-accent'}`}>
           {isBookmarked ? <BookmarkCheck className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
         </button>

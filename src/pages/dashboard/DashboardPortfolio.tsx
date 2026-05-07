@@ -97,7 +97,7 @@ const SortableCard = React.memo(({
           <button onClick={() => onSelect(item.id)} className={`w-[18px] h-[18px] rounded border-[1.5px] transition-all flex items-center justify-center shrink-0 ${isSelected ? 'bg-primary border-primary' : 'border-muted-foreground/25 hover:border-primary/60'}`}>
             {isSelected && <CheckCircle2 className="w-3 h-3 text-primary-foreground" />}
           </button>
-          <button {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing text-muted-foreground/30 hover:text-muted-foreground shrink-0 touch-none opacity-0 group-hover:opacity-100 transition-opacity">
+          <button {...attributes} {...listeners} aria-label="Drag to reorder" className="cursor-grab active:cursor-grabbing text-muted-foreground/30 hover:text-muted-foreground shrink-0 touch-none opacity-0 group-hover:opacity-100 transition-opacity">
             <GripVertical className="w-4 h-4" />
           </button>
           <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted shrink-0 cursor-pointer border border-border/30" onClick={() => onPreview(item.media_url)}>
@@ -155,7 +155,7 @@ const SortableCard = React.memo(({
             <button onClick={(e) => { e.stopPropagation(); onSelect(item.id); }} className={`w-5 h-5 rounded border-[1.5px] flex items-center justify-center bg-background/80 backdrop-blur-sm shadow-sm ${isSelected ? 'bg-primary border-primary' : 'border-muted-foreground/30'}`}>
               {isSelected && <CheckCircle2 className="w-3 h-3 text-primary-foreground" />}
             </button>
-            <button {...attributes} {...listeners} className="bg-background/80 backdrop-blur-sm rounded-md p-0.5 cursor-grab active:cursor-grabbing shadow-sm touch-none">
+            <button {...attributes} {...listeners} aria-label="Drag to reorder" className="bg-background/80 backdrop-blur-sm rounded-md p-0.5 cursor-grab active:cursor-grabbing shadow-sm touch-none">
               <GripVertical className="w-3.5 h-3.5 text-foreground" />
             </button>
           </div>

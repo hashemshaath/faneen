@@ -77,7 +77,7 @@ const SortableTagRow = React.memo(({
         !tag.is_active ? 'opacity-50' : ''
       }`}
     >
-      <button {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-accent/10 text-muted-foreground/40 hover:text-muted-foreground transition-colors touch-none">
+      <button {...attributes} {...listeners} aria-label="Drag to reorder" className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-accent/10 text-muted-foreground/40 hover:text-muted-foreground transition-colors touch-none">
         <GripVertical className="w-4 h-4" />
       </button>
 
