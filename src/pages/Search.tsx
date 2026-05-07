@@ -7,6 +7,7 @@ import { SearchHeader } from '@/components/search/SearchHeader';
 import { SearchFilters } from '@/components/search/SearchFilters';
 import { SearchResults, type ViewMode } from '@/components/search/SearchResults';
 import { ActiveFilterChips } from '@/components/search/ActiveFilterChips';
+import { RecentlyViewedStrip } from '@/components/search/RecentlyViewedStrip';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
   useDebouncedValue,
@@ -314,6 +315,8 @@ const SearchPage = () => {
             onClearAll={clearFilters}
           />
         )}
+
+        <RecentlyViewedStrip businesses={businesses} />
 
         <div className="flex flex-col lg:flex-row gap-5 sm:gap-6">
           <SearchFilters
