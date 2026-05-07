@@ -25,6 +25,7 @@ import {
   CalendarClock, Gauge,
   Mail,
   Search as SearchIcon,
+  ShieldCheck,
 } from 'lucide-react';
 
 interface MenuItem {
