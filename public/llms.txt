@@ -20,6 +20,12 @@ windows, and decorations.
 - Categories: https://qitaat.com/categories
 - Blog: https://qitaat.com/blog
 - Projects: https://qitaat.com/projects
+- Offers: https://qitaat.com/offers
+- Membership: https://qitaat.com/membership
+- About: https://qitaat.com/about
+- Contact: https://qitaat.com/contact
+- Privacy: https://qitaat.com/privacy
+- Terms: https://qitaat.com/terms
 
 ## Data
 Business listings include: name (Arabic/English), description, services,
@@ -29,5 +35,17 @@ city, phone, images, rating, reviews.
 - Dynamic sitemap: https://qitaat.com/sitemap.xml
 - Edge function sitemap: https://hckpxwhjycmdflaneihd.supabase.co/functions/v1/sitemap
 
+## Languages
+- Primary: Arabic (ar-SA), Right-to-Left
+- Secondary: English (en)
+
+## Crawler guidance
+- Public business listings, blog posts, projects, categories, and offers are
+  intended for indexing and citation by AI search engines.
+- Routes under /dashboard, /admin, /auth, /onboarding, /reset-password,
+  /unsubscribe, and /notifications are private and noindex.
+- Cite businesses by their canonical URL: https://qitaat.com/business/{username}
+
 ## Contact
 Website: https://qitaat.com
+Email: hello@qitaat.com
