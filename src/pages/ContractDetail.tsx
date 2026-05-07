@@ -16,7 +16,7 @@ import { Progress } from '@/components/ui/progress';
 import { toast } from '@/hooks/use-toast';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
-import { exportContractPDF, exportMeasurementsPDF, exportMeasurementsExcel, printMeasurements, parseMeasurementsFromCSV, type ImportedMeasurement } from '@/lib/contract-pdf-export';
+import type { ImportedMeasurement } from '@/lib/contract-pdf-export';
 import {
   FileText, Shield, Wrench, CheckCircle2, Clock,
   Calendar, DollarSign, AlertTriangle, XCircle, ListChecks, Plus, Send,
@@ -638,8 +638,9 @@ const ContractDetail = () => {
     };
   }, [installmentPayments]);
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     if (!contract) return;
+    const { exportContractPDF } = await import('@/lib/contract-pdf-export');
     exportContractPDF({
       contractNumber: contract.contract_number,
       title,
@@ -674,8 +675,9 @@ const ContractDetail = () => {
     });
   };
 
-  const handleExportMeasurementsPDF = () => {
+  const handleExportMeasurementsPDF = async () => {
     if (!contract || !measurements || measurements.length === 0) return;
+    const { exportMeasurementsPDF } = await import('@/lib/contract-pdf-export');
     exportMeasurementsPDF({
       contractNumber: contract.contract_number, businessName: bizName, currency: contract.currency_code,
       vatRate, vatInclusive,
@@ -690,8 +692,9 @@ const ContractDetail = () => {
     });
   };
 
-  const handleExportMeasurementsExcel = () => {
+  const handleExportMeasurementsExcel = async () => {
     if (!contract || !measurements || measurements.length === 0) return;
+    const { exportMeasurementsExcel } = await import('@/lib/contract-pdf-export');
     exportMeasurementsExcel({
       contractNumber: contract.contract_number, currency: contract.currency_code,
       vatRate, vatInclusive,
@@ -706,8 +709,9 @@ const ContractDetail = () => {
     });
   };
 
-  const handlePrintMeasurements = () => {
+  const handlePrintMeasurements = async () => {
     if (!contract || !measurements || measurements.length === 0) return;
+    const { printMeasurements } = await import('@/lib/contract-pdf-export');
     printMeasurements({
       contractNumber: contract.contract_number, businessName: bizName, currency: contract.currency_code,
       vatRate, vatInclusive,
@@ -727,8 +731,9 @@ const ContractDetail = () => {
     if (!file) return;
     e.target.value = '';
     const reader = new FileReader();
-    reader.onload = (ev) => {
+    reader.onload = async (ev) => {
       const text = ev.target?.result as string;
+      const { parseMeasurementsFromCSV } = await import('@/lib/contract-pdf-export');
       const parsed = parseMeasurementsFromCSV(text);
       if (parsed.length === 0) {
         toast({ title: isRTL ? 'لم يتم العثور على بيانات صالحة' : 'No valid data found', variant: 'destructive' });
