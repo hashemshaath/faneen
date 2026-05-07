@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
@@ -133,31 +134,15 @@ export const SearchFilters = ({
 
             {/* Price Range */}
             <FilterCard icon={Wallet} label={t('search.price_range')} hint={isRTL ? 'ر.س' : 'SAR'}>
-              <div className="flex items-center gap-2">
-                <div className="relative flex-1">
-                  <Input
-                    type="number"
-                    inputMode="numeric"
-                    min={0}
-                    placeholder={isRTL ? 'من' : 'Min'}
-                    value={filters.priceMin || ''}
-                    onChange={e => onFilterChange('priceMin', Number(e.target.value) || 0)}
-                    className="rounded-xl text-sm h-10 bg-background border-border/60 hover:border-accent/40 focus-visible:border-accent tech-content text-center"
-                  />
-                </div>
-                <span className="text-muted-foreground/50 text-xs font-bold select-none">—</span>
-                <div className="relative flex-1">
-                  <Input
-                    type="number"
-                    inputMode="numeric"
-                    min={0}
-                    placeholder={isRTL ? 'إلى' : 'Max'}
-                    value={filters.priceMax || ''}
-                    onChange={e => onFilterChange('priceMax', Number(e.target.value) || 0)}
-                    className="rounded-xl text-sm h-10 bg-background border-border/60 hover:border-accent/40 focus-visible:border-accent tech-content text-center"
-                  />
-                </div>
-              </div>
+              <PriceRangeInputs
+                priceMin={filters.priceMin}
+                priceMax={filters.priceMax}
+                onChange={(min, max) => {
+                  if (min !== filters.priceMin) onFilterChange('priceMin', min);
+                  if (max !== filters.priceMax) onFilterChange('priceMax', max);
+                }}
+                isRTL={isRTL}
+              />
             </FilterCard>
 
             {/* Rating */}
