@@ -932,9 +932,11 @@ export type Database = {
           region: string | null
           reviewed_at: string | null
           reviewed_by: string | null
+          sectors: string[]
           short_description_ar: string | null
           short_description_en: string | null
           street_name: string | null
+          sub_services: string[]
           submitted_at: string | null
           unified_number: string | null
           updated_at: string
@@ -980,9 +982,11 @@ export type Database = {
           region?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          sectors?: string[]
           short_description_ar?: string | null
           short_description_en?: string | null
           street_name?: string | null
+          sub_services?: string[]
           submitted_at?: string | null
           unified_number?: string | null
           updated_at?: string
@@ -1028,9 +1032,11 @@ export type Database = {
           region?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          sectors?: string[]
           short_description_ar?: string | null
           short_description_en?: string | null
           street_name?: string | null
+          sub_services?: string[]
           submitted_at?: string | null
           unified_number?: string | null
           updated_at?: string
@@ -4211,6 +4217,22 @@ export type Database = {
       }
     }
     Functions: {
+      admin_update_business_approval: {
+        Args: {
+          _business_id: string
+          _new_status: Database["public"]["Enums"]["business_approval_status"]
+          _notes?: string
+        }
+        Returns: Database["public"]["Enums"]["business_approval_status"]
+      }
+      admin_update_username_status: {
+        Args: {
+          _business_id: string
+          _new_status: Database["public"]["Enums"]["username_status"]
+          _notes?: string
+        }
+        Returns: Database["public"]["Enums"]["username_status"]
+      }
       admin_upgrade_subscription: {
         Args: {
           _billing_cycle?: string

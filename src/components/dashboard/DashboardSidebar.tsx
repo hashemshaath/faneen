@@ -25,6 +25,7 @@ import {
   CalendarClock, Gauge,
   Mail,
   Search as SearchIcon,
+  ShieldCheck,
 } from 'lucide-react';
 
 interface MenuItem {
@@ -157,6 +158,7 @@ const adminBaseGroups: MenuGroup[] = [
       { label: { ar: 'المستخدمين', en: 'Users' }, url: '/admin/users', icon: Users, superAdminOnly: true },
       { label: { ar: 'إدارة الوصول', en: 'Access Management' }, url: '/admin/access-management', icon: ShieldAlert, superAdminOnly: true },
       { label: { ar: 'المنشآت', en: 'Businesses' }, url: '/admin/businesses', icon: Building2 },
+      { label: { ar: 'مراجعة المزودين', en: 'Provider Review' }, url: '/admin/provider-review', icon: ShieldCheck },
       { label: { ar: 'كل المحادثات', en: 'All Conversations' }, url: '/dashboard/messages', icon: MessageSquare, superAdminOnly: true },
     ],
   },

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRoleRedirect } from '@/hooks/useRoleRedirect';
@@ -9,11 +9,35 @@ import { PhoneInput } from '@/components/auth/PhoneInput';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { User, Building2, Phone, Globe, Check, Loader2 } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
+import { SectorPicker } from '@/components/onboarding/SectorPicker';
+import type { SectorId } from '@/data/onboarding-sectors';
+import {
+  readDraft,
+  saveDraft,
+  clearDraft,
+  pullRemoteDraft,
+  syncDraftToServer,
+} from '@/lib/onboarding-draft';
 
-type OnboardingStep = 'account-type' | 'details' | 'phone-verify' | 'business-details';
+type OnboardingStep =
+  | 'account-type'
+  | 'details'
+  | 'phone-verify'
+  | 'business-details'
+  | 'business-sectors';
+
+const STEP_ORDER: OnboardingStep[] = [
+  'account-type',
+  'details',
+  'phone-verify',
+  'business-details',
+  'business-sectors',
+];
 
 const Onboarding = () => {
   const { t, language, isRTL } = useLanguage();
@@ -29,7 +53,24 @@ const Onboarding = () => {
   const [countryCode, setCountryCode] = useState('+966');
   const [businessName, setBusinessName] = useState('');
   const [username, setUsername] = useState('');
+  const [businessDescription, setBusinessDescription] = useState('');
+  const [sectors, setSectors] = useState<SectorId[]>([]);
+  const [subServices, setSubServices] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [draftLoaded, setDraftLoaded] = useState(false);
+
+  // Persist draft on every relevant change
+  useEffect(() => {
+    if (!draftLoaded) return;
+    saveDraft({
+      step, accountType, fullName, phone, countryCode,
+      businessName, username,
+      description: businessDescription,
+      sectors, subServices,
+    });
+    if (user?.id) void syncDraftToServer(user.id);
+  }, [step, accountType, fullName, phone, countryCode, businessName, username,
+      businessDescription, sectors, subServices, draftLoaded, user?.id]);
 
   const otp = useOtpFlow({
     isRTL,
@@ -50,13 +91,52 @@ const Onboarding = () => {
   useEffect(() => {
     if (!user) { navigate('/auth'); return; }
     if (profile?.is_onboarded) { navigate(getTargetRoute()); return; }
-    if (profile?.full_name) setFullName(profile.full_name);
-    else if (user?.user_metadata?.full_name) setFullName(user.user_metadata.full_name);
-    if (profile?.account_type && profile.account_type !== 'individual') {
-      setAccountType(profile.account_type as 'individual' | 'business');
-    }
+    let cancelled = false;
+    (async () => {
+      const draft = await pullRemoteDraft(user.id);
+      const local = readDraft();
+      const d = { ...local, ...draft };
+      if (cancelled) return;
+      // Profile takes precedence for identity fields
+      if (profile?.full_name) setFullName(profile.full_name);
+      else if (d.fullName) setFullName(d.fullName);
+      else if (user?.user_metadata?.full_name) setFullName(user.user_metadata.full_name);
+      if (profile?.account_type && profile.account_type !== 'individual') {
+        setAccountType(profile.account_type as 'individual' | 'business');
+      } else if (d.accountType) {
+        setAccountType(d.accountType);
+      }
+      if (d.phone) setPhone(d.phone);
+      if (d.countryCode) setCountryCode(d.countryCode);
+      if (d.businessName) setBusinessName(d.businessName);
+      if (d.username) setUsername(d.username);
+      if (d.description) setBusinessDescription(d.description);
+      if (d.sectors?.length) setSectors(d.sectors as SectorId[]);
+      if (d.subServices?.length) setSubServices(d.subServices);
+      if (d.step && STEP_ORDER.includes(d.step as OnboardingStep)) {
+        setStep(d.step as OnboardingStep);
+      }
+      setDraftLoaded(true);
+    })();
+    return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, profile]);
+
+  // Completion percentage for the header progress bar
+  const completionPct = useMemo(() => {
+    let total = 3; // account type, full name, account creation
+    let done = 1; // account type implicit
+    if (fullName.trim()) done++;
+    if (accountType === 'business') {
+      total += 4; // name, username, description, sectors
+      if (businessName.trim()) done++;
+      if (username.length >= 3) done++;
+      if (businessDescription.trim()) done++;
+      if (sectors.length > 0) done++;
+    }
+    if (phone && phone.length >= 7) { total += 1; done += 1; }
+    return Math.min(100, Math.round((done / total) * 100));
+  }, [fullName, accountType, businessName, username, businessDescription, sectors, phone]);
 
   const completeOnboarding = async () => {
     setLoading(true);
@@ -69,10 +149,15 @@ const Onboarding = () => {
       });
 
       if (accountType === 'business' && businessName && username) {
-        await authService.createBusiness(user!.id, businessName, username);
+        await authService.createBusiness(user!.id, businessName, username, {
+          sectors,
+          sub_services: subServices,
+          description_ar: businessDescription || undefined,
+        });
       }
 
       await refreshProfile();
+      clearDraft();
       toast.success(isRTL ? 'تم إكمال التسجيل بنجاح!' : 'Registration completed successfully!');
       
       // Role-based redirect after onboarding
@@ -227,40 +312,114 @@ const Onboarding = () => {
     );
   }
 
+  if (step === 'business-details') {
+    return (
+      <AuthLayout>
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <h2 className="font-heading font-bold text-2xl text-foreground text-center">
+              {isRTL ? 'بيانات النشاط التجاري' : 'Business Details'}
+            </h2>
+            <Progress value={completionPct} className="h-1.5" />
+            <p className="text-center text-xs text-muted-foreground tech-content">
+              {completionPct}% — {isRTL ? 'يمكنك الحفظ والمتابعة لاحقاً' : 'You can save and continue later'}
+            </p>
+          </div>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>{isRTL ? 'اسم النشاط التجاري' : 'Business Name'} <span className="text-destructive">*</span></Label>
+              <div className="relative">
+                <Building2 className="absolute top-3 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
+                <Input value={businessName} onChange={(e) => setBusinessName(e.target.value)} dir="auto" style={{ paddingInlineStart: '40px' }} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>{isRTL ? 'اسم المستخدم' : 'Username'} <span className="text-destructive">*</span></Label>
+              <div className="relative">
+                <Globe className="absolute top-3 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
+                <Input value={username} onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ''))} placeholder="my-business" dir="ltr" style={{ paddingInlineStart: '40px' }} />
+              </div>
+              {username && (
+                <p className="text-xs text-muted-foreground tech-content">
+                  qitaat.com/{username} · {isRTL ? 'بانتظار موافقة الإدارة قبل النشر' : 'Pending admin approval before publishing'}
+                </p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label>{isRTL ? 'وصف مختصر للنشاط' : 'Short business description'}</Label>
+              <Textarea
+                value={businessDescription}
+                onChange={(e) => setBusinessDescription(e.target.value.slice(0, 500))}
+                placeholder={isRTL ? 'مثال: مصنع ألمنيوم متخصص في الواجهات والنوافذ' : 'e.g. Aluminum factory specializing in facades and windows'}
+                rows={3}
+                dir="auto"
+              />
+              <p className="text-[11px] text-muted-foreground tech-content text-end">{businessDescription.length}/500</p>
+            </div>
+            <Button onClick={() => {
+              if (!businessName.trim()) { toast.error(isRTL ? 'يرجى إدخال اسم النشاط' : 'Please enter business name'); return; }
+              if (!username || username.length < 3) { toast.error(isRTL ? 'اسم المستخدم يجب أن يكون 3 أحرف على الأقل' : 'Username must be at least 3 characters'); return; }
+              setStep('business-sectors');
+            }} disabled={!businessName.trim() || !username || username.length < 3} className="w-full" variant="hero">
+              {isRTL ? 'متابعة' : 'Continue'}
+            </Button>
+          </div>
+          <button onClick={() => setStep(phone ? 'phone-verify' : 'details')} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+            {isRTL ? '→' : '←'} {isRTL ? 'رجوع' : 'Back'}
+          </button>
+        </div>
+      </AuthLayout>
+    );
+  }
+
+  // Final business step: sector picker + sub-services
   return (
     <AuthLayout>
       <div className="space-y-6">
-        <div className="text-center space-y-2">
-          <h2 className="font-heading font-bold text-2xl text-foreground">{isRTL ? 'بيانات النشاط التجاري' : 'Business Details'}</h2>
+        <div className="space-y-2">
+          <h2 className="font-heading font-bold text-2xl text-foreground text-center">
+            {isRTL ? 'القطاعات والخدمات' : 'Sectors & Services'}
+          </h2>
+          <Progress value={completionPct} className="h-1.5" />
+          <p className="text-center text-xs text-muted-foreground">
+            {isRTL
+              ? 'اختر القطاع/القطاعات والخدمات الفرعية التي يقدمها نشاطك'
+              : 'Pick the sectors and sub-services your business operates in'}
+          </p>
         </div>
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label>{isRTL ? 'اسم النشاط التجاري' : 'Business Name'} <span className="text-destructive">*</span></Label>
-            <div className="relative">
-              <Building2 className="absolute top-3 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
-              <Input value={businessName} onChange={(e) => setBusinessName(e.target.value)} style={{ paddingInlineStart: '40px' }} />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label>{isRTL ? 'اسم المستخدم' : 'Username'} <span className="text-destructive">*</span></Label>
-            <div className="relative">
-              <Globe className="absolute top-3 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
-              <Input value={username} onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ''))} placeholder="my-business" dir="ltr" style={{ paddingInlineStart: '40px' }} />
-            </div>
-            {username && <p className="text-xs text-muted-foreground">qitaat.com/{username}</p>}
-          </div>
-          <Button onClick={async () => {
-            if (!businessName.trim()) { toast.error(isRTL ? 'يرجى إدخال اسم النشاط' : 'Please enter business name'); return; }
-            if (!username || username.length < 3) { toast.error(isRTL ? 'اسم المستخدم يجب أن يكون 3 أحرف على الأقل' : 'Username must be at least 3 characters'); return; }
-            await completeOnboarding();
-          }} disabled={loading || !businessName.trim() || !username || username.length < 3} className="w-full" variant="hero">
+
+        <SectorPicker
+          selectedSectors={sectors}
+          selectedSubServices={subServices}
+          onSectorsChange={setSectors}
+          onSubServicesChange={setSubServices}
+          maxSectors={5}
+        />
+
+        <div className="rounded-xl border border-border/60 bg-muted/30 p-3 text-xs text-muted-foreground">
+          {isRTL
+            ? 'لن يظهر ملفك للجمهور إلا بعد مراجعة الإدارة والموافقة. يمكنك الحفظ والعودة لاحقاً في أي وقت.'
+            : 'Your profile will not be public until an admin reviews and approves it. You can save and continue later anytime.'}
+        </div>
+
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-between">
+          <button
+            type="button"
+            onClick={() => setStep('business-details')}
+            className="text-sm text-muted-foreground hover:text-foreground"
+          >
+            {isRTL ? '→ رجوع' : '← Back'}
+          </button>
+          <Button
+            onClick={completeOnboarding}
+            disabled={loading || sectors.length === 0}
+            variant="hero"
+            className="sm:w-64"
+          >
             {loading ? <Loader2 className="w-4 h-4 animate-spin me-2" /> : null}
-            {isRTL ? 'إنشاء الحساب' : 'Create Account'}
+            {isRTL ? 'إنشاء الحساب وإرسال للمراجعة' : 'Create account & save as draft'}
           </Button>
         </div>
-        <button onClick={() => setStep(phone ? 'phone-verify' : 'details')} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-          {isRTL ? '→' : '←'} {isRTL ? 'رجوع' : 'Back'}
-        </button>
       </div>
     </AuthLayout>
   );
