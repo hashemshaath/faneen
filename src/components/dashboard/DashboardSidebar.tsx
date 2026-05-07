@@ -23,6 +23,7 @@ import {
   Bookmark, ShieldAlert, Crown, FolderTree, Tags, UserCog, Database,
   BarChart3, Cog, Eye, TrendingUp, AlertTriangle, Server, Brain,
   CalendarClock, Gauge,
+  Mail,
   Search as SearchIcon,
 } from 'lucide-react';
 
