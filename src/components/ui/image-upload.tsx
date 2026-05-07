@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/i18n/LanguageContext';
 import { Upload, X, Loader2, ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -31,22 +32,34 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   maxSizeMB = 5,
   className,
   aspectRatio = 'video',
-  placeholder = 'اضغط لرفع صورة',
+  placeholder,
   compact = false,
 }) => {
   const { user } = useAuth();
+  const { isRTL } = useLanguage();
+  const tx = {
+    placeholder: placeholder ?? (isRTL ? 'اضغط لرفع صورة' : 'Click to upload an image'),
+    loginFirst: isRTL ? 'يجب تسجيل الدخول أولاً' : 'You must be logged in first',
+    sizeLimit: (mb: number) => isRTL ? `حجم الملف يجب أن لا يتجاوز ${mb}MB` : `File must not exceed ${mb}MB`,
+    uploadOk: isRTL ? 'تم رفع الصورة بنجاح' : 'Image uploaded successfully',
+    uploadFail: isRTL ? 'فشل رفع الصورة' : 'Failed to upload image',
+    uploading: isRTL ? 'جاري الرفع...' : 'Uploading…',
+    change: isRTL ? 'تغيير' : 'Change',
+    remove: isRTL ? 'حذف' : 'Remove',
+    maxSize: (mb: number) => isRTL ? `أقصى حجم: ${mb}MB` : `Max size: ${mb}MB`,
+  };
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const uploadFile = async (file: File) => {
     if (!user) {
-      toast.error('يجب تسجيل الدخول أولاً');
+      toast.error(tx.loginFirst);
       return;
     }
 
     if (file.size > maxSizeMB * 1024 * 1024) {
-      toast.error(`حجم الملف يجب أن لا يتجاوز ${maxSizeMB}MB`);
+      toast.error(tx.sizeLimit(maxSizeMB));
       return;
     }
 
@@ -70,10 +83,10 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
         .getPublicUrl(path);
 
       onChange(publicUrl);
-      toast.success('تم رفع الصورة بنجاح');
+      toast.success(tx.uploadOk);
     } catch (err: any) {
       console.error('Upload error:', err);
-      toast.error(err.message || 'فشل رفع الصورة');
+      toast.error(err.message || tx.uploadFail);
     } finally {
       setUploading(false);
     }
@@ -121,11 +134,11 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
             <p className="text-[10px] text-muted-foreground truncate">{value.split('/').pop()}</p>
             <div className="flex gap-1.5 mt-1">
               <Button type="button" variant="outline" size="sm" className="h-6 text-[10px] px-2 rounded-lg" onClick={() => inputRef.current?.click()} disabled={uploading}>
-                <Upload className="w-2.5 h-2.5 me-1" />تغيير
+                <Upload className="w-2.5 h-2.5 me-1" />{tx.change}
               </Button>
               {onRemove && (
                 <Button type="button" variant="ghost" size="sm" className="h-6 text-[10px] px-2 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10" onClick={handleRemove}>
-                  <X className="w-2.5 h-2.5 me-1" />حذف
+                  <X className="w-2.5 h-2.5 me-1" />{tx.remove}
                 </Button>
               )}
             </div>
@@ -139,11 +152,11 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
         <img src={value} alt={placeholder || 'Uploaded image'} className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
           <Button type="button" variant="secondary" size="sm" onClick={() => inputRef.current?.click()} disabled={uploading}>
-            <Upload className="w-4 h-4 me-1" />تغيير
+            <Upload className="w-4 h-4 me-1" />{tx.change}
           </Button>
           {onRemove && (
             <Button type="button" variant="destructive" size="sm" onClick={handleRemove}>
-              <X className="w-4 h-4 me-1" />حذف
+              <X className="w-4 h-4 me-1" />{tx.remove}
             </Button>
           )}
         </div>
@@ -173,8 +186,8 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
           </div>
         )}
         <div className="min-w-0">
-          <p className="text-xs text-muted-foreground">{uploading ? 'جاري الرفع...' : placeholder}</p>
-          <p className="text-[10px] text-muted-foreground/50">أقصى حجم: {maxSizeMB}MB</p>
+          <p className="text-xs text-muted-foreground">{uploading ? tx.uploading : tx.placeholder}</p>
+          <p className="text-[10px] text-muted-foreground/50">{tx.maxSize(maxSizeMB)}</p>
         </div>
         <input ref={inputRef} type="file" accept={accept} onChange={handleFileChange} className="hidden" />
       </div>
@@ -197,14 +210,14 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
       {uploading ? (
         <>
           <Loader2 className="w-8 h-8 text-primary animate-spin" />
-          <p className="text-sm text-muted-foreground">جاري الرفع...</p>
+          <p className="text-sm text-muted-foreground">{tx.uploading}</p>
         </>
       ) : (
         <>
           <ImageIcon className="w-8 h-8 text-muted-foreground/50" />
-          <p className="text-sm text-muted-foreground">{placeholder}</p>
+          <p className="text-sm text-muted-foreground">{tx.placeholder}</p>
           <p className="text-xs text-muted-foreground/60">
-            أقصى حجم: {maxSizeMB}MB
+            {tx.maxSize(maxSizeMB)}
           </p>
         </>
       )}
