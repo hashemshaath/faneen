@@ -3,11 +3,12 @@ import { Link } from 'react-router-dom';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Badge } from '@/components/ui/badge';
 import {
-  Star, MapPin, BadgeCheck, Phone, Crown, Globe, ChevronRight, ChevronLeft,
+  Star, MapPin, Phone, Crown, Globe, ChevronRight, ChevronLeft,
   Briefcase, CreditCard, Heart, TicketPercent, ShieldCheck,
 } from 'lucide-react';
 import { useBusinessFavorites } from '@/hooks/useBusinessFavorites';
 import { useRecentlyViewedBusinesses } from '@/hooks/useRecentlyViewedBusinesses';
+import { VerifiedBadge } from '@/components/common/VerifiedBadge';
 import { toast } from 'sonner';
 
 interface BusinessCardProps {
@@ -126,12 +127,7 @@ export const BusinessCard = memo(({ business: b, viewMode }: BusinessCardProps) 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 sm:gap-2 mb-1 flex-wrap">
             <h3 className="font-heading font-bold text-sm sm:text-base text-foreground group-hover:text-accent transition-colors truncate">{name}</h3>
-            {b.is_verified && (
-              <span className="inline-flex items-center gap-1 px-1.5 py-0 h-4 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[9px] font-body font-semibold border border-emerald-500/20">
-                <ShieldCheck className="w-2.5 h-2.5" />
-                {isRTL ? 'موثقة' : 'Verified'}
-              </span>
-            )}
+            {b.is_verified && <VerifiedBadge size="xs" />}
             {hasOffer && (
               <span className="inline-flex items-center gap-1 px-1.5 py-0 h-4 rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400 text-[9px] font-body font-semibold border border-rose-500/20">
                 <TicketPercent className="w-2.5 h-2.5" />
@@ -225,19 +221,14 @@ export const BusinessCard = memo(({ business: b, viewMode }: BusinessCardProps) 
       <div className="px-4 sm:px-5 pt-2.5 sm:pt-3 pb-4 sm:pb-5 flex flex-col flex-1">
         <div className="flex items-center gap-1.5 mb-1 flex-wrap">
           <h3 className="font-heading font-bold text-sm sm:text-[15px] text-foreground group-hover:text-accent transition-colors truncate">{name}</h3>
-          {b.is_verified && <BadgeCheck className="w-4 h-4 text-accent flex-shrink-0" />}
+          {b.is_verified && <VerifiedBadge size="sm" iconOnly />}
         </div>
         {catName && <span className="text-[10px] sm:text-xs text-accent/70 font-body">{catName}</span>}
 
         {/* saqf-style status badges */}
         {(b.is_verified || hasOffer) && (
           <div className="flex flex-wrap items-center gap-1.5 mt-2">
-            {b.is_verified && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-body font-semibold border border-emerald-500/20">
-                <ShieldCheck className="w-3 h-3" />
-                {isRTL ? 'شركة موثقة' : 'Verified'}
-              </span>
-            )}
+            {b.is_verified && <VerifiedBadge size="md" />}
             {hasOffer && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400 text-[10px] font-body font-semibold border border-rose-500/20">
                 <TicketPercent className="w-3 h-3" />
