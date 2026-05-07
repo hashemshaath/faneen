@@ -184,6 +184,7 @@ export const HeroSection = () => {
   const rafRef = useRef<number>();
   const imgRefs = useRef<(HTMLImageElement | null)[]>([]);
   const sectionRef = useRef<HTMLElement | null>(null);
+  const currentRef = useRef(0);
 
   const { data: categories = [] } = useQuery({
     queryKey: ['nav-categories'],
@@ -238,9 +239,9 @@ export const HeroSection = () => {
         const y = window.scrollY;
         if (Math.abs(y - parallaxY.current) > 2) {
           parallaxY.current = y;
-          imgRefs.current.forEach(img => {
-            if (img) img.style.transform = `translateY(${y * 0.35}px) scale(1.15)`;
-          });
+          // Only transform the visible slide — skips two no-op writes per frame
+          const img = imgRefs.current[currentRef.current];
+          if (img) img.style.transform = `translateY(${y * 0.35}px) scale(1.15)`;
         }
         rafRef.current = undefined;
       });
@@ -272,6 +273,7 @@ export const HeroSection = () => {
   }, []);
 
   const goTo = useCallback((idx: number) => { setCurrent(idx); resetTimer(); }, [resetTimer]);
+  useEffect(() => { currentRef.current = current; }, [current]);
   const prev = useCallback(() => goTo((current - 1 + slides.length) % slides.length), [current, goTo]);
   const next = useCallback(() => goTo((current + 1) % slides.length), [current, goTo]);
 
