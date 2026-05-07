@@ -73,7 +73,6 @@ const BusinessProfile = () => {
 
   const seoDesc = business
     ? (businessDesc.substring(0, 140) || `${businessName}${categoryName ? ` - ${categoryName}` : ''}${cityName ? ` في ${cityName}` : ''} — مزود خدمات معتمد على منصة قِطاعات`)
-    + (business.phone ? ` | ${business.phone}` : '')
     : undefined;
 
   usePageMeta({
@@ -97,8 +96,10 @@ const BusinessProfile = () => {
       url: `https://qitaat.com/${business.username}`,
       image: business.logo_url || business.cover_url,
       logo: business.logo_url,
-      telephone: business.phone,
-      email: business.email,
+      // Phone/email intentionally omitted from JSON-LD to prevent scraper harvesting.
+      // Visitors see the contact details inside the page (rendered client-side).
+      telephone: undefined,
+      email: undefined,
       address: {
         '@type': 'PostalAddress',
         streetAddress: business.address || undefined,
