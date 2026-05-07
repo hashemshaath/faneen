@@ -14,7 +14,6 @@ import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Star, MapPin, Plus, X, ArrowRight, ArrowLeft, Scale, Search, Download } from 'lucide-react';
 import { VerifiedBadge } from '@/components/common/VerifiedBadge';
-import { exportComparePDF } from '@/lib/compare-pdf-export';
 
 const Compare = () => {
   const { isRTL } = useLanguage();
