@@ -13,7 +13,7 @@ import { WhyQitaatSection } from '@/components/home/WhyQitaatSection';
 import {
   Mail, MapPin, Sparkles, Target, Eye, Heart, ShieldCheck, Handshake,
   Lightbulb, Gem, Building2, Star, FolderOpen, Users, ArrowLeft, ArrowRight,
-  Layers, FileSignature, Wallet, BadgeCheck,
+  Layers, FileSignature, Wallet, BadgeCheck, TrendingUp, CheckCircle2, Rocket,
 } from 'lucide-react';
 
 /* ───────── Hero ───────── */
@@ -46,22 +46,47 @@ const AboutHero = ({ isRTL }: { isRTL: boolean }) => (
 );
 
 /* ───────── Live stats strip ───────── */
-const StatItem = ({ icon: Icon, end, label, isVisible }: { icon: React.ElementType; end: number; label: string; isVisible: boolean }) => {
-  const display = useCountUp(end, isVisible, 1800);
+const StatItem = ({
+  icon: Icon, end, label, sub, isVisible, accent, index,
+}: {
+  icon: React.ElementType; end: number; label: string; sub: string;
+  isVisible: boolean; accent: string; index: number;
+}) => {
+  const display = useCountUp(end, isVisible, 2000);
   return (
-    <div className="text-center px-2">
-      <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 rounded-xl bg-accent/10 flex items-center justify-center">
-        <Icon className="w-5 h-5 text-accent" />
+    <div
+      className={`group relative overflow-hidden rounded-2xl border border-border/50 bg-card p-5 sm:p-6 hover:border-accent/40 hover:shadow-elev-3 transition-all duration-500 ${isVisible ? 'animate-card-slide-up' : 'opacity-0'}`}
+      style={{ animationDelay: `${index * 110}ms`, animationFillMode: 'both' }}
+    >
+      {/* hover-only color wash */}
+      <div className={`absolute inset-0 bg-gradient-to-br ${accent} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+      <div className="relative flex items-start justify-between gap-3">
+        <div>
+          <div className="font-heading font-black text-3xl sm:text-4xl text-gradient-gold tracking-tight tech-content leading-none">
+            {display}<span className="text-accent/80">+</span>
+          </div>
+          <div className="font-heading font-bold text-sm text-foreground mt-2">{label}</div>
+          <div className="text-[11px] text-muted-foreground font-body mt-0.5 leading-relaxed">{sub}</div>
+        </div>
+        <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${accent} flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-500`}>
+          <Icon className="w-5 h-5 text-white drop-shadow" strokeWidth={2.2} />
+        </div>
       </div>
-      <div className="font-heading font-black text-2xl sm:text-3xl text-gradient-gold tracking-tight tech-content">{display}+</div>
-      <div className="text-[11px] sm:text-xs text-muted-foreground font-body mt-0.5">{label}</div>
+      {/* live pulse dot */}
+      <div className="relative mt-4 flex items-center gap-1.5 text-[10px] text-muted-foreground/80 font-body">
+        <span className="relative flex w-1.5 h-1.5">
+          <span className="absolute inset-0 rounded-full bg-emerald-500 opacity-70 animate-ping" />
+          <span className="relative inline-flex w-1.5 h-1.5 rounded-full bg-emerald-500" />
+        </span>
+        <span className="tracking-wide uppercase">live</span>
+      </div>
     </div>
   );
 };
 
 const StatsStrip = ({ isRTL }: { isRTL: boolean }) => {
   const { ref, isVisible } = useScrollAnimation<HTMLDivElement>();
-  const { data } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['about-stats'],
     queryFn: async () => {
       const [biz, rev, proj, users] = await Promise.all([
@@ -74,19 +99,56 @@ const StatsStrip = ({ isRTL }: { isRTL: boolean }) => {
     },
     staleTime: 5 * 60 * 1000,
   });
+
   const items = [
-    { icon: Building2, end: data?.biz ?? 0, label: isRTL ? 'مزود خدمة' : 'Providers' },
-    { icon: Star, end: data?.rev ?? 0, label: isRTL ? 'تقييم' : 'Reviews' },
-    { icon: FolderOpen, end: data?.proj ?? 0, label: isRTL ? 'مشروع' : 'Projects' },
-    { icon: Users, end: data?.users ?? 0, label: isRTL ? 'عضو' : 'Members' },
+    { icon: Building2, end: data?.biz ?? 0, label: isRTL ? 'مزود خدمة' : 'Providers',
+      sub: isRTL ? 'مفعّلون ومتحقَّق منهم' : 'Active & verified',
+      accent: 'from-amber-500 to-amber-600' },
+    { icon: Star, end: data?.rev ?? 0, label: isRTL ? 'تقييم' : 'Reviews',
+      sub: isRTL ? 'تقييمات حقيقية موثقة' : 'Real verified reviews',
+      accent: 'from-emerald-500 to-emerald-600' },
+    { icon: FolderOpen, end: data?.proj ?? 0, label: isRTL ? 'مشروع' : 'Projects',
+      sub: isRTL ? 'منجزة ومنشورة' : 'Completed & published',
+      accent: 'from-sky-500 to-sky-600' },
+    { icon: Users, end: data?.users ?? 0, label: isRTL ? 'عضو' : 'Members',
+      sub: isRTL ? 'يثقون بقِطاعات' : 'Trust Qitaat',
+      accent: 'from-violet-500 to-violet-600' },
   ];
+
   return (
-    <section className="relative -mt-12 sm:-mt-16 z-10">
+    <section className="relative -mt-14 sm:-mt-20 z-10" aria-label={isRTL ? 'إحصائيات حية' : 'Live statistics'}>
       <div className="container px-4 sm:px-6">
-        <div ref={ref} className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 bg-card/95 backdrop-blur-xl border border-border/50 rounded-2xl p-4 sm:p-6 shadow-elev-3">
-          {items.map((s, i) => (
-            <StatItem key={i} icon={s.icon} end={s.end} label={s.label} isVisible={isVisible} />
-          ))}
+        <div ref={ref} className="relative">
+          {/* Glow under the card */}
+          <div className="absolute -inset-x-4 -inset-y-2 bg-gradient-to-r from-amber-500/10 via-emerald-500/10 to-violet-500/10 blur-3xl pointer-events-none" />
+          <div className="relative bg-card/95 backdrop-blur-xl border border-border/50 rounded-3xl p-3 sm:p-4 shadow-elev-3">
+            {/* Section eyebrow */}
+            <div className="flex items-center justify-between gap-2 px-3 sm:px-4 pt-2 pb-3 border-b border-border/40 mb-3">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-accent" />
+                <span className="text-xs font-heading font-bold text-foreground">
+                  {isRTL ? 'أرقامنا تتحدث' : 'Our Numbers Speak'}
+                </span>
+              </div>
+              <span className="text-[10px] text-muted-foreground font-body tech-content">
+                {isRTL ? 'محدّث مباشرة' : 'Live updated'}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              {items.map((s, i) => (
+                <StatItem
+                  key={i}
+                  icon={s.icon}
+                  end={isLoading ? 0 : s.end}
+                  label={s.label}
+                  sub={s.sub}
+                  accent={s.accent}
+                  isVisible={isVisible}
+                  index={i}
+                />
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -196,44 +258,116 @@ const SectorsSection = ({ isRTL }: { isRTL: boolean }) => {
 };
 
 /* ───────── Journey / Timeline ───────── */
+type JourneyStep = {
+  icon: React.ElementType; year: string; title: string; desc: string;
+  highlights: string[]; status: 'done' | 'live' | 'next';
+  accent: string;
+};
+
 const JourneySection = ({ isRTL }: { isRTL: boolean }) => {
-  const steps = [
-    { icon: Lightbulb, year: '2023', title: isRTL ? 'الفكرة' : 'The Idea', desc: isRTL ? 'بدأت قِطاعات كحل لمشكلة حقيقية في ربط العملاء بمزودي خدمة موثوقين.' : 'Qitaat started as a solution to a real problem: connecting clients with trusted providers.' },
-    { icon: Layers, year: '2024', title: isRTL ? 'الإطلاق' : 'The Launch', desc: isRTL ? 'إطلاق المنصة بأكثر من 6 قطاعات وأدوات احترافية متكاملة.' : 'Platform launch with 6+ sectors and integrated professional tools.' },
-    { icon: FileSignature, year: '2025', title: isRTL ? 'العقود الذكية' : 'Smart Contracts', desc: isRTL ? 'أطلقنا نظام العقود المحمية والدفع بالتقسيط والضمانات.' : 'Launched protected contracts, installment payments, and warranties.' },
-    { icon: Gem, year: '2026', title: isRTL ? 'التوسع' : 'Expansion', desc: isRTL ? 'توسع إقليمي وميزات ذكاء اصطناعي وتجربة موحدة.' : 'Regional expansion, AI features, and a unified experience.' },
+  const { ref, isVisible } = useScrollAnimation<HTMLDivElement>();
+  const steps: JourneyStep[] = [
+    {
+      icon: Lightbulb, year: '2023',
+      title: isRTL ? 'الفكرة والبحث' : 'Idea & Research',
+      desc: isRTL ? 'دراسة عميقة للسوق وتحديد فجوة الثقة بين العملاء ومزودي الخدمة.' : 'Deep market study identifying the trust gap between clients and providers.',
+      highlights: isRTL ? ['أبحاث ميدانية', 'تحليل السوق'] : ['Field research', 'Market analysis'],
+      status: 'done', accent: 'from-amber-500 to-amber-600',
+    },
+    {
+      icon: Layers, year: '2024',
+      title: isRTL ? 'إطلاق المنصة' : 'Platform Launch',
+      desc: isRTL ? 'انطلاقة قِطاعات مع أكثر من 6 قطاعات صناعية وأدوات احترافية متكاملة.' : 'Qitaat launches with 6+ industrial sectors and integrated tools.',
+      highlights: isRTL ? ['6 قطاعات', 'بحث متقدم', 'ملفات احترافية'] : ['6 sectors', 'Advanced search', 'Pro profiles'],
+      status: 'done', accent: 'from-emerald-500 to-emerald-600',
+    },
+    {
+      icon: FileSignature, year: '2025',
+      title: isRTL ? 'الأدوات الذكية' : 'Smart Tools',
+      desc: isRTL ? 'إطلاق العقود المحمية، التقسيط المرن، الضمانات الرقمية، ومحفظة آمنة.' : 'Protected contracts, flexible installments, digital warranties, and secure wallet.',
+      highlights: isRTL ? ['عقود محمية', 'تقسيط', 'ضمانات', 'محفظة'] : ['Protected contracts', 'Installments', 'Warranties', 'Wallet'],
+      status: 'live', accent: 'from-sky-500 to-sky-600',
+    },
+    {
+      icon: Rocket, year: '2026',
+      title: isRTL ? 'التوسّع والذكاء الاصطناعي' : 'Expansion & AI',
+      desc: isRTL ? 'توسع إقليمي، ميزات مدعومة بالذكاء الاصطناعي، وتجربة موحَّدة عبر الأجهزة.' : 'Regional expansion, AI-powered features, and a unified cross-device experience.',
+      highlights: isRTL ? ['توسع إقليمي', 'ذكاء اصطناعي', 'تطبيقات الجوال'] : ['Regional rollout', 'AI features', 'Mobile apps'],
+      status: 'next', accent: 'from-violet-500 to-violet-600',
+    },
   ];
+
+  const statusLabel = (s: JourneyStep['status']) => {
+    if (s === 'done') return isRTL ? 'مكتمل' : 'Completed';
+    if (s === 'live') return isRTL ? 'جارٍ الآن' : 'In progress';
+    return isRTL ? 'قادم' : 'Upcoming';
+  };
+  const statusClasses = (s: JourneyStep['status']) =>
+    s === 'done' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+      : s === 'live' ? 'bg-sky-500/15 text-sky-600 dark:text-sky-400 border-sky-500/30'
+      : 'bg-muted text-muted-foreground border-border';
+
   return (
-    <section className="py-16 sm:py-24">
-      <div className="container px-4 sm:px-6">
-        <div className="text-center mb-12 max-w-2xl mx-auto">
+    <section className="py-16 sm:py-24 relative overflow-hidden" aria-labelledby="journey-heading">
+      <div className="absolute inset-0 pointer-events-none opacity-[0.04]" style={{ backgroundImage: 'radial-gradient(hsl(var(--accent)) 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+      <div className="container px-4 sm:px-6 relative">
+        <div className="text-center mb-12 sm:mb-16 max-w-2xl mx-auto">
           <span className="inline-block text-eyebrow text-accent mb-3">{isRTL ? 'رحلتنا' : 'Our Journey'}</span>
-          <h2 className="ds-h2 font-heading font-bold text-foreground mb-3">
+          <h2 id="journey-heading" className="ds-h2 font-heading font-bold text-foreground mb-3">
             {isRTL ? 'من فكرة إلى منصّة رائدة' : 'From an Idea to a Leading Platform'}
           </h2>
+          <p className="text-body-sm text-muted-foreground">
+            {isRTL ? 'كل مرحلة بُنيت على ثقة عملائنا وتعاون مزوّدينا.' : 'Every milestone built on customer trust and provider collaboration.'}
+          </p>
         </div>
-        <div className="relative max-w-4xl mx-auto">
-          <div className="absolute top-0 bottom-0 start-6 sm:start-1/2 w-px bg-gradient-to-b from-accent/40 via-border to-accent/40 sm:-translate-x-1/2" />
-          <div className="space-y-8 sm:space-y-12">
+
+        <div ref={ref} className="relative max-w-5xl mx-auto">
+          {/* Vertical spine */}
+          <div className="absolute top-0 bottom-0 start-7 sm:start-1/2 w-[2px] bg-gradient-to-b from-transparent via-border to-transparent sm:-translate-x-1/2" aria-hidden />
+
+          <div className="space-y-6 sm:space-y-10">
             {steps.map((s, i) => {
               const Icon = s.icon;
-              const onLeft = i % 2 === 0;
+              const onLeft = i % 2 === 0; // visual side on desktop
               return (
-                <div key={i} className={`relative flex sm:items-center gap-4 ${onLeft ? 'sm:flex-row' : 'sm:flex-row-reverse'}`}>
-                  <div className="absolute start-6 sm:start-1/2 w-3 h-3 rounded-full bg-accent ring-4 ring-background sm:-translate-x-1/2 mt-6" />
-                  <div className="ps-16 sm:ps-0 sm:w-1/2 sm:px-8">
-                    <div className="bg-card border border-border/50 rounded-2xl p-5 sm:p-6 hover:border-accent/40 hover:shadow-lg transition-all">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center">
-                          <Icon className="w-4 h-4 text-accent" />
-                        </div>
-                        <span className="font-heading font-bold text-accent tech-content">{s.year}</span>
-                      </div>
-                      <h3 className="font-heading font-bold text-base sm:text-lg text-foreground mb-1">{s.title}</h3>
-                      <p className="text-sm text-muted-foreground leading-relaxed">{s.desc}</p>
+                <div
+                  key={i}
+                  className={`relative grid sm:grid-cols-2 gap-4 sm:gap-10 items-center ${isVisible ? 'animate-fade-in' : 'opacity-0'}`}
+                  style={{ animationDelay: `${i * 140}ms`, animationFillMode: 'both' }}
+                >
+                  {/* Marker */}
+                  <div className="absolute start-7 sm:start-1/2 sm:-translate-x-1/2 -translate-y-0 top-6 sm:top-1/2 sm:-translate-y-1/2 z-10">
+                    <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${s.accent} ring-4 ring-background flex items-center justify-center shadow-lg`}>
+                      <Icon className="w-4 h-4 text-white" strokeWidth={2.4} />
                     </div>
+                    {s.status === 'live' && (
+                      <span className="absolute inset-0 rounded-full bg-sky-500/30 animate-ping" aria-hidden />
+                    )}
                   </div>
-                  <div className="hidden sm:block sm:w-1/2" />
+
+                  {/* Card placement */}
+                  <div className={`ps-20 sm:ps-0 ${onLeft ? 'sm:col-start-1 sm:pe-10 sm:text-end' : 'sm:col-start-2 sm:ps-10 sm:text-start'}`}>
+                    <article className="group bg-card border border-border/50 rounded-2xl p-5 sm:p-6 hover:border-accent/40 hover:shadow-elev-3 hover:-translate-y-0.5 transition-all duration-300">
+                      <div className={`flex items-center gap-2 mb-3 ${onLeft ? 'sm:justify-end' : 'sm:justify-start'}`}>
+                        <span className="font-heading font-black text-2xl sm:text-3xl text-gradient-gold tech-content leading-none">{s.year}</span>
+                        <span className={`text-[10px] font-body font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border ${statusClasses(s.status)}`}>
+                          {statusLabel(s.status)}
+                        </span>
+                      </div>
+                      <h3 className="font-heading font-bold text-base sm:text-lg text-foreground mb-1.5">{s.title}</h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed mb-4">{s.desc}</p>
+                      <ul className={`flex flex-wrap gap-1.5 ${onLeft ? 'sm:justify-end' : 'sm:justify-start'}`}>
+                        {s.highlights.map((h, k) => (
+                          <li key={k} className="inline-flex items-center gap-1 text-[11px] font-body font-medium text-foreground/80 bg-muted/60 border border-border/50 rounded-full px-2.5 py-1">
+                            <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                            {h}
+                          </li>
+                        ))}
+                      </ul>
+                    </article>
+                  </div>
+                  {/* Spacer column for opposite side on desktop */}
+                  <div className="hidden sm:block" />
                 </div>
               );
             })}
