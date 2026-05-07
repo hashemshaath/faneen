@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { BusinessCard } from './BusinessCard';
@@ -91,5 +91,73 @@ describe('BusinessCard badges & service tags', () => {
   it('handles missing/non-array promotions & services gracefully', () => {
     renderCard({ ...baseBiz, promotions: undefined, business_services: null });
     expect(screen.queryByText('كوبون خصم')).toBeNull();
+  });
+});
+
+/**
+ * Coupon "end_date" boundary tests.
+ *
+ * The component compares promotion `end_date` (a YYYY-MM-DD string from
+ * Postgres) against `new Date().toISOString().slice(0, 10)` — i.e. **today
+ * in UTC**. The badge must show when `end_date >= todayUTC`.
+ *
+ * These tests pin "now" with fake timers so we can verify the UTC boundary
+ * behaves the same regardless of the runner's local timezone.
+ */
+describe('BusinessCard coupon end_date boundary (UTC)', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  const setNow = (iso: string) => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(iso));
+  };
+
+  it('shows coupon when end_date equals today (UTC)', () => {
+    setNow('2026-05-07T12:00:00Z'); // today UTC = 2026-05-07
+    renderCard({ ...baseBiz, promotions: [{ id: 'p', is_active: true, end_date: '2026-05-07' }] });
+    expect(screen.getAllByText('كوبون خصم').length).toBeGreaterThan(0);
+  });
+
+  it('hides coupon when end_date is yesterday (UTC)', () => {
+    setNow('2026-05-07T12:00:00Z');
+    renderCard({ ...baseBiz, promotions: [{ id: 'p', is_active: true, end_date: '2026-05-06' }] });
+    expect(screen.queryByText('كوبون خصم')).toBeNull();
+  });
+
+  it('shows coupon at 23:59 UTC on the end_date day', () => {
+    setNow('2026-05-07T23:59:59Z');
+    renderCard({ ...baseBiz, promotions: [{ id: 'p', is_active: true, end_date: '2026-05-07' }] });
+    expect(screen.getAllByText('كوبون خصم').length).toBeGreaterThan(0);
+  });
+
+  it('hides coupon one second after midnight UTC the next day', () => {
+    setNow('2026-05-08T00:00:01Z');
+    renderCard({ ...baseBiz, promotions: [{ id: 'p', is_active: true, end_date: '2026-05-07' }] });
+    expect(screen.queryByText('كوبون خصم')).toBeNull();
+  });
+
+  it('treats null end_date as never-expiring (always shows when active)', () => {
+    setNow('2099-12-31T00:00:00Z');
+    renderCard({ ...baseBiz, promotions: [{ id: 'p', is_active: true, end_date: null }] });
+    expect(screen.getAllByText('كوبون خصم').length).toBeGreaterThan(0);
+  });
+
+  it('UTC boundary: late-evening local time on May 7 that is already May 8 UTC hides a May-7 coupon', () => {
+    // 03:30 on May 8 UTC corresponds to e.g. 06:30 local in +03:00 (Riyadh).
+    // Either way, the comparison uses UTC, so a coupon whose end_date is
+    // 2026-05-07 must be hidden.
+    setNow('2026-05-08T03:30:00Z');
+    renderCard({ ...baseBiz, promotions: [{ id: 'p', is_active: true, end_date: '2026-05-07' }] });
+    expect(screen.queryByText('كوبون خصم')).toBeNull();
+  });
+
+  it('UTC boundary: late-evening local time on May 7 that is still May 7 UTC keeps a May-7 coupon visible', () => {
+    // 21:00 UTC on May 7 = midnight on May 8 in +03:00. The component uses
+    // UTC for "today", so the badge must remain visible.
+    setNow('2026-05-07T21:00:00Z');
+    renderCard({ ...baseBiz, promotions: [{ id: 'p', is_active: true, end_date: '2026-05-07' }] });
+    expect(screen.getAllByText('كوبون خصم').length).toBeGreaterThan(0);
   });
 });
