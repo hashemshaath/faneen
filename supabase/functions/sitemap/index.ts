@@ -106,18 +106,20 @@ Deno.serve(async (req) => {
         }
       }
     } else if (type === "categories") {
-      const { data } = await supabase.from("categories").select("id, slug, updated_at, created_at").eq("is_active", true);
+      const { data, error } = await supabase.from("categories").select("id, slug, created_at").eq("is_active", true);
+      if (error) console.error("categories sitemap error:", error.message);
       if (data) {
         for (const c of data) {
-          entries.push(entry(`${BASE}/categories/${encodeURIComponent(c.slug)}`, { lastmod: toDate(c.updated_at ?? c.created_at), changefreq: "weekly", priority: "0.7" }));
-          entries.push(entry(`${BASE}/search?category=${encodeURIComponent(c.id)}`, { lastmod: toDate(c.updated_at ?? c.created_at), changefreq: "daily", priority: "0.7" }));
+          entries.push(entry(`${BASE}/categories/${encodeURIComponent(c.slug)}`, { lastmod: toDate(c.created_at), changefreq: "weekly", priority: "0.7" }));
+          entries.push(entry(`${BASE}/search?category=${encodeURIComponent(c.id)}`, { lastmod: toDate(c.created_at), changefreq: "daily", priority: "0.7" }));
         }
       }
     } else if (type === "cities") {
-      const { data } = await supabase.from("cities").select("id, name_en, updated_at, created_at").eq("is_active", true);
+      const { data, error } = await supabase.from("cities").select("id, name_en, created_at").eq("is_active", true);
+      if (error) console.error("cities sitemap error:", error.message);
       if (data) {
         for (const city of data) {
-          entries.push(entry(`${BASE}/search?city=${encodeURIComponent(city.id)}`, { lastmod: toDate(city.updated_at ?? city.created_at), changefreq: "daily", priority: "0.7" }));
+          entries.push(entry(`${BASE}/search?city=${encodeURIComponent(city.id)}`, { lastmod: toDate(city.created_at), changefreq: "daily", priority: "0.7" }));
         }
       }
     } else if (type === "profiles") {
