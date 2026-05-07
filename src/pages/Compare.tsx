@@ -14,7 +14,6 @@ import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Star, MapPin, Plus, X, ArrowRight, ArrowLeft, Scale, Search, Download } from 'lucide-react';
 import { VerifiedBadge } from '@/components/common/VerifiedBadge';
-import { exportComparePDF } from '@/lib/compare-pdf-export';
 
 const Compare = () => {
   const { isRTL } = useLanguage();
@@ -220,7 +219,9 @@ const Compare = () => {
                     return { name, price };
                   }),
                 }));
-                exportComparePDF({ businesses, allServices, isRTL });
+                import('@/lib/compare-pdf-export').then(({ exportComparePDF }) =>
+                  exportComparePDF({ businesses, allServices, isRTL })
+                );
               }}
             >
               <Download className="w-4 h-4 me-1" />
