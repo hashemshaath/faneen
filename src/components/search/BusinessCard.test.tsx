@@ -324,3 +324,51 @@ describe('BusinessCard service tags & +N with name_en (English)', () => {
     expect(screen.getByText('+7')).toBeInTheDocument();
   });
 });
+
+/**
+ * Empty / undefined `business_services` must render zero chips and zero +N.
+ */
+describe('BusinessCard service tags absent when business_services is empty/undefined', () => {
+  const expectNoChipsOrCounter = () => {
+    expect(screen.queryByText(/^\+\d+$/)).toBeNull();
+    // No service-tag chips means no element with the service-chip text pattern
+    // we use in other tests (e.g. "خدمة-1", "Service-1", "تركيب").
+    expect(screen.queryByText(/^خدمة-\d+$/)).toBeNull();
+    expect(screen.queryByText(/^Service-\d+$/)).toBeNull();
+    expect(screen.queryByText('تركيب')).toBeNull();
+  };
+
+  it('renders no chips and no +N when business_services is an empty array', () => {
+    renderCard({ ...baseBiz, business_services: [] });
+    expectNoChipsOrCounter();
+  });
+
+  it('renders no chips and no +N when business_services is undefined', () => {
+    const { business_services: _omit, ...without } = baseBiz;
+    renderCard(without);
+    expectNoChipsOrCounter();
+  });
+
+  it('renders no chips and no +N when business_services is null', () => {
+    renderCard({ ...baseBiz, business_services: null });
+    expectNoChipsOrCounter();
+  });
+
+  it('renders no chips and no +N when business_services is not an array (malformed)', () => {
+    renderCard({ ...baseBiz, business_services: 'oops' as unknown as never });
+    expectNoChipsOrCounter();
+  });
+
+  it('renders no chips and no +N when every service is inactive', () => {
+    renderCard({
+      ...baseBiz,
+      business_services: [
+        { name_ar: 'خدمة-1', is_active: false },
+        { name_ar: 'خدمة-2', is_active: false },
+        { name_ar: 'خدمة-3', is_active: false },
+        { name_ar: 'خدمة-4', is_active: false },
+      ],
+    });
+    expectNoChipsOrCounter();
+  });
+});
