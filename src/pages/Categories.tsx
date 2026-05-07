@@ -10,6 +10,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Layers, Search, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { VerifiedBadge } from '@/components/common/VerifiedBadge';
 import {
   ALL_SECTORS,
   detectSectorFromCategorySlug,
@@ -178,7 +179,7 @@ const Categories = () => {
                         <div className="flex items-center gap-1.5 mt-1">
                           <span className="text-xs text-gold">★ {Number(b.rating_avg).toFixed(1)}</span>
                           <span className="text-[10px] text-muted-foreground">({b.rating_count})</span>
-                          {b.is_verified && <span className="text-[9px] bg-emerald-500/10 text-emerald-600 px-1.5 py-0.5 rounded-full">{isRTL ? 'موثق' : 'Verified'}</span>}
+                          {b.is_verified && <VerifiedBadge size="xs" />}
                         </div>
                       </div>
                     </CardContent>
