@@ -37,7 +37,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { exportContractPDF, type ContractExportData } from '@/lib/contract-pdf-export';
+import type { ContractExportData } from '@/lib/contract-pdf-export';
 import type { Database } from '@/integrations/supabase/types';
 
 type ContractRow = Database['public']['Tables']['contracts']['Row'];
@@ -981,6 +981,7 @@ const DashboardContracts = () => {
         })),
         isRTL,
       };
+      const { exportContractPDF } = await import('@/lib/contract-pdf-export');
       await exportContractPDF(data);
       toast.success(isRTL ? 'تم تصدير العقد' : 'Contract exported');
     } catch {
