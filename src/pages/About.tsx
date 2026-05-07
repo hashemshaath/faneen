@@ -463,9 +463,22 @@ const ContactCTA = ({ isRTL }: { isRTL: boolean }) => {
 const About = () => {
   const { isRTL, language } = useLanguage();
   usePageMeta({
-    title: isRTL ? 'من نحن - عن منصة قِطاعات | قِطاعات' : 'About Us - Qitaat Platform | Qitaat',
-    description: isRTL ? 'تعرف على منصة قِطاعات - المنصة الأولى لدليل أعمال الألمنيوم والحديد والزجاج والخشب في العالم العربي' : 'Learn about Qitaat - the leading business directory for aluminum, iron, glass and wood in the Arab world',
+    title: isRTL
+      ? 'من نحن — قصة قِطاعات ورؤيتنا في صناعة الألمنيوم والزجاج والحديد والخشب'
+      : 'About Us — Qitaat Story & Vision for Aluminum, Glass, Steel & Wood',
+    description: isRTL
+      ? 'قِطاعات: المنصة العربية الأولى التي تربط أصحاب المشاريع بأفضل مزودي الألمنيوم والزجاج والحديد والخشب — عقود محمية، تقسيط مرن، ضمانات حقيقية، وتقييمات موثوقة في السوق السعودي والخليجي.'
+      : 'Qitaat is the leading Arabic platform connecting project owners with top aluminum, glass, steel and wood providers — protected contracts, flexible installments, real warranties and trusted reviews across the Saudi & Gulf market.',
     canonical: 'https://qitaat.com/about',
+    ogType: 'website',
+    ogImage: 'https://qitaat.com/og-image.jpg',
+    ogTitle: isRTL ? 'قِطاعات — منصة قطاعات الصناعة في العالم العربي' : 'Qitaat — Industrial Sectors Platform in the Arab World',
+    ogDescription: isRTL
+      ? 'تعرّف على رؤية ومسيرة قِطاعات والقطاعات الصناعية التي نخدمها: ألمنيوم، زجاج، حديد، خشب، خزائن وتشطيبات.'
+      : 'Discover Qitaat\'s vision and journey across the industrial sectors we serve: aluminum, glass, steel, wood, cabinets and finishes.',
+    keywords: isRTL
+      ? 'من نحن قِطاعات, منصة الألمنيوم, دليل مزودي الزجاج, شركات الحديد السعودية, ورش الخشب, عقود محمية, ضمان الواجهات, تقسيط الكلادينج, تقييمات صناعية'
+      : 'about Qitaat, aluminum platform, glass providers directory, Saudi steel companies, wood workshops, protected contracts, facade warranty, cladding installments, industrial reviews',
   });
 
   useMultiJsonLd(useMemo(() => {
@@ -473,9 +486,52 @@ const About = () => {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'قِطاعات', item: 'https://qitaat.com' },
+        { '@type': 'ListItem', position: 1, name: language === 'ar' ? 'قِطاعات' : 'Qitaat', item: 'https://qitaat.com' },
         { '@type': 'ListItem', position: 2, name: language === 'ar' ? 'من نحن' : 'About', item: 'https://qitaat.com/about' },
       ],
+    };
+
+    const aboutPage = {
+      '@context': 'https://schema.org',
+      '@type': 'AboutPage',
+      url: 'https://qitaat.com/about',
+      inLanguage: language === 'ar' ? 'ar' : 'en',
+      name: language === 'ar' ? 'من نحن — قِطاعات' : 'About Us — Qitaat',
+      description: language === 'ar'
+        ? 'تعرّف على منصة قِطاعات: رؤيتنا، مسيرتنا، والقطاعات الصناعية التي نخدمها.'
+        : 'Learn about Qitaat: our vision, journey and the industrial sectors we serve.',
+      mainEntity: {
+        '@type': 'Organization',
+        name: 'قِطاعات Qitaat',
+        url: 'https://qitaat.com',
+        logo: 'https://qitaat.com/og-image.jpg',
+        sameAs: [
+          'https://qitaat.lovable.app',
+        ],
+      },
+    };
+
+    const organization = {
+      '@context': 'https://schema.org',
+      '@type': 'Organization',
+      '@id': 'https://qitaat.com/#organization',
+      name: 'قِطاعات Qitaat',
+      alternateName: 'Qitaat',
+      url: 'https://qitaat.com',
+      logo: { '@type': 'ImageObject', url: 'https://qitaat.com/og-image.jpg' },
+      description: language === 'ar'
+        ? 'منصة قطاعات الصناعة العربية: ألمنيوم، زجاج، حديد، خشب وخزائن.'
+        : 'Arabic industrial sectors platform: aluminum, glass, steel, wood and cabinets.',
+      areaServed: ['SA', 'AE', 'KW', 'QA', 'BH', 'OM'],
+      knowsAbout: language === 'ar'
+        ? ['الألمنيوم', 'الزجاج', 'الحديد', 'الخشب', 'الخزائن', 'الكلادينج', 'الواجهات', 'النوافذ']
+        : ['Aluminum', 'Glass', 'Steel', 'Wood', 'Cabinets', 'Cladding', 'Facades', 'Windows'],
+      contactPoint: {
+        '@type': 'ContactPoint',
+        email: 'info@qitaat.com',
+        contactType: 'customer support',
+        availableLanguage: ['Arabic', 'English'],
+      },
     };
 
     const faqPage = {
@@ -521,7 +577,7 @@ const About = () => {
       ],
     };
 
-    return [breadcrumb, faqPage];
+    return [breadcrumb, aboutPage, organization, faqPage];
   }, [language]));
 
   return (
