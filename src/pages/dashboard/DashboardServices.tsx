@@ -81,7 +81,7 @@ const SortableServiceCard = React.memo(({
                   <TooltipProvider><Tooltip><TooltipTrigger><AlertCircle className="w-3.5 h-3.5 text-destructive/50" /></TooltipTrigger>
                   <TooltipContent><p className="text-xs">{rtl ? 'بيانات ناقصة' : 'Incomplete'}</p></TooltipContent></Tooltip></TooltipProvider>
                 )}
-                <button {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-0.5 text-muted-foreground/30 hover:text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity touch-none">
+                <button {...attributes} {...listeners} aria-label="Drag to reorder" className="cursor-grab active:cursor-grabbing p-0.5 text-muted-foreground/30 hover:text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity touch-none">
                   <GripVertical className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -136,7 +136,7 @@ const SortableServiceCard = React.memo(({
         <button onClick={() => onSelect(s.id)} className={`w-[18px] h-[18px] rounded border-[1.5px] transition-all flex items-center justify-center shrink-0 ${isSelected ? 'bg-primary border-primary' : 'border-muted-foreground/20 hover:border-primary/60'}`}>
           {isSelected && <CheckCircle2 className="w-3 h-3 text-primary-foreground" />}
         </button>
-        <button {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing text-muted-foreground/25 hover:text-muted-foreground shrink-0 touch-none opacity-0 group-hover:opacity-100 transition-opacity">
+        <button {...attributes} {...listeners} aria-label="Drag to reorder" className="cursor-grab active:cursor-grabbing text-muted-foreground/25 hover:text-muted-foreground shrink-0 touch-none opacity-0 group-hover:opacity-100 transition-opacity">
           <GripVertical className="w-4 h-4" />
         </button>
         <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${s.is_active ? 'bg-primary/8' : 'bg-muted'}`}>

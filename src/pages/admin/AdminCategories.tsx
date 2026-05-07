@@ -137,7 +137,7 @@ const SortableTreeItem = React.memo(({
       {/* Drag handle */}
       <button
         {...attributes}
-        {...listeners}
+        {...listeners} aria-label="Drag to reorder"
         className="cursor-grab active:cursor-grabbing p-1 rounded-md hover:bg-accent/10 text-muted-foreground/30 hover:text-muted-foreground transition-colors touch-none"
       >
         <GripVertical className="w-4 h-4" />

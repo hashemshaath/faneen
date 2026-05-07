@@ -62,7 +62,7 @@ const SortableProjectCard = React.memo(({
           <button onClick={() => onSelect(p.id)} className={`w-[18px] h-[18px] rounded border-[1.5px] transition-all flex items-center justify-center shrink-0 ${isSelected ? 'bg-primary border-primary' : 'border-muted-foreground/25 hover:border-primary/60'}`}>
             {isSelected && <CheckCircle2 className="w-3 h-3 text-primary-foreground" />}
           </button>
-          <button {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing text-muted-foreground/30 hover:text-muted-foreground shrink-0 touch-none opacity-0 group-hover:opacity-100 transition-opacity">
+          <button {...attributes} {...listeners} aria-label="Drag to reorder" className="cursor-grab active:cursor-grabbing text-muted-foreground/30 hover:text-muted-foreground shrink-0 touch-none opacity-0 group-hover:opacity-100 transition-opacity">
             <GripVertical className="w-4 h-4" />
           </button>
           <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted shrink-0 cursor-pointer border border-border/30" onClick={() => p.cover_image_url && onPreview(p.cover_image_url)}>
@@ -134,7 +134,7 @@ const SortableProjectCard = React.memo(({
               {isSelected && <CheckCircle2 className="w-3 h-3 text-primary-foreground" />}
             </button>
           </div>
-          <button {...attributes} {...listeners} className="absolute bottom-1.5 end-1.5 bg-background/80 backdrop-blur-sm rounded-md p-0.5 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity shadow-sm touch-none">
+          <button {...attributes} {...listeners} aria-label="Drag to reorder" className="absolute bottom-1.5 end-1.5 bg-background/80 backdrop-blur-sm rounded-md p-0.5 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity shadow-sm touch-none">
             <GripVertical className="w-3.5 h-3.5 text-foreground" />
           </button>
           {/* Hover overlay */}
