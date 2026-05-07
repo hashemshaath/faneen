@@ -908,7 +908,7 @@ const AdminBusinesses = () => {
                       <FieldAiActions compact value={editForm.name_ar} lang="ar" isRTL={isRTL} fieldType="title"
                         onTranslated={(v) => setField('name_en', v)} onImproved={(v) => setField('name_ar', v)} />
                     </div>
-                    <Input value={editForm.name_ar} onChange={e => setField('name_ar', e.target.value)} />
+                     <Input value={editForm.name_ar} onChange={e => setField('name_ar', e.target.value)} dir="auto" />
                   </div>
                   <div>
                     <div className="flex items-center justify-between mb-1">
