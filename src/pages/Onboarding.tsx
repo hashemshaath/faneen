@@ -374,7 +374,7 @@ const Onboarding = () => {
 
   // Final business step: sector picker + sub-services
   return (
-    <AuthLayout wide>
+    <AuthLayout>
       <div className="space-y-6">
         <div className="space-y-2">
           <h2 className="font-heading font-bold text-2xl text-foreground text-center">
