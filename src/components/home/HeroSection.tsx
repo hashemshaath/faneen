@@ -69,14 +69,14 @@ const SearchBar = memo(({ categories, cities, language, isRTL, t, onSearch }: an
       <div className="bg-white/[0.07] backdrop-blur-2xl border border-white/10 rounded-2xl sm:rounded-3xl p-2.5 sm:p-3.5 shadow-2xl shadow-black/30 ring-1 ring-inset ring-white/[0.05]">
         <div className="flex flex-col sm:flex-row gap-2">
           <div className="flex-1 relative">
-            <Search className="absolute end-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-white/30" />
+            <Search aria-hidden="true" className="absolute end-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-white/55" />
             <input
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder={t('search.placeholder')}
               aria-label={isRTL ? 'كلمة البحث' : 'Search query'}
-              className="w-full pe-11 ps-3 sm:pe-12 sm:ps-4 py-3.5 sm:py-4 rounded-xl sm:rounded-2xl bg-white/[0.06] text-white placeholder:text-white/25 font-body text-sm border-0 outline-none focus:ring-2 focus:ring-gold/40 focus:bg-white/[0.1] transition-all"
+              className="w-full pe-11 ps-3 sm:pe-12 sm:ps-4 py-3.5 sm:py-4 rounded-xl sm:rounded-2xl bg-white/[0.06] text-white placeholder:text-white/60 font-body text-sm border-0 outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-surface-nav focus:bg-white/[0.1] transition-all"
             />
           </div>
           <select
@@ -164,7 +164,7 @@ const HeroTitle = memo(({ slides, current, language, t }: { slides: typeof slide
           <WordFade text={line2} baseDelay={line2Delay} stepMs={stepMs} className="text-gradient-gold-shimmer" />
         </h2>
         <p
-          className="font-body text-sm sm:text-lg text-white/50 max-w-2xl mx-auto leading-relaxed px-2 hero-word"
+          className="font-body text-sm sm:text-lg text-white/80 max-w-2xl mx-auto leading-relaxed px-2 hero-word"
           style={{ animationDelay: `${descDelay}ms`, animationDuration: '1.1s' }}
         >
           {desc}
@@ -319,7 +319,7 @@ export const HeroSection = () => {
               key={cat.id}
               type="button"
               onClick={() => navigate(`/search?category=${cat.id}`)}
-              className="px-3.5 sm:px-4.5 py-1.5 sm:py-2 rounded-full text-[10px] sm:text-xs font-body font-medium text-white/50 border border-white/10 hover:bg-gold/10 hover:text-gold hover:border-gold/25 active:scale-95 cursor-pointer transition-all duration-300 backdrop-blur-sm"
+              className="px-3.5 sm:px-4.5 py-1.5 sm:py-2 rounded-full text-[10px] sm:text-xs font-body font-medium text-white/80 border border-white/15 hover:bg-gold/10 hover:text-gold hover:border-gold/30 active:scale-95 cursor-pointer transition-all duration-300 backdrop-blur-sm focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none"
             >
               {language === 'ar' ? cat.name_ar : cat.name_en}
             </button>
@@ -328,7 +328,7 @@ export const HeroSection = () => {
 
         {/* Slide controls */}
         <div className="flex items-center justify-center gap-3 mt-8 sm:mt-10">
-          <button onClick={prev} aria-label={language === 'ar' ? 'الشريحة السابقة' : 'Previous slide'} className="w-9 h-9 rounded-full bg-white/10 backdrop-blur-md border border-white/15 flex items-center justify-center text-white/60 hover:text-gold hover:bg-gold/15 hover:border-gold/30 transition-all active:scale-90 focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none">
+          <button onClick={prev} aria-label={language === 'ar' ? 'الشريحة السابقة' : 'Previous slide'} className="w-9 h-9 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white/85 hover:text-gold hover:bg-gold/15 hover:border-gold/40 transition-all active:scale-90 focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none">
             {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
           </button>
           <div className="flex items-center gap-2">
@@ -342,13 +342,13 @@ export const HeroSection = () => {
               />
             ))}
           </div>
-          <button onClick={next} aria-label={language === 'ar' ? 'الشريحة التالية' : 'Next slide'} className="w-9 h-9 rounded-full bg-white/10 backdrop-blur-md border border-white/15 flex items-center justify-center text-white/60 hover:text-gold hover:bg-gold/15 hover:border-gold/30 transition-all active:scale-90 focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none">
+          <button onClick={next} aria-label={language === 'ar' ? 'الشريحة التالية' : 'Next slide'} className="w-9 h-9 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white/85 hover:text-gold hover:bg-gold/15 hover:border-gold/40 transition-all active:scale-90 focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none">
             {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
           </button>
         </div>
 
         {/* Stats bar */}
-        <div className="flex flex-wrap items-center justify-center gap-5 sm:gap-10 text-white/40 font-body text-[10px] sm:text-sm mt-6 sm:mt-10">
+        <div className="flex flex-wrap items-center justify-center gap-5 sm:gap-10 text-white/75 font-body text-[10px] sm:text-sm mt-6 sm:mt-10">
           <div className="flex items-center gap-1.5">
             <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gold/70" />
             <span>{t('hero.providers_count')}</span>

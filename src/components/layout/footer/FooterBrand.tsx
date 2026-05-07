@@ -28,7 +28,7 @@ export const FooterBrand = () => {
         </div>
       </div>
 
-      <p className="font-body text-[13px] text-surface-nav-foreground/40 leading-relaxed max-w-xs">
+      <p className="font-body text-[13px] text-surface-nav-foreground/75 leading-relaxed max-w-xs">
         {t('footer.desc')}
       </p>
 
@@ -37,7 +37,7 @@ export const FooterBrand = () => {
         {badges.map((badge) => (
           <div key={badge.label} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gold/[0.06] border border-gold/10">
             <badge.icon className="w-3.5 h-3.5 text-gold/70" />
-            <span className="text-[11px] font-medium text-surface-nav-foreground/50">{badge.label}</span>
+            <span className="text-[11px] font-medium text-surface-nav-foreground/80">{badge.label}</span>
           </div>
         ))}
       </div>
@@ -50,9 +50,9 @@ export const FooterBrand = () => {
               <item.icon className="w-3.5 h-3.5 text-gold/60 group-hover:text-gold transition-colors" />
             </span>
             {item.href ? (
-              <a href={item.href} className="text-xs sm:text-[13px] text-surface-nav-foreground/45 hover:text-gold transition-colors">{item.text}</a>
+              <a href={item.href} className="text-xs sm:text-[13px] text-surface-nav-foreground/80 hover:text-gold transition-colors focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none rounded">{item.text}</a>
             ) : (
-              <span className="text-xs sm:text-[13px] text-surface-nav-foreground/45">{item.text}</span>
+              <span className="text-xs sm:text-[13px] text-surface-nav-foreground/75">{item.text}</span>
             )}
           </div>
         ))}
