@@ -80,7 +80,7 @@ const AdminAccessManagement = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('user_roles')
-        .select('id, user_id, role, created_at');
+        .select('id, user_id, role');
       if (error) throw error;
       return data ?? [];
     },
