@@ -101,8 +101,8 @@ export const template = {
   component: WelcomeSignupEmail,
   subject: (data: Record<string, any>) =>
     data.fullName
-      ? `أهلاً ${data.fullName} في قِطاعات · Welcome to Qitaat`
-      : 'أهلاً بك في قِطاعات · Welcome to Qitaat',
+      ? `${data.fullName}، تم تفعيل حسابك في قِطاعات`
+      : 'تم تفعيل حسابك في قِطاعات',
   displayName: 'بريد الترحيب بعد التسجيل',
   previewData: { fullName: 'أحمد العتيبي', dashboardUrl: 'https://qitaat.com/dashboard' },
 } satisfies TemplateEntry
