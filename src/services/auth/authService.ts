@@ -189,7 +189,12 @@ export const authService = {
     if (error) throw error;
   },
 
-  async createBusiness(userId: string, businessName: string, username: string) {
+  async createBusiness(
+    userId: string,
+    businessName: string,
+    username: string,
+    extras?: { sectors?: string[]; sub_services?: string[]; description_ar?: string },
+  ) {
     const sanitizedName = sanitizeInput(businessName);
     const sanitizedUsername = username.toLowerCase().replace(/[^a-z0-9_-]/g, '');
 
@@ -201,6 +206,11 @@ export const authService = {
         user_id: userId,
         name_ar: sanitizedName,
         username: sanitizedUsername,
+        sectors: extras?.sectors ?? [],
+        sub_services: extras?.sub_services ?? [],
+        description_ar: extras?.description_ar ? sanitizeInput(extras.description_ar) : null,
+        approval_status: 'draft',
+        username_status: 'pending',
       });
     if (error && !error.message.includes('duplicate')) throw error;
   },
