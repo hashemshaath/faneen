@@ -13,13 +13,12 @@ import {
   ArrowLeft,
   ArrowRight,
   MapPin,
-  CheckCircle2,
   Crown,
   TrendingUp,
   Sparkles,
   Filter,
   ShieldCheck,
-  ExternalLink,
+  ArrowUpRight,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -28,19 +27,16 @@ import { VerifiedBadge } from "@/components/common/VerifiedBadge";
 
 /* ── Skeleton ── */
 const ProviderSkeleton = () => (
-  <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
-    <div className="flex items-center gap-3">
-      <Skeleton className="w-14 h-14 rounded-2xl" />
-      <div className="flex-1 space-y-2">
-        <Skeleton className="h-4 w-3/4" />
-        <Skeleton className="h-3 w-1/2" />
-      </div>
+  <div className="rounded-3xl border border-border/40 bg-card p-5 space-y-4">
+    <div className="h-20 rounded-2xl bg-muted/40 dark:bg-muted/15 relative overflow-hidden">
+      <Skeleton className="absolute -bottom-6 start-5 w-16 h-16 rounded-2xl" />
     </div>
-    <Skeleton className="h-2 w-full rounded-full" />
-    <div className="flex gap-2">
-      <Skeleton className="h-6 w-16 rounded-full" />
-      <Skeleton className="h-6 w-14 rounded-full" />
+    <div className="pt-6 space-y-2">
+      <Skeleton className="h-4 w-3/4" />
+      <Skeleton className="h-3 w-1/2" />
     </div>
+    <Skeleton className="h-1.5 w-full rounded-full" />
+    <Skeleton className="h-9 w-full rounded-xl" />
   </div>
 );
 
