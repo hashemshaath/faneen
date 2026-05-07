@@ -330,7 +330,6 @@ body.ltr { direction: ltr; }
 
 /* Prevent layout shift on language switch */
 html { transition: none; }
-}
 
 @keyframes float {
   0%, 100% { transform: translateY(0); }
