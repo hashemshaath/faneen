@@ -38,7 +38,13 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   useEffect(() => {
     document.documentElement.dir = dir;
     document.documentElement.lang = language;
-  }, [dir, language]);
+    // Body class strategy for global selectors (.rtl / .ltr)
+    const body = document.body;
+    if (body) {
+      body.classList.toggle('rtl', isRTL);
+      body.classList.toggle('ltr', !isRTL);
+    }
+  }, [dir, language, isRTL]);
 
   return (
     <LanguageContext.Provider value={{ language, setLanguage, t, dir, isRTL }}>
