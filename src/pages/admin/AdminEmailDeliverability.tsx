@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import {
   Mail, AlertTriangle, CheckCircle2, XCircle, Inbox, ShieldAlert,
-  Loader2, RefreshCw, Bell, BellOff, Search, Send,
+  Loader2, RefreshCw, Bell, BellOff, Search, Send, Radio,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
@@ -88,12 +88,46 @@ const AdminEmailDeliverability: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [templateFilter, setTemplateFilter] = useState<string>('all');
   const [search, setSearch] = useState('');
+  const [liveConnected, setLiveConnected] = useState(false);
+  const [liveTick, setLiveTick] = useState(0);
 
   const windowMinutes = WINDOWS[windowKey];
   const sinceIso = useMemo(
     () => new Date(Date.now() - windowMinutes * 60_000).toISOString(),
     [windowMinutes],
   );
+
+  // Realtime subscription: refresh logs/alerts/stats whenever a new event lands
+  useEffect(() => {
+    const channel = supabase
+      .channel('email-deliverability-live')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'email_send_log' }, (payload) => {
+        setLiveTick(t => t + 1);
+        queryClient.invalidateQueries({ queryKey: ['email-logs'] });
+        queryClient.invalidateQueries({ queryKey: ['email-stats'] });
+        const row = (payload.new ?? payload.old) as EmailLogRow | undefined;
+        if (row && payload.eventType === 'INSERT') {
+          if (row.status === 'sent') {
+            toast.success(isRTL ? `تم تسليم: ${row.recipient_email}` : `Delivered: ${row.recipient_email}`, { duration: 3000 });
+          } else if (row.status === 'bounced') {
+            toast.error(isRTL ? `ارتداد: ${row.recipient_email}` : `Bounced: ${row.recipient_email}`);
+          } else if (row.status === 'complained') {
+            toast.error(isRTL ? `شكوى spam: ${row.recipient_email}` : `Complaint: ${row.recipient_email}`);
+          } else if (row.status === 'failed' || row.status === 'dlq') {
+            toast.error(isRTL ? `فشل الإرسال: ${row.recipient_email}` : `Failed: ${row.recipient_email}`);
+          }
+        }
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'email_deliverability_alerts' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['email-alerts'] });
+        toast.warning(isRTL ? 'تنبيه جديد: ارتفاع في معدل الفشل/الارتداد' : 'New deliverability alert');
+      })
+      .subscribe((status) => {
+        setLiveConnected(status === 'SUBSCRIBED');
+      });
+    return () => { supabase.removeChannel(channel); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRTL]);
 
   // Stats
   const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useQuery({
@@ -210,6 +244,15 @@ const AdminEmailDeliverability: React.FC = () => {
                 ? 'تتبع نسب التسليم والارتداد والشكاوى مع تنبيهات تلقائية كل 15 دقيقة.'
                 : 'Track delivery, bounce, and complaint rates with automatic alerts every 15 minutes.'}
             </p>
+            <div className="flex items-center gap-2 mt-2 text-xs">
+              <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 ${liveConnected ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-700' : 'border-muted-foreground/30 bg-muted text-muted-foreground'}`}>
+                <Radio className={`h-3 w-3 ${liveConnected ? 'animate-pulse' : ''}`} />
+                {liveConnected ? (isRTL ? 'متّصل · بث مباشر' : 'Live') : (isRTL ? 'غير متّصل' : 'Offline')}
+              </span>
+              {liveTick > 0 && (
+                <span className="text-muted-foreground tech-content">{isRTL ? 'أحداث:' : 'events:'} {liveTick}</span>
+              )}
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <Select value={windowKey} onValueChange={(v) => setWindowKey(v as keyof typeof WINDOWS)}>
