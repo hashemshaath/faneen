@@ -61,6 +61,7 @@ const SearchPage = () => {
   const [showFilters, setShowFilters] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [favoritesOnly, setFavoritesOnly] = useState<boolean>(searchParams.get('fav') === '1');
 
   const [filters, setFilters] = useState<SearchFilterValues>({
     categoryId: searchParams.get('category') || 'all',
@@ -183,8 +184,19 @@ const SearchPage = () => {
 
   const filtered = useMemo(() => {
     if (!businesses) return [];
-    return filterAndSort(businesses, debouncedQuery, filters, selectedTags, entityTags, language);
-  }, [businesses, debouncedQuery, filters, language, selectedTags, entityTags]);
+    let res = filterAndSort(businesses, debouncedQuery, filters, selectedTags, entityTags, language);
+    if (favoritesOnly) {
+      try {
+        const raw = localStorage.getItem('qitaat_fav_businesses_v1');
+        const ids: string[] = raw ? JSON.parse(raw) : [];
+        const set = new Set(ids);
+        res = res.filter((b: { id: string }) => set.has(b.id));
+      } catch {
+        /* ignore */
+      }
+    }
+    return res;
+  }, [businesses, debouncedQuery, filters, language, selectedTags, entityTags, favoritesOnly]);
 
   // Consolidated JSON-LD: BreadcrumbList + WebSite/SearchAction + ItemList of
   // the top providers (when results exist). All keywords carry sector context
@@ -269,6 +281,19 @@ const SearchPage = () => {
         categories={categories}
         onCategoryClick={handleCategoryClick}
         businesses={businesses}
+        verifiedOnly={filters.verifiedOnly}
+        onToggleVerified={() => handleFilterChange('verifiedOnly', !filters.verifiedOnly)}
+        minRating={filters.minRating}
+        onSetMinRating={(r) => handleFilterChange('minRating', r)}
+        favoritesOnly={favoritesOnly}
+        onToggleFavoritesOnly={() => {
+          const next = !favoritesOnly;
+          setFavoritesOnly(next);
+          setCurrentPage(1);
+          const params = new URLSearchParams(searchParams);
+          if (next) params.set('fav', '1'); else params.delete('fav');
+          setSearchParams(params, { replace: true });
+        }}
       />
 
       <div className="container py-6 sm:py-8 px-3 sm:px-6">
