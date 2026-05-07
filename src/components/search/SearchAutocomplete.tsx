@@ -203,7 +203,7 @@ export const SearchAutocomplete = ({ query, onQueryChange, onSearch, businesses,
   }, [allItems, query, suggestions.length, isAr]);
 
   // Flat index counter for keyboard nav across grouped items
-  let flatIndex = !query ? history.filter(() => true).slice(0, 5).length : 0;
+  const flatIndex = !query ? history.filter(() => true).slice(0, 5).length : 0;
 
   return (
     <div ref={containerRef} className="max-w-2xl mx-auto relative group" role="combobox" aria-expanded={showDropdown} aria-haspopup="listbox">
