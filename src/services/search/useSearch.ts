@@ -189,7 +189,7 @@ export const useBusinesses = () =>
     queryFn: async () => {
       const { data } = await supabase
         .from('businesses_public')
-        .select('*, categories(*), cities(*), business_services(price_from, price_to, is_active)')
+        .select('*, categories(*), cities(*), business_services(name_ar, name_en, price_from, price_to, is_active), promotions(id, is_active, end_date)')
         .eq('is_active', true)
         .order('rating_avg', { ascending: false })
         .limit(500);

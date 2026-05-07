@@ -29,6 +29,7 @@ const TopProvidersSection = lazyRetry(() => import("@/components/home/TopProvide
 const LatestProjectsSection = lazyRetry(() => import("@/components/home/LatestProjectsSection").then(m => ({ default: m.LatestProjectsSection })));
 const LatestOffersSection = lazyRetry(() => import("@/components/home/LatestOffersSection").then(m => ({ default: m.LatestOffersSection })));
 const FeaturesSection = lazyRetry(() => import("@/components/home/FeaturesSection").then(m => ({ default: m.FeaturesSection })));
+const WhyQitaatSection = lazyRetry(() => import("@/components/home/WhyQitaatSection").then(m => ({ default: m.WhyQitaatSection })));
 const LatestBlogSection = lazyRetry(() => import("@/components/home/LatestBlogSection").then(m => ({ default: m.LatestBlogSection })));
 const MembershipSection = lazyRetry(() => import("@/components/home/MembershipSection").then(m => ({ default: m.MembershipSection })));
 const CTASection = lazyRetry(() => import("@/components/home/CTASection").then(m => ({ default: m.CTASection })));
@@ -102,6 +103,11 @@ const Index = () => {
       <Navbar />
       <HeroSection />
       <StatsSection />
+      <div className="cv-auto">
+        <Suspense fallback={<SectionFallback minH={360} />}>
+          <WhyQitaatSection variant="home" />
+        </Suspense>
+      </div>
       <Suspense fallback={<SectionFallback />}>
         <CategoriesSection />
       </Suspense>
