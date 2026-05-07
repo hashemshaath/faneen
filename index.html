@@ -60,6 +60,36 @@
     <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), interest-cohort=(), browsing-topics=()" />
     <meta http-equiv="X-Frame-Options" content="SAMEORIGIN" />
 
+    <!--
+      Content-Security-Policy in REPORT-ONLY mode.
+      This does NOT block anything — it only logs violations to the browser
+      console (and to the report-uri if/when configured) so we can validate
+      the policy before promoting it to enforcement.
+      Notes:
+        - 'unsafe-inline' for style is required by Tailwind/Vite injected styles.
+        - 'unsafe-inline' + 'unsafe-eval' for script kept temporarily; will be
+          tightened with hashes once the inline preload bootstrap is moved.
+        - connect-src includes Supabase REST + Realtime (wss) + Lovable AI gateway.
+        - img/media allow data: and blob: for canvas/file uploads.
+        - frame-ancestors set so Lovable preview can still embed us.
+    -->
+    <meta http-equiv="Content-Security-Policy-Report-Only" content="
+      default-src 'self';
+      base-uri 'self';
+      form-action 'self';
+      object-src 'none';
+      frame-ancestors 'self' https://*.lovable.app https://*.lovable.dev https://lovable.dev;
+      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com;
+      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+      font-src 'self' data: https://fonts.gstatic.com;
+      img-src 'self' data: blob: https: ;
+      media-src 'self' data: blob: https:;
+      connect-src 'self' https://hckpxwhjycmdflaneihd.supabase.co wss://hckpxwhjycmdflaneihd.supabase.co https://*.supabase.co wss://*.supabase.co https://fonts.googleapis.com https://fonts.gstatic.com;
+      worker-src 'self' blob:;
+      manifest-src 'self';
+      upgrade-insecure-requests
+    " />
+
     <!-- AI crawler discovery -->
     <link rel="alternate" type="text/plain" title="LLM crawler manifest" href="/llms.txt" />
 
