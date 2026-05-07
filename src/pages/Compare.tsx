@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { usePageMeta } from '@/hooks/usePageMeta';
+import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
+import { buildBreadcrumbList, ogImageFor } from '@/lib/seo/structured-data';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -32,7 +33,22 @@ const Compare = () => {
       ? `https://qitaat.com/compare?ids=${[...selectedIds].sort().join(',')}`
       : 'https://qitaat.com/compare',
     noindex: selectedIds.length > 0,
+    ogTitle: isRTL ? 'مقارنة مزودي الخدمات — قِطاعات' : 'Compare Service Providers — Qitaat',
+    ogDescription: isRTL
+      ? 'أداة مقارنة احترافية بين مزودي الألمنيوم والحديد والزجاج: أسعار، تقييمات، خدمات.'
+      : 'Professional comparison of aluminum, iron and glass providers: pricing, reviews, services.',
+    ogImage: ogImageFor('compare'),
+    keywords: isRTL
+      ? 'مقارنة, ألمنيوم, حديد, زجاج, مزودي خدمات, تقييمات, أسعار'
+      : 'compare, aluminum, iron, glass, providers, ratings, pricing',
   });
+
+  useMultiJsonLd(useMemo(() => {
+    const crumbs = buildBreadcrumbList(
+      [{ name: isRTL ? 'مقارنة المزودين' : 'Compare Providers', url: '/compare' }],
+    );
+    return crumbs ? [crumbs] : null;
+  }, [isRTL]));
 
   const [searchQuery, setSearchQuery] = useState('');
 

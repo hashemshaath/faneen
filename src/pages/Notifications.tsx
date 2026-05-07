@@ -22,6 +22,7 @@ import { formatDistanceToNow, format, isAfter, isBefore, startOfDay, endOfDay } 
 import { ar as arLocale, enUS } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { getNotificationMeta, isUrgentNotification, typeFilterLabels } from '@/components/notifications/notification-types';
+import { usePageMeta } from '@/hooks/usePageMeta';
 
 const Notifications = () => {
   const { user } = useAuth();
@@ -29,6 +30,13 @@ const Notifications = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
+
+  usePageMeta({
+    title: isRTL ? 'الإشعارات' : 'Notifications',
+    description: isRTL ? 'مركز الإشعارات الخاص بك على قِطاعات.' : 'Your Qitaat notifications center.',
+    canonical: 'https://qitaat.com/notifications',
+    noindex: true,
+  });
 
   const [typeFilter, setTypeFilter] = useState('all');
   const [readFilter, setReadFilter] = useState<'all' | 'unread' | 'read'>('all');

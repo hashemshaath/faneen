@@ -3,7 +3,8 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
-import { usePageMeta } from '@/hooks/usePageMeta';
+import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
+import { buildBreadcrumbList, ogImageFor } from '@/lib/seo/structured-data';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { Card, CardContent } from '@/components/ui/card';
@@ -53,7 +54,22 @@ const CompareProfiles = () => {
       ? `https://qitaat.com/compare-profiles?ids=${[...selectedIds].sort().join(',')}`
       : 'https://qitaat.com/compare-profiles',
     noindex: selectedIds.length > 0,
+    ogTitle: isRTL ? 'مقارنة أنظمة القطاعات — قِطاعات' : 'Compare Profile Systems — Qitaat',
+    ogDescription: isRTL
+      ? 'قارن بين أنظمة قطاعات الألمنيوم والحديد: العزل الحراري، العزل الصوتي، المقاومة، والمواصفات الفنية.'
+      : 'Compare aluminum and iron profile systems: thermal insulation, sound insulation, resistance, and technical specs.',
+    ogImage: ogImageFor('compare-profiles'),
+    keywords: isRTL
+      ? 'قطاعات, ألمنيوم, حديد, مقارنة, مواصفات, عزل حراري, عزل صوتي'
+      : 'profile systems, aluminum, iron, compare, specifications, thermal insulation',
   });
+
+  useMultiJsonLd(useMemo(() => {
+    const crumbs = buildBreadcrumbList(
+      [{ name: isRTL ? 'مقارنة أنظمة القطاعات' : 'Compare Profile Systems', url: '/compare-profiles' }],
+    );
+    return crumbs ? [crumbs] : null;
+  }, [isRTL]));
 
   // Fetch all published profiles for search
   const { data: allProfiles = [] } = useQuery({
