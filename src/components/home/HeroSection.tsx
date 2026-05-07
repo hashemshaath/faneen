@@ -264,7 +264,7 @@ export const HeroSection = () => {
           src={i === 0 ? slide.image : (current === i ? slide.image : undefined)}
           data-src={slide.image}
           alt={i === current ? (language === 'ar' ? 'خلفية قسم البحث الرئيسي' : 'Hero background') : ''}
-          className={`absolute inset-0 w-full h-full object-cover will-change-transform scale-115 transition-opacity duration-1000 ${i === current ? 'opacity-100' : 'opacity-0'}`}
+          className={`absolute inset-0 w-full h-full object-cover will-change-transform scale-[1.15] transition-opacity duration-1000 ${i === current ? 'opacity-100' : 'opacity-0'}`}
           width={1920}
           height={1080}
           {...(i === 0 ? { fetchpriority: "high" as const } : {})}
