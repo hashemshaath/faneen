@@ -72,6 +72,7 @@ interface ProviderRow {
 
 export default function AdminProviderReview() {
   const { language, isRTL } = useLanguage();
+  // intentionally below other hooks
   usePageMeta({
     title: isRTL ? 'مراجعة المزودين | الإدارة' : 'Provider Review | Admin',
     noindex: true,
