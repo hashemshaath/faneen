@@ -372,3 +372,88 @@ describe('BusinessCard service tags absent when business_services is empty/undef
     expectNoChipsOrCounter();
   });
 });
+
+/**
+ * Stable ordering of active services.
+ *
+ * The visible chips must always be the FIRST 3 active services in input
+ * order (inactive entries skipped, never re-ordered), and +N must equal
+ * (active count) - 3. Re-rendering the same input must not shuffle chips.
+ */
+describe('BusinessCard stable ordering of active services', () => {
+  it('preserves input order when picking the first 3 active services', () => {
+    renderCard({
+      ...baseBiz,
+      business_services: [
+        { name_ar: 'خدمة-A', is_active: true },
+        { name_ar: 'خدمة-B', is_active: true },
+        { name_ar: 'خدمة-C', is_active: true },
+        { name_ar: 'خدمة-D', is_active: true },
+        { name_ar: 'خدمة-E', is_active: true },
+      ],
+    });
+    const chips = ['خدمة-A', 'خدمة-B', 'خدمة-C'].map((t) => screen.getByText(t));
+    // DOM order must match input order.
+    expect(chips[0].compareDocumentPosition(chips[1]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(chips[1].compareDocumentPosition(chips[2]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.queryByText('خدمة-D')).toBeNull();
+    expect(screen.queryByText('خدمة-E')).toBeNull();
+    expect(screen.getByText('+2')).toBeInTheDocument();
+  });
+
+  it('skips inactive services without re-ordering active ones', () => {
+    renderCard({
+      ...baseBiz,
+      business_services: [
+        { name_ar: 'معطلة-1', is_active: false },
+        { name_ar: 'خدمة-A', is_active: true },
+        { name_ar: 'معطلة-2', is_active: false },
+        { name_ar: 'خدمة-B', is_active: true },
+        { name_ar: 'معطلة-3', is_active: false },
+        { name_ar: 'خدمة-C', is_active: true },
+        { name_ar: 'خدمة-D', is_active: true },
+      ],
+    });
+    const a = screen.getByText('خدمة-A');
+    const b = screen.getByText('خدمة-B');
+    const c = screen.getByText('خدمة-C');
+    expect(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(b.compareDocumentPosition(c) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.queryByText('خدمة-D')).toBeNull();
+    expect(screen.queryByText(/^معطلة-/)).toBeNull();
+    expect(screen.getByText('+1')).toBeInTheDocument();
+  });
+
+  it('produces identical DOM order across two renders of the same input', () => {
+    const services = [
+      { name_ar: 'خدمة-A', is_active: true },
+      { name_ar: 'خدمة-B', is_active: true },
+      { name_ar: 'خدمة-C', is_active: true },
+      { name_ar: 'خدمة-D', is_active: true },
+    ];
+    const { unmount } = renderCard({ ...baseBiz, business_services: services });
+    const firstOrder = ['خدمة-A', 'خدمة-B', 'خدمة-C'].map((t) => screen.getByText(t).textContent);
+    expect(screen.getByText('+1')).toBeInTheDocument();
+    unmount();
+    renderCard({ ...baseBiz, business_services: services });
+    const secondOrder = ['خدمة-A', 'خدمة-B', 'خدمة-C'].map((t) => screen.getByText(t).textContent);
+    expect(secondOrder).toEqual(firstOrder);
+    expect(screen.getByText('+1')).toBeInTheDocument();
+  });
+
+  it('does not alphabetize: input order "C, A, B" stays "C, A, B"', () => {
+    renderCard({
+      ...baseBiz,
+      business_services: [
+        { name_ar: 'خدمة-C', is_active: true },
+        { name_ar: 'خدمة-A', is_active: true },
+        { name_ar: 'خدمة-B', is_active: true },
+      ],
+    });
+    const c = screen.getByText('خدمة-C');
+    const a = screen.getByText('خدمة-A');
+    const b = screen.getByText('خدمة-B');
+    expect(c.compareDocumentPosition(a) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+});
