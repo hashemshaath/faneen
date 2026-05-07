@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Megaphone, Tag, Video, Star, Play, Calendar, Eye, TrendingUp, ArrowUpRight, Clock, Flame } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollToTop } from '@/components/ScrollToTop';
+import { VerifiedBadge } from '@/components/common/VerifiedBadge';
 
 const Offers = () => {
   const { isRTL, language } = useLanguage();
@@ -315,9 +316,7 @@ const Offers = () => {
                               <div className="flex items-center gap-1">
                                 <Star className="w-3 h-3 fill-accent text-accent" />
                                 <span className="text-[11px] text-muted-foreground" dir="ltr">{Number(biz.rating_avg).toFixed(1)}</span>
-                                {biz.is_verified && (
-                                  <Badge variant="secondary" className="text-[9px] px-1 py-0 ms-1">{isRTL ? 'موثق' : 'Verified'}</Badge>
-                                )}
+                                {biz.is_verified && <VerifiedBadge size="xs" className="ms-1" />}
                               </div>
                             </div>
                             <ArrowUpRight className="w-4 h-4 text-muted-foreground/40 group-hover/biz:text-accent transition-colors shrink-0" />
