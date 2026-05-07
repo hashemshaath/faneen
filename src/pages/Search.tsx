@@ -282,7 +282,7 @@ const SearchPage = () => {
         query={query}
         onQueryChange={handleQueryChange}
         onSearch={handleSearch}
-        totalResults={filtered.length}
+        totalResults={deferredFiltered.length}
         categories={categories}
         onCategoryClick={handleCategoryClick}
         businesses={businesses}
