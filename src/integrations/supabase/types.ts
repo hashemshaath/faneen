@@ -4389,6 +4389,7 @@ export type Database = {
           total: number
         }[]
       }
+      get_home_stats: { Args: never; Returns: Json }
       get_migration_epoch: { Args: never; Returns: number }
       get_migration_failure_stats_24h: {
         Args: never
