@@ -89,17 +89,20 @@ export const ActiveFilterChips = ({
   if (chips.length === 0) return null;
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5 mb-4 animate-fade-in">
+    <div className="flex flex-wrap items-center gap-2 mb-4 animate-fade-in">
+      <span className="text-[11px] font-heading font-bold text-muted-foreground uppercase tracking-wide">
+        {isRTL ? 'الفلاتر النشطة' : 'Active filters'}
+      </span>
       {chips.map(chip => (
         <Badge
           key={chip.key}
           variant="secondary"
-          className="gap-1 ps-2.5 pe-1 py-1 h-7 bg-accent/10 text-accent border border-accent/20 hover:bg-accent/15 transition-colors cursor-default group/chip text-xs font-body"
+          className="gap-1.5 ps-3 pe-1 py-1 h-8 bg-accent/10 text-accent border border-accent/25 hover:bg-accent/15 transition-colors cursor-default text-xs font-body font-medium rounded-full"
         >
-          <span className="truncate max-w-[120px]">{chip.label}</span>
+          <span className="truncate max-w-[180px]">{chip.label}</span>
           <button
             onClick={chip.onRemove}
-            className="w-4 h-4 rounded-full flex items-center justify-center hover:bg-accent/20 transition-colors"
+            className="w-5 h-5 rounded-full flex items-center justify-center hover:bg-accent/25 transition-colors"
             aria-label={`Remove ${chip.label}`}
           >
             <X className="w-3 h-3" />
@@ -109,7 +112,7 @@ export const ActiveFilterChips = ({
       {chips.length > 1 && (
         <button
           onClick={onClearAll}
-          className="flex items-center gap-1 text-[11px] text-destructive hover:underline font-body px-2 py-1 transition-colors"
+          className="ms-auto flex items-center gap-1.5 text-[11px] text-destructive hover:bg-destructive/10 font-body font-medium px-3 py-1.5 rounded-full border border-destructive/30 transition-colors"
         >
           <RotateCcw className="w-3 h-3" />
           {isRTL ? 'مسح الكل' : 'Clear all'}

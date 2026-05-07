@@ -1,5 +1,4 @@
 import { useLanguage } from '@/i18n/LanguageContext';
-import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -7,7 +6,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import {
-  Star, BadgeCheck, SlidersHorizontal, RotateCcw, DollarSign, ChevronRight, ChevronLeft, MapPin, ArrowUpDown, Tag,
+  Star, ShieldCheck, SlidersHorizontal, RotateCcw, ChevronRight, ChevronLeft, MapPin, ArrowUpDown, Tag, Wallet,
 } from 'lucide-react';
 import { CategoryTree } from './CategoryTree';
 import { TagsFilter } from './TagsFilter';
@@ -57,166 +56,213 @@ export const SearchFilters = ({
     : (showFilters ? ChevronLeft : ChevronRight);
 
   return (
-    <div className={`flex-shrink-0 transition-all duration-300 ${showFilters ? 'lg:w-[260px] xl:w-[280px]' : 'lg:w-[48px]'}`}>
-      {/* Header / Toggle */}
-      <div className="flex items-center justify-between mb-3">
-        <button
-          onClick={onToggleFilters}
-          className="flex items-center gap-2 font-heading font-bold text-foreground hover:text-accent transition-colors"
-          title={showFilters ? (isRTL ? 'طي التصفية' : 'Collapse filters') : (isRTL ? 'عرض التصفية' : 'Show filters')}
-        >
-          <div className="w-8 h-8 rounded-lg bg-accent/10 dark:bg-accent/15 flex items-center justify-center">
-            <SlidersHorizontal className="w-4 h-4 text-accent" />
-          </div>
-          {showFilters && <span>{t('search.filters')}</span>}
-          {activeCount > 0 && (
-            <Badge variant="secondary" className="bg-accent text-accent-foreground text-[10px] px-1.5 py-0 min-w-[18px] h-[18px] flex items-center justify-center rounded-full">
-              {activeCount}
-            </Badge>
-          )}
-          <CollapseIcon className="w-4 h-4 text-muted-foreground" />
-        </button>
-        {hasActiveFilters && showFilters && (
-          <button
-            onClick={onClearFilters}
-            className="text-[11px] text-destructive font-body hover:underline flex items-center gap-1 transition-colors"
-          >
-            <RotateCcw className="w-3 h-3" />
-            {t('search.clear_filters')}
-          </button>
-        )}
-      </div>
-
-      {showFilters && (
-        <div className="space-y-1.5 animate-fade-in">
-          {/* Category */}
-          <FilterCard icon={Tag} label={t('search.category')}>
-            <CategoryTree
-              categories={(categories || []) as any}
-              selectedId={filters.categoryId}
-              onSelect={v => onFilterChange('categoryId', v)}
-            />
-          </FilterCard>
-
-          {/* City */}
-          <FilterCard icon={MapPin} label={t('search.city')}>
-            <Select value={filters.cityId} onValueChange={v => onFilterChange('cityId', v)}>
-              <SelectTrigger className="w-full rounded-xl h-9 text-sm bg-muted/20 dark:bg-muted/10 border-border/20 dark:border-border/10">
-                <SelectValue placeholder={t('search.all_cities')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('search.all_cities')}</SelectItem>
-                {cities?.map(c => (
-                  <SelectItem key={c.id} value={c.id}>{language === 'ar' ? c.name_ar : c.name_en}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </FilterCard>
-
-          {/* Price Range */}
-          <FilterCard icon={DollarSign} label={t('search.price_range')}>
-            <div className="flex items-center gap-2">
-              <div className="relative flex-1">
-                <Input
-                  type="number"
-                  min={0}
-                  placeholder={isRTL ? 'من' : 'Min'}
-                  value={filters.priceMin || ''}
-                  onChange={e => onFilterChange('priceMin', Number(e.target.value) || 0)}
-                  className="rounded-xl text-sm h-9 ps-7 bg-muted/20 dark:bg-muted/10 border-border/20 dark:border-border/10"
-                />
-                <DollarSign className="absolute start-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/40" />
+    <aside
+      className={`flex-shrink-0 transition-all duration-300 ${showFilters ? 'lg:w-[280px] xl:w-[300px]' : 'lg:w-[56px]'}`}
+      aria-label={isRTL ? 'مرشحات البحث' : 'Search filters'}
+    >
+      <div className="lg:sticky lg:top-24">
+        {/* Header card */}
+        <div className="rounded-2xl border border-border/60 bg-card/95 backdrop-blur-sm shadow-sm overflow-hidden">
+          <div className="flex items-center justify-between gap-2 p-3">
+            <button
+              onClick={onToggleFilters}
+              className="flex items-center gap-2.5 font-heading font-bold text-foreground hover:text-accent transition-colors min-w-0"
+              title={showFilters ? (isRTL ? 'طي التصفية' : 'Collapse filters') : (isRTL ? 'عرض التصفية' : 'Show filters')}
+              aria-expanded={showFilters}
+            >
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/20 flex items-center justify-center shrink-0">
+                <SlidersHorizontal className="w-4 h-4 text-accent" />
               </div>
-              <span className="text-muted-foreground/30 text-xs font-bold">—</span>
-              <div className="relative flex-1">
-                <Input
-                  type="number"
-                  min={0}
-                  placeholder={isRTL ? 'إلى' : 'Max'}
-                  value={filters.priceMax || ''}
-                  onChange={e => onFilterChange('priceMax', Number(e.target.value) || 0)}
-                  className="rounded-xl text-sm h-9 ps-7 bg-muted/20 dark:bg-muted/10 border-border/20 dark:border-border/10"
-                />
-                <DollarSign className="absolute start-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/40" />
-              </div>
-            </div>
-          </FilterCard>
-
-          {/* Rating */}
-          <FilterCard icon={Star} label={t('search.min_rating')}>
-            <div className="flex flex-wrap gap-1.5">
-              {[5, 4, 3, 2, 1, 0].map((r) => {
-                const active = filters.minRating === r;
-                const label = r === 0
-                  ? (isRTL ? 'الكل' : 'All')
-                  : `${r}${r === 5 ? '' : '+'}★`;
-                return (
-                  <button
-                    key={r}
-                    type="button"
-                    onClick={() => onFilterChange('minRating', r)}
-                    className={`px-2.5 py-1 rounded-lg text-[11px] font-heading font-semibold transition-all border ${
-                      active
-                        ? 'bg-accent text-accent-foreground border-accent shadow-sm'
-                        : 'bg-muted/30 dark:bg-muted/15 border-border/30 text-foreground/70 hover:border-accent/40 hover:text-accent'
-                    }`}
-                    aria-pressed={active}
-                  >
-                    {label}
-                  </button>
-                );
-              })}
-            </div>
-          </FilterCard>
-
-          {/* Verified */}
-          <div className="flex items-center gap-3 p-3 rounded-xl bg-card dark:bg-card/60 border border-border/20 dark:border-border/10 hover:border-accent/20 transition-colors">
-            <Checkbox
-              id="verified"
-              checked={filters.verifiedOnly}
-              onCheckedChange={c => onFilterChange('verifiedOnly', c === true)}
-            />
-            <label htmlFor="verified" className="text-sm font-body text-foreground cursor-pointer flex items-center gap-1.5 flex-1">
-              <BadgeCheck className="w-4 h-4 text-accent" />
-              {t('search.verified_only')}
-            </label>
+              {showFilters && (
+                <>
+                  <span className="text-sm truncate">{t('search.filters')}</span>
+                  {activeCount > 0 && (
+                    <Badge className="bg-accent text-accent-foreground text-[10px] px-1.5 py-0 min-w-[18px] h-[18px] flex items-center justify-center rounded-full font-bold tech-content">
+                      {activeCount}
+                    </Badge>
+                  )}
+                </>
+              )}
+            </button>
+            {showFilters && (
+              <button
+                onClick={onToggleFilters}
+                className="w-7 h-7 rounded-lg hover:bg-muted/60 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                aria-label={isRTL ? 'طي' : 'Collapse'}
+              >
+                <CollapseIcon className="w-4 h-4" />
+              </button>
+            )}
           </div>
-
-          {/* Sort */}
-          <FilterCard icon={ArrowUpDown} label={t('search.sort_by')}>
-            <Select value={filters.sortBy} onValueChange={(v) => onFilterChange('sortBy', v as SearchFilterValues['sortBy'])}>
-              <SelectTrigger className="w-full rounded-xl h-9 text-sm bg-muted/20 dark:bg-muted/10 border-border/20 dark:border-border/10">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="relevance">{language === 'ar' ? 'الأكثر صلة' : 'Relevance'}</SelectItem>
-                <SelectItem value="rating">{t('search.sort_rating')}</SelectItem>
-                <SelectItem value="newest">{t('search.sort_newest')}</SelectItem>
-                <SelectItem value="name">{t('search.sort_name')}</SelectItem>
-              </SelectContent>
-            </Select>
-          </FilterCard>
-
-          {/* Tags */}
-          {onToggleTag && onClearTags && (
-            <TagsFilter
-              selectedTags={selectedTags}
-              onToggleTag={onToggleTag}
-              onClearTags={onClearTags}
-            />
+          {hasActiveFilters && showFilters && (
+            <button
+              onClick={onClearFilters}
+              className="w-full flex items-center justify-center gap-1.5 text-[11px] font-body font-medium text-destructive hover:bg-destructive/5 border-t border-border/60 py-2 transition-colors"
+            >
+              <RotateCcw className="w-3 h-3" />
+              {t('search.clear_filters')}
+            </button>
           )}
         </div>
-      )}
-    </div>
+
+        {showFilters && (
+          <div className="mt-3 space-y-2.5 animate-fade-in lg:max-h-[calc(100vh-12rem)] lg:overflow-y-auto lg:pe-1 no-scrollbar">
+            {/* Category */}
+            <FilterCard icon={Tag} label={t('search.category')}>
+              <CategoryTree
+                categories={(categories || []) as any}
+                selectedId={filters.categoryId}
+                onSelect={v => onFilterChange('categoryId', v)}
+              />
+            </FilterCard>
+
+            {/* City */}
+            <FilterCard icon={MapPin} label={t('search.city')}>
+              <Select value={filters.cityId} onValueChange={v => onFilterChange('cityId', v)}>
+                <SelectTrigger className="w-full rounded-xl h-10 text-sm bg-background border-border/60 hover:border-accent/40 transition-colors">
+                  <SelectValue placeholder={t('search.all_cities')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('search.all_cities')}</SelectItem>
+                  {cities?.map(c => (
+                    <SelectItem key={c.id} value={c.id}>{language === 'ar' ? c.name_ar : c.name_en}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FilterCard>
+
+            {/* Price Range */}
+            <FilterCard icon={Wallet} label={t('search.price_range')} hint={isRTL ? 'ر.س' : 'SAR'}>
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <Input
+                    type="number"
+                    inputMode="numeric"
+                    min={0}
+                    placeholder={isRTL ? 'من' : 'Min'}
+                    value={filters.priceMin || ''}
+                    onChange={e => onFilterChange('priceMin', Number(e.target.value) || 0)}
+                    className="rounded-xl text-sm h-10 bg-background border-border/60 hover:border-accent/40 focus-visible:border-accent tech-content text-center"
+                  />
+                </div>
+                <span className="text-muted-foreground/50 text-xs font-bold select-none">—</span>
+                <div className="relative flex-1">
+                  <Input
+                    type="number"
+                    inputMode="numeric"
+                    min={0}
+                    placeholder={isRTL ? 'إلى' : 'Max'}
+                    value={filters.priceMax || ''}
+                    onChange={e => onFilterChange('priceMax', Number(e.target.value) || 0)}
+                    className="rounded-xl text-sm h-10 bg-background border-border/60 hover:border-accent/40 focus-visible:border-accent tech-content text-center"
+                  />
+                </div>
+              </div>
+            </FilterCard>
+
+            {/* Rating */}
+            <FilterCard icon={Star} label={t('search.min_rating')}>
+              <div className="grid grid-cols-3 gap-1.5">
+                {[0, 3, 4, 4.5, 5].map((r) => {
+                  const active = filters.minRating === r;
+                  const label = r === 0
+                    ? (isRTL ? 'الكل' : 'All')
+                    : (
+                      <span className="inline-flex items-center gap-0.5 tech-content">
+                        {r}
+                        <Star className="w-3 h-3 fill-current" />
+                        {r < 5 ? '+' : ''}
+                      </span>
+                    );
+                  return (
+                    <button
+                      key={r}
+                      type="button"
+                      onClick={() => onFilterChange('minRating', r)}
+                      className={`h-9 rounded-lg text-[11px] font-heading font-semibold transition-all border flex items-center justify-center ${
+                        active
+                          ? 'bg-accent text-accent-foreground border-accent shadow-sm'
+                          : 'bg-background border-border/60 text-foreground/70 hover:border-accent/40 hover:text-accent'
+                      }`}
+                      aria-pressed={active}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+            </FilterCard>
+
+            {/* Verified — toggle row */}
+            <label
+              htmlFor="verified"
+              className={`flex items-center justify-between gap-3 p-3 rounded-2xl border cursor-pointer transition-all ${
+                filters.verifiedOnly
+                  ? 'bg-emerald-500/5 border-emerald-500/30'
+                  : 'bg-card border-border/60 hover:border-accent/40'
+              }`}
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                  filters.verifiedOnly ? 'bg-emerald-500/15' : 'bg-muted'
+                }`}>
+                  <ShieldCheck className={`w-4 h-4 ${filters.verifiedOnly ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'}`} />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-sm font-heading font-semibold text-foreground truncate">{t('search.verified_only')}</div>
+                  <div className="text-[10px] text-muted-foreground">{isRTL ? 'مزودون موثقون فقط' : 'Verified providers only'}</div>
+                </div>
+              </div>
+              <Checkbox
+                id="verified"
+                checked={filters.verifiedOnly}
+                onCheckedChange={c => onFilterChange('verifiedOnly', c === true)}
+              />
+            </label>
+
+            {/* Sort */}
+            <FilterCard icon={ArrowUpDown} label={t('search.sort_by')}>
+              <Select value={filters.sortBy} onValueChange={(v) => onFilterChange('sortBy', v as SearchFilterValues['sortBy'])}>
+                <SelectTrigger className="w-full rounded-xl h-10 text-sm bg-background border-border/60 hover:border-accent/40 transition-colors">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="relevance">{language === 'ar' ? 'الأكثر صلة' : 'Relevance'}</SelectItem>
+                  <SelectItem value="rating">{t('search.sort_rating')}</SelectItem>
+                  <SelectItem value="newest">{t('search.sort_newest')}</SelectItem>
+                  <SelectItem value="name">{t('search.sort_name')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </FilterCard>
+
+            {/* Tags */}
+            {onToggleTag && onClearTags && (
+              <TagsFilter
+                selectedTags={selectedTags}
+                onToggleTag={onToggleTag}
+                onClearTags={onClearTags}
+              />
+            )}
+          </div>
+        )}
+      </div>
+    </aside>
   );
 };
 
-const FilterCard = ({ icon: Icon, label, children }: { icon: React.ElementType; label: string; children: React.ReactNode }) => (
-  <div className="p-3 rounded-xl bg-card dark:bg-card/60 border border-border/20 dark:border-border/10 space-y-2.5 hover:border-accent/15 transition-colors">
-    <div className="flex items-center gap-2">
-      <Icon className="w-3.5 h-3.5 text-accent/60" />
-      <span className="text-xs font-heading font-semibold text-foreground/80">{label}</span>
-    </div>
-    {children}
-  </div>
+const FilterCard = ({
+  icon: Icon, label, hint, children,
+}: { icon: React.ElementType; label: string; hint?: string; children: React.ReactNode }) => (
+  <section className="rounded-2xl bg-card border border-border/60 hover:border-accent/30 transition-colors shadow-sm overflow-hidden">
+    <header className="flex items-center justify-between gap-2 px-3.5 py-2.5 border-b border-border/50 bg-muted/30">
+      <div className="flex items-center gap-2 min-w-0">
+        <Icon className="w-3.5 h-3.5 text-accent shrink-0" />
+        <span className="text-[11px] font-heading font-bold text-foreground/90 uppercase tracking-wide truncate">{label}</span>
+      </div>
+      {hint && (
+        <span className="text-[10px] font-body text-muted-foreground tech-content shrink-0">{hint}</span>
+      )}
+    </header>
+    <div className="p-3">{children}</div>
+  </section>
 );
