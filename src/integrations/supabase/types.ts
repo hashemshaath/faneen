@@ -1852,6 +1852,63 @@ export type Database = {
         }
         Relationships: []
       }
+      email_deliverability_alerts: {
+        Row: {
+          acknowledged: boolean
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          alert_type: string
+          bounced_count: number
+          complained_count: number
+          created_at: string
+          failed_count: number
+          id: string
+          message: string | null
+          metadata: Json | null
+          rate: number
+          severity: string
+          threshold: number
+          total_emails: number
+          window_minutes: number
+        }
+        Insert: {
+          acknowledged?: boolean
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          alert_type: string
+          bounced_count?: number
+          complained_count?: number
+          created_at?: string
+          failed_count?: number
+          id?: string
+          message?: string | null
+          metadata?: Json | null
+          rate: number
+          severity?: string
+          threshold: number
+          total_emails: number
+          window_minutes: number
+        }
+        Update: {
+          acknowledged?: boolean
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          alert_type?: string
+          bounced_count?: number
+          complained_count?: number
+          created_at?: string
+          failed_count?: number
+          id?: string
+          message?: string | null
+          metadata?: Json | null
+          rate?: number
+          severity?: string
+          threshold?: number
+          total_emails?: number
+          window_minutes?: number
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           created_at: string
@@ -4140,6 +4197,7 @@ export type Database = {
         Args: { _subscription_id: string }
         Returns: undefined
       }
+      check_email_deliverability: { Args: never; Returns: undefined }
       check_password_reset_rate_limit: {
         Args: { _email: string }
         Returns: boolean
@@ -4197,6 +4255,22 @@ export type Database = {
           epoch: number
           last_rerun_at: string
           reason: string
+        }[]
+      }
+      get_email_deliverability_stats: {
+        Args: { _window_minutes?: number }
+        Returns: {
+          bounce_rate: number
+          bounced: number
+          complained: number
+          complaint_rate: number
+          dlq: number
+          failed: number
+          failure_rate: number
+          pending: number
+          sent: number
+          suppressed: number
+          total: number
         }[]
       }
       get_migration_epoch: { Args: never; Returns: number }
