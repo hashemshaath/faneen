@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -14,7 +14,7 @@ import { toast } from 'sonner';
 import {
   ShieldCheck, Search, Send, KeyRound, Users, Mail, Phone, Calendar,
   Loader2, Clock, CheckCircle2, XCircle, AlertTriangle, RefreshCw,
-  Hash, Ban, UserCheck, History, Shield,
+  Hash, Ban, UserCheck, History, Shield, ShieldPlus, ShieldMinus, Crown,
 } from 'lucide-react';
 import { PasswordResetLogPanel } from '@/components/admin/PasswordResetLogPanel';
 
@@ -34,10 +34,18 @@ const statusConfig: Record<string, { icon: React.ElementType; color: string; lab
 
 const AdminAccessManagement = () => {
   const { isRTL, language } = useLanguage();
-  const { user } = useAuth();
+  const { user, isSuperAdmin } = useAuth();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState<'accounts' | 'reset-log'>('accounts');
+  const [activeTab, setActiveTab] = useState<'accounts' | 'roles' | 'reset-log'>('accounts');
+  const [pendingRoleAction, setPendingRoleAction] = useState<{ userId: string; action: 'grant' | 'revoke' } | null>(null);
+
+  // Auto-clear pending confirmation after 4s
+  useEffect(() => {
+    if (!pendingRoleAction) return;
+    const t = setTimeout(() => setPendingRoleAction(null), 4000);
+    return () => clearTimeout(t);
+  }, [pendingRoleAction]);
 
   // Fetch profiles
   const { data: profiles = [], isLoading: loadingProfiles } = useQuery({
@@ -64,6 +72,59 @@ const AdminAccessManagement = () => {
       return data;
     },
     enabled: !!user,
+  });
+
+  // Fetch all role assignments
+  const { data: rolesData = [], isLoading: loadingRoles } = useQuery({
+    queryKey: ['access-mgmt-roles'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('id, user_id, role');
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!user,
+  });
+
+  const rolesByUser = useMemo(() => {
+    const map = new Map<string, string[]>();
+    for (const r of rolesData) {
+      const arr = map.get(r.user_id) ?? [];
+      arr.push(r.role);
+      map.set(r.user_id, arr);
+    }
+    return map;
+  }, [rolesData]);
+
+  const grantAdminMutation = useMutation({
+    mutationFn: async (targetUserId: string) => {
+      const { error } = await supabase.from('user_roles').insert({ user_id: targetUserId, role: 'admin' });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['access-mgmt-roles'] });
+      toast.success(isRTL ? 'تم منح صلاحية الأدمن' : 'Admin role granted');
+      setPendingRoleAction(null);
+    },
+    onError: (e: Error) => toast.error(e.message || (isRTL ? 'فشل منح الصلاحية' : 'Failed to grant role')),
+  });
+
+  const revokeAdminMutation = useMutation({
+    mutationFn: async (targetUserId: string) => {
+      const { error } = await supabase
+        .from('user_roles')
+        .delete()
+        .eq('user_id', targetUserId)
+        .eq('role', 'admin');
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['access-mgmt-roles'] });
+      toast.success(isRTL ? 'تم إزالة صلاحية الأدمن' : 'Admin role revoked');
+      setPendingRoleAction(null);
+    },
+    onError: (e: Error) => toast.error(e.message || (isRTL ? 'فشل إزالة الصلاحية' : 'Failed to revoke role')),
   });
 
   // Send reset link mutation
@@ -135,7 +196,7 @@ const AdminAccessManagement = () => {
         </div>
 
         {/* Tabs */}
-        <div className="flex rounded-2xl bg-muted/40 p-1 gap-1">
+        <div className="flex rounded-2xl bg-muted/40 p-1 gap-1 flex-wrap">
           <button
             onClick={() => setActiveTab('accounts')}
             className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium transition-all duration-300 ${
@@ -144,6 +205,15 @@ const AdminAccessManagement = () => {
           >
             <Users className="w-4 h-4" />
             {isRTL ? 'الحسابات' : 'Accounts'}
+          </button>
+          <button
+            onClick={() => setActiveTab('roles')}
+            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium transition-all duration-300 ${
+              activeTab === 'roles' ? 'bg-card text-foreground shadow-sm ring-1 ring-border/30' : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <ShieldCheck className="w-4 h-4" />
+            {isRTL ? 'إدارة الأدوار' : 'Roles'}
           </button>
           <button
             onClick={() => setActiveTab('reset-log')}
@@ -158,6 +228,112 @@ const AdminAccessManagement = () => {
 
         {activeTab === 'reset-log' ? (
           <PasswordResetLogPanel />
+        ) : activeTab === 'roles' ? (
+          <div className="space-y-4">
+            {/* Search reused */}
+            <div className="rounded-2xl border border-border/30 bg-card p-4">
+              <div className="relative">
+                <Search className="absolute top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
+                <Input
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  placeholder={isRTL ? 'بحث بالاسم أو البريد أو المعرف...' : 'Search by name, email, or ref ID...'}
+                  className="ps-10 h-10 rounded-xl bg-muted/30 border-border/20 focus:bg-background transition-colors"
+                />
+              </div>
+            </div>
+
+            {!isSuperAdmin && (
+              <div className="rounded-xl border border-amber-300/50 bg-amber-500/10 p-3 text-sm flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <span>{isRTL
+                  ? 'يمكنك عرض الأدوار فقط — منح أو إزالة الأدمن مقتصر على Super Admin (مفروض على مستوى قاعدة البيانات).'
+                  : 'View-only — granting or revoking admin is restricted to Super Admin (enforced by database RLS).'}
+                </span>
+              </div>
+            )}
+
+            {loadingProfiles || loadingRoles ? (
+              <div className="space-y-3">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-16 rounded-2xl" />)}</div>
+            ) : (
+              <div className="space-y-3">
+                {filtered.map(profile => {
+                  const userRoles = rolesByUser.get(profile.user_id) ?? [];
+                  const isAdminRole = userRoles.includes('admin');
+                  const isSuperRole = userRoles.includes('super_admin');
+                  const isSelf = profile.user_id === user?.id;
+                  const pending = pendingRoleAction?.userId === profile.user_id ? pendingRoleAction.action : null;
+                  const isPendingMutation = (grantAdminMutation.isPending && grantAdminMutation.variables === profile.user_id)
+                    || (revokeAdminMutation.isPending && revokeAdminMutation.variables === profile.user_id);
+
+                  return (
+                    <div key={profile.id} className="rounded-2xl border border-border/30 bg-card p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <Avatar className="w-9 h-9 ring-2 ring-border/10">
+                          <AvatarImage src={profile.avatar_url || undefined} />
+                          <AvatarFallback className="bg-gradient-to-br from-accent/20 to-primary/10 text-accent font-bold text-sm">
+                            {(profile.full_name || '?').charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-heading font-bold text-sm truncate">{profile.full_name || (isRTL ? 'بدون اسم' : 'No name')}</span>
+                            {profile.ref_id && <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-mono"><Hash className="w-2.5 h-2.5 me-0.5" />{profile.ref_id}</Badge>}
+                            {isSelf && <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{isRTL ? 'أنت' : 'You'}</Badge>}
+                          </div>
+                          <div className="flex flex-wrap items-center gap-x-3 mt-0.5">
+                            {profile.email && <span className="flex items-center gap-1 text-[11px] text-muted-foreground truncate max-w-[240px]"><Mail className="w-3 h-3 shrink-0" />{profile.email}</span>}
+                          </div>
+                          <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                            {isSuperRole && <Badge className="text-[10px] gap-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white border-none"><Crown className="w-2.5 h-2.5" />Super Admin</Badge>}
+                            {isAdminRole && <Badge className="text-[10px] gap-1 bg-primary/15 text-primary border border-primary/30"><ShieldCheck className="w-2.5 h-2.5" />Admin</Badge>}
+                            {!isAdminRole && !isSuperRole && <Badge variant="outline" className="text-[10px]">{isRTL ? 'مستخدم' : 'User'}</Badge>}
+                          </div>
+                        </div>
+                      </div>
+
+                      {isSuperAdmin && !isSuperRole && (
+                        <div className="flex items-center gap-2 shrink-0">
+                          {!isAdminRole ? (
+                            pending === 'grant' ? (
+                              <Button size="sm" className="h-8 gap-1.5 text-xs rounded-xl" disabled={isPendingMutation}
+                                onClick={() => grantAdminMutation.mutate(profile.user_id)}>
+                                {isPendingMutation ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}
+                                {isRTL ? 'تأكيد منح الأدمن' : 'Confirm grant'}
+                              </Button>
+                            ) : (
+                              <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs rounded-xl"
+                                onClick={() => setPendingRoleAction({ userId: profile.user_id, action: 'grant' })}>
+                                <ShieldPlus className="w-3 h-3" />
+                                {isRTL ? 'تعيين كأدمن' : 'Make Admin'}
+                              </Button>
+                            )
+                          ) : (
+                            pending === 'revoke' ? (
+                              <Button variant="destructive" size="sm" className="h-8 gap-1.5 text-xs rounded-xl" disabled={isPendingMutation}
+                                onClick={() => revokeAdminMutation.mutate(profile.user_id)}>
+                                {isPendingMutation ? <Loader2 className="w-3 h-3 animate-spin" /> : <XCircle className="w-3 h-3" />}
+                                {isRTL ? 'تأكيد الإزالة' : 'Confirm revoke'}
+                              </Button>
+                            ) : (
+                              <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs rounded-xl text-destructive border-destructive/40 hover:bg-destructive/10"
+                                onClick={() => setPendingRoleAction({ userId: profile.user_id, action: 'revoke' })}>
+                                <ShieldMinus className="w-3 h-3" />
+                                {isRTL ? 'إزالة الأدمن' : 'Revoke Admin'}
+                              </Button>
+                            )
+                          )}
+                        </div>
+                      )}
+                      {isSuperRole && (
+                        <span className="text-[11px] text-muted-foreground shrink-0">{isRTL ? 'محمي — لا يمكن تعديله من الواجهة' : 'Protected — UI cannot modify'}</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         ) : (
         <>
         {/* Stats */}
