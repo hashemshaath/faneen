@@ -231,3 +231,96 @@ describe('BusinessCard service-tag +N overflow counter', () => {
     expect(screen.queryByText(/^\+\d+$/)).toBeNull();
   });
 });
+
+/**
+ * Service tags + "+N" counter when language is English.
+ *
+ * The component picks `name_en` first when `language === 'en'`, falling back
+ * to `name_ar` only if `name_en` is missing. The +N count must still equal
+ * (active count) - 3 and ignore inactive entries.
+ */
+describe('BusinessCard service tags & +N with name_en (English)', () => {
+  beforeEach(() => setLanguage('en'));
+
+  it('renders English service names when name_en is present', () => {
+    renderCard({
+      ...baseBiz,
+      business_services: [
+        { name_ar: 'تركيب', name_en: 'Installation', is_active: true },
+        { name_ar: 'صيانة', name_en: 'Maintenance', is_active: true },
+        { name_ar: 'تصميم', name_en: 'Design', is_active: true },
+      ],
+    });
+    expect(screen.getByText('Installation')).toBeInTheDocument();
+    expect(screen.getByText('Maintenance')).toBeInTheDocument();
+    expect(screen.getByText('Design')).toBeInTheDocument();
+    // Arabic names must not leak when language is English and name_en exists.
+    expect(screen.queryByText('تركيب')).toBeNull();
+    expect(screen.queryByText(/^\+\d+$/)).toBeNull();
+  });
+
+  it('falls back to name_ar when name_en is missing/empty in English mode', () => {
+    renderCard({
+      ...baseBiz,
+      business_services: [
+        { name_ar: 'تركيب', name_en: '', is_active: true },
+        { name_ar: 'صيانة', name_en: null, is_active: true },
+        { name_ar: 'تصميم', name_en: 'Design', is_active: true },
+      ],
+    });
+    expect(screen.getByText('تركيب')).toBeInTheDocument();
+    expect(screen.getByText('صيانة')).toBeInTheDocument();
+    expect(screen.getByText('Design')).toBeInTheDocument();
+  });
+
+  it('computes +N using English names with mixed active/inactive (5 active ⇒ +2)', () => {
+    renderCard({
+      ...baseBiz,
+      business_services: [
+        { name_ar: 'أ', name_en: 'A', is_active: true },
+        { name_ar: 'ب', name_en: 'B', is_active: true },
+        { name_ar: 'ج', name_en: 'C', is_active: true },
+        { name_ar: 'د', name_en: 'D', is_active: true },
+        { name_ar: 'هـ', name_en: 'E', is_active: true },
+        { name_ar: 'و', name_en: 'F', is_active: false },
+        { name_ar: 'ز', name_en: 'G', is_active: false },
+      ],
+    });
+    expect(screen.getByText('A')).toBeInTheDocument();
+    expect(screen.getByText('B')).toBeInTheDocument();
+    expect(screen.getByText('C')).toBeInTheDocument();
+    expect(screen.queryByText('D')).toBeNull();
+    expect(screen.queryByText('F')).toBeNull();
+    expect(screen.getByText('+2')).toBeInTheDocument();
+  });
+
+  it('skips entries with neither name_en nor name_ar in English mode', () => {
+    renderCard({
+      ...baseBiz,
+      business_services: [
+        { name_ar: 'تركيب', name_en: 'Installation', is_active: true },
+        { name_ar: 'صيانة', name_en: 'Maintenance', is_active: true },
+        { name_ar: 'تصميم', name_en: 'Design', is_active: true },
+        { name_ar: null, name_en: null, is_active: true },
+        { name_ar: '', name_en: '', is_active: true },
+      ],
+    });
+    expect(screen.getByText('Installation')).toBeInTheDocument();
+    expect(screen.queryByText(/^\+\d+$/)).toBeNull();
+  });
+
+  it('shows +7 with 10 active English-named services', () => {
+    renderCard({
+      ...baseBiz,
+      business_services: Array.from({ length: 10 }, (_, i) => ({
+        name_ar: `خدمة-${i + 1}`,
+        name_en: `Service-${i + 1}`,
+        is_active: true,
+      })),
+    });
+    expect(screen.getByText('Service-1')).toBeInTheDocument();
+    expect(screen.getByText('Service-3')).toBeInTheDocument();
+    expect(screen.queryByText('Service-4')).toBeNull();
+    expect(screen.getByText('+7')).toBeInTheDocument();
+  });
+});
