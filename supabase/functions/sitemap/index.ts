@@ -4,6 +4,10 @@ const HEADERS = {
   "Content-Type": "application/xml; charset=utf-8",
   "Cache-Control": "public, max-age=86400, s-maxage=86400",
   "X-Robots-Tag": "noindex",
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, OPTIONS",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Expose-Headers": "content-type, last-modified, etag",
 };
 
 const BASE = "https://qitaat.com";
@@ -54,6 +58,9 @@ ${sitemaps.join("\n")}
 }
 
 Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: HEADERS });
+  }
   try {
     const url = new URL(req.url);
     const type = url.searchParams.get("type") as SitemapType | null;
@@ -143,7 +150,7 @@ Deno.serve(async (req) => {
     console.error("Sitemap error:", error);
     return new Response(`<?xml version="1.0" encoding="UTF-8"?><sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></sitemapindex>`, {
       status: 500,
-      headers: { "Content-Type": "application/xml" },
+      headers: HEADERS,
     });
   }
 });
