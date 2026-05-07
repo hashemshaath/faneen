@@ -312,40 +312,114 @@ const Onboarding = () => {
     );
   }
 
-  return (
-    <AuthLayout>
-      <div className="space-y-6">
-        <div className="text-center space-y-2">
-          <h2 className="font-heading font-bold text-2xl text-foreground">{isRTL ? 'بيانات النشاط التجاري' : 'Business Details'}</h2>
+  if (step === 'business-details') {
+    return (
+      <AuthLayout>
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <h2 className="font-heading font-bold text-2xl text-foreground text-center">
+              {isRTL ? 'بيانات النشاط التجاري' : 'Business Details'}
+            </h2>
+            <Progress value={completionPct} className="h-1.5" />
+            <p className="text-center text-xs text-muted-foreground tech-content">
+              {completionPct}% — {isRTL ? 'يمكنك الحفظ والمتابعة لاحقاً' : 'You can save and continue later'}
+            </p>
+          </div>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>{isRTL ? 'اسم النشاط التجاري' : 'Business Name'} <span className="text-destructive">*</span></Label>
+              <div className="relative">
+                <Building2 className="absolute top-3 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
+                <Input value={businessName} onChange={(e) => setBusinessName(e.target.value)} dir="auto" style={{ paddingInlineStart: '40px' }} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>{isRTL ? 'اسم المستخدم' : 'Username'} <span className="text-destructive">*</span></Label>
+              <div className="relative">
+                <Globe className="absolute top-3 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
+                <Input value={username} onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ''))} placeholder="my-business" dir="ltr" style={{ paddingInlineStart: '40px' }} />
+              </div>
+              {username && (
+                <p className="text-xs text-muted-foreground tech-content">
+                  qitaat.com/{username} · {isRTL ? 'بانتظار موافقة الإدارة قبل النشر' : 'Pending admin approval before publishing'}
+                </p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label>{isRTL ? 'وصف مختصر للنشاط' : 'Short business description'}</Label>
+              <Textarea
+                value={businessDescription}
+                onChange={(e) => setBusinessDescription(e.target.value.slice(0, 500))}
+                placeholder={isRTL ? 'مثال: مصنع ألمنيوم متخصص في الواجهات والنوافذ' : 'e.g. Aluminum factory specializing in facades and windows'}
+                rows={3}
+                dir="auto"
+              />
+              <p className="text-[11px] text-muted-foreground tech-content text-end">{businessDescription.length}/500</p>
+            </div>
+            <Button onClick={() => {
+              if (!businessName.trim()) { toast.error(isRTL ? 'يرجى إدخال اسم النشاط' : 'Please enter business name'); return; }
+              if (!username || username.length < 3) { toast.error(isRTL ? 'اسم المستخدم يجب أن يكون 3 أحرف على الأقل' : 'Username must be at least 3 characters'); return; }
+              setStep('business-sectors');
+            }} disabled={!businessName.trim() || !username || username.length < 3} className="w-full" variant="hero">
+              {isRTL ? 'متابعة' : 'Continue'}
+            </Button>
+          </div>
+          <button onClick={() => setStep(phone ? 'phone-verify' : 'details')} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+            {isRTL ? '→' : '←'} {isRTL ? 'رجوع' : 'Back'}
+          </button>
         </div>
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label>{isRTL ? 'اسم النشاط التجاري' : 'Business Name'} <span className="text-destructive">*</span></Label>
-            <div className="relative">
-              <Building2 className="absolute top-3 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
-              <Input value={businessName} onChange={(e) => setBusinessName(e.target.value)} style={{ paddingInlineStart: '40px' }} />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label>{isRTL ? 'اسم المستخدم' : 'Username'} <span className="text-destructive">*</span></Label>
-            <div className="relative">
-              <Globe className="absolute top-3 text-muted-foreground w-4 h-4" style={{ [isRTL ? 'right' : 'left']: '12px' }} />
-              <Input value={username} onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ''))} placeholder="my-business" dir="ltr" style={{ paddingInlineStart: '40px' }} />
-            </div>
-            {username && <p className="text-xs text-muted-foreground">qitaat.com/{username}</p>}
-          </div>
-          <Button onClick={async () => {
-            if (!businessName.trim()) { toast.error(isRTL ? 'يرجى إدخال اسم النشاط' : 'Please enter business name'); return; }
-            if (!username || username.length < 3) { toast.error(isRTL ? 'اسم المستخدم يجب أن يكون 3 أحرف على الأقل' : 'Username must be at least 3 characters'); return; }
-            await completeOnboarding();
-          }} disabled={loading || !businessName.trim() || !username || username.length < 3} className="w-full" variant="hero">
+      </AuthLayout>
+    );
+  }
+
+  // Final business step: sector picker + sub-services
+  return (
+    <AuthLayout wide>
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <h2 className="font-heading font-bold text-2xl text-foreground text-center">
+            {isRTL ? 'القطاعات والخدمات' : 'Sectors & Services'}
+          </h2>
+          <Progress value={completionPct} className="h-1.5" />
+          <p className="text-center text-xs text-muted-foreground">
+            {isRTL
+              ? 'اختر القطاع/القطاعات والخدمات الفرعية التي يقدمها نشاطك'
+              : 'Pick the sectors and sub-services your business operates in'}
+          </p>
+        </div>
+
+        <SectorPicker
+          selectedSectors={sectors}
+          selectedSubServices={subServices}
+          onSectorsChange={setSectors}
+          onSubServicesChange={setSubServices}
+          maxSectors={5}
+        />
+
+        <div className="rounded-xl border border-border/60 bg-muted/30 p-3 text-xs text-muted-foreground">
+          {isRTL
+            ? 'لن يظهر ملفك للجمهور إلا بعد مراجعة الإدارة والموافقة. يمكنك الحفظ والعودة لاحقاً في أي وقت.'
+            : 'Your profile will not be public until an admin reviews and approves it. You can save and continue later anytime.'}
+        </div>
+
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-between">
+          <button
+            type="button"
+            onClick={() => setStep('business-details')}
+            className="text-sm text-muted-foreground hover:text-foreground"
+          >
+            {isRTL ? '→ رجوع' : '← Back'}
+          </button>
+          <Button
+            onClick={completeOnboarding}
+            disabled={loading || sectors.length === 0}
+            variant="hero"
+            className="sm:w-64"
+          >
             {loading ? <Loader2 className="w-4 h-4 animate-spin me-2" /> : null}
-            {isRTL ? 'إنشاء الحساب' : 'Create Account'}
+            {isRTL ? 'إنشاء الحساب وإرسال للمراجعة' : 'Create account & save as draft'}
           </Button>
         </div>
-        <button onClick={() => setStep(phone ? 'phone-verify' : 'details')} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-          {isRTL ? '→' : '←'} {isRTL ? 'رجوع' : 'Back'}
-        </button>
       </div>
     </AuthLayout>
   );
