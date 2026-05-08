@@ -59,7 +59,10 @@ const SearchPage = () => {
   }, [searchParams.get('q')]);
   const debouncedQuery = useDebouncedValue(query, 300);
   const [viewMode, setViewMode] = useState<ViewMode>('split');
-  const [showFilters, setShowFilters] = useState(true);
+  // Collapsed by default on mobile to avoid covering results; desktop CSS keeps the sidebar visible.
+  const [showFilters, setShowFilters] = useState(() =>
+    typeof window !== 'undefined' ? window.matchMedia('(min-width: 1024px)').matches : true
+  );
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [favoritesOnly, setFavoritesOnly] = useState<boolean>(searchParams.get('fav') === '1');
