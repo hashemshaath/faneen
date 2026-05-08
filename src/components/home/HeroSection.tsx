@@ -69,7 +69,7 @@ const SearchBar = memo(({ categories, cities, language, isRTL, t, onSearch }: an
       <div className="bg-white/[0.07] backdrop-blur-2xl border border-white/10 rounded-2xl sm:rounded-3xl p-2.5 sm:p-3.5 shadow-2xl shadow-black/30 ring-1 ring-inset ring-white/[0.05]">
         <div className="flex flex-col sm:flex-row gap-2">
           <div className="flex-1 relative">
-            <Search aria-hidden="true" className="absolute end-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-white/55" />
+            <Search aria-hidden="true" className="absolute end-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-white/75" />
             <input
               type="text"
               value={searchQuery}
@@ -83,7 +83,7 @@ const SearchBar = memo(({ categories, cities, language, isRTL, t, onSearch }: an
             value={selectedCategory}
             onChange={e => setSelectedCategory(e.target.value)}
             aria-label={isRTL ? 'تصفية حسب القسم' : 'Filter by category'}
-            className="sm:w-44 py-3.5 sm:py-4 px-3 sm:px-4 rounded-xl sm:rounded-2xl bg-white/[0.06] text-white/80 font-body text-sm border-0 outline-none focus:ring-2 focus:ring-gold/40 appearance-none cursor-pointer"
+            className="sm:w-44 py-3.5 sm:py-4 px-3 sm:px-4 rounded-xl sm:rounded-2xl bg-white/[0.06] text-white font-body text-sm border-0 outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-surface-nav appearance-none cursor-pointer"
           >
             <option value="" className="bg-surface-nav text-surface-nav-foreground">{isRTL ? 'جميع الأقسام' : 'All Categories'}</option>
             {categories.map((c) => (
@@ -96,7 +96,7 @@ const SearchBar = memo(({ categories, cities, language, isRTL, t, onSearch }: an
             value={selectedCity}
             onChange={e => setSelectedCity(e.target.value)}
             aria-label={isRTL ? 'تصفية حسب المدينة' : 'Filter by city'}
-            className="sm:w-40 py-3.5 sm:py-4 px-3 sm:px-4 rounded-xl sm:rounded-2xl bg-white/[0.06] text-white/80 font-body text-sm border-0 outline-none focus:ring-2 focus:ring-gold/40 appearance-none cursor-pointer hidden sm:block"
+            className="sm:w-40 py-3.5 sm:py-4 px-3 sm:px-4 rounded-xl sm:rounded-2xl bg-white/[0.06] text-white font-body text-sm border-0 outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-surface-nav appearance-none cursor-pointer hidden sm:block"
           >
             <option value="" className="bg-surface-nav text-surface-nav-foreground">{isRTL ? 'جميع المدن' : 'All Cities'}</option>
             {cities.map((c) => (

@@ -91,9 +91,9 @@ export const Navbar = () => {
         }`}>
         <div className="container flex items-center justify-between h-16 sm:h-[4.5rem] px-4 sm:px-6">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2.5 sm:gap-3 group">
+          <Link to="/" aria-label={language === 'ar' ? 'قِطاعات — الصفحة الرئيسية' : 'Qitaat — Home'} className="flex items-center gap-2.5 sm:gap-3 group rounded-xl focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none">
             <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-gold flex items-center justify-center shadow-lg shadow-gold/20 group-hover:scale-105 group-hover:shadow-gold/40 transition-all duration-300">
-              <span className="font-heading font-black text-lg sm:text-xl text-secondary-foreground">ق</span>
+              <span aria-hidden="true" className="font-heading font-black text-lg sm:text-xl text-secondary-foreground">ق</span>
             </div>
             <div className="hidden sm:block">
               <span className="font-heading font-bold text-lg text-surface-nav-foreground leading-none block">قِطاعات</span>
@@ -116,7 +116,7 @@ export const Navbar = () => {
                 <link.icon className="w-3.5 h-3.5" />
                 {link.label}
                 {link.to === '/search' && (
-                  <kbd className="hidden xl:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-surface-nav-foreground/10 text-[9px] font-mono text-surface-nav-foreground/40 border border-surface-nav-foreground/10 leading-none">
+                  <kbd aria-hidden="true" className="hidden xl:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-surface-nav-foreground/10 text-[9px] font-mono text-surface-nav-foreground/70 border border-surface-nav-foreground/15 leading-none">
                     ⌘K
                   </kbd>
                 )}
@@ -137,7 +137,7 @@ export const Navbar = () => {
                 {isRTL ? 'المزيد' : 'More'}
                 <ChevronDown aria-hidden="true" className="w-3.5 h-3.5 transition-transform duration-300 group-hover:rotate-180" />
               </button>
-              <div className="absolute top-full start-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 translate-y-1 group-hover:translate-y-0">
+              <div className="absolute top-full start-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus-within:opacity-100 group-focus-within:visible transition-all duration-300 translate-y-1 group-hover:translate-y-0 group-focus-within:translate-y-0">
                 <div className="bg-surface-nav/98 backdrop-blur-xl border border-gold/15 rounded-xl shadow-2xl shadow-black/20 p-2 min-w-[200px]">
                   {moreLinks.map((link) => (
                     <PrefetchLink

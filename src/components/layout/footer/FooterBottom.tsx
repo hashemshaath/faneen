@@ -23,7 +23,7 @@ export const FooterBottom = ({ visible }: { visible: boolean }) => {
               {t('footer.rights')}
             </p>
             <div className="hidden sm:block w-px h-3 bg-surface-nav-foreground/10" />
-            <p className="font-body text-[10px] text-surface-nav-foreground/55">
+            <p className="font-body text-[10px] text-surface-nav-foreground/70">
               {isRTL ? 'صُنع بـ ❤️ في السعودية' : 'Made with ❤️ in Saudi Arabia'}
             </p>
           </div>
@@ -37,7 +37,7 @@ export const FooterBottom = ({ visible }: { visible: boolean }) => {
                 aria-label={s.label}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-9 h-9 rounded-xl bg-surface-nav-foreground/[0.06] border border-surface-nav-foreground/15 flex items-center justify-center text-surface-nav-foreground/80 hover:bg-gold/15 hover:text-gold hover:border-gold/30 hover:scale-110 transition-all duration-300 focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none"
+                className="w-9 h-9 rounded-xl bg-surface-nav-foreground/[0.06] border border-surface-nav-foreground/20 flex items-center justify-center text-surface-nav-foreground/85 hover:bg-gold/15 hover:text-gold hover:border-gold/30 hover:scale-110 transition-all duration-300 focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none"
               >
                 <s.icon className="w-3.5 h-3.5" />
               </a>
@@ -47,8 +47,8 @@ export const FooterBottom = ({ visible }: { visible: boolean }) => {
 
             <button
               onClick={scrollToTop}
-              aria-label="Scroll to top"
-              className="w-9 h-9 rounded-xl bg-gold/10 border border-gold/15 flex items-center justify-center text-gold/60 hover:bg-gold hover:text-secondary-foreground hover:border-gold hover:scale-110 hover:-translate-y-0.5 transition-all duration-300"
+              aria-label={isRTL ? 'العودة إلى الأعلى' : 'Scroll to top'}
+              className="w-9 h-9 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center text-gold/85 hover:bg-gold hover:text-secondary-foreground hover:border-gold hover:scale-110 hover:-translate-y-0.5 transition-all duration-300 focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none"
             >
               <ArrowUp className="w-4 h-4" />
             </button>
