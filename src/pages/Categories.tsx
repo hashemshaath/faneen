@@ -189,7 +189,7 @@ const Categories = () => {
                   <Card className="hover:shadow-lg hover:border-gold/30 transition-all group">
                     <CardContent className="p-4 flex items-center gap-4">
                       <div className="w-14 h-14 rounded-xl bg-muted flex items-center justify-center overflow-hidden shrink-0">
-                        {b.logo_url ? <img src={b.logo_url} alt={b.name_ar} className="w-full h-full object-cover" /> : <Building2 className="w-6 h-6 text-muted-foreground/40" />}
+                        {b.logo_url ? <img src={b.logo_url} alt={b.name_ar} className="w-full h-full object-cover" /> : <Building2 className="ic-xl text-muted-foreground/40" />}
                       </div>
                       <div className="min-w-0 flex-1">
                         <h3 className="font-heading font-bold text-sm text-foreground truncate group-hover:text-gold transition-colors">{language === 'ar' ? b.name_ar : (b.name_en || b.name_ar)}</h3>
@@ -231,7 +231,7 @@ const Categories = () => {
                 <Card className="hover:shadow-lg hover:border-gold/30 transition-all group h-full">
                   <CardContent className="p-5 flex items-start gap-4">
                     <div className="w-12 h-12 rounded-xl bg-gold/10 flex items-center justify-center shrink-0 group-hover:bg-gold/20 transition-colors">
-                      <Layers className="w-5 h-5 text-gold" />
+                      <Layers className="ic-lg text-gold" />
                     </div>
                     <div>
                       <h2 className="font-heading font-bold text-foreground group-hover:text-gold transition-colors">{language === 'ar' ? cat.name_ar : cat.name_en}</h2>

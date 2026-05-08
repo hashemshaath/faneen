@@ -143,20 +143,20 @@ const FloatingActions: React.FC<{
         <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
           aria-label={isAr ? 'الانتقال للأعلى' : 'Scroll to top'}
           className="w-10 h-10 rounded-full bg-card border border-border shadow-lg flex items-center justify-center text-muted-foreground hover:text-accent active:scale-95 transition-all animate-fade-in">
-          <ChevronUp className="w-5 h-5" />
+          <ChevronUp className="ic-lg" />
         </button>
       )}
       <button onClick={onShare}
         aria-label={isAr ? 'مشاركة' : 'Share'}
         className="w-10 h-10 rounded-full bg-card border border-border shadow-lg flex items-center justify-center text-muted-foreground hover:text-accent active:scale-95 transition-all">
-        <Share2 className="w-4 h-4" />
+        <Share2 className="ic-sm" />
       </button>
       {showUser && (
         <button onClick={onBookmark} disabled={bookmarkPending}
           aria-label={isAr ? (isBookmarked ? 'إزالة من المحفوظات' : 'إضافة للمحفوظات') : (isBookmarked ? 'Remove bookmark' : 'Bookmark')}
           aria-pressed={isBookmarked}
           className={`w-10 h-10 rounded-full bg-card border border-border shadow-lg flex items-center justify-center active:scale-95 transition-all ${isBookmarked ? 'text-accent' : 'text-muted-foreground hover:text-accent'}`}>
-          {isBookmarked ? <BookmarkCheck className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
+          {isBookmarked ? <BookmarkCheck className="ic-sm" /> : <Bookmark className="ic-sm" />}
         </button>
       )}
     </div>
@@ -542,7 +542,7 @@ const BlogPost = () => {
         <div className="container-app pt-24 space-y-6 max-w-3xl">
           <Skeleton className="h-10 w-3/4 rounded-xl" />
           <Skeleton className="aspect-[2/1] w-full rounded-2xl" />
-          <div className="space-y-3"><Skeleton className="h-4 w-full" /><Skeleton className="h-4 w-5/6" /><Skeleton className="h-4 w-4/6" /></div>
+          <div className="space-y-3"><Skeleton className="h-4 w-full" /><Skeleton className="h-4 w-5/6" /><Skeleton className="ic-sm/6" /></div>
         </div>
       </div>
     );
@@ -588,7 +588,7 @@ const BlogPost = () => {
           <div className="relative min-w-0">
             <Link to="/blog" className="inline-flex mb-3 sm:mb-4">
               <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground hover:text-foreground text-xs sm:text-sm h-8 sm:h-9">
-                <BackIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <BackIcon className="ic-xs sm:w-4 sm:h-4" />
                 {isRTL ? 'المدونة' : 'Blog'}
               </Button>
             </Link>
@@ -603,9 +603,9 @@ const BlogPost = () => {
 
             {/* Meta info bar */}
             <div className="flex items-center gap-3 sm:gap-4 text-xs sm:text-sm text-muted-foreground mb-5 sm:mb-6 flex-wrap">
-              <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-accent" />{new Date(post.published_at || post.created_at).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
-              <span className="flex items-center gap-1.5"><Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-accent" />{post.views_count}</span>
-              <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-accent" />{readTime} {isRTL ? 'د' : 'min'}</span>
+              <span className="flex items-center gap-1.5"><Calendar className="ic-xs sm:w-4 sm:h-4 text-accent" />{new Date(post.published_at || post.created_at).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
+              <span className="flex items-center gap-1.5"><Eye className="ic-xs sm:w-4 sm:h-4 text-accent" />{post.views_count}</span>
+              <span className="flex items-center gap-1.5"><Clock className="ic-xs sm:w-4 sm:h-4 text-accent" />{readTime} {isRTL ? 'د' : 'min'}</span>
             </div>
 
             {/* ── Mobile: inline share bar ── */}
@@ -615,7 +615,7 @@ const BlogPost = () => {
               ))}
               <div className="w-px h-6 bg-border mx-1 shrink-0" />
               <button onClick={handleCopyLink} className="flex flex-col items-center gap-1 p-2 rounded-xl hover:bg-accent/10 active:scale-95 transition-all group shrink-0">
-                {copied ? <CheckCheck className="w-5 h-5 text-accent" /> : <Copy className="w-5 h-5 text-muted-foreground group-hover:text-accent transition-colors" />}
+                {copied ? <CheckCheck className="ic-lg text-accent" /> : <Copy className="ic-lg text-muted-foreground group-hover:text-accent transition-colors" />}
                 <span className="text-[9px] text-muted-foreground">{copied ? '✓' : (isRTL ? 'نسخ' : 'Copy')}</span>
               </button>
               {user && (
@@ -623,7 +623,7 @@ const BlogPost = () => {
                   <div className="w-px h-6 bg-border mx-1 shrink-0" />
                   <button onClick={() => toggleBookmark.mutate()} disabled={toggleBookmark.isPending}
                     className={`flex flex-col items-center gap-1 p-2 rounded-xl hover:bg-accent/10 active:scale-95 transition-all shrink-0 ${isBookmarked ? 'text-accent' : 'text-muted-foreground'}`}>
-                    {isBookmarked ? <BookmarkCheck className="w-5 h-5" /> : <Bookmark className="w-5 h-5" />}
+                    {isBookmarked ? <BookmarkCheck className="ic-lg" /> : <Bookmark className="ic-lg" />}
                     <span className="text-[9px]">{isRTL ? 'حفظ' : 'Save'}</span>
                   </button>
                 </>
@@ -639,14 +639,14 @@ const BlogPost = () => {
               ))}
               <div className="w-px h-5 bg-border mx-1" />
               <Button variant="ghost" size="sm" onClick={handleCopyLink} className="h-8 w-8 p-0 text-muted-foreground hover:text-accent">
-                {copied ? <CheckCheck className="w-4 h-4 text-accent" /> : <Copy className="w-4 h-4" />}
+                {copied ? <CheckCheck className="ic-sm text-accent" /> : <Copy className="ic-sm" />}
               </Button>
               {user && (
                 <>
                   <div className="w-px h-5 bg-border mx-1" />
                   <Button variant="ghost" size="sm" onClick={() => toggleBookmark.mutate()} disabled={toggleBookmark.isPending}
                     className={`h-8 w-8 p-0 ${isBookmarked ? 'text-accent' : 'text-muted-foreground hover:text-accent'}`}>
-                    {isBookmarked ? <BookmarkCheck className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
+                    {isBookmarked ? <BookmarkCheck className="ic-sm" /> : <Bookmark className="ic-sm" />}
                   </Button>
                 </>
               )}
@@ -657,7 +657,7 @@ const BlogPost = () => {
               <div className="lg:hidden mb-5 sm:mb-6 rounded-xl border border-border/60 bg-card/95 backdrop-blur-sm overflow-hidden shadow-sm">
                 <button onClick={() => setTocOpen(!tocOpen)} className="flex items-center justify-between w-full px-4 py-3 text-start active:bg-muted/30 transition-colors">
                   <span className="font-heading font-bold text-sm flex items-center gap-2">
-                    <List className="w-4 h-4 text-accent" />
+                    <List className="ic-sm text-accent" />
                     {isRTL ? 'جدول المحتويات' : 'Table of Contents'}
                     <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">{headings.length}</Badge>
                   </span>
@@ -690,7 +690,7 @@ const BlogPost = () => {
             {/* ═══ Article Search Bar ═══ */}
             <div className={`mb-4 sm:mb-6 transition-all duration-300 ${searchOpen ? 'opacity-100 max-h-20' : 'opacity-0 max-h-0 overflow-hidden'}`}>
               <div className="flex items-center gap-2 p-2 sm:p-2.5 rounded-xl border border-accent/30 bg-card dark:bg-card/90 shadow-lg shadow-accent/5">
-                <Search className="w-4 h-4 text-accent shrink-0" />
+                <Search className="ic-sm text-accent shrink-0" />
                 <Input
                   id="article-search-input"
                   placeholder={isRTL ? 'ابحث في المقال...' : 'Search in article...'}
@@ -704,10 +704,10 @@ const BlogPost = () => {
                       {currentMatch}/{totalMatches}
                     </span>
                     <button onClick={() => navigateMatch('prev')} className="p-1 rounded hover:bg-muted transition-colors" title={isRTL ? 'السابق' : 'Previous'}>
-                      <ChevronUp className="w-3.5 h-3.5 text-muted-foreground" />
+                      <ChevronUp className="ic-xs text-muted-foreground" />
                     </button>
                     <button onClick={() => navigateMatch('next')} className="p-1 rounded hover:bg-muted transition-colors" title={isRTL ? 'التالي' : 'Next'}>
-                      <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                      <ChevronDown className="ic-xs text-muted-foreground" />
                     </button>
                   </div>
                 )}
@@ -727,7 +727,7 @@ const BlogPost = () => {
                 className="mb-4 sm:mb-6 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/50 dark:bg-muted/30 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
                 title="Ctrl+F"
               >
-                <Search className="w-3.5 h-3.5" />
+                <Search className="ic-xs" />
                 {isRTL ? 'بحث في المقال' : 'Search in article'}
                 <kbd className="hidden sm:inline text-[9px] bg-background dark:bg-muted/50 border border-border rounded px-1 py-0.5 ms-1 font-mono">⌘F</kbd>
               </button>
@@ -770,7 +770,7 @@ const BlogPost = () => {
             {relatedPosts.length > 0 && (
               <div className="mb-8 sm:mb-12">
                 <h3 className="font-heading font-bold text-base sm:text-xl mb-4 sm:mb-5 flex items-center gap-2">
-                  <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />
+                  <BookOpen className="ic-sm sm:w-5 sm:h-5 text-accent" />
                   {isRTL ? 'مقالات ذات صلة' : 'Related Articles'}
                 </h3>
                 <div className="flex gap-3 sm:gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-2 sm:pb-0 -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-3 sm:overflow-visible">
@@ -792,7 +792,7 @@ const BlogPost = () => {
                               {language === 'ar' ? rp.title_ar : (rp.title_en || rp.title_ar)}
                             </h4>
                             <span className="text-[10px] sm:text-[11px] text-muted-foreground flex items-center gap-1 mt-auto">
-                              <Calendar className="w-3 h-3" />
+                              <Calendar className="ic-2xs" />
                               {new Date(rp.published_at || rp.created_at).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US')}
                             </span>
                           </div>
@@ -816,7 +816,7 @@ const BlogPost = () => {
                 <Card className="border-border/50">
                   <CardContent className="p-4">
                     <h3 className="font-heading font-bold text-sm flex items-center gap-2 mb-3">
-                      <List className="w-4 h-4 text-accent" />
+                      <List className="ic-sm text-accent" />
                       {isRTL ? 'جدول المحتويات' : 'Table of Contents'}
                     </h3>
                     <nav className="space-y-1">
@@ -839,7 +839,7 @@ const BlogPost = () => {
                 <Card className="border-border/50">
                   <CardContent className="p-4">
                     <h3 className="font-heading font-bold text-sm flex items-center gap-2 mb-3">
-                      <FileText className="w-4 h-4 text-accent" />
+                      <FileText className="ic-sm text-accent" />
                       {isRTL ? 'أحدث المقالات' : 'Latest Articles'}
                     </h3>
                     <div className="space-y-3">
@@ -849,7 +849,7 @@ const BlogPost = () => {
                             {lp.cover_image_url ? (
                               <img src={lp.cover_image_url} alt={language === 'ar' ? lp.title_ar : (lp.title_en || lp.title_ar)} className="w-full h-full object-cover" loading="lazy" />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center"><BookOpen className="w-4 h-4 text-muted-foreground/20" /></div>
+                              <div className="w-full h-full flex items-center justify-center"><BookOpen className="ic-sm text-muted-foreground/20" /></div>
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
@@ -867,7 +867,7 @@ const BlogPost = () => {
               <Card className="border-border/50 bg-gradient-to-br from-primary/5 to-accent/5">
                 <CardContent className="p-4 space-y-3">
                   <h3 className="font-heading font-bold text-sm flex items-center gap-2 justify-center">
-                    <Share2 className="w-4 h-4 text-accent" />
+                    <Share2 className="ic-sm text-accent" />
                     {isRTL ? 'شارك هذا المقال' : 'Share this article'}
                   </h3>
                   <div className="grid grid-cols-5 gap-1.5">
@@ -876,7 +876,7 @@ const BlogPost = () => {
                     ))}
                   </div>
                   <Button variant="outline" size="sm" onClick={handleCopyLink} className="w-full gap-1.5 text-xs">
-                    {copied ? <CheckCheck className="w-3.5 h-3.5 text-accent" /> : <Copy className="w-3.5 h-3.5" />}
+                    {copied ? <CheckCheck className="ic-xs text-accent" /> : <Copy className="ic-xs" />}
                     {copied ? (isRTL ? 'تم النسخ!' : 'Copied!') : (isRTL ? 'نسخ الرابط' : 'Copy Link')}
                   </Button>
                 </CardContent>

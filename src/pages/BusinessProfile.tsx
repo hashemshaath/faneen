@@ -318,7 +318,7 @@ const BusinessProfile = () => {
           <p className="text-sm text-muted-foreground">{t("profile.not_found_desc")}</p>
           <Link to="/">
             <Button variant="hero" className="gap-2">
-              <BackIcon className="h-4 w-4" />
+              <BackIcon className="ic-sm" />
               {t("profile.back_home")}
             </Button>
           </Link>
@@ -387,7 +387,7 @@ const BusinessProfile = () => {
                   onClick={() => contactMutation.mutate()}
                   disabled={contactMutation.isPending}
                 >
-                  {contactMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageSquare className="h-4 w-4" />}
+                  {contactMutation.isPending ? <Loader2 className="ic-sm animate-spin" /> : <MessageSquare className="ic-sm" />}
                   {language === "ar" ? "ابدأ التواصل الآن" : "Start contact now"}
                 </Button>
                 <Button
@@ -396,7 +396,7 @@ const BusinessProfile = () => {
                   className="gap-2"
                   onClick={() => setBookingOpen(true)}
                 >
-                  <CalendarClock className="h-4 w-4" />
+                  <CalendarClock className="ic-sm" />
                   {language === "ar" ? "حجز موعد" : "Book"}
                 </Button>
               </div>

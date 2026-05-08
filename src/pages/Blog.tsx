@@ -273,7 +273,7 @@ const Blog = () => {
       <Card className="border-border/50 dark:border-border/30 dark:bg-card/80">
         <CardContent className="p-4 sm:p-5">
           <h3 className="font-heading font-bold text-sm flex items-center gap-2 mb-3 sm:mb-4">
-            <TrendingUp className="w-4 h-4 text-accent" />
+            <TrendingUp className="ic-sm text-accent" />
             {isRTL ? 'الأكثر قراءة' : 'Most Read'}
           </h3>
           <div className="space-y-2.5 sm:space-y-3">
@@ -287,7 +287,7 @@ const Blog = () => {
                     {language === 'ar' ? post.title_ar : (post.title_en || post.title_ar)}
                   </h4>
                   <span className="text-[10px] text-muted-foreground flex items-center gap-1 mt-0.5">
-                    <Eye className="w-3 h-3" />{post.views_count}
+                    <Eye className="ic-2xs" />{post.views_count}
                   </span>
                 </div>
               </Link>
@@ -301,7 +301,7 @@ const Blog = () => {
         <Card className="border-border/50 dark:border-border/30 dark:bg-card/80">
           <CardContent className="p-4 sm:p-5">
             <h3 className="font-heading font-bold text-sm flex items-center gap-2 mb-3 sm:mb-4">
-              <Tag className="w-4 h-4 text-accent" />
+              <Tag className="ic-sm text-accent" />
               {isRTL ? 'الوسوم' : 'Tags'}
             </h3>
             <div className="flex flex-wrap gap-1.5 sm:gap-2">
@@ -355,7 +355,7 @@ const Blog = () => {
             rel="noopener"
             className="inline-flex items-center gap-1.5 text-[11px] text-accent hover:underline mt-1"
           >
-            <Rss className="w-3 h-3" />
+            <Rss className="ic-2xs" />
             {isRTL ? 'خريطة الموقع' : 'Sitemap'}
           </a>
         </CardContent>
@@ -376,7 +376,7 @@ const Blog = () => {
         <div className={`container relative z-10 px-4 sm:px-6 transition-all duration-700 ${heroVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
           <div className="text-center max-w-2xl mx-auto">
             <div className="inline-flex items-center gap-1.5 sm:gap-2 bg-accent/20 backdrop-blur-sm rounded-full px-3 sm:px-4 py-1 sm:py-1.5 mb-3 sm:mb-4">
-              <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-accent" />
+              <BookOpen className="ic-xs sm:w-4 sm:h-4 text-accent" />
               <span className="text-xs sm:text-sm font-medium text-accent">{isRTL ? 'مدونة المنصة' : 'Platform Blog'}</span>
             </div>
             <h1 className="font-heading font-bold text-2xl sm:text-3xl md:text-5xl text-primary-foreground mb-2 sm:mb-3">
@@ -387,7 +387,7 @@ const Blog = () => {
             </p>
 
             <div className="relative max-w-lg mx-auto">
-              <Search className="absolute start-3.5 sm:start-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
+              <Search className="absolute start-3.5 sm:start-4 top-1/2 -translate-y-1/2 ic-sm sm:w-5 sm:h-5 text-muted-foreground" />
               <Input
                 placeholder={isRTL ? 'ابحث في المقالات...' : 'Search articles...'}
                 value={searchQuery}
@@ -455,7 +455,7 @@ const Blog = () => {
                 onClick={() => setShowSortMenu(!showSortMenu)}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/50 dark:bg-muted/30 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
-                <ArrowUpDown className="w-3.5 h-3.5" />
+                <ArrowUpDown className="ic-xs" />
                 {sortLabels[sortBy][language === 'ar' ? 'ar' : 'en']}
                 <ChevronDown className={`w-3 h-3 transition-transform ${showSortMenu ? 'rotate-180' : ''}`} />
               </button>
@@ -494,7 +494,7 @@ const Blog = () => {
           {/* Active filters */}
           {hasActiveFilters && (
             <div className="flex items-center gap-2 mt-2 pt-1.5 border-t border-border/30">
-              <SlidersHorizontal className="w-3 h-3 text-accent shrink-0" />
+              <SlidersHorizontal className="ic-2xs text-accent shrink-0" />
               <span className="text-[11px] text-muted-foreground">{filteredPosts.length} {isRTL ? 'نتيجة' : 'results'}</span>
               <button onClick={clearFilters} className="text-[11px] text-accent font-medium hover:underline ms-auto">
                 {isRTL ? 'مسح الكل' : 'Clear all'}
@@ -547,7 +547,7 @@ const Blog = () => {
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
                         <div className="absolute top-3 start-3 flex gap-1.5">
                           <Badge className="bg-accent text-accent-foreground shadow-lg text-[10px] sm:text-xs gap-1">
-                            <Sparkles className="w-3 h-3" />
+                            <Sparkles className="ic-2xs" />
                             {isRTL ? 'مميز' : 'Featured'}
                           </Badge>
                           <Badge variant="outline" className="text-[9px] sm:text-[11px] border-white/30 text-white/90 bg-white/10 backdrop-blur-sm">
@@ -562,10 +562,10 @@ const Blog = () => {
                             {language === 'ar' ? (featuredPost.excerpt_ar || featuredPost.content_ar) : (featuredPost.excerpt_en || featuredPost.content_en || featuredPost.excerpt_ar || featuredPost.content_ar)}
                           </p>
                           <div className="flex items-center gap-3 sm:gap-4 text-[11px] sm:text-xs text-white/60 flex-wrap">
-                            <span className="flex items-center gap-1"><Calendar className="w-3 h-3 sm:w-3.5 sm:h-3.5" />{new Date(featuredPost.published_at || featuredPost.created_at).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US')}</span>
-                            <span className="flex items-center gap-1"><Eye className="w-3 h-3 sm:w-3.5 sm:h-3.5" />{featuredPost.views_count}</span>
-                            <span className="flex items-center gap-1"><MessageCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5" />{commentCounts[featuredPost.id] || 0}</span>
-                            <span className="flex items-center gap-1"><Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5" />{estimateReadTime(featuredPost.content_ar)} {isRTL ? 'د' : 'min'}</span>
+                            <span className="flex items-center gap-1"><Calendar className="ic-2xs sm:w-3.5 sm:h-3.5" />{new Date(featuredPost.published_at || featuredPost.created_at).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US')}</span>
+                            <span className="flex items-center gap-1"><Eye className="ic-2xs sm:w-3.5 sm:h-3.5" />{featuredPost.views_count}</span>
+                            <span className="flex items-center gap-1"><MessageCircle className="ic-2xs sm:w-3.5 sm:h-3.5" />{commentCounts[featuredPost.id] || 0}</span>
+                            <span className="flex items-center gap-1"><Clock className="ic-2xs sm:w-3.5 sm:h-3.5" />{estimateReadTime(featuredPost.content_ar)} {isRTL ? 'د' : 'min'}</span>
                           </div>
                         </div>
                       </div>
@@ -591,7 +591,7 @@ const Blog = () => {
                               <img src={post.cover_image_url} alt={language === 'ar' ? post.title_ar : (post.title_en || post.title_ar)} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-accent/5 dark:from-muted/80 dark:to-accent/10">
-                                <BookOpen className="w-6 h-6 text-muted-foreground/15" />
+                                <BookOpen className="ic-xl text-muted-foreground/15" />
                               </div>
                             )}
                             <span className="absolute top-1.5 start-1.5 text-[8px] font-bold text-accent-foreground bg-accent px-1.5 py-0.5 rounded-full">
@@ -648,7 +648,7 @@ const Blog = () => {
                                 {blogCategories[post.category]?.[language] || post.category}
                               </span>
                               <div className="absolute bottom-2.5 end-2.5 flex items-center gap-1 bg-background/85 dark:bg-background/90 backdrop-blur-sm rounded-full px-2 py-1 text-[10px] sm:text-[11px] text-muted-foreground font-medium">
-                                <Clock className="w-3 h-3" />
+                                <Clock className="ic-2xs" />
                                 {estimateReadTime(post.content_ar)} {isRTL ? 'د' : 'min'}
                               </div>
                             </div>
@@ -672,13 +672,13 @@ const Blog = () => {
 
                               <div className="flex items-center justify-between pt-2.5 border-t border-border/30 dark:border-border/20 text-[11px] sm:text-xs text-muted-foreground">
                                 <span className="flex items-center gap-1.5">
-                                  <Calendar className="w-3 h-3" />
+                                  <Calendar className="ic-2xs" />
                                   {new Date(post.published_at || post.created_at).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US', { month: 'short', day: 'numeric' })}
                                 </span>
                                 <div className="flex items-center gap-2.5">
-                                  <span className="flex items-center gap-1" title={isRTL ? 'تعليقات' : 'Comments'}><MessageCircle className="w-3 h-3" />{commentCounts[post.id] || 0}</span>
-                                  <span className="flex items-center gap-1" title={isRTL ? 'حفظ' : 'Saves'}><Heart className="w-3 h-3" />{bookmarkCounts[post.id] || 0}</span>
-                                  <span className="flex items-center gap-1" title={isRTL ? 'مشاهدات' : 'Views'}><Eye className="w-3 h-3" />{post.views_count}</span>
+                                  <span className="flex items-center gap-1" title={isRTL ? 'تعليقات' : 'Comments'}><MessageCircle className="ic-2xs" />{commentCounts[post.id] || 0}</span>
+                                  <span className="flex items-center gap-1" title={isRTL ? 'حفظ' : 'Saves'}><Heart className="ic-2xs" />{bookmarkCounts[post.id] || 0}</span>
+                                  <span className="flex items-center gap-1" title={isRTL ? 'مشاهدات' : 'Views'}><Eye className="ic-2xs" />{post.views_count}</span>
                                 </div>
                               </div>
                             </div>
@@ -756,9 +756,9 @@ const Blog = () => {
                 onClick={() => setShowMobileSidebar(!showMobileSidebar)}
                 className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-border/50 dark:border-border/30 bg-card dark:bg-card/80 text-sm font-medium text-muted-foreground hover:text-foreground hover:border-accent/30 transition-all"
               >
-                <TrendingUp className="w-4 h-4 text-accent" />
+                <TrendingUp className="ic-sm text-accent" />
                 {isRTL ? 'المزيد: الأكثر قراءة والوسوم' : 'More: Most Read & Tags'}
-                {showMobileSidebar ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                {showMobileSidebar ? <ChevronUp className="ic-sm" /> : <ChevronDown className="ic-sm" />}
               </button>
               {showMobileSidebar && (
                 <div className="mt-3 animate-fade-in">

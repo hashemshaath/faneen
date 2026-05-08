@@ -163,15 +163,15 @@ const Offers = () => {
                 <Badge variant="secondary" className="text-[10px] px-1.5 py-0 ms-1">{stats.total}</Badge>
               </TabsTrigger>
               <TabsTrigger value="offer" className="rounded-lg px-4 py-2 text-xs sm:text-sm gap-1.5 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
-                <Tag className="w-3.5 h-3.5" />
+                <Tag className="ic-xs" />
                 {isRTL ? 'عروض' : 'Offers'}
               </TabsTrigger>
               <TabsTrigger value="ad" className="rounded-lg px-4 py-2 text-xs sm:text-sm gap-1.5 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
-                <Megaphone className="w-3.5 h-3.5" />
+                <Megaphone className="ic-xs" />
                 {isRTL ? 'إعلانات' : 'Ads'}
               </TabsTrigger>
               <TabsTrigger value="video" className="rounded-lg px-4 py-2 text-xs sm:text-sm gap-1.5 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
-                <Video className="w-3.5 h-3.5" />
+                <Video className="ic-xs" />
                 {isRTL ? 'فيديو' : 'Videos'}
               </TabsTrigger>
             </TabsList>
@@ -275,7 +275,7 @@ const Offers = () => {
                         {/* Views badge top-end */}
                         <div className="absolute top-3 end-3">
                           <Badge variant="secondary" className="bg-black/50 backdrop-blur-sm text-white text-[10px] flex items-center gap-1 border-0">
-                            <Eye className="w-3 h-3" />
+                            <Eye className="ic-2xs" />
                             <span dir="ltr">{(p.views_count || 0).toLocaleString()}</span>
                           </Badge>
                         </div>
@@ -314,12 +314,12 @@ const Offers = () => {
                                 {isRTL ? biz.name_ar : (biz.name_en || biz.name_ar)}
                               </span>
                               <div className="flex items-center gap-1">
-                                <Star className="w-3 h-3 fill-accent text-accent" />
+                                <Star className="ic-2xs fill-accent text-accent" />
                                 <span className="text-[11px] text-muted-foreground" dir="ltr">{Number(biz.rating_avg).toFixed(1)}</span>
                                 {biz.is_verified && <VerifiedBadge size="xs" className="ms-1" />}
                               </div>
                             </div>
-                            <ArrowUpRight className="w-4 h-4 text-muted-foreground/40 group-hover/biz:text-accent transition-colors shrink-0" />
+                            <ArrowUpRight className="ic-sm text-muted-foreground/40 group-hover/biz:text-accent transition-colors shrink-0" />
                           </Link>
                         )}
 
@@ -351,14 +351,14 @@ const Offers = () => {
                         {/* Footer */}
                         <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-2 border-t border-border/30 transition-colors duration-300 group-hover:border-accent/20">
                           <span className="flex items-center gap-1.5">
-                            <Calendar className="w-3 h-3" />
+                            <Calendar className="ic-2xs" />
                             {new Date(p.start_date).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')}
                             {p.end_date && (
                               <> → {new Date(p.end_date).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')}</>
                             )}
                           </span>
                           <span className="flex items-center gap-1">
-                            <Eye className="w-3 h-3" />
+                            <Eye className="ic-2xs" />
                             <span dir="ltr">{(p.views_count || 0).toLocaleString()}</span>
                           </span>
                         </div>
