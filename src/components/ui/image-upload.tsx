@@ -22,6 +22,15 @@ interface ImageUploadProps {
   compact?: boolean;
 }
 
+// Per-bucket upload constraints (mirrors storage.buckets server-side limits).
+// Keep in sync with the storage hardening migration.
+const BUCKET_CONSTRAINTS: Record<string, { maxMB: number; mimes: string[] }> = {
+  'business-assets':  { maxMB: 2, mimes: ['image/jpeg','image/png','image/webp','image/gif','image/svg+xml'] },
+  'portfolio-images': { maxMB: 5, mimes: ['image/jpeg','image/png','image/webp','image/gif'] },
+  'project-images':   { maxMB: 5, mimes: ['image/jpeg','image/png','image/webp','image/gif'] },
+  'blog-images':      { maxMB: 5, mimes: ['image/jpeg','image/png','image/webp','image/gif'] },
+};
+
 export const ImageUpload: React.FC<ImageUploadProps> = ({
   bucket,
   value,
@@ -37,10 +46,14 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
 }) => {
   const { user } = useAuth();
   const { isRTL } = useLanguage();
+  const constraints = BUCKET_CONSTRAINTS[bucket];
+  const effectiveMaxMB = constraints?.maxMB ?? maxSizeMB;
+  const allowedMimes = constraints?.mimes;
   const tx = {
     placeholder: placeholder ?? (isRTL ? 'اضغط لرفع صورة' : 'Click to upload an image'),
     loginFirst: isRTL ? 'يجب تسجيل الدخول أولاً' : 'You must be logged in first',
     sizeLimit: (mb: number) => isRTL ? `حجم الملف يجب أن لا يتجاوز ${mb}MB` : `File must not exceed ${mb}MB`,
+    typeNotAllowed: isRTL ? 'نوع الملف غير مدعوم. الأنواع المسموحة: JPEG, PNG, WebP, GIF' : 'File type not allowed. Allowed: JPEG, PNG, WebP, GIF',
     uploadOk: isRTL ? 'تم رفع الصورة بنجاح' : 'Image uploaded successfully',
     uploadFail: isRTL ? 'فشل رفع الصورة' : 'Failed to upload image',
     uploading: isRTL ? 'جاري الرفع...' : 'Uploading…',
@@ -58,8 +71,13 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
       return;
     }
 
-    if (file.size > maxSizeMB * 1024 * 1024) {
-      toast.error(tx.sizeLimit(maxSizeMB));
+    if (allowedMimes && !allowedMimes.includes(file.type)) {
+      toast.error(tx.typeNotAllowed);
+      return;
+    }
+
+    if (file.size > effectiveMaxMB * 1024 * 1024) {
+      toast.error(tx.sizeLimit(effectiveMaxMB));
       return;
     }
 
@@ -187,7 +205,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
         )}
         <div className="min-w-0">
           <p className="text-xs text-muted-foreground">{uploading ? tx.uploading : tx.placeholder}</p>
-          <p className="text-[10px] text-muted-foreground/50">{tx.maxSize(maxSizeMB)}</p>
+          <p className="text-[10px] text-muted-foreground/50">{tx.maxSize(effectiveMaxMB)}</p>
         </div>
         <input ref={inputRef} type="file" accept={accept} onChange={handleFileChange} className="hidden" />
       </div>
@@ -217,7 +235,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
           <ImageIcon className="w-8 h-8 text-muted-foreground/50" />
           <p className="text-sm text-muted-foreground">{tx.placeholder}</p>
           <p className="text-xs text-muted-foreground/60">
-            {tx.maxSize(maxSizeMB)}
+            {tx.maxSize(effectiveMaxMB)}
           </p>
         </>
       )}
