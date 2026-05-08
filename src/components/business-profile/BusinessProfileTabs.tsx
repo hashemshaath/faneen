@@ -181,7 +181,7 @@ export const ProjectsTab = ({ businessId }: { businessId: string }) => {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 sm:gap-5">
+    <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-2 lg:grid-cols-3 sm:gap-5">
       {projects.map((project, index) => {
         const title = getLocalizedValue(language, project.title_ar, project.title_en);
         const description = getLocalizedValue(language, project.description_ar, project.description_en);
@@ -191,10 +191,10 @@ export const ProjectsTab = ({ businessId }: { businessId: string }) => {
         return (
           <Link key={project.id} to={`/projects/${project.id}`} className="group block">
             <article
-              className="animate-fade-in overflow-hidden rounded-[1.5rem] border border-border/30 bg-card transition-all duration-500 hover:border-accent/30 hover:shadow-xl hover:shadow-accent/5 active:scale-[0.98] dark:border-border/15 dark:bg-card/80"
+              className="animate-fade-in h-full overflow-hidden rounded-2xl border border-border/30 bg-card transition-all duration-500 hover:border-accent/30 hover:shadow-xl hover:shadow-accent/5 active:scale-[0.98] dark:border-border/15 dark:bg-card/80 sm:rounded-[1.5rem]"
               style={{ animationDelay: `${index * 80}ms`, animationFillMode: "both" }}
             >
-              <div className="relative aspect-video overflow-hidden bg-muted">
+              <div className="relative aspect-[4/3] overflow-hidden bg-muted sm:aspect-video">
                 {project.cover_image_url ? (
                   <img
                     src={project.cover_image_url}
@@ -216,28 +216,28 @@ export const ProjectsTab = ({ businessId }: { businessId: string }) => {
                 {categoryName && (
                   <Badge
                     variant="outline"
-                    className="absolute end-2 top-2 border-border/50 bg-background/80 text-[9px] backdrop-blur-sm sm:text-[10px] dark:bg-background/60"
+                    className="absolute end-2 top-2 hidden border-border/50 bg-background/80 text-[9px] backdrop-blur-sm sm:inline-flex sm:text-[10px] dark:bg-background/60"
                   >
                     {categoryName}
                   </Badge>
                 )}
               </div>
 
-              <div className="space-y-2 p-3 sm:p-4">
-                <h3 className="line-clamp-2 font-heading text-xs font-bold text-foreground transition-colors group-hover:text-accent sm:text-sm">
+              <div className="space-y-1.5 p-2.5 sm:space-y-2 sm:p-4">
+                <h3 className="line-clamp-2 font-heading text-[12px] font-bold text-foreground leading-tight transition-colors group-hover:text-accent sm:text-sm">
                   {title}
                 </h3>
                 {description && (
-                  <p className="line-clamp-2 text-[10px] leading-relaxed text-muted-foreground sm:text-xs">
+                  <p className="hidden line-clamp-2 text-[10px] leading-relaxed text-muted-foreground sm:block sm:text-xs">
                     {description}
                   </p>
                 )}
-                <div className="flex items-center justify-between border-t border-border/20 pt-2 text-[10px] text-muted-foreground dark:border-border/10 sm:text-[11px]">
-                  <div className="flex flex-wrap items-center gap-2">
+                <div className="flex items-center justify-between gap-1 border-t border-border/20 pt-1.5 text-[10px] text-muted-foreground dark:border-border/10 sm:pt-2 sm:text-[11px]">
+                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 min-w-0">
                     {cityName && (
-                      <span className="flex items-center gap-0.5">
+                      <span className="flex items-center gap-0.5 truncate">
                         <MapPin className="h-2.5 w-2.5 text-accent/50" />
-                        {cityName}
+                        <span className="truncate">{cityName}</span>
                       </span>
                     )}
                     {project.duration_days && (
@@ -249,7 +249,7 @@ export const ProjectsTab = ({ businessId }: { businessId: string }) => {
                     )}
                   </div>
                   {project.project_cost && (
-                    <span className="tech-content text-[11px] font-semibold text-accent sm:text-xs">
+                    <span className="tech-content shrink-0 text-[10px] font-semibold text-accent sm:text-xs">
                       {project.project_cost.toLocaleString()} {project.currency_code}
                     </span>
                   )}
