@@ -36,7 +36,7 @@ const estimateReadTime = (content: string | null): number => {
 
 const CardSkeleton = () => (
   <div className="rounded-2xl overflow-hidden border border-border bg-card">
-    <Skeleton className="aspect-[16/10] w-full" />
+    <Skeleton className="media-16-10 w-full" />
     <div className="p-4 space-y-2.5">
       <Skeleton className="h-4 w-3/4" />
       <Skeleton className="h-3 w-full" />
@@ -511,7 +511,7 @@ const Blog = () => {
         {isLoading ? (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-8">
             <div className="lg:col-span-2 space-y-5">
-              <Skeleton className="aspect-[2/1] w-full rounded-2xl" />
+              <Skeleton className="media-2-1 w-full rounded-2xl" />
               {/* Mobile: horizontal skeletons */}
               <div className="sm:hidden space-y-3">
                 {[1, 2, 3].map(i => <MobileCardSkeleton key={i} />)}
@@ -536,7 +536,7 @@ const Blog = () => {
                 <Link to={`/blog/${featuredPost.slug}`} className="group block">
                   <Card className="overflow-hidden border-border/50 dark:border-border/30 hover:border-accent/40 transition-all duration-500 hover:shadow-2xl hover:shadow-accent/10 active:scale-[0.99] dark:bg-card/80">
                     <CardContent className="p-0">
-                      <div className="relative aspect-[16/10] sm:aspect-[2/1] bg-muted overflow-hidden">
+                      <div className="relative media-16-10 sm:aspect-[2/1] bg-muted overflow-hidden">
                         {featuredPost.cover_image_url ? (
                           <img src={featuredPost.cover_image_url} alt={featuredPost.title_ar} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" />
                         ) : (
@@ -635,7 +635,7 @@ const Blog = () => {
                           style={{ animationDelay: `${i * 60}ms`, animationFillMode: 'both' }}
                         >
                           <CardContent className="p-0 flex flex-col h-full">
-                            <div className="relative aspect-[16/10] bg-muted overflow-hidden">
+                            <div className="relative media-16-10 bg-muted overflow-hidden">
                               {post.cover_image_url ? (
                                 <img src={post.cover_image_url} alt={post.title_ar} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" />
                               ) : (
