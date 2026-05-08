@@ -75,8 +75,8 @@ export const SearchFilters = ({
       aria-label={isRTL ? 'مرشحات البحث' : 'Search filters'}
     >
       <div className="lg:sticky lg:top-24">
-        {/* Header card — sticky on mobile for quick access */}
-        <div className="sticky top-[64px] z-20 lg:static rounded-2xl border border-border/60 bg-card/95 backdrop-blur-md shadow-sm overflow-hidden">
+        {/* Header card — stays in flow on mobile so it doesn't cover content */}
+        <div className="rounded-2xl border border-border/60 bg-card/95 backdrop-blur-sm shadow-sm overflow-hidden">
           <button
             onClick={onToggleFilters}
             className="w-full flex items-center justify-between gap-2 p-3 hover:bg-muted/30 transition-colors"
