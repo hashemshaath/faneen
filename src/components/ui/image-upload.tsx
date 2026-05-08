@@ -205,7 +205,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
         )}
         <div className="min-w-0">
           <p className="text-xs text-muted-foreground">{uploading ? tx.uploading : tx.placeholder}</p>
-          <p className="text-[10px] text-muted-foreground/50">{tx.maxSize(maxSizeMB)}</p>
+          <p className="text-[10px] text-muted-foreground/50">{tx.maxSize(effectiveMaxMB)}</p>
         </div>
         <input ref={inputRef} type="file" accept={accept} onChange={handleFileChange} className="hidden" />
       </div>
@@ -235,7 +235,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
           <ImageIcon className="w-8 h-8 text-muted-foreground/50" />
           <p className="text-sm text-muted-foreground">{tx.placeholder}</p>
           <p className="text-xs text-muted-foreground/60">
-            {tx.maxSize(maxSizeMB)}
+            {tx.maxSize(effectiveMaxMB)}
           </p>
         </>
       )}
