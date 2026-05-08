@@ -384,7 +384,7 @@ export const HeroSection = () => {
 
         {/* Slide controls */}
         <div className="flex items-center justify-center gap-3 mt-8 sm:mt-10">
-          <button onClick={prev} aria-label={language === 'ar' ? 'الشريحة السابقة' : 'Previous slide'} className="w-11 h-11 sm:w-9 sm:h-9 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white/85 hover:text-gold hover:bg-gold/15 hover:border-gold/40 transition-all active:scale-90 focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none">
+          <button onClick={prev} aria-label={language === 'ar' ? 'الشريحة السابقة' : 'Previous slide'} className="btn-overlay-icon focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none">
             {isRTL ? <ChevronRight className="ic-sm" /> : <ChevronLeft className="ic-sm" />}
           </button>
           <div className="flex items-center gap-2">
@@ -398,7 +398,7 @@ export const HeroSection = () => {
               />
             ))}
           </div>
-          <button onClick={next} aria-label={language === 'ar' ? 'الشريحة التالية' : 'Next slide'} className="w-11 h-11 sm:w-9 sm:h-9 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white/85 hover:text-gold hover:bg-gold/15 hover:border-gold/40 transition-all active:scale-90 focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none">
+          <button onClick={next} aria-label={language === 'ar' ? 'الشريحة التالية' : 'Next slide'} className="btn-overlay-icon focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none">
             {isRTL ? <ChevronLeft className="ic-sm" /> : <ChevronRight className="ic-sm" />}
           </button>
         </div>
