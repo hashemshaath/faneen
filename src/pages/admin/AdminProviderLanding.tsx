@@ -351,7 +351,7 @@ const AdminProviderLanding = () => {
 
           {/* SEO */}
           <TabsContent value="seo" className="space-y-3 mt-4">
-            <SettingsForm settings={settings} keys={['seo_title_ar', 'seo_title_en', 'seo_desc_ar', 'seo_desc_en', 'keywords', 'og_image_url']} onSaved={refreshAll} />
+            <SettingsForm settings={settings as unknown as Record<string, unknown> | null} keys={['seo_title_ar', 'seo_title_en', 'seo_desc_ar', 'seo_desc_en', 'keywords', 'og_image_url']} onSaved={refreshAll} />
           </TabsContent>
 
           {/* ANALYTICS */}
@@ -404,7 +404,7 @@ const AdminProviderLanding = () => {
 
           {/* INTEGRATIONS */}
           <TabsContent value="integrations" className="space-y-3 mt-4">
-            <SettingsForm settings={settings} keys={['ga4_measurement_id', 'gtm_container_id', 'gsc_verification', 'bing_verification', 'yandex_verification', 'indexnow_key']} onSaved={refreshAll} />
+            <SettingsForm settings={settings as unknown as Record<string, unknown> | null} keys={['ga4_measurement_id', 'gtm_container_id', 'gsc_verification', 'bing_verification', 'yandex_verification', 'indexnow_key']} onSaved={refreshAll} />
             <Card className="p-4">
               <h3 className="font-semibold mb-2">إجراءات سريعة</h3>
               <div className="flex flex-wrap gap-2">
@@ -494,7 +494,7 @@ const SettingsForm = ({ settings, keys, onSaved }: { settings: Record<string, un
               const el = document.getElementById(`s-${k}`) as HTMLInputElement | HTMLTextAreaElement | null;
               update[k] = el?.value || null;
             }
-            const { error } = await supabase.from('provider_landing_settings').update(update).eq('id', 1);
+            const { error } = await supabase.from('provider_landing_settings').update(update as never).eq('id', 1);
             if (error) throw error;
             toast({ title: 'تم حفظ الإعدادات' });
             onSaved();
