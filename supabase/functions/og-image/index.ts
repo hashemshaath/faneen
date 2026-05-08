@@ -195,7 +195,7 @@ function detectRtl(input: string): boolean {
 
 // ── PNG rasterization (resvg-wasm + bundled fonts) ─────────────────────────
 
-const RESVG_WASM_URL = "https://unpkg.com/@resvg/[email protected]/index_bg.wasm";
+const RESVG_WASM_URL = "https://cdn.jsdelivr.net/npm/@resvg/resvg-wasm/index_bg.wasm";
 const ARABIC_FONT_URL =
   "https://github.com/googlefonts/noto-fonts/raw/main/hinted/ttf/NotoSansArabic/NotoSansArabic-Bold.ttf";
 const LATIN_FONT_URL =
