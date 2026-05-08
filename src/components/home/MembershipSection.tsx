@@ -62,7 +62,7 @@ export const MembershipSection = () => {
                   isFeatured
                     ? "bg-gradient-navy border-gold/40 md:scale-105 shadow-2xl shadow-gold/10 hover:shadow-[0_20px_60px_-10px_hsl(var(--gold)/0.3)] md:hover:scale-[1.08]"
                     : "bg-card dark:bg-card/60 border-border/50 dark:border-border/30 hover:border-accent/40 active:scale-[0.97] sm:hover:-translate-y-3 hover:shadow-xl hover:shadow-accent/5"
-                } ${isVisible ? 'animate-card-slide-up' : 'opacity-0'}`}
+                } ${isVisible ? 'animate-card-slide-up' : ''}`}
                 style={{ animationDelay: `${idx * 150}ms`, animationFillMode: 'both' }}
               >
                 {isFeatured && (

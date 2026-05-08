@@ -41,7 +41,7 @@ const StatItem = memo(({ end, suffix, labelKey, index, isVisible, icon: Icon }: 
 
   return (
     <div
-      className={`relative text-center p-5 sm:p-7 rounded-2xl bg-card/90 dark:bg-card/40 border border-border/40 dark:border-border/20 backdrop-blur-sm hover:border-accent/30 hover:shadow-lg hover:shadow-accent/5 transition-all duration-500 group ${isVisible ? 'animate-card-slide-up' : 'opacity-0'}`}
+      className={`relative text-center p-5 sm:p-7 rounded-2xl bg-card/90 dark:bg-card/40 border border-border/40 dark:border-border/20 backdrop-blur-sm hover:border-accent/30 hover:shadow-lg hover:shadow-accent/5 transition-all duration-500 group ${isVisible ? 'animate-card-slide-up' : ''}`}
       style={{ animationDelay: `${index * 120}ms`, animationFillMode: 'both' }}
     >
       <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-xl bg-accent/[0.08] dark:bg-accent/15 flex items-center justify-center mx-auto mb-3 sm:mb-4 group-hover:bg-gradient-gold group-hover:scale-110 transition-all duration-300">

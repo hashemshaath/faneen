@@ -63,7 +63,7 @@ export const CategoriesSection = () => {
               to={`/search?category=${cat.categoryId}`}
               key={cat.titleKey}
               aria-label={t(cat.titleKey)}
-              className={`group relative rounded-2xl sm:rounded-[22px] overflow-hidden bg-card border border-border/50 dark:border-border/20 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-[0_20px_40px_-20px_hsl(var(--accent)/0.25)] hover:border-accent/40 active:scale-[0.98] sm:hover:-translate-y-1.5 transition-all duration-500 ${isVisible ? 'animate-card-slide-up' : 'opacity-0'}`}
+              className={`group relative rounded-2xl sm:rounded-[22px] overflow-hidden bg-card border border-border/50 dark:border-border/20 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-[0_20px_40px_-20px_hsl(var(--accent)/0.25)] hover:border-accent/40 active:scale-[0.98] sm:hover:-translate-y-1.5 transition-all duration-500 ${isVisible ? 'animate-card-slide-up' : ''}`}
               style={{ animationDelay: `${i * 70}ms`, animationFillMode: 'both' }}
             >
               {/* Image area */}
