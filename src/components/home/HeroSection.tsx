@@ -351,7 +351,7 @@ export const HeroSection = () => {
       <div className="relative z-10 container text-center px-4 sm:px-6 pt-24 sm:pt-28 pb-8">
         {/* Badge */}
         <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full border border-gold/25 bg-gold/[0.08] backdrop-blur-xl mb-6 sm:mb-8 animate-fade-in shadow-sm shadow-gold/10">
-          <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gold fill-gold/30" />
+          <Star className="ic-xs sm:ic-sm text-gold fill-gold/30" />
           <span className="text-[11px] sm:text-sm font-body font-medium text-gold/90 tracking-wide">{t('hero.badge')}</span>
         </div>
 
@@ -384,8 +384,8 @@ export const HeroSection = () => {
 
         {/* Slide controls */}
         <div className="flex items-center justify-center gap-3 mt-8 sm:mt-10">
-          <button onClick={prev} aria-label={language === 'ar' ? 'الشريحة السابقة' : 'Previous slide'} className="w-9 h-9 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white/85 hover:text-gold hover:bg-gold/15 hover:border-gold/40 transition-all active:scale-90 focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none">
-            {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+          <button onClick={prev} aria-label={language === 'ar' ? 'الشريحة السابقة' : 'Previous slide'} className="w-11 h-11 sm:w-9 sm:h-9 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white/85 hover:text-gold hover:bg-gold/15 hover:border-gold/40 transition-all active:scale-90 focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none">
+            {isRTL ? <ChevronRight className="ic-sm" /> : <ChevronLeft className="ic-sm" />}
           </button>
           <div className="flex items-center gap-2">
             {slides.map((_, i) => (
@@ -398,25 +398,25 @@ export const HeroSection = () => {
               />
             ))}
           </div>
-          <button onClick={next} aria-label={language === 'ar' ? 'الشريحة التالية' : 'Next slide'} className="w-9 h-9 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white/85 hover:text-gold hover:bg-gold/15 hover:border-gold/40 transition-all active:scale-90 focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none">
-            {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+          <button onClick={next} aria-label={language === 'ar' ? 'الشريحة التالية' : 'Next slide'} className="w-11 h-11 sm:w-9 sm:h-9 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white/85 hover:text-gold hover:bg-gold/15 hover:border-gold/40 transition-all active:scale-90 focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none">
+            {isRTL ? <ChevronLeft className="ic-sm" /> : <ChevronRight className="ic-sm" />}
           </button>
         </div>
 
         {/* Stats bar */}
         <div className="flex flex-wrap items-center justify-center gap-5 sm:gap-10 text-white/75 font-body text-[10px] sm:text-sm mt-6 sm:mt-10">
           <div className="flex items-center gap-1.5">
-            <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gold/70" />
+            <Building2 className="ic-xs sm:ic-sm text-gold/70" />
             <span>{t('hero.providers_count')}</span>
           </div>
           <div className="w-px h-3 bg-white/15 hidden sm:block" />
           <div className="flex items-center gap-1.5">
-            <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gold/70" />
+            <Star className="ic-xs sm:ic-sm text-gold/70" />
             <span>{t('hero.reviews_count')}</span>
           </div>
           <div className="w-px h-3 bg-white/15 hidden sm:block" />
           <div className="flex items-center gap-1.5">
-            <Shield className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gold/70" />
+            <Shield className="ic-xs sm:ic-sm text-gold/70" />
             <span>{t('hero.protection')}</span>
           </div>
         </div>
