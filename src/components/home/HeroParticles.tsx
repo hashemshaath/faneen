@@ -130,6 +130,9 @@ export const HeroParticles = memo(() => {
 
     const particles = particlesRef.current;
     let skipFrame = false;
+    let running = false;
+    let isVisible = true;
+    let docVisible = typeof document === "undefined" ? true : !document.hidden;
 
     const draw = () => {
       const now = performance.now();
@@ -247,12 +250,46 @@ export const HeroParticles = memo(() => {
       rafRef.current = requestAnimationFrame(draw);
     };
 
-    const timer = setTimeout(() => {
+    const start = () => {
+      if (running) return;
+      if (!isVisible || !docVisible) return;
+      running = true;
       rafRef.current = requestAnimationFrame(draw);
-    }, 500);
+    };
+    const stop = () => {
+      if (!running) return;
+      running = false;
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = undefined;
+      }
+    };
+
+    // Pause animation while the hero canvas is offscreen — saves significant
+    // main-thread work as the user scrolls down the page.
+    const io = new IntersectionObserver(
+      (entries) => {
+        isVisible = !!entries[0]?.isIntersecting;
+        if (isVisible) start();
+        else stop();
+      },
+      { threshold: 0 },
+    );
+    io.observe(canvas);
+
+    const onVisibility = () => {
+      docVisible = !document.hidden;
+      if (docVisible) start();
+      else stop();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+
+    const timer = setTimeout(() => start(), 500);
 
     return () => {
       clearTimeout(timer);
+      io.disconnect();
+      document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("resize", resize);
       if (section) {
         section.removeEventListener("mousemove", handleMouseMove);
@@ -260,7 +297,7 @@ export const HeroParticles = memo(() => {
         section.removeEventListener("touchmove", handleTouchMove);
         section.removeEventListener("touchend", handleTouchEnd);
       }
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      stop();
     };
   }, []);
 
