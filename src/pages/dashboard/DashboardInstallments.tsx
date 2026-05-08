@@ -29,6 +29,7 @@ import {
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { PieChart as RechartsPie, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { useNoIndex } from "@/hooks/useNoIndex";
 
 /* ── shared ────────────────────────────────────── */
 const statusColors: Record<string, string> = {
@@ -58,6 +59,7 @@ const fmtNum = (n: number) => Number(n).toLocaleString();
 
 /* ── Donut Chart ────────────────────────────────── */
 const PaymentDonut = React.memo(({ stats, isRTL }: { stats: any; isRTL: boolean }) => {
+  useNoIndex();
   const data = [
     { name: isRTL ? 'مدفوع' : 'Paid', value: stats.paidAmount, color: '#10b981' },
     { name: isRTL ? 'معلق' : 'Pending', value: stats.pendingAmount, color: '#f59e0b' },

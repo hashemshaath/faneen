@@ -31,6 +31,7 @@ import {
   arrayMove, SortableContext, sortableKeyboardCoordinates, rectSortingStrategy, verticalListSortingStrategy, useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useNoIndex } from "@/hooks/useNoIndex";
 
 interface PortfolioItem {
   id: string; business_id: string; title_ar: string; title_en: string | null;
@@ -196,6 +197,7 @@ SortableCard.displayName = 'SortableCard';
 /*          MAIN COMPONENT            */
 /* ═══════════════════════════════════ */
 const DashboardPortfolio = () => {
+  useNoIndex();
   const { isRTL } = useLanguage();
   const { user } = useAuth();
   const queryClient = useQueryClient();

@@ -22,6 +22,7 @@ import {
 } from 'recharts';
 import { cn } from '@/lib/utils';
 import { format, subDays, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, eachMonthOfInterval } from 'date-fns';
+import { useNoIndex } from "@/hooks/useNoIndex";
 
 const CHART_COLORS = [
   'hsl(var(--accent))', 'hsl(270 50% 60%)', 'hsl(150 50% 50%)',
@@ -38,6 +39,7 @@ const tooltipStyle = {
 type Period = '7d' | '30d' | '90d' | '12m';
 
 const DashboardAnalytics = () => {
+  useNoIndex();
   const { user } = useAuth();
   const { language, isRTL } = useLanguage();
   const [period, setPeriod] = useState<Period>('30d');

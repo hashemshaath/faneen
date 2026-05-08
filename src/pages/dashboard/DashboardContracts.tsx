@@ -49,6 +49,7 @@ type ContractWithRole = ContractRow & { _role: string };
 
 import { FieldAiActions } from '@/components/blog/FieldAiActions';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useNoIndex } from "@/hooks/useNoIndex";
 
 /* ── Template Category Config ── */
 const templateCategoryConfig: Record<string, { ar: string; en: string; icon: React.ElementType; color: string }> = {
@@ -95,6 +96,7 @@ type ViewSection = 'list' | 'create' | 'templates' | 'template-preview';
 
 /* ── Contract Health Score ── */
 const getContractHealth = (contract: ContractRow, milestones: MilestoneRow[], payments: PaymentRow[]) => {
+  useNoIndex();
   let score = 0, max = 0;
   max += 10; if (contract.start_date && contract.end_date) score += 10;
   max += 10; if (contract.terms_ar) score += 10;

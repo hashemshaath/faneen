@@ -29,6 +29,7 @@ import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { cn } from '@/lib/utils';
 import { tierIcons } from '@/lib/membership-tiers';
 import { ProviderReadinessCard } from '@/components/dashboard/ProviderReadinessCard';
+import { useNoIndex } from "@/hooks/useNoIndex";
 
 // ═══ Shared utils ═══
 const CHART_COLORS = [
@@ -62,6 +63,7 @@ function getStatusColor(status: string): string {
 }
 
 function getMonths(isRTL: boolean) {
+  useNoIndex();
   return isRTL
     ? ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر']
     : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];

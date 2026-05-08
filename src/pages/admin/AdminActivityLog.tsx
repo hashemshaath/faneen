@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { format, isToday, isYesterday, isThisWeek, isThisMonth } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
+import { useNoIndex } from "@/hooks/useNoIndex";
 
 /* ─── Action Config ─── */
 type Bi = { ar: string; en: string };
@@ -124,6 +125,7 @@ const tx = {
 
 /* ─── Format detail value ─── */
 const formatValue = (value: unknown, isRTL: boolean): string => {
+  useNoIndex();
   if (value === null || value === undefined || value === '') return '—';
   if (value === true) return isRTL ? tx.yes.ar : tx.yes.en;
   if (value === false) return isRTL ? tx.no.ar : tx.no.en;

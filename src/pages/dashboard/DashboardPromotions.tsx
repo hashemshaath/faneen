@@ -32,6 +32,7 @@ import {
   arrayMove, SortableContext, sortableKeyboardCoordinates, rectSortingStrategy, verticalListSortingStrategy, useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useNoIndex } from "@/hooks/useNoIndex";
 
 type PromotionType = 'ad' | 'offer' | 'video';
 type FilterMode = 'all' | 'active' | 'expired' | 'inactive';
@@ -186,6 +187,7 @@ SortablePromoCard.displayName = 'SortablePromoCard';
 
 /* ═══════════════════════════════════ */
 const DashboardPromotions = () => {
+  useNoIndex();
   const { isRTL: rtl } = useLanguage();
   const { user } = useAuth();
   const queryClient = useQueryClient();

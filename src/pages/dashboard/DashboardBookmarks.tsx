@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Bookmark, BookmarkX, Calendar, Eye, BookOpen, Search, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useNoIndex } from "@/hooks/useNoIndex";
 
 const categoryLabels: Record<string, { ar: string; en: string }> = {
   general: { ar: 'عام', en: 'General' },
@@ -21,6 +22,7 @@ const categoryLabels: Record<string, { ar: string; en: string }> = {
 };
 
 const DashboardBookmarks = () => {
+  useNoIndex();
   const { user } = useAuth();
   const { isRTL, language } = useLanguage();
   const queryClient = useQueryClient();

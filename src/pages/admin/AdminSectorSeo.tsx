@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { ALL_SECTORS, getSectorMeta, type SectorSlug } from '@/lib/sector-keywords';
+import { useNoIndex } from "@/hooks/useNoIndex";
 
 type Snapshot = {
   id: string;
@@ -38,6 +39,7 @@ const descScore = (len: number) => (len >= 120 && len <= 160 ? 'good' : len < 12
 const kwScore = (n: number) => (n >= 8 && n <= 25 ? 'good' : n < 8 ? 'short' : 'long');
 
 const ScoreBadge: React.FC<{ status: 'good' | 'short' | 'long'; isRTL: boolean }> = ({ status, isRTL }) => {
+  useNoIndex();
   const map = {
     good: { label: isRTL ? 'مثالي' : 'Optimal', cls: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30' },
     short: { label: isRTL ? 'قصير' : 'Short', cls: 'bg-amber-500/10 text-amber-600 border-amber-500/30' },

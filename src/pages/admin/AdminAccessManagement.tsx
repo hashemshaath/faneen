@@ -17,8 +17,10 @@ import {
   Hash, Ban, UserCheck, History, Shield, ShieldPlus, ShieldMinus, Crown,
 } from 'lucide-react';
 import { PasswordResetLogPanel } from '@/components/admin/PasswordResetLogPanel';
+import { useNoIndex } from "@/hooks/useNoIndex";
 
 const formatDate = (dateStr: string | null | undefined, lang: string): string => {
+  useNoIndex();
   if (!dateStr) return lang === 'ar' ? 'غير محدد' : 'N/A';
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return lang === 'ar' ? 'غير محدد' : 'N/A';

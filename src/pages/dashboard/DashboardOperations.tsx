@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { formatDistanceToNow, format, isThisWeek, isToday, isThisMonth } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
+import { useNoIndex } from "@/hooks/useNoIndex";
 
 const typeIcons: Record<string, React.ElementType> = {
   contract: FileText, project: FolderOpen, review: Star,
@@ -149,6 +150,7 @@ DateGroupHeader.displayName = 'DateGroupHeader';
 
 /* ──────────── Main ──────────── */
 const DashboardOperations = () => {
+  useNoIndex();
   const { isRTL, language } = useLanguage();
   const { user } = useAuth();
   const [search, setSearch] = useState('');

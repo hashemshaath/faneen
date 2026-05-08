@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { useNoIndex } from "@/hooks/useNoIndex";
 
 type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'no_show';
 
@@ -39,6 +40,7 @@ const dayLabels = {
 };
 
 const DashboardBookings = () => {
+  useNoIndex();
   const { user } = useAuth();
   const { language, isRTL } = useLanguage();
   const queryClient = useQueryClient();

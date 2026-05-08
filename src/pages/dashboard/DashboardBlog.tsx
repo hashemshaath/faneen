@@ -32,6 +32,7 @@ import { RichMarkdownEditor } from '@/components/blog/RichMarkdownEditor';
 import { ArticlePreview } from '@/components/blog/ArticlePreview';
 import { DraftVersions } from '@/components/blog/DraftVersions';
 import { callBlogAi, parseJsonResponse, calculateReadingTime, calculateLocalSeoScore, stripMarkdown } from '@/lib/blog-ai-utils';
+import { useNoIndex } from "@/hooks/useNoIndex";
 
 const blogCategories = [
   { value: 'general', ar: 'عام', en: 'General' },
@@ -57,6 +58,7 @@ function countInText(text: string, keyword: string): number {
   return (text.match(re) || []).length;
 }
 function analyzeContent(text: string) {
+  useNoIndex();
   if (!text) return { words: 0, headings: 0, images: 0, links: 0, paragraphs: 0 };
   return {
     words: text.trim().split(/\s+/).filter(Boolean).length,

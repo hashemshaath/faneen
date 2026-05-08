@@ -19,6 +19,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAiSettings, DEFAULT_AI_SETTINGS, type ToneType, type AiModel, type AiSettings, type ResponseStyle } from '@/hooks/useAiSettings';
 import {
+import { useNoIndex } from "@/hooks/useNoIndex";
   Languages, Sparkles, Wand2, Bot, Send, Copy, RotateCcw, ArrowLeftRight,
   Loader2, CheckCircle2, Zap, Brain, MessageSquare, FileText, Type,
   Palette, Settings2, BookOpen, Lightbulb,
@@ -136,6 +137,7 @@ const StatPill: React.FC<{ icon: React.ElementType; value: string | number; labe
 
 /* ═══════════════════ Main Component ═══════════════════ */
 const DashboardAiCenter: React.FC = () => {
+  useNoIndex();
   const { isRTL } = useLanguage();
   const { user } = useAuth();
   const t = useCallback((ar: string, en: string) => isRTL ? ar : en, [isRTL]);
