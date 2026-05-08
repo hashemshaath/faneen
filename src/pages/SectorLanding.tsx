@@ -226,8 +226,11 @@ const SectorLanding: React.FC = () => {
 
   const Arrow = isRTL ? ArrowLeft : ArrowRight;
   const relatedSectors = sector.relatedSlugs
-    .map((s) => getSectorMeta(s, isRTL))
-    .filter((s): s is NonNullable<ReturnType<typeof getSectorMeta>> => Boolean(s));
+    .map((s) => {
+      const m = getSectorMeta(s, isRTL);
+      return m ? { slug: s, ...m } : null;
+    })
+    .filter((s): s is { slug: SectorSlug; title: string; description: string; keywords: string; tagline: string; name: string } => Boolean(s));
 
   return (
     <div className="min-h-screen bg-background">
