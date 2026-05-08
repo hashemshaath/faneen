@@ -78,7 +78,7 @@ export const LazyImage = memo(({
           onLoad={() => setIsLoaded(true)}
           loading={isEager ? "eager" : "lazy"}
           decoding="async"
-          fetchPriority={fetchPriority}
+          {...(fetchPriority ? { fetchpriority: fetchPriority as "high" | "low" | "auto" } : {})}
           {...props}
         />
       )}
