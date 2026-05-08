@@ -21,6 +21,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { getSectorById, type SectorId } from '@/data/onboarding-sectors';
+import { useNoIndex } from "@/hooks/useNoIndex";
 
 type ApprovalStatus =
   | 'draft' | 'submitted' | 'under_review'
@@ -73,6 +74,7 @@ interface ProviderRow {
 }
 
 export default function AdminProviderReview() {
+  useNoIndex();
   const { language, isRTL } = useLanguage();
   const { isSuperAdmin } = useAuth();
   usePageMeta({
