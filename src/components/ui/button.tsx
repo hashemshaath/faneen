@@ -23,6 +23,11 @@ const buttonVariants = cva(
         sm: "h-9 rounded-md px-3",
         lg: "h-11 rounded-md px-8",
         icon: "h-10 w-10",
+        // Mobile-app-grade sizes — ≥44px touch targets, token-driven heights.
+        app: "h-ctrl-md px-5 rounded-xl text-sm",
+        appLg: "h-ctrl-lg px-6 rounded-xl text-base",
+        appXl: "h-ctrl-xl px-7 rounded-2xl text-base",
+        appIcon: "h-ctrl-md w-ctrl-md rounded-xl",
       },
     },
     defaultVariants: {
