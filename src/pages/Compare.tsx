@@ -128,7 +128,7 @@ const Compare = () => {
         <Card>
           <CardContent className="p-4">
             <div className="relative">
-              <Search className="absolute start-3 top-3 w-4 h-4 text-muted-foreground" />
+              <Search className="absolute start-3 top-3 ic-sm text-muted-foreground" />
               <Input
                 placeholder={isRTL ? 'ابحث عن مزود خدمة للمقارنة...' : 'Search for a provider to compare...'}
                 value={searchQuery}
@@ -151,8 +151,8 @@ const Compare = () => {
                       <p className="text-sm font-medium truncate">{isRTL ? b.name_ar : (b.name_en || b.name_ar)}</p>
                       <p className="text-xs text-muted-foreground">{(b as Record<string, unknown> & { categories?: { name_ar?: string } }).categories?.name_ar}</p>
                     </div>
-                    <div className="flex items-center gap-1 text-xs"><Star className="w-3 h-3 fill-gold text-gold" />{Number(b.rating_avg).toFixed(1)}</div>
-                    <Plus className="w-4 h-4 text-muted-foreground" />
+                    <div className="flex items-center gap-1 text-xs"><Star className="ic-2xs fill-gold text-gold" />{Number(b.rating_avg).toFixed(1)}</div>
+                    <Plus className="ic-sm text-muted-foreground" />
                   </button>
                 ))}
               </div>
@@ -224,7 +224,7 @@ const Compare = () => {
                 );
               }}
             >
-              <Download className="w-4 h-4 me-1" />
+              <Download className="ic-sm me-1" />
               {isRTL ? 'تصدير PDF' : 'Export PDF'}
             </Button>
           </div>
@@ -258,7 +258,7 @@ const Compare = () => {
                   {selectedBusinesses.map((b) => (
                     <td key={b.id} className="p-3 text-center">
                       <div className="flex items-center justify-center gap-1">
-                        <Star className="w-4 h-4 fill-gold text-gold" />
+                        <Star className="ic-sm fill-gold text-gold" />
                         <span className="font-bold">{Number(b.rating_avg).toFixed(1)}</span>
                         <span className="text-xs text-muted-foreground">({b.rating_count})</span>
                       </div>
@@ -279,7 +279,7 @@ const Compare = () => {
                   <td className="sticky start-0 bg-muted/30 p-3 font-medium text-sm">{isRTL ? 'الموقع' : 'Location'}</td>
                   {selectedBusinesses.map((b) => (
                     <td key={b.id} className="p-3 text-center text-sm">
-                      <span className="flex items-center justify-center gap-1"><MapPin className="w-3 h-3" />{b.cities ? (isRTL ? b.cities.name_ar : b.cities.name_en) : '-'}</span>
+                      <span className="flex items-center justify-center gap-1"><MapPin className="ic-2xs" />{b.cities ? (isRTL ? b.cities.name_ar : b.cities.name_en) : '-'}</span>
                     </td>
                   ))}
                 </tr>
@@ -335,7 +335,7 @@ const Compare = () => {
                   {selectedBusinesses.map((b) => (
                     <td key={b.id} className="p-3 text-center">
                       <Link to={`/${b.username}`}>
-                        <Button size="sm" variant="outline"><ArrowIcon className="w-3 h-3 me-1" />{isRTL ? 'زيارة الملف' : 'View Profile'}</Button>
+                        <Button size="sm" variant="outline"><ArrowIcon className="ic-2xs me-1" />{isRTL ? 'زيارة الملف' : 'View Profile'}</Button>
                       </Link>
                     </td>
                   ))}

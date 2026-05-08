@@ -198,7 +198,7 @@ const Contact = () => {
                 </div>
 
                 <Button type="submit" size="appLg" disabled={loading} className="w-full gap-2">
-                  <Send className="w-4 h-4" />
+                  <Send className="ic-sm" />
                   {loading
                     ? (isRTL ? 'جاري الإرسال...' : 'Sending...')
                     : (isRTL ? 'إرسال الرسالة' : 'Send Message')

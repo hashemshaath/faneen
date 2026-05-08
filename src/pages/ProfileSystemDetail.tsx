@@ -55,7 +55,7 @@ const AnimatedRatingBar = ({ value, max = 10, label, icon: Icon }: { value: numb
       <div className="flex items-center justify-between mb-1.5">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gold/10 flex items-center justify-center">
-            <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gold" />
+            <Icon className="ic-xs sm:w-4 sm:h-4 text-gold" />
           </div>
           <span className="text-xs sm:text-sm font-medium">{label}</span>
         </div>
@@ -132,8 +132,8 @@ const Lightbox = ({ images, index, onClose, onNav, isRTL, language }: { images: 
       </button>
       {images.length > 1 && (
         <>
-          <button onClick={(e) => { e.stopPropagation(); onNav(-1); }} className="absolute start-2 sm:start-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white bg-white/10 rounded-full p-1.5 sm:p-2 backdrop-blur-sm hidden sm:block"><ChevronLeft className="w-6 h-6" /></button>
-          <button onClick={(e) => { e.stopPropagation(); onNav(1); }} className="absolute end-2 sm:end-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white bg-white/10 rounded-full p-1.5 sm:p-2 backdrop-blur-sm hidden sm:block"><ChevronRight className="w-6 h-6" /></button>
+          <button onClick={(e) => { e.stopPropagation(); onNav(-1); }} className="absolute start-2 sm:start-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white bg-white/10 rounded-full p-1.5 sm:p-2 backdrop-blur-sm hidden sm:block"><ChevronLeft className="ic-xl" /></button>
+          <button onClick={(e) => { e.stopPropagation(); onNav(1); }} className="absolute end-2 sm:end-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white bg-white/10 rounded-full p-1.5 sm:p-2 backdrop-blur-sm hidden sm:block"><ChevronRight className="ic-xl" /></button>
         </>
       )}
       <div
@@ -158,7 +158,7 @@ const Lightbox = ({ images, index, onClose, onNav, isRTL, language }: { images: 
 const QuickStat = ({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string | number }) => (
   <div className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-xl bg-card border border-border/50 hover:border-gold/30 transition-colors">
     <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-gold/10 flex items-center justify-center shrink-0">
-      <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-gold" />
+      <Icon className="ic-sm sm:w-5 sm:h-5 text-gold" />
     </div>
     <div className="min-w-0">
       <p className="text-[10px] sm:text-xs text-muted-foreground truncate">{label}</p>
@@ -540,7 +540,7 @@ const ProfileSystemDetail = () => {
         </div>
         <h1 className="font-heading font-bold text-xl sm:text-2xl mb-2">{isRTL ? 'القطاع غير موجود' : 'Profile not found'}</h1>
         <p className="text-muted-foreground text-sm mb-4 sm:mb-6">{isRTL ? 'تحقق من الرابط وحاول مرة أخرى' : 'Check the URL and try again'}</p>
-        <Link to="/profile-systems"><Button variant="outline" className="gap-2"><BackIcon className="w-4 h-4" />{isRTL ? 'العودة للقطاعات' : 'Back to Profiles'}</Button></Link>
+        <Link to="/profile-systems"><Button variant="outline" className="gap-2"><BackIcon className="ic-sm" />{isRTL ? 'العودة للقطاعات' : 'Back to Profiles'}</Button></Link>
       </div>
       <Footer />
     </div>
@@ -582,7 +582,7 @@ const ProfileSystemDetail = () => {
           <div className="container-app max-w-6xl pb-4 sm:pb-8">
             <Link to="/profile-systems" className="inline-flex mb-2 sm:mb-4">
               <Button variant="ghost" size="sm" className="bg-background/60 backdrop-blur-md border border-border/30 hover:bg-background/80 text-xs sm:text-sm h-8 sm:h-9">
-                <BackIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 me-1" />{isRTL ? 'القطاعات' : 'Profiles'}
+                <BackIcon className="ic-xs sm:w-4 sm:h-4 me-1" />{isRTL ? 'القطاعات' : 'Profiles'}
               </Button>
             </Link>
             <div className="flex flex-col gap-3 sm:gap-4">
@@ -595,14 +595,14 @@ const ProfileSystemDetail = () => {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5 sm:gap-2 mb-1 sm:mb-2 flex-wrap">
                     <h1 className="font-heading font-black text-xl sm:text-3xl md:text-4xl leading-tight">{name}</h1>
-                    <Badge className={`text-[10px] sm:text-xs gap-1 ${rec.color}`}><RecIcon className="w-3 h-3" />{language === 'ar' ? rec.ar : rec.en}</Badge>
+                    <Badge className={`text-[10px] sm:text-xs gap-1 ${rec.color}`}><RecIcon className="ic-2xs" />{language === 'ar' ? rec.ar : rec.en}</Badge>
                   </div>
                   <div className="flex items-center gap-2 sm:gap-4 text-[11px] sm:text-sm text-muted-foreground flex-wrap">
                     <Badge variant="outline" className="text-[10px] sm:text-xs h-5 sm:h-auto">
                       {profile.profile_type === 'custom' ? (isRTL ? 'خاص' : 'Custom') : (isRTL ? 'سوق' : 'Market')}
                     </Badge>
-                    <span className="flex items-center gap-1"><Eye className="w-3 h-3 sm:w-3.5 sm:h-3.5" />{profile.views_count.toLocaleString()}</span>
-                    <span className="flex items-center gap-1"><Star className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-gold text-gold" />{avgRating.toFixed(1)} ({reviews.length})</span>
+                    <span className="flex items-center gap-1"><Eye className="ic-2xs sm:w-3.5 sm:h-3.5" />{profile.views_count.toLocaleString()}</span>
+                    <span className="flex items-center gap-1"><Star className="ic-2xs sm:w-3.5 sm:h-3.5 fill-gold text-gold" />{avgRating.toFixed(1)} ({reviews.length})</span>
                   </div>
                 </div>
               </div>
@@ -626,7 +626,7 @@ const ProfileSystemDetail = () => {
                   onClick={handleShare}
                   aria-label={isRTL ? 'مشاركة' : 'Share'}
                 >
-                  <Share2 className="w-4 h-4" />
+                  <Share2 className="ic-sm" />
                 </Button>
                 <Button
                   variant="outline"
@@ -635,11 +635,11 @@ const ProfileSystemDetail = () => {
                   onClick={() => window.print()}
                   aria-label={isRTL ? 'طباعة' : 'Print'}
                 >
-                  <Printer className="w-4 h-4" />
+                  <Printer className="ic-sm" />
                 </Button>
                 {suppliers.length > 0 && (
                   <Button variant="hero" size="app" className="rounded-xl gap-1.5 shrink-0 text-xs sm:text-sm px-3 sm:px-4" onClick={() => setActiveTab('suppliers')}>
-                    <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />{isRTL ? 'اطلب عرض سعر' : 'Request Quote'}
+                    <Building2 className="ic-xs sm:w-4 sm:h-4" />{isRTL ? 'اطلب عرض سعر' : 'Request Quote'}
                   </Button>
                 )}
               </div>
@@ -692,7 +692,7 @@ const ProfileSystemDetail = () => {
                     <div className="h-1 bg-gradient-gold" />
                     <CardContent className="p-4 sm:p-6">
                       <h3 className="font-heading font-bold text-base sm:text-lg mb-2 sm:mb-3 flex items-center gap-2">
-                        <Info className="w-4 h-4 sm:w-5 sm:h-5 text-gold" />{isRTL ? 'عن هذا القطاع' : 'About This Profile'}
+                        <Info className="ic-sm sm:w-5 sm:h-5 text-gold" />{isRTL ? 'عن هذا القطاع' : 'About This Profile'}
                       </h3>
                       <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{desc}</p>
                     </CardContent>
@@ -704,13 +704,13 @@ const ProfileSystemDetail = () => {
                   <Card className="border-border/50">
                     <CardContent className="p-4 sm:p-6">
                       <h3 className="font-heading font-bold text-base sm:text-lg mb-3 sm:mb-4 flex items-center gap-2">
-                        <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-gold" />{isRTL ? 'المميزات الرئيسية' : 'Key Features'}
+                        <Zap className="ic-sm sm:w-5 sm:h-5 text-gold" />{isRTL ? 'المميزات الرئيسية' : 'Key Features'}
                       </h3>
                       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3">
                         {features.map((f: string, i: number) => (
                           <div key={i} className="flex items-start gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg sm:rounded-xl bg-muted/30">
                             <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-green-500/10 flex items-center justify-center shrink-0 mt-0.5">
-                              <CheckCircle2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-green-500" />
+                              <CheckCircle2 className="ic-2xs sm:w-3.5 sm:h-3.5 text-green-500" />
                             </div>
                             <span className="text-xs sm:text-sm">{f}</span>
                           </div>
@@ -725,7 +725,7 @@ const ProfileSystemDetail = () => {
                   <Card className="border-border/50">
                     <CardContent className="p-4 sm:p-6">
                       <h3 className="font-heading font-bold text-base sm:text-lg mb-2 sm:mb-3 flex items-center gap-2">
-                        <Layers className="w-4 h-4 sm:w-5 sm:h-5 text-gold" />{isRTL ? 'مجالات الاستخدام' : 'Applications'}
+                        <Layers className="ic-sm sm:w-5 sm:h-5 text-gold" />{isRTL ? 'مجالات الاستخدام' : 'Applications'}
                       </h3>
                       <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{apps}</p>
                     </CardContent>
@@ -738,7 +738,7 @@ const ProfileSystemDetail = () => {
                     <CardContent className="p-4 sm:p-6">
                       <div className="flex items-center justify-between mb-3 sm:mb-4">
                         <h3 className="font-heading font-bold text-base sm:text-lg flex items-center gap-2">
-                          <Image className="w-4 h-4 sm:w-5 sm:h-5 text-gold" />{isRTL ? 'من المعرض' : 'Gallery'}
+                          <Image className="ic-sm sm:w-5 sm:h-5 text-gold" />{isRTL ? 'من المعرض' : 'Gallery'}
                         </h3>
                         <Button variant="ghost" size="sm" onClick={() => setActiveTab('gallery')} className="text-gold hover:text-gold/80 text-xs h-8">
                           {isRTL ? 'الكل' : 'All'} →
@@ -749,7 +749,7 @@ const ProfileSystemDetail = () => {
                           <div key={img.id} className="relative group rounded-lg sm:rounded-xl overflow-hidden aspect-[4/3] cursor-pointer" onClick={() => setLightboxIdx(i)}>
                             <img src={img.image_url} alt={language === 'ar' ? (img.caption_ar || name) : (img.caption_en || img.caption_ar || name)} className="w-full h-full object-cover" loading="lazy" />
                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all flex items-center justify-center">
-                              <Maximize2 className="w-4 h-4 sm:w-5 sm:h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                              <Maximize2 className="ic-sm sm:w-5 sm:h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
                             </div>
                           </div>
                         ))}
@@ -785,7 +785,7 @@ const ProfileSystemDetail = () => {
                   <Card className="border-border/50">
                     <CardContent className="p-4 sm:p-6 space-y-3">
                       <h3 className="font-heading font-bold text-base sm:text-lg flex items-center gap-2">
-                        <Ruler className="w-4 h-4 sm:w-5 sm:h-5 text-gold" />{isRTL ? 'الأبعاد القصوى' : 'Max Dimensions'}
+                        <Ruler className="ic-sm sm:w-5 sm:h-5 text-gold" />{isRTL ? 'الأبعاد القصوى' : 'Max Dimensions'}
                       </h3>
                       <div className="grid grid-cols-2 gap-2 sm:gap-3">
                         {profile.max_height_mm && (
@@ -810,7 +810,7 @@ const ProfileSystemDetail = () => {
                   <Card className="border-border/50">
                     <CardContent className="p-4 sm:p-6">
                       <h3 className="font-heading font-bold text-base sm:text-lg flex items-center gap-2 mb-2 sm:mb-3">
-                        <Palette className="w-4 h-4 sm:w-5 sm:h-5 text-gold" />{isRTL ? 'الألوان المتاحة' : 'Available Colors'}
+                        <Palette className="ic-sm sm:w-5 sm:h-5 text-gold" />{isRTL ? 'الألوان المتاحة' : 'Available Colors'}
                       </h3>
                       <div className="flex flex-wrap gap-1.5 sm:gap-2">
                         {profile.available_colors.map((c: string, i: number) => (
@@ -860,7 +860,7 @@ const ProfileSystemDetail = () => {
             {specs.length === 0 ? (
               <div className="text-center py-12 sm:py-16 text-muted-foreground">
                 <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                  <FileText className="w-6 h-6 sm:w-8 sm:h-8 opacity-30" />
+                  <FileText className="ic-xl sm:w-8 sm:h-8 opacity-30" />
                 </div>
                 <p className="font-heading font-bold text-sm sm:text-base mb-1">{isRTL ? 'لا توجد مواصفات' : 'No specifications'}</p>
                 <p className="text-xs sm:text-sm">{isRTL ? 'لم تُضف مواصفات لهذا القطاع بعد' : 'No specifications added yet'}</p>
@@ -913,7 +913,7 @@ const ProfileSystemDetail = () => {
             {images.length === 0 ? (
               <div className="text-center py-12 sm:py-16 text-muted-foreground">
                 <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                  <Image className="w-6 h-6 sm:w-8 sm:h-8 opacity-30" />
+                  <Image className="ic-xl sm:w-8 sm:h-8 opacity-30" />
                 </div>
                 <p className="font-heading font-bold text-sm sm:text-base mb-1">{isRTL ? 'لا توجد صور' : 'No images'}</p>
               </div>
@@ -940,7 +940,7 @@ const ProfileSystemDetail = () => {
             {suppliers.length === 0 ? (
               <div className="text-center py-12 sm:py-16 text-muted-foreground">
                 <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                  <Building2 className="w-6 h-6 sm:w-8 sm:h-8 opacity-30" />
+                  <Building2 className="ic-xl sm:w-8 sm:h-8 opacity-30" />
                 </div>
                 <p className="font-heading font-bold text-sm sm:text-base mb-1">{isRTL ? 'لا يوجد موردين' : 'No suppliers'}</p>
               </div>
@@ -953,14 +953,14 @@ const ProfileSystemDetail = () => {
                         {s.businesses?.logo_url ? (
                           <img src={s.businesses.logo_url} alt={language === 'ar' ? s.businesses.name_ar : (s.businesses.name_en || s.businesses.name_ar)} className="w-11 h-11 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl object-cover ring-1 ring-border/50" />
                         ) : (
-                          <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl bg-gold/10 flex items-center justify-center shrink-0"><Building2 className="w-5 h-5 sm:w-7 sm:h-7 text-gold" /></div>
+                          <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl bg-gold/10 flex items-center justify-center shrink-0"><Building2 className="ic-lg sm:w-7 sm:h-7 text-gold" /></div>
                         )}
                         <div className="flex-1 min-w-0">
                           <h4 className="font-heading font-bold text-sm sm:text-base group-hover:text-gold transition-colors truncate">
                             {language === 'ar' ? s.businesses?.name_ar : (s.businesses?.name_en || s.businesses?.name_ar)}
                           </h4>
                           <div className="flex items-center gap-2 sm:gap-3 text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">
-                            <span className="flex items-center gap-0.5"><Star className="w-3 h-3 fill-gold text-gold" />{s.businesses?.rating_avg}</span>
+                            <span className="flex items-center gap-0.5"><Star className="ic-2xs fill-gold text-gold" />{s.businesses?.rating_avg}</span>
                             {s.price_range_from && <span className="font-heading truncate">{Number(s.price_range_from).toLocaleString()} - {Number(s.price_range_to).toLocaleString()} {s.currency_code}</span>}
                           </div>
                         </div>
@@ -991,7 +991,7 @@ const ProfileSystemDetail = () => {
                         {ratingDistribution.map(d => (
                           <div key={d.star} className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm">
                             <span className="w-3 sm:w-4 font-heading font-bold">{d.star}</span>
-                            <Star className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-gold text-gold" />
+                            <Star className="ic-2xs sm:w-3.5 sm:h-3.5 fill-gold text-gold" />
                             <div className="flex-1 h-2 sm:h-2.5 bg-muted rounded-full overflow-hidden">
                               <div className="h-full bg-gold rounded-full transition-all duration-500" style={{ width: `${d.pct}%` }} />
                             </div>
@@ -1019,7 +1019,7 @@ const ProfileSystemDetail = () => {
                       className="rounded-xl resize-none text-sm"
                     />
                    <Button onClick={submitReview} variant="hero" size="appLg" className="rounded-xl gap-2 w-full sm:w-auto text-sm">
-                      <MessageSquare className="w-4 h-4" />{isRTL ? 'إرسال التقييم' : 'Submit Review'}
+                      <MessageSquare className="ic-sm" />{isRTL ? 'إرسال التقييم' : 'Submit Review'}
                     </Button>
                   </CardContent>
                 </Card>

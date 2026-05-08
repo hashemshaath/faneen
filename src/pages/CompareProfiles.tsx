@@ -165,7 +165,7 @@ const CompareProfiles = () => {
         <Card>
           <CardContent className="p-4">
             <div className="relative">
-              <Search className="absolute start-3 top-3 w-4 h-4 text-muted-foreground" />
+              <Search className="absolute start-3 top-3 ic-sm text-muted-foreground" />
               <Input
                 placeholder={isRTL ? 'ابحث عن قطاع للمقارنة...' : 'Search for a profile to compare...'}
                 value={searchQuery}
@@ -184,13 +184,13 @@ const CompareProfiles = () => {
                     <div className="w-10 h-10 rounded-lg bg-muted overflow-hidden">
                       {p.cover_image_url
                         ? <img src={p.cover_image_url} alt={language === 'ar' ? p.name_ar : (p.name_en || p.name_ar)} className="w-full h-full object-cover" />
-                        : <div className="w-full h-full flex items-center justify-center"><Layers className="w-5 h-5 text-muted-foreground/40" /></div>}
+                        : <div className="w-full h-full flex items-center justify-center"><Layers className="ic-lg text-muted-foreground/40" /></div>}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{getName(p)}</p>
                       <p className="text-xs text-muted-foreground">{p.category}</p>
                     </div>
-                    <Plus className="w-4 h-4 text-muted-foreground" />
+                    <Plus className="ic-sm text-muted-foreground" />
                   </button>
                 ))}
               </div>
@@ -283,7 +283,7 @@ const CompareProfiles = () => {
                 {/* Thermal */}
                 <tr>
                   <td className="sticky start-0 bg-background p-3 text-sm font-medium flex items-center gap-2">
-                    <Thermometer className="w-4 h-4 text-orange-500" />{isRTL ? 'العزل الحراري' : 'Thermal Insulation'}
+                    <Thermometer className="ic-sm text-orange-500" />{isRTL ? 'العزل الحراري' : 'Thermal Insulation'}
                   </td>
                   {selectedProfiles.map((p) => (
                     <td key={p.id} className="p-3 border-b border-border/50"><RatingCell value={p.thermal_insulation_rating || 0} /></td>
@@ -292,7 +292,7 @@ const CompareProfiles = () => {
                 {/* Sound */}
                 <tr className="bg-muted/20">
                   <td className="sticky start-0 bg-muted/20 p-3 text-sm font-medium flex items-center gap-2">
-                    <Volume2 className="w-4 h-4 text-blue-500" />{isRTL ? 'العزل الصوتي' : 'Sound Insulation'}
+                    <Volume2 className="ic-sm text-blue-500" />{isRTL ? 'العزل الصوتي' : 'Sound Insulation'}
                   </td>
                   {selectedProfiles.map((p) => (
                     <td key={p.id} className="p-3 border-b border-border/50"><RatingCell value={p.sound_insulation_rating || 0} /></td>
@@ -301,7 +301,7 @@ const CompareProfiles = () => {
                 {/* Strength */}
                 <tr>
                   <td className="sticky start-0 bg-background p-3 text-sm font-medium flex items-center gap-2">
-                    <Shield className="w-4 h-4 text-green-500" />{isRTL ? 'قوة التحمل' : 'Strength'}
+                    <Shield className="ic-sm text-green-500" />{isRTL ? 'قوة التحمل' : 'Strength'}
                   </td>
                   {selectedProfiles.map((p) => (
                     <td key={p.id} className="p-3 border-b border-border/50"><RatingCell value={p.strength_rating || 0} /></td>
@@ -314,7 +314,7 @@ const CompareProfiles = () => {
                 </td></tr>
                 <tr>
                   <td className="sticky start-0 bg-background p-3 text-sm font-medium flex items-center gap-2">
-                    <Ruler className="w-4 h-4" />{isRTL ? 'أقصى ارتفاع' : 'Max Height'}
+                    <Ruler className="ic-sm" />{isRTL ? 'أقصى ارتفاع' : 'Max Height'}
                   </td>
                   {selectedProfiles.map((p) => (
                     <td key={p.id} className="p-3 text-center text-sm border-b border-border/50">
@@ -324,7 +324,7 @@ const CompareProfiles = () => {
                 </tr>
                 <tr className="bg-muted/20">
                   <td className="sticky start-0 bg-muted/20 p-3 text-sm font-medium flex items-center gap-2">
-                    <Ruler className="w-4 h-4" />{isRTL ? 'أقصى عرض' : 'Max Width'}
+                    <Ruler className="ic-sm" />{isRTL ? 'أقصى عرض' : 'Max Width'}
                   </td>
                   {selectedProfiles.map((p) => (
                     <td key={p.id} className="p-3 text-center text-sm border-b border-border/50">
@@ -388,8 +388,8 @@ const CompareProfiles = () => {
                           return (
                             <td key={p.id} className="p-3 text-center border-b border-border/50">
                               {has
-                                ? <CheckCircle2 className="w-5 h-5 text-green-500 mx-auto" />
-                                : <XCircle className="w-5 h-5 text-muted-foreground/30 mx-auto" />}
+                                ? <CheckCircle2 className="ic-lg text-green-500 mx-auto" />
+                                : <XCircle className="ic-lg text-muted-foreground/30 mx-auto" />}
                             </td>
                           );
                         })}
@@ -447,7 +447,7 @@ const CompareProfiles = () => {
                     <td key={p.id} className="p-4 text-center">
                       <Link to={`/profile-systems/${p.slug}`}>
                         <Button size="sm" variant="outline" className="gap-1">
-                          <Eye className="w-3.5 h-3.5" />
+                          <Eye className="ic-xs" />
                           {isRTL ? 'عرض التفاصيل' : 'View Details'}
                         </Button>
                       </Link>
