@@ -1,4 +1,4 @@
-import { Layers, Shield, Building2, Wrench, Users, ArrowRight, ArrowLeft, Zap, Paintbrush } from "lucide-react";
+import { Layers, Shield, Building2, Wrench, Users, ArrowRight, ArrowLeft, Zap, Paintbrush, Sparkles } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { Link } from "react-router-dom";
@@ -31,53 +31,91 @@ export const CategoriesSection = () => {
   const ArrowIcon = isRTL ? ArrowLeft : ArrowRight;
 
   return (
-    <section id="categories" className="py-8 sm:py-16 bg-background overflow-hidden relative">
-      <div className="absolute inset-0 pointer-events-none opacity-30">
-        <div className="absolute top-20 start-10 w-72 h-72 bg-accent/10 rounded-full blur-[100px]" />
-        <div className="absolute bottom-20 end-10 w-72 h-72 bg-accent/5 rounded-full blur-[100px]" />
+    <section id="categories" className="relative py-14 sm:py-24 bg-background overflow-hidden">
+      {/* Ambient backdrop */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute -top-24 start-[-10%] w-[420px] h-[420px] bg-accent/10 rounded-full blur-[120px]" />
+        <div className="absolute bottom-[-10%] end-[-10%] w-[420px] h-[420px] bg-accent/[0.06] rounded-full blur-[120px]" />
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-border/60 to-transparent" />
       </div>
+
       <div className="container-app relative">
-        <div className="text-center mb-12 sm:mb-20">
-          <span className="section-eyebrow font-body mb-4 sm:mb-5">
-            {t('categories.label')}
-          </span>
-          <h2 className="font-heading font-bold text-2xl sm:text-4xl md:text-5xl text-foreground leading-tight">{t('categories.title')}</h2>
-          <p className="font-body text-muted-foreground mt-4 sm:mt-6 max-w-xl mx-auto text-sm sm:text-base leading-relaxed">{t('categories.desc')}</p>
+        {/* Header */}
+        <div className="text-center mb-10 sm:mb-16 max-w-2xl mx-auto px-2">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent/10 border border-accent/20 mb-4 sm:mb-5">
+            <Sparkles className="w-3.5 h-3.5 text-accent" />
+            <span className="font-body text-[11px] sm:text-xs font-semibold text-accent tracking-wide">
+              {t('categories.label')}
+            </span>
+          </div>
+          <h2 className="font-heading font-bold text-[26px] sm:text-4xl md:text-5xl text-foreground leading-[1.15] tracking-tight">
+            {t('categories.title')}
+          </h2>
+          <p className="font-body text-muted-foreground mt-3 sm:mt-5 text-[14px] sm:text-base leading-relaxed">
+            {t('categories.desc')}
+          </p>
         </div>
-        <div ref={visRef} className="grid grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-7">
+
+        {/* Grid */}
+        <div ref={visRef} className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5 lg:gap-6">
           {categories.map((cat, i) => (
             <Link
               to={`/search?category=${cat.categoryId}`}
               key={cat.titleKey}
-              className={`group relative rounded-2xl sm:rounded-3xl overflow-hidden border border-border/40 dark:border-border/20 hover:border-accent/50 shadow-sm hover:shadow-2xl hover:shadow-accent/10 active:scale-[0.97] sm:hover:-translate-y-2 transition-all duration-500 cursor-pointer media-4-3 sm:aspect-[5/3] ${isVisible ? 'animate-card-slide-up' : 'opacity-0'}`}
-              style={{ animationDelay: `${i * 100}ms`, animationFillMode: 'both' }}
+              aria-label={t(cat.titleKey)}
+              className={`group relative rounded-2xl sm:rounded-[22px] overflow-hidden bg-card border border-border/50 dark:border-border/20 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-[0_20px_40px_-20px_hsl(var(--accent)/0.25)] hover:border-accent/40 active:scale-[0.98] sm:hover:-translate-y-1.5 transition-all duration-500 ${isVisible ? 'animate-card-slide-up' : 'opacity-0'}`}
+              style={{ animationDelay: `${i * 70}ms`, animationFillMode: 'both' }}
             >
-              {/* Cover Image */}
-              <img
-                src={cat.image}
-                alt={t(cat.titleKey)}
-                loading="lazy"
-                width={640}
-                height={512}
-                className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 brightness-[0.3] group-hover:brightness-[0.2]"
-              />
-              {/* Gradient overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
-              {/* Content */}
-              <div className="absolute inset-0 flex flex-col justify-end p-4 sm:p-8 z-10">
-                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-accent/15 backdrop-blur-md border border-accent/20 flex items-center justify-center mb-3 sm:mb-5 group-hover:bg-accent/25 group-hover:border-accent/40 group-hover:scale-110 transition-all duration-300">
-                  <cat.icon className="w-5 h-5 sm:w-7 sm:h-7 text-accent" />
+              {/* Image area */}
+              <div className="relative aspect-[4/3] sm:aspect-[5/3] overflow-hidden">
+                <img
+                  src={cat.image}
+                  alt={t(cat.titleKey)}
+                  loading="lazy"
+                  width={640}
+                  height={480}
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.08]"
+                />
+                {/* Soft tint for legibility */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
+                {/* Top-start icon chip */}
+                <div className="absolute top-2.5 start-2.5 sm:top-3.5 sm:start-3.5">
+                  <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-white/15 backdrop-blur-md border border-white/25 flex items-center justify-center shadow-sm group-hover:bg-accent group-hover:border-accent transition-colors duration-300">
+                    <cat.icon className="w-4 h-4 sm:w-5 sm:h-5 text-white transition-colors duration-300" />
+                  </div>
                 </div>
-                <h3 className="font-heading font-bold text-base sm:text-2xl text-white mb-1.5 sm:mb-2.5 group-hover:text-accent transition-colors duration-300">
+                {/* Title overlay (mobile-friendly) */}
+                <div className="absolute inset-x-0 bottom-0 p-3 sm:hidden">
+                  <h3 className="font-heading font-bold text-[13.5px] text-white leading-tight line-clamp-1 drop-shadow">
+                    {t(cat.titleKey)}
+                  </h3>
+                </div>
+              </div>
+
+              {/* Body — desktop/tablet */}
+              <div className="hidden sm:flex flex-col p-5 lg:p-6">
+                <h3 className="font-heading font-bold text-lg lg:text-xl text-foreground leading-tight group-hover:text-accent transition-colors duration-300">
                   {t(cat.titleKey)}
                 </h3>
-                <p className="font-body text-white/60 text-[11px] sm:text-sm leading-relaxed line-clamp-2 mb-2.5 sm:mb-4">
+                <p className="font-body text-muted-foreground text-[13px] lg:text-sm leading-relaxed mt-1.5 line-clamp-2">
                   {t(cat.descKey)}
                 </p>
-                <div className="flex items-center gap-1.5 text-accent/80 group-hover:text-accent text-xs sm:text-sm font-semibold tracking-wide transition-colors">
-                  <span>{isRTL ? 'استكشف' : 'Explore'}</span>
-                  <ArrowIcon className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1 rtl:group-hover:-translate-x-1" />
+                <div className="mt-4 pt-4 border-t border-border/50 flex items-center justify-between">
+                  <span className="font-body text-[12.5px] font-semibold text-accent tracking-wide">
+                    {isRTL ? 'استكشف القسم' : 'Explore'}
+                  </span>
+                  <span className="w-7 h-7 rounded-full bg-accent/10 flex items-center justify-center group-hover:bg-accent transition-colors duration-300">
+                    <ArrowIcon className="w-3.5 h-3.5 text-accent group-hover:text-accent-foreground transition-colors duration-300" />
+                  </span>
                 </div>
+              </div>
+
+              {/* Body — mobile compact */}
+              <div className="sm:hidden flex items-center justify-between px-3 py-2.5">
+                <p className="font-body text-muted-foreground text-[11px] leading-snug line-clamp-1 flex-1">
+                  {t(cat.descKey)}
+                </p>
+                <ArrowIcon className="w-3.5 h-3.5 text-accent shrink-0 ms-2" />
               </div>
             </Link>
           ))}
