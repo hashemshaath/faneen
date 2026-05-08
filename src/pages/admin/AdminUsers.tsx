@@ -33,6 +33,7 @@ import {
 import type { Tables } from '@/integrations/supabase/types';
 import { maskEmail, maskPhone } from '@/lib/masking';
 
+import { useNoIndex } from "@/hooks/useNoIndex";
 type Profile = Tables<'profiles'>;
 type UserRole = Tables<'user_roles'>;
 
@@ -410,6 +411,7 @@ UserRow.displayName = 'UserRow';
 const PAGE_SIZE = 20;
 
 const AdminUsers = () => {
+  useNoIndex();
   const { isRTL, language } = useLanguage();
   const { user, isSuperAdmin } = useAuth();
   const queryClient = useQueryClient();

@@ -26,6 +26,7 @@ import {
 import { SitemapSubmissionsCard } from '@/components/admin/SitemapSubmissionsCard';
 import { SeoFilesPreviewCard } from '@/components/admin/SeoFilesPreviewCard';
 
+import { useNoIndex } from "@/hooks/useNoIndex";
 /* ═══════════ Types ═══════════ */
 interface SystemSetting {
   key: string; value: string;
@@ -200,6 +201,7 @@ SettingRow.displayName = 'SettingRow';
 
 /* ═══════════ Main Component ═══════════ */
 const AdminSystemSettings = () => {
+  useNoIndex();
   const { isRTL } = useLanguage();
   const { isSuperAdmin } = useAuth();
   const queryClient = useQueryClient();

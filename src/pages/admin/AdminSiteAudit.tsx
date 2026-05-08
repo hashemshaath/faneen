@@ -18,6 +18,7 @@ import {
 } from 'recharts';
 import { cn } from '@/lib/utils';
 
+import { useNoIndex } from "@/hooks/useNoIndex";
 /* ─── Helpers ─── */
 const fmtMs = (v: number | null | undefined) =>
   v == null ? '—' : v < 1000 ? `${Math.round(v)} ms` : `${(v / 1000).toFixed(2)} s`;
@@ -40,6 +41,7 @@ function ratingClass(rating: string | null | undefined) {
 
 /* ─── Page ─── */
 const AdminSiteAudit = () => {
+  useNoIndex();
   const { isRTL } = useLanguage();
   const queryClient = useQueryClient();
   const [windowHours, setWindowHours] = useState<24 | 72 | 168>(24);

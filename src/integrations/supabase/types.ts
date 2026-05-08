@@ -1082,6 +1082,7 @@ export type Database = {
           parent_id: string | null
           slug: string
           sort_order: number
+          updated_at: string
         }
         Insert: {
           created_at?: string
@@ -1095,6 +1096,7 @@ export type Database = {
           parent_id?: string | null
           slug: string
           sort_order?: number
+          updated_at?: string
         }
         Update: {
           created_at?: string
@@ -1108,6 +1110,7 @@ export type Database = {
           parent_id?: string | null
           slug?: string
           sort_order?: number
+          updated_at?: string
         }
         Relationships: [
           {
@@ -1127,6 +1130,7 @@ export type Database = {
           is_active: boolean
           name_ar: string
           name_en: string
+          updated_at: string
         }
         Insert: {
           country_id: string
@@ -1135,6 +1139,7 @@ export type Database = {
           is_active?: boolean
           name_ar: string
           name_en: string
+          updated_at?: string
         }
         Update: {
           country_id?: string
@@ -1143,6 +1148,7 @@ export type Database = {
           is_active?: boolean
           name_ar?: string
           name_en?: string
+          updated_at?: string
         }
         Relationships: [
           {
