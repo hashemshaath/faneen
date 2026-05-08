@@ -216,14 +216,44 @@ export const HeroSection = () => {
   }, []);
 
   // Auto-play
+  const autoplayPaused = useRef(false);
   const resetTimer = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
+    if (autoplayPaused.current) return;
     timerRef.current = setInterval(() => setCurrent(p => (p + 1) % slides.length), 6000);
   }, []);
 
   useEffect(() => {
+    const section = sectionRef.current;
     resetTimer();
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+
+    const update = () => {
+      const hidden = typeof document !== 'undefined' && document.hidden;
+      // Pause if tab hidden OR hero scrolled out of view (intersection ref below)
+      autoplayPaused.current = hidden || autoplayPaused.current;
+      resetTimer();
+    };
+    const onVisibility = () => {
+      autoplayPaused.current = document.hidden ? true : false;
+      resetTimer();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+
+    let io: IntersectionObserver | undefined;
+    if (section) {
+      io = new IntersectionObserver((entries) => {
+        const inView = !!entries[0]?.isIntersecting;
+        autoplayPaused.current = !inView || (typeof document !== 'undefined' && document.hidden);
+        resetTimer();
+      }, { threshold: 0 });
+      io.observe(section);
+    }
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+      document.removeEventListener('visibilitychange', onVisibility);
+      io?.disconnect();
+    };
   }, [resetTimer]);
 
   // Optimized parallax with rAF throttle
