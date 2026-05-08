@@ -335,22 +335,40 @@ const BlogImageLibrary: React.FC<{ isRTL: boolean; onSelect: (url: string) => vo
   const [images, setImages] = useState<{ name: string; url: string }[]>([]);
   const [loading, setLoading] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const loadImages = async () => {
     if (loaded) return;
     setLoading(true);
+    setErrorMsg(null);
     try {
-      const { data, error } = await supabase.storage.from('blog-images').list('', { limit: 50, sortBy: { column: 'created_at', order: 'desc' } });
+      const { data: userData, error: userErr } = await supabase.auth.getUser();
+      if (userErr || !userData.user) {
+        setErrorMsg(isRTL ? 'يجب تسجيل الدخول لعرض مكتبة الصور' : 'Sign in to view your image library');
+        setLoaded(true);
+        return;
+      }
+      const uid = userData.user.id;
+      const { data, error } = await supabase.storage
+        .from('blog-images')
+        .list(uid, { limit: 100, sortBy: { column: 'created_at', order: 'desc' } });
       if (error) throw error;
       const items = (data || [])
-        .filter(f => f.name && /\.(jpg|jpeg|png|gif|webp|avif|svg)$/i.test(f.name))
+        .filter(f => f.name && f.id && /\.(jpg|jpeg|png|gif|webp|avif|svg)$/i.test(f.name))
         .map(f => ({
           name: f.name,
-          url: supabase.storage.from('blog-images').getPublicUrl(f.name).data.publicUrl,
+          url: supabase.storage.from('blog-images').getPublicUrl(`${uid}/${f.name}`).data.publicUrl,
         }));
       setImages(items);
       setLoaded(true);
-    } catch { /* ignore */ }
+    } catch (err) {
+      setErrorMsg(
+        isRTL
+          ? 'تعذّر تحميل مكتبة الصور'
+          : 'Failed to load image library',
+      );
+      setLoaded(true);
+    }
     setLoading(false);
   };
 
@@ -362,7 +380,9 @@ const BlogImageLibrary: React.FC<{ isRTL: boolean; onSelect: (url: string) => vo
         </Button>
       )}
       {loaded && images.length === 0 && (
-        <p className="text-center text-xs text-muted-foreground py-4">{isRTL ? 'لا توجد صور' : 'No images'}</p>
+        <p className="text-center text-xs text-muted-foreground py-4">
+          {errorMsg ?? (isRTL ? 'لا توجد صور' : 'No images')}
+        </p>
       )}
       <div className="grid grid-cols-4 gap-1.5 mt-2">
         {images.map((img, i) => (
