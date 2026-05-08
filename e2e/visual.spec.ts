@@ -47,11 +47,16 @@ const ROUTES = [
 async function stabilize(page: Page) {
   await page.addStyleTag({
     content: `
+      /* Force reduced-motion semantics for every element, in addition to
+       * Playwright's emulated prefers-reduced-motion. Defends against custom
+       * libraries that ignore the media query. */
       *, *::before, *::after {
-        animation-duration: 0s !important;
-        animation-delay: 0s !important;
-        transition-duration: 0s !important;
+        animation-duration: 0.001ms !important;
+        animation-delay: -0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
         transition-delay: 0s !important;
+        scroll-behavior: auto !important;
       }
       /* Hide elements that change between runs (counts, dates, live data, video) */
       [data-visual-volatile],
@@ -99,6 +104,24 @@ async function waitForStable(page: Page) {
 for (const vp of VIEWPORTS) {
   test.describe(`viewport ${vp.name}`, () => {
     test.use({ viewport: { width: vp.width, height: vp.height } });
+
+    // Apply reduced-motion before any app script runs, so first paint and
+    // mount-time animations are also suppressed. This complements
+    // `use.reducedMotion: "reduce"` from playwright.config.ts.
+    test.beforeEach(async ({ page }) => {
+      await page.emulateMedia({ reducedMotion: "reduce", colorScheme: "light" });
+      await page.addInitScript(() => {
+        try {
+          window.matchMedia = ((orig) => (q: string) => {
+            const m = orig(q);
+            if (q.includes("prefers-reduced-motion")) {
+              return { ...m, matches: q.includes("reduce"), media: q } as MediaQueryList;
+            }
+            return m;
+          })(window.matchMedia.bind(window));
+        } catch { /* noop */ }
+      });
+    });
 
     for (const route of ROUTES) {
       test(`${route.name} layout`, async ({ page }) => {
