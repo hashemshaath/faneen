@@ -125,12 +125,34 @@ for (const vp of VIEWPORTS) {
 
     for (const route of ROUTES) {
       test(`${route.name} layout`, async ({ page }) => {
+        // Capture app-level console errors (filter noisy 3rd-party).
+        const errors: string[] = [];
+        page.on("console", (msg) => {
+          if (msg.type() !== "error") return;
+          const text = msg.text();
+          if (/ResizeObserver|preview iframe|Lovable/.test(text)) return;
+          errors.push(text);
+        });
+
         await page.goto(route.path, { waitUntil: "domcontentloaded" });
         await waitForStable(page);
         await stabilize(page);
+
+        // No horizontal overflow.
+        const overflow = await page.evaluate(() => ({
+          scroll: document.documentElement.scrollWidth,
+          client: document.documentElement.clientWidth,
+        }));
+        expect(
+          overflow.scroll,
+          `Horizontal overflow on ${route.name} @ ${vp.name}`
+        ).toBeLessThanOrEqual(overflow.client + 1);
+
         await expect(page).toHaveScreenshot(`${route.name}--${vp.name}.png`, {
           fullPage: true,
         });
+
+        expect(errors, `Console errors on ${route.name} @ ${vp.name}`).toEqual([]);
       });
     }
 
@@ -159,6 +181,25 @@ for (const vp of VIEWPORTS) {
       await footer.scrollIntoViewIfNeeded();
       await page.waitForTimeout(300);
       await expect(footer).toHaveScreenshot(`footer--${vp.name}.png`);
+    });
+
+    test(`scroll-to-top visible after scroll`, async ({ page }) => {
+      await page.goto("/");
+      await waitForStable(page);
+      await stabilize(page);
+      await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+      await page.waitForTimeout(500);
+      const btn = page
+        .locator(
+          'button[aria-label*="scroll" i], button[aria-label*="top" i], button[aria-label*="أعلى"], [data-scroll-to-top]'
+        )
+        .first();
+      // Best-effort: only snapshot if it actually rendered (component is optional per route).
+      if (await btn.count()) {
+        await expect(btn).toHaveScreenshot(`scroll-to-top--${vp.name}.png`);
+      } else {
+        test.info().annotations.push({ type: "skip", description: "scroll-to-top button not present" });
+      }
     });
   });
 }
