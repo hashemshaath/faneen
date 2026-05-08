@@ -149,7 +149,7 @@ export const LatestProjectsSection = () => {
                         {!p.is_featured && <span />}
 
                         {/* Membership tier badge */}
-                        {tierCfg && (
+                        {tierCfg && tier !== 'basic' && (
                           <span className={cn('text-[10px] px-2.5 py-1 rounded-full font-bold shadow-lg flex items-center gap-1', tierCfg.cls)}>
                             <TierIcon className="w-3 h-3" />
                             {isRTL ? tierCfg.label : tierCfg.labelEn}
