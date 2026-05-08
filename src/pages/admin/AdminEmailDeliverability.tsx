@@ -16,6 +16,8 @@ import {
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 
+import { useNoIndex } from "@/hooks/useNoIndex";
+
 interface DeliverabilityStats {
   total: number;
   sent: number;
@@ -82,6 +84,7 @@ const severityBadge = (sev: string) => {
 };
 
 const AdminEmailDeliverability: React.FC = () => {
+  useNoIndex();
   const { isRTL } = useLanguage();
   const queryClient = useQueryClient();
   const [windowKey, setWindowKey] = useState<keyof typeof WINDOWS>('24h');
