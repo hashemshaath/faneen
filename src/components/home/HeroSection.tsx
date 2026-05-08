@@ -260,7 +260,8 @@ export const HeroSection = () => {
     };
     const io = new IntersectionObserver(
       (entries) => {
-        entries[0]?.isIntersecting ? attach() : detach();
+        if (entries[0]?.isIntersecting) attach();
+        else detach();
       },
       { threshold: 0 },
     );

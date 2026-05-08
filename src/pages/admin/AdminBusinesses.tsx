@@ -186,7 +186,7 @@ const AdminBusinesses = () => {
   const setSearch = (v: string) => { setSearchInput(v); };
   const setPage = (n: number) => updateParam({ page: n <= 1 ? null : String(n) });
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const toggleSelect = (id: string) => setSelected(s => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const toggleSelect = (id: string) => setSelected(s => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
   const clearSelected = () => setSelected(new Set());
   const [editingBiz, setEditingBiz] = useState<any | null>(null);
   const [editForm, setEditForm] = useState<any>({});
