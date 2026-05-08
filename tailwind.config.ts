@@ -78,6 +78,32 @@ export default {
         overlay: "var(--z-overlay)",
         toast: "var(--z-toast)",
       },
+      maxWidth: {
+        "container-app": "var(--container-app)",
+        "container-prose": "var(--container-prose)",
+      },
+      height: {
+        "ctrl-sm": "var(--ctrl-sm)",
+        "ctrl-md": "var(--ctrl-md)",
+        "ctrl-lg": "var(--ctrl-lg)",
+        "ctrl-xl": "var(--ctrl-xl)",
+        "hdr": "var(--hdr-h)",
+        "hdr-compact": "var(--hdr-h-compact)",
+      },
+      minHeight: {
+        "ctrl-md": "var(--ctrl-md)",
+        "ctrl-lg": "var(--ctrl-lg)",
+        "hdr": "var(--hdr-h)",
+      },
+      size: {
+        "ic-2xs": "var(--ic-2xs)",
+        "ic-xs": "var(--ic-xs)",
+        "ic-sm": "var(--ic-sm)",
+        "ic-md": "var(--ic-md)",
+        "ic-lg": "var(--ic-lg)",
+        "ic-xl": "var(--ic-xl)",
+        "ic-2xl": "var(--ic-2xl)",
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
