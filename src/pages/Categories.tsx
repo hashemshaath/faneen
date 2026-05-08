@@ -162,7 +162,7 @@ const Categories = () => {
       <div className="min-h-screen bg-background">
         <Navbar />
         <div className="bg-primary pt-24 pb-10">
-          <div className="container px-4">
+          <div className="container-app">
             <div className="flex items-center gap-2 text-sm text-primary-foreground/60 mb-3">
               <Link to="/categories" className="hover:text-gold transition-colors">{isRTL ? 'الأقسام' : 'Categories'}</Link>
               <span>/</span>
@@ -173,7 +173,7 @@ const Categories = () => {
             <p className="mt-2 text-primary-foreground/50 text-xs">{businesses.length} {isRTL ? 'مزود خدمة' : 'providers'}</p>
           </div>
         </div>
-        <div className="container py-8 px-4">
+        <div className="container-app page-shell">
           {bizLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">{[1,2,3,4,5,6].map(i => <Skeleton key={i} className="h-32 rounded-xl" />)}</div>
           ) : businesses.length === 0 ? (
@@ -216,12 +216,12 @@ const Categories = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       <div className="bg-primary pt-24 pb-10">
-        <div className="container px-4">
+        <div className="container-app">
           <h1 className="font-heading text-2xl sm:text-3xl font-bold text-primary-foreground">{isRTL ? 'تصفح الأقسام' : 'Browse Categories'}</h1>
           <p className="mt-2 text-primary-foreground/70 text-sm">{isRTL ? 'اختر القسم المناسب لتجد مزودي الخدمات' : 'Choose a category to find service providers'}</p>
         </div>
       </div>
-      <div className="container py-8 px-4">
+      <div className="container-app page-shell">
         {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">{[1,2,3,4,5,6].map(i => <Skeleton key={i} className="h-28 rounded-xl" />)}</div>
         ) : (
