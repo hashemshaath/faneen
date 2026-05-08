@@ -1,3 +1,4 @@
+import { useNoIndex } from "@/hooks/useNoIndex";
 import React, { useState, useCallback, useRef, useEffect, useMemo, useTransition } from 'react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -19,7 +20,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAiSettings, DEFAULT_AI_SETTINGS, type ToneType, type AiModel, type AiSettings, type ResponseStyle } from '@/hooks/useAiSettings';
 import {
-import { useNoIndex } from "@/hooks/useNoIndex";
   Languages, Sparkles, Wand2, Bot, Send, Copy, RotateCcw, ArrowLeftRight,
   Loader2, CheckCircle2, Zap, Brain, MessageSquare, FileText, Type,
   Palette, Settings2, BookOpen, Lightbulb,
