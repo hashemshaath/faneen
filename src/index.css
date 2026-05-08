@@ -751,6 +751,43 @@ html { transition: none; }
 .btn-ghost-ds { background-color: transparent; color: hsl(var(--foreground)); }
 .btn-ghost-ds:hover { background-color: hsl(var(--muted) / 0.6); }
 
+/* Unified icon-button primitives — circular, ≥44px tap target enforced via global rule */
+.btn-overlay-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 2.5rem; height: 2.5rem; /* 40px — global mobile rule lifts to 44px */
+  border-radius: 9999px;
+  background-color: hsl(0 0% 100% / 0.10);
+  border: 1px solid hsl(0 0% 100% / 0.20);
+  color: hsl(0 0% 100% / 0.85);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  transition:
+    background-color var(--dur-base) var(--ease-standard),
+    color var(--dur-fast) var(--ease-standard),
+    border-color var(--dur-base) var(--ease-standard),
+    transform var(--dur-fast) var(--ease-emphasized);
+}
+.btn-overlay-icon:hover {
+  background-color: hsl(var(--gold) / 0.18);
+  border-color: hsl(var(--gold) / 0.45);
+  color: hsl(var(--gold));
+}
+.btn-overlay-icon:active { transform: scale(0.94); }
+
+.btn-floating {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 2.75rem; height: 2.75rem; /* 44px native */
+  border-radius: 9999px;
+  background-color: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  color: hsl(var(--muted-foreground));
+  box-shadow: var(--elev-3);
+  transition:
+    color var(--dur-fast) var(--ease-standard),
+    transform var(--dur-fast) var(--ease-emphasized);
+}
+.btn-floating:hover { color: hsl(var(--accent)); }
+.btn-floating:active { transform: scale(0.94); }
+
 /* Stack / Cluster helpers — token-driven, RTL-safe (block/inline logical) */
 .stack-2 > * + * { margin-block-start: var(--sp-2); }
 .stack-3 > * + * { margin-block-start: var(--sp-3); }
