@@ -1,7 +1,7 @@
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useCountUp } from "@/hooks/useCountUp";
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import { Building2, Star, FolderOpen, TrendingUp } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -61,12 +61,17 @@ export const StatsSection = () => {
   const { ref: visRef, isVisible } = useScrollAnimation();
   const { data } = useRealStats();
 
-  const stats = [
-    { end: data?.businessCount ?? 0, suffix: "+", labelKey: 'stats.providers' as const, icon: Building2 },
-    { end: data?.reviewCount ?? 0, suffix: "+", labelKey: 'stats.reviews' as const, icon: Star },
-    { end: data?.projectCount ?? 0, suffix: "+", labelKey: 'stats.projects' as const, icon: FolderOpen },
-    { end: data?.satisfaction ?? 0, suffix: "%", labelKey: 'stats.satisfaction' as const, icon: TrendingUp },
-  ];
+  // Memo keeps StatItem props referentially stable across parent re-renders
+  // (e.g. theme/language ticks) so memo() actually skips work.
+  const stats = useMemo(
+    () => [
+      { end: data?.businessCount ?? 0, suffix: "+", labelKey: 'stats.providers' as const, icon: Building2 },
+      { end: data?.reviewCount ?? 0, suffix: "+", labelKey: 'stats.reviews' as const, icon: Star },
+      { end: data?.projectCount ?? 0, suffix: "+", labelKey: 'stats.projects' as const, icon: FolderOpen },
+      { end: data?.satisfaction ?? 0, suffix: "%", labelKey: 'stats.satisfaction' as const, icon: TrendingUp },
+    ],
+    [data?.businessCount, data?.reviewCount, data?.projectCount, data?.satisfaction],
+  );
 
   return (
     <section className="py-10 sm:py-20 bg-background relative overflow-hidden">
@@ -74,7 +79,7 @@ export const StatsSection = () => {
         <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-accent/20 to-transparent" />
         <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-accent/20 to-transparent" />
       </div>
-      <div ref={visRef} className="container px-4 sm:px-6">
+      <div ref={visRef} className="container px-4 sm:px-6 min-h-[280px] sm:min-h-[200px]">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6">
           {stats.map((stat, i) => (
             <StatItem key={stat.labelKey} {...stat} index={i} isVisible={isVisible} />
