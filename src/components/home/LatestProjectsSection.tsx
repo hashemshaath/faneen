@@ -72,7 +72,7 @@ export const LatestProjectsSection = () => {
         {/* Header */}
         <div className="flex items-center justify-between mb-10 sm:mb-14">
           <div>
-            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-accent/10 text-accent text-xs sm:text-sm font-body font-semibold mb-3">
+            <span className="section-eyebrow font-body mb-3">
               {isRTL ? 'أعمالنا' : 'Our Work'}
             </span>
             <h2 className="font-heading font-bold text-xl sm:text-3xl md:text-4xl text-foreground mt-1.5">

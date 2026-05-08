@@ -89,11 +89,7 @@ export const SearchHeader = ({
                   type="button"
                   onClick={chip.onClick}
                   aria-pressed={chip.active}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-heading font-semibold border transition-all ${
-                    chip.active
-                      ? 'bg-accent text-accent-foreground border-accent shadow-sm'
-                      : 'bg-surface-nav-foreground/[0.04] text-surface-nav-foreground/85 border-surface-nav-foreground/15 hover:bg-accent/15 hover:border-accent/40 hover:text-accent'
-                  }`}
+                  className={`chip font-heading ${chip.active ? 'chip-selected' : 'bg-surface-nav-foreground/[0.04] text-surface-nav-foreground/85 border border-surface-nav-foreground/15 hover:bg-accent/15 hover:border-accent/40 hover:text-accent'}`}
                 >
                   <chip.icon className={`w-3.5 h-3.5 ${chip.key === 'fav' && chip.active ? 'fill-accent-foreground' : ''}`} />
                   {chip.label}

@@ -375,7 +375,7 @@ export const HeroSection = () => {
               key={cat.id}
               type="button"
               onClick={() => navigate(`/search?category=${cat.id}`)}
-              className="px-3.5 sm:px-4.5 py-1.5 sm:py-2 rounded-full text-[10px] sm:text-xs font-body font-medium text-white/80 border border-white/15 hover:bg-gold/10 hover:text-gold hover:border-gold/30 active:scale-95 cursor-pointer transition-all duration-300 backdrop-blur-sm focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none"
+              className="chip font-body text-white/85 bg-white/[0.06] border border-white/15 hover:bg-gold/10 hover:text-gold hover:border-gold/30 active:scale-95 backdrop-blur-sm focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none"
             >
               {language === 'ar' ? cat.name_ar : cat.name_en}
             </button>

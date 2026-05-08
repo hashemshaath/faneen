@@ -53,7 +53,7 @@ export const HowItWorksSection = () => {
       <div className="container-app relative">
         {/* Header */}
         <div className="text-center mb-14 sm:mb-20">
-          <span className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-accent/10 text-accent text-xs sm:text-sm font-body font-semibold mb-5">
+          <span className="section-eyebrow font-body mb-5">
             {isRTL ? 'كيف يعمل' : 'How It Works'}
           </span>
           <h2 className="font-heading font-bold text-2xl sm:text-4xl md:text-5xl text-foreground leading-tight">

@@ -70,12 +70,10 @@ export const TagsFilter = ({ selectedTags, onToggleTag, onClearTags }: TagsFilte
               return (
                 <button
                   key={tag.id}
+                  type="button"
                   onClick={() => onToggleTag(tag.id)}
-                  className={`text-[11px] px-2.5 py-1 rounded-full transition-all border ${
-                    isSelected
-                      ? 'bg-accent text-accent-foreground border-accent'
-                      : 'bg-muted/50 text-muted-foreground border-transparent hover:border-accent/30 hover:text-foreground'
-                  }`}
+                  aria-pressed={isSelected}
+                  className={`chip chip-sm ${isSelected ? 'chip-selected' : 'chip-unselected'}`}
                 >
                   {name}
                 </button>
