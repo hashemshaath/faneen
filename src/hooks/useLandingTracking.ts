@@ -56,7 +56,7 @@ export function useLandingTracking(enabled = true) {
       ...utm,
     };
     try {
-      await supabase.from('provider_landing_metrics').insert(payload);
+      await supabase.from('provider_landing_metrics').insert([payload]);
     } catch {
       /* ignore tracking errors */
     }
