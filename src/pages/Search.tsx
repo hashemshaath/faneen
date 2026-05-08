@@ -301,7 +301,7 @@ const SearchPage = () => {
         }}
       />
 
-      <div className="container py-6 sm:py-8 px-3 sm:px-6">
+      <div className="container-app page-shell">
         {/* Active filter chips */}
         {showChips && (
           <ActiveFilterChips

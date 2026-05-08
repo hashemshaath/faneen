@@ -106,14 +106,14 @@ const Contact = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       <div className="bg-primary pt-24 pb-10">
-        <div className="container px-4">
+        <div className="container-app">
           <h1 className="font-heading text-2xl sm:text-3xl font-bold text-primary-foreground">
             {isRTL ? 'تواصل معنا' : 'Contact Us'}
           </h1>
         </div>
       </div>
 
-      <div className="container py-10 px-4 max-w-4xl">
+      <div className="container-app page-shell max-w-4xl">
         <div className="grid md:grid-cols-5 gap-8">
           {/* Contact Info */}
           <div className="md:col-span-2 space-y-4">

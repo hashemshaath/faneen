@@ -112,7 +112,7 @@ const Compare = () => {
 
       {/* Cover */}
       <div className="bg-primary pt-24 pb-10">
-        <div className="container text-center">
+        <div className="container-app text-center">
           <Scale className="w-10 h-10 text-accent mx-auto mb-3" />
           <h1 className="font-heading font-bold text-3xl text-primary-foreground mb-2">
             {isRTL ? 'مقارنة مزودي الخدمة' : 'Compare Providers'}
@@ -123,7 +123,7 @@ const Compare = () => {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-6 space-y-6">
+      <div className="container-app py-6 space-y-6">
         {/* Search to add */}
         <Card>
           <CardContent className="p-4">

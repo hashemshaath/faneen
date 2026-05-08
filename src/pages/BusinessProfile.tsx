@@ -298,7 +298,7 @@ const BusinessProfile = () => {
       <div className="min-h-screen bg-background">
         <div className="pt-14">
           <Skeleton className="h-44 w-full sm:h-60" />
-          <div className="container mt-8 space-y-4 px-3 sm:px-4">
+          <div className="container-app mt-8 space-y-4">
             <Skeleton className="h-44 w-full rounded-3xl" />
             <Skeleton className="h-72 w-full rounded-3xl" />
           </div>
@@ -366,7 +366,7 @@ const BusinessProfile = () => {
           topServices={services}
         />
 
-        <main className="container px-3 pb-10 pt-6 sm:px-4 sm:pb-16 sm:pt-8">
+        <main className="container-app pb-10 pt-6 sm:pb-16 sm:pt-8">
           <section className="rounded-[1.75rem] border border-border/40 bg-card/80 p-4 shadow-sm backdrop-blur-sm dark:border-border/20 dark:bg-card/60 sm:p-6">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div className="space-y-2">

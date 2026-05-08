@@ -429,7 +429,7 @@ const Blog = () => {
 
       {/* ═══ Category Filter + Sort ═══ */}
       <div className="sticky top-14 sm:top-16 z-30 bg-background/95 backdrop-blur-md border-b border-border/50 dark:border-border/30 shadow-sm">
-        <div className="container px-4 sm:px-6 py-2.5 sm:py-3">
+        <div className="container-app py-2.5 sm:py-3">
           {/* Categories row */}
           <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar pb-1">
             {Object.entries(blogCategories).map(([key, cat]) => (
@@ -507,7 +507,7 @@ const Blog = () => {
       {showSortMenu && <div className="fixed inset-0 z-20" onClick={() => setShowSortMenu(false)} />}
 
       {/* ═══ Content ═══ */}
-      <div className="container mx-auto px-4 sm:px-6 py-5 sm:py-10">
+      <div className="container-app py-5 sm:py-10">
         {isLoading ? (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-8">
             <div className="lg:col-span-2 space-y-5">

@@ -122,7 +122,7 @@ const Offers = () => {
       {/* Hero Cover */}
       <section className="bg-gradient-navy pt-24 sm:pt-28 pb-12 sm:pb-16 relative overflow-hidden">
         <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 30% 50%, hsl(42 85% 55% / 0.4) 0%, transparent 50%), radial-gradient(circle at 70% 80%, hsl(42 85% 55% / 0.2) 0%, transparent 40%)" }} />
-        <div className="container relative z-10 text-center px-4">
+        <div className="container-app relative z-10 text-center">
           <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-gold flex items-center justify-center mx-auto mb-4 shadow-lg shadow-gold/30">
             <Megaphone className="w-8 h-8 sm:w-10 sm:h-10 text-secondary-foreground" />
           </div>
@@ -153,7 +153,7 @@ const Offers = () => {
         </div>
       </section>
 
-      <div className="container mx-auto px-4 py-6 sm:py-8">
+      <div className="container-app py-6 sm:py-8">
         {/* Filter Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <div className="flex items-center justify-center">

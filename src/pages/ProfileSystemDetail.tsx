@@ -521,7 +521,7 @@ const ProfileSystemDetail = () => {
   if (isLoading) return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <div className="container py-24 space-y-6 px-4">
+      <div className="container-app py-24 space-y-6">
         <Skeleton className="h-10 w-2/3 rounded-xl" />
         <Skeleton className="h-64 w-full rounded-xl" />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">{[1,2,3].map(i => <Skeleton key={i} className="h-32 rounded-xl" />)}</div>
@@ -579,7 +579,7 @@ const ProfileSystemDetail = () => {
 
         {/* Hero Content */}
         <div className="absolute bottom-0 inset-x-0">
-          <div className="container mx-auto px-3 sm:px-4 max-w-6xl pb-4 sm:pb-8">
+          <div className="container-app max-w-6xl pb-4 sm:pb-8">
             <Link to="/profile-systems" className="inline-flex mb-2 sm:mb-4">
               <Button variant="ghost" size="sm" className="bg-background/60 backdrop-blur-md border border-border/30 hover:bg-background/80 text-xs sm:text-sm h-8 sm:h-9">
                 <BackIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 me-1" />{isRTL ? 'القطاعات' : 'Profiles'}
@@ -631,7 +631,7 @@ const ProfileSystemDetail = () => {
 
       {/* ═══ Quick Stats Bar ═══ */}
       <section className="border-b border-border/50 bg-card/50 backdrop-blur-sm">
-        <div className="container mx-auto px-3 sm:px-4 max-w-6xl py-3 sm:py-4">
+        <div className="container-app max-w-6xl py-3 sm:py-4">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
             <QuickStat icon={Thermometer} label={isRTL ? 'عزل حراري' : 'Thermal'} value={`${profile.thermal_insulation_rating || 0}/10`} />
             <QuickStat icon={Volume2} label={isRTL ? 'عزل صوتي' : 'Sound'} value={`${profile.sound_insulation_rating || 0}/10`} />
@@ -642,7 +642,7 @@ const ProfileSystemDetail = () => {
       </section>
 
       {/* ═══ Main Content ═══ */}
-      <div className="container mx-auto px-3 sm:px-4 max-w-6xl py-5 sm:py-8">
+      <div className="container-app max-w-6xl py-5 sm:py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           {/* Scrollable tabs on mobile */}
           <div className="overflow-x-auto no-scrollbar -mx-3 px-3 sm:mx-0 sm:px-0 mb-5 sm:mb-8">

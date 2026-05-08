@@ -539,7 +539,7 @@ const BlogPost = () => {
     return (
       <div className="min-h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
         <Navbar />
-        <div className="container pt-24 space-y-6 px-4 max-w-3xl mx-auto">
+        <div className="container-app pt-24 space-y-6 max-w-3xl">
           <Skeleton className="h-10 w-3/4 rounded-xl" />
           <Skeleton className="aspect-[2/1] w-full rounded-2xl" />
           <div className="space-y-3"><Skeleton className="h-4 w-full" /><Skeleton className="h-4 w-5/6" /><Skeleton className="h-4 w-4/6" /></div>
@@ -581,7 +581,7 @@ const BlogPost = () => {
         <div className="pt-14 sm:pt-16" />
       )}
 
-      <div className="container mx-auto px-4 sm:px-6 max-w-6xl" style={{ marginTop: post.cover_image_url ? '-4rem' : '1.5rem' }}>
+      <div className="container-app max-w-6xl" style={{ marginTop: post.cover_image_url ? '-4rem' : '1.5rem' }}>
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6 lg:gap-8 relative">
 
           {/* ═══════════ Main Content ═══════════ */}
