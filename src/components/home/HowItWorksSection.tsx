@@ -74,7 +74,7 @@ export const HowItWorksSection = () => {
         </div>
 
         <ol
-          ref={visRef as unknown as React.Ref<HTMLOListElement>}
+          ref={visRef}
           className="relative z-10 list-none grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6 max-w-6xl mx-auto"
         >
           {steps.map((step, i) => {
@@ -89,43 +89,53 @@ export const HowItWorksSection = () => {
                 )}
                 style={{ animationDelay: `${i * 100}ms`, animationFillMode: "both" }}
               >
-                <article className="group relative h-full overflow-hidden rounded-xl bg-card border border-border/60 dark:border-border/30 p-3 sm:p-4 shadow-sm hover:shadow-lg hover:shadow-accent/[0.06] hover:border-accent/40 hover:-translate-y-0.5 transition-all duration-500">
+                <article className="group relative h-full overflow-hidden rounded-2xl bg-card border border-border/60 dark:border-border/30 p-5 sm:p-6 lg:pt-8 shadow-sm hover:shadow-xl hover:shadow-accent/[0.06] hover:border-accent/40 hover:-translate-y-1 transition-all duration-500">
+                  {/* Oversized watermark step number */}
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      "absolute -top-4 font-heading font-black leading-none select-none pointer-events-none",
+                      "text-[88px] sm:text-[96px]",
+                      "text-accent/10 dark:text-accent/15 group-hover:text-accent/20 transition-colors duration-500",
+                      isRTL ? "-left-2" : "-right-2"
+                    )}
+                  >
+                    {step.step}
+                  </span>
+
                   {/* Top accent bar */}
                   <span
                     aria-hidden="true"
-                    className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-accent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                    className="absolute top-0 inset-x-0 h-[3px] bg-gradient-to-r from-transparent via-accent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"
                   />
 
-                  <div className="flex items-start gap-3">
-                    {/* Icon + step number stack */}
-                    <div className="relative shrink-0">
-                      <div className="relative w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-accent/15 to-accent/5 border border-accent/20 flex items-center justify-center group-hover:from-accent group-hover:to-accent/80 group-hover:border-accent transition-all duration-500">
+                  {/* Header row: icon + small step pill */}
+                  <div className="relative flex items-center justify-between mb-4">
+                    <div className="relative">
+                      <div className="absolute inset-0 rounded-2xl bg-accent/20 blur-md scale-110 opacity-0 group-hover:opacity-100 transition-opacity duration-500" aria-hidden="true" />
+                      <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-accent/15 to-accent/5 border border-accent/20 flex items-center justify-center group-hover:from-accent group-hover:to-accent/80 group-hover:border-accent transition-all duration-500">
                         <StepIcon
-                          className="w-5 h-5 text-accent group-hover:text-accent-foreground transition-colors duration-500"
+                          className="w-5 h-5 sm:w-6 sm:h-6 text-accent group-hover:text-accent-foreground transition-colors duration-500"
                           strokeWidth={2}
                         />
                       </div>
-                      <span
-                        aria-hidden="true"
-                        className={cn(
-                          "absolute -top-1.5 w-5 h-5 rounded-full bg-background border border-accent/40 text-accent text-[10px] font-heading font-bold flex items-center justify-center shadow-sm",
-                          isRTL ? "-left-1.5" : "-right-1.5"
-                        )}
-                      >
-                        {step.step}
-                      </span>
                     </div>
 
-                    {/* Text */}
-                    <div className="min-w-0 flex-1">
-                      <h3 className="font-heading font-bold text-[14px] sm:text-[15px] text-foreground mb-1 leading-snug group-hover:text-accent transition-colors duration-300">
-                        {language === "ar" ? step.titleAr : step.titleEn}
-                      </h3>
-                      <p className="font-body text-[12px] sm:text-[13px] text-muted-foreground leading-[1.6]">
-                        {language === "ar" ? step.descAr : step.descEn}
-                      </p>
-                    </div>
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-accent/10 border border-accent/20 text-accent text-[11px] font-heading font-bold tracking-wider">
+                      <span className="w-1 h-1 rounded-full bg-accent" aria-hidden="true" />
+                      {isRTL ? `الخطوة ${step.step}` : `STEP ${step.step}`}
+                    </span>
                   </div>
+
+                  {/* Title */}
+                  <h3 className="relative font-heading font-bold text-[15px] sm:text-base text-foreground mb-2 leading-snug group-hover:text-accent transition-colors duration-300">
+                    {language === "ar" ? step.titleAr : step.titleEn}
+                  </h3>
+
+                  {/* Description */}
+                  <p className="relative font-body text-[13px] text-muted-foreground leading-[1.7]">
+                    {language === "ar" ? step.descAr : step.descEn}
+                  </p>
                 </article>
               </li>
             );
