@@ -43,7 +43,8 @@
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
     <!-- Geolocation API is not used in the app; deny it entirely. -->
     <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), interest-cohort=(), browsing-topics=()" />
-    <meta http-equiv="X-Frame-Options" content="SAMEORIGIN" />
+    <!-- X-Frame-Options can only be set via HTTP header; browsers reject the meta form.
+         Use frame-ancestors in the CSP below instead. -->
 
     <!--
       Content-Security-Policy — ENFORCED.
