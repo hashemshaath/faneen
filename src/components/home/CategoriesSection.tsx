@@ -38,7 +38,7 @@ export const CategoriesSection = () => {
       </div>
       <div className="container-app relative">
         <div className="text-center mb-12 sm:mb-20">
-          <span className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-accent/10 text-accent text-xs sm:text-sm font-body font-semibold mb-4 sm:mb-5">
+          <span className="section-eyebrow font-body mb-4 sm:mb-5">
             {t('categories.label')}
           </span>
           <h2 className="font-heading font-bold text-2xl sm:text-4xl md:text-5xl text-foreground leading-tight">{t('categories.title')}</h2>
