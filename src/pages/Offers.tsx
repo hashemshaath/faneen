@@ -143,7 +143,7 @@ const Offers = () => {
         <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 30% 50%, hsl(42 85% 55% / 0.4) 0%, transparent 50%), radial-gradient(circle at 70% 80%, hsl(42 85% 55% / 0.2) 0%, transparent 40%)" }} />
         <div className="container-app relative z-10 text-center">
           <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-gold flex items-center justify-center mx-auto mb-4 shadow-lg shadow-gold/30">
-            <Megaphone className="w-8 h-8 sm:w-10 sm:h-10 text-secondary-foreground" />
+            <Megaphone className={`w-8 h-8 sm:w-10 sm:h-10 text-secondary-foreground ${isRTL ? '-scale-x-100' : ''}`} />
           </div>
           <h1 className="font-heading font-bold text-2xl sm:text-4xl text-surface-nav-foreground mb-3">
             {isRTL ? 'العروض والإعلانات' : 'Offers & Promotions'}
@@ -152,19 +152,28 @@ const Offers = () => {
             {isRTL ? 'تصفح أحدث العروض والخصومات والفيديوهات الترويجية من مزودي الخدمة المعتمدين' : 'Browse latest offers, discounts, and promotional videos from verified providers'}
           </p>
 
-          {/* Stats Bar */}
+          {/* Stats Bar — direction-agnostic centered layout */}
           {!isLoading && (
-            <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 mt-6 sm:mt-8">
+            <div className="grid grid-cols-4 gap-2 sm:gap-3 mt-6 sm:mt-8 max-w-2xl mx-auto">
               {[
-                { icon: Megaphone, label: isRTL ? 'إجمالي العروض' : 'Total', value: stats.total, color: 'text-gold' },
-                { icon: Tag, label: isRTL ? 'عروض خاصة' : 'Offers', value: stats.offers, color: 'text-green-400' },
-                { icon: Video, label: isRTL ? 'فيديو' : 'Videos', value: stats.videos, color: 'text-blue-400' },
-                { icon: Eye, label: isRTL ? 'مشاهدة' : 'Views', value: stats.totalViews, color: 'text-purple-400' },
+                { icon: Megaphone, label: isRTL ? 'إجمالي العروض' : 'Total', value: stats.total, color: 'text-gold', bg: 'bg-gold/15', mirror: true },
+                { icon: Tag, label: isRTL ? 'عروض خاصة' : 'Offers', value: stats.offers, color: 'text-green-400', bg: 'bg-green-500/15' },
+                { icon: Video, label: isRTL ? 'فيديو' : 'Videos', value: stats.videos, color: 'text-blue-400', bg: 'bg-blue-500/15' },
+                { icon: Eye, label: isRTL ? 'مشاهدة' : 'Views', value: stats.totalViews, color: 'text-purple-400', bg: 'bg-purple-500/15' },
               ].map((s, i) => (
-                <div key={i} className="flex items-center gap-2 bg-surface-nav-foreground/5 backdrop-blur-sm border border-surface-nav-foreground/10 rounded-xl px-3 sm:px-4 py-2">
-                  <s.icon className={`w-4 h-4 ${s.color}`} />
-                  <span className="font-heading font-bold text-surface-nav-foreground text-sm sm:text-base tech-content">{s.value.toLocaleString()}</span>
-                  <span className="text-surface-nav-foreground/50 text-[10px] sm:text-xs">{s.label}</span>
+                <div
+                  key={i}
+                  className="flex flex-col items-center justify-center gap-1.5 bg-surface-nav-foreground/[0.06] backdrop-blur-sm border border-surface-nav-foreground/10 rounded-xl px-2 py-3 text-center"
+                >
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${s.bg}`}>
+                    <s.icon className={`w-4 h-4 ${s.color} ${s.mirror && isRTL ? '-scale-x-100' : ''}`} />
+                  </div>
+                  <div className="font-heading font-bold text-surface-nav-foreground text-sm sm:text-base leading-none tech-content">
+                    {s.value.toLocaleString()}
+                  </div>
+                  <div className="text-surface-nav-foreground/55 text-[10px] leading-tight">
+                    {s.label}
+                  </div>
                 </div>
               ))}
             </div>
