@@ -11,11 +11,16 @@ import { LazyImage } from "@/components/ui/lazy-image";
 const OfferSkeleton = () => (
   <div className="card-ds card-media">
     <Skeleton className="aspect-video w-full" />
-    <div className="p-5 space-y-3">
-      <Skeleton className="h-5 w-16 rounded-full" />
+    <div className="card-pad-md space-y-2.5">
+      <Skeleton className="h-4 w-20 rounded-full" />
       <Skeleton className="h-5 w-3/4" />
       <Skeleton className="h-4 w-full" />
-      <Skeleton className="h-6 w-24" />
+      <Skeleton className="h-4 w-2/3" />
+      <Skeleton className="h-6 w-28" />
+      <div className="flex items-center justify-between pt-2.5 border-t border-border/30">
+        <Skeleton className="h-5 w-1/2 rounded-full" />
+        <Skeleton className="h-4 w-10" />
+      </div>
     </div>
   </div>
 );
