@@ -30,10 +30,12 @@ import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { ar as arLocale, enUS } from 'date-fns/locale';
 import { useSearchParams } from 'react-router-dom';
+import { useNoIndex } from "@/hooks/useNoIndex";
 
 type SettingsTab = 'appearance' | 'account' | 'security' | 'notifications' | 'bnpl';
 
 const DashboardSettings = () => {
+  useNoIndex();
   const { isRTL, language } = useLanguage();
   const { user, profile, refreshProfile } = useAuth();
   const { theme, setTheme } = useThemeMode();

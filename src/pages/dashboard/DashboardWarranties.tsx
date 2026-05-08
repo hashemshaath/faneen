@@ -18,6 +18,7 @@ import {
 import { toast } from 'sonner';
 import { FieldAiActions } from '@/components/blog/FieldAiActions';
 import {
+import { useNoIndex } from "@/hooks/useNoIndex";
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
@@ -30,6 +31,7 @@ const statusConfig: Record<string, { color: string; label_ar: string; label_en: 
 };
 
 const DashboardWarranties = () => {
+  useNoIndex();
   const { isRTL, language } = useLanguage();
   const { user } = useAuth();
   const queryClient = useQueryClient();

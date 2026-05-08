@@ -31,6 +31,7 @@ import {
   arrayMove, SortableContext, sortableKeyboardCoordinates, rectSortingStrategy, verticalListSortingStrategy, useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useNoIndex } from "@/hooks/useNoIndex";
 
 type ViewMode = 'grid' | 'list';
 type StatusFilter = 'all' | 'published' | 'draft' | 'featured';
@@ -169,6 +170,7 @@ SortableProjectCard.displayName = 'SortableProjectCard';
 /*           MAIN COMPONENT           */
 /* ═══════════════════════════════════ */
 const DashboardProjects = () => {
+  useNoIndex();
   const { isRTL, language } = useLanguage();
   const { user } = useAuth();
   const queryClient = useQueryClient();

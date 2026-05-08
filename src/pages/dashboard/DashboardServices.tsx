@@ -36,6 +36,7 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useNoIndex } from "@/hooks/useNoIndex";
 
 type FilterMode = 'all' | 'active' | 'inactive' | 'no-price';
 type SortMode = 'custom' | 'name' | 'price' | 'date';
@@ -188,6 +189,7 @@ SortableServiceCard.displayName = 'SortableServiceCard';
 /*                 MAIN COMPONENT                */
 /* ═════════════════════════════════════════════ */
 const DashboardServices = () => {
+  useNoIndex();
   const { isRTL: rtl, language } = useLanguage();
   const { user } = useAuth();
   const queryClient = useQueryClient();

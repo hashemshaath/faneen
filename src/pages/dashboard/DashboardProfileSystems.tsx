@@ -35,6 +35,7 @@ import {
   SortableContext, useSortable, verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useNoIndex } from "@/hooks/useNoIndex";
 
 const categoryOptions = [
   { value: 'aluminum', ar: 'الألمنيوم', en: 'Aluminum', icon: '🪟', color: 'bg-blue-500/10 text-blue-600' },
@@ -196,6 +197,7 @@ SortableProfileRow.displayName = 'SortableProfileRow';
 
 // ── Drag Overlay ──
 const DragOverlayProfile = ({ profile, isRTL }: { profile: any; isRTL: boolean }) => {
+  useNoIndex();
   const cat = getCategoryInfo(profile.category);
   return (
     <div className="flex items-center gap-3 py-2.5 px-4 bg-card border border-primary/30 rounded-xl shadow-xl">

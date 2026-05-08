@@ -19,6 +19,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
+import { useNoIndex } from "@/hooks/useNoIndex";
 
 interface ReviewWithRelations {
   id: string;
@@ -42,6 +43,7 @@ type SortMode = 'newest' | 'oldest' | 'highest' | 'lowest';
 type ViewMode = 'cards' | 'compact';
 
 const RatingStars = React.memo(({ rating, size = 'sm' }: { rating: number; size?: 'sm' | 'md' }) => {
+  useNoIndex();
   const w = size === 'sm' ? 'w-3.5 h-3.5' : 'w-4 h-4';
   return (
     <div className="flex gap-0.5">

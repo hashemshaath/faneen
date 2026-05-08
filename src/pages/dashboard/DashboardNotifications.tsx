@@ -19,6 +19,7 @@ import { formatDistanceToNow, format, isToday, isThisWeek, isThisMonth } from 'd
 import { ar as arLocale, enUS } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { getNotificationMeta, isUrgentNotification, typeFilterLabels } from '@/components/notifications/notification-types';
+import { useNoIndex } from "@/hooks/useNoIndex";
 
 /* ── Notification Item (memo) ── */
 const NotificationItem = React.memo(({ notification, isRTL, language, onRead, onDelete, onNavigate }: {
@@ -130,6 +131,7 @@ DateGroup.displayName = 'DateGroup';
 
 /* ──────────── Main ──────────── */
 const DashboardNotifications = () => {
+  useNoIndex();
   const { user } = useAuth();
   const { isRTL, language } = useLanguage();
   const navigate = useNavigate();

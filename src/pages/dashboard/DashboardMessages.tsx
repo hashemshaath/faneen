@@ -31,6 +31,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
+import { useNoIndex } from "@/hooks/useNoIndex";
 
 const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -48,6 +49,7 @@ const CONV_LABELS = [
 ];
 
 const formatFileSize = (bytes: number) => {
+  useNoIndex();
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
