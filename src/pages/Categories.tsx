@@ -76,7 +76,15 @@ const Categories = () => {
     canonical: selectedCategory
       ? `https://qitaat.com/categories/${selectedCategory.slug}`
       : 'https://qitaat.com/categories',
-    ogImage: ogImageFor(selectedCategory ? `category-${selectedCategory.slug}` : 'categories'),
+    ogImage: ogImageFor(selectedCategory ? `category-${selectedCategory.slug}` : 'categories', {
+      type: 'category',
+      title: selectedCategory
+        ? (isRTL ? catName : catName)
+        : (isRTL ? 'تصفح الأقسام والفئات' : 'Browse Categories'),
+      subtitle: selectedCategory
+        ? (sectorMeta?.tagline || (isRTL ? 'دليل قِطاعات' : 'Qitaat directory'))
+        : (isRTL ? 'الألمنيوم · الزجاج · الحديد · الخشب' : 'Aluminum · Glass · Steel · Wood'),
+    }),
     ogTitle: selectedCategory
       ? (isRTL ? `${catName} — قِطاعات` : `${catName} — Qitaat`)
       : (isRTL ? 'تصفح الأقسام والفئات — قِطاعات' : 'Browse Categories — Qitaat'),

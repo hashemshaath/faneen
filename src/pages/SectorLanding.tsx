@@ -153,7 +153,11 @@ const SectorLanding: React.FC = () => {
     description: meta?.description ?? '',
     keywords: meta?.keywords,
     canonical: `https://qitaat.com/sectors/${sectorSlug}`,
-    ogImage: ogImageFor(`sector-${sectorSlug}`),
+    ogImage: ogImageFor(`sector-${sectorSlug}`, {
+      type: 'sector',
+      title: meta?.name || (isRTL ? 'قطاع' : 'Sector'),
+      subtitle: meta?.tagline || (isRTL ? 'دليل قِطاعات' : 'Qitaat directory'),
+    }),
     ogType: 'website',
   });
 
