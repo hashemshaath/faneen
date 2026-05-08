@@ -149,6 +149,37 @@
     --info: 210 90% 50%;
     --info-foreground: 0 0% 100%;
 
+    /* Icon size tokens — single source of truth for lucide size */
+    --ic-2xs: 0.75rem;
+    --ic-xs:  0.875rem;
+    --ic-sm:  1rem;
+    --ic-md:  1.125rem;
+    --ic-lg:  1.25rem;
+    --ic-xl:  1.5rem;
+    --ic-2xl: 2rem;
+
+    /* Control heights — buttons, inputs, selects */
+    --ctrl-sm: 2.25rem;
+    --ctrl-md: 2.75rem;
+    --ctrl-lg: 3rem;
+    --ctrl-xl: 3.5rem;
+
+    /* Card / surface padding */
+    --pad-card-sm: var(--sp-3);
+    --pad-card-md: var(--sp-4);
+    --pad-card-lg: var(--sp-6);
+
+    /* Page & section rhythm */
+    --pad-page-x: var(--sp-4);
+    --pad-section-y: var(--sp-10);
+    --container-app: 80rem;
+    --container-prose: 44rem;
+
+    /* Sticky header / bottom-nav heights */
+    --hdr-h: 4rem;
+    --hdr-h-compact: 3.25rem;
+    --bottom-nav-h: 3.5rem;
+
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 240 5.9% 10%;
