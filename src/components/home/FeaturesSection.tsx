@@ -46,7 +46,7 @@ export const FeaturesSection = () => {
           {features.map((feat, i) => (
             <div
               key={feat.titleKey}
-              className={`group relative rounded-2xl bg-card/80 dark:bg-card/50 backdrop-blur-sm border border-border/50 dark:border-border/30 p-3.5 sm:p-6 overflow-hidden hover:border-accent/40 hover:shadow-[0_18px_40px_-22px_hsl(var(--accent)/0.35)] active:scale-[0.97] sm:hover:-translate-y-1.5 transition-all duration-500 ${isVisible ? 'animate-card-slide-up' : 'opacity-0'}`}
+              className={`group relative rounded-2xl bg-card/80 dark:bg-card/50 backdrop-blur-sm border border-border/50 dark:border-border/30 p-3.5 sm:p-6 overflow-hidden hover:border-accent/40 hover:shadow-[0_18px_40px_-22px_hsl(var(--accent)/0.35)] active:scale-[0.97] sm:hover:-translate-y-1.5 transition-all duration-500 ${isVisible ? 'animate-card-slide-up' : ''}`}
               style={{ animationDelay: `${i * 70}ms`, animationFillMode: 'both' }}
             >
               {/* Gradient sheen on hover */}
