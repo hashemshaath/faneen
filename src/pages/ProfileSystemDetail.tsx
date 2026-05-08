@@ -356,6 +356,47 @@ const ProfileSystemDetail = () => {
       ? (language === 'ar' ? firstSupplierBiz.name_ar : (firstSupplierBiz.name_en || firstSupplierBiz.name_ar))
       : null;
 
+    // ── Technical specifications → Product.additionalProperty[] ──
+    // Mapping rules:
+    //   - Source: real `profile_specifications` rows already loaded for this page.
+    //   - Each row → PropertyValue { name, value, unitText? }.
+    //   - `name` prefers the localized spec name (current language) and falls
+    //     back to the other locale; rows missing both names are dropped.
+    //   - `value` is trimmed; rows with empty value are dropped.
+    //   - `unitText` is emitted only when `spec_unit` is a non-empty trimmed string.
+    //   - Deduplicated by lowercased `name` to avoid repeating the same key.
+    //   - Capped at 25 entries (sorted by `sort_order`) to keep JSON-LD payload small.
+    type SpecRow = {
+      spec_name_ar?: string | null;
+      spec_name_en?: string | null;
+      spec_value?: string | null;
+      spec_unit?: string | null;
+      sort_order?: number | null;
+    };
+    const specRows = ([...(specs as SpecRow[])])
+      .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+    const seenNames = new Set<string>();
+    const additionalProperty: Array<Record<string, unknown>> = [];
+    for (const s of specRows) {
+      const nameLocalized = language === 'ar'
+        ? (s.spec_name_ar || s.spec_name_en)
+        : (s.spec_name_en || s.spec_name_ar);
+      const name = (nameLocalized || '').trim();
+      const value = (s.spec_value || '').trim();
+      if (!name || !value) continue;
+      const key = name.toLowerCase();
+      if (seenNames.has(key)) continue;
+      seenNames.add(key);
+      const unit = (s.spec_unit || '').trim();
+      additionalProperty.push({
+        '@type': 'PropertyValue',
+        name,
+        value,
+        ...(unit ? { unitText: unit } : {}),
+      });
+      if (additionalProperty.length >= 25) break;
+    }
+
     const product: Record<string, unknown> = {
       '@context': 'https://schema.org',
       '@type': 'Product',
@@ -367,6 +408,7 @@ const ProfileSystemDetail = () => {
       ...(brandName ? { brand: { '@type': 'Brand', name: brandName } } : {}),
       ...(aggregateRating ? { aggregateRating } : {}),
       ...(aggregateOffer ? { offers: aggregateOffer } : {}),
+      ...(additionalProperty.length > 0 ? { additionalProperty } : {}),
     };
 
     const result: Record<string, any>[] = [product];
