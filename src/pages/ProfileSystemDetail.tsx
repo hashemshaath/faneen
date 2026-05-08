@@ -246,9 +246,7 @@ const ProfileSystemDetail = () => {
       if (userIds.length === 0) return list.map((r) => ({ ...r, profiles: null }));
 
       const { data: profs } = await supabase
-        .from('profiles')
-        .select('user_id, full_name, avatar_url')
-        .in('user_id', userIds);
+        .rpc('get_review_authors', { _user_ids: userIds });
 
       const byId = new Map(
         (profs ?? []).map((p) => [p.user_id, { full_name: p.full_name, avatar_url: p.avatar_url }])
