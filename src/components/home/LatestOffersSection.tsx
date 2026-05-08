@@ -157,7 +157,15 @@ export const LatestOffersSection = () => {
                             className="flex items-center gap-1.5 text-xs sm:text-sm text-gold font-medium hover:underline cursor-pointer"
                           >
                             {offer.businesses.logo_url ? (
-                              <img src={offer.businesses.logo_url} alt="" className="w-5 h-5 rounded-full object-cover" />
+                              <img
+                                src={offer.businesses.logo_url}
+                                alt=""
+                                width={20}
+                                height={20}
+                                loading="lazy"
+                                decoding="async"
+                                className="w-5 h-5 rounded-full object-cover"
+                              />
                             ) : (
                               <div className="w-5 h-5 rounded-full bg-gold/10 flex items-center justify-center">
                                 <Tag className="w-2.5 h-2.5 text-gold" />
