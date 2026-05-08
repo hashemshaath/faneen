@@ -309,10 +309,10 @@ const Blog = () => {
                 <button
                   key={tag}
                   onClick={() => toggleTag(tag)}
-                  className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-medium transition-all duration-200 ${
+                  className={`chip chip-sm transition-transform duration-200 ${
                     selectedTags.includes(tag)
-                      ? 'bg-accent text-accent-foreground shadow-sm scale-105'
-                      : 'bg-muted/60 dark:bg-muted/30 text-muted-foreground hover:bg-accent/10 hover:text-accent active:scale-95'
+                      ? 'chip-selected scale-105'
+                      : 'chip-muted hover:bg-accent/10 hover:text-accent active:scale-95'
                   }`}
                 >
                   #{tag}
@@ -655,7 +655,7 @@ const Blog = () => {
                               {post.tags?.length > 0 && (
                                 <div className="flex items-center gap-1 flex-wrap">
                                   {post.tags.slice(0, 3).map((tag: string) => (
-                                    <Badge key={tag} variant="secondary" className="text-[9px] sm:text-[10px] px-1.5 py-0 font-normal dark:bg-muted/50">#{tag}</Badge>
+                                    <span key={tag} className="chip-mini chip-muted dark:bg-muted/50">#{tag}</span>
                                   ))}
                                 </div>
                               )}

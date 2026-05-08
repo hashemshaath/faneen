@@ -196,7 +196,7 @@ const Categories = () => {
                         {b.cities && <p className="text-xs text-muted-foreground mt-0.5">{language === 'ar' ? b.cities.name_ar : b.cities.name_en}</p>}
                         <div className="flex items-center gap-1.5 mt-1">
                           <span className="text-xs text-gold">★ {Number(b.rating_avg).toFixed(1)}</span>
-                          <span className="text-[10px] text-muted-foreground">({b.rating_count})</span>
+                          <span className="text-micro text-muted-foreground">({b.rating_count})</span>
                           {b.is_verified && <VerifiedBadge size="xs" />}
                         </div>
                       </div>

@@ -42,7 +42,7 @@ export const ArticlePreview: React.FC<Props> = ({
 
       {/* Meta */}
       <div className="flex flex-wrap items-center gap-3 mb-4 text-xs text-muted-foreground">
-        <Badge variant="secondary" className="text-[10px]">{category}</Badge>
+        <Badge variant="secondary" className="text-micro">{category}</Badge>
         <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{new Date().toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US')}</span>
         <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{readingTime} {isRTL ? 'دقائق قراءة' : 'min read'}</span>
         {focusKeyword && (
@@ -81,7 +81,7 @@ export const ArticlePreview: React.FC<Props> = ({
       {tags && (
         <div className="flex flex-wrap gap-2 mt-8 pt-6 border-t border-border/50">
           {tags.split(',').filter(t => t.trim()).map((t, i) => (
-            <Badge key={i} variant="outline" className="text-[10px]">#{t.trim()}</Badge>
+            <Badge key={i} variant="outline" className="text-micro">#{t.trim()}</Badge>
           ))}
         </div>
       )}

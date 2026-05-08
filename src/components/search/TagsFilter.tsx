@@ -51,7 +51,7 @@ export const TagsFilter = ({ selectedTags, onToggleTag, onClearTags }: TagsFilte
           {isRTL ? 'الوسوم' : 'Tags'}
         </p>
         {selectedTags.length > 0 && (
-          <button onClick={onClearTags} className="text-[10px] text-destructive hover:underline flex items-center gap-0.5">
+          <button onClick={onClearTags} className="text-micro text-destructive hover:underline flex items-center gap-0.5">
             <X className="w-3 h-3" />
             {isRTL ? 'مسح' : 'Clear'}
           </button>
@@ -60,7 +60,7 @@ export const TagsFilter = ({ selectedTags, onToggleTag, onClearTags }: TagsFilte
 
       {Object.entries(groupedTags).map(([group, groupTags]) => (
         <div key={group}>
-          <p className="text-[10px] text-muted-foreground mb-1.5 font-medium uppercase tracking-wider">
+          <p className="text-micro text-muted-foreground mb-1.5 font-medium uppercase tracking-wider">
             {language === 'ar' ? groupLabels[group]?.ar || group : groupLabels[group]?.en || group}
           </p>
           <div className="flex flex-wrap gap-1.5">
