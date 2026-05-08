@@ -16,7 +16,7 @@
 // Discord, Telegram). If PNG rasterization fails for any reason, the function
 // gracefully degrades to SVG so callers never get a 5xx.
 
-import { initWasm, Resvg } from "npm:@resvg/[email protected]";
+import { initWasm, Resvg } from "https://esm.sh/@resvg/[email protected]";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
