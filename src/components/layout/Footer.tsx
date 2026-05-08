@@ -37,7 +37,7 @@ export const Footer = () => {
       <FooterNewsletter visible={visible} />
 
       {/* Main Grid */}
-      <div className="container py-12 sm:py-16 px-4 sm:px-6">
+      <div className="container-app py-12 sm:py-16">
         <div className={`grid grid-cols-2 md:grid-cols-5 gap-8 sm:gap-10 lg:gap-14 transition-all duration-700 delay-150 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
           <FooterBrand />
           <FooterLinks />
