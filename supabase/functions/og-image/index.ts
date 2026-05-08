@@ -107,8 +107,11 @@ function buildSvg(params: {
   const textX = isRtl ? 1140 : 60;
   const direction = isRtl ? "rtl" : "ltr";
 
+  // Font families that are guaranteed to resolve in PNG mode (resvg loads
+  // bundled Noto Sans Arabic + Inter buffers). Browsers viewing the SVG
+  // directly fall back through the same chain to system equivalents.
   const fontFamily = isRtl
-    ? "'IBM Plex Sans Arabic', 'Tajawal', 'Noto Sans Arabic', system-ui, sans-serif"
+    ? "'Noto Sans Arabic', 'IBM Plex Sans Arabic', 'Tajawal', system-ui, sans-serif"
     : "'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif";
 
   // Optional cover image rendered as a soft-tinted band on the right (LTR)
@@ -190,37 +193,139 @@ function detectRtl(input: string): boolean {
   return /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\u0590-\u05FF]/.test(input || "");
 }
 
-Deno.serve((req: Request) => {
+// ── PNG rasterization (resvg-wasm + bundled fonts) ─────────────────────────
+
+const RESVG_WASM_URL = "https://unpkg.com/@resvg/[email protected]/index_bg.wasm";
+const ARABIC_FONT_URL =
+  "https://github.com/googlefonts/noto-fonts/raw/main/hinted/ttf/NotoSansArabic/NotoSansArabic-Bold.ttf";
+const LATIN_FONT_URL =
+  "https://github.com/rsms/inter/raw/master/docs/font-files/Inter-Bold.otf";
+
+let wasmReady: Promise<void> | null = null;
+let fontBuffersPromise: Promise<Uint8Array[]> | null = null;
+
+async function ensureWasm(): Promise<void> {
+  if (!wasmReady) {
+    wasmReady = (async () => {
+      const res = await fetch(RESVG_WASM_URL);
+      if (!res.ok) throw new Error(`wasm_fetch_${res.status}`);
+      await initWasm(await res.arrayBuffer());
+    })().catch((err) => {
+      wasmReady = null;
+      throw err;
+    });
+  }
+  return wasmReady;
+}
+
+async function ensureFonts(): Promise<Uint8Array[]> {
+  if (!fontBuffersPromise) {
+    fontBuffersPromise = (async () => {
+      const fetchFont = async (url: string): Promise<Uint8Array> => {
+        const res = await fetch(url, { redirect: "follow" });
+        if (!res.ok) throw new Error(`font_fetch_${res.status}`);
+        return new Uint8Array(await res.arrayBuffer());
+      };
+      return await Promise.all([fetchFont(ARABIC_FONT_URL), fetchFont(LATIN_FONT_URL)]);
+    })().catch((err) => {
+      fontBuffersPromise = null;
+      throw err;
+    });
+  }
+  return fontBuffersPromise;
+}
+
+async function rasterize(svg: string): Promise<Uint8Array> {
+  await ensureWasm();
+  const fonts = await ensureFonts();
+  const resvg = new Resvg(svg, {
+    fitTo: { mode: "width", value: 1200 },
+    background: "#0F172A",
+    font: {
+      fontBuffers: fonts,
+      loadSystemFonts: false,
+      defaultFontFamily: "Inter",
+    },
+  });
+  return resvg.render().asPng();
+}
+
+const CACHE_HEADER =
+  "public, max-age=86400, s-maxage=604800, stale-while-revalidate=2592000";
+
+function svgResponse(svg: string): Response {
+  return new Response(svg, {
+    status: 200,
+    headers: {
+      ...corsHeaders,
+      "Content-Type": "image/svg+xml; charset=utf-8",
+      "Cache-Control": CACHE_HEADER,
+      "X-Content-Type-Options": "nosniff",
+    },
+  });
+}
+
+Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
+  let svg = "";
+  let format: "png" | "svg" = "png";
   try {
     const url = new URL(req.url);
     const type = (url.searchParams.get("type") || "page").toLowerCase();
-    const title = clamp(url.searchParams.get("title") || "قِطاعات | دليل الصناعات والمقاولين", 120);
-    const subtitle = clamp(url.searchParams.get("subtitle") || "Qitaat — Industrial directory for Aluminum, Glass, Wood and Steel", 200);
+    const title = clamp(
+      url.searchParams.get("title") || "قِطاعات | دليل الصناعات والمقاولين",
+      120,
+    );
+    const subtitle = clamp(
+      url.searchParams.get("subtitle") ||
+        "Qitaat — Industrial directory for Aluminum, Glass, Wood and Steel",
+      200,
+    );
     const rawImage = url.searchParams.get("image") || "";
     const image = /^https:\/\/[^\s"'<>]+$/i.test(rawImage) ? rawImage : null;
+    format = (url.searchParams.get("format") || "png").toLowerCase() === "svg" ? "svg" : "png";
     const isRtl = detectRtl(title) || detectRtl(subtitle);
 
-    const svg = buildSvg({ title, subtitle, type, image, isRtl });
+    svg = buildSvg({ title, subtitle, type, image, isRtl });
 
-    return new Response(svg, {
-      status: 200,
-      headers: {
-        ...corsHeaders,
-        "Content-Type": "image/svg+xml; charset=utf-8",
-        // 1 day in browser, 7 days at the edge — OG crawlers cache aggressively.
-        "Cache-Control": "public, max-age=86400, s-maxage=604800, stale-while-revalidate=2592000",
-        "X-Content-Type-Options": "nosniff",
-      },
-    });
+    if (format === "svg") return svgResponse(svg);
+
+    try {
+      const png = await rasterize(svg);
+      return new Response(png, {
+        status: 200,
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "image/png",
+          "Cache-Control": CACHE_HEADER,
+          "X-Content-Type-Options": "nosniff",
+          "X-OG-Format": "png",
+        },
+      });
+    } catch (rasterErr) {
+      // Graceful degradation: never 5xx — fall back to SVG so callers always
+      // receive a valid image response.
+      console.error("og-image: PNG rasterization failed, falling back to SVG", rasterErr);
+      const res = svgResponse(svg);
+      res.headers.set("X-OG-Format", "svg-fallback");
+      return res;
+    }
   } catch (err) {
     const message = err instanceof Error ? err.message : "render_error";
-    return new Response(
-      JSON.stringify({ ok: false, error: message }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
+    // Last-ditch fallback: minimal SVG card so OG tags always resolve to an image.
+    const fallback = buildSvg({
+      title: "قِطاعات",
+      subtitle: "Qitaat — Industrial directory",
+      type: "page",
+      image: null,
+      isRtl: true,
+    });
+    const res = svgResponse(fallback);
+    res.headers.set("X-OG-Format", "svg-error");
+    res.headers.set("X-OG-Error", message.slice(0, 80));
+    return res;
   }
 });
