@@ -281,13 +281,92 @@ const ProfileSystemDetail = () => {
   const structuredDataArray = React.useMemo(() => {
     if (!profile) return null;
 
-    const product: Record<string, any> = {
+    // ── Real-data Product enrichment ──
+    // We never fabricate price, stock, brand, or rating values. Each optional
+    // sub-field is only emitted when the underlying DB row provides it.
+    const ALLOWED_CURRENCIES = ['SAR', 'AED', 'USD', 'EUR', 'KWD', 'BHD', 'OMR', 'QAR'];
+    const isValidCurrency = (c: unknown): c is string =>
+      typeof c === 'string' && /^[A-Z]{3}$/.test(c) && ALLOWED_CURRENCIES.includes(c);
+    const isPositiveNumber = (n: unknown): n is number =>
+      typeof n === 'number' && Number.isFinite(n) && n > 0;
+
+    // AggregateOffer from real supplier rows that carry price + currency.
+    type SupplierRow = {
+      price_range_from?: number | null;
+      price_range_to?: number | null;
+      currency_code?: string | null;
+      is_available?: boolean | null;
+      businesses?: { name_ar?: string | null; name_en?: string | null } | null;
+    };
+    const validOffers = (suppliers as SupplierRow[])
+      .map((s) => {
+        const lo = Number(s.price_range_from);
+        const hi = Number(s.price_range_to ?? s.price_range_from);
+        const cur = (s.currency_code || '').toUpperCase();
+        if (!isPositiveNumber(lo) || !isPositiveNumber(hi) || !isValidCurrency(cur)) return null;
+        return { lo: Math.min(lo, hi), hi: Math.max(lo, hi), cur, available: s.is_available !== false };
+      })
+      .filter((x): x is { lo: number; hi: number; cur: string; available: boolean } => !!x);
+
+    // Group by currency and pick the dominant currency (most offers).
+    let aggregateOffer: Record<string, unknown> | undefined;
+    if (validOffers.length > 0) {
+      const byCur = new Map<string, typeof validOffers>();
+      for (const o of validOffers) {
+        const arr = byCur.get(o.cur) ?? [];
+        arr.push(o);
+        byCur.set(o.cur, arr);
+      }
+      const [dominantCur, group] = [...byCur.entries()].sort((a, b) => b[1].length - a[1].length)[0];
+      const lowPrice = Math.min(...group.map((g) => g.lo));
+      const highPrice = Math.max(...group.map((g) => g.hi));
+      const anyAvailable = group.some((g) => g.available);
+      aggregateOffer = {
+        '@type': 'AggregateOffer',
+        priceCurrency: dominantCur,
+        lowPrice: lowPrice.toFixed(2),
+        highPrice: highPrice.toFixed(2),
+        offerCount: group.length,
+        availability: anyAvailable
+          ? 'https://schema.org/InStock'
+          : 'https://schema.org/OutOfStock',
+      };
+    }
+
+    // AggregateRating from real reviews only — never invented.
+    let aggregateRating: Record<string, unknown> | undefined;
+    if (Array.isArray(reviews) && reviews.length > 0) {
+      const sum = reviews.reduce((acc: number, r: { rating?: number }) => acc + (Number(r.rating) || 0), 0);
+      const avg = sum / reviews.length;
+      if (Number.isFinite(avg) && avg > 0) {
+        aggregateRating = {
+          '@type': 'AggregateRating',
+          ratingValue: avg.toFixed(1),
+          reviewCount: reviews.length,
+          bestRating: '5',
+          worstRating: '1',
+        };
+      }
+    }
+
+    // Brand: derive from the first supplier's business name if present.
+    // Never fabricate; omit the field when no supplier identity is known.
+    const firstSupplierBiz = (suppliers as SupplierRow[]).find((s) => s.businesses)?.businesses;
+    const brandName = firstSupplierBiz
+      ? (language === 'ar' ? firstSupplierBiz.name_ar : (firstSupplierBiz.name_en || firstSupplierBiz.name_ar))
+      : null;
+
+    const product: Record<string, unknown> = {
       '@context': 'https://schema.org',
       '@type': 'Product',
       name: profileName,
       description: profileDesc?.slice(0, 300),
       image: profile.cover_image_url,
       url: `https://qitaat.com/profile-systems/${slug}`,
+      ...(profile.category ? { category: profile.category } : {}),
+      ...(brandName ? { brand: { '@type': 'Brand', name: brandName } } : {}),
+      ...(aggregateRating ? { aggregateRating } : {}),
+      ...(aggregateOffer ? { offers: aggregateOffer } : {}),
     };
 
     const result: Record<string, any>[] = [product];
@@ -358,7 +437,7 @@ const ProfileSystemDetail = () => {
     }
 
     return result;
-  }, [profile, profileName, profileDesc, slug, specs, language]);
+  }, [profile, profileName, profileDesc, slug, specs, suppliers, reviews, language]);
 
   useMultiJsonLd(structuredDataArray);
 
