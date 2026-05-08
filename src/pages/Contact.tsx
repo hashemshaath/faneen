@@ -118,7 +118,7 @@ const Contact = () => {
           {/* Contact Info */}
           <div className="md:col-span-2 space-y-4">
             {contactInfo.map((item, i) => (
-              <div key={i} className="flex items-center gap-4 p-5 rounded-xl border border-border/40 bg-card">
+              <div key={i} className="card-ds card-list">
                 <div className="w-12 h-12 rounded-xl bg-gold/10 flex items-center justify-center shrink-0">
                   <item.icon className="w-5 h-5 text-gold" />
                 </div>
@@ -137,7 +137,7 @@ const Contact = () => {
           {/* Contact Form */}
           <div className="md:col-span-3">
             {sent ? (
-              <div className="flex flex-col items-center justify-center p-10 rounded-xl border border-border/40 bg-card text-center gap-4">
+              <div className="card-ds card-pad-lg flex flex-col items-center justify-center text-center gap-4">
                 <CheckCircle className="w-16 h-16 text-secondary" />
                 <h2 className="text-xl font-heading font-bold text-foreground">
                   {isRTL ? 'تم إرسال رسالتك بنجاح!' : 'Message sent successfully!'}
@@ -150,7 +150,7 @@ const Contact = () => {
                 </Button>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="p-6 rounded-xl border border-border/40 bg-card space-y-5">
+              <form onSubmit={handleSubmit} className="card-ds card-pad-md space-y-5">
                 <h2 className="text-lg font-heading font-bold text-foreground">
                   {isRTL ? 'أرسل لنا رسالة' : 'Send us a message'}
                 </h2>
