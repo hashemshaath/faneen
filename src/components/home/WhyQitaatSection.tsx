@@ -71,8 +71,8 @@ export const WhyQitaatSection = ({ variant = 'home' }: Props) => {
     <section
       className={
         variant === 'home'
-          ? 'py-16 sm:py-24 bg-gradient-to-b from-background via-muted/20 to-background dark:from-background dark:via-card/15 dark:to-background relative overflow-hidden'
-          : 'py-12 sm:py-16'
+          ? 'py-8 sm:py-16 bg-gradient-to-b from-background via-muted/20 to-background dark:from-background dark:via-card/15 dark:to-background relative overflow-hidden'
+          : 'py-6 sm:py-12'
       }
       aria-labelledby="why-qitaat-heading"
     >

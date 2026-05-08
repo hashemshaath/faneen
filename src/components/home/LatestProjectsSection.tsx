@@ -63,7 +63,7 @@ export const LatestProjectsSection = () => {
   if (!isLoading && projects.length === 0) return null;
 
   return (
-    <section ref={sectionRef} className="py-16 sm:py-28 bg-muted/20 dark:bg-card/5 relative overflow-hidden">
+    <section ref={sectionRef} className="py-8 sm:py-16 bg-muted/20 dark:bg-card/5 relative overflow-hidden">
       {/* decorative */}
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-border/60 to-transparent" />
       <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-border/60 to-transparent" />

@@ -43,7 +43,7 @@ export const LatestOffersSection = () => {
   const formatPrice = (n: number) => n?.toLocaleString();
 
   return (
-    <section ref={sectionRef} className="py-16 sm:py-28 bg-background">
+    <section ref={sectionRef} className="py-8 sm:py-16 bg-background">
       <div className="container-app">
         <div className="flex items-center justify-between mb-10 sm:mb-14">
           <div>

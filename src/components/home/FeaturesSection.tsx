@@ -18,7 +18,7 @@ export const FeaturesSection = () => {
   const { ref: visRef, isVisible } = useScrollAnimation();
 
   return (
-    <section id="features" className="py-16 sm:py-28 bg-muted/30 dark:bg-card/20 overflow-hidden relative">
+    <section id="features" className="py-8 sm:py-16 bg-muted/30 dark:bg-card/20 overflow-hidden relative">
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
         <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />

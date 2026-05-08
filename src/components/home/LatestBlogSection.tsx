@@ -60,7 +60,7 @@ export const LatestBlogSection = () => {
   if (!isLoading && posts.length === 0) return null;
 
   return (
-    <section ref={sectionRef} className="py-16 sm:py-28 bg-muted/50">
+    <section ref={sectionRef} className="py-8 sm:py-16 bg-muted/50">
       <div className="container-app">
         <div ref={headerRef} className="flex items-center justify-between mb-10 sm:mb-14">
           <div>
