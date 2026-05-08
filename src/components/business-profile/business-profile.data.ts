@@ -91,10 +91,10 @@ export const useReviews = (businessId: string | undefined) =>
       );
       if (userIds.length === 0) return reviews.map((r) => ({ ...r, profiles: null }));
 
+      // Use SECURITY DEFINER RPC so public visitors can resolve review-author
+      // names/avatars without exposing the rest of the profiles table.
       const { data: profiles } = await supabase
-        .from("profiles")
-        .select("user_id, full_name, avatar_url")
-        .in("user_id", userIds);
+        .rpc("get_review_authors", { _user_ids: userIds });
 
       const byId = new Map(
         (profiles ?? []).map((p) => [p.user_id, { full_name: p.full_name, avatar_url: p.avatar_url }])

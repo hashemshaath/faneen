@@ -4499,6 +4499,14 @@ export type Database = {
           website: string
         }[]
       }
+      get_review_authors: {
+        Args: { _user_ids: string[] }
+        Returns: {
+          avatar_url: string
+          full_name: string
+          user_id: string
+        }[]
+      }
       get_web_vitals_summary: {
         Args: { _hours?: number }
         Returns: {
