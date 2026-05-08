@@ -1018,7 +1018,7 @@ const ProfileSystemDetail = () => {
                       rows={3}
                       className="rounded-xl resize-none text-sm"
                     />
-                    <Button onClick={submitReview} variant="hero" className="rounded-xl gap-2 w-full sm:w-auto text-sm">
+                   <Button onClick={submitReview} variant="hero" size="appLg" className="rounded-xl gap-2 w-full sm:w-auto text-sm">
                       <MessageSquare className="w-4 h-4" />{isRTL ? 'إرسال التقييم' : 'Submit Review'}
                     </Button>
                   </CardContent>
