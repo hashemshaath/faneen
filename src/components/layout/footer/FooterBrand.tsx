@@ -28,35 +28,35 @@ export const FooterBrand = () => {
         </div>
       </div>
 
-      <p className="font-body text-[13px] text-surface-nav-foreground/75 leading-relaxed max-w-xs">
+      <p className="font-body text-[13px] text-surface-nav-foreground/85 leading-relaxed max-w-xs">
         {t('footer.desc')}
       </p>
 
       {/* Trust badges */}
       <div className="flex items-center gap-3">
         {badges.map((badge) => (
-          <div key={badge.label} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gold/[0.06] border border-gold/10">
-            <badge.icon className="w-3.5 h-3.5 text-gold/70" />
-            <span className="text-[11px] font-medium text-surface-nav-foreground/80">{badge.label}</span>
+          <div key={badge.label} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gold/[0.06] border border-gold/15">
+            <badge.icon aria-hidden="true" className="w-3.5 h-3.5 text-gold/85" />
+            <span className="text-[11px] font-medium text-surface-nav-foreground/90">{badge.label}</span>
           </div>
         ))}
       </div>
 
       {/* Contact info */}
-      <div className="space-y-2.5">
+      <address className="not-italic space-y-2.5" aria-label={isRTL ? 'بيانات التواصل' : 'Contact information'}>
         {contactItems.map((item, i) => (
           <div key={i} className="group flex items-center gap-2.5">
             <span className="w-7 h-7 rounded-lg bg-surface-nav-foreground/[0.05] flex items-center justify-center group-hover:bg-gold/10 transition-colors">
-              <item.icon className="w-3.5 h-3.5 text-gold/60 group-hover:text-gold transition-colors" />
+              <item.icon aria-hidden="true" className="w-3.5 h-3.5 text-gold/80 group-hover:text-gold transition-colors" />
             </span>
             {item.href ? (
-              <a href={item.href} className="text-xs sm:text-[13px] text-surface-nav-foreground/80 hover:text-gold transition-colors focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none rounded">{item.text}</a>
+              <a href={item.href} className="text-xs sm:text-[13px] text-surface-nav-foreground/90 hover:text-gold transition-colors focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-surface-nav focus-visible:outline-none rounded">{item.text}</a>
             ) : (
-              <span className="text-xs sm:text-[13px] text-surface-nav-foreground/75">{item.text}</span>
+              <span className="text-xs sm:text-[13px] text-surface-nav-foreground/85">{item.text}</span>
             )}
           </div>
         ))}
-      </div>
+      </address>
     </div>
   );
 };
