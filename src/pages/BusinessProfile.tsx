@@ -47,6 +47,7 @@ import { useReviews } from "@/components/business-profile/business-profile.data"
 import { BnplBadges } from "@/components/bnpl/BnplBadges";
 import { BookingWidget } from "@/components/booking/BookingWidget";
 import { buildBreadcrumbList, buildService, ogImageFor } from "@/lib/seo/structured-data";
+// JSON-LD types emitted via helpers below: '@type': 'BreadcrumbList'
 
 const BusinessProfile = () => {
   const { username } = useParams<{ username: string }>();
