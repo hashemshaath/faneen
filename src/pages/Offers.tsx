@@ -9,8 +9,9 @@ import { Footer } from '@/components/layout/Footer';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { Megaphone, Tag, Video, Star, Play, Calendar, Eye, TrendingUp, ArrowUpRight, Clock, Flame } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Megaphone, Tag, Video, Star, Play, Calendar, Eye, ArrowUpRight, Clock, Flame, Search, ArrowLeft, ArrowRight, SlidersHorizontal } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollToTop } from '@/components/ScrollToTop';
 import { VerifiedBadge } from '@/components/common/VerifiedBadge';
@@ -34,6 +35,8 @@ const Offers = () => {
 
   const [activeTab, setActiveTab] = useState<string>('all');
   const [trackedIds, setTrackedIds] = useState<Set<string>>(new Set());
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<'recent' | 'popular' | 'ending' | 'discount'>('recent');
 
   const { data: promotions = [], isLoading } = useQuery({
     queryKey: ['public-promotions'],
@@ -81,9 +84,25 @@ const Offers = () => {
   }, [promotions, observerCallback, activeTab]);
 
   const filtered = useMemo(() => {
-    if (activeTab === 'all') return promotions;
-    return promotions.filter((p) => p.promotion_type === activeTab);
-  }, [promotions, activeTab]);
+    let list = activeTab === 'all' ? promotions : promotions.filter((p) => p.promotion_type === activeTab);
+    const q = searchQuery.trim().toLowerCase();
+    if (q) {
+      list = list.filter((p) => {
+        const t = `${p.title_ar || ''} ${p.title_en || ''} ${p.description_ar || ''} ${p.description_en || ''} ${p.businesses?.name_ar || ''} ${p.businesses?.name_en || ''}`.toLowerCase();
+        return t.includes(q);
+      });
+    }
+    const sorted = [...list];
+    if (sortBy === 'popular') sorted.sort((a, b) => (b.views_count || 0) - (a.views_count || 0));
+    else if (sortBy === 'discount') sorted.sort((a, b) => (b.discount_percentage || 0) - (a.discount_percentage || 0));
+    else if (sortBy === 'ending') sorted.sort((a, b) => {
+      const ad = a.end_date ? new Date(a.end_date).getTime() : Infinity;
+      const bd = b.end_date ? new Date(b.end_date).getTime() : Infinity;
+      return ad - bd;
+    });
+    else sorted.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    return sorted;
+  }, [promotions, activeTab, searchQuery, sortBy]);
 
   // Stats
   const stats = useMemo(() => {
@@ -154,9 +173,36 @@ const Offers = () => {
       </section>
 
       <div className="container-app py-6 sm:py-8">
+        {/* Search + Sort toolbar */}
+        <div className="mb-5 sm:mb-6 flex flex-col sm:flex-row gap-2.5 sm:gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute top-1/2 -translate-y-1/2 start-3 w-4 h-4 text-muted-foreground" aria-hidden="true" />
+            <Input
+              dir="auto"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={isRTL ? 'ابحث في العروض، المزودين، الأوصاف…' : 'Search offers, providers, descriptions…'}
+              aria-label={isRTL ? 'البحث في العروض' : 'Search offers'}
+              className="ps-9 h-11 rounded-xl bg-card border-border/60 focus-visible:ring-accent"
+            />
+          </div>
+          <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
+            <SelectTrigger className="sm:w-52 h-11 rounded-xl bg-card border-border/60">
+              <SlidersHorizontal className="w-4 h-4 me-2 text-muted-foreground" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="recent">{isRTL ? 'الأحدث' : 'Most recent'}</SelectItem>
+              <SelectItem value="popular">{isRTL ? 'الأكثر مشاهدة' : 'Most viewed'}</SelectItem>
+              <SelectItem value="ending">{isRTL ? 'ينتهي قريباً' : 'Ending soon'}</SelectItem>
+              <SelectItem value="discount">{isRTL ? 'أعلى خصم' : 'Highest discount'}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
         {/* Filter Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <div className="flex items-center justify-center">
+          <div className="sticky top-[64px] z-10 -mx-4 px-4 py-2 bg-background/85 backdrop-blur-md border-y border-border/40 sm:border-0 sm:bg-transparent sm:backdrop-blur-none sm:py-0 sm:static sm:mx-0 sm:px-0 flex items-center justify-center overflow-x-auto no-scrollbar">
             <TabsList className="bg-muted/50 dark:bg-muted/30 rounded-xl p-1 inline-flex">
               <TabsTrigger value="all" className="rounded-lg px-4 py-2 text-xs sm:text-sm gap-1.5 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
                 {isRTL ? 'الكل' : 'All'}
@@ -165,14 +211,17 @@ const Offers = () => {
               <TabsTrigger value="offer" className="rounded-lg px-4 py-2 text-xs sm:text-sm gap-1.5 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
                 <Tag className="ic-xs" />
                 {isRTL ? 'عروض' : 'Offers'}
+                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 ms-1">{stats.offers}</Badge>
               </TabsTrigger>
               <TabsTrigger value="ad" className="rounded-lg px-4 py-2 text-xs sm:text-sm gap-1.5 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
                 <Megaphone className="ic-xs" />
                 {isRTL ? 'إعلانات' : 'Ads'}
+                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 ms-1">{stats.ads}</Badge>
               </TabsTrigger>
               <TabsTrigger value="video" className="rounded-lg px-4 py-2 text-xs sm:text-sm gap-1.5 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
                 <Video className="ic-xs" />
                 {isRTL ? 'فيديو' : 'Videos'}
+                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 ms-1">{stats.videos}</Badge>
               </TabsTrigger>
             </TabsList>
           </div>
@@ -199,8 +248,20 @@ const Offers = () => {
                 <div className="w-20 h-20 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
                   <Megaphone className="w-10 h-10 opacity-30" />
                 </div>
-                <p className="text-lg font-heading font-bold mb-1">{isRTL ? 'لا توجد عروض حالياً' : 'No promotions available'}</p>
-                <p className="text-sm">{isRTL ? 'تابعنا لمعرفة أحدث العروض والإعلانات' : 'Stay tuned for the latest offers'}</p>
+                <p className="text-lg font-heading font-bold mb-1 text-foreground">
+                  {searchQuery ? (isRTL ? 'لا توجد نتائج مطابقة' : 'No matching results') : (isRTL ? 'لا توجد عروض حالياً' : 'No promotions available')}
+                </p>
+                <p className="text-sm">
+                  {searchQuery ? (isRTL ? 'جرّب كلمات مفتاحية مختلفة' : 'Try different keywords') : (isRTL ? 'تابعنا لمعرفة أحدث العروض والإعلانات' : 'Stay tuned for the latest offers')}
+                </p>
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="mt-4 inline-flex items-center gap-1.5 text-sm font-heading text-accent hover:underline"
+                  >
+                    {isRTL ? 'مسح البحث' : 'Clear search'}
+                  </button>
+                )}
               </div>
             ) : (
               <div className="grid gap-5 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -276,7 +337,7 @@ const Offers = () => {
                         <div className="absolute top-3 end-3">
                           <Badge variant="secondary" className="bg-black/50 backdrop-blur-sm text-white text-[10px] flex items-center gap-1 border-0">
                             <Eye className="ic-2xs" />
-                            <span dir="ltr">{(p.views_count || 0).toLocaleString()}</span>
+                            <span className="tech-content">{(p.views_count || 0).toLocaleString()}</span>
                           </Badge>
                         </div>
 
@@ -315,11 +376,13 @@ const Offers = () => {
                               </span>
                               <div className="flex items-center gap-1">
                                 <Star className="ic-2xs fill-accent text-accent" />
-                                <span className="text-[11px] text-muted-foreground" dir="ltr">{Number(biz.rating_avg).toFixed(1)}</span>
+                                <span className="text-[11px] text-muted-foreground tech-content">{Number(biz.rating_avg).toFixed(1)}</span>
                                 {biz.is_verified && <VerifiedBadge size="xs" className="ms-1" />}
                               </div>
                             </div>
-                            <ArrowUpRight className="ic-sm text-muted-foreground/40 group-hover/biz:text-accent transition-colors shrink-0" />
+                            {isRTL
+                              ? <ArrowUpRight className="ic-sm text-muted-foreground/40 group-hover/biz:text-accent transition-colors shrink-0 -scale-x-100" />
+                              : <ArrowUpRight className="ic-sm text-muted-foreground/40 group-hover/biz:text-accent transition-colors shrink-0" />}
                           </Link>
                         )}
 
@@ -338,10 +401,10 @@ const Offers = () => {
                         {/* Price section */}
                         {p.promotion_type === 'offer' && p.original_price && (
                           <div className="flex items-center gap-2.5 bg-muted/50 dark:bg-muted/30 rounded-xl px-3 py-2.5 transition-colors duration-300 group-hover:bg-accent/10">
-                            <span className="line-through text-muted-foreground text-xs" dir="ltr">
+                            <span className="line-through text-muted-foreground text-xs tech-content">
                               {Number(p.original_price).toLocaleString()}
                             </span>
-                            <span className="text-base sm:text-lg font-bold text-green-600 dark:text-green-400" dir="ltr">
+                            <span className="text-base sm:text-lg font-bold text-green-600 dark:text-green-400 tech-content">
                               {Number(p.offer_price).toLocaleString()}
                             </span>
                             <span className="text-[10px] text-muted-foreground">{p.currency_code}</span>
@@ -350,16 +413,25 @@ const Offers = () => {
 
                         {/* Footer */}
                         <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-2 border-t border-border/30 transition-colors duration-300 group-hover:border-accent/20">
-                          <span className="flex items-center gap-1.5">
+                          <span className="flex items-center gap-1.5 min-w-0">
                             <Calendar className="ic-2xs" />
-                            {new Date(p.start_date).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')}
+                            <span className="tech-content truncate">
+                              {new Date(p.start_date).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')}
+                            </span>
                             {p.end_date && (
-                              <> → {new Date(p.end_date).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')}</>
+                              <>
+                                {isRTL
+                                  ? <ArrowLeft className="w-3 h-3 opacity-60" />
+                                  : <ArrowRight className="w-3 h-3 opacity-60" />}
+                                <span className="tech-content truncate">
+                                  {new Date(p.end_date).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')}
+                                </span>
+                              </>
                             )}
                           </span>
                           <span className="flex items-center gap-1">
                             <Eye className="ic-2xs" />
-                            <span dir="ltr">{(p.views_count || 0).toLocaleString()}</span>
+                            <span className="tech-content">{(p.views_count || 0).toLocaleString()}</span>
                           </span>
                         </div>
                       </CardContent>
