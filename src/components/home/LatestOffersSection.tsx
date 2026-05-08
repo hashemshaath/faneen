@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { LazyImage } from "@/components/ui/lazy-image";
 
 const OfferSkeleton = () => (
-  <div className="rounded-2xl overflow-hidden border border-border bg-card">
+  <div className="card-ds card-media">
     <Skeleton className="aspect-video w-full" />
     <div className="p-5 space-y-3">
       <Skeleton className="h-5 w-16 rounded-full" />

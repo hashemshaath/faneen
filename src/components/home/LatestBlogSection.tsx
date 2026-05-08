@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { LazyImage } from "@/components/ui/lazy-image";
 
 const BlogSkeleton = () => (
-  <div className="rounded-2xl overflow-hidden border border-border bg-card">
+  <div className="card-ds card-media">
     <Skeleton className="aspect-video w-full" />
     <div className="p-5 space-y-3">
       <Skeleton className="h-5 w-3/4" />
@@ -85,7 +85,7 @@ export const LatestBlogSection = () => {
             posts.map((post, i: number) => (
               <Link key={post.id} to={`/blog/${post.slug}`} className="group block h-full">
                 <div
-                  className={`rounded-2xl overflow-hidden border border-border bg-card transition-all duration-500 hover:shadow-xl hover:shadow-accent/5 hover:-translate-y-1.5 sm:hover:-translate-y-2.5 hover:border-accent/40 h-full flex flex-col ${isVisible ? 'animate-card-slide-up' : 'opacity-0'}`}
+                  className={`card-ds card-media transition-all duration-500 hover:shadow-xl hover:shadow-accent/5 hover:-translate-y-1.5 sm:hover:-translate-y-2.5 hover:border-accent/40 h-full flex flex-col ${isVisible ? 'animate-card-slide-up' : 'opacity-0'}`}
                   style={{ animationDelay: `${i * 100}ms`, animationFillMode: 'both' }}
                 >
                   <div className="aspect-video bg-muted relative overflow-hidden">

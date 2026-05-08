@@ -27,7 +27,7 @@ const tierConfig: Record<string, { label: string; labelEn: string; icon: React.E
 
 /* ── skeleton ────────────────────────────────────────── */
 const ProjectSkeleton = () => (
-  <div className="rounded-2xl overflow-hidden border border-border bg-card">
+  <div className="card-ds card-media">
     <Skeleton className="aspect-[16/10] w-full" />
     <div className="p-5 space-y-3">
       <Skeleton className="h-5 w-3/4" />
