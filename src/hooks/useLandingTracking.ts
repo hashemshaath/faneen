@@ -52,9 +52,9 @@ export function useLandingTracking(enabled = true) {
       referrer: document.referrer || null,
       device: getDevice(),
       path: window.location.pathname,
-      metadata: (args.metadata ?? {}) as Record<string, unknown>,
+      metadata: JSON.parse(JSON.stringify(args.metadata ?? {})),
       ...utm,
-    };
+    } as never;
     try {
       await supabase.from('provider_landing_metrics').insert([payload]);
     } catch {
