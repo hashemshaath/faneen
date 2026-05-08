@@ -31,7 +31,7 @@ export const MembershipSection = () => {
   });
 
   return (
-    <section className="py-16 sm:py-28 bg-background overflow-hidden relative">
+    <section className="py-8 sm:py-16 bg-background overflow-hidden relative">
       <div className="absolute inset-0 pointer-events-none opacity-20">
         <div className="absolute top-1/2 start-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-accent/10 rounded-full blur-[120px]" />
       </div>

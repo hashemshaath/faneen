@@ -74,7 +74,7 @@ export const StatsSection = () => {
   );
 
   return (
-    <section className="py-10 sm:py-20 bg-background relative overflow-hidden">
+    <section className="py-6 sm:py-12 bg-background relative overflow-hidden">
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-accent/20 to-transparent" />
         <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-accent/20 to-transparent" />

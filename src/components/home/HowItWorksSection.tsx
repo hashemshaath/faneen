@@ -43,7 +43,7 @@ export const HowItWorksSection = () => {
   const { ref: visRef, isVisible } = useScrollAnimation();
 
   return (
-    <section className="py-20 sm:py-32 bg-muted/20 dark:bg-card/10 relative overflow-hidden">
+    <section className="py-6 sm:py-12 bg-muted/20 dark:bg-card/10 relative overflow-hidden">
       {/* Subtle top/bottom dividers */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-border/60 to-transparent" />

@@ -763,6 +763,18 @@ html { transition: none; }
 .pad-block-lg { padding-block: var(--sp-8); }
 .pad-inline { padding-inline: var(--sp-4); }
 
-/* Section rhythm — consistent vertical pacing across pages */
-.section-ds { padding-block: var(--sp-12); }
-@media (min-width: 640px) { .section-ds { padding-block: var(--sp-20); } }
+/* Section rhythm — three tiers, mobile-first.
+   sec-dense  → utility / stats / CTA strips
+   sec        → standard content sections (default)
+   sec-hero   → hero / feature / category showcases */
+.sec-dense { padding-block: var(--sp-6); }
+.sec       { padding-block: var(--sp-8); }
+.sec-hero  { padding-block: var(--sp-10); }
+@media (min-width: 640px) {
+  .sec-dense { padding-block: var(--sp-12); }
+  .sec       { padding-block: var(--sp-16); }
+  .sec-hero  { padding-block: var(--sp-20); }
+}
+/* Back-compat alias */
+.section-ds { padding-block: var(--sp-8); }
+@media (min-width: 640px) { .section-ds { padding-block: var(--sp-16); } }

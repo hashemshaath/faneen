@@ -101,7 +101,7 @@ export const TopProvidersSection = () => {
   if (!isLoading && providers.length === 0) return null;
 
   return (
-    <section ref={sectionRef} className="py-16 sm:py-28 bg-background overflow-hidden relative">
+    <section ref={sectionRef} className="py-8 sm:py-16 bg-background overflow-hidden relative">
       <div className="absolute inset-0 pointer-events-none opacity-30">
         <div className="absolute top-20 end-10 w-72 h-72 bg-accent/10 rounded-full blur-[100px]" />
         <div className="absolute bottom-20 start-10 w-72 h-72 bg-accent/5 rounded-full blur-[100px]" />
