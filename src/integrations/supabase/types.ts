@@ -3627,6 +3627,336 @@ export type Database = {
           },
         ]
       }
+      provider_landing_content: {
+        Row: {
+          body_ar: string | null
+          body_en: string | null
+          created_at: string
+          cta_primary_href: string | null
+          cta_primary_label_ar: string | null
+          cta_primary_label_en: string | null
+          cta_secondary_href: string | null
+          cta_secondary_label_ar: string | null
+          cta_secondary_label_en: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          section_key: string
+          sort_order: number
+          subtitle_ar: string | null
+          subtitle_en: string | null
+          title_ar: string | null
+          title_en: string | null
+          updated_at: string
+        }
+        Insert: {
+          body_ar?: string | null
+          body_en?: string | null
+          created_at?: string
+          cta_primary_href?: string | null
+          cta_primary_label_ar?: string | null
+          cta_primary_label_en?: string | null
+          cta_secondary_href?: string | null
+          cta_secondary_label_ar?: string | null
+          cta_secondary_label_en?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          section_key: string
+          sort_order?: number
+          subtitle_ar?: string | null
+          subtitle_en?: string | null
+          title_ar?: string | null
+          title_en?: string | null
+          updated_at?: string
+        }
+        Update: {
+          body_ar?: string | null
+          body_en?: string | null
+          created_at?: string
+          cta_primary_href?: string | null
+          cta_primary_label_ar?: string | null
+          cta_primary_label_en?: string | null
+          cta_secondary_href?: string | null
+          cta_secondary_label_ar?: string | null
+          cta_secondary_label_en?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          section_key?: string
+          sort_order?: number
+          subtitle_ar?: string | null
+          subtitle_en?: string | null
+          title_ar?: string | null
+          title_en?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      provider_landing_faq: {
+        Row: {
+          answer_ar: string
+          answer_en: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          question_ar: string
+          question_en: string | null
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          answer_ar: string
+          answer_en?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          question_ar: string
+          question_en?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          answer_ar?: string
+          answer_en?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          question_ar?: string
+          question_en?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      provider_landing_features: {
+        Row: {
+          category: string | null
+          created_at: string
+          desc_ar: string
+          desc_en: string | null
+          icon_name: string
+          id: string
+          is_active: boolean
+          sort_order: number
+          title_ar: string
+          title_en: string | null
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          desc_ar: string
+          desc_en?: string | null
+          icon_name?: string
+          id?: string
+          is_active?: boolean
+          sort_order?: number
+          title_ar: string
+          title_en?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          desc_ar?: string
+          desc_en?: string | null
+          icon_name?: string
+          id?: string
+          is_active?: boolean
+          sort_order?: number
+          title_ar?: string
+          title_en?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      provider_landing_metrics: {
+        Row: {
+          country: string | null
+          created_at: string
+          cta_id: string | null
+          device: string | null
+          event_type: string
+          id: string
+          metadata: Json | null
+          path: string | null
+          referrer: string | null
+          section: string | null
+          session_id: string | null
+          user_id: string | null
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          utm_term: string | null
+        }
+        Insert: {
+          country?: string | null
+          created_at?: string
+          cta_id?: string | null
+          device?: string | null
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          path?: string | null
+          referrer?: string | null
+          section?: string | null
+          session_id?: string | null
+          user_id?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+        }
+        Update: {
+          country?: string | null
+          created_at?: string
+          cta_id?: string | null
+          device?: string | null
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          path?: string | null
+          referrer?: string | null
+          section?: string | null
+          session_id?: string | null
+          user_id?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+        }
+        Relationships: []
+      }
+      provider_landing_settings: {
+        Row: {
+          bing_verification: string | null
+          enable_tracking: boolean
+          ga4_measurement_id: string | null
+          gsc_verification: string | null
+          gtm_container_id: string | null
+          hero_video_url: string | null
+          id: number
+          indexnow_key: string | null
+          keywords: string | null
+          og_image_url: string | null
+          seo_desc_ar: string | null
+          seo_desc_en: string | null
+          seo_title_ar: string | null
+          seo_title_en: string | null
+          updated_at: string
+          updated_by: string | null
+          yandex_verification: string | null
+        }
+        Insert: {
+          bing_verification?: string | null
+          enable_tracking?: boolean
+          ga4_measurement_id?: string | null
+          gsc_verification?: string | null
+          gtm_container_id?: string | null
+          hero_video_url?: string | null
+          id?: number
+          indexnow_key?: string | null
+          keywords?: string | null
+          og_image_url?: string | null
+          seo_desc_ar?: string | null
+          seo_desc_en?: string | null
+          seo_title_ar?: string | null
+          seo_title_en?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          yandex_verification?: string | null
+        }
+        Update: {
+          bing_verification?: string | null
+          enable_tracking?: boolean
+          ga4_measurement_id?: string | null
+          gsc_verification?: string | null
+          gtm_container_id?: string | null
+          hero_video_url?: string | null
+          id?: number
+          indexnow_key?: string | null
+          keywords?: string | null
+          og_image_url?: string | null
+          seo_desc_ar?: string | null
+          seo_desc_en?: string | null
+          seo_title_ar?: string | null
+          seo_title_en?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          yandex_verification?: string | null
+        }
+        Relationships: []
+      }
+      provider_landing_testimonials: {
+        Row: {
+          author_name: string
+          author_role_ar: string | null
+          author_role_en: string | null
+          avatar_url: string | null
+          business_id: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          is_featured: boolean
+          quote_ar: string
+          quote_en: string | null
+          rating: number | null
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          author_name: string
+          author_role_ar?: string | null
+          author_role_en?: string | null
+          avatar_url?: string | null
+          business_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_featured?: boolean
+          quote_ar: string
+          quote_en?: string | null
+          rating?: number | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          author_name?: string
+          author_role_ar?: string | null
+          author_role_en?: string | null
+          avatar_url?: string | null
+          business_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_featured?: boolean
+          quote_ar?: string
+          quote_en?: string | null
+          rating?: number | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_landing_testimonials_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_landing_testimonials_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reviews: {
         Row: {
           business_id: string
