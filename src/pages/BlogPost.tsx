@@ -541,7 +541,7 @@ const BlogPost = () => {
         <Navbar />
         <div className="container-app pt-24 space-y-6 max-w-3xl">
           <Skeleton className="h-10 w-3/4 rounded-xl" />
-          <Skeleton className="aspect-[2/1] w-full rounded-2xl" />
+          <Skeleton className="media-2-1 w-full rounded-2xl" />
           <div className="space-y-3"><Skeleton className="h-4 w-full" /><Skeleton className="h-4 w-5/6" /><Skeleton className="ic-sm/6" /></div>
         </div>
       </div>
@@ -573,7 +573,7 @@ const BlogPost = () => {
 
       {/* ═══ Cover ═══ */}
       {post.cover_image_url ? (
-        <div className="w-full aspect-[16/10] sm:aspect-[2/1] md:aspect-[5/2] max-h-[28rem] bg-muted relative mt-14 sm:mt-16 overflow-hidden">
+        <div className="w-full media-16-10 sm:aspect-[2/1] md:aspect-[5/2] max-h-[28rem] bg-muted relative mt-14 sm:mt-16 overflow-hidden">
           <img src={post.cover_image_url} alt={title} className="w-full h-full object-cover" loading="eager" />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
         </div>
