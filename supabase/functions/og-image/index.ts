@@ -1,17 +1,22 @@
 // Dynamic Open Graph image renderer for Qitaat.
-// Returns a 1200x630 SVG with Qitaat branding, title and optional subtitle.
-// Public endpoint — no auth, no DB writes. Heavily cached.
+// Returns a 1200x630 PNG (default) or SVG with Qitaat branding, title and
+// optional subtitle. Public endpoint — no auth, no DB writes. Heavily cached.
 //
 // Query params (all optional):
 //   type     : 'business' | 'blog' | 'project' | 'category' | 'sector' | 'page'
 //   title    : main heading (Arabic or English, up to ~80 chars)
 //   subtitle : secondary line (up to ~120 chars)
 //   image    : absolute https URL of an inline cover image (jpg/png/webp)
+//   format   : 'png' (default) | 'svg'
 //
-// SVG is widely supported by modern OG crawlers (Twitter/X, LinkedIn, Slack,
-// Discord, Telegram). For crawlers that prefer raster (Facebook, WhatsApp) the
-// calling page should still set a raster ogImage as primary when available;
-// this endpoint is the fallback layer above the global og-image.jpg.
+// PNG output is rasterized server-side via @resvg/resvg-wasm and bundled
+// Noto Sans Arabic + Inter TTFs so Arabic glyphs render correctly. PNG is the
+// safest format for Facebook / WhatsApp crawlers; SVG remains available for
+// debugging and for crawlers that handle SVG well (Twitter/X, LinkedIn, Slack,
+// Discord, Telegram). If PNG rasterization fails for any reason, the function
+// gracefully degrades to SVG so callers never get a 5xx.
+
+import { initWasm, Resvg } from "npm:@resvg/[email protected]";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
