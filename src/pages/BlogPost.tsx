@@ -595,8 +595,8 @@ const BlogPost = () => {
 
             {/* Meta badges */}
             <div className="flex items-center gap-1.5 sm:gap-2 mb-2 sm:mb-3 flex-wrap">
-              <Badge className="bg-accent text-accent-foreground text-[10px] sm:text-xs">{blogCategories[post.category]?.[language] || post.category}</Badge>
-              {post.tags?.map((tag: string) => <Badge key={tag} variant="secondary" className="text-[9px] sm:text-[10px]">{tag}</Badge>)}
+              <Badge variant="category">{blogCategories[post.category]?.[language] || post.category}</Badge>
+              {post.tags?.map((tag: string) => <Badge key={tag} variant="muted" size="sm">{tag}</Badge>)}
             </div>
 
             <h1 id="blog-post-title" className="font-heading font-bold text-[1.4rem] sm:text-3xl md:text-4xl lg:text-[2.5rem] leading-[1.4] sm:leading-tight mb-4 sm:mb-5 text-foreground">{title}</h1>
@@ -780,7 +780,7 @@ const BlogPost = () => {
                 <span className="text-xs sm:text-sm text-muted-foreground font-medium">{isRTL ? 'الوسوم:' : 'Tags:'}</span>
                 {post.tags.map((tag: string) => (
                   <Link key={tag} to="/blog">
-                    <Badge variant="outline" className="hover:bg-accent/10 hover:text-accent transition-colors cursor-pointer text-[10px] sm:text-xs">#{tag}</Badge>
+                    <Badge variant="filterUnselected" className="cursor-pointer">#{tag}</Badge>
                   </Link>
                 ))}
               </div>

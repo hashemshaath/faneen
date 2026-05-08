@@ -595,10 +595,10 @@ const ProfileSystemDetail = () => {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5 sm:gap-2 mb-1 sm:mb-2 flex-wrap">
                     <h1 className="font-heading font-black text-xl sm:text-3xl md:text-4xl leading-tight">{name}</h1>
-                    <Badge className={`text-[10px] sm:text-xs gap-1 ${rec.color}`}><RecIcon className="ic-2xs" />{language === 'ar' ? rec.ar : rec.en}</Badge>
+                    <Badge variant="status" className={rec.color}><RecIcon className="ic-2xs" />{language === 'ar' ? rec.ar : rec.en}</Badge>
                   </div>
                   <div className="flex items-center gap-2 sm:gap-4 text-[11px] sm:text-sm text-muted-foreground flex-wrap">
-                    <Badge variant="outline" className="text-[10px] sm:text-xs h-5 sm:h-auto">
+                    <Badge variant="outline" size="sm">
                       {profile.profile_type === 'custom' ? (isRTL ? 'خاص' : 'Custom') : (isRTL ? 'سوق' : 'Market')}
                     </Badge>
                     <span className="flex items-center gap-1"><Eye className="ic-2xs sm:w-3.5 sm:h-3.5" />{profile.views_count.toLocaleString()}</span>
@@ -814,7 +814,7 @@ const ProfileSystemDetail = () => {
                       </h3>
                       <div className="flex flex-wrap gap-1.5 sm:gap-2">
                         {profile.available_colors.map((c: string, i: number) => (
-                          <Badge key={i} variant="outline" className="text-[10px] sm:text-xs rounded-lg px-2 sm:px-3 py-0.5 sm:py-1">{c}</Badge>
+                          <Badge key={i} variant="outline">{c}</Badge>
                         ))}
                       </div>
                     </CardContent>
@@ -964,7 +964,7 @@ const ProfileSystemDetail = () => {
                             {s.price_range_from && <span className="font-heading truncate">{Number(s.price_range_from).toLocaleString()} - {Number(s.price_range_to).toLocaleString()} {s.currency_code}</span>}
                           </div>
                         </div>
-                        <Badge className="bg-green-500/10 text-green-600 dark:text-green-400 text-[9px] sm:text-[10px] shrink-0">{isRTL ? 'متوفر' : 'Available'}</Badge>
+                        <Badge variant="success" size="sm" className="shrink-0">{isRTL ? 'متوفر' : 'Available'}</Badge>
                       </CardContent>
                     </Card>
                   </Link>
