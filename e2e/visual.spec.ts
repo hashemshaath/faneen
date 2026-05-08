@@ -67,14 +67,33 @@ async function stabilize(page: Page) {
   });
 }
 
-/** Wait for the app to be visually stable. */
+/** Wait for the app to be visually stable.
+ *
+ * Strategy (in order):
+ *   1. DOM parsed.
+ *   2. App-ready marker (`html[data-app-ready="1"]`) — set by main.tsx after
+ *      React mounts, fonts resolve, and the browser is idle. This is the
+ *      authoritative signal; networkidle alone is unreliable on routes that
+ *      keep long-poll/realtime sockets open.
+ *   3. Best-effort networkidle as a backstop (capped at 5s).
+ *   4. Fonts loaded (in case the marker fired before the font promise on
+ *      a slow CDN).
+ *   5. One animation frame to flush layout.
+ */
 async function waitForStable(page: Page) {
   await page.waitForLoadState("domcontentloaded");
-  // App boots behind a splash that disappears once React mounts; wait for it.
-  await page.waitForSelector("body[data-app-ready], main, footer", { timeout: 15000 }).catch(() => {});
-  await page.waitForLoadState("networkidle", { timeout: 15000 }).catch(() => {});
-  // Settle layout
-  await page.waitForTimeout(400);
+  await page
+    .waitForSelector('html[data-app-ready="1"]', { timeout: 15000, state: "attached" })
+    .catch(() => {});
+  await page.waitForLoadState("networkidle", { timeout: 5000 }).catch(() => {});
+  await page
+    .evaluate(() =>
+      (document as Document & { fonts?: { ready: Promise<unknown> } }).fonts?.ready ?? Promise.resolve()
+    )
+    .catch(() => {});
+  await page.evaluate(
+    () => new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())))
+  );
 }
 
 for (const vp of VIEWPORTS) {
