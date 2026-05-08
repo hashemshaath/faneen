@@ -244,7 +244,14 @@ const BlogPost = () => {
     description: postDesc?.substring(0, 160) || undefined,
     canonical: post ? `https://qitaat.com/blog/${post.slug}` : undefined,
     ogType: 'article',
-    ogImage: post?.og_image_url || post?.cover_image_url || ogImageFor(post ? `blog-${post.slug}` : 'blog'),
+    ogImage:
+      post?.og_image_url ||
+      post?.cover_image_url ||
+      ogImageFor(post ? `blog-${post.slug}` : 'blog', {
+        type: 'blog',
+        title: postTitle,
+        subtitle: postDesc?.substring(0, 160) || undefined,
+      }),
     ogTitle: post ? postTitle : undefined,
     ogDescription: postDesc?.substring(0, 160) || undefined,
     keywords: post?.keywords?.join(', ') || post?.tags?.join(', ') || undefined,
