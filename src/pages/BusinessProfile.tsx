@@ -80,7 +80,14 @@ const BusinessProfile = () => {
     title: seoTitle,
     description: seoDesc,
     ogType: 'business.business',
-    ogImage: business?.cover_url || business?.logo_url || ogImageFor('business'),
+    ogImage:
+      business?.cover_url ||
+      business?.logo_url ||
+      ogImageFor(business?.username || 'business', {
+        type: 'business',
+        title: businessName,
+        subtitle: [categoryName, cityName].filter(Boolean).join(' — ') || 'قِطاعات',
+      }),
     canonical: business ? `https://qitaat.com/${business.username}` : undefined,
     keywords: business ? [businessName, categoryName, cityName, 'قِطاعات', 'دليل أعمال'].filter(Boolean).join(', ') : undefined,
   });
