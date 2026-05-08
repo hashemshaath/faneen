@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import tailwindcssAnimate from "tailwindcss-animate";
 
 export default {
   darkMode: ["class"],
@@ -177,7 +178,7 @@ export default {
     },
   },
   plugins: [
-    require("tailwindcss-animate"),
+    tailwindcssAnimate,
     // Direction-aware variants: rtl: and ltr:
     // Drives off [dir="rtl"] / [dir="ltr"] set by LanguageContext on <html>.
     function ({ addVariant }: { addVariant: (name: string, definition: string | string[]) => void }) {
