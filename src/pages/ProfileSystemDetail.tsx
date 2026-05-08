@@ -356,6 +356,37 @@ const ProfileSystemDetail = () => {
       ? (language === 'ar' ? firstSupplierBiz.name_ar : (firstSupplierBiz.name_en || firstSupplierBiz.name_ar))
       : null;
 
+    // ── First-class dimensions (Product.height / Product.width) ──
+    // Source: real `profile_systems.max_height_mm` and `max_width_mm` columns.
+    // Validation: must be a finite positive number; zero/negative/NaN/null
+    // are dropped. Unit is fixed to UN/CEFACT `MMT` (= millimetres).
+    const toMmDimension = (raw: unknown): Record<string, unknown> | null => {
+      const n = typeof raw === 'number' ? raw : Number(raw);
+      if (!Number.isFinite(n) || n <= 0) return null;
+      return {
+        '@type': 'QuantitativeValue',
+        value: n,
+        unitCode: 'MMT',
+        unitText: 'mm',
+      };
+    };
+    const heightDim = toMmDimension((profile as { max_height_mm?: unknown }).max_height_mm);
+    const widthDim = toMmDimension((profile as { max_width_mm?: unknown }).max_width_mm);
+
+    // Names already covered by first-class dimension fields — used to skip
+    // duplicate rows when building additionalProperty below.
+    const dimensionAliases = new Set<string>();
+    if (heightDim) {
+      ['height', 'max height', 'الارتفاع', 'أقصى ارتفاع', 'max_height_mm'].forEach((k) =>
+        dimensionAliases.add(k.toLowerCase()),
+      );
+    }
+    if (widthDim) {
+      ['width', 'max width', 'العرض', 'أقصى عرض', 'max_width_mm'].forEach((k) =>
+        dimensionAliases.add(k.toLowerCase()),
+      );
+    }
+
     // ── Technical specifications → Product.additionalProperty[] ──
     // Mapping rules:
     //   - Source: real `profile_specifications` rows already loaded for this page.
@@ -386,6 +417,7 @@ const ProfileSystemDetail = () => {
       if (!name || !value) continue;
       const key = name.toLowerCase();
       if (seenNames.has(key)) continue;
+      if (dimensionAliases.has(key)) continue; // avoid duplicating first-class dims
       seenNames.add(key);
       const unit = (s.spec_unit || '').trim();
       additionalProperty.push({
@@ -408,6 +440,8 @@ const ProfileSystemDetail = () => {
       ...(brandName ? { brand: { '@type': 'Brand', name: brandName } } : {}),
       ...(aggregateRating ? { aggregateRating } : {}),
       ...(aggregateOffer ? { offers: aggregateOffer } : {}),
+      ...(heightDim ? { height: heightDim } : {}),
+      ...(widthDim ? { width: widthDim } : {}),
       ...(additionalProperty.length > 0 ? { additionalProperty } : {}),
     };
 
