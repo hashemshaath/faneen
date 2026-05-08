@@ -231,11 +231,17 @@ export const BusinessProfileHeader = ({
                 </div>
 
                 <div className="flex shrink-0 items-center gap-2">
-                  <Button variant="hero" size="sm" className="gap-1.5" onClick={onContact} disabled={isContacting}>
+                  <Button variant="hero" size="app" className="gap-1.5" onClick={onContact} disabled={isContacting}>
                     {isContacting ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageSquare className="h-4 w-4" />}
                     {language === "ar" ? "تواصل" : "Contact"}
                   </Button>
-                  <Button variant="outline" size="icon" className="dark:border-border/40" onClick={handleShare}>
+                  <Button
+                    variant="outline"
+                    size="appIcon"
+                    className="dark:border-border/40"
+                    onClick={handleShare}
+                    aria-label={language === "ar" ? "مشاركة" : "Share"}
+                  >
                     <Share2 className="h-4 w-4" />
                   </Button>
                 </div>

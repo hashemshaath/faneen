@@ -609,17 +609,36 @@ const ProfileSystemDetail = () => {
 
               {/* Action buttons - horizontal scroll on mobile */}
               <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
-                <Button variant="outline" size="icon" className="rounded-xl shrink-0 h-9 w-9 sm:h-10 sm:w-10" onClick={() => setIsFav(!isFav)}>
+                <Button
+                  variant="outline"
+                  size="appIcon"
+                  className="rounded-xl shrink-0"
+                  onClick={() => setIsFav(!isFav)}
+                  aria-label={isRTL ? 'إضافة للمفضلة' : 'Add to favorites'}
+                  aria-pressed={isFav}
+                >
                   <Heart className={`w-4 h-4 ${isFav ? 'fill-red-500 text-red-500' : ''}`} />
                 </Button>
-                <Button variant="outline" size="icon" className="rounded-xl shrink-0 h-9 w-9 sm:h-10 sm:w-10" onClick={handleShare}>
+                <Button
+                  variant="outline"
+                  size="appIcon"
+                  className="rounded-xl shrink-0"
+                  onClick={handleShare}
+                  aria-label={isRTL ? 'مشاركة' : 'Share'}
+                >
                   <Share2 className="w-4 h-4" />
                 </Button>
-                <Button variant="outline" size="icon" className="rounded-xl shrink-0 h-9 w-9 sm:h-10 sm:w-10 hidden sm:flex" onClick={() => window.print()}>
+                <Button
+                  variant="outline"
+                  size="appIcon"
+                  className="rounded-xl shrink-0 hidden sm:flex"
+                  onClick={() => window.print()}
+                  aria-label={isRTL ? 'طباعة' : 'Print'}
+                >
                   <Printer className="w-4 h-4" />
                 </Button>
                 {suppliers.length > 0 && (
-                  <Button variant="hero" className="rounded-xl gap-1.5 shrink-0 h-9 sm:h-10 text-xs sm:text-sm px-3 sm:px-4" onClick={() => setActiveTab('suppliers')}>
+                  <Button variant="hero" size="app" className="rounded-xl gap-1.5 shrink-0 text-xs sm:text-sm px-3 sm:px-4" onClick={() => setActiveTab('suppliers')}>
                     <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />{isRTL ? 'اطلب عرض سعر' : 'Request Quote'}
                   </Button>
                 )}
