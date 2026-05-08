@@ -49,7 +49,7 @@ export const CategoriesSection = () => {
             <Link
               to={`/search?category=${cat.categoryId}`}
               key={cat.titleKey}
-              className={`group relative rounded-2xl sm:rounded-3xl overflow-hidden border border-border/40 dark:border-border/20 hover:border-accent/50 shadow-sm hover:shadow-2xl hover:shadow-accent/10 active:scale-[0.97] sm:hover:-translate-y-2 transition-all duration-500 cursor-pointer aspect-[4/3] sm:aspect-[5/3] ${isVisible ? 'animate-card-slide-up' : 'opacity-0'}`}
+              className={`group relative rounded-2xl sm:rounded-3xl overflow-hidden border border-border/40 dark:border-border/20 hover:border-accent/50 shadow-sm hover:shadow-2xl hover:shadow-accent/10 active:scale-[0.97] sm:hover:-translate-y-2 transition-all duration-500 cursor-pointer media-4-3 sm:aspect-[5/3] ${isVisible ? 'animate-card-slide-up' : 'opacity-0'}`}
               style={{ animationDelay: `${i * 100}ms`, animationFillMode: 'both' }}
             >
               {/* Cover Image */}

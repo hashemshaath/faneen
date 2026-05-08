@@ -740,7 +740,7 @@ export const ContactTab = ({ business }: { business: any }) => {
 
         {business.latitude && business.longitude ? (
           <div className="space-y-2">
-            <div className="aspect-video overflow-hidden rounded-xl border border-border/30 dark:border-border/15 sm:aspect-[16/9]">
+            <div className="media-16-9 overflow-hidden rounded-xl border border-border/30 dark:border-border/15">
               <iframe
                 title={language === "ar" ? "موقع المزود" : "Provider location"}
                 width="100%"

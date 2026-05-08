@@ -28,7 +28,7 @@ const tierConfig: Record<string, { label: string; labelEn: string; icon: React.E
 /* ── skeleton ────────────────────────────────────────── */
 const ProjectSkeleton = () => (
   <div className="card-ds card-media">
-    <Skeleton className="aspect-[16/10] w-full" />
+    <Skeleton className="media-16-10 w-full" />
     <div className="p-5 space-y-3">
       <Skeleton className="h-5 w-3/4" />
       <Skeleton className="h-4 w-full" />
@@ -115,7 +115,7 @@ export const LatestProjectsSection = () => {
                     style={{ animationDelay: `${i * 80}ms`, animationFillMode: 'both' }}
                   >
                     {/* Image */}
-                    <div className="aspect-[16/10] bg-muted relative overflow-hidden">
+                    <div className="media-16-10 bg-muted relative overflow-hidden">
                       {p.cover_image_url ? (
                         <LazyImage
                           src={p.cover_image_url}

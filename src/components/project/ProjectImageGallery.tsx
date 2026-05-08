@@ -30,7 +30,7 @@ export const ProjectImageGallery = ({ images, title }: Props) => {
 
   if (images.length === 0) {
     return (
-      <div className="aspect-[16/9] bg-muted rounded-xl flex flex-col items-center justify-center text-muted-foreground mb-8">
+      <div className="media-16-9 bg-muted rounded-xl flex flex-col items-center justify-center text-muted-foreground mb-8">
         <ImageIcon className="w-16 h-16 mb-3 opacity-30" />
         <p>{isRTL ? 'لا توجد صور لهذا المشروع' : 'No images for this project'}</p>
       </div>
@@ -44,7 +44,7 @@ export const ProjectImageGallery = ({ images, title }: Props) => {
           className="relative rounded-xl overflow-hidden bg-muted cursor-pointer group mb-3"
           onClick={() => openLightbox(0)}
         >
-          <div className="aspect-[16/9] md:aspect-[2/1]">
+          <div className="media-16-9 md:aspect-[2/1]">
           <img src={images[0].image_url} alt={title || 'Project image'} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
           </div>
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
