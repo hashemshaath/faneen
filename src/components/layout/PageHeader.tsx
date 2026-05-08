@@ -14,7 +14,7 @@ export const PageHeader = ({ title, subtitle, icon, children }: PageHeaderProps)
     <>
       <Navbar />
       <div className="bg-primary pt-20 sm:pt-24 pb-8 sm:pb-10">
-        <div className="container px-4 sm:px-6 text-center">
+        <div className="container-app text-center">
           <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2">
             {icon}
             <h1 className="font-heading font-bold text-xl sm:text-2xl md:text-3xl text-primary-foreground">{title}</h1>
