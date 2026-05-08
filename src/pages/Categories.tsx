@@ -187,7 +187,7 @@ const Categories = () => {
               {businesses.map((b: any) => (
                 <Link key={b.id} to={`/${b.username}`}>
                   <Card className="hover:shadow-lg hover:border-gold/30 transition-all group">
-                    <CardContent className="p-4 flex items-center gap-4">
+                    <CardContent className="card-pad-md flex items-center gap-4">
                       <div className="w-14 h-14 rounded-xl bg-muted flex items-center justify-center overflow-hidden shrink-0">
                         {b.logo_url ? <img src={b.logo_url} alt={b.name_ar} className="w-full h-full object-cover" /> : <Building2 className="ic-xl text-muted-foreground/40" />}
                       </div>
@@ -229,7 +229,7 @@ const Categories = () => {
             {categories.map(cat => (
               <Link key={cat.id} to={`/categories/${cat.slug}`}>
                 <Card className="hover:shadow-lg hover:border-gold/30 transition-all group h-full">
-                  <CardContent className="p-5 flex items-start gap-4">
+                  <CardContent className="card-pad-md flex items-start gap-4">
                     <div className="w-12 h-12 rounded-xl bg-gold/10 flex items-center justify-center shrink-0 group-hover:bg-gold/20 transition-colors">
                       <Layers className="ic-lg text-gold" />
                     </div>
