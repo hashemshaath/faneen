@@ -52,6 +52,19 @@ export const SearchFilters = ({
     filters.priceMax > 0,
   ].filter(Boolean).length + selectedTags.length;
 
+  const selectedCategory = categories?.find(c => c.id === filters.categoryId);
+  const selectedCity = cities?.find(c => c.id === filters.cityId);
+  const sortLabels: Record<SearchFilterValues['sortBy'], { ar: string; en: string }> = {
+    relevance: { ar: 'الأكثر صلة', en: 'Relevance' },
+    rating: { ar: 'الأعلى تقييماً', en: 'Top rated' },
+    newest: { ar: 'الأحدث', en: 'Newest' },
+    name: { ar: 'الاسم', en: 'Name' },
+  };
+  const priceSummary = filters.priceMin || filters.priceMax
+    ? `${filters.priceMin || 0} – ${filters.priceMax || '∞'}`
+    : '';
+  const ratingSummary = filters.minRating > 0 ? `${filters.minRating}★+` : '';
+
   const CollapseIcon = isRTL
     ? (showFilters ? ChevronRight : ChevronLeft)
     : (showFilters ? ChevronLeft : ChevronRight);
@@ -102,7 +115,11 @@ export const SearchFilters = ({
         {showFilters && (
           <div className="mt-3 space-y-2.5 animate-fade-in lg:max-h-[calc(100vh-12rem)] lg:overflow-y-auto lg:pe-1 no-scrollbar">
             {/* Category */}
-            <FilterCard icon={Tag} label={t('search.category')}>
+            <FilterCard
+              icon={Tag}
+              label={t('search.category')}
+              summary={selectedCategory ? (language === 'ar' ? selectedCategory.name_ar : selectedCategory.name_en) : ''}
+            >
               <CategoryTree
                 categories={(categories || []) as any}
                 selectedId={filters.categoryId}
@@ -111,7 +128,11 @@ export const SearchFilters = ({
             </FilterCard>
 
             {/* City */}
-            <FilterCard icon={MapPin} label={t('search.city')}>
+            <FilterCard
+              icon={MapPin}
+              label={t('search.city')}
+              summary={selectedCity ? (language === 'ar' ? selectedCity.name_ar : selectedCity.name_en) : ''}
+            >
               <Select value={filters.cityId} onValueChange={v => onFilterChange('cityId', v)}>
                 <SelectTrigger className="w-full rounded-xl h-10 text-sm bg-background border-border/60 hover:border-accent/40 transition-colors">
                   <SelectValue placeholder={t('search.all_cities')} />
@@ -126,7 +147,7 @@ export const SearchFilters = ({
             </FilterCard>
 
             {/* Price Range */}
-            <FilterCard icon={Wallet} label={t('search.price_range')} hint={isRTL ? 'ر.س' : 'SAR'}>
+            <FilterCard icon={Wallet} label={t('search.price_range')} hint={isRTL ? 'ر.س' : 'SAR'} summary={priceSummary}>
               <PriceRangeInputs
                 priceMin={filters.priceMin}
                 priceMax={filters.priceMax}
@@ -139,7 +160,7 @@ export const SearchFilters = ({
             </FilterCard>
 
             {/* Rating */}
-            <FilterCard icon={Star} label={t('search.min_rating')}>
+            <FilterCard icon={Star} label={t('search.min_rating')} summary={ratingSummary}>
               <div className="grid grid-cols-3 gap-1.5">
                 {[0, 3, 4, 4.5, 5].map((r) => {
                   const active = filters.minRating === r;
@@ -200,7 +221,12 @@ export const SearchFilters = ({
             </label>
 
             {/* Sort */}
-            <FilterCard icon={ArrowUpDown} label={t('search.sort_by')}>
+            <FilterCard
+              icon={ArrowUpDown}
+              label={t('search.sort_by')}
+              summary={language === 'ar' ? sortLabels[filters.sortBy].ar : sortLabels[filters.sortBy].en}
+              defaultOpen={false}
+            >
               <Select value={filters.sortBy} onValueChange={(v) => onFilterChange('sortBy', v as SearchFilterValues['sortBy'])}>
                 <SelectTrigger className="w-full rounded-xl h-10 text-sm bg-background border-border/60 hover:border-accent/40 transition-colors">
                   <SelectValue />
