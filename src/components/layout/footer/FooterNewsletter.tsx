@@ -37,7 +37,7 @@ export const FooterNewsletter = ({ visible }: { visible: boolean }) => {
 
   return (
     <div className="relative border-b border-surface-nav-foreground/[0.06]">
-      <div className={`container py-10 sm:py-14 px-4 sm:px-6 transition-all duration-700 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+      <div className={`container-app py-10 sm:py-14 transition-all duration-700 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
         <div className="relative rounded-2xl sm:rounded-3xl bg-gradient-to-br from-gold/[0.08] to-gold/[0.02] border border-gold/10 p-6 sm:p-10 md:p-12 overflow-hidden">
           {/* Pattern dots */}
           <div className="absolute inset-0 pointer-events-none opacity-[0.03]"

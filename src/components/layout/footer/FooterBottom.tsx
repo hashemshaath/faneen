@@ -15,7 +15,7 @@ export const FooterBottom = ({ visible }: { visible: boolean }) => {
 
   return (
     <div className="border-t border-surface-nav-foreground/[0.06]">
-      <div className={`container py-5 sm:py-6 px-4 sm:px-6 safe-min-pb transition-all duration-700 delay-300 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+      <div className={`container-app py-5 sm:py-6 safe-min-pb transition-all duration-700 delay-300 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           {/* Copyright & extra links */}
           <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 order-2 sm:order-1">
