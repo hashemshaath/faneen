@@ -328,15 +328,6 @@ const BusinessProfile = () => {
   }
 
 
-  const sectionIntroTitle =
-    language === "ar"
-      ? "كل ما تحتاجه للتعامل مع المزود في صفحة واحدة"
-      : "Everything you need to work with this provider in one page";
-  const sectionIntroText =
-    language === "ar"
-      ? "استعرض الخدمات، المشاريع، بيانات الفروع والتواصل بتجربة ثنائية الاتجاه أكثر وضوحاً واحترافية."
-      : "Browse services, projects, branches, and contact details in a clearer professional bilingual experience.";
-
   const tabs = [
     { value: "services", label: language === "ar" ? "الخدمات" : "Services", icon: Wrench },
     { value: "projects", label: language === "ar" ? "المشاريع" : "Projects", icon: FolderOpen, count: projects.length },
@@ -366,52 +357,32 @@ const BusinessProfile = () => {
           topServices={services}
         />
 
-        <main className="container-app pb-10 pt-6 sm:pb-16 sm:pt-8">
-          <section className="rounded-r-2xl border border-border/40 bg-card/80 p-4 shadow-sm backdrop-blur-sm dark:border-border/20 dark:bg-card/60 sm:p-6">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-              <div className="space-y-2">
-                <span className="inline-flex rounded-full border border-accent/20 bg-accent/10 px-3 py-1 text-[11px] font-medium text-accent sm:text-xs">
-                  {language === "ar" ? "ملف احترافي" : "Professional profile"}
-                </span>
-                <div>
-                  <h2 className="font-heading text-xl font-bold text-foreground sm:text-2xl">{sectionIntroTitle}</h2>
-                  <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">{sectionIntroText}</p>
-                </div>
-              </div>
+        <main className="container-app pb-10 pt-4 sm:pb-16 sm:pt-8">
+          {/* Booking quick action — desktop only (mobile has inline button in header) */}
+          <div className="mb-4 hidden items-center justify-end gap-2 sm:flex">
+            <Button
+              variant="outline"
+              size="app"
+              className="gap-2"
+              onClick={() => setBookingOpen(true)}
+            >
+              <CalendarClock className="ic-sm" />
+              {language === "ar" ? "حجز موعد" : "Book appointment"}
+            </Button>
+          </div>
 
-              <div className="flex gap-2 self-start">
-                <Button
-                  variant="hero"
-                  size="appLg"
-                  className="gap-2"
-                  onClick={() => contactMutation.mutate()}
-                  disabled={contactMutation.isPending}
-                >
-                  {contactMutation.isPending ? <Loader2 className="ic-sm animate-spin" /> : <MessageSquare className="ic-sm" />}
-                  {language === "ar" ? "ابدأ التواصل الآن" : "Start contact now"}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="appLg"
-                  className="gap-2"
-                  onClick={() => setBookingOpen(true)}
-                >
-                  <CalendarClock className="ic-sm" />
-                  {language === "ar" ? "حجز موعد" : "Book"}
-                </Button>
-              </div>
-            </div>
-          </section>
-
-          <section className="mt-5 rounded-r-2xl border border-border/40 bg-card/60 p-2 shadow-sm dark:border-border/20 dark:bg-card/40 sm:mt-6 sm:p-3">
+          <section className="rounded-2xl border border-border/40 bg-card/60 p-1.5 shadow-sm dark:border-border/20 dark:bg-card/40 sm:p-3">
             <Tabs defaultValue="services" dir={isRTL ? "rtl" : "ltr"} className="w-full">
-              <div className="overflow-x-auto px-1 no-scrollbar" dir={isRTL ? "rtl" : "ltr"}>
-                <TabsList className="h-auto w-max min-w-full justify-start gap-1 rounded-2xl bg-muted/40 p-1.5 dark:bg-muted/20" dir={isRTL ? "rtl" : "ltr"}>
+              <div
+                className="sticky top-12 z-30 -mx-1.5 overflow-x-auto bg-background/80 px-1.5 py-1 backdrop-blur-md no-scrollbar sm:top-14 sm:-mx-3 sm:px-3 sm:py-1.5"
+                dir={isRTL ? "rtl" : "ltr"}
+              >
+                <TabsList className="h-auto w-max min-w-full justify-start gap-1 rounded-2xl bg-muted/40 p-1 dark:bg-muted/20 sm:p-1.5" dir={isRTL ? "rtl" : "ltr"}>
                   {tabs.map((tab) => (
                     <TabsTrigger
                       key={tab.value}
                       value={tab.value}
-                      className="shrink-0 gap-1.5 whitespace-nowrap rounded-xl px-3 py-2 text-xs font-medium data-[state=active]:bg-accent data-[state=active]:text-accent-foreground sm:px-4 sm:text-sm"
+                      className="shrink-0 gap-1.5 whitespace-nowrap rounded-xl px-2.5 py-1.5 text-[11px] font-medium data-[state=active]:bg-accent data-[state=active]:text-accent-foreground sm:px-4 sm:py-2 sm:text-sm"
                     >
                       <tab.icon className="h-3.5 w-3.5" />
                       {tab.label}
@@ -425,7 +396,7 @@ const BusinessProfile = () => {
                 </TabsList>
               </div>
 
-              <div className="mt-4 rounded-3xl bg-background/70 p-2 sm:mt-6 sm:p-3">
+              <div className="mt-3 rounded-2xl bg-background/70 p-1.5 sm:mt-6 sm:rounded-3xl sm:p-3">
                 <TabsContent value="services" className="mt-0">
                   <ServicesTab businessId={business.id} businessName={businessName} />
                 </TabsContent>
