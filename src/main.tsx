@@ -63,3 +63,29 @@ if (!isPreviewHost && !isInIframe) {
 }
 
 createRoot(document.getElementById("root")!).render(<App />);
+
+// Visual-regression / E2E readiness marker. Set after React commits its first
+// paint, fonts settle, and any pending images have loaded. Playwright's
+// `waitForSelector("html[data-app-ready]")` keys off this attribute to take
+// stable screenshots without depending solely on networkidle.
+(function markAppReady() {
+  const flag = () => document.documentElement.setAttribute("data-app-ready", "1");
+  const onIdle = (cb: () => void) => {
+    type IdleWindow = Window & {
+      requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+    };
+    const w = window as IdleWindow;
+    if (typeof w.requestIdleCallback === "function") {
+      w.requestIdleCallback(cb, { timeout: 1500 });
+    } else {
+      setTimeout(cb, 300);
+    }
+  };
+  const ready = () => {
+    const fontsReady = (document as Document & { fonts?: { ready: Promise<unknown> } }).fonts?.ready
+      ?? Promise.resolve();
+    Promise.all([fontsReady]).finally(() => onIdle(flag));
+  };
+  if (document.readyState === "complete") ready();
+  else window.addEventListener("load", ready, { once: true });
+})();
