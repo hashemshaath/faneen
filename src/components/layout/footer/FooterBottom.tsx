@@ -14,22 +14,22 @@ export const FooterBottom = ({ visible }: { visible: boolean }) => {
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
   return (
-    <div className="border-t border-surface-nav-foreground/[0.06]">
-      <div className={`container-app py-5 sm:py-6 safe-min-pb transition-all duration-700 delay-300 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+    <div className="border-t border-surface-nav-foreground/[0.08]">
+      <div className={`container-app py-5 sm:py-6 safe-pb transition-all duration-700 delay-300 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-5">
           {/* Copyright & extra links */}
-          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 order-2 sm:order-1">
-            <p className="font-body text-[11px] sm:text-xs text-surface-nav-foreground/70">
+          <div className="flex flex-col sm:flex-row items-center gap-1.5 sm:gap-4 order-2 sm:order-1 text-center sm:text-start">
+            <p className="font-body text-xs text-surface-nav-foreground/75 leading-snug">
               {t('footer.rights')}
             </p>
-            <div className="hidden sm:block w-px h-3 bg-surface-nav-foreground/10" />
-            <p className="font-body text-[10px] text-surface-nav-foreground/70">
+            <div className="hidden sm:block w-px h-3 bg-surface-nav-foreground/15" />
+            <p className="font-body text-xs text-surface-nav-foreground/65 leading-snug">
               {isRTL ? 'صُنع بـ ❤️ في السعودية' : 'Made with ❤️ in Saudi Arabia'}
             </p>
           </div>
 
-          {/* Social icons */}
-          <div className="flex items-center gap-1.5 order-1 sm:order-2">
+          {/* Social icons — uniform 44px on mobile, 36px desktop */}
+          <div className="flex items-center gap-2 order-1 sm:order-2">
             {socialLinks.map((s) => (
               <a
                 key={s.label}
@@ -37,20 +37,20 @@ export const FooterBottom = ({ visible }: { visible: boolean }) => {
                 aria-label={s.label}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-11 h-11 sm:w-9 sm:h-9 rounded-xl bg-surface-nav-foreground/[0.06] border border-surface-nav-foreground/20 flex items-center justify-center text-surface-nav-foreground/85 hover:bg-gold/15 hover:text-gold hover:border-gold/30 hover:scale-110 transition-all duration-300 focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none"
+                className="w-11 h-11 sm:w-9 sm:h-9 rounded-full bg-surface-nav-foreground/[0.06] border border-surface-nav-foreground/15 flex items-center justify-center text-surface-nav-foreground/85 hover:bg-gold/15 hover:text-gold hover:border-gold/35 transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none"
               >
-                <s.icon className="ic-sm" />
+                <s.icon className="w-4 h-4" />
               </a>
             ))}
 
-            <div className="w-px h-5 bg-surface-nav-foreground/[0.08] mx-1.5" />
+            <div className="w-px h-6 bg-surface-nav-foreground/[0.12] mx-1" />
 
             <button
               onClick={scrollToTop}
               aria-label={isRTL ? 'العودة إلى الأعلى' : 'Scroll to top'}
-              className="w-11 h-11 sm:w-9 sm:h-9 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center text-gold/85 hover:bg-gold hover:text-secondary-foreground hover:border-gold hover:scale-110 hover:-translate-y-0.5 transition-all duration-300 focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none"
+              className="w-11 h-11 sm:w-9 sm:h-9 rounded-full bg-gold/10 border border-gold/25 flex items-center justify-center text-gold hover:bg-gold hover:text-secondary-foreground hover:border-gold transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none"
             >
-              <ArrowUp className="ic-sm" />
+              <ArrowUp className="w-4 h-4" />
             </button>
           </div>
         </div>
