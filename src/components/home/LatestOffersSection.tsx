@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -23,6 +23,7 @@ const OfferSkeleton = () => (
 export const LatestOffersSection = () => {
   const { language, isRTL } = useLanguage();
   const { ref: sectionRef, isVisible } = useScrollAnimation();
+  const navigate = useNavigate();
 
   const { data: offers = [], isLoading } = useQuery({
     queryKey: ["latest-offers-home"],
@@ -138,10 +139,22 @@ export const LatestOffersSection = () => {
                       )}
                       <div className="flex items-center justify-between pt-2.5 border-t border-border/30">
                         {offer.businesses && (
-                          <Link
-                            to={`/${offer.businesses.username}`}
-                            onClick={(e) => e.stopPropagation()}
-                            className="flex items-center gap-1.5 text-xs sm:text-sm text-gold font-medium hover:underline"
+                          <span
+                            role="link"
+                            tabIndex={0}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              navigate(`/${offer.businesses.username}`);
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                navigate(`/${offer.businesses.username}`);
+                              }
+                            }}
+                            className="flex items-center gap-1.5 text-xs sm:text-sm text-gold font-medium hover:underline cursor-pointer"
                           >
                             {offer.businesses.logo_url ? (
                               <img src={offer.businesses.logo_url} alt="" className="w-5 h-5 rounded-full object-cover" />
@@ -153,7 +166,7 @@ export const LatestOffersSection = () => {
                             <span className="truncate max-w-[100px] sm:max-w-[120px]">
                               {language === "ar" ? offer.businesses.name_ar : offer.businesses.name_en || offer.businesses.name_ar}
                             </span>
-                          </Link>
+                          </span>
                         )}
                         <span className="text-xs text-muted-foreground flex items-center gap-1">
                           <Eye className="w-3 h-3" />
