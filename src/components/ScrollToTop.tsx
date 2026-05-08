@@ -26,7 +26,8 @@ export const ScrollToTop = () => {
     <button
       onClick={scrollUp}
       aria-label="العودة للأعلى"
-      className={`fixed bottom-6 end-4 sm:end-6 z-50 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-accent/90 backdrop-blur text-accent-foreground shadow-lg shadow-accent/30 flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 group ${
+      style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 1.5rem)" }}
+      className={`fixed end-4 sm:end-6 z-40 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-background/80 backdrop-blur-md border border-border/60 text-foreground shadow-md hidden sm:flex items-center justify-center transition-all duration-300 hover:scale-110 hover:bg-accent hover:text-accent-foreground hover:border-accent active:scale-95 group ${
         visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
       }`}
     >
