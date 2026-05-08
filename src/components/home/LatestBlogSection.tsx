@@ -61,7 +61,7 @@ export const LatestBlogSection = () => {
 
   return (
     <section ref={sectionRef} className="py-16 sm:py-28 bg-muted/50">
-      <div className="container px-4 sm:px-6">
+      <div className="container-app">
         <div ref={headerRef} className="flex items-center justify-between mb-10 sm:mb-14">
           <div>
             <span className="text-xs sm:text-sm font-body text-accent font-semibold tracking-wide">

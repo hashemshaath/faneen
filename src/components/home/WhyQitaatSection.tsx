@@ -76,7 +76,7 @@ export const WhyQitaatSection = ({ variant = 'home' }: Props) => {
       }
       aria-labelledby="why-qitaat-heading"
     >
-      <div className="container px-4 sm:px-6 relative">
+      <div className="container-app relative">
         <div className="text-center mb-10 sm:mb-14">
           <h2
             id="why-qitaat-heading"

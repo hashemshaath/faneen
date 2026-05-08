@@ -36,7 +36,7 @@ export const CategoriesSection = () => {
         <div className="absolute top-20 start-10 w-72 h-72 bg-accent/10 rounded-full blur-[100px]" />
         <div className="absolute bottom-20 end-10 w-72 h-72 bg-accent/5 rounded-full blur-[100px]" />
       </div>
-      <div className="container px-4 sm:px-6 relative">
+      <div className="container-app relative">
         <div className="text-center mb-12 sm:mb-20">
           <span className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-accent/10 text-accent text-xs sm:text-sm font-body font-semibold mb-4 sm:mb-5">
             {t('categories.label')}

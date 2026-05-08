@@ -44,7 +44,7 @@ export const LatestOffersSection = () => {
 
   return (
     <section ref={sectionRef} className="py-16 sm:py-28 bg-background">
-      <div className="container px-4 sm:px-6">
+      <div className="container-app">
         <div className="flex items-center justify-between mb-10 sm:mb-14">
           <div>
             <span className="text-xs sm:text-sm font-body text-gold font-semibold tracking-wide">

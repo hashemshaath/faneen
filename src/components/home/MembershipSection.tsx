@@ -35,7 +35,7 @@ export const MembershipSection = () => {
       <div className="absolute inset-0 pointer-events-none opacity-20">
         <div className="absolute top-1/2 start-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-accent/10 rounded-full blur-[120px]" />
       </div>
-      <div className="container px-4 sm:px-6 relative">
+      <div className="container-app relative">
         <div className="text-center mb-12 sm:mb-20">
           <span className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-accent/10 text-accent text-xs sm:text-sm font-body font-semibold mb-4 sm:mb-5">
             <Sparkles className="w-3.5 h-3.5" />

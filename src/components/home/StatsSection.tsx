@@ -79,7 +79,7 @@ export const StatsSection = () => {
         <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-accent/20 to-transparent" />
         <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-accent/20 to-transparent" />
       </div>
-      <div ref={visRef} className="container px-4 sm:px-6 min-h-[280px] sm:min-h-[200px]">
+      <div ref={visRef} className="container-app min-h-[280px] sm:min-h-[200px]">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6">
           {stats.map((stat, i) => (
             <StatItem key={stat.labelKey} {...stat} index={i} isVisible={isVisible} />

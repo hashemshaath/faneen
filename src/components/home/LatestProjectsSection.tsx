@@ -68,7 +68,7 @@ export const LatestProjectsSection = () => {
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-border/60 to-transparent" />
       <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-border/60 to-transparent" />
 
-      <div className="container px-4 sm:px-6">
+      <div className="container-app">
         {/* Header */}
         <div className="flex items-center justify-between mb-10 sm:mb-14">
           <div>

@@ -23,7 +23,7 @@ export const FeaturesSection = () => {
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
         <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
       </div>
-      <div className="container px-4 sm:px-6 relative">
+      <div className="container-app relative">
         <div className="text-center mb-12 sm:mb-20">
           <span className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-accent/10 text-accent text-xs sm:text-sm font-body font-semibold mb-4 sm:mb-5">
             {t('features.label')}
