@@ -64,7 +64,7 @@ export const RelatedProjects = ({ projectId, businessId, categoryId, cityId }: P
         to={`/projects/${p.id}`}
         className="group rounded-xl border border-border/50 dark:border-border/30 bg-card dark:bg-card/80 overflow-hidden hover:shadow-lg hover:border-accent/20 transition-all"
       >
-        <div className="aspect-[16/10] bg-muted overflow-hidden relative">
+        <div className="media-16-10 bg-muted overflow-hidden relative">
           {p.cover_image_url ? (
             <img src={p.cover_image_url} alt={title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
           ) : (
