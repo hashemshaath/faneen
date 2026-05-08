@@ -230,21 +230,49 @@ export const SearchFilters = ({
 };
 
 const FilterCard = ({
-  icon: Icon, label, hint, children,
-}: { icon: React.ElementType; label: string; hint?: string; children: React.ReactNode }) => (
-  <section className="rounded-2xl bg-card border border-border/60 hover:border-accent/30 transition-colors shadow-sm overflow-hidden">
-    <header className="flex items-center justify-between gap-2 px-3.5 py-2.5 border-b border-border/50 bg-muted/30">
-      <div className="flex items-center gap-2 min-w-0">
-        <Icon className="w-4 h-4 text-accent shrink-0" />
-        <span className="text-[12.5px] font-heading font-bold text-foreground truncate">{label}</span>
-      </div>
-      {hint && (
-        <span className="text-[10px] font-body text-muted-foreground tech-content shrink-0 px-1.5 py-0.5 rounded-md bg-background/60 border border-border/50">{hint}</span>
-      )}
-    </header>
-    <div className="p-3">{children}</div>
-  </section>
-);
+  icon: Icon, label, hint, children, summary, defaultOpen = false,
+}: {
+  icon: React.ElementType;
+  label: string;
+  hint?: string;
+  children: React.ReactNode;
+  /** Compact value preview shown in the header when collapsed (mobile). */
+  summary?: string;
+  /** Whether this card is open by default on mobile. */
+  defaultOpen?: boolean;
+}) => {
+  const [open, setOpen] = useState(defaultOpen);
+  const hasSummary = Boolean(summary);
+  return (
+    <section className="rounded-2xl bg-card border border-border/60 hover:border-accent/30 transition-colors shadow-sm overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        aria-expanded={open}
+        className="lg:pointer-events-none w-full flex items-center justify-between gap-2 px-3.5 py-2.5 border-b border-border/50 bg-muted/30 lg:bg-muted/20 hover:bg-muted/50 lg:hover:bg-muted/20 transition-colors text-start"
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          <Icon className="w-4 h-4 text-accent shrink-0" />
+          <span className="text-[12.5px] font-heading font-bold text-foreground truncate">{label}</span>
+        </div>
+        <div className="flex items-center gap-1.5 shrink-0">
+          {hasSummary && !open && (
+            <span className="lg:hidden max-w-[120px] truncate text-[11px] font-body font-semibold text-accent px-2 py-0.5 rounded-md bg-accent/10 border border-accent/20">
+              {summary}
+            </span>
+          )}
+          {hint && (
+            <span className="text-[10px] font-body text-muted-foreground tech-content px-1.5 py-0.5 rounded-md bg-background/60 border border-border/50">{hint}</span>
+          )}
+          <ChevronDown
+            className={`lg:hidden w-4 h-4 text-muted-foreground transition-transform duration-300 ${open ? 'rotate-180' : ''}`}
+          />
+        </div>
+      </button>
+      <div className={`${open ? 'block' : 'hidden'} lg:block p-3`}>{children}</div>
+    </section>
+  );
+};
 
 /* Debounced price inputs — keeps typing snappy and only commits to the parent
    filter state after the user pauses (300ms). */
