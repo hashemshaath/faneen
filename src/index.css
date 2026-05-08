@@ -759,6 +759,55 @@ html { transition: none; }
   .card-pad-lg { padding: var(--sp-8); }
 }
 
+/* ============================================================
+   Unified card primitives — public-facing card system.
+   Pair with .card-pad-md / .card-pad-lg for inner padding.
+   All use rounded-2xl + 40% border for visual consistency.
+   ============================================================ */
+.card-ds {
+  background-color: hsl(var(--card));
+  border: 1px solid hsl(var(--border) / 0.4);
+  border-radius: var(--r-2xl, 1rem);
+  box-shadow: var(--elev-1);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+}
+.dark .card-ds { border-color: hsl(var(--border) / 0.2); background-color: hsl(var(--card) / 0.85); }
+
+.card-interactive {
+  cursor: pointer;
+}
+.card-interactive:hover {
+  border-color: hsl(var(--accent) / 0.35);
+  box-shadow: var(--elev-2);
+}
+.card-interactive:active { transform: scale(0.98); }
+
+.card-media { overflow: hidden; }
+.card-media > img,
+.card-media > picture > img,
+.card-media > .media { display: block; width: 100%; }
+
+.card-list {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--pad-card-sm);
+}
+@media (min-width: 640px) { .card-list { gap: var(--sp-4); padding: var(--pad-card-md); } }
+
+.card-stat {
+  text-align: center;
+  padding: var(--sp-5);
+}
+@media (min-width: 640px) { .card-stat { padding: var(--sp-7); } }
+
+/* Standard image aspect ratios for media cards */
+.media-16-10 { aspect-ratio: 16 / 10; }
+.media-16-11 { aspect-ratio: 16 / 11; }
+.media-4-3   { aspect-ratio: 4 / 3; }
+.media-1-1   { aspect-ratio: 1 / 1; }
+.media-3-2   { aspect-ratio: 3 / 2; }
+
 /* iOS / Android safe-area helpers */
 .safe-pt { padding-top: env(safe-area-inset-top, 0px); }
 .safe-pb { padding-bottom: env(safe-area-inset-bottom, 0px); }
