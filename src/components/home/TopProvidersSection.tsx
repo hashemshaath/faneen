@@ -21,16 +21,19 @@ type Biz = {
 };
 
 const ProviderSkeleton = () => (
-  <div className="rounded-2xl border border-border/40 bg-card card-pad-md">
-    <div className="flex items-center gap-3 mb-4">
-      <Skeleton className="w-14 h-14 rounded-2xl" />
-      <div className="flex-1 space-y-2">
+  <div className="flex flex-col rounded-2xl border border-border/40 bg-card card-pad-md">
+    <div className="flex items-start gap-3 mb-4">
+      <Skeleton className="w-14 h-14 rounded-2xl shrink-0" />
+      <div className="flex-1 space-y-2 min-w-0">
         <Skeleton className="h-4 w-3/4" />
         <Skeleton className="h-3 w-1/2" />
       </div>
     </div>
-    <Skeleton className="h-3 w-full mb-2" />
-    <Skeleton className="h-9 w-full rounded-xl mt-4" />
+    <div className="flex items-center justify-between gap-2 mb-4">
+      <Skeleton className="h-3 w-16" />
+      <Skeleton className="h-3 w-20" />
+    </div>
+    <Skeleton className="mt-auto h-9 w-full rounded-xl" />
   </div>
 );
 
