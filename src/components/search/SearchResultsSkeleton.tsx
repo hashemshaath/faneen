@@ -8,7 +8,7 @@ export const SearchResultsSkeleton = ({ viewMode }: { viewMode: ViewMode }) => {
         {viewMode === 'split' && (
           <div className="lg:w-1/2 space-y-3">
             {[1, 2, 3].map(i => (
-              <div key={i} className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-2xl bg-card border border-border/30 dark:border-border/15 animate-pulse" style={{ animationDelay: `${i * 100}ms` }}>
+              <div key={i} className="card-ds flex items-center gap-3 sm:gap-4 p-3 sm:p-4 animate-pulse" style={{ animationDelay: `${i * 100}ms` }}>
                 <Skeleton className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl flex-shrink-0" />
                 <div className="flex-1 space-y-2">
                   <Skeleton className="h-4 w-2/3" />
@@ -34,7 +34,7 @@ export const SearchResultsSkeleton = ({ viewMode }: { viewMode: ViewMode }) => {
     return (
       <div className="space-y-3">
         {[1, 2, 3, 4, 5].map(i => (
-          <div key={i} className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-2xl bg-card border border-border/30 dark:border-border/15 animate-pulse" style={{ animationDelay: `${i * 100}ms` }}>
+          <div key={i} className="card-ds flex items-center gap-3 sm:gap-4 p-3 sm:p-4 animate-pulse" style={{ animationDelay: `${i * 100}ms` }}>
             <Skeleton className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl flex-shrink-0" />
             <div className="flex-1 space-y-2">
               <Skeleton className="h-4 w-2/3" />
@@ -55,7 +55,7 @@ export const SearchResultsSkeleton = ({ viewMode }: { viewMode: ViewMode }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
       {[1, 2, 3, 4, 5, 6].map(i => (
-        <div key={i} className="rounded-2xl bg-card border border-border/30 dark:border-border/15 overflow-hidden flex flex-col animate-pulse" style={{ animationDelay: `${i * 80}ms` }}>
+        <div key={i} className="card-ds card-media flex flex-col animate-pulse" style={{ animationDelay: `${i * 80}ms` }}>
           <Skeleton className="h-24 sm:h-28 w-full rounded-none" />
           <div className="px-4 sm:px-5 -mt-9 sm:-mt-10 relative z-10">
             <Skeleton className="w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-xl border-[3px] border-card" />
