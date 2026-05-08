@@ -653,6 +653,32 @@ html { transition: none; }
 }
 .chip-sm { height: 24px; padding-inline: 0.625rem; font-size: 11px; }
 .chip-lg { height: 32px; padding-inline: 0.875rem; font-size: var(--fs-sm); }
+/* Mini chip — for hashtags, micro-tags, dense card labels.
+   Vertically centers Arabic glyphs via flex + line-height: 1. */
+.chip-mini {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  height: 20px;
+  padding-inline: 0.5rem;
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  font-size: var(--fs-2xs);
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  vertical-align: middle;
+  transition: background-color 0.2s ease, color 0.15s ease, border-color 0.2s ease;
+}
+.chip-mini > svg { width: 0.75rem; height: 0.75rem; }
+
+/* Micro label text utilities — replaces ad-hoc text-[10px]/text-[11px].
+   Pairs with semantic line-height for mixed Arabic/Latin content. */
+.text-micro    { font-size: var(--fs-2xs); line-height: 1.4; }
+.text-micro-tight { font-size: var(--fs-2xs); line-height: 1; }
+.text-mini    { font-size: var(--fs-xs);  line-height: 1.45; }
+.text-mini-tight  { font-size: var(--fs-xs);  line-height: 1; }
 
 .chip-selected {
   background-color: hsl(var(--accent));
