@@ -231,12 +231,29 @@ const ProfileSystemDetail = () => {
   const { data: reviews = [], refetch: refetchReviews } = useQuery({
     queryKey: ['profile-reviews', profile?.id],
     queryFn: async () => {
-      const { data } = await supabase
+      // `profile_reviews.user_id` references `auth.users`, not `public.profiles`,
+      // so PostgREST embed returns 400. Two-step fetch with safe public fields only.
+      const { data: rows } = await supabase
         .from('profile_reviews')
-        .select('*, profiles:user_id(full_name, avatar_url)')
+        .select('*')
         .eq('profile_id', profile!.id)
         .order('created_at', { ascending: false });
-      return data || [];
+
+      const list = rows ?? [];
+      const userIds = Array.from(
+        new Set(list.map((r) => r.user_id).filter(Boolean) as string[])
+      );
+      if (userIds.length === 0) return list.map((r) => ({ ...r, profiles: null }));
+
+      const { data: profs } = await supabase
+        .from('profiles')
+        .select('user_id, full_name, avatar_url')
+        .in('user_id', userIds);
+
+      const byId = new Map(
+        (profs ?? []).map((p) => [p.user_id, { full_name: p.full_name, avatar_url: p.avatar_url }])
+      );
+      return list.map((r) => ({ ...r, profiles: byId.get(r.user_id) ?? null }));
     },
     enabled: !!profile?.id,
   });
