@@ -21,4 +21,7 @@
   <sitemap>
     <loc>https://hckpxwhjycmdflaneihd.supabase.co/functions/v1/sitemap?type=projects</loc>
   </sitemap>
+  <sitemap>
+    <loc>https://hckpxwhjycmdflaneihd.supabase.co/functions/v1/sitemap?type=sectors</loc>
+  </sitemap>
 </sitemapindex>
