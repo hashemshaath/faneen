@@ -13,17 +13,17 @@ interface FooterLinkColumnProps {
 
 const FooterLinkColumn = ({ title, links }: FooterLinkColumnProps) => (
   <nav aria-label={title}>
-    <h4 className="font-heading font-bold text-sm text-surface-nav-foreground mb-5 pb-2 border-b border-surface-nav-foreground/[0.06]">
+    <h4 className="font-heading font-semibold text-[13px] uppercase tracking-wider text-gold/85 mb-4">
       {title}
     </h4>
-    <ul className="space-y-3 font-body text-[13px] text-surface-nav-foreground/85">
+    <ul className="space-y-1 font-body text-sm text-surface-nav-foreground/85">
       {links.map((item) => (
         <li key={item.to}>
           <PrefetchLink
             to={item.to}
-            className="group inline-flex items-center gap-1.5 hover:text-gold transition-all duration-200 rounded focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-surface-nav focus-visible:outline-none"
+            className="group inline-flex items-center gap-2 min-h-[36px] py-1 hover:text-gold transition-colors duration-200 rounded focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-surface-nav focus-visible:outline-none"
           >
-            <span aria-hidden="true" className="w-1 h-1 rounded-full bg-gold/55 group-hover:bg-gold group-hover:scale-150 transition-all" />
+            <span aria-hidden="true" className="w-1 h-1 rounded-full bg-gold/50 group-hover:bg-gold group-hover:scale-150 transition-all" />
             {item.label}
           </PrefetchLink>
         </li>

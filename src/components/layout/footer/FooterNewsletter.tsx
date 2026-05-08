@@ -36,24 +36,24 @@ export const FooterNewsletter = ({ visible }: { visible: boolean }) => {
   };
 
   return (
-    <div className="relative border-b border-surface-nav-foreground/[0.06]">
-      <div className={`container-app py-10 sm:py-14 transition-all duration-700 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-        <div className="relative rounded-2xl sm:rounded-3xl bg-gradient-to-br from-gold/[0.08] to-gold/[0.02] border border-gold/10 p-6 sm:p-10 md:p-12 overflow-hidden">
+    <div className="relative border-b border-surface-nav-foreground/[0.08]">
+      <div className={`container-app py-8 sm:py-12 transition-all duration-700 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+        <div className="relative rounded-2xl bg-gradient-to-br from-gold/[0.08] to-gold/[0.02] border border-gold/10 p-5 sm:p-8 md:p-10 overflow-hidden">
           {/* Pattern dots */}
           <div className="absolute inset-0 pointer-events-none opacity-[0.03]"
             style={{ backgroundImage: 'radial-gradient(circle, hsl(var(--gold)) 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
           <Sparkles className="absolute top-5 end-6 w-6 h-6 text-gold/15 animate-pulse hidden md:block" />
 
-          <div className="relative flex flex-col lg:flex-row items-center gap-6 lg:gap-12">
+          <div className="relative flex flex-col lg:flex-row items-center gap-5 lg:gap-10">
             <div className="text-center lg:text-start flex-1 space-y-2">
-              <span className="inline-flex items-center gap-1.5 text-[10px] sm:text-xs font-bold text-gold uppercase tracking-wider">
-                <Mail className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-gold uppercase tracking-wider leading-none">
+                <Mail className="w-3.5 h-3.5" />
                 {isRTL ? 'النشرة البريدية' : 'Newsletter'}
               </span>
-              <h3 className="font-heading font-bold text-xl sm:text-2xl md:text-3xl text-surface-nav-foreground leading-tight">
+              <h3 className="font-heading font-bold text-xl sm:text-2xl text-surface-nav-foreground leading-snug">
                 {isRTL ? 'ابقَ على اطلاع بأحدث الأخبار' : 'Stay up to date with the latest'}
               </h3>
-              <p className="font-body text-xs sm:text-sm text-surface-nav-foreground/75 max-w-lg">
+              <p className="font-body text-sm text-surface-nav-foreground/75 max-w-lg leading-relaxed">
                 {isRTL
                   ? 'احصل على آخر الأخبار والعروض الحصرية والنصائح المهنية مباشرة في بريدك'
                   : 'Get the latest news, exclusive offers, and professional tips delivered to your inbox'}

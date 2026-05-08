@@ -16,43 +16,43 @@ export const FooterBrand = () => {
   ];
 
   return (
-    <div className="col-span-2 space-y-6">
+    <div className="col-span-2 space-y-5">
       {/* Logo */}
       <div className="flex items-center gap-3 group">
-        <div className="w-12 h-12 rounded-2xl bg-gradient-gold flex items-center justify-center shadow-lg shadow-gold/20 group-hover:scale-110 group-hover:rotate-3 transition-all duration-400">
-          <span className="font-heading font-black text-lg text-secondary-foreground">ق</span>
+        <div className="w-11 h-11 rounded-2xl bg-gradient-gold flex items-center justify-center shadow-md shadow-gold/20 group-hover:scale-105 transition-transform duration-300">
+          <span className="font-heading font-black text-lg text-secondary-foreground leading-none">ق</span>
         </div>
-        <div>
-          <h3 className="font-heading font-bold text-xl text-surface-nav-foreground tracking-tight">قِطاعات</h3>
-          <span className="text-[11px] text-gold/70 font-body tracking-wide">Qitaat.com</span>
+        <div className="leading-tight">
+          <h3 className="font-heading font-bold text-lg text-surface-nav-foreground">قِطاعات</h3>
+          <span className="text-[11px] text-gold/75 font-body tracking-wide">Qitaat.com</span>
         </div>
       </div>
 
-      <p className="font-body text-[13px] text-surface-nav-foreground/85 leading-relaxed max-w-xs">
+      <p className="font-body text-sm text-surface-nav-foreground/80 leading-relaxed max-w-sm">
         {t('footer.desc')}
       </p>
 
       {/* Trust badges */}
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-2">
         {badges.map((badge) => (
-          <div key={badge.label} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gold/[0.06] border border-gold/15">
-            <badge.icon aria-hidden="true" className="w-3.5 h-3.5 text-gold/85" />
-            <span className="text-[11px] font-medium text-surface-nav-foreground/90">{badge.label}</span>
+          <div key={badge.label} className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full bg-gold/[0.07] border border-gold/15">
+            <badge.icon aria-hidden="true" className="w-3.5 h-3.5 text-gold/85 shrink-0" />
+            <span className="text-[11px] font-medium text-surface-nav-foreground/90 leading-none">{badge.label}</span>
           </div>
         ))}
       </div>
 
       {/* Contact info */}
-      <address className="not-italic space-y-2.5" aria-label={isRTL ? 'بيانات التواصل' : 'Contact information'}>
+      <address className="not-italic space-y-2" aria-label={isRTL ? 'بيانات التواصل' : 'Contact information'}>
         {contactItems.map((item, i) => (
           <div key={i} className="group flex items-center gap-2.5">
-            <span className="w-7 h-7 rounded-lg bg-surface-nav-foreground/[0.05] flex items-center justify-center group-hover:bg-gold/10 transition-colors">
+            <span className="w-7 h-7 rounded-lg bg-surface-nav-foreground/[0.05] flex items-center justify-center group-hover:bg-gold/10 transition-colors shrink-0">
               <item.icon aria-hidden="true" className="w-3.5 h-3.5 text-gold/80 group-hover:text-gold transition-colors" />
             </span>
             {item.href ? (
-              <a href={item.href} className="text-xs sm:text-[13px] text-surface-nav-foreground/90 hover:text-gold transition-colors focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-surface-nav focus-visible:outline-none rounded">{item.text}</a>
+              <a href={item.href} className="text-sm text-surface-nav-foreground/90 hover:text-gold transition-colors focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-surface-nav focus-visible:outline-none rounded tech-content">{item.text}</a>
             ) : (
-              <span className="text-xs sm:text-[13px] text-surface-nav-foreground/85">{item.text}</span>
+              <span className="text-sm text-surface-nav-foreground/85">{item.text}</span>
             )}
           </div>
         ))}

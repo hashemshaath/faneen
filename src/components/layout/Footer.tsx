@@ -24,21 +24,19 @@ export const Footer = () => {
 
   return (
     <footer ref={footerRef} role="contentinfo" aria-label={language === 'ar' ? 'تذييل الموقع' : 'Site footer'} className="relative bg-surface-nav overflow-hidden">
-      {/* Decorative blurs — desktop-only; the wrapper itself is skipped on
-          mobile so neither the empty div nor the heavy filters cost anything. */}
-      <div className="hidden md:block absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 start-1/4 w-[500px] h-[500px] bg-gold/[0.02] rounded-full blur-[120px]" />
-        <div className="absolute bottom-0 end-1/4 w-[400px] h-[400px] bg-gold/[0.03] rounded-full blur-[100px]" />
+      {/* Decorative blur — single, lighter, desktop-only */}
+      <div className="hidden lg:block absolute inset-0 pointer-events-none">
+        <div className="absolute top-0 start-1/3 w-[480px] h-[480px] bg-gold/[0.025] rounded-full blur-[120px]" />
       </div>
 
       {/* Top accent line */}
-      <div className="h-[2px] bg-gradient-to-r from-transparent via-gold/60 to-transparent" />
+      <div className="h-px bg-gradient-to-r from-transparent via-gold/50 to-transparent" />
 
       <FooterNewsletter visible={visible} />
 
       {/* Main Grid */}
-      <div className="container-app py-10 sm:py-14">
-        <div className={`grid grid-cols-2 md:grid-cols-5 gap-y-9 gap-x-6 sm:gap-x-10 lg:gap-x-14 transition-all duration-700 delay-150 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
+      <div className="container-app py-10 sm:py-12 lg:py-14">
+        <div className={`grid grid-cols-2 md:grid-cols-5 gap-y-8 gap-x-6 sm:gap-x-8 lg:gap-x-12 transition-all duration-700 delay-150 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
           <FooterBrand />
           <FooterLinks />
         </div>
