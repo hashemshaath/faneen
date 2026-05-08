@@ -294,26 +294,23 @@ export const HeroSection = () => {
 
   return (
     <section ref={sectionRef} id="main-content" role="banner" aria-label={language === 'ar' ? 'القسم الرئيسي' : 'Hero section'} className="relative min-h-[85vh] sm:min-h-screen flex flex-col items-center justify-center overflow-hidden">
-      {/* Slides — only first image is eager, others lazy */}
-      {slides.map((slide, i) => (
+      {/* Slides — only the active slide (and the outgoing one for crossfade)
+          are mounted. Caps DOM <img> count to ≤2 regardless of slides.length. */}
+      {(prevIdx !== null && prevIdx !== current ? [prevIdx, current] : [current]).map((i) => (
         <img
           key={i}
-          ref={el => { imgRefs.current[i] = el; }}
-          src={i === 0 ? slide.image : (current === i ? slide.image : undefined)}
-          data-src={slide.image}
+          ref={(el) => {
+            if (el) imgRefs.current[i] = el;
+            else delete imgRefs.current[i];
+          }}
+          src={slides[i].image}
           alt={i === current ? (language === 'ar' ? 'خلفية قسم البحث الرئيسي' : 'Hero background') : ''}
           className={`absolute inset-0 w-full h-full object-cover will-change-transform scale-[1.15] transition-opacity duration-1000 ${i === current ? 'opacity-100' : 'opacity-0'}`}
           width={1920}
           height={1080}
-          {...(i === 0 ? { fetchpriority: "high" as const } : {})}
-          decoding={i === 0 ? "sync" : "async"}
-          loading={i === 0 ? "eager" : "lazy"}
-          onError={(e) => {
-            // Fallback: load from data-src if src was undefined
-            const img = e.currentTarget;
-            const dataSrc = img.getAttribute('data-src');
-            if (dataSrc && img.src !== dataSrc) img.src = dataSrc;
-          }}
+          {...(i === 0 ? { fetchpriority: 'high' as const } : {})}
+          decoding={i === 0 ? 'sync' : 'async'}
+          loading={i === 0 ? 'eager' : 'lazy'}
         />
       ))}
 
