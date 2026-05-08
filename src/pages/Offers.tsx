@@ -210,7 +210,7 @@ const Offers = () => {
         </div>
 
         {/* Filter Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <Tabs dir={isRTL ? 'rtl' : 'ltr'} value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <div className="sticky top-[64px] z-10 -mx-4 px-4 py-2 bg-background/85 backdrop-blur-md border-y border-border/40 sm:border-0 sm:bg-transparent sm:backdrop-blur-none sm:py-0 sm:static sm:mx-0 sm:px-0 flex items-center justify-center overflow-x-auto no-scrollbar">
             <TabsList className="bg-muted/50 dark:bg-muted/30 rounded-xl p-1 inline-flex">
               <TabsTrigger value="all" className="rounded-lg px-4 py-2 text-xs sm:text-sm gap-1.5 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
