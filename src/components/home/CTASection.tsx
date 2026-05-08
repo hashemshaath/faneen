@@ -13,7 +13,7 @@ export const CTASection = () => {
     <section ref={visRef} className="py-8 sm:py-16 bg-background relative overflow-hidden">
       <div className="container-app">
         <div
-          className={`relative rounded-3xl overflow-hidden bg-gradient-navy p-10 sm:p-14 md:p-20 text-center ${isVisible ? 'animate-fade-in' : 'opacity-0'}`}
+          className={`relative rounded-3xl overflow-hidden bg-gradient-navy p-10 sm:p-14 md:p-20 text-center ${isVisible ? 'animate-fade-in' : ''}`}
         >
           {/* Decorative elements */}
           <div className="absolute inset-0 pointer-events-none">

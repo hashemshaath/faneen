@@ -89,7 +89,7 @@ export const LatestBlogSection = () => {
             posts.map((post, i: number) => (
               <Link key={post.id} to={`/blog/${post.slug}`} className="group block h-full">
                 <div
-                  className={`card-ds card-media transition-all duration-500 hover:shadow-xl hover:shadow-accent/5 hover:-translate-y-1.5 sm:hover:-translate-y-2.5 hover:border-accent/40 h-full flex flex-col ${isVisible ? 'animate-card-slide-up' : 'opacity-0'}`}
+                  className={`card-ds card-media transition-all duration-500 hover:shadow-xl hover:shadow-accent/5 hover:-translate-y-1.5 sm:hover:-translate-y-2.5 hover:border-accent/40 h-full flex flex-col ${isVisible ? 'animate-card-slide-up' : ''}`}
                   style={{ animationDelay: `${i * 100}ms`, animationFillMode: 'both' }}
                 >
                   <div className="aspect-video bg-muted relative overflow-hidden">

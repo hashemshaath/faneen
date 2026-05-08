@@ -115,7 +115,7 @@ export const LatestProjectsSection = () => {
                       'card-ds card-media block group transition-all duration-500',
                       'hover:border-accent/40 hover:shadow-xl hover:shadow-accent/5 sm:hover:-translate-y-1.5',
                       p.is_featured && 'ring-1 ring-gold/30',
-                      isVisible ? 'animate-fade-in' : 'opacity-0'
+                      isVisible ? 'animate-fade-in' : ''
                     )}
                     style={{ animationDelay: `${i * 80}ms`, animationFillMode: 'both' }}
                   >

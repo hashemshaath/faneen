@@ -100,7 +100,7 @@ export const WhyQitaatSection = ({ variant = 'home' }: Props) => {
             return (
               <article
                 key={i}
-                className={`group bg-card dark:bg-card/70 rounded-2xl border border-border/40 dark:border-border/20 p-4 sm:p-5 text-center hover:border-accent/30 hover:shadow-lg hover:shadow-accent/5 transition-all duration-500 ${isVisible ? 'animate-card-slide-up' : 'opacity-0'}`}
+                className={`group bg-card dark:bg-card/70 rounded-2xl border border-border/40 dark:border-border/20 p-4 sm:p-5 text-center hover:border-accent/30 hover:shadow-lg hover:shadow-accent/5 transition-all duration-500 ${isVisible ? 'animate-card-slide-up' : ''}`}
                 style={{ animationDelay: `${i * 70}ms`, animationFillMode: 'both' }}
               >
                 <div className="mx-auto mb-3 sm:mb-4 w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-emerald-500/10 dark:bg-emerald-500/15 flex items-center justify-center group-hover:bg-emerald-500/20 group-hover:scale-110 transition-all duration-300">
