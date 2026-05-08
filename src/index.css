@@ -623,6 +623,68 @@ html { transition: none; }
   font-size: var(--fs-2xs); font-weight: 600; letter-spacing: 0.08em;
   text-transform: uppercase; color: hsl(var(--accent));
 }
+
+/* ============================================================
+   Unified chip / tag system — used for filter chips, hero quick
+   tags, eyebrows, and ad-hoc pill labels. Pairs with <Badge>.
+   Same height/radius/padding family for visual consistency.
+   ============================================================ */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  height: 28px;
+  padding-inline: 0.75rem;
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  transition: background-color 0.2s ease, color 0.15s ease, border-color 0.2s ease;
+  vertical-align: middle;
+}
+.chip-sm { height: 24px; padding-inline: 0.625rem; font-size: 11px; }
+.chip-lg { height: 32px; padding-inline: 0.875rem; font-size: var(--fs-sm); }
+
+.chip-selected {
+  background-color: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+  border-color: transparent;
+  box-shadow: 0 1px 2px hsl(var(--accent) / 0.25);
+}
+.chip-unselected {
+  background-color: hsl(var(--background) / 0.6);
+  color: hsl(var(--foreground));
+  border-color: hsl(var(--border) / 0.7);
+}
+.chip-unselected:hover {
+  background-color: hsl(var(--accent) / 0.1);
+  color: hsl(var(--accent));
+  border-color: hsl(var(--accent) / 0.3);
+}
+.chip-muted {
+  background-color: hsl(var(--muted) / 0.7);
+  color: hsl(var(--muted-foreground));
+}
+
+/* Section eyebrow — the small accent pill above section titles */
+.section-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 28px;
+  padding-inline: 0.875rem;
+  border-radius: 9999px;
+  background-color: hsl(var(--accent) / 0.1);
+  color: hsl(var(--accent));
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
 .text-body { font-size: var(--fs-base); line-height: 1.7; }
 .text-body-sm { font-size: var(--fs-sm); line-height: 1.6; }
 .text-caption { font-size: var(--fs-xs); line-height: 1.5; color: hsl(var(--muted-foreground)); }
