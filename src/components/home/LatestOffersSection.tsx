@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { LazyImage } from "@/components/ui/lazy-image";
 
 const OfferSkeleton = () => (
-  <div className="rounded-2xl overflow-hidden border border-border bg-card">
+  <div className="card-ds card-media">
     <Skeleton className="aspect-video w-full" />
     <div className="p-5 space-y-3">
       <Skeleton className="h-5 w-16 rounded-full" />
@@ -78,7 +78,7 @@ export const LatestOffersSection = () => {
                   className={`group block ${isVisible ? "animate-fade-in" : ""}`}
                   style={{ animationDelay: `${i * 100}ms`, animationFillMode: "both" }}
                 >
-                  <div className="rounded-2xl overflow-hidden border border-border hover:border-gold/40 bg-card transition-all duration-500 hover:shadow-xl hover:shadow-gold/5 sm:hover:-translate-y-2 h-full relative">
+                  <div className="card-ds card-media hover:border-gold/40 hover:shadow-xl hover:shadow-gold/5 sm:hover:-translate-y-2 transition-all duration-500 h-full relative">
                     {hasDiscount && (
                       <div className="absolute top-3 start-3 z-10 bg-destructive text-destructive-foreground text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-md">
                         <Percent className="w-3 h-3" />

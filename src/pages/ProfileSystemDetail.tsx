@@ -156,7 +156,7 @@ const Lightbox = ({ images, index, onClose, onNav, isRTL, language }: { images: 
 
 // ─── Quick Stat Card ───
 const QuickStat = ({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string | number }) => (
-  <div className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-xl bg-card border border-border/50 hover:border-gold/30 transition-colors">
+  <div className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-xl bg-card border border-border/40 hover:border-gold/30 transition-colors">
     <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-gold/10 flex items-center justify-center shrink-0">
       <Icon className="ic-sm sm:w-5 sm:h-5 text-gold" />
     </div>
@@ -588,7 +588,7 @@ const ProfileSystemDetail = () => {
             <div className="flex flex-col gap-3 sm:gap-4">
               <div className="flex items-start gap-3 sm:gap-4">
                 {profile.logo_url && (
-                  <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl bg-background/90 backdrop-blur-sm p-1.5 sm:p-2.5 border border-border/50 shadow-lg shrink-0">
+                  <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl bg-background/90 backdrop-blur-sm p-1.5 sm:p-2.5 border border-border/40 shadow-lg shrink-0">
                     <img src={profile.logo_url} alt={name} className="w-full h-full object-contain" />
                   </div>
                 )}
@@ -649,7 +649,7 @@ const ProfileSystemDetail = () => {
       </section>
 
       {/* ═══ Quick Stats Bar ═══ */}
-      <section className="border-b border-border/50 bg-card/50 backdrop-blur-sm">
+      <section className="border-b border-border/40 bg-card/50 backdrop-blur-sm">
         <div className="container-app max-w-6xl py-3 sm:py-4">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
             <QuickStat icon={Thermometer} label={isRTL ? 'عزل حراري' : 'Thermal'} value={`${profile.thermal_insulation_rating || 0}/10`} />
@@ -665,7 +665,7 @@ const ProfileSystemDetail = () => {
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           {/* Scrollable tabs on mobile */}
           <div className="overflow-x-auto no-scrollbar -mx-3 px-3 sm:mx-0 sm:px-0 mb-5 sm:mb-8">
-            <TabsList className="bg-card border border-border/50 rounded-xl sm:rounded-2xl p-1 sm:p-1.5 h-auto shadow-sm inline-flex w-auto min-w-full sm:min-w-0 sm:flex-wrap">
+            <TabsList className="bg-card border border-border/40 rounded-xl sm:rounded-2xl p-1 sm:p-1.5 h-auto shadow-sm inline-flex w-auto min-w-full sm:min-w-0 sm:flex-wrap">
               {[
                 { val: 'overview', icon: Info, ar: 'نظرة عامة', en: 'Overview' },
                 { val: 'specs', icon: FileText, ar: 'المواصفات', en: 'Specs', count: specs.length },
@@ -688,7 +688,7 @@ const ProfileSystemDetail = () => {
               <div className="lg:col-span-2 space-y-4 sm:space-y-6">
                 {/* Description */}
                 {desc && (
-                  <Card className="border-border/50 overflow-hidden">
+                  <Card className="border-border/40 overflow-hidden">
                     <div className="h-1 bg-gradient-gold" />
                     <CardContent className="p-4 sm:p-6">
                       <h3 className="font-heading font-bold text-base sm:text-lg mb-2 sm:mb-3 flex items-center gap-2">
@@ -701,7 +701,7 @@ const ProfileSystemDetail = () => {
 
                 {/* Features */}
                 {features.length > 0 && (
-                  <Card className="border-border/50">
+                  <Card className="border-border/40">
                     <CardContent className="p-4 sm:p-6">
                       <h3 className="font-heading font-bold text-base sm:text-lg mb-3 sm:mb-4 flex items-center gap-2">
                         <Zap className="ic-sm sm:w-5 sm:h-5 text-gold" />{isRTL ? 'المميزات الرئيسية' : 'Key Features'}
@@ -722,7 +722,7 @@ const ProfileSystemDetail = () => {
 
                 {/* Applications */}
                 {apps && (
-                  <Card className="border-border/50">
+                  <Card className="border-border/40">
                     <CardContent className="p-4 sm:p-6">
                       <h3 className="font-heading font-bold text-base sm:text-lg mb-2 sm:mb-3 flex items-center gap-2">
                         <Layers className="ic-sm sm:w-5 sm:h-5 text-gold" />{isRTL ? 'مجالات الاستخدام' : 'Applications'}
@@ -734,7 +734,7 @@ const ProfileSystemDetail = () => {
 
                 {/* Quick Gallery Preview */}
                 {images.length > 0 && (
-                  <Card className="border-border/50">
+                  <Card className="border-border/40">
                     <CardContent className="p-4 sm:p-6">
                       <div className="flex items-center justify-between mb-3 sm:mb-4">
                         <h3 className="font-heading font-bold text-base sm:text-lg flex items-center gap-2">
@@ -762,14 +762,14 @@ const ProfileSystemDetail = () => {
               {/* Sidebar */}
               <div className="space-y-4 sm:space-y-5">
                 {/* Technical Rating */}
-                <Card className="border-border/50 overflow-hidden">
+                <Card className="border-border/40 overflow-hidden">
                   <div className="h-1 bg-gradient-gold" />
                   <CardContent className="p-4 sm:p-6 space-y-3 sm:space-y-4">
                     <h3 className="font-heading font-bold text-base sm:text-lg">{isRTL ? 'التقييم الفني' : 'Technical Rating'}</h3>
                     <AnimatedRatingBar value={profile.thermal_insulation_rating || 0} label={isRTL ? 'عزل حراري' : 'Thermal'} icon={Thermometer} />
                     <AnimatedRatingBar value={profile.sound_insulation_rating || 0} label={isRTL ? 'عزل صوتي' : 'Sound'} icon={Volume2} />
                     <AnimatedRatingBar value={profile.strength_rating || 0} label={isRTL ? 'المتانة' : 'Strength'} icon={Shield} />
-                    <div className="pt-2 sm:pt-3 border-t border-border/50">
+                    <div className="pt-2 sm:pt-3 border-t border-border/40">
                       <div className="flex items-center justify-between">
                         <span className="text-xs sm:text-sm font-medium">{isRTL ? 'الإجمالي' : 'Overall'}</span>
                         <span className="font-heading font-black text-xl sm:text-2xl text-gold">
@@ -782,7 +782,7 @@ const ProfileSystemDetail = () => {
 
                 {/* Dimensions */}
                 {(profile.max_height_mm || profile.max_width_mm) && (
-                  <Card className="border-border/50">
+                  <Card className="border-border/40">
                     <CardContent className="p-4 sm:p-6 space-y-3">
                       <h3 className="font-heading font-bold text-base sm:text-lg flex items-center gap-2">
                         <Ruler className="ic-sm sm:w-5 sm:h-5 text-gold" />{isRTL ? 'الأبعاد القصوى' : 'Max Dimensions'}
@@ -807,7 +807,7 @@ const ProfileSystemDetail = () => {
 
                 {/* Colors */}
                 {profile.available_colors?.length > 0 && (
-                  <Card className="border-border/50">
+                  <Card className="border-border/40">
                     <CardContent className="p-4 sm:p-6">
                       <h3 className="font-heading font-bold text-base sm:text-lg flex items-center gap-2 mb-2 sm:mb-3">
                         <Palette className="ic-sm sm:w-5 sm:h-5 text-gold" />{isRTL ? 'الألوان المتاحة' : 'Available Colors'}
@@ -823,7 +823,7 @@ const ProfileSystemDetail = () => {
 
                 {/* User Reviews Summary */}
                 {reviews.length > 0 && (
-                  <Card className="border-border/50">
+                  <Card className="border-border/40">
                     <CardContent className="p-4 sm:p-6">
                       <h3 className="font-heading font-bold text-base sm:text-lg mb-3">{isRTL ? 'تقييم المستخدمين' : 'User Rating'}</h3>
                       <div className="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
@@ -870,7 +870,7 @@ const ProfileSystemDetail = () => {
                 {/* Mobile: Cards layout */}
                 <div className="space-y-2 sm:hidden">
                   {specs.map((s) => (
-                    <div key={s.id} className="flex items-center justify-between p-3 rounded-xl bg-card border border-border/50">
+                    <div key={s.id} className="flex items-center justify-between p-3 rounded-xl bg-card border border-border/40">
                       <span className="text-xs font-medium">{language === 'ar' ? s.spec_name_ar : (s.spec_name_en || s.spec_name_ar)}</span>
                       <span className="text-xs font-heading font-bold">
                         {s.spec_value} {s.spec_unit && <span className="text-muted-foreground font-normal">{s.spec_unit}</span>}
@@ -879,13 +879,13 @@ const ProfileSystemDetail = () => {
                   ))}
                 </div>
                 {/* Desktop: Table layout */}
-                <Card className="border-border/50 overflow-hidden hidden sm:block">
+                <Card className="border-border/40 overflow-hidden hidden sm:block">
                   <div className="h-1 bg-gradient-gold" />
                   <CardContent className="p-0">
                     <div className="overflow-x-auto">
                       <table className="w-full">
                         <thead>
-                          <tr className="border-b border-border/50 bg-muted/30">
+                          <tr className="border-b border-border/40 bg-muted/30">
                             <th className="p-4 text-start text-sm font-heading font-bold">{isRTL ? 'المواصفة' : 'Specification'}</th>
                             <th className="p-4 text-start text-sm font-heading font-bold">{isRTL ? 'القيمة' : 'Value'}</th>
                             <th className="p-4 text-start text-sm font-heading font-bold">{isRTL ? 'الوحدة' : 'Unit'}</th>
@@ -948,7 +948,7 @@ const ProfileSystemDetail = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 {suppliers.map((s) => (
                   <Link key={s.id} to={`/${s.businesses?.username}`}>
-                    <Card className="border-border/50 hover:border-gold/30 active:border-gold/50 transition-all group overflow-hidden">
+                    <Card className="border-border/40 hover:border-gold/30 active:border-gold/50 transition-all group overflow-hidden">
                       <CardContent className="p-3.5 sm:card-pad-md flex items-center gap-3 sm:gap-4">
                         {s.businesses?.logo_url ? (
                           <img src={s.businesses.logo_url} alt={language === 'ar' ? s.businesses.name_ar : (s.businesses.name_en || s.businesses.name_ar)} className="w-11 h-11 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl object-cover ring-1 ring-border/50" />
@@ -978,7 +978,7 @@ const ProfileSystemDetail = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
               {/* Rating Summary - on top for mobile */}
               <div className="lg:order-2">
-                <Card className="border-border/50 lg:sticky lg:top-24">
+                <Card className="border-border/40 lg:sticky lg:top-24">
                   <CardContent className="p-4 sm:p-6">
                     <h3 className="font-heading font-bold text-base sm:text-lg mb-3 sm:mb-4 text-center">{isRTL ? 'ملخص التقييمات' : 'Rating Summary'}</h3>
                     <div className="flex items-center gap-4 sm:flex-col sm:gap-2 lg:flex-col">
@@ -1031,7 +1031,7 @@ const ProfileSystemDetail = () => {
                   </div>
                 ) : (
                   reviews.map((r) => (
-                    <Card key={r.id} className="border-border/50">
+                    <Card key={r.id} className="border-border/40">
                       <CardContent className="p-3.5 sm:card-pad-md">
                         <div className="flex items-start gap-2.5 sm:gap-3">
                           <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gold/10 flex items-center justify-center text-gold font-bold text-xs sm:text-sm shrink-0">

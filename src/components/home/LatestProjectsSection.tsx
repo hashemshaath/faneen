@@ -27,7 +27,7 @@ const tierConfig: Record<string, { label: string; labelEn: string; icon: React.E
 
 /* ── skeleton ────────────────────────────────────────── */
 const ProjectSkeleton = () => (
-  <div className="rounded-2xl overflow-hidden border border-border bg-card">
+  <div className="card-ds card-media">
     <Skeleton className="aspect-[16/10] w-full" />
     <div className="p-5 space-y-3">
       <Skeleton className="h-5 w-3/4" />
@@ -107,8 +107,8 @@ export const LatestProjectsSection = () => {
                     key={p.id}
                     to={`/projects/${p.id}`}
                     className={cn(
-                      'group relative rounded-2xl overflow-hidden border bg-card transition-all duration-500 block',
-                      'border-border/50 hover:border-accent/40 hover:shadow-xl hover:shadow-accent/5 sm:hover:-translate-y-1.5',
+                      'card-ds card-media block group transition-all duration-500',
+                      'hover:border-accent/40 hover:shadow-xl hover:shadow-accent/5 sm:hover:-translate-y-1.5',
                       p.is_featured && 'ring-1 ring-gold/30',
                       isVisible ? 'animate-fade-in' : 'opacity-0'
                     )}
