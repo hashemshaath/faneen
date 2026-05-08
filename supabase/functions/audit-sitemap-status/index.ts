@@ -144,7 +144,7 @@ Deno.serve(async (req) => {
 
   // 2) Robots rules check (use whichever robots fetch succeeded)
   const robotsResult = results.find((r) => r.url.endsWith("/robots.txt"));
-  let robotsCheck: RobotsRuleCheck[] = [];
+  const robotsCheck: RobotsRuleCheck[] = [];
   if (robotsResult && !robotsResult.error && robotsResult.status === 200) {
     const txt = await fetch(robotsResult.url, { cache: "no-store" }).then((r) => r.text()).catch(() => "");
     const rules = parseRobotsForStar(txt);
