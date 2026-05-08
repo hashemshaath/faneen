@@ -29,6 +29,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
+import { useNoIndex } from "@/hooks/useNoIndex";
 interface Tag {
   id: string; name_ar: string; name_en: string; slug: string;
   tag_group: string; icon: string | null; color: string | null;
@@ -173,6 +174,7 @@ const DragOverlayTag = ({ tag, isRTL }: { tag: Tag; isRTL: boolean }) => (
 
 // ══════════════ Main Component ══════════════
 const AdminTags = () => {
+  useNoIndex();
   const { isRTL } = useLanguage();
   const { isAdmin } = useAuth();
   const queryClient = useQueryClient();

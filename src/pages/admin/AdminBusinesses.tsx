@@ -33,6 +33,7 @@ import {
   CheckSquare, Square, AlertTriangle,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useNoIndex } from "@/hooks/useNoIndex";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
@@ -152,6 +153,7 @@ const StatCard = React.memo(({ label, value, icon: Icon, trend, gradient, iconBg
 StatCard.displayName = 'StatCard';
 
 const AdminBusinesses = () => {
+  useNoIndex();
   const { isRTL, language } = useLanguage();
   const { isAdmin, user } = useAuth();
   const queryClient = useQueryClient();

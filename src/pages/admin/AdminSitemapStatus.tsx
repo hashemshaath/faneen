@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useState } from 'react';
 
+import { useNoIndex } from "@/hooks/useNoIndex";
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 const FUNC = `${SUPABASE_URL}/functions/v1/sitemap`;
 const SITE = 'https://qitaat.com';
@@ -57,6 +58,7 @@ async function checkUrl(url: string): Promise<CheckResult> {
 }
 
 export default function AdminSitemapStatus() {
+  useNoIndex();
   const { language } = useLanguage();
   const isAr = language === 'ar';
   const qc = useQueryClient();

@@ -13,6 +13,7 @@ import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from 'sonner';
+import { useNoIndex } from "@/hooks/useNoIndex";
 import {
   Mail, Smartphone, Brain, Globe, Eye, EyeOff, Save, Loader2,
   CheckCircle2, XCircle, Shield, Key, Server, Lock, Bot, Sparkles,
@@ -210,6 +211,7 @@ SettingField.displayName = 'SettingField';
 
 /* ═══════════ Main Component ═══════════ */
 const AdminApiSettings = () => {
+  useNoIndex();
   const { isRTL, language } = useLanguage();
   const { user } = useAuth();
   const queryClient = useQueryClient();

@@ -27,6 +27,7 @@ import {
 import { TIERS, tierIcons, tierColors, statusConfig } from '@/lib/membership-tiers';
 import { LIMIT_FIELDS, LIMIT_CATEGORIES, parseLimits, limitsToJson } from '@/lib/membership-limits';
 
+import { useNoIndex } from "@/hooks/useNoIndex";
 type Tab = 'overview' | 'plans' | 'subscriptions' | 'businesses';
 
 /* ─── Plan Card ─── */
@@ -410,6 +411,7 @@ SubRow.displayName = 'SubRow';
 /* ─── Main Component ─── */
 /* ═══════════════════════════════════════════════════════ */
 const AdminMemberships = () => {
+  useNoIndex();
   const { isRTL, language } = useLanguage();
   const { isAdmin } = useAuth();
   const queryClient = useQueryClient();

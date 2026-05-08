@@ -30,6 +30,7 @@ import {
   SortableContext, useSortable, verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useNoIndex } from "@/hooks/useNoIndex";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
@@ -283,6 +284,7 @@ const DragOverlayItem = ({ node, isRTL }: { node: TreeNode; isRTL: boolean }) =>
 
 // ══════════════ Main Component ══════════════
 const AdminCategories = () => {
+  useNoIndex();
   const { isRTL } = useLanguage();
   const { isAdmin } = useAuth();
   const queryClient = useQueryClient();

@@ -25,6 +25,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { maskEmail } from '@/lib/masking';
 import { Lock } from 'lucide-react';
 
+import { useNoIndex } from "@/hooks/useNoIndex";
 type Status = 'new' | 'read' | 'replied' | 'archived';
 type Priority = 'low' | 'normal' | 'high' | 'urgent';
 
@@ -62,6 +63,7 @@ const priorityConfig: Record<Priority, { ar: string; en: string; color: string }
 const PAGE_SIZE = 25;
 
 const AdminContactMessages = () => {
+  useNoIndex();
   const { isRTL } = useLanguage();
   const { isSuperAdmin } = useAuth();
   const queryClient = useQueryClient();
