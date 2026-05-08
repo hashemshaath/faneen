@@ -76,13 +76,30 @@ export const useReviews = (businessId: string | undefined) =>
   useQuery({
     queryKey: ["reviews", businessId],
     queryFn: async () => {
-      const { data } = await supabase
+      // `reviews.user_id` references `auth.users`, not `public.profiles`,
+      // so PostgREST cannot embed `profiles(...)` (returns 400). Fetch in
+      // two steps and merge only safe public profile fields.
+      const { data: rows } = await supabase
         .from("reviews")
-        .select("*, profiles(full_name, avatar_url)")
+        .select("*")
         .eq("business_id", businessId!)
         .order("created_at", { ascending: false });
 
-      return data ?? [];
+      const reviews = rows ?? [];
+      const userIds = Array.from(
+        new Set(reviews.map((r) => r.user_id).filter(Boolean) as string[])
+      );
+      if (userIds.length === 0) return reviews.map((r) => ({ ...r, profiles: null }));
+
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, avatar_url")
+        .in("user_id", userIds);
+
+      const byId = new Map(
+        (profiles ?? []).map((p) => [p.user_id, { full_name: p.full_name, avatar_url: p.avatar_url }])
+      );
+      return reviews.map((r) => ({ ...r, profiles: byId.get(r.user_id) ?? null }));
     },
     enabled: !!businessId,
   });
