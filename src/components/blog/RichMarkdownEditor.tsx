@@ -380,7 +380,9 @@ const BlogImageLibrary: React.FC<{ isRTL: boolean; onSelect: (url: string) => vo
         </Button>
       )}
       {loaded && images.length === 0 && (
-        <p className="text-center text-xs text-muted-foreground py-4">{isRTL ? 'لا توجد صور' : 'No images'}</p>
+        <p className="text-center text-xs text-muted-foreground py-4">
+          {errorMsg ?? (isRTL ? 'لا توجد صور' : 'No images')}
+        </p>
       )}
       <div className="grid grid-cols-4 gap-1.5 mt-2">
         {images.map((img, i) => (
