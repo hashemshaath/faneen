@@ -95,21 +95,21 @@ export const ServicesTab = ({
   }
 
   return (
-    <div className="space-y-5">
-      <div className="relative overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-primary via-primary/90 to-primary/80 p-5 sm:p-8">
+    <div className="space-y-4 sm:space-y-5">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-primary/80 p-3.5 sm:rounded-[1.75rem] sm:p-8">
         <div
           className="absolute inset-0 opacity-10"
           style={{ backgroundImage: "radial-gradient(circle at 70% 30%, hsl(var(--accent) / 0.5) 0%, transparent 50%)" }}
         />
-        <div className="relative z-10 flex items-center gap-4">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-accent/20 sm:h-16 sm:w-16">
-            <Wrench className="h-7 w-7 text-accent sm:h-8 sm:w-8" />
+        <div className="relative z-10 flex items-center gap-3 sm:gap-4">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent/20 sm:h-16 sm:w-16 sm:rounded-2xl">
+            <Wrench className="h-5 w-5 text-accent sm:h-8 sm:w-8" />
           </div>
-          <div>
-            <h2 className="font-heading text-lg font-bold text-primary-foreground sm:text-xl">
+          <div className="min-w-0">
+            <h2 className="font-heading text-base font-bold text-primary-foreground sm:text-xl">
               {language === "ar" ? "خدماتنا" : "Our Services"}
             </h2>
-            <p className="mt-0.5 text-xs text-primary-foreground/70 sm:text-sm">
+            <p className="mt-0.5 text-[11px] text-primary-foreground/70 sm:text-sm">
               {language === "ar"
                 ? `${services.length} خدمة متاحة من ${businessName}`
                 : `${services.length} services available from ${businessName}`}
@@ -118,7 +118,7 @@ export const ServicesTab = ({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 sm:gap-4">
+      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3 sm:gap-4">
         {services.map((service, index) => {
           const name = getLocalizedValue(language, service.name_ar, service.name_en);
           const description = getLocalizedValue(language, service.description_ar, service.description_en);
@@ -126,24 +126,24 @@ export const ServicesTab = ({
           return (
             <article
               key={service.id}
-              className="animate-fade-in rounded-[1.5rem] border border-border/30 bg-card p-4 transition-all duration-300 hover:border-accent/30 hover:shadow-lg hover:shadow-accent/5 active:scale-[0.98] dark:border-border/15 dark:bg-card/80 sm:p-5"
+              className="animate-fade-in rounded-2xl border border-border/30 bg-card p-3 transition-all duration-300 hover:border-accent/30 hover:shadow-lg hover:shadow-accent/5 active:scale-[0.98] dark:border-border/15 dark:bg-card/80 sm:rounded-[1.5rem] sm:p-5"
               style={{ animationDelay: `${index * 60}ms`, animationFillMode: "both" }}
             >
-              <div className="flex items-start gap-3">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent/10 transition-colors group-hover:bg-accent group-hover:text-accent-foreground dark:bg-accent/15">
-                  <Wrench className="h-5 w-5 text-accent" />
+              <div className="flex items-start gap-2.5 sm:gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent/10 transition-colors group-hover:bg-accent group-hover:text-accent-foreground dark:bg-accent/15 sm:h-11 sm:w-11 sm:rounded-xl">
+                  <Wrench className="h-4 w-4 text-accent sm:h-5 sm:w-5" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h3 className="mb-1 truncate font-heading text-sm font-bold text-foreground sm:text-base">{name}</h3>
+                  <h3 className="mb-1 line-clamp-2 font-heading text-[13px] font-bold text-foreground leading-tight sm:text-base">{name}</h3>
                   {description && (
-                    <p className="mb-3 line-clamp-2 text-xs leading-relaxed text-muted-foreground sm:text-sm">
+                    <p className="mb-2 line-clamp-2 text-[11px] leading-relaxed text-muted-foreground sm:mb-3 sm:text-sm">
                       {description}
                     </p>
                   )}
 
                   {(service.price_from || service.price_to) && (
-                    <div className="inline-flex items-center gap-1.5 rounded-lg bg-accent/5 px-2.5 py-1.5 text-xs dark:bg-accent/10 sm:text-sm">
-                      <DollarSign className="h-3.5 w-3.5 text-accent" />
+                    <div className="inline-flex items-center gap-1 rounded-md bg-accent/5 px-2 py-1 text-[11px] dark:bg-accent/10 sm:gap-1.5 sm:rounded-lg sm:px-2.5 sm:py-1.5 sm:text-sm">
+                      <DollarSign className="h-3 w-3 text-accent sm:h-3.5 sm:w-3.5" />
                       <span className="tech-content font-semibold text-foreground">
                         {service.price_from && service.price_from.toLocaleString()}
                         {service.price_from && service.price_to && " - "}
@@ -181,7 +181,7 @@ export const ProjectsTab = ({ businessId }: { businessId: string }) => {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 sm:gap-5">
+    <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-2 lg:grid-cols-3 sm:gap-5">
       {projects.map((project, index) => {
         const title = getLocalizedValue(language, project.title_ar, project.title_en);
         const description = getLocalizedValue(language, project.description_ar, project.description_en);
@@ -191,10 +191,10 @@ export const ProjectsTab = ({ businessId }: { businessId: string }) => {
         return (
           <Link key={project.id} to={`/projects/${project.id}`} className="group block">
             <article
-              className="animate-fade-in overflow-hidden rounded-[1.5rem] border border-border/30 bg-card transition-all duration-500 hover:border-accent/30 hover:shadow-xl hover:shadow-accent/5 active:scale-[0.98] dark:border-border/15 dark:bg-card/80"
+              className="animate-fade-in h-full overflow-hidden rounded-2xl border border-border/30 bg-card transition-all duration-500 hover:border-accent/30 hover:shadow-xl hover:shadow-accent/5 active:scale-[0.98] dark:border-border/15 dark:bg-card/80 sm:rounded-[1.5rem]"
               style={{ animationDelay: `${index * 80}ms`, animationFillMode: "both" }}
             >
-              <div className="relative aspect-video overflow-hidden bg-muted">
+              <div className="relative aspect-[4/3] overflow-hidden bg-muted sm:aspect-video">
                 {project.cover_image_url ? (
                   <img
                     src={project.cover_image_url}
@@ -216,28 +216,28 @@ export const ProjectsTab = ({ businessId }: { businessId: string }) => {
                 {categoryName && (
                   <Badge
                     variant="outline"
-                    className="absolute end-2 top-2 border-border/50 bg-background/80 text-[9px] backdrop-blur-sm sm:text-[10px] dark:bg-background/60"
+                    className="absolute end-2 top-2 hidden border-border/50 bg-background/80 text-[9px] backdrop-blur-sm sm:inline-flex sm:text-[10px] dark:bg-background/60"
                   >
                     {categoryName}
                   </Badge>
                 )}
               </div>
 
-              <div className="space-y-2 p-3 sm:p-4">
-                <h3 className="line-clamp-2 font-heading text-xs font-bold text-foreground transition-colors group-hover:text-accent sm:text-sm">
+              <div className="space-y-1.5 p-2.5 sm:space-y-2 sm:p-4">
+                <h3 className="line-clamp-2 font-heading text-[12px] font-bold text-foreground leading-tight transition-colors group-hover:text-accent sm:text-sm">
                   {title}
                 </h3>
                 {description && (
-                  <p className="line-clamp-2 text-[10px] leading-relaxed text-muted-foreground sm:text-xs">
+                  <p className="hidden line-clamp-2 text-[10px] leading-relaxed text-muted-foreground sm:block sm:text-xs">
                     {description}
                   </p>
                 )}
-                <div className="flex items-center justify-between border-t border-border/20 pt-2 text-[10px] text-muted-foreground dark:border-border/10 sm:text-[11px]">
-                  <div className="flex flex-wrap items-center gap-2">
+                <div className="flex items-center justify-between gap-1 border-t border-border/20 pt-1.5 text-[10px] text-muted-foreground dark:border-border/10 sm:pt-2 sm:text-[11px]">
+                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 min-w-0">
                     {cityName && (
-                      <span className="flex items-center gap-0.5">
+                      <span className="flex items-center gap-0.5 truncate">
                         <MapPin className="h-2.5 w-2.5 text-accent/50" />
-                        {cityName}
+                        <span className="truncate">{cityName}</span>
                       </span>
                     )}
                     {project.duration_days && (
@@ -249,7 +249,7 @@ export const ProjectsTab = ({ businessId }: { businessId: string }) => {
                     )}
                   </div>
                   {project.project_cost && (
-                    <span className="tech-content text-[11px] font-semibold text-accent sm:text-xs">
+                    <span className="tech-content shrink-0 text-[10px] font-semibold text-accent sm:text-xs">
                       {project.project_cost.toLocaleString()} {project.currency_code}
                     </span>
                   )}

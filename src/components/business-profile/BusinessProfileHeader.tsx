@@ -148,7 +148,7 @@ export const BusinessProfileHeader = ({
 
   return (
     <header className="relative">
-      <div className="relative h-44 overflow-hidden bg-gradient-navy sm:h-60 md:h-80">
+      <div className="relative h-28 overflow-hidden bg-gradient-navy sm:h-52 md:h-72">
         {business.cover_url ? (
           <img src={business.cover_url} alt={name} className="h-full w-full object-cover" loading="eager" />
         ) : (
@@ -166,14 +166,14 @@ export const BusinessProfileHeader = ({
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
       </div>
 
-      <div className="container relative z-10 -mt-16 px-3 sm:-mt-24 sm:px-4">
-        <div className="rounded-[1.75rem] border border-border/50 bg-card/90 p-4 shadow-xl backdrop-blur-xl dark:border-border/30 dark:bg-card/80 dark:shadow-black/20 sm:p-6">
-          <div className="flex flex-col items-start gap-4 sm:flex-row sm:gap-6">
-            <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-3xl border-2 border-accent/20 bg-background shadow-lg dark:border-accent/30 sm:h-28 sm:w-28">
+      <div className="container relative z-10 -mt-10 px-3 sm:-mt-24 sm:px-4">
+        <div className="rounded-2xl border border-border/50 bg-card/95 p-3 shadow-xl backdrop-blur-xl dark:border-border/30 dark:bg-card/80 dark:shadow-black/20 sm:rounded-[1.75rem] sm:p-6">
+          <div className="flex flex-row items-start gap-3 sm:gap-6">
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-2 border-accent/20 bg-background shadow-lg dark:border-accent/30 sm:h-28 sm:w-28 sm:rounded-3xl">
               {business.logo_url ? (
                 <img src={business.logo_url} alt={name} className="h-full w-full object-cover" />
               ) : (
-                <span className="font-heading text-3xl font-black text-accent sm:text-4xl">
+                <span className="font-heading text-2xl font-black text-accent sm:text-4xl">
                   {name.charAt(0) || "ق"}
                 </span>
               )}
@@ -182,30 +182,30 @@ export const BusinessProfileHeader = ({
             <div className="min-w-0 flex-1">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div className="min-w-0">
-                  <div className="mb-1 flex flex-wrap items-center gap-2 sm:gap-3">
-                    <h1 className="truncate font-heading text-xl font-bold text-foreground sm:text-3xl">
+                  <div className="mb-1 flex flex-wrap items-center gap-1.5 sm:gap-3">
+                    <h1 className="font-heading text-base font-bold text-foreground leading-tight sm:text-3xl line-clamp-2">
                       {name}
                     </h1>
-                    {business.is_verified && <VerifiedBadge size="md" />}
+                    {business.is_verified && <VerifiedBadge size="sm" />}
                     {activeOffersCount > 0 && (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400 text-[11px] font-body font-semibold border border-rose-500/20">
-                        <TicketPercent className="h-3.5 w-3.5" />
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400 text-[10px] sm:text-[11px] font-body font-semibold border border-rose-500/20">
+                        <TicketPercent className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                         {language === "ar" ? "كوبون خصم" : "Coupon"}
                       </span>
                     )}
                     {tier && (
-                      <Badge className={`${tier.color} gap-1`}>
-                        <Crown className="h-3.5 w-3.5" />
+                      <Badge className={`${tier.color} gap-1 text-[10px] px-1.5 py-0 sm:text-xs sm:px-2.5 sm:py-0.5`}>
+                        <Crown className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                         {language === "ar" ? tier.labelAr : tier.label}
                       </Badge>
                     )}
                   </div>
 
                   {categoryName && (
-                    <span className="text-sm font-medium text-accent">{categoryName}</span>
+                    <span className="text-xs font-medium text-accent sm:text-sm">{categoryName}</span>
                   )}
 
-                  <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-muted-foreground sm:text-sm">
+                  <div className="mt-2 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] text-muted-foreground sm:mt-3 sm:gap-x-3 sm:gap-y-1.5 sm:text-sm">
                     {cityName && (
                       <div className="flex items-center gap-1">
                         <MapPin className="h-3.5 w-3.5 text-accent" />
@@ -215,7 +215,7 @@ export const BusinessProfileHeader = ({
                     {business.contact_person && (
                       <div className="flex items-center gap-1">
                         <User className="h-3.5 w-3.5 text-accent" />
-                        <span>{business.contact_person}</span>
+                        <span className="truncate max-w-[120px]">{business.contact_person}</span>
                       </div>
                     )}
                     <div className="flex items-center gap-1">
@@ -223,14 +223,14 @@ export const BusinessProfileHeader = ({
                       <span className="font-semibold text-foreground">{Number(business.rating_avg ?? 0).toFixed(1)}</span>
                       <span className="tech-content">({business.rating_count ?? 0})</span>
                     </div>
-                    <div className="flex items-center gap-1">
+                    <div className="hidden sm:flex items-center gap-1">
                       <Clock className="h-3.5 w-3.5" />
                       <span>{memberDate}</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex shrink-0 items-center gap-2">
+                <div className="hidden sm:flex shrink-0 items-center gap-2">
                   <Button variant="hero" size="app" className="gap-1.5" onClick={onContact} disabled={isContacting}>
                     {isContacting ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageSquare className="h-4 w-4" />}
                     {language === "ar" ? "تواصل" : "Contact"}
@@ -248,11 +248,11 @@ export const BusinessProfileHeader = ({
               </div>
 
               {shortDesc && (
-                <p className="mt-3 max-w-3xl text-sm leading-relaxed text-muted-foreground">{shortDesc}</p>
+                <p className="mt-2 hidden max-w-3xl text-sm leading-relaxed text-muted-foreground sm:block sm:mt-3">{shortDesc}</p>
               )}
 
               {topServices.length > 0 && (
-                <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                <div className="mt-2 hidden flex-wrap items-center gap-1.5 sm:mt-3 sm:flex">
                   {topServices.slice(0, 4).map((s, idx) => {
                     const label = getLocalizedValue(language, s.name_ar, s.name_en);
                     if (!label) return null;
@@ -275,15 +275,37 @@ export const BusinessProfileHeader = ({
             </div>
           </div>
 
-          <div className="mt-5 grid grid-cols-2 gap-2 border-t border-border/30 pt-4 dark:border-border/20 sm:grid-cols-4 sm:gap-4">
+          {/* Mobile description (full width below logo+name) */}
+          {shortDesc && (
+            <p className="mt-3 line-clamp-3 text-xs leading-relaxed text-muted-foreground sm:hidden">{shortDesc}</p>
+          )}
+
+          {/* Mobile quick action row */}
+          <div className="mt-3 flex items-center gap-2 sm:hidden">
+            <Button variant="hero" size="sm" className="h-10 flex-1 gap-1.5 rounded-xl" onClick={onContact} disabled={isContacting}>
+              {isContacting ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageSquare className="h-4 w-4" />}
+              {language === "ar" ? "تواصل" : "Contact"}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-10 w-10 shrink-0 rounded-xl p-0 dark:border-border/40"
+              onClick={handleShare}
+              aria-label={language === "ar" ? "مشاركة" : "Share"}
+            >
+              <Share2 className="h-4 w-4" />
+            </Button>
+          </div>
+
+          <div className="mt-3 grid grid-cols-4 gap-1.5 border-t border-border/30 pt-3 dark:border-border/20 sm:mt-5 sm:gap-4 sm:pt-4">
             {stats.map((stat) => (
-              <div key={stat.label} className="flex items-center justify-center gap-3 rounded-2xl bg-muted/30 px-3 py-3 dark:bg-muted/15">
-                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-accent/10 dark:bg-accent/20">
-                  <stat.icon className="h-5 w-5 text-accent" />
+              <div key={stat.label} className="flex flex-col items-center justify-center gap-1 rounded-xl bg-muted/30 px-1.5 py-2 dark:bg-muted/15 sm:flex-row sm:gap-3 sm:rounded-2xl sm:px-3 sm:py-3">
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/10 dark:bg-accent/20 sm:h-10 sm:w-10 sm:rounded-2xl">
+                  <stat.icon className="h-3.5 w-3.5 text-accent sm:h-5 sm:w-5" />
                 </div>
-                <div>
-                  <div className="font-heading text-lg font-bold text-foreground">{stat.value}</div>
-                  <div className="text-xs text-muted-foreground">{stat.label}</div>
+                <div className="text-center sm:text-start">
+                  <div className="font-heading text-sm font-bold text-foreground leading-none sm:text-lg">{stat.value}</div>
+                  <div className="mt-0.5 text-[10px] text-muted-foreground sm:text-xs">{stat.label}</div>
                 </div>
               </div>
             ))}
