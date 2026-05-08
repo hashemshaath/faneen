@@ -17,7 +17,7 @@ const BASE = "https://qitaat.com";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "https://hckpxwhjycmdflaneihd.supabase.co";
 const FUNC = `${SUPABASE_URL}/functions/v1/sitemap`;
 
-const TYPES = ["static", "businesses", "blog", "categories", "cities", "profiles", "projects"] as const;
+const TYPES = ["static", "businesses", "blog", "categories", "cities", "profiles", "projects", "sectors"] as const;
 type SitemapType = (typeof TYPES)[number];
 
 function esc(s: string) {
@@ -97,6 +97,12 @@ Deno.serve(async (req) => {
       ];
       for (const p of staticPages) {
         entries.push(entry(`${BASE}${p.loc}`, { lastmod: today, changefreq: p.changefreq, priority: p.priority }));
+      }
+    } else if (type === "sectors") {
+      const sectors = ["aluminum", "iron", "glass", "wood", "cabinets"];
+      entries.push(entry(`${BASE}/sectors`, { lastmod: today, changefreq: "weekly", priority: "0.8" }));
+      for (const s of sectors) {
+        entries.push(entry(`${BASE}/sectors/${s}`, { lastmod: today, changefreq: "weekly", priority: "0.85" }));
       }
     } else if (type === "businesses") {
       const { data } = await supabase.from("businesses").select("username, updated_at").eq("is_active", true).order("rating_avg", { ascending: false }).limit(50000);
