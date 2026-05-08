@@ -304,8 +304,15 @@
       margin-bottom: 0.45em;
     }
 
-    /* Better touch targets — 44px per Apple/Google HIG */
-    button, a, [role="button"] {
+    /* Touch targets — 44px per Apple/Google HIG.
+       Scoped to interactive controls only — inline anchors inside
+       prose / paragraphs / list items must NOT be forced to 44px,
+       otherwise text rhythm and footer/breadcrumb rows break. */
+    button:not([data-inline]),
+    [role="button"]:not([data-inline]),
+    a[role="button"],
+    a.btn,
+    a[data-tappable] {
       min-height: 44px;
     }
 
@@ -330,20 +337,19 @@
     }
   }
 
-  /* ── Small phones (320-374px) ── */
+  /* ── Small phones (320-374px) ──
+     Keep gutters at 16px (per spec) — only typography compresses slightly.
+     Body stays at 14px for Arabic legibility. */
   @media (max-width: 374px) {
-    body {
-      font-size: 13px;
-    }
+    h1 { font-size: 1.3rem; }
+    h2 { font-size: 1.1rem; }
+    h3 { font-size: 0.98rem; }
+  }
 
-    h1 { font-size: 1.35rem; }
-    h2 { font-size: 1.15rem; }
-    h3 { font-size: 1rem; }
-
-    .container {
-      padding-left: 12px;
-      padding-right: 12px;
-    }
+  /* Hard safety net — prevent any rogue element from causing
+     horizontal page scroll on mobile. */
+  @media (max-width: 640px) {
+    html, body { overflow-x: hidden; }
   }
 }
 

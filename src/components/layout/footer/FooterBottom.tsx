@@ -28,8 +28,8 @@ export const FooterBottom = ({ visible }: { visible: boolean }) => {
             </p>
           </div>
 
-          {/* Social icons — uniform 44px on mobile, 36px desktop */}
-          <div className="flex items-center gap-2 order-1 sm:order-2">
+          {/* Social icons — 36px on very small phones (320px), 40px standard mobile, 36px desktop */}
+          <div className="flex items-center gap-1.5 sm:gap-2 order-1 sm:order-2">
             {socialLinks.map((s) => (
               <a
                 key={s.label}
@@ -37,18 +37,19 @@ export const FooterBottom = ({ visible }: { visible: boolean }) => {
                 aria-label={s.label}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-11 h-11 sm:w-9 sm:h-9 rounded-full bg-surface-nav-foreground/[0.06] border border-surface-nav-foreground/15 flex items-center justify-center text-surface-nav-foreground/85 hover:bg-gold/15 hover:text-gold hover:border-gold/35 transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none"
+                data-tappable
+                className="w-10 h-10 sm:w-9 sm:h-9 rounded-full bg-surface-nav-foreground/[0.06] border border-surface-nav-foreground/15 flex items-center justify-center text-surface-nav-foreground/85 hover:bg-gold/15 hover:text-gold hover:border-gold/35 transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none"
               >
                 <s.icon className="w-4 h-4" />
               </a>
             ))}
 
-            <div className="w-px h-6 bg-surface-nav-foreground/[0.12] mx-1" />
+            <div className="w-px h-5 bg-surface-nav-foreground/[0.12] mx-0.5 sm:mx-1" />
 
             <button
               onClick={scrollToTop}
               aria-label={isRTL ? 'العودة إلى الأعلى' : 'Scroll to top'}
-              className="w-11 h-11 sm:w-9 sm:h-9 rounded-full bg-gold/10 border border-gold/25 flex items-center justify-center text-gold hover:bg-gold hover:text-secondary-foreground hover:border-gold transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none"
+              className="w-10 h-10 sm:w-9 sm:h-9 rounded-full bg-gold/10 border border-gold/25 flex items-center justify-center text-gold hover:bg-gold hover:text-secondary-foreground hover:border-gold transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none"
             >
               <ArrowUp className="w-4 h-4" />
             </button>
