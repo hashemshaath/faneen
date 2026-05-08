@@ -163,7 +163,7 @@ const Offers = () => {
               ].map((s, i) => (
                 <div key={i} className="flex items-center gap-2 bg-surface-nav-foreground/5 backdrop-blur-sm border border-surface-nav-foreground/10 rounded-xl px-3 sm:px-4 py-2">
                   <s.icon className={`w-4 h-4 ${s.color}`} />
-                  <span className="font-heading font-bold text-surface-nav-foreground text-sm sm:text-base" dir="ltr">{s.value.toLocaleString()}</span>
+                  <span className="font-heading font-bold text-surface-nav-foreground text-sm sm:text-base tech-content">{s.value.toLocaleString()}</span>
                   <span className="text-surface-nav-foreground/50 text-[10px] sm:text-xs">{s.label}</span>
                 </div>
               ))}
