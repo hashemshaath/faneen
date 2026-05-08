@@ -105,8 +105,8 @@ const SearchBar = memo(({ categories, cities, language, isRTL, t, onSearch }: an
               </option>
             ))}
           </select>
-          <Button type="submit" variant="hero" size="lg" className="px-8 sm:px-10 py-3.5 sm:py-4 rounded-xl sm:rounded-2xl active:scale-95 transition-transform shadow-lg shadow-gold/25 text-sm sm:text-base font-semibold tracking-wide">
-            <Search className="w-4 h-4 sm:w-5 sm:h-5 me-2" />
+          <Button type="submit" variant="hero" size="appLg" className="rounded-xl sm:rounded-2xl active:scale-95 transition-transform shadow-lg shadow-gold/25 text-sm sm:text-base font-semibold tracking-wide">
+            <Search className="ic-sm sm:ic-md me-2" />
             {t('search.btn')}
           </Button>
         </div>
