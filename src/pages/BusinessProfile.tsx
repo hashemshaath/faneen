@@ -367,7 +367,7 @@ const BusinessProfile = () => {
         />
 
         <main className="container-app pb-10 pt-6 sm:pb-16 sm:pt-8">
-          <section className="rounded-[1.75rem] border border-border/40 bg-card/80 p-4 shadow-sm backdrop-blur-sm dark:border-border/20 dark:bg-card/60 sm:p-6">
+          <section className="rounded-r-2xl border border-border/40 bg-card/80 p-4 shadow-sm backdrop-blur-sm dark:border-border/20 dark:bg-card/60 sm:p-6">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div className="space-y-2">
                 <span className="inline-flex rounded-full border border-accent/20 bg-accent/10 px-3 py-1 text-[11px] font-medium text-accent sm:text-xs">
@@ -403,7 +403,7 @@ const BusinessProfile = () => {
             </div>
           </section>
 
-          <section className="mt-5 rounded-[1.75rem] border border-border/30 bg-card/60 p-2 shadow-sm dark:border-border/20 dark:bg-card/40 sm:mt-6 sm:p-3">
+          <section className="mt-5 rounded-r-2xl border border-border/40 bg-card/60 p-2 shadow-sm dark:border-border/20 dark:bg-card/40 sm:mt-6 sm:p-3">
             <Tabs defaultValue="services" dir={isRTL ? "rtl" : "ltr"} className="w-full">
               <div className="overflow-x-auto px-1 no-scrollbar" dir={isRTL ? "rtl" : "ltr"}>
                 <TabsList className="h-auto w-max min-w-full justify-start gap-1 rounded-2xl bg-muted/40 p-1.5 dark:bg-muted/20" dir={isRTL ? "rtl" : "ltr"}>
@@ -425,7 +425,7 @@ const BusinessProfile = () => {
                 </TabsList>
               </div>
 
-              <div className="mt-4 rounded-[1.5rem] bg-background/70 p-2 sm:mt-6 sm:p-3">
+              <div className="mt-4 rounded-3xl bg-background/70 p-2 sm:mt-6 sm:p-3">
                 <TabsContent value="services" className="mt-0">
                   <ServicesTab businessId={business.id} businessName={businessName} />
                 </TabsContent>
