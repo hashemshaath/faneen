@@ -480,10 +480,8 @@ const Blog = () => {
               <button
                 key={tag}
                 onClick={() => toggleTag(tag)}
-                className={`shrink-0 px-2.5 py-1 rounded-full text-[11px] font-medium transition-all duration-200 ${
-                  selectedTags.includes(tag)
-                    ? 'bg-accent text-accent-foreground shadow-sm'
-                    : 'bg-muted/40 dark:bg-muted/25 text-muted-foreground hover:bg-muted active:scale-95'
+                className={`chip chip-sm shrink-0 ${
+                  selectedTags.includes(tag) ? 'chip-selected' : 'chip-muted hover:bg-muted active:scale-95'
                 }`}
               >
                 #{tag}
