@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLanguage } from '@/i18n/LanguageContext';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import {
-  Star, ShieldCheck, SlidersHorizontal, RotateCcw, ChevronRight, ChevronLeft, MapPin, ArrowUpDown, Tag, Wallet,
+  Star, ShieldCheck, SlidersHorizontal, RotateCcw, ChevronRight, ChevronLeft, MapPin, ArrowUpDown, Tag, Wallet, ChevronDown,
 } from 'lucide-react';
 import { CategoryTree } from './CategoryTree';
 import { TagsFilter } from './TagsFilter';
@@ -58,49 +58,42 @@ export const SearchFilters = ({
 
   return (
     <aside
-      className={`flex-shrink-0 transition-all duration-300 ${showFilters ? 'lg:w-[280px] xl:w-[300px]' : 'lg:w-[56px]'}`}
+      className={`flex-shrink-0 transition-all duration-300 w-full ${showFilters ? 'lg:w-[280px] xl:w-[300px]' : 'lg:w-[56px]'}`}
       aria-label={isRTL ? 'مرشحات البحث' : 'Search filters'}
     >
       <div className="lg:sticky lg:top-24">
-        {/* Header card */}
-        <div className="rounded-2xl border border-border/60 bg-card/95 backdrop-blur-sm shadow-sm overflow-hidden">
-          <div className="flex items-center justify-between gap-2 p-3">
-            <button
-              onClick={onToggleFilters}
-              className="flex items-center gap-2.5 font-heading font-bold text-foreground hover:text-accent transition-colors min-w-0"
-              title={showFilters ? (isRTL ? 'طي التصفية' : 'Collapse filters') : (isRTL ? 'عرض التصفية' : 'Show filters')}
-              aria-expanded={showFilters}
-            >
+        {/* Header card — sticky on mobile for quick access */}
+        <div className="sticky top-[64px] z-20 lg:static rounded-2xl border border-border/60 bg-card/95 backdrop-blur-md shadow-sm overflow-hidden">
+          <button
+            onClick={onToggleFilters}
+            className="w-full flex items-center justify-between gap-2 p-3 hover:bg-muted/30 transition-colors"
+            title={showFilters ? (isRTL ? 'طي التصفية' : 'Collapse filters') : (isRTL ? 'عرض التصفية' : 'Show filters')}
+            aria-expanded={showFilters}
+          >
+            <div className="flex items-center gap-2.5 font-heading font-bold text-foreground min-w-0">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/20 flex items-center justify-center shrink-0">
                 <SlidersHorizontal className="w-4 h-4 text-accent" />
               </div>
-              {showFilters && (
-                <>
-                  <span className="text-sm truncate">{t('search.filters')}</span>
-                  {activeCount > 0 && (
-                    <Badge className="bg-accent text-accent-foreground text-[10px] px-1.5 py-0 min-w-[18px] h-[18px] flex items-center justify-center rounded-full font-bold tech-content">
-                      {activeCount}
-                    </Badge>
-                  )}
-                </>
+              <span className="text-sm truncate">{t('search.filters')}</span>
+              {activeCount > 0 && (
+                <Badge className="bg-accent text-accent-foreground text-[10px] px-1.5 py-0 min-w-[20px] h-5 flex items-center justify-center rounded-full font-bold tech-content">
+                  {activeCount}
+                </Badge>
               )}
-            </button>
-            {showFilters && (
-              <button
-                onClick={onToggleFilters}
-                className="w-7 h-7 rounded-lg hover:bg-muted/60 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
-                aria-label={isRTL ? 'طي' : 'Collapse'}
-              >
-                <CollapseIcon className="w-4 h-4" />
-              </button>
-            )}
-          </div>
+            </div>
+            <span className="hidden lg:flex w-7 h-7 rounded-lg items-center justify-center text-muted-foreground">
+              <CollapseIcon className="w-4 h-4" />
+            </span>
+            <span className="lg:hidden w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground">
+              <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${showFilters ? 'rotate-180' : ''}`} />
+            </span>
+          </button>
           {hasActiveFilters && showFilters && (
             <button
               onClick={onClearFilters}
-              className="w-full flex items-center justify-center gap-1.5 text-[11px] font-body font-medium text-destructive hover:bg-destructive/5 border-t border-border/60 py-2 transition-colors"
+              className="w-full flex items-center justify-center gap-1.5 text-[12px] font-body font-semibold text-destructive hover:bg-destructive/5 border-t border-border/60 py-2.5 transition-colors"
             >
-              <RotateCcw className="w-3 h-3" />
+              <RotateCcw className="w-3.5 h-3.5" />
               {t('search.clear_filters')}
             </button>
           )}
@@ -181,7 +174,7 @@ export const SearchFilters = ({
             {/* Verified — toggle row */}
             <label
               htmlFor="verified"
-              className={`flex items-center justify-between gap-3 p-3 rounded-2xl border cursor-pointer transition-all ${
+              className={`flex items-center justify-between gap-3 p-3 rounded-2xl border cursor-pointer transition-all min-h-[60px] ${
                 filters.verifiedOnly
                   ? 'bg-emerald-500/5 border-emerald-500/30'
                   : 'bg-card border-border/60 hover:border-accent/40'
@@ -195,13 +188,14 @@ export const SearchFilters = ({
                 </div>
                 <div className="min-w-0">
                   <div className="text-sm font-heading font-semibold text-foreground truncate">{t('search.verified_only')}</div>
-                  <div className="text-[10px] text-muted-foreground">{isRTL ? 'مزودون موثقون فقط' : 'Verified providers only'}</div>
+                  <div className="text-[11px] text-muted-foreground">{isRTL ? 'مزودون موثقون فقط' : 'Verified providers only'}</div>
                 </div>
               </div>
-              <Checkbox
+              <Switch
                 id="verified"
                 checked={filters.verifiedOnly}
                 onCheckedChange={c => onFilterChange('verifiedOnly', c === true)}
+                className="data-[state=checked]:bg-emerald-500"
               />
             </label>
 
@@ -241,11 +235,11 @@ const FilterCard = ({
   <section className="rounded-2xl bg-card border border-border/60 hover:border-accent/30 transition-colors shadow-sm overflow-hidden">
     <header className="flex items-center justify-between gap-2 px-3.5 py-2.5 border-b border-border/50 bg-muted/30">
       <div className="flex items-center gap-2 min-w-0">
-        <Icon className="w-3.5 h-3.5 text-accent shrink-0" />
-        <span className="text-[11px] font-heading font-bold text-foreground/90 uppercase tracking-wide truncate">{label}</span>
+        <Icon className="w-4 h-4 text-accent shrink-0" />
+        <span className="text-[12.5px] font-heading font-bold text-foreground truncate">{label}</span>
       </div>
       {hint && (
-        <span className="text-[10px] font-body text-muted-foreground tech-content shrink-0">{hint}</span>
+        <span className="text-[10px] font-body text-muted-foreground tech-content shrink-0 px-1.5 py-0.5 rounded-md bg-background/60 border border-border/50">{hint}</span>
       )}
     </header>
     <div className="p-3">{children}</div>
