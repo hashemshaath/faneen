@@ -104,7 +104,7 @@ export const BusinessCard = memo(({ business: b, viewMode }: BusinessCardProps) 
         to={`/${b.username}`}
         onClick={handleOpen}
         {...touchHandlers}
-        className={`group relative flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-2xl bg-card dark:bg-card/80 border border-border/30 dark:border-border/15 hover:border-accent/30 transition-all duration-300 active:scale-[0.98] ${pressed ? 'scale-[0.98] shadow-lg' : 'hover:shadow-md dark:hover:shadow-accent/5'}`}
+        className={`card-ds card-interactive group relative flex items-center gap-3 sm:gap-4 p-3 sm:p-4 ${pressed ? 'scale-[0.98] shadow-lg' : 'hover:shadow-md dark:hover:shadow-accent/5'}`}
       >
         <button
           type="button"
@@ -177,7 +177,7 @@ export const BusinessCard = memo(({ business: b, viewMode }: BusinessCardProps) 
       to={`/${b.username}`}
       onClick={handleOpen}
       {...touchHandlers}
-      className={`group relative rounded-2xl bg-card dark:bg-card/80 border border-border/30 dark:border-border/15 hover:border-accent/25 transition-all duration-300 flex flex-col overflow-hidden active:scale-[0.97] hover-lift ${pressed ? 'scale-[0.97] shadow-xl' : 'dark:hover:shadow-accent/5'}`}
+      className={`card-ds card-interactive card-media group relative flex flex-col hover-lift ${pressed ? 'scale-[0.97] shadow-xl' : 'dark:hover:shadow-accent/5'}`}
     >
       {/* Favorite button */}
       <button
