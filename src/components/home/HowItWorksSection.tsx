@@ -74,7 +74,7 @@ export const HowItWorksSection = () => {
         </div>
 
         <ol
-          ref={visRef}
+          ref={visRef as unknown as React.RefObject<HTMLOListElement>}
           className="relative z-10 list-none grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6 max-w-6xl mx-auto"
         >
           {steps.map((step, i) => {
