@@ -62,13 +62,15 @@ export const FooterNewsletter = ({ visible }: { visible: boolean }) => {
 
             <form onSubmit={handleSubscribe} className="flex w-full lg:w-auto lg:min-w-[380px] gap-2.5">
               <div className="relative flex-1">
-                <Mail aria-hidden="true" className="absolute top-1/2 -translate-y-1/2 start-3.5 w-4 h-4 text-surface-nav-foreground/55 pointer-events-none" />
+              <Mail aria-hidden="true" className="absolute top-1/2 -translate-y-1/2 start-3.5 w-4 h-4 text-surface-nav-foreground/70 pointer-events-none" />
                 <Input
                   type="email"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   placeholder={isRTL ? "بريدك الإلكتروني..." : "Your email address..."}
-                  className="ps-10 bg-surface-nav-foreground/[0.06] border-surface-nav-foreground/15 text-surface-nav-foreground placeholder:text-surface-nav-foreground/55 focus-visible:border-gold/60 focus-visible:ring-2 focus-visible:ring-gold/40 h-11 sm:h-12 text-sm rounded-xl"
+                  aria-label={isRTL ? 'البريد الإلكتروني للاشتراك في النشرة' : 'Email address for newsletter'}
+                  required
+                  className="ps-10 bg-surface-nav-foreground/[0.06] border-surface-nav-foreground/20 text-surface-nav-foreground placeholder:text-surface-nav-foreground/70 focus-visible:border-gold/60 focus-visible:ring-2 focus-visible:ring-gold/40 h-11 sm:h-12 text-sm rounded-xl"
                   dir="ltr"
                 />
               </div>
