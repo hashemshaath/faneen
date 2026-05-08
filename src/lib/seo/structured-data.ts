@@ -17,6 +17,31 @@ export const SITE_NAME_AR = 'قِطاعات';
 export const SITE_NAME = 'قِطاعات Qitaat';
 export const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.jpg`;
 
+/** Type tag used by the dynamic OG renderer to pick a label chip. */
+export type OgImageType = 'business' | 'blog' | 'project' | 'category' | 'sector' | 'page';
+
+export interface OgImageParams {
+  type?: OgImageType;
+  title?: string | null;
+  subtitle?: string | null;
+  /** Absolute https URL of an inline cover image (jpg/png/webp). Optional. */
+  image?: string | null;
+}
+
+/**
+ * Resolve the Supabase Edge Function base URL at build time. Falls back to a
+ * sensible default so the helper still returns the global static image when
+ * the env var is missing (e.g. during pure unit tests).
+ */
+function edgeBaseUrl(): string | null {
+  // Vite injects VITE_SUPABASE_URL at build time.
+  const fromEnv =
+    typeof import.meta !== 'undefined' && (import.meta as ImportMeta & { env?: Record<string, string> }).env
+      ? (import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_SUPABASE_URL
+      : undefined;
+  return fromEnv ? fromEnv.replace(/\/+$/, '') : null;
+}
+
 export interface BreadcrumbCrumb {
   /** Display name shown in the breadcrumb trail. */
   name: string;
@@ -109,14 +134,34 @@ export function buildService(input: {
 }
 
 /**
- * Returns a 1200x630 OG image URL for a given page slug. For now this falls
- * back to the global default; once per-page OG renderer is wired up, it will
- * resolve to `${SITE_URL}/og/${slug}.jpg`.
+ * Returns a 1200x630 OG image URL for a given page.
+ *
+ * - When called with just a `slug` (back-compat), returns the global static
+ *   `og-image.jpg` so existing callers are unaffected.
+ * - When called with structured `params` ({ type, title, subtitle, image }),
+ *   returns a URL pointing at the `og-image` Edge Function which renders a
+ *   per-page 1200x630 SVG with Qitaat branding and Arabic-friendly typography.
+ *
+ * The Edge Function falls back to a generic Qitaat card if any param is
+ * missing or malformed, and the page-level meta still lists the static
+ * `og-image.jpg` as the ultimate fallback.
  */
-export function ogImageFor(slug?: string | null): string {
-  if (!slug) return DEFAULT_OG_IMAGE;
-  // Future: return `${SITE_URL}/og/${slug}.jpg` once the renderer exists.
-  return DEFAULT_OG_IMAGE;
+export function ogImageFor(slug?: string | null, params?: OgImageParams): string {
+  // Back-compat: single string arg → static image.
+  if (!params) return DEFAULT_OG_IMAGE;
+
+  const base = edgeBaseUrl();
+  if (!base) return DEFAULT_OG_IMAGE;
+
+  const qs = new URLSearchParams();
+  qs.set('type', params.type || 'page');
+  if (params.title) qs.set('title', String(params.title).slice(0, 120));
+  if (params.subtitle) qs.set('subtitle', String(params.subtitle).slice(0, 200));
+  if (params.image && /^https:\/\//i.test(params.image)) qs.set('image', params.image);
+  // Cache-bust marker tied to the slug so updates propagate without changing key params.
+  if (slug) qs.set('v', encodeURIComponent(slug).slice(0, 60));
+
+  return `${base}/functions/v1/og-image?${qs.toString()}`;
 }
 
 function absoluteUrl(input: string): string {
