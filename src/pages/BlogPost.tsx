@@ -211,6 +211,24 @@ const BlogPost = () => {
     enabled: !!post,
   });
 
+  // Public-safe author lookup for Article.author Person enrichment.
+  // RLS on profiles may restrict access for anonymous visitors; in that case
+  // the query returns null and we omit `author` from the JSON-LD entirely.
+  const { data: author } = useQuery({
+    queryKey: ['blog-post-author', post?.author_id],
+    queryFn: async () => {
+      if (!post?.author_id) return null;
+      const { data } = await supabase
+        .from('profiles')
+        .select('full_name, ref_id')
+        .eq('user_id', post.author_id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!post?.author_id,
+    staleTime: 10 * 60 * 1000,
+  });
+
   const { data: isBookmarked = false } = useQuery({
     queryKey: ['blog-bookmark', post?.id, user?.id],
     queryFn: async () => {
@@ -260,22 +278,64 @@ const BlogPost = () => {
   useJsonLd(useMemo(() => {
     if (!post) return null;
     const wordCount = (post.content_ar || '').trim().split(/\s+/).length;
+
+    // Normalize timestamps to valid ISO-8601 strings; drop the field if invalid.
+    const toIso = (v?: string | null): string | undefined => {
+      if (!v) return undefined;
+      const d = new Date(v);
+      return Number.isNaN(d.getTime()) ? undefined : d.toISOString();
+    };
+    const datePublished = toIso(post.published_at) || toIso(post.created_at);
+    const dateModified = toIso(post.updated_at) || datePublished;
+
+    // Image: prefer real cover/og raster, fall back to dynamic PNG OG renderer.
+    const image =
+      post.cover_image_url ||
+      post.og_image_url ||
+      ogImageFor(`blog-${post.slug}`, {
+        type: 'blog',
+        title: post.title_ar,
+        subtitle: (post.meta_description_ar || post.excerpt_ar || '').slice(0, 160) || undefined,
+      });
+
+    // Author: only include when we actually have a real human name from profiles.
+    const authorName = author?.full_name?.trim();
+    const authorBlock = authorName
+      ? {
+          author: {
+            '@type': 'Person',
+            name: authorName,
+            ...(author?.ref_id
+              ? { identifier: author.ref_id }
+              : {}),
+          },
+        }
+      : {};
+
     return {
       '@context': 'https://schema.org',
       '@type': 'BlogPosting',
       headline: post.title_ar,
       alternativeHeadline: post.title_en,
       description: post.meta_description_ar || post.excerpt_ar,
-      image: post.cover_image_url || post.og_image_url,
-      datePublished: post.published_at,
-      dateModified: post.updated_at,
+      image,
+      ...(datePublished ? { datePublished } : {}),
+      ...(dateModified ? { dateModified } : {}),
       url: `https://qitaat.com/blog/${post.slug}`,
       wordCount,
       inLanguage: ['ar', 'en'],
       keywords: post.tags?.join(', '),
       articleSection: post.category,
+      ...authorBlock,
       publisher: { '@type': 'Organization', name: 'قِطاعات Qitaat', url: 'https://qitaat.com', logo: { '@type': 'ImageObject', url: 'https://qitaat.com/og-image.jpg' } },
       mainEntityOfPage: { '@type': 'WebPage', '@id': `https://qitaat.com/blog/${post.slug}` },
+      // Speakable: limited to the visible headline + excerpt summary so voice
+      // surfaces (Google Assistant) read a clean abstract rather than the full
+      // article body. Selectors map to ids/data attrs on the rendered DOM.
+      speakable: {
+        '@type': 'SpeakableSpecification',
+        cssSelector: ['#blog-post-title', '[data-speakable="excerpt"]'],
+      },
       breadcrumb: {
         '@type': 'BreadcrumbList',
         itemListElement: [
@@ -285,7 +345,7 @@ const BlogPost = () => {
         ],
       },
     };
-  }, [post, language]));
+  }, [post, language, author]));
 
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
   const title = post ? (language === 'ar' ? post.title_ar : (post.title_en || post.title_ar)) : '';
@@ -539,7 +599,7 @@ const BlogPost = () => {
               {post.tags?.map((tag: string) => <Badge key={tag} variant="secondary" className="text-[9px] sm:text-[10px]">{tag}</Badge>)}
             </div>
 
-            <h1 className="font-heading font-bold text-[1.4rem] sm:text-3xl md:text-4xl lg:text-[2.5rem] leading-[1.4] sm:leading-tight mb-4 sm:mb-5 text-foreground">{title}</h1>
+            <h1 id="blog-post-title" className="font-heading font-bold text-[1.4rem] sm:text-3xl md:text-4xl lg:text-[2.5rem] leading-[1.4] sm:leading-tight mb-4 sm:mb-5 text-foreground">{title}</h1>
 
             {/* Meta info bar */}
             <div className="flex items-center gap-3 sm:gap-4 text-xs sm:text-sm text-muted-foreground mb-5 sm:mb-6 flex-wrap">
@@ -622,7 +682,7 @@ const BlogPost = () => {
 
             {/* Excerpt */}
             {(post.excerpt_ar || post.excerpt_en) && (
-              <div className="bg-accent/5 border-s-4 border-accent rounded-e-xl p-4 sm:p-5 mb-7 sm:mb-8 text-[0.9rem] sm:text-base text-muted-foreground italic font-body leading-[1.8]">
+              <div data-speakable="excerpt" className="bg-accent/5 border-s-4 border-accent rounded-e-xl p-4 sm:p-5 mb-7 sm:mb-8 text-[0.9rem] sm:text-base text-muted-foreground italic font-body leading-[1.8]">
                 {language === 'ar' ? post.excerpt_ar : (post.excerpt_en || post.excerpt_ar)}
               </div>
             )}
