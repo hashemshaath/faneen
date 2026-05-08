@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { Search, Star, Shield, Building2, ChevronLeft, ChevronRight, Clock, TrendingUp, X } from "lucide-react";
+import { Search, Star, Shield, Building2, ChevronLeft, ChevronRight, Clock, TrendingUp, X, Plus, Minus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useEffect, useRef, useState, useCallback, memo, useMemo, lazy, Suspense } from "react";
@@ -308,6 +308,7 @@ export const HeroSection = () => {
   const { t, language, isRTL } = useLanguage();
   const navigate = useNavigate();
   const [current, setCurrent] = useState(0);
+  const [tagsExpanded, setTagsExpanded] = useState(false);
   // Only the previous slide stays mounted briefly to crossfade out.
   // This caps DOM <img> count to 2 instead of `slides.length`.
   const [prevIdx, setPrevIdx] = useState<number | null>(null);
@@ -497,19 +498,46 @@ export const HeroSection = () => {
           onSearch={handleSearch}
         />
 
-        {/* Quick tags */}
-        <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2.5 mt-4 sm:mt-6">
-          {categories.slice(0, 5).map((cat) => (
-            <button
-              key={cat.id}
-              type="button"
-              onClick={() => navigate(`/search?category=${cat.id}`)}
-              className="chip font-body text-white/85 bg-white/[0.06] border border-white/15 hover:bg-gold/10 hover:text-gold hover:border-gold/30 active:scale-95 backdrop-blur-sm focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none"
-            >
-              {language === 'ar' ? cat.name_ar : cat.name_en}
-            </button>
-          ))}
-        </div>
+        {/* Quick tags — collapsed by default to save vertical space */}
+        {categories.length > 0 && (() => {
+          const visibleCount = tagsExpanded ? categories.length : 3;
+          const visible = categories.slice(0, visibleCount);
+          const remaining = categories.length - visibleCount;
+          return (
+            <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2.5 mt-3 sm:mt-5">
+              {visible.map((cat) => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => navigate(`/search?category=${cat.id}`)}
+                  className="chip font-body text-white/85 bg-white/[0.06] border border-white/15 hover:bg-gold/10 hover:text-gold hover:border-gold/30 active:scale-95 backdrop-blur-sm focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none"
+                >
+                  {language === 'ar' ? cat.name_ar : cat.name_en}
+                </button>
+              ))}
+              {(remaining > 0 || tagsExpanded) && (
+                <button
+                  type="button"
+                  onClick={() => setTagsExpanded(v => !v)}
+                  aria-expanded={tagsExpanded}
+                  className="chip font-body text-gold bg-gold/10 border border-gold/30 hover:bg-gold/20 active:scale-95 backdrop-blur-sm focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none inline-flex items-center gap-1"
+                >
+                  {tagsExpanded ? (
+                    <>
+                      <Minus className="w-3 h-3" />
+                      {isRTL ? 'إخفاء' : 'Less'}
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-3 h-3" />
+                      {isRTL ? `+${remaining} المزيد` : `+${remaining} more`}
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Slide controls */}
         <div className="flex items-center justify-center gap-3 mt-8 sm:mt-10">
