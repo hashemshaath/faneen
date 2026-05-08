@@ -271,7 +271,7 @@ const Blog = () => {
     <div className="space-y-4 sm:space-y-5">
       {/* Popular Posts */}
       <Card className="border-border/50 dark:border-border/30 dark:bg-card/80">
-        <CardContent className="p-4 sm:p-5">
+        <CardContent className="card-pad-md">
           <h3 className="font-heading font-bold text-sm flex items-center gap-2 mb-3 sm:mb-4">
             <TrendingUp className="ic-sm text-accent" />
             {isRTL ? 'الأكثر قراءة' : 'Most Read'}
@@ -299,7 +299,7 @@ const Blog = () => {
       {/* Tags Cloud */}
       {allTags.length > 0 && (
         <Card className="border-border/50 dark:border-border/30 dark:bg-card/80">
-          <CardContent className="p-4 sm:p-5">
+          <CardContent className="card-pad-md">
             <h3 className="font-heading font-bold text-sm flex items-center gap-2 mb-3 sm:mb-4">
               <Tag className="ic-sm text-accent" />
               {isRTL ? 'الوسوم' : 'Tags'}
@@ -325,7 +325,7 @@ const Blog = () => {
 
       {/* Stats */}
       <Card className="border-border/50 dark:border-border/30 bg-gradient-to-br from-primary/5 to-accent/5 dark:from-primary/10 dark:to-accent/10">
-        <CardContent className="p-4 sm:p-5 text-center space-y-2 sm:space-y-3">
+        <CardContent className="card-pad-md text-center space-y-2 sm:space-y-3">
           <BarChart3 className="w-7 h-7 sm:w-8 sm:h-8 text-accent mx-auto" />
           <div>
             <div className="font-heading font-bold text-xl sm:text-2xl text-foreground tech-content">{posts.length}</div>

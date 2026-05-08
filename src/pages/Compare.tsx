@@ -126,7 +126,7 @@ const Compare = () => {
       <div className="container-app py-6 space-y-6">
         {/* Search to add */}
         <Card>
-          <CardContent className="p-4">
+          <CardContent className="card-pad-md">
             <div className="relative">
               <Search className="absolute start-3 top-3 ic-sm text-muted-foreground" />
               <Input

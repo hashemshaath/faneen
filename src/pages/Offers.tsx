@@ -296,7 +296,7 @@ const Offers = () => {
                         )}
                       </div>
 
-                      <CardContent className="p-4 sm:p-5 space-y-3">
+                      <CardContent className="card-pad-md space-y-3">
                         {/* Provider info */}
                         {biz && (
                           <Link to={`/${biz.username}`} className="flex items-center gap-2.5 group/biz">

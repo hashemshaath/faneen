@@ -949,7 +949,7 @@ const ProfileSystemDetail = () => {
                 {suppliers.map((s) => (
                   <Link key={s.id} to={`/${s.businesses?.username}`}>
                     <Card className="border-border/50 hover:border-gold/30 active:border-gold/50 transition-all group overflow-hidden">
-                      <CardContent className="p-3.5 sm:p-5 flex items-center gap-3 sm:gap-4">
+                      <CardContent className="p-3.5 sm:card-pad-md flex items-center gap-3 sm:gap-4">
                         {s.businesses?.logo_url ? (
                           <img src={s.businesses.logo_url} alt={language === 'ar' ? s.businesses.name_ar : (s.businesses.name_en || s.businesses.name_ar)} className="w-11 h-11 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl object-cover ring-1 ring-border/50" />
                         ) : (
@@ -1032,7 +1032,7 @@ const ProfileSystemDetail = () => {
                 ) : (
                   reviews.map((r) => (
                     <Card key={r.id} className="border-border/50">
-                      <CardContent className="p-3.5 sm:p-5">
+                      <CardContent className="p-3.5 sm:card-pad-md">
                         <div className="flex items-start gap-2.5 sm:gap-3">
                           <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gold/10 flex items-center justify-center text-gold font-bold text-xs sm:text-sm shrink-0">
                             {((r as any).profiles)?.avatar_url ? (
