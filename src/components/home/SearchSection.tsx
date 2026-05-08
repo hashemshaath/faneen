@@ -37,7 +37,7 @@ export const SearchSection = () => {
           <div ref={formRef}>
             <form onSubmit={e => { e.preventDefault(); handleSearch(); }} className="flex flex-col sm:flex-row gap-2 sm:gap-3 p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-primary-foreground/10 border border-gold/20 backdrop-blur-sm">
               <div className="flex-1 relative">
-                <Search className="absolute end-3 sm:end-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-surface-nav-foreground/40" />
+                <Search className="absolute end-3 sm:end-4 top-1/2 -translate-y-1/2 ic-sm sm:ic-md text-surface-nav-foreground/40" />
                 <input
                   type="text"
                   value={query}
@@ -46,7 +46,7 @@ export const SearchSection = () => {
                   className="w-full pe-10 sm:pe-12 ps-3 sm:ps-4 py-3 sm:py-4 rounded-lg sm:rounded-xl bg-primary-foreground/10 text-surface-nav-foreground placeholder:text-surface-nav-foreground/30 font-body text-sm border-0 outline-none focus:ring-2 focus:ring-gold/50"
                 />
               </div>
-              <Button type="submit" variant="hero" size="lg" className="px-6 sm:px-8 py-3 sm:py-0 active:scale-95 transition-transform">
+              <Button type="submit" variant="hero" size="appLg" className="active:scale-95 transition-transform">
                 {t('search.btn')}
               </Button>
             </form>

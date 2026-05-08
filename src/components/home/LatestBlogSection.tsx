@@ -110,7 +110,7 @@ export const LatestBlogSection = () => {
                       {post.category}
                     </span>
                   </div>
-                  <div className="p-4 sm:p-5 space-y-2.5 sm:space-y-3 flex-1 flex flex-col">
+                  <div className="card-pad-md space-y-2.5 sm:space-y-3 flex-1 flex flex-col">
                     <h3 className="font-heading font-bold text-sm sm:text-base line-clamp-2 transition-colors duration-300 group-hover:text-accent">
                       {language === 'ar' ? post.title_ar : (post.title_en || post.title_ar)}
                     </h3>

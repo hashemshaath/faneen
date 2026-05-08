@@ -15,7 +15,7 @@ export const FooterBottom = ({ visible }: { visible: boolean }) => {
 
   return (
     <div className="border-t border-surface-nav-foreground/[0.06]">
-      <div className={`container py-5 sm:py-6 px-4 sm:px-6 transition-all duration-700 delay-300 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+      <div className={`container py-5 sm:py-6 px-4 sm:px-6 safe-min-pb transition-all duration-700 delay-300 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           {/* Copyright & extra links */}
           <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 order-2 sm:order-1">
@@ -37,9 +37,9 @@ export const FooterBottom = ({ visible }: { visible: boolean }) => {
                 aria-label={s.label}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-9 h-9 rounded-xl bg-surface-nav-foreground/[0.06] border border-surface-nav-foreground/20 flex items-center justify-center text-surface-nav-foreground/85 hover:bg-gold/15 hover:text-gold hover:border-gold/30 hover:scale-110 transition-all duration-300 focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none"
+                className="w-11 h-11 sm:w-9 sm:h-9 rounded-xl bg-surface-nav-foreground/[0.06] border border-surface-nav-foreground/20 flex items-center justify-center text-surface-nav-foreground/85 hover:bg-gold/15 hover:text-gold hover:border-gold/30 hover:scale-110 transition-all duration-300 focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none"
               >
-                <s.icon className="w-3.5 h-3.5" />
+                <s.icon className="ic-sm" />
               </a>
             ))}
 
@@ -48,9 +48,9 @@ export const FooterBottom = ({ visible }: { visible: boolean }) => {
             <button
               onClick={scrollToTop}
               aria-label={isRTL ? 'العودة إلى الأعلى' : 'Scroll to top'}
-              className="w-9 h-9 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center text-gold/85 hover:bg-gold hover:text-secondary-foreground hover:border-gold hover:scale-110 hover:-translate-y-0.5 transition-all duration-300 focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none"
+              className="w-11 h-11 sm:w-9 sm:h-9 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center text-gold/85 hover:bg-gold hover:text-secondary-foreground hover:border-gold hover:scale-110 hover:-translate-y-0.5 transition-all duration-300 focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none"
             >
-              <ArrowUp className="w-4 h-4" />
+              <ArrowUp className="ic-sm" />
             </button>
           </div>
         </div>

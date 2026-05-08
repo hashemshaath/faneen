@@ -252,13 +252,13 @@ export const Navbar = () => {
           mobileOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-3 pointer-events-none'
         }`}
       >
-        <div className="max-h-[calc(100vh-4rem)] sm:max-h-[calc(100vh-4.5rem)] overflow-y-auto py-3 px-4 space-y-0.5 font-body text-sm">
+        <div className="max-h-[calc(100vh-4rem)] sm:max-h-[calc(100vh-4.5rem)] overflow-y-auto py-3 px-4 safe-min-pb space-y-0.5 font-body text-sm">
           {allLinks.map((link, idx) => (
             <Link
               key={link.to}
               to={link.to}
               onClick={closeMobile}
-              className={`flex items-center gap-3 py-3 px-3 rounded-xl transition-all duration-200 ${
+              className={`flex items-center gap-3 min-h-ctrl-md py-3 px-3 rounded-xl transition-all duration-200 ${
                 isActive(link.to)
                   ? 'text-gold bg-gold/10'
                   : 'text-surface-nav-foreground/70 hover:text-gold hover:bg-gold/5'
@@ -267,7 +267,7 @@ export const Navbar = () => {
               <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
                 isActive(link.to) ? 'bg-gold/20' : 'bg-surface-nav-foreground/5'
               }`}>
-                <link.icon className="w-4 h-4 text-gold" />
+                <link.icon className="ic-sm text-gold" />
               </div>
               <span className="font-medium">{link.label}</span>
             </Link>

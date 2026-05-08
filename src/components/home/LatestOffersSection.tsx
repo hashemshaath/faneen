@@ -107,7 +107,7 @@ export const LatestOffersSection = () => {
                         </div>
                       )}
                     </div>
-                    <div className="p-4 sm:p-5 space-y-2.5">
+                    <div className="card-pad-md space-y-2.5">
                       <span className="text-[10px] font-bold text-gold bg-gold/10 dark:bg-gold/15 px-2.5 py-0.5 rounded-full">
                         {offer.promotion_type === "offer"
                           ? isRTL ? "عرض خاص" : "Special Offer"
