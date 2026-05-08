@@ -633,19 +633,39 @@ const BlogPost = () => {
             {/* ── Desktop: inline share icons ── */}
             <div className="hidden lg:flex items-center gap-1 mb-6">
               {Object.keys(socialIcons).map(p => (
-                <Button key={p} variant="ghost" size="sm" onClick={() => shareToSocial(p)} className="h-8 w-8 p-0 text-muted-foreground hover:text-accent">
+                <Button
+                  key={p}
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => shareToSocial(p)}
+                  className="h-8 w-8 p-0 text-muted-foreground hover:text-accent"
+                  aria-label={isRTL ? `مشاركة على ${p}` : `Share on ${p}`}
+                >
                   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d={socialIcons[p].svg} /></svg>
                 </Button>
               ))}
               <div className="w-px h-5 bg-border mx-1" />
-              <Button variant="ghost" size="sm" onClick={handleCopyLink} className="h-8 w-8 p-0 text-muted-foreground hover:text-accent">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleCopyLink}
+                className="h-8 w-8 p-0 text-muted-foreground hover:text-accent"
+                aria-label={isRTL ? 'نسخ الرابط' : 'Copy link'}
+              >
                 {copied ? <CheckCheck className="ic-sm text-accent" /> : <Copy className="ic-sm" />}
               </Button>
               {user && (
                 <>
                   <div className="w-px h-5 bg-border mx-1" />
-                  <Button variant="ghost" size="sm" onClick={() => toggleBookmark.mutate()} disabled={toggleBookmark.isPending}
-                    className={`h-8 w-8 p-0 ${isBookmarked ? 'text-accent' : 'text-muted-foreground hover:text-accent'}`}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => toggleBookmark.mutate()}
+                    disabled={toggleBookmark.isPending}
+                    aria-label={isRTL ? (isBookmarked ? 'إزالة من المحفوظات' : 'حفظ المقال') : (isBookmarked ? 'Remove bookmark' : 'Save article')}
+                    aria-pressed={isBookmarked}
+                    className={`h-8 w-8 p-0 ${isBookmarked ? 'text-accent' : 'text-muted-foreground hover:text-accent'}`}
+                  >
                     {isBookmarked ? <BookmarkCheck className="ic-sm" /> : <Bookmark className="ic-sm" />}
                   </Button>
                 </>
