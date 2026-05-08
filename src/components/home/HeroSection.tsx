@@ -1,10 +1,14 @@
 import { Link, useNavigate } from "react-router-dom";
-import { Search, Star, Shield, Building2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Star, Shield, Building2, ChevronLeft, ChevronRight, Clock, TrendingUp, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useEffect, useRef, useState, useCallback, memo, useMemo, lazy, Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  getSearchHistory,
+  addToSearchHistory,
+} from "@/services/search/useSearch";
 // HeroParticles is purely decorative — defer it past LCP to keep the main
 // thread free during the initial paint (improves INP/TBT on mobile).
 const HeroParticles = lazy(() =>
@@ -50,34 +54,159 @@ const preloadImage = (src: string) => {
   img.src = src;
 };
 
+/* Industry defaults reused from /search autocomplete for parity. */
+const HERO_SUGGESTIONS = [
+  { ar: 'مصانع ألمنيوم في الرياض', en: 'Aluminum factories in Riyadh', icon: '🪟' },
+  { ar: 'تركيب نوافذ ألمنيوم', en: 'Aluminum window installation', icon: '🪟' },
+  { ar: 'بوابات حديدية', en: 'Iron gates', icon: '⚙️' },
+  { ar: 'مطابخ خشبية', en: 'Wooden kitchens', icon: '🪵' },
+  { ar: 'واجهات زجاجية', en: 'Glass facades', icon: '🔷' },
+  { ar: 'مظلات ألمنيوم', en: 'Aluminum canopies', icon: '🌂' },
+  { ar: 'درابزين حديد', en: 'Iron railings', icon: '⚙️' },
+  { ar: 'أبواب خشبية داخلية', en: 'Interior wooden doors', icon: '🚪' },
+];
+
 const SearchBar = memo(({ categories, cities, language, isRTL, t, onSearch }: any) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedCity, setSelectedCity] = useState('');
+  const [focused, setFocused] = useState(false);
+  const [activeIdx, setActiveIdx] = useState(-1);
+  const [history, setHistory] = useState<string[]>([]);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const isAr = language === 'ar';
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
+  useEffect(() => { if (focused) setHistory(getSearchHistory()); }, [focused]);
+
+  // Close on outside click
+  useEffect(() => {
+    const onDoc = (e: MouseEvent) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setFocused(false);
+    };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, []);
+
+  const items = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    const list: { label: string; type: 'history' | 'industry' | 'category'; id: string; icon?: string }[] = [];
+    if (!q) {
+      history.slice(0, 4).forEach(h => list.push({ label: h, type: 'history', id: `h-${h}` }));
+      HERO_SUGGESTIONS.slice(0, 6).forEach((s, i) => list.push({ label: isAr ? s.ar : s.en, type: 'industry', id: `i-${i}`, icon: s.icon }));
+    } else {
+      history.forEach(h => { if (h.toLowerCase().includes(q) && h !== searchQuery) list.push({ label: h, type: 'history', id: `h-${h}` }); });
+      HERO_SUGGESTIONS.forEach((s, i) => {
+        const label = isAr ? s.ar : s.en;
+        if (label.toLowerCase().includes(q)) list.push({ label, type: 'industry', id: `i-${i}`, icon: s.icon });
+      });
+      (categories || []).forEach((c: any) => {
+        const name = isAr ? c.name_ar : c.name_en;
+        if (name?.toLowerCase().includes(q)) list.push({ label: name, type: 'category', id: c.id });
+      });
+    }
+    return list.slice(0, 8);
+  }, [searchQuery, history, isAr, categories]);
+
+  useEffect(() => { setActiveIdx(-1); }, [items.length]);
+
+  const submit = (term?: string) => {
+    const q = (term ?? searchQuery).trim();
+    if (q) addToSearchHistory(q);
     const params = new URLSearchParams();
-    if (searchQuery) params.set('q', searchQuery);
+    if (q) params.set('q', q);
     if (selectedCategory) params.set('category', selectedCategory);
     if (selectedCity) params.set('city', selectedCity);
     onSearch(params.toString());
+    setFocused(false);
   };
+
+  const handleSearch = (e: React.FormEvent) => { e.preventDefault(); submit(); };
+
+  const handleKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!focused || items.length === 0) return;
+    if (e.key === 'ArrowDown') { e.preventDefault(); setActiveIdx(p => (p + 1) % items.length); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); setActiveIdx(p => (p <= 0 ? items.length - 1 : p - 1)); }
+    else if (e.key === 'Enter' && activeIdx >= 0) { e.preventDefault(); submit(items[activeIdx].label); }
+    else if (e.key === 'Escape') { setFocused(false); }
+  };
+
+  const showDropdown = focused && items.length > 0;
 
   return (
     <form onSubmit={handleSearch} className="mt-8 sm:mt-12 max-w-4xl mx-auto">
       <div className="bg-white/[0.07] backdrop-blur-2xl border border-white/10 rounded-2xl sm:rounded-3xl p-2.5 sm:p-3.5 shadow-2xl shadow-black/30 ring-1 ring-inset ring-white/[0.05]">
         <div className="flex flex-col sm:flex-row gap-2">
-          <div className="flex-1 relative">
+          <div ref={wrapRef} className="flex-1 relative">
             <Search aria-hidden="true" className="absolute end-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-white/75" />
             <input
               type="text"
               value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
+              onChange={e => { setSearchQuery(e.target.value); setFocused(true); }}
+              onFocus={() => setFocused(true)}
+              onKeyDown={handleKey}
               placeholder={t('search.placeholder')}
               aria-label={isRTL ? 'كلمة البحث' : 'Search query'}
+              role="combobox"
+              aria-expanded={showDropdown}
+              aria-autocomplete="list"
               className="w-full pe-11 ps-3 sm:pe-12 sm:ps-4 py-3.5 sm:py-4 rounded-xl sm:rounded-2xl bg-white/[0.06] text-white placeholder:text-white/60 font-body text-sm border-0 outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-surface-nav focus:bg-white/[0.1] transition-all"
             />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => { setSearchQuery(''); setActiveIdx(-1); }}
+                aria-label={isAr ? 'مسح' : 'Clear'}
+                className="absolute end-12 sm:end-14 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/70 transition-colors"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            )}
+
+            {/* Autocomplete dropdown */}
+            {showDropdown && (
+              <div
+                role="listbox"
+                className="absolute top-full mt-2 inset-x-0 z-50 rounded-2xl bg-surface-nav/95 backdrop-blur-xl border border-white/10 shadow-2xl shadow-black/40 overflow-hidden animate-fade-in max-h-[360px] overflow-y-auto"
+              >
+                {!searchQuery && history.length > 0 && (
+                  <div className="px-3 pt-2.5 pb-1 flex items-center gap-1.5 text-[11px] text-white/55 font-body">
+                    <Clock className="w-3 h-3" />
+                    {isAr ? 'بحث سابق' : 'Recent'}
+                  </div>
+                )}
+                {!searchQuery && history.length === 0 && (
+                  <div className="px-3 pt-2.5 pb-1 flex items-center gap-1.5 text-[11px] text-white/55 font-body">
+                    <TrendingUp className="w-3 h-3" />
+                    {isAr ? 'الأكثر بحثاً' : 'Trending'}
+                  </div>
+                )}
+                {items.map((item, i) => (
+                  <button
+                    type="button"
+                    key={item.id}
+                    role="option"
+                    aria-selected={activeIdx === i}
+                    onMouseDown={(e) => { e.preventDefault(); submit(item.label); }}
+                    onMouseEnter={() => setActiveIdx(i)}
+                    className={`w-full flex items-center gap-3 px-3 sm:px-4 py-2.5 text-start transition-colors ${
+                      activeIdx === i ? 'bg-white/10' : 'hover:bg-white/[0.06]'
+                    }`}
+                  >
+                    <span className="w-6 flex items-center justify-center text-base">
+                      {item.type === 'history' ? <Clock className="w-3.5 h-3.5 text-white/55" />
+                        : item.type === 'category' ? <Building2 className="w-3.5 h-3.5 text-gold" />
+                        : <span aria-hidden>{item.icon}</span>}
+                    </span>
+                    <span className="flex-1 text-[13px] text-white/90 font-body truncate">{item.label}</span>
+                    {item.type === 'category' && (
+                      <span className="text-[10px] text-gold/85 bg-gold/10 border border-gold/20 px-1.5 py-0.5 rounded-md">
+                        {isAr ? 'قسم' : 'Category'}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           <select
             value={selectedCategory}
