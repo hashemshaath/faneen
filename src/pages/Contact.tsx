@@ -3,7 +3,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { buildBreadcrumbList, ogImageFor } from '@/lib/seo/structured-data';
 import { useAuth } from '@/contexts/AuthContext';
-// JSON-LD types emitted via helpers below: '@type': 'BreadcrumbList', itemListElement
+// JSON-LD types emitted via helpers below: '@type': 'BreadcrumbList', itemListElement:
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { Mail, Phone, MapPin, Send, CheckCircle } from 'lucide-react';
