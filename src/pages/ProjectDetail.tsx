@@ -71,7 +71,13 @@ const ProjectDetail = () => {
   usePageMeta({
     title: projectTitle || (isRTL ? 'تفاصيل المشروع' : 'Project Details'),
     description: projectDesc?.slice(0, 160) || '',
-    ogImage: project?.cover_image_url || ogImageFor('project'),
+    ogImage:
+      project?.cover_image_url ||
+      ogImageFor(id ? `project-${id}` : 'project', {
+        type: 'project',
+        title: projectTitle,
+        subtitle: projectDesc?.slice(0, 160) || undefined,
+      }),
     ogType: 'article',
     canonical: id ? `https://qitaat.com/projects/${id}` : undefined,
     ogTitle: projectTitle || undefined,
