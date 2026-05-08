@@ -4,12 +4,9 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { usePageMeta, useMultiJsonLd } from "@/hooks/usePageMeta";
 import {
   CalendarClock,
-  CreditCard,
   FolderOpen,
   GitBranch,
   Image as ImageIcon,
-  Loader2,
-  MessageSquare,
   Phone,
   Shield,
   Star,
