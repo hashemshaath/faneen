@@ -227,12 +227,6 @@ export const HeroSection = () => {
     const section = sectionRef.current;
     resetTimer();
 
-    const update = () => {
-      const hidden = typeof document !== 'undefined' && document.hidden;
-      // Pause if tab hidden OR hero scrolled out of view (intersection ref below)
-      autoplayPaused.current = hidden || autoplayPaused.current;
-      resetTimer();
-    };
     const onVisibility = () => {
       autoplayPaused.current = document.hidden ? true : false;
       resetTimer();
