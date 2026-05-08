@@ -52,6 +52,19 @@ export const SearchFilters = ({
     filters.priceMax > 0,
   ].filter(Boolean).length + selectedTags.length;
 
+  const selectedCategory = categories?.find(c => c.id === filters.categoryId);
+  const selectedCity = cities?.find(c => c.id === filters.cityId);
+  const sortLabels: Record<SearchFilterValues['sortBy'], { ar: string; en: string }> = {
+    relevance: { ar: 'الأكثر صلة', en: 'Relevance' },
+    rating: { ar: 'الأعلى تقييماً', en: 'Top rated' },
+    newest: { ar: 'الأحدث', en: 'Newest' },
+    name: { ar: 'الاسم', en: 'Name' },
+  };
+  const priceSummary = filters.priceMin || filters.priceMax
+    ? `${filters.priceMin || 0} – ${filters.priceMax || '∞'}`
+    : '';
+  const ratingSummary = filters.minRating > 0 ? `${filters.minRating}★+` : '';
+
   const CollapseIcon = isRTL
     ? (showFilters ? ChevronRight : ChevronLeft)
     : (showFilters ? ChevronLeft : ChevronRight);
@@ -102,7 +115,11 @@ export const SearchFilters = ({
         {showFilters && (
           <div className="mt-3 space-y-2.5 animate-fade-in lg:max-h-[calc(100vh-12rem)] lg:overflow-y-auto lg:pe-1 no-scrollbar">
             {/* Category */}
-            <FilterCard icon={Tag} label={t('search.category')}>
+            <FilterCard
+              icon={Tag}
+              label={t('search.category')}
+              summary={selectedCategory ? (language === 'ar' ? selectedCategory.name_ar : selectedCategory.name_en) : ''}
+            >
               <CategoryTree
                 categories={(categories || []) as any}
                 selectedId={filters.categoryId}
@@ -111,7 +128,11 @@ export const SearchFilters = ({
             </FilterCard>
 
             {/* City */}
-            <FilterCard icon={MapPin} label={t('search.city')}>
+            <FilterCard
+              icon={MapPin}
+              label={t('search.city')}
+              summary={selectedCity ? (language === 'ar' ? selectedCity.name_ar : selectedCity.name_en) : ''}
+            >
               <Select value={filters.cityId} onValueChange={v => onFilterChange('cityId', v)}>
                 <SelectTrigger className="w-full rounded-xl h-10 text-sm bg-background border-border/60 hover:border-accent/40 transition-colors">
                   <SelectValue placeholder={t('search.all_cities')} />
@@ -126,7 +147,7 @@ export const SearchFilters = ({
             </FilterCard>
 
             {/* Price Range */}
-            <FilterCard icon={Wallet} label={t('search.price_range')} hint={isRTL ? 'ر.س' : 'SAR'}>
+            <FilterCard icon={Wallet} label={t('search.price_range')} hint={isRTL ? 'ر.س' : 'SAR'} summary={priceSummary}>
               <PriceRangeInputs
                 priceMin={filters.priceMin}
                 priceMax={filters.priceMax}
@@ -139,7 +160,7 @@ export const SearchFilters = ({
             </FilterCard>
 
             {/* Rating */}
-            <FilterCard icon={Star} label={t('search.min_rating')}>
+            <FilterCard icon={Star} label={t('search.min_rating')} summary={ratingSummary}>
               <div className="grid grid-cols-3 gap-1.5">
                 {[0, 3, 4, 4.5, 5].map((r) => {
                   const active = filters.minRating === r;
@@ -200,7 +221,12 @@ export const SearchFilters = ({
             </label>
 
             {/* Sort */}
-            <FilterCard icon={ArrowUpDown} label={t('search.sort_by')}>
+            <FilterCard
+              icon={ArrowUpDown}
+              label={t('search.sort_by')}
+              summary={language === 'ar' ? sortLabels[filters.sortBy].ar : sortLabels[filters.sortBy].en}
+              defaultOpen={false}
+            >
               <Select value={filters.sortBy} onValueChange={(v) => onFilterChange('sortBy', v as SearchFilterValues['sortBy'])}>
                 <SelectTrigger className="w-full rounded-xl h-10 text-sm bg-background border-border/60 hover:border-accent/40 transition-colors">
                   <SelectValue />
@@ -230,21 +256,49 @@ export const SearchFilters = ({
 };
 
 const FilterCard = ({
-  icon: Icon, label, hint, children,
-}: { icon: React.ElementType; label: string; hint?: string; children: React.ReactNode }) => (
-  <section className="rounded-2xl bg-card border border-border/60 hover:border-accent/30 transition-colors shadow-sm overflow-hidden">
-    <header className="flex items-center justify-between gap-2 px-3.5 py-2.5 border-b border-border/50 bg-muted/30">
-      <div className="flex items-center gap-2 min-w-0">
-        <Icon className="w-4 h-4 text-accent shrink-0" />
-        <span className="text-[12.5px] font-heading font-bold text-foreground truncate">{label}</span>
-      </div>
-      {hint && (
-        <span className="text-[10px] font-body text-muted-foreground tech-content shrink-0 px-1.5 py-0.5 rounded-md bg-background/60 border border-border/50">{hint}</span>
-      )}
-    </header>
-    <div className="p-3">{children}</div>
-  </section>
-);
+  icon: Icon, label, hint, children, summary, defaultOpen = false,
+}: {
+  icon: React.ElementType;
+  label: string;
+  hint?: string;
+  children: React.ReactNode;
+  /** Compact value preview shown in the header when collapsed (mobile). */
+  summary?: string;
+  /** Whether this card is open by default on mobile. */
+  defaultOpen?: boolean;
+}) => {
+  const [open, setOpen] = useState(defaultOpen);
+  const hasSummary = Boolean(summary);
+  return (
+    <section className="rounded-2xl bg-card border border-border/60 hover:border-accent/30 transition-colors shadow-sm overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        aria-expanded={open}
+        className="lg:pointer-events-none w-full flex items-center justify-between gap-2 px-3.5 py-2.5 border-b border-border/50 bg-muted/30 lg:bg-muted/20 hover:bg-muted/50 lg:hover:bg-muted/20 transition-colors text-start"
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          <Icon className="w-4 h-4 text-accent shrink-0" />
+          <span className="text-[12.5px] font-heading font-bold text-foreground truncate">{label}</span>
+        </div>
+        <div className="flex items-center gap-1.5 shrink-0">
+          {hasSummary && !open && (
+            <span className="lg:hidden max-w-[120px] truncate text-[11px] font-body font-semibold text-accent px-2 py-0.5 rounded-md bg-accent/10 border border-accent/20">
+              {summary}
+            </span>
+          )}
+          {hint && (
+            <span className="text-[10px] font-body text-muted-foreground tech-content px-1.5 py-0.5 rounded-md bg-background/60 border border-border/50">{hint}</span>
+          )}
+          <ChevronDown
+            className={`lg:hidden w-4 h-4 text-muted-foreground transition-transform duration-300 ${open ? 'rotate-180' : ''}`}
+          />
+        </div>
+      </button>
+      <div className={`${open ? 'block' : 'hidden'} lg:block p-3`}>{children}</div>
+    </section>
+  );
+};
 
 /* Debounced price inputs — keeps typing snappy and only commits to the parent
    filter state after the user pauses (300ms). */
