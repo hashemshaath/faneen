@@ -1,8 +1,9 @@
 import { useLanguage } from '@/i18n/LanguageContext';
+import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Navbar } from '@/components/layout/Navbar';
 import { SearchAutocomplete } from './SearchAutocomplete';
-import { TrendingUp, BadgeCheck, Star, Heart, CreditCard } from 'lucide-react';
+import { TrendingUp, BadgeCheck, Star, Heart, CreditCard, LayoutGrid, ChevronDown, ChevronUp } from 'lucide-react';
 import { useBusinessFavorites } from '@/hooks/useBusinessFavorites';
 
 interface SearchHeaderProps {
@@ -28,6 +29,8 @@ export const SearchHeader = ({
 }: SearchHeaderProps) => {
   const { t, language, isRTL } = useLanguage();
   const { count: favCount } = useBusinessFavorites();
+  const [catsOpen, setCatsOpen] = useState(false);
+  const [catsExpanded, setCatsExpanded] = useState(false);
 
   const quickChips: { key: string; label: string; active: boolean; icon: React.ElementType; onClick: () => void }[] = [
     ...(onToggleVerified ? [{
@@ -98,20 +101,61 @@ export const SearchHeader = ({
             </div>
           )}
 
-          {/* Category pills with scroll indicator */}
+          {/* Categories — collapsible: single horizontal scroll line by default */}
           {categories && categories.length > 0 && (
-            <div className="mt-5 sm:mt-7">
-              <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
-                {categories.map(c => (
-                  <button
-                    key={c.id}
-                    onClick={() => onCategoryClick?.(c.id)}
-                    className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-[10px] sm:text-xs font-body text-surface-nav-foreground/80 border border-surface-nav-foreground/15 hover:bg-accent/15 hover:border-accent/40 hover:text-accent active:scale-95 transition-all duration-200 backdrop-blur-sm"
+            <div className="mt-4 sm:mt-6">
+              <button
+                type="button"
+                onClick={() => setCatsOpen(v => !v)}
+                aria-expanded={catsOpen}
+                className="mx-auto flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-surface-nav-foreground/[0.06] border border-surface-nav-foreground/15 text-surface-nav-foreground/85 hover:bg-accent/15 hover:border-accent/40 hover:text-accent transition-all text-[11px] sm:text-xs font-body"
+              >
+                <LayoutGrid className="w-3.5 h-3.5" />
+                {isRTL ? 'التخصصات' : 'Specialties'}
+                <span className="text-[10px] opacity-70 tech-content">({categories.length})</span>
+                {catsOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+              </button>
+
+              {catsOpen && (
+                <div className="mt-3 animate-fade-in">
+                  <div
+                    className={
+                      catsExpanded
+                        ? 'flex flex-wrap items-center justify-center gap-1.5 sm:gap-2'
+                        : 'flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar -mx-4 px-4 snap-x snap-mandatory scroll-px-4'
+                    }
                   >
-                    {language === 'ar' ? c.name_ar : c.name_en}
-                  </button>
-                ))}
-              </div>
+                    {categories.map(c => (
+                      <button
+                        key={c.id}
+                        onClick={() => onCategoryClick?.(c.id)}
+                        className="shrink-0 snap-start px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-body text-surface-nav-foreground/80 border border-surface-nav-foreground/15 hover:bg-accent/15 hover:border-accent/40 hover:text-accent active:scale-95 transition-all duration-200 backdrop-blur-sm whitespace-nowrap"
+                      >
+                        {language === 'ar' ? c.name_ar : c.name_en}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="mt-2 flex justify-center">
+                    <button
+                      type="button"
+                      onClick={() => setCatsExpanded(v => !v)}
+                      className="text-[10px] sm:text-[11px] font-body text-surface-nav-foreground/65 hover:text-accent inline-flex items-center gap-1"
+                    >
+                      {catsExpanded ? (
+                        <>
+                          <ChevronUp className="w-3 h-3" />
+                          {isRTL ? 'سطر واحد' : 'Single line'}
+                        </>
+                      ) : (
+                        <>
+                          <ChevronDown className="w-3 h-3" />
+                          {isRTL ? 'عرض الكل' : 'Show all'}
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
