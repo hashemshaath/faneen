@@ -181,7 +181,7 @@ export const HeroSection = () => {
   const [current, setCurrent] = useState(0);
   // Only the previous slide stays mounted briefly to crossfade out.
   // This caps DOM <img> count to 2 instead of `slides.length`.
-  const [prev, setPrev] = useState<number | null>(null);
+  const [prevIdx, setPrevIdx] = useState<number | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval>>();
   const parallaxY = useRef(0);
   const rafRef = useRef<number>();
@@ -279,10 +279,10 @@ export const HeroSection = () => {
   const goTo = useCallback((idx: number) => { setCurrent(idx); resetTimer(); }, [resetTimer]);
   useEffect(() => {
     const p = currentRef.current;
-    if (p !== current) setPrev(p);
+    if (p !== current) setPrevIdx(p);
     currentRef.current = current;
     // Unmount the outgoing slide once the 1s opacity transition finishes.
-    const t = setTimeout(() => setPrev(null), 1100);
+    const t = setTimeout(() => setPrevIdx(null), 1100);
     return () => clearTimeout(t);
   }, [current]);
   const prev = useCallback(() => goTo((current - 1 + slides.length) % slides.length), [current, goTo]);
