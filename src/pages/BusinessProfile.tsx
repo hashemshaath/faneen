@@ -94,6 +94,61 @@ const BusinessProfile = () => {
 
   const structuredDataArray = useMemo(() => {
     if (!business) return null;
+
+    // ── sameAs enrichment ──
+    // Only the `website` column exists in the public `businesses` schema today;
+    // a future migration could add dedicated social_links. To stay forward-
+    // compatible we accept an optional `business.social_links` array of strings
+    // as well, but never read private contact fields (phone/email).
+    //
+    // Validation rules per URL candidate:
+    //   1. Must parse as a valid URL via the WHATWG `URL` constructor.
+    //   2. Protocol must be exactly `https:` (no http, javascript:, data:, etc.).
+    //   3. Hostname must be either:
+    //        - the official website (any host, but stripped of credentials), OR
+    //        - on the whitelist of public social platforms below.
+    //   4. No userinfo (user:pass@), no localhost / IP literals, no fragments
+    //      that look like tracking junk longer than 200 chars.
+    //   5. Trimmed, deduplicated, capped at 8 entries.
+    const SOCIAL_HOSTS = [
+      'linkedin.com', 'x.com', 'twitter.com', 'instagram.com',
+      'facebook.com', 'fb.com', 'youtube.com', 'youtu.be',
+    ];
+    const isPublicSocial = (host: string) =>
+      SOCIAL_HOSTS.some((h) => host === h || host.endsWith(`.${h}`));
+    const sanitizeUrl = (raw: unknown, requireSocial: boolean): string | null => {
+      if (typeof raw !== 'string') return null;
+      const trimmed = raw.trim();
+      if (!trimmed || trimmed.length > 300) return null;
+      let parsed: URL;
+      try { parsed = new URL(trimmed); } catch { return null; }
+      if (parsed.protocol !== 'https:') return null;
+      if (parsed.username || parsed.password) return null;
+      const host = parsed.hostname.toLowerCase();
+      if (!host || host === 'localhost') return null;
+      if (/^\d{1,3}(\.\d{1,3}){3}$/.test(host)) return null; // IPv4
+      if (host.includes(':')) return null; // IPv6
+      if (requireSocial && !isPublicSocial(host)) return null;
+      // Strip fragments to keep the canonical profile URL clean.
+      parsed.hash = '';
+      return parsed.toString();
+    };
+
+    const candidates: Array<{ raw: unknown; requireSocial: boolean }> = [
+      { raw: (business as { website?: unknown }).website, requireSocial: false },
+    ];
+    const extraSocials = (business as { social_links?: unknown }).social_links;
+    if (Array.isArray(extraSocials)) {
+      for (const link of extraSocials) candidates.push({ raw: link, requireSocial: true });
+    }
+    const sameAs = Array.from(
+      new Set(
+        candidates
+          .map((c) => sanitizeUrl(c.raw, c.requireSocial))
+          .filter((u): u is string => !!u),
+      ),
+    ).slice(0, 8);
+
     const localBusiness: Record<string, any> = {
       '@context': 'https://schema.org',
       '@type': 'LocalBusiness',
@@ -108,6 +163,7 @@ const BusinessProfile = () => {
       // Visitors see the contact details inside the page (rendered client-side).
       telephone: undefined,
       email: undefined,
+      ...(sameAs.length > 0 ? { sameAs } : {}),
       address: {
         '@type': 'PostalAddress',
         streetAddress: business.address || undefined,
