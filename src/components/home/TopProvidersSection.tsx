@@ -21,7 +21,7 @@ type Biz = {
 };
 
 const ProviderSkeleton = () => (
-  <div className="flex flex-col rounded-2xl border border-border/40 bg-card card-pad-md">
+  <div className="card-ds card-pad-md flex flex-col">
     <div className="flex items-start gap-3 mb-4">
       <Skeleton className="w-14 h-14 rounded-2xl shrink-0" />
       <div className="flex-1 space-y-2 min-w-0">
@@ -141,7 +141,7 @@ export const TopProvidersSection = () => {
                     key={biz.id}
                     to={`/${biz.username}`}
                     onClick={() => track("card_click", biz.id, biz.username)}
-                    className={`group relative flex flex-col rounded-2xl border border-border/40 dark:border-border/20 bg-card card-pad-md hover:border-accent/40 hover:shadow-lg hover:shadow-accent/5 hover-lift transition-all duration-300 ${
+                    className={`card-ds card-interactive card-pad-md group relative flex flex-col hover:shadow-accent/5 hover-lift ${
                       isVisible ? "animate-card-slide-up" : "opacity-0"
                     }`}
                     style={{ animationDelay: `${i * 70}ms`, animationFillMode: "both" }}
