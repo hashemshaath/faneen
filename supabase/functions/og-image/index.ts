@@ -196,10 +196,12 @@ function detectRtl(input: string): boolean {
 // ── PNG rasterization (resvg-wasm + bundled fonts) ─────────────────────────
 
 const RESVG_WASM_URL = "https://cdn.jsdelivr.net/npm/@resvg/resvg-wasm/index_bg.wasm";
+// Stable TTF sources hosted under the google/fonts and notofonts repos.
+// Both repos serve raw binary fonts via raw.githubusercontent.com (HTTP 200).
 const ARABIC_FONT_URL =
-  "https://github.com/googlefonts/noto-fonts/raw/main/hinted/ttf/NotoSansArabic/NotoSansArabic-Bold.ttf";
+  "https://raw.githubusercontent.com/notofonts/noto-fonts/main/hinted/ttf/NotoSansArabic/NotoSansArabic-Bold.ttf";
 const LATIN_FONT_URL =
-  "https://github.com/rsms/inter/raw/master/docs/font-files/Inter-Bold.otf";
+  "https://raw.githubusercontent.com/google/fonts/main/ofl/inter/Inter%5Bopsz%2Cwght%5D.ttf";
 
 let wasmReady: Promise<void> | null = null;
 let fontBuffersPromise: Promise<Uint8Array[]> | null = null;
