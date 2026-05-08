@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { Search, Star, Shield, Building2, ChevronLeft, ChevronRight, MapPin } from "lucide-react";
+import { Search, Star, Shield, Building2, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useEffect, useRef, useState, useCallback, memo, useMemo, lazy, Suspense } from "react";
