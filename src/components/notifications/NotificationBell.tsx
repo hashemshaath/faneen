@@ -126,8 +126,17 @@ export const NotificationBell = () => {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="w-5 h-5" />
+        <Button
+          variant="ghost"
+          size="icon"
+          className="relative"
+          aria-label={
+            isRTL
+              ? `الإشعارات${unreadCount > 0 ? ` — ${unreadCount} غير مقروء` : ''}`
+              : `Notifications${unreadCount > 0 ? ` — ${unreadCount} unread` : ''}`
+          }
+        >
+          <Bell aria-hidden="true" className="w-5 h-5" />
           {unreadCount > 0 && (
             <span className={`absolute -top-0.5 -end-0.5 w-5 h-5 text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse ${
               urgentUnread > 0
@@ -248,8 +257,9 @@ export const NotificationBell = () => {
                           variant="ghost" size="icon"
                           className="w-6 h-6 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
                           onClick={e => { e.stopPropagation(); deleteNotification.mutate(n.id); }}
+                          aria-label={isRTL ? 'حذف الإشعار' : 'Delete notification'}
                         >
-                          <Trash2 className="w-3 h-3" />
+                          <Trash2 aria-hidden="true" className="w-3 h-3" />
                         </Button>
                       </div>
                     </div>
