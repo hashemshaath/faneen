@@ -382,6 +382,7 @@ const BusinessProfile = () => {
               <div className="flex gap-2 self-start">
                 <Button
                   variant="hero"
+                  size="appLg"
                   className="gap-2"
                   onClick={() => contactMutation.mutate()}
                   disabled={contactMutation.isPending}
@@ -391,6 +392,7 @@ const BusinessProfile = () => {
                 </Button>
                 <Button
                   variant="outline"
+                  size="appLg"
                   className="gap-2"
                   onClick={() => setBookingOpen(true)}
                 >
