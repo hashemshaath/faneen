@@ -170,7 +170,7 @@ export const LatestProjectsSection = () => {
                     </div>
 
                     {/* Content */}
-                    <div className="p-4 sm:p-5 space-y-3">
+                    <div className="card-pad-md space-y-3">
                       <h3 className="font-heading font-bold text-sm sm:text-base line-clamp-1 group-hover:text-accent transition-colors">
                         {language === 'ar' ? p.title_ar : (p.title_en || p.title_ar)}
                       </h3>
@@ -185,13 +185,13 @@ export const LatestProjectsSection = () => {
                       <div className="flex flex-wrap gap-2 text-[11px] text-muted-foreground">
                         {p.project_cost && (
                           <span className="flex items-center gap-1 bg-muted/80 dark:bg-muted/40 px-2.5 py-1 rounded-full">
-                            <DollarSign className="w-3 h-3 text-accent" />
+                            <DollarSign className="ic-2xs text-accent" />
                             {Number(p.project_cost).toLocaleString()} SAR
                           </span>
                         )}
                         {p.duration_days && (
                           <span className="flex items-center gap-1 bg-muted/80 dark:bg-muted/40 px-2.5 py-1 rounded-full">
-                            <Clock className="w-3 h-3 text-accent" />
+                            <Clock className="ic-2xs text-accent" />
                             {p.duration_days} {isRTL ? 'يوم' : 'days'}
                           </span>
                         )}
