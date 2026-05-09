@@ -17,6 +17,8 @@ import { template as maintenanceStatusUpdate } from './maintenance-status-update
 import { template as paymentReminder } from './payment-reminder.tsx'
 import { template as welcomeSignup } from './welcome-signup.tsx'
 import { template as contractSigned } from './contract-signed.tsx'
+import { template as leadConfirmation } from './lead-confirmation.tsx'
+import { template as leadNotification } from './lead-notification.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'booking-confirmation': bookingConfirmation,
@@ -27,4 +29,6 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'payment-reminder': paymentReminder,
   'welcome-signup': welcomeSignup,
   'contract-signed': contractSigned,
+  'lead-confirmation': leadConfirmation,
+  'lead-notification': leadNotification,
 }
