@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import * as Icons from 'lucide-react';
 import {
   Star, ArrowLeft, ArrowRight, CheckCircle2, XCircle, Sparkles,
-  TrendingUp, ShieldCheck, Zap, Clock, Users, Award, BadgeCheck,
+  TrendingUp, ShieldCheck, Zap, Clock, Award, BadgeCheck,
   Factory, Store, Wrench, Quote,
 } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
@@ -13,7 +13,6 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { useLandingTracking } from '@/hooks/useLandingTracking';
