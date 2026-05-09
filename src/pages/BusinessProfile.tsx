@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { usePageMeta, useMultiJsonLd } from "@/hooks/usePageMeta";
@@ -44,6 +44,7 @@ import { useReviews } from "@/components/business-profile/business-profile.data"
 import { BnplBadges } from "@/components/bnpl/BnplBadges";
 import { BookingWidget } from "@/components/booking/BookingWidget";
 import { buildBreadcrumbList, buildService, ogImageFor } from "@/lib/seo/structured-data";
+import { track } from "@/lib/analytics-events";
 // JSON-LD types emitted via helpers below: '@type': 'BreadcrumbList', itemListElement:
 
 const BusinessProfile = () => {
@@ -64,6 +65,17 @@ const BusinessProfile = () => {
   const businessDesc = business ? (getLocalizedValue(language, business.description_ar, business.description_en) || getLocalizedValue(language, business.short_description_ar, business.short_description_en) || '') : '';
   const categoryName = business?.categories ? getLocalizedValue(language, business.categories.name_ar, business.categories.name_en) : '';
   const cityName = business?.cities ? getLocalizedValue(language, business.cities.name_ar, business.cities.name_en) : '';
+
+  // business_profile_view — fires once per profile load (slug-based).
+  useEffect(() => {
+    if (!business?.username) return;
+    track.businessProfileView({
+      business_slug: business.username,
+      category_slug: business.categories ? (business.categories as { slug?: string }).slug : undefined,
+      category_name: categoryName || undefined,
+      city: cityName || undefined,
+    });
+  }, [business?.username, business?.categories, categoryName, cityName]);
 
   const seoTitle = business
     ? `${businessName}${categoryName ? ` — ${categoryName}` : ''}${cityName ? ` في ${cityName}` : ''} | قِطاعات`
