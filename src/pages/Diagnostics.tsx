@@ -12,7 +12,7 @@ import {
 } from "@/lib/diagnostics";
 import {
   Activity, Trash2, Download, Copy, RefreshCw, Home,
-  AlertTriangle, AlertCircle, Info, Globe, Bug, Zap,
+  AlertTriangle, AlertCircle, Info, Globe, Bug, Zap, ShieldAlert, Puzzle,
 } from "lucide-react";
 import { useNoIndex } from "@/hooks/useNoIndex";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -22,6 +22,8 @@ const SOURCE_ICONS: Record<DiagSource, React.ReactNode> = {
   error: <AlertTriangle className="w-3.5 h-3.5" />,
   rejection: <Zap className="w-3.5 h-3.5" />,
   network: <Globe className="w-3.5 h-3.5" />,
+  csp: <ShieldAlert className="w-3.5 h-3.5" />,
+  extension: <Puzzle className="w-3.5 h-3.5" />,
 };
 
 const LEVEL_STYLES: Record<DiagLevel, string> = {
