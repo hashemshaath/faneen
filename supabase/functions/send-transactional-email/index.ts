@@ -21,6 +21,60 @@ const corsHeaders = {
     'authorization, x-client-info, apikey, content-type',
 }
 
+// Map template name → notification preference category column on
+// `notification_preferences`. If no entry, the email is treated as
+// transactional/system and only the master `email_enabled` flag applies.
+const TEMPLATE_CATEGORY: Record<string, string> = {
+  'welcome-signup': 'email_marketing',
+  'lead-confirmation': 'email_leads',
+  'lead-notification': 'email_leads',
+  'booking-confirmation': 'email_bookings',
+  'maintenance-status-update': 'email_maintenance_updates',
+  'contract-signed': 'email_contracts',
+  'contract-status-update': 'email_contracts',
+  'payment-reminder': 'email_contracts',
+  'contact-confirmation': 'email_messages',
+  'contact-admin-notification': 'email_system',
+}
+
+function buildTrackingUrl(supabaseUrl: string, fn: string, params: Record<string, string>): string {
+  const u = new URL(`${supabaseUrl}/functions/v1/${fn}`)
+  for (const [k, v] of Object.entries(params)) u.searchParams.set(k, v)
+  return u.toString()
+}
+
+// Inject an open-tracking pixel and rewrite anchor href values to go through
+// the click-tracking redirect. Skips mailto:, tel:, anchor (#), unsubscribe
+// links, and already-tracked URLs.
+function injectTracking(html: string, supabaseUrl: string, messageId: string): string {
+  let out = html
+  // Rewrite <a href="..."> targets
+  out = out.replace(/<a\s+([^>]*?)href=("|')([^"']+)("|')([^>]*)>/gi, (m, pre, q1, href, _q2, post) => {
+    const lower = href.toLowerCase()
+    if (
+      lower.startsWith('mailto:') ||
+      lower.startsWith('tel:') ||
+      lower.startsWith('#') ||
+      lower.includes('/handle-email-unsubscribe') ||
+      lower.includes('/email-track-click') ||
+      lower.includes('list-unsubscribe')
+    ) {
+      return m
+    }
+    const tracked = buildTrackingUrl(supabaseUrl, 'email-track-click', { m: messageId, u: href })
+    return `<a ${pre}href="${tracked}"${post.replace(/^"/, '')}>`
+  })
+
+  const pixelUrl = buildTrackingUrl(supabaseUrl, 'email-track-open', { m: messageId })
+  const pixelImg = `<img src="${pixelUrl}" width="1" height="1" alt="" border="0" style="display:block;width:1px;height:1px;border:0;outline:none;" />`
+  if (out.includes('</body>')) {
+    out = out.replace('</body>', `${pixelImg}</body>`)
+  } else {
+    out = `${out}${pixelImg}`
+  }
+  return out
+}
+
 // Generate a cryptographically random 32-byte hex token
 function generateToken(): string {
   const bytes = new Uint8Array(32)
@@ -165,6 +219,46 @@ Deno.serve(async (req) => {
     )
   }
 
+  // 2b. Honor user notification_preferences when we can match the recipient
+  // to a profile. Anonymous recipients (e.g. lead form submitters) are
+  // unaffected and continue to receive transactional confirmations.
+  try {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('user_id')
+      .or(`email.eq.${normalizedEmailKey(normalizedEmailRaw(effectiveRecipient))},login_email.eq.${normalizedEmailKey(normalizedEmailRaw(effectiveRecipient))}`)
+      .limit(1)
+      .maybeSingle()
+
+    if (profile?.user_id) {
+      const { data: prefs } = await supabase
+        .from('notification_preferences')
+        .select('*')
+        .eq('user_id', profile.user_id)
+        .maybeSingle()
+      if (prefs) {
+        const categoryCol = TEMPLATE_CATEGORY[templateName]
+        const masterOff = prefs.email_enabled === false
+        const categoryOff = categoryCol ? (prefs as Record<string, unknown>)[categoryCol] === false : false
+        if (masterOff || categoryOff) {
+          await supabase.from('email_send_log').insert({
+            message_id: messageId,
+            template_name: templateName,
+            recipient_email: effectiveRecipient,
+            status: 'suppressed',
+            error_message: masterOff ? 'user_disabled_email' : `user_disabled_${categoryCol}`,
+          })
+          return new Response(
+            JSON.stringify({ success: false, reason: 'user_preference_opt_out' }),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+          )
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('preference check failed (continuing)', e)
+  }
+
   // 3. Get or create unsubscribe token (one token per email address)
   const normalizedEmail = effectiveRecipient.toLowerCase()
   let unsubscribeToken: string
@@ -283,9 +377,11 @@ Deno.serve(async (req) => {
   }
 
   // 4. Render React Email template to HTML and plain text
-  const html = await renderAsync(
+  let html = await renderAsync(
     React.createElement(template.component, templateData)
   )
+  // Inject tracking (open pixel + rewritten click links).
+  html = injectTracking(html, supabaseUrl, messageId)
   const plainText = await renderAsync(
     React.createElement(template.component, templateData),
     { plainText: true }
