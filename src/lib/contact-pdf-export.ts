@@ -77,7 +77,7 @@ export const exportContactsCSV = (
   const headers = fields.map(f => fieldLabel(f, isRTL));
   const lines = rows.map(r =>
     fields.map(f => {
-      const v = (r as Record<string, unknown>)[f];
+      const v = (r as unknown as Record<string, unknown>)[f];
       const s = fmt(v).replace(/[\r\n]+/g, ' ').replace(/"/g, '""');
       return `"${s}"`;
     }).join(','),
@@ -126,7 +126,7 @@ export const exportContactsPDF = async (
   const head = [fields.map(f => fieldLabel(f, isRTL))];
   const body = rows.map(r =>
     fields.map(f => {
-      const v = (r as Record<string, unknown>)[f];
+      const v = (r as unknown as Record<string, unknown>)[f];
       const s = fmt(v);
       // Truncate long fields for table layout
       if (f === 'message' || f === 'ai_summary' || f === 'internal_notes') {
@@ -141,8 +141,8 @@ export const exportContactsPDF = async (
     head,
     body,
     theme: 'grid',
-    styles: { ...styles.styles, fontSize: 7, cellPadding: 1.5 },
-    headStyles: { ...styles.headStyles, fontSize: 8 },
+    styles: { ...styles, fontSize: 7, cellPadding: 1.5 },
+    headStyles: { ...styles, fontSize: 8, fillColor: [40, 40, 40], textColor: 255 },
     didDrawPage: () => {
       const pageCount = doc.getNumberOfPages();
       const current = doc.getCurrentPageInfo().pageNumber;
