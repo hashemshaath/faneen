@@ -26,6 +26,52 @@ const buffer: DiagEntry[] = [];
 const listeners = new Set<() => void>();
 let installed = false;
 
+// ─────────────────────────────────────────────────────────────────────────
+// Extension noise classifier
+//
+// Browser extensions (Tag Assistant, ad blockers, screenshot tools, page
+// translators, password managers, etc.) routinely inject scripts into every
+// page and crash inside their own service-worker messaging. Their errors
+// pollute the console and the `/diagnostics` view, masking real Qitaat bugs.
+//
+// We pattern-match these and reclassify them as `source: "extension"` /
+// `level: "info"`, AND suppress their forwarding to the developer console.
+// Anything that isn't recognized as extension noise is treated as a
+// Qitaat-origin error, augmented with a stack trace, and forwarded normally.
+// ─────────────────────────────────────────────────────────────────────────
+
+const EXTENSION_PATTERNS: RegExp[] = [
+  /Unchecked runtime\.lastError/i,
+  /Could not establish connection\. Receiving end does not exist/i,
+  /The message port closed before a response was received/i,
+  /Extension context invalidated/i,
+  /\bchrome-extension:\/\//i,
+  /\bmoz-extension:\/\//i,
+  /\bsafari-web-extension:\/\//i,
+  /\bsafari-extension:\/\//i,
+  /\bedge-extension:\/\//i,
+  // Common injected helper filenames seen in the wild
+  /\bshare-modal\.js\b/i,
+  /\bcontentScript(\.bundle)?\.js\b/i,
+  /\binpage\.js\b/i,
+  /\boverlay_bundle\.js\b/i,
+];
+
+export function isExtensionNoise(...parts: Array<string | undefined | null>): boolean {
+  const text = parts.filter(Boolean).join(" \n ");
+  if (!text) return false;
+  return EXTENSION_PATTERNS.some((re) => re.test(text));
+}
+
+function captureStack(skip = 2): string {
+  const raw = new Error("diag-stack").stack || "";
+  return raw.split("\n").slice(skip).join("\n");
+}
+
+/** Counter exposed for tests / Diagnostics page. */
+const suppressed = { extension: 0 };
+export function getSuppressedCounts() { return { ...suppressed }; }
+
 function notify() {
   listeners.forEach((l) => {
     try { l(); } catch { /* ignore */ }
@@ -65,22 +111,45 @@ export function installDiagnostics() {
   // ── console.error / console.warn
   const origError = console.error.bind(console);
   const origWarn = console.warn.bind(console);
-  console.error = (...args: unknown[]) => {
-    push({ source: "console", level: "error", ...formatArgs(args) });
-    origError(...args);
-  };
-  console.warn = (...args: unknown[]) => {
-    push({ source: "console", level: "warn", ...formatArgs(args) });
-    origWarn(...args);
-  };
+  const wrapConsole = (level: DiagLevel, orig: (...a: unknown[]) => void) =>
+    (...args: unknown[]) => {
+      const { message, detail } = formatArgs(args);
+      if (isExtensionNoise(message, detail)) {
+        suppressed.extension++;
+        push({ source: "extension", level: "info", message, detail });
+        // Suppress: do NOT forward to the real console.
+        return;
+      }
+      // Qitaat-origin (or unknown): augment with a stack trace if missing.
+      const hasStack = !!detail && /\n\s+at\s+/.test(detail);
+      const finalDetail = hasStack ? detail : `${detail ?? message}\n${captureStack(3)}`;
+      push({ source: "console", level, message, detail: finalDetail });
+      orig(...args);
+    };
+  console.error = wrapConsole("error", origError);
+  console.warn = wrapConsole("warn", origWarn);
 
   // ── window.onerror
   window.addEventListener("error", (ev: ErrorEvent) => {
+    const msg = ev.message || "Uncaught error";
+    const stack = ev.error instanceof Error ? (ev.error.stack || ev.error.message) : safeStringify(ev.error);
+    if (isExtensionNoise(msg, stack, ev.filename)) {
+      suppressed.extension++;
+      push({
+        source: "extension",
+        level: "info",
+        message: msg.slice(0, 240),
+        detail: [`filename: ${ev.filename || "(none)"}`, `line:col: ${ev.lineno || 0}:${ev.colno || 0}`, stack].filter(Boolean).join("\n"),
+        url: ev.filename,
+      });
+      ev.preventDefault?.();
+      return;
+    }
     push({
       source: "error",
       level: "error",
-      message: ev.message || "Uncaught error",
-      detail: ev.error instanceof Error ? (ev.error.stack || ev.error.message) : safeStringify(ev.error),
+      message: msg,
+      detail: stack,
       url: ev.filename,
     });
   });
@@ -88,12 +157,15 @@ export function installDiagnostics() {
   // ── unhandledrejection
   window.addEventListener("unhandledrejection", (ev: PromiseRejectionEvent) => {
     const r = ev.reason;
-    push({
-      source: "rejection",
-      level: "error",
-      message: r instanceof Error ? r.message : safeStringify(r).split("\n")[0].slice(0, 240),
-      detail: r instanceof Error ? (r.stack || r.message) : safeStringify(r),
-    });
+    const message = r instanceof Error ? r.message : safeStringify(r).split("\n")[0].slice(0, 240);
+    const detail = r instanceof Error ? (r.stack || r.message) : safeStringify(r);
+    if (isExtensionNoise(message, detail)) {
+      suppressed.extension++;
+      push({ source: "extension", level: "info", message, detail });
+      ev.preventDefault?.();
+      return;
+    }
+    push({ source: "rejection", level: "error", message, detail });
   });
 
   // ── CSP violations (Content-Security-Policy reports)
@@ -118,30 +190,7 @@ export function installDiagnostics() {
     });
   });
 
-  // ── chrome.runtime.lastError noise (browser extensions like Tag Assistant
-  //    emit "Could not establish connection. Receiving end does not exist."
-  //    via the global error event with no filename). We capture them so the
-  //    /diagnostics view can show provenance, but classify them as "extension"
-  //    so they don't get mixed up with real Qitaat runtime errors.
-  window.addEventListener("error", (ev: ErrorEvent) => {
-    const msg = ev.message || "";
-    const isExt =
-      /Could not establish connection\. Receiving end does not exist/i.test(msg) ||
-      /Extension context invalidated/i.test(msg) ||
-      (typeof ev.filename === "string" && /^chrome-extension:\/\//.test(ev.filename));
-    if (!isExt) return;
-    push({
-      source: "extension",
-      level: "warn",
-      message: msg.slice(0, 240),
-      detail: [
-        `filename: ${ev.filename || "(none)"}`,
-        `line:col: ${ev.lineno || 0}:${ev.colno || 0}`,
-        ev.error instanceof Error ? (ev.error.stack || ev.error.message) : "",
-      ].filter(Boolean).join("\n"),
-      url: ev.filename,
-    });
-  });
+  // (extension classifier is integrated into the primary error/console hooks above)
 
   // ── fetch instrumentation
   if (typeof window.fetch === "function") {
