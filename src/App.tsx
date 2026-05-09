@@ -98,6 +98,7 @@ const Forbidden = lazyRetry(() => import("./pages/Forbidden"));
 const Unsubscribe = lazyRetry(() => import("./pages/Unsubscribe"));
 const Diagnostics = lazyRetry(() => import("./pages/Diagnostics"));
 const ForProviders = lazyRetry(() => import("./pages/ForProviders"));
+const DashboardCommunicationPreferences = lazyRetry(() => import("./pages/dashboard/DashboardCommunicationPreferences"));
 const AdminProviderLanding = lazyRetry(() => import("./pages/admin/AdminProviderLanding"));
 const AdminAnalyticsSettings = lazyRetry(() => import("./pages/admin/AdminAnalyticsSettings"));
 
@@ -168,6 +169,7 @@ const AppRoutes = () => (
           <Route path="/dashboard/notifications" element={<ProtectedRoute><DashboardNotifications /></ProtectedRoute>} />
           <Route path="/dashboard/bookings" element={<ProtectedRoute><DashboardBookings /></ProtectedRoute>} />
           <Route path="/dashboard/settings" element={<ProtectedRoute><DashboardSettings /></ProtectedRoute>} />
+          <Route path="/dashboard/communication-preferences" element={<ProtectedRoute><DashboardCommunicationPreferences /></ProtectedRoute>} />
 
           <Route path="/dashboard/services" element={<ProtectedRoute requireProvider><DashboardServices /></ProtectedRoute>} />
           <Route path="/dashboard/portfolio" element={<ProtectedRoute requireProvider><DashboardPortfolio /></ProtectedRoute>} />

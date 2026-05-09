@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import {
   Mail, AlertTriangle, CheckCircle2, XCircle, Inbox, ShieldAlert,
-  Loader2, RefreshCw, Bell, BellOff, Search, Send, Radio,
+  Loader2, RefreshCw, Bell, BellOff, Search, Send, Radio, MousePointerClick, Eye,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
@@ -39,6 +39,10 @@ interface EmailLogRow {
   status: string;
   error_message: string | null;
   created_at: string;
+  opens_count?: number;
+  clicks_count?: number;
+  first_opened_at?: string | null;
+  first_clicked_at?: string | null;
 }
 
 interface AlertRow {
@@ -156,7 +160,7 @@ const AdminEmailDeliverability: React.FC = () => {
     queryFn: async () => {
       let q = supabase
         .from('email_send_log')
-        .select('message_id, template_name, recipient_email, status, error_message, created_at')
+        .select('message_id, template_name, recipient_email, status, error_message, created_at, opens_count, clicks_count, first_opened_at, first_clicked_at')
         .gte('created_at', sinceIso)
         .order('created_at', { ascending: false })
         .limit(500);
@@ -181,6 +185,18 @@ const AdminEmailDeliverability: React.FC = () => {
     }
     return out.slice(0, 100);
   }, [logsRaw]);
+
+  // Engagement stats (opens / clicks)
+  const { data: engagement } = useQuery({
+    queryKey: ['email-engagement', windowMinutes],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_email_engagement_stats', { _window_minutes: windowMinutes });
+      if (error) throw error;
+      const row = Array.isArray(data) ? data[0] : data;
+      return row as { delivered: number; unique_opens: number; unique_clicks: number; total_opens: number; total_clicks: number; open_rate: number; click_rate: number } | null;
+    },
+    refetchInterval: 60_000,
+  });
 
   // Distinct templates for filter
   const templates = useMemo(() => {
@@ -323,6 +339,14 @@ const AdminEmailDeliverability: React.FC = () => {
           <RateCard label={isRTL ? 'معدل الشكاوى' : 'Complaint rate'} value={stats?.complaint_rate ?? 0} threshold={2} />
         </div>
 
+        {/* Engagement (opens/clicks) */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <StatCard icon={Eye} label={isRTL ? 'مرّات الفتح (فريدة)' : 'Unique opens'} value={engagement?.unique_opens ?? 0} accent="emerald" />
+          <StatCard icon={MousePointerClick} label={isRTL ? 'النقرات (فريدة)' : 'Unique clicks'} value={engagement?.unique_clicks ?? 0} accent="emerald" />
+          <RateCard label={isRTL ? 'معدل الفتح' : 'Open rate'} value={engagement?.open_rate ?? 0} threshold={100} />
+          <RateCard label={isRTL ? 'معدل النقر' : 'Click rate'} value={engagement?.click_rate ?? 0} threshold={100} />
+        </div>
+
         {/* Logs */}
         <Card>
           <CardHeader>
@@ -375,6 +399,7 @@ const AdminEmailDeliverability: React.FC = () => {
                       <th className="text-start py-2 px-2 font-medium">{isRTL ? 'القالب' : 'Template'}</th>
                       <th className="text-start py-2 px-2 font-medium">{isRTL ? 'المستلم' : 'Recipient'}</th>
                       <th className="text-start py-2 px-2 font-medium">{isRTL ? 'الحالة' : 'Status'}</th>
+                      <th className="text-start py-2 px-2 font-medium">{isRTL ? 'فتح/نقر' : 'Open/Click'}</th>
                       <th className="text-start py-2 px-2 font-medium">{isRTL ? 'الوقت' : 'Time'}</th>
                       <th className="text-start py-2 px-2 font-medium">{isRTL ? 'الخطأ' : 'Error'}</th>
                     </tr>
@@ -386,6 +411,11 @@ const AdminEmailDeliverability: React.FC = () => {
                         <td className="py-2 px-2 tech-content">{r.recipient_email}</td>
                         <td className="py-2 px-2">
                           <Badge variant="outline" className={statusBadge(r.status)}>{r.status}</Badge>
+                        </td>
+                        <td className="py-2 px-2 text-xs tech-content">
+                          <span className="inline-flex items-center gap-1 text-emerald-700"><Eye className="h-3 w-3" />{r.opens_count ?? 0}</span>
+                          <span className="mx-1 text-muted-foreground">·</span>
+                          <span className="inline-flex items-center gap-1 text-emerald-700"><MousePointerClick className="h-3 w-3" />{r.clicks_count ?? 0}</span>
                         </td>
                         <td className="py-2 px-2 text-xs text-muted-foreground tech-content">
                           {format(new Date(r.created_at), 'PPp', { locale: isRTL ? ar : undefined })}

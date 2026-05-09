@@ -786,6 +786,63 @@ export type Database = {
           },
         ]
       }
+      business_notification_preferences: {
+        Row: {
+          business_id: string
+          created_at: string
+          email_bookings: boolean
+          email_contracts: boolean
+          email_enabled: boolean
+          email_leads: boolean
+          email_maintenance_updates: boolean
+          email_marketing: boolean
+          email_messages: boolean
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          email_bookings?: boolean
+          email_contracts?: boolean
+          email_enabled?: boolean
+          email_leads?: boolean
+          email_maintenance_updates?: boolean
+          email_marketing?: boolean
+          email_messages?: boolean
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          email_bookings?: boolean
+          email_contracts?: boolean
+          email_enabled?: boolean
+          email_leads?: boolean
+          email_maintenance_updates?: boolean
+          email_marketing?: boolean
+          email_messages?: boolean
+          id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_notification_preferences_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: true
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_notification_preferences_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: true
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_services: {
         Row: {
           business_id: string
@@ -1971,31 +2028,49 @@ export type Database = {
       }
       email_send_log: {
         Row: {
+          clicks_count: number
           created_at: string
           error_message: string | null
+          first_clicked_at: string | null
+          first_opened_at: string | null
           id: string
+          last_clicked_at: string | null
+          last_opened_at: string | null
           message_id: string | null
           metadata: Json | null
+          opens_count: number
           recipient_email: string
           status: string
           template_name: string
         }
         Insert: {
+          clicks_count?: number
           created_at?: string
           error_message?: string | null
+          first_clicked_at?: string | null
+          first_opened_at?: string | null
           id?: string
+          last_clicked_at?: string | null
+          last_opened_at?: string | null
           message_id?: string | null
           metadata?: Json | null
+          opens_count?: number
           recipient_email: string
           status: string
           template_name: string
         }
         Update: {
+          clicks_count?: number
           created_at?: string
           error_message?: string | null
+          first_clicked_at?: string | null
+          first_opened_at?: string | null
           id?: string
+          last_clicked_at?: string | null
+          last_opened_at?: string | null
           message_id?: string | null
           metadata?: Json | null
+          opens_count?: number
           recipient_email?: string
           status?: string
           template_name?: string
@@ -2686,6 +2761,75 @@ export type Database = {
           is_active?: boolean
           subscribed_at?: string
           unsubscribed_at?: string | null
+        }
+        Relationships: []
+      }
+      notification_preferences: {
+        Row: {
+          created_at: string
+          email_bookings: boolean
+          email_contracts: boolean
+          email_enabled: boolean
+          email_leads: boolean
+          email_maintenance_updates: boolean
+          email_marketing: boolean
+          email_messages: boolean
+          email_system: boolean
+          id: string
+          in_app_enabled: boolean
+          inapp_bookings: boolean
+          inapp_contracts: boolean
+          inapp_leads: boolean
+          inapp_maintenance_updates: boolean
+          inapp_messages: boolean
+          inapp_system: boolean
+          sms_enabled: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email_bookings?: boolean
+          email_contracts?: boolean
+          email_enabled?: boolean
+          email_leads?: boolean
+          email_maintenance_updates?: boolean
+          email_marketing?: boolean
+          email_messages?: boolean
+          email_system?: boolean
+          id?: string
+          in_app_enabled?: boolean
+          inapp_bookings?: boolean
+          inapp_contracts?: boolean
+          inapp_leads?: boolean
+          inapp_maintenance_updates?: boolean
+          inapp_messages?: boolean
+          inapp_system?: boolean
+          sms_enabled?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email_bookings?: boolean
+          email_contracts?: boolean
+          email_enabled?: boolean
+          email_leads?: boolean
+          email_maintenance_updates?: boolean
+          email_marketing?: boolean
+          email_messages?: boolean
+          email_system?: boolean
+          id?: string
+          in_app_enabled?: boolean
+          inapp_bookings?: boolean
+          inapp_contracts?: boolean
+          inapp_leads?: boolean
+          inapp_maintenance_updates?: boolean
+          inapp_messages?: boolean
+          inapp_system?: boolean
+          sms_enabled?: boolean
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -4833,6 +4977,18 @@ export type Database = {
           total: number
         }[]
       }
+      get_email_engagement_stats: {
+        Args: { _window_minutes?: number }
+        Returns: {
+          click_rate: number
+          delivered: number
+          open_rate: number
+          total_clicks: number
+          total_opens: number
+          unique_clicks: number
+          unique_opens: number
+        }[]
+      }
       get_home_stats: { Args: never; Returns: Json }
       get_migration_epoch: { Args: never; Returns: number }
       get_migration_failure_stats_24h: {
@@ -5003,6 +5159,8 @@ export type Database = {
           read_ct: number
         }[]
       }
+      record_email_click: { Args: { _message_id: string }; Returns: undefined }
+      record_email_open: { Args: { _message_id: string }; Returns: undefined }
       submit_business_for_review: {
         Args: { _business_id: string }
         Returns: Database["public"]["Enums"]["business_approval_status"]
