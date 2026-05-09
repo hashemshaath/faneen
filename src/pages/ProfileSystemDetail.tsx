@@ -23,6 +23,7 @@ import {
   ChevronLeft, ChevronRight, X, Maximize2, Award, TrendingUp,
   BarChart3, Clock, ExternalLink, Printer,
 } from 'lucide-react';
+import { track } from '@/lib/analytics-events';
 
 // ─── Constants ───
 const recommendationLabels: Record<string, { ar: string; en: string; color: string; icon: React.ElementType }> = {
@@ -196,6 +197,10 @@ const ProfileSystemDetail = () => {
 
   const { trackView, trackShare } = useContentTracking('profile_system', profile?.id);
   useEffect(() => { if (profile?.id) trackView(); }, [profile?.id, trackView]);
+  useEffect(() => {
+    if (!profile?.slug) return;
+    track.profileSystemView({ profile_system_slug: profile.slug });
+  }, [profile?.slug]);
 
   const { data: specs = [] } = useQuery({
     queryKey: ['profile-specs', profile?.id],
