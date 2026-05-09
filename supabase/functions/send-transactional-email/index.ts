@@ -223,10 +223,11 @@ Deno.serve(async (req) => {
   // to a profile. Anonymous recipients (e.g. lead form submitters) are
   // unaffected and continue to receive transactional confirmations.
   try {
+    const lowerEmail = effectiveRecipient.toLowerCase()
     const { data: profile } = await supabase
       .from('profiles')
       .select('user_id')
-      .or(`email.eq.${normalizedEmailKey(normalizedEmailRaw(effectiveRecipient))},login_email.eq.${normalizedEmailKey(normalizedEmailRaw(effectiveRecipient))}`)
+      .or(`email.eq.${lowerEmail},login_email.eq.${lowerEmail}`)
       .limit(1)
       .maybeSingle()
 
