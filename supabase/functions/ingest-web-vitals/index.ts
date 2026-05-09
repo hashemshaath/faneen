@@ -1,11 +1,41 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+/**
+ * Build CORS headers for this request.
+ *
+ * `sendBeacon` (used on the client) is a credentialed cross-origin request,
+ * which means a wildcard `Access-Control-Allow-Origin: *` triggers a CORS
+ * error in modern browsers ("ACAO cannot be wildcard when credentials mode
+ * is include"). To stay safe AND functional we echo a SPECIFIC origin from
+ * an allow-list and pair it with `Access-Control-Allow-Credentials: true`.
+ *
+ * Origins not in the allow-list still get a wildcard fallback (which is
+ * fine for non-credentialed fetches and harmless for unknown origins).
+ */
+const ORIGIN_ALLOWLIST = [
+  "https://qitaat.com",
+  "https://www.qitaat.com",
+  "https://qitaat.lovable.app",
+];
+const ORIGIN_PATTERNS: RegExp[] = [
+  /^https:\/\/[a-z0-9-]+\.lovable\.app$/i,
+  /^https:\/\/[a-z0-9-]+\.lovableproject\.com$/i,
+];
+
+function buildCorsHeaders(req: Request): Record<string, string> {
+  const origin = req.headers.get("Origin") ?? "";
+  const allowed =
+    ORIGIN_ALLOWLIST.includes(origin) ||
+    ORIGIN_PATTERNS.some((re) => re.test(origin));
+  return {
+    "Access-Control-Allow-Origin": allowed && origin ? origin : "*",
+    "Access-Control-Allow-Credentials": allowed ? "true" : "false",
+    "Access-Control-Allow-Headers":
+      "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Vary": "Origin",
+  };
+}
 
 const ALLOWED_METRICS = new Set(["LCP", "CLS", "INP", "FCP", "TTFB"]);
 const ALLOWED_RATINGS = new Set(["good", "needs-improvement", "poor"]);
@@ -53,6 +83,7 @@ function sanitize(events: unknown): VitalEvent[] {
 }
 
 Deno.serve(async (req) => {
+  const corsHeaders = buildCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
