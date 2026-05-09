@@ -30,7 +30,6 @@ const GTM_ID_PATTERN = /^GTM-[A-Z0-9]+$/;
  *      parameters here because TS/Vite transpilation of `..._args` can
  *      interfere with the `arguments` object semantics in some targets.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function localGtag(this: void): void {
   const w = window as DataLayerWindow;
   w.dataLayer = w.dataLayer ?? [];
