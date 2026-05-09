@@ -18,6 +18,20 @@ type DataLayerWindow = Window & {
 
 const GTM_ID_PATTERN = /^GTM-[A-Z0-9]+$/;
 
+/**
+ * Push a `gtag()`-style command (e.g. `gtag('consent','update',{...})`) onto
+ * the dataLayer. GTM's Consent Mode ONLY recognizes consent commands when
+ * they arrive as an actual `Arguments` object — NOT as a plain object with
+ * numeric keys. We therefore route through a real function so `arguments`
+ * has the correct internal `[[Class]]` of `Arguments`.
+ */
+function gtag(this: void, ..._args: unknown[]): void {
+  const w = window as DataLayerWindow;
+  w.dataLayer = w.dataLayer ?? [];
+  // eslint-disable-next-line prefer-rest-params
+  w.dataLayer.push(arguments);
+}
+
 export function getGtmId(): string | null {
   const raw = (import.meta.env.VITE_GTM_ID ?? "").toString().trim();
   if (!raw) return null;
@@ -48,20 +62,17 @@ export function initGtm(): void {
     return;
   }
 
-  // 1) Consent Mode v2 defaults — pushed BEFORE the GTM loader.
-  w.dataLayer.push({
-    0: "consent",
-    1: "default",
-    2: {
-      ad_storage: "denied",
-      ad_user_data: "denied",
-      ad_personalization: "denied",
-      analytics_storage: "denied",
-      functionality_storage: "granted",
-      security_storage: "granted",
-      wait_for_update: 500,
-    },
-  } as unknown as Record<string, unknown>);
+  // 1) Consent Mode v2 defaults — pushed BEFORE the GTM loader, as an
+  //    Arguments object via gtag() so GTM recognizes the consent command.
+  gtag("consent", "default", {
+    ad_storage: "denied",
+    ad_user_data: "denied",
+    ad_personalization: "denied",
+    analytics_storage: "denied",
+    functionality_storage: "granted",
+    security_storage: "granted",
+    wait_for_update: 500,
+  });
 
   // 2) GTM container loader.
   w.dataLayer.push({ "gtm.start": Date.now(), event: "gtm.js" });
@@ -173,10 +184,26 @@ export function updateConsent(decision: ConsentDecision): ConsentState {
   if (typeof window === "undefined") return state;
   const w = window as DataLayerWindow;
   w.dataLayer = w.dataLayer ?? [];
-  // Consent Mode v2 update — pushed in the gtag() arguments shape so GTM
-  // recognizes it identically to `gtag('consent', 'update', {...})`.
-  w.dataLayer.push({ 0: "consent", 1: "update", 2: state } as unknown as Record<string, unknown>);
+  // Consent Mode v2 update — MUST be pushed as a real Arguments object so
+  // GTM recognizes it as `gtag('consent','update',{...})`. Pushing a plain
+  // object `{0:'consent',1:'update',2:state}` is silently ignored by GTM.
+  gtag("consent", "update", state);
   // Also emit a lightweight event for custom triggers in GTM (no PII).
   w.dataLayer.push({ event: "consent_update", consent_decision: decision });
   return state;
+}
+
+/**
+ * Push a custom Consent Mode v2 update (mixed toggles) to the dataLayer.
+ * Used by the banner's "manage preferences → save" path. No PII.
+ */
+export function pushConsentUpdate(
+  state: ConsentState,
+  decisionLabel: string,
+): void {
+  if (typeof window === "undefined") return;
+  const w = window as DataLayerWindow;
+  w.dataLayer = w.dataLayer ?? [];
+  gtag("consent", "update", state);
+  w.dataLayer.push({ event: "consent_update", consent_decision: decisionLabel });
 }

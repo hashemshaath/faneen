@@ -5,6 +5,7 @@ import {
   CONSENT_ACCEPT_ALL,
   CONSENT_REJECT_NON_ESSENTIAL,
   CONSENT_STORAGE_KEY,
+  pushConsentUpdate,
   readStoredConsent,
   updateConsent,
   type ConsentState,
@@ -123,11 +124,8 @@ export const ConsentBanner = () => {
       } catch {
         /* ignore */
       }
-      type DLW = Window & { dataLayer?: Array<Record<string, unknown>> };
-      const w = window as DLW;
-      w.dataLayer = w.dataLayer ?? [];
-      w.dataLayer.push({ 0: "consent", 1: "update", 2: state } as unknown as Record<string, unknown>);
-      w.dataLayer.push({ event: "consent_update", consent_decision: "custom" });
+      // Use the shared gtag() helper so GTM recognizes the consent command.
+      pushConsentUpdate(state, "custom");
       setOpen(false);
     }
   };
