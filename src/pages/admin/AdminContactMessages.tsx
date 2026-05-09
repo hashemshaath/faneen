@@ -1556,4 +1556,34 @@ const TimelineDot: React.FC<{ label: string; time: string | null; active: boolea
   </div>
 );
 
+const EventLabel: React.FC<{ ev: ContactEvent; isRTL: boolean; assigneeMap: Map<string, AdminAssignee> }> = ({ ev, isRTL, assigneeMap }) => {
+  const userLabel = (id: string | null) => {
+    if (!id) return isRTL ? 'لا أحد' : 'no one';
+    const u = assigneeMap.get(id);
+    return u ? (u.full_name || u.email || id.slice(0, 8)) : id.slice(0, 8);
+  };
+  switch (ev.event_type) {
+    case 'created':
+      return <>{isRTL ? 'تم إنشاء التذكرة' : 'Ticket created'}</>;
+    case 'status_changed':
+      return <>{isRTL ? `تغيير الحالة: ${ev.from_value || '—'} → ${ev.to_value || '—'}` : `Status: ${ev.from_value || '—'} → ${ev.to_value || '—'}`}</>;
+    case 'priority_changed':
+      return <>{isRTL ? `تغيير الأولوية: ${ev.from_value || '—'} → ${ev.to_value || '—'}` : `Priority: ${ev.from_value || '—'} → ${ev.to_value || '—'}`}</>;
+    case 'work_state_changed':
+      return <>{isRTL ? `حالة العمل: ${ev.from_value || '—'} → ${ev.to_value || '—'}` : `Work state: ${ev.from_value || '—'} → ${ev.to_value || '—'}`}</>;
+    case 'assigned':
+      return <>{isRTL ? `تعيين إلى ${userLabel(ev.to_value)}` : `Assigned to ${userLabel(ev.to_value)}`}</>;
+    case 'unassigned':
+      return <>{isRTL ? `إلغاء تعيين ${userLabel(ev.from_value)}` : `Unassigned from ${userLabel(ev.from_value)}`}</>;
+    case 'replied':
+      return <>{isRTL ? 'تم الرد على الرسالة' : 'Message replied'}</>;
+    case 'note_added':
+      return <>{isRTL ? 'تمت إضافة/تحديث ملاحظة داخلية' : 'Internal note updated'}</>;
+    case 'ai_triaged':
+      return <>{isRTL ? `فرز ذكي: ${ev.to_value || ''}` : `AI triage: ${ev.to_value || ''}`}</>;
+    default:
+      return <>{ev.event_type}{ev.note ? ` — ${ev.note}` : ''}</>;
+  }
+};
+
 export default AdminContactMessages;
