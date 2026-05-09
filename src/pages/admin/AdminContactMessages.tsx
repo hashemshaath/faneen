@@ -589,8 +589,12 @@ const AdminContactMessages = () => {
             <Button variant="outline" size="sm" onClick={() => refetch()} className="gap-2">
               <RefreshCw className="w-4 h-4" />{isRTL ? 'تحديث' : 'Refresh'}
             </Button>
-            <Button variant="outline" size="sm" onClick={exportCSV} disabled={!filtered.length} className="gap-2">
-              <Download className="w-4 h-4" />{isRTL ? 'تصدير CSV' : 'Export'}
+            <Button
+              variant={showExportPanel ? 'default' : 'outline'} size="sm"
+              onClick={() => setShowExportPanel(s => !s)}
+              disabled={!filtered.length} className="gap-2"
+            >
+              <Download className="w-4 h-4" />{isRTL ? 'تصدير' : 'Export'}
             </Button>
             <Button
               variant="outline" size="sm" className="gap-2"
