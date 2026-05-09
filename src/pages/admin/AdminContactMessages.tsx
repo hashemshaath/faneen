@@ -429,27 +429,77 @@ const AdminContactMessages = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusedId, filtered, focused]);
 
-  const exportCSV = () => {
-    if (!isSuperAdmin) {
+  const buildExportRows = useCallback((source: ContactMessage[]): ContactExportRow[] =>
+    source.map(m => ({
+      ticket_number: m.ticket_number,
+      name: m.name,
+      email: isSuperAdmin ? m.email : maskEmail(m.email),
+      subject: m.subject,
+      message: m.message,
+      status: m.status,
+      priority: m.priority,
+      work_state: m.work_state,
+      assigned_to_name: m.assigned_to ? (assigneeMap.get(m.assigned_to)?.full_name || assigneeMap.get(m.assigned_to)?.email || '—') : '',
+      starred: m.starred,
+      internal_notes: m.internal_notes,
+      created_at: format(new Date(m.created_at), 'yyyy-MM-dd HH:mm'),
+      replied_at: m.replied_at ? format(new Date(m.replied_at), 'yyyy-MM-dd HH:mm') : null,
+      response_hours: m.replied_at ? differenceInHours(new Date(m.replied_at), new Date(m.created_at)) : null,
+      ai_priority: m.ai_priority,
+      ai_category: m.ai_category,
+      ai_summary: m.ai_summary,
+    })),
+  [isSuperAdmin, assigneeMap]);
+
+  const buildFilterSummary = useCallback(() => {
+    const parts: string[] = [];
+    if (statusFilter !== 'all') parts.push(`status=${statusFilter}`);
+    if (priorityFilter !== 'all') parts.push(`priority=${priorityFilter}`);
+    if (workStateFilter !== 'all') parts.push(`work=${workStateFilter}`);
+    if (assigneeFilter !== 'all') parts.push(`assignee=${assigneeFilter}`);
+    if (dateRange !== 'all') parts.push(`range=${dateRange}`);
+    if (starredOnly) parts.push('starred');
+    if (quickChip) parts.push(`chip=${quickChip}`);
+    if (search) parts.push(`q="${search}"`);
+    return parts.join(' · ');
+  }, [statusFilter, priorityFilter, workStateFilter, assigneeFilter, dateRange, starredOnly, quickChip, search]);
+
+  const runExport = async () => {
+    if (!isSuperAdmin && exportFields.some(f => f === 'email' || f === 'message' || f === 'internal_notes')) {
       toast.error(isRTL
-        ? 'تصدير CSV يحتوي على بيانات حساسة — متاح فقط لمدير النظام (Super Admin).'
-        : 'CSV export contains sensitive data — Super Admin only.');
+        ? 'بعض الحقول تحتوي على بيانات حساسة — Super Admin فقط.'
+        : 'Some fields contain sensitive data — Super Admin only.');
       return;
     }
-    const headers = ['ID', 'Name', 'Email', 'Subject', 'Message', 'Status', 'Priority', 'Starred', 'Notes', 'Created', 'Replied At', 'Response (hrs)'];
-    const rows = filtered.map(m => [
-      m.id, m.name, m.email, m.subject || '', m.message.replace(/[\n\r]/g, ' '),
-      m.status, m.priority, m.starred ? 'yes' : 'no', m.internal_notes || '',
-      format(new Date(m.created_at), 'yyyy-MM-dd HH:mm'),
-      m.replied_at ? format(new Date(m.replied_at), 'yyyy-MM-dd HH:mm') : '',
-      m.replied_at ? String(differenceInHours(new Date(m.replied_at), new Date(m.created_at))) : '',
-    ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(','));
-    const csv = '\uFEFF' + [headers.join(','), ...rows].join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = `contact-messages-${format(new Date(), 'yyyy-MM-dd-HHmm')}.csv`; a.click();
-    URL.revokeObjectURL(url);
+    if (exportFields.length === 0) {
+      toast.error(isRTL ? 'اختر حقلاً واحداً على الأقل' : 'Select at least one field');
+      return;
+    }
+    const source = exportScope === 'selected'
+      ? filtered.filter(m => selectedIds.has(m.id))
+      : filtered;
+    if (source.length === 0) {
+      toast.error(isRTL ? 'لا توجد رسائل للتصدير' : 'No messages to export');
+      return;
+    }
+    setIsExporting(true);
+    try {
+      const rows = buildExportRows(source);
+      if (exportFormat === 'csv') {
+        exportContactsCSV(rows, exportFields, isRTL);
+      } else {
+        await exportContactsPDF(rows, exportFields, isRTL, {
+          totalCount: messages.length,
+          filterSummary: buildFilterSummary(),
+        });
+      }
+      toast.success(isRTL ? `تم تصدير ${rows.length} رسالة` : `Exported ${rows.length} messages`);
+      setShowExportPanel(false);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : (isRTL ? 'فشل التصدير' : 'Export failed'));
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const copyDeepLink = (id: string) => {
