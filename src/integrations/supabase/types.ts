@@ -1810,7 +1810,11 @@ export type Database = {
           group_avatar_url: string | null
           group_name: string | null
           id: string
+          is_archived_by_p1: boolean
+          is_archived_by_p2: boolean
           is_group: boolean
+          is_pinned_by_p1: boolean
+          is_pinned_by_p2: boolean
           last_message_at: string | null
           last_message_text: string | null
           participant_1: string
@@ -1825,7 +1829,11 @@ export type Database = {
           group_avatar_url?: string | null
           group_name?: string | null
           id?: string
+          is_archived_by_p1?: boolean
+          is_archived_by_p2?: boolean
           is_group?: boolean
+          is_pinned_by_p1?: boolean
+          is_pinned_by_p2?: boolean
           last_message_at?: string | null
           last_message_text?: string | null
           participant_1: string
@@ -1840,7 +1848,11 @@ export type Database = {
           group_avatar_url?: string | null
           group_name?: string | null
           id?: string
+          is_archived_by_p1?: boolean
+          is_archived_by_p2?: boolean
           is_group?: boolean
+          is_pinned_by_p1?: boolean
+          is_pinned_by_p2?: boolean
           last_message_at?: string | null
           last_message_text?: string | null
           participant_1?: string
@@ -2444,9 +2456,11 @@ export type Database = {
           content: string
           conversation_id: string
           created_at: string
+          delivered_at: string | null
           id: string
           is_read: boolean
           message_type: string
+          read_at: string | null
           sender_id: string
         }
         Insert: {
@@ -2454,9 +2468,11 @@ export type Database = {
           content: string
           conversation_id: string
           created_at?: string
+          delivered_at?: string | null
           id?: string
           is_read?: boolean
           message_type?: string
+          read_at?: string | null
           sender_id: string
         }
         Update: {
@@ -2464,9 +2480,11 @@ export type Database = {
           content?: string
           conversation_id?: string
           created_at?: string
+          delivered_at?: string | null
           id?: string
           is_read?: boolean
           message_type?: string
+          read_at?: string | null
           sender_id?: string
         }
         Relationships: [
