@@ -13,6 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { User, Building2, Phone, Globe, Check, Loader2 } from 'lucide-react';
+import { track } from '@/lib/analytics-events';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { SectorPicker } from '@/components/onboarding/SectorPicker';
 import type { SectorId } from '@/data/onboarding-sectors';
@@ -158,6 +159,10 @@ const Onboarding = () => {
 
       await refreshProfile();
       clearDraft();
+      // provider_signup_submit fires only when a business profile is created.
+      if (accountType === 'business') {
+        track.providerSignupSubmit({});
+      }
       toast.success(isRTL ? 'تم إكمال التسجيل بنجاح!' : 'Registration completed successfully!');
       
       // Role-based redirect after onboarding

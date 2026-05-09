@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { buildBreadcrumbList, ogImageFor } from '@/lib/seo/structured-data';
@@ -13,6 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { track } from '@/lib/analytics-events';
 
 const Contact = () => {
   const { isRTL, language } = useLanguage();
@@ -20,6 +21,15 @@ const Contact = () => {
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
+  const startedRef = useRef(false);
+
+  // Fires once when the user begins filling the contact form. We never send
+  // the field values themselves — only the intent.
+  const handleFormStart = () => {
+    if (startedRef.current) return;
+    startedRef.current = true;
+    track.quoteRequestStart({ contact_type: 'contact_form' });
+  };
 
   usePageMeta({
     title: isRTL ? 'تواصل معنا | قِطاعات' : 'Contact Us | Qitaat',
@@ -88,6 +98,7 @@ const Contact = () => {
       });
 
       setSent(true);
+      track.quoteRequestSubmit({ contact_type: 'contact_form' });
       toast.success(isRTL ? 'تم إرسال رسالتك بنجاح' : 'Message sent successfully');
     } catch {
       toast.error(isRTL ? 'حدث خطأ، يرجى المحاولة لاحقاً' : 'An error occurred, please try again');
@@ -150,7 +161,7 @@ const Contact = () => {
                 </Button>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="card-ds card-pad-md space-y-5">
+              <form onSubmit={handleSubmit} onFocusCapture={handleFormStart} className="card-ds card-pad-md space-y-5">
                 <h2 className="text-lg font-heading font-bold text-foreground">
                   {isRTL ? 'أرسل لنا رسالة' : 'Send us a message'}
                 </h2>

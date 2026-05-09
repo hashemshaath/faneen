@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { buildBreadcrumbList, ogImageFor } from '@/lib/seo/structured-data';
 import { useSearchParams, Link } from 'react-router-dom';
@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Star, MapPin, Plus, X, ArrowRight, ArrowLeft, Scale, Search, Download } from 'lucide-react';
 import { VerifiedBadge } from '@/components/common/VerifiedBadge';
+import { track } from '@/lib/analytics-events';
 
 const Compare = () => {
   const { isRTL } = useLanguage();
@@ -24,6 +25,9 @@ const Compare = () => {
     const ids = searchParams.get('ids');
     return ids ? ids.split(',').filter(Boolean) : [];
   }, [searchParams]);
+
+  // compare_start fires once per Compare page mount.
+  useEffect(() => { track.compareStart({}); }, []);
 
   usePageMeta({
     title: isRTL ? 'مقارنة مزودي الخدمات | قِطاعات' : 'Compare Service Providers | Qitaat',
@@ -83,6 +87,11 @@ const Compare = () => {
 
   const addBusiness = (id: string) => {
     if (selectedIds.includes(id) || selectedIds.length >= 4) return;
+    const biz = allBusinesses.find(b => b.id === id);
+    track.compareProfileAdded({
+      business_slug: biz?.username,
+      results_count: selectedIds.length + 1,
+    });
     setSearchParams({ ids: [...selectedIds, id].join(',') });
   };
 

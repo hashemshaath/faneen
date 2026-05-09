@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { buildBreadcrumbList, ogImageFor } from '@/lib/seo/structured-data';
+import { track } from '@/lib/analytics-events';
 
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -55,6 +56,13 @@ const ProjectDetail = () => {
   // Unified tracking
   const { trackView, trackShare } = useContentTracking('project', project?.id);
   useEffect(() => { if (project?.id) trackView(); }, [project?.id, trackView]);
+  useEffect(() => {
+    if (!project?.id) return;
+    track.projectView({
+      project_slug: (project as { slug?: string }).slug || String(project.id),
+      business_slug: project.businesses?.username,
+    });
+  }, [project?.id, project?.businesses?.username]);
 
   const { data: category } = useQuery({
     queryKey: ['category', project?.category_id],
