@@ -20,6 +20,31 @@ type DataLayerWindow = Window & {
 const GTM_ID_PATTERN = /^GTM-[A-Z0-9]+$/;
 
 /* ------------------------------------------------------------------ */
+/* Production-host gating                                              */
+/* GA4/GTM must only run on qitaat.com (and www). Lovable preview      */
+/* hosts (lovable.app, lovableproject.com, id-preview--*) MUST NOT     */
+/* fire hits — otherwise GA4 surfaces them as cross-domain candidates  */
+/* and pollutes Container Quality. Override with either:               */
+/*   - build env: VITE_ENABLE_ANALYTICS_IN_PREVIEW=true                */
+/*   - runtime:   localStorage['qitaat_enable_analytics_preview']='1'  */
+/* ------------------------------------------------------------------ */
+const PROD_HOSTS = new Set(["qitaat.com", "www.qitaat.com"]);
+const PREVIEW_OVERRIDE_KEY = "qitaat_enable_analytics_preview";
+
+export function isAnalyticsHostAllowed(): boolean {
+  if (typeof window === "undefined") return false;
+  const host = window.location.hostname;
+  if (PROD_HOSTS.has(host)) return true;
+  const buildOverride = String(import.meta.env.VITE_ENABLE_ANALYTICS_IN_PREVIEW ?? "")
+    .toLowerCase() === "true";
+  if (buildOverride) return true;
+  try {
+    if (localStorage.getItem(PREVIEW_OVERRIDE_KEY) === "1") return true;
+  } catch { /* storage unavailable */ }
+  return false;
+}
+
+/* ------------------------------------------------------------------ */
 /* Consent audit log — every gtag('consent', ...) call we make is      */
 /* recorded here with a correlationId + reason so Container Quality    */
 /* issues can be diagnosed end-to-end without server logs.             */
@@ -139,6 +164,12 @@ export function initGtm(): void {
 
   const id = getGtmId();
   if (!id) return; // Requirement #2: do nothing without VITE_GTM_ID.
+
+  // Host gate: skip everything (including the safety-net replay) on non-
+  // production hosts. The dataLayer + Consent Mode defaults pushed inline
+  // in index.html are harmless without GTM, so consent state is preserved
+  // for when the visitor returns to the production domain.
+  if (!isAnalyticsHostAllowed()) return;
 
   initialized = true;
   const w = window as DataLayerWindow;
