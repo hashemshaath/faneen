@@ -31,7 +31,16 @@ export type QitaatEvent =
   | "compare_start"
   | "compare_profile_added"
   | "membership_plan_click"
-  | "outbound_click";
+  | "outbound_click"
+  // Communication & onboarding (no PII)
+  | "signup_started"
+  | "signup_otp_sent"
+  | "signup_completed"
+  | "onboarding_step_viewed"
+  | "onboarding_completed"
+  | "lead_request_submitted"
+  | "message_sent"
+  | "notification_clicked";
 
 /** Allow-listed parameters. Anything not in this set is dropped. */
 export type AllowedParam =
@@ -50,7 +59,14 @@ export type AllowedParam =
   | "contact_type"
   | "filters_count"
   | "results_count"
-  | "outbound_domain";
+  | "outbound_domain"
+  // Communication & onboarding allow-list
+  | "account_type"
+  | "onboarding_step"
+  | "notification_type"
+  | "contact_preference"
+  | "conversation_type"
+  | "method";
 
 export type EventPayload = Partial<Record<AllowedParam, string | number | boolean>>;
 
@@ -71,6 +87,12 @@ const ALLOWED: ReadonlySet<AllowedParam> = new Set<AllowedParam>([
   "filters_count",
   "results_count",
   "outbound_domain",
+  "account_type",
+  "onboarding_step",
+  "notification_type",
+  "contact_preference",
+  "conversation_type",
+  "method",
 ]);
 
 /** Looks like an email or phone number — used as a defensive PII guard. */
@@ -163,6 +185,15 @@ export const track = {
   compareProfileAdded: (p: EventPayload) => trackEvent("compare_profile_added", p),
   membershipPlanClick: (p: EventPayload) => trackEvent("membership_plan_click", p),
   outboundClick: (p: EventPayload) => trackEvent("outbound_click", p),
+  // Communication & onboarding
+  signupStarted: (p: EventPayload = {}) => trackEvent("signup_started", p),
+  signupOtpSent: (p: EventPayload = {}) => trackEvent("signup_otp_sent", p),
+  signupCompleted: (p: EventPayload = {}) => trackEvent("signup_completed", p),
+  onboardingStepViewed: (p: EventPayload) => trackEvent("onboarding_step_viewed", p),
+  onboardingCompleted: (p: EventPayload = {}) => trackEvent("onboarding_completed", p),
+  leadRequestSubmitted: (p: EventPayload) => trackEvent("lead_request_submitted", p),
+  messageSent: (p: EventPayload = {}) => trackEvent("message_sent", p),
+  notificationClicked: (p: EventPayload) => trackEvent("notification_clicked", p),
 };
 
 /** Extract a hostname safely (used for outbound link tagging, never for PII). */

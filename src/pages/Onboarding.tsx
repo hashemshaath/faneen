@@ -17,6 +17,7 @@ import { track } from '@/lib/analytics-events';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { SectorPicker } from '@/components/onboarding/SectorPicker';
 import type { SectorId } from '@/data/onboarding-sectors';
+import { supabase } from '@/integrations/supabase/client';
 import {
   readDraft,
   saveDraft,
@@ -72,6 +73,23 @@ const Onboarding = () => {
     if (user?.id) void syncDraftToServer(user.id);
   }, [step, accountType, fullName, phone, countryCode, businessName, username,
       businessDescription, sectors, subServices, draftLoaded, user?.id]);
+
+  // Track step views (no PII) + persist current step index to profile
+  useEffect(() => {
+    if (!draftLoaded) return;
+    const idx = STEP_ORDER.indexOf(step);
+    track.onboardingStepViewed({ onboarding_step: step, account_type: accountType });
+    if (user?.id) {
+      void supabase
+        .from('profiles')
+        .update({
+          onboarding_step: idx,
+          onboarding_started_at: new Date().toISOString(),
+        })
+        .eq('user_id', user.id)
+        .is('onboarding_completed_at', null);
+    }
+  }, [step, draftLoaded, accountType, user?.id]);
 
   const otp = useOtpFlow({
     isRTL,
@@ -163,6 +181,7 @@ const Onboarding = () => {
       if (accountType === 'business') {
         track.providerSignupSubmit({});
       }
+      track.onboardingCompleted({ account_type: accountType });
       toast.success(isRTL ? 'تم إكمال التسجيل بنجاح!' : 'Registration completed successfully!');
       
       // Role-based redirect after onboarding
