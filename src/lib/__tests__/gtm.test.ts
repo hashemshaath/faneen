@@ -29,6 +29,9 @@ describe("initGtm — Consent Mode replay for returning visitors", () => {
   beforeEach(() => {
     resetWorld();
     vi.stubEnv("VITE_GTM_ID", "GTM-TEST1234");
+    // Tests run on jsdom (hostname=localhost). Opt in so the production-host
+    // gate doesn't short-circuit initGtm().
+    localStorage.setItem("qitaat_enable_analytics_preview", "1");
   });
 
   it("replays stored consent BEFORE injecting gtm.js and records an audit entry", () => {
