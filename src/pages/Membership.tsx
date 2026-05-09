@@ -13,6 +13,7 @@ import { MembershipHeader } from '@/components/membership/MembershipHeader';
 import { CurrentSubscriptionCard } from '@/components/membership/CurrentSubscriptionCard';
 import { PlanCard } from '@/components/membership/PlanCard';
 import { FeatureComparisonTable } from '@/components/membership/FeatureComparisonTable';
+import { track } from '@/lib/analytics-events';
 
 const tierOrder = ['free', 'basic', 'premium', 'enterprise'];
 
@@ -102,6 +103,7 @@ const Membership = () => {
   const currentTierIndex = tierOrder.indexOf(currentTier);
 
   const handleSubscribe = (plan: { id: string; tier: string }) => {
+    track.membershipPlanClick({ membership_tier: plan.tier });
     if (!user) { navigate('/auth'); return; }
     if (!myBusiness) {
       toast.error(isRTL ? 'يجب إنشاء نشاط تجاري أولاً من لوحة التحكم' : 'Create a business profile first from dashboard');
