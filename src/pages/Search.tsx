@@ -23,6 +23,7 @@ import {
 } from '@/services/search';
 import { detectSectorFromQuery, getSectorMeta, ALL_SECTORS } from '@/lib/sector-keywords';
 import { findCityKeywords, getCityKeywordsString, mergeKeywords } from '@/lib/city-keywords';
+import { track } from '@/lib/analytics-events';
 
 const ITEMS_PER_PAGE = 12;
 
@@ -158,6 +159,12 @@ const SearchPage = () => {
   const handleFilterChange = useCallback(<K extends keyof SearchFilterValues>(key: K, value: SearchFilterValues[K]) => {
     setFilters(prev => ({ ...prev, [key]: value }));
     setCurrentPage(1);
+    // Privacy-safe: only the filter key name + the count of active filters.
+    track.filter({
+      // `key` is constrained by SearchFilterValues so it is non-PII.
+      category_slug: key === 'categoryId' && value !== 'all' ? String(value) : undefined,
+      city: key === 'cityId' && value !== 'all' ? String(value) : undefined,
+    });
     const params = new URLSearchParams(searchParams);
     const paramMap: Record<string, string> = {
       categoryId: 'category', cityId: 'city', minRating: 'rating',
@@ -205,6 +212,27 @@ const SearchPage = () => {
   // Defer the heavy filtered list so typing/filter clicks stay responsive.
   const deferredFiltered = useDeferredValue(filtered);
   const isPending = deferredFiltered !== filtered;
+
+  // search_performed — fires when the (debounced) query settles. The actual
+  // query text is intentionally NOT sent (could contain PII / private intent).
+  React.useEffect(() => {
+    if (!debouncedQuery.trim()) return;
+    const activeFilters = [
+      filters.categoryId !== 'all',
+      filters.cityId !== 'all',
+      filters.minRating > 0,
+      filters.verifiedOnly,
+      filters.priceMin > 0,
+      filters.priceMax > 0,
+    ].filter(Boolean).length + selectedTags.length;
+    track.search({
+      results_count: filtered.length,
+      filters_count: activeFilters,
+      sector: detectedSector || undefined,
+      city: cityMeta?.name,
+    });
+    // Only re-fire when the debounced query or result count meaningfully changes.
+  }, [debouncedQuery, filtered.length, detectedSector, cityMeta?.name, filters, selectedTags.length]);
 
   // Consolidated JSON-LD: BreadcrumbList + WebSite/SearchAction + ItemList of
   // the top providers (when results exist). All keywords carry sector context
