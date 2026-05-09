@@ -1295,6 +1295,106 @@ const FocusedMessage: React.FC<FocusedProps> = ({
           {focused.message}
         </div>
 
+        {/* Workflow controls: assignee + work state */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-lg border border-border/50 bg-background">
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-medium text-muted-foreground flex items-center gap-1.5">
+              <User className="w-3 h-3" />{isRTL ? 'المسؤول' : 'Assignee'}
+            </label>
+            <div className="flex gap-1.5">
+              <Select
+                value={focused.assigned_to || '__unassigned__'}
+                onValueChange={(v) => updateMutation.mutate({
+                  ids: [focused.id],
+                  patch: { assigned_to: v === '__unassigned__' ? null : v },
+                })}
+              >
+                <SelectTrigger className="h-8 text-xs flex-1"><SelectValue placeholder={isRTL ? 'غير معيَّن' : 'Unassigned'} /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__unassigned__">{isRTL ? 'غير معيَّن' : 'Unassigned'}</SelectItem>
+                  {assignees.map(a => (
+                    <SelectItem key={a.user_id} value={a.user_id}>
+                      {a.full_name || a.email || a.user_id.slice(0, 8)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {currentUserId && focused.assigned_to !== currentUserId && (
+                <Button
+                  size="sm" variant="outline" className="h-8 text-xs"
+                  onClick={() => updateMutation.mutate({ ids: [focused.id], patch: { assigned_to: currentUserId } })}
+                >
+                  {isRTL ? 'لي' : 'Me'}
+                </Button>
+              )}
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-medium text-muted-foreground flex items-center gap-1.5">
+              <Timer className="w-3 h-3" />{isRTL ? 'حالة العمل' : 'Work state'}
+            </label>
+            <Select
+              value={focused.work_state}
+              onValueChange={(v) => updateMutation.mutate({ ids: [focused.id], patch: { work_state: v as WorkState } })}
+            >
+              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {(Object.keys(workStateConfig) as WorkState[]).map(k => (
+                  <SelectItem key={k} value={k}>{isRTL ? workStateConfig[k].ar : workStateConfig[k].en}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* AI suggested reply */}
+        {focused.ai_suggested_reply && (
+          <div className="space-y-2 p-3 rounded-lg border border-violet-500/30 bg-violet-500/5">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div className="flex items-center gap-2 text-xs font-medium text-violet-700">
+                <Brain className="w-3.5 h-3.5" />
+                {isRTL ? 'رد مقترح بالذكاء الاصطناعي' : 'AI suggested reply'}
+                {focused.ai_category && (
+                  <Badge variant="outline" className="text-[10px] h-4 px-1.5 bg-violet-500/10 text-violet-700 border-violet-500/30">
+                    {focused.ai_category}
+                  </Badge>
+                )}
+              </div>
+              {focused.ai_processed_at && (
+                <span className="text-[10px] text-muted-foreground tech-content">
+                  {format(new Date(focused.ai_processed_at), 'MM/dd HH:mm')}
+                </span>
+              )}
+            </div>
+            {focused.ai_summary && (
+              <p className="text-xs text-muted-foreground italic">{focused.ai_summary}</p>
+            )}
+            <div className="text-sm whitespace-pre-wrap p-3 rounded bg-background border border-border/50 max-h-48 overflow-y-auto" dir="auto">
+              {focused.ai_suggested_reply}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                size="sm" variant="outline" className="h-7 gap-1.5 text-xs"
+                onClick={() => {
+                  navigator.clipboard.writeText(focused.ai_suggested_reply || '');
+                  toast.success(isRTL ? 'تم نسخ الرد' : 'Reply copied');
+                }}
+              >
+                <Copy className="w-3 h-3" />{isRTL ? 'نسخ' : 'Copy'}
+              </Button>
+              {isSuperAdmin && (
+                <a
+                  href={`mailto:${focused.email}?subject=${encodeURIComponent('Re: ' + (focused.subject || ''))}&body=${encodeURIComponent(focused.ai_suggested_reply || '')}`}
+                >
+                  <Button size="sm" className="h-7 gap-1.5 text-xs">
+                    <Reply className="w-3 h-3" />{isRTL ? 'إرسال هذا الرد' : 'Send this reply'}
+                  </Button>
+                </a>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Reply templates */}
         {isSuperAdmin && (
           <div className="space-y-2">
@@ -1345,6 +1445,35 @@ const FocusedMessage: React.FC<FocusedProps> = ({
           )}
         </div>
 
+        {/* Activity feed */}
+        {events.length > 0 && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+              <Clock className="w-3.5 h-3.5" />
+              {isRTL ? `سجل الأحداث (${events.length})` : `Activity feed (${events.length})`}
+            </div>
+            <div className="space-y-1.5 max-h-56 overflow-y-auto pe-1">
+              {events.map(ev => {
+                const actor = ev.actor_id ? assigneeMap.get(ev.actor_id) : null;
+                const actorLabel = actor ? (actor.full_name || actor.email) : (isRTL ? 'النظام' : 'System');
+                return (
+                  <div key={ev.id} className="flex items-start gap-2 p-2 rounded border border-border/50 bg-background text-[11px]">
+                    <div className="w-1.5 h-1.5 rounded-full bg-accent mt-1.5 shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium">
+                        <EventLabel ev={ev} isRTL={isRTL} assigneeMap={assigneeMap} />
+                      </p>
+                      <p className="text-muted-foreground tech-content">
+                        {actorLabel} · {format(new Date(ev.created_at), 'yyyy-MM-dd HH:mm')}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Priority + actions */}
         <div className="flex items-center gap-2 flex-wrap pt-2 border-t border-border/50">
           <Select value={focused.priority} onValueChange={(v) => updateMutation.mutate({ ids: [focused.id], patch: { priority: v as Priority } })}>
@@ -1352,6 +1481,17 @@ const FocusedMessage: React.FC<FocusedProps> = ({
             <SelectContent>
               {(Object.keys(priorityConfig) as Priority[]).map(k => (
                 <SelectItem key={k} value={k}>{isRTL ? priorityConfig[k].ar : priorityConfig[k].en}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={focused.status}
+            onValueChange={(v) => updateMutation.mutate({ ids: [focused.id], patch: { status: v as Status } })}
+          >
+            <SelectTrigger className="h-8 w-40 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {(Object.keys(statusConfig) as Status[]).map(k => (
+                <SelectItem key={k} value={k}>{isRTL ? statusConfig[k].ar : statusConfig[k].en}</SelectItem>
               ))}
             </SelectContent>
           </Select>
