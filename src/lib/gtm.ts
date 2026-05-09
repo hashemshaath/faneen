@@ -19,6 +19,76 @@ type DataLayerWindow = Window & {
 
 const GTM_ID_PATTERN = /^GTM-[A-Z0-9]+$/;
 
+/* ------------------------------------------------------------------ */
+/* Consent audit log — every gtag('consent', ...) call we make is      */
+/* recorded here with a correlationId + reason so Container Quality    */
+/* issues can be diagnosed end-to-end without server logs.             */
+/* ------------------------------------------------------------------ */
+
+export type ConsentAuditKind = "default" | "update" | "replay" | "custom";
+
+export interface ConsentAuditEntry {
+  id: string;
+  ts: number;
+  correlationId: string;
+  kind: ConsentAuditKind;
+  reason: string;
+  state?: Record<string, unknown>;
+  decision?: string;
+}
+
+const AUDIT_MAX = 50;
+const auditBuffer: ConsentAuditEntry[] = [];
+const auditListeners = new Set<() => void>();
+let lastConsentUpdate: ConsentAuditEntry | null = null;
+
+function newCorrelationId(): string {
+  return `c_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function recordConsent(
+  kind: ConsentAuditKind,
+  reason: string,
+  state?: Record<string, unknown>,
+  decision?: string,
+  correlationId: string = newCorrelationId(),
+): ConsentAuditEntry {
+  const entry: ConsentAuditEntry = {
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    ts: Date.now(),
+    correlationId,
+    kind,
+    reason,
+    state,
+    decision,
+  };
+  auditBuffer.push(entry);
+  if (auditBuffer.length > AUDIT_MAX) auditBuffer.splice(0, auditBuffer.length - AUDIT_MAX);
+  if (kind !== "default") lastConsentUpdate = entry;
+  auditListeners.forEach((l) => { try { l(); } catch { /* ignore */ } });
+  return entry;
+}
+
+export function getConsentAuditLog(): ConsentAuditEntry[] {
+  return auditBuffer.slice();
+}
+
+export function getLastConsentUpdate(): ConsentAuditEntry | null {
+  return lastConsentUpdate;
+}
+
+export function subscribeConsentAudit(l: () => void): () => void {
+  auditListeners.add(l);
+  return () => auditListeners.delete(l);
+}
+
+/** Test-only: reset module state. Safe in production (just clears buffers). */
+export function __resetGtmForTests(): void {
+  initialized = false;
+  auditBuffer.length = 0;
+  lastConsentUpdate = null;
+}
+
 /**
  * Push a `gtag()`-style command onto the dataLayer.
  *
@@ -82,7 +152,22 @@ export function initGtm(): void {
   try {
     const stored = readStoredConsent();
     if (stored?.state) {
+      const cid = newCorrelationId();
       gtag("consent", "update", stored.state);
+      recordConsent(
+        "replay",
+        "returning-visitor:initGtm",
+        stored.state as unknown as Record<string, unknown>,
+        stored.decision,
+        cid,
+      );
+      // Mirror to dataLayer as a debug breadcrumb (no PII).
+      w.dataLayer.push({
+        event: "consent_update",
+        consent_decision: stored.decision,
+        consent_replay: true,
+        consent_correlation_id: cid,
+      });
     }
   } catch {
     /* storage unavailable */
@@ -97,7 +182,7 @@ export function initGtm(): void {
   // 1) Consent Mode v2 defaults — pushed BEFORE the GTM loader, as an
   //    Arguments object via gtag() so GTM recognizes the consent command.
   //    (Only reached when HTML did NOT inline-load GTM.)
-  gtag("consent", "default", {
+  const defaultState = {
     ad_storage: "denied",
     ad_user_data: "denied",
     ad_personalization: "denied",
@@ -105,7 +190,9 @@ export function initGtm(): void {
     functionality_storage: "granted",
     security_storage: "granted",
     wait_for_update: 500,
-  });
+  };
+  gtag("consent", "default", defaultState);
+  recordConsent("default", "initGtm:no-html-inline", defaultState);
 
   // 2) GTM container loader.
   w.dataLayer.push({ "gtm.start": Date.now(), event: "gtm.js" });
@@ -217,12 +304,16 @@ export function updateConsent(decision: ConsentDecision): ConsentState {
   if (typeof window === "undefined") return state;
   const w = window as DataLayerWindow;
   w.dataLayer = w.dataLayer ?? [];
-  // Consent Mode v2 update — MUST be pushed as a real Arguments object so
-  // GTM recognizes it as `gtag('consent','update',{...})`. Pushing a plain
-  // object `{0:'consent',1:'update',2:state}` is silently ignored by GTM.
+  const cid = newCorrelationId();
+  // Consent Mode v2 update — MUST be pushed as a real Arguments object.
   gtag("consent", "update", state);
-  // Also emit a lightweight event for custom triggers in GTM (no PII).
-  w.dataLayer.push({ event: "consent_update", consent_decision: decision });
+  recordConsent("update", `user-decision:${decision}`, state as unknown as Record<string, unknown>, decision, cid);
+  // Lightweight event for custom triggers in GTM (no PII).
+  w.dataLayer.push({
+    event: "consent_update",
+    consent_decision: decision,
+    consent_correlation_id: cid,
+  });
   return state;
 }
 
@@ -237,6 +328,12 @@ export function pushConsentUpdate(
   if (typeof window === "undefined") return;
   const w = window as DataLayerWindow;
   w.dataLayer = w.dataLayer ?? [];
+  const cid = newCorrelationId();
   gtag("consent", "update", state);
-  w.dataLayer.push({ event: "consent_update", consent_decision: decisionLabel });
+  recordConsent("custom", `manage-prefs:${decisionLabel}`, state as unknown as Record<string, unknown>, decisionLabel, cid);
+  w.dataLayer.push({
+    event: "consent_update",
+    consent_decision: decisionLabel,
+    consent_correlation_id: cid,
+  });
 }
