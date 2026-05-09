@@ -7,7 +7,7 @@
  * Zero dependencies, zero impact on production traffic — purely client-side.
  */
 
-export type DiagSource = "console" | "error" | "rejection" | "network";
+export type DiagSource = "console" | "error" | "rejection" | "network" | "csp" | "extension";
 export type DiagLevel = "error" | "warn" | "info";
 
 export interface DiagEntry {
@@ -93,6 +93,53 @@ export function installDiagnostics() {
       level: "error",
       message: r instanceof Error ? r.message : safeStringify(r).split("\n")[0].slice(0, 240),
       detail: r instanceof Error ? (r.stack || r.message) : safeStringify(r),
+    });
+  });
+
+  // ── CSP violations (Content-Security-Policy reports)
+  window.addEventListener("securitypolicyviolation", (ev: SecurityPolicyViolationEvent) => {
+    const directive = ev.effectiveDirective || ev.violatedDirective || "unknown";
+    const blocked = ev.blockedURI || "(inline)";
+    push({
+      source: "csp",
+      level: "error",
+      message: `CSP blocked ${directive} → ${blocked}`,
+      detail: [
+        `directive: ${directive}`,
+        `blockedURI: ${blocked}`,
+        `documentURI: ${ev.documentURI || ""}`,
+        `sourceFile: ${ev.sourceFile || ""}`,
+        `line:col: ${ev.lineNumber || 0}:${ev.columnNumber || 0}`,
+        `sample: ${(ev.sample || "").slice(0, 240)}`,
+        `disposition: ${ev.disposition || ""}`,
+        new Error("CSP violation stack").stack || "",
+      ].join("\n"),
+      url: blocked,
+    });
+  });
+
+  // ── chrome.runtime.lastError noise (browser extensions like Tag Assistant
+  //    emit "Could not establish connection. Receiving end does not exist."
+  //    via the global error event with no filename). We capture them so the
+  //    /diagnostics view can show provenance, but classify them as "extension"
+  //    so they don't get mixed up with real Qitaat runtime errors.
+  window.addEventListener("error", (ev: ErrorEvent) => {
+    const msg = ev.message || "";
+    const isExt =
+      /Could not establish connection\. Receiving end does not exist/i.test(msg) ||
+      /Extension context invalidated/i.test(msg) ||
+      (typeof ev.filename === "string" && /^chrome-extension:\/\//.test(ev.filename));
+    if (!isExt) return;
+    push({
+      source: "extension",
+      level: "warn",
+      message: msg.slice(0, 240),
+      detail: [
+        `filename: ${ev.filename || "(none)"}`,
+        `line:col: ${ev.lineno || 0}:${ev.colno || 0}`,
+        ev.error instanceof Error ? (ev.error.stack || ev.error.message) : "",
+      ].filter(Boolean).join("\n"),
+      url: ev.filename,
     });
   });
 
