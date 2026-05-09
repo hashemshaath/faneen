@@ -57,25 +57,10 @@ const EXTENSION_PATTERNS: RegExp[] = [
   /\boverlay_bundle\.js\b/i,
 ];
 
-const QITAAT_HOST_HINTS = [
-  "qitaat.com",
-  "qitaat.lovable.app",
-  "lovable.app",
-  "lovableproject.com",
-  "/src/",
-  "/assets/",
-];
-
 export function isExtensionNoise(...parts: Array<string | undefined | null>): boolean {
   const text = parts.filter(Boolean).join(" \n ");
   if (!text) return false;
   return EXTENSION_PATTERNS.some((re) => re.test(text));
-}
-
-function looksLikeQitaatOrigin(text: string): boolean {
-  if (!text) return false;
-  if (isExtensionNoise(text)) return false;
-  return QITAAT_HOST_HINTS.some((h) => text.includes(h));
 }
 
 function captureStack(skip = 2): string {
