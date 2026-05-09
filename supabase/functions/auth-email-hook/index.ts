@@ -17,12 +17,12 @@ const corsHeaders = {
 }
 
 const EMAIL_SUBJECTS: Record<string, string> = {
-  signup: 'Confirm your email',
-  invite: "You've been invited",
-  magiclink: 'Your login link',
-  recovery: 'Reset your password',
-  email_change: 'Confirm your new email',
-  reauthentication: 'Your verification code',
+  signup: 'أكّد بريدك الإلكتروني · Confirm your email — Qitaat',
+  invite: 'دعوة للانضمام إلى قِطاعات · You\'ve been invited to Qitaat',
+  magiclink: 'رابط تسجيل الدخول · Your login link — Qitaat',
+  recovery: 'إعادة تعيين كلمة المرور · Reset your password — Qitaat',
+  email_change: 'أكّد تغيير البريد الإلكتروني · Confirm your new email — Qitaat',
+  reauthentication: 'رمز التحقق · Your verification code — Qitaat',
 }
 
 // Template mapping
