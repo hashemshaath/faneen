@@ -4,6 +4,17 @@ export default defineConfig({
   testDir: "./e2e",
   timeout: 30000,
   retries: 1,
+  // CI: emit HTML report + JSON summary so failed visual diffs are easy to
+  // browse from the uploaded artifact. Locally we keep the default 'list'.
+  reporter: process.env.CI
+    ? [
+        ["list"],
+        ["html", { outputFolder: "playwright-report", open: "never" }],
+        ["json", { outputFile: "playwright-report/results.json" }],
+        ["github"],
+      ]
+    : "list",
+  outputDir: "test-results",
   use: {
     baseURL: process.env.PLAYWRIGHT_BASE_URL || "http://localhost:8080",
     headless: true,
