@@ -74,13 +74,29 @@ export function initGtm(): void {
   const w = window as DataLayerWindow;
   w.dataLayer = w.dataLayer ?? [];
 
-  // If GTM is already present in HTML (static load via index.html), skip injection.
+  // Safety-net consent replay: index.html already replays stored consent
+  // inline (before GTM loads). This runtime path covers builds where the
+  // inline snippet is absent (e.g. Lovable preview iframe, future template
+  // changes) so a returning visitor's "granted" state always reaches GTM.
+  // Idempotent — pushing the same state twice is a no-op for GTM.
+  try {
+    const stored = readStoredConsent();
+    if (stored?.state) {
+      gtag("consent", "update", stored.state);
+    }
+  } catch {
+    /* storage unavailable */
+  }
+
+  // If GTM is already present in HTML (static load via index.html), skip
+  // re-injection — but the consent replay above has already run.
   if (document.querySelector('script[src*="googletagmanager.com/gtm.js"]')) {
     return;
   }
 
   // 1) Consent Mode v2 defaults — pushed BEFORE the GTM loader, as an
   //    Arguments object via gtag() so GTM recognizes the consent command.
+  //    (Only reached when HTML did NOT inline-load GTM.)
   gtag("consent", "default", {
     ad_storage: "denied",
     ad_user_data: "denied",
@@ -90,25 +106,6 @@ export function initGtm(): void {
     security_storage: "granted",
     wait_for_update: 500,
   });
-
-  // 1b) Replay any previously persisted consent decision BEFORE the GTM
-  //     loader runs. Without this, returning visitors who already accepted
-  //     are reported to GTM as "denied" forever (the banner never re-opens,
-  //     so no consent update is ever pushed). This is what causes
-  //     "0% consent rate / 100% denied" in GTM container quality.
-  try {
-    const stored = readStoredConsent();
-    if (stored?.state) {
-      gtag("consent", "update", stored.state);
-      w.dataLayer.push({
-        event: "consent_update",
-        consent_decision: stored.decision,
-        consent_replay: true,
-      });
-    }
-  } catch {
-    /* storage unavailable — proceed with defaults only */
-  }
 
   // 2) GTM container loader.
   w.dataLayer.push({ "gtm.start": Date.now(), event: "gtm.js" });
