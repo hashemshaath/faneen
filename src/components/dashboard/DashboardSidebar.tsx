@@ -189,6 +189,7 @@ const adminBaseGroups: MenuGroup[] = [
       { label: { ar: 'مركز الذكاء', en: 'AI Center' }, url: '/admin/ai-center', icon: Brain },
       { label: { ar: 'إعدادات النظام', en: 'System Settings' }, url: '/admin/system-settings', icon: ShieldAlert, superAdminOnly: true },
       { label: { ar: 'إعدادات API والتكاملات', en: 'API & Integrations' }, url: '/admin/api-settings', icon: Key },
+      { label: { ar: 'التحليلات والموافقة', en: 'Analytics & Consent' }, url: '/admin/analytics-settings', icon: BarChart3 },
     ],
   },
   {
