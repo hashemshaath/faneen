@@ -43,6 +43,11 @@ export function initGtm(): void {
   const w = window as DataLayerWindow;
   w.dataLayer = w.dataLayer ?? [];
 
+  // If GTM is already present in HTML (static load via index.html), skip injection.
+  if (document.querySelector('script[src*="googletagmanager.com/gtm.js"]')) {
+    return;
+  }
+
   // 1) Consent Mode v2 defaults — pushed BEFORE the GTM loader.
   w.dataLayer.push({
     0: "consent",
