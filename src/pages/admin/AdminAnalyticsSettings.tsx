@@ -9,11 +9,15 @@ import { Separator } from "@/components/ui/separator";
 import { useNoIndex } from "@/hooks/useNoIndex";
 import {
   Activity, BarChart3, CheckCircle2, XCircle, Shield, ShieldAlert,
-  RefreshCw, ExternalLink, Cookie, Eye, AlertTriangle, HeartPulse, Wand2,
+  RefreshCw, ExternalLink, Cookie, Eye, AlertTriangle, HeartPulse, Wand2, FileClock,
 } from "lucide-react";
 import {
   getGtmId,
   readStoredConsent,
+  getConsentAuditLog,
+  getLastConsentUpdate,
+  subscribeConsentAudit,
+  type ConsentAuditEntry,
   type ConsentState,
 } from "@/lib/gtm";
 import {
@@ -97,11 +101,13 @@ const AdminAnalyticsSettings = () => {
   const { isRTL } = useLanguage();
   const [tick, setTick] = useState(0);
   const [diag, setDiag] = useState<DiagEntry[]>(() => getDiagEntries());
+  const [audit, setAudit] = useState<ConsentAuditEntry[]>(() => getConsentAuditLog());
 
   useEffect(() => {
     const id = window.setInterval(() => setTick((t) => t + 1), 2000);
     const unsub = subscribeDiag(() => setDiag(getDiagEntries()));
-    return () => { window.clearInterval(id); unsub(); };
+    const unsubAudit = subscribeConsentAudit(() => setAudit(getConsentAuditLog()));
+    return () => { window.clearInterval(id); unsub(); unsubAudit(); };
   }, []);
 
   // Recompute live GTM/GA/dataLayer state on every tick (2s) and on manual refresh.
@@ -109,6 +115,8 @@ const AdminAnalyticsSettings = () => {
   // Re-read consent on every tick — user may accept/reject in another tab.
   const stored = useMemo(readStoredConsent, [tick]);
   const health: ConsentHealthSnapshot = useMemo(getConsentHealth, [tick]);
+  const lastUpdate = useMemo(getLastConsentUpdate, [tick, audit]);
+  const recentAudit = useMemo(() => audit.slice(-15).reverse(), [audit]);
 
   const cspViolations = useMemo(
     () => diag.filter((d) => d.source === "csp").slice(-10).reverse(),
@@ -168,6 +176,18 @@ const AdminAnalyticsSettings = () => {
         verdict_dm: "تباين عن المحفوظ",
         verdict_nd: "لا يوجد قرار",
         verdict_ndl: "لا يوجد dataLayer",
+        auditTitle: "سجل تدقيق الموافقة",
+        auditSub: "كل مكالمة gtag('consent', ...) مع السبب وcorrelationId — لتشخيص جودة الحاوية.",
+        lastUpdate: "آخر تحديث موافقة",
+        kind: "النوع",
+        reason: "السبب",
+        cid: "معرّف الربط",
+        none2: "لم تُسجَّل أي مكالمة بعد",
+        currentDecision: "القرار الحالي المخزّن",
+        kind_default: "افتراضي",
+        kind_update: "تحديث",
+        kind_replay: "إعادة إرسال",
+        kind_custom: "مخصّص",
       }
     : {
         title: "Analytics & Consent",
@@ -211,6 +231,18 @@ const AdminAnalyticsSettings = () => {
         verdict_dm: "Diverges from stored",
         verdict_nd: "No decision yet",
         verdict_ndl: "No dataLayer",
+        auditTitle: "Consent audit log",
+        auditSub: "Every gtag('consent', ...) call with reason + correlationId — for diagnosing Container Quality.",
+        lastUpdate: "Last consent update",
+        kind: "Kind",
+        reason: "Reason",
+        cid: "Correlation ID",
+        none2: "No consent calls recorded yet",
+        currentDecision: "Currently stored decision",
+        kind_default: "default",
+        kind_update: "update",
+        kind_replay: "replay",
+        kind_custom: "custom",
       };
 
   const Pill = ({ ok, labelOk, labelBad }: { ok: boolean; labelOk: string; labelBad: string }) => (
@@ -412,6 +444,90 @@ const AdminAnalyticsSettings = () => {
                         {e.detail}
                       </pre>
                     )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Extension noise card */}
+        {/* Consent audit log card */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <FileClock className="w-4 h-4 text-primary" /> {tx.auditTitle}
+              <Badge variant="outline" className="ms-auto tech-content">{audit.length}</Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-xs text-muted-foreground">{tx.auditSub}</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Stat
+                label={tx.currentDecision}
+                value={
+                  stored ? (
+                    <Pill
+                      ok={stored.decision === "accept_all"}
+                      labelOk={tx.granted}
+                      labelBad={tx.denied}
+                    />
+                  ) : (
+                    <span className="text-muted-foreground text-sm">{tx.unknown}</span>
+                  )
+                }
+              />
+              <Stat
+                label={tx.lastUpdate}
+                value={
+                  lastUpdate ? (
+                    <span className="tech-content text-xs">
+                      {new Date(lastUpdate.ts).toLocaleString(isRTL ? "ar" : "en")}
+                      {" · "}
+                      <code>{lastUpdate.correlationId}</code>
+                    </span>
+                  ) : (
+                    <span className="text-muted-foreground text-sm">{tx.nope}</span>
+                  )
+                }
+              />
+            </div>
+            {recentAudit.length === 0 ? (
+              <p className="text-sm text-muted-foreground">{tx.none2}</p>
+            ) : (
+              <ul className="space-y-1.5">
+                {recentAudit.map((e) => (
+                  <li
+                    key={e.id}
+                    className="rounded-lg border bg-muted/30 px-3 py-2 text-xs flex items-center gap-2 flex-wrap"
+                  >
+                    <Badge
+                      variant="outline"
+                      className={
+                        e.kind === "replay"
+                          ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30"
+                          : e.kind === "update"
+                          ? "bg-primary/10 text-primary border-primary/30"
+                          : e.kind === "custom"
+                          ? "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30"
+                          : "bg-muted text-muted-foreground"
+                      }
+                    >
+                      {e.kind === "default" ? tx.kind_default
+                        : e.kind === "update" ? tx.kind_update
+                        : e.kind === "replay" ? tx.kind_replay
+                        : tx.kind_custom}
+                    </Badge>
+                    <span className="text-muted-foreground tech-content">
+                      {new Date(e.ts).toLocaleTimeString(isRTL ? "ar" : "en")}
+                    </span>
+                    <span className="font-medium">{e.reason}</span>
+                    {e.decision ? (
+                      <Badge variant="secondary" className="tech-content">{e.decision}</Badge>
+                    ) : null}
+                    <code className="ms-auto tech-content text-[10px] text-muted-foreground">
+                      {e.correlationId}
+                    </code>
                   </li>
                 ))}
               </ul>
