@@ -3219,8 +3219,11 @@ export type Database = {
           is_onboarded: boolean
           is_verified: boolean
           membership_tier: Database["public"]["Enums"]["membership_tier"]
+          onboarding_completed_at: string | null
           onboarding_draft: Json
           onboarding_draft_updated_at: string | null
+          onboarding_started_at: string | null
+          onboarding_step: number
           phone: string | null
           phone_verified: boolean
           preferred_language: string
@@ -3243,8 +3246,11 @@ export type Database = {
           is_onboarded?: boolean
           is_verified?: boolean
           membership_tier?: Database["public"]["Enums"]["membership_tier"]
+          onboarding_completed_at?: string | null
           onboarding_draft?: Json
           onboarding_draft_updated_at?: string | null
+          onboarding_started_at?: string | null
+          onboarding_step?: number
           phone?: string | null
           phone_verified?: boolean
           preferred_language?: string
@@ -3267,8 +3273,11 @@ export type Database = {
           is_onboarded?: boolean
           is_verified?: boolean
           membership_tier?: Database["public"]["Enums"]["membership_tier"]
+          onboarding_completed_at?: string | null
           onboarding_draft?: Json
           onboarding_draft_updated_at?: string | null
+          onboarding_started_at?: string | null
+          onboarding_step?: number
           phone?: string | null
           phone_verified?: boolean
           preferred_language?: string
