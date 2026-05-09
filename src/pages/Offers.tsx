@@ -15,6 +15,7 @@ import { Megaphone, Tag, Video, Star, Play, Calendar, Eye, ArrowUpRight, Clock, 
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollToTop } from '@/components/ScrollToTop';
 import { VerifiedBadge } from '@/components/common/VerifiedBadge';
+import { track } from '@/lib/analytics-events';
 
 const Offers = () => {
   const { isRTL, language } = useLanguage();
@@ -55,6 +56,11 @@ const Offers = () => {
   const trackPromoView = useCallback(async (id: string) => {
     if (trackedIds.has(id)) return;
     setTrackedIds(prev => new Set(prev).add(id));
+    const promo = promotions.find((p) => p.id === id);
+    track.offerView({
+      offer_slug: (promo as { slug?: string } | undefined)?.slug || id,
+      business_slug: (promo as { businesses?: { username?: string } } | undefined)?.businesses?.username,
+    });
     try {
       await supabase.rpc('track_content_interaction', {
         _content_type: 'promotion',
@@ -64,7 +70,7 @@ const Offers = () => {
         _metadata: {},
       });
     } catch (_e) { /* view tracking failed */ }
-  }, [trackedIds]);
+  }, [trackedIds, promotions]);
 
   // Intersection observer for view tracking
   const observerCallback = useCallback((entries: IntersectionObserverEntry[]) => {
