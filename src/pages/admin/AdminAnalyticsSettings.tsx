@@ -458,4 +458,18 @@ const Stat = ({ label, value }: { label: string; value: React.ReactNode }) => (
   </div>
 );
 
+function verdictLabel(
+  v: ConsentHealthSnapshot["lastVerdict"],
+  tx: { verdict_ok: string; verdict_missing: string; verdict_dm: string; verdict_nd: string; verdict_ndl: string },
+): string {
+  switch (v) {
+    case "ok": return tx.verdict_ok;
+    case "missing": return tx.verdict_missing;
+    case "denied-mismatch": return tx.verdict_dm;
+    case "no-decision": return tx.verdict_nd;
+    case "no-datalayer": return tx.verdict_ndl;
+    default: return v;
+  }
+}
+
 export default AdminAnalyticsSettings;
