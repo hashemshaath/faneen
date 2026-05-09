@@ -78,7 +78,29 @@
     <!-- AI crawler discovery -->
     <link rel="alternate" type="text/plain" title="LLM crawler manifest" href="/llms.txt" />
 
-    <!-- GTM + Consent Mode v2 are bootstrapped from src/lib/gtm.ts using VITE_GTM_ID. -->
+    <!-- Google Consent Mode v2 defaults + GTM container.
+         VITE_GTM_ID is substituted at build time. The runtime bootstrap in
+         src/lib/gtm.ts is a no-op when GTM is already present in HTML. -->
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        functionality_storage: 'granted',
+        security_storage: 'granted',
+        wait_for_update: 500
+      });
+    </script>
+    <!-- Google Tag Manager -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','%VITE_GTM_ID%');</script>
+    <!-- End Google Tag Manager -->
 
     <!-- Open Graph -->
     <meta property="og:type" content="website">
