@@ -5,6 +5,7 @@ import "./index.css";
 import { startWebVitals } from "./utils/reportWebVitals";
 import { installDiagnostics } from "./lib/diagnostics";
 import { initGtm } from "./lib/gtm";
+import { startConsentWatchdog } from "./lib/consent-watchdog";
 
 validateEnv();
 
@@ -14,6 +15,10 @@ installDiagnostics();
 
 // Bootstrap Google Tag Manager + Consent Mode v2 (no-op without VITE_GTM_ID).
 initGtm();
+
+// Self-healing consent watchdog: detects "stuck-denied" state and re-pushes
+// the user's stored decision. Boots after initGtm() so the dataLayer exists.
+startConsentWatchdog();
 
 // One-time legacy storage cleanup: removes any leftover `faneen_*` keys
 // from beta-tester browsers. Safe no-op once it has run on a device.

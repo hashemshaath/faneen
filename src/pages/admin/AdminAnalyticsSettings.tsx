@@ -9,13 +9,18 @@ import { Separator } from "@/components/ui/separator";
 import { useNoIndex } from "@/hooks/useNoIndex";
 import {
   Activity, BarChart3, CheckCircle2, XCircle, Shield, ShieldAlert,
-  RefreshCw, ExternalLink, Cookie, Eye, AlertTriangle,
+  RefreshCw, ExternalLink, Cookie, Eye, AlertTriangle, HeartPulse, Wand2,
 } from "lucide-react";
 import {
   getGtmId,
   readStoredConsent,
   type ConsentState,
 } from "@/lib/gtm";
+import {
+  getConsentHealth,
+  runConsentCheckNow,
+  type ConsentHealthSnapshot,
+} from "@/lib/consent-watchdog";
 import { getDiagEntries, subscribeDiag, type DiagEntry } from "@/lib/diagnostics";
 
 type DataLayerWindow = Window & {
@@ -103,6 +108,7 @@ const AdminAnalyticsSettings = () => {
   const state = useMemo(detect, [tick]);
   // Re-read consent on every tick — user may accept/reject in another tab.
   const stored = useMemo(readStoredConsent, [tick]);
+  const health: ConsentHealthSnapshot = useMemo(getConsentHealth, [tick]);
 
   const cspViolations = useMemo(
     () => diag.filter((d) => d.source === "csp").slice(-10).reverse(),
@@ -114,6 +120,10 @@ const AdminAnalyticsSettings = () => {
   );
 
   const refresh = useCallback(() => setTick((t) => t + 1), []);
+  const runCheck = useCallback(() => {
+    runConsentCheckNow();
+    setTick((t) => t + 1);
+  }, []);
 
   const tx = isRTL
     ? {
@@ -144,6 +154,20 @@ const AdminAnalyticsSettings = () => {
         notConfigured: "غير مُعدّ — VITE_GTM_ID غير مضبوط.",
         viewDiag: "فتح التشخيصات الكاملة",
         nope: "—",
+        watchdog: "مراقب الموافقة",
+        watchdogSub: "يكتشف حالة 100% مرفوض الثابتة ويعيد مزامنة قرار الزائر تلقائيًا.",
+        verdict: "النتيجة",
+        resyncs: "مرات إعادة المزامنة",
+        mismatches: "حالات عدم التطابق",
+        lastResync: "آخر إعادة مزامنة",
+        runNow: "فحص الآن",
+        recentSamples: "العيّنات الأخيرة",
+        allDenied: "كله مرفوض",
+        verdict_ok: "متطابق",
+        verdict_missing: "لا يوجد أمر موافقة",
+        verdict_dm: "تباين عن المحفوظ",
+        verdict_nd: "لا يوجد قرار",
+        verdict_ndl: "لا يوجد dataLayer",
       }
     : {
         title: "Analytics & Consent",
@@ -173,6 +197,20 @@ const AdminAnalyticsSettings = () => {
         notConfigured: "Not configured — VITE_GTM_ID is unset.",
         viewDiag: "Open full diagnostics",
         nope: "—",
+        watchdog: "Consent watchdog",
+        watchdogSub: "Detects a stuck 100%-denied state and auto-resyncs the visitor's decision.",
+        verdict: "Verdict",
+        resyncs: "Resyncs",
+        mismatches: "Mismatches",
+        lastResync: "Last resync",
+        runNow: "Check now",
+        recentSamples: "Recent samples",
+        allDenied: "All denied",
+        verdict_ok: "In sync",
+        verdict_missing: "No consent command",
+        verdict_dm: "Diverges from stored",
+        verdict_nd: "No decision yet",
+        verdict_ndl: "No dataLayer",
       };
 
   const Pill = ({ ok, labelOk, labelBad }: { ok: boolean; labelOk: string; labelBad: string }) => (
@@ -279,6 +317,81 @@ const AdminAnalyticsSettings = () => {
         </Card>
 
         {/* CSP violations card */}
+        {/* Consent watchdog card */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <HeartPulse className="w-4 h-4 text-primary" /> {tx.watchdog}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={runCheck}
+                className="ms-auto gap-1 h-7"
+              >
+                <Wand2 className="w-3.5 h-3.5" /> {tx.runNow}
+              </Button>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-xs text-muted-foreground">{tx.watchdogSub}</p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <Stat
+                label={tx.verdict}
+                value={
+                  <Badge
+                    variant="outline"
+                    className={
+                      health.lastVerdict === "ok"
+                        ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30"
+                        : health.lastVerdict === "no-decision"
+                        ? "bg-muted text-muted-foreground"
+                        : "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30"
+                    }
+                  >
+                    {verdictLabel(health.lastVerdict, tx)}
+                  </Badge>
+                }
+              />
+              <Stat label={tx.mismatches} value={<span className="tech-content font-semibold">{health.mismatchCount}</span>} />
+              <Stat label={tx.resyncs} value={<span className="tech-content font-semibold">{health.resyncCount}</span>} />
+              <Stat
+                label={tx.lastResync}
+                value={
+                  health.lastResyncAt
+                    ? <span className="tech-content text-xs">{new Date(health.lastResyncAt).toLocaleString(isRTL ? "ar" : "en")}</span>
+                    : <span className="text-muted-foreground">{tx.nope}</span>
+                }
+              />
+            </div>
+            {health.samples.length > 0 && (
+              <div>
+                <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1">{tx.recentSamples}</div>
+                <ul className="flex flex-wrap gap-1.5">
+                  {health.samples.slice().reverse().map((s, i) => (
+                    <li key={`${s.ts}-${i}`}>
+                      <Badge
+                        variant="outline"
+                        className={
+                          s.verdict === "ok"
+                            ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 gap-1"
+                            : s.allDenied
+                            ? "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30 gap-1"
+                            : "bg-muted text-muted-foreground gap-1"
+                        }
+                        title={new Date(s.ts).toISOString()}
+                      >
+                        {verdictLabel(s.verdict, tx)}
+                        {s.allDenied ? <span className="text-[10px]">· {tx.allDenied}</span> : null}
+                      </Badge>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* CSP violations card */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
@@ -344,5 +457,19 @@ const Stat = ({ label, value }: { label: string; value: React.ReactNode }) => (
     <div className="text-sm">{value}</div>
   </div>
 );
+
+function verdictLabel(
+  v: ConsentHealthSnapshot["lastVerdict"],
+  tx: { verdict_ok: string; verdict_missing: string; verdict_dm: string; verdict_nd: string; verdict_ndl: string },
+): string {
+  switch (v) {
+    case "ok": return tx.verdict_ok;
+    case "missing": return tx.verdict_missing;
+    case "denied-mismatch": return tx.verdict_dm;
+    case "no-decision": return tx.verdict_nd;
+    case "no-datalayer": return tx.verdict_ndl;
+    default: return v;
+  }
+}
 
 export default AdminAnalyticsSettings;
