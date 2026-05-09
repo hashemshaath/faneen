@@ -570,8 +570,8 @@ export const BranchesTab = ({ businessId }: { businessId: string }) => {
           branch.unified_number && { icon: Hash, label: language === "ar" ? "الرقم الموحد" : "Unified Number", value: branch.unified_number, dir: "ltr" as const, href: `tel:${branch.unified_number}` },
           branch.customer_service_phone && { icon: PhoneCall, label: language === "ar" ? "خدمة العملاء" : "Customer Service", value: branch.customer_service_phone, dir: "ltr" as const, href: `tel:${branch.customer_service_phone}` },
           branch.email && { icon: Mail, label: language === "ar" ? "البريد" : "Email", value: branch.email, dir: "ltr" as const, href: `mailto:${branch.email}` },
-          branch.website && { icon: Globe, label: language === "ar" ? "الموقع" : "Website", value: branch.website.replace(/^https?:\/\//, ""), dir: "ltr" as const, href: branch.website, external: true },
-        ].filter(Boolean) as Array<{ icon: React.ElementType; label: string; value: string; dir?: "ltr"; href?: string; external?: boolean }>;
+          branch.website && { icon: Globe, label: language === "ar" ? "الموقع" : "Website", value: branch.website.replace(/^https?:\/\//, ""), dir: "ltr" as const, href: branch.website, external: true, leadType: "website" as const },
+        ].filter(Boolean) as Array<{ icon: React.ElementType; label: string; value: string; dir?: "ltr"; href?: string; external?: boolean; leadType?: "website" }>;
 
         return (
           <article
@@ -616,6 +616,9 @@ export const BranchesTab = ({ businessId }: { businessId: string }) => {
                   const wrapperProps = item.href
                     ? { href: item.href, ...(item.external ? { target: "_blank", rel: "noopener noreferrer" } : {}) }
                     : {};
+                  if (item.href && item.leadType) {
+                    (wrapperProps as Record<string, string>)["data-contact-type"] = item.leadType;
+                  }
 
                   return (
                     <Wrapper
@@ -677,8 +680,8 @@ export const ContactTab = ({ business }: { business: any }) => {
     business.unified_number && { icon: Hash, label: language === "ar" ? "الرقم الموحد" : "Unified Number", value: business.unified_number, href: `tel:${business.unified_number}`, dir: "ltr" as const },
     business.customer_service_phone && { icon: PhoneCall, label: language === "ar" ? "خدمة العملاء" : "Customer Service", value: business.customer_service_phone, href: `tel:${business.customer_service_phone}`, dir: "ltr" as const },
     business.email && { icon: Mail, label: language === "ar" ? "راسلنا" : "Email us", value: business.email, href: `mailto:${business.email}`, dir: "ltr" as const },
-    business.website && { icon: Globe, label: language === "ar" ? "الموقع" : "Website", value: business.website.replace(/^https?:\/\//, ""), href: business.website, dir: "ltr" as const, external: true },
-  ].filter(Boolean) as Array<{ icon: React.ElementType; label: string; value: string; href?: string; dir?: "ltr"; external?: boolean }>;
+    business.website && { icon: Globe, label: language === "ar" ? "الموقع" : "Website", value: business.website.replace(/^https?:\/\//, ""), href: business.website, dir: "ltr" as const, external: true, leadType: "website" as const },
+  ].filter(Boolean) as Array<{ icon: React.ElementType; label: string; value: string; href?: string; dir?: "ltr"; external?: boolean; leadType?: "website" }>;
 
   const addressParts = [
     business.district,
@@ -695,6 +698,9 @@ export const ContactTab = ({ business }: { business: any }) => {
           const wrapperProps = item.href
             ? { href: item.href, ...(item.external ? { target: "_blank", rel: "noopener noreferrer" } : {}) }
             : {};
+          if (item.href && item.leadType) {
+            (wrapperProps as Record<string, string>)["data-contact-type"] = item.leadType;
+          }
 
           return (
             <Wrapper
