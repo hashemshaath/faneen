@@ -1,11 +1,7 @@
 /// <reference types="npm:@types/react@18.3.1" />
 import * as React from 'npm:react@18.3.1'
-import {
-  Body, Container, Head, Heading, Html, Preview, Text, Section, Hr,
-} from 'npm:@react-email/components@0.0.22'
+import { BilingualEmail, SITE_NAME_AR } from '../email-layout/BilingualLayout.tsx'
 import type { TemplateEntry } from './registry.ts'
-
-const SITE_NAME = "قِطاعات"
 
 interface BookingConfirmationProps {
   clientName?: string
@@ -15,72 +11,44 @@ interface BookingConfirmationProps {
   refId?: string
 }
 
-const BookingConfirmationEmail = ({
-  clientName,
-  businessName,
-  bookingDate,
-  startTime,
-  refId,
-}: BookingConfirmationProps) => (
-  <Html lang="ar" dir="rtl">
-    <Head>
-          <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;600;700&display=swap" />
-        </Head>
-    <Preview>تأكيد حجز موعدك لدى {businessName || 'مزود الخدمة'}</Preview>
-    <Body style={main}>
-      <Container style={container}>
-        <Section style={logoSection}>
-          <Text style={logoText}>قِطاعات</Text>
-        </Section>
-        <Hr style={hr} />
-        <Heading style={h1}>
-          تم تأكيد حجزك بنجاح ✓
-        </Heading>
-        <Text style={text}>
-          {clientName ? `مرحباً ${clientName}،` : 'مرحباً،'}
-        </Text>
-        <Text style={text}>
-          تم تسجيل حجز موعدك بنجاح. إليك تفاصيل الحجز:
-        </Text>
-        <Section style={detailsBox}>
-          {refId && <Text style={detailRow}>رقم الحجز: <strong>{refId}</strong></Text>}
-          {businessName && <Text style={detailRow}>مزود الخدمة: <strong>{businessName}</strong></Text>}
-          {bookingDate && <Text style={detailRow}>التاريخ: <strong>{bookingDate}</strong></Text>}
-          {startTime && <Text style={detailRow}>الوقت: <strong>{startTime}</strong></Text>}
-        </Section>
-        <Text style={text}>
-          يمكنك متابعة حالة الحجز من خلال لوحة التحكم الخاصة بك.
-        </Text>
-        <Hr style={hr} />
-        <Text style={footer}>
-          مع تحيات فريق {SITE_NAME}
-        </Text>
-      </Container>
-    </Body>
-  </Html>
+const BookingConfirmationEmail: React.FC<BookingConfirmationProps> = ({
+  clientName, businessName, bookingDate, startTime, refId,
+}) => (
+  <BilingualEmail
+    preview={`تأكيد حجزك لدى ${businessName || 'مزود الخدمة'} · Your booking is confirmed`}
+    badge={{ textAr: 'تم التأكيد', textEn: 'Confirmed', tone: 'success' }}
+    titleAr="تم تأكيد حجزك ✓"
+    titleEn="Your booking is confirmed ✓"
+    greetingNameAr={clientName}
+    greetingNameEn={clientName}
+    introAr="تم تسجيل موعدك بنجاح. الرجاء الاحتفاظ بهذه التفاصيل للرجوع إليها."
+    introEn="Your appointment has been scheduled successfully. Please keep these details for your reference."
+    details={[
+      ...(refId ? [{ labelAr: 'رقم الحجز', labelEn: 'Booking ID', value: refId, mono: true }] : []),
+      ...(businessName ? [{ labelAr: 'مزود الخدمة', labelEn: 'Provider', value: businessName }] : []),
+      ...(bookingDate ? [{ labelAr: 'التاريخ', labelEn: 'Date', value: bookingDate, mono: true }] : []),
+      ...(startTime ? [{ labelAr: 'الوقت', labelEn: 'Time', value: startTime, mono: true }] : []),
+    ]}
+    tipAr="إذا احتجت لتعديل أو إلغاء الموعد، يمكنك ذلك عبر لوحة التحكم قبل الموعد بـ 24 ساعة على الأقل."
+    tipEn="To reschedule or cancel, please use your dashboard at least 24 hours before the appointment."
+    cta={{
+      href: 'https://qitaat.com/dashboard/bookings',
+      labelAr: 'إدارة الحجز',
+      labelEn: 'Manage booking',
+    }}
+  />
 )
 
 export const template = {
   component: BookingConfirmationEmail,
   subject: (data: Record<string, any>) =>
-    `تأكيد حجز${data.refId ? ' #' + data.refId : ''} - ${SITE_NAME}`,
-  displayName: 'تأكيد حجز موعد',
+    `تأكيد حجز${data?.refId ? ` #${data.refId}` : ''} · Booking confirmed — ${SITE_NAME_AR}`,
+  displayName: 'تأكيد حجز موعد · Booking confirmation',
   previewData: {
-    clientName: 'أحمد',
+    clientName: 'أحمد العتيبي',
     businessName: 'شركة الإنجاز للمقاولات',
     bookingDate: '2026-04-20',
-    startTime: '10:00',
+    startTime: '10:00 ص',
     refId: 'BK-0001234',
   },
 } satisfies TemplateEntry
-
-const main = { backgroundColor: '#ffffff', fontFamily: "'Noto Sans Arabic', 'Segoe UI', Tahoma, Arial, sans-serif" }
-const container = { padding: '20px 30px', maxWidth: '560px', margin: '0 auto' }
-const logoSection = { textAlign: 'center' as const, padding: '20px 0 10px' }
-const logoText = { fontSize: '28px', fontWeight: '700', color: 'hsl(220, 35%, 15%)', margin: '0' }
-const hr = { borderColor: 'hsl(220, 15%, 88%)', margin: '20px 0' }
-const h1 = { fontSize: '22px', fontWeight: '700', color: 'hsl(220, 35%, 15%)', margin: '0 0 16px', textAlign: 'right' as const }
-const text = { fontSize: '15px', color: 'hsl(220, 10%, 45%)', lineHeight: '1.7', margin: '0 0 14px', textAlign: 'right' as const }
-const detailsBox = { backgroundColor: 'hsl(220, 20%, 97%)', borderRadius: '12px', padding: '16px 20px', margin: '16px 0' }
-const detailRow = { fontSize: '14px', color: 'hsl(220, 30%, 12%)', margin: '6px 0', textAlign: 'right' as const }
-const footer = { fontSize: '12px', color: 'hsl(220, 10%, 45%)', margin: '20px 0 0', textAlign: 'center' as const }
