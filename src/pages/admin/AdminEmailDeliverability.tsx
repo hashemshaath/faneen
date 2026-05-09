@@ -399,6 +399,7 @@ const AdminEmailDeliverability: React.FC = () => {
                       <th className="text-start py-2 px-2 font-medium">{isRTL ? 'القالب' : 'Template'}</th>
                       <th className="text-start py-2 px-2 font-medium">{isRTL ? 'المستلم' : 'Recipient'}</th>
                       <th className="text-start py-2 px-2 font-medium">{isRTL ? 'الحالة' : 'Status'}</th>
+                      <th className="text-start py-2 px-2 font-medium">{isRTL ? 'فتح/نقر' : 'Open/Click'}</th>
                       <th className="text-start py-2 px-2 font-medium">{isRTL ? 'الوقت' : 'Time'}</th>
                       <th className="text-start py-2 px-2 font-medium">{isRTL ? 'الخطأ' : 'Error'}</th>
                     </tr>
@@ -410,6 +411,11 @@ const AdminEmailDeliverability: React.FC = () => {
                         <td className="py-2 px-2 tech-content">{r.recipient_email}</td>
                         <td className="py-2 px-2">
                           <Badge variant="outline" className={statusBadge(r.status)}>{r.status}</Badge>
+                        </td>
+                        <td className="py-2 px-2 text-xs tech-content">
+                          <span className="inline-flex items-center gap-1 text-emerald-700"><Eye className="h-3 w-3" />{r.opens_count ?? 0}</span>
+                          <span className="mx-1 text-muted-foreground">·</span>
+                          <span className="inline-flex items-center gap-1 text-emerald-700"><MousePointerClick className="h-3 w-3" />{r.clicks_count ?? 0}</span>
                         </td>
                         <td className="py-2 px-2 text-xs text-muted-foreground tech-content">
                           {format(new Date(r.created_at), 'PPp', { locale: isRTL ? ar : undefined })}
