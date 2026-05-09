@@ -199,6 +199,17 @@ const AdminEmailDeliverability: React.FC = () => {
     refetchInterval: 60_000,
   });
 
+  // Per-category click stats
+  const { data: categoryStats = [] } = useQuery({
+    queryKey: ['email-link-categories', windowMinutes],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_email_link_category_stats', { _window_minutes: windowMinutes });
+      if (error) throw error;
+      return (data ?? []) as Array<{ category: string; total_clicks: number; unique_clicks: number; unique_messages: number; ctr: number }>;
+    },
+    refetchInterval: 60_000,
+  });
+
   // Distinct templates for filter
   const templates = useMemo(() => {
     const set = new Set<string>();
