@@ -9,13 +9,18 @@ import { Separator } from "@/components/ui/separator";
 import { useNoIndex } from "@/hooks/useNoIndex";
 import {
   Activity, BarChart3, CheckCircle2, XCircle, Shield, ShieldAlert,
-  RefreshCw, ExternalLink, Cookie, Eye, AlertTriangle,
+  RefreshCw, ExternalLink, Cookie, Eye, AlertTriangle, HeartPulse, Wand2,
 } from "lucide-react";
 import {
   getGtmId,
   readStoredConsent,
   type ConsentState,
 } from "@/lib/gtm";
+import {
+  getConsentHealth,
+  runConsentCheckNow,
+  type ConsentHealthSnapshot,
+} from "@/lib/consent-watchdog";
 import { getDiagEntries, subscribeDiag, type DiagEntry } from "@/lib/diagnostics";
 
 type DataLayerWindow = Window & {
@@ -103,6 +108,7 @@ const AdminAnalyticsSettings = () => {
   const state = useMemo(detect, [tick]);
   // Re-read consent on every tick — user may accept/reject in another tab.
   const stored = useMemo(readStoredConsent, [tick]);
+  const health: ConsentHealthSnapshot = useMemo(getConsentHealth, [tick]);
 
   const cspViolations = useMemo(
     () => diag.filter((d) => d.source === "csp").slice(-10).reverse(),
@@ -114,6 +120,10 @@ const AdminAnalyticsSettings = () => {
   );
 
   const refresh = useCallback(() => setTick((t) => t + 1), []);
+  const runCheck = useCallback(() => {
+    runConsentCheckNow();
+    setTick((t) => t + 1);
+  }, []);
 
   const tx = isRTL
     ? {
