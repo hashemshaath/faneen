@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,6 +18,7 @@ import {
   detectSectorFromCategorySlug,
   getSectorMeta,
 } from '@/lib/sector-keywords';
+import { track } from '@/lib/analytics-events';
 
 const Categories = () => {
   const { slug } = useParams<{ slug?: string }>();
@@ -38,6 +39,16 @@ const Categories = () => {
   // can hydrate the page with industry-specific title/description/keywords.
   const sectorSlug = detectSectorFromCategorySlug(selectedCategory?.slug ?? slug);
   const sectorMeta = sectorSlug ? getSectorMeta(sectorSlug, isRTL) : null;
+
+  // category_view — fires whenever the user lands on a specific category page.
+  useEffect(() => {
+    if (!selectedCategory?.slug) return;
+    track.categoryView({
+      category_slug: selectedCategory.slug,
+      category_name: catName || undefined,
+      sector: sectorSlug || undefined,
+    });
+  }, [selectedCategory?.slug, catName, sectorSlug]);
 
   // For the categories index (no slug) we mix the top keywords across sectors.
   const allSectorKeywords = useMemo(
