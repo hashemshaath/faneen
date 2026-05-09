@@ -2191,6 +2191,87 @@ export type Database = {
           },
         ]
       }
+      lead_requests: {
+        Row: {
+          budget_range: string | null
+          business_id: string
+          contact_preference: string
+          created_at: string
+          email: string
+          id: string
+          internal_notes: string | null
+          message: string
+          name: string
+          phone: string | null
+          priority: string
+          project_scope: string | null
+          responded_at: string | null
+          responded_by: string | null
+          source: string | null
+          status: string
+          subject: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          budget_range?: string | null
+          business_id: string
+          contact_preference?: string
+          created_at?: string
+          email: string
+          id?: string
+          internal_notes?: string | null
+          message: string
+          name: string
+          phone?: string | null
+          priority?: string
+          project_scope?: string | null
+          responded_at?: string | null
+          responded_by?: string | null
+          source?: string | null
+          status?: string
+          subject?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          budget_range?: string | null
+          business_id?: string
+          contact_preference?: string
+          created_at?: string
+          email?: string
+          id?: string
+          internal_notes?: string | null
+          message?: string
+          name?: string
+          phone?: string | null
+          priority?: string
+          project_scope?: string | null
+          responded_at?: string | null
+          responded_by?: string | null
+          source?: string | null
+          status?: string
+          subject?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_requests_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_requests_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       maintenance_requests: {
         Row: {
           client_id: string
