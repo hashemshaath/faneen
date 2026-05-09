@@ -147,6 +147,8 @@ const AdminContactMessages = () => {
 
   const statusFilter = searchParams.get('status') || 'all';
   const priorityFilter = searchParams.get('priority') || 'all';
+  const assigneeFilter = searchParams.get('assignee') || 'all'; // 'all' | 'me' | 'unassigned' | <uuid>
+  const workStateFilter = searchParams.get('work') || 'all';
   const search = searchParams.get('q') || '';
   const starredOnly = searchParams.get('starred') === '1';
   const dateRange = (searchParams.get('range') as DateRange) || 'all';
@@ -161,6 +163,11 @@ const AdminContactMessages = () => {
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [splitView, setSplitView] = useState<boolean>(() => localStorage.getItem('qitaat_cm_split') === '1');
   const [density, setDensity] = useState<Density>(() => (localStorage.getItem('qitaat_cm_density') as Density) || 'comfortable');
+  const [showExportPanel, setShowExportPanel] = useState(false);
+  const [exportFormat, setExportFormat] = useState<'csv' | 'pdf'>('csv');
+  const [exportFields, setExportFields] = useState<ContactExportField[]>(DEFAULT_EXPORT_FIELDS);
+  const [exportScope, setExportScope] = useState<'filtered' | 'selected'>('filtered');
+  const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => { localStorage.setItem('qitaat_cm_split', splitView ? '1' : '0'); }, [splitView]);
   useEffect(() => { localStorage.setItem('qitaat_cm_density', density); }, [density]);
@@ -196,11 +203,46 @@ const AdminContactMessages = () => {
     },
   });
 
+  // Admin assignees (for assignment + filter)
+  const { data: assignees = [] } = useQuery({
+    queryKey: ['admin-assignees'],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('list_admin_assignees');
+      if (error) throw error;
+      return (data || []) as AdminAssignee[];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+  const assigneeMap = useMemo(() => {
+    const m = new Map<string, AdminAssignee>();
+    assignees.forEach(a => m.set(a.user_id, a));
+    return m;
+  }, [assignees]);
+
+  // Activity feed for focused message
+  const { data: events = [] } = useQuery({
+    queryKey: ['contact-message-events', focusedId],
+    enabled: !!focusedId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('contact_message_events')
+        .select('*')
+        .eq('message_id', focusedId!)
+        .order('created_at', { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return (data || []) as ContactEvent[];
+    },
+  });
+
   useEffect(() => {
     const channel = supabase
       .channel('admin-contact-messages-rt')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'contact_messages' }, () => {
         queryClient.invalidateQueries({ queryKey: ['admin-contact-messages'] });
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'contact_message_events' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['contact-message-events'] });
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
@@ -213,6 +255,12 @@ const AdminContactMessages = () => {
       if (patch.status === 'replied') {
         finalPatch.replied_at = new Date().toISOString();
         if (user?.id) finalPatch.replied_by = user.id;
+      }
+      if (patch.status === 'closed') {
+        finalPatch.closed_at = new Date().toISOString();
+      }
+      if (patch.assigned_to !== undefined) {
+        finalPatch.assigned_at = patch.assigned_to ? new Date().toISOString() : null;
       }
       const { error } = await supabase.from('contact_messages').update(finalPatch).in('id', ids);
       if (error) throw error;
@@ -250,6 +298,10 @@ const AdminContactMessages = () => {
     const list = messages.filter(m => {
       if (statusFilter !== 'all' && m.status !== statusFilter) return false;
       if (priorityFilter !== 'all' && m.priority !== priorityFilter) return false;
+      if (workStateFilter !== 'all' && m.work_state !== workStateFilter) return false;
+      if (assigneeFilter === 'me' && m.assigned_to !== user?.id) return false;
+      else if (assigneeFilter === 'unassigned' && m.assigned_to) return false;
+      else if (assigneeFilter !== 'all' && assigneeFilter !== 'me' && assigneeFilter !== 'unassigned' && m.assigned_to !== assigneeFilter) return false;
       if (starredOnly && !m.starred) return false;
       if (cutoff && new Date(m.created_at) < cutoff) return false;
       if (quickChip === 'unread' && m.status !== 'new') return false;
@@ -262,7 +314,7 @@ const AdminContactMessages = () => {
         if (now - new Date(m.created_at).getTime() < 24 * 60 * 60 * 1000) return false;
       }
       if (q) {
-        const hay = `${m.name} ${m.email} ${m.subject || ''} ${m.message} ${m.internal_notes || ''}`.toLowerCase();
+        const hay = `${m.name} ${m.email} ${m.subject || ''} ${m.message} ${m.internal_notes || ''} ${m.ticket_number || ''} ${m.ai_summary || ''}`.toLowerCase();
         if (!hay.includes(q)) return false;
       }
       return true;
@@ -284,7 +336,7 @@ const AdminContactMessages = () => {
       }
       return +new Date(b.created_at) - +new Date(a.created_at);
     });
-  }, [messages, statusFilter, priorityFilter, starredOnly, search, dateRange, quickChip, sortKey]);
+  }, [messages, statusFilter, priorityFilter, workStateFilter, assigneeFilter, user?.id, starredOnly, search, dateRange, quickChip, sortKey]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
