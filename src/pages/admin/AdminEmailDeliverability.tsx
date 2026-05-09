@@ -588,5 +588,3 @@ const CategoryCard: React.FC<{ row: { category: string; total_clicks: number; un
 };
 
 export default AdminEmailDeliverability;
-
-export default AdminEmailDeliverability;
