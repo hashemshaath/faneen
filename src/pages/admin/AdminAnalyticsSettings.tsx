@@ -317,6 +317,81 @@ const AdminAnalyticsSettings = () => {
         </Card>
 
         {/* CSP violations card */}
+        {/* Consent watchdog card */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <HeartPulse className="w-4 h-4 text-primary" /> {tx.watchdog}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={runCheck}
+                className="ms-auto gap-1 h-7"
+              >
+                <Wand2 className="w-3.5 h-3.5" /> {tx.runNow}
+              </Button>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-xs text-muted-foreground">{tx.watchdogSub}</p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <Stat
+                label={tx.verdict}
+                value={
+                  <Badge
+                    variant="outline"
+                    className={
+                      health.lastVerdict === "ok"
+                        ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30"
+                        : health.lastVerdict === "no-decision"
+                        ? "bg-muted text-muted-foreground"
+                        : "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30"
+                    }
+                  >
+                    {verdictLabel(health.lastVerdict, tx)}
+                  </Badge>
+                }
+              />
+              <Stat label={tx.mismatches} value={<span className="tech-content font-semibold">{health.mismatchCount}</span>} />
+              <Stat label={tx.resyncs} value={<span className="tech-content font-semibold">{health.resyncCount}</span>} />
+              <Stat
+                label={tx.lastResync}
+                value={
+                  health.lastResyncAt
+                    ? <span className="tech-content text-xs">{new Date(health.lastResyncAt).toLocaleString(isRTL ? "ar" : "en")}</span>
+                    : <span className="text-muted-foreground">{tx.nope}</span>
+                }
+              />
+            </div>
+            {health.samples.length > 0 && (
+              <div>
+                <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1">{tx.recentSamples}</div>
+                <ul className="flex flex-wrap gap-1.5">
+                  {health.samples.slice().reverse().map((s, i) => (
+                    <li key={`${s.ts}-${i}`}>
+                      <Badge
+                        variant="outline"
+                        className={
+                          s.verdict === "ok"
+                            ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 gap-1"
+                            : s.allDenied
+                            ? "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30 gap-1"
+                            : "bg-muted text-muted-foreground gap-1"
+                        }
+                        title={new Date(s.ts).toISOString()}
+                      >
+                        {verdictLabel(s.verdict, tx)}
+                        {s.allDenied ? <span className="text-[10px]">· {tx.allDenied}</span> : null}
+                      </Badge>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* CSP violations card */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
