@@ -54,24 +54,27 @@
           font preload onload handler. Future: replace with hashes to drop it.
         - 'unsafe-inline' on style-src is required by Tailwind/Vite/Radix injected styles.
         - connect-src covers Supabase REST + Realtime (wss) + Google Fonts.
-        - frame-ancestors lets the Lovable preview embed the app.
+        - frame-ancestors is INTENTIONALLY OMITTED here: browsers ignore
+          frame-ancestors when delivered via <meta> and emit a console
+          warning. It must be set as an HTTP response header by hosting
+          (Lovable) instead. Fallback embedding protection is still
+          provided by `object-src 'none'` and the lack of legacy plugins.
     -->
     <meta http-equiv="Content-Security-Policy" content="
       default-src 'self';
       base-uri 'self';
       form-action 'self';
       object-src 'none';
-      frame-ancestors 'self' https://*.lovable.app https://*.lovable.dev https://lovable.dev https://tagassistant.google.com;
       script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://www.googletagmanager.com;
       script-src-attr 'unsafe-inline';
-      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://www.googletagmanager.com https://tagassistant.google.com;
       font-src 'self' data: https://fonts.gstatic.com;
       img-src 'self' data: blob: https:;
       media-src 'self' data: blob: https:;
       connect-src 'self' https://hckpxwhjycmdflaneihd.supabase.co wss://hckpxwhjycmdflaneihd.supabase.co https://*.supabase.co wss://*.supabase.co https://fonts.googleapis.com https://fonts.gstatic.com https://www.googletagmanager.com https://www.google-analytics.com https://www.google.com https://region1.google-analytics.com https://analytics.google.com;
       worker-src 'self' blob:;
       manifest-src 'self';
-      frame-src 'self' https://www.googletagmanager.com;
+      frame-src 'self' https://www.googletagmanager.com https://tagassistant.google.com;
       upgrade-insecure-requests
     " />
 
