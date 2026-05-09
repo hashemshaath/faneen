@@ -1200,6 +1200,11 @@ const FocusedMessage: React.FC<FocusedProps> = ({
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div className="space-y-1 min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
+              {focused.ticket_number && (
+                <Badge variant="outline" className="bg-slate-500/10 text-slate-700 border-slate-500/30 tech-content">
+                  {focused.ticket_number}
+                </Badge>
+              )}
               <Badge variant="outline" className={statusConfig[focused.status].color}>
                 {isRTL ? statusConfig[focused.status].ar : statusConfig[focused.status].en}
               </Badge>
@@ -1207,6 +1212,16 @@ const FocusedMessage: React.FC<FocusedProps> = ({
                 <Flame className="w-3 h-3 me-1" />
                 {isRTL ? priorityConfig[focused.priority].ar : priorityConfig[focused.priority].en}
               </Badge>
+              <Badge variant="outline" className={wsCfg.color}>
+                <Timer className="w-3 h-3 me-1" />
+                {isRTL ? wsCfg.ar : wsCfg.en}
+              </Badge>
+              {assignedUser && (
+                <Badge variant="outline" className="bg-accent/10 text-accent border-accent/30">
+                  <User className="w-3 h-3 me-1" />
+                  {assignedUser.full_name || assignedUser.email}
+                </Badge>
+              )}
               {focused.starred && <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/30"><Star className="w-3 h-3 fill-current" /></Badge>}
               {responseHrs !== null && (
                 <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30">
