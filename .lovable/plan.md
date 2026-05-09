@@ -1,132 +1,181 @@
-# خطة: صفحة هبوط احترافية لمزودي الخدمات + لوحة تحكم إدارية
 
-## الهدف
-بناء صفحة هبوط `/for-providers` (وكذلك `/join-as-provider` كـ alias) مُحسّنة لمحركات البحث ومحركات الذكاء الاصطناعي (GEO/AEO) لاستقطاب أصحاب ورش ومصانع الألمنيوم والحديد والزجاج والخشب للتسجيل في قِطاعات، مع لوحة تحكم كاملة لتعديل المحتوى والصور وقياس الأداء.
+# خطة تطوير تجربة التواصل في قِطاعات
 
----
+تنفيذ مرحلي على 4 مراحل متتابعة. كل مرحلة قابلة للنشر بشكل مستقل، ويمكنك المراجعة بين المراحل.
 
-## 1) الواجهة الأمامية — صفحة `/for-providers`
+## المبادئ الحاكمة
 
-تصميم Apple-like صناعي، RTL/LTR، Mobile-first، خط IBM Plex Sans Arabic، استخدام `<Bi>` للنصوص ثنائية اللغة.
-
-**الأقسام بالترتيب:**
-
-1. **Hero** — عنوان H1 قوي بالكلمات المفتاحية: "انضم لأكبر دليل ورش الألمنيوم والحديد والزجاج في السعودية والخليج". CTA مزدوج (سجّل الآن / شاهد جولة)، شارة ثقة (عدد الورش، عدد المشاريع، عدد العملاء — Live من DB)، خلفية متحركة `HeroParticles` خفيفة.
-2. **شريط الإحصائيات** — أرقام حقيقية (عدد الورش، الفروع، العقود، المشاهدات الشهرية).
-3. **لماذا قِطاعات؟** — 6 بطاقات (وصول لعملاء جدد، ملف احترافي، إدارة عقود وضمانات، رسائل وحجوزات، تحليلات، AI مساعد).
-4. **كيف تعمل المنصة؟** — 4 خطوات: سجّل → فعّل ملفك → أضف خدماتك ومشاريعك → استقبل العملاء.
-5. **الميزات الكاملة** — شبكة ميزات (ملف عمل، خدمات، مشاريع/معرض، عقود وفواتير VAT، حجوزات، رسائل، ضمانات، تقييمات، مدونة، AI Center، تحليلات Recharts).
-6. **مقارنة العضويات** — Free / Premium / Pro مع الحدود الفعلية من `membership-limits.ts`.
-7. **شهادات حقيقية** — Carousel من جدول `provider_testimonials` (جديد).
-8. **القطاعات المخدومة** — Grid (ألمنيوم، حديد، زجاج، خشب، مطابخ، ديكورات، حدادة) كروابط داخلية لـ `/sectors/*` لتعزيز الـ internal linking SEO.
-9. **FAQ** — 8-10 أسئلة شائعة لمزودي الخدمات (JSON-LD FAQPage).
-10. **CTA نهائي قوي** — "ابدأ مجاناً اليوم" مع نموذج تسجيل سريع inline.
-
-**SEO و AI Search Optimization:**
-- `usePageMeta` بعنوان ووصف مُحسّنين (<60/<160).
-- JSON-LD متعدد: `WebPage` + `Organization` + `Service` + `FAQPage` + `BreadcrumbList` + `AggregateOffer` للعضويات.
-- صورة OG ديناميكية عبر edge function `og-image`.
-- روابط داخلية لـ `/sectors`, `/categories`, `/projects`, `/blog`.
-- محتوى نصي غني (>1500 كلمة عربي) بكلمات مفتاحية: "دليل ورش ألمنيوم", "تسجيل ورشة حديد", "منصة مزودي خدمات صناعات خفيفة".
-- ملف `public/llms.txt` يُحدَّث ليشمل وصف الصفحة لمحركات AI (ChatGPT, Claude, Perplexity).
-- `aria-*` كاملة + `<section>` semantic.
-- صور WebP <80KB مع `loading="lazy"` و `alt` وصفية.
-- Preload للـ hero image.
+- **Backend**: لا تغييرات DB إلا عند الحاجة الحقيقية، ودائماً مع شرح + RLS صارم.
+- **الأمان**: لا تمرير PII (إيميل، هاتف، اسم) إلى GA4/GTM — فقط أحداث مجهولة الهوية.
+- **التصميم**: Tokens موجودة (`surface`, `btn-ds`, `.hover-lift`, `VerifiedBadge`, `<Bi>`).
+- **اللغة**: `<Bi ar="..." en="..."/>` بدلاً من `isRTL ? ar : en` المباشر.
+- **No popups**: نماذج inline أو fullscreen views.
+- **Mobile-first**: الاختبار الأساسي على 393px.
 
 ---
 
-## 2) قاعدة البيانات — جداول جديدة
+## المرحلة 1 — التسجيل و Onboarding (احترافية + موثوقية)
 
-```text
-provider_landing_content   (KV لمحتوى الصفحة قابل للتحرير)
-  - id, section_key, lang (ar|en), title, subtitle, body_md,
-    image_url, cta_label, cta_href, sort_order, is_active
+### الواجهة (Frontend)
+- **`RegisterForm`**: مؤشر قوة كلمة سر مرئي مع اقتراحات، تحقق فوري للإيميل/الهاتف، عرض الأخطاء بصورة inline أسفل الحقل (لا toasts للأخطاء التحققية).
+- **`RegistrationSuccessView`**: شاشة fullscreen محسّنة — زر "إعادة إرسال التأكيد" مع cooldown 60s، عداد مرئي، زر "تغيير الإيميل".
+- **`Onboarding` Wizard**: 
+  - Progress bar أوضح (3 خطوات: نوع الحساب → بيانات → قطاعات للمزود).
+  - حفظ تلقائي للمسودة في `localStorage` عبر `onboarding-draft.ts` (موجود).
+  - شاشة "Welcome" نهائية مع CTA لأول إجراء (إكمال الملف، استكشاف المزودين).
+- **حالات Error**: رسائل عربية واضحة عبر `errorMessages.ts` (موجود) — توسيع لتغطية حالات الشبكة والـ rate limit.
 
-provider_landing_features  (بطاقات الميزات)
-  - id, icon_name, title_ar, title_en, desc_ar, desc_en, sort_order, is_active
+### Backend (مطلوب)
+- **توسيع جدول `profiles`** (إن لم يوجد): إضافة `onboarding_step` (smallint), `onboarding_completed_at` (timestamptz) — لتمكين resume الدقيق وتتبع التحويل.
+- **Edge function `track-onboarding-event`**: يستقبل أحداث (started, step_completed, abandoned, completed) ويسجلها في `activity_log` فقط (بدون GA4).
+- **Trigger**: عند اكتمال الـ onboarding، إنشاء إشعار welcome في `notifications` + إرسال welcome email عبر `send-transactional-email`.
 
-provider_landing_faq       (أسئلة شائعة)
-  - id, question_ar, question_en, answer_ar, answer_en, sort_order, is_active
+### Analytics (آمن — بدون PII)
+- أحداث GTM: `signup_started`, `signup_otp_sent`, `signup_completed`, `onboarding_step_{n}`, `onboarding_completed`. القيم: `account_type` فقط.
 
-provider_landing_testimonials
-  - id, business_id (FK), quote_ar, quote_en, author_name, author_role,
-    avatar_url, rating, is_featured, sort_order
+---
 
-provider_landing_metrics   (event tracking)
-  - id, event_type (view|cta_click|signup|scroll_depth|video_play),
-    section, cta_id, session_id, user_id, referrer, utm_source,
-    utm_medium, utm_campaign, device, country, created_at
+## المرحلة 2 — مركز الرسائل + الإشعارات
 
-provider_landing_settings  (إعدادات SEO + Google)
-  - id (singleton), seo_title_ar, seo_title_en, seo_desc_ar, seo_desc_en,
-    keywords, og_image_url, ga4_measurement_id, gtm_container_id,
-    gsc_verification, hero_video_url, updated_at, updated_by
+### الواجهة
+- **`DashboardMessages`**: 
+  - Empty state احترافي (illustration + CTA "ابدأ محادثة جديدة").
+  - Loading: skeletons موحدة (لا spinners).
+  - Error state مع زر "إعادة المحاولة".
+  - مؤشر "متصل الآن" (online presence) — موجود بشكل جزئي، توحيد.
+  - مؤشر "يكتب الآن…" عبر Realtime broadcast.
+  - Read receipts (✓ / ✓✓) واضحة.
+  - Pinned conversations + Unread filter chips.
+- **`NotificationBell`** (موجود): تحسين group-by-type، "Mark by category"، صوت اختياري عند وصول إشعار عاجل.
+- **`DashboardNotifications`** صفحة كاملة: Filters (All/Unread/Urgent/By type)، Bulk actions، Search داخل الإشعارات.
+
+### Backend
+- **`messages` table**: إضافة `read_at` (timestamptz), `delivered_at`, `is_pinned` إن لم توجد.
+- **`typing_indicators`**: استخدام Realtime broadcast فقط (لا جدول DB).
+- **RLS**: تأكيد أن المرسل والمستقبل فقط يقرأون الرسالة، الأدمن لا يطلع على المحتوى (privacy-by-design) — فقط metadata.
+- **Trigger**: عند إنشاء رسالة جديدة، إنشاء إشعار للمستقبل (إن لم يكن متصلاً وعدّاد unread > 0).
+
+### Realtime
+- Channels: `conversation:{id}` للرسائل + typing، `user:{id}:notifications` للإشعارات.
+
+---
+
+## المرحلة 3 — Contact/Lead + قوالب الإيميل
+
+### الواجهة
+- **`Contact`**: نموذج يحفظ في `contact_messages` + يُرسل تأكيد للمستخدم وإشعار إيميل للأدمن (موجود — تحسين القوالب فقط).
+- **Lead requests (طلب تواصل من ملف مزود)**: زر "اطلب عرض سعر" يفتح inline form (لا dialog) — يحفظ في `lead_requests` ويُرسل:
+  - إشعار in-app + إيميل للمزود.
+  - تأكيد إيميل للمستخدم.
+  - إشعار للأدمن (للمتابعة).
+
+### Backend
+- **جدول جديد `lead_requests`** (إن لم يوجد):
+  - `id, user_id, business_id, message, contact_preference (email/phone/whatsapp), status (new/contacted/closed), created_at`.
+  - RLS: المستخدم يرى طلباته، المزود يرى الطلبات الموجهة لأعماله، الأدمن يرى الكل (metadata فقط).
+- **Trigger**: notifications + transactional emails متعددة.
+
+### قوالب الإيميل (Transactional)
+استخدام `email_domain--scaffold_transactional_email` لتسجيل قوالب موحّدة بهوية قِطاعات (RTL، الخط، اللون):
+1. `welcome-signup` (موجود — تحسين).
+2. `lead-request-received` (للمزود).
+3. `lead-request-confirmation` (للمستخدم).
+4. `contact-form-confirmation` (موجود).
+5. `contact-admin-notification` (موجود).
+6. `new-message-notification` (للمستخدم/المزود — مع throttle: لا أكثر من إيميل واحد كل 15 دقيقة).
+7. `weekly-digest` للأدمن (إحصائيات leads & messages).
+
+كل القوالب: header بشعار "ق"، RTL، خط IBM Plex Sans Arabic عبر web-safe fallback، CTA واضح، footer unsubscribe (تلقائي).
+
+---
+
+## المرحلة 4 — رؤية الأدمن + Analytics
+
+### الواجهة
+- **`AdminContactMessages`** (موجود): إضافة status workflow (new → in_progress → resolved)، assignee، ملاحظات داخلية.
+- **صفحة جديدة `AdminLeadRequests`**: جدول مع filter (status, business, date range)، تصدير CSV، زر "تواصل مع المستخدم".
+- **`AdminCommunicationDashboard`** صفحة جديدة: KPIs (إجمالي رسائل، leads، معدل الرد، متوسط زمن الرد) عبر Recharts.
+
+### Backend
+- **View `admin_communication_stats`**: aggregations للوحة الأدمن (cached, 5min).
+- **RLS**: View محصور بـ `has_role(uid, 'admin')`.
+
+### Analytics (GA4/GTM — بدون PII)
+أحداث جديدة في `analytics-events.ts`:
+- `lead_request_submitted` (params: `business_sector`, `contact_preference`).
+- `message_sent` (params: `conversation_type` فقط).
+- `notification_clicked` (params: `notification_type`).
+- `email_template_sent` (server-side log فقط، ليس GA4).
+
+تأكيد عدم تمرير user_id, email, phone, name إلى dataLayer.
+
+---
+
+## التفاصيل التقنية (للمراجعة)
+
+### ملفات جديدة متوقعة
+```
+src/components/messages/
+  EmptyMessagesState.tsx
+  TypingIndicator.tsx
+  ReadReceipt.tsx
+src/components/lead/
+  LeadRequestForm.tsx (inline)
+src/pages/admin/
+  AdminLeadRequests.tsx
+  AdminCommunicationDashboard.tsx
+src/hooks/
+  useTypingPresence.ts
+  useLeadRequests.ts
+supabase/functions/_shared/transactional-email-templates/
+  lead-request-received.tsx
+  lead-request-confirmation.tsx
+  new-message-notification.tsx
 ```
 
-RLS: قراءة عامة للمحتوى النشط، كتابة/حذف للأدمن فقط (`has_role(auth.uid(), 'admin')`).
+### ملفات معدّلة
+```
+src/components/auth/RegisterForm.tsx
+src/components/auth/RegistrationSuccessView.tsx
+src/pages/Onboarding.tsx
+src/pages/dashboard/DashboardMessages.tsx
+src/pages/dashboard/DashboardNotifications.tsx
+src/components/notifications/NotificationBell.tsx
+src/pages/Contact.tsx
+src/pages/admin/AdminContactMessages.tsx
+src/lib/analytics-events.ts
+src/lib/gtm.ts (تأكيد عدم تمرير PII)
+src/services/auth/errorMessages.ts (توسيع)
+```
+
+### Migrations مطلوبة
+1. توسيع `profiles` بحقول onboarding tracking.
+2. جدول `lead_requests` جديد + RLS + trigger.
+3. توسيع `messages` بـ `read_at, delivered_at, is_pinned` (إن لم توجد).
+4. View `admin_communication_stats` + RLS.
+
+سأشرح كل migration نصياً قبل تنفيذها وأنتظر موافقتك.
+
+### ترتيب التنفيذ
+المرحلة 1 → مراجعة → المرحلة 2 → مراجعة → المرحلة 3 → مراجعة → المرحلة 4.
+
+داخل كل مرحلة:
+1. Migrations (إن وُجدت) — مع شرح وانتظار موافقة.
+2. Backend logic (edge functions, triggers).
+3. Frontend (components, pages).
+4. Analytics events.
+5. اختبار عيني سريع على preview.
 
 ---
 
-## 3) لوحة التحكم — `/admin/provider-landing`
+## ما يبقى بدون تغيير
 
-تبويبات داخلية (بدون popups — inline forms حسب القاعدة):
-
-1. **المحتوى** — تحرير كل قسم (Hero, Why, How, CTA) بالعربي والإنجليزي مع معاينة مباشرة. محرر Markdown خفيف، رفع صور WebP مضغوطة، Drag & drop ترتيب.
-2. **الميزات** — CRUD لبطاقات الميزات مع picker من Lucide icons.
-3. **الشهادات** — ربط مع businesses موجودين، تفعيل/تعطيل، ترتيب.
-4. **الأسئلة الشائعة** — CRUD مع AI generation (`blog-ai-tools` edge function reuse) لتوليد إجابات SEO-friendly.
-5. **SEO & Meta** — تحرير العنوان/الوصف/الكلمات/OG image، فحص طول، Score panel (شبيه `SeoScorePanel`).
-6. **التحليلات** — Recharts dashboard:
-   - Funnel: مشاهدات → CTA clicks → signups
-   - أعلى المصادر (UTM)
-   - Heatmap للأقسام (scroll depth)
-   - معدل التحويل اليومي/الأسبوعي
-   - مقارنة قبل/بعد التغييرات
-7. **التكاملات** — حقول إدخال: GA4 ID, GTM Container, Search Console verification, IndexNow key، زر "ping search engines" (يستدعي `ping-search-engines` edge function)، عرض حالة الفهرسة من `audit-sitemap-status`.
-8. **AI Tools** — توليد عناوين بديلة، اقتراح كلمات مفتاحية، A/B variants لنصوص الـ Hero عبر Lovable AI (`google/gemini-2.5-flash`).
-
-كل التحرير inline، عرض completeness bar، حفظ تلقائي مع toast.
+- بنية Auth الأساسية (Supabase, OTP, JWT).
+- RLS الحالية — توسيع فقط، لا إضعاف.
+- Business profiles, contracts, projects logic.
+- SEO و JSON-LD.
+- Consent Mode + GTM gating الحالي (production فقط).
 
 ---
 
-## 4) التتبع والتكامل مع Google
-
-- مكون `<AnalyticsLoader>` يحقن GA4 + GTM ديناميكياً من `provider_landing_settings` (بدون hardcode).
-- Edge function `track-landing-event` يستقبل events ويكتب في `provider_landing_metrics` + يدفعها لـ GA4 Measurement Protocol (server-side للأمان وتجاوز ad-blockers).
-- Hook `useLandingTracking()` يتتبع: page view, scroll depth (25/50/75/100%), CTA clicks, form starts/submits.
-- ربط Search Console: عرض meta tag في `<head>` تلقائياً + إضافة الصفحة في sitemap edge function.
-- IndexNow: إشعار Bing/Yandex فوراً عند تحديث المحتوى من الأدمن.
-- `robots.txt` يتأكد من `Allow: /for-providers` و `/join-as-provider`.
-
----
-
-## 5) التفاصيل التقنية
-
-- ملفات جديدة:
-  - `src/pages/ForProviders.tsx` (الصفحة الرئيسية، lazy-loaded sections)
-  - `src/components/for-providers/` (HeroProviders, WhyProviders, HowItWorksProviders, FeaturesGrid, MembershipCompare, TestimonialsCarousel, SectorsGrid, ProvidersFAQ, FinalCTA, AnalyticsLoader)
-  - `src/pages/admin/AdminProviderLanding.tsx` (لوحة التحكم بـ tabs)
-  - `src/components/admin/provider-landing/` (ContentEditor, FeaturesManager, FaqManager, TestimonialsManager, SeoEditor, AnalyticsDashboard, IntegrationsPanel, AiAssistant)
-  - `src/hooks/useLandingTracking.ts`
-  - `src/services/providerLandingService.ts`
-  - `supabase/functions/track-landing-event/index.ts`
-  - `supabase/functions/provider-landing-ai/index.ts`
-- Routes في `src/App.tsx`: `/for-providers`, `/join-as-provider` (alias), `/admin/provider-landing` (محمي بـ admin).
-- إضافة رابط في `Navbar` + `Footer` (قسم "للأعمال") + `DashboardSidebar` للأدمن.
-- Migration واحد لكل الجداول + RLS + seed initial content.
-- تحديث `useNoIndex` لاستثناء الصفحة العامة، و noindex على لوحة الأدمن.
-- تحديث `mem://features/` بمذكرة جديدة `provider-landing-page`.
-
----
-
-## 6) ما لن يتم في هذه الجولة (للحفاظ على التركيز)
-- A/B testing فعلي بـ split traffic (سيتم فقط تخزين الـ variants).
-- Heatmap فيديوهات (Hotjar/Clarity) — يمكن إضافته لاحقاً عبر GTM.
-- Multi-variant landing pages (يدعم variant واحد فقط الآن).
-
----
-
-## التقدير
-~12 ملف جديد + migration + 2 edge functions. سيتم البناء على دفعات: (1) DB + RLS + seed، (2) الصفحة العامة + SEO، (3) لوحة الأدمن + التحليلات + التكاملات.
-
-هل تعتمد الخطة لأبدأ التنفيذ؟
+عند الموافقة، أبدأ بالمرحلة 1 (التسجيل + Onboarding) — أعرض migration الـ profiles أولاً للمراجعة، ثم أكمل التنفيذ.
