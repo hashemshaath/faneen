@@ -55,6 +55,11 @@ const SKIP_PATTERNS = [
   /lovable\.dev/,
   /qitaat\.com/,
   /faneen\.com/,
+  // OpenAI / Anthropic / Google AI docs hard-block non-browser UAs (HTTP 403).
+  // The links themselves are valid — skip them in CI to avoid false positives.
+  /platform\.openai\.com/,
+  /docs\.anthropic\.com/,
+  /ai\.google\.dev/,
 ];
 
 /* ── Helpers ── */
