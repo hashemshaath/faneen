@@ -91,6 +91,25 @@ export function initGtm(): void {
     wait_for_update: 500,
   });
 
+  // 1b) Replay any previously persisted consent decision BEFORE the GTM
+  //     loader runs. Without this, returning visitors who already accepted
+  //     are reported to GTM as "denied" forever (the banner never re-opens,
+  //     so no consent update is ever pushed). This is what causes
+  //     "0% consent rate / 100% denied" in GTM container quality.
+  try {
+    const stored = readStoredConsent();
+    if (stored?.state) {
+      gtag("consent", "update", stored.state);
+      w.dataLayer.push({
+        event: "consent_update",
+        consent_decision: stored.decision,
+        consent_replay: true,
+      });
+    }
+  } catch {
+    /* storage unavailable — proceed with defaults only */
+  }
+
   // 2) GTM container loader.
   w.dataLayer.push({ "gtm.start": Date.now(), event: "gtm.js" });
   if (!document.getElementById("gtm-loader")) {
