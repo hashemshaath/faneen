@@ -755,6 +755,129 @@ const AdminContactMessages = () => {
               </Button>
             </div>
 
+            {/* Workflow filters: assignee + work state */}
+            <div className="flex flex-col md:flex-row gap-3">
+              <Select value={assigneeFilter} onValueChange={v => updateParam({ assignee: v === 'all' ? null : v, page: null })}>
+                <SelectTrigger className="w-full md:w-56"><User className="w-4 h-4 me-2" /><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{isRTL ? 'كل المسؤولين' : 'All assignees'}</SelectItem>
+                  <SelectItem value="me">{isRTL ? 'مُعيَّنة لي' : 'Assigned to me'}</SelectItem>
+                  <SelectItem value="unassigned">{isRTL ? 'غير مُعيَّنة' : 'Unassigned'}</SelectItem>
+                  {assignees.map(a => (
+                    <SelectItem key={a.user_id} value={a.user_id}>
+                      {a.full_name || a.email || a.user_id.slice(0, 8)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={workStateFilter} onValueChange={v => updateParam({ work: v === 'all' ? null : v, page: null })}>
+                <SelectTrigger className="w-full md:w-44"><Timer className="w-4 h-4 me-2" /><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{isRTL ? 'كل حالات العمل' : 'All work states'}</SelectItem>
+                  {(Object.keys(workStateConfig) as WorkState[]).map(k => (
+                    <SelectItem key={k} value={k}>{isRTL ? workStateConfig[k].ar : workStateConfig[k].en}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Inline export panel */}
+            {showExportPanel && (
+              <div className="rounded-lg border border-accent/30 bg-accent/5 p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <Download className="w-4 h-4" />
+                    {isRTL ? 'تصدير مخصص' : 'Custom export'}
+                  </div>
+                  <button
+                    onClick={() => setShowExportPanel(false)}
+                    className="text-xs text-muted-foreground hover:text-foreground"
+                  >×</button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-medium text-muted-foreground">{isRTL ? 'الصيغة' : 'Format'}</label>
+                    <Select value={exportFormat} onValueChange={(v: 'csv' | 'pdf') => setExportFormat(v)}>
+                      <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="csv">CSV (Excel)</SelectItem>
+                        <SelectItem value="pdf">PDF</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-medium text-muted-foreground">{isRTL ? 'النطاق' : 'Scope'}</label>
+                    <Select value={exportScope} onValueChange={(v: 'filtered' | 'selected') => setExportScope(v)}>
+                      <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="filtered">{isRTL ? `كل المُفلترة (${filtered.length})` : `All filtered (${filtered.length})`}</SelectItem>
+                        <SelectItem value="selected" disabled={selectedIds.size === 0}>
+                          {isRTL ? `المحدد فقط (${selectedIds.size})` : `Selected only (${selectedIds.size})`}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[11px] font-medium text-muted-foreground">
+                      {isRTL ? `الحقول (${exportFields.length}/${ALL_EXPORT_FIELDS.length})` : `Fields (${exportFields.length}/${ALL_EXPORT_FIELDS.length})`}
+                    </label>
+                    <div className="flex gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setExportFields(ALL_EXPORT_FIELDS)}
+                        className="text-[10px] px-2 py-0.5 rounded border border-border hover:border-accent/40"
+                      >{isRTL ? 'الكل' : 'All'}</button>
+                      <button
+                        type="button"
+                        onClick={() => setExportFields(DEFAULT_EXPORT_FIELDS)}
+                        className="text-[10px] px-2 py-0.5 rounded border border-border hover:border-accent/40"
+                      >{isRTL ? 'الافتراضي' : 'Default'}</button>
+                      <button
+                        type="button"
+                        onClick={() => setExportFields([])}
+                        className="text-[10px] px-2 py-0.5 rounded border border-border hover:border-accent/40"
+                      >{isRTL ? 'مسح' : 'Clear'}</button>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1.5 max-h-48 overflow-y-auto p-2 rounded border border-border/50 bg-background">
+                    {ALL_EXPORT_FIELDS.map(f => {
+                      const sensitive = (f === 'email' || f === 'message' || f === 'internal_notes') && !isSuperAdmin;
+                      const checked = exportFields.includes(f);
+                      return (
+                        <label
+                          key={f}
+                          className={`flex items-center gap-2 p-1.5 rounded text-xs cursor-pointer hover:bg-muted/40 ${sensitive ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                          <Checkbox
+                            checked={checked}
+                            disabled={sensitive}
+                            onCheckedChange={() => {
+                              setExportFields(prev =>
+                                prev.includes(f) ? prev.filter(x => x !== f) : [...prev, f],
+                              );
+                            }}
+                          />
+                          <span className="truncate">{fieldLabel(f, isRTL)}</span>
+                          {sensitive && <Lock className="w-3 h-3 ms-auto" />}
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 justify-end pt-1">
+                  <Button size="sm" variant="ghost" onClick={() => setShowExportPanel(false)}>
+                    {isRTL ? 'إلغاء' : 'Cancel'}
+                  </Button>
+                  <Button size="sm" onClick={runExport} disabled={isExporting || exportFields.length === 0} className="gap-2">
+                    {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                    {isRTL ? `تصدير ${exportFormat.toUpperCase()}` : `Export ${exportFormat.toUpperCase()}`}
+                  </Button>
+                </div>
+              </div>
+            )}
+
             {/* Quick chips */}
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-[11px] text-muted-foreground font-medium">{isRTL ? 'فلاتر سريعة:' : 'Quick:'}</span>
