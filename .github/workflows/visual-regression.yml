@@ -48,7 +48,18 @@ jobs:
           done
           echo "Server did not become ready"; exit 1
 
+      - name: Check for visual baselines
+        id: baselines
+        run: |
+          if [ -d "e2e/__screenshots__" ] && [ "$(find e2e/__screenshots__ -name '*.png' | head -1)" ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::No visual baselines found in e2e/__screenshots__/. Skipping visual regression. Seed baselines locally per e2e/VISUAL_REGRESSION.md."
+          fi
+
       - name: Run visual regression tests
+        if: steps.baselines.outputs.exists == 'true'
         run: npm run test:visual
 
       - name: Upload Playwright report on failure

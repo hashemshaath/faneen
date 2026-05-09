@@ -1,27 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <sitemap>
-    <loc>https://hckpxwhjycmdflaneihd.supabase.co/functions/v1/sitemap?type=static</loc>
+    <loc>https://qitaat.com/functions/v1/sitemap?type=static</loc>
   </sitemap>
   <sitemap>
-    <loc>https://hckpxwhjycmdflaneihd.supabase.co/functions/v1/sitemap?type=businesses</loc>
+    <loc>https://qitaat.com/functions/v1/sitemap?type=businesses</loc>
   </sitemap>
   <sitemap>
-    <loc>https://hckpxwhjycmdflaneihd.supabase.co/functions/v1/sitemap?type=blog</loc>
+    <loc>https://qitaat.com/functions/v1/sitemap?type=blog</loc>
   </sitemap>
   <sitemap>
-    <loc>https://hckpxwhjycmdflaneihd.supabase.co/functions/v1/sitemap?type=categories</loc>
+    <loc>https://qitaat.com/functions/v1/sitemap?type=categories</loc>
   </sitemap>
   <sitemap>
-    <loc>https://hckpxwhjycmdflaneihd.supabase.co/functions/v1/sitemap?type=cities</loc>
+    <loc>https://qitaat.com/functions/v1/sitemap?type=cities</loc>
   </sitemap>
   <sitemap>
-    <loc>https://hckpxwhjycmdflaneihd.supabase.co/functions/v1/sitemap?type=profiles</loc>
+    <loc>https://qitaat.com/functions/v1/sitemap?type=profiles</loc>
   </sitemap>
   <sitemap>
-    <loc>https://hckpxwhjycmdflaneihd.supabase.co/functions/v1/sitemap?type=projects</loc>
+    <loc>https://qitaat.com/functions/v1/sitemap?type=projects</loc>
   </sitemap>
   <sitemap>
-    <loc>https://hckpxwhjycmdflaneihd.supabase.co/functions/v1/sitemap?type=sectors</loc>
+    <loc>https://qitaat.com/functions/v1/sitemap?type=sectors</loc>
   </sitemap>
 </sitemapindex>
