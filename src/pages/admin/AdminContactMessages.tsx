@@ -966,6 +966,10 @@ const AdminContactMessages = () => {
               isRTL={isRTL}
               isSuperAdmin={isSuperAdmin}
               dateLocale={dateLocale}
+              currentUserId={user?.id}
+              assignees={assignees}
+              assigneeMap={assigneeMap}
+              events={events}
               noteDraft={noteDraft}
               setNoteDraft={setNoteDraft}
               editingNoteId={editingNoteId}
@@ -1129,6 +1133,10 @@ const AdminContactMessages = () => {
                 isRTL={isRTL}
                 isSuperAdmin={isSuperAdmin}
                 dateLocale={dateLocale}
+                currentUserId={user?.id}
+                assignees={assignees}
+                assigneeMap={assigneeMap}
+                events={events}
                 noteDraft={noteDraft}
                 setNoteDraft={setNoteDraft}
                 editingNoteId={editingNoteId}
