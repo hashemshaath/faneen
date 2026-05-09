@@ -158,16 +158,8 @@ const ForProviders = () => {
       if (!m) { m = document.createElement('meta'); m.name = 'google-site-verification'; document.head.appendChild(m); }
       m.content = settings.gsc_verification;
     }
-    if (settings.ga4_measurement_id && !document.getElementById('ga4-script')) {
-      const s1 = document.createElement('script');
-      s1.id = 'ga4-script'; s1.async = true;
-      s1.src = `https://www.googletagmanager.com/gtag/js?id=${settings.ga4_measurement_id}`;
-      document.head.appendChild(s1);
-      const s2 = document.createElement('script');
-      s2.id = 'ga4-init';
-      s2.text = `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${settings.ga4_measurement_id}');`;
-      document.head.appendChild(s2);
-    }
+    // GA4 is loaded via Google Tag Manager (GTM-NHPQ2R52) configured in index.html.
+    // Do not inject gtag.js directly here — keep GTM as the single marketing tag.
   }, [settings]);
 
   const ArrowFwd = isRTL ? ArrowLeft : ArrowRight;
