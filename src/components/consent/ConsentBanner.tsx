@@ -1,0 +1,215 @@
+import { useEffect, useState, useCallback } from "react";
+import { useLanguage } from "@/i18n/LanguageContext";
+import { Button } from "@/components/ui/button";
+import {
+  CONSENT_ACCEPT_ALL,
+  CONSENT_REJECT_NON_ESSENTIAL,
+  CONSENT_STORAGE_KEY,
+  readStoredConsent,
+  updateConsent,
+  type ConsentState,
+} from "@/lib/gtm";
+import { ShieldCheck, Settings2, Check, X } from "lucide-react";
+
+/**
+ * Lightweight bilingual Consent Mode v2 banner.
+ *
+ * - Shows only when no choice exists in localStorage(`qitaat_consent_v1`).
+ * - Mounts AFTER first paint via `requestIdleCallback` to avoid CWV impact.
+ * - Fixed-position overlay → no document layout shift.
+ * - Respects iOS safe-area via `env(safe-area-inset-bottom)`.
+ * - Pushes Consent Mode v2 update to dataLayer (no PII).
+ */
+const COPY = {
+  ar: {
+    title: "نحترم خصوصيتك",
+    body:
+      "نستخدم ملفات تعريف الارتباط لتحسين تجربتك وقياس الأداء. يمكنك القبول، أو الرفض، أو إدارة التفضيلات.",
+    accept: "قبول الكل",
+    reject: "رفض غير الضروري",
+    manage: "إدارة التفضيلات",
+    save: "حفظ التفضيلات",
+    analytics: "إحصاءات الاستخدام",
+    ads: "تخصيص الإعلانات",
+    essential: "ضرورية (دائمًا مفعّلة)",
+    close: "إغلاق",
+  },
+  en: {
+    title: "We respect your privacy",
+    body:
+      "We use cookies to improve your experience and measure performance. You can accept, reject, or manage preferences.",
+    accept: "Accept all",
+    reject: "Reject non-essential",
+    manage: "Manage preferences",
+    save: "Save preferences",
+    analytics: "Usage analytics",
+    ads: "Ad personalization",
+    essential: "Essential (always on)",
+    close: "Close",
+  },
+};
+
+export const ConsentBanner = () => {
+  const { isRTL } = useLanguage();
+  const t = COPY[isRTL ? "ar" : "en"];
+
+  const [open, setOpen] = useState(false);
+  const [showManage, setShowManage] = useState(false);
+  const [analytics, setAnalytics] = useState(false);
+  const [ads, setAds] = useState(false);
+
+  // Mount check, deferred to idle to keep LCP/INP clean.
+  useEffect(() => {
+    const decide = () => {
+      const stored = readStoredConsent();
+      if (!stored) setOpen(true);
+    };
+    type IdleW = Window & {
+      requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+    };
+    const w = window as IdleW;
+    if (typeof w.requestIdleCallback === "function") {
+      w.requestIdleCallback(decide, { timeout: 1500 });
+    } else {
+      setTimeout(decide, 400);
+    }
+    // Re-open if another component dispatches the custom event.
+    const onOpen = () => setOpen(true);
+    window.addEventListener("qitaat:consent-open", onOpen);
+    return () => window.removeEventListener("qitaat:consent-open", onOpen);
+  }, []);
+
+  const persistAndPush = useCallback(
+    (state: ConsentState, decision: "accept_all" | "reject_non_essential") => {
+      // updateConsent already persists + pushes; pass through.
+      void state;
+      updateConsent(decision);
+      setOpen(false);
+    },
+    [],
+  );
+
+  const acceptAll = () => persistAndPush(CONSENT_ACCEPT_ALL, "accept_all");
+  const rejectNonEssential = () =>
+    persistAndPush(CONSENT_REJECT_NON_ESSENTIAL, "reject_non_essential");
+
+  const saveCustom = () => {
+    // If user customizes: any "granted" toggle counts as accept_all-ish only if
+    // both analytics + ads are on; otherwise treat as reject for ads when off.
+    // To keep the API surface to two decisions, map custom toggles deterministically:
+    if (analytics && ads) {
+      persistAndPush(CONSENT_ACCEPT_ALL, "accept_all");
+    } else if (!analytics && !ads) {
+      persistAndPush(CONSENT_REJECT_NON_ESSENTIAL, "reject_non_essential");
+    } else {
+      // Mixed: build a custom state and persist directly via dataLayer.
+      const state: ConsentState = {
+        ad_storage: ads ? "granted" : "denied",
+        ad_user_data: ads ? "granted" : "denied",
+        ad_personalization: ads ? "granted" : "denied",
+        analytics_storage: analytics ? "granted" : "denied",
+        functionality_storage: "granted",
+        security_storage: "granted",
+      };
+      try {
+        localStorage.setItem(
+          CONSENT_STORAGE_KEY,
+          JSON.stringify({
+            decision: analytics ? "accept_all" : "reject_non_essential",
+            state,
+            ts: Date.now(),
+          }),
+        );
+      } catch {
+        /* ignore */
+      }
+      type DLW = Window & { dataLayer?: Array<Record<string, unknown>> };
+      const w = window as DLW;
+      w.dataLayer = w.dataLayer ?? [];
+      w.dataLayer.push({ 0: "consent", 1: "update", 2: state } as unknown as Record<string, unknown>);
+      w.dataLayer.push({ event: "consent_update", consent_decision: "custom" });
+      setOpen(false);
+    }
+  };
+
+  if (!open) return null;
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="false"
+      aria-label={t.title}
+      className="fixed inset-x-0 bottom-0 z-[60] px-3 sm:px-4 pointer-events-none"
+      style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+      dir={isRTL ? "rtl" : "ltr"}
+    >
+      <div className="mx-auto max-w-3xl pointer-events-auto rounded-2xl border border-border bg-background/95 backdrop-blur-md shadow-elegant p-4 sm:p-5">
+        <div className="flex items-start gap-3">
+          <div className="hidden sm:flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <ShieldCheck className="h-5 w-5" aria-hidden />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h2 className="text-sm sm:text-base font-semibold text-foreground">{t.title}</h2>
+            <p className="mt-1 text-xs sm:text-sm text-muted-foreground leading-relaxed">
+              {t.body}
+            </p>
+
+            {showManage && (
+              <div className="mt-3 space-y-2 rounded-xl border border-border bg-muted/30 p-3">
+                <label className="flex items-center justify-between gap-3 text-xs sm:text-sm">
+                  <span className="text-foreground/80">{t.essential}</span>
+                  <input type="checkbox" checked disabled className="h-4 w-4 accent-primary" aria-label={t.essential} />
+                </label>
+                <label className="flex items-center justify-between gap-3 text-xs sm:text-sm cursor-pointer">
+                  <span className="text-foreground/80">{t.analytics}</span>
+                  <input
+                    type="checkbox"
+                    checked={analytics}
+                    onChange={(e) => setAnalytics(e.target.checked)}
+                    className="h-4 w-4 accent-primary"
+                    aria-label={t.analytics}
+                  />
+                </label>
+                <label className="flex items-center justify-between gap-3 text-xs sm:text-sm cursor-pointer">
+                  <span className="text-foreground/80">{t.ads}</span>
+                  <input
+                    type="checkbox"
+                    checked={ads}
+                    onChange={(e) => setAds(e.target.checked)}
+                    className="h-4 w-4 accent-primary"
+                    aria-label={t.ads}
+                  />
+                </label>
+              </div>
+            )}
+
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <Button size="sm" onClick={acceptAll} className="gap-1.5 min-h-[40px]">
+                <Check className="h-4 w-4" /> {t.accept}
+              </Button>
+              <Button size="sm" variant="outline" onClick={rejectNonEssential} className="gap-1.5 min-h-[40px]">
+                <X className="h-4 w-4" /> {t.reject}
+              </Button>
+              {!showManage ? (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setShowManage(true)}
+                  className="gap-1.5 min-h-[40px] text-muted-foreground"
+                >
+                  <Settings2 className="h-4 w-4" /> {t.manage}
+                </Button>
+              ) : (
+                <Button size="sm" variant="secondary" onClick={saveCustom} className="min-h-[40px]">
+                  {t.save}
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ConsentBanner;
