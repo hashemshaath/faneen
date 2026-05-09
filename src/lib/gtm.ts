@@ -14,22 +14,39 @@
 
 type DataLayerWindow = Window & {
   dataLayer?: Array<Record<string, unknown> | IArguments>;
+  gtag?: (...args: unknown[]) => void;
 };
 
 const GTM_ID_PATTERN = /^GTM-[A-Z0-9]+$/;
 
 /**
- * Push a `gtag()`-style command (e.g. `gtag('consent','update',{...})`) onto
- * the dataLayer. GTM's Consent Mode ONLY recognizes consent commands when
- * they arrive as an actual `Arguments` object — NOT as a plain object with
- * numeric keys. We therefore route through a real function so `arguments`
- * has the correct internal `[[Class]]` of `Arguments`.
+ * Push a `gtag()`-style command onto the dataLayer.
+ *
+ * GTM's Consent Mode only recognizes consent commands that arrive as a real
+ * `Arguments` object. We therefore:
+ *   1. Prefer the global `window.gtag` defined inline in `index.html`
+ *      (the canonical `function gtag(){dataLayer.push(arguments);}` shim).
+ *   2. Fall back to a local function that does the same. We avoid rest
+ *      parameters here because TS/Vite transpilation of `..._args` can
+ *      interfere with the `arguments` object semantics in some targets.
  */
-function gtag(this: void, ..._args: unknown[]): void {
+function localGtag(this: void): void {
   const w = window as DataLayerWindow;
   w.dataLayer = w.dataLayer ?? [];
   // eslint-disable-next-line prefer-rest-params
-  w.dataLayer.push(arguments);
+  w.dataLayer.push(arguments as unknown as IArguments);
+}
+function gtag(...args: unknown[]): void {
+  if (typeof window === "undefined") return;
+  const w = window as DataLayerWindow;
+  if (typeof w.gtag === "function") {
+    // Apply through the canonical shim from index.html so `arguments`
+    // is constructed inside that function with the correct [[Class]].
+    w.gtag.apply(null, args);
+    return;
+  }
+  // eslint-disable-next-line prefer-spread
+  localGtag.apply(null, args as []);
 }
 
 export function getGtmId(): string | null {
