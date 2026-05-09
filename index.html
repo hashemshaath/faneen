@@ -116,11 +116,22 @@
         }
       } catch (e) { /* storage unavailable */ }
     </script>
-    <!-- Google Tag Manager -->
-    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    <!-- Google Tag Manager — production-host gated.
+         Loads only on qitaat.com / www.qitaat.com to avoid GA4 suggesting
+         Lovable preview domains in cross-domain settings. Preview override:
+         localStorage.setItem('qitaat_enable_analytics_preview','1'). -->
+    <script>(function(w,d,s,l,i){
+      try {
+        var h = w.location && w.location.hostname || '';
+        var prod = (h === 'qitaat.com' || h === 'www.qitaat.com');
+        var override = false;
+        try { override = w.localStorage && w.localStorage.getItem('qitaat_enable_analytics_preview') === '1'; } catch(e) {}
+        if (!prod && !override) return;
+      } catch(e) { return; }
+      w[l]=w[l]||[];w[l].push({'gtm.start':
+      new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+      j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+      'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
     })(window,document,'script','dataLayer','%VITE_GTM_ID%');</script>
     <!-- End Google Tag Manager -->
 
