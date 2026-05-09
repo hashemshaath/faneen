@@ -160,7 +160,7 @@ const AdminEmailDeliverability: React.FC = () => {
     queryFn: async () => {
       let q = supabase
         .from('email_send_log')
-        .select('message_id, template_name, recipient_email, status, error_message, created_at')
+        .select('message_id, template_name, recipient_email, status, error_message, created_at, opens_count, clicks_count, first_opened_at, first_clicked_at')
         .gte('created_at', sinceIso)
         .order('created_at', { ascending: false })
         .limit(500);
@@ -185,6 +185,18 @@ const AdminEmailDeliverability: React.FC = () => {
     }
     return out.slice(0, 100);
   }, [logsRaw]);
+
+  // Engagement stats (opens / clicks)
+  const { data: engagement } = useQuery({
+    queryKey: ['email-engagement', windowMinutes],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_email_engagement_stats', { _window_minutes: windowMinutes });
+      if (error) throw error;
+      const row = Array.isArray(data) ? data[0] : data;
+      return row as { delivered: number; unique_opens: number; unique_clicks: number; total_opens: number; total_clicks: number; open_rate: number; click_rate: number } | null;
+    },
+    refetchInterval: 60_000,
+  });
 
   // Distinct templates for filter
   const templates = useMemo(() => {
