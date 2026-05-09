@@ -90,6 +90,7 @@ Deno.serve(async (req) => {
         { loc: "/compare", priority: "0.6", changefreq: "weekly" },
         { loc: "/compare-profiles", priority: "0.6", changefreq: "weekly" },
         { loc: "/membership", priority: "0.6", changefreq: "monthly" },
+        { loc: "/for-providers", priority: "0.9", changefreq: "weekly" },
         { loc: "/about", priority: "0.5", changefreq: "monthly" },
         { loc: "/contact", priority: "0.5", changefreq: "monthly" },
         { loc: "/privacy", priority: "0.3", changefreq: "yearly" },
