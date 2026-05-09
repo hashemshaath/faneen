@@ -161,7 +161,7 @@ const Contact = () => {
                 </Button>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="card-ds card-pad-md space-y-5">
+              <form onSubmit={handleSubmit} onFocusCapture={handleFormStart} className="card-ds card-pad-md space-y-5">
                 <h2 className="text-lg font-heading font-bold text-foreground">
                   {isRTL ? 'أرسل لنا رسالة' : 'Send us a message'}
                 </h2>
