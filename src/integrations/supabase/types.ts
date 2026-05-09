@@ -1217,8 +1217,63 @@ export type Database = {
           },
         ]
       }
+      contact_message_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          event_type: string
+          from_value: string | null
+          id: string
+          message_id: string
+          metadata: Json | null
+          note: string | null
+          to_value: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          event_type: string
+          from_value?: string | null
+          id?: string
+          message_id: string
+          metadata?: Json | null
+          note?: string | null
+          to_value?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          event_type?: string
+          from_value?: string | null
+          id?: string
+          message_id?: string
+          metadata?: Json | null
+          note?: string | null
+          to_value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contact_message_events_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "contact_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contact_messages: {
         Row: {
+          ai_category: string | null
+          ai_confidence: number | null
+          ai_priority: string | null
+          ai_processed_at: string | null
+          ai_suggested_reply: string | null
+          ai_summary: string | null
+          assigned_at: string | null
+          assigned_by: string | null
+          assigned_to: string | null
+          closed_at: string | null
+          closed_by: string | null
           created_at: string
           email: string
           id: string
@@ -1231,10 +1286,24 @@ export type Database = {
           starred: boolean
           status: string
           subject: string | null
+          ticket_number: string | null
           updated_at: string
           user_id: string | null
+          work_state: string
+          work_state_updated_at: string | null
         }
         Insert: {
+          ai_category?: string | null
+          ai_confidence?: number | null
+          ai_priority?: string | null
+          ai_processed_at?: string | null
+          ai_suggested_reply?: string | null
+          ai_summary?: string | null
+          assigned_at?: string | null
+          assigned_by?: string | null
+          assigned_to?: string | null
+          closed_at?: string | null
+          closed_by?: string | null
           created_at?: string
           email: string
           id?: string
@@ -1247,10 +1316,24 @@ export type Database = {
           starred?: boolean
           status?: string
           subject?: string | null
+          ticket_number?: string | null
           updated_at?: string
           user_id?: string | null
+          work_state?: string
+          work_state_updated_at?: string | null
         }
         Update: {
+          ai_category?: string | null
+          ai_confidence?: number | null
+          ai_priority?: string | null
+          ai_processed_at?: string | null
+          ai_suggested_reply?: string | null
+          ai_summary?: string | null
+          assigned_at?: string | null
+          assigned_by?: string | null
+          assigned_to?: string | null
+          closed_at?: string | null
+          closed_by?: string | null
           created_at?: string
           email?: string
           id?: string
@@ -1263,8 +1346,11 @@ export type Database = {
           starred?: boolean
           status?: string
           subject?: string | null
+          ticket_number?: string | null
           updated_at?: string
           user_id?: string | null
+          work_state?: string
+          work_state_updated_at?: string | null
         }
         Relationships: []
       }
@@ -4973,6 +5059,7 @@ export type Database = {
         Args: { _prefix: string; _seq_name: string }
         Returns: string
       }
+      get_contact_sla_weekly: { Args: never; Returns: Json }
       get_contract_counterpart_profile: {
         Args: { _target_user_id: string; _viewer_id: string }
         Returns: {
@@ -5180,6 +5267,15 @@ export type Database = {
         Returns: boolean
       }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      list_admin_assignees: {
+        Args: never
+        Returns: {
+          email: string
+          full_name: string
+          role: string
+          user_id: string
+        }[]
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string
