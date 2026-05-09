@@ -31,8 +31,14 @@ import { ar } from 'date-fns/locale';
 import { useAuth } from '@/contexts/AuthContext';
 import { maskEmail } from '@/lib/masking';
 import { useNoIndex } from '@/hooks/useNoIndex';
+import {
+  exportContactsCSV, exportContactsPDF,
+  ALL_EXPORT_FIELDS, DEFAULT_EXPORT_FIELDS,
+  fieldLabel, type ContactExportField, type ContactExportRow,
+} from '@/lib/contact-pdf-export';
 
-type Status = 'new' | 'read' | 'replied' | 'archived';
+type Status = 'new' | 'read' | 'under_review' | 'replied' | 'closed' | 'archived';
+type WorkState = 'ready' | 'in_progress' | 'done' | 'blocked';
 type Priority = 'low' | 'normal' | 'high' | 'urgent';
 type SortKey = 'newest' | 'oldest' | 'priority' | 'unread';
 type DateRange = 'all' | 'today' | '7d' | '30d';
@@ -53,13 +59,50 @@ interface ContactMessage {
   replied_by: string | null;
   created_at: string;
   updated_at: string;
+  assigned_to: string | null;
+  assigned_at: string | null;
+  work_state: WorkState;
+  ticket_number: string | null;
+  closed_at: string | null;
+  ai_priority: Priority | null;
+  ai_category: string | null;
+  ai_summary: string | null;
+  ai_suggested_reply: string | null;
+  ai_processed_at: string | null;
+}
+
+interface ContactEvent {
+  id: string;
+  message_id: string;
+  actor_id: string | null;
+  event_type: string;
+  from_value: string | null;
+  to_value: string | null;
+  note: string | null;
+  created_at: string;
+}
+
+interface AdminAssignee {
+  user_id: string;
+  full_name: string | null;
+  email: string | null;
+  role: string | null;
 }
 
 const statusConfig: Record<Status, { ar: string; en: string; color: string; icon: React.ElementType }> = {
   new:      { ar: 'جديد',    en: 'New',      color: 'bg-blue-500/10 text-blue-600 border-blue-500/30',         icon: Mail },
   read:     { ar: 'مقروء',   en: 'Read',     color: 'bg-amber-500/10 text-amber-600 border-amber-500/30',      icon: MailOpen },
+  under_review: { ar: 'تحت المراجعة', en: 'Under review', color: 'bg-violet-500/10 text-violet-600 border-violet-500/30', icon: Brain },
   replied:  { ar: 'تم الرد', en: 'Replied',  color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30', icon: CheckCircle },
+  closed:   { ar: 'مغلق',    en: 'Closed',   color: 'bg-slate-500/10 text-slate-700 border-slate-500/30',      icon: Lock },
   archived: { ar: 'مؤرشف',   en: 'Archived', color: 'bg-muted text-muted-foreground border-border',             icon: Archive },
+};
+
+const workStateConfig: Record<WorkState, { ar: string; en: string; color: string }> = {
+  ready:       { ar: 'جاهز',         en: 'Ready',       color: 'bg-blue-500/10 text-blue-600 border-blue-500/30' },
+  in_progress: { ar: 'قيد المعالجة', en: 'In progress', color: 'bg-amber-500/10 text-amber-600 border-amber-500/30' },
+  done:        { ar: 'منجز',         en: 'Done',        color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30' },
+  blocked:     { ar: 'متوقف',        en: 'Blocked',     color: 'bg-red-500/10 text-red-600 border-red-500/30' },
 };
 
 const priorityConfig: Record<Priority, { ar: string; en: string; color: string; weight: number }> = {
