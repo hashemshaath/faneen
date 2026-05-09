@@ -13,6 +13,7 @@ import { AppDirectionShell } from "@/components/ui/app-direction-shell";
 import { RouteScrollToTop } from "@/components/RouteScrollToTop";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 const Index = lazyRetry(() => import("./pages/Index"));
+const ConsentBanner = lazy(() => import("./components/consent/ConsentBanner"));
 
 function lazyRetry<T extends ComponentType<any>>(
   factory: () => Promise<{ default: T }>,
@@ -200,6 +201,9 @@ const AppRoutes = () => (
           <Route path="/:username" element={<BusinessProfile />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
+      </Suspense>
+      <Suspense fallback={null}>
+        <ConsentBanner />
       </Suspense>
     </AppDirectionShell>
   </BrowserRouter>
