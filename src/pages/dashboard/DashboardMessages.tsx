@@ -49,7 +49,6 @@ const CONV_LABELS = [
 ];
 
 const formatFileSize = (bytes: number) => {
-  useNoIndex();
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
@@ -562,6 +561,7 @@ ChatInfoPanel.displayName = 'ChatInfoPanel';
 /* ─── Main Component ─── */
 /* ═══════════════════════════════════════════════════════ */
 const DashboardMessages = () => {
+  useNoIndex();
   const { isRTL, language } = useLanguage();
   const { user, isSuperAdmin } = useAuth();
   const navigate = useNavigate();
