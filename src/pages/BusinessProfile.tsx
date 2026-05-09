@@ -380,7 +380,15 @@ const BusinessProfile = () => {
             </Button>
           </div>
 
-          <section className="rounded-2xl border border-border/40 bg-card/60 p-1.5 shadow-sm dark:border-border/20 dark:bg-card/40 sm:p-3">
+          <section
+            className="rounded-2xl border border-border/40 bg-card/60 p-1.5 shadow-sm dark:border-border/20 dark:bg-card/40 sm:p-3"
+            data-lead-context=""
+            data-lead-business-slug={business.username || ""}
+            data-lead-membership-tier={business.membership_tier || ""}
+            data-lead-sector={(business.categories as { slug?: string } | null)?.slug || ""}
+            data-lead-category-slug={(business.categories as { slug?: string } | null)?.slug || ""}
+            data-lead-city={(business.cities as { slug?: string } | null)?.slug || cityName || ""}
+          >
             <Tabs defaultValue="services" dir={isRTL ? "rtl" : "ltr"} className="w-full">
               <div
                 className="sticky top-12 z-30 -mx-1.5 overflow-x-auto bg-background/80 px-1.5 py-1 backdrop-blur-md no-scrollbar sm:top-14 sm:-mx-3 sm:px-3 sm:py-1.5"
