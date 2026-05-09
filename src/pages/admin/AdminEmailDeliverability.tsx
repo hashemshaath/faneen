@@ -339,6 +339,14 @@ const AdminEmailDeliverability: React.FC = () => {
           <RateCard label={isRTL ? 'معدل الشكاوى' : 'Complaint rate'} value={stats?.complaint_rate ?? 0} threshold={2} />
         </div>
 
+        {/* Engagement (opens/clicks) */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <StatCard icon={Eye} label={isRTL ? 'مرّات الفتح (فريدة)' : 'Unique opens'} value={engagement?.unique_opens ?? 0} accent="emerald" />
+          <StatCard icon={MousePointerClick} label={isRTL ? 'النقرات (فريدة)' : 'Unique clicks'} value={engagement?.unique_clicks ?? 0} accent="emerald" />
+          <RateCard label={isRTL ? 'معدل الفتح' : 'Open rate'} value={engagement?.open_rate ?? 0} threshold={100} good />
+          <RateCard label={isRTL ? 'معدل النقر' : 'Click rate'} value={engagement?.click_rate ?? 0} threshold={100} good />
+        </div>
+
         {/* Logs */}
         <Card>
           <CardHeader>
