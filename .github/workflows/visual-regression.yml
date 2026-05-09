@@ -60,10 +60,52 @@ jobs:
 
       - name: Run visual regression tests
         if: steps.baselines.outputs.exists == 'true'
+        id: visual
         run: npm run test:visual
 
-      - name: Upload Playwright report on failure
-        if: failure()
+      - name: Collect visual diff images (actual / expected / diff)
+        if: always() && steps.baselines.outputs.exists == 'true'
+        run: |
+          mkdir -p visual-diffs
+          if [ -d test-results ]; then
+            # Playwright writes *-actual.png, *-expected.png, *-diff.png into
+            # test-results/<spec>/ on snapshot failure. Flatten them into one
+            # folder per failing test so they're easy to scan in the artifact.
+            find test-results -type f \( -name "*-actual.png" -o -name "*-expected.png" -o -name "*-diff.png" \) -print0 \
+              | while IFS= read -r -d '' f; do
+                  rel="${f#test-results/}"
+                  dest="visual-diffs/$(dirname "$rel")"
+                  mkdir -p "$dest"
+                  cp "$f" "$dest/"
+                done
+          fi
+          count=$(find visual-diffs -type f -name "*.png" 2>/dev/null | wc -l)
+          echo "Collected $count diff image(s)"
+          if [ "$count" -gt 0 ]; then
+            {
+              echo "## 🖼️ Visual regression failures"
+              echo ""
+              echo "Found **$count** snapshot diff image(s). Download the \`visual-diffs\` artifact below to inspect actual / expected / diff side-by-side, or open the \`playwright-report\` artifact for the full HTML report."
+              echo ""
+              echo "<details><summary>Failing snapshots</summary>"
+              echo ""
+              find visual-diffs -type f -name "*-diff.png" | sort | sed 's|^|- `|; s|$|`|'
+              echo ""
+              echo "</details>"
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload visual diff images
+        if: always() && steps.baselines.outputs.exists == 'true' && hashFiles('visual-diffs/**/*.png') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-diffs
+          path: visual-diffs/
+          retention-days: 30
+          if-no-files-found: ignore
+
+      - name: Upload Playwright HTML report
+        if: always() && steps.baselines.outputs.exists == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
@@ -71,6 +113,7 @@ jobs:
             playwright-report/
             test-results/
           retention-days: 14
+          if-no-files-found: ignore
 
       - name: Stop preview server
         if: always()
