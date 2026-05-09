@@ -24,6 +24,7 @@ import {
   Calendar, ArrowUpDown, LayoutList, Rows, Printer, Reply,
   AlertTriangle, Timer, TrendingUp, Sparkles, MailX, MoreHorizontal,
   PanelRightOpen, PanelRightClose,
+  Brain, FileBarChart,
 } from 'lucide-react';
 import { format, formatDistanceToNow, differenceInHours, isToday, subDays } from 'date-fns';
 import { ar } from 'date-fns/locale';
@@ -446,6 +447,41 @@ const AdminContactMessages = () => {
             <Button variant="outline" size="sm" onClick={exportCSV} disabled={!filtered.length} className="gap-2">
               <Download className="w-4 h-4" />{isRTL ? 'تصدير CSV' : 'Export'}
             </Button>
+            <Button
+              variant="outline" size="sm" className="gap-2"
+              onClick={async () => {
+                const t = toast.loading(isRTL ? 'جارٍ توليد التقرير...' : 'Generating report...');
+                const { data, error } = await supabase.functions.invoke('weekly-sla-report');
+                toast.dismiss(t);
+                if (error || !data?.ok) {
+                  toast.error(isRTL ? 'فشل توليد التقرير' : 'Report failed');
+                  return;
+                }
+                toast.success(isRTL ? 'تم إرسال التقرير الأسبوعي للإدارة' : 'Weekly SLA report sent to admins');
+              }}
+            >
+              <FileBarChart className="w-4 h-4" />{isRTL ? 'تقرير SLA الأسبوعي' : 'Weekly SLA'}
+            </Button>
+            {focused && (
+              <Button
+                variant="default" size="sm" className="gap-2"
+                onClick={async () => {
+                  const t = toast.loading(isRTL ? 'يحلّل الذكاء الاصطناعي الرسالة...' : 'AI analysing...');
+                  const { data, error } = await supabase.functions.invoke('triage-contact-message', { body: { message_id: focused.id } });
+                  toast.dismiss(t);
+                  if (error || data?.error) {
+                    toast.error(data?.error || (isRTL ? 'فشل الفرز الذكي' : 'Triage failed'));
+                    return;
+                  }
+                  queryClient.invalidateQueries({ queryKey: ['admin-contact-messages'] });
+                  toast.success(isRTL
+                    ? `الفرز: ${data.priority || ''} · ${data.category || ''}`
+                    : `Triage: ${data.priority || ''} · ${data.category || ''}`);
+                }}
+              >
+                <Brain className="w-4 h-4" />{isRTL ? 'فرز ذكي' : 'AI Triage'}
+              </Button>
+            )}
           </div>
         </div>
 
