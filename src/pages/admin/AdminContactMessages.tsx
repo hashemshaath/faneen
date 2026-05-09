@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -12,22 +12,30 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
 import {
   Mail, Search, Clock, CheckCircle, Archive, Loader2,
-  Download, MailOpen, Filter, Inbox, User, MessageSquare,
-  Star, Flame, Copy, Trash2, Link2, ChevronLeft, ChevronRight,
-  StickyNote, Phone, RefreshCw,
+  Download, MailOpen, Inbox, User, Star, Flame, Copy, Trash2, Link2,
+  ChevronLeft, ChevronRight, StickyNote, RefreshCw, Lock,
+  Calendar, ArrowUpDown, LayoutList, Rows, Printer, Reply,
+  AlertTriangle, Timer, TrendingUp, Sparkles, MailX, MoreHorizontal,
+  PanelRightOpen, PanelRightClose,
 } from 'lucide-react';
-import { format, formatDistanceToNow } from 'date-fns';
+import { format, formatDistanceToNow, differenceInHours, isToday, subDays } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { useAuth } from '@/contexts/AuthContext';
 import { maskEmail } from '@/lib/masking';
-import { Lock } from 'lucide-react';
+import { useNoIndex } from '@/hooks/useNoIndex';
 
-import { useNoIndex } from "@/hooks/useNoIndex";
 type Status = 'new' | 'read' | 'replied' | 'archived';
 type Priority = 'low' | 'normal' | 'high' | 'urgent';
+type SortKey = 'newest' | 'oldest' | 'priority' | 'unread';
+type DateRange = 'all' | 'today' | '7d' | '30d';
+type Density = 'comfortable' | 'compact';
 
 interface ContactMessage {
   id: string;
@@ -47,33 +55,59 @@ interface ContactMessage {
 }
 
 const statusConfig: Record<Status, { ar: string; en: string; color: string; icon: React.ElementType }> = {
-  new: { ar: 'جديد', en: 'New', color: 'bg-blue-500/10 text-blue-600 border-blue-500/30', icon: Mail },
-  read: { ar: 'مقروء', en: 'Read', color: 'bg-amber-500/10 text-amber-600 border-amber-500/30', icon: MailOpen },
-  replied: { ar: 'تم الرد', en: 'Replied', color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30', icon: CheckCircle },
-  archived: { ar: 'مؤرشف', en: 'Archived', color: 'bg-muted text-muted-foreground border-border', icon: Archive },
+  new:      { ar: 'جديد',    en: 'New',      color: 'bg-blue-500/10 text-blue-600 border-blue-500/30',         icon: Mail },
+  read:     { ar: 'مقروء',   en: 'Read',     color: 'bg-amber-500/10 text-amber-600 border-amber-500/30',      icon: MailOpen },
+  replied:  { ar: 'تم الرد', en: 'Replied',  color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30', icon: CheckCircle },
+  archived: { ar: 'مؤرشف',   en: 'Archived', color: 'bg-muted text-muted-foreground border-border',             icon: Archive },
 };
 
-const priorityConfig: Record<Priority, { ar: string; en: string; color: string }> = {
-  low: { ar: 'منخفض', en: 'Low', color: 'bg-slate-500/10 text-slate-600 border-slate-500/30' },
-  normal: { ar: 'عادي', en: 'Normal', color: 'bg-blue-500/10 text-blue-600 border-blue-500/30' },
-  high: { ar: 'مرتفع', en: 'High', color: 'bg-orange-500/10 text-orange-600 border-orange-500/30' },
-  urgent: { ar: 'عاجل', en: 'Urgent', color: 'bg-red-500/10 text-red-600 border-red-500/30' },
+const priorityConfig: Record<Priority, { ar: string; en: string; color: string; weight: number }> = {
+  low:    { ar: 'منخفض', en: 'Low',    color: 'bg-slate-500/10 text-slate-600 border-slate-500/30',    weight: 0 },
+  normal: { ar: 'عادي',  en: 'Normal', color: 'bg-blue-500/10 text-blue-600 border-blue-500/30',       weight: 1 },
+  high:   { ar: 'مرتفع', en: 'High',   color: 'bg-orange-500/10 text-orange-600 border-orange-500/30', weight: 2 },
+  urgent: { ar: 'عاجل',  en: 'Urgent', color: 'bg-red-500/10 text-red-600 border-red-500/30',          weight: 3 },
 };
+
+const replyTemplates = [
+  {
+    id: 'received',
+    labelAr: 'استلام الرسالة',
+    labelEn: 'Acknowledge receipt',
+    bodyAr: 'مرحباً {name}،\n\nشكراً لتواصلك مع قِطاعات. استلمنا رسالتك وسيقوم فريقنا بالرد عليك خلال 24 ساعة عمل.\n\nمع تحيات فريق قِطاعات',
+    bodyEn: 'Hi {name},\n\nThanks for reaching out to Qitaat. We have received your message and a team member will respond within 24 business hours.\n\nBest regards,\nThe Qitaat Team',
+  },
+  {
+    id: 'info',
+    labelAr: 'طلب معلومات إضافية',
+    labelEn: 'Request more info',
+    bodyAr: 'مرحباً {name}،\n\nشكراً لرسالتك. لمساعدتك بشكل أفضل، نحتاج إلى تفاصيل إضافية حول طلبك (الموقع، الميزانية، الجدول الزمني).\n\nمع تحيات فريق قِطاعات',
+    bodyEn: 'Hi {name},\n\nThanks for your message. To assist you better, we need a bit more detail (location, budget, timeline).\n\nBest regards,\nThe Qitaat Team',
+  },
+  {
+    id: 'resolved',
+    labelAr: 'تم حل الطلب',
+    labelEn: 'Resolution confirmed',
+    bodyAr: 'مرحباً {name}،\n\nسعدنا بمساعدتك. تم تنفيذ طلبك بنجاح. لا تتردد في التواصل معنا لأي استفسار آخر.\n\nمع تحيات فريق قِطاعات',
+    bodyEn: 'Hi {name},\n\nGlad we could help. Your request has been completed. Feel free to reach out anytime.\n\nBest regards,\nThe Qitaat Team',
+  },
+];
 
 const PAGE_SIZE = 25;
 
 const AdminContactMessages = () => {
   useNoIndex();
   const { isRTL } = useLanguage();
-  const { isSuperAdmin } = useAuth();
+  const { isSuperAdmin, user } = useAuth();
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const statusFilter = searchParams.get('status') || 'all';
   const priorityFilter = searchParams.get('priority') || 'all';
   const search = searchParams.get('q') || '';
   const starredOnly = searchParams.get('starred') === '1';
+  const dateRange = (searchParams.get('range') as DateRange) || 'all';
+  const sortKey = (searchParams.get('sort') as SortKey) || 'newest';
+  const quickChip = searchParams.get('chip') || ''; // unread | stale | today | urgent | notes
   const page = parseInt(searchParams.get('page') || '1', 10);
   const focusedId = searchParams.get('id');
 
@@ -81,6 +115,11 @@ const AdminContactMessages = () => {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [noteDraft, setNoteDraft] = useState<string>('');
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
+  const [splitView, setSplitView] = useState<boolean>(() => localStorage.getItem('qitaat_cm_split') === '1');
+  const [density, setDensity] = useState<Density>(() => (localStorage.getItem('qitaat_cm_density') as Density) || 'comfortable');
+
+  useEffect(() => { localStorage.setItem('qitaat_cm_split', splitView ? '1' : '0'); }, [splitView]);
+  useEffect(() => { localStorage.setItem('qitaat_cm_density', density); }, [density]);
 
   const updateParam = useCallback((updates: Record<string, string | null>) => {
     const sp = new URLSearchParams(searchParams);
@@ -91,7 +130,6 @@ const AdminContactMessages = () => {
     setSearchParams(sp, { replace: false });
   }, [searchParams, setSearchParams]);
 
-  // Debounce search input → URL
   useEffect(() => {
     const t = setTimeout(() => {
       if (searchInput !== search) updateParam({ q: searchInput || null, page: null });
@@ -99,10 +137,9 @@ const AdminContactMessages = () => {
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchInput]);
-
   useEffect(() => { setSearchInput(search); }, [search]);
 
-  const { data: messages = [], isLoading, refetch } = useQuery({
+  const { data: messages = [], isLoading, refetch, isFetching } = useQuery({
     queryKey: ['admin-contact-messages'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -115,7 +152,6 @@ const AdminContactMessages = () => {
     },
   });
 
-  // Realtime
   useEffect(() => {
     const channel = supabase
       .channel('admin-contact-messages-rt')
@@ -128,7 +164,13 @@ const AdminContactMessages = () => {
 
   const updateMutation = useMutation({
     mutationFn: async ({ ids, patch }: { ids: string[]; patch: Partial<ContactMessage> }) => {
-      const { error } = await supabase.from('contact_messages').update(patch).in('id', ids);
+      // Auto-set replied_at / replied_by when transitioning to "replied"
+      const finalPatch: Partial<ContactMessage> = { ...patch };
+      if (patch.status === 'replied') {
+        finalPatch.replied_at = new Date().toISOString();
+        if (user?.id) finalPatch.replied_by = user.id;
+      }
+      const { error } = await supabase.from('contact_messages').update(finalPatch).in('id', ids);
       if (error) throw error;
     },
     onSuccess: (_d, vars) => {
@@ -146,24 +188,59 @@ const AdminContactMessages = () => {
     onSuccess: (_d, ids) => {
       queryClient.invalidateQueries({ queryKey: ['admin-contact-messages'] });
       setSelectedIds(new Set());
+      if (focusedId && ids.includes(focusedId)) updateParam({ id: null });
       toast.success(isRTL ? `تم الحذف (${ids.length})` : `Deleted (${ids.length})`);
     },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : (isRTL ? 'فشل الحذف' : 'Delete failed')),
   });
 
+  // Apply chip → effective filter sets
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
-    return messages.filter(m => {
+    const now = Date.now();
+    let cutoff: Date | null = null;
+    if (dateRange === 'today') cutoff = new Date(new Date().setHours(0, 0, 0, 0));
+    else if (dateRange === '7d') cutoff = subDays(new Date(), 7);
+    else if (dateRange === '30d') cutoff = subDays(new Date(), 30);
+
+    const list = messages.filter(m => {
       if (statusFilter !== 'all' && m.status !== statusFilter) return false;
       if (priorityFilter !== 'all' && m.priority !== priorityFilter) return false;
       if (starredOnly && !m.starred) return false;
+      if (cutoff && new Date(m.created_at) < cutoff) return false;
+      if (quickChip === 'unread' && m.status !== 'new') return false;
+      if (quickChip === 'urgent' && m.priority !== 'urgent') return false;
+      if (quickChip === 'notes' && !m.internal_notes) return false;
+      if (quickChip === 'today' && !isToday(new Date(m.created_at))) return false;
+      if (quickChip === 'stale') {
+        // Unanswered for more than 24h
+        if (m.status === 'replied' || m.status === 'archived') return false;
+        if (now - new Date(m.created_at).getTime() < 24 * 60 * 60 * 1000) return false;
+      }
       if (q) {
         const hay = `${m.name} ${m.email} ${m.subject || ''} ${m.message} ${m.internal_notes || ''}`.toLowerCase();
         if (!hay.includes(q)) return false;
       }
       return true;
     });
-  }, [messages, statusFilter, priorityFilter, starredOnly, search]);
+
+    // Sort
+    return [...list].sort((a, b) => {
+      if (sortKey === 'oldest') return +new Date(a.created_at) - +new Date(b.created_at);
+      if (sortKey === 'priority') {
+        const d = priorityConfig[b.priority].weight - priorityConfig[a.priority].weight;
+        if (d !== 0) return d;
+        return +new Date(b.created_at) - +new Date(a.created_at);
+      }
+      if (sortKey === 'unread') {
+        const ai = a.status === 'new' ? 0 : 1;
+        const bi = b.status === 'new' ? 0 : 1;
+        if (ai !== bi) return ai - bi;
+        return +new Date(b.created_at) - +new Date(a.created_at);
+      }
+      return +new Date(b.created_at) - +new Date(a.created_at);
+    });
+  }, [messages, statusFilter, priorityFilter, starredOnly, search, dateRange, quickChip, sortKey]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
@@ -175,9 +252,23 @@ const AdminContactMessages = () => {
     return c;
   }, [messages]);
 
+  // SLA / pro KPIs
+  const kpis = useMemo(() => {
+    const replied = messages.filter(m => m.replied_at);
+    const responseHours = replied.map(m => differenceInHours(new Date(m.replied_at!), new Date(m.created_at)));
+    const avgHours = responseHours.length ? Math.round((responseHours.reduce((s, h) => s + h, 0) / responseHours.length) * 10) / 10 : null;
+    const stale = messages.filter(m =>
+      (m.status === 'new' || m.status === 'read') &&
+      Date.now() - new Date(m.created_at).getTime() > 24 * 60 * 60 * 1000
+    ).length;
+    const todayCount = messages.filter(m => isToday(new Date(m.created_at))).length;
+    const total = messages.length;
+    const responseRate = total ? Math.round((replied.length / total) * 100) : 0;
+    return { avgHours, stale, todayCount, responseRate };
+  }, [messages]);
+
   const focused = useMemo(() => messages.find(m => m.id === focusedId) || null, [messages, focusedId]);
 
-  // Auto mark-as-read when opening
   useEffect(() => {
     if (focused && focused.status === 'new') {
       updateMutation.mutate({ ids: [focused.id], patch: { status: 'read' } });
@@ -231,12 +322,16 @@ const AdminContactMessages = () => {
           const prev = filtered[Math.max(0, idx - 1)];
           if (prev) openMessage(prev.id);
         }
+        if (e.key === 'e') updateMutation.mutate({ ids: [focusedId], patch: { status: 'archived' } });
+        if (e.key === 'r') updateMutation.mutate({ ids: [focusedId], patch: { status: 'replied' } });
+        if (e.key === 'u') updateMutation.mutate({ ids: [focusedId], patch: { status: 'new' } });
+        if (e.key === 's') updateMutation.mutate({ ids: [focusedId], patch: { starred: !focused?.starred } });
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [focusedId, filtered]);
+  }, [focusedId, filtered, focused]);
 
   const exportCSV = () => {
     if (!isSuperAdmin) {
@@ -245,11 +340,13 @@ const AdminContactMessages = () => {
         : 'CSV export contains sensitive data — Super Admin only.');
       return;
     }
-    const headers = ['ID', 'Name', 'Email', 'Subject', 'Message', 'Status', 'Priority', 'Starred', 'Notes', 'Created'];
+    const headers = ['ID', 'Name', 'Email', 'Subject', 'Message', 'Status', 'Priority', 'Starred', 'Notes', 'Created', 'Replied At', 'Response (hrs)'];
     const rows = filtered.map(m => [
       m.id, m.name, m.email, m.subject || '', m.message.replace(/[\n\r]/g, ' '),
       m.status, m.priority, m.starred ? 'yes' : 'no', m.internal_notes || '',
       format(new Date(m.created_at), 'yyyy-MM-dd HH:mm'),
+      m.replied_at ? format(new Date(m.replied_at), 'yyyy-MM-dd HH:mm') : '',
+      m.replied_at ? String(differenceInHours(new Date(m.replied_at), new Date(m.created_at))) : '',
     ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(','));
     const csv = '\uFEFF' + [headers.join(','), ...rows].join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -265,7 +362,43 @@ const AdminContactMessages = () => {
     toast.success(isRTL ? 'تم نسخ الرابط' : 'Link copied');
   };
 
+  const printMessage = () => {
+    if (!focused) return;
+    const w = window.open('', '_blank');
+    if (!w) return;
+    const safe = (s: string) => s.replace(/</g, '&lt;');
+    w.document.write(`
+      <html><head><title>${safe(focused.subject || 'Message')}</title>
+      <style>body{font-family:system-ui;padding:32px;max-width:720px;margin:auto;line-height:1.6}h1{font-size:20px}.meta{color:#666;font-size:13px;margin-bottom:24px}.body{white-space:pre-wrap;border-top:1px solid #eee;padding-top:16px}</style>
+      </head><body>
+      <h1>${safe(focused.subject || '(No subject)')}</h1>
+      <div class="meta"><strong>${safe(focused.name)}</strong> · ${safe(focused.email)}<br/>${format(new Date(focused.created_at), 'yyyy-MM-dd HH:mm')}</div>
+      <div class="body">${safe(focused.message)}</div>
+      </body></html>`);
+    w.document.close();
+    setTimeout(() => w.print(), 250);
+  };
+
+  const useReplyTemplate = (tplId: string) => {
+    if (!focused || !isSuperAdmin) return;
+    const tpl = replyTemplates.find(t => t.id === tplId);
+    if (!tpl) return;
+    const body = (isRTL ? tpl.bodyAr : tpl.bodyEn).replace(/\{name\}/g, focused.name);
+    const subject = `Re: ${focused.subject || (isRTL ? 'تواصل قِطاعات' : 'Qitaat enquiry')}`;
+    const url = `mailto:${focused.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href = url;
+  };
+
   const dateLocale = isRTL ? ar : undefined;
+
+  // Quick chips definition
+  const chips: { id: string; ar: string; en: string; icon: React.ElementType; tone: string }[] = [
+    { id: 'unread', ar: 'غير مقروءة',         en: 'Unread',          icon: Mail,          tone: 'bg-blue-500/10 text-blue-600 border-blue-500/30' },
+    { id: 'today',  ar: 'اليوم',               en: 'Today',           icon: Calendar,      tone: 'bg-violet-500/10 text-violet-600 border-violet-500/30' },
+    { id: 'stale',  ar: 'بدون رد > 24س',       en: 'Stale > 24h',     icon: Timer,         tone: 'bg-orange-500/10 text-orange-600 border-orange-500/30' },
+    { id: 'urgent', ar: 'عاجل',                en: 'Urgent',          icon: Flame,         tone: 'bg-red-500/10 text-red-600 border-red-500/30' },
+    { id: 'notes',  ar: 'تحتوي ملاحظات',       en: 'Has notes',       icon: StickyNote,    tone: 'bg-amber-500/10 text-amber-600 border-amber-500/30' },
+  ];
 
   return (
     <DashboardLayout>
@@ -277,24 +410,89 @@ const AdminContactMessages = () => {
               <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
                 <Inbox className="w-5 h-5 text-accent" />
               </div>
-              {isRTL ? 'رسائل التواصل' : 'Contact Messages'}
+              {isRTL ? 'صندوق رسائل التواصل' : 'Contact Inbox'}
               <Badge variant="outline" className="text-xs h-5">{messages.length}</Badge>
+              {isFetching && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
             </h1>
             <p className="text-muted-foreground font-body mt-1 text-sm">
-              {isRTL ? 'إدارة احترافية للرسائل مع روابط عميقة وإجراءات جماعية' : 'Professional inbox with deep links and bulk actions'}
+              {isRTL
+                ? 'لوحة احترافية لإدارة الرسائل: مؤشرات الأداء، قوالب رد، عرض مقسوم، اختصارات لوحة المفاتيح.'
+                : 'Pro inbox: SLA KPIs, reply templates, split view, keyboard shortcuts.'}
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button
+              variant={splitView ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setSplitView(s => !s)}
+              className="gap-2 hidden xl:inline-flex"
+              title={isRTL ? 'عرض مقسوم' : 'Split view'}
+            >
+              {splitView ? <PanelRightClose className="w-4 h-4" /> : <PanelRightOpen className="w-4 h-4" />}
+              {isRTL ? 'عرض مقسوم' : 'Split'}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setDensity(d => d === 'compact' ? 'comfortable' : 'compact')}
+              className="gap-2"
+              title={isRTL ? 'كثافة العرض' : 'Density'}
+            >
+              {density === 'compact' ? <LayoutList className="w-4 h-4" /> : <Rows className="w-4 h-4" />}
+            </Button>
             <Button variant="outline" size="sm" onClick={() => refetch()} className="gap-2">
               <RefreshCw className="w-4 h-4" />{isRTL ? 'تحديث' : 'Refresh'}
             </Button>
             <Button variant="outline" size="sm" onClick={exportCSV} disabled={!filtered.length} className="gap-2">
-              <Download className="w-4 h-4" />{isRTL ? 'تصدير' : 'Export'}
+              <Download className="w-4 h-4" />{isRTL ? 'تصدير CSV' : 'Export'}
             </Button>
           </div>
         </div>
 
-        {/* Stat cards (clickable filters) */}
+        {/* SLA / KPI strip */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <Card className="hover-lift">
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-violet-500/10 text-violet-600 flex items-center justify-center"><Calendar className="w-4 h-4" /></div>
+              <div>
+                <p className="font-heading font-bold text-lg tech-content">{kpis.todayCount}</p>
+                <p className="text-[10px] text-muted-foreground">{isRTL ? 'رسائل اليوم' : 'Today'}</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className={`hover-lift cursor-pointer transition-all ${quickChip === 'stale' ? 'border-orange-500 ring-1 ring-orange-500/30' : ''}`}
+            onClick={() => updateParam({ chip: quickChip === 'stale' ? null : 'stale', page: null })}>
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-orange-500/10 text-orange-600 flex items-center justify-center"><AlertTriangle className="w-4 h-4" /></div>
+              <div>
+                <p className="font-heading font-bold text-lg tech-content">{kpis.stale}</p>
+                <p className="text-[10px] text-muted-foreground">{isRTL ? 'بدون رد > 24س' : 'Stale > 24h'}</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="hover-lift">
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center"><Timer className="w-4 h-4" /></div>
+              <div>
+                <p className="font-heading font-bold text-lg tech-content">
+                  {kpis.avgHours !== null ? `${kpis.avgHours}س` : '—'}
+                </p>
+                <p className="text-[10px] text-muted-foreground">{isRTL ? 'متوسط زمن الرد' : 'Avg response'}</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="hover-lift">
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center"><TrendingUp className="w-4 h-4" /></div>
+              <div>
+                <p className="font-heading font-bold text-lg tech-content">{kpis.responseRate}%</p>
+                <p className="text-[10px] text-muted-foreground">{isRTL ? 'نسبة الرد' : 'Response rate'}</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Status cards (clickable filters) */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {(Object.keys(statusConfig) as Status[]).map(key => {
             const cfg = statusConfig[key];
@@ -336,15 +534,30 @@ const AdminContactMessages = () => {
                 />
               </div>
               <Select value={priorityFilter} onValueChange={v => updateParam({ priority: v, page: null })}>
-                <SelectTrigger className="w-full lg:w-44">
-                  <Flame className="w-4 h-4 me-2" />
-                  <SelectValue />
-                </SelectTrigger>
+                <SelectTrigger className="w-full lg:w-40"><Flame className="w-4 h-4 me-2" /><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{isRTL ? 'جميع الأولويات' : 'All Priorities'}</SelectItem>
+                  <SelectItem value="all">{isRTL ? 'كل الأولويات' : 'All Priorities'}</SelectItem>
                   {(Object.keys(priorityConfig) as Priority[]).map(k => (
                     <SelectItem key={k} value={k}>{isRTL ? priorityConfig[k].ar : priorityConfig[k].en}</SelectItem>
                   ))}
+                </SelectContent>
+              </Select>
+              <Select value={dateRange} onValueChange={v => updateParam({ range: v, page: null })}>
+                <SelectTrigger className="w-full lg:w-36"><Calendar className="w-4 h-4 me-2" /><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{isRTL ? 'كل الفترات' : 'All time'}</SelectItem>
+                  <SelectItem value="today">{isRTL ? 'اليوم' : 'Today'}</SelectItem>
+                  <SelectItem value="7d">{isRTL ? '٧ أيام' : 'Last 7 days'}</SelectItem>
+                  <SelectItem value="30d">{isRTL ? '٣٠ يوم' : 'Last 30 days'}</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={sortKey} onValueChange={v => updateParam({ sort: v === 'newest' ? null : v, page: null })}>
+                <SelectTrigger className="w-full lg:w-40"><ArrowUpDown className="w-4 h-4 me-2" /><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="newest">{isRTL ? 'الأحدث أولاً' : 'Newest first'}</SelectItem>
+                  <SelectItem value="oldest">{isRTL ? 'الأقدم أولاً' : 'Oldest first'}</SelectItem>
+                  <SelectItem value="priority">{isRTL ? 'حسب الأولوية' : 'By priority'}</SelectItem>
+                  <SelectItem value="unread">{isRTL ? 'غير المقروءة أولاً' : 'Unread first'}</SelectItem>
                 </SelectContent>
               </Select>
               <Button
@@ -357,6 +570,33 @@ const AdminContactMessages = () => {
               </Button>
             </div>
 
+            {/* Quick chips */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[11px] text-muted-foreground font-medium">{isRTL ? 'فلاتر سريعة:' : 'Quick:'}</span>
+              {chips.map(chip => {
+                const Icon = chip.icon;
+                const active = quickChip === chip.id;
+                return (
+                  <button
+                    key={chip.id}
+                    onClick={() => updateParam({ chip: active ? null : chip.id, page: null })}
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-medium transition-all ${active ? chip.tone + ' shadow-sm' : 'border-border/60 text-muted-foreground hover:border-accent/40 hover:text-foreground'}`}
+                  >
+                    <Icon className="w-3 h-3" />
+                    {isRTL ? chip.ar : chip.en}
+                  </button>
+                );
+              })}
+              {(quickChip || starredOnly || statusFilter !== 'all' || priorityFilter !== 'all' || dateRange !== 'all' || search) && (
+                <button
+                  onClick={() => setSearchParams(new URLSearchParams())}
+                  className="inline-flex items-center gap-1 px-2 py-1 text-[11px] text-destructive hover:underline ms-auto"
+                >
+                  <MailX className="w-3 h-3" />{isRTL ? 'مسح كل الفلاتر' : 'Clear all'}
+                </button>
+              )}
+            </div>
+
             {/* Bulk actions bar */}
             {selectedIds.size > 0 && (
               <div className="flex items-center gap-2 p-2 rounded-lg bg-accent/5 border border-accent/20 flex-wrap">
@@ -367,11 +607,20 @@ const AdminContactMessages = () => {
                 <Button size="sm" variant="ghost" className="h-7 gap-1.5 text-xs" onClick={() => updateMutation.mutate({ ids: [...selectedIds], patch: { status: 'read' } })}>
                   <MailOpen className="w-3.5 h-3.5" />{isRTL ? 'تعليم كمقروء' : 'Mark Read'}
                 </Button>
+                <Button size="sm" variant="ghost" className="h-7 gap-1.5 text-xs" onClick={() => updateMutation.mutate({ ids: [...selectedIds], patch: { status: 'new' } })}>
+                  <Mail className="w-3.5 h-3.5" />{isRTL ? 'كغير مقروءة' : 'Mark Unread'}
+                </Button>
                 <Button size="sm" variant="ghost" className="h-7 gap-1.5 text-xs" onClick={() => updateMutation.mutate({ ids: [...selectedIds], patch: { status: 'replied' } })}>
                   <CheckCircle className="w-3.5 h-3.5" />{isRTL ? 'تم الرد' : 'Replied'}
                 </Button>
                 <Button size="sm" variant="ghost" className="h-7 gap-1.5 text-xs" onClick={() => updateMutation.mutate({ ids: [...selectedIds], patch: { status: 'archived' } })}>
                   <Archive className="w-3.5 h-3.5" />{isRTL ? 'أرشفة' : 'Archive'}
+                </Button>
+                <Button size="sm" variant="ghost" className="h-7 gap-1.5 text-xs" onClick={() => updateMutation.mutate({ ids: [...selectedIds], patch: { starred: true } })}>
+                  <Star className="w-3.5 h-3.5" />{isRTL ? 'تمييز ★' : 'Star'}
+                </Button>
+                <Button size="sm" variant="ghost" className="h-7 gap-1.5 text-xs" onClick={() => updateMutation.mutate({ ids: [...selectedIds], patch: { starred: false } })}>
+                  <Star className="w-3.5 h-3.5" />{isRTL ? 'إلغاء ★' : 'Unstar'}
                 </Button>
                 <Select onValueChange={(v) => updateMutation.mutate({ ids: [...selectedIds], patch: { priority: v as Priority } })}>
                   <SelectTrigger className="h-7 w-32 text-xs"><SelectValue placeholder={isRTL ? 'الأولوية' : 'Priority'} /></SelectTrigger>
@@ -400,242 +649,432 @@ const AdminContactMessages = () => {
           </CardContent>
         </Card>
 
-        {/* Focused message panel (deep-linked) */}
-        {focused && (
-          <Card className="border-accent/40 ring-1 ring-accent/20">
-            <CardContent className="p-5 space-y-4">
-              <div className="flex items-start justify-between gap-3 flex-wrap">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <Badge variant="outline" className={statusConfig[focused.status].color}>
-                      {isRTL ? statusConfig[focused.status].ar : statusConfig[focused.status].en}
-                    </Badge>
-                    <Badge variant="outline" className={priorityConfig[focused.priority].color}>
-                      <Flame className="w-3 h-3 me-1" />
-                      {isRTL ? priorityConfig[focused.priority].ar : priorityConfig[focused.priority].en}
-                    </Badge>
-                    {focused.starred && <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/30"><Star className="w-3 h-3 fill-current" /></Badge>}
-                  </div>
-                  <h2 className="font-heading font-bold text-lg">{focused.subject || (isRTL ? '(بدون موضوع)' : '(No subject)')}</h2>
-                  <p className="text-xs text-muted-foreground tech-content">
-                    {format(new Date(focused.created_at), 'yyyy-MM-dd HH:mm')} · {formatDistanceToNow(new Date(focused.created_at), { addSuffix: true, locale: dateLocale })}
-                  </p>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => copyDeepLink(focused.id)} title={isRTL ? 'نسخ الرابط' : 'Copy link'}>
-                    <Link2 className="w-4 h-4" />
-                  </Button>
-                  <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => updateMutation.mutate({ ids: [focused.id], patch: { starred: !focused.starred } })}>
-                    <Star className={`w-4 h-4 ${focused.starred ? 'fill-amber-500 text-amber-500' : ''}`} />
-                  </Button>
-                  <Button size="icon" variant="ghost" className="h-8 w-8" onClick={closeMessage}>×</Button>
-                </div>
-              </div>
+        {/* Layout: list + (optional split detail) */}
+        <div className={splitView && focused ? 'grid grid-cols-1 xl:grid-cols-[1fr_minmax(420px,520px)] gap-4 items-start' : ''}>
+          {/* Focused panel — when not split, show above list */}
+          {focused && !splitView && (
+            <FocusedMessage
+              focused={focused}
+              isRTL={isRTL}
+              isSuperAdmin={isSuperAdmin}
+              dateLocale={dateLocale}
+              noteDraft={noteDraft}
+              setNoteDraft={setNoteDraft}
+              editingNoteId={editingNoteId}
+              setEditingNoteId={setEditingNoteId}
+              updateMutation={updateMutation}
+              deleteMutation={deleteMutation}
+              copyDeepLink={copyDeepLink}
+              closeMessage={closeMessage}
+              printMessage={printMessage}
+              useReplyTemplate={useReplyTemplate}
+            />
+          )}
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                <div className="flex items-center gap-2">
-                  <User className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span className="font-medium">{focused.name}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Mail className="w-3.5 h-3.5 text-muted-foreground" />
-                  {isSuperAdmin ? (
-                    <>
-                      <a href={`mailto:${focused.email}`} className="text-accent hover:underline tech-content">{focused.email}</a>
-                      <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => { navigator.clipboard.writeText(focused.email); toast.success(isRTL ? 'تم النسخ' : 'Copied'); }}>
-                        <Copy className="w-3 h-3" />
-                      </Button>
-                    </>
-                  ) : (
-                    <span
-                      className="tech-content text-muted-foreground inline-flex items-center gap-1.5"
-                      title={isRTL ? 'البريد الكامل متاح فقط لمدير النظام (Super Admin)' : 'Full email visible to Super Admins only'}
-                    >
-                      {maskEmail(focused.email)}
-                      <Lock className="w-3 h-3 opacity-60" />
+          {/* List */}
+          <div>
+            {isLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 text-accent animate-spin" />
+              </div>
+            ) : filtered.length === 0 ? (
+              <Card>
+                <CardContent className="p-12 flex flex-col items-center text-muted-foreground">
+                  <Inbox className="w-12 h-12 mb-3 opacity-30" />
+                  <p className="font-medium">{isRTL ? 'لا توجد رسائل تطابق التصفية' : 'No messages match the filter'}</p>
+                  <Button variant="link" size="sm" onClick={() => setSearchParams(new URLSearchParams())}>
+                    {isRTL ? 'مسح كل الفلاتر' : 'Clear all filters'}
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card>
+                <CardContent className="p-0">
+                  <div className="flex items-center gap-3 p-3 border-b border-border/50 bg-muted/20">
+                    <Checkbox
+                      checked={paged.length > 0 && paged.every(m => selectedIds.has(m.id))}
+                      onCheckedChange={toggleSelectAll}
+                    />
+                    <span className="text-xs text-muted-foreground">
+                      {isRTL
+                        ? `عرض ${(safePage - 1) * PAGE_SIZE + 1}–${Math.min(safePage * PAGE_SIZE, filtered.length)} من ${filtered.length}`
+                        : `${(safePage - 1) * PAGE_SIZE + 1}–${Math.min(safePage * PAGE_SIZE, filtered.length)} of ${filtered.length}`}
                     </span>
-                  )}
-                </div>
-              </div>
-
-              <div className="p-4 rounded-lg bg-muted/30 text-sm whitespace-pre-wrap leading-relaxed border border-border/50" dir="auto">
-                {focused.message}
-              </div>
-
-              {/* Internal notes */}
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                  <StickyNote className="w-3.5 h-3.5" />
-                  {isRTL ? 'ملاحظات داخلية (لا تظهر للمستخدم)' : 'Internal notes (private)'}
-                </div>
-                <Textarea
-                  value={editingNoteId === focused.id ? noteDraft : (focused.internal_notes || '')}
-                  onChange={e => { setEditingNoteId(focused.id); setNoteDraft(e.target.value); }}
-                  placeholder={isRTL ? 'أضف ملاحظة...' : 'Add a note...'}
-                  className="min-h-[80px] text-sm"
-                  dir="auto"
-                />
-                {editingNoteId === focused.id && (
-                  <div className="flex gap-2">
-                    <Button size="sm" className="h-8" onClick={() => {
-                      updateMutation.mutate({ ids: [focused.id], patch: { internal_notes: noteDraft || null } });
-                      setEditingNoteId(null);
-                    }}>{isRTL ? 'حفظ الملاحظة' : 'Save Note'}</Button>
-                    <Button size="sm" variant="ghost" className="h-8" onClick={() => { setEditingNoteId(null); setNoteDraft(focused.internal_notes || ''); }}>
-                      {isRTL ? 'إلغاء' : 'Cancel'}
-                    </Button>
+                    <span className="text-[10px] text-muted-foreground ms-auto hidden md:block">
+                      {isRTL ? 'اختصارات: / بحث · J/K تنقل · R رد · E أرشفة · U غير مقروء · S تمييز · Esc إغلاق' : '/ search · J/K nav · R reply · E archive · U unread · S star · Esc close'}
+                    </span>
                   </div>
-                )}
-              </div>
 
-              {/* Priority + actions */}
-              <div className="flex items-center gap-2 flex-wrap pt-2 border-t border-border/50">
-                <Select value={focused.priority} onValueChange={(v) => updateMutation.mutate({ ids: [focused.id], patch: { priority: v as Priority } })}>
-                  <SelectTrigger className="h-8 w-36 text-xs"><Flame className="w-3 h-3 me-1" /><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {(Object.keys(priorityConfig) as Priority[]).map(k => (
-                      <SelectItem key={k} value={k}>{isRTL ? priorityConfig[k].ar : priorityConfig[k].en}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {focused.status !== 'replied' && (
-                  <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={() => updateMutation.mutate({ ids: [focused.id], patch: { status: 'replied' } })}>
-                    <CheckCircle className="w-3.5 h-3.5" />{isRTL ? 'تم الرد' : 'Mark Replied'}
-                  </Button>
-                )}
-                {focused.status !== 'archived' ? (
-                  <Button size="sm" variant="ghost" className="h-8 gap-1.5 text-xs" onClick={() => updateMutation.mutate({ ids: [focused.id], patch: { status: 'archived' } })}>
-                    <Archive className="w-3.5 h-3.5" />{isRTL ? 'أرشفة' : 'Archive'}
-                  </Button>
-                ) : (
-                  <Button size="sm" variant="ghost" className="h-8 gap-1.5 text-xs" onClick={() => updateMutation.mutate({ ids: [focused.id], patch: { status: 'new' } })}>
-                    <Inbox className="w-3.5 h-3.5" />{isRTL ? 'استعادة' : 'Restore'}
-                  </Button>
-                )}
-                {isSuperAdmin ? (
-                  <a href={`mailto:${focused.email}?subject=${encodeURIComponent('Re: ' + (focused.subject || ''))}&body=${encodeURIComponent('\n\n---\n' + focused.message.split('\n').map(l => '> ' + l).join('\n'))}`} className="ms-auto">
-                    <Button size="sm" className="h-8 gap-1.5 text-xs">
-                      <Mail className="w-3.5 h-3.5" />{isRTL ? 'رد بالبريد' : 'Reply via Email'}
-                    </Button>
-                  </a>
-                ) : (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled
-                    className="ms-auto h-8 gap-1.5 text-xs"
-                    title={isRTL ? 'الرد بالبريد متاح فقط لمدير النظام (Super Admin)' : 'Reply by email available to Super Admins only'}
-                  >
-                    <Lock className="w-3.5 h-3.5" />{isRTL ? 'رد بالبريد (Super Admin فقط)' : 'Reply (Super Admin only)'}
-                  </Button>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* List */}
-        {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 text-accent animate-spin" />
-          </div>
-        ) : filtered.length === 0 ? (
-          <Card>
-            <CardContent className="p-12 flex flex-col items-center text-muted-foreground">
-              <Inbox className="w-12 h-12 mb-3 opacity-30" />
-              <p className="font-medium">{isRTL ? 'لا توجد رسائل تطابق التصفية' : 'No messages match the filter'}</p>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card>
-            <CardContent className="p-0">
-              {/* Select-all header */}
-              <div className="flex items-center gap-3 p-3 border-b border-border/50 bg-muted/20">
-                <Checkbox
-                  checked={paged.length > 0 && paged.every(m => selectedIds.has(m.id))}
-                  onCheckedChange={toggleSelectAll}
-                />
-                <span className="text-xs text-muted-foreground">
-                  {isRTL
-                    ? `عرض ${(safePage - 1) * PAGE_SIZE + 1}–${Math.min(safePage * PAGE_SIZE, filtered.length)} من ${filtered.length}`
-                    : `${(safePage - 1) * PAGE_SIZE + 1}–${Math.min(safePage * PAGE_SIZE, filtered.length)} of ${filtered.length}`}
-                </span>
-                <span className="text-[10px] text-muted-foreground ms-auto hidden md:block">
-                  {isRTL ? 'اختصارات: / للبحث · J/K للتنقل · Esc للإغلاق' : 'Shortcuts: / search · J/K navigate · Esc close'}
-                </span>
-              </div>
-
-              <div className="divide-y divide-border/50">
-                {paged.map(msg => {
-                  const cfg = statusConfig[msg.status];
-                  const Icon = cfg.icon;
-                  const isFocused = focusedId === msg.id;
-                  const isSelected = selectedIds.has(msg.id);
-                  return (
-                    <div
-                      key={msg.id}
-                      className={`flex items-center gap-3 p-3 hover:bg-muted/30 cursor-pointer transition-colors ${isFocused ? 'bg-accent/5' : ''} ${msg.status === 'new' ? 'bg-blue-500/[0.03]' : ''}`}
-                      onClick={() => openMessage(msg.id)}
-                    >
-                      <div onClick={e => e.stopPropagation()}>
-                        <Checkbox checked={isSelected} onCheckedChange={() => toggleSelect(msg.id)} />
-                      </div>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); updateMutation.mutate({ ids: [msg.id], patch: { starred: !msg.starred } }); }}
-                        className="shrink-0"
-                        aria-label="star"
-                      >
-                        <Star className={`w-4 h-4 ${msg.starred ? 'fill-amber-500 text-amber-500' : 'text-muted-foreground/40'}`} />
-                      </button>
-                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${cfg.color}`}>
-                        <Icon className="w-3.5 h-3.5" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <p className={`text-sm truncate ${msg.status === 'new' ? 'font-bold' : 'font-medium'}`}>{msg.name}</p>
-                          {msg.priority !== 'normal' && (
-                            <Badge variant="outline" className={`text-[9px] h-4 ${priorityConfig[msg.priority].color}`}>
-                              {isRTL ? priorityConfig[msg.priority].ar : priorityConfig[msg.priority].en}
-                            </Badge>
-                          )}
-                          {msg.internal_notes && <StickyNote className="w-3 h-3 text-amber-500" />}
+                  <div className="divide-y divide-border/50">
+                    {paged.map(msg => {
+                      const cfg = statusConfig[msg.status];
+                      const Icon = cfg.icon;
+                      const isFocused = focusedId === msg.id;
+                      const isSelected = selectedIds.has(msg.id);
+                      const ageMs = Date.now() - new Date(msg.created_at).getTime();
+                      const isStale = (msg.status === 'new' || msg.status === 'read') && ageMs > 24 * 60 * 60 * 1000;
+                      const padding = density === 'compact' ? 'p-2' : 'p-3';
+                      return (
+                        <div
+                          key={msg.id}
+                          className={`flex items-center gap-3 ${padding} hover:bg-muted/30 cursor-pointer transition-colors ${isFocused ? 'bg-accent/5' : ''} ${msg.status === 'new' ? 'bg-blue-500/[0.03]' : ''}`}
+                          onClick={() => openMessage(msg.id)}
+                        >
+                          <div onClick={e => e.stopPropagation()}>
+                            <Checkbox checked={isSelected} onCheckedChange={() => toggleSelect(msg.id)} />
+                          </div>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); updateMutation.mutate({ ids: [msg.id], patch: { starred: !msg.starred } }); }}
+                            className="shrink-0"
+                            aria-label="star"
+                          >
+                            <Star className={`w-4 h-4 ${msg.starred ? 'fill-amber-500 text-amber-500' : 'text-muted-foreground/40'}`} />
+                          </button>
+                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${cfg.color}`}>
+                            <Icon className="w-3.5 h-3.5" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className={`text-sm truncate ${msg.status === 'new' ? 'font-bold' : 'font-medium'}`}>{msg.name}</p>
+                              {msg.priority !== 'normal' && (
+                                <Badge variant="outline" className={`text-[9px] h-4 px-1.5 ${priorityConfig[msg.priority].color}`}>
+                                  {isRTL ? priorityConfig[msg.priority].ar : priorityConfig[msg.priority].en}
+                                </Badge>
+                              )}
+                              {isStale && (
+                                <Badge variant="outline" className="text-[9px] h-4 px-1.5 bg-orange-500/10 text-orange-600 border-orange-500/30">
+                                  <Timer className="w-2.5 h-2.5 me-0.5" />{isRTL ? 'متأخرة' : 'Stale'}
+                                </Badge>
+                              )}
+                              {msg.internal_notes && <StickyNote className="w-3 h-3 text-amber-500" />}
+                            </div>
+                            {density !== 'compact' && (
+                              <p className="text-xs text-muted-foreground truncate">
+                                {msg.subject ? <span className="font-medium">{msg.subject} · </span> : null}
+                                {msg.message.substring(0, 80)}
+                              </p>
+                            )}
+                          </div>
+                          <div className="text-[10px] text-muted-foreground shrink-0 hidden sm:flex items-center gap-1 tech-content">
+                            <Clock className="w-3 h-3" />
+                            {format(new Date(msg.created_at), 'MM/dd HH:mm')}
+                          </div>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild onClick={e => e.stopPropagation()}>
+                              <Button size="icon" variant="ghost" className="h-7 w-7"><MoreHorizontal className="w-3.5 h-3.5" /></Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" onClick={e => e.stopPropagation()}>
+                              <DropdownMenuLabel className="text-xs">{isRTL ? 'إجراءات' : 'Actions'}</DropdownMenuLabel>
+                              <DropdownMenuItem onClick={() => updateMutation.mutate({ ids: [msg.id], patch: { status: msg.status === 'new' ? 'read' : 'new' } })}>
+                                <Mail className="w-3.5 h-3.5 me-2" />{isRTL ? (msg.status === 'new' ? 'كمقروءة' : 'كغير مقروءة') : (msg.status === 'new' ? 'Mark read' : 'Mark unread')}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => updateMutation.mutate({ ids: [msg.id], patch: { status: 'replied' } })}>
+                                <CheckCircle className="w-3.5 h-3.5 me-2" />{isRTL ? 'تم الرد' : 'Mark replied'}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => updateMutation.mutate({ ids: [msg.id], patch: { status: msg.status === 'archived' ? 'new' : 'archived' } })}>
+                                <Archive className="w-3.5 h-3.5 me-2" />{isRTL ? (msg.status === 'archived' ? 'استعادة' : 'أرشفة') : (msg.status === 'archived' ? 'Restore' : 'Archive')}
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={() => copyDeepLink(msg.id)}>
+                                <Link2 className="w-3.5 h-3.5 me-2" />{isRTL ? 'نسخ الرابط' : 'Copy link'}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-destructive focus:text-destructive"
+                                onClick={() => {
+                                  if (confirm(isRTL ? 'حذف هذه الرسالة؟' : 'Delete this message?')) deleteMutation.mutate([msg.id]);
+                                }}
+                              >
+                                <Trash2 className="w-3.5 h-3.5 me-2" />{isRTL ? 'حذف' : 'Delete'}
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {msg.subject ? <span className="font-medium">{msg.subject} · </span> : null}
-                          {msg.message.substring(0, 80)}
-                        </p>
-                      </div>
-                      <div className="text-[10px] text-muted-foreground shrink-0 hidden sm:flex items-center gap-1 tech-content">
-                        <Clock className="w-3 h-3" />
-                        {format(new Date(msg.created_at), 'MM/dd HH:mm')}
+                      );
+                    })}
+                  </div>
+
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-between p-3 border-t border-border/50">
+                      <span className="text-xs text-muted-foreground tech-content">
+                        {safePage} / {totalPages}
+                      </span>
+                      <div className="flex gap-1">
+                        <Button size="sm" variant="outline" className="h-8" disabled={safePage <= 1} onClick={() => updateParam({ page: String(safePage - 1) })}>
+                          {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+                        </Button>
+                        <Button size="sm" variant="outline" className="h-8" disabled={safePage >= totalPages} onClick={() => updateParam({ page: String(safePage + 1) })}>
+                          {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                        </Button>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+          </div>
 
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-between p-3 border-t border-border/50">
-                  <span className="text-xs text-muted-foreground tech-content">
-                    {safePage} / {totalPages}
-                  </span>
-                  <div className="flex gap-1">
-                    <Button size="sm" variant="outline" className="h-8" disabled={safePage <= 1} onClick={() => updateParam({ page: String(safePage - 1) })}>
-                      {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-                    </Button>
-                    <Button size="sm" variant="outline" className="h-8" disabled={safePage >= totalPages} onClick={() => updateParam({ page: String(safePage + 1) })}>
-                      {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
+          {/* Focused panel — split mode (right side on xl+) */}
+          {focused && splitView && (
+            <div className="xl:sticky xl:top-4">
+              <FocusedMessage
+                focused={focused}
+                isRTL={isRTL}
+                isSuperAdmin={isSuperAdmin}
+                dateLocale={dateLocale}
+                noteDraft={noteDraft}
+                setNoteDraft={setNoteDraft}
+                editingNoteId={editingNoteId}
+                setEditingNoteId={setEditingNoteId}
+                updateMutation={updateMutation}
+                deleteMutation={deleteMutation}
+                copyDeepLink={copyDeepLink}
+                closeMessage={closeMessage}
+                printMessage={printMessage}
+                useReplyTemplate={useReplyTemplate}
+              />
+            </div>
+          )}
+        </div>
       </div>
     </DashboardLayout>
   );
 };
+
+/* ─────────────────────────────────────────────────────────── */
+/*  Focused message panel — extracted for split-view reuse    */
+/* ─────────────────────────────────────────────────────────── */
+interface FocusedProps {
+  focused: ContactMessage;
+  isRTL: boolean;
+  isSuperAdmin: boolean;
+  dateLocale: Locale | undefined;
+  noteDraft: string;
+  setNoteDraft: (v: string) => void;
+  editingNoteId: string | null;
+  setEditingNoteId: (v: string | null) => void;
+  updateMutation: ReturnType<typeof useMutation<unknown, unknown, { ids: string[]; patch: Partial<ContactMessage> }>>;
+  deleteMutation: ReturnType<typeof useMutation<unknown, unknown, string[]>>;
+  copyDeepLink: (id: string) => void;
+  closeMessage: () => void;
+  printMessage: () => void;
+  useReplyTemplate: (id: string) => void;
+}
+type Locale = typeof ar;
+
+const FocusedMessage: React.FC<FocusedProps> = ({
+  focused, isRTL, isSuperAdmin, dateLocale,
+  noteDraft, setNoteDraft, editingNoteId, setEditingNoteId,
+  updateMutation, deleteMutation, copyDeepLink, closeMessage, printMessage, useReplyTemplate,
+}) => {
+  const responseHrs = focused.replied_at
+    ? differenceInHours(new Date(focused.replied_at), new Date(focused.created_at))
+    : null;
+
+  return (
+    <Card className="border-accent/40 ring-1 ring-accent/20">
+      <CardContent className="p-5 space-y-4">
+        <div className="flex items-start justify-between gap-3 flex-wrap">
+          <div className="space-y-1 min-w-0 flex-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <Badge variant="outline" className={statusConfig[focused.status].color}>
+                {isRTL ? statusConfig[focused.status].ar : statusConfig[focused.status].en}
+              </Badge>
+              <Badge variant="outline" className={priorityConfig[focused.priority].color}>
+                <Flame className="w-3 h-3 me-1" />
+                {isRTL ? priorityConfig[focused.priority].ar : priorityConfig[focused.priority].en}
+              </Badge>
+              {focused.starred && <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/30"><Star className="w-3 h-3 fill-current" /></Badge>}
+              {responseHrs !== null && (
+                <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30">
+                  <Timer className="w-3 h-3 me-1" />{isRTL ? `رُدّ خلال ${responseHrs}س` : `Replied in ${responseHrs}h`}
+                </Badge>
+              )}
+            </div>
+            <h2 className="font-heading font-bold text-lg">{focused.subject || (isRTL ? '(بدون موضوع)' : '(No subject)')}</h2>
+            <p className="text-xs text-muted-foreground tech-content">
+              {format(new Date(focused.created_at), 'yyyy-MM-dd HH:mm')} · {formatDistanceToNow(new Date(focused.created_at), { addSuffix: true, locale: dateLocale })}
+            </p>
+          </div>
+          <div className="flex items-center gap-1">
+            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => copyDeepLink(focused.id)} title={isRTL ? 'نسخ الرابط' : 'Copy link'}>
+              <Link2 className="w-4 h-4" />
+            </Button>
+            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={printMessage} title={isRTL ? 'طباعة' : 'Print'}>
+              <Printer className="w-4 h-4" />
+            </Button>
+            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => updateMutation.mutate({ ids: [focused.id], patch: { starred: !focused.starred } })}>
+              <Star className={`w-4 h-4 ${focused.starred ? 'fill-amber-500 text-amber-500' : ''}`} />
+            </Button>
+            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={closeMessage}>×</Button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+          <div className="flex items-center gap-2">
+            <User className="w-3.5 h-3.5 text-muted-foreground" />
+            <span className="font-medium">{focused.name}</span>
+          </div>
+          <div className="flex items-center gap-2 min-w-0">
+            <Mail className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+            {isSuperAdmin ? (
+              <>
+                <a href={`mailto:${focused.email}`} className="text-accent hover:underline tech-content truncate">{focused.email}</a>
+                <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0" onClick={() => { navigator.clipboard.writeText(focused.email); toast.success(isRTL ? 'تم النسخ' : 'Copied'); }}>
+                  <Copy className="w-3 h-3" />
+                </Button>
+              </>
+            ) : (
+              <span
+                className="tech-content text-muted-foreground inline-flex items-center gap-1.5 truncate"
+                title={isRTL ? 'البريد الكامل متاح فقط لمدير النظام' : 'Full email visible to Super Admins only'}
+              >
+                {maskEmail(focused.email)}
+                <Lock className="w-3 h-3 opacity-60" />
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Status timeline */}
+        <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-border/50 text-[11px] flex-wrap">
+          <TimelineDot label={isRTL ? 'تم الاستلام' : 'Received'} time={focused.created_at} active />
+          <span className="text-muted-foreground/40">→</span>
+          <TimelineDot
+            label={isRTL ? 'تمت القراءة' : 'Read'}
+            time={focused.status !== 'new' ? focused.updated_at : null}
+            active={focused.status !== 'new'}
+          />
+          <span className="text-muted-foreground/40">→</span>
+          <TimelineDot
+            label={isRTL ? 'تم الرد' : 'Replied'}
+            time={focused.replied_at}
+            active={!!focused.replied_at}
+          />
+        </div>
+
+        <div className="p-4 rounded-lg bg-muted/30 text-sm whitespace-pre-wrap leading-relaxed border border-border/50 max-h-96 overflow-y-auto" dir="auto">
+          {focused.message}
+        </div>
+
+        {/* Reply templates */}
+        {isSuperAdmin && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+              <Sparkles className="w-3.5 h-3.5" />
+              {isRTL ? 'قوالب رد سريعة' : 'Quick reply templates'}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {replyTemplates.map(tpl => (
+                <Button
+                  key={tpl.id}
+                  size="sm"
+                  variant="outline"
+                  className="h-8 gap-1.5 text-xs"
+                  onClick={() => useReplyTemplate(tpl.id)}
+                >
+                  <Reply className="w-3 h-3" />
+                  {isRTL ? tpl.labelAr : tpl.labelEn}
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Internal notes */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+            <StickyNote className="w-3.5 h-3.5" />
+            {isRTL ? 'ملاحظات داخلية (لا تظهر للمستخدم)' : 'Internal notes (private)'}
+          </div>
+          <Textarea
+            value={editingNoteId === focused.id ? noteDraft : (focused.internal_notes || '')}
+            onChange={e => { setEditingNoteId(focused.id); setNoteDraft(e.target.value); }}
+            placeholder={isRTL ? 'أضف ملاحظة...' : 'Add a note...'}
+            className="min-h-[80px] text-sm"
+            dir="auto"
+          />
+          {editingNoteId === focused.id && (
+            <div className="flex gap-2">
+              <Button size="sm" className="h-8" onClick={() => {
+                updateMutation.mutate({ ids: [focused.id], patch: { internal_notes: noteDraft || null } });
+                setEditingNoteId(null);
+              }}>{isRTL ? 'حفظ الملاحظة' : 'Save note'}</Button>
+              <Button size="sm" variant="ghost" className="h-8" onClick={() => { setEditingNoteId(null); setNoteDraft(focused.internal_notes || ''); }}>
+                {isRTL ? 'إلغاء' : 'Cancel'}
+              </Button>
+            </div>
+          )}
+        </div>
+
+        {/* Priority + actions */}
+        <div className="flex items-center gap-2 flex-wrap pt-2 border-t border-border/50">
+          <Select value={focused.priority} onValueChange={(v) => updateMutation.mutate({ ids: [focused.id], patch: { priority: v as Priority } })}>
+            <SelectTrigger className="h-8 w-36 text-xs"><Flame className="w-3 h-3 me-1" /><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {(Object.keys(priorityConfig) as Priority[]).map(k => (
+                <SelectItem key={k} value={k}>{isRTL ? priorityConfig[k].ar : priorityConfig[k].en}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {focused.status === 'new' || focused.status === 'read' ? (
+            <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={() => updateMutation.mutate({ ids: [focused.id], patch: { status: 'new' } })}>
+              <Mail className="w-3.5 h-3.5" />{isRTL ? 'كغير مقروءة' : 'Unread'}
+            </Button>
+          ) : null}
+          {focused.status !== 'replied' && (
+            <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={() => updateMutation.mutate({ ids: [focused.id], patch: { status: 'replied' } })}>
+              <CheckCircle className="w-3.5 h-3.5" />{isRTL ? 'تم الرد' : 'Mark replied'}
+            </Button>
+          )}
+          {focused.status !== 'archived' ? (
+            <Button size="sm" variant="ghost" className="h-8 gap-1.5 text-xs" onClick={() => updateMutation.mutate({ ids: [focused.id], patch: { status: 'archived' } })}>
+              <Archive className="w-3.5 h-3.5" />{isRTL ? 'أرشفة' : 'Archive'}
+            </Button>
+          ) : (
+            <Button size="sm" variant="ghost" className="h-8 gap-1.5 text-xs" onClick={() => updateMutation.mutate({ ids: [focused.id], patch: { status: 'new' } })}>
+              <Inbox className="w-3.5 h-3.5" />{isRTL ? 'استعادة' : 'Restore'}
+            </Button>
+          )}
+          <Button
+            size="sm" variant="ghost"
+            className="h-8 gap-1.5 text-xs text-destructive hover:text-destructive"
+            onClick={() => {
+              if (confirm(isRTL ? 'حذف هذه الرسالة نهائياً؟' : 'Delete this message permanently?')) {
+                deleteMutation.mutate([focused.id]);
+              }
+            }}
+          >
+            <Trash2 className="w-3.5 h-3.5" />{isRTL ? 'حذف' : 'Delete'}
+          </Button>
+          {isSuperAdmin ? (
+            <a href={`mailto:${focused.email}?subject=${encodeURIComponent('Re: ' + (focused.subject || ''))}&body=${encodeURIComponent('\n\n---\n' + focused.message.split('\n').map(l => '> ' + l).join('\n'))}`} className="ms-auto">
+              <Button size="sm" className="h-8 gap-1.5 text-xs">
+                <Mail className="w-3.5 h-3.5" />{isRTL ? 'رد بالبريد' : 'Reply via Email'}
+              </Button>
+            </a>
+          ) : (
+            <Button
+              size="sm" variant="outline" disabled
+              className="ms-auto h-8 gap-1.5 text-xs"
+              title={isRTL ? 'الرد بالبريد متاح فقط لمدير النظام' : 'Reply available to Super Admins only'}
+            >
+              <Lock className="w-3.5 h-3.5" />{isRTL ? 'رد بالبريد (Super Admin فقط)' : 'Reply (Super Admin only)'}
+            </Button>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+const TimelineDot: React.FC<{ label: string; time: string | null; active: boolean }> = ({ label, time, active }) => (
+  <div className="flex items-center gap-1.5">
+    <div className={`w-2 h-2 rounded-full ${active ? 'bg-emerald-500' : 'bg-muted-foreground/30'}`} />
+    <div>
+      <p className={`font-medium ${active ? 'text-foreground' : 'text-muted-foreground'}`}>{label}</p>
+      {time && <p className="text-muted-foreground tech-content text-[10px]">{format(new Date(time), 'MM/dd HH:mm')}</p>}
+    </div>
+  </div>
+);
 
 export default AdminContactMessages;
