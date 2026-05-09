@@ -23,6 +23,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { ScrollToTop } from '@/components/ScrollToTop';
 import { HeroParticles } from '@/components/home/HeroParticles';
+import { track as gtmTrack } from '@/lib/analytics-events';
 
 const pickIcon = (name: string): React.ComponentType<{ className?: string }> => {
   const Lib = Icons as unknown as Record<string, React.ComponentType<{ className?: string }>>;
@@ -214,7 +215,7 @@ const ForProviders = () => {
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center items-center mb-10">
               <Button asChild size="lg" className="h-12 px-7 text-base shadow-lg hover:shadow-xl transition-all w-full sm:w-auto"
-                onClick={() => track({ event_type: 'cta_click', section: 'hero', cta_id: 'primary' })}>
+                onClick={() => { track({ event_type: 'cta_click', section: 'hero', cta_id: 'primary' }); gtmTrack.providerSignupStart({}); }}>
                 <Link to={hero?.cta_primary_href || '/auth?mode=signup&role=provider'}>
                   {pick(hero?.cta_primary_label_ar, hero?.cta_primary_label_en) || (isRTL ? 'سجّل منشأتك مجاناً' : 'Register Your Business — Free')}
                   <ArrowFwd className="w-4 h-4 ms-2" />
@@ -281,7 +282,7 @@ const ForProviders = () => {
                   <h3 className="font-bold text-lg mb-2">{isRTL ? a.ar : a.en}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed mb-4">{isRTL ? a.desc_ar : a.desc_en}</p>
                   <Link to="/auth?mode=signup&role=provider"
-                    onClick={() => track({ event_type: 'cta_click', section: 'audience_card', cta_id: a.key })}
+                    onClick={() => { track({ event_type: 'cta_click', section: 'audience_card', cta_id: a.key }); gtmTrack.providerSignupStart({}); }}
                     className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:gap-2.5 transition-all">
                     {isRTL ? 'ابدأ الآن' : 'Get started'} <ArrowFwd className="w-4 h-4" />
                   </Link>
@@ -477,7 +478,7 @@ const ForProviders = () => {
               <Link to="/membership">{isRTL ? 'استعرض الخطط' : 'View plans'} <ArrowFwd className="w-4 h-4 ms-2" /></Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="h-12 px-7"
-              onClick={() => track({ event_type: 'cta_click', section: 'pricing', cta_id: 'start_free' })}>
+              onClick={() => { track({ event_type: 'cta_click', section: 'pricing', cta_id: 'start_free' }); gtmTrack.providerSignupStart({}); }}>
               <Link to="/auth?mode=signup&role=provider">{isRTL ? 'ابدأ مجاناً' : 'Start free'}</Link>
             </Button>
           </div>
@@ -526,7 +527,7 @@ const ForProviders = () => {
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center mb-8">
             <Button asChild size="lg" variant="secondary" className="h-12 px-8 text-base shadow-xl"
-              onClick={() => track({ event_type: 'cta_click', section: 'final', cta_id: 'primary' })}>
+              onClick={() => { track({ event_type: 'cta_click', section: 'final', cta_id: 'primary' }); gtmTrack.providerSignupStart({}); }}>
               <Link to={finalCta?.cta_primary_href || '/auth?mode=signup&role=provider'}>
                 {pick(finalCta?.cta_primary_label_ar, finalCta?.cta_primary_label_en) || (isRTL ? 'سجّل منشأتك مجاناً' : 'Register Free')}
                 <ArrowFwd className="w-4 h-4 ms-2" />
