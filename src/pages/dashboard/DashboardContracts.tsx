@@ -96,7 +96,6 @@ type ViewSection = 'list' | 'create' | 'templates' | 'template-preview';
 
 /* ── Contract Health Score ── */
 const getContractHealth = (contract: ContractRow, milestones: MilestoneRow[], payments: PaymentRow[]) => {
-  useNoIndex();
   let score = 0, max = 0;
   max += 10; if (contract.start_date && contract.end_date) score += 10;
   max += 10; if (contract.terms_ar) score += 10;
@@ -369,6 +368,7 @@ ContractCard.displayName = 'ContractCard';
 
 /* ──────────── Main ──────────── */
 const DashboardContracts = () => {
+  useNoIndex();
   const { isRTL, language } = useLanguage();
   const { user, profile } = useAuth();
   const navigate = useNavigate();

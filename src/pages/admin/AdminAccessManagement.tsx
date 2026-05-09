@@ -20,7 +20,6 @@ import { PasswordResetLogPanel } from '@/components/admin/PasswordResetLogPanel'
 import { useNoIndex } from "@/hooks/useNoIndex";
 
 const formatDate = (dateStr: string | null | undefined, lang: string): string => {
-  useNoIndex();
   if (!dateStr) return lang === 'ar' ? 'غير محدد' : 'N/A';
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return lang === 'ar' ? 'غير محدد' : 'N/A';
@@ -35,6 +34,7 @@ const statusConfig: Record<string, { icon: React.ElementType; color: string; lab
 };
 
 const AdminAccessManagement = () => {
+  useNoIndex();
   const { isRTL, language } = useLanguage();
   const { user, isSuperAdmin } = useAuth();
   const queryClient = useQueryClient();

@@ -63,7 +63,6 @@ function getStatusColor(status: string): string {
 }
 
 function getMonths(isRTL: boolean) {
-  useNoIndex();
   return isRTL
     ? ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر']
     : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -1074,6 +1073,7 @@ UserDashboardView.displayName = 'UserDashboardView';
    Main Component
    ═══════════════════════════════════════════════════ */
 const DashboardOverview = () => {
+  useNoIndex();
   const { isRTL } = useLanguage();
   const { user, profile, isAdmin, isProvider } = useAuth();
 

@@ -58,7 +58,6 @@ function countInText(text: string, keyword: string): number {
   return (text.match(re) || []).length;
 }
 function analyzeContent(text: string) {
-  useNoIndex();
   if (!text) return { words: 0, headings: 0, images: 0, links: 0, paragraphs: 0 };
   return {
     words: text.trim().split(/\s+/).filter(Boolean).length,
@@ -159,6 +158,7 @@ const PostCard = React.memo(({ post, language, isRTL, onEdit, onDelete }: {
 PostCard.displayName = 'PostCard';
 
 const DashboardBlog = () => {
+  useNoIndex();
   const { isRTL, language } = useLanguage();
   const { user } = useAuth();
   const queryClient = useQueryClient();

@@ -125,7 +125,6 @@ const tx = {
 
 /* ─── Format detail value ─── */
 const formatValue = (value: unknown, isRTL: boolean): string => {
-  useNoIndex();
   if (value === null || value === undefined || value === '') return '—';
   if (value === true) return isRTL ? tx.yes.ar : tx.yes.en;
   if (value === false) return isRTL ? tx.no.ar : tx.no.en;
@@ -324,6 +323,7 @@ const LogItem = React.memo(({ log, getProfileName, isRTL }: {
 LogItem.displayName = 'LogItem';
 
 const AdminActivityLog = () => {
+  useNoIndex();
   const { isRTL } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [actionFilter, setActionFilter] = useState('all');
