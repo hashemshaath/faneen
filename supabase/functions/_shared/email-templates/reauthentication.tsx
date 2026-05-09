@@ -1,60 +1,32 @@
 /// <reference types="npm:@types/react@18.3.1" />
-
 import * as React from 'npm:react@18.3.1'
-
-import {
-  Body,
-  Container,
-  Head,
-  Heading,
-  Html,
-  Preview,
-  Text,
-} from 'npm:@react-email/components@0.0.22'
+import { BilingualEmail, otpStyle } from '../email-layout/BilingualLayout.tsx'
 
 interface ReauthenticationEmailProps {
   token: string
 }
 
 export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => (
-  <Html lang="en" dir="ltr">
-    <Head />
-    <Preview>Your verification code</Preview>
-    <Body style={main}>
-      <Container style={container}>
-        <Heading style={h1}>Confirm reauthentication</Heading>
-        <Text style={text}>Use the code below to confirm your identity:</Text>
-        <Text style={codeStyle}>{token}</Text>
-        <Text style={footer}>
-          This code will expire shortly. If you didn't request this, you can
-          safely ignore this email.
-        </Text>
-      </Container>
-    </Body>
-  </Html>
+  <BilingualEmail
+    preview="رمز التحقق الخاص بك · Your verification code"
+    badge={{ textAr: 'رمز تحقق', textEn: 'Verification', tone: 'info' }}
+    titleAr="رمز التحقق الخاص بك"
+    titleEn="Your verification code"
+    introAr={
+      <>
+        استخدم الرمز التالي لتأكيد هويتك في قِطاعات:
+        <span style={otpStyle}>{token}</span>
+      </>
+    }
+    introEn={
+      <>
+        Use the code below to confirm your identity on Qitaat:
+        <span style={otpStyle}>{token}</span>
+      </>
+    }
+    tipAr="ينتهي الرمز خلال دقائق. إذا لم تطلب هذا التحقق، يمكنك تجاهل الرسالة."
+    tipEn="The code expires in a few minutes. If you didn't request this, you can safely ignore the email."
+  />
 )
 
 export default ReauthenticationEmail
-
-const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
-const container = { padding: '20px 25px' }
-const h1 = {
-  fontSize: '22px',
-  fontWeight: 'bold' as const,
-  color: '#000000',
-  margin: '0 0 20px',
-}
-const text = {
-  fontSize: '14px',
-  color: '#55575d',
-  lineHeight: '1.5',
-  margin: '0 0 25px',
-}
-const codeStyle = {
-  fontFamily: 'Courier, monospace',
-  fontSize: '22px',
-  fontWeight: 'bold' as const,
-  color: '#000000',
-  margin: '0 0 30px',
-}
-const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }

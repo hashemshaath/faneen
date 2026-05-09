@@ -1,11 +1,7 @@
 /// <reference types="npm:@types/react@18.3.1" />
 import * as React from 'npm:react@18.3.1'
-import {
-  Body, Container, Head, Heading, Html, Preview, Text, Section, Hr, Button,
-} from 'npm:@react-email/components@0.0.22'
+import { BilingualEmail, SITE_NAME_AR } from '../email-layout/BilingualLayout.tsx'
 import type { TemplateEntry } from './registry.ts'
-
-const SITE_NAME = "قِطاعات"
 
 interface ContractStatusProps {
   recipientName?: string
@@ -15,85 +11,59 @@ interface ContractStatusProps {
   contractId?: string
 }
 
-const statusLabels: Record<string, string> = {
-  draft: 'مسودة',
-  pending: 'بانتظار الموافقة',
-  active: 'نشط',
-  completed: 'مكتمل',
-  cancelled: 'ملغي',
-  disputed: 'متنازع عليه',
+const STATUS_AR: Record<string, string> = {
+  draft: 'مسودة', pending: 'بانتظار الموافقة', active: 'نشط',
+  completed: 'مكتمل', cancelled: 'ملغي', disputed: 'متنازع عليه',
+}
+const STATUS_EN: Record<string, string> = {
+  draft: 'Draft', pending: 'Pending approval', active: 'Active',
+  completed: 'Completed', cancelled: 'Cancelled', disputed: 'Disputed',
+}
+const STATUS_TONE: Record<string, 'success' | 'info' | 'warning' | 'danger' | 'neutral'> = {
+  active: 'success', completed: 'success', pending: 'warning',
+  draft: 'neutral', cancelled: 'danger', disputed: 'danger',
 }
 
-const ContractStatusEmail = ({
-  recipientName,
-  contractNumber,
-  contractTitle,
-  newStatus,
-  contractId,
-}: ContractStatusProps) => (
-  <Html lang="ar" dir="rtl">
-    <Head>
-          <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;600;700&display=swap" />
-        </Head>
-    <Preview>تحديث حالة العقد {contractNumber || ''}</Preview>
-    <Body style={main}>
-      <Container style={container}>
-        <Section style={logoSection}>
-          <Text style={logoText}>قِطاعات</Text>
-        </Section>
-        <Hr style={hr} />
-        <Heading style={h1}>تحديث حالة العقد</Heading>
-        <Text style={text}>
-          {recipientName ? `مرحباً ${recipientName}،` : 'مرحباً،'}
-        </Text>
-        <Text style={text}>
-          تم تغيير حالة العقد الخاص بك:
-        </Text>
-        <Section style={detailsBox}>
-          {contractNumber && <Text style={detailRow}>رقم العقد: <strong>{contractNumber}</strong></Text>}
-          {contractTitle && <Text style={detailRow}>عنوان العقد: <strong>{contractTitle}</strong></Text>}
-          {newStatus && (
-            <Text style={detailRow}>
-              الحالة الجديدة: <strong style={{ color: 'hsl(42, 85%, 40%)' }}>{statusLabels[newStatus] || newStatus}</strong>
-            </Text>
-          )}
-        </Section>
-        {contractId && (
-          <Section style={{ textAlign: 'center' as const, margin: '20px 0' }}>
-            <Button style={button} href={`https://qitaat.lovable.app/contracts/${contractId}`}>
-              عرض تفاصيل العقد
-            </Button>
-          </Section>
-        )}
-        <Hr style={hr} />
-        <Text style={footer}>مع تحيات فريق {SITE_NAME}</Text>
-      </Container>
-    </Body>
-  </Html>
-)
+const ContractStatusEmail: React.FC<ContractStatusProps> = ({
+  recipientName, contractNumber, contractTitle, newStatus, contractId,
+}) => {
+  const statusAr = newStatus ? (STATUS_AR[newStatus] || newStatus) : undefined
+  const statusEn = newStatus ? (STATUS_EN[newStatus] || newStatus) : undefined
+  const tone = newStatus ? STATUS_TONE[newStatus] || 'info' : 'info'
+  return (
+    <BilingualEmail
+      preview={`تحديث حالة العقد ${contractNumber || ''} · Contract status updated`}
+      badge={statusAr && statusEn ? { textAr: statusAr, textEn: statusEn, tone } : undefined}
+      titleAr="تحديث حالة العقد"
+      titleEn="Contract status updated"
+      greetingNameAr={recipientName}
+      greetingNameEn={recipientName}
+      introAr="تم تحديث حالة أحد عقودك على المنصة. التفاصيل أدناه."
+      introEn="The status of one of your contracts has been updated. See details below."
+      details={[
+        ...(contractNumber ? [{ labelAr: 'رقم العقد', labelEn: 'Contract ID', value: contractNumber, mono: true }] : []),
+        ...(contractTitle ? [{ labelAr: 'عنوان العقد', labelEn: 'Title', value: contractTitle }] : []),
+        ...(statusAr ? [{ labelAr: 'الحالة الحالية', labelEn: 'Current status', value: `${statusAr} · ${statusEn}` }] : []),
+      ]}
+      cta={contractId ? {
+        href: `https://qitaat.com/contracts/${contractId}`,
+        labelAr: 'عرض تفاصيل العقد',
+        labelEn: 'View contract details',
+      } : undefined}
+    />
+  )
+}
 
 export const template = {
   component: ContractStatusEmail,
   subject: (data: Record<string, any>) =>
-    `تحديث عقد ${data.contractNumber || ''} - ${SITE_NAME}`,
-  displayName: 'تحديث حالة العقد',
+    `تحديث عقد ${data?.contractNumber || ''} · Contract update — ${SITE_NAME_AR}`,
+  displayName: 'تحديث حالة العقد · Contract status update',
   previewData: {
-    recipientName: 'أحمد',
-    contractNumber: 'CTR-0001234',
-    contractTitle: 'عقد تجديد مطبخ',
+    recipientName: 'أحمد العتيبي',
+    contractNumber: 'CON-0001234',
+    contractTitle: 'عقد توريد وتركيب واجهات ألمنيوم',
     newStatus: 'active',
     contractId: '123',
   },
 } satisfies TemplateEntry
-
-const main = { backgroundColor: '#ffffff', fontFamily: "'Noto Sans Arabic', 'Segoe UI', Tahoma, Arial, sans-serif" }
-const container = { padding: '20px 30px', maxWidth: '560px', margin: '0 auto' }
-const logoSection = { textAlign: 'center' as const, padding: '20px 0 10px' }
-const logoText = { fontSize: '28px', fontWeight: '700', color: 'hsl(220, 35%, 15%)', margin: '0' }
-const hr = { borderColor: 'hsl(220, 15%, 88%)', margin: '20px 0' }
-const h1 = { fontSize: '22px', fontWeight: '700', color: 'hsl(220, 35%, 15%)', margin: '0 0 16px', textAlign: 'right' as const }
-const text = { fontSize: '15px', color: 'hsl(220, 10%, 45%)', lineHeight: '1.7', margin: '0 0 14px', textAlign: 'right' as const }
-const detailsBox = { backgroundColor: 'hsl(220, 20%, 97%)', borderRadius: '12px', padding: '16px 20px', margin: '16px 0' }
-const detailRow = { fontSize: '14px', color: 'hsl(220, 30%, 12%)', margin: '6px 0', textAlign: 'right' as const }
-const button = { backgroundColor: 'hsl(220, 35%, 15%)', color: 'hsl(42, 100%, 95%)', padding: '12px 28px', borderRadius: '12px', fontSize: '15px', fontWeight: '600', textDecoration: 'none' }
-const footer = { fontSize: '12px', color: 'hsl(220, 10%, 45%)', margin: '20px 0 0', textAlign: 'center' as const }
