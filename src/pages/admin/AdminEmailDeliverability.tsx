@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import {
   Mail, AlertTriangle, CheckCircle2, XCircle, Inbox, ShieldAlert,
-  Loader2, RefreshCw, Bell, BellOff, Search, Send, Radio,
+  Loader2, RefreshCw, Bell, BellOff, Search, Send, Radio, MousePointerClick, Eye,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
@@ -39,6 +39,10 @@ interface EmailLogRow {
   status: string;
   error_message: string | null;
   created_at: string;
+  opens_count?: number;
+  clicks_count?: number;
+  first_opened_at?: string | null;
+  first_clicked_at?: string | null;
 }
 
 interface AlertRow {
