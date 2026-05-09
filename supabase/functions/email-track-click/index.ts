@@ -31,7 +31,10 @@ Deno.serve(async (req) => {
         Deno.env.get('SUPABASE_URL')!,
         Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
       )
-      await supabase.rpc('record_email_click', { _message_id: mid })
+      await supabase.rpc('record_email_link_click', {
+        _message_id: mid,
+        _target_url: target ?? '',
+      })
     }
   } catch (e) {
     console.error('click tracking error', e)
