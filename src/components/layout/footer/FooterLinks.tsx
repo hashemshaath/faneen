@@ -55,6 +55,7 @@ export const FooterLinks = () => {
           { label: isRTL ? 'العروض' : 'Offers', to: '/offers' },
           { label: t('footer.contracts'), to: '/contracts' },
           { label: isRTL ? 'العضويات' : 'Membership', to: '/membership' },
+          { label: isRTL ? 'انضم كمزود خدمة' : 'For Providers', to: '/for-providers' },
         ]}
       />
       <FooterLinkColumn

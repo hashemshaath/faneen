@@ -28,6 +28,8 @@ Allow: /about
 Allow: /contact
 Allow: /privacy
 Allow: /terms
+Allow: /for-providers
+Allow: /join-as-provider
 
 # منع فهرسة نتائج البحث (query strings)
 Disallow: /search?q=

@@ -94,6 +94,8 @@ const Terms = lazyRetry(() => import("./pages/Terms"));
 const Forbidden = lazyRetry(() => import("./pages/Forbidden"));
 const Unsubscribe = lazyRetry(() => import("./pages/Unsubscribe"));
 const Diagnostics = lazyRetry(() => import("./pages/Diagnostics"));
+const ForProviders = lazyRetry(() => import("./pages/ForProviders"));
+const AdminProviderLanding = lazyRetry(() => import("./pages/admin/AdminProviderLanding"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -147,6 +149,8 @@ const AppRoutes = () => (
           <Route path="/forbidden" element={<Forbidden />} />
           <Route path="/unsubscribe" element={<Unsubscribe />} />
           <Route path="/diagnostics" element={<Diagnostics />} />
+          <Route path="/for-providers" element={<ForProviders />} />
+          <Route path="/join-as-provider" element={<ForProviders />} />
 
           <Route path="/contracts" element={<ProtectedRoute><Contracts /></ProtectedRoute>} />
           <Route path="/contracts/:id" element={<ProtectedRoute><ContractDetail /></ProtectedRoute>} />
@@ -187,6 +191,7 @@ const AppRoutes = () => (
           <Route path="/admin/sector-seo" element={<ProtectedRoute requireAdmin><AdminSectorSeo /></ProtectedRoute>} />
           <Route path="/admin/sitemap-status" element={<ProtectedRoute requireAdmin><AdminSitemapStatus /></ProtectedRoute>} />
           <Route path="/admin/provider-analytics" element={<ProtectedRoute requireAdmin><AdminProviderAnalytics /></ProtectedRoute>} />
+          <Route path="/admin/provider-landing" element={<ProtectedRoute requireAdmin><AdminProviderLanding /></ProtectedRoute>} />
           <Route path="/admin/access-management" element={<ProtectedRoute requireSuperAdmin><AdminAccessManagement /></ProtectedRoute>} />
 
           <Route path="/admin/users" element={<ProtectedRoute requireSuperAdmin><AdminUsers /></ProtectedRoute>} />
