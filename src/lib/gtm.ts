@@ -192,3 +192,18 @@ export function updateConsent(decision: ConsentDecision): ConsentState {
   w.dataLayer.push({ event: "consent_update", consent_decision: decision });
   return state;
 }
+
+/**
+ * Push a custom Consent Mode v2 update (mixed toggles) to the dataLayer.
+ * Used by the banner's "manage preferences → save" path. No PII.
+ */
+export function pushConsentUpdate(
+  state: ConsentState,
+  decisionLabel: string,
+): void {
+  if (typeof window === "undefined") return;
+  const w = window as DataLayerWindow;
+  w.dataLayer = w.dataLayer ?? [];
+  gtag("consent", "update", state);
+  w.dataLayer.push({ event: "consent_update", consent_decision: decisionLabel });
+}
