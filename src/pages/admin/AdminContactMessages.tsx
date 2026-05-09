@@ -1164,6 +1164,10 @@ interface FocusedProps {
   isRTL: boolean;
   isSuperAdmin: boolean;
   dateLocale: Locale | undefined;
+  currentUserId: string | undefined;
+  assignees: AdminAssignee[];
+  assigneeMap: Map<string, AdminAssignee>;
+  events: ContactEvent[];
   noteDraft: string;
   setNoteDraft: (v: string) => void;
   editingNoteId: string | null;
@@ -1179,12 +1183,16 @@ type Locale = typeof ar;
 
 const FocusedMessage: React.FC<FocusedProps> = ({
   focused, isRTL, isSuperAdmin, dateLocale,
+  currentUserId, assignees, assigneeMap, events,
   noteDraft, setNoteDraft, editingNoteId, setEditingNoteId,
   updateMutation, deleteMutation, copyDeepLink, closeMessage, printMessage, useReplyTemplate,
 }) => {
   const responseHrs = focused.replied_at
     ? differenceInHours(new Date(focused.replied_at), new Date(focused.created_at))
     : null;
+
+  const assignedUser = focused.assigned_to ? assigneeMap.get(focused.assigned_to) : null;
+  const wsCfg = workStateConfig[focused.work_state];
 
   return (
     <Card className="border-accent/40 ring-1 ring-accent/20">
