@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import {
   Mail, AlertTriangle, CheckCircle2, XCircle, Inbox, ShieldAlert,
   Loader2, RefreshCw, Bell, BellOff, Search, Send, Radio, MousePointerClick, Eye,
+  Tags, DollarSign, FileText, Wrench, Users, Calendar, CreditCard, MessageSquare, Briefcase, LayoutDashboard, Link2,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
