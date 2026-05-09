@@ -359,6 +359,27 @@ const AdminEmailDeliverability: React.FC = () => {
           <RateCard label={isRTL ? 'معدل النقر' : 'Click rate'} value={engagement?.click_rate ?? 0} threshold={100} />
         </div>
 
+        {/* Per-category link clicks */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Tags className="h-5 w-5 text-primary" />
+              {isRTL ? 'النقرات حسب نوع الرابط' : 'Clicks by link category'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {categoryStats.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground text-sm">
+                {isRTL ? 'لا توجد نقرات في هذه الفترة.' : 'No clicks in this period.'}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                {categoryStats.map((c) => <CategoryCard key={c.category} row={c} isRTL={isRTL} />)}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Logs */}
         <Card>
           <CardHeader>
