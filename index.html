@@ -96,6 +96,25 @@
         security_storage: 'granted',
         wait_for_update: 500
       });
+      // Replay any previously persisted consent decision BEFORE GTM loads.
+      // Without this, returning visitors who already accepted are reported to
+      // GTM as "denied" forever — the banner never re-opens, so no consent
+      // update is ever pushed. This is what causes "0% consent rate" in
+      // GTM Container Quality. Schema kept in sync with src/lib/gtm.ts.
+      try {
+        var __qc = localStorage.getItem('qitaat_consent_v1');
+        if (__qc) {
+          var __p = JSON.parse(__qc);
+          if (__p && __p.state) {
+            gtag('consent', 'update', __p.state);
+            window.dataLayer.push({
+              event: 'consent_update',
+              consent_decision: __p.decision,
+              consent_replay: true
+            });
+          }
+        }
+      } catch (e) { /* storage unavailable */ }
     </script>
     <!-- Google Tag Manager -->
     <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
