@@ -1217,6 +1217,66 @@ export type Database = {
           },
         ]
       }
+      contact_inbox_settings: {
+        Row: {
+          id: number
+          muted_user_ids: string[]
+          notify_email_on_assign: boolean
+          notify_email_on_priority_change: boolean
+          notify_email_on_status_change: boolean
+          notify_webhook_on_assign: boolean
+          notify_webhook_on_priority_change: boolean
+          notify_webhook_on_status_change: boolean
+          role_subscriptions: Json
+          stale_hours: number
+          target_resolution_hours: number
+          target_response_hours: number
+          updated_at: string
+          updated_by: string | null
+          webhook_secret: string | null
+          webhook_url: string | null
+          weekly_report_recipients: string[]
+        }
+        Insert: {
+          id: number
+          muted_user_ids?: string[]
+          notify_email_on_assign?: boolean
+          notify_email_on_priority_change?: boolean
+          notify_email_on_status_change?: boolean
+          notify_webhook_on_assign?: boolean
+          notify_webhook_on_priority_change?: boolean
+          notify_webhook_on_status_change?: boolean
+          role_subscriptions?: Json
+          stale_hours?: number
+          target_resolution_hours?: number
+          target_response_hours?: number
+          updated_at?: string
+          updated_by?: string | null
+          webhook_secret?: string | null
+          webhook_url?: string | null
+          weekly_report_recipients?: string[]
+        }
+        Update: {
+          id?: number
+          muted_user_ids?: string[]
+          notify_email_on_assign?: boolean
+          notify_email_on_priority_change?: boolean
+          notify_email_on_status_change?: boolean
+          notify_webhook_on_assign?: boolean
+          notify_webhook_on_priority_change?: boolean
+          notify_webhook_on_status_change?: boolean
+          role_subscriptions?: Json
+          stale_hours?: number
+          target_resolution_hours?: number
+          target_response_hours?: number
+          updated_at?: string
+          updated_by?: string | null
+          webhook_secret?: string | null
+          webhook_url?: string | null
+          weekly_report_recipients?: string[]
+        }
+        Relationships: []
+      }
       contact_message_events: {
         Row: {
           actor_id: string | null
@@ -5059,6 +5119,34 @@ export type Database = {
         Args: { _prefix: string; _seq_name: string }
         Returns: string
       }
+      get_contact_inbox_settings: {
+        Args: never
+        Returns: {
+          id: number
+          muted_user_ids: string[]
+          notify_email_on_assign: boolean
+          notify_email_on_priority_change: boolean
+          notify_email_on_status_change: boolean
+          notify_webhook_on_assign: boolean
+          notify_webhook_on_priority_change: boolean
+          notify_webhook_on_status_change: boolean
+          role_subscriptions: Json
+          stale_hours: number
+          target_resolution_hours: number
+          target_response_hours: number
+          updated_at: string
+          updated_by: string | null
+          webhook_secret: string | null
+          webhook_url: string | null
+          weekly_report_recipients: string[]
+        }
+        SetofOptions: {
+          from: "*"
+          to: "contact_inbox_settings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       get_contact_sla_weekly: { Args: never; Returns: Json }
       get_contract_counterpart_profile: {
         Args: { _target_user_id: string; _viewer_id: string }
@@ -5276,6 +5364,33 @@ export type Database = {
           user_id: string
         }[]
       }
+      list_contact_audit_events: {
+        Args: {
+          _actor?: string
+          _event_types?: string[]
+          _from?: string
+          _limit?: number
+          _message_id?: string
+          _to?: string
+        }
+        Returns: {
+          actor_email: string
+          actor_id: string
+          actor_name: string
+          created_at: string
+          event_type: string
+          from_value: string
+          id: string
+          message_email: string
+          message_id: string
+          message_name: string
+          message_subject: string
+          metadata: Json
+          note: string
+          ticket_number: string
+          to_value: string
+        }[]
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string
@@ -5299,6 +5414,10 @@ export type Database = {
         Returns: undefined
       }
       record_email_open: { Args: { _message_id: string }; Returns: undefined }
+      set_my_inbox_notification_mute: {
+        Args: { _muted: boolean }
+        Returns: undefined
+      }
       submit_business_for_review: {
         Args: { _business_id: string }
         Returns: Database["public"]["Enums"]["business_approval_status"]
@@ -5323,6 +5442,34 @@ export type Database = {
         Returns: string
       }
       unsubscribe_newsletter: { Args: { p_email: string }; Returns: boolean }
+      update_contact_inbox_settings: {
+        Args: { _patch: Json }
+        Returns: {
+          id: number
+          muted_user_ids: string[]
+          notify_email_on_assign: boolean
+          notify_email_on_priority_change: boolean
+          notify_email_on_status_change: boolean
+          notify_webhook_on_assign: boolean
+          notify_webhook_on_priority_change: boolean
+          notify_webhook_on_status_change: boolean
+          role_subscriptions: Json
+          stale_hours: number
+          target_resolution_hours: number
+          target_response_hours: number
+          updated_at: string
+          updated_by: string | null
+          webhook_secret: string | null
+          webhook_url: string | null
+          weekly_report_recipients: string[]
+        }
+        SetofOptions: {
+          from: "*"
+          to: "contact_inbox_settings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
     }
     Enums: {
       account_type: "individual" | "business" | "company"
