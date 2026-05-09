@@ -2026,6 +2026,33 @@ export type Database = {
         }
         Relationships: []
       }
+      email_link_clicks: {
+        Row: {
+          category: string
+          clicked_at: string
+          id: number
+          message_id: string
+          target_url: string | null
+          template_name: string | null
+        }
+        Insert: {
+          category: string
+          clicked_at?: string
+          id?: number
+          message_id: string
+          target_url?: string | null
+          template_name?: string | null
+        }
+        Update: {
+          category?: string
+          clicked_at?: string
+          id?: number
+          message_id?: string
+          target_url?: string | null
+          template_name?: string | null
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           clicks_count: number
@@ -4897,6 +4924,7 @@ export type Database = {
         Args: { _subscription_id: string }
         Returns: undefined
       }
+      categorize_email_link: { Args: { _url: string }; Returns: string }
       check_email_deliverability: { Args: never; Returns: undefined }
       check_password_reset_rate_limit: {
         Args: { _email: string }
@@ -4987,6 +5015,16 @@ export type Database = {
           total_opens: number
           unique_clicks: number
           unique_opens: number
+        }[]
+      }
+      get_email_link_category_stats: {
+        Args: { _window_minutes?: number }
+        Returns: {
+          category: string
+          ctr: number
+          total_clicks: number
+          unique_clicks: number
+          unique_messages: number
         }[]
       }
       get_home_stats: { Args: never; Returns: Json }
@@ -5160,6 +5198,10 @@ export type Database = {
         }[]
       }
       record_email_click: { Args: { _message_id: string }; Returns: undefined }
+      record_email_link_click: {
+        Args: { _message_id: string; _target_url: string }
+        Returns: undefined
+      }
       record_email_open: { Args: { _message_id: string }; Returns: undefined }
       submit_business_for_review: {
         Args: { _business_id: string }

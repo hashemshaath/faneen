@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import {
   Mail, AlertTriangle, CheckCircle2, XCircle, Inbox, ShieldAlert,
   Loader2, RefreshCw, Bell, BellOff, Search, Send, Radio, MousePointerClick, Eye,
+  Tags, DollarSign, FileText, Wrench, Users, Calendar, CreditCard, MessageSquare, Briefcase, LayoutDashboard, Link2,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
@@ -198,6 +199,17 @@ const AdminEmailDeliverability: React.FC = () => {
     refetchInterval: 60_000,
   });
 
+  // Per-category click stats
+  const { data: categoryStats = [] } = useQuery({
+    queryKey: ['email-link-categories', windowMinutes],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_email_link_category_stats', { _window_minutes: windowMinutes });
+      if (error) throw error;
+      return (data ?? []) as Array<{ category: string; total_clicks: number; unique_clicks: number; unique_messages: number; ctr: number }>;
+    },
+    refetchInterval: 60_000,
+  });
+
   // Distinct templates for filter
   const templates = useMemo(() => {
     const set = new Set<string>();
@@ -346,6 +358,27 @@ const AdminEmailDeliverability: React.FC = () => {
           <RateCard label={isRTL ? 'معدل الفتح' : 'Open rate'} value={engagement?.open_rate ?? 0} threshold={100} />
           <RateCard label={isRTL ? 'معدل النقر' : 'Click rate'} value={engagement?.click_rate ?? 0} threshold={100} />
         </div>
+
+        {/* Per-category link clicks */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Tags className="h-5 w-5 text-primary" />
+              {isRTL ? 'النقرات حسب نوع الرابط' : 'Clicks by link category'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {categoryStats.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground text-sm">
+                {isRTL ? 'لا توجد نقرات في هذه الفترة.' : 'No clicks in this period.'}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                {categoryStats.map((c) => <CategoryCard key={c.category} row={c} isRTL={isRTL} />)}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Logs */}
         <Card>
@@ -512,6 +545,43 @@ const RateCard: React.FC<{ label: string; value: number; threshold: number }> = 
           <div className={`h-full ${breached ? 'bg-rose-500' : 'bg-emerald-500'}`} style={{ width: `${pct}%` }} />
         </div>
         <div className="text-xs text-muted-foreground mt-1 tech-content">threshold: {threshold}%</div>
+      </CardContent>
+    </Card>
+  );
+};
+
+const CATEGORY_META: Record<string, { ar: string; en: string; icon: React.ElementType; color: string }> = {
+  pricing:     { ar: 'التسعير',    en: 'Pricing',     icon: DollarSign,       color: 'text-emerald-600' },
+  contract:    { ar: 'العقود',     en: 'Contracts',   icon: FileText,         color: 'text-blue-600' },
+  maintenance: { ar: 'الصيانة',    en: 'Maintenance', icon: Wrench,           color: 'text-amber-600' },
+  leads:       { ar: 'العروض',     en: 'Leads',       icon: Users,            color: 'text-purple-600' },
+  booking:     { ar: 'الحجوزات',   en: 'Bookings',    icon: Calendar,         color: 'text-cyan-600' },
+  payment:     { ar: 'المدفوعات',  en: 'Payments',    icon: CreditCard,       color: 'text-rose-600' },
+  messages:    { ar: 'الرسائل',    en: 'Messages',    icon: MessageSquare,    color: 'text-indigo-600' },
+  projects:    { ar: 'المشاريع',   en: 'Projects',    icon: Briefcase,        color: 'text-orange-600' },
+  dashboard:   { ar: 'لوحة التحكم', en: 'Dashboard',  icon: LayoutDashboard,  color: 'text-slate-600' },
+  other:       { ar: 'أخرى',       en: 'Other',       icon: Link2,            color: 'text-muted-foreground' },
+};
+
+const CategoryCard: React.FC<{ row: { category: string; total_clicks: number; unique_clicks: number; ctr: number }; isRTL: boolean }> = ({ row, isRTL }) => {
+  const meta = CATEGORY_META[row.category] ?? CATEGORY_META.other;
+  const Icon = meta.icon;
+  return (
+    <Card className="hover-lift">
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <Icon className={`h-4 w-4 ${meta.color}`} />
+            <span className="text-sm font-medium">{isRTL ? meta.ar : meta.en}</span>
+          </div>
+          <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30 tech-content">
+            {row.ctr}%
+          </Badge>
+        </div>
+        <div className="flex items-center justify-between text-xs text-muted-foreground tech-content">
+          <span>{isRTL ? 'النقرات:' : 'Clicks:'} {row.total_clicks}</span>
+          <span>{isRTL ? 'فريدة:' : 'Unique:'} {row.unique_clicks}</span>
+        </div>
       </CardContent>
     </Card>
   );
