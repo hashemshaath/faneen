@@ -31,8 +31,14 @@ import { ar } from 'date-fns/locale';
 import { useAuth } from '@/contexts/AuthContext';
 import { maskEmail } from '@/lib/masking';
 import { useNoIndex } from '@/hooks/useNoIndex';
+import {
+  exportContactsCSV, exportContactsPDF,
+  ALL_EXPORT_FIELDS, DEFAULT_EXPORT_FIELDS,
+  fieldLabel, type ContactExportField, type ContactExportRow,
+} from '@/lib/contact-pdf-export';
 
-type Status = 'new' | 'read' | 'replied' | 'archived';
+type Status = 'new' | 'read' | 'under_review' | 'replied' | 'closed' | 'archived';
+type WorkState = 'ready' | 'in_progress' | 'done' | 'blocked';
 type Priority = 'low' | 'normal' | 'high' | 'urgent';
 type SortKey = 'newest' | 'oldest' | 'priority' | 'unread';
 type DateRange = 'all' | 'today' | '7d' | '30d';
@@ -53,13 +59,50 @@ interface ContactMessage {
   replied_by: string | null;
   created_at: string;
   updated_at: string;
+  assigned_to: string | null;
+  assigned_at: string | null;
+  work_state: WorkState;
+  ticket_number: string | null;
+  closed_at: string | null;
+  ai_priority: Priority | null;
+  ai_category: string | null;
+  ai_summary: string | null;
+  ai_suggested_reply: string | null;
+  ai_processed_at: string | null;
+}
+
+interface ContactEvent {
+  id: string;
+  message_id: string;
+  actor_id: string | null;
+  event_type: string;
+  from_value: string | null;
+  to_value: string | null;
+  note: string | null;
+  created_at: string;
+}
+
+interface AdminAssignee {
+  user_id: string;
+  full_name: string | null;
+  email: string | null;
+  role: string | null;
 }
 
 const statusConfig: Record<Status, { ar: string; en: string; color: string; icon: React.ElementType }> = {
   new:      { ar: 'جديد',    en: 'New',      color: 'bg-blue-500/10 text-blue-600 border-blue-500/30',         icon: Mail },
   read:     { ar: 'مقروء',   en: 'Read',     color: 'bg-amber-500/10 text-amber-600 border-amber-500/30',      icon: MailOpen },
+  under_review: { ar: 'تحت المراجعة', en: 'Under review', color: 'bg-violet-500/10 text-violet-600 border-violet-500/30', icon: Brain },
   replied:  { ar: 'تم الرد', en: 'Replied',  color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30', icon: CheckCircle },
+  closed:   { ar: 'مغلق',    en: 'Closed',   color: 'bg-slate-500/10 text-slate-700 border-slate-500/30',      icon: Lock },
   archived: { ar: 'مؤرشف',   en: 'Archived', color: 'bg-muted text-muted-foreground border-border',             icon: Archive },
+};
+
+const workStateConfig: Record<WorkState, { ar: string; en: string; color: string }> = {
+  ready:       { ar: 'جاهز',         en: 'Ready',       color: 'bg-blue-500/10 text-blue-600 border-blue-500/30' },
+  in_progress: { ar: 'قيد المعالجة', en: 'In progress', color: 'bg-amber-500/10 text-amber-600 border-amber-500/30' },
+  done:        { ar: 'منجز',         en: 'Done',        color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30' },
+  blocked:     { ar: 'متوقف',        en: 'Blocked',     color: 'bg-red-500/10 text-red-600 border-red-500/30' },
 };
 
 const priorityConfig: Record<Priority, { ar: string; en: string; color: string; weight: number }> = {
@@ -104,6 +147,8 @@ const AdminContactMessages = () => {
 
   const statusFilter = searchParams.get('status') || 'all';
   const priorityFilter = searchParams.get('priority') || 'all';
+  const assigneeFilter = searchParams.get('assignee') || 'all'; // 'all' | 'me' | 'unassigned' | <uuid>
+  const workStateFilter = searchParams.get('work') || 'all';
   const search = searchParams.get('q') || '';
   const starredOnly = searchParams.get('starred') === '1';
   const dateRange = (searchParams.get('range') as DateRange) || 'all';
@@ -118,6 +163,11 @@ const AdminContactMessages = () => {
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [splitView, setSplitView] = useState<boolean>(() => localStorage.getItem('qitaat_cm_split') === '1');
   const [density, setDensity] = useState<Density>(() => (localStorage.getItem('qitaat_cm_density') as Density) || 'comfortable');
+  const [showExportPanel, setShowExportPanel] = useState(false);
+  const [exportFormat, setExportFormat] = useState<'csv' | 'pdf'>('csv');
+  const [exportFields, setExportFields] = useState<ContactExportField[]>(DEFAULT_EXPORT_FIELDS);
+  const [exportScope, setExportScope] = useState<'filtered' | 'selected'>('filtered');
+  const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => { localStorage.setItem('qitaat_cm_split', splitView ? '1' : '0'); }, [splitView]);
   useEffect(() => { localStorage.setItem('qitaat_cm_density', density); }, [density]);
@@ -153,11 +203,46 @@ const AdminContactMessages = () => {
     },
   });
 
+  // Admin assignees (for assignment + filter)
+  const { data: assignees = [] } = useQuery({
+    queryKey: ['admin-assignees'],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('list_admin_assignees');
+      if (error) throw error;
+      return (data || []) as AdminAssignee[];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+  const assigneeMap = useMemo(() => {
+    const m = new Map<string, AdminAssignee>();
+    assignees.forEach(a => m.set(a.user_id, a));
+    return m;
+  }, [assignees]);
+
+  // Activity feed for focused message
+  const { data: events = [] } = useQuery({
+    queryKey: ['contact-message-events', focusedId],
+    enabled: !!focusedId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('contact_message_events')
+        .select('*')
+        .eq('message_id', focusedId!)
+        .order('created_at', { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return (data || []) as ContactEvent[];
+    },
+  });
+
   useEffect(() => {
     const channel = supabase
       .channel('admin-contact-messages-rt')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'contact_messages' }, () => {
         queryClient.invalidateQueries({ queryKey: ['admin-contact-messages'] });
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'contact_message_events' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['contact-message-events'] });
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
@@ -170,6 +255,12 @@ const AdminContactMessages = () => {
       if (patch.status === 'replied') {
         finalPatch.replied_at = new Date().toISOString();
         if (user?.id) finalPatch.replied_by = user.id;
+      }
+      if (patch.status === 'closed') {
+        finalPatch.closed_at = new Date().toISOString();
+      }
+      if (patch.assigned_to !== undefined) {
+        finalPatch.assigned_at = patch.assigned_to ? new Date().toISOString() : null;
       }
       const { error } = await supabase.from('contact_messages').update(finalPatch).in('id', ids);
       if (error) throw error;
@@ -207,6 +298,10 @@ const AdminContactMessages = () => {
     const list = messages.filter(m => {
       if (statusFilter !== 'all' && m.status !== statusFilter) return false;
       if (priorityFilter !== 'all' && m.priority !== priorityFilter) return false;
+      if (workStateFilter !== 'all' && m.work_state !== workStateFilter) return false;
+      if (assigneeFilter === 'me' && m.assigned_to !== user?.id) return false;
+      else if (assigneeFilter === 'unassigned' && m.assigned_to) return false;
+      else if (assigneeFilter !== 'all' && assigneeFilter !== 'me' && assigneeFilter !== 'unassigned' && m.assigned_to !== assigneeFilter) return false;
       if (starredOnly && !m.starred) return false;
       if (cutoff && new Date(m.created_at) < cutoff) return false;
       if (quickChip === 'unread' && m.status !== 'new') return false;
@@ -219,7 +314,7 @@ const AdminContactMessages = () => {
         if (now - new Date(m.created_at).getTime() < 24 * 60 * 60 * 1000) return false;
       }
       if (q) {
-        const hay = `${m.name} ${m.email} ${m.subject || ''} ${m.message} ${m.internal_notes || ''}`.toLowerCase();
+        const hay = `${m.name} ${m.email} ${m.subject || ''} ${m.message} ${m.internal_notes || ''} ${m.ticket_number || ''} ${m.ai_summary || ''}`.toLowerCase();
         if (!hay.includes(q)) return false;
       }
       return true;
@@ -241,7 +336,7 @@ const AdminContactMessages = () => {
       }
       return +new Date(b.created_at) - +new Date(a.created_at);
     });
-  }, [messages, statusFilter, priorityFilter, starredOnly, search, dateRange, quickChip, sortKey]);
+  }, [messages, statusFilter, priorityFilter, workStateFilter, assigneeFilter, user?.id, starredOnly, search, dateRange, quickChip, sortKey]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
@@ -334,27 +429,77 @@ const AdminContactMessages = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusedId, filtered, focused]);
 
-  const exportCSV = () => {
-    if (!isSuperAdmin) {
+  const buildExportRows = useCallback((source: ContactMessage[]): ContactExportRow[] =>
+    source.map(m => ({
+      ticket_number: m.ticket_number,
+      name: m.name,
+      email: isSuperAdmin ? m.email : maskEmail(m.email),
+      subject: m.subject,
+      message: m.message,
+      status: m.status,
+      priority: m.priority,
+      work_state: m.work_state,
+      assigned_to_name: m.assigned_to ? (assigneeMap.get(m.assigned_to)?.full_name || assigneeMap.get(m.assigned_to)?.email || '—') : '',
+      starred: m.starred,
+      internal_notes: m.internal_notes,
+      created_at: format(new Date(m.created_at), 'yyyy-MM-dd HH:mm'),
+      replied_at: m.replied_at ? format(new Date(m.replied_at), 'yyyy-MM-dd HH:mm') : null,
+      response_hours: m.replied_at ? differenceInHours(new Date(m.replied_at), new Date(m.created_at)) : null,
+      ai_priority: m.ai_priority,
+      ai_category: m.ai_category,
+      ai_summary: m.ai_summary,
+    })),
+  [isSuperAdmin, assigneeMap]);
+
+  const buildFilterSummary = useCallback(() => {
+    const parts: string[] = [];
+    if (statusFilter !== 'all') parts.push(`status=${statusFilter}`);
+    if (priorityFilter !== 'all') parts.push(`priority=${priorityFilter}`);
+    if (workStateFilter !== 'all') parts.push(`work=${workStateFilter}`);
+    if (assigneeFilter !== 'all') parts.push(`assignee=${assigneeFilter}`);
+    if (dateRange !== 'all') parts.push(`range=${dateRange}`);
+    if (starredOnly) parts.push('starred');
+    if (quickChip) parts.push(`chip=${quickChip}`);
+    if (search) parts.push(`q="${search}"`);
+    return parts.join(' · ');
+  }, [statusFilter, priorityFilter, workStateFilter, assigneeFilter, dateRange, starredOnly, quickChip, search]);
+
+  const runExport = async () => {
+    if (!isSuperAdmin && exportFields.some(f => f === 'email' || f === 'message' || f === 'internal_notes')) {
       toast.error(isRTL
-        ? 'تصدير CSV يحتوي على بيانات حساسة — متاح فقط لمدير النظام (Super Admin).'
-        : 'CSV export contains sensitive data — Super Admin only.');
+        ? 'بعض الحقول تحتوي على بيانات حساسة — Super Admin فقط.'
+        : 'Some fields contain sensitive data — Super Admin only.');
       return;
     }
-    const headers = ['ID', 'Name', 'Email', 'Subject', 'Message', 'Status', 'Priority', 'Starred', 'Notes', 'Created', 'Replied At', 'Response (hrs)'];
-    const rows = filtered.map(m => [
-      m.id, m.name, m.email, m.subject || '', m.message.replace(/[\n\r]/g, ' '),
-      m.status, m.priority, m.starred ? 'yes' : 'no', m.internal_notes || '',
-      format(new Date(m.created_at), 'yyyy-MM-dd HH:mm'),
-      m.replied_at ? format(new Date(m.replied_at), 'yyyy-MM-dd HH:mm') : '',
-      m.replied_at ? String(differenceInHours(new Date(m.replied_at), new Date(m.created_at))) : '',
-    ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(','));
-    const csv = '\uFEFF' + [headers.join(','), ...rows].join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = `contact-messages-${format(new Date(), 'yyyy-MM-dd-HHmm')}.csv`; a.click();
-    URL.revokeObjectURL(url);
+    if (exportFields.length === 0) {
+      toast.error(isRTL ? 'اختر حقلاً واحداً على الأقل' : 'Select at least one field');
+      return;
+    }
+    const source = exportScope === 'selected'
+      ? filtered.filter(m => selectedIds.has(m.id))
+      : filtered;
+    if (source.length === 0) {
+      toast.error(isRTL ? 'لا توجد رسائل للتصدير' : 'No messages to export');
+      return;
+    }
+    setIsExporting(true);
+    try {
+      const rows = buildExportRows(source);
+      if (exportFormat === 'csv') {
+        exportContactsCSV(rows, exportFields, isRTL);
+      } else {
+        await exportContactsPDF(rows, exportFields, isRTL, {
+          totalCount: messages.length,
+          filterSummary: buildFilterSummary(),
+        });
+      }
+      toast.success(isRTL ? `تم تصدير ${rows.length} رسالة` : `Exported ${rows.length} messages`);
+      setShowExportPanel(false);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : (isRTL ? 'فشل التصدير' : 'Export failed'));
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const copyDeepLink = (id: string) => {
@@ -444,8 +589,12 @@ const AdminContactMessages = () => {
             <Button variant="outline" size="sm" onClick={() => refetch()} className="gap-2">
               <RefreshCw className="w-4 h-4" />{isRTL ? 'تحديث' : 'Refresh'}
             </Button>
-            <Button variant="outline" size="sm" onClick={exportCSV} disabled={!filtered.length} className="gap-2">
-              <Download className="w-4 h-4" />{isRTL ? 'تصدير CSV' : 'Export'}
+            <Button
+              variant={showExportPanel ? 'default' : 'outline'} size="sm"
+              onClick={() => setShowExportPanel(s => !s)}
+              disabled={!filtered.length} className="gap-2"
+            >
+              <Download className="w-4 h-4" />{isRTL ? 'تصدير' : 'Export'}
             </Button>
             <Button
               variant="outline" size="sm" className="gap-2"
@@ -606,6 +755,129 @@ const AdminContactMessages = () => {
               </Button>
             </div>
 
+            {/* Workflow filters: assignee + work state */}
+            <div className="flex flex-col md:flex-row gap-3">
+              <Select value={assigneeFilter} onValueChange={v => updateParam({ assignee: v === 'all' ? null : v, page: null })}>
+                <SelectTrigger className="w-full md:w-56"><User className="w-4 h-4 me-2" /><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{isRTL ? 'كل المسؤولين' : 'All assignees'}</SelectItem>
+                  <SelectItem value="me">{isRTL ? 'مُعيَّنة لي' : 'Assigned to me'}</SelectItem>
+                  <SelectItem value="unassigned">{isRTL ? 'غير مُعيَّنة' : 'Unassigned'}</SelectItem>
+                  {assignees.map(a => (
+                    <SelectItem key={a.user_id} value={a.user_id}>
+                      {a.full_name || a.email || a.user_id.slice(0, 8)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={workStateFilter} onValueChange={v => updateParam({ work: v === 'all' ? null : v, page: null })}>
+                <SelectTrigger className="w-full md:w-44"><Timer className="w-4 h-4 me-2" /><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{isRTL ? 'كل حالات العمل' : 'All work states'}</SelectItem>
+                  {(Object.keys(workStateConfig) as WorkState[]).map(k => (
+                    <SelectItem key={k} value={k}>{isRTL ? workStateConfig[k].ar : workStateConfig[k].en}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Inline export panel */}
+            {showExportPanel && (
+              <div className="rounded-lg border border-accent/30 bg-accent/5 p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <Download className="w-4 h-4" />
+                    {isRTL ? 'تصدير مخصص' : 'Custom export'}
+                  </div>
+                  <button
+                    onClick={() => setShowExportPanel(false)}
+                    className="text-xs text-muted-foreground hover:text-foreground"
+                  >×</button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-medium text-muted-foreground">{isRTL ? 'الصيغة' : 'Format'}</label>
+                    <Select value={exportFormat} onValueChange={(v: 'csv' | 'pdf') => setExportFormat(v)}>
+                      <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="csv">CSV (Excel)</SelectItem>
+                        <SelectItem value="pdf">PDF</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-medium text-muted-foreground">{isRTL ? 'النطاق' : 'Scope'}</label>
+                    <Select value={exportScope} onValueChange={(v: 'filtered' | 'selected') => setExportScope(v)}>
+                      <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="filtered">{isRTL ? `كل المُفلترة (${filtered.length})` : `All filtered (${filtered.length})`}</SelectItem>
+                        <SelectItem value="selected" disabled={selectedIds.size === 0}>
+                          {isRTL ? `المحدد فقط (${selectedIds.size})` : `Selected only (${selectedIds.size})`}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[11px] font-medium text-muted-foreground">
+                      {isRTL ? `الحقول (${exportFields.length}/${ALL_EXPORT_FIELDS.length})` : `Fields (${exportFields.length}/${ALL_EXPORT_FIELDS.length})`}
+                    </label>
+                    <div className="flex gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setExportFields(ALL_EXPORT_FIELDS)}
+                        className="text-[10px] px-2 py-0.5 rounded border border-border hover:border-accent/40"
+                      >{isRTL ? 'الكل' : 'All'}</button>
+                      <button
+                        type="button"
+                        onClick={() => setExportFields(DEFAULT_EXPORT_FIELDS)}
+                        className="text-[10px] px-2 py-0.5 rounded border border-border hover:border-accent/40"
+                      >{isRTL ? 'الافتراضي' : 'Default'}</button>
+                      <button
+                        type="button"
+                        onClick={() => setExportFields([])}
+                        className="text-[10px] px-2 py-0.5 rounded border border-border hover:border-accent/40"
+                      >{isRTL ? 'مسح' : 'Clear'}</button>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1.5 max-h-48 overflow-y-auto p-2 rounded border border-border/50 bg-background">
+                    {ALL_EXPORT_FIELDS.map(f => {
+                      const sensitive = (f === 'email' || f === 'message' || f === 'internal_notes') && !isSuperAdmin;
+                      const checked = exportFields.includes(f);
+                      return (
+                        <label
+                          key={f}
+                          className={`flex items-center gap-2 p-1.5 rounded text-xs cursor-pointer hover:bg-muted/40 ${sensitive ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                          <Checkbox
+                            checked={checked}
+                            disabled={sensitive}
+                            onCheckedChange={() => {
+                              setExportFields(prev =>
+                                prev.includes(f) ? prev.filter(x => x !== f) : [...prev, f],
+                              );
+                            }}
+                          />
+                          <span className="truncate">{fieldLabel(f, isRTL)}</span>
+                          {sensitive && <Lock className="w-3 h-3 ms-auto" />}
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 justify-end pt-1">
+                  <Button size="sm" variant="ghost" onClick={() => setShowExportPanel(false)}>
+                    {isRTL ? 'إلغاء' : 'Cancel'}
+                  </Button>
+                  <Button size="sm" onClick={runExport} disabled={isExporting || exportFields.length === 0} className="gap-2">
+                    {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                    {isRTL ? `تصدير ${exportFormat.toUpperCase()}` : `Export ${exportFormat.toUpperCase()}`}
+                  </Button>
+                </div>
+              </div>
+            )}
+
             {/* Quick chips */}
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-[11px] text-muted-foreground font-medium">{isRTL ? 'فلاتر سريعة:' : 'Quick:'}</span>
@@ -694,6 +966,10 @@ const AdminContactMessages = () => {
               isRTL={isRTL}
               isSuperAdmin={isSuperAdmin}
               dateLocale={dateLocale}
+              currentUserId={user?.id}
+              assignees={assignees}
+              assigneeMap={assigneeMap}
+              events={events}
               noteDraft={noteDraft}
               setNoteDraft={setNoteDraft}
               editingNoteId={editingNoteId}
@@ -857,6 +1133,10 @@ const AdminContactMessages = () => {
                 isRTL={isRTL}
                 isSuperAdmin={isSuperAdmin}
                 dateLocale={dateLocale}
+                currentUserId={user?.id}
+                assignees={assignees}
+                assigneeMap={assigneeMap}
+                events={events}
                 noteDraft={noteDraft}
                 setNoteDraft={setNoteDraft}
                 editingNoteId={editingNoteId}
@@ -884,6 +1164,10 @@ interface FocusedProps {
   isRTL: boolean;
   isSuperAdmin: boolean;
   dateLocale: Locale | undefined;
+  currentUserId: string | undefined;
+  assignees: AdminAssignee[];
+  assigneeMap: Map<string, AdminAssignee>;
+  events: ContactEvent[];
   noteDraft: string;
   setNoteDraft: (v: string) => void;
   editingNoteId: string | null;
@@ -899,6 +1183,7 @@ type Locale = typeof ar;
 
 const FocusedMessage: React.FC<FocusedProps> = ({
   focused, isRTL, isSuperAdmin, dateLocale,
+  currentUserId, assignees, assigneeMap, events,
   noteDraft, setNoteDraft, editingNoteId, setEditingNoteId,
   updateMutation, deleteMutation, copyDeepLink, closeMessage, printMessage, useReplyTemplate,
 }) => {
@@ -906,12 +1191,20 @@ const FocusedMessage: React.FC<FocusedProps> = ({
     ? differenceInHours(new Date(focused.replied_at), new Date(focused.created_at))
     : null;
 
+  const assignedUser = focused.assigned_to ? assigneeMap.get(focused.assigned_to) : null;
+  const wsCfg = workStateConfig[focused.work_state];
+
   return (
     <Card className="border-accent/40 ring-1 ring-accent/20">
       <CardContent className="p-5 space-y-4">
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div className="space-y-1 min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
+              {focused.ticket_number && (
+                <Badge variant="outline" className="bg-slate-500/10 text-slate-700 border-slate-500/30 tech-content">
+                  {focused.ticket_number}
+                </Badge>
+              )}
               <Badge variant="outline" className={statusConfig[focused.status].color}>
                 {isRTL ? statusConfig[focused.status].ar : statusConfig[focused.status].en}
               </Badge>
@@ -919,6 +1212,16 @@ const FocusedMessage: React.FC<FocusedProps> = ({
                 <Flame className="w-3 h-3 me-1" />
                 {isRTL ? priorityConfig[focused.priority].ar : priorityConfig[focused.priority].en}
               </Badge>
+              <Badge variant="outline" className={wsCfg.color}>
+                <Timer className="w-3 h-3 me-1" />
+                {isRTL ? wsCfg.ar : wsCfg.en}
+              </Badge>
+              {assignedUser && (
+                <Badge variant="outline" className="bg-accent/10 text-accent border-accent/30">
+                  <User className="w-3 h-3 me-1" />
+                  {assignedUser.full_name || assignedUser.email}
+                </Badge>
+              )}
               {focused.starred && <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/30"><Star className="w-3 h-3 fill-current" /></Badge>}
               {responseHrs !== null && (
                 <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30">
@@ -992,6 +1295,106 @@ const FocusedMessage: React.FC<FocusedProps> = ({
           {focused.message}
         </div>
 
+        {/* Workflow controls: assignee + work state */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-lg border border-border/50 bg-background">
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-medium text-muted-foreground flex items-center gap-1.5">
+              <User className="w-3 h-3" />{isRTL ? 'المسؤول' : 'Assignee'}
+            </label>
+            <div className="flex gap-1.5">
+              <Select
+                value={focused.assigned_to || '__unassigned__'}
+                onValueChange={(v) => updateMutation.mutate({
+                  ids: [focused.id],
+                  patch: { assigned_to: v === '__unassigned__' ? null : v },
+                })}
+              >
+                <SelectTrigger className="h-8 text-xs flex-1"><SelectValue placeholder={isRTL ? 'غير معيَّن' : 'Unassigned'} /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__unassigned__">{isRTL ? 'غير معيَّن' : 'Unassigned'}</SelectItem>
+                  {assignees.map(a => (
+                    <SelectItem key={a.user_id} value={a.user_id}>
+                      {a.full_name || a.email || a.user_id.slice(0, 8)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {currentUserId && focused.assigned_to !== currentUserId && (
+                <Button
+                  size="sm" variant="outline" className="h-8 text-xs"
+                  onClick={() => updateMutation.mutate({ ids: [focused.id], patch: { assigned_to: currentUserId } })}
+                >
+                  {isRTL ? 'لي' : 'Me'}
+                </Button>
+              )}
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-medium text-muted-foreground flex items-center gap-1.5">
+              <Timer className="w-3 h-3" />{isRTL ? 'حالة العمل' : 'Work state'}
+            </label>
+            <Select
+              value={focused.work_state}
+              onValueChange={(v) => updateMutation.mutate({ ids: [focused.id], patch: { work_state: v as WorkState } })}
+            >
+              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {(Object.keys(workStateConfig) as WorkState[]).map(k => (
+                  <SelectItem key={k} value={k}>{isRTL ? workStateConfig[k].ar : workStateConfig[k].en}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* AI suggested reply */}
+        {focused.ai_suggested_reply && (
+          <div className="space-y-2 p-3 rounded-lg border border-violet-500/30 bg-violet-500/5">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div className="flex items-center gap-2 text-xs font-medium text-violet-700">
+                <Brain className="w-3.5 h-3.5" />
+                {isRTL ? 'رد مقترح بالذكاء الاصطناعي' : 'AI suggested reply'}
+                {focused.ai_category && (
+                  <Badge variant="outline" className="text-[10px] h-4 px-1.5 bg-violet-500/10 text-violet-700 border-violet-500/30">
+                    {focused.ai_category}
+                  </Badge>
+                )}
+              </div>
+              {focused.ai_processed_at && (
+                <span className="text-[10px] text-muted-foreground tech-content">
+                  {format(new Date(focused.ai_processed_at), 'MM/dd HH:mm')}
+                </span>
+              )}
+            </div>
+            {focused.ai_summary && (
+              <p className="text-xs text-muted-foreground italic">{focused.ai_summary}</p>
+            )}
+            <div className="text-sm whitespace-pre-wrap p-3 rounded bg-background border border-border/50 max-h-48 overflow-y-auto" dir="auto">
+              {focused.ai_suggested_reply}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                size="sm" variant="outline" className="h-7 gap-1.5 text-xs"
+                onClick={() => {
+                  navigator.clipboard.writeText(focused.ai_suggested_reply || '');
+                  toast.success(isRTL ? 'تم نسخ الرد' : 'Reply copied');
+                }}
+              >
+                <Copy className="w-3 h-3" />{isRTL ? 'نسخ' : 'Copy'}
+              </Button>
+              {isSuperAdmin && (
+                <a
+                  href={`mailto:${focused.email}?subject=${encodeURIComponent('Re: ' + (focused.subject || ''))}&body=${encodeURIComponent(focused.ai_suggested_reply || '')}`}
+                >
+                  <Button size="sm" className="h-7 gap-1.5 text-xs">
+                    <Reply className="w-3 h-3" />{isRTL ? 'إرسال هذا الرد' : 'Send this reply'}
+                  </Button>
+                </a>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Reply templates */}
         {isSuperAdmin && (
           <div className="space-y-2">
@@ -1042,6 +1445,35 @@ const FocusedMessage: React.FC<FocusedProps> = ({
           )}
         </div>
 
+        {/* Activity feed */}
+        {events.length > 0 && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+              <Clock className="w-3.5 h-3.5" />
+              {isRTL ? `سجل الأحداث (${events.length})` : `Activity feed (${events.length})`}
+            </div>
+            <div className="space-y-1.5 max-h-56 overflow-y-auto pe-1">
+              {events.map(ev => {
+                const actor = ev.actor_id ? assigneeMap.get(ev.actor_id) : null;
+                const actorLabel = actor ? (actor.full_name || actor.email) : (isRTL ? 'النظام' : 'System');
+                return (
+                  <div key={ev.id} className="flex items-start gap-2 p-2 rounded border border-border/50 bg-background text-[11px]">
+                    <div className="w-1.5 h-1.5 rounded-full bg-accent mt-1.5 shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium">
+                        <EventLabel ev={ev} isRTL={isRTL} assigneeMap={assigneeMap} />
+                      </p>
+                      <p className="text-muted-foreground tech-content">
+                        {actorLabel} · {format(new Date(ev.created_at), 'yyyy-MM-dd HH:mm')}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Priority + actions */}
         <div className="flex items-center gap-2 flex-wrap pt-2 border-t border-border/50">
           <Select value={focused.priority} onValueChange={(v) => updateMutation.mutate({ ids: [focused.id], patch: { priority: v as Priority } })}>
@@ -1049,6 +1481,17 @@ const FocusedMessage: React.FC<FocusedProps> = ({
             <SelectContent>
               {(Object.keys(priorityConfig) as Priority[]).map(k => (
                 <SelectItem key={k} value={k}>{isRTL ? priorityConfig[k].ar : priorityConfig[k].en}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={focused.status}
+            onValueChange={(v) => updateMutation.mutate({ ids: [focused.id], patch: { status: v as Status } })}
+          >
+            <SelectTrigger className="h-8 w-40 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {(Object.keys(statusConfig) as Status[]).map(k => (
+                <SelectItem key={k} value={k}>{isRTL ? statusConfig[k].ar : statusConfig[k].en}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -1112,5 +1555,35 @@ const TimelineDot: React.FC<{ label: string; time: string | null; active: boolea
     </div>
   </div>
 );
+
+const EventLabel: React.FC<{ ev: ContactEvent; isRTL: boolean; assigneeMap: Map<string, AdminAssignee> }> = ({ ev, isRTL, assigneeMap }) => {
+  const userLabel = (id: string | null) => {
+    if (!id) return isRTL ? 'لا أحد' : 'no one';
+    const u = assigneeMap.get(id);
+    return u ? (u.full_name || u.email || id.slice(0, 8)) : id.slice(0, 8);
+  };
+  switch (ev.event_type) {
+    case 'created':
+      return <>{isRTL ? 'تم إنشاء التذكرة' : 'Ticket created'}</>;
+    case 'status_changed':
+      return <>{isRTL ? `تغيير الحالة: ${ev.from_value || '—'} → ${ev.to_value || '—'}` : `Status: ${ev.from_value || '—'} → ${ev.to_value || '—'}`}</>;
+    case 'priority_changed':
+      return <>{isRTL ? `تغيير الأولوية: ${ev.from_value || '—'} → ${ev.to_value || '—'}` : `Priority: ${ev.from_value || '—'} → ${ev.to_value || '—'}`}</>;
+    case 'work_state_changed':
+      return <>{isRTL ? `حالة العمل: ${ev.from_value || '—'} → ${ev.to_value || '—'}` : `Work state: ${ev.from_value || '—'} → ${ev.to_value || '—'}`}</>;
+    case 'assigned':
+      return <>{isRTL ? `تعيين إلى ${userLabel(ev.to_value)}` : `Assigned to ${userLabel(ev.to_value)}`}</>;
+    case 'unassigned':
+      return <>{isRTL ? `إلغاء تعيين ${userLabel(ev.from_value)}` : `Unassigned from ${userLabel(ev.from_value)}`}</>;
+    case 'replied':
+      return <>{isRTL ? 'تم الرد على الرسالة' : 'Message replied'}</>;
+    case 'note_added':
+      return <>{isRTL ? 'تمت إضافة/تحديث ملاحظة داخلية' : 'Internal note updated'}</>;
+    case 'ai_triaged':
+      return <>{isRTL ? `فرز ذكي: ${ev.to_value || ''}` : `AI triage: ${ev.to_value || ''}`}</>;
+    default:
+      return <>{ev.event_type}{ev.note ? ` — ${ev.note}` : ''}</>;
+  }
+};
 
 export default AdminContactMessages;
