@@ -90,7 +90,7 @@ const SIGNAL_LABELS_EN: Record<keyof ConsentState, string> = {
 const AdminAnalyticsSettings = () => {
   useNoIndex();
   const { isRTL } = useLanguage();
-  const [, setTick] = useState(0);
+  const [tick, setTick] = useState(0);
   const [diag, setDiag] = useState<DiagEntry[]>(() => getDiagEntries());
 
   useEffect(() => {
@@ -99,8 +99,10 @@ const AdminAnalyticsSettings = () => {
     return () => { window.clearInterval(id); unsub(); };
   }, []);
 
-  const state = useMemo(detect, [/* recomputed each render via tick */]);
-  const stored = useMemo(readStoredConsent, [diag.length]);
+  // Recompute live GTM/GA/dataLayer state on every tick (2s) and on manual refresh.
+  const state = useMemo(detect, [tick]);
+  // Re-read consent on every tick — user may accept/reject in another tab.
+  const stored = useMemo(readStoredConsent, [tick]);
 
   const cspViolations = useMemo(
     () => diag.filter((d) => d.source === "csp").slice(-10).reverse(),
