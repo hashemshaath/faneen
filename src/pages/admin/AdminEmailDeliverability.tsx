@@ -550,4 +550,43 @@ const RateCard: React.FC<{ label: string; value: number; threshold: number }> = 
   );
 };
 
+const CATEGORY_META: Record<string, { ar: string; en: string; icon: React.ElementType; color: string }> = {
+  pricing:     { ar: 'التسعير',    en: 'Pricing',     icon: DollarSign,       color: 'text-emerald-600' },
+  contract:    { ar: 'العقود',     en: 'Contracts',   icon: FileText,         color: 'text-blue-600' },
+  maintenance: { ar: 'الصيانة',    en: 'Maintenance', icon: Wrench,           color: 'text-amber-600' },
+  leads:       { ar: 'العروض',     en: 'Leads',       icon: Users,            color: 'text-purple-600' },
+  booking:     { ar: 'الحجوزات',   en: 'Bookings',    icon: Calendar,         color: 'text-cyan-600' },
+  payment:     { ar: 'المدفوعات',  en: 'Payments',    icon: CreditCard,       color: 'text-rose-600' },
+  messages:    { ar: 'الرسائل',    en: 'Messages',    icon: MessageSquare,    color: 'text-indigo-600' },
+  projects:    { ar: 'المشاريع',   en: 'Projects',    icon: Briefcase,        color: 'text-orange-600' },
+  dashboard:   { ar: 'لوحة التحكم', en: 'Dashboard',  icon: LayoutDashboard,  color: 'text-slate-600' },
+  other:       { ar: 'أخرى',       en: 'Other',       icon: Link2,            color: 'text-muted-foreground' },
+};
+
+const CategoryCard: React.FC<{ row: { category: string; total_clicks: number; unique_clicks: number; ctr: number }; isRTL: boolean }> = ({ row, isRTL }) => {
+  const meta = CATEGORY_META[row.category] ?? CATEGORY_META.other;
+  const Icon = meta.icon;
+  return (
+    <Card className="hover-lift">
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <Icon className={`h-4 w-4 ${meta.color}`} />
+            <span className="text-sm font-medium">{isRTL ? meta.ar : meta.en}</span>
+          </div>
+          <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30 tech-content">
+            {row.ctr}%
+          </Badge>
+        </div>
+        <div className="flex items-center justify-between text-xs text-muted-foreground tech-content">
+          <span>{isRTL ? 'النقرات:' : 'Clicks:'} {row.total_clicks}</span>
+          <span>{isRTL ? 'فريدة:' : 'Unique:'} {row.unique_clicks}</span>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+export default AdminEmailDeliverability;
+
 export default AdminEmailDeliverability;
