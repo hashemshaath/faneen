@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { track } from '@/lib/analytics-events';
+import { getAttributionPayload } from '@/lib/analytics-attribution';
 
 const Contact = () => {
   const { isRTL, language } = useLanguage();
@@ -98,8 +99,9 @@ const Contact = () => {
       });
 
       setSent(true);
-      track.quoteRequestSubmit({ contact_type: 'contact_form' });
-      track.contactFormSubmitted({ contact_type: 'contact_form' });
+      const attribution = getAttributionPayload();
+      track.quoteRequestSubmit({ contact_type: 'contact_form', ...attribution });
+      track.contactFormSubmitted({ contact_type: 'contact_form', ...attribution });
       toast.success(isRTL ? 'تم إرسال رسالتك بنجاح' : 'Message sent successfully');
     } catch {
       toast.error(isRTL ? 'حدث خطأ، يرجى المحاولة لاحقاً' : 'An error occurred, please try again');
