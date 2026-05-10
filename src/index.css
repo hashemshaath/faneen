@@ -78,11 +78,10 @@
     --slate-warm: 220 10% 45%;
     --cream: 158 30% 96%;
 
-    /* Navbar/Footer surface — always dark navy so the white logo always sits
-       on a dark background. The colored logo is reserved for genuinely light
-       surfaces (auth screens, admin previews, business headers). */
-    --surface-nav: 220 35% 12%;
-    --surface-nav-foreground: 0 0% 98%;
+    /* Navbar/Footer surface — light in light mode (so the colored logo shines),
+       dark navy in dark mode for contrast. */
+    --surface-nav: 0 0% 100%;
+    --surface-nav-foreground: 220 30% 12%;
 
     --gradient-gold: linear-gradient(135deg, hsl(158 65% 42%), hsl(225 60% 47%));
     --gradient-brand: linear-gradient(135deg, hsl(158 65% 42%), hsl(225 60% 47%));
@@ -379,15 +378,17 @@
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
 
+  /* Brand gradient utilities — mapped to logo identity (green → blue) so any
+     legacy "gold" class automatically reflects the brand colors. */
   .text-gradient-gold {
-    background: linear-gradient(135deg, hsl(42 85% 55%), hsl(42 90% 70%));
+    background: linear-gradient(135deg, hsl(var(--gold)), hsl(var(--brand-blue)));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
   .bg-gradient-gold {
-    background: linear-gradient(135deg, hsl(42 85% 55%), hsl(42 90% 70%));
+    background: linear-gradient(135deg, hsl(var(--gold)), hsl(var(--brand-blue)));
   }
 
   .bg-gradient-navy {
@@ -395,7 +396,7 @@
   }
 
   .shadow-gold {
-    box-shadow: 0 4px 20px -4px hsl(42 85% 55% / 0.4);
+    box-shadow: 0 4px 20px -4px hsl(var(--gold) / 0.4);
   }
 
   .animate-float {
@@ -513,11 +514,11 @@ html { transition: none; }
 .text-gradient-gold-shimmer {
   background: linear-gradient(
     100deg,
-    hsl(42 85% 55%) 0%,
-    hsl(45 95% 78%) 35%,
-    hsl(48 100% 92%) 50%,
-    hsl(45 95% 78%) 65%,
-    hsl(42 85% 55%) 100%
+    hsl(var(--gold)) 0%,
+    hsl(var(--gold-light)) 35%,
+    hsl(var(--brand-blue-light)) 50%,
+    hsl(var(--brand-blue)) 65%,
+    hsl(var(--gold)) 100%
   );
   background-size: 200% 100%;
   -webkit-background-clip: text;
