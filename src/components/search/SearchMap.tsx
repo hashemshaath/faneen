@@ -1,7 +1,6 @@
 import { useEffect, useRef, useMemo } from 'react';
 import L from 'leaflet';
 import { useLanguage } from '@/i18n/LanguageContext';
-import { useNavigate } from 'react-router-dom';
 import { MapPin } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
 
