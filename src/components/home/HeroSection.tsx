@@ -134,10 +134,10 @@ const SearchBar = memo(({ categories, cities, language, isRTL, t, onSearch }: an
 
   return (
     <form onSubmit={handleSearch} className="mt-8 sm:mt-12 max-w-4xl mx-auto">
-      <div className="bg-white/[0.07] backdrop-blur-2xl border border-white/10 rounded-2xl sm:rounded-3xl p-2.5 sm:p-3.5 shadow-2xl shadow-black/30 ring-1 ring-inset ring-white/[0.05]">
+      <div className="bg-white border border-[#E2E6EE] rounded-2xl p-2 sm:p-2.5 shadow-2">
         <div className="flex flex-col sm:flex-row gap-2">
           <div ref={wrapRef} className="flex-1 relative">
-            <Search aria-hidden="true" className="absolute end-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-white/75" />
+            <Search aria-hidden="true" className="absolute end-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-[#94A0B2]" />
             <input
               type="text"
               value={searchQuery}
@@ -149,14 +149,14 @@ const SearchBar = memo(({ categories, cities, language, isRTL, t, onSearch }: an
               role="combobox"
               aria-expanded={showDropdown}
               aria-autocomplete="list"
-              className="w-full pe-11 ps-3 sm:pe-12 sm:ps-4 py-3.5 sm:py-4 rounded-xl sm:rounded-2xl bg-white/[0.06] text-white placeholder:text-white/60 font-body text-sm border-0 outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-surface-nav focus:bg-white/[0.1] transition-all"
+              className="w-full pe-11 ps-3 sm:pe-12 sm:ps-4 h-12 sm:h-14 rounded-xl bg-white text-[#1A2230] placeholder:text-[#94A0B2] font-body text-sm border-0 outline-none focus-visible:ring-2 focus-visible:ring-primary transition-all"
             />
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => { setSearchQuery(''); setActiveIdx(-1); }}
                 aria-label={isAr ? 'مسح' : 'Clear'}
-                className="absolute end-12 sm:end-14 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/70 transition-colors"
+                className="absolute end-12 sm:end-14 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-[#EDEFF3] hover:bg-[#DDE2EA] flex items-center justify-center text-[#6B7689] transition-colors"
               >
                 <X className="w-3 h-3" />
               </button>
@@ -166,16 +166,16 @@ const SearchBar = memo(({ categories, cities, language, isRTL, t, onSearch }: an
             {showDropdown && (
               <div
                 role="listbox"
-                className="absolute top-full mt-2 inset-x-0 z-50 rounded-2xl bg-surface-nav/95 backdrop-blur-xl border border-white/10 shadow-2xl shadow-black/40 overflow-hidden animate-fade-in max-h-[360px] overflow-y-auto"
+                className="absolute top-full mt-2 inset-x-0 z-50 rounded-2xl bg-white border border-[#E2E6EE] shadow-3 overflow-hidden animate-fade-in max-h-[360px] overflow-y-auto"
               >
                 {!searchQuery && history.length > 0 && (
-                  <div className="px-3 pt-2.5 pb-1 flex items-center gap-1.5 text-[11px] text-white/55 font-body">
+                  <div className="px-3 pt-2.5 pb-1 flex items-center gap-1.5 text-[11px] text-[#6B7689] font-body">
                     <Clock className="w-3 h-3" />
                     {isAr ? 'بحث سابق' : 'Recent'}
                   </div>
                 )}
                 {!searchQuery && history.length === 0 && (
-                  <div className="px-3 pt-2.5 pb-1 flex items-center gap-1.5 text-[11px] text-white/55 font-body">
+                  <div className="px-3 pt-2.5 pb-1 flex items-center gap-1.5 text-[11px] text-[#6B7689] font-body">
                     <TrendingUp className="w-3 h-3" />
                     {isAr ? 'الأكثر بحثاً' : 'Trending'}
                   </div>
@@ -189,17 +189,17 @@ const SearchBar = memo(({ categories, cities, language, isRTL, t, onSearch }: an
                     onMouseDown={(e) => { e.preventDefault(); submit(item.label); }}
                     onMouseEnter={() => setActiveIdx(i)}
                     className={`w-full flex items-center gap-3 px-3 sm:px-4 py-2.5 text-start transition-colors ${
-                      activeIdx === i ? 'bg-white/10' : 'hover:bg-white/[0.06]'
+                      activeIdx === i ? 'bg-primary-light' : 'hover:bg-[#F7F8FA]'
                     }`}
                   >
                     <span className="w-6 flex items-center justify-center text-base">
-                      {item.type === 'history' ? <Clock className="w-3.5 h-3.5 text-white/55" />
-                        : item.type === 'category' ? <Building2 className="w-3.5 h-3.5 text-gold" />
+                      {item.type === 'history' ? <Clock className="w-3.5 h-3.5 text-[#6B7689]" />
+                        : item.type === 'category' ? <Building2 className="w-3.5 h-3.5 text-primary" />
                         : <span aria-hidden>{item.icon}</span>}
                     </span>
-                    <span className="flex-1 text-[13px] text-white/90 font-body truncate">{item.label}</span>
+                    <span className="flex-1 text-[13px] text-[#1A2230] font-body truncate">{item.label}</span>
                     {item.type === 'category' && (
-                      <span className="text-[10px] text-gold/85 bg-gold/10 border border-gold/20 px-1.5 py-0.5 rounded-md">
+                      <span className="text-[10px] text-primary-dark bg-primary-light border border-[#9DD8BD] px-1.5 py-0.5 rounded-md">
                         {isAr ? 'قسم' : 'Category'}
                       </span>
                     )}
@@ -212,11 +212,11 @@ const SearchBar = memo(({ categories, cities, language, isRTL, t, onSearch }: an
             value={selectedCategory}
             onChange={e => setSelectedCategory(e.target.value)}
             aria-label={isRTL ? 'تصفية حسب القسم' : 'Filter by category'}
-            className="sm:w-44 py-3.5 sm:py-4 px-3 sm:px-4 rounded-xl sm:rounded-2xl bg-white/[0.06] text-white font-body text-sm border-0 outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-surface-nav appearance-none cursor-pointer"
+            className="sm:w-44 h-12 sm:h-14 px-3 sm:px-4 rounded-xl bg-white text-[#1A2230] font-body text-sm border border-[#E2E6EE] outline-none focus-visible:ring-2 focus-visible:ring-primary appearance-none cursor-pointer"
           >
-            <option value="" className="bg-surface-nav text-surface-nav-foreground">{isRTL ? 'جميع الأقسام' : 'All Categories'}</option>
+            <option value="">{isRTL ? 'جميع الأقسام' : 'All Categories'}</option>
             {categories.map((c) => (
-              <option key={c.id} value={c.id} className="bg-surface-nav text-surface-nav-foreground">
+              <option key={c.id} value={c.id}>
                 {language === 'ar' ? c.name_ar : c.name_en}
               </option>
             ))}
@@ -225,16 +225,16 @@ const SearchBar = memo(({ categories, cities, language, isRTL, t, onSearch }: an
             value={selectedCity}
             onChange={e => setSelectedCity(e.target.value)}
             aria-label={isRTL ? 'تصفية حسب المدينة' : 'Filter by city'}
-            className="sm:w-40 py-3.5 sm:py-4 px-3 sm:px-4 rounded-xl sm:rounded-2xl bg-white/[0.06] text-white font-body text-sm border-0 outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-surface-nav appearance-none cursor-pointer hidden sm:block"
+            className="sm:w-40 h-12 sm:h-14 px-3 sm:px-4 rounded-xl bg-white text-[#1A2230] font-body text-sm border border-[#E2E6EE] outline-none focus-visible:ring-2 focus-visible:ring-primary appearance-none cursor-pointer hidden sm:block"
           >
-            <option value="" className="bg-surface-nav text-surface-nav-foreground">{isRTL ? 'جميع المدن' : 'All Cities'}</option>
+            <option value="">{isRTL ? 'جميع المدن' : 'All Cities'}</option>
             {cities.map((c) => (
-              <option key={c.id} value={c.id} className="bg-surface-nav text-surface-nav-foreground">
+              <option key={c.id} value={c.id}>
                 {language === 'ar' ? c.name_ar : c.name_en}
               </option>
             ))}
           </select>
-          <Button type="submit" variant="hero" size="appLg" className="rounded-xl sm:rounded-2xl active:scale-95 transition-transform shadow-lg shadow-gold/25 text-sm sm:text-base font-semibold tracking-wide">
+          <Button type="submit" variant="primary" size="appLg" className="rounded-xl active:scale-95 transition-transform text-sm sm:text-base font-semibold tracking-wide">
             <Search className="ic-sm sm:ic-md me-2" />
             {t('search.btn')}
           </Button>
@@ -290,7 +290,7 @@ const HeroTitle = memo(({ slides, current, language, t }: { slides: typeof slide
         <h2 className="font-heading font-black text-[1.8rem] leading-[1.2] sm:text-[2.75rem] md:text-[3.25rem] lg:text-[3.75rem] text-white sm:leading-[1.15] mb-3 sm:mb-6 tracking-tight">
           <WordFade text={line1} baseDelay={baseDelay} stepMs={stepMs} />
           <br />
-          <WordFade text={line2} baseDelay={line2Delay} stepMs={stepMs} className="text-gradient-gold-shimmer" />
+          <WordFade text={line2} baseDelay={line2Delay} stepMs={stepMs} className="text-white" />
         </h2>
         <p
           className="font-body text-sm sm:text-lg text-white/80 max-w-2xl mx-auto leading-relaxed px-2 hero-word"
@@ -469,8 +469,7 @@ export const HeroSection = () => {
       ))}
 
       {/* Overlays */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/35 to-black/85" />
-      <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at 50% 25%, hsl(42 85% 55% / 0.04) 0%, transparent 50%), radial-gradient(ellipse at 50% 30%, transparent 20%, hsl(220 35% 6% / 0.7) 70%)" }} />
+      <div className="absolute inset-0" style={{ background: "rgba(19, 23, 34, 0.55)" }} />
 
       {/* Particles — deferred past first paint, no fallback (purely decorative) */}
       <Suspense fallback={null}>
@@ -480,9 +479,9 @@ export const HeroSection = () => {
       {/* Content */}
       <div className="relative z-10 container text-center px-4 sm:px-6 pt-24 sm:pt-28 pb-8">
         {/* Badge */}
-        <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full border border-gold/25 bg-gold/[0.08] backdrop-blur-xl mb-6 sm:mb-8 animate-fade-in shadow-sm shadow-gold/10">
-          <Star className="ic-xs sm:ic-sm text-gold fill-gold/30" />
-          <span className="text-[11px] sm:text-sm font-body font-medium text-gold/90 tracking-wide">{t('hero.badge')}</span>
+        <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full border border-white/30 bg-white/10 backdrop-blur-md mb-6 sm:mb-8 animate-fade-in">
+          <Star className="ic-xs sm:ic-sm text-white" />
+          <span className="text-[11px] sm:text-sm font-body font-medium text-white tracking-wide">{t('hero.badge')}</span>
         </div>
 
         {/* Title with slide transition + typing animation */}
@@ -510,7 +509,7 @@ export const HeroSection = () => {
                   key={cat.id}
                   type="button"
                   onClick={() => navigate(`/search?category=${cat.id}`)}
-                  className="chip font-body text-white/85 bg-white/[0.06] border border-white/15 hover:bg-gold/10 hover:text-gold hover:border-gold/30 active:scale-95 backdrop-blur-sm focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none"
+                  className="chip font-body text-white bg-white/10 border border-white/25 hover:bg-white hover:text-[#1A2230] active:scale-95 backdrop-blur-sm focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
                 >
                   {language === 'ar' ? cat.name_ar : cat.name_en}
                 </button>
@@ -520,7 +519,7 @@ export const HeroSection = () => {
                   type="button"
                   onClick={() => setTagsExpanded(v => !v)}
                   aria-expanded={tagsExpanded}
-                  className="chip font-body text-gold bg-gold/10 border border-gold/30 hover:bg-gold/20 active:scale-95 backdrop-blur-sm focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none inline-flex items-center gap-1"
+                  className="chip font-body text-white bg-white/15 border border-white/30 hover:bg-white/25 active:scale-95 backdrop-blur-sm focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none inline-flex items-center gap-1"
                 >
                   {tagsExpanded ? (
                     <>
@@ -541,7 +540,7 @@ export const HeroSection = () => {
 
         {/* Slide controls */}
         <div className="flex items-center justify-center gap-3 mt-8 sm:mt-10">
-          <button onClick={prev} aria-label={language === 'ar' ? 'الشريحة السابقة' : 'Previous slide'} className="btn-overlay-icon focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none">
+          <button onClick={prev} aria-label={language === 'ar' ? 'الشريحة السابقة' : 'Previous slide'} className="btn-overlay-icon focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none">
             {isRTL ? <ChevronRight className="ic-sm" /> : <ChevronLeft className="ic-sm" />}
           </button>
           <div className="flex items-center gap-2">
@@ -549,31 +548,31 @@ export const HeroSection = () => {
               <button
                 key={i}
                 onClick={() => goTo(i)}
-                className={`h-1.5 rounded-full transition-all duration-500 focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none ${i === current ? 'bg-gold w-8' : 'bg-white/25 w-1.5 hover:bg-white/40'}`}
+                className={`h-1.5 rounded-full transition-all duration-500 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none ${i === current ? 'bg-white w-8' : 'bg-white/30 w-1.5 hover:bg-white/50'}`}
                 aria-label={`${language === 'ar' ? 'انتقل للشريحة' : 'Go to slide'} ${i + 1}`}
                 aria-current={i === current ? 'true' : undefined}
               />
             ))}
           </div>
-          <button onClick={next} aria-label={language === 'ar' ? 'الشريحة التالية' : 'Next slide'} className="btn-overlay-icon focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none">
+          <button onClick={next} aria-label={language === 'ar' ? 'الشريحة التالية' : 'Next slide'} className="btn-overlay-icon focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none">
             {isRTL ? <ChevronLeft className="ic-sm" /> : <ChevronRight className="ic-sm" />}
           </button>
         </div>
 
         {/* Stats bar */}
-        <div className="flex flex-wrap items-center justify-center gap-5 sm:gap-10 text-white/75 font-body text-[10px] sm:text-sm mt-6 sm:mt-10">
+        <div className="flex flex-wrap items-center justify-center gap-5 sm:gap-10 text-white/85 font-body text-[10px] sm:text-sm mt-6 sm:mt-10">
           <div className="flex items-center gap-1.5">
-            <Building2 className="ic-xs sm:ic-sm text-gold/70" />
+            <Building2 className="ic-xs sm:ic-sm text-white/85" />
             <span>{t('hero.providers_count')}</span>
           </div>
-          <div className="w-px h-3 bg-white/15 hidden sm:block" />
+          <div className="w-px h-3 bg-white/25 hidden sm:block" />
           <div className="flex items-center gap-1.5">
-            <Star className="ic-xs sm:ic-sm text-gold/70" />
+            <Star className="ic-xs sm:ic-sm text-white/85" />
             <span>{t('hero.reviews_count')}</span>
           </div>
-          <div className="w-px h-3 bg-white/15 hidden sm:block" />
+          <div className="w-px h-3 bg-white/25 hidden sm:block" />
           <div className="flex items-center gap-1.5">
-            <Shield className="ic-xs sm:ic-sm text-gold/70" />
+            <Shield className="ic-xs sm:ic-sm text-white/85" />
             <span>{t('hero.protection')}</span>
           </div>
         </div>
