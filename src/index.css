@@ -551,6 +551,10 @@
 }
 
 /* Body class strategy — set by LanguageContext */
+body {
+  background: var(--color-background);
+  color: var(--color-text);
+}
 body.rtl { direction: rtl; }
 body.ltr { direction: ltr; }
 
