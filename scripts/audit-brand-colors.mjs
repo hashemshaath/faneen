@@ -36,6 +36,8 @@ const ALLOWED_BRAND_HEX = new Set([
   '#A6BFE3',
   '#EDEFF3','#DDE2EA','#4B5566',
   '#FFF6E5','#9C1212',
+  // Email-only soft status tints (mirrors EMAIL_TINTS in supabase/functions/_shared/brandTheme.ts)
+  '#EEF1F6','#E6F5EE','#FBEEDC','#E6EEF8','#F8E1E1',
 ]);
 
 // Official third-party brand colors (justified)
@@ -48,6 +50,7 @@ const OFFICIAL_BRAND_HEX = new Map([
   ['#1877F2','Facebook blue'],
   ['#0A66C2','LinkedIn blue'],
   ['#26A5E4','Telegram blue'],
+  ['#0088CC','Telegram blue (legacy)'],
   ['#1DA1F2','Twitter/X blue'],
   ['#FF0000','YouTube red'],
 ]);
