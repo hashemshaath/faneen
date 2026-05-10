@@ -487,59 +487,167 @@ const AdminBranding: React.FC = () => {
               {renderImageField('markUrl', 'light')}
             </div>
 
-            {/* Colors */}
+            {/* Colors — Brand / Neutral / Status */}
+            {[
+              { title_ar: 'ألوان الهوية',   title_en: 'Brand colors',   group: BRAND_GROUP },
+              { title_ar: 'الألوان المحايدة', title_en: 'Neutral colors', group: NEUTRAL_GROUP },
+              { title_ar: 'ألوان الحالات',   title_en: 'Status colors',  group: STATUS_GROUP },
+            ].map((section) => (
+              <Card key={section.title_en}>
+                <CardHeader className="flex-row items-center justify-between gap-3">
+                  <div>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Palette className="w-4 h-4 text-accent" />
+                      {isRTL ? section.title_ar : section.title_en}
+                    </CardTitle>
+                    <CardDescription className="text-xs">
+                      {isRTL
+                        ? 'تُطبَّق فوراً بعد الحفظ. الافتراضي من قطاعات v1.0.'
+                        : 'Applied right after Save. Defaults from Qitaat v1.0.'}
+                    </CardDescription>
+                  </div>
+                  {section.group === BRAND_GROUP && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => resetToQitaatBrand.mutate()}
+                      disabled={resetToQitaatBrand.isPending}
+                    >
+                      {resetToQitaatBrand.isPending ? (
+                        <Loader2 className="w-4 h-4 animate-spin me-2" />
+                      ) : (
+                        <Sparkles className="w-4 h-4 me-2" />
+                      )}
+                      {isRTL ? 'استعادة هوية قطاعات v1.0' : 'Reset to Qitaat Brand v1.0'}
+                    </Button>
+                  )}
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {section.group.map((f) => {
+                    const value = theme[f.key];
+                    const valid = validateHexColor(value);
+                    const error = themeErrors[f.key];
+                    return (
+                      <div key={f.key} className="rounded-xl border border-border p-3 space-y-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="min-w-0">
+                            <Label className="text-sm block truncate">{isRTL ? f.ar : f.en}</Label>
+                            <p className="text-[11px] text-muted-foreground truncate">{f.desc}</p>
+                          </div>
+                          <div
+                            className="w-9 h-9 rounded-lg border border-border shrink-0"
+                            style={{ background: valid ? value : 'transparent' }}
+                            aria-hidden="true"
+                          />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="color"
+                            value={valid ? value : '#000000'}
+                            onChange={(e) => updateTheme(f.key, e.target.value)}
+                            className="h-10 w-12 rounded-lg border border-border cursor-pointer bg-background"
+                            aria-label={f.en}
+                          />
+                          <Input
+                            value={value}
+                            dir="ltr"
+                            onChange={(e) => updateTheme(f.key, e.target.value)}
+                            className="h-10 tech-content text-xs uppercase"
+                            placeholder="#0E9E6F"
+                          />
+                        </div>
+                        {error && (
+                          <p className="text-[11px] text-destructive">{error}</p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </CardContent>
+              </Card>
+            ))}
+
+            {/* Live theme preview — uses current FORM values, not saved DB. */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
-                  <Palette className="w-4 h-4 text-accent" />
-                  {isRTL ? 'ألوان العلامة التجارية' : 'Brand colors'}
+                  <Eye className="w-4 h-4 text-accent" />
+                  {isRTL ? 'معاينة الهوية' : 'Theme preview'}
                 </CardTitle>
                 <CardDescription className="text-xs">
                   {isRTL
-                    ? 'يتم تطبيق الألوان فوراً على المنصة بعد الحفظ. الألوان الافتراضية مأخوذة من اللوجو.'
-                    : 'Colors apply across the platform after Save. Defaults are derived from the logo.'}
+                    ? 'تعكس قيم الفورم الحالية مباشرةً قبل الحفظ.'
+                    : 'Reflects current form values live, before saving.'}
                 </CardDescription>
               </CardHeader>
-              <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {THEME_FIELDS.map(f => {
-                  const valid = /^#[0-9a-f]{6}$/i.test(theme[f.key]);
-                  return (
-                    <div key={f.key} className="rounded-xl border border-border p-3 space-y-2">
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="min-w-0">
-                          <Label className="text-sm block truncate">{isRTL ? f.ar : f.en}</Label>
-                          <p className="text-[11px] text-muted-foreground truncate">{f.desc}</p>
-                        </div>
-                        <div
-                          className="w-9 h-9 rounded-lg border border-border shrink-0"
-                          style={{ background: valid ? theme[f.key] : 'transparent' }}
-                          aria-hidden="true"
-                        />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="color"
-                          value={valid ? theme[f.key] : '#000000'}
-                          onChange={(e) => updateTheme(f.key, e.target.value.toUpperCase())}
-                          className="h-10 w-12 rounded-lg border border-border cursor-pointer bg-background"
-                          aria-label={f.en}
-                        />
-                        <Input
-                          value={theme[f.key]}
-                          dir="ltr"
-                          onChange={(e) => updateTheme(f.key, e.target.value.toUpperCase())}
-                          className="h-10 tech-content text-xs uppercase"
-                          placeholder="#1FBA82"
-                        />
-                      </div>
-                      {!valid && (
-                        <p className="text-[11px] text-destructive">
-                          {isRTL ? 'صيغة HEX غير صحيحة' : 'Invalid HEX'}
-                        </p>
-                      )}
+              <CardContent>
+                <div
+                  className="rounded-xl p-4 sm:p-6 space-y-4 border"
+                  style={{
+                    background: validateHexColor(theme.background) ? theme.background : undefined,
+                    borderColor: validateHexColor(theme.border) ? theme.border : undefined,
+                    color: validateHexColor(theme.text) ? theme.text : undefined,
+                  }}
+                >
+                  {/* Buttons */}
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      className="h-10 px-4 rounded-lg text-sm font-semibold text-white"
+                      style={{ background: theme.primary }}
+                    >
+                      {isRTL ? 'زر أساسي' : 'Primary button'}
+                    </button>
+                    <button
+                      type="button"
+                      className="h-10 px-4 rounded-lg text-sm font-semibold text-white"
+                      style={{ background: theme.secondary }}
+                    >
+                      {isRTL ? 'زر ثانوي' : 'Secondary button'}
+                    </button>
+                    <button
+                      type="button"
+                      className="h-10 px-4 rounded-lg text-sm font-semibold text-white"
+                      style={{ background: theme.accent }}
+                    >
+                      {isRTL ? 'زر مميز' : 'Accent button'}
+                    </button>
+                  </div>
+                  {/* Status badges */}
+                  <div className="flex flex-wrap gap-2">
+                    {([
+                      { key: 'success', label_ar: 'نجاح',  label_en: 'Success' },
+                      { key: 'warning', label_ar: 'تنبيه', label_en: 'Warning' },
+                      { key: 'error',   label_ar: 'خطأ',   label_en: 'Error' },
+                      { key: 'info',    label_ar: 'معلومة', label_en: 'Info' },
+                    ] as const).map((s) => (
+                      <span
+                        key={s.key}
+                        className="inline-flex items-center h-7 px-3 rounded-full text-xs font-semibold text-white"
+                        style={{ background: theme[s.key] }}
+                      >
+                        {isRTL ? s.label_ar : s.label_en}
+                      </span>
+                    ))}
+                  </div>
+                  {/* Card sample */}
+                  <div
+                    className="rounded-xl p-4 border"
+                    style={{
+                      background: validateHexColor(theme.surface) ? theme.surface : undefined,
+                      borderColor: validateHexColor(theme.border) ? theme.border : undefined,
+                      color: validateHexColor(theme.text) ? theme.text : undefined,
+                    }}
+                  >
+                    <div className="text-sm font-bold mb-1">
+                      {isRTL ? 'عنوان البطاقة' : 'Card title'}
                     </div>
-                  );
-                })}
+                    <p className="text-xs" style={{ color: theme.textMuted }}>
+                      {isRTL
+                        ? 'هذه فقرة تجريبية تستخدم لون النص الباهت لمعاينة التباين.'
+                        : 'Sample paragraph using muted text to preview contrast.'}
+                    </p>
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
