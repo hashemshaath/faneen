@@ -44,14 +44,8 @@ export interface BilingualEmailProps {
 }
 
 /* Status tones — soft tinted backgrounds + readable foregrounds, all sourced
-   from the central brand status palette (no hardcoded random hues). */
-const TONE_BG: Record<BadgeTone, string> = {
-  neutral: '#EEF1F6',
-  success: '#E6F5EE',
-  warning: '#FBEEDC',
-  info:    '#E6EEF8',
-  danger:  '#F8E1E1',
-}
+   from the shared brand status palette (no hardcoded random hues). */
+const TONE_BG: Record<BadgeTone, string> = { ...T }
 const TONE_FG: Record<BadgeTone, string> = {
   neutral: B.text,
   success: B.success,
