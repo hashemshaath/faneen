@@ -110,8 +110,9 @@ export const SearchResults = ({
               onClick={handleShareSearch}
               className="p-2 rounded-lg text-muted-foreground hover:text-accent hover:bg-accent/10 transition-all"
               title={isRTL ? 'مشاركة البحث' : 'Share search'}
+              aria-label={isRTL ? 'مشاركة البحث' : 'Share search'}
             >
-              <Share2 className="w-4 h-4" />
+              <Share2 className="w-4 h-4" aria-hidden="true" />
             </button>
           )}
 
@@ -123,8 +124,10 @@ export const SearchResults = ({
                 onClick={() => onViewModeChange(mode)}
                 className={`p-1.5 sm:p-2 rounded-lg transition-all duration-200 ${viewMode === mode ? 'bg-card dark:bg-card/80 shadow-sm text-accent ring-1 ring-accent/20' : 'text-muted-foreground hover:text-foreground'}`}
                 title={isRTL ? labelAr : label}
+                aria-label={isRTL ? `عرض النتائج: ${labelAr}` : `View as ${label}`}
+                aria-pressed={viewMode === mode}
               >
-                <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" aria-hidden="true" />
               </button>
             ))}
           </div>
