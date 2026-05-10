@@ -15,6 +15,10 @@ import { Loader2, Save, RotateCcw, Upload, Image as ImageIcon, Palette, Eye } fr
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { BrandLogo } from '@/components/common/BrandLogo';
 import { DEFAULT_BRANDING, BRANDING_KEYS, type BrandingConfig } from '@/hooks/useBranding';
+import {
+  DEFAULT_THEME, KEY_FROM_FIELD as THEME_KEY_FROM_FIELD,
+  FIELD_FROM_KEY as THEME_FIELD_FROM_KEY, type ThemeColors, hexToHslString,
+} from '@/hooks/useThemeColors';
 
 type FieldKey =
   | 'fullLightUrl' | 'fullDarkUrl' | 'markUrl'
@@ -42,6 +46,15 @@ const META = {
 } as const;
 
 const SIZE_LIMITS = { min: 24, max: 96 };
+
+const THEME_FIELDS: Array<{ key: keyof ThemeColors; ar: string; en: string; desc: string }> = [
+  { key: 'primary',       ar: 'اللون الأساسي (أخضر اللوجو)', en: 'Primary (logo green)',     desc: 'الأزرار، الروابط، التأكيدات' },
+  { key: 'primaryDark',   ar: 'الأخضر الداكن',               en: 'Primary dark',              desc: 'تدرجات وحالات hover' },
+  { key: 'secondary',     ar: 'اللون الثانوي (أزرق اللوجو)', en: 'Secondary (logo blue)',     desc: 'العناصر الثانوية والتدرجات' },
+  { key: 'secondaryDark', ar: 'الأزرق الداكن',               en: 'Secondary dark',            desc: 'تدرجات وعمق' },
+  { key: 'accent',        ar: 'لون التمييز (Accent)',        en: 'Accent',                    desc: 'الشارات والروابط الفعّالة' },
+  { key: 'navy',          ar: 'لون السطح الداكن (Navy)',     en: 'Surface navy',              desc: 'الفوتر والأقسام الداكنة' },
+];
 
 const AdminBranding: React.FC = () => {
   useNoIndex();
