@@ -55,9 +55,10 @@
     --muted: 220 17% 94%;              /* #EDEFF3 */
     --muted-foreground: 217 13% 48%;   /* #6B7689 */
 
-    /* Accent stays aliased to primary green so existing bg-accent CTAs
-       remain on-brand. The orange industrial accent lives in --urgent. */
-    --accent: 159 76% 34%;
+    /* Accent = industrial orange #F08A24 per Brand Identity v1.0 spec.
+       NOTE: this affects every `bg-accent` / `text-accent` utility across
+       the app (previously aliased to green). */
+    --accent: 28 87% 54%;              /* #F08A24 */
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 67% 46%;          /* #C42626 */
@@ -272,8 +273,8 @@
     --secondary-foreground: 0 0% 100%;
     --muted: 220 25% 18%;
     --muted-foreground: 220 10% 60%;
-    --accent: 158 60% 48%;
-    --accent-foreground: 220 35% 8%;
+    --accent: 28 87% 54%;              /* #F08A24 — brand orange */
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
     --border: 220 25% 20%;
