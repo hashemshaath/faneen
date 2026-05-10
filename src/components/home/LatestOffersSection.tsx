@@ -52,7 +52,7 @@ export const LatestOffersSection = () => {
       <div className="container-app">
         <div className="flex items-center justify-between mb-10 sm:mb-14">
           <div>
-            <span className="text-xs sm:text-sm font-body text-gold font-semibold tracking-wide">
+            <span className="text-xs sm:text-sm font-body text-accent font-semibold tracking-wide">
               {isRTL ? "عروض حصرية" : "Exclusive Deals"}
             </span>
             <h2 className="font-heading font-bold text-xl sm:text-3xl md:text-4xl text-foreground mt-1.5 sm:mt-2.5">
@@ -83,7 +83,7 @@ export const LatestOffersSection = () => {
                   className={`group block ${isVisible ? "animate-fade-in" : ""}`}
                   style={{ animationDelay: `${i * 100}ms`, animationFillMode: "both" }}
                 >
-                  <div className="card-ds card-media hover:border-gold/40 hover:shadow-xl hover:shadow-gold/5 sm:hover:-translate-y-2 transition-all duration-500 h-full relative">
+                  <div className="card-ds card-media hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5 sm:hover:-translate-y-2 transition-all duration-500 h-full relative">
                     {hasDiscount && (
                       <div className="absolute top-3 start-3 z-10 bg-destructive text-destructive-foreground text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-md">
                         <Percent className="w-3 h-3" />
@@ -93,7 +93,7 @@ export const LatestOffersSection = () => {
                       </div>
                     )}
                     {isExpiringSoon && (
-                      <div className="absolute top-3 end-3 z-10 bg-gold text-secondary-foreground text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                      <div className="absolute top-3 end-3 z-10 bg-accent text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
                         <Clock className="w-3 h-3" />
                         {isRTL ? "ينتهي قريباً" : "Ending soon"}
                       </div>
@@ -107,18 +107,18 @@ export const LatestOffersSection = () => {
                           wrapperClassName="w-full h-full"
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gold/10 to-gold/5 dark:from-gold/5 dark:to-gold/[0.02]">
-                          <Tag className="w-10 h-10 text-gold/30" />
+                        <div className="w-full h-full flex items-center justify-center bg-primary-light dark:bg-primary/5">
+                          <Tag className="w-10 h-10 text-primary/30" />
                         </div>
                       )}
                     </div>
                     <div className="card-pad-md space-y-2.5">
-                      <span className="text-[10px] font-bold text-gold bg-gold/10 dark:bg-gold/15 px-2.5 py-0.5 rounded-full">
+                      <span className="text-[10px] font-bold text-primary bg-primary-light dark:bg-primary/15 px-2.5 py-0.5 rounded-full">
                         {offer.promotion_type === "offer"
                           ? isRTL ? "عرض خاص" : "Special Offer"
                           : isRTL ? "إعلان" : "Ad"}
                       </span>
-                      <h3 className="font-heading font-bold text-sm sm:text-base line-clamp-2 group-hover:text-gold transition-colors">
+                      <h3 className="font-heading font-bold text-sm sm:text-base line-clamp-2 group-hover:text-primary transition-colors">
                         {language === "ar" ? offer.title_ar : offer.title_en || offer.title_ar}
                       </h3>
                       {(offer.description_ar || offer.description_en) && (
@@ -131,7 +131,7 @@ export const LatestOffersSection = () => {
                       {(offer.original_price || offer.offer_price) && (
                         <div className="flex items-center gap-2.5 pt-1">
                           {offer.offer_price && (
-                            <span className="text-base sm:text-lg font-bold text-gold">
+                            <span className="text-base sm:text-lg font-bold text-primary">
                               {formatPrice(offer.offer_price)} {offer.currency_code}
                             </span>
                           )}
@@ -159,7 +159,7 @@ export const LatestOffersSection = () => {
                                 navigate(`/${offer.businesses.username}`);
                               }
                             }}
-                            className="flex items-center gap-1.5 text-xs sm:text-sm text-gold font-medium hover:underline cursor-pointer"
+                            className="flex items-center gap-1.5 text-xs sm:text-sm text-primary font-medium hover:underline cursor-pointer"
                           >
                             {offer.businesses.logo_url ? (
                               <img
@@ -172,8 +172,8 @@ export const LatestOffersSection = () => {
                                 className="w-5 h-5 rounded-full object-cover"
                               />
                             ) : (
-                              <div className="w-5 h-5 rounded-full bg-gold/10 flex items-center justify-center">
-                                <Tag className="w-2.5 h-2.5 text-gold" />
+                              <div className="w-5 h-5 rounded-full bg-primary-light flex items-center justify-center">
+                                <Tag className="w-2.5 h-2.5 text-primary" />
                               </div>
                             )}
                             <span className="truncate max-w-[100px] sm:max-w-[120px]">

@@ -21,7 +21,7 @@ const fmt = (n: number) => {
 
 const tierConfig: Record<string, { label: string; labelEn: string; icon: React.ElementType; cls: string }> = {
   enterprise: { label: 'بلاتيني', labelEn: 'Platinum', icon: Crown, cls: 'bg-secondary/90 text-white' },
-  premium:    { label: 'ذهبي',    labelEn: 'Gold',     icon: Star,  cls: 'bg-gold/90 text-secondary-foreground' },
+  premium:    { label: 'ذهبي',    labelEn: 'Gold',     icon: Star,  cls: 'bg-accent text-white' },
   basic:      { label: 'أساسي',   labelEn: 'Basic',    icon: BadgeCheck, cls: 'bg-info/90 text-white' },
 };
 
@@ -114,7 +114,7 @@ export const LatestProjectsSection = () => {
                     className={cn(
                       'card-ds card-media block group transition-all duration-500',
                       'hover:border-accent/40 hover:shadow-xl hover:shadow-accent/5 sm:hover:-translate-y-1.5',
-                      p.is_featured && 'ring-1 ring-gold/30',
+                      p.is_featured && 'ring-1 ring-accent/30',
                       isVisible ? 'animate-fade-in' : ''
                     )}
                     style={{ animationDelay: `${i * 80}ms`, animationFillMode: 'both' }}
@@ -141,7 +141,7 @@ export const LatestProjectsSection = () => {
                       <div className="absolute top-3 inset-x-3 flex items-start justify-between">
                         {/* Featured */}
                         {p.is_featured && (
-                          <span className="bg-gold text-secondary-foreground text-[10px] px-2.5 py-1 rounded-full font-bold shadow-lg flex items-center gap-1">
+                          <span className="bg-accent text-white text-[10px] px-2.5 py-1 rounded-full font-bold shadow-lg flex items-center gap-1">
                             <Star className="w-3 h-3" />
                             {isRTL ? 'مميز' : 'Featured'}
                           </span>
