@@ -14,7 +14,7 @@ import { AuthDivider } from './AuthDivider';
 import { FieldError } from './FieldError';
 import { useFieldValidation } from '@/hooks/useFieldValidation';
 import type { RegisterStep, RegisterType } from '@/services/auth/types';
-import { track } from '@/lib/analytics-events';
+import { track, trackRegisterFailed, categorizeReason } from '@/lib/analytics-events';
 import { getAttributionPayload } from '@/lib/analytics-attribution';
 
 interface RegisterFormProps {
