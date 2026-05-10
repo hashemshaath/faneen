@@ -73,7 +73,10 @@ export type QitaatEvent =
   | "service_request_needs_info"
   | "service_request_closed"
   | "service_request_cancelled"
-  | "service_request_customer_viewed";
+  | "service_request_customer_viewed"
+  // Service Requests (Phase SR-3A) — conversation linkage.
+  | "service_request_conversation_created"
+  | "service_request_conversation_opened";
 
 /** Allow-listed parameters. Anything not in this set is dropped. */
 export type AllowedParam =
