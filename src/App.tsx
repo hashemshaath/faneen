@@ -13,6 +13,7 @@ import { AppDirectionShell } from "@/components/ui/app-direction-shell";
 import { RouteScrollToTop } from "@/components/RouteScrollToTop";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { GlobalLinkTracker } from "@/components/GlobalLinkTracker";
+import { BrandLogo } from "@/components/common/BrandLogo";
 const Index = lazyRetry(() => import("./pages/Index"));
 const ConsentBanner = lazy(() => import("./components/consent/ConsentBanner"));
 
