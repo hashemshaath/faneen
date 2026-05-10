@@ -1119,6 +1119,15 @@ const AdminUsers = () => {
                       <SelectItem value="enterprise">{isRTL ? 'مؤسسات' : 'Enterprise'}</SelectItem>
                     </SelectContent>
                   </Select>
+                  <Select value={filterBusinessLink} onValueChange={(v) => { setFilterBusinessLink(v as typeof filterBusinessLink); setPage(1); }}>
+                    <SelectTrigger className="w-full md:w-44 h-10 rounded-xl"><Link2 className="w-4 h-4 me-2 text-muted-foreground" /><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">{isRTL ? 'كل الارتباطات' : 'All links'}</SelectItem>
+                      <SelectItem value="none">{isRTL ? 'بدون منشآت' : 'No business'}</SelectItem>
+                      <SelectItem value="single">{isRTL ? 'منشأة واحدة' : 'Single business'}</SelectItem>
+                      <SelectItem value="multi">{isRTL ? 'عدة منشآت' : 'Multiple businesses'}</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 {/* Sort + select-all + counter */}
                 <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/20 flex-wrap">
