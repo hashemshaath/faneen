@@ -5,24 +5,27 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-semibold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
+        default: "bg-primary text-white hover:bg-primary-hover",
+        primary: "bg-primary text-white hover:bg-primary-hover",
+        secondary: "bg-secondary text-white hover:bg-secondary-hover",
+        accent: "bg-accent text-white hover:bg-accent-hover",
+        outline: "border border-slate-300 bg-transparent text-secondary hover:bg-secondary-light",
+        ghost: "bg-transparent text-slate-800 hover:bg-slate-100",
+        danger: "bg-error text-white hover:bg-[#A81F1F]",
+        destructive: "bg-error text-white hover:bg-[#A81F1F]",
         link: "text-primary underline-offset-4 hover:underline",
         hero: "bg-gradient-gold text-secondary-foreground font-heading font-bold shadow-gold hover:opacity-90 transition-all duration-300",
         heroOutline: "border-2 border-gold text-gold hover:bg-gold/10 font-heading font-semibold transition-all duration-300",
         urgent: "bg-urgent text-urgent-foreground hover:bg-urgent-hover shadow-sm",
       },
       size: {
-        default: "h-10 px-4 py-2",
-        sm: "h-9 rounded-md px-3",
-        lg: "h-11 rounded-md px-8",
+        default: "h-10 px-[18px] text-[14px]",
+        sm: "h-8 px-3 text-[13px]",
+        lg: "h-12 px-[22px] text-[15px]",
         icon: "h-10 w-10",
         // Mobile-app-grade sizes — ≥44px touch targets, token-driven heights.
         app: "h-ctrl-md px-5 rounded-xl text-sm",
