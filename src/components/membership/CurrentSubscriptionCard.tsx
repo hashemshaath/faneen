@@ -31,7 +31,7 @@ export const CurrentSubscriptionCard = ({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <h3 className="font-heading font-bold text-sm">{isRTL ? 'اشتراكك الحالي' : 'Current Subscription'}</h3>
-              <Badge className="bg-emerald-500/10 text-emerald-600 text-[8px] px-1.5 py-0 h-3.5">{isRTL ? 'نشط' : 'Active'}</Badge>
+              <Badge className="bg-success/10 text-success text-[8px] px-1.5 py-0 h-3.5">{isRTL ? 'نشط' : 'Active'}</Badge>
               <Badge variant="outline" className="text-[8px] px-1.5 py-0 h-3.5">
                 {isRTL ? (mySubscription.plan as any)?.name_ar : (mySubscription.plan as any)?.name_en}
               </Badge>
@@ -50,7 +50,7 @@ export const CurrentSubscriptionCard = ({
                 </div>
                 <Progress value={daysRemaining <= 0 ? 100 : Math.max(5, 100 - (daysRemaining / (mySubscription.billing_cycle === 'yearly' ? 365 : 30)) * 100)} className="h-1.5" />
                 {daysRemaining <= 7 && (
-                  <p className="text-[10px] text-amber-600 flex items-center gap-1 mt-1">
+                  <p className="text-[10px] text-warning flex items-center gap-1 mt-1">
                     <AlertTriangle className="w-3 h-3" />
                     {isRTL ? 'اشتراكك ينتهي قريباً! جدد الآن' : 'Subscription expiring soon! Renew now'}
                   </p>

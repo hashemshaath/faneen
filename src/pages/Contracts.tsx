@@ -22,11 +22,11 @@ type Contract = Tables<'contracts'>;
 
 const statusConfig: Record<string, { icon: React.ElementType; color: string; bgCard: string; label_ar: string; label_en: string }> = {
   draft: { icon: FileText, color: 'bg-muted text-muted-foreground', bgCard: 'border-muted-foreground/10', label_ar: 'مسودة', label_en: 'Draft' },
-  pending_approval: { icon: Clock, color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400', bgCard: 'border-amber-200 dark:border-amber-800/30', label_ar: 'بانتظار الموافقة', label_en: 'Pending' },
-  active: { icon: CheckCircle2, color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400', bgCard: 'border-emerald-200 dark:border-emerald-800/30', label_ar: 'نشط', label_en: 'Active' },
-  completed: { icon: Shield, color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400', bgCard: 'border-blue-200 dark:border-blue-800/30', label_ar: 'مكتمل', label_en: 'Completed' },
-  cancelled: { icon: XCircle, color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400', bgCard: 'border-red-200 dark:border-red-800/30', label_ar: 'ملغي', label_en: 'Cancelled' },
-  disputed: { icon: AlertTriangle, color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400', bgCard: 'border-orange-200 dark:border-orange-800/30', label_ar: 'نزاع', label_en: 'Disputed' },
+  pending_approval: { icon: Clock, color: 'bg-warning text-warning dark:bg-warning/30 dark:text-warning', bgCard: 'border-warning dark:border-warning/30', label_ar: 'بانتظار الموافقة', label_en: 'Pending' },
+  active: { icon: CheckCircle2, color: 'bg-success text-success dark:bg-success/30 dark:text-success', bgCard: 'border-success dark:border-success/30', label_ar: 'نشط', label_en: 'Active' },
+  completed: { icon: Shield, color: 'bg-info text-info dark:bg-info/30 dark:text-info', bgCard: 'border-info dark:border-info/30', label_ar: 'مكتمل', label_en: 'Completed' },
+  cancelled: { icon: XCircle, color: 'bg-destructive text-destructive dark:bg-destructive/30 dark:text-destructive', bgCard: 'border-destructive dark:border-destructive/30', label_ar: 'ملغي', label_en: 'Cancelled' },
+  disputed: { icon: AlertTriangle, color: 'bg-urgent text-urgent dark:bg-urgent/30 dark:text-urgent', bgCard: 'border-urgent dark:border-urgent/30', label_ar: 'نزاع', label_en: 'Disputed' },
 };
 
 const STATUS_FILTERS = ['all', 'active', 'pending_approval', 'draft', 'completed', 'cancelled', 'disputed'] as const;
@@ -196,8 +196,8 @@ const Contracts = () => {
               <p className="text-[10px] sm:text-xs text-muted-foreground">{isRTL ? 'إجمالي العقود' : 'Total'}</p>
             </div>
             <div className="rounded-xl bg-card border border-border p-3 sm:p-4 text-center shadow-sm">
-              <CheckCircle2 className="w-4 h-4 mx-auto text-emerald-500 mb-1" />
-              <p className="font-heading font-bold text-lg sm:text-xl text-emerald-600 dark:text-emerald-400">{activeCount}</p>
+              <CheckCircle2 className="w-4 h-4 mx-auto text-success mb-1" />
+              <p className="font-heading font-bold text-lg sm:text-xl text-success dark:text-success">{activeCount}</p>
               <p className="text-[10px] sm:text-xs text-muted-foreground">{isRTL ? 'نشطة' : 'Active'}</p>
             </div>
             <div className="rounded-xl bg-card border border-border p-3 sm:p-4 text-center shadow-sm">

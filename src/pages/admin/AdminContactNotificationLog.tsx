@@ -24,10 +24,10 @@ type LogRow = {
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  success:     'bg-emerald-100 text-emerald-700',
-  pending:     'bg-amber-100 text-amber-700',
-  failed:      'bg-rose-100 text-rose-700',
-  max_retries: 'bg-rose-200 text-rose-800',
+  success:     'bg-success text-success',
+  pending:     'bg-warning text-warning',
+  failed:      'bg-destructive text-destructive',
+  max_retries: 'bg-destructive text-destructive',
   skipped:     'bg-muted text-muted-foreground',
 };
 
@@ -195,9 +195,9 @@ export default function AdminContactNotificationLog() {
         {/* Quick stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <Stat label={isRTL ? 'الإجمالي' : 'Total'} value={stats.total} />
-          <Stat label={isRTL ? 'ناجح' : 'Success'} value={stats.success} color="text-emerald-600" />
-          <Stat label={isRTL ? 'قيد الإرسال' : 'Pending'} value={stats.pending} color="text-amber-600" />
-          <Stat label={isRTL ? 'فشل/مستنفذ' : 'Failed'} value={stats.failed} color="text-rose-600" />
+          <Stat label={isRTL ? 'ناجح' : 'Success'} value={stats.success} color="text-success" />
+          <Stat label={isRTL ? 'قيد الإرسال' : 'Pending'} value={stats.pending} color="text-warning" />
+          <Stat label={isRTL ? 'فشل/مستنفذ' : 'Failed'} value={stats.failed} color="text-destructive" />
         </div>
 
         <Card>
@@ -215,8 +215,8 @@ export default function AdminContactNotificationLog() {
                     <div key={r.id} className="px-4 py-3 hover:bg-muted/30">
                       <div className="flex items-center gap-3 flex-wrap">
                         {r.channel === 'email'
-                          ? <Mail className="w-4 h-4 text-sky-600" />
-                          : <Webhook className="w-4 h-4 text-violet-600" />}
+                          ? <Mail className="w-4 h-4 text-info" />
+                          : <Webhook className="w-4 h-4 text-secondary" />}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className={`px-2 py-0.5 rounded-md text-xs font-medium ${STATUS_COLORS[r.status]}`}>{r.status}</span>
@@ -229,7 +229,7 @@ export default function AdminContactNotificationLog() {
                           </div>
                           <div className="text-sm tech-content truncate mt-0.5" dir="ltr">{r.recipient}</div>
                           {r.error_message && (
-                            <div className="text-xs text-rose-600 mt-0.5 line-clamp-1 tech-content">
+                            <div className="text-xs text-destructive mt-0.5 line-clamp-1 tech-content">
                               {r.error_code ? `[${r.error_code}] ` : ''}{r.error_message}
                             </div>
                           )}
@@ -244,7 +244,7 @@ export default function AdminContactNotificationLog() {
                       {isOpen && (
                         <div className="mt-3 grid md:grid-cols-2 gap-3 text-xs">
                           {r.next_retry_at && (
-                            <div className="bg-amber-50 text-amber-900 p-2 rounded-lg">
+                            <div className="bg-warning text-warning p-2 rounded-lg">
                               <b>{isRTL ? 'إعادة المحاولة في' : 'Next retry'}:</b>{' '}
                               <span className="tech-content">{new Date(r.next_retry_at).toLocaleString(isRTL ? 'ar-SA' : 'en-US')}</span>
                             </div>
@@ -256,7 +256,7 @@ export default function AdminContactNotificationLog() {
                             </div>
                           )}
                           {r.error_message && (
-                            <div className="bg-rose-50 text-rose-900 p-2 rounded-lg md:col-span-2">
+                            <div className="bg-destructive text-destructive p-2 rounded-lg md:col-span-2">
                               <div className="font-medium mb-1">{isRTL ? 'تفاصيل الخطأ' : 'Error details'}</div>
                               <pre className="text-[11px] whitespace-pre-wrap break-all tech-content" dir="ltr">{r.error_code ? `[${r.error_code}]\n` : ''}{r.error_message}</pre>
                             </div>

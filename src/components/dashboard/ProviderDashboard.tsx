@@ -149,14 +149,14 @@ export const ProviderDashboard: React.FC = () => {
       icon: DollarSign,
       label: isRTL ? 'إجمالي الإيرادات' : 'Total Revenue',
       value: animatedRevenue + (isRTL ? ' ر.س' : ' SAR'),
-      color: 'bg-green-500/10 text-green-600 dark:bg-green-500/20 dark:text-green-400',
+      color: 'bg-success/10 text-success dark:bg-success/20 dark:text-success',
     },
     {
       icon: FileText,
       label: isRTL ? 'العقود النشطة' : 'Active Contracts',
       value: String(stats?.activeContracts ?? 0),
       subLabel: `${isRTL ? 'من' : 'of'} ${animatedContracts}`,
-      color: 'bg-purple-500/10 text-purple-600 dark:bg-purple-500/20 dark:text-purple-400',
+      color: 'bg-secondary/10 text-secondary dark:bg-secondary/20 dark:text-secondary',
     },
     {
       icon: Star,
@@ -169,7 +169,7 @@ export const ProviderDashboard: React.FC = () => {
       icon: FolderOpen,
       label: isRTL ? 'المشاريع المنجزة' : 'Projects',
       value: animatedProjects,
-      color: 'bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400',
+      color: 'bg-info/10 text-info dark:bg-info/20 dark:text-info',
     },
   ];
 
@@ -188,7 +188,7 @@ export const ProviderDashboard: React.FC = () => {
           <h1 className="font-heading font-bold text-xl sm:text-2xl text-foreground flex items-center gap-2">
             {isRTL ? 'لوحة مزود الخدمة' : 'Provider Dashboard'}
             {business?.is_verified && (
-              <Badge variant="secondary" className="text-[10px] bg-green-500/10 text-green-600 dark:text-green-400 border-0">
+              <Badge variant="secondary" className="text-[10px] bg-success/10 text-success dark:text-success border-0">
                 <CheckCircle2 className="w-3 h-3 me-1" />
                 {isRTL ? 'موثق' : 'Verified'}
               </Badge>
@@ -267,8 +267,8 @@ export const ProviderDashboard: React.FC = () => {
         <Card className="border-border/40 dark:border-border/20 dark:bg-card/80">
           <CardHeader className="pb-2 px-3 sm:px-6 pt-3 sm:pt-6">
             <CardTitle className="text-sm sm:text-base flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-purple-500/10 dark:bg-purple-500/20 flex items-center justify-center">
-                <BarChart3 className="w-3.5 h-3.5 text-purple-500 dark:text-purple-400" />
+              <div className="w-7 h-7 rounded-lg bg-secondary/10 dark:bg-secondary/20 flex items-center justify-center">
+                <BarChart3 className="w-3.5 h-3.5 text-secondary dark:text-secondary" />
               </div>
               {isRTL ? 'حالة العقود' : 'Contract Status'}
             </CardTitle>
@@ -336,8 +336,8 @@ export const ProviderDashboard: React.FC = () => {
         <Card className="border-border/40 dark:border-border/20 dark:bg-card/80">
           <CardHeader className="pb-2 px-3 sm:px-6 pt-3 sm:pt-6 flex flex-row items-center justify-between">
             <CardTitle className="text-sm sm:text-base flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-purple-500/10 dark:bg-purple-500/20 flex items-center justify-center">
-                <FileText className="w-3.5 h-3.5 text-purple-500 dark:text-purple-400" />
+              <div className="w-7 h-7 rounded-lg bg-secondary/10 dark:bg-secondary/20 flex items-center justify-center">
+                <FileText className="w-3.5 h-3.5 text-secondary dark:text-secondary" />
               </div>
               {isRTL ? 'أحدث العقود' : 'Recent Contracts'}
             </CardTitle>
@@ -430,11 +430,11 @@ export const ProviderDashboard: React.FC = () => {
       {/* Bottom Stats Row */}
       <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 sm:gap-4">
         {[
-          { icon: Wrench, label: isRTL ? 'خدمات' : 'Services', value: stats?.services ?? 0, color: 'text-blue-500 dark:text-blue-400', bg: 'bg-blue-500/10 dark:bg-blue-500/20' },
-          { icon: Image, label: isRTL ? 'معرض' : 'Portfolio', value: stats?.portfolio ?? 0, color: 'text-green-500 dark:text-green-400', bg: 'bg-green-500/10 dark:bg-green-500/20' },
-          { icon: MessageSquare, label: isRTL ? 'محادثات' : 'Chats', value: stats?.conversations ?? 0, color: 'text-indigo-500 dark:text-indigo-400', bg: 'bg-indigo-500/10 dark:bg-indigo-500/20' },
-          { icon: Shield, label: isRTL ? 'ضمانات' : 'Warranties', value: 0, color: 'text-teal-500 dark:text-teal-400', bg: 'bg-teal-500/10 dark:bg-teal-500/20' },
-          { icon: Users, label: isRTL ? 'عملاء' : 'Clients', value: stats?.totalContracts ?? 0, color: 'text-orange-500 dark:text-orange-400', bg: 'bg-orange-500/10 dark:bg-orange-500/20' },
+          { icon: Wrench, label: isRTL ? 'خدمات' : 'Services', value: stats?.services ?? 0, color: 'text-info dark:text-info', bg: 'bg-info/10 dark:bg-info/20' },
+          { icon: Image, label: isRTL ? 'معرض' : 'Portfolio', value: stats?.portfolio ?? 0, color: 'text-success dark:text-success', bg: 'bg-success/10 dark:bg-success/20' },
+          { icon: MessageSquare, label: isRTL ? 'محادثات' : 'Chats', value: stats?.conversations ?? 0, color: 'text-secondary dark:text-secondary', bg: 'bg-secondary/10 dark:bg-secondary/20' },
+          { icon: Shield, label: isRTL ? 'ضمانات' : 'Warranties', value: 0, color: 'text-success dark:text-success', bg: 'bg-success/10 dark:bg-success/20' },
+          { icon: Users, label: isRTL ? 'عملاء' : 'Clients', value: stats?.totalContracts ?? 0, color: 'text-urgent dark:text-urgent', bg: 'bg-urgent/10 dark:bg-urgent/20' },
         ].map(card => (
           <Card key={card.label} className="border-border/40 dark:border-border/20 dark:bg-card/80">
             <CardContent className="p-3 sm:p-4 flex flex-col items-center text-center gap-1.5">
@@ -466,11 +466,11 @@ function getStatusLabel(status: string, isRTL: boolean): string {
 function getStatusColor(status: string): string {
   const map: Record<string, string> = {
     draft: 'border-muted-foreground/30 text-muted-foreground',
-    pending_approval: 'border-yellow-500/30 text-yellow-600 dark:text-yellow-400',
-    active: 'border-green-500/30 text-green-600 dark:text-green-400',
-    completed: 'border-blue-500/30 text-blue-600 dark:text-blue-400',
-    cancelled: 'border-red-500/30 text-red-600 dark:text-red-400',
-    disputed: 'border-orange-500/30 text-orange-600 dark:text-orange-400',
+    pending_approval: 'border-warning/30 text-warning dark:text-warning',
+    active: 'border-success/30 text-success dark:text-success',
+    completed: 'border-info/30 text-info dark:text-info',
+    cancelled: 'border-destructive/30 text-destructive dark:text-destructive',
+    disputed: 'border-urgent/30 text-urgent dark:text-urgent',
   };
   return map[status] ?? '';
 }

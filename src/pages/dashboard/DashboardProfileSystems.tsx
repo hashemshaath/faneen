@@ -38,18 +38,18 @@ import { CSS } from '@dnd-kit/utilities';
 import { useNoIndex } from "@/hooks/useNoIndex";
 
 const categoryOptions = [
-  { value: 'aluminum', ar: 'الألمنيوم', en: 'Aluminum', icon: '🪟', color: 'bg-blue-500/10 text-blue-600' },
-  { value: 'kitchen', ar: 'المطابخ', en: 'Kitchens', icon: '🍽️', color: 'bg-amber-500/10 text-amber-600' },
+  { value: 'aluminum', ar: 'الألمنيوم', en: 'Aluminum', icon: '🪟', color: 'bg-info/10 text-info' },
+  { value: 'kitchen', ar: 'المطابخ', en: 'Kitchens', icon: '🍽️', color: 'bg-warning/10 text-warning' },
   { value: 'iron', ar: 'الحديد', en: 'Iron', icon: '🔩', color: 'bg-slate-500/10 text-slate-600' },
-  { value: 'glass', ar: 'الزجاج', en: 'Glass', icon: '🪞', color: 'bg-cyan-500/10 text-cyan-600' },
-  { value: 'wood', ar: 'الخشب', en: 'Wood', icon: '🪵', color: 'bg-orange-500/10 text-orange-600' },
-  { value: 'upvc', ar: 'UPVC', en: 'UPVC', icon: '🏠', color: 'bg-emerald-500/10 text-emerald-600' },
+  { value: 'glass', ar: 'الزجاج', en: 'Glass', icon: '🪞', color: 'bg-info/10 text-info' },
+  { value: 'wood', ar: 'الخشب', en: 'Wood', icon: '🪵', color: 'bg-urgent/10 text-urgent' },
+  { value: 'upvc', ar: 'UPVC', en: 'UPVC', icon: '🏠', color: 'bg-success/10 text-success' },
 ];
 
 const recommendationStyles: Record<string, { ar: string; en: string; color: string }> = {
   standard: { ar: 'قياسي', en: 'Standard', color: 'bg-muted text-muted-foreground' },
-  recommended: { ar: 'موصى به', en: 'Recommended', color: 'bg-blue-500/10 text-blue-600' },
-  premium: { ar: 'احترافي', en: 'Premium', color: 'bg-amber-500/10 text-amber-600' },
+  recommended: { ar: 'موصى به', en: 'Recommended', color: 'bg-info/10 text-info' },
+  premium: { ar: 'احترافي', en: 'Premium', color: 'bg-warning/10 text-warning' },
 };
 
 const getCategoryInfo = (val: string) => categoryOptions.find(c => c.value === val) || categoryOptions[0];
@@ -117,7 +117,7 @@ const SortableProfileRow = React.memo(({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="font-medium text-sm truncate">{language === 'ar' ? profile.name_ar : (profile.name_en || profile.name_ar)}</span>
-          {profile.recommendation_level === 'premium' && <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500 shrink-0" />}
+          {profile.recommendation_level === 'premium' && <Star className="w-3.5 h-3.5 text-warning fill-warning shrink-0" />}
         </div>
         <div className="flex items-center gap-2 mt-0.5 text-[11px] text-muted-foreground">
           <span className="truncate max-w-[100px]">{language === 'ar' ? (profile.name_en || '') : profile.name_ar}</span>
@@ -144,16 +144,16 @@ const SortableProfileRow = React.memo(({
       {/* Ratings mini */}
       <div className="hidden lg:flex flex-col gap-1 shrink-0">
         <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-          <Thermometer className="w-3 h-3 text-red-400" />
-          <RatingBar value={profile.thermal_insulation_rating || 0} color="bg-red-400" />
+          <Thermometer className="w-3 h-3 text-destructive" />
+          <RatingBar value={profile.thermal_insulation_rating || 0} color="bg-destructive" />
         </div>
         <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-          <Volume2 className="w-3 h-3 text-blue-400" />
-          <RatingBar value={profile.sound_insulation_rating || 0} color="bg-blue-400" />
+          <Volume2 className="w-3 h-3 text-info" />
+          <RatingBar value={profile.sound_insulation_rating || 0} color="bg-info" />
         </div>
         <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-          <Shield className="w-3 h-3 text-emerald-400" />
-          <RatingBar value={profile.strength_rating || 0} color="bg-emerald-400" />
+          <Shield className="w-3 h-3 text-success" />
+          <RatingBar value={profile.strength_rating || 0} color="bg-success" />
         </div>
       </div>
 
@@ -161,7 +161,7 @@ const SortableProfileRow = React.memo(({
       <TooltipProvider delayDuration={300}>
         <Tooltip>
           <TooltipTrigger asChild>
-            <div className={`w-2 h-2 rounded-full shrink-0 ${profile.status === 'published' ? 'bg-emerald-500' : 'bg-amber-400'}`} />
+            <div className={`w-2 h-2 rounded-full shrink-0 ${profile.status === 'published' ? 'bg-success' : 'bg-warning'}`} />
           </TooltipTrigger>
           <TooltipContent side="top" className="text-xs">
             {profile.status === 'published' ? (isRTL ? 'منشور' : 'Published') : (isRTL ? 'مسودة' : 'Draft')}
@@ -426,9 +426,9 @@ const DashboardProfileSystems = () => {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
               { label: isRTL ? 'إجمالي القطاعات' : 'Total Profiles', value: stats.total, icon: Layers, color: 'text-primary bg-primary/10' },
-              { label: isRTL ? 'منشور' : 'Published', value: stats.published, icon: Eye, color: 'text-emerald-600 bg-emerald-500/10' },
-              { label: isRTL ? 'مسودة' : 'Draft', value: stats.draft, icon: FileText, color: 'text-amber-600 bg-amber-500/10' },
-              { label: isRTL ? 'متوسط التقييم' : 'Avg Rating', value: `${stats.avgRating}/10`, icon: TrendingUp, color: 'text-blue-600 bg-blue-500/10' },
+              { label: isRTL ? 'منشور' : 'Published', value: stats.published, icon: Eye, color: 'text-success bg-success/10' },
+              { label: isRTL ? 'مسودة' : 'Draft', value: stats.draft, icon: FileText, color: 'text-warning bg-warning/10' },
+              { label: isRTL ? 'متوسط التقييم' : 'Avg Rating', value: `${stats.avgRating}/10`, icon: TrendingUp, color: 'text-info bg-info/10' },
             ].map((s, i) => (
               <Card key={i} className="border-border/50">
                 <CardContent className="p-3 flex items-center gap-3">
@@ -538,9 +538,9 @@ const DashboardProfileSystems = () => {
                   <TabsContent value="ratings" className="space-y-5 mt-0">
                     <div className="p-4 rounded-xl bg-muted/30 space-y-4">
                       <h4 className="font-heading font-bold text-sm flex items-center gap-2"><TrendingUp className="w-4 h-4" />{isRTL ? 'التقييمات الفنية' : 'Technical Ratings'}</h4>
-                      <RatingSlider label={isRTL ? 'العزل الحراري' : 'Thermal Insulation'} icon={Thermometer} color="text-red-400" value={form.thermal_insulation_rating} onChange={v => setForm(f => ({ ...f, thermal_insulation_rating: v }))} />
-                      <RatingSlider label={isRTL ? 'العزل الصوتي' : 'Sound Insulation'} icon={Volume2} color="text-blue-400" value={form.sound_insulation_rating} onChange={v => setForm(f => ({ ...f, sound_insulation_rating: v }))} />
-                      <RatingSlider label={isRTL ? 'قوة التحمل' : 'Strength'} icon={Shield} color="text-emerald-400" value={form.strength_rating} onChange={v => setForm(f => ({ ...f, strength_rating: v }))} />
+                      <RatingSlider label={isRTL ? 'العزل الحراري' : 'Thermal Insulation'} icon={Thermometer} color="text-destructive" value={form.thermal_insulation_rating} onChange={v => setForm(f => ({ ...f, thermal_insulation_rating: v }))} />
+                      <RatingSlider label={isRTL ? 'العزل الصوتي' : 'Sound Insulation'} icon={Volume2} color="text-info" value={form.sound_insulation_rating} onChange={v => setForm(f => ({ ...f, sound_insulation_rating: v }))} />
+                      <RatingSlider label={isRTL ? 'قوة التحمل' : 'Strength'} icon={Shield} color="text-success" value={form.strength_rating} onChange={v => setForm(f => ({ ...f, strength_rating: v }))} />
                     </div>
                     <div className="p-3 rounded-lg bg-accent/5 border border-accent/20 text-xs text-muted-foreground">
                       💡 {isRTL ? 'تحرك المؤشر من 0 إلى 10 لتقييم الخاصية الفنية. القيمة الافتراضية 5.' : 'Slide from 0 to 10 to rate. Default is 5.'}
@@ -638,10 +638,10 @@ const DashboardProfileSystems = () => {
                         <div className="w-full h-full flex items-center justify-center text-4xl">{cat.icon}</div>
                       )}
                       <div className="absolute top-2 end-2 flex gap-1.5">
-                        <Badge className={`text-[10px] ${p.status === 'published' ? 'bg-emerald-500 text-white' : 'bg-amber-500 text-white'}`}>
+                        <Badge className={`text-[10px] ${p.status === 'published' ? 'bg-success text-white' : 'bg-warning text-white'}`}>
                           {p.status === 'published' ? (isRTL ? 'منشور' : 'Published') : (isRTL ? 'مسودة' : 'Draft')}
                         </Badge>
-                        {p.recommendation_level === 'premium' && <Badge className="bg-amber-500 text-white text-[10px]">🏆</Badge>}
+                        {p.recommendation_level === 'premium' && <Badge className="bg-warning text-white text-[10px]">🏆</Badge>}
                       </div>
                       <div className="absolute bottom-2 start-2">
                         <Badge variant="outline" className={`text-[10px] bg-background/80 backdrop-blur-sm ${cat.color}`}>{cat.icon} {isRTL ? cat.ar : cat.en}</Badge>
@@ -657,9 +657,9 @@ const DashboardProfileSystems = () => {
                       <p className="text-[11px] text-muted-foreground truncate mt-0.5">{language === 'ar' ? (p.name_en || '') : p.name_ar}</p>
                       {/* Ratings */}
                       <div className="mt-3 space-y-1.5">
-                        <div className="flex items-center gap-1.5"><Thermometer className="w-3 h-3 text-red-400" /><RatingBar value={p.thermal_insulation_rating || 0} color="bg-red-400" /></div>
-                        <div className="flex items-center gap-1.5"><Volume2 className="w-3 h-3 text-blue-400" /><RatingBar value={p.sound_insulation_rating || 0} color="bg-blue-400" /></div>
-                        <div className="flex items-center gap-1.5"><Shield className="w-3 h-3 text-emerald-400" /><RatingBar value={p.strength_rating || 0} color="bg-emerald-400" /></div>
+                        <div className="flex items-center gap-1.5"><Thermometer className="w-3 h-3 text-destructive" /><RatingBar value={p.thermal_insulation_rating || 0} color="bg-destructive" /></div>
+                        <div className="flex items-center gap-1.5"><Volume2 className="w-3 h-3 text-info" /><RatingBar value={p.sound_insulation_rating || 0} color="bg-info" /></div>
+                        <div className="flex items-center gap-1.5"><Shield className="w-3 h-3 text-success" /><RatingBar value={p.strength_rating || 0} color="bg-success" /></div>
                       </div>
                     </CardContent>
                   </Card>

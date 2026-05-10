@@ -55,9 +55,9 @@ function getStatusLabel(status: string, isRTL: boolean): string {
 
 function getStatusColor(status: string): string {
   const map: Record<string, string> = {
-    draft: 'border-muted-foreground/30 text-muted-foreground', pending_approval: 'border-amber-500/30 text-amber-600',
-    active: 'border-emerald-500/30 text-emerald-600', completed: 'border-primary/30 text-primary',
-    cancelled: 'border-destructive/30 text-destructive', disputed: 'border-amber-600/30 text-amber-600',
+    draft: 'border-muted-foreground/30 text-muted-foreground', pending_approval: 'border-warning/30 text-warning',
+    active: 'border-success/30 text-success', completed: 'border-primary/30 text-primary',
+    cancelled: 'border-destructive/30 text-destructive', disputed: 'border-warning/30 text-warning',
   };
   return map[status] ?? '';
 }
@@ -200,25 +200,25 @@ const OverdueAlerts = React.memo(({ isRTL, userId }: { isRTL: boolean; userId: s
   if (total === 0) return null;
 
   return (
-    <Card className="border-amber-500/30 bg-amber-500/5">
+    <Card className="border-warning/30 bg-warning/5">
       <CardContent className="p-3">
         <div className="flex items-center gap-2 mb-2">
-          <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
-          <h3 className="font-heading font-bold text-xs text-amber-700 dark:text-amber-400">{isRTL ? 'تنبيهات' : 'Alerts'}</h3>
+          <AlertTriangle className="w-3.5 h-3.5 text-warning" />
+          <h3 className="font-heading font-bold text-xs text-warning dark:text-warning">{isRTL ? 'تنبيهات' : 'Alerts'}</h3>
         </div>
         <div className="space-y-1.5">
           {(data?.overduePayments ?? 0) > 0 && (
-            <Link to="/dashboard/installments" className="flex items-center gap-2 p-2 rounded-lg bg-amber-500/10 hover:bg-amber-500/15 transition-colors">
-              <CreditCard className="w-3.5 h-3.5 text-amber-600" />
-              <span className="text-xs text-amber-700 dark:text-amber-400">
+            <Link to="/dashboard/installments" className="flex items-center gap-2 p-2 rounded-lg bg-warning/10 hover:bg-warning/15 transition-colors">
+              <CreditCard className="w-3.5 h-3.5 text-warning" />
+              <span className="text-xs text-warning dark:text-warning">
                 {data!.overduePayments} {isRTL ? 'أقساط متأخرة' : 'overdue payments'}
               </span>
             </Link>
           )}
           {(data?.expiringContracts ?? 0) > 0 && (
-            <Link to="/dashboard/contracts" className="flex items-center gap-2 p-2 rounded-lg bg-amber-500/10 hover:bg-amber-500/15 transition-colors">
-              <Timer className="w-3.5 h-3.5 text-amber-600" />
-              <span className="text-xs text-amber-700 dark:text-amber-400">
+            <Link to="/dashboard/contracts" className="flex items-center gap-2 p-2 rounded-lg bg-warning/10 hover:bg-warning/15 transition-colors">
+              <Timer className="w-3.5 h-3.5 text-warning" />
+              <span className="text-xs text-warning dark:text-warning">
                 {data!.expiringContracts} {isRTL ? 'عقود قاربت الانتهاء' : 'contracts expiring soon'}
               </span>
             </Link>
@@ -354,12 +354,12 @@ const AdminDashboardView = React.memo(({ isRTL }: { isRTL: boolean }) => {
 
   const adminCards = useMemo(() => [
     { icon: Users, label: isRTL ? 'المستخدمين' : 'Users', value: animatedUsers, color: 'bg-primary/10 text-primary', to: '/admin/users' },
-    { icon: Building2, label: isRTL ? 'المنشآت' : 'Businesses', value: stats?.businesses ?? 0, color: 'bg-emerald-500/10 text-emerald-600', to: '/admin/businesses' },
-    { icon: DollarSign, label: isRTL ? 'إجمالي الإيرادات' : 'Revenue', value: `${animatedRevenue.toLocaleString()} ${isRTL ? 'ر.س' : 'SAR'}`, color: 'bg-emerald-500/10 text-emerald-600', to: '/dashboard/contracts' },
+    { icon: Building2, label: isRTL ? 'المنشآت' : 'Businesses', value: stats?.businesses ?? 0, color: 'bg-success/10 text-success', to: '/admin/businesses' },
+    { icon: DollarSign, label: isRTL ? 'إجمالي الإيرادات' : 'Revenue', value: `${animatedRevenue.toLocaleString()} ${isRTL ? 'ر.س' : 'SAR'}`, color: 'bg-success/10 text-success', to: '/dashboard/contracts' },
     { icon: FileText, label: isRTL ? 'العقود النشطة' : 'Active Contracts', value: stats?.activeContracts ?? 0, sub: `${isRTL ? 'من' : 'of'} ${animatedContracts}`, color: 'bg-accent/10 text-accent', to: '/dashboard/contracts' },
     { icon: Crown, label: isRTL ? 'اشتراكات نشطة' : 'Active Subs', value: stats?.subscriptions ?? 0, color: 'bg-accent/10 text-accent', to: '/admin/memberships' },
     { icon: MessageSquare, label: isRTL ? 'المحادثات' : 'Conversations', value: stats?.messages ?? 0, color: 'bg-primary/10 text-primary', to: '/dashboard/messages' },
-    { icon: Mail, label: isRTL ? 'رسائل جديدة' : 'New Messages', value: stats?.newContactMessages ?? 0, color: 'bg-blue-500/10 text-blue-600', to: '/admin/contact-messages' },
+    { icon: Mail, label: isRTL ? 'رسائل جديدة' : 'New Messages', value: stats?.newContactMessages ?? 0, color: 'bg-info/10 text-info', to: '/admin/contact-messages' },
   ], [isRTL, animatedUsers, animatedRevenue, animatedContracts, stats]);
 
   return (
@@ -376,7 +376,7 @@ const AdminDashboardView = React.memo(({ isRTL }: { isRTL: boolean }) => {
               <p className="text-xs text-muted-foreground/70 mt-0.5">{isRTL ? 'نظرة شاملة على النظام' : 'System overview'}</p>
             </div>
           </div>
-          <Badge variant="outline" className="text-[10px] gap-1.5 bg-emerald-500/10 border-emerald-500/30 text-emerald-600">
+          <Badge variant="outline" className="text-[10px] gap-1.5 bg-success/10 border-success/30 text-success">
             <Zap className="w-3 h-3" />{isRTL ? 'مباشر' : 'Live'}
           </Badge>
         </div>
@@ -692,7 +692,7 @@ const ProviderDashboardView = React.memo(({ isRTL, user, profile }: { isRTL: boo
             <div>
               <h1 className="font-heading font-bold text-base sm:text-lg flex items-center gap-2">
                 {isRTL ? 'لوحة مزود الخدمة' : 'Provider Dashboard'}
-                {business?.is_verified && <Badge variant="secondary" className="text-[9px] bg-emerald-500/10 text-emerald-600 border-0"><CheckCircle2 className="w-2.5 h-2.5 me-0.5" />{isRTL ? 'موثق' : 'Verified'}</Badge>}
+                {business?.is_verified && <Badge variant="secondary" className="text-[9px] bg-success/10 text-success border-0"><CheckCircle2 className="w-2.5 h-2.5 me-0.5" />{isRTL ? 'موثق' : 'Verified'}</Badge>}
               </h1>
               <p className="text-[10px] text-muted-foreground">
                 {isRTL ? `مرحباً ${profile?.full_name || ''}` : `Welcome ${profile?.full_name || ''}`}
@@ -719,7 +719,7 @@ const ProviderDashboardView = React.memo(({ isRTL, user, profile }: { isRTL: boo
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <StatCard icon={DollarSign} label={isRTL ? 'إجمالي الإيرادات' : 'Revenue'} value={`${animatedRevenue.toLocaleString()} ${isRTL ? 'ر.س' : 'SAR'}`} color="bg-emerald-500/10 text-emerald-600" />
+        <StatCard icon={DollarSign} label={isRTL ? 'إجمالي الإيرادات' : 'Revenue'} value={`${animatedRevenue.toLocaleString()} ${isRTL ? 'ر.س' : 'SAR'}`} color="bg-success/10 text-success" />
         <StatCard icon={FileText} label={isRTL ? 'العقود النشطة' : 'Active'} value={stats?.activeContracts ?? 0} sub={`${isRTL ? 'من' : 'of'} ${animatedContracts}`} color="bg-accent/10 text-accent" />
         <StatCard icon={Star} label={isRTL ? 'التقييم' : 'Rating'} value={stats?.avgRating ?? '0.0'} sub={`${stats?.reviews ?? 0} ${isRTL ? 'تقييم' : 'reviews'}`} color="bg-accent/10 text-accent" />
         <StatCard icon={Target} label={isRTL ? 'معدل الإنجاز' : 'Completion'} value={`${completionRate}%`} sub={`${stats?.completedContracts ?? 0} ${isRTL ? 'مكتمل' : 'done'}`} color="bg-primary/10 text-primary" />
@@ -728,7 +728,7 @@ const ProviderDashboardView = React.memo(({ isRTL, user, profile }: { isRTL: boo
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
         <Card className="border-border/40 lg:col-span-2">
-          <CardHeader className="pb-1 px-4 pt-3"><CardTitle className="text-xs flex items-center gap-2"><TrendingUp className="w-3.5 h-3.5 text-emerald-600" />{isRTL ? 'الإيرادات الشهرية' : 'Monthly Revenue'}</CardTitle></CardHeader>
+          <CardHeader className="pb-1 px-4 pt-3"><CardTitle className="text-xs flex items-center gap-2"><TrendingUp className="w-3.5 h-3.5 text-success" />{isRTL ? 'الإيرادات الشهرية' : 'Monthly Revenue'}</CardTitle></CardHeader>
           <CardContent className="px-4 pb-3">
             <div className="h-[170px]">
               <ResponsiveContainer width="100%" height="100%">
@@ -949,9 +949,9 @@ const UserDashboardView = React.memo(({ isRTL, user, profile }: { isRTL: boolean
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <StatCard icon={FileText} label={isRTL ? 'العقود النشطة' : 'Active'} value={stats?.activeContracts ?? 0} sub={`${isRTL ? 'من' : 'of'} ${stats?.totalContracts ?? 0}`} color="bg-accent/10 text-accent" />
-        <StatCard icon={DollarSign} label={isRTL ? 'إجمالي الإنفاق' : 'Spent'} value={`${animatedSpent.toLocaleString()} ${isRTL ? 'ر.س' : 'SAR'}`} color="bg-emerald-500/10 text-emerald-600" />
+        <StatCard icon={DollarSign} label={isRTL ? 'إجمالي الإنفاق' : 'Spent'} value={`${animatedSpent.toLocaleString()} ${isRTL ? 'ر.س' : 'SAR'}`} color="bg-success/10 text-success" />
         <StatCard icon={MessageSquare} label={isRTL ? 'المحادثات' : 'Conversations'} value={stats?.messages ?? 0} color="bg-primary/10 text-primary" />
-        <StatCard icon={Bell} label={isRTL ? 'إشعارات جديدة' : 'Unread'} value={stats?.unreadNotifications ?? 0} color="bg-amber-500/10 text-amber-600" />
+        <StatCard icon={Bell} label={isRTL ? 'إشعارات جديدة' : 'Unread'} value={stats?.unreadNotifications ?? 0} color="bg-warning/10 text-warning" />
       </div>
 
       {/* Contracts + Notifications */}
@@ -990,7 +990,7 @@ const UserDashboardView = React.memo(({ isRTL, user, profile }: { isRTL: boolean
 
         <Card className="border-border/40">
           <CardHeader className="pb-1 px-4 pt-3 flex flex-row items-center justify-between">
-            <CardTitle className="text-xs flex items-center gap-2"><Bell className="w-3.5 h-3.5 text-amber-600" />{isRTL ? 'آخر الإشعارات' : 'Notifications'}</CardTitle>
+            <CardTitle className="text-xs flex items-center gap-2"><Bell className="w-3.5 h-3.5 text-warning" />{isRTL ? 'آخر الإشعارات' : 'Notifications'}</CardTitle>
             <Link to="/dashboard/notifications"><Button variant="ghost" size="sm" className="text-[10px] text-accent h-6">{isRTL ? 'الكل' : 'All'}</Button></Link>
           </CardHeader>
           <CardContent className="px-4 pb-3">

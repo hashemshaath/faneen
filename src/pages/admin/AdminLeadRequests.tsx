@@ -35,18 +35,18 @@ interface LeadRow {
 }
 
 const statusConfig: Record<Status, { ar: string; en: string; color: string }> = {
-  new:       { ar: 'جديد',    en: 'New',       color: 'bg-blue-500/10 text-blue-600 border-blue-500/30' },
-  contacted: { ar: 'تم التواصل', en: 'Contacted', color: 'bg-amber-500/10 text-amber-600 border-amber-500/30' },
-  qualified: { ar: 'مؤهَّل',   en: 'Qualified', color: 'bg-violet-500/10 text-violet-600 border-violet-500/30' },
-  closed:    { ar: 'مغلق',    en: 'Closed',    color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30' },
-  spam:      { ar: 'سبام',    en: 'Spam',      color: 'bg-red-500/10 text-red-600 border-red-500/30' },
+  new:       { ar: 'جديد',    en: 'New',       color: 'bg-info/10 text-info border-info/30' },
+  contacted: { ar: 'تم التواصل', en: 'Contacted', color: 'bg-warning/10 text-warning border-warning/30' },
+  qualified: { ar: 'مؤهَّل',   en: 'Qualified', color: 'bg-secondary/10 text-secondary border-secondary/30' },
+  closed:    { ar: 'مغلق',    en: 'Closed',    color: 'bg-success/10 text-success border-success/30' },
+  spam:      { ar: 'سبام',    en: 'Spam',      color: 'bg-destructive/10 text-destructive border-destructive/30' },
 };
 
 const priorityConfig: Record<Priority, { ar: string; en: string; color: string }> = {
   low:    { ar: 'منخفض',  en: 'Low',    color: 'bg-slate-500/10 text-slate-600 border-slate-500/30' },
-  normal: { ar: 'عادي',   en: 'Normal', color: 'bg-blue-500/10 text-blue-600 border-blue-500/30' },
-  high:   { ar: 'مرتفع',  en: 'High',   color: 'bg-orange-500/10 text-orange-600 border-orange-500/30' },
-  urgent: { ar: 'عاجل',   en: 'Urgent', color: 'bg-red-500/10 text-red-600 border-red-500/30' },
+  normal: { ar: 'عادي',   en: 'Normal', color: 'bg-info/10 text-info border-info/30' },
+  high:   { ar: 'مرتفع',  en: 'High',   color: 'bg-urgent/10 text-urgent border-urgent/30' },
+  urgent: { ar: 'عاجل',   en: 'Urgent', color: 'bg-destructive/10 text-destructive border-destructive/30' },
 };
 
 const STATUSES: Status[] = ['new', 'contacted', 'qualified', 'closed', 'spam'];

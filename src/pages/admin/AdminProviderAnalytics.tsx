@@ -99,7 +99,7 @@ const AdminProviderAnalytics = () => {
       icon: Eye,
       label: isRTL ? 'مشاهدات القسم' : 'Section Views',
       value: summary?.section_views ?? 0,
-      color: 'text-blue-500 bg-blue-500/10',
+      color: 'text-info bg-info/10',
     },
     {
       icon: MousePointerClick,
@@ -111,7 +111,7 @@ const AdminProviderAnalytics = () => {
       icon: ExternalLink,
       label: isRTL ? 'نقرات عرض الكل' : 'View All Clicks',
       value: summary?.view_all ?? 0,
-      color: 'text-emerald-500 bg-emerald-500/10',
+      color: 'text-success bg-success/10',
     },
     {
       icon: TrendingUp,
@@ -119,7 +119,7 @@ const AdminProviderAnalytics = () => {
       value: summary && summary.section_views > 0
         ? `${((summary.card_clicks / summary.section_views) * 100).toFixed(1)}%`
         : '0%',
-      color: 'text-amber-500 bg-amber-500/10',
+      color: 'text-warning bg-warning/10',
     },
   ], [summary, isRTL]);
 

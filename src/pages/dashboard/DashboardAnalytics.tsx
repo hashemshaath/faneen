@@ -288,13 +288,13 @@ const DashboardAnalytics = () => {
             {/* KPI Cards */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
-                { icon: DollarSign, label: isRTL ? 'الإيرادات' : 'Revenue', value: `${stats.totalRevenue.toLocaleString()}`, sub: isRTL ? 'ر.س' : 'SAR', color: 'bg-emerald-500/10 text-emerald-600' },
+                { icon: DollarSign, label: isRTL ? 'الإيرادات' : 'Revenue', value: `${stats.totalRevenue.toLocaleString()}`, sub: isRTL ? 'ر.س' : 'SAR', color: 'bg-success/10 text-success' },
                 { icon: FileText, label: isRTL ? 'العقود' : 'Contracts', value: stats.totalContracts, sub: `${stats.activeContracts} ${isRTL ? 'نشط' : 'active'}`, color: 'bg-accent/10 text-accent' },
-                { icon: CalendarClock, label: isRTL ? 'الحجوزات' : 'Bookings', value: stats.totalBookings, sub: `${stats.confirmedBookings} ${isRTL ? 'مؤكد' : 'confirmed'}`, color: 'bg-blue-500/10 text-blue-600' },
-                { icon: Star, label: isRTL ? 'التقييم' : 'Rating', value: stats.avgRating, sub: `${stats.totalReviews} ${isRTL ? 'تقييم' : 'reviews'}`, color: 'bg-amber-500/10 text-amber-600' },
-                { icon: Eye, label: isRTL ? 'المشاريع' : 'Projects', value: stats.projectsCount, color: 'bg-purple-500/10 text-purple-600' },
+                { icon: CalendarClock, label: isRTL ? 'الحجوزات' : 'Bookings', value: stats.totalBookings, sub: `${stats.confirmedBookings} ${isRTL ? 'مؤكد' : 'confirmed'}`, color: 'bg-info/10 text-info' },
+                { icon: Star, label: isRTL ? 'التقييم' : 'Rating', value: stats.avgRating, sub: `${stats.totalReviews} ${isRTL ? 'تقييم' : 'reviews'}`, color: 'bg-warning/10 text-warning' },
+                { icon: Eye, label: isRTL ? 'المشاريع' : 'Projects', value: stats.projectsCount, color: 'bg-secondary/10 text-secondary' },
                 { icon: Activity, label: isRTL ? 'الخدمات' : 'Services', value: stats.servicesCount, color: 'bg-primary/10 text-primary' },
-                { icon: Users, label: isRTL ? 'حجوزات مكتملة' : 'Completed', value: stats.completedBookings, color: 'bg-emerald-500/10 text-emerald-600' },
+                { icon: Users, label: isRTL ? 'حجوزات مكتملة' : 'Completed', value: stats.completedBookings, color: 'bg-success/10 text-success' },
                 { icon: TrendingUp, label: isRTL ? 'عقود مكتملة' : 'Done Contracts', value: stats.completedContracts, color: 'bg-accent/10 text-accent' },
               ].map((s, i) => (
                 <Card key={i} className="border-border/40">
@@ -314,7 +314,7 @@ const DashboardAnalytics = () => {
             <Card className="border-border/40">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-heading flex items-center gap-2">
-                  <DollarSign className="w-4 h-4 text-emerald-500" />
+                  <DollarSign className="w-4 h-4 text-success" />
                   {isRTL ? 'الإيرادات' : 'Revenue'}
                 </CardTitle>
               </CardHeader>
@@ -345,7 +345,7 @@ const DashboardAnalytics = () => {
               <Card className="border-border/40">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-heading flex items-center gap-2">
-                    <CalendarClock className="w-4 h-4 text-blue-500" />
+                    <CalendarClock className="w-4 h-4 text-info" />
                     {isRTL ? 'الحجوزات' : 'Bookings'}
                   </CardTitle>
                 </CardHeader>
@@ -430,7 +430,7 @@ const DashboardAnalytics = () => {
               <Card className="border-border/40">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-heading flex items-center gap-2">
-                    <Star className="w-4 h-4 text-amber-500" />
+                    <Star className="w-4 h-4 text-warning" />
                     {isRTL ? 'توزيع التقييمات' : 'Rating Distribution'}
                   </CardTitle>
                 </CardHeader>

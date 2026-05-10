@@ -102,12 +102,12 @@ const defaultSettings: SystemSetting[] = [
 /* ═══════════ Categories ═══════════ */
 const settingCategories = [
   { key: 'platform', icon: Globe, labelAr: 'المنصة', labelEn: 'Platform', gradient: 'from-primary/15 to-primary/5', iconColor: 'text-primary' },
-  { key: 'auth', icon: Lock, labelAr: 'المصادقة', labelEn: 'Auth', gradient: 'from-blue-500/15 to-blue-500/5', iconColor: 'text-blue-600' },
-  { key: 'business', icon: Database, labelAr: 'الأعمال', labelEn: 'Business', gradient: 'from-emerald-500/15 to-emerald-500/5', iconColor: 'text-emerald-600' },
-  { key: 'notifications', icon: Bell, labelAr: 'الإشعارات', labelEn: 'Notifications', gradient: 'from-amber-500/15 to-amber-500/5', iconColor: 'text-amber-600' },
-  { key: 'security', icon: Shield, labelAr: 'الأمان', labelEn: 'Security', gradient: 'from-red-500/15 to-red-500/5', iconColor: 'text-red-600' },
-  { key: 'content', icon: FileText, labelAr: 'المحتوى', labelEn: 'Content', gradient: 'from-purple-500/15 to-purple-500/5', iconColor: 'text-purple-600' },
-  { key: 'seo', icon: BarChart3, labelAr: 'SEO', labelEn: 'SEO', gradient: 'from-cyan-500/15 to-cyan-500/5', iconColor: 'text-cyan-600' },
+  { key: 'auth', icon: Lock, labelAr: 'المصادقة', labelEn: 'Auth', gradient: 'from-info/15 to-info/5', iconColor: 'text-info' },
+  { key: 'business', icon: Database, labelAr: 'الأعمال', labelEn: 'Business', gradient: 'from-success/15 to-success/5', iconColor: 'text-success' },
+  { key: 'notifications', icon: Bell, labelAr: 'الإشعارات', labelEn: 'Notifications', gradient: 'from-warning/15 to-warning/5', iconColor: 'text-warning' },
+  { key: 'security', icon: Shield, labelAr: 'الأمان', labelEn: 'Security', gradient: 'from-destructive/15 to-destructive/5', iconColor: 'text-destructive' },
+  { key: 'content', icon: FileText, labelAr: 'المحتوى', labelEn: 'Content', gradient: 'from-secondary/15 to-secondary/5', iconColor: 'text-secondary' },
+  { key: 'seo', icon: BarChart3, labelAr: 'SEO', labelEn: 'SEO', gradient: 'from-info/15 to-info/5', iconColor: 'text-info' },
 ];
 
 /* ═══════════ Setting Row ═══════════ */
@@ -140,7 +140,7 @@ const SettingRow = React.memo(({ setting, value, isDirty, isRTL, onUpdate }: {
               checked={value === 'true'}
               onCheckedChange={c => onUpdate(setting.key, String(c))}
             />
-            <span className={`text-xs font-medium ${value === 'true' ? 'text-emerald-600' : 'text-muted-foreground'}`}>
+            <span className={`text-xs font-medium ${value === 'true' ? 'text-success' : 'text-muted-foreground'}`}>
               {value === 'true' ? (isRTL ? 'مفعّل' : 'On') : (isRTL ? 'معطّل' : 'Off')}
             </span>
           </div>
@@ -416,9 +416,9 @@ const AdminSystemSettings = () => {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {[
               { label: isRTL ? 'إجمالي الإعدادات' : 'Total Settings', value: stats.total, icon: Hash, gradient: 'from-primary/15 to-primary/5', iconColor: 'text-primary' },
-              { label: isRTL ? 'مفاتيح مفعّلة' : 'Toggles Enabled', value: `${stats.enabled}/${stats.toggles}`, icon: Zap, gradient: 'from-emerald-500/15 to-emerald-500/5', iconColor: 'text-emerald-600' },
-              { label: isRTL ? 'حقول معبّأة' : 'Fields Configured', value: `${stats.configured}/${stats.textFields}`, icon: CheckCircle2, gradient: 'from-blue-500/15 to-blue-500/5', iconColor: 'text-blue-600' },
-              { label: isRTL ? 'أقسام الإعدادات' : 'Setting Groups', value: stats.categories, icon: Layers, gradient: 'from-amber-500/15 to-amber-500/5', iconColor: 'text-amber-600' },
+              { label: isRTL ? 'مفاتيح مفعّلة' : 'Toggles Enabled', value: `${stats.enabled}/${stats.toggles}`, icon: Zap, gradient: 'from-success/15 to-success/5', iconColor: 'text-success' },
+              { label: isRTL ? 'حقول معبّأة' : 'Fields Configured', value: `${stats.configured}/${stats.textFields}`, icon: CheckCircle2, gradient: 'from-info/15 to-info/5', iconColor: 'text-info' },
+              { label: isRTL ? 'أقسام الإعدادات' : 'Setting Groups', value: stats.categories, icon: Layers, gradient: 'from-warning/15 to-warning/5', iconColor: 'text-warning' },
             ].map((s, i) => (
               <Card key={i} className="border-border/40 hover-lift transition-all duration-200">
                 <CardContent className="p-4 flex items-center gap-3.5">
@@ -557,16 +557,16 @@ const AdminSystemSettings = () => {
           {!search && activeCategory === 'seo' && <SeoFilesPreviewCard />}
 
           {/* ── Warning ── */}
-          <Card className="border-amber-200/50 dark:border-amber-800/30 bg-gradient-to-r from-amber-50/50 to-transparent dark:from-amber-950/10">
+          <Card className="border-warning/50 dark:border-warning/30 bg-gradient-to-r from-warning/50 to-transparent dark:from-warning/10">
             <CardContent className="p-4 flex gap-3">
-              <div className="w-9 h-9 rounded-xl bg-amber-500/10 flex items-center justify-center shrink-0">
-                <AlertTriangle className="w-4.5 h-4.5 text-amber-500" />
+              <div className="w-9 h-9 rounded-xl bg-warning/10 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-4.5 h-4.5 text-warning" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-amber-700 dark:text-amber-400">
+                <p className="text-sm font-semibold text-warning dark:text-warning">
                   {isRTL ? 'تحذير: إعدادات حساسة' : 'Warning: Sensitive Settings'}
                 </p>
-                <p className="text-xs text-amber-600/70 dark:text-amber-500/70 mt-0.5 leading-relaxed">
+                <p className="text-xs text-warning/70 dark:text-warning/70 mt-0.5 leading-relaxed">
                   {isRTL
                     ? 'تغيير هذه الإعدادات يؤثر على عمل المنصة بالكامل. تأكد من مراجعة التغييرات قبل الحفظ. يتم تسجيل جميع التغييرات في سجل النشاط.'
                     : 'Changing these settings affects the entire platform. Review changes before saving. All changes are logged in the activity log.'}

@@ -50,7 +50,7 @@ const PlanCard = React.memo(({ plan, isRTL, language, subsCount, onEdit }: { pla
       'relative transition-all duration-300 group border overflow-hidden',
       colors.border, colors.bg,
       isPremium && 'ring-1 ring-accent/30 shadow-md shadow-accent/5',
-      isEnterprise && 'ring-1 ring-purple-500/20',
+      isEnterprise && 'ring-1 ring-secondary/20',
       !plan.is_active && 'opacity-40 grayscale',
       'hover:shadow-xl hover:-translate-y-0.5'
     )}>
@@ -58,9 +58,9 @@ const PlanCard = React.memo(({ plan, isRTL, language, subsCount, onEdit }: { pla
       <div className={cn(
         'absolute top-0 inset-x-0 h-1',
         plan.tier === 'free' && 'bg-muted-foreground/30',
-        plan.tier === 'basic' && 'bg-blue-500',
+        plan.tier === 'basic' && 'bg-info',
         isPremium && 'bg-gradient-to-r from-accent via-accent/80 to-accent',
-        isEnterprise && 'bg-gradient-to-r from-purple-500 via-purple-400 to-purple-600',
+        isEnterprise && 'bg-gradient-to-r from-secondary via-secondary to-secondary',
       )} />
 
       {/* Popular badge */}
@@ -140,7 +140,7 @@ const PlanCard = React.memo(({ plan, isRTL, language, subsCount, onEdit }: { pla
               }
             </p>
             {savingPct > 0 && (
-              <Badge className="absolute -top-1.5 -end-1.5 bg-emerald-500 text-white text-[7px] px-1.5 py-0 h-4 shadow-sm">
+              <Badge className="absolute -top-1.5 -end-1.5 bg-success text-white text-[7px] px-1.5 py-0 h-4 shadow-sm">
                 -{savingPct}%
               </Badge>
             )}
@@ -181,8 +181,8 @@ const PlanCard = React.memo(({ plan, isRTL, language, subsCount, onEdit }: { pla
             <div
               className={cn('h-full rounded-full transition-all duration-500',
                 plan.tier === 'free' ? 'bg-muted-foreground/40' :
-                plan.tier === 'basic' ? 'bg-blue-500' :
-                isPremium ? 'bg-accent' : 'bg-purple-500'
+                plan.tier === 'basic' ? 'bg-info' :
+                isPremium ? 'bg-accent' : 'bg-secondary'
               )}
               style={{ width: `${benefitPct}%` }}
             />
@@ -308,7 +308,7 @@ const SubRow = React.memo(({ sub, isRTL, language, plans, onCancel, onRenew, onU
   const business = sub.business;
 
   return (
-    <Card className={cn('transition-all hover:shadow-md border', isExpiringSoon ? 'border-amber-400/50 bg-amber-50/5' : 'border-border/30')}>
+    <Card className={cn('transition-all hover:shadow-md border', isExpiringSoon ? 'border-warning/50 bg-warning/5' : 'border-border/30')}>
       <CardContent className="p-3 sm:p-4">
         <div className="flex items-start gap-3">
           <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm', colors.badge)}>
@@ -323,7 +323,7 @@ const SubRow = React.memo(({ sub, isRTL, language, plans, onCancel, onRenew, onU
                 {sub.billing_cycle === 'yearly' ? (isRTL ? 'سنوي' : 'Yearly') : (isRTL ? 'شهري' : 'Monthly')}
               </Badge>
               {isExpiringSoon && (
-                <Badge className="bg-amber-500/10 text-amber-600 text-[7px] px-1.5 py-0 h-3.5 gap-0.5 animate-pulse">
+                <Badge className="bg-warning/10 text-warning text-[7px] px-1.5 py-0 h-3.5 gap-0.5 animate-pulse">
                   <AlertTriangle className="w-2 h-2" />
                   {isRTL ? `ينتهي خلال ${daysLeft} يوم` : `Expires in ${daysLeft}d`}
                 </Badge>
@@ -354,7 +354,7 @@ const SubRow = React.memo(({ sub, isRTL, language, plans, onCancel, onRenew, onU
                 {format(new Date(sub.starts_at), 'dd/MM/yyyy')} → {sub.expires_at ? format(new Date(sub.expires_at), 'dd/MM/yyyy') : '∞'}
               </span>
               {daysLeft !== null && sub.status === 'active' && (
-                <span className={cn('font-medium', daysLeft <= 7 ? 'text-amber-600' : daysLeft <= 30 ? 'text-foreground' : 'text-emerald-600')}>
+                <span className={cn('font-medium', daysLeft <= 7 ? 'text-warning' : daysLeft <= 30 ? 'text-foreground' : 'text-success')}>
                   {daysLeft} {isRTL ? 'يوم متبقي' : 'days left'}
                 </span>
               )}
@@ -392,7 +392,7 @@ const SubRow = React.memo(({ sub, isRTL, language, plans, onCancel, onRenew, onU
             {(sub.status === 'expired' || sub.status === 'cancelled') && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-7 w-7 text-emerald-600 hover:bg-emerald-500/10" onClick={() => onRenew(sub)}>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 text-success hover:bg-success/10" onClick={() => onRenew(sub)}>
                     <RefreshCw className="w-3.5 h-3.5" />
                   </Button>
                 </TooltipTrigger>
@@ -713,9 +713,9 @@ const AdminMemberships = () => {
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {[
                   { icon: Users, label: isRTL ? 'إجمالي الاشتراكات' : 'Total Subscriptions', value: stats.total, color: 'text-foreground', bg: 'bg-muted/30' },
-                  { icon: UserCheck, label: isRTL ? 'نشط حالياً' : 'Currently Active', value: stats.active, color: 'text-emerald-600', bg: 'bg-emerald-500/5' },
+                  { icon: UserCheck, label: isRTL ? 'نشط حالياً' : 'Currently Active', value: stats.active, color: 'text-success', bg: 'bg-success/5' },
                   { icon: DollarSign, label: isRTL ? 'الإيراد الشهري' : 'Monthly Revenue', value: `${Math.round(stats.revenue)} SAR`, color: 'text-accent', bg: 'bg-accent/5' },
-                  { icon: AlertTriangle, label: isRTL ? 'ينتهي قريباً' : 'Expiring Soon', value: stats.expiringSoon, color: 'text-amber-600', bg: 'bg-amber-500/5' },
+                  { icon: AlertTriangle, label: isRTL ? 'ينتهي قريباً' : 'Expiring Soon', value: stats.expiringSoon, color: 'text-warning', bg: 'bg-warning/5' },
                 ].map((s, i) => (
                   <Card key={i} className={cn('border-border/30', s.bg)}>
                     <CardContent className="p-4 flex items-center gap-3">
@@ -754,7 +754,7 @@ const AdminMemberships = () => {
                                 <span className="text-[10px] text-muted-foreground">{count} ({pct}%)</span>
                               </div>
                               <div className="h-2 bg-muted rounded-full overflow-hidden">
-                                <div className={cn('h-full rounded-full transition-all', tier === 'free' ? 'bg-muted-foreground/40' : tier === 'basic' ? 'bg-blue-500' : tier === 'premium' ? 'bg-accent' : 'bg-purple-500')}
+                                <div className={cn('h-full rounded-full transition-all', tier === 'free' ? 'bg-muted-foreground/40' : tier === 'basic' ? 'bg-info' : tier === 'premium' ? 'bg-accent' : 'bg-secondary')}
                                   style={{ width: `${pct}%` }} />
                               </div>
                             </div>
@@ -772,8 +772,8 @@ const AdminMemberships = () => {
                       {isRTL ? 'ملخص الحالة' : 'Status Summary'}
                     </h3>
                     <div className="grid grid-cols-2 gap-2 mb-4">
-                      <div className="p-3 rounded-xl bg-blue-500/5 border border-blue-500/10 text-center">
-                        <p className="text-lg font-bold text-blue-600">{stats.monthly}</p>
+                      <div className="p-3 rounded-xl bg-info/5 border border-info/10 text-center">
+                        <p className="text-lg font-bold text-info">{stats.monthly}</p>
                         <p className="text-[9px] text-muted-foreground">{isRTL ? 'شهري نشط' : 'Active Monthly'}</p>
                       </div>
                       <div className="p-3 rounded-xl bg-accent/5 border border-accent/10 text-center">
@@ -785,7 +785,7 @@ const AdminMemberships = () => {
                       {[
                         { label: isRTL ? 'ملغي' : 'Cancelled', value: stats.cancelled, color: 'text-destructive' },
                         { label: isRTL ? 'منتهي' : 'Expired', value: stats.expired, color: 'text-muted-foreground' },
-                        { label: isRTL ? 'ينتهي خلال أسبوع' : 'Expiring (7d)', value: stats.expiringSoon, color: 'text-amber-600' },
+                        { label: isRTL ? 'ينتهي خلال أسبوع' : 'Expiring (7d)', value: stats.expiringSoon, color: 'text-warning' },
                       ].map((item, i) => (
                         <div key={i} className="flex items-center justify-between text-xs px-2 py-1.5 rounded-lg bg-muted/20">
                           <span className="text-muted-foreground">{item.label}</span>
@@ -1040,7 +1040,7 @@ const AdminMemberships = () => {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1.5">
                               <span className="text-xs font-bold truncate">{isRTL ? biz.name_ar : (biz.name_en || biz.name_ar)}</span>
-                              {biz.is_verified && <Shield className="w-3 h-3 text-emerald-500 shrink-0" />}
+                              {biz.is_verified && <Shield className="w-3 h-3 text-success shrink-0" />}
                               {!biz.is_active && <Badge variant="outline" className="text-[7px] h-3 px-1 text-destructive">{isRTL ? 'معطل' : 'Inactive'}</Badge>}
                             </div>
                             <div className="flex items-center gap-2 text-[9px] text-muted-foreground mt-0.5">

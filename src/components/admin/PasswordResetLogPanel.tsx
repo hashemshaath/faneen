@@ -14,10 +14,10 @@ import {
 type ResetStatus = 'requested' | 'resend' | 'completed' | 'failed';
 
 const STATUS_CONFIG: Record<ResetStatus, { icon: React.ElementType; color: string; labelAr: string; labelEn: string }> = {
-  requested: { icon: Clock, color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400', labelAr: 'مطلوب', labelEn: 'Requested' },
-  resend: { icon: RefreshCw, color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400', labelAr: 'إعادة إرسال', labelEn: 'Resent' },
-  completed: { icon: CheckCircle2, color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400', labelAr: 'مكتمل', labelEn: 'Completed' },
-  failed: { icon: XCircle, color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400', labelAr: 'فشل', labelEn: 'Failed' },
+  requested: { icon: Clock, color: 'bg-info text-info dark:bg-info/30 dark:text-info', labelAr: 'مطلوب', labelEn: 'Requested' },
+  resend: { icon: RefreshCw, color: 'bg-warning text-warning dark:bg-warning/30 dark:text-warning', labelAr: 'إعادة إرسال', labelEn: 'Resent' },
+  completed: { icon: CheckCircle2, color: 'bg-success text-success dark:bg-success/30 dark:text-success', labelAr: 'مكتمل', labelEn: 'Completed' },
+  failed: { icon: XCircle, color: 'bg-destructive text-destructive dark:bg-destructive/30 dark:text-destructive', labelAr: 'فشل', labelEn: 'Failed' },
 };
 
 const TIME_RANGES = [
@@ -89,10 +89,10 @@ export const PasswordResetLogPanel: React.FC = () => {
 
   const statCards = [
     { labelAr: 'الإجمالي', labelEn: 'Total', value: stats.total, color: 'text-foreground', bg: 'bg-muted/50' },
-    { labelAr: 'مطلوب', labelEn: 'Requested', value: stats.requested, color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-900/20' },
-    { labelAr: 'مكتمل', labelEn: 'Completed', value: stats.completed, color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-900/20' },
-    { labelAr: 'فشل', labelEn: 'Failed', value: stats.failed, color: 'text-red-600', bg: 'bg-red-50 dark:bg-red-900/20' },
-    { labelAr: 'إعادة إرسال', labelEn: 'Resent', value: stats.resend, color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-900/20' },
+    { labelAr: 'مطلوب', labelEn: 'Requested', value: stats.requested, color: 'text-info', bg: 'bg-info dark:bg-info/20' },
+    { labelAr: 'مكتمل', labelEn: 'Completed', value: stats.completed, color: 'text-success', bg: 'bg-success dark:bg-success/20' },
+    { labelAr: 'فشل', labelEn: 'Failed', value: stats.failed, color: 'text-destructive', bg: 'bg-destructive dark:bg-destructive/20' },
+    { labelAr: 'إعادة إرسال', labelEn: 'Resent', value: stats.resend, color: 'text-warning', bg: 'bg-warning dark:bg-warning/20' },
   ];
 
   return (

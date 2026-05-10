@@ -257,8 +257,8 @@ const DashboardNotifications = () => {
           {[
             { label: isRTL ? 'إجمالي' : 'Total', value: stats.total, icon: Bell, color: 'text-primary bg-primary/10' },
             { label: isRTL ? 'غير مقروء' : 'Unread', value: stats.unread, icon: BellRing, color: 'text-accent bg-accent/10' },
-            { label: isRTL ? 'اليوم' : 'Today', value: stats.today, icon: Zap, color: 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10' },
-            { label: isRTL ? 'معدل القراءة' : 'Read Rate', value: stats.total > 0 ? `${Math.round(((stats.total - stats.unread) / stats.total) * 100)}%` : '0%', icon: TrendingUp, color: 'text-blue-600 dark:text-blue-400 bg-blue-500/10' },
+            { label: isRTL ? 'اليوم' : 'Today', value: stats.today, icon: Zap, color: 'text-success dark:text-success bg-success/10' },
+            { label: isRTL ? 'معدل القراءة' : 'Read Rate', value: stats.total > 0 ? `${Math.round(((stats.total - stats.unread) / stats.total) * 100)}%` : '0%', icon: TrendingUp, color: 'text-info dark:text-info bg-info/10' },
           ].map((s, i) => (
             <Card key={i} className="border-border/40 bg-card/50">
               <CardContent className="p-2.5 sm:p-3 flex items-center gap-2">

@@ -163,9 +163,9 @@ const Offers = () => {
             <div className="grid grid-cols-4 gap-2 sm:gap-3 mt-6 sm:mt-8 max-w-2xl mx-auto">
               {[
                 { icon: Megaphone, label: isRTL ? 'إجمالي العروض' : 'Total', value: stats.total, color: 'text-gold', bg: 'bg-gold/15', mirror: true },
-                { icon: Tag, label: isRTL ? 'عروض خاصة' : 'Offers', value: stats.offers, color: 'text-green-400', bg: 'bg-green-500/15' },
-                { icon: Video, label: isRTL ? 'فيديو' : 'Videos', value: stats.videos, color: 'text-blue-400', bg: 'bg-blue-500/15' },
-                { icon: Eye, label: isRTL ? 'مشاهدة' : 'Views', value: stats.totalViews, color: 'text-purple-400', bg: 'bg-purple-500/15' },
+                { icon: Tag, label: isRTL ? 'عروض خاصة' : 'Offers', value: stats.offers, color: 'text-success', bg: 'bg-success/15' },
+                { icon: Video, label: isRTL ? 'فيديو' : 'Videos', value: stats.videos, color: 'text-info', bg: 'bg-info/15' },
+                { icon: Eye, label: isRTL ? 'مشاهدة' : 'Views', value: stats.totalViews, color: 'text-secondary', bg: 'bg-secondary/15' },
               ].map((s, i) => (
                 <div
                   key={i}
@@ -325,7 +325,7 @@ const Offers = () => {
                         {/* Badges top-start */}
                         <div className="absolute top-3 start-3 flex flex-col gap-1.5">
                           {p.promotion_type === 'offer' && p.discount_percentage && (
-                            <Badge className="bg-red-500 text-white text-xs shadow-lg">
+                            <Badge className="bg-destructive text-white text-xs shadow-lg">
                               -{p.discount_percentage}%
                             </Badge>
                           )}
@@ -335,13 +335,13 @@ const Offers = () => {
                             </Badge>
                           )}
                           {isNewPromo && (
-                            <Badge className="bg-green-500 text-white text-[10px] shadow-lg flex items-center gap-0.5">
+                            <Badge className="bg-success text-white text-[10px] shadow-lg flex items-center gap-0.5">
                               <Flame className="w-2.5 h-2.5" />
                               {isRTL ? 'جديد' : 'New'}
                             </Badge>
                           )}
                           {expiringSoon && (
-                            <Badge className="bg-orange-500 text-white text-[10px] shadow-lg flex items-center gap-0.5 animate-pulse">
+                            <Badge className="bg-urgent text-white text-[10px] shadow-lg flex items-center gap-0.5 animate-pulse">
                               <Clock className="w-2.5 h-2.5" />
                               {isRTL ? 'ينتهي قريباً' : 'Ending soon'}
                             </Badge>
@@ -360,9 +360,9 @@ const Offers = () => {
                         {biz?.membership_tier && biz.membership_tier !== 'free' && (
                           <div className="absolute bottom-3 end-3">
                             <Badge className={`text-[9px] border-0 shadow-lg ${
-                              biz.membership_tier === 'enterprise' ? 'bg-purple-500/90 text-white' :
+                              biz.membership_tier === 'enterprise' ? 'bg-secondary/90 text-white' :
                               biz.membership_tier === 'premium' ? 'bg-gradient-gold text-secondary-foreground' :
-                              'bg-blue-500/90 text-white'
+                              'bg-info/90 text-white'
                             }`}>
                               {biz.membership_tier === 'enterprise' ? (isRTL ? 'مؤسسي' : 'Enterprise') :
                                biz.membership_tier === 'premium' ? (isRTL ? 'مميز' : 'Premium') :
@@ -419,7 +419,7 @@ const Offers = () => {
                             <span className="line-through text-muted-foreground text-xs tech-content">
                               {Number(p.original_price).toLocaleString()}
                             </span>
-                            <span className="text-base sm:text-lg font-bold text-green-600 dark:text-green-400 tech-content">
+                            <span className="text-base sm:text-lg font-bold text-success dark:text-success tech-content">
                               {Number(p.offer_price).toLocaleString()}
                             </span>
                             <span className="text-[10px] text-muted-foreground">{p.currency_code}</span>

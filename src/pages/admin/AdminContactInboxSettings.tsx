@@ -366,7 +366,7 @@ export default function AdminContactInboxSettings() {
                 </p>
               </div>
               <div className="space-y-2">
-                <Label className="flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-amber-600" />
+                <Label className="flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-warning" />
                   {isRTL ? 'تنبيه عند بلوغ الحد' : 'Alert at max retries'}
                 </Label>
                 <div className="h-12 flex items-center">
@@ -426,9 +426,9 @@ export default function AdminContactInboxSettings() {
             {testResult && (
               <div className="space-y-3">
                 <div className={`p-3 rounded-xl flex items-center gap-3 flex-wrap ${
-                  testResult.ok ? 'bg-emerald-50 text-emerald-900' : 'bg-rose-50 text-rose-900'
+                  testResult.ok ? 'bg-success text-success' : 'bg-destructive text-destructive'
                 }`}>
-                  <Badge className={testResult.ok ? 'bg-emerald-600' : 'bg-rose-600'}>
+                  <Badge className={testResult.ok ? 'bg-success' : 'bg-destructive'}>
                     {testResult.ok ? (isRTL ? 'نجح' : 'OK') : (isRTL ? 'فشل' : 'FAILED')}
                   </Badge>
                   {testResult.http_status != null && (

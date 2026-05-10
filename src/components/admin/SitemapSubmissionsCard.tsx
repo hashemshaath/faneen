@@ -29,10 +29,10 @@ const PROVIDER_LABELS: Record<string, { ar: string; en: string }> = {
 };
 
 const STATUS_STYLES: Record<string, { icon: typeof CheckCircle2; cls: string }> = {
-  success: { icon: CheckCircle2, cls: 'text-emerald-600 bg-emerald-500/10 border-emerald-500/20' },
+  success: { icon: CheckCircle2, cls: 'text-success bg-success/10 border-success/20' },
   failed: { icon: XCircle, cls: 'text-destructive bg-destructive/10 border-destructive/20' },
   skipped: { icon: MinusCircle, cls: 'text-muted-foreground bg-muted border-border' },
-  pending: { icon: Clock, cls: 'text-amber-600 bg-amber-500/10 border-amber-500/20' },
+  pending: { icon: Clock, cls: 'text-warning bg-warning/10 border-warning/20' },
 };
 
 export const SitemapSubmissionsCard = () => {
@@ -86,8 +86,8 @@ export const SitemapSubmissionsCard = () => {
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-cyan-500/10 flex items-center justify-center">
-              <Globe className="w-4.5 h-4.5 text-cyan-600" />
+            <div className="w-9 h-9 rounded-xl bg-info/10 flex items-center justify-center">
+              <Globe className="w-4.5 h-4.5 text-info" />
             </div>
             <div>
               <CardTitle className="text-base">
@@ -131,11 +131,11 @@ export const SitemapSubmissionsCard = () => {
               </p>
               <p className="text-lg font-bold tabular-nums">{summary.last24h}</p>
             </div>
-            <div className="rounded-lg bg-emerald-500/5 border border-emerald-500/15 px-3 py-2">
-              <p className="text-[10px] text-emerald-700 dark:text-emerald-400 uppercase tracking-wide">
+            <div className="rounded-lg bg-success/5 border border-success/15 px-3 py-2">
+              <p className="text-[10px] text-success dark:text-success uppercase tracking-wide">
                 {isRTL ? 'نجح' : 'Success'}
               </p>
-              <p className="text-lg font-bold tabular-nums text-emerald-700 dark:text-emerald-400">{summary.success}</p>
+              <p className="text-lg font-bold tabular-nums text-success dark:text-success">{summary.success}</p>
             </div>
             <div className="rounded-lg bg-destructive/5 border border-destructive/15 px-3 py-2">
               <p className="text-[10px] text-destructive uppercase tracking-wide">

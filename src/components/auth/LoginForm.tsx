@@ -257,7 +257,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
 
           {/* Attempts warning (near limit) */}
           {!lockout.isLocked && lockout.failedAttempts >= 3 && (
-            <p className="text-[11px] text-amber-600 dark:text-amber-400 flex items-center gap-1">
+            <p className="text-[11px] text-warning dark:text-warning flex items-center gap-1">
               <ShieldAlert className="w-3 h-3" />
               {isRTL
                 ? `تبقى ${lockout.maxAttempts - lockout.failedAttempts} محاولة قبل القفل المؤقت`

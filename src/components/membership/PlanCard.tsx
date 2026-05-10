@@ -41,7 +41,7 @@ export const PlanCard = React.memo(({
       )}
       {isCurrentPlan && (
         <div className="absolute -top-3 end-4">
-          <Badge className="bg-emerald-500 text-white shadow-lg gap-1">
+          <Badge className="bg-success text-white shadow-lg gap-1">
             <Check className="w-3 h-3" />{isRTL ? 'خطتك' : 'Your Plan'}
           </Badge>
         </div>

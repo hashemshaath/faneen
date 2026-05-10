@@ -27,9 +27,9 @@ const STATUS_LABEL: Record<ApprovalStatus, { ar: string; en: string; tone: 'mute
 
 const TONE_CLASSES: Record<string, string> = {
   muted: 'bg-muted text-muted-foreground',
-  info: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
-  warn: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
-  success: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+  info: 'bg-info/10 text-info dark:text-info',
+  warn: 'bg-warning/10 text-warning dark:text-warning',
+  success: 'bg-success/10 text-success dark:text-success',
   danger: 'bg-destructive/10 text-destructive',
 };
 
@@ -111,9 +111,9 @@ export function ProviderReadinessCard() {
         <div className="flex items-center justify-between gap-3">
           <CardTitle className="flex items-center gap-2 text-base">
             {isPublic ? (
-              <ShieldCheck className="h-5 w-5 text-emerald-500" />
+              <ShieldCheck className="h-5 w-5 text-success" />
             ) : (
-              <ShieldAlert className="h-5 w-5 text-amber-500" />
+              <ShieldAlert className="h-5 w-5 text-warning" />
             )}
             {language === 'ar' ? 'جاهزية الملف للنشر' : 'Profile Readiness'}
           </CardTitle>
@@ -154,8 +154,8 @@ export function ProviderReadinessCard() {
 
         {/* Admin feedback */}
         {business.approval_notes && (status === 'rejected' || status === 'needs_changes') && (
-          <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-sm">
-            <div className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-amber-600">
+          <div className="rounded-lg border border-warning/30 bg-warning/5 p-3 text-sm">
+            <div className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-warning">
               <AlertCircle className="h-3.5 w-3.5" />
               {language === 'ar' ? 'ملاحظات الإدارة' : 'Admin notes'}
             </div>
@@ -172,7 +172,7 @@ export function ProviderReadinessCard() {
             <div className="flex flex-wrap gap-1.5">
               {missing.map((m) => (
                 <Badge key={m.key} variant="outline" className="gap-1 text-[11px]">
-                  <AlertCircle className="h-3 w-3 text-amber-500" />
+                  <AlertCircle className="h-3 w-3 text-warning" />
                   {language === 'ar' ? m.ar : m.en}
                 </Badge>
               ))}
@@ -203,7 +203,7 @@ export function ProviderReadinessCard() {
             </Button>
           )}
           {isPublic && (
-            <Badge className="gap-1 bg-emerald-500/10 text-emerald-600">
+            <Badge className="gap-1 bg-success/10 text-success">
               <CheckCircle2 className="h-3 w-3" />
               {language === 'ar' ? 'ملفك يظهر للجمهور' : 'Visible to the public'}
             </Badge>

@@ -54,30 +54,30 @@ interface BusinessLink {
 }
 
 const staffRoleConfig: Record<StaffRole, { ar: string; en: string; color: string }> = {
-  owner:   { ar: 'مالك',     en: 'Owner',   color: 'bg-emerald-500/15 text-emerald-700 border-emerald-500/40 dark:text-emerald-300' },
-  manager: { ar: 'مدير',     en: 'Manager', color: 'bg-blue-500/15 text-blue-700 border-blue-500/40 dark:text-blue-300' },
-  editor:  { ar: 'محرر',     en: 'Editor',  color: 'bg-amber-500/15 text-amber-700 border-amber-500/40 dark:text-amber-300' },
+  owner:   { ar: 'مالك',     en: 'Owner',   color: 'bg-success/15 text-success border-success/40 dark:text-success' },
+  manager: { ar: 'مدير',     en: 'Manager', color: 'bg-info/15 text-info border-info/40 dark:text-info' },
+  editor:  { ar: 'محرر',     en: 'Editor',  color: 'bg-warning/15 text-warning border-warning/40 dark:text-warning' },
   viewer:  { ar: 'مشاهد',    en: 'Viewer',  color: 'bg-muted text-muted-foreground border-border' },
 };
 
 const roleConfig = {
-  super_admin: { icon: ShieldAlert, badge: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 border-purple-200 dark:border-purple-800', iconBg: 'bg-purple-500/15 text-purple-600 dark:text-purple-400', labelAr: 'مشرف أعلى', labelEn: 'Super Admin', rank: 0 },
-  admin: { icon: Crown, badge: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800', iconBg: 'bg-red-500/15 text-red-600 dark:text-red-400', labelAr: 'مشرف', labelEn: 'Admin', rank: 1 },
-  moderator: { icon: ShieldCheck, badge: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800', iconBg: 'bg-amber-500/15 text-amber-600 dark:text-amber-400', labelAr: 'مشرف محتوى', labelEn: 'Moderator', rank: 2 },
-  user: { icon: Users, badge: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-800', iconBg: 'bg-blue-500/15 text-blue-600 dark:text-blue-400', labelAr: 'مستخدم', labelEn: 'User', rank: 3 },
+  super_admin: { icon: ShieldAlert, badge: 'bg-secondary text-secondary dark:bg-secondary/30 dark:text-secondary border-secondary dark:border-secondary', iconBg: 'bg-secondary/15 text-secondary dark:text-secondary', labelAr: 'مشرف أعلى', labelEn: 'Super Admin', rank: 0 },
+  admin: { icon: Crown, badge: 'bg-destructive text-destructive dark:bg-destructive/30 dark:text-destructive border-destructive dark:border-destructive', iconBg: 'bg-destructive/15 text-destructive dark:text-destructive', labelAr: 'مشرف', labelEn: 'Admin', rank: 1 },
+  moderator: { icon: ShieldCheck, badge: 'bg-warning text-warning dark:bg-warning/30 dark:text-warning border-warning dark:border-warning', iconBg: 'bg-warning/15 text-warning dark:text-warning', labelAr: 'مشرف محتوى', labelEn: 'Moderator', rank: 2 },
+  user: { icon: Users, badge: 'bg-info text-info dark:bg-info/30 dark:text-info border-info dark:border-info', iconBg: 'bg-info/15 text-info dark:text-info', labelAr: 'مستخدم', labelEn: 'User', rank: 3 },
 } as const;
 
 const tierConfig = {
   free: { labelAr: 'مجاني', labelEn: 'Free', color: 'bg-muted text-muted-foreground border-border' },
-  basic: { labelAr: 'أساسي', labelEn: 'Basic', color: 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400 border-blue-200 dark:border-blue-800' },
+  basic: { labelAr: 'أساسي', labelEn: 'Basic', color: 'bg-info text-info dark:bg-info/20 dark:text-info border-info dark:border-info' },
   premium: { labelAr: 'مميز', labelEn: 'Premium', color: 'bg-accent/10 text-accent border-accent/30' },
-  enterprise: { labelAr: 'مؤسسات', labelEn: 'Enterprise', color: 'bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400 border-purple-200 dark:border-purple-800' },
+  enterprise: { labelAr: 'مؤسسات', labelEn: 'Enterprise', color: 'bg-secondary text-secondary dark:bg-secondary/20 dark:text-secondary border-secondary dark:border-secondary' },
 } as const;
 
 const accountTypeConfig: Record<string, { labelAr: string; labelEn: string; icon: React.ElementType; color: string }> = {
-  individual: { labelAr: 'فرد', labelEn: 'Individual', icon: Users, color: 'text-blue-600 bg-blue-500/10 border-blue-200 dark:border-blue-800' },
-  business: { labelAr: 'مزود خدمة', labelEn: 'Provider', icon: Briefcase, color: 'text-emerald-600 bg-emerald-500/10 border-emerald-200 dark:border-emerald-800' },
-  company: { labelAr: 'شركة', labelEn: 'Company', icon: Building2, color: 'text-purple-600 bg-purple-500/10 border-purple-200 dark:border-purple-800' },
+  individual: { labelAr: 'فرد', labelEn: 'Individual', icon: Users, color: 'text-info bg-info/10 border-info dark:border-info' },
+  business: { labelAr: 'مزود خدمة', labelEn: 'Provider', icon: Briefcase, color: 'text-success bg-success/10 border-success dark:border-success' },
+  company: { labelAr: 'شركة', labelEn: 'Company', icon: Building2, color: 'text-secondary bg-secondary/10 border-secondary dark:border-secondary' },
 };
 
 type ActivePanel =
@@ -133,7 +133,7 @@ const KpiCard = React.memo(({ icon: Icon, label, value, gradient, iconBg, trend 
       </div>
       {trend && (
         <span className={`text-[10px] font-bold tech-content shrink-0 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md ${
-          trend.startsWith('-') ? 'text-rose-600 bg-rose-500/10' : 'text-emerald-600 bg-emerald-500/10'
+          trend.startsWith('-') ? 'text-destructive bg-destructive/10' : 'text-success bg-success/10'
         }`}>
           {trend.startsWith('-') ? <TrendingDown className="w-2.5 h-2.5" /> : <TrendingUp className="w-2.5 h-2.5" />}
           {trend.replace('-', '')}
@@ -178,9 +178,9 @@ const UserDetailPanel = React.memo(({
   if (isLoading) return <div className="px-4 pb-4"><Skeleton className="h-20 rounded-xl" /></div>;
   if (!data) return null;
   const stats = [
-    { label: isRTL ? 'العقود' : 'Contracts', val: data.contracts, icon: FileText, color: 'text-blue-600 bg-blue-500/10' },
-    { label: isRTL ? 'الرسائل' : 'Messages', val: data.messages, icon: MessageSquare, color: 'text-emerald-600 bg-emerald-500/10' },
-    { label: isRTL ? 'التقييمات' : 'Reviews', val: data.reviews, icon: Star, color: 'text-amber-600 bg-amber-500/10' },
+    { label: isRTL ? 'العقود' : 'Contracts', val: data.contracts, icon: FileText, color: 'text-info bg-info/10' },
+    { label: isRTL ? 'الرسائل' : 'Messages', val: data.messages, icon: MessageSquare, color: 'text-success bg-success/10' },
+    { label: isRTL ? 'التقييمات' : 'Reviews', val: data.reviews, icon: Star, color: 'text-warning bg-warning/10' },
   ];
   return (
     <div className="border-t border-border/30 bg-muted/20 px-4 py-3 rounded-b-2xl space-y-3 animate-in slide-in-from-top-1 duration-200">
@@ -205,11 +205,11 @@ const UserDetailPanel = React.memo(({
               return (
                 <div key={link.business.id + (link.staffId ?? 'owner')}
                   className="flex items-center gap-2 rounded-lg bg-background/60 border border-border/30 px-2 py-1.5 text-[11px]">
-                  <Building2 className="w-3 h-3 text-emerald-600 shrink-0" />
+                  <Building2 className="w-3 h-3 text-success shrink-0" />
                   <span className="truncate flex-1 font-medium">
                     {isRTL ? link.business.name_ar : (link.business.name_en || link.business.name_ar)}
                   </span>
-                  <span className="font-mono tech-content text-emerald-600 shrink-0">{link.business.ref_id}</span>
+                  <span className="font-mono tech-content text-success shrink-0">{link.business.ref_id}</span>
                   {!link.isActive && (
                     <Badge variant="outline" className="text-[9px] text-muted-foreground border-dashed px-1 py-0">
                       {isRTL ? 'غير نشط' : 'inactive'}
@@ -410,7 +410,7 @@ const UserRow = React.memo(({ profile, roles, businessLinks, isCurrentUser, canM
             {businessLinks.length > 0 && (
               <div className="mt-2 flex flex-wrap items-center gap-1.5">
                 {businessLinks.length >= 4 && (
-                  <Badge variant="outline" className="text-[10px] gap-1 px-1.5 py-0.5 border-amber-500/50 bg-amber-500/10 text-amber-700 dark:text-amber-300">
+                  <Badge variant="outline" className="text-[10px] gap-1 px-1.5 py-0.5 border-warning/50 bg-warning/10 text-warning dark:text-warning">
                     <AlertTriangle className="w-2.5 h-2.5" />
                     {isRTL ? `مرتبط بـ ${businessLinks.length} منشآت` : `${businessLinks.length} businesses`}
                   </Badge>
@@ -420,15 +420,15 @@ const UserRow = React.memo(({ profile, roles, businessLinks, isCurrentUser, canM
                   const cfg = staffRoleConfig[link.role];
                   return (
                     <Badge key={biz.id + (link.staffId ?? 'o')} variant="outline"
-                      className={`text-[10px] gap-1 px-1.5 py-0.5 bg-emerald-500/5 border-emerald-500/30 ${!link.isActive ? 'opacity-60' : ''}`}
+                      className={`text-[10px] gap-1 px-1.5 py-0.5 bg-success/5 border-success/30 ${!link.isActive ? 'opacity-60' : ''}`}
                       title={`${isRTL ? cfg.ar : cfg.en} • ${biz.ref_id}`}>
-                      <Building2 className="w-2.5 h-2.5 text-emerald-600" />
+                      <Building2 className="w-2.5 h-2.5 text-success" />
                       <span className="truncate max-w-[120px]">{isRTL ? biz.name_ar : (biz.name_en || biz.name_ar)}</span>
-                      <span className="font-mono text-emerald-600 tech-content">{biz.ref_id}</span>
+                      <span className="font-mono text-success tech-content">{biz.ref_id}</span>
                       <span className={`text-[9px] px-1 rounded ${cfg.color} border-0`}>
                         {isRTL ? cfg.ar : cfg.en}
                       </span>
-                      {biz.is_verified && <Check className="w-2.5 h-2.5 text-emerald-500" />}
+                      {biz.is_verified && <Check className="w-2.5 h-2.5 text-success" />}
                     </Badge>
                   );
                 })}
@@ -457,7 +457,7 @@ const UserRow = React.memo(({ profile, roles, businessLinks, isCurrentUser, canM
             )}
             {canManageUser && (
               <Tooltip><TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className={`h-8 w-8 rounded-xl ${isBanned ? 'text-emerald-600' : 'text-amber-600'}`} onClick={() => onToggleBan(profile)}>
+                <Button variant="ghost" size="icon" className={`h-8 w-8 rounded-xl ${isBanned ? 'text-success' : 'text-warning'}`} onClick={() => onToggleBan(profile)}>
                   {isBanned ? <UserCheck className="w-4 h-4" /> : <Ban className="w-4 h-4" />}
                 </Button>
               </TooltipTrigger><TooltipContent>{isBanned ? (isRTL ? 'تفعيل' : 'Enable') : (isRTL ? 'تعطيل' : 'Disable')}</TooltipContent></Tooltip>
@@ -995,21 +995,21 @@ const AdminUsers = () => {
           <TabsContent value="overview" className="space-y-5 mt-5">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               <KpiCard icon={Users} label={isRTL ? 'إجمالي المستخدمين' : 'Total Users'} value={stats.totalUsers} gradient="from-primary/10 to-primary/5" iconBg="bg-primary/15 text-primary" />
-              <KpiCard icon={Briefcase} label={isRTL ? 'مزودي الخدمات' : 'Providers'} value={stats.providers} gradient="from-emerald-500/10 to-emerald-500/5" iconBg="bg-emerald-500/15 text-emerald-600" />
+              <KpiCard icon={Briefcase} label={isRTL ? 'مزودي الخدمات' : 'Providers'} value={stats.providers} gradient="from-success/10 to-success/5" iconBg="bg-success/15 text-success" />
               <KpiCard
                 icon={UserCheck}
                 label={isRTL ? 'مكتمل التسجيل' : 'Onboarded'}
                 value={stats.onboarded}
-                gradient="from-blue-500/10 to-blue-500/5"
-                iconBg="bg-blue-500/15 text-blue-600"
+                gradient="from-info/10 to-info/5"
+                iconBg="bg-info/15 text-info"
                 trend={stats.totalUsers > 0 ? `${Math.round((stats.onboarded / stats.totalUsers) * 100)}%` : undefined}
               />
               <KpiCard
                 icon={TrendingUp}
                 label={isRTL ? `جديد هذا الأسبوع • ${stats.last24h} اليوم` : `New 7d • ${stats.last24h} today`}
                 value={stats.recentUsers}
-                gradient="from-amber-500/10 to-amber-500/5"
-                iconBg="bg-amber-500/15 text-amber-600"
+                gradient="from-warning/10 to-warning/5"
+                iconBg="bg-warning/15 text-warning"
                 trend={`${stats.wow >= 0 ? '' : '-'}${Math.abs(stats.wow)}%`}
               />
             </div>
@@ -1198,12 +1198,12 @@ const AdminUsers = () => {
                       <Download className="w-3.5 h-3.5" />{isRTL ? 'تصدير المحدد' : 'Export'}
                     </Button>
                     {isSuperAdmin && (<>
-                    <Button variant="outline" size="sm" className="rounded-xl gap-1.5 h-8 text-amber-600 border-amber-300"
+                    <Button variant="outline" size="sm" className="rounded-xl gap-1.5 h-8 text-warning border-warning"
                       onClick={() => bulkBanMutation.mutate({ ids: Array.from(selected), isBanned: true })}
                       disabled={bulkBanMutation.isPending}>
                       <Ban className="w-3.5 h-3.5" />{isRTL ? 'تعطيل' : 'Disable'}
                     </Button>
-                    <Button variant="outline" size="sm" className="rounded-xl gap-1.5 h-8 text-emerald-600 border-emerald-300"
+                    <Button variant="outline" size="sm" className="rounded-xl gap-1.5 h-8 text-success border-success"
                       onClick={() => bulkBanMutation.mutate({ ids: Array.from(selected), isBanned: false })}
                       disabled={bulkBanMutation.isPending}>
                       <UserCheck className="w-3.5 h-3.5" />{isRTL ? 'تفعيل' : 'Enable'}
@@ -1402,10 +1402,10 @@ const AdminUsers = () => {
           {/* ANALYTICS */}
           <TabsContent value="analytics" className="space-y-5 mt-5">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              <KpiCard icon={ShieldAlert} label={isRTL ? 'مشرف أعلى' : 'Super Admins'} value={stats.superAdmins} gradient="from-purple-500/10 to-purple-500/5" iconBg="bg-purple-500/15 text-purple-600" />
-              <KpiCard icon={Crown} label={isRTL ? 'المشرفين' : 'Admins'} value={stats.admins} gradient="from-red-500/10 to-red-500/5" iconBg="bg-red-500/15 text-red-600" />
-              <KpiCard icon={ShieldCheck} label={isRTL ? 'مشرفي محتوى' : 'Moderators'} value={stats.moderators} gradient="from-amber-500/10 to-amber-500/5" iconBg="bg-amber-500/15 text-amber-600" />
-              <KpiCard icon={Ban} label={isRTL ? 'معطّلون' : 'Disabled'} value={stats.bannedCount} gradient="from-rose-500/10 to-rose-500/5" iconBg="bg-rose-500/15 text-rose-600" />
+              <KpiCard icon={ShieldAlert} label={isRTL ? 'مشرف أعلى' : 'Super Admins'} value={stats.superAdmins} gradient="from-secondary/10 to-secondary/5" iconBg="bg-secondary/15 text-secondary" />
+              <KpiCard icon={Crown} label={isRTL ? 'المشرفين' : 'Admins'} value={stats.admins} gradient="from-destructive/10 to-destructive/5" iconBg="bg-destructive/15 text-destructive" />
+              <KpiCard icon={ShieldCheck} label={isRTL ? 'مشرفي محتوى' : 'Moderators'} value={stats.moderators} gradient="from-warning/10 to-warning/5" iconBg="bg-warning/15 text-warning" />
+              <KpiCard icon={Ban} label={isRTL ? 'معطّلون' : 'Disabled'} value={stats.bannedCount} gradient="from-destructive/10 to-destructive/5" iconBg="bg-destructive/15 text-destructive" />
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div className="rounded-2xl border border-border/30 bg-card p-5">

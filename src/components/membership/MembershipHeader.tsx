@@ -42,7 +42,7 @@ export const MembershipHeader = ({ isRTL, billingCycle, setBillingCycle, plans =
           billingCycle === 'yearly' ? 'bg-accent text-accent-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground')}>
         {isRTL ? 'سنوي' : 'Yearly'}
         {savingsPct > 0 && (
-          <span className="ms-1 text-[10px] bg-emerald-500/15 text-emerald-600 px-1.5 py-0.5 rounded-full">
+          <span className="ms-1 text-[10px] bg-success/15 text-success px-1.5 py-0.5 rounded-full">
             {isRTL ? `وفّر ${savingsPct}%` : `Save ${savingsPct}%`}
           </span>
         )}

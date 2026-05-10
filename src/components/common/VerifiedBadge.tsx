@@ -40,7 +40,7 @@ export const VerifiedBadge = memo(({ size = 'sm', iconOnly = false, className }:
     return (
       <ShieldCheck
         aria-label={label}
-        className={cn('text-emerald-600 dark:text-emerald-400 shrink-0', styles.icon, className)}
+        className={cn('text-success dark:text-success shrink-0', styles.icon, className)}
       />
     );
   }
@@ -48,7 +48,7 @@ export const VerifiedBadge = memo(({ size = 'sm', iconOnly = false, className }:
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-md font-body font-semibold border bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
+        'inline-flex items-center rounded-md font-body font-semibold border bg-success/10 text-success dark:text-success border-success/20',
         styles.wrap,
         className,
       )}

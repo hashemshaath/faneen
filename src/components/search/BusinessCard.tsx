@@ -129,7 +129,7 @@ export const BusinessCard = memo(({ business: b, viewMode }: BusinessCardProps) 
             <h3 className="font-heading font-bold text-sm sm:text-base text-foreground group-hover:text-accent transition-colors truncate">{name}</h3>
             {b.is_verified && <VerifiedBadge size="xs" />}
             {hasOffer && (
-              <span className="inline-flex items-center gap-1 px-1.5 py-0 h-4 rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400 text-[9px] font-body font-semibold border border-rose-500/20">
+              <span className="inline-flex items-center gap-1 px-1.5 py-0 h-4 rounded-md bg-destructive/10 text-destructive dark:text-destructive text-[9px] font-body font-semibold border border-destructive/20">
                 <TicketPercent className="w-2.5 h-2.5" />
                 {isRTL ? 'كوبون' : 'Coupon'}
               </span>
@@ -230,7 +230,7 @@ export const BusinessCard = memo(({ business: b, viewMode }: BusinessCardProps) 
           <div className="flex flex-wrap items-center gap-1.5 mt-2">
             {b.is_verified && <VerifiedBadge size="md" />}
             {hasOffer && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400 text-[10px] font-body font-semibold border border-rose-500/20">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-destructive/10 text-destructive dark:text-destructive text-[10px] font-body font-semibold border border-destructive/20">
                 <TicketPercent className="w-3 h-3" />
                 {isRTL ? 'كوبون خصم' : 'Coupon'}
               </span>

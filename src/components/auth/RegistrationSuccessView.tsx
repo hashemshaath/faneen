@@ -127,9 +127,9 @@ export const RegistrationSuccessView: React.FC<RegistrationSuccessViewProps> = (
     <div className="space-y-8 text-center animate-fade-in">
       {/* Success icon */}
       <div className="relative mx-auto w-24 h-24">
-        <div className="absolute inset-0 rounded-full bg-green-500/10 animate-ping" style={{ animationDuration: '2s' }} />
-        <div className="relative w-24 h-24 rounded-full bg-green-500/15 flex items-center justify-center">
-          <CheckCircle className="w-12 h-12 text-green-500" />
+        <div className="absolute inset-0 rounded-full bg-success/10 animate-ping" style={{ animationDuration: '2s' }} />
+        <div className="relative w-24 h-24 rounded-full bg-success/15 flex items-center justify-center">
+          <CheckCircle className="w-12 h-12 text-success" />
         </div>
       </div>
 
@@ -182,9 +182,9 @@ export const RegistrationSuccessView: React.FC<RegistrationSuccessViewProps> = (
           </p>
         </div>
       ) : (
-        <div className="flex items-center justify-center gap-2 rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 px-4 py-3 max-w-xs mx-auto">
-          <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
-          <p className="text-xs text-amber-700 dark:text-amber-300 font-medium">
+        <div className="flex items-center justify-center gap-2 rounded-lg border border-warning dark:border-warning bg-warning dark:bg-warning/20 px-4 py-3 max-w-xs mx-auto">
+          <AlertTriangle className="w-4 h-4 text-warning dark:text-warning shrink-0" />
+          <p className="text-xs text-warning dark:text-warning font-medium">
             {isRTL
               ? 'انتهى الوقت المتوقع. أعد الإرسال أو تحقق من البريد المهمل.'
               : "Time's up. Resend or check your spam folder."}

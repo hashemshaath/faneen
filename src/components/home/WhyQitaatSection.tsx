@@ -103,8 +103,8 @@ export const WhyQitaatSection = ({ variant = 'home' }: Props) => {
                 className={`group bg-card dark:bg-card/70 rounded-2xl border border-border/40 dark:border-border/20 p-4 sm:p-5 text-center hover:border-accent/30 hover:shadow-lg hover:shadow-accent/5 transition-all duration-500 ${isVisible ? 'animate-card-slide-up' : ''}`}
                 style={{ animationDelay: `${i * 70}ms`, animationFillMode: 'both' }}
               >
-                <div className="mx-auto mb-3 sm:mb-4 w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-emerald-500/10 dark:bg-emerald-500/15 flex items-center justify-center group-hover:bg-emerald-500/20 group-hover:scale-110 transition-all duration-300">
-                  <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600 dark:text-emerald-400" strokeWidth={2} />
+                <div className="mx-auto mb-3 sm:mb-4 w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-success/10 dark:bg-success/15 flex items-center justify-center group-hover:bg-success/20 group-hover:scale-110 transition-all duration-300">
+                  <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-success dark:text-success" strokeWidth={2} />
                 </div>
                 <h3 className="font-heading font-bold text-xs sm:text-sm text-foreground mb-1.5 sm:mb-2">
                   {language === 'ar' ? item.title_ar : item.title_en}

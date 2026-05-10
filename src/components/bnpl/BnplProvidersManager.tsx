@@ -180,11 +180,11 @@ export const BnplProvidersManager = ({ businessId }: Props) => {
                         {provider.min_amount}-{provider.max_amount} {provider.currency_code}
                       </span>
                       {provider.interest_rate > 0 ? (
-                        <span className="flex items-center gap-0.5 text-amber-600">
+                        <span className="flex items-center gap-0.5 text-warning">
                           <Percent className="w-3 h-3" />{provider.interest_rate}%
                         </span>
                       ) : (
-                        <Badge variant="secondary" className="text-[8px] px-1.5 py-0 h-4 bg-emerald-500/10 text-emerald-600">{isRTL ? 'بدون فوائد' : '0% Interest'}</Badge>
+                        <Badge variant="secondary" className="text-[8px] px-1.5 py-0 h-4 bg-success/10 text-success">{isRTL ? 'بدون فوائد' : '0% Interest'}</Badge>
                       )}
                     </div>
                   </div>

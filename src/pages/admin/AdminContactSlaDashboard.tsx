@@ -128,9 +128,9 @@ export default function AdminContactSlaDashboard() {
             {/* KPIs */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <KpiCard icon={<Clock className="w-4 h-4" />} label={isRTL ? 'إجمالي الرسائل' : 'Total messages'} value={String(overall?.total ?? 0)} />
-              <KpiCard icon={<CheckCircle2 className="w-4 h-4 text-emerald-600" />} label={isRTL ? 'التزام الرد' : 'Response SLA'} value={fmt(overall?.sla_response_compliance_pct ?? null)} sub={`< ${data.thresholds.target_response_hours}h`} />
-              <KpiCard icon={<TrendingUp className="w-4 h-4 text-sky-600" />} label={isRTL ? 'التزام الإغلاق' : 'Resolution SLA'} value={fmt(overall?.sla_resolution_compliance_pct ?? null)} sub={`< ${data.thresholds.target_resolution_hours}h`} />
-              <KpiCard icon={<AlertTriangle className="w-4 h-4 text-amber-600" />} label={isRTL ? 'متأخرة مفتوحة' : 'Stale open'} value={String(overall?.stale_open ?? 0)} sub={`> ${data.thresholds.stale_hours}h`} />
+              <KpiCard icon={<CheckCircle2 className="w-4 h-4 text-success" />} label={isRTL ? 'التزام الرد' : 'Response SLA'} value={fmt(overall?.sla_response_compliance_pct ?? null)} sub={`< ${data.thresholds.target_response_hours}h`} />
+              <KpiCard icon={<TrendingUp className="w-4 h-4 text-info" />} label={isRTL ? 'التزام الإغلاق' : 'Resolution SLA'} value={fmt(overall?.sla_resolution_compliance_pct ?? null)} sub={`< ${data.thresholds.target_resolution_hours}h`} />
+              <KpiCard icon={<AlertTriangle className="w-4 h-4 text-warning" />} label={isRTL ? 'متأخرة مفتوحة' : 'Stale open'} value={String(overall?.stale_open ?? 0)} sub={`> ${data.thresholds.stale_hours}h`} />
             </div>
 
             {/* Trend chart */}
@@ -219,9 +219,9 @@ function KpiCard({ icon, label, value, sub }: { icon: React.ReactNode; label: st
 
 function ComplianceBadge({ value }: { value: number | null | undefined }) {
   if (value == null) return <span className="text-muted-foreground tech-content">—</span>;
-  const cls = value >= 90 ? 'bg-emerald-100 text-emerald-700' :
-              value >= 70 ? 'bg-sky-100 text-sky-700' :
-              value >= 50 ? 'bg-amber-100 text-amber-700' :
-                            'bg-rose-100 text-rose-700';
+  const cls = value >= 90 ? 'bg-success text-success' :
+              value >= 70 ? 'bg-info text-info' :
+              value >= 50 ? 'bg-warning text-warning' :
+                            'bg-destructive text-destructive';
   return <span className={`px-2 py-0.5 rounded-md text-xs font-medium tech-content ${cls}`}>{value}%</span>;
 }

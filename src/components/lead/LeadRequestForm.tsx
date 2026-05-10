@@ -127,8 +127,8 @@ export const LeadRequestForm: React.FC<Props> = ({ businessId, businessName, sou
     return (
       <Card className={className}>
         <CardContent className="p-6 sm:p-8 text-center space-y-3">
-          <div className="w-14 h-14 mx-auto rounded-2xl bg-emerald-500/10 flex items-center justify-center">
-            <CheckCircle2 className="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
+          <div className="w-14 h-14 mx-auto rounded-2xl bg-success/10 flex items-center justify-center">
+            <CheckCircle2 className="w-7 h-7 text-success dark:text-success" />
           </div>
           <h3 className="text-base font-semibold">
             {isRTL ? 'تم إرسال طلبك بنجاح' : 'Request sent successfully'}

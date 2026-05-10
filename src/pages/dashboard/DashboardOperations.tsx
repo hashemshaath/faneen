@@ -25,18 +25,18 @@ const typeIcons: Record<string, React.ElementType> = {
 };
 
 const typeColors: Record<string, string> = {
-  contract: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
-  project: 'bg-violet-500/10 text-violet-600 dark:text-violet-400',
-  review: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
-  payment: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
-  warranty: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400',
-  maintenance: 'bg-orange-500/10 text-orange-600 dark:text-orange-400',
+  contract: 'bg-info/10 text-info dark:text-info',
+  project: 'bg-secondary/10 text-secondary dark:text-secondary',
+  review: 'bg-warning/10 text-warning dark:text-warning',
+  payment: 'bg-success/10 text-success dark:text-success',
+  warranty: 'bg-info/10 text-info dark:text-info',
+  maintenance: 'bg-urgent/10 text-urgent dark:text-urgent',
 };
 
 const opTypeColors: Record<string, string> = {
-  create: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200/50 dark:border-emerald-800/30',
-  status_change: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-200/50 dark:border-blue-800/30',
-  review_received: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-200/50 dark:border-amber-800/30',
+  create: 'bg-success/10 text-success dark:text-success border-success/50 dark:border-success/30',
+  status_change: 'bg-info/10 text-info dark:text-info border-info/50 dark:border-info/30',
+  review_received: 'bg-warning/10 text-warning dark:text-warning border-warning/50 dark:border-warning/30',
   payment: 'bg-accent/10 text-accent border-accent/20',
 };
 
@@ -249,9 +249,9 @@ const DashboardOperations = () => {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
           {[
             { label: isRTL ? 'إجمالي العمليات' : 'Total', value: stats.total, icon: Activity, color: 'text-accent bg-accent/10', trend: null },
-            { label: isRTL ? 'اليوم' : 'Today', value: stats.today, icon: Zap, color: 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10', trend: stats.today > 0 ? 'up' : null },
-            { label: isRTL ? 'هذا الأسبوع' : 'This Week', value: stats.thisWeek, icon: TrendingUp, color: 'text-blue-600 dark:text-blue-400 bg-blue-500/10', trend: null },
-            { label: isRTL ? 'هذا الشهر' : 'This Month', value: stats.thisMonth, icon: Calendar, color: 'text-violet-600 dark:text-violet-400 bg-violet-500/10', trend: null },
+            { label: isRTL ? 'اليوم' : 'Today', value: stats.today, icon: Zap, color: 'text-success dark:text-success bg-success/10', trend: stats.today > 0 ? 'up' : null },
+            { label: isRTL ? 'هذا الأسبوع' : 'This Week', value: stats.thisWeek, icon: TrendingUp, color: 'text-info dark:text-info bg-info/10', trend: null },
+            { label: isRTL ? 'هذا الشهر' : 'This Month', value: stats.thisMonth, icon: Calendar, color: 'text-secondary dark:text-secondary bg-secondary/10', trend: null },
           ].map((stat, i) => (
             <Card key={i} className="border-border/40 bg-card/50 overflow-hidden">
               <CardContent className="p-2.5 sm:p-3">
@@ -262,7 +262,7 @@ const DashboardOperations = () => {
                   <div className="min-w-0">
                     <p className="text-lg sm:text-xl font-bold flex items-center gap-1">
                       <span className="tech-content">{stat.value}</span>
-                      {stat.trend === 'up' && <ArrowUpRight className="w-3 h-3 text-emerald-500" />}
+                      {stat.trend === 'up' && <ArrowUpRight className="w-3 h-3 text-success" />}
                     </p>
                     <p className="text-[9px] sm:text-[10px] text-muted-foreground truncate">{stat.label}</p>
                   </div>

@@ -39,27 +39,27 @@ interface Props {
 }
 
 const statusIcon = (s: string) => {
-  if (s === 'pass') return <CheckCircle2 className="w-3.5 h-3.5 text-green-500 shrink-0" />;
-  if (s === 'warn') return <AlertTriangle className="w-3.5 h-3.5 text-yellow-500 shrink-0" />;
-  return <XCircle className="w-3.5 h-3.5 text-red-500 shrink-0" />;
+  if (s === 'pass') return <CheckCircle2 className="w-3.5 h-3.5 text-success shrink-0" />;
+  if (s === 'warn') return <AlertTriangle className="w-3.5 h-3.5 text-warning shrink-0" />;
+  return <XCircle className="w-3.5 h-3.5 text-destructive shrink-0" />;
 };
 
 const scoreColor = (s: number) => {
-  if (s >= 80) return 'text-green-500';
-  if (s >= 50) return 'text-yellow-500';
-  return 'text-red-500';
+  if (s >= 80) return 'text-success';
+  if (s >= 50) return 'text-warning';
+  return 'text-destructive';
 };
 
 const scoreBg = (s: number) => {
-  if (s >= 80) return 'bg-green-500';
-  if (s >= 50) return 'bg-yellow-500';
-  return 'bg-red-500';
+  if (s >= 80) return 'bg-success';
+  if (s >= 50) return 'bg-warning';
+  return 'bg-destructive';
 };
 
 const progressColor = (s: number) => {
-  if (s >= 80) return '[&>div]:bg-green-500';
-  if (s >= 50) return '[&>div]:bg-yellow-500';
-  return '[&>div]:bg-red-500';
+  if (s >= 80) return '[&>div]:bg-success';
+  if (s >= 50) return '[&>div]:bg-warning';
+  return '[&>div]:bg-destructive';
 };
 
 export const SeoScorePanel: React.FC<Props> = ({ isRTL, analysis, localScore, isAnalyzing, contentStats, focusKeyword }) => {
@@ -140,7 +140,7 @@ export const SeoScorePanel: React.FC<Props> = ({ isRTL, analysis, localScore, is
           </p>
           {quickChecks.map((c, i) => (
             <div key={i} className="flex items-center gap-1.5 text-[11px]">
-              {c.ok ? <CheckCircle2 className="w-3 h-3 text-green-500 shrink-0" /> : <XCircle className="w-3 h-3 text-muted-foreground/40 shrink-0" />}
+              {c.ok ? <CheckCircle2 className="w-3 h-3 text-success shrink-0" /> : <XCircle className="w-3 h-3 text-muted-foreground/40 shrink-0" />}
               <span className={c.ok ? 'text-foreground' : 'text-muted-foreground'}>{c.label}</span>
             </div>
           ))}
@@ -185,7 +185,7 @@ export const SeoScorePanel: React.FC<Props> = ({ isRTL, analysis, localScore, is
             <div className="space-y-1">
               <div className="flex justify-between text-[11px]">
                 <span className="text-muted-foreground">{isRTL ? 'كثافة الكلمة المفتاحية' : 'Keyword Density'}</span>
-                <span className={`font-medium ${contentStats.keywordDensity >= 1 && contentStats.keywordDensity <= 3 ? 'text-green-500' : contentStats.keywordDensity > 3 ? 'text-red-500' : 'text-yellow-500'}`}>
+                <span className={`font-medium ${contentStats.keywordDensity >= 1 && contentStats.keywordDensity <= 3 ? 'text-success' : contentStats.keywordDensity > 3 ? 'text-destructive' : 'text-warning'}`}>
                   {contentStats.keywordDensity.toFixed(1)}%
                 </span>
               </div>
@@ -200,7 +200,7 @@ export const SeoScorePanel: React.FC<Props> = ({ isRTL, analysis, localScore, is
           <div className="space-y-1">
             <div className="flex justify-between text-[11px]">
               <span className="text-muted-foreground">{isRTL ? 'طول المحتوى' : 'Content Length'}</span>
-              <span className={`font-medium ${contentStats.wordCountAr >= 300 ? 'text-green-500' : 'text-yellow-500'}`}>
+              <span className={`font-medium ${contentStats.wordCountAr >= 300 ? 'text-success' : 'text-warning'}`}>
                 {contentStats.wordCountAr >= 300 ? (isRTL ? 'جيد' : 'Good') : (isRTL ? 'قصير' : 'Short')}
               </span>
             </div>

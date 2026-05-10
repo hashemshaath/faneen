@@ -75,8 +75,8 @@ const StatItem = ({
       {/* live pulse dot */}
       <div className="relative mt-4 flex items-center gap-1.5 text-[10px] text-muted-foreground/80 font-body">
         <span className="relative flex w-1.5 h-1.5">
-          <span className="absolute inset-0 rounded-full bg-emerald-500 opacity-70 animate-ping" />
-          <span className="relative inline-flex w-1.5 h-1.5 rounded-full bg-emerald-500" />
+          <span className="absolute inset-0 rounded-full bg-success opacity-70 animate-ping" />
+          <span className="relative inline-flex w-1.5 h-1.5 rounded-full bg-success" />
         </span>
         <span className="tracking-wide uppercase">live</span>
       </div>
@@ -103,16 +103,16 @@ const StatsStrip = ({ isRTL }: { isRTL: boolean }) => {
   const items = [
     { icon: Building2, end: data?.biz ?? 0, label: isRTL ? 'مزود خدمة' : 'Providers',
       sub: isRTL ? 'مفعّلون ومتحقَّق منهم' : 'Active & verified',
-      accent: 'from-amber-500 to-amber-600' },
+      accent: 'from-warning to-warning' },
     { icon: Star, end: data?.rev ?? 0, label: isRTL ? 'تقييم' : 'Reviews',
       sub: isRTL ? 'تقييمات حقيقية موثقة' : 'Real verified reviews',
-      accent: 'from-emerald-500 to-emerald-600' },
+      accent: 'from-success to-success' },
     { icon: FolderOpen, end: data?.proj ?? 0, label: isRTL ? 'مشروع' : 'Projects',
       sub: isRTL ? 'منجزة ومنشورة' : 'Completed & published',
-      accent: 'from-sky-500 to-sky-600' },
+      accent: 'from-info to-info' },
     { icon: Users, end: data?.users ?? 0, label: isRTL ? 'عضو' : 'Members',
       sub: isRTL ? 'يثقون بقِطاعات' : 'Trust Qitaat',
-      accent: 'from-violet-500 to-violet-600' },
+      accent: 'from-secondary to-secondary' },
   ];
 
   return (
@@ -120,7 +120,7 @@ const StatsStrip = ({ isRTL }: { isRTL: boolean }) => {
       <div className="container px-4 sm:px-6">
         <div ref={ref} className="relative">
           {/* Glow under the card */}
-          <div className="absolute -inset-x-4 -inset-y-2 bg-gradient-to-r from-amber-500/10 via-emerald-500/10 to-violet-500/10 blur-3xl pointer-events-none" />
+          <div className="absolute -inset-x-4 -inset-y-2 bg-gradient-to-r from-warning/10 via-success/10 to-secondary/10 blur-3xl pointer-events-none" />
           <div className="relative bg-card/95 backdrop-blur-xl border border-border/50 rounded-3xl p-3 sm:p-4 shadow-elev-3">
             {/* Section eyebrow */}
             <div className="flex items-center justify-between gap-2 px-3 sm:px-4 pt-2 pb-3 border-b border-border/40 mb-3">
@@ -165,7 +165,7 @@ const PillarsSection = ({ isRTL }: { isRTL: boolean }) => {
       desc: isRTL
         ? 'تمكين قطاع الصناعة العربي عبر منصة موثوقة تجمع المزودين والعملاء في بيئة شفافة، احترافية، ومحمية.'
         : 'Empowering the Arab industrial sector through a trusted platform that connects providers and clients in a transparent, professional, and protected environment.',
-      tone: 'from-amber-500/15 to-amber-500/5 text-amber-600 dark:text-amber-400',
+      tone: 'from-warning/15 to-warning/5 text-warning dark:text-warning',
     },
     {
       icon: Eye,
@@ -173,7 +173,7 @@ const PillarsSection = ({ isRTL }: { isRTL: boolean }) => {
       desc: isRTL
         ? 'أن نكون البوابة الرقمية الأولى لأعمال الألمنيوم والزجاج والخشب والحديد في الوطن العربي بحلول 2030.'
         : 'To become the leading digital gateway for aluminum, glass, wood, and steel businesses in the Arab world by 2030.',
-      tone: 'from-emerald-500/15 to-emerald-500/5 text-emerald-600 dark:text-emerald-400',
+      tone: 'from-success/15 to-success/5 text-success dark:text-success',
     },
     {
       icon: Heart,
@@ -181,7 +181,7 @@ const PillarsSection = ({ isRTL }: { isRTL: boolean }) => {
       desc: isRTL
         ? 'الثقة، الجودة، الشفافية، والابتكار — أربعة مبادئ تحكم كل قرار وكل ميزة نطلقها.'
         : 'Trust, Quality, Transparency, and Innovation — four principles that guide every decision and feature we ship.',
-      tone: 'from-sky-500/15 to-sky-500/5 text-sky-600 dark:text-sky-400',
+      tone: 'from-info/15 to-info/5 text-info dark:text-info',
     },
   ];
   return (
@@ -272,28 +272,28 @@ const JourneySection = ({ isRTL }: { isRTL: boolean }) => {
       title: isRTL ? 'الفكرة والبحث' : 'Idea & Research',
       desc: isRTL ? 'دراسة عميقة للسوق وتحديد فجوة الثقة بين العملاء ومزودي الخدمة.' : 'Deep market study identifying the trust gap between clients and providers.',
       highlights: isRTL ? ['أبحاث ميدانية', 'تحليل السوق'] : ['Field research', 'Market analysis'],
-      status: 'done', accent: 'from-amber-500 to-amber-600',
+      status: 'done', accent: 'from-warning to-warning',
     },
     {
       icon: Layers, year: '2024',
       title: isRTL ? 'إطلاق المنصة' : 'Platform Launch',
       desc: isRTL ? 'انطلاقة قِطاعات مع أكثر من 6 قطاعات صناعية وأدوات احترافية متكاملة.' : 'Qitaat launches with 6+ industrial sectors and integrated tools.',
       highlights: isRTL ? ['6 قطاعات', 'بحث متقدم', 'ملفات احترافية'] : ['6 sectors', 'Advanced search', 'Pro profiles'],
-      status: 'done', accent: 'from-emerald-500 to-emerald-600',
+      status: 'done', accent: 'from-success to-success',
     },
     {
       icon: FileSignature, year: '2025',
       title: isRTL ? 'الأدوات الذكية' : 'Smart Tools',
       desc: isRTL ? 'إطلاق العقود المحمية، التقسيط المرن، الضمانات الرقمية، ومحفظة آمنة.' : 'Protected contracts, flexible installments, digital warranties, and secure wallet.',
       highlights: isRTL ? ['عقود محمية', 'تقسيط', 'ضمانات', 'محفظة'] : ['Protected contracts', 'Installments', 'Warranties', 'Wallet'],
-      status: 'live', accent: 'from-sky-500 to-sky-600',
+      status: 'live', accent: 'from-info to-info',
     },
     {
       icon: Rocket, year: '2026',
       title: isRTL ? 'التوسّع والذكاء الاصطناعي' : 'Expansion & AI',
       desc: isRTL ? 'توسع إقليمي، ميزات مدعومة بالذكاء الاصطناعي، وتجربة موحَّدة عبر الأجهزة.' : 'Regional expansion, AI-powered features, and a unified cross-device experience.',
       highlights: isRTL ? ['توسع إقليمي', 'ذكاء اصطناعي', 'تطبيقات الجوال'] : ['Regional rollout', 'AI features', 'Mobile apps'],
-      status: 'next', accent: 'from-violet-500 to-violet-600',
+      status: 'next', accent: 'from-secondary to-secondary',
     },
   ];
 
@@ -303,8 +303,8 @@ const JourneySection = ({ isRTL }: { isRTL: boolean }) => {
     return isRTL ? 'قادم' : 'Upcoming';
   };
   const statusClasses = (s: JourneyStep['status']) =>
-    s === 'done' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
-      : s === 'live' ? 'bg-sky-500/15 text-sky-600 dark:text-sky-400 border-sky-500/30'
+    s === 'done' ? 'bg-success/15 text-success dark:text-success border-success/30'
+      : s === 'live' ? 'bg-info/15 text-info dark:text-info border-info/30'
       : 'bg-muted text-muted-foreground border-border';
 
   return (
@@ -341,7 +341,7 @@ const JourneySection = ({ isRTL }: { isRTL: boolean }) => {
                       <Icon className="w-4 h-4 text-white" strokeWidth={2.4} />
                     </div>
                     {s.status === 'live' && (
-                      <span className="absolute inset-0 rounded-full bg-sky-500/30 animate-ping" aria-hidden />
+                      <span className="absolute inset-0 rounded-full bg-info/30 animate-ping" aria-hidden />
                     )}
                   </div>
 
@@ -359,7 +359,7 @@ const JourneySection = ({ isRTL }: { isRTL: boolean }) => {
                       <ul className={`flex flex-wrap gap-1.5 ${onLeft ? 'sm:justify-end' : 'sm:justify-start'}`}>
                         {s.highlights.map((h, k) => (
                           <li key={k} className="inline-flex items-center gap-1 text-[11px] font-body font-medium text-foreground/80 bg-muted/60 border border-border/50 rounded-full px-2.5 py-1">
-                            <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                            <CheckCircle2 className="w-3 h-3 text-success" />
                             {h}
                           </li>
                         ))}
@@ -400,8 +400,8 @@ const PromisesSection = ({ isRTL }: { isRTL: boolean }) => {
             const Icon = it.icon;
             return (
               <div key={i} className="bg-card border border-border/40 rounded-2xl p-5 hover:border-accent/40 hover:shadow-lg transition-all">
-                <div className="w-11 h-11 rounded-xl bg-emerald-500/10 flex items-center justify-center mb-3">
-                  <Icon className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                <div className="w-11 h-11 rounded-xl bg-success/10 flex items-center justify-center mb-3">
+                  <Icon className="w-5 h-5 text-success dark:text-success" />
                 </div>
                 <h3 className="font-heading font-bold text-sm text-foreground mb-1.5">{it.t}</h3>
                 <p className="text-xs text-muted-foreground leading-relaxed">{it.d}</p>

@@ -231,10 +231,10 @@ const ForProviders = () => {
 
             {/* Trust signals */}
             <div className="flex flex-wrap justify-center items-center gap-x-5 gap-y-2 text-xs md:text-sm text-muted-foreground mb-8">
-              <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-emerald-500" />{isRTL ? 'بدون رسوم تسجيل' : 'No signup fees'}</span>
-              <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-emerald-500" />{isRTL ? 'بدون عمولة على المشاريع' : 'Zero project commission'}</span>
-              <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-emerald-500" />{isRTL ? 'إلغاء في أي وقت' : 'Cancel anytime'}</span>
-              <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-emerald-500" />{isRTL ? 'دعم بالعربية 24/7' : 'Arabic support 24/7'}</span>
+              <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-success" />{isRTL ? 'بدون رسوم تسجيل' : 'No signup fees'}</span>
+              <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-success" />{isRTL ? 'بدون عمولة على المشاريع' : 'Zero project commission'}</span>
+              <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-success" />{isRTL ? 'إلغاء في أي وقت' : 'Cancel anytime'}</span>
+              <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-success" />{isRTL ? 'دعم بالعربية 24/7' : 'Arabic support 24/7'}</span>
             </div>
 
             {/* Stats strip */}
@@ -361,10 +361,10 @@ const ForProviders = () => {
                 <div key={i} className="contents">
                   <div className={`p-4 md:p-5 border-t border-border/40 ${i % 2 ? 'bg-muted/10' : ''}`}>{isRTL ? row.ar : row.en}</div>
                   <div className={`p-4 md:p-5 border-t border-border/40 text-center ${i % 2 ? 'bg-muted/10' : ''}`}>
-                    {row.without ? <CheckCircle2 className="w-5 h-5 text-emerald-500 mx-auto" /> : <XCircle className="w-5 h-5 text-muted-foreground/40 mx-auto" />}
+                    {row.without ? <CheckCircle2 className="w-5 h-5 text-success mx-auto" /> : <XCircle className="w-5 h-5 text-muted-foreground/40 mx-auto" />}
                   </div>
                   <div className={`p-4 md:p-5 border-t border-border/40 text-center bg-primary/5`}>
-                    {row.withQ ? <CheckCircle2 className="w-5 h-5 text-emerald-500 mx-auto" /> : <XCircle className="w-5 h-5 text-muted-foreground/40 mx-auto" />}
+                    {row.withQ ? <CheckCircle2 className="w-5 h-5 text-success mx-auto" /> : <XCircle className="w-5 h-5 text-muted-foreground/40 mx-auto" />}
                   </div>
                 </div>
               ))}
@@ -444,7 +444,7 @@ const ForProviders = () => {
                   <Quote className="absolute top-4 end-4 w-7 h-7 text-primary/15" />
                   <div className="flex gap-0.5 mb-3">
                     {Array.from({ length: Math.round(t.rating ?? 5) }).map((_, i) => (
-                      <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
+                      <Star key={i} className="w-4 h-4 fill-warning text-warning" />
                     ))}
                   </div>
                   <p className="text-sm leading-relaxed mb-5 text-foreground/90">"{pick(t.quote_ar, t.quote_en)}"</p>

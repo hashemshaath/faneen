@@ -24,10 +24,10 @@ import {
 } from '@/components/ui/alert-dialog';
 
 const statusConfig: Record<string, { color: string; label_ar: string; label_en: string; icon: React.ElementType }> = {
-  active: { color: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400', label_ar: 'ساري', label_en: 'Active', icon: CheckCircle2 },
+  active: { color: 'bg-success text-success dark:bg-success/30 dark:text-success', label_ar: 'ساري', label_en: 'Active', icon: CheckCircle2 },
   expired: { color: 'bg-muted text-muted-foreground', label_ar: 'منتهي', label_en: 'Expired', icon: Clock },
-  claimed: { color: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400', label_ar: 'مُطالب به', label_en: 'Claimed', icon: AlertTriangle },
-  void: { color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400', label_ar: 'ملغي', label_en: 'Void', icon: X },
+  claimed: { color: 'bg-warning text-warning dark:bg-warning/30 dark:text-warning', label_ar: 'مُطالب به', label_en: 'Claimed', icon: AlertTriangle },
+  void: { color: 'bg-destructive text-destructive dark:bg-destructive/30 dark:text-destructive', label_ar: 'ملغي', label_en: 'Void', icon: X },
 };
 
 const DashboardWarranties = () => {
@@ -169,7 +169,7 @@ const DashboardWarranties = () => {
             </Card>
             <Card className="border-border/40 bg-card/50">
               <CardContent className="p-4 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center"><CheckCircle2 className="w-5 h-5 text-emerald-500" /></div>
+                <div className="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center"><CheckCircle2 className="w-5 h-5 text-success" /></div>
                 <div><p className="text-2xl font-bold">{stats.active}</p><p className="text-xs text-muted-foreground">{isRTL ? 'ساري' : 'Active'}</p></div>
               </CardContent>
             </Card>

@@ -27,10 +27,10 @@ import { useNoIndex } from "@/hooks/useNoIndex";
 type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'no_show';
 
 const statusConfig: Record<BookingStatus, { label: { ar: string; en: string }; color: string; icon: React.ElementType }> = {
-  pending: { label: { ar: 'بانتظار التأكيد', en: 'Pending' }, color: 'bg-amber-500/15 text-amber-700 dark:text-amber-400', icon: AlertCircle },
-  confirmed: { label: { ar: 'مؤكد', en: 'Confirmed' }, color: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400', icon: CheckCircle2 },
+  pending: { label: { ar: 'بانتظار التأكيد', en: 'Pending' }, color: 'bg-warning/15 text-warning dark:text-warning', icon: AlertCircle },
+  confirmed: { label: { ar: 'مؤكد', en: 'Confirmed' }, color: 'bg-success/15 text-success dark:text-success', icon: CheckCircle2 },
   cancelled: { label: { ar: 'ملغي', en: 'Cancelled' }, color: 'bg-destructive/15 text-destructive', icon: XCircle },
-  completed: { label: { ar: 'مكتمل', en: 'Completed' }, color: 'bg-blue-500/15 text-blue-700 dark:text-blue-400', icon: CheckCircle2 },
+  completed: { label: { ar: 'مكتمل', en: 'Completed' }, color: 'bg-info/15 text-info dark:text-info', icon: CheckCircle2 },
   no_show: { label: { ar: 'لم يحضر', en: 'No Show' }, color: 'bg-muted text-muted-foreground', icon: XCircle },
 };
 
@@ -204,9 +204,9 @@ const DashboardBookings = () => {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
             { label: { ar: 'إجمالي', en: 'Total' }, value: stats.total, icon: CalendarClock, color: 'text-accent' },
-            { label: { ar: 'بانتظار التأكيد', en: 'Pending' }, value: stats.pending, icon: AlertCircle, color: 'text-amber-500' },
-            { label: { ar: 'مؤكد', en: 'Confirmed' }, value: stats.confirmed, icon: CheckCircle2, color: 'text-emerald-500' },
-            { label: { ar: 'اليوم', en: 'Today' }, value: stats.today, icon: Calendar, color: 'text-blue-500' },
+            { label: { ar: 'بانتظار التأكيد', en: 'Pending' }, value: stats.pending, icon: AlertCircle, color: 'text-warning' },
+            { label: { ar: 'مؤكد', en: 'Confirmed' }, value: stats.confirmed, icon: CheckCircle2, color: 'text-success' },
+            { label: { ar: 'اليوم', en: 'Today' }, value: stats.today, icon: Calendar, color: 'text-info' },
           ].map((s, i) => (
             <Card key={i} className="border-border/40">
               <CardContent className="p-4 flex items-center gap-3">

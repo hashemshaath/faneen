@@ -361,7 +361,7 @@ const DashboardSettings = () => {
                         <div className="space-y-1.5">
                           <div className="flex items-center gap-1.5">
                             <p className="font-heading font-bold text-sm">{profile?.full_name || (isRTL ? 'بدون اسم' : 'No name')}</p>
-                            {profile?.phone_verified && <Badge className="bg-emerald-500/10 text-emerald-600 text-[7px] px-1 py-0 h-3.5 gap-0.5"><CheckCircle className="w-2 h-2" />{isRTL ? 'موثق' : 'Verified'}</Badge>}
+                            {profile?.phone_verified && <Badge className="bg-success/10 text-success text-[7px] px-1 py-0 h-3.5 gap-0.5"><CheckCircle className="w-2 h-2" />{isRTL ? 'موثق' : 'Verified'}</Badge>}
                           </div>
                           <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
                             <Mail className="w-3 h-3" /><span className="tech-content">{profile?.email || user?.email || '-'}</span>
@@ -470,7 +470,7 @@ const DashboardSettings = () => {
                       type={showPassword ? 'text' : 'password'}
                       value={confirmPassword}
                       onChange={e => setConfirmPassword(e.target.value)}
-                      className={cn('h-8 text-xs mt-0.5', confirmPassword && (passwordsMatch ? 'border-emerald-500/50' : 'border-destructive/50'))}
+                      className={cn('h-8 text-xs mt-0.5', confirmPassword && (passwordsMatch ? 'border-success/50' : 'border-destructive/50'))}
                     />
                     {confirmPassword && !passwordsMatch && (
                       <p className="text-[9px] text-destructive mt-0.5">{isRTL ? 'كلمتا المرور غير متطابقتين' : 'Passwords do not match'}</p>
@@ -500,7 +500,7 @@ const DashboardSettings = () => {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5">
                         <p className="text-xs font-medium">{isRTL ? 'الجلسة الحالية' : 'Current Session'}</p>
-                        <Badge className="bg-emerald-500/10 text-emerald-600 text-[7px] px-1 py-0 h-3">{isRTL ? 'نشط' : 'Active'}</Badge>
+                        <Badge className="bg-success/10 text-success text-[7px] px-1 py-0 h-3">{isRTL ? 'نشط' : 'Active'}</Badge>
                       </div>
                       <p className="text-[9px] text-muted-foreground mt-0.5">
                         {isRTL ? 'بدأت' : 'Started'}: {formatDistanceToNow(new Date(s.created_at), { addSuffix: true, locale: language === 'ar' ? arLocale : enUS })}
@@ -526,7 +526,7 @@ const DashboardSettings = () => {
                     { ar: 'قم بتسجيل الخروج من الأجهزة غير المستخدمة', en: 'Sign out from unused devices' },
                   ].map((tip, i) => (
                     <div key={i} className="flex items-start gap-2 p-1.5 text-[10px] text-muted-foreground">
-                      <CheckCircle className="w-3 h-3 text-emerald-500 mt-0.5 shrink-0" />
+                      <CheckCircle className="w-3 h-3 text-success mt-0.5 shrink-0" />
                       <span>{isRTL ? tip.ar : tip.en}</span>
                     </div>
                   ))}
@@ -558,7 +558,7 @@ const DashboardSettings = () => {
                       </div>
                       <div className="flex items-center gap-2">
                         <Badge className={cn('text-[8px] px-1.5 py-0 h-[14px]',
-                          permission.current === 'granted' ? 'bg-emerald-500/10 text-emerald-600' :
+                          permission.current === 'granted' ? 'bg-success/10 text-success' :
                           permission.current === 'denied' ? 'bg-destructive/10 text-destructive' : 'bg-muted text-muted-foreground')}>
                           {permission.current === 'granted' ? (isRTL ? 'مفعّل' : 'Enabled') :
                            permission.current === 'denied' ? (isRTL ? 'محظور' : 'Blocked') :

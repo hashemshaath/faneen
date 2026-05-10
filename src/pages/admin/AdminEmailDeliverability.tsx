@@ -71,21 +71,21 @@ const WINDOWS: Record<string, number> = {
 
 const statusBadge = (status: string) => {
   const map: Record<string, string> = {
-    sent: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30',
-    pending: 'bg-blue-500/10 text-blue-600 border-blue-500/30',
-    failed: 'bg-rose-500/10 text-rose-600 border-rose-500/30',
-    dlq: 'bg-rose-500/15 text-rose-700 border-rose-500/40',
-    bounced: 'bg-amber-500/10 text-amber-600 border-amber-500/30',
-    complained: 'bg-purple-500/10 text-purple-600 border-purple-500/30',
+    sent: 'bg-success/10 text-success border-success/30',
+    pending: 'bg-info/10 text-info border-info/30',
+    failed: 'bg-destructive/10 text-destructive border-destructive/30',
+    dlq: 'bg-destructive/15 text-destructive border-destructive/40',
+    bounced: 'bg-warning/10 text-warning border-warning/30',
+    complained: 'bg-secondary/10 text-secondary border-secondary/30',
     suppressed: 'bg-muted text-muted-foreground border-border',
   };
   return map[status] ?? 'bg-muted text-muted-foreground border-border';
 };
 
 const severityBadge = (sev: string) => {
-  if (sev === 'critical') return 'bg-rose-500/15 text-rose-700 border-rose-500/40';
-  if (sev === 'warning') return 'bg-amber-500/10 text-amber-600 border-amber-500/30';
-  return 'bg-blue-500/10 text-blue-600 border-blue-500/30';
+  if (sev === 'critical') return 'bg-destructive/15 text-destructive border-destructive/40';
+  if (sev === 'warning') return 'bg-warning/10 text-warning border-warning/30';
+  return 'bg-info/10 text-info border-info/30';
 };
 
 const AdminEmailDeliverability: React.FC = () => {
@@ -276,7 +276,7 @@ const AdminEmailDeliverability: React.FC = () => {
                 : 'Track delivery, bounce, and complaint rates with automatic alerts every 15 minutes.'}
             </p>
             <div className="flex items-center gap-2 mt-2 text-xs">
-              <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 ${liveConnected ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-700' : 'border-muted-foreground/30 bg-muted text-muted-foreground'}`}>
+              <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 ${liveConnected ? 'border-success/40 bg-success/10 text-success' : 'border-muted-foreground/30 bg-muted text-muted-foreground'}`}>
                 <Radio className={`h-3 w-3 ${liveConnected ? 'animate-pulse' : ''}`} />
                 {liveConnected ? (isRTL ? 'متّصل · بث مباشر' : 'Live') : (isRTL ? 'غير متّصل' : 'Offline')}
               </span>
@@ -307,9 +307,9 @@ const AdminEmailDeliverability: React.FC = () => {
 
         {/* Active alerts */}
         {activeAlerts.length > 0 && (
-          <Card className="border-rose-500/40 bg-rose-500/5">
+          <Card className="border-destructive/40 bg-destructive/5">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-rose-700 text-base">
+              <CardTitle className="flex items-center gap-2 text-destructive text-base">
                 <AlertTriangle className="h-5 w-5" />
                 {isRTL ? `تنبيهات نشطة (${activeAlerts.length})` : `Active alerts (${activeAlerts.length})`}
               </CardTitle>
@@ -446,14 +446,14 @@ const AdminEmailDeliverability: React.FC = () => {
                           <Badge variant="outline" className={statusBadge(r.status)}>{r.status}</Badge>
                         </td>
                         <td className="py-2 px-2 text-xs tech-content">
-                          <span className="inline-flex items-center gap-1 text-emerald-700"><Eye className="h-3 w-3" />{r.opens_count ?? 0}</span>
+                          <span className="inline-flex items-center gap-1 text-success"><Eye className="h-3 w-3" />{r.opens_count ?? 0}</span>
                           <span className="mx-1 text-muted-foreground">·</span>
-                          <span className="inline-flex items-center gap-1 text-emerald-700"><MousePointerClick className="h-3 w-3" />{r.clicks_count ?? 0}</span>
+                          <span className="inline-flex items-center gap-1 text-success"><MousePointerClick className="h-3 w-3" />{r.clicks_count ?? 0}</span>
                         </td>
                         <td className="py-2 px-2 text-xs text-muted-foreground tech-content">
                           {format(new Date(r.created_at), 'PPp', { locale: isRTL ? ar : undefined })}
                         </td>
-                        <td className="py-2 px-2 text-xs text-rose-600 max-w-[260px] truncate" title={r.error_message ?? ''}>
+                        <td className="py-2 px-2 text-xs text-destructive max-w-[260px] truncate" title={r.error_message ?? ''}>
                           {r.error_message ?? '—'}
                         </td>
                       </tr>
@@ -509,9 +509,9 @@ const AdminEmailDeliverability: React.FC = () => {
 
 const StatCard: React.FC<{ icon: React.ElementType; label: string; value: number; accent?: string; loading?: boolean }> = ({ icon: Icon, label, value, accent, loading }) => {
   const accentMap: Record<string, string> = {
-    emerald: 'text-emerald-600 bg-emerald-500/10',
-    rose: 'text-rose-600 bg-rose-500/10',
-    amber: 'text-amber-600 bg-amber-500/10',
+    emerald: 'text-success bg-success/10',
+    rose: 'text-destructive bg-destructive/10',
+    amber: 'text-warning bg-warning/10',
   };
   const cls = accent ? accentMap[accent] : 'text-primary bg-primary/10';
   return (
@@ -537,12 +537,12 @@ const RateCard: React.FC<{ label: string; value: number; threshold: number }> = 
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm text-muted-foreground">{label}</span>
-          <Badge variant="outline" className={breached ? 'bg-rose-500/10 text-rose-600 border-rose-500/30' : 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30'}>
+          <Badge variant="outline" className={breached ? 'bg-destructive/10 text-destructive border-destructive/30' : 'bg-success/10 text-success border-success/30'}>
             {value}%
           </Badge>
         </div>
         <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
-          <div className={`h-full ${breached ? 'bg-rose-500' : 'bg-emerald-500'}`} style={{ width: `${pct}%` }} />
+          <div className={`h-full ${breached ? 'bg-destructive' : 'bg-success'}`} style={{ width: `${pct}%` }} />
         </div>
         <div className="text-xs text-muted-foreground mt-1 tech-content">threshold: {threshold}%</div>
       </CardContent>
@@ -551,14 +551,14 @@ const RateCard: React.FC<{ label: string; value: number; threshold: number }> = 
 };
 
 const CATEGORY_META: Record<string, { ar: string; en: string; icon: React.ElementType; color: string }> = {
-  pricing:     { ar: 'التسعير',    en: 'Pricing',     icon: DollarSign,       color: 'text-emerald-600' },
-  contract:    { ar: 'العقود',     en: 'Contracts',   icon: FileText,         color: 'text-blue-600' },
-  maintenance: { ar: 'الصيانة',    en: 'Maintenance', icon: Wrench,           color: 'text-amber-600' },
-  leads:       { ar: 'العروض',     en: 'Leads',       icon: Users,            color: 'text-purple-600' },
-  booking:     { ar: 'الحجوزات',   en: 'Bookings',    icon: Calendar,         color: 'text-cyan-600' },
-  payment:     { ar: 'المدفوعات',  en: 'Payments',    icon: CreditCard,       color: 'text-rose-600' },
-  messages:    { ar: 'الرسائل',    en: 'Messages',    icon: MessageSquare,    color: 'text-indigo-600' },
-  projects:    { ar: 'المشاريع',   en: 'Projects',    icon: Briefcase,        color: 'text-orange-600' },
+  pricing:     { ar: 'التسعير',    en: 'Pricing',     icon: DollarSign,       color: 'text-success' },
+  contract:    { ar: 'العقود',     en: 'Contracts',   icon: FileText,         color: 'text-info' },
+  maintenance: { ar: 'الصيانة',    en: 'Maintenance', icon: Wrench,           color: 'text-warning' },
+  leads:       { ar: 'العروض',     en: 'Leads',       icon: Users,            color: 'text-secondary' },
+  booking:     { ar: 'الحجوزات',   en: 'Bookings',    icon: Calendar,         color: 'text-info' },
+  payment:     { ar: 'المدفوعات',  en: 'Payments',    icon: CreditCard,       color: 'text-destructive' },
+  messages:    { ar: 'الرسائل',    en: 'Messages',    icon: MessageSquare,    color: 'text-secondary' },
+  projects:    { ar: 'المشاريع',   en: 'Projects',    icon: Briefcase,        color: 'text-urgent' },
   dashboard:   { ar: 'لوحة التحكم', en: 'Dashboard',  icon: LayoutDashboard,  color: 'text-slate-600' },
   other:       { ar: 'أخرى',       en: 'Other',       icon: Link2,            color: 'text-muted-foreground' },
 };
@@ -574,7 +574,7 @@ const CategoryCard: React.FC<{ row: { category: string; total_clicks: number; un
             <Icon className={`h-4 w-4 ${meta.color}`} />
             <span className="text-sm font-medium">{isRTL ? meta.ar : meta.en}</span>
           </div>
-          <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30 tech-content">
+          <Badge variant="outline" className="bg-success/10 text-success border-success/30 tech-content">
             {row.ctr}%
           </Badge>
         </div>

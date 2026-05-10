@@ -19,14 +19,14 @@ export const tierGradients: Record<string, string> = {
 /** Rich color tokens used by admin dashboards */
 export const tierColors: Record<string, { bg: string; badge: string; border: string; text: string }> = {
   free: { bg: 'bg-muted/40', badge: 'bg-muted text-muted-foreground', border: 'border-border/40', text: 'text-muted-foreground' },
-  basic: { bg: 'bg-blue-500/5', badge: 'bg-blue-500/15 text-blue-600', border: 'border-blue-500/20', text: 'text-blue-600' },
+  basic: { bg: 'bg-info/5', badge: 'bg-info/15 text-info', border: 'border-info/20', text: 'text-info' },
   premium: { bg: 'bg-accent/5', badge: 'bg-accent/15 text-accent', border: 'border-accent/20', text: 'text-accent' },
-  enterprise: { bg: 'bg-purple-500/5', badge: 'bg-purple-500/15 text-purple-600', border: 'border-purple-500/20', text: 'text-purple-600' },
+  enterprise: { bg: 'bg-secondary/5', badge: 'bg-secondary/15 text-secondary', border: 'border-secondary/20', text: 'text-secondary' },
 };
 
 export const statusConfig: Record<string, { badge: string; label_ar: string; label_en: string }> = {
-  active: { badge: 'bg-emerald-500/10 text-emerald-600', label_ar: 'نشط', label_en: 'Active' },
+  active: { badge: 'bg-success/10 text-success', label_ar: 'نشط', label_en: 'Active' },
   cancelled: { badge: 'bg-destructive/10 text-destructive', label_ar: 'ملغي', label_en: 'Cancelled' },
   expired: { badge: 'bg-muted text-muted-foreground', label_ar: 'منتهي', label_en: 'Expired' },
-  replaced: { badge: 'bg-amber-500/10 text-amber-600', label_ar: 'مُحدّث', label_en: 'Replaced' },
+  replaced: { badge: 'bg-warning/10 text-warning', label_ar: 'مُحدّث', label_en: 'Replaced' },
 };

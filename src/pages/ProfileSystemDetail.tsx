@@ -28,7 +28,7 @@ import { track } from '@/lib/analytics-events';
 // ─── Constants ───
 const recommendationLabels: Record<string, { ar: string; en: string; color: string; icon: React.ElementType }> = {
   premium: { ar: 'احترافي', en: 'Premium', color: 'bg-gold text-primary-foreground', icon: Award },
-  recommended: { ar: 'موصى به', en: 'Recommended', color: 'bg-green-500/10 text-green-600 dark:text-green-400', icon: TrendingUp },
+  recommended: { ar: 'موصى به', en: 'Recommended', color: 'bg-success/10 text-success dark:text-success', icon: TrendingUp },
   standard: { ar: 'قياسي', en: 'Standard', color: 'bg-muted text-muted-foreground', icon: BarChart3 },
 };
 
@@ -45,10 +45,10 @@ const AnimatedRatingBar = ({ value, max = 10, label, icon: Icon }: { value: numb
 
   const pct = (value / max) * 100;
   const getColor = () => {
-    if (pct >= 80) return 'from-green-400 to-green-500';
+    if (pct >= 80) return 'from-success to-success';
     if (pct >= 60) return 'from-gold/70 to-gold';
-    if (pct >= 40) return 'from-yellow-400 to-orange-400';
-    return 'from-orange-400 to-red-400';
+    if (pct >= 40) return 'from-warning to-urgent';
+    return 'from-urgent to-destructive';
   };
 
   return (
@@ -637,7 +637,7 @@ const ProfileSystemDetail = () => {
                   aria-label={isRTL ? 'إضافة للمفضلة' : 'Add to favorites'}
                   aria-pressed={isFav}
                 >
-                  <Heart className={`w-4 h-4 ${isFav ? 'fill-red-500 text-red-500' : ''}`} />
+                  <Heart className={`w-4 h-4 ${isFav ? 'fill-destructive text-destructive' : ''}`} />
                 </Button>
                 <Button
                   variant="outline"
@@ -729,8 +729,8 @@ const ProfileSystemDetail = () => {
                       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3">
                         {features.map((f: string, i: number) => (
                           <div key={i} className="flex items-start gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg sm:rounded-xl bg-muted/30">
-                            <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-green-500/10 flex items-center justify-center shrink-0 mt-0.5">
-                              <CheckCircle2 className="ic-2xs sm:w-3.5 sm:h-3.5 text-green-500" />
+                            <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-success/10 flex items-center justify-center shrink-0 mt-0.5">
+                              <CheckCircle2 className="ic-2xs sm:w-3.5 sm:h-3.5 text-success" />
                             </div>
                             <span className="text-xs sm:text-sm">{f}</span>
                           </div>

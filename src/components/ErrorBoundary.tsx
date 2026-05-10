@@ -157,7 +157,7 @@ export class ErrorBoundary extends Component<Props, State> {
                                 e.level === "error"
                                   ? "border-destructive/20 bg-destructive/5"
                                   : e.level === "warn"
-                                    ? "border-amber-500/20 bg-amber-500/5"
+                                    ? "border-warning/20 bg-warning/5"
                                     : "border-border/40 bg-card"
                               }`}
                             >
