@@ -20,6 +20,10 @@ import { template as welcomeBusiness } from './welcome-business.tsx'
 import { template as contractSigned } from './contract-signed.tsx'
 import { template as leadConfirmation } from './lead-confirmation.tsx'
 import { template as leadNotification } from './lead-notification.tsx'
+import { template as leadAccepted } from './lead-accepted.tsx'
+import { template as leadRejected } from './lead-rejected.tsx'
+import { template as leadNeedsInfo } from './lead-needs-info.tsx'
+import { template as leadCancelledProviderNotice } from './lead-cancelled-provider-notice.tsx'
 import { template as providerApproved } from './provider-approved.tsx'
 import { template as providerRejected } from './provider-rejected.tsx'
 import { template as providerRevisionRequested } from './provider-revision-requested.tsx'
@@ -36,6 +40,10 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'contract-signed': contractSigned,
   'lead-confirmation': leadConfirmation,
   'lead-notification': leadNotification,
+  'lead-accepted': leadAccepted,
+  'lead-rejected': leadRejected,
+  'lead-needs-info': leadNeedsInfo,
+  'lead-cancelled-provider-notice': leadCancelledProviderNotice,
   'provider-approved': providerApproved,
   'provider-rejected': providerRejected,
   'provider-revision-requested': providerRevisionRequested,
