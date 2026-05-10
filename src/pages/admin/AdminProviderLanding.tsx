@@ -23,9 +23,18 @@ import {
 import { Loader2, Save, Trash2, Plus, ExternalLink, BarChart3, Eye, MousePointerClick, UserPlus, TrendingUp, Sparkles } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
-/* Brand-aligned chart palette — green/blue/orange/warning/error/secondary scale.
+/* Brand-aligned chart palette — sourced from central design tokens.
    No purple/cyan/pink/neon. */
-const COLORS = ['#0E9E6F', '#2F62AE', '#F08A24', '#B45309', '#C42626', '#5ECCA3', '#769BD1', '#142D52'];
+const COLORS = [
+  'hsl(var(--primary))',
+  'hsl(var(--secondary))',
+  'hsl(var(--accent))',
+  'hsl(var(--warning))',
+  'hsl(var(--destructive))',
+  'hsl(var(--success))',
+  'hsl(var(--info))',
+  'hsl(var(--muted-foreground))',
+];
 
 const AdminProviderLanding = () => {
   useNoIndex();
@@ -373,7 +382,7 @@ const AdminProviderLanding = () => {
                   <YAxis tick={{ fontSize: 11 }} />
                   <Tooltip />
                   <Line type="monotone" dataKey="views" stroke="hsl(var(--primary))" name="مشاهدات" />
-                  <Line type="monotone" dataKey="clicks" stroke="#F08A24" name="نقرات" />
+                  <Line type="monotone" dataKey="clicks" stroke="hsl(var(--accent))" name="نقرات" />
                 </LineChart>
               </ResponsiveContainer>
             </Card>

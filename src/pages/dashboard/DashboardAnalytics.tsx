@@ -364,7 +364,7 @@ const DashboardAnalytics = () => {
                         <XAxis dataKey="date" tick={{ fontSize: 9 }} stroke="hsl(var(--muted-foreground))" />
                         <YAxis tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" allowDecimals={false} />
                         <Tooltip contentStyle={tooltipStyle} />
-                        <Bar dataKey="count" fill="hsl(200 70% 55%)" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="count" fill="hsl(var(--secondary))" radius={[4, 4, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -449,7 +449,7 @@ const DashboardAnalytics = () => {
                         <XAxis type="number" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" allowDecimals={false} />
                         <YAxis type="category" dataKey="stars" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" width={40} />
                         <Tooltip contentStyle={tooltipStyle} />
-                        <Bar dataKey="count" fill="hsl(40 80% 55%)" radius={[0, 4, 4, 0]} />
+                        <Bar dataKey="count" fill="hsl(var(--warning))" radius={[0, 4, 4, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
