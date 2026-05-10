@@ -5,6 +5,7 @@ import { HeroSection } from "@/components/home/HeroSection";
 import { StatsSection } from "@/components/home/StatsSection";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { usePageMeta, useJsonLd } from "@/hooks/usePageMeta";
+import { LazyOnView } from "@/components/LazyOnView";
 
 // Retry wrapper for lazy imports to handle stale chunk errors after deploys
 function lazyRetry<T extends ComponentType<any>>(
@@ -103,54 +104,62 @@ const Index = () => {
       <Navbar />
       <HeroSection />
       <StatsSection />
-      <div className="cv-auto">
+      {/*
+        Below-the-fold sections are mounted only as they approach the
+        viewport. This keeps their lazy chunks out of the home page's
+        critical request graph and slashes initial JS execution / TBT.
+        Each section keeps a reserved minHeight so layout doesn't shift.
+      */}
+      <LazyOnView minHeight={360} className="cv-auto">
         <Suspense fallback={<SectionFallback minH={360} />}>
           <WhyQitaatSection variant="home" />
         </Suspense>
-      </div>
-      <Suspense fallback={<SectionFallback />}>
-        <CategoriesSection />
-      </Suspense>
-      <div className="cv-auto">
+      </LazyOnView>
+      <LazyOnView minHeight={520}>
+        <Suspense fallback={<SectionFallback />}>
+          <CategoriesSection />
+        </Suspense>
+      </LazyOnView>
+      <LazyOnView minHeight={480} className="cv-auto">
         <Suspense fallback={<SectionFallback />}>
           <HowItWorksSection />
         </Suspense>
-      </div>
-      <div className="cv-auto">
+      </LazyOnView>
+      <LazyOnView minHeight={520} className="cv-auto">
         <Suspense fallback={<SectionFallback />}>
           <TopProvidersSection />
         </Suspense>
-      </div>
-      <div className="cv-auto">
+      </LazyOnView>
+      <LazyOnView minHeight={520} className="cv-auto">
         <Suspense fallback={<SectionFallback />}>
           <LatestProjectsSection />
         </Suspense>
-      </div>
-      <div className="cv-auto">
+      </LazyOnView>
+      <LazyOnView minHeight={520} className="cv-auto">
         <Suspense fallback={<SectionFallback />}>
           <LatestOffersSection />
         </Suspense>
-      </div>
-      <div className="cv-auto">
+      </LazyOnView>
+      <LazyOnView minHeight={480} className="cv-auto">
         <Suspense fallback={<SectionFallback />}>
           <FeaturesSection />
         </Suspense>
-      </div>
-      <div className="cv-auto">
+      </LazyOnView>
+      <LazyOnView minHeight={480} className="cv-auto">
         <Suspense fallback={<SectionFallback />}>
           <LatestBlogSection />
         </Suspense>
-      </div>
-      <div className="cv-auto">
+      </LazyOnView>
+      <LazyOnView minHeight={520} className="cv-auto">
         <Suspense fallback={<SectionFallback />}>
           <MembershipSection />
         </Suspense>
-      </div>
-      <div className="cv-auto">
+      </LazyOnView>
+      <LazyOnView minHeight={360} className="cv-auto">
         <Suspense fallback={<SectionFallback />}>
           <CTASection />
         </Suspense>
-      </div>
+      </LazyOnView>
       <Footer />
       <ScrollToTop />
     </div>

@@ -1,5 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+// Bundle the default brand assets so they are served from the hashed
+// /assets/* directory (long-cache immutable). Admin-uploaded URLs from
+// platform_settings still take precedence at runtime.
+import logoFullDefault from '@/assets/logo-full.png';
+import logoFullLightDefault from '@/assets/logo-full-light.png';
+import logoMarkDefault from '@/assets/logo-mark.png';
 
 export interface BrandingConfig {
   fullLightUrl: string;   // logo for light backgrounds (full color)
@@ -13,9 +19,9 @@ export interface BrandingConfig {
 }
 
 export const DEFAULT_BRANDING: BrandingConfig = {
-  fullLightUrl: '/brand/logo-full.png',
-  fullDarkUrl: '/brand/logo-full-light.png',
-  markUrl: '/brand/logo-mark.png',
+  fullLightUrl: logoFullDefault,
+  fullDarkUrl: logoFullLightDefault,
+  markUrl: logoMarkDefault,
   sizeNavbar: 44,
   sizeFooter: 44,
   sizeAuth: 48,

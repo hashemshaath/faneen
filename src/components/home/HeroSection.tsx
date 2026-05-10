@@ -9,16 +9,56 @@ import {
   getSearchHistory,
   addToSearchHistory,
 } from "@/services/search/useSearch";
-// HeroParticles is purely decorative — defer it past LCP to keep the main
-// thread free during the initial paint (improves INP/TBT on mobile).
+// HeroParticles is purely decorative — defer it past LCP and skip it
+// entirely on mobile / reduced-motion / low-end devices to avoid the
+// chunk download + canvas init competing with the hero paint.
 const HeroParticles = lazy(() =>
   import("./HeroParticles").then((m) => ({ default: m.HeroParticles })),
 );
-// First slide is served from /public so we can <link rel="preload"> it from
-// index.html — that preload only matches if the URL is identical here.
-const heroBg1 = "/hero-bg.webp";
+// All hero slides are bundled (hashed /assets/*) so they get the immutable
+// long-cache headers Vite/Lovable applies to /assets/.
+import heroBg1 from "@/assets/hero-bg.webp";
 import heroBg2 from "@/assets/hero-slide-2.webp";
 import heroBg3 from "@/assets/hero-slide-3.webp";
+
+// Eagerly preload the LCP hero image at module-evaluation time — fires
+// before React mounts so the request races with the JS chunk parse.
+if (typeof document !== "undefined") {
+  try {
+    const existing = document.querySelector(
+      'link[rel="preload"][as="image"][data-hero="1"]',
+    );
+    if (!existing) {
+      const l = document.createElement("link");
+      l.rel = "preload";
+      l.as = "image";
+      l.href = heroBg1;
+      l.type = "image/webp";
+      l.setAttribute("fetchpriority", "high");
+      l.setAttribute("data-hero", "1");
+      document.head.appendChild(l);
+    }
+  } catch { /* never break boot */ }
+}
+
+// Decide once whether the decorative particle canvas should render at all.
+// Mobile / reduced-motion / saveData / 2g connections skip it entirely so
+// the chunk is never even downloaded. Re-evaluated on every mount, which is
+// fine — the hero section only mounts once per session.
+function shouldRenderParticles(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return false;
+    if (window.matchMedia?.("(max-width: 768px)").matches) return false;
+    type ConnNav = Navigator & {
+      connection?: { saveData?: boolean; effectiveType?: string };
+    };
+    const conn = (navigator as ConnNav).connection;
+    if (conn?.saveData) return false;
+    if (conn?.effectiveType === "2g" || conn?.effectiveType === "slow-2g") return false;
+  } catch { /* fall through */ }
+  return true;
+}
 
 const slidesData = [
   {
@@ -309,6 +349,8 @@ export const HeroSection = () => {
   const navigate = useNavigate();
   const [current, setCurrent] = useState(0);
   const [tagsExpanded, setTagsExpanded] = useState(false);
+  // Decide once on mount whether the canvas chunk should load at all.
+  const [enableParticles, setEnableParticles] = useState(false);
   // Only the previous slide stays mounted briefly to crossfade out.
   // This caps DOM <img> count to 2 instead of `slides.length`.
   const [prevIdx, setPrevIdx] = useState<number | null>(null);
@@ -318,6 +360,23 @@ export const HeroSection = () => {
   const imgRefs = useRef<Record<number, HTMLImageElement | null>>({});
   const sectionRef = useRef<HTMLElement | null>(null);
   const currentRef = useRef(0);
+
+  // Defer the particles decision past first paint so it never blocks LCP.
+  useEffect(() => {
+    if (!shouldRenderParticles()) return;
+    type RICWindow = Window & {
+      requestIdleCallback?: (cb: () => void, opts?: { timeout?: number }) => number;
+    };
+    const w = window as RICWindow;
+    let id: number | undefined;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    if (typeof w.requestIdleCallback === "function") {
+      id = w.requestIdleCallback(() => setEnableParticles(true), { timeout: 2500 });
+    } else {
+      timer = setTimeout(() => setEnableParticles(true), 1500);
+    }
+    return () => { if (timer) clearTimeout(timer); };
+  }, []);
 
   const { data: categories = [] } = useQuery({
     queryKey: ['nav-categories'],
@@ -472,9 +531,11 @@ export const HeroSection = () => {
       <div className="absolute inset-0" style={{ background: "rgba(19, 23, 34, 0.55)" }} />
 
       {/* Particles — deferred past first paint, no fallback (purely decorative) */}
-      <Suspense fallback={null}>
-        <HeroParticles />
-      </Suspense>
+      {enableParticles && (
+        <Suspense fallback={null}>
+          <HeroParticles />
+        </Suspense>
+      )}
 
       {/* Content */}
       <div className="relative z-10 container text-center px-4 sm:px-6 pt-24 sm:pt-28 pb-8">
