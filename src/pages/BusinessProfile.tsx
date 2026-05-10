@@ -457,7 +457,12 @@ const BusinessProfile = () => {
                   <PortfolioTab businessId={business.id} />
                 </TabsContent>
                 <TabsContent value="branches" className="mt-0">
-                  <BranchesTab businessId={business.id} />
+                  <BranchesTab
+                    businessId={business.id}
+                    isAuthenticated={!!user}
+                    onRequestContact={() => handleContactClick("branches_tab")}
+                    onRevealContact={handleContactReveal}
+                  />
                 </TabsContent>
                 <TabsContent value="reviews" className="mt-0">
                   <ReviewsTab business={business} />

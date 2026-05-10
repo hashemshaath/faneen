@@ -535,7 +535,19 @@ export const ReviewsTab = ({ business }: { business: any }) => {
   );
 };
 
-export const BranchesTab = ({ businessId }: { businessId: string }) => {
+interface BranchesTabProps {
+  businessId: string;
+  isAuthenticated?: boolean;
+  onRequestContact?: () => void;
+  onRevealContact?: (kind: "phone" | "email") => void;
+}
+
+export const BranchesTab = ({
+  businessId,
+  isAuthenticated = false,
+  onRequestContact,
+  onRevealContact,
+}: BranchesTabProps) => {
   const { language } = useLanguage();
   const { data: branches, isLoading } = useBranches(businessId);
 
@@ -555,6 +567,25 @@ export const BranchesTab = ({ businessId }: { businessId: string }) => {
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
+      {!isAuthenticated && onRequestContact && (
+        <div className="rounded-2xl border border-accent/20 bg-accent/5 p-3 sm:col-span-2 sm:p-4">
+          <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+            {language === "ar"
+              ? "لحماية المورّد، تظهر بيانات تواصل الفروع بشكل مخفي للزوار. أرسل طلبك وسيتواصل معك مباشرة."
+              : "Branch contact details are masked for guests. Send a request and the supplier will reach out directly."}
+          </p>
+          <Button
+            type="button"
+            variant="primary"
+            size="sm"
+            className="mt-3 h-10 w-full gap-1.5 rounded-xl sm:w-auto"
+            onClick={onRequestContact}
+          >
+            <MessageSquare className="h-4 w-4" />
+            {language === "ar" ? "تواصل مع المورّد" : "Contact supplier"}
+          </Button>
+        </div>
+      )}
       {branches.map((branch, index) => {
         const name = getLocalizedValue(language, branch.name_ar, branch.name_en);
         const cityName = getLocalizedValue(language, branch.cities?.name_ar, branch.cities?.name_en);
@@ -565,15 +596,32 @@ export const BranchesTab = ({ businessId }: { businessId: string }) => {
           branch.building_number && (language === "ar" ? `مبنى ${branch.building_number}` : `Bldg ${branch.building_number}`),
         ].filter(Boolean);
 
+        // Phone/email are masked + tel:/mailto: stripped for unauthenticated
+        // visitors. Authenticated users see real values and trigger a
+        // `supplier_*_revealed` analytics event when tapping a link.
+        const phoneItem = (icon: React.ElementType, label: string, value: string) => ({
+          icon, label,
+          value: isAuthenticated ? value : maskPhone(value),
+          href: isAuthenticated ? `tel:${value}` : undefined,
+          dir: "ltr" as const,
+          revealKind: "phone" as const,
+        });
+        const emailItem = (icon: React.ElementType, label: string, value: string) => ({
+          icon, label,
+          value: isAuthenticated ? value : maskEmail(value),
+          href: isAuthenticated ? `mailto:${value}` : undefined,
+          dir: "ltr" as const,
+          revealKind: "email" as const,
+        });
         const contactItems = [
           branch.contact_person && { icon: User, label: language === "ar" ? "مسؤول التواصل" : "Contact Person", value: branch.contact_person },
-          branch.phone && { icon: Phone, label: language === "ar" ? "الهاتف" : "Phone", value: branch.phone, dir: "ltr" as const, href: `tel:${branch.phone}` },
-          branch.mobile && { icon: PhoneCall, label: language === "ar" ? "الجوال" : "Mobile", value: branch.mobile, dir: "ltr" as const, href: `tel:${branch.mobile}` },
-          branch.unified_number && { icon: Hash, label: language === "ar" ? "الرقم الموحد" : "Unified Number", value: branch.unified_number, dir: "ltr" as const, href: `tel:${branch.unified_number}` },
-          branch.customer_service_phone && { icon: PhoneCall, label: language === "ar" ? "خدمة العملاء" : "Customer Service", value: branch.customer_service_phone, dir: "ltr" as const, href: `tel:${branch.customer_service_phone}` },
-          branch.email && { icon: Mail, label: language === "ar" ? "البريد" : "Email", value: branch.email, dir: "ltr" as const, href: `mailto:${branch.email}` },
+          branch.phone && phoneItem(Phone, language === "ar" ? "الهاتف" : "Phone", branch.phone),
+          branch.mobile && phoneItem(PhoneCall, language === "ar" ? "الجوال" : "Mobile", branch.mobile),
+          branch.unified_number && phoneItem(Hash, language === "ar" ? "الرقم الموحد" : "Unified Number", branch.unified_number),
+          branch.customer_service_phone && phoneItem(PhoneCall, language === "ar" ? "خدمة العملاء" : "Customer Service", branch.customer_service_phone),
+          branch.email && emailItem(Mail, language === "ar" ? "البريد" : "Email", branch.email),
           branch.website && { icon: Globe, label: language === "ar" ? "الموقع" : "Website", value: branch.website.replace(/^https?:\/\//, ""), dir: "ltr" as const, href: branch.website, external: true, leadType: "website" as const },
-        ].filter(Boolean) as Array<{ icon: React.ElementType; label: string; value: string; dir?: "ltr"; href?: string; external?: boolean; leadType?: "website" }>;
+        ].filter(Boolean) as Array<{ icon: React.ElementType; label: string; value: string; dir?: "ltr"; href?: string; external?: boolean; leadType?: "website"; revealKind?: "phone" | "email" }>;
 
         return (
           <article
@@ -620,6 +668,9 @@ export const BranchesTab = ({ businessId }: { businessId: string }) => {
                     : {};
                   if (item.href && item.leadType) {
                     (wrapperProps as Record<string, string>)["data-contact-type"] = item.leadType;
+                  }
+                  if (item.href && item.revealKind && onRevealContact) {
+                    (wrapperProps as Record<string, unknown>).onClick = () => onRevealContact(item.revealKind!);
                   }
 
                   return (
