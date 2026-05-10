@@ -2,6 +2,8 @@
 // lead_request row is created on the BusinessProfile contact flow.
 // Failure here MUST NOT block lead capture — the caller already inserted
 // the row before invoking this function.
+// TODO: Add backend rate limiting for supplier lead submissions using a
+// dedicated throttle table or RPC.
 import { createClient } from 'npm:@supabase/supabase-js@2'
 
 const corsHeaders = {

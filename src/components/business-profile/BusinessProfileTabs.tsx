@@ -736,7 +736,7 @@ export const ContactTab = ({
             </p>
             <Button
               type="button"
-              variant="hero"
+              variant="primary"
               size="sm"
               className="mt-3 h-10 w-full gap-1.5 rounded-xl sm:w-auto"
               onClick={onRequestContact}
