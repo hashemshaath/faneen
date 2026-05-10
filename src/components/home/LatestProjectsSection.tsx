@@ -21,7 +21,7 @@ const fmt = (n: number) => {
 
 const tierConfig: Record<string, { label: string; labelEn: string; icon: React.ElementType; cls: string }> = {
   enterprise: { label: 'بلاتيني', labelEn: 'Platinum', icon: Crown, cls: 'bg-secondary/90 text-white' },
-  premium:    { label: 'ذهبي',    labelEn: 'Gold',     icon: Star,  cls: 'bg-accent text-white' },
+  premium:    { label: 'مميّز',   labelEn: 'Premium',  icon: Star,  cls: 'bg-primary/90 text-white' },
   basic:      { label: 'أساسي',   labelEn: 'Basic',    icon: BadgeCheck, cls: 'bg-info/90 text-white' },
 };
 
@@ -113,8 +113,8 @@ export const LatestProjectsSection = () => {
                     to={`/projects/${p.id}`}
                     className={cn(
                       'card-ds card-media block group transition-all duration-500',
-                      'hover:border-accent/40 hover:shadow-xl hover:shadow-accent/5 sm:hover:-translate-y-1.5',
-                      p.is_featured && 'ring-1 ring-accent/30',
+                      'hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5 sm:hover:-translate-y-1.5',
+                      p.is_featured && 'ring-1 ring-accent/40',
                       isVisible ? 'animate-fade-in' : ''
                     )}
                     style={{ animationDelay: `${i * 80}ms`, animationFillMode: 'both' }}
@@ -176,7 +176,7 @@ export const LatestProjectsSection = () => {
 
                     {/* Content */}
                     <div className="card-pad-md space-y-3">
-                      <h3 className="font-heading font-bold text-sm sm:text-base line-clamp-1 group-hover:text-accent transition-colors">
+                      <h3 className="font-heading font-bold text-sm sm:text-base line-clamp-1 group-hover:text-primary transition-colors">
                         {language === 'ar' ? p.title_ar : (p.title_en || p.title_ar)}
                       </h3>
 
@@ -190,13 +190,13 @@ export const LatestProjectsSection = () => {
                       <div className="flex flex-wrap gap-2 text-[11px] text-muted-foreground">
                         {p.project_cost && (
                           <span className="flex items-center gap-1 bg-muted/80 dark:bg-muted/40 px-2.5 py-1 rounded-full">
-                            <DollarSign className="ic-2xs text-accent" />
+                            <DollarSign className="ic-2xs text-primary" />
                             {Number(p.project_cost).toLocaleString()} SAR
                           </span>
                         )}
                         {p.duration_days && (
                           <span className="flex items-center gap-1 bg-muted/80 dark:bg-muted/40 px-2.5 py-1 rounded-full">
-                            <Clock className="ic-2xs text-accent" />
+                            <Clock className="ic-2xs text-primary" />
                             {p.duration_days} {isRTL ? 'يوم' : 'days'}
                           </span>
                         )}
@@ -216,11 +216,11 @@ export const LatestProjectsSection = () => {
                               className="w-7 h-7 rounded-full object-cover ring-1 ring-border/30"
                             />
                           ) : (
-                            <div className="w-7 h-7 rounded-full bg-accent/10 flex items-center justify-center">
-                              <Building2 className="w-3.5 h-3.5 text-accent" />
+                            <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
+                              <Building2 className="w-3.5 h-3.5 text-primary" />
                             </div>
                           )}
-                          <span className="text-sm font-semibold text-accent flex items-center gap-1.5 truncate">
+                          <span className="text-sm font-semibold text-foreground flex items-center gap-1.5 truncate">
                             {language === 'ar' ? biz.name_ar : (biz.name_en || biz.name_ar)}
                             {biz.is_verified && <VerifiedBadge size="sm" iconOnly />}
                           </span>
