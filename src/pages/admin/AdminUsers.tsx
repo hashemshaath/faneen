@@ -1063,6 +1063,7 @@ const AdminUsers = () => {
                   { key: 'companies', icon: Building2, ar: 'الشركات', en: 'Companies', active: filterAccountType === 'company', onClick: () => { setFilterAccountType(filterAccountType === 'company' ? 'all' : 'company'); setPage(1); } },
                   { key: 'premium', icon: Crown, ar: 'مميز فأعلى', en: 'Premium+', active: filterTier === 'premium' || filterTier === 'enterprise', onClick: () => { setFilterTier(filterTier === 'premium' ? 'enterprise' : filterTier === 'enterprise' ? 'all' : 'premium'); setPage(1); } },
                   { key: 'no_role', icon: Shield, ar: 'بدون صلاحيات', en: 'No role', active: filterRole === 'no_role', onClick: () => { setFilterRole(filterRole === 'no_role' ? 'all' : 'no_role'); setPage(1); } },
+                  { key: 'multi', icon: Link2, ar: 'مرتبط بعدة منشآت', en: 'Multi-business', active: filterBusinessLink === 'multi', onClick: () => { setFilterBusinessLink(filterBusinessLink === 'multi' ? 'all' : 'multi'); setPage(1); } },
                 ]).map(c => {
                   const Icon = c.icon;
                   return (
@@ -1125,9 +1126,9 @@ const AdminUsers = () => {
                   <span className="text-[11px] text-muted-foreground">
                     {isRTL ? `${sorted.length} نتيجة • صفحة ${page}/${totalPages}` : `${sorted.length} results • Page ${page}/${totalPages}`}
                   </span>
-                  {(deferredSearch || filterRole !== 'all' || filterAccountType !== 'all' || filterTier !== 'all') && (
+                  {(deferredSearch || filterRole !== 'all' || filterAccountType !== 'all' || filterTier !== 'all' || filterBusinessLink !== 'all') && (
                     <button
-                      onClick={() => { handleSearchChange(''); setFilterRole('all'); setFilterAccountType('all'); setFilterTier('all'); }}
+                      onClick={() => { handleSearchChange(''); setFilterRole('all'); setFilterAccountType('all'); setFilterTier('all'); setFilterBusinessLink('all'); }}
                       className="text-[11px] inline-flex items-center gap-1 px-2 py-1 rounded-lg border border-dashed border-border/50 text-muted-foreground hover:text-foreground hover:border-border transition-colors"
                     >
                       <X className="w-3 h-3" />{isRTL ? 'مسح الفلاتر' : 'Clear filters'}
