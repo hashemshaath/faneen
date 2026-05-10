@@ -83,7 +83,7 @@ export const LatestProjectsSection = () => {
             <h2 className="font-heading font-bold text-xl sm:text-3xl md:text-4xl text-foreground mt-1.5">
               {isRTL ? 'أحدث المشاريع المنجزة' : 'Latest Completed Projects'}
             </h2>
-            <p className="text-sm text-muted-foreground mt-2 max-w-lg">
+            <p className="text-sm text-foreground/80 mt-2 max-w-lg">
               {isRTL
                 ? 'استعرض أحدث المشاريع من مزودي خدمات معتمدين ومصانع رائدة'
                 : 'Browse the latest projects from verified providers and leading manufacturers'}
@@ -187,15 +187,15 @@ export const LatestProjectsSection = () => {
                       )}
 
                       {/* Cost & duration chips */}
-                      <div className="flex flex-wrap gap-2 text-[11px] text-muted-foreground">
+                      <div className="flex flex-wrap gap-2 text-[11px] text-foreground/80">
                         {p.project_cost && (
-                          <span className="flex items-center gap-1 bg-muted/80 dark:bg-muted/40 px-2.5 py-1 rounded-full">
+                          <span className="flex items-center gap-1 bg-muted dark:bg-muted/60 border border-border/50 px-2.5 py-1 rounded-full">
                             <DollarSign className="ic-2xs text-primary" />
                             {Number(p.project_cost).toLocaleString()} SAR
                           </span>
                         )}
                         {p.duration_days && (
-                          <span className="flex items-center gap-1 bg-muted/80 dark:bg-muted/40 px-2.5 py-1 rounded-full">
+                          <span className="flex items-center gap-1 bg-muted dark:bg-muted/60 border border-border/50 px-2.5 py-1 rounded-full">
                             <Clock className="ic-2xs text-primary" />
                             {p.duration_days} {isRTL ? 'يوم' : 'days'}
                           </span>

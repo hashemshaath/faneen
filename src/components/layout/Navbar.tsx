@@ -114,7 +114,7 @@ export const Navbar = () => {
                 <link.icon className="w-3.5 h-3.5" />
                 {link.label}
                 {link.to === '/search' && (
-                  <kbd aria-hidden="true" className="hidden xl:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-[#EDEFF3] text-[9px] font-mono text-[#6B7689] border border-[#E2E6EE] leading-none">
+                  <kbd aria-hidden="true" className="hidden xl:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-muted text-[9px] font-mono text-foreground border border-border leading-none">
                     ⌘K
                   </kbd>
                 )}
