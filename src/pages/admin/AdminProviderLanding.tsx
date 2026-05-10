@@ -373,7 +373,7 @@ const AdminProviderLanding = () => {
                   <YAxis tick={{ fontSize: 11 }} />
                   <Tooltip />
                   <Line type="monotone" dataKey="views" stroke="hsl(var(--primary))" name="مشاهدات" />
-                  <Line type="monotone" dataKey="clicks" stroke="#f59e0b" name="نقرات" />
+                  <Line type="monotone" dataKey="clicks" stroke="#F08A24" name="نقرات" />
                 </LineChart>
               </ResponsiveContainer>
             </Card>
