@@ -24,8 +24,10 @@ interface ImageUploadProps {
 
 // Per-bucket upload constraints (mirrors storage.buckets server-side limits).
 // Keep in sync with the storage hardening migration.
+// SVG intentionally excluded for business-assets until server-side
+// sanitization (DOMPurify) is in place — see backlog IMG-01.
 const BUCKET_CONSTRAINTS: Record<string, { maxMB: number; mimes: string[] }> = {
-  'business-assets':  { maxMB: 2, mimes: ['image/jpeg','image/png','image/webp','image/gif','image/svg+xml'] },
+  'business-assets':  { maxMB: 2, mimes: ['image/jpeg','image/png','image/webp','image/gif'] },
   'portfolio-images': { maxMB: 5, mimes: ['image/jpeg','image/png','image/webp','image/gif'] },
   'project-images':   { maxMB: 5, mimes: ['image/jpeg','image/png','image/webp','image/gif'] },
   'blog-images':      { maxMB: 5, mimes: ['image/jpeg','image/png','image/webp','image/gif'] },
@@ -54,6 +56,9 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     loginFirst: isRTL ? 'يجب تسجيل الدخول أولاً' : 'You must be logged in first',
     sizeLimit: (mb: number) => isRTL ? `حجم الملف يجب أن لا يتجاوز ${mb}MB` : `File must not exceed ${mb}MB`,
     typeNotAllowed: isRTL ? 'نوع الملف غير مدعوم. الأنواع المسموحة: JPEG, PNG, WebP, GIF' : 'File type not allowed. Allowed: JPEG, PNG, WebP, GIF',
+    svgBlocked: isRTL
+      ? 'صيغة SVG غير مدعومة حاليًا لأسباب أمنية. يرجى رفع PNG أو JPG أو WebP.'
+      : 'SVG is temporarily disabled for security reasons. Please upload PNG, JPG, or WebP.',
     uploadOk: isRTL ? 'تم رفع الصورة بنجاح' : 'Image uploaded successfully',
     uploadFail: isRTL ? 'فشل رفع الصورة' : 'Failed to upload image',
     uploading: isRTL ? 'جاري الرفع...' : 'Uploading…',
@@ -71,6 +76,10 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
       return;
     }
 
+    if (file.type === 'image/svg+xml' && allowedMimes && !allowedMimes.includes('image/svg+xml')) {
+      toast.error(tx.svgBlocked);
+      return;
+    }
     if (allowedMimes && !allowedMimes.includes(file.type)) {
       toast.error(tx.typeNotAllowed);
       return;
