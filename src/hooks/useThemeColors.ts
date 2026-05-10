@@ -1,7 +1,28 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import {
+  BRAND_COLORS,
+  BRAND_THEME,
+  BRAND_CHARTS,
+  BRAND_DOCUMENTS,
+  BRAND_EMAILS,
+  type BrandColorTokens,
+} from '@/config/brandTheme';
+import {
+  hexToHslString as _hexToHslString,
+  validateHexColor,
+  isForbiddenBrandColor,
+  mergeBrandThemeWithOverrides,
+  buildCssVariablesFromBrandTheme,
+  type BrandThemeOverrides,
+} from '@/lib/theme/brandThemeUtils';
 
-/** Hex like "#1FBA82" — UI-friendly. We convert to "H S% L%" for CSS HSL tokens. */
+/**
+ * Legacy `ThemeColors` shape — preserved for backward-compat with
+ * `AdminBranding.tsx`. New code should use `BrandColorTokens` from
+ * `@/config/brandTheme`. All defaults below are derived from the central
+ * brand registry so there is a single source of truth.
+ */
 export interface ThemeColors {
   primary: string;       // logo green
   primaryDark: string;
@@ -11,14 +32,14 @@ export interface ThemeColors {
   navy: string;          // surface/foreground deep
 }
 
+/** Default theme — sourced from the central `BRAND_COLORS` registry. */
 export const DEFAULT_THEME: ThemeColors = {
-  /* Aligned with Brand Identity v1.0 (May 2026). */
-  primary: '#0E9E6F',
-  primaryDark: '#075E42',
-  secondary: '#2F62AE',
-  secondaryDark: '#142D52',
-  accent: '#F08A24',
-  navy: '#131722',
+  primary: BRAND_COLORS.primary,
+  primaryDark: BRAND_COLORS.primaryDark,
+  secondary: BRAND_COLORS.secondary,
+  secondaryDark: BRAND_COLORS.secondaryDark,
+  accent: BRAND_COLORS.accent,
+  navy: BRAND_COLORS.dark,
 };
 
 const KEY_MAP: Record<string, keyof ThemeColors> = {
@@ -38,29 +59,8 @@ export const KEY_FROM_FIELD = Object.fromEntries(
   Object.entries(KEY_MAP).map(([k, v]) => [v, k]),
 ) as Record<keyof ThemeColors, string>;
 
-/** Convert "#RRGGBB" → "H S% L%" string used by Tailwind's hsl(var(--x)) tokens. */
-export function hexToHslString(hex: string): string | null {
-  const m = hex.trim().match(/^#?([0-9a-f]{6})$/i);
-  if (!m) return null;
-  const v = parseInt(m[1], 16);
-  const r = ((v >> 16) & 255) / 255;
-  const g = ((v >> 8) & 255) / 255;
-  const b = (v & 255) / 255;
-  const max = Math.max(r, g, b), min = Math.min(r, g, b);
-  const l = (max + min) / 2;
-  let h = 0, s = 0;
-  if (max !== min) {
-    const d = max - min;
-    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-    switch (max) {
-      case r: h = ((g - b) / d + (g < b ? 6 : 0)); break;
-      case g: h = ((b - r) / d + 2); break;
-      case b: h = ((r - g) / d + 4); break;
-    }
-    h *= 60;
-  }
-  return `${Math.round(h)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
-}
+/** Re-exported from the central `brandThemeUtils` so callers have one home. */
+export const hexToHslString = _hexToHslString;
 
 export function useThemeColors() {
   const { data, isLoading } = useQuery({
@@ -74,9 +74,12 @@ export function useThemeColors() {
       const merged: ThemeColors = { ...DEFAULT_THEME };
       for (const r of rows ?? []) {
         const f = FIELD_FROM_KEY[r.setting_key];
-        if (f && r.setting_value && /^#[0-9a-f]{6}$/i.test(r.setting_value)) {
-          merged[f] = r.setting_value;
-        }
+        if (!f || !r.setting_value) continue;
+        const value = r.setting_value.trim();
+        // Reject malformed and forbidden values — fall through to default.
+        if (!validateHexColor(value)) continue;
+        if (isForbiddenBrandColor(value)) continue;
+        merged[f] = value;
       }
       return merged;
     },
@@ -87,16 +90,81 @@ export function useThemeColors() {
   return { theme: data ?? DEFAULT_THEME, isLoading };
 }
 
-/** Build CSS variable assignments suitable for injection on :root. */
+/**
+ * Build the `:root { ... }` CSS variable block injected by `<ThemeApplier />`.
+ *
+ * Three layers, in order:
+ *  1. Brand-namespaced HSL tokens (from `buildCssVariablesFromBrandTheme`)
+ *     — `--brand-primary`, `--brand-text`, etc.
+ *  2. Public `--color-*`, `--chart-*`, `--invoice-*`, `--email-*` tokens
+ *     consumed by app code, charts, PDFs and email templates.
+ *  3. Legacy aliases (`--primary`, `--accent`, `--gold`, `--navy`,
+ *     `--brand-blue`, `--gradient-gold`, `--shadow-gold`) so existing
+ *     Tailwind tokens and CSS keep working without churn.
+ */
 export function buildCssVars(theme: ThemeColors): string {
-  const p = hexToHslString(theme.primary);
-  const pd = hexToHslString(theme.primaryDark);
-  const s = hexToHslString(theme.secondary);
-  const sd = hexToHslString(theme.secondaryDark);
-  const a = hexToHslString(theme.accent);
-  const n = hexToHslString(theme.navy);
+  // Map legacy ThemeColors → BrandThemeOverrides so admin DB values cascade
+  // through the central merger. Anything invalid was already filtered above.
+  const overrides: BrandThemeOverrides = {
+    primary: theme.primary,
+    primaryDark: theme.primaryDark,
+    secondary: theme.secondary,
+    secondaryDark: theme.secondaryDark,
+    accent: theme.accent,
+    dark: theme.navy,
+  };
+  const merged = mergeBrandThemeWithOverrides(BRAND_THEME, overrides);
+  const c: BrandColorTokens = merged.colors;
+
+  const brandBlock = buildCssVariablesFromBrandTheme(merged);
+
+  const p = hexToHslString(c.primary);
+  const ph = hexToHslString(c.primaryHover);
+  const pd = hexToHslString(c.primaryDark);
+  const s = hexToHslString(c.secondary);
+  const sd = hexToHslString(c.secondaryDark);
+  const a = hexToHslString(c.accent);
+  const bg = hexToHslString(c.background);
+  const sf = hexToHslString(c.surface);
+  const tx = hexToHslString(c.text);
+  const tm = hexToHslString(c.textMuted);
+  const br = hexToHslString(c.border);
+  const ok = hexToHslString(c.success);
+  const wn = hexToHslString(c.warning);
+  const er = hexToHslString(c.error);
+  const inf = hexToHslString(c.info);
+  const n = hexToHslString(c.dark);
   if (!p || !s || !a) return '';
+
   const parts: string[] = [];
+  if (brandBlock) parts.push(brandBlock);
+
+  // ── Public --color-* tokens (the new public API) ────────────────────────
+  const pushHsl = (name: string, v: string | null) => { if (v) parts.push(`${name}:${v}`); };
+  pushHsl('--color-primary', p);
+  pushHsl('--color-primary-hover', ph);
+  pushHsl('--color-secondary', s);
+  pushHsl('--color-accent', a);
+  pushHsl('--color-background', bg);
+  pushHsl('--color-surface', sf);
+  pushHsl('--color-text', tx);
+  pushHsl('--color-text-muted', tm);
+  pushHsl('--color-border', br);
+  pushHsl('--color-success', ok);
+  pushHsl('--color-warning', wn);
+  pushHsl('--color-error', er);
+  pushHsl('--color-info', inf);
+
+  // ── Charts / Invoices / Emails — raw hex (consumed by JS, not Tailwind) ─
+  parts.push(`--chart-primary:${BRAND_CHARTS.primary}`);
+  parts.push(`--chart-secondary:${BRAND_CHARTS.secondary}`);
+  parts.push(`--chart-accent:${BRAND_CHARTS.accent}`);
+  parts.push(`--invoice-header:${BRAND_DOCUMENTS.invoiceHeader}`);
+  parts.push(`--invoice-accent:${BRAND_DOCUMENTS.invoiceAccent}`);
+  parts.push(`--email-header-bg:${BRAND_EMAILS.headerBg}`);
+  parts.push(`--email-primary-button:${BRAND_EMAILS.primaryButton}`);
+
+  // ── Legacy aliases (do not remove — many components still consume) ──────
   parts.push(`--primary:${p}`);
   parts.push(`--accent:${a}`);
   parts.push(`--ring:${p}`);
