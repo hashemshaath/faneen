@@ -913,7 +913,15 @@ const DashboardBlog = () => {
                 </div>
                 <div className="p-4">
                   <SeoScorePanel isRTL={isRTL} analysis={seoAnalysis as any} localScore={localScore}
-                    isAnalyzing={aiLoading === 'analyze'} contentStats={contentStats} focusKeyword={form.focus_keyword} />
+                    isAnalyzing={aiLoading === 'analyze'} contentStats={contentStats} focusKeyword={form.focus_keyword}
+                    onApplyFix={(field, value) => {
+                      setField(field as keyof typeof form, value);
+                      toast.success(isRTL ? 'تم التطبيق' : 'Applied');
+                    }}
+                    onApplyAll={(fixes) => {
+                      fixes.forEach(f => setField(f.field as keyof typeof form, f.suggested_value));
+                      toast.success(isRTL ? `تم تطبيق ${fixes.length} تحسينات` : `Applied ${fixes.length} fixes`);
+                    }} />
                 </div>
               </div>
 
