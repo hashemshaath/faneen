@@ -160,18 +160,50 @@ export default function AdminProviderReview() {
       if (error) throw error;
       // Best-effort: notify the provider (in-app + email). Failures must
       // never block the approval action itself.
-      try {
-        const target = (rows ?? []).find((r) => r.id === vars.id);
-        if (target) {
-          await notifyProviderOfStatusChange({
-            status: vars.status,
-            notes: vars.notes,
-            target,
+      const target = (rows ?? []).find((r) => r.id === vars.id);
+      const copy = NOTIFY_MAP[vars.status];
+      if (!target || !copy) return;
+
+      // 1) In-app notification (requires user_id).
+      if (target.user_id) {
+        try {
+          await supabase.from('notifications').insert({
+            user_id: target.user_id,
+            title_ar: copy.titleAr,
+            title_en: copy.titleEn,
+            body_ar: copy.bodyAr,
+            body_en: copy.bodyEn,
+            notification_type: 'system',
+            reference_type: 'business_approval',
+            reference_id: target.id,
+            action_url: '/dashboard',
           });
+        } catch (err) {
+          // eslint-disable-next-line no-console
+          console.warn('[AdminProviderReview] notification insert failed', err);
         }
-      } catch (notifyErr) {
-        // eslint-disable-next-line no-console
-        console.warn('[AdminProviderReview] notify failed', notifyErr);
+      }
+
+      // 2) Transactional email (requires recipient email).
+      if (target.email) {
+        try {
+          await supabase.functions.invoke('send-transactional-email', {
+            body: {
+              templateName: copy.template,
+              recipientEmail: target.email,
+              idempotencyKey: `provider-${vars.status}-${target.id}-${Date.now()}`,
+              templateData: {
+                recipientName: target.name_ar ?? target.name_en ?? undefined,
+                businessName: target.name_ar ?? target.name_en ?? undefined,
+                username: target.username ?? undefined,
+                notes: vars.notes ?? undefined,
+              },
+            },
+          });
+        } catch (err) {
+          // eslint-disable-next-line no-console
+          console.warn('[AdminProviderReview] email send failed', err);
+        }
       }
     },
     onSuccess: (_d, vars) => {
