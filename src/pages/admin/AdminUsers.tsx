@@ -686,6 +686,30 @@ const AdminUsers = () => {
     onError: () => toast.error(isRTL ? 'فشل الإزالة' : 'Failed to remove'),
   });
 
+  const updateStaffRoleMutation = useMutation({
+    mutationFn: async ({ staffId, role }: { staffId: string; role: StaffRole }) => {
+      const { error } = await supabase.from('business_staff').update({ role }).eq('id', staffId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-business-staff'] });
+      toast.success(isRTL ? 'تم تحديث الصلاحية' : 'Permission updated');
+    },
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : (isRTL ? 'فشل التحديث' : 'Failed to update')),
+  });
+
+  const removeStaffMutation = useMutation({
+    mutationFn: async (staffId: string) => {
+      const { error } = await supabase.from('business_staff').delete().eq('id', staffId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-business-staff'] });
+      toast.success(isRTL ? 'تمت الإزالة من المنشأة' : 'Removed from business');
+    },
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : (isRTL ? 'فشل الإزالة' : 'Failed to remove')),
+  });
+
   const updateProfileMutation = useMutation({
     mutationFn: async ({ profileId, data }: { profileId: string; data: Partial<Profile> }) => {
       const { error } = await supabase.from('profiles').update(data).eq('id', profileId);
