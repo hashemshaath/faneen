@@ -825,6 +825,9 @@ const DashboardMessages = () => {
       setForwardMsg(null);
       queryClient.invalidateQueries({ queryKey: ['messages', selectedConversation] });
       queryClient.invalidateQueries({ queryKey: ['conversations', user?.id] });
+      try {
+        trackMessageSent({ source_page: 'dashboard_messages' });
+      } catch { /* analytics must never break send */ }
     },
     onError: () => { setIsUploading(false); toast.error(isRTL ? 'فشل إرسال الرسالة' : 'Failed to send'); },
   });
