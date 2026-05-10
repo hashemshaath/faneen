@@ -100,7 +100,7 @@ const Contact = () => {
 
       setSent(true);
       const attribution = getAttributionPayload();
-      track.quoteRequestSubmit({ contact_type: 'contact_form', ...attribution });
+      // Canonical contact event (Phase 6). `quote_request_submit` deprecated.
       track.contactFormSubmitted({ contact_type: 'contact_form', ...attribution });
       toast.success(isRTL ? 'تم إرسال رسالتك بنجاح' : 'Message sent successfully');
     } catch {

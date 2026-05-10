@@ -21,6 +21,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { getSectorById, type SectorId } from '@/data/onboarding-sectors';
+import { trackProviderApproved, trackProviderRejected, trackProviderNeedsChanges } from '@/lib/analytics-events';
 import { useNoIndex } from "@/hooks/useNoIndex";
 
 type ApprovalStatus =
@@ -158,6 +159,17 @@ export default function AdminProviderReview() {
         _notes: vars.notes ?? null,
       });
       if (error) throw error;
+      // PII-free analytics — only outcome + has_notes flag.
+      try {
+        const payload = {
+          source_page: 'admin_provider_review',
+          outcome: vars.status,
+          has_notes: !!vars.notes?.trim(),
+        };
+        if (vars.status === 'approved') trackProviderApproved(payload);
+        else if (vars.status === 'rejected') trackProviderRejected(payload);
+        else if (vars.status === 'needs_changes') trackProviderNeedsChanges(payload);
+      } catch { /* analytics never breaks approval */ }
       // Best-effort: notify the provider (in-app + email). Failures must
       // never block the approval action itself.
       const target = (rows ?? []).find((r) => r.id === vars.id);

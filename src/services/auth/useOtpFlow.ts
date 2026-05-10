@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { OTP_COOLDOWN_SECONDS, OTP_LENGTH } from './constants';
-import { track } from '@/lib/analytics-events';
+import { track, trackOtpFailed, trackLoginFailed, categorizeReason } from '@/lib/analytics-events';
 
 interface UseOtpFlowOptions {
   onSendOtp: () => Promise<{ success: boolean; demo_otp?: string; error?: string; message?: string }>;
@@ -31,6 +31,14 @@ export function useOtpFlow({ onSendOtp, onVerifyOtp, isRTL }: UseOtpFlowOptions)
         const msg = data?.error === 'no_account'
           ? (isRTL ? 'لم يتم العثور على حساب بهذا الرقم' : 'No account found with this number')
           : data?.message || (isRTL ? 'تعذر إرسال الرمز' : 'Could not send code');
+        try {
+          trackOtpFailed({
+            method: 'otp',
+            flow: 'send',
+            source_page: 'auth_otp',
+            reason_category: data?.error === 'no_account' ? 'auth_failed' : categorizeReason(data?.error || data?.message),
+          });
+        } catch { /* analytics never breaks otp */ }
         setError(msg);
         return false;
       }
@@ -40,7 +48,8 @@ export function useOtpFlow({ onSendOtp, onVerifyOtp, isRTL }: UseOtpFlowOptions)
       setCooldown(OTP_COOLDOWN_SECONDS);
       track.otpSent({ method: 'otp' });
       return true;
-    } catch {
+    } catch (err) {
+      try { trackOtpFailed({ method: 'otp', flow: 'send', source_page: 'auth_otp', reason_category: categorizeReason(err) }); } catch { /* noop */ }
       setError(isRTL ? 'حدث خطأ، حاول مرة أخرى' : 'An error occurred, try again');
       return false;
     } finally {
@@ -60,6 +69,10 @@ export function useOtpFlow({ onSendOtp, onVerifyOtp, isRTL }: UseOtpFlowOptions)
       track.otpVerified({ method: 'otp' });
       return true;
     } catch (err: unknown) {
+      try {
+        trackOtpFailed({ method: 'otp', flow: 'verify', source_page: 'auth_otp', reason_category: categorizeReason(err) });
+        trackLoginFailed({ method: 'otp', source_page: 'auth_login', reason_category: categorizeReason(err) });
+      } catch { /* analytics never breaks otp */ }
       setError(err instanceof Error ? err.message : (isRTL ? 'تعذر التحقق من الرمز' : 'Could not verify the code'));
       return false;
     } finally {

@@ -25,6 +25,7 @@ export type QitaatEvent =
   | "project_view"
   | "lead_contact_click"
   | "quote_request_start"
+  /** @deprecated alias of `contact_form_submitted` — keep for backward compat; do NOT fire in new code. Planned removal: after GA4 dashboards migrate. */
   | "quote_request_submit"
   | "provider_signup_start"
   | "provider_signup_submit"
@@ -35,15 +36,19 @@ export type QitaatEvent =
   // Communication & onboarding (no PII)
   | "signup_started"
   | "signup_otp_sent"
+  /** @deprecated alias of `register_completed`. Planned removal: after GA4 dashboards migrate. */
   | "signup_completed"
+  /** Canonical signup conversion event. */
   | "register_completed"
   | "otp_sent"
   | "otp_verified"
   | "contact_form_submitted"
   | "onboarding_step_viewed"
   | "onboarding_completed"
+  /** @deprecated alias of `supplier_lead_submitted`. Planned removal: after GA4 dashboards migrate. */
   | "lead_request_submitted"
   | "message_sent"
+  /** @deprecated alias of `notification_opened` — never fired (kept for type compat). */
   | "notification_clicked"
   | "login_success"
   | "notification_opened"
@@ -51,7 +56,16 @@ export type QitaatEvent =
   | "contact_button_clicked"
   | "supplier_lead_submitted"
   | "supplier_phone_revealed"
-  | "supplier_email_revealed";
+  | "supplier_email_revealed"
+  // Failure events (Phase 6) — PII-free; only `reason_category` is allowed.
+  | "register_failed"
+  | "otp_failed"
+  | "login_failed"
+  | "lead_failed"
+  // Provider lifecycle (Phase 6) — fired from admin review actions.
+  | "provider_approved"
+  | "provider_rejected"
+  | "provider_needs_changes";
 
 /** Allow-listed parameters. Anything not in this set is dropped. */
 export type AllowedParam =
@@ -82,6 +96,13 @@ export type AllowedParam =
   | "source_page"
   | "inquiry_type"
   | "is_authenticated"
+  // Phase 6 additions — PII-free dimensions.
+  | "reason_category"
+  | "outcome"
+  | "has_notes"
+  | "flow"
+  | "item_type"
+  | "action"
   // Attribution (UTM + first/last touch) — added by analytics-attribution helper.
   // Only attached to conversion events (lead/register/contact) — never blanket.
   | "utm_source"
@@ -122,6 +143,12 @@ const ALLOWED: ReadonlySet<AllowedParam> = new Set<AllowedParam>([
   "source_page",
   "inquiry_type",
   "is_authenticated",
+  "reason_category",
+  "outcome",
+  "has_notes",
+  "flow",
+  "item_type",
+  "action",
   "utm_source",
   "utm_medium",
   "utm_campaign",
@@ -246,6 +273,43 @@ export const track = {
 export const trackLoginSuccess = (p: EventPayload = {}) => trackEvent("login_success", p);
 export const trackNotificationOpened = (p: EventPayload = {}) => trackEvent("notification_opened", p);
 export const trackMessageSent = (p: EventPayload = {}) => trackEvent("message_sent", p);
+
+/**
+ * Categorize a raw error/message into a stable `reason_category` value.
+ * Never returns the raw message — only one of:
+ *   validation | rate_limited | auth_failed | network | server | unknown
+ */
+export type ReasonCategory =
+  | "validation"
+  | "rate_limited"
+  | "auth_failed"
+  | "network"
+  | "server"
+  | "unknown";
+
+export function categorizeReason(input: unknown): ReasonCategory {
+  const raw =
+    input instanceof Error ? input.message :
+    typeof input === "string" ? input :
+    "";
+  const s = raw.toLowerCase();
+  if (!s) return "unknown";
+  if (/(rate.?limit|too.?many|429|throttle|cooldown)/.test(s)) return "rate_limited";
+  if (/(invalid.?(login|credential|otp|code)|unauthor|forbid|expired|already.?used|otp_)/.test(s)) return "auth_failed";
+  if (/(network|fetch|offline|timeout|connection)/.test(s)) return "network";
+  if (/(required|invalid|must|missing|format|validation|short|weak)/.test(s)) return "validation";
+  if (/(5\d{2}|server|internal|unavailable)/.test(s)) return "server";
+  return "unknown";
+}
+
+/** Safe wrappers — analytics MUST never break a flow. Always wrap in try/catch at call-site. */
+export const trackRegisterFailed = (p: EventPayload = {}) => trackEvent("register_failed", p);
+export const trackOtpFailed = (p: EventPayload = {}) => trackEvent("otp_failed", p);
+export const trackLoginFailed = (p: EventPayload = {}) => trackEvent("login_failed", p);
+export const trackLeadFailed = (p: EventPayload = {}) => trackEvent("lead_failed", p);
+export const trackProviderApproved = (p: EventPayload = {}) => trackEvent("provider_approved", p);
+export const trackProviderRejected = (p: EventPayload = {}) => trackEvent("provider_rejected", p);
+export const trackProviderNeedsChanges = (p: EventPayload = {}) => trackEvent("provider_needs_changes", p);
 
 /** Extract a hostname safely (used for outbound link tagging, never for PII). */
 export function getDomain(url: string): string | undefined {

@@ -17,7 +17,7 @@ import { AuthDivider } from './AuthDivider';
 import { FieldError } from './FieldError';
 import { AuthErrorHelpLinks } from './AuthErrorHelpLinks';
 import { useFieldValidation } from '@/hooks/useFieldValidation';
-import { trackLoginSuccess } from '@/lib/analytics-events';
+import { trackLoginSuccess, trackLoginFailed, categorizeReason } from '@/lib/analytics-events';
 
 interface LoginFormProps {
   onSwitchToRegister: () => void;
@@ -85,6 +85,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
       const msg = err instanceof Error ? err.message : String(err);
       const friendlyMsg = translateAuthError(msg, isRTL);
       lockout.recordFailure();
+      try { trackLoginFailed({ method: 'password', source_page: 'auth_login', reason_category: categorizeReason(err) }); } catch { /* analytics never breaks login */ }
       setLoginError(friendlyMsg);
       setLoginErrorRaw(msg);
     } finally {
