@@ -14,6 +14,7 @@ import { RouteScrollToTop } from "@/components/RouteScrollToTop";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { GlobalLinkTracker } from "@/components/GlobalLinkTracker";
 import { BrandLogo } from "@/components/common/BrandLogo";
+import { ThemeApplier } from "@/components/ThemeApplier";
 const Index = lazyRetry(() => import("./pages/Index"));
 const ConsentBanner = lazy(() => import("./components/consent/ConsentBanner"));
 
@@ -235,6 +236,7 @@ const App = () => (
         <LanguageProvider>
           <AuthProvider>
             <TooltipProvider>
+              <ThemeApplier />
               <Toaster />
               <Sonner />
               <AppRoutes />
