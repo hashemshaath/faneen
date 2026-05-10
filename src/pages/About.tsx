@@ -20,17 +20,17 @@ import {
 const AboutHero = ({ isRTL }: { isRTL: boolean }) => (
   <section className="relative overflow-hidden bg-primary text-primary-foreground pt-28 sm:pt-36 pb-20 sm:pb-28">
     <div className="absolute inset-0 pointer-events-none">
-      <div className="absolute -top-24 -start-24 w-[28rem] h-[28rem] rounded-full bg-gold/15 blur-3xl" />
+      <div className="absolute -top-24 -start-24 w-[28rem] h-[28rem] rounded-full bg-accent/10 blur-3xl" />
       <div className="absolute -bottom-32 -end-24 w-[32rem] h-[32rem] rounded-full bg-accent/10 blur-3xl" />
       <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: 'radial-gradient(hsl(var(--accent)) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
     </div>
     <div className="container relative px-4 sm:px-6 text-center max-w-3xl">
-      <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-gold/30 bg-gold/10 backdrop-blur mb-6 animate-fade-in">
-        <Sparkles className="w-3.5 h-3.5 text-gold" />
-        <span className="text-xs font-body font-medium text-gold">{isRTL ? 'تعرّف على قِطاعات' : 'Get to know Qitaat'}</span>
+      <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-accent/30 bg-accent/10 backdrop-blur mb-6 animate-fade-in">
+        <Sparkles className="w-3.5 h-3.5 text-accent" />
+        <span className="text-xs font-body font-medium text-accent">{isRTL ? 'تعرّف على قِطاعات' : 'Get to know Qitaat'}</span>
       </div>
       <h1 className="font-heading font-black text-3xl sm:text-5xl md:text-6xl leading-tight mb-5 tracking-tight">
-        {isRTL ? (<>نُعيد تعريف <span className="text-gradient-gold-shimmer">قِطاعات الصناعة</span></>) : (<>Reimagining the <span className="text-gradient-gold-shimmer">Industrial Sectors</span></>)}
+        {isRTL ? (<>نُعيد تعريف <span className="text-primary">قِطاعات الصناعة</span></>) : (<>Reimagining the <span className="text-primary">Industrial Sectors</span></>)}
       </h1>
       <p className="text-sm sm:text-lg text-primary-foreground/70 font-body leading-relaxed max-w-2xl mx-auto">
         {isRTL
@@ -62,7 +62,7 @@ const StatItem = ({
       <div className={`absolute inset-0 bg-gradient-to-br ${accent} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
       <div className="relative flex items-start justify-between gap-3">
         <div>
-          <div className="font-heading font-black text-3xl sm:text-4xl text-gradient-gold tracking-tight tech-content leading-none">
+          <div className="font-heading font-black text-3xl sm:text-4xl text-primary tracking-tight tech-content leading-none">
             {display}<span className="text-accent/80">+</span>
           </div>
           <div className="font-heading font-bold text-sm text-foreground mt-2">{label}</div>
@@ -349,7 +349,7 @@ const JourneySection = ({ isRTL }: { isRTL: boolean }) => {
                   <div className={`ps-20 sm:ps-0 ${onLeft ? 'sm:col-start-1 sm:pe-10 sm:text-end' : 'sm:col-start-2 sm:ps-10 sm:text-start'}`}>
                     <article className="group bg-card border border-border/50 rounded-2xl p-5 sm:p-6 hover:border-accent/40 hover:shadow-elev-3 hover:-translate-y-0.5 transition-all duration-300">
                       <div className={`flex items-center gap-2 mb-3 ${onLeft ? 'sm:justify-end' : 'sm:justify-start'}`}>
-                        <span className="font-heading font-black text-2xl sm:text-3xl text-gradient-gold tech-content leading-none">{s.year}</span>
+                        <span className="font-heading font-black text-2xl sm:text-3xl text-primary tech-content leading-none">{s.year}</span>
                         <span className={`text-[10px] font-body font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border ${statusClasses(s.status)}`}>
                           {statusLabel(s.status)}
                         </span>
@@ -422,7 +422,7 @@ const ContactCTA = ({ isRTL }: { isRTL: boolean }) => {
       <div className="container px-4 sm:px-6">
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-primary to-navy-light text-primary-foreground p-8 sm:p-14">
           <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute -top-20 -end-20 w-80 h-80 rounded-full bg-gold/20 blur-3xl" />
+            <div className="absolute -top-20 -end-20 w-80 h-80 rounded-full bg-accent/15 blur-3xl" />
             <div className="absolute -bottom-24 -start-24 w-96 h-96 rounded-full bg-accent/15 blur-3xl" />
           </div>
           <div className="relative grid md:grid-cols-2 gap-8 items-center">
@@ -439,14 +439,14 @@ const ContactCTA = ({ isRTL }: { isRTL: boolean }) => {
             </div>
             <div className="grid grid-cols-1 gap-3">
               <a href="mailto:info@qitaat.com" className="flex items-center gap-3 p-4 rounded-xl bg-white/[0.06] border border-white/10 hover:bg-white/[0.1] transition-all">
-                <div className="w-10 h-10 rounded-lg bg-gold/20 flex items-center justify-center"><Mail className="w-5 h-5 text-gold" /></div>
+                <div className="w-10 h-10 rounded-lg bg-accent/15 flex items-center justify-center"><Mail className="w-5 h-5 text-accent" /></div>
                 <div className="flex-1 min-w-0">
                   <div className="text-xs text-primary-foreground/60 font-body">{isRTL ? 'البريد الإلكتروني' : 'Email'}</div>
                   <div className="font-heading font-bold text-sm tech-content truncate">info@qitaat.com</div>
                 </div>
               </a>
               <div className="flex items-center gap-3 p-4 rounded-xl bg-white/[0.06] border border-white/10">
-                <div className="w-10 h-10 rounded-lg bg-gold/20 flex items-center justify-center"><MapPin className="w-5 h-5 text-gold" /></div>
+                <div className="w-10 h-10 rounded-lg bg-accent/15 flex items-center justify-center"><MapPin className="w-5 h-5 text-accent" /></div>
                 <div className="flex-1">
                   <div className="text-xs text-primary-foreground/60 font-body">{isRTL ? 'الموقع' : 'Location'}</div>
                   <div className="font-heading font-bold text-sm">{isRTL ? 'المملكة العربية السعودية' : 'Saudi Arabia'}</div>

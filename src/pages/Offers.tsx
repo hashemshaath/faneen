@@ -162,7 +162,7 @@ const Offers = () => {
           {!isLoading && (
             <div className="grid grid-cols-4 gap-2 sm:gap-3 mt-6 sm:mt-8 max-w-2xl mx-auto">
               {[
-                { icon: Megaphone, label: isRTL ? 'إجمالي العروض' : 'Total', value: stats.total, color: 'text-gold', bg: 'bg-gold/15', mirror: true },
+                { icon: Megaphone, label: isRTL ? 'إجمالي العروض' : 'Total', value: stats.total, color: 'text-accent', bg: 'bg-accent/10', mirror: true },
                 { icon: Tag, label: isRTL ? 'عروض خاصة' : 'Offers', value: stats.offers, color: 'text-success', bg: 'bg-success/15' },
                 { icon: Video, label: isRTL ? 'فيديو' : 'Videos', value: stats.videos, color: 'text-info', bg: 'bg-info/15' },
                 { icon: Eye, label: isRTL ? 'مشاهدة' : 'Views', value: stats.totalViews, color: 'text-secondary', bg: 'bg-secondary/15' },

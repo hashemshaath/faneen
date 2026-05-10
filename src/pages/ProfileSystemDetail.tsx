@@ -27,7 +27,7 @@ import { track } from '@/lib/analytics-events';
 
 // ─── Constants ───
 const recommendationLabels: Record<string, { ar: string; en: string; color: string; icon: React.ElementType }> = {
-  premium: { ar: 'احترافي', en: 'Premium', color: 'bg-gold text-primary-foreground', icon: Award },
+  premium: { ar: 'احترافي', en: 'Premium', color: 'bg-accent text-primary-foreground', icon: Award },
   recommended: { ar: 'موصى به', en: 'Recommended', color: 'bg-success/10 text-success dark:text-success', icon: TrendingUp },
   standard: { ar: 'قياسي', en: 'Standard', color: 'bg-muted text-muted-foreground', icon: BarChart3 },
 };
@@ -46,7 +46,7 @@ const AnimatedRatingBar = ({ value, max = 10, label, icon: Icon }: { value: numb
   const pct = (value / max) * 100;
   const getColor = () => {
     if (pct >= 80) return 'from-success to-success';
-    if (pct >= 60) return 'from-gold/70 to-gold';
+    if (pct >= 60) return 'from-accent/70 to-accent';
     if (pct >= 40) return 'from-warning to-urgent';
     return 'from-urgent to-destructive';
   };
@@ -55,8 +55,8 @@ const AnimatedRatingBar = ({ value, max = 10, label, icon: Icon }: { value: numb
     <div ref={ref} className="group">
       <div className="flex items-center justify-between mb-1.5">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gold/10 flex items-center justify-center">
-            <Icon className="ic-xs sm:w-4 sm:h-4 text-gold" />
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-accent/10 flex items-center justify-center">
+            <Icon className="ic-xs sm:w-4 sm:h-4 text-accent" />
           </div>
           <span className="text-xs sm:text-sm font-medium">{label}</span>
         </div>
@@ -77,7 +77,7 @@ const StarRating = ({ rating, size = 'sm' }: { rating: number; size?: 'sm' | 'lg
   return (
     <div className="flex gap-0.5">
       {Array.from({ length: 5 }).map((_, i) => (
-        <Star key={i} className={`${s} ${i < rating ? 'fill-gold text-gold' : 'text-muted-foreground/20'}`} />
+        <Star key={i} className={`${s} ${i < rating ? 'fill-accent text-accent' : 'text-muted-foreground/20'}`} />
       ))}
     </div>
   );
@@ -95,7 +95,7 @@ const InteractiveStarInput = ({ value, onChange }: { value: number; onChange: (v
           onClick={() => onChange(i + 1)}
           className="transition-transform hover:scale-125 active:scale-110 touch-manipulation"
         >
-          <Star className={`w-8 h-8 sm:w-7 sm:h-7 cursor-pointer transition-colors ${i < (hover || value) ? 'fill-gold text-gold' : 'text-muted-foreground/30 hover:text-gold/50'}`} />
+          <Star className={`w-8 h-8 sm:w-7 sm:h-7 cursor-pointer transition-colors ${i < (hover || value) ? 'fill-accent text-accent' : 'text-muted-foreground/30 hover:text-accent/50'}`} />
         </button>
       ))}
     </div>
@@ -147,7 +147,7 @@ const Lightbox = ({ images, index, onClose, onNav, isRTL, language }: { images: 
         {img?.caption_ar && <p className="text-white/80 text-center text-xs sm:text-sm mt-3">{language === 'ar' ? img.caption_ar : (img.caption_en || img.caption_ar)}</p>}
         <div className="flex items-center justify-center gap-1.5 mt-2">
           {images.map((_, i: number) => (
-            <button key={i} onClick={() => onNav(i - index)} className={`w-2 h-2 rounded-full transition-all ${i === index ? 'bg-gold w-4' : 'bg-white/30'}`} />
+            <button key={i} onClick={() => onNav(i - index)} className={`w-2 h-2 rounded-full transition-all ${i === index ? 'bg-accent w-4' : 'bg-white/30'}`} />
           ))}
         </div>
       </div>
@@ -157,9 +157,9 @@ const Lightbox = ({ images, index, onClose, onNav, isRTL, language }: { images: 
 
 // ─── Quick Stat Card ───
 const QuickStat = ({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string | number }) => (
-  <div className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-xl bg-card border border-border/40 hover:border-gold/30 transition-colors">
-    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-gold/10 flex items-center justify-center shrink-0">
-      <Icon className="ic-sm sm:w-5 sm:h-5 text-gold" />
+  <div className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-xl bg-card border border-border/40 hover:border-accent/30 transition-colors">
+    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
+      <Icon className="ic-sm sm:w-5 sm:h-5 text-accent" />
     </div>
     <div className="min-w-0">
       <p className="text-[10px] sm:text-xs text-muted-foreground truncate">{label}</p>
@@ -592,7 +592,7 @@ const ProfileSystemDetail = () => {
             <div className="absolute inset-0 bg-gradient-to-r from-background/30 to-transparent" />
           </div>
         ) : (
-          <div className="h-40 sm:h-56 md:h-72 bg-gradient-to-br from-primary/10 via-gold/5 to-background relative">
+          <div className="h-40 sm:h-56 md:h-72 bg-gradient-to-br from-primary/10 via-accent/5 to-background relative">
             <div className="absolute inset-0 opacity-5" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23d4a853\' fill-opacity=\'0.4\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")' }} />
           </div>
         )}
@@ -622,7 +622,7 @@ const ProfileSystemDetail = () => {
                       {profile.profile_type === 'custom' ? (isRTL ? 'خاص' : 'Custom') : (isRTL ? 'سوق' : 'Market')}
                     </Badge>
                     <span className="flex items-center gap-1"><Eye className="ic-2xs sm:w-3.5 sm:h-3.5" />{profile.views_count.toLocaleString()}</span>
-                    <span className="flex items-center gap-1"><Star className="ic-2xs sm:w-3.5 sm:h-3.5 fill-gold text-gold" />{avgRating.toFixed(1)} ({reviews.length})</span>
+                    <span className="flex items-center gap-1"><Star className="ic-2xs sm:w-3.5 sm:h-3.5 fill-accent text-accent" />{avgRating.toFixed(1)} ({reviews.length})</span>
                   </div>
                 </div>
               </div>
@@ -712,7 +712,7 @@ const ProfileSystemDetail = () => {
                     <div className="h-1 bg-accent" />
                     <CardContent className="p-4 sm:p-6">
                       <h3 className="font-heading font-bold text-base sm:text-lg mb-2 sm:mb-3 flex items-center gap-2">
-                        <Info className="ic-sm sm:w-5 sm:h-5 text-gold" />{isRTL ? 'عن هذا القطاع' : 'About This Profile'}
+                        <Info className="ic-sm sm:w-5 sm:h-5 text-accent" />{isRTL ? 'عن هذا القطاع' : 'About This Profile'}
                       </h3>
                       <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{desc}</p>
                     </CardContent>
@@ -724,7 +724,7 @@ const ProfileSystemDetail = () => {
                   <Card className="border-border/40">
                     <CardContent className="p-4 sm:p-6">
                       <h3 className="font-heading font-bold text-base sm:text-lg mb-3 sm:mb-4 flex items-center gap-2">
-                        <Zap className="ic-sm sm:w-5 sm:h-5 text-gold" />{isRTL ? 'المميزات الرئيسية' : 'Key Features'}
+                        <Zap className="ic-sm sm:w-5 sm:h-5 text-accent" />{isRTL ? 'المميزات الرئيسية' : 'Key Features'}
                       </h3>
                       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3">
                         {features.map((f: string, i: number) => (
@@ -745,7 +745,7 @@ const ProfileSystemDetail = () => {
                   <Card className="border-border/40">
                     <CardContent className="p-4 sm:p-6">
                       <h3 className="font-heading font-bold text-base sm:text-lg mb-2 sm:mb-3 flex items-center gap-2">
-                        <Layers className="ic-sm sm:w-5 sm:h-5 text-gold" />{isRTL ? 'مجالات الاستخدام' : 'Applications'}
+                        <Layers className="ic-sm sm:w-5 sm:h-5 text-accent" />{isRTL ? 'مجالات الاستخدام' : 'Applications'}
                       </h3>
                       <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{apps}</p>
                     </CardContent>
@@ -758,9 +758,9 @@ const ProfileSystemDetail = () => {
                     <CardContent className="p-4 sm:p-6">
                       <div className="flex items-center justify-between mb-3 sm:mb-4">
                         <h3 className="font-heading font-bold text-base sm:text-lg flex items-center gap-2">
-                          <Image className="ic-sm sm:w-5 sm:h-5 text-gold" />{isRTL ? 'من المعرض' : 'Gallery'}
+                          <Image className="ic-sm sm:w-5 sm:h-5 text-accent" />{isRTL ? 'من المعرض' : 'Gallery'}
                         </h3>
-                        <Button variant="ghost" size="sm" onClick={() => setActiveTab('gallery')} className="text-gold hover:text-gold/80 text-xs h-8">
+                        <Button variant="ghost" size="sm" onClick={() => setActiveTab('gallery')} className="text-accent hover:text-accent/80 text-xs h-8">
                           {isRTL ? 'الكل' : 'All'} →
                         </Button>
                       </div>
@@ -792,7 +792,7 @@ const ProfileSystemDetail = () => {
                     <div className="pt-2 sm:pt-3 border-t border-border/40">
                       <div className="flex items-center justify-between">
                         <span className="text-xs sm:text-sm font-medium">{isRTL ? 'الإجمالي' : 'Overall'}</span>
-                        <span className="font-heading font-black text-xl sm:text-2xl text-gold">
+                        <span className="font-heading font-black text-xl sm:text-2xl text-accent">
                           {(((profile.thermal_insulation_rating || 0) + (profile.sound_insulation_rating || 0) + (profile.strength_rating || 0)) / 3).toFixed(1)}
                         </span>
                       </div>
@@ -805,7 +805,7 @@ const ProfileSystemDetail = () => {
                   <Card className="border-border/40">
                     <CardContent className="p-4 sm:p-6 space-y-3">
                       <h3 className="font-heading font-bold text-base sm:text-lg flex items-center gap-2">
-                        <Ruler className="ic-sm sm:w-5 sm:h-5 text-gold" />{isRTL ? 'الأبعاد القصوى' : 'Max Dimensions'}
+                        <Ruler className="ic-sm sm:w-5 sm:h-5 text-accent" />{isRTL ? 'الأبعاد القصوى' : 'Max Dimensions'}
                       </h3>
                       <div className="grid grid-cols-2 gap-2 sm:gap-3">
                         {profile.max_height_mm && (
@@ -830,7 +830,7 @@ const ProfileSystemDetail = () => {
                   <Card className="border-border/40">
                     <CardContent className="p-4 sm:p-6">
                       <h3 className="font-heading font-bold text-base sm:text-lg flex items-center gap-2 mb-2 sm:mb-3">
-                        <Palette className="ic-sm sm:w-5 sm:h-5 text-gold" />{isRTL ? 'الألوان المتاحة' : 'Available Colors'}
+                        <Palette className="ic-sm sm:w-5 sm:h-5 text-accent" />{isRTL ? 'الألوان المتاحة' : 'Available Colors'}
                       </h3>
                       <div className="flex flex-wrap gap-1.5 sm:gap-2">
                         {profile.available_colors.map((c: string, i: number) => (
@@ -848,7 +848,7 @@ const ProfileSystemDetail = () => {
                       <h3 className="font-heading font-bold text-base sm:text-lg mb-3">{isRTL ? 'تقييم المستخدمين' : 'User Rating'}</h3>
                       <div className="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
                         <div className="text-center shrink-0">
-                          <p className="font-heading font-black text-3xl sm:text-4xl text-gold">{avgRating.toFixed(1)}</p>
+                          <p className="font-heading font-black text-3xl sm:text-4xl text-accent">{avgRating.toFixed(1)}</p>
                           <StarRating rating={Math.round(avgRating)} size="lg" />
                           <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">{reviews.length} {isRTL ? 'تقييم' : 'reviews'}</p>
                         </div>
@@ -856,9 +856,9 @@ const ProfileSystemDetail = () => {
                           {ratingDistribution.map(d => (
                             <div key={d.star} className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs">
                               <span className="w-3">{d.star}</span>
-                              <Star className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-gold text-gold" />
+                              <Star className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-accent text-accent" />
                               <div className="flex-1 h-1.5 sm:h-2 bg-muted rounded-full overflow-hidden">
-                                <div className="h-full bg-gold rounded-full transition-all" style={{ width: `${d.pct}%` }} />
+                                <div className="h-full bg-accent rounded-full transition-all" style={{ width: `${d.pct}%` }} />
                               </div>
                               <span className="text-muted-foreground w-4 sm:w-6 text-end">{d.count}</span>
                             </div>
@@ -942,7 +942,7 @@ const ProfileSystemDetail = () => {
                 {images.map((img, i: number) => (
                   <div
                     key={img.id}
-                    className="relative group rounded-xl sm:rounded-2xl overflow-hidden bg-muted aspect-square cursor-pointer ring-1 ring-border/50 active:ring-gold/50 sm:hover:ring-gold/30 transition-all"
+                    className="relative group rounded-xl sm:rounded-2xl overflow-hidden bg-muted aspect-square cursor-pointer ring-1 ring-border/50 active:ring-accent/50 sm:hover:ring-accent/30 transition-all"
                     onClick={() => setLightboxIdx(i)}
                   >
                     <img src={img.image_url} alt={img.caption_ar || ''} className="w-full h-full object-cover" loading="lazy" />
@@ -968,19 +968,19 @@ const ProfileSystemDetail = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 {suppliers.map((s) => (
                   <Link key={s.id} to={`/${s.businesses?.username}`}>
-                    <Card className="border-border/40 hover:border-gold/30 active:border-gold/50 transition-all group overflow-hidden">
+                    <Card className="border-border/40 hover:border-accent/30 active:border-accent/50 transition-all group overflow-hidden">
                       <CardContent className="p-3.5 sm:card-pad-md flex items-center gap-3 sm:gap-4">
                         {s.businesses?.logo_url ? (
                           <img src={s.businesses.logo_url} alt={language === 'ar' ? s.businesses.name_ar : (s.businesses.name_en || s.businesses.name_ar)} className="w-11 h-11 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl object-cover ring-1 ring-border/50" />
                         ) : (
-                          <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl bg-gold/10 flex items-center justify-center shrink-0"><Building2 className="ic-lg sm:w-7 sm:h-7 text-gold" /></div>
+                          <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl bg-accent/10 flex items-center justify-center shrink-0"><Building2 className="ic-lg sm:w-7 sm:h-7 text-accent" /></div>
                         )}
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-heading font-bold text-sm sm:text-base group-hover:text-gold transition-colors truncate">
+                          <h4 className="font-heading font-bold text-sm sm:text-base group-hover:text-accent transition-colors truncate">
                             {language === 'ar' ? s.businesses?.name_ar : (s.businesses?.name_en || s.businesses?.name_ar)}
                           </h4>
                           <div className="flex items-center gap-2 sm:gap-3 text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">
-                            <span className="flex items-center gap-0.5"><Star className="ic-2xs fill-gold text-gold" />{s.businesses?.rating_avg}</span>
+                            <span className="flex items-center gap-0.5"><Star className="ic-2xs fill-accent text-accent" />{s.businesses?.rating_avg}</span>
                             {s.price_range_from && <span className="font-heading truncate">{Number(s.price_range_from).toLocaleString()} - {Number(s.price_range_to).toLocaleString()} {s.currency_code}</span>}
                           </div>
                         </div>
@@ -1003,7 +1003,7 @@ const ProfileSystemDetail = () => {
                     <h3 className="font-heading font-bold text-base sm:text-lg mb-3 sm:mb-4 text-center">{isRTL ? 'ملخص التقييمات' : 'Rating Summary'}</h3>
                     <div className="flex items-center gap-4 sm:flex-col sm:gap-2 lg:flex-col">
                       <div className="text-center shrink-0">
-                        <p className="font-heading font-black text-4xl sm:text-5xl text-gold">{avgRating.toFixed(1)}</p>
+                        <p className="font-heading font-black text-4xl sm:text-5xl text-accent">{avgRating.toFixed(1)}</p>
                         <StarRating rating={Math.round(avgRating)} size="lg" />
                         <p className="text-[10px] sm:text-sm text-muted-foreground mt-1">{isRTL ? `من ${reviews.length} تقييم` : `from ${reviews.length} reviews`}</p>
                       </div>
@@ -1011,9 +1011,9 @@ const ProfileSystemDetail = () => {
                         {ratingDistribution.map(d => (
                           <div key={d.star} className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm">
                             <span className="w-3 sm:w-4 font-heading font-bold">{d.star}</span>
-                            <Star className="ic-2xs sm:w-3.5 sm:h-3.5 fill-gold text-gold" />
+                            <Star className="ic-2xs sm:w-3.5 sm:h-3.5 fill-accent text-accent" />
                             <div className="flex-1 h-2 sm:h-2.5 bg-muted rounded-full overflow-hidden">
-                              <div className="h-full bg-gold rounded-full transition-all duration-500" style={{ width: `${d.pct}%` }} />
+                              <div className="h-full bg-accent rounded-full transition-all duration-500" style={{ width: `${d.pct}%` }} />
                             </div>
                             <span className="text-muted-foreground w-5 sm:w-8 text-end text-[10px] sm:text-xs">{d.count}</span>
                           </div>
@@ -1026,7 +1026,7 @@ const ProfileSystemDetail = () => {
 
               {/* Review Form + List */}
               <div className="lg:col-span-2 lg:order-1 space-y-3 sm:space-y-4">
-                <Card className="border-gold/20 overflow-hidden">
+                <Card className="border-accent/20 overflow-hidden">
                   <div className="h-1 bg-accent" />
                   <CardContent className="p-4 sm:p-6 space-y-3 sm:space-y-4">
                     <h4 className="font-heading font-bold text-base sm:text-lg">{isRTL ? 'شاركنا تجربتك' : 'Share Your Experience'}</h4>
@@ -1054,7 +1054,7 @@ const ProfileSystemDetail = () => {
                     <Card key={r.id} className="border-border/40">
                       <CardContent className="p-3.5 sm:card-pad-md">
                         <div className="flex items-start gap-2.5 sm:gap-3">
-                          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gold/10 flex items-center justify-center text-gold font-bold text-xs sm:text-sm shrink-0">
+                          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-xs sm:text-sm shrink-0">
                             {((r as any).profiles)?.avatar_url ? (
                               <img src={((r as any).profiles).avatar_url} alt={((r as any).profiles)?.full_name || ''} className="w-full h-full rounded-full object-cover" />
                             ) : (
