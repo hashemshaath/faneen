@@ -94,7 +94,7 @@ export const ProjectImageGallery = ({ images, title }: Props) => {
                   size="icon"
                   className="absolute start-2 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 rounded-full w-10 h-10"
                   onClick={isRTL ? goNext : goPrev}
-                  aria-label={isRTL ? 'الصورة التالية' : 'Previous image'}
+                  aria-label={isRTL ? 'التالية' : 'Previous image'}
                 >
                   {isRTL ? <ChevronRight className="w-6 h-6" aria-hidden="true" /> : <ChevronLeft className="w-6 h-6" aria-hidden="true" />}
                 </Button>
@@ -103,7 +103,7 @@ export const ProjectImageGallery = ({ images, title }: Props) => {
                   size="icon"
                   className="absolute end-2 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 rounded-full w-10 h-10"
                   onClick={isRTL ? goPrev : goNext}
-                  aria-label={isRTL ? 'الصورة السابقة' : 'Next image'}
+                  aria-label={isRTL ? 'السابقة' : 'Next image'}
                 >
                   {isRTL ? <ChevronLeft className="w-6 h-6" aria-hidden="true" /> : <ChevronRight className="w-6 h-6" aria-hidden="true" />}
                 </Button>
