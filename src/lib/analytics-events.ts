@@ -44,7 +44,12 @@ export type QitaatEvent =
   | "onboarding_completed"
   | "lead_request_submitted"
   | "message_sent"
-  | "notification_clicked";
+  | "notification_clicked"
+  // Supplier lead capture (BusinessProfile)
+  | "contact_button_clicked"
+  | "supplier_lead_submitted"
+  | "supplier_phone_revealed"
+  | "supplier_email_revealed";
 
 /** Allow-listed parameters. Anything not in this set is dropped. */
 export type AllowedParam =
@@ -70,7 +75,11 @@ export type AllowedParam =
   | "notification_type"
   | "contact_preference"
   | "conversation_type"
-  | "method";
+  | "method"
+  // Supplier lead capture
+  | "source_page"
+  | "inquiry_type"
+  | "is_authenticated";
 
 export type EventPayload = Partial<Record<AllowedParam, string | number | boolean>>;
 
@@ -97,6 +106,9 @@ const ALLOWED: ReadonlySet<AllowedParam> = new Set<AllowedParam>([
   "contact_preference",
   "conversation_type",
   "method",
+  "source_page",
+  "inquiry_type",
+  "is_authenticated",
 ]);
 
 /** Looks like an email or phone number — used as a defensive PII guard. */
@@ -202,6 +214,10 @@ export const track = {
   otpSent: (p: EventPayload = {}) => trackEvent("otp_sent", p),
   otpVerified: (p: EventPayload = {}) => trackEvent("otp_verified", p),
   contactFormSubmitted: (p: EventPayload = {}) => trackEvent("contact_form_submitted", p),
+  contactButtonClicked: (p: EventPayload = {}) => trackEvent("contact_button_clicked", p),
+  supplierLeadSubmitted: (p: EventPayload = {}) => trackEvent("supplier_lead_submitted", p),
+  supplierPhoneRevealed: (p: EventPayload = {}) => trackEvent("supplier_phone_revealed", p),
+  supplierEmailRevealed: (p: EventPayload = {}) => trackEvent("supplier_email_revealed", p),
 };
 
 /** Extract a hostname safely (used for outbound link tagging, never for PII). */

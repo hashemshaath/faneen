@@ -43,6 +43,7 @@ import {
 import { useReviews } from "@/components/business-profile/business-profile.data";
 import { BnplBadges } from "@/components/bnpl/BnplBadges";
 import { BookingWidget } from "@/components/booking/BookingWidget";
+import { ContactSupplierSheet } from "@/components/business-profile/ContactSupplierSheet";
 import { buildBreadcrumbList, buildService, ogImageFor } from "@/lib/seo/structured-data";
 import { track } from "@/lib/analytics-events";
 // JSON-LD types emitted via helpers below: '@type': 'BreadcrumbList', itemListElement:
@@ -54,6 +55,7 @@ const BusinessProfile = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [bookingOpen, setBookingOpen] = useState(false);
+  const [contactSheetOpen, setContactSheetOpen] = useState(false);
   const { data: business, isLoading, error } = useBusinessByUsername(username || "");
   const { data: projects = [] } = useProjects(business?.id);
   const { data: services = [] } = useServices(business?.id);
@@ -248,7 +250,7 @@ const BusinessProfile = () => {
   const contactMutation = useMutation({
     mutationFn: async () => {
       if (!user) {
-        navigate("/auth");
+        // Guests get the lead-capture sheet — never bounce them to /auth.
         throw new Error("not_authenticated");
       }
 
@@ -302,6 +304,37 @@ const BusinessProfile = () => {
     },
   });
 
+  // Unified contact handler: guests open the lead-capture sheet, authenticated
+  // non-owners go through the existing conversation flow. Always tracks the
+  // click (PII-free).
+  const handleContactClick = (sourcePage: string = "header") => {
+    track.contactButtonClicked({
+      business_slug: business?.username || undefined,
+      source_page: sourcePage,
+      is_authenticated: !!user,
+    });
+    if (!user) {
+      setContactSheetOpen(true);
+      return;
+    }
+    contactMutation.mutate();
+  };
+
+  // Track tel:/mailto reveals for authenticated users (called from ContactTab).
+  const handleContactReveal = (kind: "phone" | "email") => {
+    if (kind === "phone") {
+      track.supplierPhoneRevealed({
+        business_slug: business?.username || undefined,
+        is_authenticated: !!user,
+      });
+    } else {
+      track.supplierEmailRevealed({
+        business_slug: business?.username || undefined,
+        is_authenticated: !!user,
+      });
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -350,14 +383,14 @@ const BusinessProfile = () => {
     <div className="min-h-screen bg-background">
       <BusinessProfileTopBar
         businessName={businessName}
-        onContact={() => contactMutation.mutate()}
+        onContact={() => handleContactClick("topbar")}
         isContacting={contactMutation.isPending}
       />
 
       <div className="pt-12 sm:pt-14">
         <BusinessProfileHeader
           business={business}
-          onContact={() => contactMutation.mutate()}
+          onContact={() => handleContactClick("header")}
           isContacting={contactMutation.isPending}
           projectCount={projects.length}
           serviceCount={services.length}
@@ -430,7 +463,12 @@ const BusinessProfile = () => {
                   <ReviewsTab business={business} />
                 </TabsContent>
                 <TabsContent value="contact" className="mt-0">
-                  <ContactTab business={business} />
+                  <ContactTab
+                    business={business}
+                    isAuthenticated={!!user}
+                    onRequestContact={() => handleContactClick("contact_tab")}
+                    onRevealContact={handleContactReveal}
+                  />
                   {/* BNPL section */}
                   <div className="mt-6">
                     <BnplBadges businessId={business.id} />
@@ -447,6 +485,14 @@ const BusinessProfile = () => {
         businessName={businessName}
         open={bookingOpen}
         onOpenChange={setBookingOpen}
+      />
+
+      <ContactSupplierSheet
+        open={contactSheetOpen}
+        onOpenChange={setContactSheetOpen}
+        businessId={business.id}
+        businessName={businessName}
+        source="business-profile"
       />
 
       <Footer />
