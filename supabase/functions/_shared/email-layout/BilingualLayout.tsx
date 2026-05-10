@@ -3,7 +3,7 @@ import * as React from 'npm:react@18.3.1'
 import {
   Body, Container, Head, Heading, Html, Link, Preview, Section, Text, Hr, Button, Row, Column,
 } from 'npm:@react-email/components@0.0.22'
-import { EMAIL_BRAND as B } from '../brandTheme.ts'
+import { EMAIL_BRAND as B, EMAIL_TINTS as T } from '../brandTheme.ts'
 
 export const SITE_NAME_AR = 'قِطاعات'
 export const SITE_NAME_EN = 'Qitaat'
