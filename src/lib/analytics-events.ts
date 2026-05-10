@@ -170,6 +170,8 @@ const ALLOWED: ReadonlySet<AllowedParam> = new Set<AllowedParam>([
   "action",
   "has_budget",
   "response_time_bucket",
+  "has_quote_amount",
+  "quote_validity_bucket",
   "utm_source",
   "utm_medium",
   "utm_campaign",
