@@ -2578,6 +2578,7 @@ export type Database = {
           accepted_at: string | null
           budget_range: string | null
           business_id: string
+          cancelled_at: string | null
           closed_at: string | null
           contact_preference: string
           created_at: string
@@ -2605,6 +2606,7 @@ export type Database = {
           accepted_at?: string | null
           budget_range?: string | null
           business_id: string
+          cancelled_at?: string | null
           closed_at?: string | null
           contact_preference?: string
           created_at?: string
@@ -2632,6 +2634,7 @@ export type Database = {
           accepted_at?: string | null
           budget_range?: string | null
           business_id?: string
+          cancelled_at?: string | null
           closed_at?: string | null
           contact_preference?: string
           created_at?: string
