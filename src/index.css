@@ -436,6 +436,35 @@
     direction: ltr;
     text-align: start;
     unicode-bidi: plaintext;
+    font-family: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ============================================================
+     Brand Identity v1.0 — May 2026
+     Card status accents (industrial spec, section 6).
+     Use .card-verified / .card-urgent / .card-featured for
+     left-border (start-border) status accents on listing cards.
+     ============================================================ */
+  .card-verified {
+    border-inline-start: 3px solid hsl(var(--primary));
+  }
+  .card-urgent {
+    border-inline-start: 3px solid hsl(var(--urgent));
+  }
+  .card-featured {
+    border-inline-start: 3px solid hsl(var(--urgent));
+    background: linear-gradient(90deg, hsl(var(--urgent-light) / 0.35), transparent 30%);
+  }
+
+  /* Admin mode permanent top strip — visual reminder of elevated context. */
+  .admin-mode-bar {
+    position: sticky;
+    top: 0;
+    z-index: 60;
+    height: 4px;
+    width: 100%;
+    background: hsl(var(--urgent));
   }
 
   /* ============================================================
