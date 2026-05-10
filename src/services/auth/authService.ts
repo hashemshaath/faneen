@@ -193,7 +193,7 @@ export const authService = {
     userId: string,
     businessName: string,
     username: string,
-    extras?: { sectors?: string[]; sub_services?: string[]; description_ar?: string },
+    extras?: { sectors?: string[]; sub_services?: string[]; description_ar?: string; recipientEmail?: string },
   ) {
     const sanitizedName = sanitizeInput(businessName);
     const sanitizedUsername = username.toLowerCase().replace(/[^a-z0-9_-]/g, '');
@@ -213,6 +213,24 @@ export const authService = {
         username_status: 'pending',
       });
     if (error && !error.message.includes('duplicate')) throw error;
+
+    // Welcome-business email — fire-and-forget; idempotency key bound to
+    // userId so the queue de-dupes if onboarding runs twice. Failures must
+    // never break onboarding. Recipient preferences are honored server-side
+    // by `send-transactional-email` via the TEMPLATE_CATEGORY map.
+    if (!error && extras?.recipientEmail) {
+      void supabase.functions.invoke('send-transactional-email', {
+        body: {
+          templateName: 'welcome-business',
+          recipientEmail: extras.recipientEmail,
+          idempotencyKey: `welcome-business-${userId}`,
+          templateData: {
+            businessName: sanitizedName || undefined,
+            dashboardUrl: `${window.location.origin}/dashboard`,
+          },
+        },
+      }).catch(() => { /* swallow — handled by queue retries */ });
+    }
   },
 
   // ─── Sign Out ────────────────────────────────────────
