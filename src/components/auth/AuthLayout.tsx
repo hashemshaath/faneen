@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Shield, Star, Trophy, CheckCircle2 } from 'lucide-react';
+import { BrandLogo } from '@/components/common/BrandLogo';
 import authSlide1 from '@/assets/auth-slide-1.jpg';
 import authSlide2 from '@/assets/auth-slide-2.jpg';
 import authSlide3 from '@/assets/auth-slide-3.jpg';
@@ -75,14 +76,8 @@ export const AuthLayout: React.FC<{ children: React.ReactNode }> = ({ children }
         ))}
 
         {/* Logo */}
-        <Link to="/" className="absolute top-8 start-10 z-10 flex items-center gap-3 hover:opacity-80 transition-opacity">
-          <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-2xl flex items-center justify-center border border-white/15 shadow-2xl">
-            <span className="font-heading font-black text-2xl text-white">ق</span>
-          </div>
-          <div>
-            <span className="font-heading font-bold text-xl text-white leading-none tracking-tight block">قِطاعات</span>
-            <span className="text-[11px] text-white/40 tracking-widest uppercase">Qitaat</span>
-          </div>
+        <Link to="/" className="absolute top-8 start-10 z-10 flex items-center hover:opacity-80 transition-opacity">
+          <BrandLogo variant="full" tone="dark" size="auth" priority alt="قِطاعات — Qitaat" />
         </Link>
 
         {/* Feature badges */}
@@ -154,14 +149,8 @@ export const AuthLayout: React.FC<{ children: React.ReactNode }> = ({ children }
         {/* Top bar */}
         <div className="flex items-center justify-between px-6 sm:px-10 py-6">
           <div className="flex items-center gap-2.5 md:hidden">
-            <Link to="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
-              <div className="w-10 h-10 rounded-xl bg-gradient-gold flex items-center justify-center shadow-md">
-                <span className="font-heading font-black text-lg text-secondary-foreground">ق</span>
-              </div>
-              <div>
-                <span className="font-heading font-bold text-base text-foreground leading-none block">قِطاعات</span>
-                <span className="text-[10px] text-accent tracking-wider">Qitaat</span>
-              </div>
+            <Link to="/" className="flex items-center hover:opacity-80 transition-opacity">
+              <BrandLogo variant="full" tone="auto" size={40} priority alt="قِطاعات — Qitaat" />
             </Link>
           </div>
           <div className="hidden md:block" />
