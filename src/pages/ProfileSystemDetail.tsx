@@ -709,7 +709,7 @@ const ProfileSystemDetail = () => {
                 {/* Description */}
                 {desc && (
                   <Card className="border-border/40 overflow-hidden">
-                    <div className="h-1 bg-gradient-gold" />
+                    <div className="h-1 bg-accent" />
                     <CardContent className="p-4 sm:p-6">
                       <h3 className="font-heading font-bold text-base sm:text-lg mb-2 sm:mb-3 flex items-center gap-2">
                         <Info className="ic-sm sm:w-5 sm:h-5 text-gold" />{isRTL ? 'عن هذا القطاع' : 'About This Profile'}
@@ -783,7 +783,7 @@ const ProfileSystemDetail = () => {
               <div className="space-y-4 sm:space-y-5">
                 {/* Technical Rating */}
                 <Card className="border-border/40 overflow-hidden">
-                  <div className="h-1 bg-gradient-gold" />
+                  <div className="h-1 bg-accent" />
                   <CardContent className="p-4 sm:p-6 space-y-3 sm:space-y-4">
                     <h3 className="font-heading font-bold text-base sm:text-lg">{isRTL ? 'التقييم الفني' : 'Technical Rating'}</h3>
                     <AnimatedRatingBar value={profile.thermal_insulation_rating || 0} label={isRTL ? 'عزل حراري' : 'Thermal'} icon={Thermometer} />
@@ -900,7 +900,7 @@ const ProfileSystemDetail = () => {
                 </div>
                 {/* Desktop: Table layout */}
                 <Card className="border-border/40 overflow-hidden hidden sm:block">
-                  <div className="h-1 bg-gradient-gold" />
+                  <div className="h-1 bg-accent" />
                   <CardContent className="p-0">
                     <div className="overflow-x-auto">
                       <table className="w-full">
@@ -1027,7 +1027,7 @@ const ProfileSystemDetail = () => {
               {/* Review Form + List */}
               <div className="lg:col-span-2 lg:order-1 space-y-3 sm:space-y-4">
                 <Card className="border-gold/20 overflow-hidden">
-                  <div className="h-1 bg-gradient-gold" />
+                  <div className="h-1 bg-accent" />
                   <CardContent className="p-4 sm:p-6 space-y-3 sm:space-y-4">
                     <h4 className="font-heading font-bold text-base sm:text-lg">{isRTL ? 'شاركنا تجربتك' : 'Share Your Experience'}</h4>
                     <InteractiveStarInput value={reviewRating} onChange={setReviewRating} />

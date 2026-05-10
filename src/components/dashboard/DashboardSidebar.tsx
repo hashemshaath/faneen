@@ -289,8 +289,8 @@ export const DashboardSidebar: React.FC = () => {
       <SidebarContent>
         {/* Logo */}
         <div className="p-4 sm:p-5 flex items-center gap-3 border-b border-sidebar-border">
-          <div className="w-10 h-10 rounded-xl bg-gradient-gold flex items-center justify-center text-secondary-foreground font-bold text-lg shrink-0 shadow-md shadow-gold/20">
-            ف
+          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-primary-foreground font-bold text-lg shrink-0 shadow-md shadow-primary/20">
+            ق
           </div>
           {!collapsed && (
             <div className="min-w-0">
