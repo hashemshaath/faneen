@@ -93,7 +93,7 @@ export const LatestOffersSection = () => {
                       </div>
                     )}
                     {isExpiringSoon && (
-                      <div className="absolute top-3 end-3 z-10 bg-accent text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                      <div className="absolute top-3 end-3 z-10 bg-urgent text-urgent-foreground text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
                         <Clock className="w-3 h-3" />
                         {isRTL ? "ينتهي قريباً" : "Ending soon"}
                       </div>
