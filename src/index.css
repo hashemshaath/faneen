@@ -206,23 +206,34 @@
     --card-foreground: 42 20% 92%;
     --popover: 220 30% 12%;
     --popover-foreground: 42 20% 92%;
-    --primary: 42 85% 55%;
-    --primary-foreground: 220 35% 10%;
-    --secondary: 220 25% 20%;
-    --secondary-foreground: 42 20% 92%;
+    --primary: 158 60% 48%;
+    --primary-foreground: 220 35% 8%;
+    --secondary: 225 60% 58%;
+    --secondary-foreground: 0 0% 100%;
     --muted: 220 25% 18%;
     --muted-foreground: 220 10% 60%;
-    --accent: 42 85% 55%;
-    --accent-foreground: 220 35% 10%;
+    --accent: 158 60% 48%;
+    --accent-foreground: 220 35% 8%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
     --border: 220 25% 20%;
     --input: 220 25% 20%;
-    --ring: 42 85% 55%;
+    --ring: 158 60% 48%;
 
-    /* Nav surface stays dark but slightly lighter than background */
+    /* Nav surface — dark navy in dark mode for contrast with bright logo */
     --surface-nav: 220 30% 10%;
-    --surface-nav-foreground: 42 20% 92%;
+    --surface-nav-foreground: 0 0% 98%;
+
+    /* Brand colors slightly brightened for dark mode */
+    --gold: 158 60% 48%;
+    --gold-light: 158 55% 60%;
+    --gold-dark: 158 65% 38%;
+    --brand-blue: 225 65% 60%;
+    --brand-blue-light: 225 70% 70%;
+    --brand-blue-dark: 225 65% 45%;
+    --gradient-gold: linear-gradient(135deg, hsl(158 60% 48%), hsl(225 65% 60%));
+    --gradient-brand: linear-gradient(135deg, hsl(158 60% 48%), hsl(225 65% 60%));
+    --shadow-gold: 0 4px 20px -4px hsl(158 60% 48% / 0.45);
 
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
