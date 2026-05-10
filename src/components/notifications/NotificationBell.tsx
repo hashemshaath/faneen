@@ -14,6 +14,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { formatDistanceToNow } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
 import { getNotificationMeta, isUrgentNotification } from './notification-types';
+import { trackNotificationOpened } from '@/lib/analytics-events';
 
 export const NotificationBell = () => {
   const { user } = useAuth();
@@ -118,6 +119,12 @@ export const NotificationBell = () => {
 
   const handleClick = (n: any) => {
     if (!n.is_read) markRead.mutate(n.id);
+    try {
+      trackNotificationOpened({
+        notification_type: n.notification_type || n.reference_type,
+        source_page: 'notification_bell',
+      });
+    } catch { /* analytics never breaks navigation */ }
     if (n.action_url) { navigate(n.action_url); setOpen(false); }
   };
 
