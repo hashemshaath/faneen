@@ -38,15 +38,15 @@ export const FooterNewsletter = ({ visible }: { visible: boolean }) => {
   return (
     <div className="relative border-b border-surface-nav-foreground/[0.08]">
       <div className={`container-app py-8 sm:py-12 transition-all duration-700 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-        <div className="relative rounded-2xl bg-gradient-to-br from-gold/[0.08] to-gold/[0.02] border border-gold/10 p-5 sm:p-8 md:p-10 overflow-hidden">
+        <div className="relative rounded-2xl bg-gradient-to-br from-primary/[0.08] to-primary/[0.02] border border-primary/10 p-5 sm:p-8 md:p-10 overflow-hidden">
           {/* Pattern dots */}
           <div className="absolute inset-0 pointer-events-none opacity-[0.03]"
-            style={{ backgroundImage: 'radial-gradient(circle, hsl(var(--gold)) 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
-          <Sparkles className="absolute top-5 end-6 w-6 h-6 text-gold/15 animate-pulse hidden md:block" />
+            style={{ backgroundImage: 'radial-gradient(circle, hsl(var(--primary)) 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
+          <Sparkles className="absolute top-5 end-6 w-6 h-6 text-primary/15 animate-pulse hidden md:block" />
 
           <div className="relative flex flex-col lg:flex-row items-center gap-5 lg:gap-10">
             <div className="text-center lg:text-start flex-1 space-y-2">
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-gold uppercase tracking-wider leading-none">
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-primary uppercase tracking-wider leading-none">
                 <Mail className="w-3.5 h-3.5" />
                 {isRTL ? 'النشرة البريدية' : 'Newsletter'}
               </span>
@@ -70,7 +70,7 @@ export const FooterNewsletter = ({ visible }: { visible: boolean }) => {
                   placeholder={isRTL ? "بريدك الإلكتروني..." : "Your email address..."}
                   aria-label={isRTL ? 'البريد الإلكتروني للاشتراك في النشرة' : 'Email address for newsletter'}
                   required
-                  className="ps-10 bg-surface-nav-foreground/[0.06] border-surface-nav-foreground/20 text-surface-nav-foreground placeholder:text-surface-nav-foreground/70 focus-visible:border-gold/60 focus-visible:ring-2 focus-visible:ring-gold/40 h-11 sm:h-12 text-sm rounded-xl"
+                  className="ps-10 bg-surface-nav-foreground/[0.06] border-surface-nav-foreground/20 text-surface-nav-foreground placeholder:text-surface-nav-foreground/70 focus-visible:border-primary/60 focus-visible:ring-2 focus-visible:ring-primary/40 h-11 sm:h-12 text-sm rounded-xl"
                   dir="ltr"
                 />
               </div>
@@ -80,7 +80,7 @@ export const FooterNewsletter = ({ visible }: { visible: boolean }) => {
                 className={`h-11 sm:h-12 px-5 sm:px-6 gap-2 font-bold text-sm rounded-xl transition-all duration-500 shrink-0 ${
                   subscribed
                     ? 'bg-success hover:bg-success text-success-foreground scale-105'
-                    : 'bg-gradient-gold text-secondary-foreground hover:shadow-lg hover:shadow-gold/25 hover:scale-[1.02]'
+                    : 'bg-primary text-primary-foreground hover:shadow-lg hover:shadow-primary/25 hover:scale-[1.02]'
                 }`}
               >
                 {subscribed ? (

@@ -36,8 +36,8 @@ export const FooterBrand = () => {
       {/* Trust badges */}
       <div className="flex flex-wrap items-center gap-2">
         {badges.map((badge) => (
-          <div key={badge.label} className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full bg-gold/[0.07] border border-gold/15">
-            <badge.icon aria-hidden="true" className="w-3.5 h-3.5 text-gold/85 shrink-0" />
+          <div key={badge.label} className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full bg-primary/[0.07] border border-primary/15">
+            <badge.icon aria-hidden="true" className="w-3.5 h-3.5 text-primary/85 shrink-0" />
             <span className="text-[11px] font-medium text-surface-nav-foreground/90 leading-none">{badge.label}</span>
           </div>
         ))}
@@ -47,11 +47,11 @@ export const FooterBrand = () => {
       <address className="not-italic space-y-2" aria-label={isRTL ? 'بيانات التواصل' : 'Contact information'}>
         {contactItems.map((item, i) => (
           <div key={i} className="group flex items-center gap-2.5">
-            <span className="w-7 h-7 rounded-lg bg-surface-nav-foreground/[0.05] flex items-center justify-center group-hover:bg-gold/10 transition-colors shrink-0">
-              <item.icon aria-hidden="true" className="w-3.5 h-3.5 text-gold/80 group-hover:text-gold transition-colors" />
+            <span className="w-7 h-7 rounded-lg bg-surface-nav-foreground/[0.05] flex items-center justify-center group-hover:bg-primary/10 transition-colors shrink-0">
+              <item.icon aria-hidden="true" className="w-3.5 h-3.5 text-primary/80 group-hover:text-primary transition-colors" />
             </span>
             {item.href ? (
-              <a href={item.href} className="text-sm text-surface-nav-foreground/90 hover:text-gold transition-colors focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-surface-nav focus-visible:outline-none rounded tech-content">{item.text}</a>
+              <a href={item.href} className="text-sm text-surface-nav-foreground/90 hover:text-primary transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface-nav focus-visible:outline-none rounded tech-content">{item.text}</a>
             ) : (
               <span className="text-sm text-surface-nav-foreground/85">{item.text}</span>
             )}
