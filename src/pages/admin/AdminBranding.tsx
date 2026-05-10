@@ -159,12 +159,40 @@ const AdminBranding: React.FC = () => {
           if (error) throw error;
         }
       }
+      for (const field of themeDirty) {
+        const settingKey = THEME_KEY_FROM_FIELD[field];
+        const newValue = theme[field];
+        const existing = themeRows.find(r => r.setting_key === settingKey);
+        if (existing) {
+          const { error } = await supabase.from('platform_settings').update({
+            setting_value: newValue,
+            updated_at: new Date().toISOString(),
+          }).eq('id', existing.id);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase.from('platform_settings').insert({
+            setting_key: settingKey,
+            setting_value: newValue,
+            category: 'theme',
+            setting_label_ar: 'لون العلامة التجارية',
+            setting_label_en: 'Brand color',
+            description_ar: 'يتحكم بألوان نظام التصميم',
+            description_en: 'Controls design system colors',
+            is_secret: false,
+            is_active: true,
+          });
+          if (error) throw error;
+        }
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['branding-settings-admin'] });
       queryClient.invalidateQueries({ queryKey: ['branding-config'] });
+      queryClient.invalidateQueries({ queryKey: ['theme-settings-admin'] });
+      queryClient.invalidateQueries({ queryKey: ['theme-colors'] });
       toast.success(isRTL ? 'تم حفظ إعدادات العلامة التجارية' : 'Branding saved');
       setDirty(new Set());
+      setThemeDirty(new Set());
     },
     onError: (err: unknown) => {
       const msg = err instanceof Error ? err.message : 'unknown';
@@ -175,6 +203,8 @@ const AdminBranding: React.FC = () => {
   const resetDefaults = useCallback(() => {
     setValues(DEFAULT_BRANDING);
     setDirty(new Set(BRANDING_KEYS.map(k => FIELD_BY_SETTING[k])));
+    setTheme(DEFAULT_THEME);
+    setThemeDirty(new Set(THEME_FIELDS.map(f => f.key)));
     toast.info(isRTL ? 'تم استعادة الإعدادات الافتراضية — اضغط حفظ للتطبيق' : 'Defaults restored — click Save to apply');
   }, [isRTL]);
 
