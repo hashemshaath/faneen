@@ -528,6 +528,7 @@ const AdminUsers = () => {
   const [filterRole, setFilterRole] = useState('all');
   const [filterAccountType, setFilterAccountType] = useState('all');
   const [filterTier, setFilterTier] = useState('all');
+  const [filterBusinessLink, setFilterBusinessLink] = useState<'all' | 'multi' | 'none' | 'single'>('all');
   const [sortKey, setSortKey] = useState<SortKey>('created_at');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [page, setPage] = useState(1);
