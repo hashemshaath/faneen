@@ -399,14 +399,14 @@ const detailValueMonoEn = {
   fontFamily: "'SF Mono', Menlo, Consolas, monospace",
 }
 const highlightBoxRtl = {
-  backgroundColor: '#E6F5EE',
+  backgroundColor: T.success,
   borderRadius: '12px',
   padding: '14px 18px',
   margin: '12px 0',
   borderRight: `4px solid ${B.primaryButton}`,
 }
 const highlightBoxLtr = {
-  backgroundColor: '#E6F5EE',
+  backgroundColor: T.success,
   borderRadius: '12px',
   padding: '14px 18px',
   margin: '12px 0',
@@ -442,7 +442,7 @@ const highlightTextEn = {
   whiteSpace: 'pre-wrap' as const,
 }
 const tipBoxAr = {
-  backgroundColor: '#E6EEF8',
+  backgroundColor: T.info,
   borderRadius: '10px',
   padding: '12px 16px',
   margin: '8px 0 16px',
