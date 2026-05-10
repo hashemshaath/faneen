@@ -17,6 +17,7 @@ import { AuthDivider } from './AuthDivider';
 import { FieldError } from './FieldError';
 import { AuthErrorHelpLinks } from './AuthErrorHelpLinks';
 import { useFieldValidation } from '@/hooks/useFieldValidation';
+import { trackLoginSuccess } from '@/lib/analytics-events';
 
 interface LoginFormProps {
   onSwitchToRegister: () => void;
@@ -57,6 +58,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
         throw new Error(errorMap[response.error || ''] || response.message || (isRTL ? 'تعذر التحقق' : 'Verification failed'));
       }
       await authService.setSessionFromOtp(response);
+      trackLoginSuccess({ method: 'otp' });
       toast.success(isRTL ? 'تم تسجيل الدخول بنجاح' : 'Signed in successfully');
     },
   });
@@ -77,6 +79,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForg
     try {
       await authService.signInWithEmail(email, password);
       lockout.recordSuccess();
+      trackLoginSuccess({ method: 'password' });
       toast.success(t('common.success'));
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
