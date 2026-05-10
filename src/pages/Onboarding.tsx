@@ -172,6 +172,7 @@ const Onboarding = () => {
           sectors,
           sub_services: subServices,
           description_ar: businessDescription || undefined,
+          recipientEmail: user?.email || undefined,
         });
       }
 
