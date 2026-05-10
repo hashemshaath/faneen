@@ -3,6 +3,7 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useNoIndex } from '@/hooks/useNoIndex';
+import { BrandLogo } from '@/components/common/BrandLogo';
 
 const Forbidden = lazy(() => import('@/pages/Forbidden'));
 
@@ -74,8 +75,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   if (!fullyLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="w-10 h-10 rounded-xl bg-gradient-gold flex items-center justify-center animate-pulse">
-          <span className="font-heading font-black text-lg text-secondary-foreground">ق</span>
+        <div className="animate-pulse">
+          <BrandLogo variant="mark" tone="auto" size="loader" alt="قِطاعات" />
         </div>
       </div>
     );
