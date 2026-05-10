@@ -36,17 +36,36 @@ serve(async (req) => {
         break;
 
       case "generate_meta":
-        systemPrompt = `You are an SEO specialist. Generate optimized meta tags. Return ONLY valid JSON with these fields:
+        systemPrompt = `You are an elite SEO copywriter. Generate THREE distinct meta tag variations for this article, each tailored to a different search intent. Return ONLY valid JSON with this exact shape:
 {
-  "meta_title_ar": "عنوان ميتا بالعربية (50-60 حرف)",
-  "meta_title_en": "English meta title (50-60 chars)",
-  "meta_description_ar": "وصف ميتا بالعربية (150-160 حرف)",
-  "meta_description_en": "English meta description (150-160 chars)",
-  "focus_keyword": "primary SEO keyword",
-  "slug_suggestion": "optimized-url-slug"
+  "options": [
+    {
+      "id": "informational|commercial|transactional",
+      "label_ar": "متوازن|تسويقي|مقارنة",
+      "label_en": "Balanced|Marketing|Comparison",
+      "intent": "informational|commercial|transactional",
+      "meta_title_ar": "... (50-60 chars exactly, includes focus keyword naturally)",
+      "meta_title_en": "... (50-60 chars exactly)",
+      "meta_description_ar": "... (150-160 chars exactly, includes focus keyword + soft CTA)",
+      "meta_description_en": "... (150-160 chars exactly)",
+      "score": 0-100,
+      "recommended": true|false,
+      "rationale_ar": "سبب مختصر (سطر واحد)",
+      "rationale_en": "short reason (one line)"
+    }
+  ],
+  "focus_keyword": "primary keyword",
+  "slug_suggestion": "lowercase-hyphenated-slug-max-60-chars"
 }
+Rules:
+- Generate EXACTLY 3 options with intents: informational (educational/how-to), commercial (best/comparison), transactional (services/buy).
+- Mark exactly ONE option with "recommended": true based on the dominant search intent of the content.
+- Score reflects: length compliance (50-60 title, 150-160 desc), keyword usage, click-through appeal.
+- meta_title length 50-60 chars; meta_description length 150-160 chars (strict).
+- slug_suggestion: lowercase ASCII, hyphens only, max 60 chars.
+- All values plain text, no markdown.
 ${toneInstruction}`;
-        userPrompt = `Title AR: ${title}\nContent excerpt: ${content?.substring(0, 500)}\nExisting keywords: ${keywords?.join(', ') || 'none'}`;
+        userPrompt = `Title AR: ${title}\nContent excerpt: ${content?.substring(0, 800)}\nExisting keywords: ${keywords?.join(', ') || 'none'}`;
         break;
 
       case "seo_analysis":
