@@ -149,6 +149,8 @@ const adminBaseGroups: MenuGroup[] = [
       { label: { ar: 'رسائل التواصل', en: 'Contact Messages' }, url: '/admin/contact-messages', icon: MessageSquare },
       { label: { ar: 'إعدادات الصندوق و SLA', en: 'Inbox & SLA Settings' }, url: '/admin/contact-inbox-settings', icon: Mail },
       { label: { ar: 'سجل تدقيق الرسائل', en: 'Contact Audit Log' }, url: '/admin/contact-audit-log', icon: BarChart3 },
+      { label: { ar: 'لوحة امتثال SLA', en: 'SLA Compliance' }, url: '/admin/contact-sla-dashboard', icon: TrendingUp },
+      { label: { ar: 'سجل إرسال الإشعارات', en: 'Notification Log' }, url: '/admin/contact-notification-log', icon: Mail },
       { label: { ar: 'طلبات العملاء (Leads)', en: 'Lead Requests' }, url: '/admin/lead-requests', icon: MessageSquare },
       { label: { ar: 'مراقبة البريد', en: 'Email Deliverability' }, url: '/admin/email-deliverability', icon: Mail },
       { label: { ar: 'تدقيق الأداء و SEO', en: 'Performance & SEO Audit' }, url: '/admin/site-audit', icon: Gauge },
