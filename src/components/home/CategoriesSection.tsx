@@ -3,15 +3,15 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { Link } from "react-router-dom";
 
-import catAluminum from "@/assets/cat-aluminum.jpg";
-import catIron from "@/assets/cat-iron.jpg";
-import catGlass from "@/assets/cat-glass.jpg";
-import catWood from "@/assets/cat-wood.jpg";
-import catAccessories from "@/assets/cat-accessories.jpg";
-import catDesigners from "@/assets/cat-designers.jpg";
-import catEnergy from "@/assets/cat-energy.jpg";
-import catGypsum from "@/assets/cat-gypsum.jpg";
-import catFacades from "@/assets/cat-facades.jpg";
+import catAluminum from "@/assets/cat-aluminum.webp";
+import catIron from "@/assets/cat-iron.webp";
+import catGlass from "@/assets/cat-glass.webp";
+import catWood from "@/assets/cat-wood.webp";
+import catAccessories from "@/assets/cat-accessories.webp";
+import catDesigners from "@/assets/cat-designers.webp";
+import catEnergy from "@/assets/cat-energy.webp";
+import catGypsum from "@/assets/cat-gypsum.webp";
+import catFacades from "@/assets/cat-facades.webp";
 
 const categories = [
   { icon: Layers, image: catAluminum, titleKey: 'cat.aluminum' as const, descKey: 'cat.aluminum.desc' as const, categoryId: '50cdcb8d-3ec3-4cdc-98ad-1c699d6c1abf' },
