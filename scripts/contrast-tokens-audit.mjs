@@ -2,81 +2,134 @@
 /**
  * Contrast / Semantic-Tokens Audit
  * --------------------------------
- * Guards a small allow-list of "Lighthouse-sensitive" UI elements that are
- * known to fail color-contrast checks when authored with raw hex colors
- * instead of design-token CSS variables.
+ * Targeted regression guard for the specific Lighthouse contrast failures
+ * that were fixed in the pre-launch contrast-fix passes. Each rule asserts
+ * that ONE Lighthouse-sensitive element keeps using semantic design tokens
+ * (or a known-good variant) — so future edits can't silently re-introduce
+ * the broken styling.
  *
- * For each guarded file we:
- *   1. ensure no raw `text-[#...]`, `bg-[#...]`, `border-[#...]` Tailwind
- *      arbitrary values appear (they bypass the design system),
- *   2. ensure no inline `style={{ color: "#..." }}` / `background: "#..."`
- *      uses a literal hex,
- *   3. ensure none of the disallowed legacy hex literals appear inline.
- *
- * Files that are intentionally exempt (e.g. brand assets that ship raw
- * brand colors) live in `docs/brand-color-audit-exceptions.md` and can be
- * added to ALLOWED_FILES below if needed.
+ * Broader hex coverage already lives in `scripts/audit-brand-colors.mjs`.
  */
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 
 const ROOT = process.cwd();
-
-/** Files that MUST stay token-only (Lighthouse contrast offenders). */
-const GUARDED_FILES = [
-  "src/components/layout/Navbar.tsx",                 // ⌘K kbd, "سجل الآن"
-  "src/components/home/HeroSection.tsx",              // "بحث" button
-  "src/components/home/LatestProjectsSection.tsx",    // card chips/badges
-  "src/components/consent/ConsentBanner.tsx",         // "قبول الكل"
-  "src/index.css",                                    // .section-eyebrow
-];
-
-/** Hex literals that previously caused contrast failures. */
-const DISALLOWED_HEX = [
-  "#EDEFF3", "#DDE2EA", "#E2E6EE", "#94A0B2",
-  // Note: #1A2230 and #6B7689 remain explicitly allowed (see
-  // docs/brand-color-audit-exceptions.md) — Lighthouse passes for them.
-];
-
-const ARBITRARY_HEX_RE = /(?:text|bg|border|ring|from|to|via|fill|stroke|placeholder|decoration|shadow|outline)-\[#[0-9a-fA-F]{3,8}\b[^\]]*\]/g;
-const INLINE_STYLE_HEX_RE = /style=\{\{[^}]*?#[0-9a-fA-F]{3,8}\b[^}]*?\}\}/g;
-
 const errors = [];
 
-for (const rel of GUARDED_FILES) {
-  const path = join(ROOT, rel);
-  if (!existsSync(path)) {
-    errors.push(`${rel}  ❌  guarded file is missing`);
-    continue;
+function read(rel) {
+  const p = join(ROOT, rel);
+  if (!existsSync(p)) {
+    errors.push(`${rel}  ❌  file missing`);
+    return null;
   }
-  const src = readFileSync(path, "utf8");
+  return readFileSync(p, "utf8");
+}
 
-  const arbitraryHits = src.match(ARBITRARY_HEX_RE) ?? [];
-  for (const hit of arbitraryHits) {
-    errors.push(`${rel}  ❌  arbitrary hex Tailwind value: ${hit}`);
+function expect(cond, file, message) {
+  if (!cond) errors.push(`${file}  ❌  ${message}`);
+}
+
+/* ---- 1. Navbar: ⌘K kbd uses semantic tokens ---- */
+const navbar = read("src/components/layout/Navbar.tsx");
+if (navbar) {
+  // The kbd element rendering ⌘K must NOT carry a `bg-[#...]` arbitrary value.
+  const kbdMatch = navbar.match(/<kbd[\s\S]*?⌘K[\s\S]*?<\/kbd>/);
+  if (!kbdMatch) {
+    errors.push("src/components/layout/Navbar.tsx  ❌  ⌘K kbd element not found");
+  } else {
+    expect(
+      !/bg-\[#/.test(kbdMatch[0]) && !/text-\[#/.test(kbdMatch[0]) && !/border-\[#/.test(kbdMatch[0]),
+      "src/components/layout/Navbar.tsx",
+      "⌘K kbd must not use arbitrary hex tailwind values (use bg-muted/text-foreground/border-border)",
+    );
+    expect(
+      /bg-muted/.test(kbdMatch[0]),
+      "src/components/layout/Navbar.tsx",
+      "⌘K kbd must use bg-muted token",
+    );
   }
 
-  const inlineHits = src.match(INLINE_STYLE_HEX_RE) ?? [];
-  for (const hit of inlineHits) {
-    errors.push(`${rel}  ❌  inline style hex: ${hit.slice(0, 80)}…`);
-  }
-
-  for (const hex of DISALLOWED_HEX) {
-    if (src.includes(hex)) {
-      errors.push(`${rel}  ❌  disallowed legacy hex literal: ${hex}`);
-    }
+  // "سجل الآن" register button must use variant="primary".
+  const regMatch = navbar.match(/<Button[^>]*>[\s\S]{0,80}سجل الآن/);
+  if (regMatch) {
+    expect(
+      /variant=["']primary["']/.test(regMatch[0]),
+      "src/components/layout/Navbar.tsx",
+      "'سجل الآن' button must use variant=\"primary\" (token-driven)",
+    );
   }
 }
 
-console.log("\n🎨  Contrast / Semantic-Tokens Audit");
-console.log(`   Guarded files: ${GUARDED_FILES.length}`);
-console.log(`   Disallowed hex literals: ${DISALLOWED_HEX.length}\n`);
+/* ---- 2. HeroSection: "بحث" submit button uses variant="primary" ---- */
+const hero = read("src/components/home/HeroSection.tsx");
+if (hero) {
+  const searchBtn = hero.match(/<Button[^>]*type=["']submit["'][^>]*>/);
+  expect(
+    !!searchBtn && /variant=["']primary["']/.test(searchBtn[0]),
+    "src/components/home/HeroSection.tsx",
+    "Hero search submit button must use variant=\"primary\"",
+  );
+}
 
+/* ---- 3. index.css: .section-eyebrow uses solid token, not 0.16 alpha ---- */
+const css = read("src/index.css");
+if (css) {
+  const eyebrow = css.match(/\.section-eyebrow\s*\{[^}]*\}/);
+  if (!eyebrow) {
+    errors.push("src/index.css  ❌  .section-eyebrow rule not found");
+  } else {
+    expect(
+      !/--primary\)\s*\/\s*0?\.[0-3]/.test(eyebrow[0]),
+      "src/index.css",
+      ".section-eyebrow must not use low-alpha primary background (fails 4.5:1)",
+    );
+    expect(
+      /var\(--primary-foreground\)|hsl\(var\(--primary-foreground\)\)/.test(eyebrow[0]),
+      "src/index.css",
+      ".section-eyebrow must use --primary-foreground for text color",
+    );
+  }
+}
+
+/* ---- 4. LatestProjectsSection: card description not muted-foreground ---- */
+const latest = read("src/components/home/LatestProjectsSection.tsx");
+if (latest) {
+  // Cost/duration chips must be foreground/80 not muted-foreground (the latter
+  // failed contrast on muted backgrounds).
+  expect(
+    !/className=["'][^"']*\btext-muted-foreground\b[^"']*["'][^>]*>\s*\{[^}]*?(cost|duration|price)/i.test(latest),
+    "src/components/home/LatestProjectsSection.tsx",
+    "Card cost/duration chips must not use text-muted-foreground (use text-foreground/80)",
+  );
+}
+
+/* ---- 5. ConsentBanner: "accept all" button is solid primary ---- */
+const consent = read("src/components/consent/ConsentBanner.tsx");
+if (consent) {
+  // Some i18n key like accept_all / acceptAll OR Arabic 'قبول الكل'.
+  const acceptBtn = consent.match(/<Button[\s\S]{0,200}?(accept[_A-Za-z]*All|قبول الكل)[\s\S]{0,40}?<\/Button>/i)
+    ?? consent.match(/<button[\s\S]{0,200}?(accept[_A-Za-z]*All|قبول الكل)[\s\S]{0,40}?<\/button>/i);
+  if (acceptBtn) {
+    expect(
+      /variant=["']primary["']/.test(acceptBtn[0])
+        || /bg-primary\b/.test(acceptBtn[0])
+        || !/variant=/.test(acceptBtn[0]) /* default = bg-primary */,
+      "src/components/consent/ConsentBanner.tsx",
+      "'قبول الكل' button must be variant=\"primary\" or bg-primary (default)",
+    );
+    expect(
+      !/bg-\[#/.test(acceptBtn[0]) && !/text-\[#/.test(acceptBtn[0]),
+      "src/components/consent/ConsentBanner.tsx",
+      "'قبول الكل' button must not use arbitrary hex Tailwind values",
+    );
+  }
+}
+
+console.log("\n🎨  Contrast / Semantic-Tokens Audit (regression guard)");
 if (errors.length > 0) {
   for (const e of errors) console.log("   " + e);
   console.log(`\n❌  ${errors.length} contrast-token violation(s) — fix before publishing.`);
   process.exit(1);
 }
-
-console.log("✅  All guarded elements use semantic tokens only. No disallowed hex.");
+console.log("✅  All Lighthouse-sensitive elements still use semantic tokens.");
 process.exit(0);
