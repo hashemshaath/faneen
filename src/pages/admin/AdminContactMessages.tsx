@@ -515,7 +515,7 @@ const AdminContactMessages = () => {
     const safe = (s: string) => s.replace(/</g, '&lt;');
     w.document.write(`
       <html><head><title>${safe(focused.subject || 'Message')}</title>
-      <style>body{font-family:system-ui;padding:32px;max-width:720px;margin:auto;line-height:1.6}h1{font-size:20px}.meta{color:#666;font-size:13px;margin-bottom:24px}.body{white-space:pre-wrap;border-top:1px solid #eee;padding-top:16px}</style>
+      <style>body{font-family:system-ui;padding:32px;max-width:720px;margin:auto;line-height:1.6;color:#1A2230}h1{font-size:20px}.meta{color:#6B7689;font-size:13px;margin-bottom:24px}.body{white-space:pre-wrap;border-top:1px solid #E2E6EE;padding-top:16px}</style>
       </head><body>
       <h1>${safe(focused.subject || '(No subject)')}</h1>
       <div class="meta"><strong>${safe(focused.name)}</strong> · ${safe(focused.email)}<br/>${format(new Date(focused.created_at), 'yyyy-MM-dd HH:mm')}</div>
