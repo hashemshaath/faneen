@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { EMAIL_BRAND as B } from "../_shared/brandTheme.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -107,13 +108,13 @@ serve(async (req) => {
       const recipients = (((s.alert_recipients as string[]) ?? []).filter((e) => /\S+@\S+\.\S+/.test(e)));
       if (recipients.length === 0) recipients.push(Deno.env.get("ADMIN_CONTACT_EMAIL") || "info@qitaat.com");
       const items = exhaustedDetails.map((d) =>
-        `<li><b>${d.channel}</b> → <code>${B.error}">${(d.error_message ?? "").slice(0, 200)}</code></li>`.replace('${B.error}">', `${B.error};">`).replace('<code>', '<code><small style="color:').replace('</code></li>', '</small></li>')
+        `<li><b>${d.channel}</b> → <code>${d.recipient}</code><br><small style="color:${B.error}">${(d.error_message ?? "").slice(0, 200)}</small></li>`
       ).join("");
       const html = `<!doctype html><html><body style="font-family:system-ui;padding:24px;max-width:560px;margin:auto">
-<h2 style="color:#b91c1c">⚠️ Notification delivery exhausted</h2>
+<h2 style="color:${B.error}">⚠️ Notification delivery exhausted</h2>
 <p>${exhausted} notification(s) reached max retries (${maxAttempts}).</p>
 <ul>${items}</ul>
-<p><a href="https://qitaat.com/admin/contact-notification-log" style="background:#0ea5e9;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none">Open log</a></p>
+<p><a href="https://qitaat.com/admin/contact-notification-log" style="background:${B.primaryButton};color:${B.primaryButtonText};padding:10px 18px;border-radius:8px;text-decoration:none">Open log</a></p>
 </body></html>`;
       for (const to of recipients) {
         try {
