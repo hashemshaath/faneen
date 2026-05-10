@@ -224,11 +224,17 @@ export const FORBIDDEN_BRAND_COLORS: readonly string[] = [
   '#1F3D99',
   '#1A2240',
   '#d4a017',
+  '#D4AF37',
+  '#F4D03F',
   '#f59e0b',
   '#fbbf24',
   '#8b5cf6',
   '#06b6d4',
   '#ec4899',
+  '#10b981',
+  '#3b82f6',
+  '#2563eb',
+  '#ef4444',
 ] as const;
 
 export default BRAND_THEME;
