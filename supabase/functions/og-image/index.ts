@@ -23,13 +23,15 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Industrial brand palette — mirrors `BRAND_COLORS` from src/config/brandTheme.ts.
+// Inlined here because Edge Functions cannot import from src/.
 const PALETTE = {
-  bg0: "#0F172A",
-  bg1: "#1E293B",
-  gold: "#D4AF37",
-  goldSoft: "#F4D03F",
-  text: "#F8FAFC",
-  muted: "#94A3B8",
+  bg0:      "#131722", // navy-900 / brand surface-nav
+  bg1:      "#1A2230", // navy-800 / text default
+  accent:   "#0E9E6F", // brand primary (industrial green)
+  accentSoft: "#E6F7F0", // brand primary-light tint
+  text:     "#F7F8FA", // brand surface-1 (near-white)
+  muted:    "#94A0B2", // brand slate-400
 };
 
 const TYPE_LABEL: Record<string, { ar: string; en: string }> = {
@@ -152,8 +154,8 @@ function buildSvg(params: {
       <stop offset="1" stop-color="${PALETTE.bg1}"/>
     </linearGradient>
     <linearGradient id="goldGrad" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="${PALETTE.gold}"/>
-      <stop offset="1" stop-color="${PALETTE.goldSoft}"/>
+     <stop offset="0" stop-color="${PALETTE.accent}"/>
+     <stop offset="1" stop-color="${PALETTE.accentSoft}"/>
     </linearGradient>
   </defs>
   <rect width="1200" height="630" fill="url(#bg)"/>
@@ -169,8 +171,8 @@ function buildSvg(params: {
 
   <!-- type chip -->
   <g transform="translate(${isRtl ? 1010 : 60}, 200)">
-    <rect x="0" y="0" rx="999" ry="999" width="130" height="44" fill="${PALETTE.gold}" opacity="0.18"/>
-    <text x="65" y="29" text-anchor="middle" font-family="${fontFamily}" font-size="20" font-weight="700" fill="${PALETTE.goldSoft}">${escapeXml(typeLabel)}</text>
+    <rect x="0" y="0" rx="999" ry="999" width="130" height="44" fill="${PALETTE.accent}" opacity="0.18"/>
+    <text x="65" y="29" text-anchor="middle" font-family="${fontFamily}" font-size="20" font-weight="700" fill="${PALETTE.accent}">${escapeXml(typeLabel)}</text>
   </g>
 
   <!-- title -->
@@ -242,7 +244,7 @@ async function rasterize(svg: string): Promise<Uint8Array> {
   const fonts = await ensureFonts();
   const resvg = new Resvg(svg, {
     fitTo: { mode: "width", value: 1200 },
-    background: "#0F172A",
+    background: PALETTE.bg0,
     font: {
       fontBuffers: fonts,
       loadSystemFonts: false,
