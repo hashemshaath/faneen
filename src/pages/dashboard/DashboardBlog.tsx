@@ -712,7 +712,10 @@ const DashboardBlog = () => {
                               onTranslated={(v) => setField('meta_title_en', v)} onImproved={(v) => setField('meta_title_ar', v)} focusKeyword={form.focus_keyword} />
                           </div>
                           <Input value={form.meta_title_ar} onChange={e => setField('meta_title_ar', e.target.value)} className="rounded-xl" />
-                          <span className={`text-[10px] ${charHint(form.meta_title_ar.length, 60)}`}>{form.meta_title_ar.length}/60</span>
+                          <div className="flex items-center justify-between mt-0.5">
+                            <span className={`text-[10px] ${charHint(form.meta_title_ar.length, 60)}`}>{form.meta_title_ar.length}/60</span>
+                            {metaErrors.meta_title_ar && <span className="text-[10px] text-destructive">{metaErrors.meta_title_ar}</span>}
+                          </div>
                         </div>
                         <div>
                           <div className="flex items-center justify-between mb-1.5">
@@ -721,7 +724,10 @@ const DashboardBlog = () => {
                               onTranslated={(v) => setField('meta_title_ar', v)} onImproved={(v) => setField('meta_title_en', v)} focusKeyword={form.focus_keyword} />
                           </div>
                           <Input value={form.meta_title_en} onChange={e => setField('meta_title_en', e.target.value)} dir="ltr" className="rounded-xl" />
-                          <span className={`text-[10px] ${charHint(form.meta_title_en.length, 60)}`}>{form.meta_title_en.length}/60</span>
+                          <div className="flex items-center justify-between mt-0.5">
+                            <span className={`text-[10px] ${charHint(form.meta_title_en.length, 60)}`}>{form.meta_title_en.length}/60</span>
+                            {metaErrors.meta_title_en && <span className="text-[10px] text-destructive">{metaErrors.meta_title_en}</span>}
+                          </div>
                         </div>
                       </div>
 
@@ -733,7 +739,10 @@ const DashboardBlog = () => {
                               onTranslated={(v) => setField('meta_description_en', v)} onImproved={(v) => setField('meta_description_ar', v)} focusKeyword={form.focus_keyword} />
                           </div>
                           <Textarea value={form.meta_description_ar} onChange={e => setField('meta_description_ar', e.target.value)} rows={2} className="rounded-xl" />
-                          <span className={`text-[10px] ${charHint(form.meta_description_ar.length, 160)}`}>{form.meta_description_ar.length}/160</span>
+                          <div className="flex items-center justify-between mt-0.5">
+                            <span className={`text-[10px] ${charHint(form.meta_description_ar.length, 160)}`}>{form.meta_description_ar.length}/160</span>
+                            {metaErrors.meta_description_ar && <span className="text-[10px] text-destructive">{metaErrors.meta_description_ar}</span>}
+                          </div>
                         </div>
                         <div>
                           <div className="flex items-center justify-between mb-1.5">
@@ -742,9 +751,67 @@ const DashboardBlog = () => {
                               onTranslated={(v) => setField('meta_description_ar', v)} onImproved={(v) => setField('meta_description_en', v)} focusKeyword={form.focus_keyword} />
                           </div>
                           <Textarea value={form.meta_description_en} onChange={e => setField('meta_description_en', e.target.value)} rows={2} dir="ltr" className="rounded-xl" />
-                          <span className={`text-[10px] ${charHint(form.meta_description_en.length, 160)}`}>{form.meta_description_en.length}/160</span>
+                          <div className="flex items-center justify-between mt-0.5">
+                            <span className={`text-[10px] ${charHint(form.meta_description_en.length, 160)}`}>{form.meta_description_en.length}/160</span>
+                            {metaErrors.meta_description_en && <span className="text-[10px] text-destructive">{metaErrors.meta_description_en}</span>}
+                          </div>
                         </div>
                       </div>
+
+                      {/* Multi-option Meta Picker */}
+                      {metaOptions && metaOptions.length > 0 && (
+                        <div className="rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5 p-3 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <p className="text-[11px] font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
+                              <Sparkles className="w-3.5 h-3.5" />
+                              {isRTL ? 'خيارات الميتا المُولّدة' : 'Generated Meta Options'}
+                            </p>
+                            <Button size="sm" variant="ghost" className="h-6 px-2 text-[10px]" onClick={() => setMetaOptions(null)}>
+                              <X className="w-3 h-3" />
+                            </Button>
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                            {metaOptions.map((opt, i) => {
+                              const titleLen = (opt.meta_title_ar || '').length;
+                              const descLen = (opt.meta_description_ar || '').length;
+                              const titleOk = titleLen >= 30 && titleLen <= 60;
+                              const descOk = descLen >= 100 && descLen <= 160;
+                              return (
+                                <div key={i} className={cn(
+                                  "p-2.5 rounded-lg border bg-background space-y-1.5 transition-all hover:shadow-md",
+                                  opt.recommended ? "border-primary/40 ring-1 ring-primary/20" : "border-border/40"
+                                )}>
+                                  <div className="flex items-center justify-between gap-1">
+                                    <div className="flex items-center gap-1">
+                                      <Badge variant={opt.recommended ? 'default' : 'secondary'} className="text-[9px] h-4 px-1.5">
+                                        {opt.recommended && <Star className="w-2.5 h-2.5 me-0.5 fill-current" />}
+                                        {isRTL ? (opt.label_ar || opt.label_en) : (opt.label_en || opt.label_ar)}
+                                      </Badge>
+                                      {typeof opt.score === 'number' && (
+                                        <span className="text-[9px] font-bold text-muted-foreground">{opt.score}/100</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <p className="text-[10px] text-muted-foreground italic line-clamp-2">
+                                    {isRTL ? (opt.rationale_ar || opt.rationale_en) : (opt.rationale_en || opt.rationale_ar)}
+                                  </p>
+                                  <div className="text-[10px] space-y-0.5">
+                                    <p className="font-medium line-clamp-1" dir="auto">{opt.meta_title_ar || opt.meta_title_en}</p>
+                                    <div className="flex gap-2 text-[9px] text-muted-foreground">
+                                      <span className={titleOk ? 'text-success' : 'text-warning'}>T:{titleLen}</span>
+                                      <span className={descOk ? 'text-success' : 'text-warning'}>D:{descLen}</span>
+                                      <span className="text-muted-foreground">{opt.intent}</span>
+                                    </div>
+                                  </div>
+                                  <Button size="sm" variant={opt.recommended ? 'default' : 'outline'} className="w-full h-7 text-[10px] rounded-lg" onClick={() => applyMetaOption(opt)}>
+                                    {isRTL ? 'تطبيق' : 'Apply'}
+                                  </Button>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
 
                       {/* Google Previews */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -849,8 +916,12 @@ const DashboardBlog = () => {
                           <Label className="text-xs">Slug (URL)</Label>
                           <div className="flex items-center gap-1 mt-1.5">
                             <span className="text-[10px] text-muted-foreground shrink-0">/blog/</span>
-                            <Input value={form.slug} onChange={e => setField('slug', e.target.value)} dir="ltr" placeholder="auto-generated" className="flex-1 rounded-xl" />
+                            <Input value={form.slug} onChange={e => setField('slug', e.target.value)}
+                              onBlur={e => setField('slug', sanitizeSlug(e.target.value))}
+                              dir="ltr" placeholder="auto-generated"
+                              className={cn("flex-1 rounded-xl", metaErrors.slug && "border-destructive focus-visible:ring-destructive")} />
                           </div>
+                          {metaErrors.slug && <span className="text-[10px] text-destructive mt-1 block">{metaErrors.slug}</span>}
                         </div>
                         <div>
                           <Label className="text-xs">{isRTL ? 'التصنيف' : 'Category'}</Label>
@@ -917,7 +988,13 @@ const DashboardBlog = () => {
 
                   {/* Actions */}
                   <div className="flex gap-2 pt-4 border-t border-border/20">
-                    <Button onClick={() => saveMutation.mutate()} disabled={!form.title_ar || saveMutation.isPending}
+                    <Button onClick={() => {
+                        if (blockSave) {
+                          toast.error(isRTL ? 'صحّح أخطاء الميتا/Slug قبل النشر' : 'Fix meta/slug errors before publishing');
+                          return;
+                        }
+                        saveMutation.mutate();
+                      }} disabled={!form.title_ar || saveMutation.isPending || blockSave}
                       className="flex-1 gap-2 rounded-xl h-10">
                       {saveMutation.isPending ? '...' : (
                         <>
@@ -929,6 +1006,12 @@ const DashboardBlog = () => {
                     </Button>
                     <Button variant="outline" onClick={closeForm} className="rounded-xl h-10">{isRTL ? 'إلغاء' : 'Cancel'}</Button>
                   </div>
+                  {blockSave && (
+                    <p className="text-[11px] text-destructive flex items-center gap-1.5">
+                      <AlertTriangle className="w-3.5 h-3.5" />
+                      {isRTL ? 'يوجد أخطاء في حقول SEO — صحّحها أو احفظ كمسودة' : 'SEO field errors — fix them or save as draft'}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
