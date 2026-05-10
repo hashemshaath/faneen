@@ -164,20 +164,26 @@ export function buildCssVars(theme: ThemeColors): string {
   parts.push(`--email-header-bg:${BRAND_EMAILS.headerBg}`);
   parts.push(`--email-primary-button:${BRAND_EMAILS.primaryButton}`);
 
-  // ── Legacy aliases (do not remove — many components still consume) ──────
+  // ── Legacy aliases (kept to avoid churn — values re-pointed to brand v1.0)
+  // None of these emit gold/amber anymore. `--gold*`/`--gradient-gold`/
+  // `--shadow-gold` are name-only aliases that resolve to the brand-green
+  // palette. The accent orange (#F08A24) is exposed only via `--accent`.
   parts.push(`--primary:${p}`);
   parts.push(`--accent:${a}`);
   parts.push(`--ring:${p}`);
-  parts.push(`--gold:${p}`);
-  if (pd) parts.push(`--gold-dark:${pd}`);
+  parts.push(`--gold:${p}`);                  // alias → brand primary green
+  if (pd) parts.push(`--gold-dark:${pd}`);    // alias → brand primary dark
   parts.push(`--secondary:${s}`);
-  parts.push(`--brand-blue:${s}`);
-  if (sd) parts.push(`--brand-blue-dark:${sd}`);
-  if (n) parts.push(`--navy:${n}`);
+  parts.push(`--brand-blue:${s}`);            // alias → brand secondary
+  if (sd) parts.push(`--brand-blue-dark:${sd}`); // alias → brand secondary dark
+  if (n) parts.push(`--navy:${n}`);           // alias → brand dark
+  // Gradient `--gradient-gold` is now primary → primary-dark (no gold).
+  const gradGoldEnd = pd ?? p;
   parts.push(
-    `--gradient-gold:linear-gradient(135deg,hsl(${p}),hsl(${s}))`,
-    `--gradient-brand:linear-gradient(135deg,hsl(${p}),hsl(${s}))`,
-    `--shadow-gold:0 4px 20px -4px hsl(${p} / 0.4)`,
+    `--gradient-gold:linear-gradient(135deg,hsl(${p}) 0%,hsl(${gradGoldEnd}) 100%)`,
+    `--gradient-brand:linear-gradient(135deg,hsl(${p}) 0%,hsl(${s}) 100%)`,
+    // Calm green shadow (no gold tint). Hardcoded RGBA matches brand primary.
+    `--shadow-gold:0 8px 24px rgba(14,158,111,0.18)`,
   );
   return `:root{${parts.join(';')}}`;
 }
