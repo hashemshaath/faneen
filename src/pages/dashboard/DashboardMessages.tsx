@@ -573,6 +573,18 @@ const DashboardMessages = () => {
   const [, startTransition] = useTransition();
 
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  // SR-3A: deep-link a conversation via ?conversation=<id> (e.g., from Service Requests).
+  React.useEffect(() => {
+    const cid = searchParams.get('conversation');
+    if (cid && /^[0-9a-f-]{36}$/i.test(cid) && cid !== selectedConversation) {
+      setSelectedConversation(cid);
+      const next = new URLSearchParams(searchParams);
+      next.delete('conversation');
+      setSearchParams(next, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
   const [messageText, setMessageText] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [deferredSearch, setDeferredSearch] = useState('');
