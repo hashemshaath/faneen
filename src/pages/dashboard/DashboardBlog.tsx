@@ -32,7 +32,6 @@ import { RichMarkdownEditor } from '@/components/blog/RichMarkdownEditor';
 import { ArticlePreview } from '@/components/blog/ArticlePreview';
 import { DraftVersions } from '@/components/blog/DraftVersions';
 import { callBlogAi, parseJsonResponse, calculateReadingTime, calculateLocalSeoScore, stripMarkdown, sanitizeSlug, validateMetaFields, hasMetaErrors } from '@/lib/blog-ai-utils';
-import { Sparkles, Wand2, Star } from 'lucide-react';
 import { useNoIndex } from "@/hooks/useNoIndex";
 
 const blogCategories = [
