@@ -24,6 +24,9 @@ const badgeVariants = cva(
         muted: "border-transparent bg-muted/70 text-muted-foreground",
         filterSelected: "border-transparent bg-accent text-accent-foreground shadow-sm shadow-accent/20",
         filterUnselected: "border-border/70 bg-background/60 text-foreground hover:bg-accent/10 hover:text-accent hover:border-accent/30",
+        urgent: "border-transparent bg-urgent text-urgent-foreground hover:bg-urgent-hover",
+        featured: "border-urgent/40 bg-urgent-light text-urgent-hover",
+        pending: "border-border bg-muted text-muted-foreground",
       },
       size: {
         sm: "h-5 px-2 text-[10px] leading-none [&>svg]:size-3",
