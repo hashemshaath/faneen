@@ -5,10 +5,10 @@ import { useThemeColors, buildCssVars } from '@/hooks/useThemeColors';
  *  document head, overriding the design-token CSS variables according to the
  *  admin's saved theme. Renders nothing. */
 export const ThemeApplier = () => {
-  const { theme } = useThemeColors();
+  const { theme, overrides } = useThemeColors();
 
   useEffect(() => {
-    const css = buildCssVars(theme);
+    const css = buildCssVars(theme, overrides);
     if (!css) return;
     const id = 'theme-overrides';
     let el = document.getElementById(id) as HTMLStyleElement | null;
@@ -18,7 +18,7 @@ export const ThemeApplier = () => {
       document.head.appendChild(el);
     }
     el.textContent = css;
-  }, [theme]);
+  }, [theme, overrides]);
 
   return null;
 };

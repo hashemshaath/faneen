@@ -11,14 +11,13 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
-import { Loader2, Save, RotateCcw, Upload, Image as ImageIcon, Palette, Eye } from 'lucide-react';
+import { Loader2, Save, RotateCcw, Upload, Image as ImageIcon, Palette, Eye, Sparkles } from 'lucide-react';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { BrandLogo } from '@/components/common/BrandLogo';
 import { DEFAULT_BRANDING, BRANDING_KEYS, type BrandingConfig } from '@/hooks/useBranding';
-import {
-  DEFAULT_THEME, KEY_FROM_FIELD as THEME_KEY_FROM_FIELD,
-  FIELD_FROM_KEY as THEME_FIELD_FROM_KEY, type ThemeColors, hexToHslString,
-} from '@/hooks/useThemeColors';
+import { BRAND_THEME_KEY_BY_FIELD, BRAND_THEME_FIELD_BY_KEY } from '@/hooks/useThemeColors';
+import { BRAND_COLORS, type BrandColorTokens } from '@/config/brandTheme';
+import { validateHexColor, isForbiddenBrandColor } from '@/lib/theme/brandThemeUtils';
 
 type FieldKey =
   | 'fullLightUrl' | 'fullDarkUrl' | 'markUrl'
@@ -47,14 +46,50 @@ const META = {
 
 const SIZE_LIMITS = { min: 24, max: 96 };
 
-const THEME_FIELDS: Array<{ key: keyof ThemeColors; ar: string; en: string; desc: string }> = [
-  { key: 'primary',       ar: 'اللون الأساسي (أخضر اللوجو)', en: 'Primary (logo green)',     desc: 'الأزرار، الروابط، التأكيدات' },
-  { key: 'primaryDark',   ar: 'الأخضر الداكن',               en: 'Primary dark',              desc: 'تدرجات وحالات hover' },
-  { key: 'secondary',     ar: 'اللون الثانوي (أزرق اللوجو)', en: 'Secondary (logo blue)',     desc: 'العناصر الثانوية والتدرجات' },
-  { key: 'secondaryDark', ar: 'الأزرق الداكن',               en: 'Secondary dark',            desc: 'تدرجات وعمق' },
-  { key: 'accent',        ar: 'لون التمييز (Accent)',        en: 'Accent',                    desc: 'الشارات والروابط الفعّالة' },
-  { key: 'navy',          ar: 'لون السطح الداكن (Navy)',     en: 'Surface navy',              desc: 'الفوتر والأقسام الداكنة' },
+/** Color fields exposed in the admin UI, organised into 3 visible groups. */
+type AdminColorField = Extract<keyof BrandColorTokens,
+  | 'primary' | 'primaryHover' | 'primaryDark'
+  | 'secondary' | 'secondaryDark'
+  | 'accent' | 'accentHover'
+  | 'background' | 'surface' | 'text' | 'textMuted' | 'border'
+  | 'success' | 'warning' | 'error' | 'info'>;
+
+interface ColorFieldDef { key: AdminColorField; ar: string; en: string; desc: string; }
+
+const BRAND_GROUP: ColorFieldDef[] = [
+  { key: 'primary',      ar: 'الأساسي (Primary)',          en: 'Primary',         desc: 'أزرار، روابط، تأكيدات' },
+  { key: 'primaryHover', ar: 'الأساسي عند Hover',          en: 'Primary hover',   desc: 'حالة التحويم على الأزرار' },
+  { key: 'primaryDark',  ar: 'الأساسي الداكن',             en: 'Primary dark',    desc: 'تدرجات وعمق' },
+  { key: 'secondary',    ar: 'الثانوي (Secondary)',        en: 'Secondary',       desc: 'الأزرق الصناعي' },
+  { key: 'secondaryDark',ar: 'الثانوي الداكن',             en: 'Secondary dark',  desc: 'تدرجات' },
+  { key: 'accent',       ar: 'التمييز (Accent)',           en: 'Accent',          desc: 'CTA عاجل أو مميّز' },
+  { key: 'accentHover',  ar: 'التمييز عند Hover',          en: 'Accent hover',    desc: 'حالة التحويم للـ accent' },
 ];
+
+const NEUTRAL_GROUP: ColorFieldDef[] = [
+  { key: 'background', ar: 'خلفية الصفحة',     en: 'Background',  desc: 'خلفية body العامة' },
+  { key: 'surface',    ar: 'سطح البطاقات',     en: 'Surface',     desc: 'بطاقات، Inputs' },
+  { key: 'text',       ar: 'النص الأساسي',     en: 'Text',        desc: 'العناوين والمتن' },
+  { key: 'textMuted',  ar: 'النص الباهت',      en: 'Muted text',  desc: 'الأوصاف والنصوص الثانوية' },
+  { key: 'border',     ar: 'الحدود',           en: 'Border',      desc: 'حدود البطاقات والـ Inputs' },
+];
+
+const STATUS_GROUP: ColorFieldDef[] = [
+  { key: 'success', ar: 'نجاح',  en: 'Success', desc: 'حالات النجاح' },
+  { key: 'warning', ar: 'تنبيه', en: 'Warning', desc: 'حالات التحذير' },
+  { key: 'error',   ar: 'خطأ',   en: 'Error',   desc: 'حالات الخطأ' },
+  { key: 'info',    ar: 'معلومة',en: 'Info',    desc: 'حالات إعلامية' },
+];
+
+const ALL_COLOR_FIELDS: ColorFieldDef[] = [...BRAND_GROUP, ...NEUTRAL_GROUP, ...STATUS_GROUP];
+
+/** Subset of `BrandColorTokens` covering only the fields exposed in admin. */
+type AdminColorState = Record<AdminColorField, string>;
+
+const ADMIN_DEFAULTS: AdminColorState = ALL_COLOR_FIELDS.reduce((acc, f) => {
+  acc[f.key] = BRAND_COLORS[f.key];
+  return acc;
+}, {} as AdminColorState);
 
 const AdminBranding: React.FC = () => {
   useNoIndex();
@@ -63,8 +98,9 @@ const AdminBranding: React.FC = () => {
   const queryClient = useQueryClient();
   const [values, setValues] = useState<BrandingConfig>(DEFAULT_BRANDING);
   const [dirty, setDirty] = useState<Set<FieldKey>>(new Set());
-  const [theme, setTheme] = useState<ThemeColors>(DEFAULT_THEME);
-  const [themeDirty, setThemeDirty] = useState<Set<keyof ThemeColors>>(new Set());
+  const [theme, setTheme] = useState<AdminColorState>(ADMIN_DEFAULTS);
+  const [themeDirty, setThemeDirty] = useState<Set<AdminColorField>>(new Set());
+  const [themeErrors, setThemeErrors] = useState<Partial<Record<AdminColorField, string>>>({});
   const uploadInputRef = useRef<HTMLInputElement>(null);
   const [uploadingFor, setUploadingFor] = useState<FieldKey | null>(null);
 
@@ -111,15 +147,19 @@ const AdminBranding: React.FC = () => {
   }, [rows]);
 
   useEffect(() => {
-    const next: ThemeColors = { ...DEFAULT_THEME };
+    const next: AdminColorState = { ...ADMIN_DEFAULTS };
     for (const r of themeRows) {
-      const f = THEME_FIELD_FROM_KEY[r.setting_key];
-      if (f && r.setting_value && /^#[0-9a-f]{6}$/i.test(r.setting_value)) {
-        next[f] = r.setting_value;
-      }
+      const field = BRAND_THEME_FIELD_BY_KEY[r.setting_key];
+      if (!field || !r.setting_value) continue;
+      // Only apply if (a) the field is one we expose and (b) value is valid + allowed.
+      if (!(field in next)) continue;
+      const v = r.setting_value.trim();
+      if (!validateHexColor(v) || isForbiddenBrandColor(v)) continue;
+      next[field as AdminColorField] = v.toUpperCase();
     }
     setTheme(next);
     setThemeDirty(new Set());
+    setThemeErrors({});
   }, [themeRows]);
 
   const update = useCallback((field: FieldKey, value: string | number) => {
@@ -127,9 +167,15 @@ const AdminBranding: React.FC = () => {
     setDirty(prev => { const n = new Set(prev); n.add(field); return n; });
   }, []);
 
-  const updateTheme = useCallback((field: keyof ThemeColors, value: string) => {
-    setTheme(prev => ({ ...prev, [field]: value }));
+  const updateTheme = useCallback((field: AdminColorField, value: string) => {
+    const v = value.toUpperCase();
+    setTheme(prev => ({ ...prev, [field]: v }));
     setThemeDirty(prev => { const n = new Set(prev); n.add(field); return n; });
+    setThemeErrors(prev => {
+      const n = { ...prev };
+      delete n[field];
+      return n;
+    });
   }, []);
 
   const saveMutation = useMutation({
@@ -160,7 +206,8 @@ const AdminBranding: React.FC = () => {
         }
       }
       for (const field of themeDirty) {
-        const settingKey = THEME_KEY_FROM_FIELD[field];
+        const settingKey = BRAND_THEME_KEY_BY_FIELD[field];
+        if (!settingKey) continue;
         const newValue = theme[field];
         const existing = themeRows.find(r => r.setting_key === settingKey);
         if (existing) {
@@ -203,10 +250,63 @@ const AdminBranding: React.FC = () => {
   const resetDefaults = useCallback(() => {
     setValues(DEFAULT_BRANDING);
     setDirty(new Set(BRANDING_KEYS.map(k => FIELD_BY_SETTING[k])));
-    setTheme(DEFAULT_THEME);
-    setThemeDirty(new Set(THEME_FIELDS.map(f => f.key)));
+    setTheme(ADMIN_DEFAULTS);
+    setThemeDirty(new Set(ALL_COLOR_FIELDS.map(f => f.key)));
+    setThemeErrors({});
     toast.info(isRTL ? 'تم استعادة الإعدادات الافتراضية — اضغط حفظ للتطبيق' : 'Defaults restored — click Save to apply');
   }, [isRTL]);
+
+  /**
+   * Reset to Qitaat Brand v1.0 — wipes ALL `category='theme'` rows so the
+   * runtime falls back to the central `BRAND_THEME` defaults. Other
+   * categories (branding, etc.) are untouched.
+   */
+  const resetToQitaatBrand = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from('platform_settings')
+        .delete()
+        .eq('category', 'theme');
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      setTheme(ADMIN_DEFAULTS);
+      setThemeDirty(new Set());
+      setThemeErrors({});
+      queryClient.invalidateQueries({ queryKey: ['theme-settings-admin'] });
+      queryClient.invalidateQueries({ queryKey: ['theme-colors'] });
+      toast.success(isRTL ? 'تم استعادة هوية قطاعات v1.0' : 'Reset to Qitaat Brand v1.0');
+    },
+    onError: (err: unknown) => {
+      const msg = err instanceof Error ? err.message : 'unknown';
+      toast.error((isRTL ? 'فشل الاستعادة: ' : 'Reset failed: ') + msg);
+    },
+  });
+
+  /** Validate every dirty color before saving. Returns true when all good. */
+  const runThemeValidation = useCallback((): boolean => {
+    const errs: Partial<Record<AdminColorField, string>> = {};
+    for (const field of themeDirty) {
+      const v = (theme[field] ?? '').trim();
+      if (!v) {
+        errs[field] = isRTL ? 'القيمة فارغة' : 'Empty value';
+      } else if (!validateHexColor(v)) {
+        errs[field] = isRTL ? 'صيغة HEX غير صحيحة' : 'Invalid HEX';
+      } else if (isForbiddenBrandColor(v)) {
+        errs[field] = isRTL ? 'لون ممنوع — مخصص للوغو أو من الإصدار القديم' : 'Forbidden color (logo-only or legacy)';
+      }
+    }
+    setThemeErrors(errs);
+    return Object.keys(errs).length === 0;
+  }, [theme, themeDirty, isRTL]);
+
+  const handleSave = () => {
+    if (!runThemeValidation()) {
+      toast.error(isRTL ? 'هناك ألوان غير صالحة' : 'Some colors are invalid');
+      return;
+    }
+    saveMutation.mutate();
+  };
 
   const onUpload = (field: FieldKey) => {
     setUploadingFor(field);
@@ -361,7 +461,7 @@ const AdminBranding: React.FC = () => {
               {isRTL ? 'افتراضي' : 'Defaults'}
             </Button>
             <Button
-              onClick={() => saveMutation.mutate()}
+              onClick={handleSave}
               disabled={(dirty.size === 0 && themeDirty.size === 0) || saveMutation.isPending}
             >
               {saveMutation.isPending ? (
@@ -387,59 +487,167 @@ const AdminBranding: React.FC = () => {
               {renderImageField('markUrl', 'light')}
             </div>
 
-            {/* Colors */}
+            {/* Colors — Brand / Neutral / Status */}
+            {[
+              { title_ar: 'ألوان الهوية',   title_en: 'Brand colors',   group: BRAND_GROUP },
+              { title_ar: 'الألوان المحايدة', title_en: 'Neutral colors', group: NEUTRAL_GROUP },
+              { title_ar: 'ألوان الحالات',   title_en: 'Status colors',  group: STATUS_GROUP },
+            ].map((section) => (
+              <Card key={section.title_en}>
+                <CardHeader className="flex-row items-center justify-between gap-3">
+                  <div>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Palette className="w-4 h-4 text-accent" />
+                      {isRTL ? section.title_ar : section.title_en}
+                    </CardTitle>
+                    <CardDescription className="text-xs">
+                      {isRTL
+                        ? 'تُطبَّق فوراً بعد الحفظ. الافتراضي من قطاعات v1.0.'
+                        : 'Applied right after Save. Defaults from Qitaat v1.0.'}
+                    </CardDescription>
+                  </div>
+                  {section.group === BRAND_GROUP && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => resetToQitaatBrand.mutate()}
+                      disabled={resetToQitaatBrand.isPending}
+                    >
+                      {resetToQitaatBrand.isPending ? (
+                        <Loader2 className="w-4 h-4 animate-spin me-2" />
+                      ) : (
+                        <Sparkles className="w-4 h-4 me-2" />
+                      )}
+                      {isRTL ? 'استعادة هوية قطاعات v1.0' : 'Reset to Qitaat Brand v1.0'}
+                    </Button>
+                  )}
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {section.group.map((f) => {
+                    const value = theme[f.key];
+                    const valid = validateHexColor(value);
+                    const error = themeErrors[f.key];
+                    return (
+                      <div key={f.key} className="rounded-xl border border-border p-3 space-y-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="min-w-0">
+                            <Label className="text-sm block truncate">{isRTL ? f.ar : f.en}</Label>
+                            <p className="text-[11px] text-muted-foreground truncate">{f.desc}</p>
+                          </div>
+                          <div
+                            className="w-9 h-9 rounded-lg border border-border shrink-0"
+                            style={{ background: valid ? value : 'transparent' }}
+                            aria-hidden="true"
+                          />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="color"
+                            value={valid ? value : '#000000'}
+                            onChange={(e) => updateTheme(f.key, e.target.value)}
+                            className="h-10 w-12 rounded-lg border border-border cursor-pointer bg-background"
+                            aria-label={f.en}
+                          />
+                          <Input
+                            value={value}
+                            dir="ltr"
+                            onChange={(e) => updateTheme(f.key, e.target.value)}
+                            className="h-10 tech-content text-xs uppercase"
+                            placeholder="#0E9E6F"
+                          />
+                        </div>
+                        {error && (
+                          <p className="text-[11px] text-destructive">{error}</p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </CardContent>
+              </Card>
+            ))}
+
+            {/* Live theme preview — uses current FORM values, not saved DB. */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
-                  <Palette className="w-4 h-4 text-accent" />
-                  {isRTL ? 'ألوان العلامة التجارية' : 'Brand colors'}
+                  <Eye className="w-4 h-4 text-accent" />
+                  {isRTL ? 'معاينة الهوية' : 'Theme preview'}
                 </CardTitle>
                 <CardDescription className="text-xs">
                   {isRTL
-                    ? 'يتم تطبيق الألوان فوراً على المنصة بعد الحفظ. الألوان الافتراضية مأخوذة من اللوجو.'
-                    : 'Colors apply across the platform after Save. Defaults are derived from the logo.'}
+                    ? 'تعكس قيم الفورم الحالية مباشرةً قبل الحفظ.'
+                    : 'Reflects current form values live, before saving.'}
                 </CardDescription>
               </CardHeader>
-              <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {THEME_FIELDS.map(f => {
-                  const valid = /^#[0-9a-f]{6}$/i.test(theme[f.key]);
-                  return (
-                    <div key={f.key} className="rounded-xl border border-border p-3 space-y-2">
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="min-w-0">
-                          <Label className="text-sm block truncate">{isRTL ? f.ar : f.en}</Label>
-                          <p className="text-[11px] text-muted-foreground truncate">{f.desc}</p>
-                        </div>
-                        <div
-                          className="w-9 h-9 rounded-lg border border-border shrink-0"
-                          style={{ background: valid ? theme[f.key] : 'transparent' }}
-                          aria-hidden="true"
-                        />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="color"
-                          value={valid ? theme[f.key] : '#000000'}
-                          onChange={(e) => updateTheme(f.key, e.target.value.toUpperCase())}
-                          className="h-10 w-12 rounded-lg border border-border cursor-pointer bg-background"
-                          aria-label={f.en}
-                        />
-                        <Input
-                          value={theme[f.key]}
-                          dir="ltr"
-                          onChange={(e) => updateTheme(f.key, e.target.value.toUpperCase())}
-                          className="h-10 tech-content text-xs uppercase"
-                          placeholder="#1FBA82"
-                        />
-                      </div>
-                      {!valid && (
-                        <p className="text-[11px] text-destructive">
-                          {isRTL ? 'صيغة HEX غير صحيحة' : 'Invalid HEX'}
-                        </p>
-                      )}
+              <CardContent>
+                <div
+                  className="rounded-xl p-4 sm:p-6 space-y-4 border"
+                  style={{
+                    background: validateHexColor(theme.background) ? theme.background : undefined,
+                    borderColor: validateHexColor(theme.border) ? theme.border : undefined,
+                    color: validateHexColor(theme.text) ? theme.text : undefined,
+                  }}
+                >
+                  {/* Buttons */}
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      className="h-10 px-4 rounded-lg text-sm font-semibold text-white"
+                      style={{ background: theme.primary }}
+                    >
+                      {isRTL ? 'زر أساسي' : 'Primary button'}
+                    </button>
+                    <button
+                      type="button"
+                      className="h-10 px-4 rounded-lg text-sm font-semibold text-white"
+                      style={{ background: theme.secondary }}
+                    >
+                      {isRTL ? 'زر ثانوي' : 'Secondary button'}
+                    </button>
+                    <button
+                      type="button"
+                      className="h-10 px-4 rounded-lg text-sm font-semibold text-white"
+                      style={{ background: theme.accent }}
+                    >
+                      {isRTL ? 'زر مميز' : 'Accent button'}
+                    </button>
+                  </div>
+                  {/* Status badges */}
+                  <div className="flex flex-wrap gap-2">
+                    {([
+                      { key: 'success', label_ar: 'نجاح',  label_en: 'Success' },
+                      { key: 'warning', label_ar: 'تنبيه', label_en: 'Warning' },
+                      { key: 'error',   label_ar: 'خطأ',   label_en: 'Error' },
+                      { key: 'info',    label_ar: 'معلومة', label_en: 'Info' },
+                    ] as const).map((s) => (
+                      <span
+                        key={s.key}
+                        className="inline-flex items-center h-7 px-3 rounded-full text-xs font-semibold text-white"
+                        style={{ background: theme[s.key] }}
+                      >
+                        {isRTL ? s.label_ar : s.label_en}
+                      </span>
+                    ))}
+                  </div>
+                  {/* Card sample */}
+                  <div
+                    className="rounded-xl p-4 border"
+                    style={{
+                      background: validateHexColor(theme.surface) ? theme.surface : undefined,
+                      borderColor: validateHexColor(theme.border) ? theme.border : undefined,
+                      color: validateHexColor(theme.text) ? theme.text : undefined,
+                    }}
+                  >
+                    <div className="text-sm font-bold mb-1">
+                      {isRTL ? 'عنوان البطاقة' : 'Card title'}
                     </div>
-                  );
-                })}
+                    <p className="text-xs" style={{ color: theme.textMuted }}>
+                      {isRTL
+                        ? 'هذه فقرة تجريبية تستخدم لون النص الباهت لمعاينة التباين.'
+                        : 'Sample paragraph using muted text to preview contrast.'}
+                    </p>
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
