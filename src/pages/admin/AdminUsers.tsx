@@ -145,7 +145,16 @@ const KpiCard = React.memo(({ icon: Icon, label, value, gradient, iconBg, trend 
 KpiCard.displayName = 'KpiCard';
 
 /* ─── Per-user expanded detail card ─── */
-const UserDetailPanel = React.memo(({ userId, isRTL }: { userId: string; isRTL: boolean }) => {
+const UserDetailPanel = React.memo(({
+  userId, isRTL, businessLinks, isSuperAdmin, onChangeStaffRole, onRemoveStaff,
+}: {
+  userId: string;
+  isRTL: boolean;
+  businessLinks: BusinessLink[];
+  isSuperAdmin: boolean;
+  onChangeStaffRole: (link: BusinessLink, role: StaffRole) => void;
+  onRemoveStaff: (link: BusinessLink) => void;
+}) => {
   const { data, isLoading } = useQuery({
     queryKey: ['admin-user-detail', userId],
     queryFn: async () => {
@@ -183,6 +192,58 @@ const UserDetailPanel = React.memo(({ userId, isRTL }: { userId: string; isRTL: 
           </div>
         ))}
       </div>
+      {businessLinks.length > 0 && (
+        <div>
+          <p className="text-[11px] font-bold text-muted-foreground mb-1.5 flex items-center gap-1">
+            <Building2 className="w-3 h-3" />
+            {isRTL ? `الصلاحيات على المنشآت (${businessLinks.length})` : `Business permissions (${businessLinks.length})`}
+          </p>
+          <div className="space-y-1.5">
+            {businessLinks.map(link => {
+              const cfg = staffRoleConfig[link.role];
+              const lockedOwner = link.isOwnerByEntity; // can't downgrade actual owner
+              return (
+                <div key={link.business.id + (link.staffId ?? 'owner')}
+                  className="flex items-center gap-2 rounded-lg bg-background/60 border border-border/30 px-2 py-1.5 text-[11px]">
+                  <Building2 className="w-3 h-3 text-emerald-600 shrink-0" />
+                  <span className="truncate flex-1 font-medium">
+                    {isRTL ? link.business.name_ar : (link.business.name_en || link.business.name_ar)}
+                  </span>
+                  <span className="font-mono tech-content text-emerald-600 shrink-0">{link.business.ref_id}</span>
+                  {!link.isActive && (
+                    <Badge variant="outline" className="text-[9px] text-muted-foreground border-dashed px-1 py-0">
+                      {isRTL ? 'غير نشط' : 'inactive'}
+                    </Badge>
+                  )}
+                  {isSuperAdmin && !lockedOwner && link.staffId ? (
+                    <Select value={link.role} onValueChange={(v) => onChangeStaffRole(link, v as StaffRole)}>
+                      <SelectTrigger className="h-7 w-24 text-[10px] rounded-lg"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="manager">{isRTL ? 'مدير' : 'Manager'}</SelectItem>
+                        <SelectItem value="editor">{isRTL ? 'محرر' : 'Editor'}</SelectItem>
+                        <SelectItem value="viewer">{isRTL ? 'مشاهد' : 'Viewer'}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Badge className={`${cfg.color} text-[10px] border px-1.5 py-0`}>
+                      {isRTL ? cfg.ar : cfg.en}{lockedOwner && <Lock className="w-2.5 h-2.5 ms-0.5 inline" />}
+                    </Badge>
+                  )}
+                  {isSuperAdmin && !lockedOwner && link.staffId && (
+                    <button
+                      onClick={() => onRemoveStaff(link)}
+                      title={isRTL ? 'إزالة الصلاحية' : 'Remove access'}
+                      className="p-1 rounded-md text-destructive/60 hover:text-destructive hover:bg-destructive/10 transition-colors"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
       {data.recentActivity.length > 0 && (
         <div>
           <p className="text-[11px] font-bold text-muted-foreground mb-1.5 flex items-center gap-1"><Activity className="w-3 h-3" />{isRTL ? 'آخر نشاط إداري' : 'Recent Admin Activity'}</p>
