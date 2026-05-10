@@ -1333,7 +1333,7 @@ const AdminUsers = () => {
                       const canManageUser = !isCurrentUser && (isSuperAdmin || (!targetIsSuperAdmin && !targetIsAdmin));
                       return (
                         <UserRow key={profile.id} profile={profile} roles={roles}
-                          business={businessMap.get(profile.user_id) || []}
+                          businessLinks={businessLinksMap.get(profile.user_id) || []}
                           isCurrentUser={isCurrentUser} canManageUser={canManageUser} isSuperAdmin={isSuperAdmin}
                           isRTL={isRTL} language={language}
                           selected={selected.has(profile.id)} expanded={expanded.has(profile.id)} density={density}
@@ -1344,6 +1344,14 @@ const AdminUsers = () => {
                           onDelete={(p) => setActivePanel({ type: 'delete', userId: p.user_id, userName: p.full_name || '' })}
                           onAddRole={(uid, role) => addRoleMutation.mutate({ userId: uid, role })}
                           onRemoveRole={(rid) => removeRoleMutation.mutate(rid)}
+                          onChangeStaffRole={(link, role) => {
+                            if (!link.staffId) return;
+                            updateStaffRoleMutation.mutate({ staffId: link.staffId, role });
+                          }}
+                          onRemoveStaff={(link) => {
+                            if (!link.staffId || link.isOwnerByEntity) return;
+                            removeStaffMutation.mutate(link.staffId);
+                          }}
                         />
                       );
                     })}
