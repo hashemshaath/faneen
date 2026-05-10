@@ -45,6 +45,8 @@ export type QitaatEvent =
   | "lead_request_submitted"
   | "message_sent"
   | "notification_clicked"
+  | "login_success"
+  | "notification_opened"
   // Supplier lead capture (BusinessProfile)
   | "contact_button_clicked"
   | "supplier_lead_submitted"
