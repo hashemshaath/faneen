@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Send, CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { track } from '@/lib/analytics-events';
+import { getAttributionPayload } from '@/lib/analytics-attribution';
 
 /**
  * Inline lead-request form (NO popups, per UX policy).
