@@ -15,6 +15,7 @@ import { FieldError } from './FieldError';
 import { useFieldValidation } from '@/hooks/useFieldValidation';
 import type { RegisterStep, RegisterType } from '@/services/auth/types';
 import { track } from '@/lib/analytics-events';
+import { getAttributionPayload } from '@/lib/analytics-attribution';
 
 interface RegisterFormProps {
   onSwitchToLogin: () => void;
@@ -67,8 +68,9 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
         phone: phone ? `${countryCode}${phone.replace(/^0/, '')}` : '',
       });
       onEmailSent(email);
-      track.signupCompleted({ account_type: registerType, method: 'email' });
-      track.registerCompleted({ account_type: registerType, method: 'email' });
+      const attribution = getAttributionPayload();
+      track.signupCompleted({ account_type: registerType, method: 'email', ...attribution });
+      track.registerCompleted({ account_type: registerType, method: 'email', ...attribution });
       toast.success(isRTL ? 'تم إرسال رابط التحقق إلى بريدك الإلكتروني' : 'Verification link sent to your email');
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
