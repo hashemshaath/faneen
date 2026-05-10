@@ -68,6 +68,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
       });
       onEmailSent(email);
       track.signupCompleted({ account_type: registerType, method: 'email' });
+      track.registerCompleted({ account_type: registerType, method: 'email' });
       toast.success(isRTL ? 'تم إرسال رابط التحقق إلى بريدك الإلكتروني' : 'Verification link sent to your email');
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);

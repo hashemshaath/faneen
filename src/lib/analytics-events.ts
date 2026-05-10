@@ -36,6 +36,10 @@ export type QitaatEvent =
   | "signup_started"
   | "signup_otp_sent"
   | "signup_completed"
+  | "register_completed"
+  | "otp_sent"
+  | "otp_verified"
+  | "contact_form_submitted"
   | "onboarding_step_viewed"
   | "onboarding_completed"
   | "lead_request_submitted"
@@ -194,6 +198,10 @@ export const track = {
   leadRequestSubmitted: (p: EventPayload) => trackEvent("lead_request_submitted", p),
   messageSent: (p: EventPayload = {}) => trackEvent("message_sent", p),
   notificationClicked: (p: EventPayload) => trackEvent("notification_clicked", p),
+  registerCompleted: (p: EventPayload = {}) => trackEvent("register_completed", p),
+  otpSent: (p: EventPayload = {}) => trackEvent("otp_sent", p),
+  otpVerified: (p: EventPayload = {}) => trackEvent("otp_verified", p),
+  contactFormSubmitted: (p: EventPayload = {}) => trackEvent("contact_form_submitted", p),
 };
 
 /** Extract a hostname safely (used for outbound link tagging, never for PII). */

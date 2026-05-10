@@ -19,6 +19,9 @@ import { template as welcomeSignup } from './welcome-signup.tsx'
 import { template as contractSigned } from './contract-signed.tsx'
 import { template as leadConfirmation } from './lead-confirmation.tsx'
 import { template as leadNotification } from './lead-notification.tsx'
+import { template as providerApproved } from './provider-approved.tsx'
+import { template as providerRejected } from './provider-rejected.tsx'
+import { template as providerRevisionRequested } from './provider-revision-requested.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'booking-confirmation': bookingConfirmation,
@@ -31,4 +34,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'contract-signed': contractSigned,
   'lead-confirmation': leadConfirmation,
   'lead-notification': leadNotification,
+  'provider-approved': providerApproved,
+  'provider-rejected': providerRejected,
+  'provider-revision-requested': providerRevisionRequested,
 }
