@@ -96,13 +96,22 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !profile) return;
-    if (!file.type.startsWith('image/')) { toast.error(isRTL ? 'يرجى اختيار صورة' : 'Please select an image'); return; }
-    if (file.size > 2 * 1024 * 1024) { toast.error(isRTL ? 'حجم الصورة يجب أن لا يتجاوز 2 ميجا' : 'Image must be under 2MB'); return; }
+    const { validateImageFile, getImageRejectionMessage, ALLOWED_PUBLIC_IMAGE_MIMES } = await import('@/lib/image-validate');
+    const { compressImage } = await import('@/lib/image-compress');
+    const check = await validateImageFile(file, {
+      allowed: [...ALLOWED_PUBLIC_IMAGE_MIMES],
+      maxBytes: 2 * 1024 * 1024,
+    });
+    if (!check.ok) {
+      toast.error(getImageRejectionMessage(check.reason ?? 'unsupported_type', isRTL));
+      return;
+    }
     setAvatarUploading(true);
     try {
-      const ext = file.name.split('.').pop();
+      const compressed = await compressImage(file);
+      const ext = compressed.name.split('.').pop() || 'webp';
       const path = `${user.id}/avatar.${ext}`;
-      const { error: uploadError } = await supabase.storage.from('business-assets').upload(path, file, { upsert: true });
+      const { error: uploadError } = await supabase.storage.from('business-assets').upload(path, compressed, { upsert: true, contentType: compressed.type });
       if (uploadError) throw uploadError;
       const { data: urlData } = supabase.storage.from('business-assets').getPublicUrl(path);
       const { error: updateError } = await supabase.from('profiles').update({ avatar_url: urlData.publicUrl }).eq('user_id', user.id);
