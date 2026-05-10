@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { Loader2, ShieldCheck, AlertTriangle, Clock, KeyRound, RefreshCw, LogIn, XCircle } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { useNavigate } from 'react-router-dom';
+import { BrandLogo } from '@/components/common/BrandLogo';
 
 const ResetPassword = () => {
   const { t, isRTL } = useLanguage();
@@ -212,8 +213,8 @@ const ResetPassword = () => {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="w-12 h-12 mx-auto rounded-xl bg-gradient-gold flex items-center justify-center mb-4">
-            <span className="font-heading font-black text-xl text-secondary-foreground">ق</span>
+          <div className="mx-auto mb-4 inline-flex">
+            <BrandLogo variant="mark" tone="auto" size={48} alt="قِطاعات" />
           </div>
         </div>
         <div className="bg-card rounded-2xl border border-border p-8 shadow-sm space-y-6">
