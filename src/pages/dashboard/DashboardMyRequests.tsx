@@ -35,6 +35,7 @@ interface MyLeadRow {
   rejected_at: string | null;
   closed_at: string | null;
   cancelled_at: string | null;
+  conversation_id: string | null;
 }
 
 function safeTrack(event: Parameters<typeof trackEvent>[0], payload: Parameters<typeof trackEvent>[1]) {
@@ -57,7 +58,7 @@ const DashboardMyRequests: React.FC = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('lead_requests')
-        .select('id, ref_id, business_id, user_id, subject, status, contact_preference, budget_range, project_scope, created_at, updated_at, viewed_at, needs_info_at, accepted_at, rejected_at, closed_at, cancelled_at')
+        .select('id, ref_id, business_id, user_id, subject, status, contact_preference, budget_range, project_scope, created_at, updated_at, viewed_at, needs_info_at, accepted_at, rejected_at, closed_at, cancelled_at, conversation_id')
         .eq('user_id', user!.id)
         .order('created_at', { ascending: false })
         .limit(200);
@@ -247,6 +248,23 @@ const DashboardMyRequests: React.FC = () => {
 
                       {/* Actions */}
                       <div className="flex flex-wrap gap-2 pt-1">
+                        {lead.conversation_id && (lead.status === 'accepted' || lead.status === 'needs_info') && (
+                          <Button
+                            asChild
+                            variant="default"
+                            className="min-h-[44px]"
+                            onClick={() => safeTrack('service_request_conversation_opened', {
+                              source_page: 'dashboard_my_requests',
+                              outcome: lead.status,
+                              is_authenticated: true,
+                            } as Parameters<typeof trackEvent>[1])}
+                          >
+                            <Link to={`/dashboard/messages?conversation=${lead.conversation_id}`}>
+                              <MessageSquare />
+                              <span>{isRTL ? 'فتح المحادثة' : 'Open conversation'}</span>
+                            </Link>
+                          </Button>
+                        )}
                         {biz?.username && (
                           <Button asChild variant="outline" className="min-h-[44px]">
                             <Link to={`/${biz.username}`}>
