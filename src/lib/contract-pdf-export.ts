@@ -339,7 +339,7 @@ export const printMeasurements = (opts: {
 
   const html = `
     <h1>${opts.isRTL ? 'جدول المقاسات' : 'Measurements Schedule'}</h1>
-    <p style="text-align:center;color:#888;margin-bottom:6mm;">${opts.contractNumber}${opts.businessName ? ' — ' + opts.businessName : ''}</p>
+    <p style="text-align:center;color:#6B7689;margin-bottom:6mm;">${opts.contractNumber}${opts.businessName ? ' — ' + opts.businessName : ''}</p>
     <table>
       <thead><tr>
         <th>#</th><th>${opts.isRTL ? 'رقم القطعة' : 'Piece #'}</th><th>${opts.isRTL ? 'الاسم' : 'Name'}</th>
