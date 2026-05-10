@@ -62,6 +62,9 @@ export default {
         "elev-2": "var(--elev-2)",
         "elev-3": "var(--elev-3)",
         "elev-4": "var(--elev-4)",
+        1: "0 1px 2px rgba(19,23,34,.06), 0 1px 1px rgba(19,23,34,.04)",
+        2: "0 4px 12px rgba(19,23,34,.06), 0 2px 4px rgba(19,23,34,.04)",
+        3: "0 12px 32px rgba(19,23,34,.10), 0 4px 8px rgba(19,23,34,.04)",
       },
       transitionTimingFunction: {
         standard: "var(--ease-standard)",
