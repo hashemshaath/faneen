@@ -31,7 +31,8 @@ import { SeoScorePanel } from '@/components/blog/SeoScorePanel';
 import { RichMarkdownEditor } from '@/components/blog/RichMarkdownEditor';
 import { ArticlePreview } from '@/components/blog/ArticlePreview';
 import { DraftVersions } from '@/components/blog/DraftVersions';
-import { callBlogAi, parseJsonResponse, calculateReadingTime, calculateLocalSeoScore, stripMarkdown } from '@/lib/blog-ai-utils';
+import { callBlogAi, parseJsonResponse, calculateReadingTime, calculateLocalSeoScore, stripMarkdown, sanitizeSlug, validateMetaFields, hasMetaErrors } from '@/lib/blog-ai-utils';
+import { Sparkles, Wand2, Star } from 'lucide-react';
 import { useNoIndex } from "@/hooks/useNoIndex";
 
 const blogCategories = [
@@ -168,6 +169,7 @@ const DashboardBlog = () => {
   const [aiLoading, setAiLoading] = useState<string | null>(null);
   const [seoAnalysis, setSeoAnalysis] = useState<any | null>(null);
   const [competitorAnalysis, setCompetitorAnalysis] = useState<any | null>(null);
+  const [metaOptions, setMetaOptions] = useState<any[] | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [previewLang, setPreviewLang] = useState<'ar' | 'en'>('ar');
@@ -181,6 +183,7 @@ const DashboardBlog = () => {
     setEditId(null);
     setSeoAnalysis(null);
     setCompetitorAnalysis(null);
+    setMetaOptions(null);
     setScheduledDate(undefined);
   };
   const closeForm = () => { setShowForm(false); resetForm(); };
@@ -397,16 +400,32 @@ const DashboardBlog = () => {
       const raw = await callBlogAi({ action: 'generate_meta', title: form.title_ar, content: form.content_ar || form.content_en, keywords: form.keywords ? form.keywords.split(',').map(s => s.trim()) : [] });
       const parsed = parseJsonResponse(raw);
       if (parsed) {
-        if (parsed.meta_title_ar) setField('meta_title_ar', parsed.meta_title_ar);
-        if (parsed.meta_title_en) setField('meta_title_en', parsed.meta_title_en);
-        if (parsed.meta_description_ar) setField('meta_description_ar', parsed.meta_description_ar);
-        if (parsed.meta_description_en) setField('meta_description_en', parsed.meta_description_en);
-        if (parsed.focus_keyword && !form.focus_keyword) setField('focus_keyword', parsed.focus_keyword);
-        if (parsed.slug_suggestion && !form.slug) setField('slug', parsed.slug_suggestion);
-        toast.success(isRTL ? 'تم توليد بيانات الميتا' : 'Meta generated');
+        if (Array.isArray(parsed.options) && parsed.options.length > 0) {
+          setMetaOptions(parsed.options);
+          if (parsed.focus_keyword && !form.focus_keyword) setField('focus_keyword', parsed.focus_keyword);
+          if (parsed.slug_suggestion && !form.slug) setField('slug', sanitizeSlug(parsed.slug_suggestion));
+          toast.success(isRTL ? `تم توليد ${parsed.options.length} خيارات للميتا` : `${parsed.options.length} meta options generated`);
+        } else {
+          // Backward compatibility
+          if (parsed.meta_title_ar) setField('meta_title_ar', parsed.meta_title_ar);
+          if (parsed.meta_title_en) setField('meta_title_en', parsed.meta_title_en);
+          if (parsed.meta_description_ar) setField('meta_description_ar', parsed.meta_description_ar);
+          if (parsed.meta_description_en) setField('meta_description_en', parsed.meta_description_en);
+          if (parsed.focus_keyword && !form.focus_keyword) setField('focus_keyword', parsed.focus_keyword);
+          if (parsed.slug_suggestion && !form.slug) setField('slug', sanitizeSlug(parsed.slug_suggestion));
+          toast.success(isRTL ? 'تم توليد بيانات الميتا' : 'Meta generated');
+        }
       }
     } catch (_e) { /* AI operation failed */ } finally { setAiLoading(null); }
   };
+
+  const applyMetaOption = useCallback((opt: any) => {
+    if (opt.meta_title_ar) setField('meta_title_ar', opt.meta_title_ar);
+    if (opt.meta_title_en) setField('meta_title_en', opt.meta_title_en);
+    if (opt.meta_description_ar) setField('meta_description_ar', opt.meta_description_ar);
+    if (opt.meta_description_en) setField('meta_description_en', opt.meta_description_en);
+    toast.success(isRTL ? `تم تطبيق خيار: ${opt.label_ar || opt.label_en}` : `Applied: ${opt.label_en || opt.label_ar}`);
+  }, [setField, isRTL]);
 
   const handleAnalyzeSeo = async () => {
     setAiLoading('analyze');
@@ -493,6 +512,19 @@ const DashboardBlog = () => {
     if (pct > 0.85) return 'text-warning';
     return 'text-muted-foreground';
   };
+
+  /* Auto-validation on field changes */
+  const metaErrors = useMemo(
+    () => validateMetaFields({
+      slug: form.slug,
+      meta_title_ar: form.meta_title_ar,
+      meta_title_en: form.meta_title_en,
+      meta_description_ar: form.meta_description_ar,
+      meta_description_en: form.meta_description_en,
+    }, isRTL),
+    [form.slug, form.meta_title_ar, form.meta_title_en, form.meta_description_ar, form.meta_description_en, isRTL]
+  );
+  const blockSave = hasMetaErrors(metaErrors) && form.status !== 'draft';
 
   return (
     <DashboardLayout>
