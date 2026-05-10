@@ -19,7 +19,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import {
   Plus, Edit, Trash2, FileText, Eye, Calendar as CalendarIcon, X, Search, Tag, Globe,
   BarChart3, ArrowRight, Clock, Hash, Zap, ExternalLink, CalendarClock, History, Trophy,
-  CheckCircle2, AlertTriangle, XCircle, TrendingUp, BookOpen, PenLine,
+  CheckCircle2, AlertTriangle, XCircle, TrendingUp, BookOpen, PenLine, Sparkles, Star,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -31,7 +31,7 @@ import { SeoScorePanel } from '@/components/blog/SeoScorePanel';
 import { RichMarkdownEditor } from '@/components/blog/RichMarkdownEditor';
 import { ArticlePreview } from '@/components/blog/ArticlePreview';
 import { DraftVersions } from '@/components/blog/DraftVersions';
-import { callBlogAi, parseJsonResponse, calculateReadingTime, calculateLocalSeoScore, stripMarkdown } from '@/lib/blog-ai-utils';
+import { callBlogAi, parseJsonResponse, calculateReadingTime, calculateLocalSeoScore, stripMarkdown, sanitizeSlug, validateMetaFields, hasMetaErrors } from '@/lib/blog-ai-utils';
 import { useNoIndex } from "@/hooks/useNoIndex";
 
 const blogCategories = [
@@ -168,6 +168,7 @@ const DashboardBlog = () => {
   const [aiLoading, setAiLoading] = useState<string | null>(null);
   const [seoAnalysis, setSeoAnalysis] = useState<any | null>(null);
   const [competitorAnalysis, setCompetitorAnalysis] = useState<any | null>(null);
+  const [metaOptions, setMetaOptions] = useState<any[] | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [previewLang, setPreviewLang] = useState<'ar' | 'en'>('ar');
@@ -181,6 +182,7 @@ const DashboardBlog = () => {
     setEditId(null);
     setSeoAnalysis(null);
     setCompetitorAnalysis(null);
+    setMetaOptions(null);
     setScheduledDate(undefined);
   };
   const closeForm = () => { setShowForm(false); resetForm(); };
@@ -397,16 +399,32 @@ const DashboardBlog = () => {
       const raw = await callBlogAi({ action: 'generate_meta', title: form.title_ar, content: form.content_ar || form.content_en, keywords: form.keywords ? form.keywords.split(',').map(s => s.trim()) : [] });
       const parsed = parseJsonResponse(raw);
       if (parsed) {
-        if (parsed.meta_title_ar) setField('meta_title_ar', parsed.meta_title_ar);
-        if (parsed.meta_title_en) setField('meta_title_en', parsed.meta_title_en);
-        if (parsed.meta_description_ar) setField('meta_description_ar', parsed.meta_description_ar);
-        if (parsed.meta_description_en) setField('meta_description_en', parsed.meta_description_en);
-        if (parsed.focus_keyword && !form.focus_keyword) setField('focus_keyword', parsed.focus_keyword);
-        if (parsed.slug_suggestion && !form.slug) setField('slug', parsed.slug_suggestion);
-        toast.success(isRTL ? 'تم توليد بيانات الميتا' : 'Meta generated');
+        if (Array.isArray(parsed.options) && parsed.options.length > 0) {
+          setMetaOptions(parsed.options);
+          if (parsed.focus_keyword && !form.focus_keyword) setField('focus_keyword', parsed.focus_keyword);
+          if (parsed.slug_suggestion && !form.slug) setField('slug', sanitizeSlug(parsed.slug_suggestion));
+          toast.success(isRTL ? `تم توليد ${parsed.options.length} خيارات للميتا` : `${parsed.options.length} meta options generated`);
+        } else {
+          // Backward compatibility
+          if (parsed.meta_title_ar) setField('meta_title_ar', parsed.meta_title_ar);
+          if (parsed.meta_title_en) setField('meta_title_en', parsed.meta_title_en);
+          if (parsed.meta_description_ar) setField('meta_description_ar', parsed.meta_description_ar);
+          if (parsed.meta_description_en) setField('meta_description_en', parsed.meta_description_en);
+          if (parsed.focus_keyword && !form.focus_keyword) setField('focus_keyword', parsed.focus_keyword);
+          if (parsed.slug_suggestion && !form.slug) setField('slug', sanitizeSlug(parsed.slug_suggestion));
+          toast.success(isRTL ? 'تم توليد بيانات الميتا' : 'Meta generated');
+        }
       }
     } catch (_e) { /* AI operation failed */ } finally { setAiLoading(null); }
   };
+
+  const applyMetaOption = useCallback((opt: any) => {
+    if (opt.meta_title_ar) setField('meta_title_ar', opt.meta_title_ar);
+    if (opt.meta_title_en) setField('meta_title_en', opt.meta_title_en);
+    if (opt.meta_description_ar) setField('meta_description_ar', opt.meta_description_ar);
+    if (opt.meta_description_en) setField('meta_description_en', opt.meta_description_en);
+    toast.success(isRTL ? `تم تطبيق خيار: ${opt.label_ar || opt.label_en}` : `Applied: ${opt.label_en || opt.label_ar}`);
+  }, [setField, isRTL]);
 
   const handleAnalyzeSeo = async () => {
     setAiLoading('analyze');
@@ -493,6 +511,19 @@ const DashboardBlog = () => {
     if (pct > 0.85) return 'text-warning';
     return 'text-muted-foreground';
   };
+
+  /* Auto-validation on field changes */
+  const metaErrors = useMemo(
+    () => validateMetaFields({
+      slug: form.slug,
+      meta_title_ar: form.meta_title_ar,
+      meta_title_en: form.meta_title_en,
+      meta_description_ar: form.meta_description_ar,
+      meta_description_en: form.meta_description_en,
+    }, isRTL),
+    [form.slug, form.meta_title_ar, form.meta_title_en, form.meta_description_ar, form.meta_description_en, isRTL]
+  );
+  const blockSave = hasMetaErrors(metaErrors) && form.status !== 'draft';
 
   return (
     <DashboardLayout>
@@ -681,7 +712,10 @@ const DashboardBlog = () => {
                               onTranslated={(v) => setField('meta_title_en', v)} onImproved={(v) => setField('meta_title_ar', v)} focusKeyword={form.focus_keyword} />
                           </div>
                           <Input value={form.meta_title_ar} onChange={e => setField('meta_title_ar', e.target.value)} className="rounded-xl" />
-                          <span className={`text-[10px] ${charHint(form.meta_title_ar.length, 60)}`}>{form.meta_title_ar.length}/60</span>
+                          <div className="flex items-center justify-between mt-0.5">
+                            <span className={`text-[10px] ${charHint(form.meta_title_ar.length, 60)}`}>{form.meta_title_ar.length}/60</span>
+                            {metaErrors.meta_title_ar && <span className="text-[10px] text-destructive">{metaErrors.meta_title_ar}</span>}
+                          </div>
                         </div>
                         <div>
                           <div className="flex items-center justify-between mb-1.5">
@@ -690,7 +724,10 @@ const DashboardBlog = () => {
                               onTranslated={(v) => setField('meta_title_ar', v)} onImproved={(v) => setField('meta_title_en', v)} focusKeyword={form.focus_keyword} />
                           </div>
                           <Input value={form.meta_title_en} onChange={e => setField('meta_title_en', e.target.value)} dir="ltr" className="rounded-xl" />
-                          <span className={`text-[10px] ${charHint(form.meta_title_en.length, 60)}`}>{form.meta_title_en.length}/60</span>
+                          <div className="flex items-center justify-between mt-0.5">
+                            <span className={`text-[10px] ${charHint(form.meta_title_en.length, 60)}`}>{form.meta_title_en.length}/60</span>
+                            {metaErrors.meta_title_en && <span className="text-[10px] text-destructive">{metaErrors.meta_title_en}</span>}
+                          </div>
                         </div>
                       </div>
 
@@ -702,7 +739,10 @@ const DashboardBlog = () => {
                               onTranslated={(v) => setField('meta_description_en', v)} onImproved={(v) => setField('meta_description_ar', v)} focusKeyword={form.focus_keyword} />
                           </div>
                           <Textarea value={form.meta_description_ar} onChange={e => setField('meta_description_ar', e.target.value)} rows={2} className="rounded-xl" />
-                          <span className={`text-[10px] ${charHint(form.meta_description_ar.length, 160)}`}>{form.meta_description_ar.length}/160</span>
+                          <div className="flex items-center justify-between mt-0.5">
+                            <span className={`text-[10px] ${charHint(form.meta_description_ar.length, 160)}`}>{form.meta_description_ar.length}/160</span>
+                            {metaErrors.meta_description_ar && <span className="text-[10px] text-destructive">{metaErrors.meta_description_ar}</span>}
+                          </div>
                         </div>
                         <div>
                           <div className="flex items-center justify-between mb-1.5">
@@ -711,9 +751,67 @@ const DashboardBlog = () => {
                               onTranslated={(v) => setField('meta_description_ar', v)} onImproved={(v) => setField('meta_description_en', v)} focusKeyword={form.focus_keyword} />
                           </div>
                           <Textarea value={form.meta_description_en} onChange={e => setField('meta_description_en', e.target.value)} rows={2} dir="ltr" className="rounded-xl" />
-                          <span className={`text-[10px] ${charHint(form.meta_description_en.length, 160)}`}>{form.meta_description_en.length}/160</span>
+                          <div className="flex items-center justify-between mt-0.5">
+                            <span className={`text-[10px] ${charHint(form.meta_description_en.length, 160)}`}>{form.meta_description_en.length}/160</span>
+                            {metaErrors.meta_description_en && <span className="text-[10px] text-destructive">{metaErrors.meta_description_en}</span>}
+                          </div>
                         </div>
                       </div>
+
+                      {/* Multi-option Meta Picker */}
+                      {metaOptions && metaOptions.length > 0 && (
+                        <div className="rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5 p-3 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <p className="text-[11px] font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
+                              <Sparkles className="w-3.5 h-3.5" />
+                              {isRTL ? 'خيارات الميتا المُولّدة' : 'Generated Meta Options'}
+                            </p>
+                            <Button size="sm" variant="ghost" className="h-6 px-2 text-[10px]" onClick={() => setMetaOptions(null)}>
+                              <X className="w-3 h-3" />
+                            </Button>
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                            {metaOptions.map((opt, i) => {
+                              const titleLen = (opt.meta_title_ar || '').length;
+                              const descLen = (opt.meta_description_ar || '').length;
+                              const titleOk = titleLen >= 30 && titleLen <= 60;
+                              const descOk = descLen >= 100 && descLen <= 160;
+                              return (
+                                <div key={i} className={cn(
+                                  "p-2.5 rounded-lg border bg-background space-y-1.5 transition-all hover:shadow-md",
+                                  opt.recommended ? "border-primary/40 ring-1 ring-primary/20" : "border-border/40"
+                                )}>
+                                  <div className="flex items-center justify-between gap-1">
+                                    <div className="flex items-center gap-1">
+                                      <Badge variant={opt.recommended ? 'default' : 'secondary'} className="text-[9px] h-4 px-1.5">
+                                        {opt.recommended && <Star className="w-2.5 h-2.5 me-0.5 fill-current" />}
+                                        {isRTL ? (opt.label_ar || opt.label_en) : (opt.label_en || opt.label_ar)}
+                                      </Badge>
+                                      {typeof opt.score === 'number' && (
+                                        <span className="text-[9px] font-bold text-muted-foreground">{opt.score}/100</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <p className="text-[10px] text-muted-foreground italic line-clamp-2">
+                                    {isRTL ? (opt.rationale_ar || opt.rationale_en) : (opt.rationale_en || opt.rationale_ar)}
+                                  </p>
+                                  <div className="text-[10px] space-y-0.5">
+                                    <p className="font-medium line-clamp-1" dir="auto">{opt.meta_title_ar || opt.meta_title_en}</p>
+                                    <div className="flex gap-2 text-[9px] text-muted-foreground">
+                                      <span className={titleOk ? 'text-success' : 'text-warning'}>T:{titleLen}</span>
+                                      <span className={descOk ? 'text-success' : 'text-warning'}>D:{descLen}</span>
+                                      <span className="text-muted-foreground">{opt.intent}</span>
+                                    </div>
+                                  </div>
+                                  <Button size="sm" variant={opt.recommended ? 'default' : 'outline'} className="w-full h-7 text-[10px] rounded-lg" onClick={() => applyMetaOption(opt)}>
+                                    {isRTL ? 'تطبيق' : 'Apply'}
+                                  </Button>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
 
                       {/* Google Previews */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -818,8 +916,12 @@ const DashboardBlog = () => {
                           <Label className="text-xs">Slug (URL)</Label>
                           <div className="flex items-center gap-1 mt-1.5">
                             <span className="text-[10px] text-muted-foreground shrink-0">/blog/</span>
-                            <Input value={form.slug} onChange={e => setField('slug', e.target.value)} dir="ltr" placeholder="auto-generated" className="flex-1 rounded-xl" />
+                            <Input value={form.slug} onChange={e => setField('slug', e.target.value)}
+                              onBlur={e => setField('slug', sanitizeSlug(e.target.value))}
+                              dir="ltr" placeholder="auto-generated"
+                              className={cn("flex-1 rounded-xl", metaErrors.slug && "border-destructive focus-visible:ring-destructive")} />
                           </div>
+                          {metaErrors.slug && <span className="text-[10px] text-destructive mt-1 block">{metaErrors.slug}</span>}
                         </div>
                         <div>
                           <Label className="text-xs">{isRTL ? 'التصنيف' : 'Category'}</Label>
@@ -886,7 +988,13 @@ const DashboardBlog = () => {
 
                   {/* Actions */}
                   <div className="flex gap-2 pt-4 border-t border-border/20">
-                    <Button onClick={() => saveMutation.mutate()} disabled={!form.title_ar || saveMutation.isPending}
+                    <Button onClick={() => {
+                        if (blockSave) {
+                          toast.error(isRTL ? 'صحّح أخطاء الميتا/Slug قبل النشر' : 'Fix meta/slug errors before publishing');
+                          return;
+                        }
+                        saveMutation.mutate();
+                      }} disabled={!form.title_ar || saveMutation.isPending || blockSave}
                       className="flex-1 gap-2 rounded-xl h-10">
                       {saveMutation.isPending ? '...' : (
                         <>
@@ -898,6 +1006,12 @@ const DashboardBlog = () => {
                     </Button>
                     <Button variant="outline" onClick={closeForm} className="rounded-xl h-10">{isRTL ? 'إلغاء' : 'Cancel'}</Button>
                   </div>
+                  {blockSave && (
+                    <p className="text-[11px] text-destructive flex items-center gap-1.5">
+                      <AlertTriangle className="w-3.5 h-3.5" />
+                      {isRTL ? 'يوجد أخطاء في حقول SEO — صحّحها أو احفظ كمسودة' : 'SEO field errors — fix them or save as draft'}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -915,11 +1029,15 @@ const DashboardBlog = () => {
                   <SeoScorePanel isRTL={isRTL} analysis={seoAnalysis as any} localScore={localScore}
                     isAnalyzing={aiLoading === 'analyze'} contentStats={contentStats} focusKeyword={form.focus_keyword}
                     onApplyFix={(field, value) => {
-                      setField(field as keyof typeof form, value);
+                      const v = field === 'slug' ? sanitizeSlug(value) : value;
+                      setField(field as keyof typeof form, v);
                       toast.success(isRTL ? 'تم التطبيق' : 'Applied');
                     }}
                     onApplyAll={(fixes) => {
-                      fixes.forEach(f => setField(f.field as keyof typeof form, f.suggested_value));
+                      fixes.forEach(f => {
+                        const v = f.field === 'slug' ? sanitizeSlug(f.suggested_value) : f.suggested_value;
+                        setField(f.field as keyof typeof form, v);
+                      });
                       toast.success(isRTL ? `تم تطبيق ${fixes.length} تحسينات` : `Applied ${fixes.length} fixes`);
                     }} />
                 </div>
