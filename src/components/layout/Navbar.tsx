@@ -83,16 +83,12 @@ export const Navbar = () => {
       <nav
         role="navigation"
         aria-label={language === 'ar' ? 'التنقل الرئيسي' : 'Main navigation'}
-        className={`fixed top-0 end-0 start-0 z-50 transition-all duration-500 ${
-          scrolled
-            ? 'bg-surface-nav/98 backdrop-blur-xl shadow-xl shadow-black/10 border-b border-gold/10'
-            : isHome
-              ? 'bg-transparent border-b border-transparent'
-              : 'bg-surface-nav/95 backdrop-blur-md border-b border-gold/20'
+        className={`fixed top-0 end-0 start-0 z-50 transition-all duration-300 bg-white border-b ${
+          scrolled ? 'border-[#E2E6EE] shadow-sm' : 'border-transparent'
         }`}>
         <div className="container flex items-center justify-between h-16 sm:h-[4.5rem] px-4 sm:px-6">
           {/* Logo */}
-          <Link to="/" aria-label={language === 'ar' ? 'قِطاعات — الصفحة الرئيسية' : 'Qitaat — Home'} className="flex items-center group rounded-xl focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none">
+          <Link to="/" aria-label={language === 'ar' ? 'قِطاعات — الصفحة الرئيسية' : 'Qitaat — Home'} className="flex items-center group rounded-xl focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none">
             <BrandLogo
               variant="full"
               tone="auto"
@@ -109,21 +105,21 @@ export const Navbar = () => {
               <PrefetchLink
                 key={link.to}
                 to={link.to}
-                className={`relative px-3.5 py-2 rounded-lg transition-all duration-300 flex items-center gap-1.5 ${
-                  isActive(link.to) 
-                    ? 'text-gold bg-gold/10' 
-                    : 'text-surface-nav-foreground/70 hover:text-gold hover:bg-gold/5'
+                className={`relative px-3.5 py-2 rounded-lg transition-colors duration-200 flex items-center gap-1.5 ${
+                  isActive(link.to)
+                    ? 'text-primary font-semibold'
+                    : 'text-[#1A2230] hover:text-primary'
                 }`}
               >
                 <link.icon className="w-3.5 h-3.5" />
                 {link.label}
                 {link.to === '/search' && (
-                  <kbd aria-hidden="true" className="hidden xl:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-surface-nav-foreground/10 text-[9px] font-mono text-surface-nav-foreground/70 border border-surface-nav-foreground/15 leading-none">
+                  <kbd aria-hidden="true" className="hidden xl:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-[#EDEFF3] text-[9px] font-mono text-[#6B7689] border border-[#E2E6EE] leading-none">
                     ⌘K
                   </kbd>
                 )}
                 {isActive(link.to) && (
-                  <span className="absolute bottom-0 inset-x-3 h-0.5 bg-gold rounded-full" />
+                  <span className="absolute -bottom-0.5 inset-x-3 h-0.5 bg-primary rounded-full" />
                 )}
               </PrefetchLink>
             ))}
@@ -134,36 +130,36 @@ export const Navbar = () => {
                 type="button"
                 aria-haspopup="menu"
                 aria-label={isRTL ? 'قائمة المزيد' : 'More menu'}
-                className="px-3.5 py-2 rounded-lg text-surface-nav-foreground/85 hover:text-gold hover:bg-gold/5 transition-all duration-300 flex items-center gap-1.5 focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none"
+                className="px-3.5 py-2 rounded-lg text-[#1A2230] hover:text-primary transition-colors duration-200 flex items-center gap-1.5 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
               >
                 {isRTL ? 'المزيد' : 'More'}
                 <ChevronDown aria-hidden="true" className="w-3.5 h-3.5 transition-transform duration-300 group-hover:rotate-180" />
               </button>
               <div className="absolute top-full start-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus-within:opacity-100 group-focus-within:visible transition-all duration-300 translate-y-1 group-hover:translate-y-0 group-focus-within:translate-y-0">
-                <div className="bg-surface-nav/98 backdrop-blur-xl border border-gold/15 rounded-xl shadow-2xl shadow-black/20 p-2 min-w-[200px]">
+                <div className="bg-white border border-[#E2E6EE] rounded-xl shadow-lg p-2 min-w-[200px]">
                   {moreLinks.map((link) => (
                     <PrefetchLink
                       key={link.to}
                       to={link.to}
-                      className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg transition-all duration-200 ${
+                      className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg transition-colors duration-200 ${
                         isActive(link.to)
-                          ? 'text-gold bg-gold/10'
-                          : 'text-surface-nav-foreground/70 hover:text-gold hover:bg-gold/5'
+                          ? 'text-primary bg-primary-light'
+                          : 'text-[#1A2230] hover:text-primary hover:bg-[#F7F8FA]'
                       }`}
                     >
                       <div className={`w-7 h-7 rounded-md flex items-center justify-center ${
-                        isActive(link.to) ? 'bg-gold/20' : 'bg-gold/10'
+                        isActive(link.to) ? 'bg-primary/15' : 'bg-primary-light'
                       }`}>
-                        <link.icon className="w-3.5 h-3.5 text-gold" />
+                        <link.icon className="w-3.5 h-3.5 text-primary" />
                       </div>
                       <span className="text-sm font-medium">{link.label}</span>
                     </PrefetchLink>
                   ))}
-                  <div className="border-t border-surface-nav-foreground/10 mt-1.5 pt-1.5">
-                    <button onClick={() => scrollToSection('#categories')} className="w-full text-start px-3.5 py-2 rounded-lg text-surface-nav-foreground/75 hover:text-gold hover:bg-gold/5 text-sm transition-all focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none">
+                  <div className="border-t border-[#E2E6EE] mt-1.5 pt-1.5">
+                    <button onClick={() => scrollToSection('#categories')} className="w-full text-start px-3.5 py-2 rounded-lg text-[#1A2230] hover:text-primary hover:bg-[#F7F8FA] text-sm transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none">
                       {t('nav.sections')}
                     </button>
-                    <button onClick={() => scrollToSection('#features')} className="w-full text-start px-3.5 py-2 rounded-lg text-surface-nav-foreground/75 hover:text-gold hover:bg-gold/5 text-sm transition-all focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none">
+                    <button onClick={() => scrollToSection('#features')} className="w-full text-start px-3.5 py-2 rounded-lg text-[#1A2230] hover:text-primary hover:bg-[#F7F8FA] text-sm transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none">
                       {t('nav.features')}
                     </button>
                   </div>
@@ -177,7 +173,7 @@ export const Navbar = () => {
             <ThemeToggle variant="navbar" />
             <button
               onClick={() => setLanguage(language === 'ar' ? 'en' : 'ar')}
-              className="text-[10px] sm:text-xs text-surface-nav-foreground/85 hover:text-gold transition-colors px-2 py-1.5 rounded-lg border border-surface-nav-foreground/20 hover:border-gold/30 font-medium focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none"
+              className="text-[10px] sm:text-xs text-[#1A2230] hover:text-primary transition-colors px-2 py-1.5 rounded-lg hover:bg-[#F7F8FA] font-medium focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
               aria-label={language === 'ar' ? 'تبديل اللغة إلى الإنجليزية' : 'Switch language to Arabic'}
             >
               {t('nav.language')}
@@ -188,7 +184,7 @@ export const Navbar = () => {
             {/* Mobile toggle */}
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="lg:hidden text-surface-nav-foreground/80 hover:text-gold transition-colors p-2.5 rounded-lg hover:bg-gold/5 focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none min-w-[44px] min-h-[44px] flex items-center justify-center"
+              className="lg:hidden text-[#1A2230] hover:text-primary transition-colors p-2.5 rounded-lg hover:bg-[#F7F8FA] focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none min-w-[44px] min-h-[44px] flex items-center justify-center"
               aria-label={mobileOpen ? (language === 'ar' ? 'إغلاق القائمة' : 'Close menu') : (language === 'ar' ? 'فتح القائمة' : 'Open menu')}
               aria-expanded={mobileOpen}
             >
@@ -212,24 +208,24 @@ export const Navbar = () => {
                   </span>
                 )}
                 <PrefetchLink to="/dashboard">
-                  <Button variant="hero" size="sm" className="gap-1.5 shadow-lg shadow-gold/20 hover:shadow-gold/40 transition-shadow">
+                  <Button variant="primary" size="sm" className="gap-1.5">
                     <User className="w-3.5 h-3.5" />
                     {t('dashboard.overview')}
                   </Button>
                 </PrefetchLink>
-                <Button variant="ghost" size="sm" className="text-surface-nav-foreground/60 hover:text-gold hover:bg-gold/10" onClick={signOut}>
+                <Button variant="ghost" size="sm" onClick={signOut}>
                   <LogOut className="w-3.5 h-3.5" />
                 </Button>
               </div>
             ) : (
               <div className="hidden lg:flex items-center gap-2">
                 <PrefetchLink to="/auth?mode=login">
-                  <Button variant="ghost" size="sm" className="text-surface-nav-foreground/70 hover:text-gold hover:bg-gold/10 text-sm">
+                  <Button variant="ghost" size="sm">
                     {t('nav.login')}
                   </Button>
                 </PrefetchLink>
                 <PrefetchLink to="/auth?mode=register">
-                  <Button variant="hero" size="sm" className="shadow-lg shadow-gold/20 hover:shadow-gold/40 transition-shadow">
+                  <Button variant="primary" size="sm">
                     {t('nav.register')}
                   </Button>
                 </PrefetchLink>
@@ -250,7 +246,7 @@ export const Navbar = () => {
       {/* Mobile menu */}
       <div
         ref={menuRef}
-        className={`fixed top-16 sm:top-[4.5rem] end-0 start-0 z-50 lg:hidden bg-surface-nav/98 backdrop-blur-xl border-t border-gold/10 shadow-2xl shadow-black/20 transition-all duration-400 ease-out ${
+        className={`fixed top-16 sm:top-[4.5rem] end-0 start-0 z-50 lg:hidden bg-white border-t border-[#E2E6EE] shadow-lg transition-all duration-300 ease-out ${
           mobileOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-3 pointer-events-none'
         }`}
       >
@@ -260,31 +256,31 @@ export const Navbar = () => {
               key={link.to}
               to={link.to}
               onClick={closeMobile}
-              className={`flex items-center gap-3 min-h-ctrl-md py-3 px-3 rounded-xl transition-all duration-200 ${
+              className={`flex items-center gap-3 min-h-ctrl-md py-3 px-3 rounded-xl transition-colors duration-200 ${
                 isActive(link.to)
-                  ? 'text-gold bg-gold/10'
-                  : 'text-surface-nav-foreground/70 hover:text-gold hover:bg-gold/5'
+                  ? 'text-primary bg-primary-light'
+                  : 'text-[#1A2230] hover:text-primary hover:bg-[#F7F8FA]'
               }`}
             >
               <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                isActive(link.to) ? 'bg-gold/20' : 'bg-surface-nav-foreground/5'
+                isActive(link.to) ? 'bg-primary/15' : 'bg-primary-light'
               }`}>
-                <link.icon className="ic-sm text-gold" />
+                <link.icon className="ic-sm text-primary" />
               </div>
               <span className="font-medium">{link.label}</span>
             </Link>
           ))}
 
-          <div className="border-t border-surface-nav-foreground/10 pt-2 mt-2 space-y-0.5">
-            <button onClick={() => scrollToSection('#categories')} className="block w-full text-start text-surface-nav-foreground/80 hover:text-gold py-2.5 px-3 rounded-lg hover:bg-gold/5 text-sm transition-all focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none">
+          <div className="border-t border-[#E2E6EE] pt-2 mt-2 space-y-0.5">
+            <button onClick={() => scrollToSection('#categories')} className="block w-full text-start text-[#1A2230] hover:text-primary py-2.5 px-3 rounded-lg hover:bg-[#F7F8FA] text-sm transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none">
               {t('nav.sections')}
             </button>
-            <button onClick={() => scrollToSection('#features')} className="block w-full text-start text-surface-nav-foreground/80 hover:text-gold py-2.5 px-3 rounded-lg hover:bg-gold/5 text-sm transition-all focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none">
+            <button onClick={() => scrollToSection('#features')} className="block w-full text-start text-[#1A2230] hover:text-primary py-2.5 px-3 rounded-lg hover:bg-[#F7F8FA] text-sm transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none">
               {t('nav.features')}
             </button>
           </div>
 
-          <div className="pt-3 pb-2 border-t border-surface-nav-foreground/10 flex flex-col gap-2">
+          <div className="pt-3 pb-2 border-t border-[#E2E6EE] flex flex-col gap-2">
             {user ? (
               <>
                 {(isAdmin || isSuperAdmin) && (
@@ -300,12 +296,12 @@ export const Navbar = () => {
                   </div>
                 )}
                 <Link to="/dashboard" onClick={closeMobile}>
-                  <Button variant="hero" size="sm" className="w-full gap-1.5 shadow-lg shadow-gold/20">
+                  <Button variant="primary" size="sm" className="w-full gap-1.5">
                     <User className="w-3.5 h-3.5" />
                     {t('dashboard.overview')}
                   </Button>
                 </Link>
-                <Button variant="ghost" className="text-surface-nav-foreground/60 hover:text-gold hover:bg-gold/10 text-sm w-full gap-1.5" onClick={() => { signOut(); closeMobile(); }}>
+                <Button variant="ghost" className="text-sm w-full gap-1.5" onClick={() => { signOut(); closeMobile(); }}>
                   <LogOut className="w-3.5 h-3.5" />
                   {t('auth.logout')}
                 </Button>
@@ -313,10 +309,10 @@ export const Navbar = () => {
             ) : (
               <>
                 <Link to="/auth?mode=register" onClick={closeMobile}>
-                  <Button variant="hero" size="sm" className="w-full shadow-lg shadow-gold/20">{t('nav.register')}</Button>
+                  <Button variant="primary" size="sm" className="w-full">{t('nav.register')}</Button>
                 </Link>
                 <Link to="/auth?mode=login" onClick={closeMobile}>
-                  <Button variant="ghost" className="text-surface-nav-foreground/60 hover:text-gold hover:bg-gold/10 text-sm w-full">
+                  <Button variant="ghost" className="text-sm w-full">
                     {t('nav.login')}
                   </Button>
                 </Link>
