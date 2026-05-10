@@ -266,7 +266,7 @@ UserDetailPanel.displayName = 'UserDetailPanel';
 interface UserRowProps {
   profile: Profile;
   roles: UserRole[];
-  business: BusinessInfo[];
+  businessLinks: BusinessLink[];
   isCurrentUser: boolean;
   canManageUser: boolean;
   isSuperAdmin: boolean;
@@ -283,11 +283,14 @@ interface UserRowProps {
   onDelete: (p: Profile) => void;
   onAddRole: (userId: string, role: string) => void;
   onRemoveRole: (id: string) => void;
+  onChangeStaffRole: (link: BusinessLink, role: StaffRole) => void;
+  onRemoveStaff: (link: BusinessLink) => void;
 }
 
-const UserRow = React.memo(({ profile, roles, business, isCurrentUser, canManageUser, isSuperAdmin,
+const UserRow = React.memo(({ profile, roles, businessLinks, isCurrentUser, canManageUser, isSuperAdmin,
   isRTL, language, selected, expanded, density, onToggleSelect, onToggleExpand,
-  onEdit, onPassword, onToggleBan, onDelete, onAddRole, onRemoveRole }: UserRowProps) => {
+  onEdit, onPassword, onToggleBan, onDelete, onAddRole, onRemoveRole,
+  onChangeStaffRole, onRemoveStaff }: UserRowProps) => {
   const [addingRole, setAddingRole] = useState(false);
   const [pickedRole, setPickedRole] = useState('user');
   const tier = tierConfig[profile.membership_tier as keyof typeof tierConfig] || tierConfig.free;
