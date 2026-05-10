@@ -96,7 +96,7 @@ const MiniRing = React.memo(({ pct, size = 32, stroke = 3 }: { pct: number; size
   return (
     <svg width={size} height={size} className="shrink-0 -rotate-90">
       <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="hsl(var(--muted))" strokeWidth={stroke} />
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={pct >= 100 ? '#10b981' : 'hsl(var(--accent))'} strokeWidth={stroke} strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round" className="transition-all duration-700" />
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={pct >= 100 ? 'hsl(var(--success))' : 'hsl(var(--accent))'} strokeWidth={stroke} strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round" className="transition-all duration-700" />
     </svg>
   );
 });
