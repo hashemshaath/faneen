@@ -21,6 +21,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { getSectorById, type SectorId } from '@/data/onboarding-sectors';
+import { trackProviderApproved, trackProviderRejected, trackProviderNeedsChanges } from '@/lib/analytics-events';
 import { useNoIndex } from "@/hooks/useNoIndex";
 
 type ApprovalStatus =
