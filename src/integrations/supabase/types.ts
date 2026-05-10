@@ -2592,6 +2592,12 @@ export type Database = {
           phone: string | null
           priority: string
           project_scope: string | null
+          quote_amount: number | null
+          quote_currency: string | null
+          quote_note: string | null
+          quote_valid_until: string | null
+          quoted_at: string | null
+          quoted_by: string | null
           ref_id: string | null
           rejected_at: string | null
           responded_at: string | null
@@ -2621,6 +2627,12 @@ export type Database = {
           phone?: string | null
           priority?: string
           project_scope?: string | null
+          quote_amount?: number | null
+          quote_currency?: string | null
+          quote_note?: string | null
+          quote_valid_until?: string | null
+          quoted_at?: string | null
+          quoted_by?: string | null
           ref_id?: string | null
           rejected_at?: string | null
           responded_at?: string | null
@@ -2650,6 +2662,12 @@ export type Database = {
           phone?: string | null
           priority?: string
           project_scope?: string | null
+          quote_amount?: number | null
+          quote_currency?: string | null
+          quote_note?: string | null
+          quote_valid_until?: string | null
+          quoted_at?: string | null
+          quoted_by?: string | null
           ref_id?: string | null
           rejected_at?: string | null
           responded_at?: string | null
