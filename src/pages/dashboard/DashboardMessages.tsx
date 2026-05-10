@@ -32,6 +32,7 @@ import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/comp
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { useNoIndex } from "@/hooks/useNoIndex";
+import { trackMessageSent } from '@/lib/analytics-events';
 
 const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -825,6 +826,9 @@ const DashboardMessages = () => {
       setForwardMsg(null);
       queryClient.invalidateQueries({ queryKey: ['messages', selectedConversation] });
       queryClient.invalidateQueries({ queryKey: ['conversations', user?.id] });
+      try {
+        trackMessageSent({ source_page: 'dashboard_messages' });
+      } catch { /* analytics must never break send */ }
     },
     onError: () => { setIsUploading(false); toast.error(isRTL ? 'فشل إرسال الرسالة' : 'Failed to send'); },
   });

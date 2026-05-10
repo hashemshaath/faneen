@@ -45,6 +45,8 @@ export type QitaatEvent =
   | "lead_request_submitted"
   | "message_sent"
   | "notification_clicked"
+  | "login_success"
+  | "notification_opened"
   // Supplier lead capture (BusinessProfile)
   | "contact_button_clicked"
   | "supplier_lead_submitted"
@@ -219,6 +221,11 @@ export const track = {
   supplierPhoneRevealed: (p: EventPayload = {}) => trackEvent("supplier_phone_revealed", p),
   supplierEmailRevealed: (p: EventPayload = {}) => trackEvent("supplier_email_revealed", p),
 };
+
+// Extra wrappers (Phase 3)
+export const trackLoginSuccess = (p: EventPayload = {}) => trackEvent("login_success", p);
+export const trackNotificationOpened = (p: EventPayload = {}) => trackEvent("notification_opened", p);
+export const trackMessageSent = (p: EventPayload = {}) => trackEvent("message_sent", p);
 
 /** Extract a hostname safely (used for outbound link tagging, never for PII). */
 export function getDomain(url: string): string | undefined {

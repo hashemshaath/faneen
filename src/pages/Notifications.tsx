@@ -23,6 +23,7 @@ import { ar as arLocale, enUS } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { getNotificationMeta, isUrgentNotification, typeFilterLabels } from '@/components/notifications/notification-types';
 import { usePageMeta } from '@/hooks/usePageMeta';
+import { trackNotificationOpened } from '@/lib/analytics-events';
 
 const Notifications = () => {
   const { user } = useAuth();
@@ -106,6 +107,12 @@ const Notifications = () => {
 
   const handleClick = (n: any) => {
     if (!n.is_read) markRead.mutate(n.id);
+    try {
+      trackNotificationOpened({
+        notification_type: n.notification_type || n.reference_type,
+        source_page: 'notifications_page',
+      });
+    } catch { /* analytics never breaks navigation */ }
     if (n.action_url) navigate(n.action_url);
   };
 
