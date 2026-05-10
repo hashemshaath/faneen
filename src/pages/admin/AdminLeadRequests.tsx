@@ -8,17 +8,25 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Inbox, Search, Loader2, Mail, Phone, MessageSquare, Filter, RefreshCw, Send } from 'lucide-react';
+import { Inbox, Search, Loader2, Mail, Phone, Filter, RefreshCw, Send, Wallet, Calendar, ReceiptText, FileText } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { useNoIndex } from '@/hooks/useNoIndex';
+import { LeadStatusBadge } from '@/components/leads/LeadStatusBadge';
 
-type Status = 'new' | 'contacted' | 'qualified' | 'closed' | 'spam';
+// SR-4A: Service Request lifecycle statuses (new vocabulary).
+type Status =
+  | 'new' | 'viewed' | 'needs_info' | 'accepted' | 'quoted'
+  | 'rejected' | 'cancelled' | 'closed';
+// Legacy values that may still exist in older rows — read-only support.
+type LegacyStatus = 'contacted' | 'qualified' | 'spam';
+type AnyStatus = Status | LegacyStatus;
 type Priority = 'low' | 'normal' | 'high' | 'urgent';
 
 interface LeadRow {
   id: string;
+  ref_id: string | null;
   business_id: string;
   user_id: string | null;
   name: string;
@@ -28,19 +36,18 @@ interface LeadRow {
   message: string;
   budget_range: string | null;
   contact_preference: string | null;
-  status: Status;
+  status: AnyStatus;
   priority: Priority;
   source: string | null;
   created_at: string;
+  responded_at: string | null;
+  quoted_at: string | null;
+  quoted_by: string | null;
+  quote_amount: number | string | null;
+  quote_currency: string | null;
+  quote_valid_until: string | null;
+  quote_note: string | null;
 }
-
-const statusConfig: Record<Status, { ar: string; en: string; color: string }> = {
-  new:       { ar: 'جديد',    en: 'New',       color: 'bg-info/10 text-info border-info/30' },
-  contacted: { ar: 'تم التواصل', en: 'Contacted', color: 'bg-warning/10 text-warning border-warning/30' },
-  qualified: { ar: 'مؤهَّل',   en: 'Qualified', color: 'bg-secondary/10 text-secondary border-secondary/30' },
-  closed:    { ar: 'مغلق',    en: 'Closed',    color: 'bg-success/10 text-success border-success/30' },
-  spam:      { ar: 'سبام',    en: 'Spam',      color: 'bg-destructive/10 text-destructive border-destructive/30' },
-};
 
 const priorityConfig: Record<Priority, { ar: string; en: string; color: string }> = {
   low:    { ar: 'منخفض',  en: 'Low',    color: 'bg-slate-500/10 text-slate-600 border-slate-500/30' },
@@ -49,7 +56,23 @@ const priorityConfig: Record<Priority, { ar: string; en: string; color: string }
   urgent: { ar: 'عاجل',   en: 'Urgent', color: 'bg-destructive/10 text-destructive border-destructive/30' },
 };
 
-const STATUSES: Status[] = ['new', 'contacted', 'qualified', 'closed', 'spam'];
+const STATUSES: Status[] = [
+  'new', 'viewed', 'needs_info', 'accepted', 'quoted', 'rejected', 'cancelled', 'closed',
+];
+const LEGACY_STATUSES: LegacyStatus[] = ['contacted', 'qualified', 'spam'];
+
+const statusLabels: Record<Status, { ar: string; en: string }> = {
+  new:        { ar: 'جديد',           en: 'New' },
+  viewed:     { ar: 'تمت المشاهدة',    en: 'Viewed' },
+  needs_info: { ar: 'بحاجة معلومات',   en: 'Needs info' },
+  accepted:   { ar: 'مقبول',           en: 'Accepted' },
+  quoted:     { ar: 'تم إرسال عرض سعر', en: 'Quote sent' },
+  rejected:   { ar: 'مرفوض',           en: 'Rejected' },
+  cancelled:  { ar: 'ملغي',            en: 'Cancelled' },
+  closed:     { ar: 'مغلق',            en: 'Closed' },
+};
+const isLegacy = (s: string): s is LegacyStatus =>
+  (LEGACY_STATUSES as string[]).includes(s);
 
 const AdminLeadRequests: React.FC = () => {
   useNoIndex();
@@ -66,7 +89,8 @@ const AdminLeadRequests: React.FC = () => {
         .select('*')
         .order('created_at', { ascending: false })
         .limit(200);
-      if (statusFilter !== 'all') q = q.eq('status', statusFilter as Status);
+      if (statusFilter !== 'all' && statusFilter !== 'legacy') q = q.eq('status', statusFilter);
+      if (statusFilter === 'legacy') q = q.in('status', LEGACY_STATUSES);
       const { data, error } = await q;
       if (error) throw error;
       return (data ?? []) as LeadRow[];
@@ -78,6 +102,7 @@ const AdminLeadRequests: React.FC = () => {
     const s = search.trim().toLowerCase();
     if (!s) return data;
     return data.filter(r =>
+      (r.ref_id ?? '').toLowerCase().includes(s) ||
       r.name.toLowerCase().includes(s) ||
       r.email.toLowerCase().includes(s) ||
       (r.phone ?? '').toLowerCase().includes(s) ||
@@ -86,12 +111,41 @@ const AdminLeadRequests: React.FC = () => {
     );
   }, [data, search]);
 
-  const counts = useMemo(() => {
-    const base: Record<string, number> = { all: data?.length ?? 0 };
+  // KPI counts (current loaded set; capped at 200 for safety).
+  const kpis = useMemo(() => {
+    const rows = data ?? [];
+    const base: Record<string, number> = { all: rows.length, legacy: 0 };
     STATUSES.forEach(s => { base[s] = 0; });
-    (data ?? []).forEach(r => { base[r.status] = (base[r.status] ?? 0) + 1; });
-    return base;
+    let respondedSum = 0;
+    let respondedCount = 0;
+    rows.forEach(r => {
+      if (isLegacy(r.status)) base.legacy += 1;
+      else base[r.status] = (base[r.status] ?? 0) + 1;
+      if (r.responded_at && r.created_at) {
+        const dt = new Date(r.responded_at).getTime() - new Date(r.created_at).getTime();
+        if (Number.isFinite(dt) && dt >= 0) {
+          respondedSum += dt;
+          respondedCount += 1;
+        }
+      }
+    });
+    const avgFirstResponseMs = respondedCount > 0 ? Math.round(respondedSum / respondedCount) : null;
+    // Conversion funnel: new → accepted → quoted (uses presence of timestamps when available)
+    const total = rows.length;
+    const accepted = rows.filter(r => r.status === 'accepted' || r.status === 'quoted' || r.status === 'closed').length;
+    const quoted = rows.filter(r => r.status === 'quoted' || (r.quoted_at != null)).length;
+    return { ...base, avgFirstResponseMs, total, accepted, quoted };
   }, [data]);
+
+  const fmtDuration = (ms: number | null) => {
+    if (ms == null) return '—';
+    const mins = Math.round(ms / 60000);
+    if (mins < 60) return isRTL ? `${mins} د` : `${mins}m`;
+    const hrs = Math.round(mins / 60);
+    if (hrs < 48) return isRTL ? `${hrs} س` : `${hrs}h`;
+    const days = Math.round(hrs / 24);
+    return isRTL ? `${days} ي` : `${days}d`;
+  };
 
   const updateStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: Status }) => {
@@ -114,32 +168,60 @@ const AdminLeadRequests: React.FC = () => {
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <Inbox className="h-6 w-6 text-primary" />
-              {isRTL ? 'طلبات العملاء (Leads)' : 'Lead Requests'}
+              {isRTL ? 'طلبات الخدمة' : 'Service Requests'}
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
-              {isRTL ? 'الاستفسارات الموجَّهة إلى المنشآت' : 'Inquiries directed to businesses'}
+              {isRTL ? 'إدارة طلبات العملاء وعروض الأسعار' : 'Manage customer requests and quotes'}
             </p>
           </div>
-          <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching}>
+          <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching} aria-label={isRTL ? 'تحديث' : 'Refresh'}>
             <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
             {isRTL ? 'تحديث' : 'Refresh'}
           </Button>
         </header>
 
-        {/* Stat cards */}
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
-          {(['all', ...STATUSES] as const).map(s => {
-            const cfg = s === 'all' ? null : statusConfig[s as Status];
+        {/* KPI summary row */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="rounded-xl border border-border bg-card p-3">
+            <div className="text-xs text-muted-foreground">{isRTL ? 'متوسط زمن أول رد' : 'Avg. first response'}</div>
+            <div className="text-2xl font-bold tech-content">{fmtDuration(kpis.avgFirstResponseMs)}</div>
+          </div>
+          <div className="rounded-xl border border-border bg-card p-3">
+            <div className="text-xs text-muted-foreground">{isRTL ? 'نسبة القبول' : 'Acceptance rate'}</div>
+            <div className="text-2xl font-bold tech-content">
+              {kpis.total > 0 ? `${Math.round((kpis.accepted / kpis.total) * 100)}%` : '—'}
+            </div>
+          </div>
+          <div className="rounded-xl border border-border bg-card p-3">
+            <div className="text-xs text-muted-foreground">{isRTL ? 'نسبة العروض المرسلة' : 'Quoted rate'}</div>
+            <div className="text-2xl font-bold tech-content">
+              {kpis.total > 0 ? `${Math.round((kpis.quoted / kpis.total) * 100)}%` : '—'}
+            </div>
+          </div>
+          <div className="rounded-xl border border-border bg-card p-3">
+            <div className="text-xs text-muted-foreground">{isRTL ? 'سجلات قديمة' : 'Legacy records'}</div>
+            <div className="text-2xl font-bold tech-content">{kpis.legacy}</div>
+          </div>
+        </div>
+
+        {/* Status filter chips */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-10 gap-2">
+          {(['all', ...STATUSES, 'legacy'] as const).map(s => {
             const active = statusFilter === s;
-            const label = s === 'all' ? (isRTL ? 'الكل' : 'All') : (isRTL ? cfg!.ar : cfg!.en);
+            const label = s === 'all' ? (isRTL ? 'الكل' : 'All')
+              : s === 'legacy' ? (isRTL ? 'قديم' : 'Legacy')
+              : (isRTL ? statusLabels[s].ar : statusLabels[s].en);
+            const count = kpis[s] ?? 0;
             return (
               <button
                 key={s}
+                type="button"
                 onClick={() => setStatusFilter(s)}
-                className={`text-start rounded-xl border p-3 transition hover-lift ${active ? 'border-primary bg-primary/5' : 'border-border bg-card'}`}
+                aria-pressed={active}
+                className={`text-start rounded-xl border p-3 transition hover-lift min-h-[64px] ${active ? 'border-primary bg-primary/5' : 'border-border bg-card'}`}
               >
-                <div className="text-xs text-muted-foreground">{label}</div>
-                <div className="text-2xl font-bold tech-content">{counts[s] ?? 0}</div>
+                <div className="text-[11px] text-muted-foreground truncate">{label}</div>
+                <div className="text-xl font-bold tech-content">{count}</div>
               </button>
             );
           })}
@@ -153,7 +235,7 @@ const AdminLeadRequests: React.FC = () => {
               <Input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                placeholder={isRTL ? 'بحث بالاسم أو البريد أو الرسالة...' : 'Search by name, email, message...'}
+                placeholder={isRTL ? 'بحث برقم الطلب أو الاسم أو البريد...' : 'Search by ref, name, or email...'}
                 className="ps-9 h-11"
                 dir="auto"
               />
@@ -166,8 +248,9 @@ const AdminLeadRequests: React.FC = () => {
               <SelectContent>
                 <SelectItem value="all">{isRTL ? 'كل الحالات' : 'All statuses'}</SelectItem>
                 {STATUSES.map(s => (
-                  <SelectItem key={s} value={s}>{isRTL ? statusConfig[s].ar : statusConfig[s].en}</SelectItem>
+                  <SelectItem key={s} value={s}>{isRTL ? statusLabels[s].ar : statusLabels[s].en}</SelectItem>
                 ))}
+                <SelectItem value="legacy">{isRTL ? 'قديم (legacy)' : 'Legacy'}</SelectItem>
               </SelectContent>
             </Select>
           </CardContent>
@@ -183,7 +266,7 @@ const AdminLeadRequests: React.FC = () => {
           <Card>
             <CardContent className="py-16 text-center text-muted-foreground">
               <Inbox className="h-12 w-12 mx-auto mb-3 opacity-40" />
-              <p>{isRTL ? 'لا توجد طلبات بعد' : 'No lead requests yet'}</p>
+              <p>{isRTL ? 'لا توجد طلبات مطابقة' : 'No matching requests'}</p>
             </CardContent>
           </Card>
         ) : (
@@ -194,10 +277,14 @@ const AdminLeadRequests: React.FC = () => {
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-mono text-xs text-muted-foreground tech-content">{r.ref_id ?? '—'}</span>
                         <span className="font-semibold truncate">{r.name}</span>
-                        <Badge variant="outline" className={statusConfig[r.status].color}>
-                          {isRTL ? statusConfig[r.status].ar : statusConfig[r.status].en}
-                        </Badge>
+                        <LeadStatusBadge status={r.status} />
+                        {isLegacy(r.status) && (
+                          <Badge variant="outline" className="text-[10px] bg-muted text-muted-foreground border-border">
+                            {isRTL ? 'قديم' : 'Legacy'}
+                          </Badge>
+                        )}
                         <Badge variant="outline" className={priorityConfig[r.priority].color}>
                           {isRTL ? priorityConfig[r.priority].ar : priorityConfig[r.priority].en}
                         </Badge>
@@ -222,28 +309,70 @@ const AdminLeadRequests: React.FC = () => {
                     {r.message}
                   </div>
 
+                  {/* Quote details — read-only, admin view only */}
+                  {(r.status === 'quoted' || r.quote_amount != null) && (
+                    <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-1.5">
+                      <div className="flex items-center gap-2 text-xs font-medium">
+                        <ReceiptText className="h-3.5 w-3.5 text-primary" />
+                        <span>{isRTL ? 'تفاصيل عرض السعر' : 'Quote details'}</span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                        {r.quote_amount != null && (
+                          <span className="inline-flex items-center gap-1.5">
+                            <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+                            <span className="tech-content font-medium">
+                              {Number(r.quote_amount).toLocaleString('en-US', { maximumFractionDigits: 2 })} {r.quote_currency ?? 'SAR'}
+                            </span>
+                          </span>
+                        )}
+                        {r.quote_valid_until && (
+                          <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                            <Calendar className="h-3.5 w-3.5" />
+                            <span className="tech-content">
+                              {isRTL ? 'صالح حتى:' : 'Valid until:'} {r.quote_valid_until}
+                            </span>
+                          </span>
+                        )}
+                        {r.quoted_at && (
+                          <span className="inline-flex items-center gap-1.5 text-muted-foreground sm:col-span-2">
+                            <Calendar className="h-3.5 w-3.5" />
+                            <span className="tech-content">
+                              {new Date(r.quoted_at).toLocaleString(isRTL ? 'ar-SA' : 'en-US')}
+                            </span>
+                          </span>
+                        )}
+                        {r.quote_note && (
+                          <span className="inline-flex items-start gap-1.5 sm:col-span-2">
+                            <FileText className="h-3.5 w-3.5 text-muted-foreground mt-0.5" />
+                            <span className="leading-5 whitespace-pre-wrap text-foreground/90">{r.quote_note}</span>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   <div className="flex flex-wrap gap-2 pt-1">
                     <Select
-                      value={r.status}
+                      value={isLegacy(r.status) ? '' : r.status}
                       onValueChange={(v) => updateStatus.mutate({ id: r.id, status: v as Status })}
                     >
-                      <SelectTrigger className="h-9 w-[160px]">
-                        <SelectValue />
+                      <SelectTrigger className="h-9 w-[180px]" aria-label={isRTL ? 'تغيير الحالة' : 'Change status'}>
+                        <SelectValue placeholder={isLegacy(r.status) ? (isRTL ? 'تحديث للحالة الجديدة' : 'Update to new status') : undefined} />
                       </SelectTrigger>
                       <SelectContent>
                         {STATUSES.map(s => (
-                          <SelectItem key={s} value={s}>{isRTL ? statusConfig[s].ar : statusConfig[s].en}</SelectItem>
+                          <SelectItem key={s} value={s}>{isRTL ? statusLabels[s].ar : statusLabels[s].en}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                    <Button asChild variant="outline" size="sm">
-                      <a href={`mailto:${r.email}`} onClick={() => updateStatus.mutate({ id: r.id, status: 'contacted' })}>
+                    <Button asChild variant="outline" size="sm" aria-label={isRTL ? 'الرد بالبريد' : 'Reply by email'}>
+                      <a href={`mailto:${r.email}`}>
                         <Send className="h-4 w-4" />
                         {isRTL ? 'الرد بالبريد' : 'Reply by email'}
                       </a>
                     </Button>
                     {r.phone && (
-                      <Button asChild variant="outline" size="sm">
+                      <Button asChild variant="outline" size="sm" aria-label={isRTL ? 'اتصال' : 'Call'}>
                         <a href={`tel:${r.phone}`}>
                           <Phone className="h-4 w-4" />
                           {isRTL ? 'اتصال' : 'Call'}
