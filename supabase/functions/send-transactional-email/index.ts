@@ -24,6 +24,10 @@ const corsHeaders = {
 // Map template name → notification preference category column on
 // `notification_preferences`. If no entry, the email is treated as
 // transactional/system and only the master `email_enabled` flag applies.
+// TODO: Consider a dedicated `account_lifecycle` / `onboarding` category
+// for welcome emails (welcome-signup, welcome-business) to separate them
+// from marketing preferences. Deferred — would require DB migration on
+// `notification_preferences` and `DashboardCommunicationPreferences` UI.
 const TEMPLATE_CATEGORY: Record<string, string> = {
   'welcome-signup': 'email_marketing',
   'welcome-business': 'email_marketing',
@@ -36,6 +40,15 @@ const TEMPLATE_CATEGORY: Record<string, string> = {
   'payment-reminder': 'email_contracts',
   'contact-confirmation': 'email_messages',
   'contact-admin-notification': 'email_system',
+}
+
+// Mask an email for log output: keep first char and full domain only.
+// Example: "ahmed.alotaibi@example.com" → "a***@example.com"
+function maskEmail(e: string): string {
+  const [local, domain] = e.split('@')
+  if (!local || !domain) return '***'
+  const first = local.slice(0, 1)
+  return `${first}***@${domain}`
 }
 
 function buildTrackingUrl(supabaseUrl: string, fn: string, params: Record<string, string>): string {
@@ -210,7 +223,7 @@ Deno.serve(async (req) => {
       status: 'suppressed',
     })
 
-    console.log('Email suppressed', { effectiveRecipient, templateName })
+    console.log('Email suppressed', { recipient: maskEmail(effectiveRecipient), templateName })
     return new Response(
       JSON.stringify({ success: false, reason: 'email_suppressed' }),
       {
@@ -445,7 +458,7 @@ Deno.serve(async (req) => {
     })
   }
 
-  console.log('Transactional email enqueued', { templateName, effectiveRecipient })
+  console.log('Transactional email enqueued', { templateName, recipient: maskEmail(effectiveRecipient) })
 
   return new Response(
     JSON.stringify({ success: true, queued: true }),
