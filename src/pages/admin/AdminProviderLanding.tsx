@@ -23,7 +23,9 @@ import {
 import { Loader2, Save, Trash2, Plus, ExternalLink, BarChart3, Eye, MousePointerClick, UserPlus, TrendingUp, Sparkles } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
-const COLORS = ['hsl(var(--primary))', 'hsl(var(--accent))', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899'];
+/* Brand-aligned chart palette — green/blue/orange/warning/error/secondary scale.
+   No purple/cyan/pink/neon. */
+const COLORS = ['#0E9E6F', '#2F62AE', '#F08A24', '#B45309', '#C42626', '#5ECCA3', '#769BD1', '#142D52'];
 
 const AdminProviderLanding = () => {
   useNoIndex();
@@ -371,7 +373,7 @@ const AdminProviderLanding = () => {
                   <YAxis tick={{ fontSize: 11 }} />
                   <Tooltip />
                   <Line type="monotone" dataKey="views" stroke="hsl(var(--primary))" name="مشاهدات" />
-                  <Line type="monotone" dataKey="clicks" stroke="#f59e0b" name="نقرات" />
+                  <Line type="monotone" dataKey="clicks" stroke="#F08A24" name="نقرات" />
                 </LineChart>
               </ResponsiveContainer>
             </Card>

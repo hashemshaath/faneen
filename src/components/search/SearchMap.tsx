@@ -69,14 +69,14 @@ export const SearchMap = ({ businesses, className }: SearchMapProps) => {
 
       const popupContent = `
         <div style="min-width:180px;font-family:inherit;direction:${language === 'ar' ? 'rtl' : 'ltr'}">
-          <a href="/${b.username}" style="font-weight:700;font-size:14px;color:#1a1a2e;text-decoration:none;display:block;margin-bottom:4px">
-            ${name} ${verified ? '<span style="color:#d4a017">✓</span>' : ''}
+          <a href="/${b.username}" style="font-weight:700;font-size:14px;color:#1A2230;text-decoration:none;display:block;margin-bottom:4px">
+            ${name} ${verified ? '<span style="color:#0E9E6F">✓</span>' : ''}
           </a>
-          <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#666">
+          <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#6B7689">
             <span>⭐ ${rating}</span>
             ${cityName ? `<span>📍 ${cityName}</span>` : ''}
           </div>
-          <a href="/${b.username}" style="display:block;text-align:center;margin-top:8px;padding:6px 12px;background:#d4a017;color:#1a1a2e;border-radius:8px;text-decoration:none;font-size:12px;font-weight:600">
+          <a href="/${b.username}" style="display:block;text-align:center;margin-top:8px;padding:6px 12px;background:#0E9E6F;color:#FFFFFF;border-radius:8px;text-decoration:none;font-size:12px;font-weight:600">
             ${language === 'ar' ? 'عرض الملف' : 'View Profile'}
           </a>
         </div>

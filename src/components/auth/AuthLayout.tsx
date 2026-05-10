@@ -71,7 +71,7 @@ export const AuthLayout: React.FC<{ children: React.ReactNode }> = ({ children }
               height={1080}
               loading={i === 0 ? undefined : 'lazy'}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0d1117]/95 via-[#0d1117]/30 to-[#0d1117]/10" />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/95 via-slate-900/30 to-slate-900/10" />
           </div>
         ))}
 

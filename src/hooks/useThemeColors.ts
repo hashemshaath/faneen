@@ -12,12 +12,13 @@ export interface ThemeColors {
 }
 
 export const DEFAULT_THEME: ThemeColors = {
-  primary: '#1FBA82',
-  primaryDark: '#178A60',
-  secondary: '#2D54C4',
-  secondaryDark: '#1F3D99',
-  accent: '#1FBA82',
-  navy: '#1A2240',
+  /* Aligned with Brand Identity v1.0 (May 2026). */
+  primary: '#0E9E6F',
+  primaryDark: '#075E42',
+  secondary: '#2F62AE',
+  secondaryDark: '#142D52',
+  accent: '#F08A24',
+  navy: '#131722',
 };
 
 const KEY_MAP: Record<string, keyof ThemeColors> = {

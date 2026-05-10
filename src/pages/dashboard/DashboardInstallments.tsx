@@ -61,9 +61,9 @@ const fmtNum = (n: number) => Number(n).toLocaleString();
 const PaymentDonut = React.memo(({ stats, isRTL }: { stats: any; isRTL: boolean }) => {
   useNoIndex();
   const data = [
-    { name: isRTL ? 'مدفوع' : 'Paid', value: stats.paidAmount, color: '#10b981' },
-    { name: isRTL ? 'معلق' : 'Pending', value: stats.pendingAmount, color: '#f59e0b' },
-    { name: isRTL ? 'متأخر' : 'Overdue', value: stats.overdueAmount, color: '#ef4444' },
+    { name: isRTL ? 'مدفوع' : 'Paid', value: stats.paidAmount, color: '#0E9E6F' },
+    { name: isRTL ? 'معلق' : 'Pending', value: stats.pendingAmount, color: '#B45309' },
+    { name: isRTL ? 'متأخر' : 'Overdue', value: stats.overdueAmount, color: '#C42626' },
   ].filter(d => d.value > 0);
 
   if (data.length === 0) return null;
@@ -96,7 +96,7 @@ const MiniRing = React.memo(({ pct, size = 32, stroke = 3 }: { pct: number; size
   return (
     <svg width={size} height={size} className="shrink-0 -rotate-90">
       <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="hsl(var(--muted))" strokeWidth={stroke} />
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={pct >= 100 ? '#10b981' : 'hsl(var(--accent))'} strokeWidth={stroke} strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round" className="transition-all duration-700" />
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={pct >= 100 ? 'hsl(var(--success))' : 'hsl(var(--accent))'} strokeWidth={stroke} strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round" className="transition-all duration-700" />
     </svg>
   );
 });
