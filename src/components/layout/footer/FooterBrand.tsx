@@ -1,5 +1,6 @@
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Mail, Phone, MapPin, Shield, Award } from "lucide-react";
+import { BrandLogo } from "@/components/common/BrandLogo";
 
 export const FooterBrand = () => {
   const { t, isRTL } = useLanguage();
@@ -18,14 +19,14 @@ export const FooterBrand = () => {
   return (
     <div className="col-span-2 space-y-5">
       {/* Logo */}
-      <div className="flex items-center gap-3 group">
-        <div className="w-11 h-11 rounded-2xl bg-gradient-gold flex items-center justify-center shadow-md shadow-gold/20 group-hover:scale-105 transition-transform duration-300">
-          <span className="font-heading font-black text-lg text-secondary-foreground leading-none">ق</span>
-        </div>
-        <div className="leading-tight">
-          <h3 className="font-heading font-bold text-lg text-surface-nav-foreground">قِطاعات</h3>
-          <span className="text-[11px] text-gold/75 font-body tracking-wide">Qitaat.com</span>
-        </div>
+      <div className="flex items-center group">
+        <BrandLogo
+          variant="full"
+          tone="dark"
+          size="footer"
+          alt={isRTL ? 'قِطاعات — الصفحة الرئيسية' : 'Qitaat — Home'}
+          imgClassName="transition-transform duration-300 group-hover:scale-[1.03]"
+        />
       </div>
 
       <p className="font-body text-sm text-surface-nav-foreground/80 leading-relaxed max-w-sm">
