@@ -1,7 +1,8 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, AlertTriangle, XCircle, Loader2, TrendingUp, Type, Link2, Image, Hash } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, XCircle, Loader2, TrendingUp, Type, Link2, Image, Hash, Sparkles, Wand2 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
 
 interface SeoCheck {
   name_ar: string;
@@ -11,11 +12,20 @@ interface SeoCheck {
   message_en: string;
 }
 
+export interface SeoFix {
+  field: string;
+  suggested_value: string;
+  reason_ar?: string;
+  reason_en?: string;
+  priority?: 'high' | 'medium' | 'low';
+}
+
 interface SeoAnalysisResult {
   score: number;
   checks: SeoCheck[];
   suggestions_ar: string[];
   suggestions_en: string[];
+  fixes?: SeoFix[];
 }
 
 interface ContentStats {
@@ -36,6 +46,8 @@ interface Props {
   isAnalyzing: boolean;
   contentStats?: ContentStats;
   focusKeyword?: string;
+  onApplyFix?: (field: string, value: string) => void;
+  onApplyAll?: (fixes: SeoFix[]) => void;
 }
 
 const statusIcon = (s: string) => {
@@ -62,7 +74,29 @@ const progressColor = (s: number) => {
   return '[&>div]:bg-destructive';
 };
 
-export const SeoScorePanel: React.FC<Props> = ({ isRTL, analysis, localScore, isAnalyzing, contentStats, focusKeyword }) => {
+const fieldLabel = (field: string, isRTL: boolean) => {
+  const map: Record<string, [string, string]> = {
+    title_ar: ['العنوان (AR)', 'Title (AR)'],
+    title_en: ['Title (EN)', 'Title (EN)'],
+    meta_title_ar: ['Meta Title (AR)', 'Meta Title (AR)'],
+    meta_title_en: ['Meta Title (EN)', 'Meta Title (EN)'],
+    meta_description_ar: ['Meta Desc (AR)', 'Meta Desc (AR)'],
+    meta_description_en: ['Meta Desc (EN)', 'Meta Desc (EN)'],
+    slug: ['Slug', 'Slug'],
+    excerpt_ar: ['المقتطف (AR)', 'Excerpt (AR)'],
+    excerpt_en: ['Excerpt (EN)', 'Excerpt (EN)'],
+    focus_keyword: ['الكلمة المفتاحية', 'Focus Keyword'],
+  };
+  const v = map[field];
+  return v ? (isRTL ? v[0] : v[1]) : field;
+};
+
+const priorityColor = (p?: string) =>
+  p === 'high' ? 'border-destructive/40 bg-destructive/5'
+  : p === 'medium' ? 'border-warning/40 bg-warning/5'
+  : 'border-border/40 bg-muted/20';
+
+export const SeoScorePanel: React.FC<Props> = ({ isRTL, analysis, localScore, isAnalyzing, contentStats, focusKeyword, onApplyFix, onApplyAll }) => {
   const displayScore = analysis?.score ?? localScore;
 
   const quickChecks = [
