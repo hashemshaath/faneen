@@ -26,6 +26,7 @@ import {
   Mail,
   Search as SearchIcon,
   ShieldCheck,
+  Palette,
 } from 'lucide-react';
 
 interface MenuItem {
@@ -195,6 +196,7 @@ const adminBaseGroups: MenuGroup[] = [
     items: [
       { label: { ar: 'مركز الذكاء', en: 'AI Center' }, url: '/admin/ai-center', icon: Brain },
       { label: { ar: 'إعدادات النظام', en: 'System Settings' }, url: '/admin/system-settings', icon: ShieldAlert, superAdminOnly: true },
+      { label: { ar: 'العلامة التجارية', en: 'Branding & Logo' }, url: '/admin/branding', icon: Palette },
       { label: { ar: 'إعدادات API والتكاملات', en: 'API & Integrations' }, url: '/admin/api-settings', icon: Key },
       { label: { ar: 'التحليلات والموافقة', en: 'Analytics & Consent' }, url: '/admin/analytics-settings', icon: BarChart3 },
     ],

@@ -21,6 +21,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { getLocalizedValue, useDirection } from "@/lib/direction";
 import { tierConfig } from "./business-profile.data";
 import { VerifiedBadge } from "@/components/common/VerifiedBadge";
+import { BrandLogo } from "@/components/common/BrandLogo";
 
 export const Stars = ({ rating, size = "w-4 h-4" }: { rating: number; size?: string }) => (
   <div className="flex items-center gap-0.5">
@@ -55,13 +56,8 @@ export const BusinessProfileTopBar = ({
           className="flex items-center gap-1.5 text-xs font-medium text-primary-foreground/80 transition-colors hover:text-accent sm:gap-2 sm:text-sm dark:text-foreground/80"
         >
           <BackIcon className="h-4 w-4" />
-          <div className="flex items-center gap-1.5">
-            <div className="flex h-6 w-6 items-center justify-center rounded bg-gradient-gold sm:h-7 sm:w-7">
-              <span className="font-heading text-[10px] font-black text-secondary-foreground sm:text-xs">ق</span>
-            </div>
-            <span className="hidden font-heading text-sm font-bold text-primary-foreground sm:inline dark:text-foreground">
-              قِطاعات
-            </span>
+          <div className="flex items-center">
+            <BrandLogo variant="full" tone="dark" size={28} alt="قِطاعات" />
           </div>
         </Link>
 

@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { BrandLogo } from '@/components/common/BrandLogo';
 
 const breadcrumbMap: Record<string, { ar: string; en: string }> = {
   '/dashboard': { ar: 'لوحة التحكم', en: 'Dashboard' },
@@ -75,8 +76,8 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="w-10 h-10 rounded-xl bg-gradient-gold flex items-center justify-center animate-pulse">
-          <span className="font-heading font-black text-lg text-secondary-foreground">ق</span>
+        <div className="animate-pulse">
+          <BrandLogo variant="mark" tone="auto" size="loader" alt="قِطاعات" />
         </div>
       </div>
     );

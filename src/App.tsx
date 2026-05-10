@@ -13,6 +13,7 @@ import { AppDirectionShell } from "@/components/ui/app-direction-shell";
 import { RouteScrollToTop } from "@/components/RouteScrollToTop";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { GlobalLinkTracker } from "@/components/GlobalLinkTracker";
+import { BrandLogo } from "@/components/common/BrandLogo";
 const Index = lazyRetry(() => import("./pages/Index"));
 const ConsentBanner = lazy(() => import("./components/consent/ConsentBanner"));
 
@@ -105,6 +106,7 @@ const ForProviders = lazyRetry(() => import("./pages/ForProviders"));
 const DashboardCommunicationPreferences = lazyRetry(() => import("./pages/dashboard/DashboardCommunicationPreferences"));
 const AdminProviderLanding = lazyRetry(() => import("./pages/admin/AdminProviderLanding"));
 const AdminAnalyticsSettings = lazyRetry(() => import("./pages/admin/AdminAnalyticsSettings"));
+const AdminBranding = lazyRetry(() => import("./pages/admin/AdminBranding"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -120,8 +122,8 @@ const queryClient = new QueryClient({
 
 const PageLoader = () => (
   <div className="flex min-h-screen items-center justify-center bg-background">
-    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-gold animate-pulse">
-      <span className="font-heading text-lg font-black text-secondary-foreground">ق</span>
+    <div className="animate-pulse">
+      <BrandLogo variant="mark" tone="auto" size="loader" priority alt="قِطاعات" />
     </div>
   </div>
 );
@@ -213,6 +215,7 @@ const AppRoutes = () => (
           <Route path="/admin/users" element={<ProtectedRoute requireSuperAdmin><AdminUsers /></ProtectedRoute>} />
           <Route path="/admin/system-settings" element={<ProtectedRoute requireSuperAdmin><AdminSystemSettings /></ProtectedRoute>} />
           <Route path="/admin/analytics-settings" element={<ProtectedRoute requireAdmin><AdminAnalyticsSettings /></ProtectedRoute>} />
+          <Route path="/admin/branding" element={<ProtectedRoute requireAdmin><AdminBranding /></ProtectedRoute>} />
 
           <Route path="/:username" element={<BusinessProfile />} />
           <Route path="*" element={<NotFound />} />
