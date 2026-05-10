@@ -11,7 +11,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Send, CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import { track } from '@/lib/analytics-events';
+import { track, trackLeadFailed, categorizeReason } from '@/lib/analytics-events';
 import { getAttributionPayload } from '@/lib/analytics-attribution';
 
 /**
@@ -125,11 +125,8 @@ export const LeadRequestForm: React.FC<Props> = ({ businessId, businessName, sou
         }
       }
 
-      // PII-safe analytics — no name/email/phone in dataLayer
-      track.leadRequestSubmitted({
-        contact_preference: parsed.data.contact_preference,
-        method: source ?? 'business-profile',
-      });
+      // Canonical lead conversion event (Phase 6). `lead_request_submitted` deprecated.
+      // PII-safe — no name/email/phone in dataLayer.
       track.supplierLeadSubmitted({
         source_page: source ?? 'business-profile',
         inquiry_type: parsed.data.contact_preference,
@@ -141,6 +138,14 @@ export const LeadRequestForm: React.FC<Props> = ({ businessId, businessName, sou
       onSuccess?.();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Unknown error';
+      try {
+        trackLeadFailed({
+          source_page: source ?? 'business-profile',
+          inquiry_type: parsed.data.contact_preference,
+          is_authenticated: !!user,
+          reason_category: categorizeReason(err),
+        });
+      } catch { /* analytics never breaks lead capture */ }
       setServerError(isRTL ? `حدث خطأ: ${message}` : `Error: ${message}`);
     } finally {
       setSubmitting(false);
