@@ -50,6 +50,37 @@ const TONE: Record<ApprovalStatus, string> = {
   published: 'bg-success/10 text-success',
 };
 
+/** Map approval status → (template, in-app notification copy). */
+const NOTIFY_MAP: Partial<Record<ApprovalStatus, {
+  template: 'provider-approved' | 'provider-rejected' | 'provider-revision-requested';
+  titleAr: string;
+  bodyAr: string;
+  titleEn: string;
+  bodyEn: string;
+}>> = {
+  approved: {
+    template: 'provider-approved',
+    titleAr: 'تم اعتماد حساب منشأتك في قِطاعات',
+    bodyAr: 'تم اعتماد حساب منشأتك ويمكنك الآن إدارة ملفك واستقبال الطلبات عبر منصة قِطاعات.',
+    titleEn: 'Your provider account has been approved',
+    bodyEn: 'Your provider account is now active. You can manage your profile and receive requests on Qitaat.',
+  },
+  rejected: {
+    template: 'provider-rejected',
+    titleAr: 'لم يتم اعتماد حساب منشأتك',
+    bodyAr: 'نأسف، لم يتم اعتماد حساب منشأتك حالياً. يمكنك مراجعة الملاحظات وتحديث البيانات عند الحاجة.',
+    titleEn: 'Provider account not approved',
+    bodyEn: 'Your provider account was not approved. Review the notes and update your details if needed.',
+  },
+  needs_changes: {
+    template: 'provider-revision-requested',
+    titleAr: 'مطلوب تحديث بيانات منشأتك',
+    bodyAr: 'يحتاج طلب التسجيل إلى بعض التعديلات قبل الاعتماد. يرجى مراجعة الملاحظات وإعادة الإرسال.',
+    titleEn: 'Updates required on your provider profile',
+    bodyEn: 'Your registration needs a few updates before approval. Review the notes and resubmit.',
+  },
+};
+
 interface ProviderRow {
   id: string;
   user_id: string;
