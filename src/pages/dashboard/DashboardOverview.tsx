@@ -372,7 +372,7 @@ const AdminDashboardView = React.memo(({ isRTL }: { isRTL: boolean }) => {
   return (
     <div className="space-y-5" ref={ref}>
       {/* Welcome */}
-      <div className="rounded-2xl border border-border/30 bg-gradient-to-br from-card via-card to-accent/5 p-5 sm:p-6 dark:from-card/80 dark:to-accent/10">
+      <div className="rounded-2xl border border-border/30 bg-gradient-to-br from-card via-card to-primary/5 p-5 sm:p-6 dark:from-card/80 dark:to-primary/10">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-xl bg-accent/15 flex items-center justify-center">
@@ -690,7 +690,7 @@ const ProviderDashboardView = React.memo(({ isRTL, user, profile }: { isRTL: boo
   return (
     <div className="space-y-5" ref={ref}>
       {/* Welcome */}
-      <div className="rounded-2xl border border-border/30 bg-gradient-to-br from-card via-card to-accent/5 p-5 sm:p-6 dark:from-card/80 dark:to-accent/10">
+      <div className="rounded-2xl border border-border/30 bg-gradient-to-br from-card via-card to-primary/5 p-5 sm:p-6 dark:from-card/80 dark:to-primary/10">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div className="flex items-center gap-2.5">
             <div className="w-10 h-10 rounded-xl bg-accent/15 flex items-center justify-center shrink-0 overflow-hidden">
@@ -936,7 +936,7 @@ const UserDashboardView = React.memo(({ isRTL, user, profile }: { isRTL: boolean
   return (
     <div className="space-y-5" ref={ref}>
       {/* Welcome */}
-      <div className="rounded-2xl border border-border/30 bg-gradient-to-br from-card via-card to-accent/5 p-5 sm:p-6 dark:from-card/80 dark:to-accent/10">
+      <div className="rounded-2xl border border-border/30 bg-gradient-to-br from-card via-card to-primary/5 p-5 sm:p-6 dark:from-card/80 dark:to-primary/10">
         <div className="flex items-center justify-between">
           <div>
              <h1 className="font-heading font-bold text-lg sm:text-xl">{isRTL ? `مرحباً ${profile?.full_name || ''}` : `Welcome ${profile?.full_name || ''}`}</h1>
