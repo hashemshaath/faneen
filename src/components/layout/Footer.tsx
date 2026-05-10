@@ -37,13 +37,8 @@ export const Footer = () => {
         ['--surface-nav-foreground' as string]: '0 0% 100%',
       }}
     >
-      {/* Decorative blur — single, lighter, desktop-only */}
-      <div className="hidden lg:block absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 start-1/3 w-[480px] h-[480px] bg-gold/[0.025] rounded-full blur-[120px]" />
-      </div>
-
       {/* Top accent line */}
-      <div className="h-px bg-gradient-to-r from-transparent via-gold/50 to-transparent" />
+      <div className="h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
 
       <FooterNewsletter visible={visible} />
 
