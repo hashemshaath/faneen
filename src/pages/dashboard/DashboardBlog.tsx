@@ -19,7 +19,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import {
   Plus, Edit, Trash2, FileText, Eye, Calendar as CalendarIcon, X, Search, Tag, Globe,
   BarChart3, ArrowRight, Clock, Hash, Zap, ExternalLink, CalendarClock, History, Trophy,
-  CheckCircle2, AlertTriangle, XCircle, TrendingUp, BookOpen, PenLine,
+  CheckCircle2, AlertTriangle, XCircle, TrendingUp, BookOpen, PenLine, Sparkles, Star,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
