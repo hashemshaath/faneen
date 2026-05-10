@@ -407,16 +407,31 @@ const UserRow = React.memo(({ profile, roles, businessLinks, isCurrentUser, canM
                 <Badge variant="outline" className="text-[10px] px-1.5 py-0 text-muted-foreground border-dashed"><Shield className="w-2.5 h-2.5 me-0.5" />{isRTL ? 'عضو عادي' : 'Member'}</Badge>
               )}
             </div>
-            {business.length > 0 && (
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {business.map(biz => (
-                  <Badge key={biz.id} variant="outline" className="text-[10px] gap-1 px-1.5 py-0.5 bg-emerald-500/5 border-emerald-500/30">
-                    <Building2 className="w-2.5 h-2.5 text-emerald-600" />
-                    <span className="truncate max-w-[120px]">{isRTL ? biz.name_ar : (biz.name_en || biz.name_ar)}</span>
-                    <span className="font-mono text-emerald-600 tech-content">{biz.ref_id}</span>
-                    {biz.is_verified && <Check className="w-2.5 h-2.5 text-emerald-500" />}
+            {businessLinks.length > 0 && (
+              <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                {businessLinks.length >= 4 && (
+                  <Badge variant="outline" className="text-[10px] gap-1 px-1.5 py-0.5 border-amber-500/50 bg-amber-500/10 text-amber-700 dark:text-amber-300">
+                    <AlertTriangle className="w-2.5 h-2.5" />
+                    {isRTL ? `مرتبط بـ ${businessLinks.length} منشآت` : `${businessLinks.length} businesses`}
                   </Badge>
-                ))}
+                )}
+                {businessLinks.map(link => {
+                  const biz = link.business;
+                  const cfg = staffRoleConfig[link.role];
+                  return (
+                    <Badge key={biz.id + (link.staffId ?? 'o')} variant="outline"
+                      className={`text-[10px] gap-1 px-1.5 py-0.5 bg-emerald-500/5 border-emerald-500/30 ${!link.isActive ? 'opacity-60' : ''}`}
+                      title={`${isRTL ? cfg.ar : cfg.en} • ${biz.ref_id}`}>
+                      <Building2 className="w-2.5 h-2.5 text-emerald-600" />
+                      <span className="truncate max-w-[120px]">{isRTL ? biz.name_ar : (biz.name_en || biz.name_ar)}</span>
+                      <span className="font-mono text-emerald-600 tech-content">{biz.ref_id}</span>
+                      <span className={`text-[9px] px-1 rounded ${cfg.color} border-0`}>
+                        {isRTL ? cfg.ar : cfg.en}
+                      </span>
+                      {biz.is_verified && <Check className="w-2.5 h-2.5 text-emerald-500" />}
+                    </Badge>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -482,7 +497,16 @@ const UserRow = React.memo(({ profile, roles, businessLinks, isCurrentUser, canM
           </TooltipProvider>
         </div>
       </div>
-      {expanded && <UserDetailPanel userId={profile.user_id} isRTL={isRTL} />}
+      {expanded && (
+        <UserDetailPanel
+          userId={profile.user_id}
+          isRTL={isRTL}
+          businessLinks={businessLinks}
+          isSuperAdmin={isSuperAdmin}
+          onChangeStaffRole={onChangeStaffRole}
+          onRemoveStaff={onRemoveStaff}
+        />
+      )}
     </div>
   );
 });
