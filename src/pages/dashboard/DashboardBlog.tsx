@@ -411,7 +411,25 @@ const DashboardBlog = () => {
   const handleAnalyzeSeo = async () => {
     setAiLoading('analyze');
     try {
-      const raw = await callBlogAi({ action: 'seo_analysis', title: form.title_ar, content: form.content_ar || form.content_en, text: form.meta_description_ar, keywords: [form.focus_keyword, form.cover_image_url ? 'has_image' : ''] });
+      const payload = {
+        title_ar: form.title_ar,
+        title_en: form.title_en,
+        meta_title_ar: form.meta_title_ar,
+        meta_title_en: form.meta_title_en,
+        meta_description_ar: form.meta_description_ar,
+        meta_description_en: form.meta_description_en,
+        slug: form.slug,
+        excerpt_ar: form.excerpt_ar,
+        excerpt_en: form.excerpt_en,
+        focus_keyword: form.focus_keyword,
+        keywords: form.keywords,
+        has_cover_image: !!form.cover_image_url,
+        content_ar: form.content_ar,
+        content_en: form.content_en,
+        word_count_ar: (form.content_ar || '').split(/\s+/).filter(Boolean).length,
+        word_count_en: (form.content_en || '').split(/\s+/).filter(Boolean).length,
+      };
+      const raw = await callBlogAi({ action: 'seo_analysis', title: form.title_ar, content: form.content_ar || form.content_en, text: JSON.stringify(payload), keywords: [form.focus_keyword] });
       const parsed = parseJsonResponse(raw);
       if (parsed) setSeoAnalysis(parsed);
       toast.success(isRTL ? 'تم التحليل' : 'Analysis done');
@@ -895,7 +913,15 @@ const DashboardBlog = () => {
                 </div>
                 <div className="p-4">
                   <SeoScorePanel isRTL={isRTL} analysis={seoAnalysis as any} localScore={localScore}
-                    isAnalyzing={aiLoading === 'analyze'} contentStats={contentStats} focusKeyword={form.focus_keyword} />
+                    isAnalyzing={aiLoading === 'analyze'} contentStats={contentStats} focusKeyword={form.focus_keyword}
+                    onApplyFix={(field, value) => {
+                      setField(field as keyof typeof form, value);
+                      toast.success(isRTL ? 'تم التطبيق' : 'Applied');
+                    }}
+                    onApplyAll={(fixes) => {
+                      fixes.forEach(f => setField(f.field as keyof typeof form, f.suggested_value));
+                      toast.success(isRTL ? `تم تطبيق ${fixes.length} تحسينات` : `Applied ${fixes.length} fixes`);
+                    }} />
                 </div>
               </div>
 

@@ -50,22 +50,41 @@ ${toneInstruction}`;
         break;
 
       case "seo_analysis":
-        systemPrompt = `You are a senior SEO analyst. Analyze the blog post for SEO quality and provide a detailed score. Return ONLY valid JSON:
+        systemPrompt = `You are a senior SEO analyst. Analyze the blog post deeply and return actionable, applyable improvements. Return ONLY valid JSON with this exact shape:
 {
-  "score": 85,
+  "score": 0-100,
   "checks": [
     {"name_ar": "...", "name_en": "...", "status": "pass|warn|fail", "message_ar": "...", "message_en": "..."}
   ],
   "suggestions_ar": ["..."],
-  "suggestions_en": ["..."]
-}`;
-        userPrompt = JSON.stringify({
-          title_ar: title, content_ar: content,
-          focus_keyword: keywords?.[0] || '',
-          meta_description: text || '',
-          has_cover_image: !!keywords?.[1],
-          word_count: content?.split(/\s+/).length || 0,
-        });
+  "suggestions_en": ["..."],
+  "fixes": [
+    {
+      "field": "title_ar|title_en|meta_title_ar|meta_title_en|meta_description_ar|meta_description_en|slug|excerpt_ar|excerpt_en|focus_keyword",
+      "suggested_value": "the new improved value, plain text only, no markdown",
+      "reason_ar": "سبب مختصر بالعربية",
+      "reason_en": "short reason in English",
+      "priority": "high|medium|low"
+    }
+  ]
+}
+Rules:
+- Include 3-8 fixes, only for fields that genuinely need improvement.
+- meta_title_* must be 50-60 chars, meta_description_* 150-160 chars.
+- slug must be lowercase, hyphenated, ASCII, max 60 chars.
+- suggested_value must be a clean string without markdown symbols.
+- Make sure focus_keyword appears naturally in titles and meta_description when relevant.
+- Score must reflect: keyword usage, meta quality, content length, heading structure, slug quality, excerpts presence.`;
+        userPrompt = JSON.stringify(typeof text === 'string' && text.startsWith('{')
+          ? JSON.parse(text)
+          : {
+              title_ar: title,
+              content_ar: content,
+              focus_keyword: keywords?.[0] || '',
+              meta_description: text || '',
+              has_cover_image: !!keywords?.[1],
+              word_count: content?.split(/\s+/).length || 0,
+            });
         break;
 
       case "improve_content": {
