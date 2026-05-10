@@ -56,8 +56,8 @@ export const FeaturesSection = () => {
 
               <div className="relative z-10 flex flex-col h-full">
                 {/* Icon */}
-                <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-accent/10 dark:bg-accent/15 flex items-center justify-center mb-3 sm:mb-4 group-hover:bg-gradient-gold group-hover:scale-110 transition-all duration-300 shadow-sm">
-                  <feat.icon className="w-[18px] h-[18px] sm:w-6 sm:h-6 text-accent group-hover:text-secondary-foreground transition-colors duration-300" />
+                <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-primary-light dark:bg-primary/15 flex items-center justify-center mb-3 sm:mb-4 group-hover:bg-primary group-hover:scale-110 transition-all duration-300 shadow-sm">
+                  <feat.icon className="w-[18px] h-[18px] sm:w-6 sm:h-6 text-primary group-hover:text-white transition-colors duration-300" />
                 </div>
 
                 {/* Title */}
