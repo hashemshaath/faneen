@@ -548,10 +548,16 @@ export const HeroSection = () => {
               <button
                 key={i}
                 onClick={() => goTo(i)}
-                className={`h-1.5 rounded-full transition-all duration-500 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none ${i === current ? 'bg-white w-8' : 'bg-white/30 w-1.5 hover:bg-white/50'}`}
+                type="button"
+                className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center px-1 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none rounded-full"
                 aria-label={`${language === 'ar' ? 'انتقل للشريحة' : 'Go to slide'} ${i + 1}`}
                 aria-current={i === current ? 'true' : undefined}
-              />
+              >
+                <span
+                  aria-hidden="true"
+                  className={`block h-1.5 rounded-full transition-all duration-500 ${i === current ? 'bg-white w-8' : 'bg-white/30 w-1.5 hover:bg-white/50'}`}
+                />
+              </button>
             ))}
           </div>
           <button onClick={next} aria-label={language === 'ar' ? 'الشريحة التالية' : 'Next slide'} className="btn-overlay-icon focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none">
