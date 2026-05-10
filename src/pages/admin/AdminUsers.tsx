@@ -43,6 +43,23 @@ interface BusinessInfo {
   membership_tier: string; business_number: number;
 }
 
+type StaffRole = 'owner' | 'manager' | 'editor' | 'viewer';
+
+interface BusinessLink {
+  business: BusinessInfo;
+  role: StaffRole;
+  staffId: string | null; // null = ownership inferred from businesses.user_id with no staff row
+  isOwnerByEntity: boolean; // owns the business record itself
+  isActive: boolean;
+}
+
+const staffRoleConfig: Record<StaffRole, { ar: string; en: string; color: string }> = {
+  owner:   { ar: 'مالك',     en: 'Owner',   color: 'bg-emerald-500/15 text-emerald-700 border-emerald-500/40 dark:text-emerald-300' },
+  manager: { ar: 'مدير',     en: 'Manager', color: 'bg-blue-500/15 text-blue-700 border-blue-500/40 dark:text-blue-300' },
+  editor:  { ar: 'محرر',     en: 'Editor',  color: 'bg-amber-500/15 text-amber-700 border-amber-500/40 dark:text-amber-300' },
+  viewer:  { ar: 'مشاهد',    en: 'Viewer',  color: 'bg-muted text-muted-foreground border-border' },
+};
+
 const roleConfig = {
   super_admin: { icon: ShieldAlert, badge: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 border-purple-200 dark:border-purple-800', iconBg: 'bg-purple-500/15 text-purple-600 dark:text-purple-400', labelAr: 'مشرف أعلى', labelEn: 'Super Admin', rank: 0 },
   admin: { icon: Crown, badge: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800', iconBg: 'bg-red-500/15 text-red-600 dark:text-red-400', labelAr: 'مشرف', labelEn: 'Admin', rank: 1 },
@@ -128,7 +145,16 @@ const KpiCard = React.memo(({ icon: Icon, label, value, gradient, iconBg, trend 
 KpiCard.displayName = 'KpiCard';
 
 /* ─── Per-user expanded detail card ─── */
-const UserDetailPanel = React.memo(({ userId, isRTL }: { userId: string; isRTL: boolean }) => {
+const UserDetailPanel = React.memo(({
+  userId, isRTL, businessLinks, isSuperAdmin, onChangeStaffRole, onRemoveStaff,
+}: {
+  userId: string;
+  isRTL: boolean;
+  businessLinks: BusinessLink[];
+  isSuperAdmin: boolean;
+  onChangeStaffRole: (link: BusinessLink, role: StaffRole) => void;
+  onRemoveStaff: (link: BusinessLink) => void;
+}) => {
   const { data, isLoading } = useQuery({
     queryKey: ['admin-user-detail', userId],
     queryFn: async () => {
@@ -166,6 +192,58 @@ const UserDetailPanel = React.memo(({ userId, isRTL }: { userId: string; isRTL: 
           </div>
         ))}
       </div>
+      {businessLinks.length > 0 && (
+        <div>
+          <p className="text-[11px] font-bold text-muted-foreground mb-1.5 flex items-center gap-1">
+            <Building2 className="w-3 h-3" />
+            {isRTL ? `الصلاحيات على المنشآت (${businessLinks.length})` : `Business permissions (${businessLinks.length})`}
+          </p>
+          <div className="space-y-1.5">
+            {businessLinks.map(link => {
+              const cfg = staffRoleConfig[link.role];
+              const lockedOwner = link.isOwnerByEntity; // can't downgrade actual owner
+              return (
+                <div key={link.business.id + (link.staffId ?? 'owner')}
+                  className="flex items-center gap-2 rounded-lg bg-background/60 border border-border/30 px-2 py-1.5 text-[11px]">
+                  <Building2 className="w-3 h-3 text-emerald-600 shrink-0" />
+                  <span className="truncate flex-1 font-medium">
+                    {isRTL ? link.business.name_ar : (link.business.name_en || link.business.name_ar)}
+                  </span>
+                  <span className="font-mono tech-content text-emerald-600 shrink-0">{link.business.ref_id}</span>
+                  {!link.isActive && (
+                    <Badge variant="outline" className="text-[9px] text-muted-foreground border-dashed px-1 py-0">
+                      {isRTL ? 'غير نشط' : 'inactive'}
+                    </Badge>
+                  )}
+                  {isSuperAdmin && !lockedOwner && link.staffId ? (
+                    <Select value={link.role} onValueChange={(v) => onChangeStaffRole(link, v as StaffRole)}>
+                      <SelectTrigger className="h-7 w-24 text-[10px] rounded-lg"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="manager">{isRTL ? 'مدير' : 'Manager'}</SelectItem>
+                        <SelectItem value="editor">{isRTL ? 'محرر' : 'Editor'}</SelectItem>
+                        <SelectItem value="viewer">{isRTL ? 'مشاهد' : 'Viewer'}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Badge className={`${cfg.color} text-[10px] border px-1.5 py-0`}>
+                      {isRTL ? cfg.ar : cfg.en}{lockedOwner && <Lock className="w-2.5 h-2.5 ms-0.5 inline" />}
+                    </Badge>
+                  )}
+                  {isSuperAdmin && !lockedOwner && link.staffId && (
+                    <button
+                      onClick={() => onRemoveStaff(link)}
+                      title={isRTL ? 'إزالة الصلاحية' : 'Remove access'}
+                      className="p-1 rounded-md text-destructive/60 hover:text-destructive hover:bg-destructive/10 transition-colors"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
       {data.recentActivity.length > 0 && (
         <div>
           <p className="text-[11px] font-bold text-muted-foreground mb-1.5 flex items-center gap-1"><Activity className="w-3 h-3" />{isRTL ? 'آخر نشاط إداري' : 'Recent Admin Activity'}</p>
@@ -188,7 +266,7 @@ UserDetailPanel.displayName = 'UserDetailPanel';
 interface UserRowProps {
   profile: Profile;
   roles: UserRole[];
-  business: BusinessInfo[];
+  businessLinks: BusinessLink[];
   isCurrentUser: boolean;
   canManageUser: boolean;
   isSuperAdmin: boolean;
@@ -205,11 +283,14 @@ interface UserRowProps {
   onDelete: (p: Profile) => void;
   onAddRole: (userId: string, role: string) => void;
   onRemoveRole: (id: string) => void;
+  onChangeStaffRole: (link: BusinessLink, role: StaffRole) => void;
+  onRemoveStaff: (link: BusinessLink) => void;
 }
 
-const UserRow = React.memo(({ profile, roles, business, isCurrentUser, canManageUser, isSuperAdmin,
+const UserRow = React.memo(({ profile, roles, businessLinks, isCurrentUser, canManageUser, isSuperAdmin,
   isRTL, language, selected, expanded, density, onToggleSelect, onToggleExpand,
-  onEdit, onPassword, onToggleBan, onDelete, onAddRole, onRemoveRole }: UserRowProps) => {
+  onEdit, onPassword, onToggleBan, onDelete, onAddRole, onRemoveRole,
+  onChangeStaffRole, onRemoveStaff }: UserRowProps) => {
   const [addingRole, setAddingRole] = useState(false);
   const [pickedRole, setPickedRole] = useState('user');
   const tier = tierConfig[profile.membership_tier as keyof typeof tierConfig] || tierConfig.free;
@@ -326,16 +407,31 @@ const UserRow = React.memo(({ profile, roles, business, isCurrentUser, canManage
                 <Badge variant="outline" className="text-[10px] px-1.5 py-0 text-muted-foreground border-dashed"><Shield className="w-2.5 h-2.5 me-0.5" />{isRTL ? 'عضو عادي' : 'Member'}</Badge>
               )}
             </div>
-            {business.length > 0 && (
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {business.map(biz => (
-                  <Badge key={biz.id} variant="outline" className="text-[10px] gap-1 px-1.5 py-0.5 bg-emerald-500/5 border-emerald-500/30">
-                    <Building2 className="w-2.5 h-2.5 text-emerald-600" />
-                    <span className="truncate max-w-[120px]">{isRTL ? biz.name_ar : (biz.name_en || biz.name_ar)}</span>
-                    <span className="font-mono text-emerald-600 tech-content">{biz.ref_id}</span>
-                    {biz.is_verified && <Check className="w-2.5 h-2.5 text-emerald-500" />}
+            {businessLinks.length > 0 && (
+              <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                {businessLinks.length >= 4 && (
+                  <Badge variant="outline" className="text-[10px] gap-1 px-1.5 py-0.5 border-amber-500/50 bg-amber-500/10 text-amber-700 dark:text-amber-300">
+                    <AlertTriangle className="w-2.5 h-2.5" />
+                    {isRTL ? `مرتبط بـ ${businessLinks.length} منشآت` : `${businessLinks.length} businesses`}
                   </Badge>
-                ))}
+                )}
+                {businessLinks.map(link => {
+                  const biz = link.business;
+                  const cfg = staffRoleConfig[link.role];
+                  return (
+                    <Badge key={biz.id + (link.staffId ?? 'o')} variant="outline"
+                      className={`text-[10px] gap-1 px-1.5 py-0.5 bg-emerald-500/5 border-emerald-500/30 ${!link.isActive ? 'opacity-60' : ''}`}
+                      title={`${isRTL ? cfg.ar : cfg.en} • ${biz.ref_id}`}>
+                      <Building2 className="w-2.5 h-2.5 text-emerald-600" />
+                      <span className="truncate max-w-[120px]">{isRTL ? biz.name_ar : (biz.name_en || biz.name_ar)}</span>
+                      <span className="font-mono text-emerald-600 tech-content">{biz.ref_id}</span>
+                      <span className={`text-[9px] px-1 rounded ${cfg.color} border-0`}>
+                        {isRTL ? cfg.ar : cfg.en}
+                      </span>
+                      {biz.is_verified && <Check className="w-2.5 h-2.5 text-emerald-500" />}
+                    </Badge>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -401,7 +497,16 @@ const UserRow = React.memo(({ profile, roles, business, isCurrentUser, canManage
           </TooltipProvider>
         </div>
       </div>
-      {expanded && <UserDetailPanel userId={profile.user_id} isRTL={isRTL} />}
+      {expanded && (
+        <UserDetailPanel
+          userId={profile.user_id}
+          isRTL={isRTL}
+          businessLinks={businessLinks}
+          isSuperAdmin={isSuperAdmin}
+          onChangeStaffRole={onChangeStaffRole}
+          onRemoveStaff={onRemoveStaff}
+        />
+      )}
     </div>
   );
 });
@@ -423,6 +528,7 @@ const AdminUsers = () => {
   const [filterRole, setFilterRole] = useState('all');
   const [filterAccountType, setFilterAccountType] = useState('all');
   const [filterTier, setFilterTier] = useState('all');
+  const [filterBusinessLink, setFilterBusinessLink] = useState<'all' | 'multi' | 'none' | 'single'>('all');
   const [sortKey, setSortKey] = useState<SortKey>('created_at');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [page, setPage] = useState(1);
@@ -496,6 +602,17 @@ const AdminUsers = () => {
     enabled: !!user,
   });
 
+  const { data: businessStaff = [] } = useQuery({
+    queryKey: ['admin-business-staff'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('business_staff')
+        .select('id, business_id, user_id, role, is_active');
+      if (error) throw error;
+      return data as Array<{ id: string; business_id: string; user_id: string; role: StaffRole; is_active: boolean }>;
+    },
+    enabled: !!user,
+  });
+
   const { data: recentAdminActivity = [] } = useQuery({
     queryKey: ['admin-recent-activity'],
     queryFn: async () => {
@@ -513,6 +630,37 @@ const AdminUsers = () => {
     businesses.forEach(b => { const arr = m.get(b.user_id) || []; arr.push(b); m.set(b.user_id, arr); });
     return m;
   }, [businesses]);
+
+  // Per-user list of business links (combining ownership and staff rows, de-duplicated by business_id).
+  const businessLinksMap = useMemo(() => {
+    const bizById = new Map(businesses.map(b => [b.id, b]));
+    const m = new Map<string, BusinessLink[]>();
+    // Seed with ownership (businesses.user_id)
+    businesses.forEach(b => {
+      const arr = m.get(b.user_id) || [];
+      arr.push({ business: b, role: 'owner', staffId: null, isOwnerByEntity: true, isActive: b.is_active });
+      m.set(b.user_id, arr);
+    });
+    // Add staff rows (skip duplicates per (user, business))
+    businessStaff.forEach(s => {
+      const biz = bizById.get(s.business_id);
+      if (!biz) return;
+      const arr = m.get(s.user_id) || [];
+      const existing = arr.find(l => l.business.id === s.business_id);
+      if (existing) {
+        // If user is the entity owner, keep it locked but record the staffId for the underlying row.
+        if (existing.isOwnerByEntity) {
+          existing.staffId = s.id;
+          existing.isActive = existing.isActive && s.is_active;
+          return;
+        }
+        return;
+      }
+      arr.push({ business: biz, role: s.role, staffId: s.id, isOwnerByEntity: false, isActive: s.is_active });
+      m.set(s.user_id, arr);
+    });
+    return m;
+  }, [businesses, businessStaff]);
 
   const roleMap = useMemo(() => {
     const m = new Map<string, UserRole[]>();
@@ -537,6 +685,30 @@ const AdminUsers = () => {
     mutationFn: async (id: string) => { const { error } = await supabase.from('user_roles').delete().eq('id', id); if (error) throw error; },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['admin-user-roles'] }); toast.success(isRTL ? 'تم إزالة الصلاحية' : 'Role removed'); },
     onError: () => toast.error(isRTL ? 'فشل الإزالة' : 'Failed to remove'),
+  });
+
+  const updateStaffRoleMutation = useMutation({
+    mutationFn: async ({ staffId, role }: { staffId: string; role: StaffRole }) => {
+      const { error } = await supabase.from('business_staff').update({ role }).eq('id', staffId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-business-staff'] });
+      toast.success(isRTL ? 'تم تحديث الصلاحية' : 'Permission updated');
+    },
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : (isRTL ? 'فشل التحديث' : 'Failed to update')),
+  });
+
+  const removeStaffMutation = useMutation({
+    mutationFn: async (staffId: string) => {
+      const { error } = await supabase.from('business_staff').delete().eq('id', staffId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-business-staff'] });
+      toast.success(isRTL ? 'تمت الإزالة من المنشأة' : 'Removed from business');
+    },
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : (isRTL ? 'فشل الإزالة' : 'Failed to remove')),
   });
 
   const updateProfileMutation = useMutation({
@@ -639,9 +811,15 @@ const AdminUsers = () => {
       const matchesRole = filterRole === 'all' || (filterRole === 'no_role' && roles.length === 0) || roles.some(r => r.role === filterRole);
       const matchesType = filterAccountType === 'all' || p.account_type === filterAccountType;
       const matchesTier = filterTier === 'all' || p.membership_tier === filterTier;
-      return matchesSearch && matchesRole && matchesType && matchesTier;
+      const linkCount = (businessLinksMap.get(p.user_id) || []).length;
+      const matchesBizLink =
+        filterBusinessLink === 'all'
+        || (filterBusinessLink === 'none' && linkCount === 0)
+        || (filterBusinessLink === 'single' && linkCount === 1)
+        || (filterBusinessLink === 'multi' && linkCount > 1);
+      return matchesSearch && matchesRole && matchesType && matchesTier && matchesBizLink;
     });
-  }, [profiles, deferredSearch, filterRole, filterAccountType, filterTier, roleMap, businessMap]);
+  }, [profiles, deferredSearch, filterRole, filterAccountType, filterTier, filterBusinessLink, roleMap, businessMap, businessLinksMap]);
 
   const tabFiltered = useMemo(() => {
     if (tab === 'staff') return baseFiltered.filter(p => {
@@ -885,6 +1063,7 @@ const AdminUsers = () => {
                   { key: 'companies', icon: Building2, ar: 'الشركات', en: 'Companies', active: filterAccountType === 'company', onClick: () => { setFilterAccountType(filterAccountType === 'company' ? 'all' : 'company'); setPage(1); } },
                   { key: 'premium', icon: Crown, ar: 'مميز فأعلى', en: 'Premium+', active: filterTier === 'premium' || filterTier === 'enterprise', onClick: () => { setFilterTier(filterTier === 'premium' ? 'enterprise' : filterTier === 'enterprise' ? 'all' : 'premium'); setPage(1); } },
                   { key: 'no_role', icon: Shield, ar: 'بدون صلاحيات', en: 'No role', active: filterRole === 'no_role', onClick: () => { setFilterRole(filterRole === 'no_role' ? 'all' : 'no_role'); setPage(1); } },
+                  { key: 'multi', icon: Link2, ar: 'مرتبط بعدة منشآت', en: 'Multi-business', active: filterBusinessLink === 'multi', onClick: () => { setFilterBusinessLink(filterBusinessLink === 'multi' ? 'all' : 'multi'); setPage(1); } },
                 ]).map(c => {
                   const Icon = c.icon;
                   return (
@@ -940,6 +1119,15 @@ const AdminUsers = () => {
                       <SelectItem value="enterprise">{isRTL ? 'مؤسسات' : 'Enterprise'}</SelectItem>
                     </SelectContent>
                   </Select>
+                  <Select value={filterBusinessLink} onValueChange={(v) => { setFilterBusinessLink(v as typeof filterBusinessLink); setPage(1); }}>
+                    <SelectTrigger className="w-full md:w-44 h-10 rounded-xl"><Link2 className="w-4 h-4 me-2 text-muted-foreground" /><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">{isRTL ? 'كل الارتباطات' : 'All links'}</SelectItem>
+                      <SelectItem value="none">{isRTL ? 'بدون منشآت' : 'No business'}</SelectItem>
+                      <SelectItem value="single">{isRTL ? 'منشأة واحدة' : 'Single business'}</SelectItem>
+                      <SelectItem value="multi">{isRTL ? 'عدة منشآت' : 'Multiple businesses'}</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 {/* Sort + select-all + counter */}
                 <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/20 flex-wrap">
@@ -947,9 +1135,9 @@ const AdminUsers = () => {
                   <span className="text-[11px] text-muted-foreground">
                     {isRTL ? `${sorted.length} نتيجة • صفحة ${page}/${totalPages}` : `${sorted.length} results • Page ${page}/${totalPages}`}
                   </span>
-                  {(deferredSearch || filterRole !== 'all' || filterAccountType !== 'all' || filterTier !== 'all') && (
+                  {(deferredSearch || filterRole !== 'all' || filterAccountType !== 'all' || filterTier !== 'all' || filterBusinessLink !== 'all') && (
                     <button
-                      onClick={() => { handleSearchChange(''); setFilterRole('all'); setFilterAccountType('all'); setFilterTier('all'); }}
+                      onClick={() => { handleSearchChange(''); setFilterRole('all'); setFilterAccountType('all'); setFilterTier('all'); setFilterBusinessLink('all'); }}
                       className="text-[11px] inline-flex items-center gap-1 px-2 py-1 rounded-lg border border-dashed border-border/50 text-muted-foreground hover:text-foreground hover:border-border transition-colors"
                     >
                       <X className="w-3 h-3" />{isRTL ? 'مسح الفلاتر' : 'Clear filters'}
@@ -1155,7 +1343,7 @@ const AdminUsers = () => {
                       const canManageUser = !isCurrentUser && (isSuperAdmin || (!targetIsSuperAdmin && !targetIsAdmin));
                       return (
                         <UserRow key={profile.id} profile={profile} roles={roles}
-                          business={businessMap.get(profile.user_id) || []}
+                          businessLinks={businessLinksMap.get(profile.user_id) || []}
                           isCurrentUser={isCurrentUser} canManageUser={canManageUser} isSuperAdmin={isSuperAdmin}
                           isRTL={isRTL} language={language}
                           selected={selected.has(profile.id)} expanded={expanded.has(profile.id)} density={density}
@@ -1166,6 +1354,14 @@ const AdminUsers = () => {
                           onDelete={(p) => setActivePanel({ type: 'delete', userId: p.user_id, userName: p.full_name || '' })}
                           onAddRole={(uid, role) => addRoleMutation.mutate({ userId: uid, role })}
                           onRemoveRole={(rid) => removeRoleMutation.mutate(rid)}
+                          onChangeStaffRole={(link, role) => {
+                            if (!link.staffId) return;
+                            updateStaffRoleMutation.mutate({ staffId: link.staffId, role });
+                          }}
+                          onRemoveStaff={(link) => {
+                            if (!link.staffId || link.isOwnerByEntity) return;
+                            removeStaffMutation.mutate(link.staffId);
+                          }}
                         />
                       );
                     })}
