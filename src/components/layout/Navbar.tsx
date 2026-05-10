@@ -91,14 +91,15 @@ export const Navbar = () => {
         }`}>
         <div className="container flex items-center justify-between h-16 sm:h-[4.5rem] px-4 sm:px-6">
           {/* Logo */}
-          <Link to="/" aria-label={language === 'ar' ? 'قِطاعات — الصفحة الرئيسية' : 'Qitaat — Home'} className="flex items-center gap-2.5 sm:gap-3 group rounded-xl focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none">
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-gold flex items-center justify-center shadow-lg shadow-gold/20 group-hover:scale-105 group-hover:shadow-gold/40 transition-all duration-300">
-              <span aria-hidden="true" className="font-heading font-black text-lg sm:text-xl text-secondary-foreground">ق</span>
-            </div>
-            <div className="hidden sm:block">
-              <span className="font-heading font-bold text-lg text-surface-nav-foreground leading-none block">قِطاعات</span>
-              <span className="text-[10px] text-gold/80 font-body tracking-wider">QITAAT</span>
-            </div>
+          <Link to="/" aria-label={language === 'ar' ? 'قِطاعات — الصفحة الرئيسية' : 'Qitaat — Home'} className="flex items-center group rounded-xl focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none">
+            <BrandLogo
+              variant="full"
+              tone="dark"
+              size="navbar"
+              priority
+              alt={language === 'ar' ? 'قِطاعات — الصفحة الرئيسية' : 'Qitaat — Home'}
+              imgClassName="transition-transform duration-300 group-hover:scale-[1.04]"
+            />
           </Link>
 
           {/* Desktop Nav */}
