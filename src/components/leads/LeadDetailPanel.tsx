@@ -1,7 +1,10 @@
-import React from 'react';
-import { Mail, Phone, Wallet, FileText, Calendar, Building2, MessageSquare, UserX } from 'lucide-react';
+import React, { useState } from 'react';
+import { Mail, Phone, Wallet, FileText, Calendar, Building2, MessageSquare, UserX, ReceiptText, Send, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { LeadStatusBadge, type LeadStatus } from './LeadStatusBadge';
 import { LeadActionsBar } from './LeadActionsBar';
@@ -25,6 +28,11 @@ export interface LeadRow {
   source: string | null;
   created_at: string;
   conversation_id?: string | null;
+  quoted_at?: string | null;
+  quote_amount?: number | string | null;
+  quote_currency?: string | null;
+  quote_note?: string | null;
+  quote_valid_until?: string | null;
 }
 
 interface Props {
@@ -32,12 +40,43 @@ interface Props {
   pending?: boolean;
   onAction: (next: LeadStatus) => void;
   onOpenConversation?: () => void;
+  onSendQuote?: (input: { amount: number; currency: 'SAR'; note: string | null; valid_until: string | null }) => void;
 }
 
-export const LeadDetailPanel: React.FC<Props> = ({ lead, pending, onAction, onOpenConversation }) => {
+export const LeadDetailPanel: React.FC<Props> = ({ lead, pending, onAction, onOpenConversation, onSendQuote }) => {
   const { isRTL } = useLanguage();
   const canHaveConversation = lead.user_id !== null && (lead.status === 'accepted' || lead.status === 'needs_info');
   const isGuest = lead.user_id === null;
+  const canQuote = (lead.status === 'accepted' || lead.status === 'needs_info') && !!onSendQuote;
+  const [showQuote, setShowQuote] = useState(false);
+  const [amount, setAmount] = useState('');
+  const [validUntil, setValidUntil] = useState('');
+  const [note, setNote] = useState('');
+  const [errs, setErrs] = useState<{ amount?: string; valid_until?: string }>({});
+  const today = new Date().toISOString().slice(0, 10);
+
+  const handleSubmitQuote = () => {
+    const n = Number(amount);
+    const next: typeof errs = {};
+    if (!Number.isFinite(n) || n <= 0) {
+      next.amount = isRTL ? 'أدخل قيمة صحيحة أكبر من صفر' : 'Enter a valid amount greater than 0';
+    }
+    if (validUntil && validUntil < today) {
+      next.valid_until = isRTL ? 'يجب أن يكون اليوم أو بعده' : 'Must be today or later';
+    }
+    if (note.length > 1000) {
+      // shouldn't happen due to maxLength, but guard anyway
+    }
+    setErrs(next);
+    if (Object.keys(next).length > 0) return;
+    onSendQuote?.({
+      amount: n,
+      currency: 'SAR',
+      note: note.trim() ? note.trim() : null,
+      valid_until: validUntil || null,
+    });
+  };
+
   return (
     <div className="rounded-xl border border-border bg-muted/30 p-4 sm:p-5 space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -74,6 +113,18 @@ export const LeadDetailPanel: React.FC<Props> = ({ lead, pending, onAction, onOp
               <span>{isRTL ? 'بدء المحادثة' : 'Start conversation'}</span>
             </Button>
           )}
+          {canQuote && (
+            <Button
+              variant="outline"
+              className="min-h-[44px]"
+              onClick={() => setShowQuote((v) => !v)}
+              disabled={pending}
+              aria-expanded={showQuote}
+            >
+              <ReceiptText />
+              <span>{isRTL ? 'إرسال عرض سعر' : 'Send a quote'}</span>
+            </Button>
+          )}
         </div>
       )}
       {isGuest && (lead.status === 'accepted' || lead.status === 'needs_info') && (
@@ -84,6 +135,118 @@ export const LeadDetailPanel: React.FC<Props> = ({ lead, pending, onAction, onOp
               ? 'هذا الطلب من زائر غير مسجل. يمكن التواصل معه عبر بيانات التواصل المتاحة أدناه.'
               : 'This request is from a guest. Use the contact details below to reach out.'}
           </span>
+        </div>
+      )}
+
+      {/* SR-3B: Inline quote form (no popup). */}
+      {canQuote && showQuote && (
+        <div className="rounded-xl border border-border bg-background p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <ReceiptText className="h-4 w-4 text-primary" />
+            <h4 className="font-medium text-sm">{isRTL ? 'تفاصيل عرض السعر' : 'Quote details'}</h4>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor={`quote-amount-${lead.id}`}>
+                {isRTL ? 'القيمة (ريال سعودي)' : 'Amount (SAR)'} <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id={`quote-amount-${lead.id}`}
+                type="number"
+                min="0"
+                step="0.01"
+                inputMode="decimal"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="tech-content"
+                aria-invalid={!!errs.amount}
+                aria-describedby={errs.amount ? `quote-amount-err-${lead.id}` : undefined}
+              />
+              {errs.amount && (
+                <p id={`quote-amount-err-${lead.id}`} className="text-xs text-destructive">{errs.amount}</p>
+              )}
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor={`quote-valid-${lead.id}`}>
+                {isRTL ? 'صالح حتى (اختياري)' : 'Valid until (optional)'}
+              </Label>
+              <Input
+                id={`quote-valid-${lead.id}`}
+                type="date"
+                min={today}
+                value={validUntil}
+                onChange={(e) => setValidUntil(e.target.value)}
+                className="tech-content"
+                aria-invalid={!!errs.valid_until}
+                aria-describedby={errs.valid_until ? `quote-valid-err-${lead.id}` : undefined}
+              />
+              {errs.valid_until && (
+                <p id={`quote-valid-err-${lead.id}`} className="text-xs text-destructive">{errs.valid_until}</p>
+              )}
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor={`quote-note-${lead.id}`}>
+              {isRTL ? 'ملاحظة (اختياري)' : 'Note (optional)'}
+            </Label>
+            <Textarea
+              id={`quote-note-${lead.id}`}
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              maxLength={1000}
+              rows={3}
+              dir="auto"
+              placeholder={isRTL ? 'تفاصيل أو شروط العرض' : 'Quote details or conditions'}
+            />
+            <p className="text-[11px] text-muted-foreground">{note.length}/1000</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={handleSubmitQuote} disabled={pending} className="min-h-[44px]">
+              {pending ? <Loader2 className="animate-spin" /> : <Send />}
+              <span>{isRTL ? 'إرسال العرض' : 'Send quote'}</span>
+            </Button>
+            <Button variant="ghost" onClick={() => setShowQuote(false)} disabled={pending} className="min-h-[44px]">
+              {isRTL ? 'إلغاء' : 'Cancel'}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Quote summary card after status = quoted */}
+      {lead.status === 'quoted' && lead.quote_amount != null && (
+        <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 space-y-2">
+          <div className="flex items-center gap-2">
+            <ReceiptText className="h-4 w-4 text-primary" />
+            <h4 className="font-medium text-sm">{isRTL ? 'عرض السعر المرسل' : 'Quote sent'}</h4>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+            <div className="flex items-center gap-2">
+              <Wallet className="h-4 w-4 text-muted-foreground" />
+              <span className="tech-content font-medium">
+                {Number(lead.quote_amount).toLocaleString('en-US', { maximumFractionDigits: 2 })} {lead.quote_currency ?? 'SAR'}
+              </span>
+            </div>
+            {lead.quote_valid_until && (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Calendar className="h-4 w-4" />
+                <span className="tech-content">
+                  {isRTL ? 'صالح حتى: ' : 'Valid until: '}{lead.quote_valid_until}
+                </span>
+              </div>
+            )}
+            {lead.quoted_at && (
+              <div className="flex items-center gap-2 text-muted-foreground sm:col-span-2 text-xs">
+                <Calendar className="h-3.5 w-3.5" />
+                <span className="tech-content">{new Date(lead.quoted_at).toLocaleString(isRTL ? 'ar-SA' : 'en-US')}</span>
+              </div>
+            )}
+            {lead.quote_note && (
+              <div className="sm:col-span-2 flex items-start gap-2">
+                <FileText className="h-4 w-4 text-muted-foreground mt-0.5" />
+                <p className="leading-6 whitespace-pre-wrap text-foreground/90">{lead.quote_note}</p>
+              </div>
+            )}
+          </div>
         </div>
       )}
 

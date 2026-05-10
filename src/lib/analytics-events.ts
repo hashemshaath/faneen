@@ -76,7 +76,9 @@ export type QitaatEvent =
   | "service_request_customer_viewed"
   // Service Requests (Phase SR-3A) — conversation linkage.
   | "service_request_conversation_created"
-  | "service_request_conversation_opened";
+  | "service_request_conversation_opened"
+  // Service Requests (Phase SR-3B) — quote flow.
+  | "service_request_quoted";
 
 /** Allow-listed parameters. Anything not in this set is dropped. */
 export type AllowedParam =
@@ -117,6 +119,9 @@ export type AllowedParam =
   // Service Requests — booleans/buckets only, never PII.
   | "has_budget"
   | "response_time_bucket"
+  // SR-3B quote flow — booleans/buckets only, never amounts/notes.
+  | "has_quote_amount"
+  | "quote_validity_bucket"
   // Attribution (UTM + first/last touch) — added by analytics-attribution helper.
   // Only attached to conversion events (lead/register/contact) — never blanket.
   | "utm_source"
@@ -165,6 +170,8 @@ const ALLOWED: ReadonlySet<AllowedParam> = new Set<AllowedParam>([
   "action",
   "has_budget",
   "response_time_bucket",
+  "has_quote_amount",
+  "quote_validity_bucket",
   "utm_source",
   "utm_medium",
   "utm_campaign",

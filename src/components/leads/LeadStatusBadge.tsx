@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/i18n/LanguageContext';
 
 export type LeadStatus =
-  | 'new' | 'viewed' | 'needs_info' | 'accepted' | 'rejected' | 'closed' | 'cancelled'
+  | 'new' | 'viewed' | 'needs_info' | 'accepted' | 'rejected' | 'closed' | 'cancelled' | 'quoted'
   | 'contacted' | 'qualified' | 'spam';
 
 const map: Record<LeadStatus, { ar: string; en: string; cls: string }> = {
@@ -14,6 +14,7 @@ const map: Record<LeadStatus, { ar: string; en: string; cls: string }> = {
   rejected:    { ar: 'مرفوض',         en: 'Rejected',    cls: 'bg-destructive/10 text-destructive border-destructive/30' },
   closed:      { ar: 'مغلق',          en: 'Closed',      cls: 'bg-muted text-muted-foreground border-border' },
   cancelled:   { ar: 'ملغي',          en: 'Cancelled',   cls: 'bg-muted text-muted-foreground border-border' },
+  quoted:      { ar: 'تم إرسال عرض سعر', en: 'Quote sent', cls: 'bg-primary/10 text-primary border-primary/30' },
   contacted:   { ar: 'تم التواصل',    en: 'Contacted',   cls: 'bg-info/10 text-info border-info/30' },
   qualified:   { ar: 'مؤهَّل',        en: 'Qualified',   cls: 'bg-secondary/10 text-secondary border-secondary/30' },
   spam:        { ar: 'سبام',          en: 'Spam',        cls: 'bg-destructive/10 text-destructive border-destructive/30' },
