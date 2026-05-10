@@ -266,6 +266,48 @@ export const SeoScorePanel: React.FC<Props> = ({ isRTL, analysis, localScore, is
         </div>
       )}
 
+      {/* Actionable Fixes */}
+      {analysis?.fixes && analysis.fixes.length > 0 && (
+        <div className="space-y-2 pt-2 border-t border-border/50">
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+              <Sparkles className="w-3 h-3 text-primary" />
+              {isRTL ? 'تحسينات قابلة للتطبيق' : 'Actionable Fixes'}
+            </p>
+            {onApplyAll && analysis.fixes.length > 1 && (
+              <Button size="sm" variant="ghost" className="h-6 px-2 text-[10px]"
+                onClick={() => onApplyAll(analysis.fixes!)}>
+                <Wand2 className="w-3 h-3 me-1" />
+                {isRTL ? 'طبّق الكل' : 'Apply all'}
+              </Button>
+            )}
+          </div>
+          <div className="space-y-1.5 max-h-72 overflow-y-auto">
+            {analysis.fixes.map((f, i) => (
+              <div key={i} className={`p-2 rounded-lg border ${priorityColor(f.priority)} space-y-1`}>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[10px] font-semibold">{fieldLabel(f.field, isRTL)}</span>
+                  {onApplyFix && (
+                    <Button size="sm" variant="outline" className="h-6 px-2 text-[10px] rounded-md"
+                      onClick={() => onApplyFix(f.field, f.suggested_value)}>
+                      {isRTL ? 'طبّق' : 'Apply'}
+                    </Button>
+                  )}
+                </div>
+                <p className="text-[11px] leading-snug bg-background/60 rounded p-1.5 border border-border/30 break-words">
+                  {f.suggested_value}
+                </p>
+                {(f.reason_ar || f.reason_en) && (
+                  <p className="text-[9px] text-muted-foreground leading-tight">
+                    {isRTL ? (f.reason_ar || f.reason_en) : (f.reason_en || f.reason_ar)}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Suggestions */}
       {analysis?.suggestions_ar && analysis.suggestions_ar.length > 0 && (
         <div className="space-y-1 pt-2 border-t border-border/50">
