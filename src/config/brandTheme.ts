@@ -213,7 +213,7 @@ export const BRAND_THEME: BrandTheme = {
 
 /**
  * Colors that must NEVER appear in components, emails, PDFs or charts.
- * - `#14B481` is reserved for the LOGO ONLY (legacy "Faneen" green tone).
+ * - `#14B481` is reserved for the LOGO ONLY (legacy brand green tone).
  * - The rest are deprecated palette values from previous iterations.
  */
 export const FORBIDDEN_BRAND_COLORS: readonly string[] = [
