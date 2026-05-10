@@ -31,16 +31,16 @@ const categoryOptions = [
 
 const recommendationLabels: Record<string, { ar: string; en: string; color: string }> = {
   premium: { ar: 'احترافي', en: 'Premium', color: 'bg-gold text-primary-foreground' },
-  recommended: { ar: 'موصى به', en: 'Recommended', color: 'bg-green-500/10 text-green-600 dark:text-green-400' },
+  recommended: { ar: 'موصى به', en: 'Recommended', color: 'bg-success/10 text-success dark:text-success' },
   standard: { ar: 'قياسي', en: 'Standard', color: 'bg-muted text-muted-foreground' },
 };
 
 const RatingBar = ({ value, max = 10, label, icon: Icon }: { value: number; max?: number; label: string; icon: React.ElementType }) => {
   const pct = (value / max) * 100;
   const getColor = () => {
-    if (pct >= 80) return 'from-green-400 to-green-500';
+    if (pct >= 80) return 'from-success to-success';
     if (pct >= 60) return 'from-gold/70 to-gold';
-    return 'from-yellow-400 to-orange-400';
+    return 'from-warning to-urgent';
   };
   return (
     <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs">

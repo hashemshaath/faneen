@@ -197,15 +197,15 @@ export const SearchFilters = ({
               htmlFor="verified"
               className={`flex items-center justify-between gap-3 p-3 rounded-2xl border cursor-pointer transition-all min-h-[60px] ${
                 filters.verifiedOnly
-                  ? 'bg-emerald-500/5 border-emerald-500/30'
+                  ? 'bg-success/5 border-success/30'
                   : 'bg-card border-border/60 hover:border-accent/40'
               }`}
             >
               <div className="flex items-center gap-2.5 min-w-0">
                 <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-                  filters.verifiedOnly ? 'bg-emerald-500/15' : 'bg-muted'
+                  filters.verifiedOnly ? 'bg-success/15' : 'bg-muted'
                 }`}>
-                  <ShieldCheck className={`w-4 h-4 ${filters.verifiedOnly ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'}`} />
+                  <ShieldCheck className={`w-4 h-4 ${filters.verifiedOnly ? 'text-success dark:text-success' : 'text-muted-foreground'}`} />
                 </div>
                 <div className="min-w-0">
                   <div className="text-sm font-heading font-semibold text-foreground truncate">{t('search.verified_only')}</div>
@@ -216,7 +216,7 @@ export const SearchFilters = ({
                 id="verified"
                 checked={filters.verifiedOnly}
                 onCheckedChange={c => onFilterChange('verifiedOnly', c === true)}
-                className="data-[state=checked]:bg-emerald-500"
+                className="data-[state=checked]:bg-success"
               />
             </label>
 

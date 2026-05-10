@@ -28,8 +28,8 @@ const SOURCE_ICONS: Record<DiagSource, React.ReactNode> = {
 
 const LEVEL_STYLES: Record<DiagLevel, string> = {
   error: "bg-destructive/10 text-destructive border-destructive/20",
-  warn: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20",
-  info: "bg-sky-500/10 text-sky-700 dark:text-sky-400 border-sky-500/20",
+  warn: "bg-warning/10 text-warning dark:text-warning border-warning/20",
+  info: "bg-info/10 text-info dark:text-info border-info/20",
 };
 
 const LEVEL_ICONS: Record<DiagLevel, React.ReactNode> = {
@@ -149,8 +149,8 @@ const Diagnostics = () => {
           {[
             { label: tx.total, value: counts.total, color: "text-foreground" },
             { label: tx.errors, value: counts.errors, color: "text-destructive" },
-            { label: tx.warnings, value: counts.warnings, color: "text-amber-600 dark:text-amber-400" },
-            { label: tx.network, value: counts.network, color: "text-sky-600 dark:text-sky-400" },
+            { label: tx.warnings, value: counts.warnings, color: "text-warning dark:text-warning" },
+            { label: tx.network, value: counts.network, color: "text-info dark:text-info" },
           ].map((s) => (
             <div key={s.label} className="rounded-2xl border border-border/40 bg-card px-4 py-3">
               <div className={`text-2xl font-bold tabular-nums tech-content ${s.color}`}>{s.value}</div>

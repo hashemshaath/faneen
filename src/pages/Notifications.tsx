@@ -232,8 +232,8 @@ const Notifications = () => {
           {[
             { label: isRTL ? 'الكل' : 'Total', count: notifications.length, color: 'text-foreground' },
             { label: isRTL ? 'غير مقروء' : 'Unread', count: unreadCount, color: 'text-primary' },
-            { label: isRTL ? 'العقود' : 'Contracts', count: notifications.filter((n: any) => n.notification_type === 'contract').length, color: 'text-blue-600' },
-            { label: isRTL ? 'الأقساط' : 'Installments', count: notifications.filter((n: any) => n.notification_type === 'installment').length, color: 'text-amber-600' },
+            { label: isRTL ? 'العقود' : 'Contracts', count: notifications.filter((n: any) => n.notification_type === 'contract').length, color: 'text-info' },
+            { label: isRTL ? 'الأقساط' : 'Installments', count: notifications.filter((n: any) => n.notification_type === 'installment').length, color: 'text-warning' },
           ].map((s) => (
             <Card key={s.label}>
               <CardContent className="p-3 text-center">

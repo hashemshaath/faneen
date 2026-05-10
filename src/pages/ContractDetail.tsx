@@ -35,35 +35,35 @@ import {
 /* ─── Status config ─── */
 const statusConfig: Record<string, { icon: React.ElementType; color: string; bg: string; label_ar: string; label_en: string }> = {
   draft: { icon: FileText, color: 'text-muted-foreground', bg: 'bg-muted text-muted-foreground', label_ar: 'مسودة', label_en: 'Draft' },
-  pending_approval: { icon: Clock, color: 'text-amber-600', bg: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400', label_ar: 'بانتظار الموافقة', label_en: 'Pending' },
-  pending: { icon: Clock, color: 'text-amber-600', bg: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400', label_ar: 'معلق', label_en: 'Pending' },
-  active: { icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400', label_ar: 'نشط', label_en: 'Active' },
-  in_progress: { icon: Timer, color: 'text-blue-600', bg: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400', label_ar: 'قيد التنفيذ', label_en: 'In Progress' },
-  completed: { icon: Shield, color: 'text-blue-600', bg: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400', label_ar: 'مكتمل', label_en: 'Completed' },
-  cancelled: { icon: XCircle, color: 'text-red-600', bg: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400', label_ar: 'ملغي', label_en: 'Cancelled' },
-  disputed: { icon: AlertTriangle, color: 'text-orange-600', bg: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400', label_ar: 'نزاع', label_en: 'Disputed' },
-  paid: { icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400', label_ar: 'مسدد', label_en: 'Paid' },
-  overdue: { icon: AlertTriangle, color: 'text-red-600', bg: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400', label_ar: 'متأخر', label_en: 'Overdue' },
-  submitted: { icon: Send, color: 'text-amber-600', bg: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400', label_ar: 'مرسل', label_en: 'Submitted' },
-  expired: { icon: XCircle, color: 'text-red-600', bg: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400', label_ar: 'منتهي', label_en: 'Expired' },
-  installed: { icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400', label_ar: 'مركّب', label_en: 'Installed' },
+  pending_approval: { icon: Clock, color: 'text-warning', bg: 'bg-warning text-warning dark:bg-warning/30 dark:text-warning', label_ar: 'بانتظار الموافقة', label_en: 'Pending' },
+  pending: { icon: Clock, color: 'text-warning', bg: 'bg-warning text-warning dark:bg-warning/30 dark:text-warning', label_ar: 'معلق', label_en: 'Pending' },
+  active: { icon: CheckCircle2, color: 'text-success', bg: 'bg-success text-success dark:bg-success/30 dark:text-success', label_ar: 'نشط', label_en: 'Active' },
+  in_progress: { icon: Timer, color: 'text-info', bg: 'bg-info text-info dark:bg-info/30 dark:text-info', label_ar: 'قيد التنفيذ', label_en: 'In Progress' },
+  completed: { icon: Shield, color: 'text-info', bg: 'bg-info text-info dark:bg-info/30 dark:text-info', label_ar: 'مكتمل', label_en: 'Completed' },
+  cancelled: { icon: XCircle, color: 'text-destructive', bg: 'bg-destructive text-destructive dark:bg-destructive/30 dark:text-destructive', label_ar: 'ملغي', label_en: 'Cancelled' },
+  disputed: { icon: AlertTriangle, color: 'text-urgent', bg: 'bg-urgent text-urgent dark:bg-urgent/30 dark:text-urgent', label_ar: 'نزاع', label_en: 'Disputed' },
+  paid: { icon: CheckCircle2, color: 'text-success', bg: 'bg-success text-success dark:bg-success/30 dark:text-success', label_ar: 'مسدد', label_en: 'Paid' },
+  overdue: { icon: AlertTriangle, color: 'text-destructive', bg: 'bg-destructive text-destructive dark:bg-destructive/30 dark:text-destructive', label_ar: 'متأخر', label_en: 'Overdue' },
+  submitted: { icon: Send, color: 'text-warning', bg: 'bg-warning text-warning dark:bg-warning/30 dark:text-warning', label_ar: 'مرسل', label_en: 'Submitted' },
+  expired: { icon: XCircle, color: 'text-destructive', bg: 'bg-destructive text-destructive dark:bg-destructive/30 dark:text-destructive', label_ar: 'منتهي', label_en: 'Expired' },
+  installed: { icon: CheckCircle2, color: 'text-success', bg: 'bg-success text-success dark:bg-success/30 dark:text-success', label_ar: 'مركّب', label_en: 'Installed' },
 };
 
 const priorityConfig: Record<string, { bg: string; label_ar: string; label_en: string }> = {
   low: { bg: 'bg-muted text-muted-foreground', label_ar: 'منخفض', label_en: 'Low' },
-  medium: { bg: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400', label_ar: 'متوسط', label_en: 'Medium' },
-  high: { bg: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400', label_ar: 'عالي', label_en: 'High' },
-  urgent: { bg: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400', label_ar: 'عاجل', label_en: 'Urgent' },
+  medium: { bg: 'bg-info text-info dark:bg-info/30 dark:text-info', label_ar: 'متوسط', label_en: 'Medium' },
+  high: { bg: 'bg-urgent text-urgent dark:bg-urgent/30 dark:text-urgent', label_ar: 'عالي', label_en: 'High' },
+  urgent: { bg: 'bg-destructive text-destructive dark:bg-destructive/30 dark:text-destructive', label_ar: 'عاجل', label_en: 'Urgent' },
 };
 
 const noteTypeConfig: Record<string, { label_ar: string; label_en: string; color: string; icon: React.ElementType }> = {
   general: { label_ar: 'ملاحظة عامة', label_en: 'General', color: 'border-border', icon: StickyNote },
   note: { label_ar: 'ملاحظة', label_en: 'Note', color: 'border-border', icon: StickyNote },
-  amendment: { label_ar: 'طلب تعديل', label_en: 'Amendment', color: 'border-amber-200 dark:border-amber-800/30', icon: PenTool },
-  technical_issue: { label_ar: 'ملاحظة فنية', label_en: 'Technical Issue', color: 'border-red-200 dark:border-red-800/30', icon: AlertTriangle },
-  issue: { label_ar: 'مشكلة', label_en: 'Issue', color: 'border-red-200 dark:border-red-800/30', icon: AlertTriangle },
-  delivery_report: { label_ar: 'محضر تسليم', label_en: 'Delivery Report', color: 'border-emerald-200 dark:border-emerald-800/30', icon: ListChecks },
-  delivery: { label_ar: 'تسليم', label_en: 'Delivery', color: 'border-emerald-200 dark:border-emerald-800/30', icon: ListChecks },
+  amendment: { label_ar: 'طلب تعديل', label_en: 'Amendment', color: 'border-warning dark:border-warning/30', icon: PenTool },
+  technical_issue: { label_ar: 'ملاحظة فنية', label_en: 'Technical Issue', color: 'border-destructive dark:border-destructive/30', icon: AlertTriangle },
+  issue: { label_ar: 'مشكلة', label_en: 'Issue', color: 'border-destructive dark:border-destructive/30', icon: AlertTriangle },
+  delivery_report: { label_ar: 'محضر تسليم', label_en: 'Delivery Report', color: 'border-success dark:border-success/30', icon: ListChecks },
+  delivery: { label_ar: 'تسليم', label_en: 'Delivery', color: 'border-success dark:border-success/30', icon: ListChecks },
 };
 
 /* ─── InfoRow helper ─── */
@@ -837,7 +837,7 @@ const ContractDetail = () => {
           <div className="w-7 h-7 rounded-lg bg-accent/10 flex items-center justify-center"><PIcon className="w-3.5 h-3.5 text-accent" /></div>
           <span className="font-heading font-bold text-xs">{partyLabel}</span>
         </div>
-        {acceptedAt && <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-[9px] gap-1"><CheckCircle2 className="w-2.5 h-2.5" />{isRTL ? 'موافق' : 'Accepted'}</Badge>}
+        {acceptedAt && <Badge className="bg-success text-success dark:bg-success/30 dark:text-success text-[9px] gap-1"><CheckCircle2 className="w-2.5 h-2.5" />{isRTL ? 'موافق' : 'Accepted'}</Badge>}
       </div>
       <div className="p-4 space-y-0.5">
         <div className="flex items-center gap-3 mb-3">
@@ -884,7 +884,7 @@ const ContractDetail = () => {
         {acceptedAt && (
           <>
             <Separator className="my-2" />
-            <div className="flex items-center gap-1.5 text-[10px] text-emerald-600 dark:text-emerald-400 font-body">
+            <div className="flex items-center gap-1.5 text-[10px] text-success dark:text-success font-body">
               <PenTool className="w-3 h-3" />{isRTL ? 'تاريخ التوقيع:' : 'Signed:'} {formatDate(acceptedAt)}
             </div>
           </>
@@ -977,16 +977,16 @@ const ContractDetail = () => {
                   <React.Fragment key={m.id}>
                     <button
                       onClick={() => { setActiveTab('milestones'); setExpandedMilestone(m.id); }}
-                      className={`flex flex-col items-center gap-1.5 px-3 py-2 rounded-lg transition-all min-w-[80px] hover:bg-muted/50 ${isComp ? '' : isActive ? 'bg-blue-50/50 dark:bg-blue-950/20' : ''}`}
+                      className={`flex flex-col items-center gap-1.5 px-3 py-2 rounded-lg transition-all min-w-[80px] hover:bg-muted/50 ${isComp ? '' : isActive ? 'bg-info/50 dark:bg-info/20' : ''}`}
                     >
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${isComp ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400' : isActive ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400 ring-2 ring-blue-300 dark:ring-blue-700' : 'bg-muted text-muted-foreground'}`}>
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${isComp ? 'bg-success text-success dark:bg-success/40 dark:text-success' : isActive ? 'bg-info text-info dark:bg-info/40 dark:text-info ring-2 ring-info dark:ring-info' : 'bg-muted text-muted-foreground'}`}>
                         {isComp ? <CheckCircle2 className="w-4 h-4" /> : idx + 1}
                       </div>
                       <span className="text-[9px] font-body text-muted-foreground text-center whitespace-nowrap">{(language === 'ar' ? m.title_ar : (m.title_en || m.title_ar)).slice(0, 20)}</span>
                       <Badge variant="outline" className="text-[8px] px-1.5">{pct}%</Badge>
                     </button>
                     {idx < milestones.length - 1 && (
-                      <div className={`w-6 h-0.5 shrink-0 ${isComp ? 'bg-emerald-300 dark:bg-emerald-700' : 'bg-border'}`} />
+                      <div className={`w-6 h-0.5 shrink-0 ${isComp ? 'bg-success dark:bg-success' : 'bg-border'}`} />
                     )}
                   </React.Fragment>
                 );
@@ -1051,7 +1051,7 @@ const ContractDetail = () => {
               <div className="flex items-center justify-between"><span className="text-[10px] text-muted-foreground font-body">{isRTL ? 'بدء سريان العقد' : 'Start'}</span><span className="text-xs font-heading font-semibold">{formatDate(contract.start_date)}</span></div>
               <div className="flex items-center justify-between"><span className="text-[10px] text-muted-foreground font-body">{isRTL ? 'تاريخ الانتهاء' : 'End'}</span><span className="text-xs font-heading font-semibold">{formatDate(contract.end_date)}</span></div>
               <div className="flex items-center justify-between"><span className="text-[10px] text-muted-foreground font-body">{isRTL ? 'تاريخ الإنشاء' : 'Created'}</span><span className="text-xs font-heading font-semibold">{formatDate(contract.created_at)}</span></div>
-              {contract.completed_at && <div className="flex items-center justify-between"><span className="text-[10px] text-muted-foreground font-body">{isRTL ? 'تاريخ الإكمال' : 'Completed'}</span><span className="text-xs font-heading font-semibold text-emerald-600 dark:text-emerald-400">{formatDate(contract.completed_at)}</span></div>}
+              {contract.completed_at && <div className="flex items-center justify-between"><span className="text-[10px] text-muted-foreground font-body">{isRTL ? 'تاريخ الإكمال' : 'Completed'}</span><span className="text-xs font-heading font-semibold text-success dark:text-success">{formatDate(contract.completed_at)}</span></div>}
               {contract.start_date && contract.end_date && (() => {
                 const pct = Math.min(100, Math.max(0, Math.round(((Date.now() - new Date(contract.start_date!).getTime()) / (new Date(contract.end_date!).getTime() - new Date(contract.start_date!).getTime())) * 100)));
                 return (
@@ -1072,7 +1072,7 @@ const ContractDetail = () => {
               <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center"><Banknote className="w-4 h-4 text-accent" /></div>
               <span className="font-heading font-bold text-sm">{isRTL ? 'الملخص المالي' : 'Financial Summary'}</span>
               {vatInclusive && (
-                <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-[9px] ms-auto">
+                <Badge className="bg-success text-success dark:bg-success/30 dark:text-success text-[9px] ms-auto">
                   <Percent className="w-3 h-3 me-1" />{isRTL ? 'شامل الضريبة' : 'VAT Inclusive'}
                 </Badge>
               )}
@@ -1087,7 +1087,7 @@ const ContractDetail = () => {
                   <Percent className="w-3 h-3" />
                   {isRTL ? `ضريبة القيمة المضافة (${vatRate}%)` : `VAT (${vatRate}%)`}
                 </span>
-                <span className="text-xs font-heading font-semibold text-amber-600 dark:text-amber-400">{vatAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {contract.currency_code}</span>
+                <span className="text-xs font-heading font-semibold text-warning dark:text-warning">{vatAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {contract.currency_code}</span>
               </div>
               <Separator />
               <div className="flex items-center justify-between">
@@ -1097,7 +1097,7 @@ const ContractDetail = () => {
               <Separator />
               <div className="flex items-center justify-between">
                 <span className="text-[10px] text-muted-foreground font-body">{isRTL ? 'المسدد' : 'Paid'}</span>
-                <span className="text-xs font-heading font-semibold text-emerald-600 dark:text-emerald-400">{paymentsTotals.paid.toLocaleString()} {contract.currency_code}</span>
+                <span className="text-xs font-heading font-semibold text-success dark:text-success">{paymentsTotals.paid.toLocaleString()} {contract.currency_code}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-[10px] text-muted-foreground font-body">{isRTL ? 'المتبقي' : 'Remaining'}</span>
@@ -1144,10 +1144,10 @@ const ContractDetail = () => {
                       const isPaid = pay.status === 'paid';
                       const isOverdue = !isPaid && new Date(pay.due_date) < new Date();
                       return (
-                        <div key={pay.id} className={`rounded-xl border p-4 transition-all ${isPaid ? 'border-emerald-200 dark:border-emerald-800/30 bg-emerald-50/50 dark:bg-emerald-950/10' : isOverdue ? 'border-red-200 dark:border-red-800/30 bg-red-50/50 dark:bg-red-950/10' : 'border-border bg-card'}`}>
+                        <div key={pay.id} className={`rounded-xl border p-4 transition-all ${isPaid ? 'border-success dark:border-success/30 bg-success/50 dark:bg-success/10' : isOverdue ? 'border-destructive dark:border-destructive/30 bg-destructive/50 dark:bg-destructive/10' : 'border-border bg-card'}`}>
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2">
-                              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${isPaid ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400' : isOverdue ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400' : 'bg-muted text-muted-foreground'}`}>
+                              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${isPaid ? 'bg-success text-success dark:bg-success/40 dark:text-success' : isOverdue ? 'bg-destructive text-destructive dark:bg-destructive/40 dark:text-destructive' : 'bg-muted text-muted-foreground'}`}>
                                 {isPaid ? <CheckCircle2 className="w-4 h-4" /> : pay.installment_number}
                               </div>
                               <div>
@@ -1155,14 +1155,14 @@ const ContractDetail = () => {
                                 <p className="text-[9px] text-muted-foreground font-body">{ratio}% {isRTL ? 'من الإجمالي' : 'of total'}</p>
                               </div>
                             </div>
-                            <Badge className={`text-[9px] ${isPaid ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : isOverdue ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : 'bg-muted text-muted-foreground'}`}>
+                            <Badge className={`text-[9px] ${isPaid ? 'bg-success text-success dark:bg-success/30 dark:text-success' : isOverdue ? 'bg-destructive text-destructive dark:bg-destructive/30 dark:text-destructive' : 'bg-muted text-muted-foreground'}`}>
                               {isPaid ? (isRTL ? 'مسدد' : 'Paid') : isOverdue ? (isRTL ? 'متأخر' : 'Overdue') : (isRTL ? 'معلق' : 'Pending')}
                             </Badge>
                           </div>
                           <p className="font-heading font-bold text-lg text-foreground">{Number(pay.amount).toLocaleString()} <span className="text-xs text-muted-foreground">{plan.currency_code}</span></p>
                           <div className="mt-2 space-y-1 text-[10px] text-muted-foreground font-body">
                             <div className="flex items-center gap-1"><Calendar className="w-3 h-3" />{isRTL ? 'الاستحقاق:' : 'Due:'} {formatDate(pay.due_date)}</div>
-                            {isPaid && pay.paid_at && <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400"><CheckCircle2 className="w-3 h-3" />{isRTL ? 'تم السداد:' : 'Paid:'} {formatDate(pay.paid_at)}</div>}
+                            {isPaid && pay.paid_at && <div className="flex items-center gap-1 text-success dark:text-success"><CheckCircle2 className="w-3 h-3" />{isRTL ? 'تم السداد:' : 'Paid:'} {formatDate(pay.paid_at)}</div>}
                             {pay.payment_method && <div className="flex items-center gap-1"><CreditCard className="w-3 h-3" />{pay.payment_method === 'bank_transfer' ? (isRTL ? 'تحويل بنكي' : 'Bank Transfer') : pay.payment_method}</div>}
                           </div>
                           {pay.notes && <p className="mt-2 text-[10px] text-muted-foreground/80 font-body border-t border-border pt-2">{pay.notes}</p>}
@@ -1225,7 +1225,7 @@ const ContractDetail = () => {
                       <p className="font-heading font-bold text-foreground text-xs">{party.label}</p>
                       <p className="text-xs">{party.name}</p>
                       {party.accepted
-                        ? <div className="flex items-center justify-center gap-1 text-emerald-600 dark:text-emerald-400"><PenTool className="w-3 h-3" /><span className="text-[10px]">{isRTL ? 'تم التوقيع' : 'Signed'} · {formatDate(party.accepted)}</span></div>
+                        ? <div className="flex items-center justify-center gap-1 text-success dark:text-success"><PenTool className="w-3 h-3" /><span className="text-[10px]">{isRTL ? 'تم التوقيع' : 'Signed'} · {formatDate(party.accepted)}</span></div>
                         : <span className="text-[10px] text-muted-foreground/50">{isRTL ? 'لم يتم التوقيع' : 'Not signed'}</span>}
                     </div>
                   ))}
@@ -1237,7 +1237,7 @@ const ContractDetail = () => {
 
         {/* ─── Lock Banner ─── */}
         {isContractLocked && (
-          <div className="flex items-center gap-2 p-3 mb-4 rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/30 text-amber-800 dark:text-amber-300">
+          <div className="flex items-center gap-2 p-3 mb-4 rounded-xl bg-warning dark:bg-warning/20 border border-warning dark:border-warning/30 text-warning dark:text-warning">
             <Shield className="w-5 h-5 shrink-0" />
             <div>
               <p className="font-heading font-bold text-xs">{isRTL ? 'العقد معتمد ومقفل' : 'Contract Approved & Locked'}</p>
@@ -1291,7 +1291,7 @@ const ContractDetail = () => {
               </div>
             )}
             {isContractLocked && (
-              <div className="text-[10px] text-amber-600 dark:text-amber-400 mb-3 flex items-center gap-1"><Shield className="w-3 h-3" />{isRTL ? 'المراحل مقفلة - استخدم ملحق العقد للتعديل' : 'Milestones locked - use amendments to modify'}</div>
+              <div className="text-[10px] text-warning dark:text-warning mb-3 flex items-center gap-1"><Shield className="w-3 h-3" />{isRTL ? 'المراحل مقفلة - استخدم ملحق العقد للتعديل' : 'Milestones locked - use amendments to modify'}</div>
             )}
             <div className="space-y-2 sm:space-y-3">
               {milestones?.map((m, idx) => {
@@ -1303,11 +1303,11 @@ const ContractDetail = () => {
                 const milestoneAtts = attachments?.filter(a => a.milestone_id === m.id) || [];
                 const isExpanded = expandedMilestone === m.id;
                 return (
-                  <div key={m.id} className={`rounded-xl border transition-all ${isComp ? 'bg-emerald-50/50 dark:bg-emerald-950/10 border-emerald-200/50 dark:border-emerald-800/30' : 'bg-card border-border'} ${isExpanded ? 'ring-1 ring-accent/30' : ''}`}>
+                  <div key={m.id} className={`rounded-xl border transition-all ${isComp ? 'bg-success/50 dark:bg-success/10 border-success/50 dark:border-success/30' : 'bg-card border-border'} ${isExpanded ? 'ring-1 ring-accent/30' : ''}`}>
                     <button onClick={() => setExpandedMilestone(isExpanded ? null : m.id)} className="w-full p-3 sm:p-5 text-start">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex items-start gap-2 sm:gap-3 min-w-0">
-                          <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${isComp ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400' : 'bg-muted text-muted-foreground'}`}>
+                          <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${isComp ? 'bg-success text-success dark:bg-success/40 dark:text-success' : 'bg-muted text-muted-foreground'}`}>
                             {isComp ? <CheckCircle2 className="w-4 h-4" /> : idx + 1}
                           </div>
                           <div className="min-w-0 flex-1">
@@ -1519,7 +1519,7 @@ const ContractDetail = () => {
               </div>
             )}
             {isContractLocked && (
-              <div className="text-[10px] text-amber-600 dark:text-amber-400 mb-3 flex items-center gap-1"><Shield className="w-3 h-3" />{isRTL ? 'المقاسات مقفلة - المجموع النهائي يحدد قيمة العقد' : 'Measurements locked - total determines contract value'}</div>
+              <div className="text-[10px] text-warning dark:text-warning mb-3 flex items-center gap-1"><Shield className="w-3 h-3" />{isRTL ? 'المقاسات مقفلة - المجموع النهائي يحدد قيمة العقد' : 'Measurements locked - total determines contract value'}</div>
             )}
 
             {/* Info banner: total = contract value */}
@@ -1532,7 +1532,7 @@ const ContractDetail = () => {
                 </div>
                 <div className="flex items-center gap-3 flex-wrap text-[10px] font-body text-muted-foreground border-t border-accent/10 pt-2">
                   <span>{isRTL ? 'المبلغ قبل الضريبة:' : 'Before VAT:'} <strong className="text-foreground">{(vatInclusive ? measurementsTotals.totalCost - (measurementsTotals.totalCost * vatRate / (100 + vatRate)) : measurementsTotals.totalCost).toLocaleString(undefined, { maximumFractionDigits: 2 })}</strong></span>
-                  <span>{isRTL ? `ضريبة ${vatRate}%:` : `VAT ${vatRate}%:`} <strong className="text-amber-600 dark:text-amber-400">{(vatInclusive ? measurementsTotals.totalCost * vatRate / (100 + vatRate) : measurementsTotals.totalCost * vatRate / 100).toLocaleString(undefined, { maximumFractionDigits: 2 })}</strong></span>
+                  <span>{isRTL ? `ضريبة ${vatRate}%:` : `VAT ${vatRate}%:`} <strong className="text-warning dark:text-warning">{(vatInclusive ? measurementsTotals.totalCost * vatRate / (100 + vatRate) : measurementsTotals.totalCost * vatRate / 100).toLocaleString(undefined, { maximumFractionDigits: 2 })}</strong></span>
                   <span>{isRTL ? 'الإجمالي شامل الضريبة:' : 'Total incl. VAT:'} <strong className="text-accent">{(vatInclusive ? measurementsTotals.totalCost : measurementsTotals.totalCost + measurementsTotals.totalCost * vatRate / 100).toLocaleString(undefined, { maximumFractionDigits: 2 })}</strong> {contract.currency_code}</span>
                 </div>
               </div>
@@ -1622,15 +1622,15 @@ const ContractDetail = () => {
                           <td className="p-2.5"></td>
                           {!isContractLocked && <td className="p-2.5"></td>}
                         </tr>
-                        <tr className="border-t border-border bg-amber-50/50 dark:bg-amber-950/10 font-heading text-xs">
+                        <tr className="border-t border-border bg-warning/50 dark:bg-warning/10 font-heading text-xs">
                           <td colSpan={5} className="p-2.5 flex items-center gap-1">
-                            <Percent className="w-3 h-3 text-amber-600 dark:text-amber-400" />
-                            <span className="text-amber-700 dark:text-amber-400">{isRTL ? `ضريبة القيمة المضافة (${vatRate}%)` : `VAT (${vatRate}%)`}</span>
-                            {vatInclusive && <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-[8px] ms-1">{isRTL ? 'مشمولة' : 'Included'}</Badge>}
+                            <Percent className="w-3 h-3 text-warning dark:text-warning" />
+                            <span className="text-warning dark:text-warning">{isRTL ? `ضريبة القيمة المضافة (${vatRate}%)` : `VAT (${vatRate}%)`}</span>
+                            {vatInclusive && <Badge className="bg-success text-success dark:bg-success/30 dark:text-success text-[8px] ms-1">{isRTL ? 'مشمولة' : 'Included'}</Badge>}
                           </td>
                           <td className="p-2.5" dir="ltr"></td>
                           <td className="p-2.5"></td>
-                          <td className="p-2.5 text-amber-600 dark:text-amber-400 font-semibold" dir="ltr">
+                          <td className="p-2.5 text-warning dark:text-warning font-semibold" dir="ltr">
                             {(vatInclusive ? measurementsTotals.totalCost * vatRate / (100 + vatRate) : measurementsTotals.totalCost * vatRate / 100).toLocaleString(undefined, { maximumFractionDigits: 2 })}
                           </td>
                           <td className="p-2.5"></td>
@@ -1677,10 +1677,10 @@ const ContractDetail = () => {
 
                   return (
                     <div key={w.id} className="rounded-xl bg-card border border-border overflow-hidden">
-                      <div className={`px-4 sm:px-6 py-3 border-b border-border flex items-center justify-between ${isActive ? 'bg-emerald-50/50 dark:bg-emerald-950/10' : isExpired ? 'bg-red-50/30 dark:bg-red-950/10' : 'bg-muted/30'}`}>
+                      <div className={`px-4 sm:px-6 py-3 border-b border-border flex items-center justify-between ${isActive ? 'bg-success/50 dark:bg-success/10' : isExpired ? 'bg-destructive/30 dark:bg-destructive/10' : 'bg-muted/30'}`}>
                         <div className="flex items-center gap-3">
-                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${isActive ? 'bg-emerald-100 dark:bg-emerald-900/30' : 'bg-muted'}`}>
-                            {isActive ? <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400" /> : <ShieldX className="w-5 h-5 text-muted-foreground" />}
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${isActive ? 'bg-success dark:bg-success/30' : 'bg-muted'}`}>
+                            {isActive ? <ShieldCheck className="w-5 h-5 text-success dark:text-success" /> : <ShieldX className="w-5 h-5 text-muted-foreground" />}
                           </div>
                           <div>
                             <h3 className="font-heading font-bold text-sm">{wTitle}</h3>
@@ -1690,7 +1690,7 @@ const ContractDetail = () => {
                             </div>
                           </div>
                         </div>
-                        <Badge className={`text-[10px] ${isActive ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'}`}>
+                        <Badge className={`text-[10px] ${isActive ? 'bg-success text-success dark:bg-success/30 dark:text-success' : 'bg-destructive text-destructive dark:bg-destructive/30 dark:text-destructive'}`}>
                           {isExpired ? (isRTL ? 'منتهي' : 'Expired') : (isRTL ? 'ساري' : 'Active')}
                         </Badge>
                       </div>
@@ -1814,7 +1814,7 @@ const ContractDetail = () => {
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2 mb-1">
                               <span className="text-[10px] text-muted-foreground font-body" dir="ltr">{req.request_number}</span>
-                              {linkedWarranty && <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-[8px] gap-0.5"><Shield className="w-2.5 h-2.5" />{isRTL ? 'ضمان' : 'Warranty'}</Badge>}
+                              {linkedWarranty && <Badge className="bg-success text-success dark:bg-success/30 dark:text-success text-[8px] gap-0.5"><Shield className="w-2.5 h-2.5" />{isRTL ? 'ضمان' : 'Warranty'}</Badge>}
                             </div>
                             <h4 className="font-heading font-semibold text-sm">{rTitle}</h4>
                             <div className="flex items-center gap-2 mt-1.5 text-[10px] text-muted-foreground font-body flex-wrap">
@@ -1833,13 +1833,13 @@ const ContractDetail = () => {
                         <div className="px-3 sm:px-5 pb-4 pt-0 border-t border-border space-y-3">
                           {rDesc && <p className="text-xs text-muted-foreground font-body mt-3 leading-relaxed">{rDesc}</p>}
                           {req.resolution_notes && (
-                            <div className="bg-emerald-50/50 dark:bg-emerald-950/10 rounded-lg p-3 border border-emerald-200/50 dark:border-emerald-800/30">
-                              <p className="text-[10px] font-heading font-semibold text-emerald-700 dark:text-emerald-400 mb-1 flex items-center gap-1"><CheckCircle2 className="w-3 h-3" />{isRTL ? 'ملاحظات الحل' : 'Resolution'}</p>
+                            <div className="bg-success/50 dark:bg-success/10 rounded-lg p-3 border border-success/50 dark:border-success/30">
+                              <p className="text-[10px] font-heading font-semibold text-success dark:text-success mb-1 flex items-center gap-1"><CheckCircle2 className="w-3 h-3" />{isRTL ? 'ملاحظات الحل' : 'Resolution'}</p>
                               <p className="text-xs text-muted-foreground font-body leading-relaxed">{req.resolution_notes}</p>
                             </div>
                           )}
                           {req.completed_at && (
-                            <div className="flex items-center gap-1.5 text-[10px] text-emerald-600 dark:text-emerald-400 font-body">
+                            <div className="flex items-center gap-1.5 text-[10px] text-success dark:text-success font-body">
                               <CheckCircle2 className="w-3 h-3" />{isRTL ? 'تم الإنجاز:' : 'Completed:'} {formatDate(req.completed_at)}
                             </div>
                           )}
@@ -1965,7 +1965,7 @@ const ContractDetail = () => {
                       {attachments.filter(a => !a.file_type.startsWith('image')).map(att => {
                         const linkedMilestone = milestones?.find(m => m.id === att.milestone_id);
                         const ext = att.file_name.split('.').pop()?.toUpperCase() || 'FILE';
-                        const extColors: Record<string, string> = { PDF: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400', DOC: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400', DOCX: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400', XLS: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400', XLSX: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' };
+                        const extColors: Record<string, string> = { PDF: 'bg-destructive text-destructive dark:bg-destructive/30 dark:text-destructive', DOC: 'bg-info text-info dark:bg-info/30 dark:text-info', DOCX: 'bg-info text-info dark:bg-info/30 dark:text-info', XLS: 'bg-success text-success dark:bg-success/30 dark:text-success', XLSX: 'bg-success text-success dark:bg-success/30 dark:text-success' };
                         return (
                           <div key={att.id} className="p-3.5 rounded-xl bg-card border border-border flex items-center gap-3 hover:border-accent/30 hover:shadow-sm transition-all group">
                             <div className={`w-11 h-11 rounded-lg flex items-center justify-center shrink-0 font-heading font-bold text-[10px] ${extColors[ext] || 'bg-muted text-muted-foreground'}`}>
@@ -2042,7 +2042,7 @@ const ContractDetail = () => {
                   const canApprove = a.status === 'pending' && ((isClient && !a.client_approved_at) || (isProvider && !a.provider_approved_at));
                   const typeLabels: Record<string, string> = { scope_change: isRTL ? 'نطاق العمل' : 'Scope', financial: isRTL ? 'مالي' : 'Financial', extension: isRTL ? 'تمديد' : 'Extension', other: isRTL ? 'أخرى' : 'Other' };
                   return (
-                    <div key={a.id} className={`p-4 rounded-xl border ${a.status === 'approved' ? 'border-emerald-200/50 bg-emerald-50/30 dark:border-emerald-800/20 dark:bg-emerald-950/10' : a.status === 'rejected' ? 'border-red-200/50 bg-red-50/30' : 'border-amber-200/50 bg-amber-50/30 dark:border-amber-800/20 dark:bg-amber-950/10'}`}>
+                    <div key={a.id} className={`p-4 rounded-xl border ${a.status === 'approved' ? 'border-success/50 bg-success/30 dark:border-success/20 dark:bg-success/10' : a.status === 'rejected' ? 'border-destructive/50 bg-destructive/30' : 'border-warning/50 bg-warning/30 dark:border-warning/20 dark:bg-warning/10'}`}>
                       <div className="flex items-center justify-between gap-2 mb-2">
                         <h4 className="font-heading font-bold text-sm">{a.title_ar}</h4>
                         <div className="flex items-center gap-1.5">
@@ -2060,7 +2060,7 @@ const ContractDetail = () => {
                         <span>{formatDate(a.created_at)}</span>
                       </div>
                       {canApprove && (
-                        <Button size="sm" variant="outline" className="h-7 text-[10px] gap-1 mt-3 text-emerald-600 border-emerald-300" onClick={() => approveAmendmentMutation.mutate(a)}>
+                        <Button size="sm" variant="outline" className="h-7 text-[10px] gap-1 mt-3 text-success border-success" onClick={() => approveAmendmentMutation.mutate(a)}>
                           <CheckCircle2 className="w-3 h-3" />{isRTL ? 'موافقة على الملحق' : 'Approve Amendment'}
                         </Button>
                       )}

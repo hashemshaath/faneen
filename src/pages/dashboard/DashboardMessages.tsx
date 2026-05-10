@@ -40,12 +40,12 @@ const EMOJI_REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
 
 const CONV_LABELS = [
   { key: 'none', color: '', label_ar: 'بدون تصنيف', label_en: 'No label' },
-  { key: 'new_client', color: 'bg-emerald-500', label_ar: 'عميل جديد', label_en: 'New Client' },
-  { key: 'follow_up', color: 'bg-amber-500', label_ar: 'متابعة', label_en: 'Follow-up' },
+  { key: 'new_client', color: 'bg-success', label_ar: 'عميل جديد', label_en: 'New Client' },
+  { key: 'follow_up', color: 'bg-warning', label_ar: 'متابعة', label_en: 'Follow-up' },
   { key: 'important', color: 'bg-destructive', label_ar: 'مهم', label_en: 'Important' },
-  { key: 'completed', color: 'bg-blue-500', label_ar: 'مكتمل', label_en: 'Completed' },
-  { key: 'vip', color: 'bg-purple-500', label_ar: 'VIP', label_en: 'VIP' },
-  { key: 'support', color: 'bg-cyan-500', label_ar: 'دعم فني', label_en: 'Support' },
+  { key: 'completed', color: 'bg-info', label_ar: 'مكتمل', label_en: 'Completed' },
+  { key: 'vip', color: 'bg-secondary', label_ar: 'VIP', label_en: 'VIP' },
+  { key: 'support', color: 'bg-info', label_ar: 'دعم فني', label_en: 'Support' },
 ];
 
 const formatFileSize = (bytes: number) => {
@@ -185,10 +185,10 @@ const ConversationItem = React.memo(({ conv, isSelected, unread, isRTL, language
           </AvatarFallback>
         </Avatar>
         {isOnline && (
-          <span className="absolute -bottom-0.5 -end-0.5 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-card shadow-sm shadow-emerald-500/30" />
+          <span className="absolute -bottom-0.5 -end-0.5 w-3.5 h-3.5 bg-success rounded-full border-2 border-card shadow-sm shadow-success/30" />
         )}
         {isAway && !isOnline && (
-          <span className="absolute -bottom-0.5 -end-0.5 w-3.5 h-3.5 bg-amber-400 rounded-full border-2 border-card shadow-sm" />
+          <span className="absolute -bottom-0.5 -end-0.5 w-3.5 h-3.5 bg-warning rounded-full border-2 border-card shadow-sm" />
         )}
         {!isOnline && !isAway && unread > 0 && (
           <span className="absolute -top-0.5 -end-0.5 w-3 h-3 bg-accent rounded-full border-2 border-card animate-pulse" />
@@ -200,7 +200,7 @@ const ConversationItem = React.memo(({ conv, isSelected, unread, isRTL, language
             <h4 className={`text-sm truncate transition-colors ${unread > 0 ? 'font-bold text-foreground' : 'font-medium text-foreground/80'}`}>
               {conv.other_profile?.full_name || (isRTL ? 'مستخدم' : 'User')}
             </h4>
-            {isStarred && <Star className="w-3 h-3 text-amber-500 fill-amber-500 shrink-0" />}
+            {isStarred && <Star className="w-3 h-3 text-warning fill-warning shrink-0" />}
             {isMuted && <VolumeX className="w-3 h-3 text-muted-foreground/50 shrink-0" />}
           </div>
           <span className={`text-[10px] shrink-0 ${unread > 0 ? 'text-accent font-semibold' : 'text-muted-foreground'}`}>{timeAgo}</span>
@@ -228,7 +228,7 @@ const ConversationItem = React.memo(({ conv, isSelected, unread, isRTL, language
           <Pin className={`w-2.5 h-2.5 ${isPinned ? 'fill-current text-accent' : ''}`} />
         </button>
         <button onClick={(e) => { e.stopPropagation(); onStar?.(conv.id); }} className="p-1 rounded-md hover:bg-muted/60 text-muted-foreground" title={isRTL ? 'مفضلة' : 'Star'}>
-          <Star className={`w-2.5 h-2.5 ${isStarred ? 'fill-amber-500 text-amber-500' : ''}`} />
+          <Star className={`w-2.5 h-2.5 ${isStarred ? 'fill-warning text-warning' : ''}`} />
         </button>
         <button onClick={(e) => { e.stopPropagation(); onMute?.(conv.id); }} className="p-1 rounded-md hover:bg-muted/60 text-muted-foreground" title={isRTL ? 'كتم' : 'Mute'}>
           {isMuted ? <Volume2 className="w-2.5 h-2.5" /> : <VolumeX className="w-2.5 h-2.5" />}
@@ -313,7 +313,7 @@ const MessageBubble = React.memo(({ msg, isMine, language, isRTL, onReply, onCop
             </span>
             {isMine && (
               msg.is_read
-                ? <CheckCheck className="w-3.5 h-3.5 text-sky-300" />
+                ? <CheckCheck className="w-3.5 h-3.5 text-info" />
                 : <Check className="w-3 h-3 text-primary-foreground/40" />
             )}
           </div>
@@ -432,7 +432,7 @@ const ChatInfoPanel = React.memo(({ conv, messages, isRTL, language, onClose }: 
                 const away = !online && mins < 30;
                 return (
                   <Badge variant="outline" className="text-[9px] mt-1.5 gap-1">
-                    <span className={`w-1.5 h-1.5 rounded-full ${online ? 'bg-emerald-500' : away ? 'bg-amber-400' : 'bg-muted-foreground/30'}`} />
+                    <span className={`w-1.5 h-1.5 rounded-full ${online ? 'bg-success' : away ? 'bg-warning' : 'bg-muted-foreground/30'}`} />
                     {online ? (isRTL ? 'متصل' : 'Online') : away ? (isRTL ? 'بعيد' : 'Away') : (isRTL ? 'غير متصل' : 'Offline')}
                   </Badge>
                 );
@@ -444,9 +444,9 @@ const ChatInfoPanel = React.memo(({ conv, messages, isRTL, language, onClose }: 
           <div className="grid grid-cols-2 gap-2">
             {[
               { label: isRTL ? 'الرسائل' : 'Messages', value: totalMsgs, icon: MessageCircle, color: 'text-primary bg-primary/10' },
-              { label: isRTL ? 'المرفقات' : 'Attachments', value: attachments.length, icon: Paperclip, color: 'text-amber-600 bg-amber-500/10' },
-              { label: isRTL ? 'الصور' : 'Images', value: images.length, icon: ImageIcon, color: 'text-blue-600 bg-blue-500/10' },
-              { label: isRTL ? 'الملفات' : 'Files', value: files.length, icon: FileText, color: 'text-emerald-600 bg-emerald-500/10' },
+              { label: isRTL ? 'المرفقات' : 'Attachments', value: attachments.length, icon: Paperclip, color: 'text-warning bg-warning/10' },
+              { label: isRTL ? 'الصور' : 'Images', value: images.length, icon: ImageIcon, color: 'text-info bg-info/10' },
+              { label: isRTL ? 'الملفات' : 'Files', value: files.length, icon: FileText, color: 'text-success bg-success/10' },
             ].map((s, i) => (
               <div key={i} className="p-2.5 rounded-xl bg-muted/20 border border-border/20 text-center">
                 <div className={`w-7 h-7 rounded-lg mx-auto mb-1 flex items-center justify-center ${s.color}`}>
@@ -487,8 +487,8 @@ const ChatInfoPanel = React.memo(({ conv, messages, isRTL, language, onClose }: 
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{isRTL ? 'التسلسل الزمني' : 'Timeline'}</p>
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-xs">
-                  <div className="w-6 h-6 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0">
-                    <Calendar className="w-3 h-3 text-emerald-500" />
+                  <div className="w-6 h-6 rounded-full bg-success/10 flex items-center justify-center shrink-0">
+                    <Calendar className="w-3 h-3 text-success" />
                   </div>
                   <div>
                     <p className="text-[10px] text-muted-foreground">{isRTL ? 'بداية المحادثة' : 'Started'}</p>
@@ -497,8 +497,8 @@ const ChatInfoPanel = React.memo(({ conv, messages, isRTL, language, onClose }: 
                 </div>
                 {lastMsg && lastMsg.id !== firstMsg.id && (
                   <div className="flex items-center gap-2 text-xs">
-                    <div className="w-6 h-6 rounded-full bg-blue-500/10 flex items-center justify-center shrink-0">
-                      <Clock className="w-3 h-3 text-blue-500" />
+                    <div className="w-6 h-6 rounded-full bg-info/10 flex items-center justify-center shrink-0">
+                      <Clock className="w-3 h-3 text-info" />
                     </div>
                     <div>
                       <p className="text-[10px] text-muted-foreground">{isRTL ? 'آخر رسالة' : 'Last message'}</p>
@@ -930,9 +930,9 @@ const DashboardMessages = () => {
           <div className="flex items-center gap-2 mb-3 overflow-x-auto pb-1 no-scrollbar">
             {[
               { icon: MessageSquare, label: isRTL ? 'المحادثات' : 'Chats', value: stats.total, color: 'text-primary bg-primary/10', filter: 'all' as const },
-              { icon: Clock, label: isRTL ? 'غير مقروءة' : 'Unread', value: stats.unread, color: 'text-amber-600 bg-amber-500/10', filter: 'unread' as const },
-              { icon: Star, label: isRTL ? 'مميزة' : 'Starred', value: stats.starred, color: 'text-yellow-600 bg-yellow-500/10', filter: 'starred' as const },
-              { icon: Pin, label: isRTL ? 'مثبتة' : 'Pinned', value: stats.pinned, color: 'text-blue-600 bg-blue-500/10', filter: 'pinned' as const },
+              { icon: Clock, label: isRTL ? 'غير مقروءة' : 'Unread', value: stats.unread, color: 'text-warning bg-warning/10', filter: 'unread' as const },
+              { icon: Star, label: isRTL ? 'مميزة' : 'Starred', value: stats.starred, color: 'text-warning bg-warning/10', filter: 'starred' as const },
+              { icon: Pin, label: isRTL ? 'مثبتة' : 'Pinned', value: stats.pinned, color: 'text-info bg-info/10', filter: 'pinned' as const },
             ].map((s, i) => (
               <button
                 key={i}
@@ -1145,9 +1145,9 @@ const DashboardMessages = () => {
                         const online = mins < 5;
                         const away = !online && mins < 30;
                         return online
-                          ? <span className="absolute -bottom-0.5 -end-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-card shadow-sm shadow-emerald-500/30" />
+                          ? <span className="absolute -bottom-0.5 -end-0.5 w-3 h-3 bg-success rounded-full border-2 border-card shadow-sm shadow-success/30" />
                           : away
-                            ? <span className="absolute -bottom-0.5 -end-0.5 w-3 h-3 bg-amber-400 rounded-full border-2 border-card" />
+                            ? <span className="absolute -bottom-0.5 -end-0.5 w-3 h-3 bg-warning rounded-full border-2 border-card" />
                             : <span className="absolute -bottom-0.5 -end-0.5 w-3 h-3 bg-muted-foreground/30 rounded-full border-2 border-card" />;
                       })()}
                     </div>
@@ -1156,14 +1156,14 @@ const DashboardMessages = () => {
                       {(() => {
                         const mins = selectedConv?.last_message_at ? differenceInMinutes(new Date(), new Date(selectedConv.last_message_at)) : 999;
                         if (mins < 5) return (
-                          <p className="text-[10px] text-emerald-500 font-medium flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                          <p className="text-[10px] text-success font-medium flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
                             {isRTL ? 'متصل الآن' : 'Online'}
                           </p>
                         );
                         if (mins < 30) return (
-                          <p className="text-[10px] text-amber-500 font-medium flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                          <p className="text-[10px] text-warning font-medium flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-warning" />
                             {isRTL ? 'بعيد' : 'Away'}
                           </p>
                         );
@@ -1207,7 +1207,7 @@ const DashboardMessages = () => {
                             {pinnedConvs.has(selectedConversation!) ? (isRTL ? 'إلغاء التثبيت' : 'Unpin') : (isRTL ? 'تثبيت' : 'Pin')}
                           </DropdownMenuItem>
                           <DropdownMenuItem className="rounded-lg text-xs gap-2" onClick={() => toggleStarConv(selectedConversation!)}>
-                            <Star className={`w-3.5 h-3.5 ${starredConvs.has(selectedConversation!) ? 'fill-amber-500 text-amber-500' : ''}`} />
+                            <Star className={`w-3.5 h-3.5 ${starredConvs.has(selectedConversation!) ? 'fill-warning text-warning' : ''}`} />
                             {starredConvs.has(selectedConversation!) ? (isRTL ? 'إزالة النجمة' : 'Unstar') : (isRTL ? 'تمييز بنجمة' : 'Star')}
                           </DropdownMenuItem>
                           <DropdownMenuItem className="rounded-lg text-xs gap-2" onClick={() => toggleMuteConv(selectedConversation!)}>
@@ -1468,10 +1468,10 @@ const DashboardMessages = () => {
                     {scheduledMessages.filter(s => s.convId === selectedConversation).length > 0 && (
                       <div className="mt-2 space-y-1">
                         {scheduledMessages.filter(s => s.convId === selectedConversation).map(sm => (
-                          <div key={sm.id} className="flex items-center gap-2 px-2.5 py-1.5 bg-amber-500/5 border border-amber-500/20 rounded-lg">
-                            <Timer className="w-3 h-3 text-amber-600 shrink-0" />
+                          <div key={sm.id} className="flex items-center gap-2 px-2.5 py-1.5 bg-warning/5 border border-warning/20 rounded-lg">
+                            <Timer className="w-3 h-3 text-warning shrink-0" />
                             <p className="text-[10px] text-foreground truncate flex-1">{sm.text}</p>
-                            <span className="text-[9px] text-amber-600 font-medium shrink-0">
+                            <span className="text-[9px] text-warning font-medium shrink-0">
                               {new Date(sm.time).toLocaleString(language === 'ar' ? 'ar-SA' : 'en', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                             </span>
                             <button onClick={() => cancelScheduledMessage(sm.id)} className="p-0.5 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors shrink-0">

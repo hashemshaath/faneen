@@ -58,7 +58,7 @@ const Unsubscribe = () => {
               </Button>
             </>
           )}
-          {status === "success" && <><CheckCircle className="h-12 w-12 text-green-500" /><h2 className="text-xl font-bold text-foreground">تم إلغاء الاشتراك</h2><p className="text-muted-foreground">لن تتلقى إشعارات بريدية بعد الآن.</p></>}
+          {status === "success" && <><CheckCircle className="h-12 w-12 text-success" /><h2 className="text-xl font-bold text-foreground">تم إلغاء الاشتراك</h2><p className="text-muted-foreground">لن تتلقى إشعارات بريدية بعد الآن.</p></>}
           {status === "already" && <><CheckCircle className="h-12 w-12 text-muted-foreground" /><h2 className="text-xl font-bold text-foreground">تم الإلغاء مسبقاً</h2><p className="text-muted-foreground">لقد ألغيت الاشتراك بالفعل.</p></>}
           {status === "invalid" && <><XCircle className="h-12 w-12 text-destructive" /><h2 className="text-xl font-bold text-foreground">رابط غير صالح</h2><p className="text-muted-foreground">هذا الرابط غير صالح أو منتهي الصلاحية.</p></>}
           {status === "error" && <><XCircle className="h-12 w-12 text-destructive" /><h2 className="text-xl font-bold text-foreground">حدث خطأ</h2><p className="text-muted-foreground">لم نتمكن من معالجة طلبك. يرجى المحاولة مرة أخرى.</p></>}

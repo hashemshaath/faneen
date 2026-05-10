@@ -107,9 +107,9 @@ const PROMPT_TEMPLATES = [
 ];
 
 const TIER_COLORS: Record<string, string> = {
-  fast: 'border-emerald-500/50 text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30',
-  mid: 'border-blue-500/50 text-blue-600 bg-blue-50 dark:bg-blue-950/30',
-  pro: 'border-amber-500/50 text-amber-600 bg-amber-50 dark:bg-amber-950/30',
+  fast: 'border-success/50 text-success bg-success dark:bg-success/30',
+  mid: 'border-info/50 text-info bg-info dark:bg-info/30',
+  pro: 'border-warning/50 text-warning bg-warning dark:bg-warning/30',
 };
 
 /* ═══════════════════ Helpers ═══════════════════ */
@@ -529,7 +529,7 @@ const DashboardAiCenter: React.FC = () => {
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary via-accent to-primary/80 flex items-center justify-center shadow-lg shadow-primary/20 relative">
               <Brain className="w-6 h-6 text-primary-foreground" />
-              <div className="absolute -top-0.5 -end-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-background animate-pulse" />
+              <div className="absolute -top-0.5 -end-0.5 w-3 h-3 bg-success rounded-full border-2 border-background animate-pulse" />
             </div>
             <div>
               <h1 className="text-xl font-bold text-foreground">{t('مركز الذكاء الاصطناعي', 'AI Command Center')}</h1>
@@ -544,12 +544,12 @@ const DashboardAiCenter: React.FC = () => {
               <activeTone.icon className="w-3 h-3" />{t(activeTone.ar, activeTone.en)}
             </Badge>
             {activeKnowledgeCount > 0 && (
-              <Badge variant="outline" className="text-[10px] gap-1 rounded-lg h-7 px-2.5 border-emerald-500/50 text-emerald-600">
+              <Badge variant="outline" className="text-[10px] gap-1 rounded-lg h-7 px-2.5 border-success/50 text-success">
                 <Database className="w-3 h-3" />{activeKnowledgeCount} {t('مصادر', 'sources')}
               </Badge>
             )}
             {settingsDirty && (
-              <Badge variant="outline" className="text-[10px] gap-1 rounded-lg h-7 px-2.5 border-amber-500/50 text-amber-600 animate-pulse">
+              <Badge variant="outline" className="text-[10px] gap-1 rounded-lg h-7 px-2.5 border-warning/50 text-warning animate-pulse">
                 <AlertCircle className="w-3 h-3" />{t('تغييرات غير محفوظة', 'Unsaved')}
               </Badge>
             )}
@@ -624,7 +624,7 @@ const DashboardAiCenter: React.FC = () => {
             </TabsTrigger>
             <TabsTrigger value="knowledge" className="rounded-lg text-xs gap-1.5 data-[state=active]:shadow-sm">
               <Database className="w-3.5 h-3.5" />{t('المعرفة', 'Knowledge')}
-              {activeKnowledgeCount > 0 && <span className="text-[9px] bg-emerald-500/15 text-emerald-600 px-1 rounded-full tech-content">{activeKnowledgeCount}</span>}
+              {activeKnowledgeCount > 0 && <span className="text-[9px] bg-success/15 text-success px-1 rounded-full tech-content">{activeKnowledgeCount}</span>}
             </TabsTrigger>
             <TabsTrigger value="history" className="rounded-lg text-xs gap-1.5 data-[state=active]:shadow-sm">
               <Clock className="w-3.5 h-3.5" />{t('السجل', 'History')}
@@ -637,10 +637,10 @@ const DashboardAiCenter: React.FC = () => {
             {/* Services Overview */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
-                { icon: Languages, label: t('الترجمة', 'Translation'), desc: t('ترجمة تلقائية AR↔EN', 'Auto AR↔EN translation'), color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-950/30', tab: 'translate' },
-                { icon: Wand2, label: t('تحسين المحتوى', 'Content'), desc: t('تحسين وإعادة صياغة', 'Improve & rewrite'), color: 'text-purple-600', bg: 'bg-purple-50 dark:bg-purple-950/30', tab: 'tools' },
-                { icon: Bot, label: t('المساعد الذكي', 'Assistant'), desc: t('محادثة ذكية مع RAG', 'Smart chat with RAG'), color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-950/30', tab: 'assistant' },
-                { icon: Newspaper, label: t('المدونة', 'Blog Tools'), desc: t('أدوات SEO والمحتوى', 'SEO & content tools'), color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-950/30', tab: 'blog' },
+                { icon: Languages, label: t('الترجمة', 'Translation'), desc: t('ترجمة تلقائية AR↔EN', 'Auto AR↔EN translation'), color: 'text-info', bg: 'bg-info dark:bg-info/30', tab: 'translate' },
+                { icon: Wand2, label: t('تحسين المحتوى', 'Content'), desc: t('تحسين وإعادة صياغة', 'Improve & rewrite'), color: 'text-secondary', bg: 'bg-secondary dark:bg-secondary/30', tab: 'tools' },
+                { icon: Bot, label: t('المساعد الذكي', 'Assistant'), desc: t('محادثة ذكية مع RAG', 'Smart chat with RAG'), color: 'text-success', bg: 'bg-success dark:bg-success/30', tab: 'assistant' },
+                { icon: Newspaper, label: t('المدونة', 'Blog Tools'), desc: t('أدوات SEO والمحتوى', 'SEO & content tools'), color: 'text-warning', bg: 'bg-warning dark:bg-warning/30', tab: 'blog' },
               ].map((s, i) => (
                 <Card key={i} className="rounded-xl border-border/40 hover:border-primary/20 transition-all cursor-pointer hover:shadow-sm group"
                   onClick={() => startTransition(() => setActiveTab(s.tab))}>
@@ -843,10 +843,10 @@ const DashboardAiCenter: React.FC = () => {
                     <p className="text-[11px] font-semibold text-foreground">{t('كيف يعمل المحرك المركزي؟', 'How does the Central Engine work?')}</p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {[
-                        { icon: Languages, color: 'text-blue-500', ar: 'الترجمة في حقول الإدارة (FieldAI) ← تستخدم النموذج والأسلوب وتعليمات الترجمة من هنا', en: 'Admin field translations (FieldAI) ← Uses model, tone & translation instructions from here' },
-                        { icon: Sparkles, color: 'text-purple-500', ar: 'تحسين المحتوى في كل الصفحات ← يطبّق تعليمات التحسين والأسلوب من هنا', en: 'Content improvement across pages ← Applies improvement instructions & style from here' },
-                        { icon: Bot, color: 'text-emerald-500', ar: 'المساعد الذكي ← يعمل بأمر النظام وقاعدة المعرفة المحددة هنا', en: 'Smart Assistant ← Runs with system prompt & knowledge base configured here' },
-                        { icon: Newspaper, color: 'text-amber-500', ar: 'أدوات المدونة ← تستخدم نفس النموذج والأسلوب والإعدادات', en: 'Blog tools ← Uses same model, tone & settings' },
+                        { icon: Languages, color: 'text-info', ar: 'الترجمة في حقول الإدارة (FieldAI) ← تستخدم النموذج والأسلوب وتعليمات الترجمة من هنا', en: 'Admin field translations (FieldAI) ← Uses model, tone & translation instructions from here' },
+                        { icon: Sparkles, color: 'text-secondary', ar: 'تحسين المحتوى في كل الصفحات ← يطبّق تعليمات التحسين والأسلوب من هنا', en: 'Content improvement across pages ← Applies improvement instructions & style from here' },
+                        { icon: Bot, color: 'text-success', ar: 'المساعد الذكي ← يعمل بأمر النظام وقاعدة المعرفة المحددة هنا', en: 'Smart Assistant ← Runs with system prompt & knowledge base configured here' },
+                        { icon: Newspaper, color: 'text-warning', ar: 'أدوات المدونة ← تستخدم نفس النموذج والأسلوب والإعدادات', en: 'Blog tools ← Uses same model, tone & settings' },
                       ].map((item, i) => (
                         <div key={i} className="flex items-start gap-2 p-2.5 rounded-lg bg-card/80 border border-border/30">
                           <item.icon className={`w-4 h-4 ${item.color} mt-0.5 shrink-0`} />
@@ -887,7 +887,7 @@ const DashboardAiCenter: React.FC = () => {
                 </div>
                 {localSettings.translation_instructions && (
                   <Tooltip><TooltipTrigger asChild>
-                    <Badge variant="outline" className="text-[9px] gap-1 border-blue-500/40 text-blue-600">
+                    <Badge variant="outline" className="text-[9px] gap-1 border-info/40 text-info">
                       <Shield className="w-3 h-3" />{t('تعليمات مفعلة', 'Instructions active')}
                     </Badge>
                   </TooltipTrigger><TooltipContent className="max-w-xs text-[10px]">{localSettings.translation_instructions.slice(0, 100)}</TooltipContent></Tooltip>
@@ -1122,7 +1122,7 @@ const DashboardAiCenter: React.FC = () => {
             <Card className="rounded-2xl border-border/50">
               <CardHeader className="p-3 border-b border-border/40">
                 <CardTitle className="text-sm flex items-center gap-2">
-                  <Lightbulb className="w-4 h-4 text-amber-500" />{t('توصيات ذكية', 'Smart Recommendations')}
+                  <Lightbulb className="w-4 h-4 text-warning" />{t('توصيات ذكية', 'Smart Recommendations')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-3">
@@ -1149,7 +1149,7 @@ const DashboardAiCenter: React.FC = () => {
                   <div className="flex items-center gap-2.5">
                     <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-sm relative">
                       <Bot className="w-4.5 h-4.5 text-primary-foreground" />
-                      <div className="absolute -bottom-0.5 -end-0.5 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-background" />
+                      <div className="absolute -bottom-0.5 -end-0.5 w-2.5 h-2.5 bg-success rounded-full border-2 border-background" />
                     </div>
                     <div className="min-w-0">
                       <h3 className="text-sm font-bold">{t('المساعد الذكي', 'Smart Assistant')}</h3>
@@ -1158,7 +1158,7 @@ const DashboardAiCenter: React.FC = () => {
                   </div>
                   <div className="flex items-center gap-1.5">
                     {activeKnowledgeCount > 0 && (
-                      <Badge variant="outline" className="text-[9px] gap-1 border-emerald-500/40 text-emerald-600">
+                      <Badge variant="outline" className="text-[9px] gap-1 border-success/40 text-success">
                         <Database className="w-3 h-3" />{activeKnowledgeCount} RAG
                       </Badge>
                     )}
@@ -1254,10 +1254,10 @@ const DashboardAiCenter: React.FC = () => {
           <TabsContent value="knowledge" className="mt-0 space-y-3">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
-                { icon: Database, value: knowledgeEntries.length, label: t('إجمالي المصادر', 'Total Sources'), color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-950/30' },
-                { icon: CheckCircle2, value: activeKnowledgeCount, label: t('مصادر نشطة', 'Active'), color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-950/30' },
-                { icon: Hash, value: totalKnowledgeChars.toLocaleString(), label: t('إجمالي الأحرف', 'Total Chars'), color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-950/30' },
-                { icon: Brain, value: localSettings.include_knowledge ? t('مفعّل', 'ON') : t('معطّل', 'OFF'), label: t('الربط بالمساعد', 'Assistant Link'), color: localSettings.include_knowledge ? 'text-emerald-600' : 'text-red-500', bg: localSettings.include_knowledge ? 'bg-emerald-50 dark:bg-emerald-950/30' : 'bg-red-50 dark:bg-red-950/30' },
+                { icon: Database, value: knowledgeEntries.length, label: t('إجمالي المصادر', 'Total Sources'), color: 'text-info', bg: 'bg-info dark:bg-info/30' },
+                { icon: CheckCircle2, value: activeKnowledgeCount, label: t('مصادر نشطة', 'Active'), color: 'text-success', bg: 'bg-success dark:bg-success/30' },
+                { icon: Hash, value: totalKnowledgeChars.toLocaleString(), label: t('إجمالي الأحرف', 'Total Chars'), color: 'text-warning', bg: 'bg-warning dark:bg-warning/30' },
+                { icon: Brain, value: localSettings.include_knowledge ? t('مفعّل', 'ON') : t('معطّل', 'OFF'), label: t('الربط بالمساعد', 'Assistant Link'), color: localSettings.include_knowledge ? 'text-success' : 'text-destructive', bg: localSettings.include_knowledge ? 'bg-success dark:bg-success/30' : 'bg-destructive dark:bg-destructive/30' },
               ].map((s, i) => (
                 <Card key={i} className="rounded-xl border-border/40">
                   <CardContent className="p-3 flex items-center gap-2.5">
@@ -1314,7 +1314,7 @@ const DashboardAiCenter: React.FC = () => {
                         <Upload className="w-5 h-5 text-muted-foreground" />
                         <span className="text-xs text-muted-foreground">{t('اختر ملف', 'Choose file')}</span>
                       </Button>
-                      {addContent && <p className="text-[10px] text-emerald-600 flex items-center gap-1"><CheckCircle2 className="w-3 h-3" />{t(`تم تحميل ${addContent.length} حرف`, `Loaded ${addContent.length} chars`)}</p>}
+                      {addContent && <p className="text-[10px] text-success flex items-center gap-1"><CheckCircle2 className="w-3 h-3" />{t(`تم تحميل ${addContent.length} حرف`, `Loaded ${addContent.length} chars`)}</p>}
                     </div>
                   ) : (
                     <Textarea value={addContent} onChange={e => setAddContent(e.target.value)}
@@ -1350,9 +1350,9 @@ const DashboardAiCenter: React.FC = () => {
                         <div key={entry.id} className={`p-3 hover:bg-muted/30 transition-colors ${!entry.is_active ? 'opacity-50' : ''}`}>
                           <div className="flex items-start gap-3">
                             <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center shrink-0 mt-0.5">
-                              {entry.source_type === 'url' ? <Globe className="w-4 h-4 text-blue-500" />
-                                : entry.source_type === 'file' ? <FileText className="w-4 h-4 text-amber-500" />
-                                : <Type className="w-4 h-4 text-emerald-500" />}
+                              {entry.source_type === 'url' ? <Globe className="w-4 h-4 text-info" />
+                                : entry.source_type === 'file' ? <FileText className="w-4 h-4 text-warning" />
+                                : <Type className="w-4 h-4 text-success" />}
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-0.5">
@@ -1370,7 +1370,7 @@ const DashboardAiCenter: React.FC = () => {
                             <div className="flex items-center gap-1 shrink-0">
                               <Tooltip><TooltipTrigger asChild>
                                 <Button variant="ghost" size="sm" className="h-7 w-7 rounded-lg" onClick={() => toggleKnowledge(entry.id, !entry.is_active)}>
-                                  {entry.is_active ? <Eye className="w-3.5 h-3.5 text-emerald-500" /> : <EyeOff className="w-3.5 h-3.5" />}
+                                  {entry.is_active ? <Eye className="w-3.5 h-3.5 text-success" /> : <EyeOff className="w-3.5 h-3.5" />}
                                 </Button>
                               </TooltipTrigger><TooltipContent className="text-[10px]">{entry.is_active ? t('تعطيل', 'Disable') : t('تفعيل', 'Enable')}</TooltipContent></Tooltip>
                               <Button variant="ghost" size="sm" className="h-7 w-7 rounded-lg text-destructive hover:text-destructive" onClick={() => deleteKnowledge(entry.id)}>
@@ -1393,19 +1393,19 @@ const DashboardAiCenter: React.FC = () => {
             {history.length > 0 && (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <Card className="rounded-xl border-border/40"><CardContent className="p-3 flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/30 flex items-center justify-center"><Activity className="w-4 h-4 text-blue-600" /></div>
+                  <div className="w-8 h-8 rounded-lg bg-info dark:bg-info/30 flex items-center justify-center"><Activity className="w-4 h-4 text-info" /></div>
                   <div><p className="text-sm font-bold tech-content">{history.length}</p><p className="text-[10px] text-muted-foreground">{t('عمليات', 'Operations')}</p></div>
                 </CardContent></Card>
                 <Card className="rounded-xl border-border/40"><CardContent className="p-3 flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-950/30 flex items-center justify-center"><ArrowUpRight className="w-4 h-4 text-purple-600" /></div>
+                  <div className="w-8 h-8 rounded-lg bg-secondary dark:bg-secondary/30 flex items-center justify-center"><ArrowUpRight className="w-4 h-4 text-secondary" /></div>
                   <div><p className="text-sm font-bold tech-content">{(history.reduce((s, h) => s + h.inputLen, 0) / 1000).toFixed(1)}K</p><p className="text-[10px] text-muted-foreground">{t('أحرف مدخلة', 'Input chars')}</p></div>
                 </CardContent></Card>
                 <Card className="rounded-xl border-border/40"><CardContent className="p-3 flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 flex items-center justify-center"><Download className="w-4 h-4 text-emerald-600" /></div>
+                  <div className="w-8 h-8 rounded-lg bg-success dark:bg-success/30 flex items-center justify-center"><Download className="w-4 h-4 text-success" /></div>
                   <div><p className="text-sm font-bold tech-content">{(history.reduce((s, h) => s + h.outputLen, 0) / 1000).toFixed(1)}K</p><p className="text-[10px] text-muted-foreground">{t('أحرف ناتجة', 'Output chars')}</p></div>
                 </CardContent></Card>
                 <Card className="rounded-xl border-border/40"><CardContent className="p-3 flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/30 flex items-center justify-center"><Gauge className="w-4 h-4 text-amber-600" /></div>
+                  <div className="w-8 h-8 rounded-lg bg-warning dark:bg-warning/30 flex items-center justify-center"><Gauge className="w-4 h-4 text-warning" /></div>
                   <div><p className="text-sm font-bold tech-content">{[...new Set(history.map(h => h.model))].length}</p><p className="text-[10px] text-muted-foreground">{t('نماذج مستخدمة', 'Models used')}</p></div>
                 </CardContent></Card>
               </div>

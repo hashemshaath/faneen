@@ -182,11 +182,11 @@ export default function AdminSitemapStatus() {
           </Card>
           <Card>
             <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">{isAr ? 'مسارات سليمة' : 'Healthy endpoints'}</CardTitle></CardHeader>
-            <CardContent><div className="text-3xl font-bold text-emerald-600 dark:text-emerald-400 tech-content">{isLoading ? '—' : okCount}</div></CardContent>
+            <CardContent><div className="text-3xl font-bold text-success dark:text-success tech-content">{isLoading ? '—' : okCount}</div></CardContent>
           </Card>
           <Card>
             <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">{isAr ? 'أخطاء / تحذيرات' : 'Errors / warnings'}</CardTitle></CardHeader>
-            <CardContent><div className={`text-3xl font-bold tech-content ${errorCount ? 'text-red-600 dark:text-red-400' : 'text-muted-foreground'}`}>{isLoading ? '—' : errorCount}</div></CardContent>
+            <CardContent><div className={`text-3xl font-bold tech-content ${errorCount ? 'text-destructive dark:text-destructive' : 'text-muted-foreground'}`}>{isLoading ? '—' : errorCount}</div></CardContent>
           </Card>
         </div>
 
@@ -197,7 +197,7 @@ export default function AdminSitemapStatus() {
             {!isLoading && data?.map((row) => {
               const r = row.result;
               const Icon = r.ok ? CheckCircle2 : (r.status === 0 || r.isSpaFallback) ? XCircle : AlertTriangle;
-              const colorCls = r.ok ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400';
+              const colorCls = r.ok ? 'text-success dark:text-success' : 'text-destructive dark:text-destructive';
               return (
                 <div key={row.url} className="border rounded-xl p-4 hover-lift">
                   <div className="flex items-start justify-between gap-3 flex-wrap">
@@ -227,7 +227,7 @@ export default function AdminSitemapStatus() {
                     <div><span className="opacity-60">Content-Type: </span>{r.contentType || '—'}</div>
                     <div><span className="opacity-60">Last-mod: </span>{r.lastmod ?? '—'}</div>
                     <div><span className="opacity-60">Checked: </span>{new Date(r.fetchedAt).toLocaleTimeString()}</div>
-                    {r.error && <div className="col-span-full text-red-600 dark:text-red-400">{r.error}</div>}
+                    {r.error && <div className="col-span-full text-destructive dark:text-destructive">{r.error}</div>}
                   </div>
                 </div>
               );
@@ -250,7 +250,7 @@ export default function AdminSitemapStatus() {
             {robotsRows.length > 0 && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 {robotsRows.map((r) => (
-                  <div key={r.path + r.expected} className={`flex items-center justify-between gap-2 border rounded-lg px-3 py-2 ${r.ok ? '' : 'border-red-500/40 bg-red-500/5'}`}>
+                  <div key={r.path + r.expected} className={`flex items-center justify-between gap-2 border rounded-lg px-3 py-2 ${r.ok ? '' : 'border-destructive/40 bg-destructive/5'}`}>
                     <div className="min-w-0 flex-1">
                       <div className="text-sm font-medium tech-content truncate">{r.path}</div>
                       <div className="text-xs text-muted-foreground tech-content">
@@ -290,14 +290,14 @@ export default function AdminSitemapStatus() {
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       {run.has_failures || run.has_spa_fallback
-                        ? <XCircle className="h-5 w-5 text-red-600 dark:text-red-400 shrink-0" />
-                        : <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400 shrink-0" />}
+                        ? <XCircle className="h-5 w-5 text-destructive dark:text-destructive shrink-0" />
+                        : <CheckCircle2 className="h-5 w-5 text-success dark:text-success shrink-0" />}
                       <div className="text-start min-w-0">
                         <div className="text-sm font-semibold tech-content">{new Date(run.created_at).toLocaleString()}</div>
                         <div className="text-xs text-muted-foreground tech-content">
                           {run.triggered_by} · {run.ok_count}/{run.total_endpoints} ok · {run.total_urls} urls
                           {typeof diff.totalUrlsDelta === 'number' && diff.totalUrlsDelta !== 0 && (
-                            <span className={diff.totalUrlsDelta > 0 ? ' text-emerald-600' : ' text-red-600'}> ({diff.totalUrlsDelta > 0 ? '+' : ''}{diff.totalUrlsDelta})</span>
+                            <span className={diff.totalUrlsDelta > 0 ? ' text-success' : ' text-destructive'}> ({diff.totalUrlsDelta > 0 ? '+' : ''}{diff.totalUrlsDelta})</span>
                           )}
                         </div>
                       </div>
@@ -316,7 +316,7 @@ export default function AdminSitemapStatus() {
                           <div className="font-semibold text-xs mb-1">{isAr ? 'تغيرات الحالة' : 'Status flips'}</div>
                           <ul className="text-xs space-y-1 tech-content">
                             {diff.statusFlips!.map((f) => (
-                              <li key={f.url} className={f.to ? 'text-emerald-600' : 'text-red-600'}>
+                              <li key={f.url} className={f.to ? 'text-success' : 'text-destructive'}>
                                 {f.url} : {String(f.from)} → {String(f.to)}
                               </li>
                             ))}
@@ -329,7 +329,7 @@ export default function AdminSitemapStatus() {
                           <ul className="text-xs space-y-1 tech-content">
                             {diff.urlCountDeltas!.map((d) => (
                               <li key={d.url}>
-                                {d.url} : {d.from} → {d.to} <span className={d.delta > 0 ? 'text-emerald-600' : 'text-red-600'}>({d.delta > 0 ? '+' : ''}{d.delta})</span>
+                                {d.url} : {d.from} → {d.to} <span className={d.delta > 0 ? 'text-success' : 'text-destructive'}>({d.delta > 0 ? '+' : ''}{d.delta})</span>
                               </li>
                             ))}
                           </ul>
@@ -339,7 +339,7 @@ export default function AdminSitemapStatus() {
                         <div className="font-semibold text-xs mb-1">{isAr ? 'النقاط' : 'Endpoints'}</div>
                         <ul className="text-xs space-y-1 tech-content">
                           {((run.results as Array<{ url: string; status: number; ok: boolean; urlCount: number; isSpaFallback: boolean }>) ?? []).map((r) => (
-                            <li key={r.url} className={r.ok ? '' : 'text-red-600'}>
+                            <li key={r.url} className={r.ok ? '' : 'text-destructive'}>
                               [{r.status || 'ERR'}] {r.url} — {r.urlCount} urls{r.isSpaFallback ? ' · SPA!' : ''}
                             </li>
                           ))}

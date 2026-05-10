@@ -48,11 +48,11 @@ const emptyForm: TagForm = {
 
 const tagGroups = [
   { value: 'general', ar: 'عام', en: 'General', icon: Tags, color: 'bg-slate-500/10 text-slate-600' },
-  { value: 'products', ar: 'منتجات', en: 'Products', icon: Package, color: 'bg-blue-500/10 text-blue-600' },
-  { value: 'materials', ar: 'مواد', en: 'Materials', icon: Layers, color: 'bg-amber-500/10 text-amber-600' },
-  { value: 'services', ar: 'خدمات', en: 'Services', icon: Wrench, color: 'bg-emerald-500/10 text-emerald-600' },
-  { value: 'features', ar: 'مميزات', en: 'Features', icon: Star, color: 'bg-purple-500/10 text-purple-600' },
-  { value: 'certifications', ar: 'شهادات', en: 'Certifications', icon: Award, color: 'bg-rose-500/10 text-rose-600' },
+  { value: 'products', ar: 'منتجات', en: 'Products', icon: Package, color: 'bg-info/10 text-info' },
+  { value: 'materials', ar: 'مواد', en: 'Materials', icon: Layers, color: 'bg-warning/10 text-warning' },
+  { value: 'services', ar: 'خدمات', en: 'Services', icon: Wrench, color: 'bg-success/10 text-success' },
+  { value: 'features', ar: 'مميزات', en: 'Features', icon: Star, color: 'bg-secondary/10 text-secondary' },
+  { value: 'certifications', ar: 'شهادات', en: 'Certifications', icon: Award, color: 'bg-destructive/10 text-destructive' },
 ];
 
 const getGroupInfo = (value: string) => tagGroups.find(g => g.value === value) || tagGroups[0];
@@ -115,7 +115,7 @@ const SortableTagRow = React.memo(({
             <button
               onClick={() => onToggleActive(tag.id, !tag.is_active)}
               className={`w-2 h-2 rounded-full shrink-0 transition-colors ${
-                tag.is_active ? 'bg-emerald-500' : 'bg-red-400'
+                tag.is_active ? 'bg-success' : 'bg-destructive'
               }`}
             />
           </TooltipTrigger>
@@ -338,9 +338,9 @@ const AdminTags = () => {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
               { label: isRTL ? 'إجمالي الوسوم' : 'Total Tags', value: stats.total, icon: Tags, color: 'text-primary bg-primary/10' },
-              { label: isRTL ? 'مفعّلة' : 'Active', value: stats.active, icon: Eye, color: 'text-emerald-600 bg-emerald-500/10' },
-              { label: isRTL ? 'معطّلة' : 'Inactive', value: stats.total - stats.active, icon: EyeOff, color: 'text-red-500 bg-red-500/10' },
-              { label: isRTL ? 'المجموعات' : 'Groups', value: stats.groups, icon: Layers, color: 'text-blue-600 bg-blue-500/10' },
+              { label: isRTL ? 'مفعّلة' : 'Active', value: stats.active, icon: Eye, color: 'text-success bg-success/10' },
+              { label: isRTL ? 'معطّلة' : 'Inactive', value: stats.total - stats.active, icon: EyeOff, color: 'text-destructive bg-destructive/10' },
+              { label: isRTL ? 'المجموعات' : 'Groups', value: stats.groups, icon: Layers, color: 'text-info bg-info/10' },
             ].map((s, i) => (
               <Card key={i} className="border-border/50">
                 <CardContent className="p-3 flex items-center gap-3">
@@ -553,7 +553,7 @@ const AdminTags = () => {
                         <Badge variant="outline" className={`text-[10px] px-1.5 py-0 gap-1 ${group.color}`}>
                           <GroupIcon className="w-2.5 h-2.5" />{isRTL ? group.ar : group.en}
                         </Badge>
-                        <div className={`w-2 h-2 rounded-full ${tag.is_active ? 'bg-emerald-500' : 'bg-red-400'}`} />
+                        <div className={`w-2 h-2 rounded-full ${tag.is_active ? 'bg-success' : 'bg-destructive'}`} />
                       </div>
                     </CardContent>
                   </Card>

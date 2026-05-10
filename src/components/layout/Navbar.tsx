@@ -204,8 +204,8 @@ export const Navbar = () => {
                 {(isAdmin || isSuperAdmin) && (
                   <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wide ${
                     isSuperAdmin
-                      ? 'bg-purple-500/15 text-purple-400 border border-purple-500/20'
-                      : 'bg-red-500/15 text-red-400 border border-red-500/20'
+                      ? 'bg-secondary/15 text-secondary border border-secondary/20'
+                      : 'bg-destructive/15 text-destructive border border-destructive/20'
                   }`}>
                     {isSuperAdmin ? <ShieldAlert className="w-3 h-3" /> : <Shield className="w-3 h-3" />}
                     {isSuperAdmin ? 'Super Admin' : 'Admin'}
@@ -291,8 +291,8 @@ export const Navbar = () => {
                   <div className="flex justify-center mb-1">
                     <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold ${
                       isSuperAdmin
-                        ? 'bg-purple-500/15 text-purple-400 border border-purple-500/20'
-                        : 'bg-red-500/15 text-red-400 border border-red-500/20'
+                        ? 'bg-secondary/15 text-secondary border border-secondary/20'
+                        : 'bg-destructive/15 text-destructive border border-destructive/20'
                     }`}>
                       {isSuperAdmin ? <ShieldAlert className="w-3.5 h-3.5" /> : <Shield className="w-3.5 h-3.5" />}
                       {isSuperAdmin ? 'Super Admin' : 'Admin'}

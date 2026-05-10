@@ -328,7 +328,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
             },
             {
               icon: AlertTriangle,
-              color: 'text-amber-500',
+              color: 'text-warning',
               titleAr: 'تحقق من البريد المهمل',
               titleEn: 'Check Spam / Junk',
               descAr: 'إذا لم تجد الرسالة، تحقق من مجلد الرسائل غير المرغوب فيها (Spam).',
@@ -400,9 +400,9 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
           </div>
         )}
         {deliveryCountdown === 0 && activityLog.length > 0 && (
-          <div className="flex items-center gap-2 rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 px-4 py-3">
-            <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
-            <p className="text-xs text-amber-700 dark:text-amber-300 font-medium">
+          <div className="flex items-center gap-2 rounded-lg border border-warning dark:border-warning bg-warning dark:bg-warning/20 px-4 py-3">
+            <AlertTriangle className="w-4 h-4 text-warning dark:text-warning shrink-0" />
+            <p className="text-xs text-warning dark:text-warning font-medium">
               {isRTL
                 ? 'انتهى الوقت المتوقع. إذا لم تصلك الرسالة، أعد الإرسال أو تحقق من البريد المهمل.'
                 : "Expected time has passed. If you haven't received it, resend or check your spam folder."}
@@ -412,9 +412,9 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
 
         {/* Resend success confirmation */}
         {resendSuccess && (
-          <div className="flex items-center gap-2 rounded-lg border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20 px-4 py-3 animate-in fade-in slide-in-from-top-2 duration-300">
-            <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-            <p className="text-xs text-emerald-700 dark:text-emerald-300 font-medium">
+          <div className="flex items-center gap-2 rounded-lg border border-success dark:border-success bg-success dark:bg-success/20 px-4 py-3 animate-in fade-in slide-in-from-top-2 duration-300">
+            <CheckCircle className="w-4 h-4 text-success dark:text-success shrink-0" />
+            <p className="text-xs text-success dark:text-success font-medium">
               {isRTL
                 ? `تم إعادة إرسال الرابط بنجاح (المرة ${resendCount}). تحقق من بريدك.`
                 : `Link resent successfully (attempt ${resendCount}). Check your email.`}
@@ -443,7 +443,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
           </p>
         )}
         {resendCount >= 3 && resendCooldown === 0 && (
-          <p className="text-[11px] text-amber-600 dark:text-amber-400 flex items-center justify-center gap-1">
+          <p className="text-[11px] text-warning dark:text-warning flex items-center justify-center gap-1">
             <AlertTriangle className="w-3 h-3" />
             {isRTL
               ? 'إذا لم تصلك الرسالة، تواصل مع الدعم الفني'

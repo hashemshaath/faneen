@@ -33,12 +33,12 @@ import { useNoIndex } from "@/hooks/useNoIndex";
 
 /* ── shared ────────────────────────────────────── */
 const statusColors: Record<string, string> = {
-  active: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
-  completed: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
+  active: 'bg-success/10 text-success dark:text-success',
+  completed: 'bg-info/10 text-info dark:text-info',
   cancelled: 'bg-muted text-muted-foreground',
   defaulted: 'bg-destructive/10 text-destructive',
-  pending: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
-  paid: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+  pending: 'bg-warning/10 text-warning dark:text-warning',
+  paid: 'bg-success/10 text-success dark:text-success',
   overdue: 'bg-destructive/10 text-destructive',
 };
 
@@ -221,7 +221,7 @@ const PaymentTimeline = React.memo(({ plans, isRTL, language }: { plans: Array<a
                   {/* Dot */}
                   <div className={cn(
                     "absolute top-1.5 w-2.5 h-2.5 rounded-full border-2 border-background z-10 transition-all",
-                    isOverdue ? "bg-destructive ring-2 ring-destructive/20" : daysLeft <= 7 ? "bg-amber-500 ring-2 ring-amber-500/20" : "bg-accent",
+                    isOverdue ? "bg-destructive ring-2 ring-destructive/20" : daysLeft <= 7 ? "bg-warning ring-2 ring-warning/20" : "bg-accent",
                     "start-[7px]"
                   )} />
 
@@ -247,7 +247,7 @@ const PaymentTimeline = React.memo(({ plans, isRTL, language }: { plans: Array<a
                           {isRTL ? 'متأخر' : 'Overdue'}
                         </Badge>
                       ) : daysLeft <= 7 ? (
-                        <Badge className="bg-amber-500/10 text-amber-600 text-[8px] px-1.5 py-0 h-[14px] gap-0.5">
+                        <Badge className="bg-warning/10 text-warning text-[8px] px-1.5 py-0 h-[14px] gap-0.5">
                           <Bell className="w-2.5 h-2.5" />
                           {isRTL ? `${daysLeft} يوم` : `${daysLeft}d left`}
                         </Badge>
@@ -275,11 +275,11 @@ const PaymentItem = React.memo(({ payment, plan, isProvider, isRTL, language, on
   return (
     <div className={cn(
       'flex items-center justify-between p-2.5 rounded-lg text-xs gap-2 transition-all group/item',
-      isPaid ? 'bg-emerald-50/50 dark:bg-emerald-950/10 hover:bg-emerald-50/80 dark:hover:bg-emerald-950/20' :
+      isPaid ? 'bg-success/50 dark:bg-success/10 hover:bg-success/80 dark:hover:bg-success/20' :
       isOverdue ? 'bg-destructive/5 hover:bg-destructive/10' : 'bg-muted/30 hover:bg-muted/50'
     )}>
       <div className="flex items-center gap-2 min-w-0">
-        {isPaid ? <CheckCircle className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" /> :
+        {isPaid ? <CheckCircle className="w-3.5 h-3.5 text-success dark:text-success shrink-0" /> :
          isOverdue ? <AlertTriangle className="w-3.5 h-3.5 text-destructive shrink-0 animate-pulse" /> :
          <Clock className="w-3.5 h-3.5 text-muted-foreground shrink-0" />}
         <span className="font-medium">{isRTL ? `القسط ${payment.installment_number}` : `#${payment.installment_number}`}</span>
@@ -290,7 +290,7 @@ const PaymentItem = React.memo(({ payment, plan, isProvider, isRTL, language, on
           <Calendar className="w-2.5 h-2.5" />{fmtDate(payment.due_date, language)}
         </span>
         {payment.paid_at && (
-          <span className="text-[9px] text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5">
+          <span className="text-[9px] text-success dark:text-success flex items-center gap-0.5">
             <CheckCircle className="w-2.5 h-2.5" />{fmtDate(payment.paid_at, language)}
           </span>
         )}
@@ -332,7 +332,7 @@ const PlanCard = React.memo(({ plan, user, isRTL, language, onMarkPaid, isPendin
         <div className={cn(
           "h-0.5 w-full",
           overdueCount > 0 ? "bg-gradient-to-r from-destructive to-destructive/50" :
-          plan.status === 'completed' ? "bg-gradient-to-r from-emerald-500 to-emerald-500/50" :
+          plan.status === 'completed' ? "bg-gradient-to-r from-success to-success/50" :
           "bg-gradient-to-r from-accent to-accent/30"
         )} />
 
@@ -364,7 +364,7 @@ const PlanCard = React.memo(({ plan, user, isRTL, language, onMarkPaid, isPendin
               <MiniRing pct={progress} size={36} stroke={3} />
               <div className="text-end">
                 <p className="tech-content font-bold text-sm">{fmtNum(Number(plan.total_amount))} <span className="text-[10px] font-normal text-muted-foreground">{plan.currency_code}</span></p>
-                <p className="text-[9px] text-muted-foreground">{isRTL ? 'مدفوع:' : 'Paid:'} <span className="tech-content text-emerald-600 dark:text-emerald-400">{fmtNum(paidAmount)}</span></p>
+                <p className="text-[9px] text-muted-foreground">{isRTL ? 'مدفوع:' : 'Paid:'} <span className="tech-content text-success dark:text-success">{fmtNum(paidAmount)}</span></p>
               </div>
             </div>
           </div>
@@ -443,7 +443,7 @@ const BnplShowcaseCard = React.memo(({ provider, isRTL }: { provider: any; isRTL
           {/* Interest badge floating */}
           <div className="absolute top-3 end-3">
             {provider.interest_rate === 0 ? (
-              <Badge className="bg-emerald-500/90 text-white text-[10px] px-2.5 py-1 gap-1 shadow-sm">
+              <Badge className="bg-success/90 text-white text-[10px] px-2.5 py-1 gap-1 shadow-sm">
                 <CheckCircle className="w-3 h-3" />
                 {isRTL ? 'بدون فوائد' : '0% Interest'}
               </Badge>
@@ -479,10 +479,10 @@ const BnplShowcaseCard = React.memo(({ provider, isRTL }: { provider: any; isRTL
             </div>
           </div>
 
-          <div className="p-2.5 rounded-lg bg-amber-500/5 border border-amber-500/15 mb-3">
+          <div className="p-2.5 rounded-lg bg-warning/5 border border-warning/15 mb-3">
             <div className="flex items-center gap-1.5">
-              <Info className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
-              <p className="text-[10px] text-amber-700 dark:text-amber-400">
+              <Info className="w-3.5 h-3.5 text-warning dark:text-warning shrink-0" />
+              <p className="text-[10px] text-warning dark:text-warning">
                 {isRTL ? 'يخضع للموافقة الائتمانية والسجل الائتماني' : 'Subject to credit approval'}
               </p>
             </div>
@@ -808,8 +808,8 @@ const DashboardInstallments = () => {
               {[
                 { icon: Activity, label: isRTL ? 'خطط التقسيط' : 'Total Plans', value: plans.length, color: 'text-primary' },
                 { icon: CircleDollarSign, label: isRTL ? 'إجمالي المبالغ' : 'Total Amount', value: fmtNum(stats.totalAmount), sub: 'SAR', color: 'text-accent' },
-                { icon: TrendingUp, label: isRTL ? 'المدفوع' : 'Paid', value: fmtNum(stats.paidAmount), sub: 'SAR', color: 'text-emerald-600 dark:text-emerald-400' },
-                { icon: TrendingDown, label: isRTL ? 'المتبقي' : 'Remaining', value: fmtNum(stats.totalAmount - stats.paidAmount), sub: 'SAR', color: 'text-amber-600 dark:text-amber-400' },
+                { icon: TrendingUp, label: isRTL ? 'المدفوع' : 'Paid', value: fmtNum(stats.paidAmount), sub: 'SAR', color: 'text-success dark:text-success' },
+                { icon: TrendingDown, label: isRTL ? 'المتبقي' : 'Remaining', value: fmtNum(stats.totalAmount - stats.paidAmount), sub: 'SAR', color: 'text-warning dark:text-warning' },
               ].map((s, i) => (
                 <div key={i} className="p-3 rounded-xl bg-background/60 backdrop-blur-sm border border-border/30 hover:bg-background/80 transition-colors">
                   <div className="flex items-center gap-2 mb-1">
@@ -841,7 +841,7 @@ const DashboardInstallments = () => {
               <CalendarDays className="w-3.5 h-3.5" />
               {isRTL ? 'الجدول الزمني' : 'Timeline'}
               {stats.pendingPayments > 0 && (
-                <Badge className="bg-amber-500/10 text-amber-600 text-[8px] px-1.5 py-0 h-4 ms-1">{stats.pendingPayments}</Badge>
+                <Badge className="bg-warning/10 text-warning text-[8px] px-1.5 py-0 h-4 ms-1">{stats.pendingPayments}</Badge>
               )}
             </TabsTrigger>
             <TabsTrigger value="bnpl" className="gap-1.5 text-xs">
@@ -871,8 +871,8 @@ const DashboardInstallments = () => {
                     </h4>
                     <PaymentDonut stats={stats} isRTL={isRTL} />
                     <div className="flex items-center gap-3 mt-3 text-[9px] text-muted-foreground">
-                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500" />{isRTL ? 'مدفوع' : 'Paid'}</span>
-                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-500" />{isRTL ? 'معلق' : 'Pending'}</span>
+                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-success" />{isRTL ? 'مدفوع' : 'Paid'}</span>
+                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-warning" />{isRTL ? 'معلق' : 'Pending'}</span>
                       <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-destructive" />{isRTL ? 'متأخر' : 'Overdue'}</span>
                     </div>
                   </CardContent>
@@ -894,8 +894,8 @@ const DashboardInstallments = () => {
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                       {[
                         { label: isRTL ? 'إجمالي' : 'Total', value: fmtNum(stats.totalAmount), color: 'text-foreground', bg: 'bg-muted/40' },
-                        { label: isRTL ? 'مسدد' : 'Paid', value: fmtNum(stats.paidAmount), color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50/50 dark:bg-emerald-950/10' },
-                        { label: isRTL ? 'معلق' : 'Pending', value: fmtNum(stats.pendingAmount), color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50/50 dark:bg-amber-950/10' },
+                        { label: isRTL ? 'مسدد' : 'Paid', value: fmtNum(stats.paidAmount), color: 'text-success dark:text-success', bg: 'bg-success/50 dark:bg-success/10' },
+                        { label: isRTL ? 'معلق' : 'Pending', value: fmtNum(stats.pendingAmount), color: 'text-warning dark:text-warning', bg: 'bg-warning/50 dark:bg-warning/10' },
                         { label: isRTL ? 'متأخر' : 'Overdue', value: fmtNum(stats.overdueAmount), color: 'text-destructive', bg: stats.overdueAmount > 0 ? 'bg-destructive/5' : 'bg-muted/30' },
                       ].map((item, i) => (
                         <div key={i} className={cn("p-2 rounded-lg text-center", item.bg)}>
@@ -1027,23 +1027,23 @@ const DashboardInstallments = () => {
 
                   return (
                     <Card className="border-border/40 overflow-hidden">
-                      <div className="h-0.5 bg-gradient-to-r from-emerald-500 to-emerald-500/30" />
+                      <div className="h-0.5 bg-gradient-to-r from-success to-success/30" />
                       <CardContent className="p-4 sm:p-5">
                         <h3 className="font-heading font-bold text-sm flex items-center gap-2 mb-3">
-                          <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                            <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                          <div className="w-7 h-7 rounded-lg bg-success/10 flex items-center justify-center">
+                            <CheckCircle className="w-4 h-4 text-success dark:text-success" />
                           </div>
                           {isRTL ? 'آخر المدفوعات' : 'Recent Payments'}
                         </h3>
                         <div className="space-y-1.5">
                           {recent5.map((p) => (
-                            <div key={p.id} className="flex items-center justify-between p-2.5 rounded-lg bg-emerald-50/30 dark:bg-emerald-950/10 text-xs hover:bg-emerald-50/60 dark:hover:bg-emerald-950/20 transition-colors">
+                            <div key={p.id} className="flex items-center justify-between p-2.5 rounded-lg bg-success/30 dark:bg-success/10 text-xs hover:bg-success/60 dark:hover:bg-success/20 transition-colors">
                               <div className="flex items-center gap-2 min-w-0">
-                                <CheckCircle className="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                                <CheckCircle className="w-3 h-3 text-success dark:text-success shrink-0" />
                                 <span className="truncate">{p.contract ? (isRTL ? p.contract.title_ar : (p.contract.title_en || p.contract.title_ar)) : ''}</span>
                               </div>
                               <div className="flex items-center gap-2 shrink-0 text-[10px]">
-                                <span className="tech-content font-semibold text-emerald-600 dark:text-emerald-400">{fmtNum(Number(p.amount))} {p.currency}</span>
+                                <span className="tech-content font-semibold text-success dark:text-success">{fmtNum(Number(p.amount))} {p.currency}</span>
                                 <span className="text-muted-foreground">{fmtDate(p.paid_at, language)}</span>
                               </div>
                             </div>
@@ -1160,8 +1160,8 @@ const DashboardInstallments = () => {
                   <p className="text-lg font-bold tech-content text-primary">{allProviders.length}</p>
                   <p className="text-[9px] text-muted-foreground">{isRTL ? 'إجمالي الشركات' : 'Total Providers'}</p>
                 </div>
-                <div className="p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/10 text-center">
-                  <p className="text-lg font-bold tech-content text-emerald-600 dark:text-emerald-400">{activeProviders.length}</p>
+                <div className="p-3 rounded-xl bg-success/5 border border-success/10 text-center">
+                  <p className="text-lg font-bold tech-content text-success dark:text-success">{activeProviders.length}</p>
                   <p className="text-[9px] text-muted-foreground">{isRTL ? 'مفعّلة' : 'Active'}</p>
                 </div>
                 <div className="p-3 rounded-xl bg-muted/50 border border-border/20 text-center">
@@ -1228,7 +1228,7 @@ const DashboardInstallments = () => {
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-1.5 flex-wrap">
                                   <h4 className="font-heading font-bold text-sm">{name}</h4>
-                                  <Badge className={cn('text-[8px] px-1.5 py-0 h-[14px]', p.is_active ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-destructive/10 text-destructive')}>
+                                  <Badge className={cn('text-[8px] px-1.5 py-0 h-[14px]', p.is_active ? 'bg-success/10 text-success dark:text-success' : 'bg-destructive/10 text-destructive')}>
                                     {p.is_active ? (isRTL ? 'مفعّل' : 'Active') : (isRTL ? 'معطّل' : 'Disabled')}
                                   </Badge>
                                 </div>
@@ -1236,7 +1236,7 @@ const DashboardInstallments = () => {
                                 <div className="flex items-center gap-1.5 mt-1">
                                   <Badge variant="outline" className="text-[7px] px-1 py-0 h-3 tech-content">{p.slug}</Badge>
                                   {p.interest_rate === 0 && (
-                                    <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[7px] px-1 py-0 h-3 gap-0.5">
+                                    <Badge className="bg-success/10 text-success dark:text-success text-[7px] px-1 py-0 h-3 gap-0.5">
                                       <CheckCircle className="w-2 h-2" />{isRTL ? 'بدون فوائد' : '0%'}
                                     </Badge>
                                   )}

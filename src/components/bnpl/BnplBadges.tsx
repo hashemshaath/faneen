@@ -97,7 +97,7 @@ export const BnplBadges = ({ businessId, compact = false }: Props) => {
                       <span>{p.installments_count} {isRTL ? 'أقساط' : 'payments'}</span>
                       <span>•</span>
                       {p.interest_rate === 0 ? (
-                        <span className="text-emerald-600 font-medium">{isRTL ? 'بدون فوائد' : '0% Interest'}</span>
+                        <span className="text-success font-medium">{isRTL ? 'بدون فوائد' : '0% Interest'}</span>
                       ) : (
                         <span>{p.interest_rate}%</span>
                       )}
@@ -163,7 +163,7 @@ const ProviderCard = ({ provider: p, linked }: { provider: any; linked: any }) =
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
           {p.interest_rate === 0 ? (
-            <Badge className="bg-emerald-500/10 text-emerald-600 text-[9px] px-1.5 py-0">{isRTL ? 'بدون فوائد' : '0%'}</Badge>
+            <Badge className="bg-success/10 text-success text-[9px] px-1.5 py-0">{isRTL ? 'بدون فوائد' : '0%'}</Badge>
           ) : (
             <Badge variant="outline" className="text-[9px] px-1.5 py-0">{p.interest_rate}%</Badge>
           )}

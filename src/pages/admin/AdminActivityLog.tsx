@@ -21,21 +21,21 @@ import { useNoIndex } from "@/hooks/useNoIndex";
 /* ─── Action Config ─── */
 type Bi = { ar: string; en: string };
 const actionConfig: Record<string, Bi & { color: string; icon: React.ElementType; iconBg: string }> = {
-  create:              { ar: 'إنشاء',                  en: 'Create',              color: 'text-emerald-600 dark:text-emerald-400', iconBg: 'bg-emerald-500/10', icon: FileText },
-  update:              { ar: 'تعديل بيانات',           en: 'Update',              color: 'text-blue-600 dark:text-blue-400',       iconBg: 'bg-blue-500/10',    icon: Edit },
-  delete:              { ar: 'حذف',                    en: 'Delete',              color: 'text-red-600 dark:text-red-400',         iconBg: 'bg-red-500/10',     icon: Trash2 },
-  login:               { ar: 'تسجيل دخول',             en: 'Login',               color: 'text-purple-600 dark:text-purple-400',   iconBg: 'bg-purple-500/10',  icon: LogIn },
-  role_change:         { ar: 'تغيير صلاحية',           en: 'Role change',         color: 'text-amber-600 dark:text-amber-400',     iconBg: 'bg-amber-500/10',   icon: Shield },
-  role_assigned:       { ar: 'منح صلاحية',             en: 'Role assigned',       color: 'text-amber-600 dark:text-amber-400',     iconBg: 'bg-amber-500/10',   icon: UserPlus },
-  role_updated:        { ar: 'تحديث صلاحية',           en: 'Role updated',        color: 'text-amber-600 dark:text-amber-400',     iconBg: 'bg-amber-500/10',   icon: Shield },
-  role_removed:        { ar: 'سحب صلاحية',             en: 'Role removed',        color: 'text-red-600 dark:text-red-400',         iconBg: 'bg-red-500/10',     icon: UserMinus },
-  settings:            { ar: 'تعديل إعدادات',          en: 'Settings change',     color: 'text-teal-600 dark:text-teal-400',       iconBg: 'bg-teal-500/10',    icon: Settings },
-  setting_created:     { ar: 'إنشاء إعداد',            en: 'Setting created',     color: 'text-teal-600 dark:text-teal-400',       iconBg: 'bg-teal-500/10',    icon: Settings },
-  setting_updated:     { ar: 'تحديث إعداد',            en: 'Setting updated',     color: 'text-blue-600 dark:text-blue-400',       iconBg: 'bg-blue-500/10',    icon: Settings },
-  setting_deleted:     { ar: 'حذف إعداد',              en: 'Setting deleted',     color: 'text-red-600 dark:text-red-400',         iconBg: 'bg-red-500/10',     icon: Settings },
-  user_disabled:       { ar: 'تعطيل حساب',             en: 'Account disabled',    color: 'text-orange-600 dark:text-orange-400',   iconBg: 'bg-orange-500/10',  icon: Ban },
-  user_enabled:        { ar: 'تفعيل حساب',             en: 'Account enabled',     color: 'text-emerald-600 dark:text-emerald-400', iconBg: 'bg-emerald-500/10', icon: CheckCircle },
-  unauthorized_access: { ar: 'محاولة وصول غير مصرح',   en: 'Unauthorized access', color: 'text-red-700 dark:text-red-400',         iconBg: 'bg-red-500/15',     icon: AlertTriangle },
+  create:              { ar: 'إنشاء',                  en: 'Create',              color: 'text-success dark:text-success', iconBg: 'bg-success/10', icon: FileText },
+  update:              { ar: 'تعديل بيانات',           en: 'Update',              color: 'text-info dark:text-info',       iconBg: 'bg-info/10',    icon: Edit },
+  delete:              { ar: 'حذف',                    en: 'Delete',              color: 'text-destructive dark:text-destructive',         iconBg: 'bg-destructive/10',     icon: Trash2 },
+  login:               { ar: 'تسجيل دخول',             en: 'Login',               color: 'text-secondary dark:text-secondary',   iconBg: 'bg-secondary/10',  icon: LogIn },
+  role_change:         { ar: 'تغيير صلاحية',           en: 'Role change',         color: 'text-warning dark:text-warning',     iconBg: 'bg-warning/10',   icon: Shield },
+  role_assigned:       { ar: 'منح صلاحية',             en: 'Role assigned',       color: 'text-warning dark:text-warning',     iconBg: 'bg-warning/10',   icon: UserPlus },
+  role_updated:        { ar: 'تحديث صلاحية',           en: 'Role updated',        color: 'text-warning dark:text-warning',     iconBg: 'bg-warning/10',   icon: Shield },
+  role_removed:        { ar: 'سحب صلاحية',             en: 'Role removed',        color: 'text-destructive dark:text-destructive',         iconBg: 'bg-destructive/10',     icon: UserMinus },
+  settings:            { ar: 'تعديل إعدادات',          en: 'Settings change',     color: 'text-success dark:text-success',       iconBg: 'bg-success/10',    icon: Settings },
+  setting_created:     { ar: 'إنشاء إعداد',            en: 'Setting created',     color: 'text-success dark:text-success',       iconBg: 'bg-success/10',    icon: Settings },
+  setting_updated:     { ar: 'تحديث إعداد',            en: 'Setting updated',     color: 'text-info dark:text-info',       iconBg: 'bg-info/10',    icon: Settings },
+  setting_deleted:     { ar: 'حذف إعداد',              en: 'Setting deleted',     color: 'text-destructive dark:text-destructive',         iconBg: 'bg-destructive/10',     icon: Settings },
+  user_disabled:       { ar: 'تعطيل حساب',             en: 'Account disabled',    color: 'text-urgent dark:text-urgent',   iconBg: 'bg-urgent/10',  icon: Ban },
+  user_enabled:        { ar: 'تفعيل حساب',             en: 'Account enabled',     color: 'text-success dark:text-success', iconBg: 'bg-success/10', icon: CheckCircle },
+  unauthorized_access: { ar: 'محاولة وصول غير مصرح',   en: 'Unauthorized access', color: 'text-destructive dark:text-destructive',         iconBg: 'bg-destructive/15',     icon: AlertTriangle },
 };
 
 const entityLabels: Record<string, Bi> = {
@@ -300,11 +300,11 @@ const LogItem = React.memo(({ log, getProfileName, isRTL }: {
                   <span className="text-muted-foreground font-medium shrink-0 min-w-[90px]">{item.label}</span>
                   {item.oldVal !== undefined && item.newVal !== undefined ? (
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="px-2 py-0.5 rounded-md bg-red-500/8 text-red-600 dark:text-red-400 line-through text-[11px]">
+                      <span className="px-2 py-0.5 rounded-md bg-destructive/8 text-destructive dark:text-destructive line-through text-[11px]">
                         {item.oldVal}
                       </span>
                       <ArrowRight className="w-3 h-3 text-muted-foreground shrink-0" />
-                      <span className="px-2 py-0.5 rounded-md bg-emerald-500/8 text-emerald-600 dark:text-emerald-400 text-[11px] font-medium">
+                      <span className="px-2 py-0.5 rounded-md bg-success/8 text-success dark:text-success text-[11px] font-medium">
                         {item.newVal}
                       </span>
                     </div>
@@ -451,8 +451,8 @@ const AdminActivityLog = () => {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {[
             { icon: Activity, label: isRTL ? tx.totalOps.ar : tx.totalOps.en, value: stats.total, gradient: 'from-primary/10 to-primary/5', iconBg: 'bg-primary/15 text-primary' },
-            { icon: TrendingUp, label: isRTL ? tx.todayOps.ar : tx.todayOps.en, value: stats.today, gradient: 'from-emerald-500/10 to-emerald-500/5', iconBg: 'bg-emerald-500/15 text-emerald-600' },
-            { icon: Users, label: isRTL ? tx.activeAdmins.ar : tx.activeAdmins.en, value: stats.uniqueAdmins, gradient: 'from-blue-500/10 to-blue-500/5', iconBg: 'bg-blue-500/15 text-blue-600' },
+            { icon: TrendingUp, label: isRTL ? tx.todayOps.ar : tx.todayOps.en, value: stats.today, gradient: 'from-success/10 to-success/5', iconBg: 'bg-success/15 text-success' },
+            { icon: Users, label: isRTL ? tx.activeAdmins.ar : tx.activeAdmins.en, value: stats.uniqueAdmins, gradient: 'from-info/10 to-info/5', iconBg: 'bg-info/15 text-info' },
             { icon: Zap, label: isRTL ? tx.topAction.ar : tx.topAction.en, value: pick(actionConfig[stats.topAction], isRTL, '—'), gradient: 'from-accent/10 to-accent/5', iconBg: 'bg-accent/15 text-accent-foreground' },
           ].map((stat, i) => (
             <div key={i} className={`rounded-2xl border border-border/30 bg-gradient-to-br ${stat.gradient} p-4 transition-all hover:shadow-md group`}>

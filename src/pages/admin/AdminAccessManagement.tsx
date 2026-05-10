@@ -27,10 +27,10 @@ const formatDate = (dateStr: string | null | undefined, lang: string): string =>
 };
 
 const statusConfig: Record<string, { icon: React.ElementType; color: string; labelAr: string; labelEn: string }> = {
-  requested: { icon: Clock, color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-800', labelAr: 'مطلوب', labelEn: 'Requested' },
-  resend: { icon: RefreshCw, color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800', labelAr: 'إعادة إرسال', labelEn: 'Resent' },
-  completed: { icon: CheckCircle2, color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800', labelAr: 'مكتمل', labelEn: 'Completed' },
-  failed: { icon: XCircle, color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800', labelAr: 'فشل', labelEn: 'Failed' },
+  requested: { icon: Clock, color: 'bg-info text-info dark:bg-info/30 dark:text-info border-info dark:border-info', labelAr: 'مطلوب', labelEn: 'Requested' },
+  resend: { icon: RefreshCw, color: 'bg-warning text-warning dark:bg-warning/30 dark:text-warning border-warning dark:border-warning', labelAr: 'إعادة إرسال', labelEn: 'Resent' },
+  completed: { icon: CheckCircle2, color: 'bg-success text-success dark:bg-success/30 dark:text-success border-success dark:border-success', labelAr: 'مكتمل', labelEn: 'Completed' },
+  failed: { icon: XCircle, color: 'bg-destructive text-destructive dark:bg-destructive/30 dark:text-destructive border-destructive dark:border-destructive', labelAr: 'فشل', labelEn: 'Failed' },
 };
 
 const AdminAccessManagement = () => {
@@ -246,8 +246,8 @@ const AdminAccessManagement = () => {
             </div>
 
             {!isSuperAdmin && (
-              <div className="rounded-xl border border-amber-300/50 bg-amber-500/10 p-3 text-sm flex items-start gap-2">
-                <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+              <div className="rounded-xl border border-warning/50 bg-warning/10 p-3 text-sm flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 text-warning shrink-0 mt-0.5" />
                 <span>{isRTL
                   ? 'يمكنك عرض الأدوار فقط — منح أو إزالة الأدمن مقتصر على Super Admin (مفروض على مستوى قاعدة البيانات).'
                   : 'View-only — granting or revoking admin is restricted to Super Admin (enforced by database RLS).'}
@@ -287,7 +287,7 @@ const AdminAccessManagement = () => {
                             {profile.email && <span className="flex items-center gap-1 text-[11px] text-muted-foreground truncate max-w-[240px]"><Mail className="w-3 h-3 shrink-0" />{profile.email}</span>}
                           </div>
                           <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                            {isSuperRole && <Badge className="text-[10px] gap-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white border-none"><Crown className="w-2.5 h-2.5" />Super Admin</Badge>}
+                            {isSuperRole && <Badge className="text-[10px] gap-1 bg-gradient-to-r from-warning to-urgent text-white border-none"><Crown className="w-2.5 h-2.5" />Super Admin</Badge>}
                             {isAdminRole && <Badge className="text-[10px] gap-1 bg-primary/15 text-primary border border-primary/30"><ShieldCheck className="w-2.5 h-2.5" />Admin</Badge>}
                             {!isAdminRole && !isSuperRole && <Badge variant="outline" className="text-[10px]">{isRTL ? 'مستخدم' : 'User'}</Badge>}
                           </div>
@@ -342,10 +342,10 @@ const AdminAccessManagement = () => {
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
           {[
             { icon: Users, label: isRTL ? 'إجمالي الحسابات' : 'Total Accounts', value: stats.total, gradient: 'from-primary/10 to-primary/5', iconBg: 'bg-primary/15 text-primary' },
-            { icon: UserCheck, label: isRTL ? 'هاتف موثق' : 'Phone Verified', value: stats.verified, gradient: 'from-emerald-500/10 to-emerald-500/5', iconBg: 'bg-emerald-500/15 text-emerald-600' },
-            { icon: CheckCircle2, label: isRTL ? 'مكتمل التسجيل' : 'Onboarded', value: stats.onboarded, gradient: 'from-blue-500/10 to-blue-500/5', iconBg: 'bg-blue-500/15 text-blue-600' },
-            { icon: Ban, label: isRTL ? 'حسابات معطّلة' : 'Disabled', value: stats.banned, gradient: 'from-red-500/10 to-red-500/5', iconBg: 'bg-red-500/15 text-red-600' },
-            { icon: History, label: isRTL ? 'إعادة تعيين (أسبوع)' : 'Resets (7d)', value: stats.recentResets, gradient: 'from-amber-500/10 to-amber-500/5', iconBg: 'bg-amber-500/15 text-amber-600' },
+            { icon: UserCheck, label: isRTL ? 'هاتف موثق' : 'Phone Verified', value: stats.verified, gradient: 'from-success/10 to-success/5', iconBg: 'bg-success/15 text-success' },
+            { icon: CheckCircle2, label: isRTL ? 'مكتمل التسجيل' : 'Onboarded', value: stats.onboarded, gradient: 'from-info/10 to-info/5', iconBg: 'bg-info/15 text-info' },
+            { icon: Ban, label: isRTL ? 'حسابات معطّلة' : 'Disabled', value: stats.banned, gradient: 'from-destructive/10 to-destructive/5', iconBg: 'bg-destructive/15 text-destructive' },
+            { icon: History, label: isRTL ? 'إعادة تعيين (أسبوع)' : 'Resets (7d)', value: stats.recentResets, gradient: 'from-warning/10 to-warning/5', iconBg: 'bg-warning/15 text-warning' },
           ].map((s, i) => (
             <div key={i} className={`relative overflow-hidden rounded-2xl border border-border/30 bg-gradient-to-br ${s.gradient} p-4 transition-all hover:shadow-md group`}>
               <div className="flex items-center gap-3">
@@ -413,10 +413,10 @@ const AdminAccessManagement = () => {
                         </div>
                         {/* Account status badges */}
                         <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                          <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${profile.is_onboarded ? 'border-emerald-300 text-emerald-600 dark:text-emerald-400' : 'border-amber-300 text-amber-600 dark:text-amber-400'}`}>
+                          <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${profile.is_onboarded ? 'border-success text-success dark:text-success' : 'border-warning text-warning dark:text-warning'}`}>
                             {profile.is_onboarded ? (isRTL ? 'مكتمل التسجيل' : 'Onboarded') : (isRTL ? 'لم يكتمل' : 'Not onboarded')}
                           </Badge>
-                          <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${profile.phone_verified ? 'border-emerald-300 text-emerald-600 dark:text-emerald-400' : 'border-muted text-muted-foreground'}`}>
+                          <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${profile.phone_verified ? 'border-success text-success dark:text-success' : 'border-muted text-muted-foreground'}`}>
                             {profile.phone_verified ? (isRTL ? 'هاتف موثق' : 'Phone verified') : (isRTL ? 'هاتف غير موثق' : 'Phone not verified')}
                           </Badge>
                           {lastReset && (() => {

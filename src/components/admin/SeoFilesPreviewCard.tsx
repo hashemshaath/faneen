@@ -139,7 +139,7 @@ export const SeoFilesPreviewCard = () => {
                 {isRTL ? f.label.ar : f.label.en}
                 {p && (
                   ok
-                    ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                    ? <CheckCircle2 className="w-3.5 h-3.5 text-success" />
                     : <AlertCircle className="w-3.5 h-3.5 text-destructive" />
                 )}
               </button>
@@ -158,7 +158,7 @@ export const SeoFilesPreviewCard = () => {
             <Badge
               variant="outline"
               className={`text-[10px] h-5 font-mono ${
-                isOk ? "bg-emerald-500/10 text-emerald-700 border-emerald-500/30" : "bg-destructive/10 text-destructive border-destructive/30"
+                isOk ? "bg-success/10 text-success border-success/30" : "bg-destructive/10 text-destructive border-destructive/30"
               }`}
             >
               HTTP {preview.status}

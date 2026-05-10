@@ -41,9 +41,9 @@ const kwScore = (n: number) => (n >= 8 && n <= 25 ? 'good' : n < 8 ? 'short' : '
 const ScoreBadge: React.FC<{ status: 'good' | 'short' | 'long'; isRTL: boolean }> = ({ status, isRTL }) => {
   useNoIndex();
   const map = {
-    good: { label: isRTL ? 'مثالي' : 'Optimal', cls: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30' },
-    short: { label: isRTL ? 'قصير' : 'Short', cls: 'bg-amber-500/10 text-amber-600 border-amber-500/30' },
-    long: { label: isRTL ? 'طويل' : 'Long', cls: 'bg-rose-500/10 text-rose-600 border-rose-500/30' },
+    good: { label: isRTL ? 'مثالي' : 'Optimal', cls: 'bg-success/10 text-success border-success/30' },
+    short: { label: isRTL ? 'قصير' : 'Short', cls: 'bg-warning/10 text-warning border-warning/30' },
+    long: { label: isRTL ? 'طويل' : 'Long', cls: 'bg-destructive/10 text-destructive border-destructive/30' },
   } as const;
   const { label, cls } = map[status];
   return <Badge variant="outline" className={cls}>{label}</Badge>;
@@ -54,7 +54,7 @@ const Delta: React.FC<{ current: number; previous: number | null }> = ({ current
   const diff = current - previous;
   if (diff === 0) return <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><Minus className="w-3 h-3" />0</span>;
   const Icon = diff > 0 ? ArrowUp : ArrowDown;
-  const cls = diff > 0 ? 'text-emerald-600' : 'text-rose-600';
+  const cls = diff > 0 ? 'text-success' : 'text-destructive';
   return (
     <span className={`inline-flex items-center gap-1 text-xs font-mono ${cls}`}>
       <Icon className="w-3 h-3" />{diff > 0 ? '+' : ''}{diff}
@@ -309,7 +309,7 @@ const AdminSectorSeo: React.FC = () => {
                               variant="ghost"
                               size="sm"
                               onClick={() => deleteSnapshot.mutate(snap.id)}
-                              className="h-7 w-7 p-0 text-muted-foreground hover:text-rose-600"
+                              className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </Button>

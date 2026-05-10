@@ -85,7 +85,7 @@ export const CopyButton = ({
       }
     >
       {copied
-        ? <Check className={cn(iconCls, 'text-emerald-600')} />
+        ? <Check className={cn(iconCls, 'text-success')} />
         : <Copy className={iconCls} />}
     </Button>
   );

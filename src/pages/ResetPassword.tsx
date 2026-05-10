@@ -132,8 +132,8 @@ const ResetPassword = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <div className="w-full max-w-md bg-card rounded-2xl border border-border p-8 shadow-sm space-y-6 text-center">
-          <div className="w-16 h-16 mx-auto rounded-full bg-amber-100 dark:bg-amber-900/20 flex items-center justify-center">
-            <Clock className="w-8 h-8 text-amber-600 dark:text-amber-400" />
+          <div className="w-16 h-16 mx-auto rounded-full bg-warning dark:bg-warning/20 flex items-center justify-center">
+            <Clock className="w-8 h-8 text-warning dark:text-warning" />
           </div>
           <div className="space-y-2">
             <h2 className="font-heading font-bold text-2xl text-foreground">

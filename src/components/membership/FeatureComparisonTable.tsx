@@ -97,7 +97,7 @@ export const FeatureComparisonTable = ({ isRTL }: FeatureComparisonTableProps) =
                           <td key={tier} className={cn('p-3 text-center', tier === 'premium' && 'bg-accent/5')}>
                             {field.type === 'boolean' ? (
                               val ? (
-                                <Check className="w-4 h-4 text-emerald-500 mx-auto" />
+                                <Check className="w-4 h-4 text-success mx-auto" />
                               ) : (
                                 <X className="w-4 h-4 text-muted-foreground/30 mx-auto" />
                               )

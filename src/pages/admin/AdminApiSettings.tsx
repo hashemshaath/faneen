@@ -43,7 +43,7 @@ interface CategoryMeta {
 
 const categoryConfig: Record<string, CategoryMeta> = {
   email: {
-    icon: Mail, gradient: 'from-blue-500/15 to-blue-500/5', iconColor: 'text-blue-600',
+    icon: Mail, gradient: 'from-info/15 to-info/5', iconColor: 'text-info',
     label: { ar: 'البريد الإلكتروني (SMTP)', en: 'Email (SMTP)' },
     desc: { ar: 'إعدادات خادم SMTP لإرسال رسائل البريد الإلكتروني من المنصة', en: 'SMTP server settings for sending emails from the platform' },
     docsUrl: 'https://support.google.com/mail/answer/7126229',
@@ -60,7 +60,7 @@ const categoryConfig: Record<string, CategoryMeta> = {
     },
   },
   sms: {
-    icon: Smartphone, gradient: 'from-emerald-500/15 to-emerald-500/5', iconColor: 'text-emerald-600',
+    icon: Smartphone, gradient: 'from-success/15 to-success/5', iconColor: 'text-success',
     label: { ar: 'الرسائل النصية (Twilio)', en: 'SMS (Twilio)' },
     desc: { ar: 'إعدادات Twilio Verify لإرسال رموز التحقق OTP عبر SMS', en: 'Twilio Verify settings for sending OTP verification codes via SMS' },
     docsUrl: 'https://www.twilio.com/docs/verify/quickstarts',
@@ -78,7 +78,7 @@ const categoryConfig: Record<string, CategoryMeta> = {
     },
   },
   ai: {
-    icon: Brain, gradient: 'from-purple-500/15 to-purple-500/5', iconColor: 'text-purple-600',
+    icon: Brain, gradient: 'from-secondary/15 to-secondary/5', iconColor: 'text-secondary',
     label: { ar: 'الذكاء الاصطناعي', en: 'AI Services' },
     desc: { ar: 'مفاتيح API لخدمات الذكاء الاصطناعي (OpenAI و Google AI)', en: 'API keys for AI services (OpenAI & Google AI)' },
     docsUrl: 'https://platform.openai.com/docs/api-reference',
@@ -96,7 +96,7 @@ const categoryConfig: Record<string, CategoryMeta> = {
     },
   },
   google: {
-    icon: Globe, gradient: 'from-red-500/15 to-red-500/5', iconColor: 'text-red-600',
+    icon: Globe, gradient: 'from-destructive/15 to-destructive/5', iconColor: 'text-destructive',
     label: { ar: 'منصات جوجل', en: 'Google Platforms' },
     desc: { ar: 'خدمات جوجل: الخرائط، التحليلات، الإشعارات، الحماية (reCAPTCHA)', en: 'Google services: Maps, Analytics, Push Notifications, reCAPTCHA' },
     docsUrl: 'https://console.cloud.google.com/',
@@ -162,7 +162,7 @@ const SettingField = React.memo(({ setting, editValue, isVisible, isRTL, languag
             <div className="flex items-center gap-2 flex-wrap">
               <Label className="font-semibold text-sm">{language === 'ar' ? setting.setting_label_ar : setting.setting_label_en}</Label>
               {isConfigured ? (
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                <CheckCircle2 className="w-3.5 h-3.5 text-success shrink-0" />
               ) : (
                 <XCircle className="w-3.5 h-3.5 text-muted-foreground/30 shrink-0" />
               )}
@@ -371,7 +371,7 @@ const AdminApiSettings = () => {
                       <p className="text-sm font-semibold truncate">{cfg.label[language as 'ar' | 'en']}</p>
                       <div className="flex items-center gap-2 mt-1">
                         {status.isConnected ? (
-                          <Badge className="bg-emerald-500/10 text-emerald-600 border-0 text-[10px] px-1.5 py-0 h-[16px] gap-0.5">
+                          <Badge className="bg-success/10 text-success border-0 text-[10px] px-1.5 py-0 h-[16px] gap-0.5">
                             <CheckCircle2 className="w-2.5 h-2.5" />{isRTL ? 'متصل' : 'Connected'}
                           </Badge>
                         ) : (
@@ -430,7 +430,7 @@ const AdminApiSettings = () => {
                     </div>
                     <div className="flex items-center gap-2">
                       {status.isConnected ? (
-                        <Badge className="bg-emerald-500/10 text-emerald-600 border-0 text-[10px] gap-1">
+                        <Badge className="bg-success/10 text-success border-0 text-[10px] gap-1">
                           <CheckCircle2 className="w-3 h-3" />{isRTL ? 'متصل بالكامل' : 'Fully Connected'}
                         </Badge>
                       ) : (
@@ -513,7 +513,7 @@ const AdminApiSettings = () => {
                             {cfg.endpoints.map((ep, i) => (
                               <div key={i} className="space-y-2">
                                 <div className="flex items-center gap-2">
-                                  <Badge className={`text-[10px] px-1.5 py-0 h-[18px] border-0 ${ep.method === 'GET' ? 'bg-blue-500/10 text-blue-600' : 'bg-emerald-500/10 text-emerald-600'}`}>
+                                  <Badge className={`text-[10px] px-1.5 py-0 h-[18px] border-0 ${ep.method === 'GET' ? 'bg-info/10 text-info' : 'bg-success/10 text-success'}`}>
                                     {ep.method}
                                   </Badge>
                                   <code className="text-xs font-mono bg-muted/60 px-2 py-0.5 rounded-md" dir="ltr">{ep.path}</code>
@@ -527,14 +527,14 @@ const AdminApiSettings = () => {
                       )}
 
                       {/* Security Notes */}
-                      <div className="bg-amber-500/[0.04] border border-amber-500/10 rounded-xl p-3">
-                        <h4 className="text-sm font-semibold flex items-center gap-2 mb-2 text-amber-700 dark:text-amber-400">
+                      <div className="bg-warning/[0.04] border border-warning/10 rounded-xl p-3">
+                        <h4 className="text-sm font-semibold flex items-center gap-2 mb-2 text-warning dark:text-warning">
                           <Shield className="w-4 h-4" />{isRTL ? 'ملاحظات أمنية' : 'Security Notes'}
                         </h4>
                         <ul className="space-y-1.5">
                           {cfg.securityNotes[language as 'ar' | 'en'].map((note, i) => (
                             <li key={i} className="text-xs text-muted-foreground flex items-start gap-2">
-                              <span className="text-amber-500 mt-1">•</span>{note}
+                              <span className="text-warning mt-1">•</span>{note}
                             </li>
                           ))}
                         </ul>

@@ -249,7 +249,7 @@ const AdminAnalyticsSettings = () => {
     <Badge
       variant="outline"
       className={ok
-        ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 gap-1"
+        ? "bg-success/10 text-success dark:text-success border-success/30 gap-1"
         : "bg-destructive/10 text-destructive border-destructive/30 gap-1"}
     >
       {ok ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
@@ -303,7 +303,7 @@ const AdminAnalyticsSettings = () => {
               </>
             ) : (
               <p className="text-sm text-muted-foreground flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 text-amber-500" /> {tx.notConfigured}
+                <AlertTriangle className="w-4 h-4 text-warning" /> {tx.notConfigured}
               </p>
             )}
           </CardContent>
@@ -374,10 +374,10 @@ const AdminAnalyticsSettings = () => {
                     variant="outline"
                     className={
                       health.lastVerdict === "ok"
-                        ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30"
+                        ? "bg-success/10 text-success dark:text-success border-success/30"
                         : health.lastVerdict === "no-decision"
                         ? "bg-muted text-muted-foreground"
-                        : "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30"
+                        : "bg-warning/10 text-warning dark:text-warning border-warning/30"
                     }
                   >
                     {verdictLabel(health.lastVerdict, tx)}
@@ -405,9 +405,9 @@ const AdminAnalyticsSettings = () => {
                         variant="outline"
                         className={
                           s.verdict === "ok"
-                            ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 gap-1"
+                            ? "bg-success/10 text-success dark:text-success border-success/30 gap-1"
                             : s.allDenied
-                            ? "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30 gap-1"
+                            ? "bg-warning/10 text-warning dark:text-warning border-warning/30 gap-1"
                             : "bg-muted text-muted-foreground gap-1"
                         }
                         title={new Date(s.ts).toISOString()}
@@ -505,11 +505,11 @@ const AdminAnalyticsSettings = () => {
                       variant="outline"
                       className={
                         e.kind === "replay"
-                          ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30"
+                          ? "bg-success/10 text-success dark:text-success border-success/30"
                           : e.kind === "update"
                           ? "bg-primary/10 text-primary border-primary/30"
                           : e.kind === "custom"
-                          ? "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30"
+                          ? "bg-warning/10 text-warning dark:text-warning border-warning/30"
                           : "bg-muted text-muted-foreground"
                       }
                     >

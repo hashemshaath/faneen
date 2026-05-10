@@ -70,16 +70,16 @@ function analyzeContent(text: string) {
 
 /* ─── Status config ─── */
 const statusConfig: Record<string, { ar: string; en: string; color: string; icon: React.ElementType }> = {
-  published: { ar: 'منشور', en: 'Published', color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20', icon: Globe },
-  draft: { ar: 'مسودة', en: 'Draft', color: 'bg-amber-500/10 text-amber-600 border-amber-500/20', icon: PenLine },
-  scheduled: { ar: 'مجدول', en: 'Scheduled', color: 'bg-blue-500/10 text-blue-600 border-blue-500/20', icon: CalendarClock },
+  published: { ar: 'منشور', en: 'Published', color: 'bg-success/10 text-success border-success/20', icon: Globe },
+  draft: { ar: 'مسودة', en: 'Draft', color: 'bg-warning/10 text-warning border-warning/20', icon: PenLine },
+  scheduled: { ar: 'مجدول', en: 'Scheduled', color: 'bg-info/10 text-info border-info/20', icon: CalendarClock },
 };
 
 /* ─── SEO score badge ─── */
 const seoScoreColor = (score: number) => {
-  if (score >= 80) return 'bg-emerald-500/10 text-emerald-600';
-  if (score >= 50) return 'bg-amber-500/10 text-amber-600';
-  return 'bg-red-500/10 text-red-600';
+  if (score >= 80) return 'bg-success/10 text-success';
+  if (score >= 50) return 'bg-warning/10 text-warning';
+  return 'bg-destructive/10 text-destructive';
 };
 
 /* ─── Post Card ─── */
@@ -147,7 +147,7 @@ const PostCard = React.memo(({ post, language, isRTL, onEdit, onDelete }: {
               <span className="flex items-center gap-1"><Hash className="w-3 h-3" />{post.focus_keyword}</span>
             )}
             {post.scheduled_at && (
-              <span className="flex items-center gap-1 text-blue-600"><CalendarClock className="w-3 h-3" />{format(new Date(post.scheduled_at), 'yyyy/MM/dd')}</span>
+              <span className="flex items-center gap-1 text-info"><CalendarClock className="w-3 h-3" />{format(new Date(post.scheduled_at), 'yyyy/MM/dd')}</span>
             )}
           </div>
         </div>
@@ -472,7 +472,7 @@ const DashboardBlog = () => {
   const charHint = (len: number, max: number) => {
     const pct = len / max;
     if (pct > 1) return 'text-destructive';
-    if (pct > 0.85) return 'text-amber-600';
+    if (pct > 0.85) return 'text-warning';
     return 'text-muted-foreground';
   };
 
@@ -505,10 +505,10 @@ const DashboardBlog = () => {
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             {[
               { label: isRTL ? 'إجمالي المقالات' : 'Total', value: stats.total, icon: FileText, gradient: 'from-primary/10 to-primary/5', iconBg: 'bg-primary/15 text-primary' },
-              { label: isRTL ? 'منشور' : 'Published', value: stats.published, icon: Globe, gradient: 'from-emerald-500/10 to-emerald-500/5', iconBg: 'bg-emerald-500/15 text-emerald-600' },
-              { label: isRTL ? 'مسودة' : 'Drafts', value: stats.draft, icon: PenLine, gradient: 'from-amber-500/10 to-amber-500/5', iconBg: 'bg-amber-500/15 text-amber-600' },
-              { label: isRTL ? 'مجدول' : 'Scheduled', value: stats.scheduled, icon: CalendarClock, gradient: 'from-blue-500/10 to-blue-500/5', iconBg: 'bg-blue-500/15 text-blue-600' },
-              { label: isRTL ? 'المشاهدات' : 'Views', value: stats.totalViews, icon: Eye, gradient: 'from-purple-500/10 to-purple-500/5', iconBg: 'bg-purple-500/15 text-purple-600' },
+              { label: isRTL ? 'منشور' : 'Published', value: stats.published, icon: Globe, gradient: 'from-success/10 to-success/5', iconBg: 'bg-success/15 text-success' },
+              { label: isRTL ? 'مسودة' : 'Drafts', value: stats.draft, icon: PenLine, gradient: 'from-warning/10 to-warning/5', iconBg: 'bg-warning/15 text-warning' },
+              { label: isRTL ? 'مجدول' : 'Scheduled', value: stats.scheduled, icon: CalendarClock, gradient: 'from-info/10 to-info/5', iconBg: 'bg-info/15 text-info' },
+              { label: isRTL ? 'المشاهدات' : 'Views', value: stats.totalViews, icon: Eye, gradient: 'from-secondary/10 to-secondary/5', iconBg: 'bg-secondary/15 text-secondary' },
               { label: isRTL ? 'متوسط SEO' : 'Avg SEO', value: `${stats.avgSeo}%`, icon: TrendingUp, gradient: 'from-accent/10 to-accent/5', iconBg: 'bg-accent/15 text-accent-foreground' },
             ].map((s, i) => (
               <div key={i} className={`rounded-2xl border border-border/30 bg-gradient-to-br ${s.gradient} p-3.5 transition-all hover:shadow-md group`}>
@@ -546,7 +546,7 @@ const DashboardBlog = () => {
                         {scheduledDate && <Badge variant="secondary" className="text-[9px] h-4 gap-1"><CalendarClock className="w-2.5 h-2.5" />{format(scheduledDate, 'MMM dd')}</Badge>}
                         {lastAutoSave && (
                           <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                            <CheckCircle2 className="w-2.5 h-2.5 text-emerald-500" />
+                            <CheckCircle2 className="w-2.5 h-2.5 text-success" />
                             {isRTL ? 'آخر حفظ' : 'Saved'} {format(lastAutoSave, 'HH:mm')}
                           </span>
                         )}
@@ -703,7 +703,7 @@ const DashboardBlog = () => {
                           <p className="text-[10px] text-muted-foreground mb-2 font-bold uppercase tracking-wider flex items-center gap-1"><Globe className="w-3 h-3" /> Google AR</p>
                           <div className="space-y-0.5" dir="rtl">
                             <p className="text-primary text-sm font-medium truncate">{form.meta_title_ar || form.title_ar || 'عنوان الصفحة'}</p>
-                            <p className="text-[10px] text-emerald-600 truncate">qitaat.com/blog/{form.slug || 'your-post-slug'}</p>
+                            <p className="text-[10px] text-success truncate">qitaat.com/blog/{form.slug || 'your-post-slug'}</p>
                             <p className="text-[11px] text-muted-foreground line-clamp-2">{form.meta_description_ar || form.excerpt_ar || 'سيظهر الوصف هنا...'}</p>
                           </div>
                         </div>
@@ -711,7 +711,7 @@ const DashboardBlog = () => {
                           <p className="text-[10px] text-muted-foreground mb-2 font-bold uppercase tracking-wider flex items-center gap-1"><Globe className="w-3 h-3" /> Google EN</p>
                           <div className="space-y-0.5" dir="ltr">
                             <p className="text-primary text-sm font-medium truncate">{form.meta_title_en || form.title_en || 'Page Title'}</p>
-                            <p className="text-[10px] text-emerald-600 truncate">qitaat.com/blog/{form.slug || 'your-post-slug'}</p>
+                            <p className="text-[10px] text-success truncate">qitaat.com/blog/{form.slug || 'your-post-slug'}</p>
                             <p className="text-[11px] text-muted-foreground line-clamp-2">{form.meta_description_en || form.excerpt_en || 'Description here...'}</p>
                           </div>
                         </div>
@@ -948,7 +948,7 @@ const DashboardBlog = () => {
                   </div>
                   <div className="p-4 space-y-3">
                     <div className="text-center">
-                      <span className={`text-2xl font-bold ${competitorAnalysis.competitive_score >= 70 ? 'text-emerald-600' : competitorAnalysis.competitive_score >= 40 ? 'text-amber-600' : 'text-red-600'}`}>
+                      <span className={`text-2xl font-bold ${competitorAnalysis.competitive_score >= 70 ? 'text-success' : competitorAnalysis.competitive_score >= 40 ? 'text-warning' : 'text-destructive'}`}>
                         {competitorAnalysis.competitive_score}
                       </span>
                       <p className="text-[10px] text-muted-foreground">{isRTL ? 'نقاط التنافسية' : 'Competitive Score'}</p>
@@ -966,23 +966,23 @@ const DashboardBlog = () => {
                     </div>
 
                     <div className="space-y-1">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-600">{isRTL ? 'نقاط القوة' : 'Strengths'}</p>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-success">{isRTL ? 'نقاط القوة' : 'Strengths'}</p>
                       {(isRTL ? competitorAnalysis.strengths_ar : competitorAnalysis.strengths_en)?.map((s: string, i: number) => (
-                        <p key={i} className="text-[11px] flex items-start gap-1"><CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0 mt-0.5" />{s}</p>
+                        <p key={i} className="text-[11px] flex items-start gap-1"><CheckCircle2 className="w-3 h-3 text-success shrink-0 mt-0.5" />{s}</p>
                       ))}
                     </div>
 
                     <div className="space-y-1">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-red-600">{isRTL ? 'نقاط الضعف' : 'Weaknesses'}</p>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-destructive">{isRTL ? 'نقاط الضعف' : 'Weaknesses'}</p>
                       {(isRTL ? competitorAnalysis.weaknesses_ar : competitorAnalysis.weaknesses_en)?.map((s: string, i: number) => (
-                        <p key={i} className="text-[11px] flex items-start gap-1"><XCircle className="w-3 h-3 text-red-500 shrink-0 mt-0.5" />{s}</p>
+                        <p key={i} className="text-[11px] flex items-start gap-1"><XCircle className="w-3 h-3 text-destructive shrink-0 mt-0.5" />{s}</p>
                       ))}
                     </div>
 
                     <div className="space-y-1">
                       <p className="text-[10px] font-bold uppercase tracking-wider text-primary">{isRTL ? 'التوصيات' : 'Tips'}</p>
                       {(isRTL ? competitorAnalysis.recommendations_ar : competitorAnalysis.recommendations_en)?.map((s: string, i: number) => (
-                        <p key={i} className="text-[11px] flex items-start gap-1"><AlertTriangle className="w-3 h-3 text-amber-500 shrink-0 mt-0.5" />{s}</p>
+                        <p key={i} className="text-[11px] flex items-start gap-1"><AlertTriangle className="w-3 h-3 text-warning shrink-0 mt-0.5" />{s}</p>
                       ))}
                     </div>
 

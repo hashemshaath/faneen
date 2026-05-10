@@ -27,15 +27,15 @@ const fmtNum = (v: number | null | undefined, d = 2) =>
 
 function scoreBadge(score: number | null | undefined) {
   if (score == null) return { label: '—', cls: 'bg-muted text-muted-foreground' };
-  if (score >= 90) return { label: String(score), cls: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30' };
-  if (score >= 50) return { label: String(score), cls: 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30' };
-  return { label: String(score), cls: 'bg-red-500/15 text-red-700 dark:text-red-400 border border-red-500/30' };
+  if (score >= 90) return { label: String(score), cls: 'bg-success/15 text-success dark:text-success border border-success/30' };
+  if (score >= 50) return { label: String(score), cls: 'bg-warning/15 text-warning dark:text-warning border border-warning/30' };
+  return { label: String(score), cls: 'bg-destructive/15 text-destructive dark:text-destructive border border-destructive/30' };
 }
 
 function ratingClass(rating: string | null | undefined) {
-  if (rating === 'good') return 'text-emerald-600 dark:text-emerald-400';
-  if (rating === 'needs-improvement') return 'text-amber-600 dark:text-amber-400';
-  if (rating === 'poor') return 'text-red-600 dark:text-red-400';
+  if (rating === 'good') return 'text-success dark:text-success';
+  if (rating === 'needs-improvement') return 'text-warning dark:text-warning';
+  if (rating === 'poor') return 'text-destructive dark:text-destructive';
   return 'text-muted-foreground';
 }
 
@@ -228,7 +228,7 @@ const AdminSiteAudit = () => {
                       <div className="flex items-center justify-between">
                         <span className="text-[10px] font-mono uppercase text-muted-foreground">{name}</span>
                         {row?.good_pct != null && (
-                          <Badge variant="outline" className={cn('text-[9px] h-4 px-1.5', Number(row.good_pct) >= 75 ? 'border-emerald-500/30 text-emerald-600' : 'border-amber-500/30 text-amber-600')}>
+                          <Badge variant="outline" className={cn('text-[9px] h-4 px-1.5', Number(row.good_pct) >= 75 ? 'border-success/30 text-success' : 'border-warning/30 text-warning')}>
                             {Math.round(Number(row.good_pct))}% {isRTL ? 'جيد' : 'good'}
                           </Badge>
                         )}
@@ -282,8 +282,8 @@ const AdminSiteAudit = () => {
                             {delta != null && (
                               <span className={cn(
                                 'text-[10px] px-1.5 py-0.5 rounded font-bold tabular-nums flex items-center gap-0.5',
-                                delta > 0 ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400'
-                                : delta < 0 ? 'bg-red-500/15 text-red-700 dark:text-red-400'
+                                delta > 0 ? 'bg-success/15 text-success dark:text-success'
+                                : delta < 0 ? 'bg-destructive/15 text-destructive dark:text-destructive'
                                 : 'bg-muted text-muted-foreground'
                               )} title={isRTL ? `السابق: ${prev?.performance_score}` : `Previous: ${prev?.performance_score}`}>
                                 {delta > 0 ? <TrendingUp className="w-2.5 h-2.5" /> : delta < 0 ? <TrendingDown className="w-2.5 h-2.5" /> : <Minus className="w-2.5 h-2.5" />}
@@ -304,7 +304,7 @@ const AdminSiteAudit = () => {
                           <div><span className="text-muted-foreground">SI </span><span className="font-medium">{fmtMs(row.speed_index_ms)}</span></div>
                         </div>
                         {row.error && (
-                          <p className="text-[10px] text-red-600 mt-1">⚠ {row.error}</p>
+                          <p className="text-[10px] text-destructive mt-1">⚠ {row.error}</p>
                         )}
                       </div>
                     );
@@ -411,8 +411,8 @@ const AdminSiteAudit = () => {
                       return (
                         <div key={i} className="px-3 py-2 flex items-center gap-2 flex-wrap text-[11px]">
                           {passed
-                            ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                            : <XCircle className="w-3.5 h-3.5 text-red-600 shrink-0" />}
+                            ? <CheckCircle2 className="w-3.5 h-3.5 text-success shrink-0" />
+                            : <XCircle className="w-3.5 h-3.5 text-destructive shrink-0" />}
                           <code className="tech-content text-muted-foreground" dir="ltr">
                             {String(p.url ?? '').replace('https://qitaat.com', '') || '/'}
                           </code>
@@ -447,10 +447,10 @@ function CheckRow({ icon, label, ok, detail }: {
   return (
     <div className={cn(
       'rounded-lg border p-2.5 flex items-center gap-2',
-      ok ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-red-500/30 bg-red-500/5'
+      ok ? 'border-success/30 bg-success/5' : 'border-destructive/30 bg-destructive/5'
     )}>
       <div className={cn('w-7 h-7 rounded-md flex items-center justify-center shrink-0',
-        ok ? 'bg-emerald-500/15 text-emerald-600' : 'bg-red-500/15 text-red-600')}>
+        ok ? 'bg-success/15 text-success' : 'bg-destructive/15 text-destructive')}>
         {ok ? <CheckCircle2 className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
       </div>
       <div className="min-w-0 flex-1">
@@ -466,8 +466,8 @@ function Chip({ ok, children }: { ok: boolean; children: React.ReactNode }) {
     <span className={cn(
       'px-1.5 py-0.5 rounded text-[9px] font-medium border',
       ok
-        ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
-        : 'border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-400'
+        ? 'border-success/30 bg-success/10 text-success dark:text-success'
+        : 'border-destructive/30 bg-destructive/10 text-destructive dark:text-destructive'
     )}>
       {children}
     </span>
@@ -578,13 +578,13 @@ function IssuesReport({ pageResults, isRTL, hasData }: {
   }), [issues]);
 
   const sevStyle = (s: Severity) =>
-    s === 'high' ? 'border-red-500/40 bg-red-500/5'
-    : s === 'medium' ? 'border-amber-500/40 bg-amber-500/5'
-    : 'border-blue-500/30 bg-blue-500/5';
+    s === 'high' ? 'border-destructive/40 bg-destructive/5'
+    : s === 'medium' ? 'border-warning/40 bg-warning/5'
+    : 'border-info/30 bg-info/5';
   const sevBadge = (s: Severity) =>
-    s === 'high' ? 'bg-red-500/15 text-red-700 dark:text-red-400 border-red-500/30'
-    : s === 'medium' ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30'
-    : 'bg-blue-500/15 text-blue-700 dark:text-blue-400 border-blue-500/30';
+    s === 'high' ? 'bg-destructive/15 text-destructive dark:text-destructive border-destructive/30'
+    : s === 'medium' ? 'bg-warning/15 text-warning dark:text-warning border-warning/30'
+    : 'bg-info/15 text-info dark:text-info border-info/30';
   const sevLabel = (s: Severity) =>
     isRTL
       ? (s === 'high' ? 'حرج' : s === 'medium' ? 'متوسط' : 'منخفض')
@@ -617,7 +617,7 @@ function IssuesReport({ pageResults, isRTL, hasData }: {
             {isRTL ? 'شغّل التدقيق أولاً لرؤية التقرير.' : 'Run the audit first to see the report.'}
           </div>
         ) : issues.length === 0 ? (
-          <div className="flex items-center justify-center gap-2 py-6 text-sm text-emerald-600 dark:text-emerald-400">
+          <div className="flex items-center justify-center gap-2 py-6 text-sm text-success dark:text-success">
             <CheckCircle2 className="w-5 h-5" />
             {isRTL ? 'ممتاز! لا توجد مشاكل SEO.' : 'Excellent! No SEO issues found.'}
           </div>
@@ -642,7 +642,7 @@ function IssuesReport({ pageResults, isRTL, hasData }: {
                     <span dir="auto">{isRTL ? issue.problem_ar : issue.problem_en}</span>
                   </div>
                   <div className="mt-1 text-[11px] text-muted-foreground flex items-start gap-1.5">
-                    <Lightbulb className="w-3.5 h-3.5 mt-0.5 shrink-0 text-amber-500" />
+                    <Lightbulb className="w-3.5 h-3.5 mt-0.5 shrink-0 text-warning" />
                     <span dir="auto">{isRTL ? issue.fix_ar : issue.fix_en}</span>
                   </div>
                 </div>

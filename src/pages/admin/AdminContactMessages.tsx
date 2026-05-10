@@ -90,26 +90,26 @@ interface AdminAssignee {
 }
 
 const statusConfig: Record<Status, { ar: string; en: string; color: string; icon: React.ElementType }> = {
-  new:      { ar: 'جديد',    en: 'New',      color: 'bg-blue-500/10 text-blue-600 border-blue-500/30',         icon: Mail },
-  read:     { ar: 'مقروء',   en: 'Read',     color: 'bg-amber-500/10 text-amber-600 border-amber-500/30',      icon: MailOpen },
-  under_review: { ar: 'تحت المراجعة', en: 'Under review', color: 'bg-violet-500/10 text-violet-600 border-violet-500/30', icon: Brain },
-  replied:  { ar: 'تم الرد', en: 'Replied',  color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30', icon: CheckCircle },
+  new:      { ar: 'جديد',    en: 'New',      color: 'bg-info/10 text-info border-info/30',         icon: Mail },
+  read:     { ar: 'مقروء',   en: 'Read',     color: 'bg-warning/10 text-warning border-warning/30',      icon: MailOpen },
+  under_review: { ar: 'تحت المراجعة', en: 'Under review', color: 'bg-secondary/10 text-secondary border-secondary/30', icon: Brain },
+  replied:  { ar: 'تم الرد', en: 'Replied',  color: 'bg-success/10 text-success border-success/30', icon: CheckCircle },
   closed:   { ar: 'مغلق',    en: 'Closed',   color: 'bg-slate-500/10 text-slate-700 border-slate-500/30',      icon: Lock },
   archived: { ar: 'مؤرشف',   en: 'Archived', color: 'bg-muted text-muted-foreground border-border',             icon: Archive },
 };
 
 const workStateConfig: Record<WorkState, { ar: string; en: string; color: string }> = {
-  ready:       { ar: 'جاهز',         en: 'Ready',       color: 'bg-blue-500/10 text-blue-600 border-blue-500/30' },
-  in_progress: { ar: 'قيد المعالجة', en: 'In progress', color: 'bg-amber-500/10 text-amber-600 border-amber-500/30' },
-  done:        { ar: 'منجز',         en: 'Done',        color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30' },
-  blocked:     { ar: 'متوقف',        en: 'Blocked',     color: 'bg-red-500/10 text-red-600 border-red-500/30' },
+  ready:       { ar: 'جاهز',         en: 'Ready',       color: 'bg-info/10 text-info border-info/30' },
+  in_progress: { ar: 'قيد المعالجة', en: 'In progress', color: 'bg-warning/10 text-warning border-warning/30' },
+  done:        { ar: 'منجز',         en: 'Done',        color: 'bg-success/10 text-success border-success/30' },
+  blocked:     { ar: 'متوقف',        en: 'Blocked',     color: 'bg-destructive/10 text-destructive border-destructive/30' },
 };
 
 const priorityConfig: Record<Priority, { ar: string; en: string; color: string; weight: number }> = {
   low:    { ar: 'منخفض', en: 'Low',    color: 'bg-slate-500/10 text-slate-600 border-slate-500/30',    weight: 0 },
-  normal: { ar: 'عادي',  en: 'Normal', color: 'bg-blue-500/10 text-blue-600 border-blue-500/30',       weight: 1 },
-  high:   { ar: 'مرتفع', en: 'High',   color: 'bg-orange-500/10 text-orange-600 border-orange-500/30', weight: 2 },
-  urgent: { ar: 'عاجل',  en: 'Urgent', color: 'bg-red-500/10 text-red-600 border-red-500/30',          weight: 3 },
+  normal: { ar: 'عادي',  en: 'Normal', color: 'bg-info/10 text-info border-info/30',       weight: 1 },
+  high:   { ar: 'مرتفع', en: 'High',   color: 'bg-urgent/10 text-urgent border-urgent/30', weight: 2 },
+  urgent: { ar: 'عاجل',  en: 'Urgent', color: 'bg-destructive/10 text-destructive border-destructive/30',          weight: 3 },
 };
 
 const replyTemplates = [
@@ -539,11 +539,11 @@ const AdminContactMessages = () => {
 
   // Quick chips definition
   const chips: { id: string; ar: string; en: string; icon: React.ElementType; tone: string }[] = [
-    { id: 'unread', ar: 'غير مقروءة',         en: 'Unread',          icon: Mail,          tone: 'bg-blue-500/10 text-blue-600 border-blue-500/30' },
-    { id: 'today',  ar: 'اليوم',               en: 'Today',           icon: Calendar,      tone: 'bg-violet-500/10 text-violet-600 border-violet-500/30' },
-    { id: 'stale',  ar: 'بدون رد > 24س',       en: 'Stale > 24h',     icon: Timer,         tone: 'bg-orange-500/10 text-orange-600 border-orange-500/30' },
-    { id: 'urgent', ar: 'عاجل',                en: 'Urgent',          icon: Flame,         tone: 'bg-red-500/10 text-red-600 border-red-500/30' },
-    { id: 'notes',  ar: 'تحتوي ملاحظات',       en: 'Has notes',       icon: StickyNote,    tone: 'bg-amber-500/10 text-amber-600 border-amber-500/30' },
+    { id: 'unread', ar: 'غير مقروءة',         en: 'Unread',          icon: Mail,          tone: 'bg-info/10 text-info border-info/30' },
+    { id: 'today',  ar: 'اليوم',               en: 'Today',           icon: Calendar,      tone: 'bg-secondary/10 text-secondary border-secondary/30' },
+    { id: 'stale',  ar: 'بدون رد > 24س',       en: 'Stale > 24h',     icon: Timer,         tone: 'bg-urgent/10 text-urgent border-urgent/30' },
+    { id: 'urgent', ar: 'عاجل',                en: 'Urgent',          icon: Flame,         tone: 'bg-destructive/10 text-destructive border-destructive/30' },
+    { id: 'notes',  ar: 'تحتوي ملاحظات',       en: 'Has notes',       icon: StickyNote,    tone: 'bg-warning/10 text-warning border-warning/30' },
   ];
 
   return (
@@ -638,17 +638,17 @@ const AdminContactMessages = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <Card className="hover-lift">
             <CardContent className="p-4 flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-violet-500/10 text-violet-600 flex items-center justify-center"><Calendar className="w-4 h-4" /></div>
+              <div className="w-9 h-9 rounded-xl bg-secondary/10 text-secondary flex items-center justify-center"><Calendar className="w-4 h-4" /></div>
               <div>
                 <p className="font-heading font-bold text-lg tech-content">{kpis.todayCount}</p>
                 <p className="text-[10px] text-muted-foreground">{isRTL ? 'رسائل اليوم' : 'Today'}</p>
               </div>
             </CardContent>
           </Card>
-          <Card className={`hover-lift cursor-pointer transition-all ${quickChip === 'stale' ? 'border-orange-500 ring-1 ring-orange-500/30' : ''}`}
+          <Card className={`hover-lift cursor-pointer transition-all ${quickChip === 'stale' ? 'border-urgent ring-1 ring-urgent/30' : ''}`}
             onClick={() => updateParam({ chip: quickChip === 'stale' ? null : 'stale', page: null })}>
             <CardContent className="p-4 flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-orange-500/10 text-orange-600 flex items-center justify-center"><AlertTriangle className="w-4 h-4" /></div>
+              <div className="w-9 h-9 rounded-xl bg-urgent/10 text-urgent flex items-center justify-center"><AlertTriangle className="w-4 h-4" /></div>
               <div>
                 <p className="font-heading font-bold text-lg tech-content">{kpis.stale}</p>
                 <p className="text-[10px] text-muted-foreground">{isRTL ? 'بدون رد > 24س' : 'Stale > 24h'}</p>
@@ -657,7 +657,7 @@ const AdminContactMessages = () => {
           </Card>
           <Card className="hover-lift">
             <CardContent className="p-4 flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center"><Timer className="w-4 h-4" /></div>
+              <div className="w-9 h-9 rounded-xl bg-success/10 text-success flex items-center justify-center"><Timer className="w-4 h-4" /></div>
               <div>
                 <p className="font-heading font-bold text-lg tech-content">
                   {kpis.avgHours !== null ? `${kpis.avgHours}س` : '—'}
@@ -668,7 +668,7 @@ const AdminContactMessages = () => {
           </Card>
           <Card className="hover-lift">
             <CardContent className="p-4 flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center"><TrendingUp className="w-4 h-4" /></div>
+              <div className="w-9 h-9 rounded-xl bg-info/10 text-info flex items-center justify-center"><TrendingUp className="w-4 h-4" /></div>
               <div>
                 <p className="font-heading font-bold text-lg tech-content">{kpis.responseRate}%</p>
                 <p className="text-[10px] text-muted-foreground">{isRTL ? 'نسبة الرد' : 'Response rate'}</p>
@@ -1029,7 +1029,7 @@ const AdminContactMessages = () => {
                       return (
                         <div
                           key={msg.id}
-                          className={`flex items-center gap-3 ${padding} hover:bg-muted/30 cursor-pointer transition-colors ${isFocused ? 'bg-accent/5' : ''} ${msg.status === 'new' ? 'bg-blue-500/[0.03]' : ''}`}
+                          className={`flex items-center gap-3 ${padding} hover:bg-muted/30 cursor-pointer transition-colors ${isFocused ? 'bg-accent/5' : ''} ${msg.status === 'new' ? 'bg-info/[0.03]' : ''}`}
                           onClick={() => openMessage(msg.id)}
                         >
                           <div onClick={e => e.stopPropagation()}>
@@ -1040,7 +1040,7 @@ const AdminContactMessages = () => {
                             className="shrink-0"
                             aria-label="star"
                           >
-                            <Star className={`w-4 h-4 ${msg.starred ? 'fill-amber-500 text-amber-500' : 'text-muted-foreground/40'}`} />
+                            <Star className={`w-4 h-4 ${msg.starred ? 'fill-warning text-warning' : 'text-muted-foreground/40'}`} />
                           </button>
                           <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${cfg.color}`}>
                             <Icon className="w-3.5 h-3.5" />
@@ -1054,11 +1054,11 @@ const AdminContactMessages = () => {
                                 </Badge>
                               )}
                               {isStale && (
-                                <Badge variant="outline" className="text-[9px] h-4 px-1.5 bg-orange-500/10 text-orange-600 border-orange-500/30">
+                                <Badge variant="outline" className="text-[9px] h-4 px-1.5 bg-urgent/10 text-urgent border-urgent/30">
                                   <Timer className="w-2.5 h-2.5 me-0.5" />{isRTL ? 'متأخرة' : 'Stale'}
                                 </Badge>
                               )}
-                              {msg.internal_notes && <StickyNote className="w-3 h-3 text-amber-500" />}
+                              {msg.internal_notes && <StickyNote className="w-3 h-3 text-warning" />}
                             </div>
                             {density !== 'compact' && (
                               <p className="text-xs text-muted-foreground truncate">
@@ -1222,9 +1222,9 @@ const FocusedMessage: React.FC<FocusedProps> = ({
                   {assignedUser.full_name || assignedUser.email}
                 </Badge>
               )}
-              {focused.starred && <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/30"><Star className="w-3 h-3 fill-current" /></Badge>}
+              {focused.starred && <Badge variant="outline" className="bg-warning/10 text-warning border-warning/30"><Star className="w-3 h-3 fill-current" /></Badge>}
               {responseHrs !== null && (
-                <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30">
+                <Badge variant="outline" className="bg-success/10 text-success border-success/30">
                   <Timer className="w-3 h-3 me-1" />{isRTL ? `رُدّ خلال ${responseHrs}س` : `Replied in ${responseHrs}h`}
                 </Badge>
               )}
@@ -1242,7 +1242,7 @@ const FocusedMessage: React.FC<FocusedProps> = ({
               <Printer className="w-4 h-4" />
             </Button>
             <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => updateMutation.mutate({ ids: [focused.id], patch: { starred: !focused.starred } })}>
-              <Star className={`w-4 h-4 ${focused.starred ? 'fill-amber-500 text-amber-500' : ''}`} />
+              <Star className={`w-4 h-4 ${focused.starred ? 'fill-warning text-warning' : ''}`} />
             </Button>
             <Button size="icon" variant="ghost" className="h-8 w-8" onClick={closeMessage}>×</Button>
           </div>
@@ -1349,13 +1349,13 @@ const FocusedMessage: React.FC<FocusedProps> = ({
 
         {/* AI suggested reply */}
         {focused.ai_suggested_reply && (
-          <div className="space-y-2 p-3 rounded-lg border border-violet-500/30 bg-violet-500/5">
+          <div className="space-y-2 p-3 rounded-lg border border-secondary/30 bg-secondary/5">
             <div className="flex items-center justify-between gap-2 flex-wrap">
-              <div className="flex items-center gap-2 text-xs font-medium text-violet-700">
+              <div className="flex items-center gap-2 text-xs font-medium text-secondary">
                 <Brain className="w-3.5 h-3.5" />
                 {isRTL ? 'رد مقترح بالذكاء الاصطناعي' : 'AI suggested reply'}
                 {focused.ai_category && (
-                  <Badge variant="outline" className="text-[10px] h-4 px-1.5 bg-violet-500/10 text-violet-700 border-violet-500/30">
+                  <Badge variant="outline" className="text-[10px] h-4 px-1.5 bg-secondary/10 text-secondary border-secondary/30">
                     {focused.ai_category}
                   </Badge>
                 )}
@@ -1548,7 +1548,7 @@ const FocusedMessage: React.FC<FocusedProps> = ({
 
 const TimelineDot: React.FC<{ label: string; time: string | null; active: boolean }> = ({ label, time, active }) => (
   <div className="flex items-center gap-1.5">
-    <div className={`w-2 h-2 rounded-full ${active ? 'bg-emerald-500' : 'bg-muted-foreground/30'}`} />
+    <div className={`w-2 h-2 rounded-full ${active ? 'bg-success' : 'bg-muted-foreground/30'}`} />
     <div>
       <p className={`font-medium ${active ? 'text-foreground' : 'text-muted-foreground'}`}>{label}</p>
       {time && <p className="text-muted-foreground tech-content text-[10px]">{format(new Date(time), 'MM/dd HH:mm')}</p>}

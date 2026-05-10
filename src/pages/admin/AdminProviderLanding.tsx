@@ -357,10 +357,10 @@ const AdminProviderLanding = () => {
           {/* ANALYTICS */}
           <TabsContent value="analytics" className="space-y-4 mt-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <KpiCard icon={Eye} label="مشاهدات" value={metrics?.totalViews ?? 0} color="text-blue-500" />
-              <KpiCard icon={UserPlus} label="جلسات فريدة" value={metrics?.uniqueSessions ?? 0} color="text-emerald-500" />
-              <KpiCard icon={MousePointerClick} label="نقرات CTA" value={metrics?.ctaClicks ?? 0} color="text-amber-500" />
-              <KpiCard icon={TrendingUp} label="معدل التحويل" value={`${metrics?.conversionRate ?? 0}%`} color="text-rose-500" />
+              <KpiCard icon={Eye} label="مشاهدات" value={metrics?.totalViews ?? 0} color="text-info" />
+              <KpiCard icon={UserPlus} label="جلسات فريدة" value={metrics?.uniqueSessions ?? 0} color="text-success" />
+              <KpiCard icon={MousePointerClick} label="نقرات CTA" value={metrics?.ctaClicks ?? 0} color="text-warning" />
+              <KpiCard icon={TrendingUp} label="معدل التحويل" value={`${metrics?.conversionRate ?? 0}%`} color="text-destructive" />
             </div>
             <Card className="p-4">
               <h3 className="font-semibold mb-3 text-sm">الأحداث اليومية (آخر 30 يوم)</h3>

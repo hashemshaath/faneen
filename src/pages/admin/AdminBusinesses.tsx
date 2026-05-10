@@ -48,9 +48,9 @@ L.Icon.Default.mergeOptions({
 
 const tiers = [
   { value: 'free', label_ar: 'مجاني', label_en: 'Free', color: 'bg-muted text-muted-foreground', icon: '🆓' },
-  { value: 'basic', label_ar: 'أساسي', label_en: 'Basic', color: 'bg-blue-500/10 text-blue-600', icon: '⭐' },
+  { value: 'basic', label_ar: 'أساسي', label_en: 'Basic', color: 'bg-info/10 text-info', icon: '⭐' },
   { value: 'premium', label_ar: 'مميز', label_en: 'Premium', color: 'bg-accent/20 text-accent-foreground', icon: '👑' },
-  { value: 'enterprise', label_ar: 'مؤسسات', label_en: 'Enterprise', color: 'bg-purple-500/10 text-purple-600', icon: '🏢' },
+  { value: 'enterprise', label_ar: 'مؤسسات', label_en: 'Enterprise', color: 'bg-secondary/10 text-secondary', icon: '🏢' },
 ];
 
 /* ─── Location Map Picker ─── */
@@ -142,7 +142,7 @@ const StatCard = React.memo(({ label, value, icon: Icon, trend, gradient, iconBg
         <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{label}</p>
       </div>
       {trend && (
-        <div className="flex items-center gap-0.5 text-[10px] text-emerald-600 bg-emerald-500/10 px-1.5 py-0.5 rounded-full font-medium">
+        <div className="flex items-center gap-0.5 text-[10px] text-success bg-success/10 px-1.5 py-0.5 rounded-full font-medium">
           <TrendingUp className="w-3 h-3" />
           {trend}
         </div>
@@ -702,11 +702,11 @@ const AdminBusinesses = () => {
         {/* ─── Stats ─── */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
           <StatCard label={isRTL ? 'إجمالي الأعمال' : 'Total Businesses'} value={stats.total} icon={Building2} gradient="from-primary/10 to-primary/5" iconBg="bg-primary/15 text-primary" />
-          <StatCard label={isRTL ? 'نشط' : 'Active'} value={stats.active} icon={Activity} gradient="from-emerald-500/10 to-emerald-500/5" iconBg="bg-emerald-500/15 text-emerald-600"
+          <StatCard label={isRTL ? 'نشط' : 'Active'} value={stats.active} icon={Activity} gradient="from-success/10 to-success/5" iconBg="bg-success/15 text-success"
             trend={stats.total ? `${Math.round(stats.active / stats.total * 100)}%` : undefined} />
-          <StatCard label={isRTL ? 'موثق' : 'Verified'} value={stats.verified} icon={Shield} gradient="from-blue-500/10 to-blue-500/5" iconBg="bg-blue-500/15 text-blue-600" />
+          <StatCard label={isRTL ? 'موثق' : 'Verified'} value={stats.verified} icon={Shield} gradient="from-info/10 to-info/5" iconBg="bg-info/15 text-info" />
           <StatCard label={isRTL ? 'مرتبط بعقود' : 'With Contracts'} value={stats.contracts} icon={FileText} gradient="from-accent/10 to-accent/5" iconBg="bg-accent/15 text-accent" />
-          <StatCard label={isRTL ? 'مميز / مؤسسات' : 'Premium/Enterprise'} value={stats.premium} icon={Crown} gradient="from-purple-500/10 to-purple-500/5" iconBg="bg-purple-500/15 text-purple-600" />
+          <StatCard label={isRTL ? 'مميز / مؤسسات' : 'Premium/Enterprise'} value={stats.premium} icon={Crown} gradient="from-secondary/10 to-secondary/5" iconBg="bg-secondary/15 text-secondary" />
         </div>
 
         {/* ─── Tier Distribution Bar ─── */}
@@ -732,9 +732,9 @@ const AdminBusinesses = () => {
                 if (!pct) return null;
                 const colorMap: Record<string, string> = {
                   free: 'bg-muted-foreground/30',
-                  basic: 'bg-blue-500',
+                  basic: 'bg-info',
                   premium: 'bg-accent',
-                  enterprise: 'bg-purple-500',
+                  enterprise: 'bg-secondary',
                 };
                 return <div key={t.value} className={`${colorMap[t.value]} transition-all`} style={{ width: `${pct}%` }} />;
               })}
@@ -872,7 +872,7 @@ const AdminBusinesses = () => {
                     {(() => {
                       const tc = translationCompleteness(editForm);
                       return (
-                        <Badge variant="outline" className={`text-[9px] gap-1 ${tc.full ? 'border-emerald-500/40 text-emerald-600' : 'border-amber-500/40 text-amber-600'}`}>
+                        <Badge variant="outline" className={`text-[9px] gap-1 ${tc.full ? 'border-success/40 text-success' : 'border-warning/40 text-warning'}`}>
                           <Languages className="w-2.5 h-2.5" />
                           {tc.full ? (isRTL ? 'الترجمة مكتملة' : 'Bilingual ready')
                             : (isRTL ? `ينقص: ${[!tc.ar && 'AR', !tc.en && 'EN'].filter(Boolean).join(' · ')}` : `Missing: ${[!tc.ar && 'AR', !tc.en && 'EN'].filter(Boolean).join(' · ')}`)}
@@ -1586,7 +1586,7 @@ const AdminBusinesses = () => {
                           </span>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline" className={`text-[9px] h-5 gap-1 ${tc.full ? 'border-emerald-500/30 text-emerald-600' : 'border-amber-500/30 text-amber-600'}`}
+                          <Badge variant="outline" className={`text-[9px] h-5 gap-1 ${tc.full ? 'border-success/30 text-success' : 'border-warning/30 text-warning'}`}
                             title={tc.full ? (isRTL ? 'مكتملة' : 'Complete') : (isRTL ? 'ناقصة' : 'Incomplete')}>
                             <Languages className="w-2.5 h-2.5" />
                             {tc.ar ? 'AR' : '·'} / {tc.en ? 'EN' : '·'}
@@ -1594,9 +1594,9 @@ const AdminBusinesses = () => {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1">
-                            {biz.is_verified && <Badge className="text-[8px] h-4 bg-blue-500/10 text-blue-600 border-0">{isRTL ? 'موثق' : 'Verified'}</Badge>}
+                            {biz.is_verified && <Badge className="text-[8px] h-4 bg-info/10 text-info border-0">{isRTL ? 'موثق' : 'Verified'}</Badge>}
                             {!biz.is_active && <Badge variant="destructive" className="text-[8px] h-4">{isRTL ? 'معطل' : 'Disabled'}</Badge>}
-                            {biz.is_active && !biz.is_verified && <Badge className="text-[8px] h-4 bg-green-500/10 text-green-600 border-0">{isRTL ? 'نشط' : 'Active'}</Badge>}
+                            {biz.is_active && !biz.is_verified && <Badge className="text-[8px] h-4 bg-success/10 text-success border-0">{isRTL ? 'نشط' : 'Active'}</Badge>}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -1656,8 +1656,8 @@ const AdminBusinesses = () => {
                             </AvatarFallback>
                           </Avatar>
                           {biz.is_verified && (
-                            <div className="absolute -bottom-1 -end-1 w-5 h-5 rounded-full bg-blue-500/15 flex items-center justify-center ring-2 ring-card">
-                              <CheckCircle className="w-3 h-3 text-blue-500" />
+                            <div className="absolute -bottom-1 -end-1 w-5 h-5 rounded-full bg-info/15 flex items-center justify-center ring-2 ring-card">
+                              <CheckCircle className="w-3 h-3 text-info" />
                             </div>
                           )}
                         </div>
@@ -1669,7 +1669,7 @@ const AdminBusinesses = () => {
                             {!biz.is_active && <Badge variant="destructive" className="text-[9px] gap-0.5 px-1.5 py-0"><Ban className="w-2.5 h-2.5" />{isRTL ? 'معطل' : 'Disabled'}</Badge>}
                             {hasContract && <Badge variant="outline" className="text-[9px] gap-0.5 px-1.5 py-0"><FileText className="w-2.5 h-2.5" />{isRTL ? 'عقود' : 'Contracts'}</Badge>}
                             {!tc.full && (
-                              <Badge variant="outline" className="text-[9px] gap-0.5 px-1.5 py-0 border-amber-500/40 text-amber-600" title={isRTL ? 'الترجمة غير مكتملة' : 'Translation incomplete'}>
+                              <Badge variant="outline" className="text-[9px] gap-0.5 px-1.5 py-0 border-warning/40 text-warning" title={isRTL ? 'الترجمة غير مكتملة' : 'Translation incomplete'}>
                                 <AlertTriangle className="w-2.5 h-2.5" />{tc.ar ? 'EN' : 'AR'}
                               </Badge>
                             )}
@@ -1712,7 +1712,7 @@ const AdminBusinesses = () => {
                         </Button>
 
                         <Button variant="outline" size="sm"
-                          className={`h-8 text-xs gap-1.5 rounded-xl ${!biz.is_active ? 'text-emerald-600 border-emerald-200' : 'text-amber-600 border-amber-200'}`}
+                          className={`h-8 text-xs gap-1.5 rounded-xl ${!biz.is_active ? 'text-success border-success' : 'text-warning border-warning'}`}
                           onClick={() => toggleMutation.mutate({ id: biz.id, field: 'is_active', value: !biz.is_active })}>
                           {biz.is_active ? <Ban className="w-3 h-3" /> : <CheckCircle className="w-3 h-3" />}
                           {biz.is_active ? (isRTL ? 'تعطيل' : 'Disable') : (isRTL ? 'تفعيل' : 'Enable')}

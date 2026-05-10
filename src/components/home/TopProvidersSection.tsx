@@ -178,7 +178,7 @@ export const TopProvidersSection = () => {
                     {/* Rating + city */}
                     <div className="flex items-center justify-between gap-2 mb-4 text-xs">
                       <div className="inline-flex items-center gap-1.5">
-                        <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                        <Star className="w-3.5 h-3.5 fill-warning text-warning" />
                         <span className="font-bold text-foreground tabular-nums tech-content">
                           {Number(biz.rating_avg).toFixed(1)}
                         </span>

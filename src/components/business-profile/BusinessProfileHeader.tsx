@@ -184,7 +184,7 @@ export const BusinessProfileHeader = ({
                     </h1>
                     {business.is_verified && <VerifiedBadge size="sm" />}
                     {activeOffersCount > 0 && (
-                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400 text-[10px] sm:text-[11px] font-body font-semibold border border-rose-500/20">
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-destructive/10 text-destructive dark:text-destructive text-[10px] sm:text-[11px] font-body font-semibold border border-destructive/20">
                         <TicketPercent className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                         {language === "ar" ? "كوبون خصم" : "Coupon"}
                       </span>

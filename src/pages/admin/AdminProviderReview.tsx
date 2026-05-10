@@ -42,12 +42,12 @@ const STATUSES: { value: ApprovalStatus | 'all'; ar: string; en: string }[] = [
 
 const TONE: Record<ApprovalStatus, string> = {
   draft: 'bg-muted text-muted-foreground',
-  submitted: 'bg-blue-500/10 text-blue-600',
-  under_review: 'bg-blue-500/10 text-blue-600',
-  needs_changes: 'bg-amber-500/10 text-amber-600',
-  approved: 'bg-emerald-500/10 text-emerald-600',
+  submitted: 'bg-info/10 text-info',
+  under_review: 'bg-info/10 text-info',
+  needs_changes: 'bg-warning/10 text-warning',
+  approved: 'bg-success/10 text-success',
   rejected: 'bg-destructive/10 text-destructive',
-  published: 'bg-emerald-600/10 text-emerald-700',
+  published: 'bg-success/10 text-success',
 };
 
 interface ProviderRow {
@@ -326,7 +326,7 @@ export default function AdminProviderReview() {
                           disabled={usernameMutation.isPending}
                           className="gap-1"
                         >
-                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                          <CheckCircle2 className="h-3.5 w-3.5 text-success" />
                           {isRTL ? 'الموافقة على الاسم' : 'Approve username'}
                         </Button>
                         <Button
@@ -449,7 +449,7 @@ export default function AdminProviderReview() {
                       disabled={approvalMutation.isPending}
                       className="gap-1"
                     >
-                      <AlertCircle className="h-3.5 w-3.5 text-amber-500" />
+                      <AlertCircle className="h-3.5 w-3.5 text-warning" />
                       {isRTL ? 'طلب تعديلات' : 'Request changes'}
                     </Button>
                     <Button
@@ -459,7 +459,7 @@ export default function AdminProviderReview() {
                       disabled={approvalMutation.isPending}
                       className="gap-1"
                     >
-                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                      <CheckCircle2 className="h-3.5 w-3.5 text-success" />
                       {isRTL ? 'موافقة' : 'Approve'}
                     </Button>
                     <Button
@@ -479,7 +479,7 @@ export default function AdminProviderReview() {
                       disabled={approvalMutation.isPending}
                       className="gap-1"
                     >
-                      <ShieldAlert className="h-3.5 w-3.5 text-amber-500" />
+                      <ShieldAlert className="h-3.5 w-3.5 text-warning" />
                       {isRTL ? 'إلغاء النشر' : 'Unpublish'}
                     </Button>
                     <Button

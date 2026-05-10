@@ -40,13 +40,13 @@ const EVENT_TYPES = [
 ] as const;
 
 const EVENT_LABELS: Record<string, { ar: string; en: string; color: string }> = {
-  created:            { ar: 'إنشاء', en: 'Created', color: 'bg-blue-500/15 text-blue-700' },
-  status_changed:     { ar: 'تغيير الحالة', en: 'Status', color: 'bg-amber-500/15 text-amber-700' },
-  assignee_changed:   { ar: 'تغيير المسؤول', en: 'Assignee', color: 'bg-violet-500/15 text-violet-700' },
-  priority_changed:   { ar: 'تغيير الأولوية', en: 'Priority', color: 'bg-rose-500/15 text-rose-700' },
-  work_state_changed: { ar: 'سير العمل', en: 'Work state', color: 'bg-cyan-500/15 text-cyan-700' },
-  ai_triaged:         { ar: 'فرز ذكي', en: 'AI triage', color: 'bg-emerald-500/15 text-emerald-700' },
-  replied:            { ar: 'تم الرد', en: 'Replied', color: 'bg-green-500/15 text-green-700' },
+  created:            { ar: 'إنشاء', en: 'Created', color: 'bg-info/15 text-info' },
+  status_changed:     { ar: 'تغيير الحالة', en: 'Status', color: 'bg-warning/15 text-warning' },
+  assignee_changed:   { ar: 'تغيير المسؤول', en: 'Assignee', color: 'bg-secondary/15 text-secondary' },
+  priority_changed:   { ar: 'تغيير الأولوية', en: 'Priority', color: 'bg-destructive/15 text-destructive' },
+  work_state_changed: { ar: 'سير العمل', en: 'Work state', color: 'bg-info/15 text-info' },
+  ai_triaged:         { ar: 'فرز ذكي', en: 'AI triage', color: 'bg-success/15 text-success' },
+  replied:            { ar: 'تم الرد', en: 'Replied', color: 'bg-success/15 text-success' },
   note_added:         { ar: 'ملاحظة', en: 'Note', color: 'bg-slate-500/15 text-slate-700' },
 };
 

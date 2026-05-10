@@ -53,26 +53,26 @@ import { useNoIndex } from "@/hooks/useNoIndex";
 
 /* ── Template Category Config ── */
 const templateCategoryConfig: Record<string, { ar: string; en: string; icon: React.ElementType; color: string }> = {
-  aluminum_doors_windows: { ar: 'ألمنيوم أبواب وشبابيك', en: 'Aluminum Doors & Windows', icon: PanelTop, color: 'text-blue-600 bg-blue-500/10' },
+  aluminum_doors_windows: { ar: 'ألمنيوم أبواب وشبابيك', en: 'Aluminum Doors & Windows', icon: PanelTop, color: 'text-info bg-info/10' },
   iron_doors_windows: { ar: 'حديد أبواب وشبابيك', en: 'Iron Doors & Windows', icon: Hammer, color: 'text-slate-600 bg-slate-500/10' },
-  fire_doors: { ar: 'أبواب مقاومة للحريق', en: 'Fire-Rated Doors', icon: Flame, color: 'text-red-600 bg-red-500/10' },
-  gates_structures: { ar: 'بوابات ومظلات وهناجر', en: 'Gates & Structures', icon: Factory, color: 'text-amber-600 bg-amber-500/10' },
-  wood_doors: { ar: 'أبواب خشبية', en: 'Wood Doors', icon: TreePine, color: 'text-emerald-700 bg-emerald-500/10' },
-  kitchens: { ar: 'مطابخ', en: 'Kitchens', icon: Grid3X3, color: 'text-violet-600 bg-violet-500/10' },
-  facades: { ar: 'واجهات', en: 'Facades', icon: Home, color: 'text-cyan-600 bg-cyan-500/10' },
-  wardrobes_closets: { ar: 'خزائن ودواليب', en: 'Wardrobes & Closets', icon: Layers, color: 'text-pink-600 bg-pink-500/10' },
-  upvc: { ar: 'UPVC أبواب وشبابيك', en: 'UPVC Doors & Windows', icon: Wrench, color: 'text-teal-600 bg-teal-500/10' },
-  glass_securit: { ar: 'زجاج وسيكوريت', en: 'Glass & Securit', icon: GlassWater, color: 'text-sky-600 bg-sky-500/10' },
+  fire_doors: { ar: 'أبواب مقاومة للحريق', en: 'Fire-Rated Doors', icon: Flame, color: 'text-destructive bg-destructive/10' },
+  gates_structures: { ar: 'بوابات ومظلات وهناجر', en: 'Gates & Structures', icon: Factory, color: 'text-warning bg-warning/10' },
+  wood_doors: { ar: 'أبواب خشبية', en: 'Wood Doors', icon: TreePine, color: 'text-success bg-success/10' },
+  kitchens: { ar: 'مطابخ', en: 'Kitchens', icon: Grid3X3, color: 'text-secondary bg-secondary/10' },
+  facades: { ar: 'واجهات', en: 'Facades', icon: Home, color: 'text-info bg-info/10' },
+  wardrobes_closets: { ar: 'خزائن ودواليب', en: 'Wardrobes & Closets', icon: Layers, color: 'text-destructive bg-destructive/10' },
+  upvc: { ar: 'UPVC أبواب وشبابيك', en: 'UPVC Doors & Windows', icon: Wrench, color: 'text-success bg-success/10' },
+  glass_securit: { ar: 'زجاج وسيكوريت', en: 'Glass & Securit', icon: GlassWater, color: 'text-info bg-info/10' },
 };
 
 /* ── Status Config ── */
 const statusConfig: Record<string, { icon: React.ElementType; color: string; label_ar: string; label_en: string; ring: string; gradient: string }> = {
   draft: { icon: FileText, color: 'bg-muted text-muted-foreground', label_ar: 'مسودة', label_en: 'Draft', ring: 'ring-muted-foreground/20', gradient: 'from-slate-400 to-slate-500' },
-  pending_approval: { icon: Clock, color: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400', label_ar: 'بانتظار الموافقة', label_en: 'Pending', ring: 'ring-amber-400/30', gradient: 'from-amber-400 to-orange-500' },
-  active: { icon: CheckCircle2, color: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400', label_ar: 'نشط', label_en: 'Active', ring: 'ring-emerald-400/30', gradient: 'from-emerald-400 to-teal-500' },
-  completed: { icon: Shield, color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400', label_ar: 'مكتمل', label_en: 'Completed', ring: 'ring-blue-400/30', gradient: 'from-blue-400 to-indigo-500' },
-  cancelled: { icon: XCircle, color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400', label_ar: 'ملغي', label_en: 'Cancelled', ring: 'ring-red-400/30', gradient: 'from-red-400 to-rose-500' },
-  disputed: { icon: AlertTriangle, color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400', label_ar: 'متنازع', label_en: 'Disputed', ring: 'ring-orange-400/30', gradient: 'from-orange-400 to-red-500' },
+  pending_approval: { icon: Clock, color: 'bg-warning text-warning dark:bg-warning/30 dark:text-warning', label_ar: 'بانتظار الموافقة', label_en: 'Pending', ring: 'ring-warning/30', gradient: 'from-warning to-urgent' },
+  active: { icon: CheckCircle2, color: 'bg-success text-success dark:bg-success/30 dark:text-success', label_ar: 'نشط', label_en: 'Active', ring: 'ring-success/30', gradient: 'from-success to-success' },
+  completed: { icon: Shield, color: 'bg-info text-info dark:bg-info/30 dark:text-info', label_ar: 'مكتمل', label_en: 'Completed', ring: 'ring-info/30', gradient: 'from-info to-secondary' },
+  cancelled: { icon: XCircle, color: 'bg-destructive text-destructive dark:bg-destructive/30 dark:text-destructive', label_ar: 'ملغي', label_en: 'Cancelled', ring: 'ring-destructive/30', gradient: 'from-destructive to-destructive' },
+  disputed: { icon: AlertTriangle, color: 'bg-urgent text-urgent dark:bg-urgent/30 dark:text-urgent', label_ar: 'متنازع', label_en: 'Disputed', ring: 'ring-urgent/30', gradient: 'from-urgent to-destructive' },
 };
 
 interface ContractForm {
@@ -193,9 +193,9 @@ const ContractCard = React.memo(({
                 value={healthScore}
                 size={44}
                 stroke={3.5}
-                color={healthScore >= 70 ? 'text-emerald-500' : healthScore >= 40 ? 'text-amber-500' : 'text-red-500'}
+                color={healthScore >= 70 ? 'text-success' : healthScore >= 40 ? 'text-warning' : 'text-destructive'}
               />
-              <span className={`absolute inset-0 flex items-center justify-center text-[9px] font-bold ${healthScore >= 70 ? 'text-emerald-600' : healthScore >= 40 ? 'text-amber-600' : 'text-red-600'}`}>
+              <span className={`absolute inset-0 flex items-center justify-center text-[9px] font-bold ${healthScore >= 70 ? 'text-success' : healthScore >= 40 ? 'text-warning' : 'text-destructive'}`}>
                 {healthScore}%
               </span>
             </div>
@@ -207,7 +207,7 @@ const ContractCard = React.memo(({
                   <StatusIcon className="w-3 h-3" />
                   {isRTL ? cfg.label_ar : cfg.label_en}
                 </Badge>
-                {locked && <Badge variant="outline" className="text-[8px] gap-0.5 px-1.5 h-4 border-amber-300 text-amber-600"><Shield className="w-2.5 h-2.5" />{isRTL ? 'مقفل' : 'Locked'}</Badge>}
+                {locked && <Badge variant="outline" className="text-[8px] gap-0.5 px-1.5 h-4 border-warning text-warning"><Shield className="w-2.5 h-2.5" />{isRTL ? 'مقفل' : 'Locked'}</Badge>}
               </div>
               <div className="flex items-center gap-2 flex-wrap text-[10px] text-muted-foreground">
                 <span className="font-mono bg-muted/50 px-1.5 py-0.5 rounded text-[9px]">{c.contract_number}</span>
@@ -230,7 +230,7 @@ const ContractCard = React.memo(({
                 {canAccept && c.status !== 'completed' && c.status !== 'cancelled' && (
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/20" onClick={() => onApprove(c)}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-success hover:bg-success dark:hover:bg-success/20" onClick={() => onApprove(c)}>
                         <CircleCheck className="w-4 h-4" />
                       </Button>
                     </TooltipTrigger>
@@ -286,29 +286,29 @@ const ContractCard = React.memo(({
               <p className="text-sm font-bold text-foreground">{Number(c.total_amount).toLocaleString()}</p>
               <p className="text-[8px] text-accent font-medium">{c.currency_code}</p>
             </div>
-            <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-950/20 dark:to-emerald-900/10 p-3 border border-emerald-200/30 dark:border-emerald-800/20">
-              <TrendingUp className="absolute -top-1 -end-1 w-8 h-8 text-emerald-500/10" />
+            <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-success to-success/50 dark:from-success/20 dark:to-success/10 p-3 border border-success/30 dark:border-success/20">
+              <TrendingUp className="absolute -top-1 -end-1 w-8 h-8 text-success/10" />
               <p className="text-[9px] text-muted-foreground mb-0.5">{isRTL ? 'المحصّل' : 'Collected'}</p>
-              <p className="text-sm font-bold text-emerald-700 dark:text-emerald-400">{totalPaid.toLocaleString()}</p>
+              <p className="text-sm font-bold text-success dark:text-success">{totalPaid.toLocaleString()}</p>
               <div className="flex items-center gap-1 mt-0.5">
-                <Progress value={paymentPercent} className="h-1 flex-1 [&>div]:bg-emerald-500" />
-                <span className="text-[8px] font-semibold text-emerald-600">{paymentPercent}%</span>
+                <Progress value={paymentPercent} className="h-1 flex-1 [&>div]:bg-success" />
+                <span className="text-[8px] font-semibold text-success">{paymentPercent}%</span>
               </div>
             </div>
-            <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-950/20 dark:to-blue-900/10 p-3 border border-blue-200/30 dark:border-blue-800/20">
-              <Ruler className="absolute -top-1 -end-1 w-8 h-8 text-blue-500/10" />
+            <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-info to-info/50 dark:from-info/20 dark:to-info/10 p-3 border border-info/30 dark:border-info/20">
+              <Ruler className="absolute -top-1 -end-1 w-8 h-8 text-info/10" />
               <p className="text-[9px] text-muted-foreground mb-0.5">{isRTL ? 'المقاسات' : 'Measurements'}</p>
-              <p className="text-sm font-bold text-blue-700 dark:text-blue-400">{measurements.length}</p>
-              <p className="text-[8px] text-blue-600">{measurementTotal.toLocaleString()} {c.currency_code}</p>
+              <p className="text-sm font-bold text-info dark:text-info">{measurements.length}</p>
+              <p className="text-[8px] text-info">{measurementTotal.toLocaleString()} {c.currency_code}</p>
             </div>
-            <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-violet-50 to-violet-100/50 dark:from-violet-950/20 dark:to-violet-900/10 p-3 border border-violet-200/30 dark:border-violet-800/20">
-              <ListChecks className="absolute -top-1 -end-1 w-8 h-8 text-violet-500/10" />
+            <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-secondary to-secondary/50 dark:from-secondary/20 dark:to-secondary/10 p-3 border border-secondary/30 dark:border-secondary/20">
+              <ListChecks className="absolute -top-1 -end-1 w-8 h-8 text-secondary/10" />
               <p className="text-[9px] text-muted-foreground mb-0.5">{isRTL ? 'التقدم' : 'Progress'}</p>
-              <p className="text-sm font-bold text-violet-700 dark:text-violet-400">{completedMs}/{totalMs}</p>
+              <p className="text-sm font-bold text-secondary dark:text-secondary">{completedMs}/{totalMs}</p>
               {totalMs > 0 && (
                 <div className="flex items-center gap-1 mt-0.5">
-                  <Progress value={progress} className="h-1 flex-1 [&>div]:bg-violet-500" />
-                  <span className="text-[8px] font-semibold text-violet-600">{progress}%</span>
+                  <Progress value={progress} className="h-1 flex-1 [&>div]:bg-secondary" />
+                  <span className="text-[8px] font-semibold text-secondary">{progress}%</span>
                 </div>
               )}
             </div>
@@ -328,7 +328,7 @@ const ContractCard = React.memo(({
                       <AvatarFallback className="text-[9px] bg-accent/10 text-accent font-bold">{(party.p?.full_name || '?').charAt(0)}</AvatarFallback>
                     </Avatar>
                     {party.accepted && (
-                      <div className="absolute -bottom-0.5 -end-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 text-white flex items-center justify-center ring-2 ring-card">
+                      <div className="absolute -bottom-0.5 -end-0.5 w-3.5 h-3.5 rounded-full bg-success text-white flex items-center justify-center ring-2 ring-card">
                         <CheckCircle2 className="w-2.5 h-2.5" />
                       </div>
                     )}
@@ -1092,15 +1092,15 @@ const DashboardContracts = () => {
               {[
                 { icon: FileText, label: isRTL ? 'إجمالي العقود' : 'Total Contracts', value: stats.total.toString(), color: 'from-primary/10 to-primary/5', iconColor: 'text-primary bg-primary/15', trend: stats.active > 0 ? `${stats.active} ${isRTL ? 'نشط' : 'active'}` : undefined, trendUp: true },
                 { icon: DollarSign, label: isRTL ? 'القيمة الإجمالية' : 'Total Value', value: stats.totalAmount.toLocaleString(), color: 'from-accent/10 to-accent/5', iconColor: 'text-accent bg-accent/15', sub: 'SAR' },
-                { icon: Banknote, label: isRTL ? 'المحصّل' : 'Collected', value: stats.totalPaid.toLocaleString(), color: 'from-emerald-500/10 to-emerald-500/5', iconColor: 'text-emerald-600 bg-emerald-500/15', sub: 'SAR', trend: stats.totalAmount > 0 ? `${Math.round((stats.totalPaid / stats.totalAmount) * 100)}%` : undefined, trendUp: true },
-                { icon: AlertTriangle, label: isRTL ? 'متأخرات' : 'Overdue', value: stats.overdueAmount.toLocaleString(), color: stats.overdueCount > 0 ? 'from-red-500/10 to-red-500/5' : 'from-emerald-500/5 to-emerald-500/3', iconColor: stats.overdueCount > 0 ? 'text-red-600 bg-red-500/15' : 'text-emerald-600 bg-emerald-500/15', sub: 'SAR', trend: stats.overdueCount > 0 ? `${stats.overdueCount} ${isRTL ? 'دفعة' : 'payments'}` : undefined, trendUp: false },
+                { icon: Banknote, label: isRTL ? 'المحصّل' : 'Collected', value: stats.totalPaid.toLocaleString(), color: 'from-success/10 to-success/5', iconColor: 'text-success bg-success/15', sub: 'SAR', trend: stats.totalAmount > 0 ? `${Math.round((stats.totalPaid / stats.totalAmount) * 100)}%` : undefined, trendUp: true },
+                { icon: AlertTriangle, label: isRTL ? 'متأخرات' : 'Overdue', value: stats.overdueAmount.toLocaleString(), color: stats.overdueCount > 0 ? 'from-destructive/10 to-destructive/5' : 'from-success/5 to-success/3', iconColor: stats.overdueCount > 0 ? 'text-destructive bg-destructive/15' : 'text-success bg-success/15', sub: 'SAR', trend: stats.overdueCount > 0 ? `${stats.overdueCount} ${isRTL ? 'دفعة' : 'payments'}` : undefined, trendUp: false },
               ].map((s, i) => (
                 <Card key={i} className={`overflow-hidden border-border/40`}>
                   <CardContent className={`p-4 bg-gradient-to-br ${s.color}`}>
                     <div className="flex items-start justify-between mb-3">
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${s.iconColor}`}><s.icon className="w-5 h-5" /></div>
                       {s.trend && (
-                        <Badge variant="outline" className={`text-[8px] gap-0.5 ${s.trendUp ? 'text-emerald-600 border-emerald-200' : 'text-red-600 border-red-200'}`}>
+                        <Badge variant="outline" className={`text-[8px] gap-0.5 ${s.trendUp ? 'text-success border-success' : 'text-destructive border-destructive'}`}>
                           {s.trendUp ? <ArrowUpRight className="w-2.5 h-2.5" /> : <ArrowDownRight className="w-2.5 h-2.5" />}
                           {s.trend}
                         </Badge>
@@ -1123,7 +1123,7 @@ const DashboardContracts = () => {
                       <h3 className="text-xs font-semibold flex items-center gap-1.5"><TrendingUp className="w-3.5 h-3.5 text-accent" />{isRTL ? 'نسبة التحصيل' : 'Collection Rate'}</h3>
                       <span className="text-lg font-bold text-accent">{Math.round((stats.totalPaid / stats.totalAmount) * 100)}%</span>
                     </div>
-                    <Progress value={(stats.totalPaid / stats.totalAmount) * 100} className="h-2.5 mb-2 [&>div]:bg-gradient-to-r [&>div]:from-accent [&>div]:to-emerald-500" />
+                    <Progress value={(stats.totalPaid / stats.totalAmount) * 100} className="h-2.5 mb-2 [&>div]:bg-gradient-to-r [&>div]:from-accent [&>div]:to-success" />
                     <div className="flex items-center justify-between text-[10px] text-muted-foreground">
                       <span>{isRTL ? 'المحصّل' : 'Collected'}: <strong className="text-foreground">{stats.totalPaid.toLocaleString()}</strong> {isRTL ? 'ر.س' : 'SAR'}</span>
                       <span>{isRTL ? 'المتبقي' : 'Remaining'}: <strong className="text-foreground">{(stats.totalAmount - stats.totalPaid).toLocaleString()}</strong> {isRTL ? 'ر.س' : 'SAR'}</span>
@@ -1136,11 +1136,11 @@ const DashboardContracts = () => {
                 <CardContent className="p-4 space-y-2.5">
                   <h3 className="text-xs font-semibold flex items-center gap-1.5 mb-1"><Activity className="w-3.5 h-3.5 text-primary" />{isRTL ? 'إحصائيات سريعة' : 'Quick Stats'}</h3>
                   {[
-                    { icon: CheckCircle2, label: isRTL ? 'مكتملة' : 'Completed', value: stats.completed, color: 'text-blue-600' },
-                    { icon: Clock, label: isRTL ? 'بانتظار الموافقة' : 'Pending', value: stats.pendingApproval, color: 'text-amber-600' },
-                    { icon: ListChecks, label: isRTL ? 'المراحل' : 'Milestones', value: `${stats.completedMilestones}/${stats.totalMilestones}`, color: 'text-violet-600' },
-                    { icon: Ruler, label: isRTL ? 'المقاسات' : 'Measurements', value: stats.totalMeasurements, color: 'text-cyan-600' },
-                    { icon: WrenchIcon, label: isRTL ? 'طلبات الصيانة' : 'Maintenance', value: stats.totalMaintenance, color: 'text-orange-600' },
+                    { icon: CheckCircle2, label: isRTL ? 'مكتملة' : 'Completed', value: stats.completed, color: 'text-info' },
+                    { icon: Clock, label: isRTL ? 'بانتظار الموافقة' : 'Pending', value: stats.pendingApproval, color: 'text-warning' },
+                    { icon: ListChecks, label: isRTL ? 'المراحل' : 'Milestones', value: `${stats.completedMilestones}/${stats.totalMilestones}`, color: 'text-secondary' },
+                    { icon: Ruler, label: isRTL ? 'المقاسات' : 'Measurements', value: stats.totalMeasurements, color: 'text-info' },
+                    { icon: WrenchIcon, label: isRTL ? 'طلبات الصيانة' : 'Maintenance', value: stats.totalMaintenance, color: 'text-urgent' },
                   ].map((s, i) => (
                     <div key={i} className="flex items-center justify-between text-[11px]">
                       <span className="flex items-center gap-1.5 text-muted-foreground"><s.icon className={`w-3.5 h-3.5 ${s.color}`} />{s.label}</span>
@@ -1480,9 +1480,9 @@ const DashboardContracts = () => {
                           <CardContent className="p-4 sm:p-5">
                             {/* Lock Banner */}
                             {locked && (
-                              <div className="flex items-center gap-2.5 p-3 mb-4 rounded-xl bg-amber-50/80 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-800/30">
-                                <Shield className="w-4 h-4 text-amber-600 shrink-0" />
-                                <p className="text-[11px] text-amber-800 dark:text-amber-300">{isRTL ? 'العقد معتمد — التعديل يتطلب ملحق عقد رسمي وموافقة الطرفين' : 'Contract approved — changes require a formal amendment with both parties\' approval'}</p>
+                              <div className="flex items-center gap-2.5 p-3 mb-4 rounded-xl bg-warning/80 dark:bg-warning/20 border border-warning/60 dark:border-warning/30">
+                                <Shield className="w-4 h-4 text-warning shrink-0" />
+                                <p className="text-[11px] text-warning dark:text-warning">{isRTL ? 'العقد معتمد — التعديل يتطلب ملحق عقد رسمي وموافقة الطرفين' : 'Contract approved — changes require a formal amendment with both parties\' approval'}</p>
                               </div>
                             )}
 
@@ -1542,10 +1542,10 @@ const DashboardContracts = () => {
                                         const isInProgress = (m.status as string) === 'in_progress';
                                         return (
                                           <div key={m.id} className="relative ps-10">
-                                            <div className={`absolute top-2 start-1 w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold z-10 transition-all ${isCompleted ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' : isInProgress ? 'bg-accent text-accent-foreground ring-2 ring-accent/30 shadow-md' : 'bg-card text-muted-foreground border-2 border-border'}`}>
+                                            <div className={`absolute top-2 start-1 w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold z-10 transition-all ${isCompleted ? 'bg-success text-white shadow-lg shadow-success/30' : isInProgress ? 'bg-accent text-accent-foreground ring-2 ring-accent/30 shadow-md' : 'bg-card text-muted-foreground border-2 border-border'}`}>
                                               {isCompleted ? <CheckCircle2 className="w-3.5 h-3.5" /> : idx + 1}
                                             </div>
-                                            <div className={`p-3 rounded-xl border transition-all ${isCompleted ? 'border-emerald-200/50 bg-emerald-50/30 dark:border-emerald-800/20 dark:bg-emerald-950/10' : isInProgress ? 'border-accent/30 bg-accent/5' : 'border-border/40 bg-card hover:border-border'}`}>
+                                            <div className={`p-3 rounded-xl border transition-all ${isCompleted ? 'border-success/50 bg-success/30 dark:border-success/20 dark:bg-success/10' : isInProgress ? 'border-accent/30 bg-accent/5' : 'border-border/40 bg-card hover:border-border'}`}>
                                               <div className="flex items-center justify-between gap-2">
                                                 <h4 className="font-semibold text-xs">{mTitle}</h4>
                                                 <div className="flex items-center gap-1">
@@ -1565,7 +1565,7 @@ const DashboardContracts = () => {
                                               <div className="flex items-center gap-3 mt-1.5 text-[10px] text-muted-foreground">
                                                 <span className="font-medium text-foreground"><DollarSign className="w-3 h-3 inline text-accent" />{Number(m.amount).toLocaleString()} {c.currency_code}</span>
                                                 {m.due_date && <span><Calendar className="w-3 h-3 inline" /> {formatDate(m.due_date)}</span>}
-                                                {m.completed_at && <span className="text-emerald-600"><CheckCircle2 className="w-3 h-3 inline" /> {formatDate(m.completed_at)}</span>}
+                                                {m.completed_at && <span className="text-success"><CheckCircle2 className="w-3 h-3 inline" /> {formatDate(m.completed_at)}</span>}
                                               </div>
                                             </div>
                                           </div>
@@ -1605,16 +1605,16 @@ const DashboardContracts = () => {
                                 {payments.length > 0 ? (
                                   <div className="space-y-2">
                                     {payments.sort((a, b) => a.installment_number - b.installment_number).map((p) => (
-                                      <div key={p.id} className={`p-3 rounded-xl border transition-all ${p.status === 'paid' ? 'border-emerald-200/50 bg-emerald-50/20 dark:border-emerald-800/20 dark:bg-emerald-950/10' : p.status === 'overdue' ? 'border-red-200/50 bg-red-50/20 dark:border-red-800/20' : 'border-border/40 bg-card'}`}>
+                                      <div key={p.id} className={`p-3 rounded-xl border transition-all ${p.status === 'paid' ? 'border-success/50 bg-success/20 dark:border-success/20 dark:bg-success/10' : p.status === 'overdue' ? 'border-destructive/50 bg-destructive/20 dark:border-destructive/20' : 'border-border/40 bg-card'}`}>
                                         <div className="flex items-center justify-between gap-3">
                                           <div className="flex items-center gap-3">
-                                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-[10px] font-bold ${p.status === 'paid' ? 'bg-emerald-500 text-white' : p.status === 'overdue' ? 'bg-red-500 text-white' : 'bg-muted text-muted-foreground'}`}>
+                                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-[10px] font-bold ${p.status === 'paid' ? 'bg-success text-white' : p.status === 'overdue' ? 'bg-destructive text-white' : 'bg-muted text-muted-foreground'}`}>
                                               {p.status === 'paid' ? <CheckCircle2 className="w-4 h-4" /> : p.installment_number}
                                             </div>
                                             <div>
                                               <p className="text-xs font-semibold">{isRTL ? `الدفعة ${p.installment_number}` : `Payment #${p.installment_number}`}</p>
                                               <p className="text-[10px] text-muted-foreground">{isRTL ? 'استحقاق:' : 'Due:'} {formatDate(p.due_date)}</p>
-                                              {p.paid_at && <p className="text-[9px] text-emerald-600">{isRTL ? 'دفع:' : 'Paid:'} {formatDate(p.paid_at)}</p>}
+                                              {p.paid_at && <p className="text-[9px] text-success">{isRTL ? 'دفع:' : 'Paid:'} {formatDate(p.paid_at)}</p>}
                                               {p.notes && <p className="text-[9px] text-muted-foreground mt-0.5">{p.notes}</p>}
                                             </div>
                                           </div>
@@ -1626,7 +1626,7 @@ const DashboardContracts = () => {
                                               </Badge>
                                             </div>
                                             {p.status !== 'paid' && isProvider && (
-                                              <Button variant="ghost" size="icon" className="h-8 w-8 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/20" onClick={() => markPaidMutation.mutate({ paymentId: p.id })}>
+                                              <Button variant="ghost" size="icon" className="h-8 w-8 text-success hover:bg-success dark:hover:bg-success/20" onClick={() => markPaidMutation.mutate({ paymentId: p.id })}>
                                                 <Banknote className="w-4 h-4" />
                                               </Button>
                                             )}
@@ -1638,9 +1638,9 @@ const DashboardContracts = () => {
                                     <div className="p-3 rounded-xl bg-muted/30 border border-border/30">
                                       <div className="flex items-center justify-between mb-1">
                                         <span className="text-[10px] text-muted-foreground">{isRTL ? 'الإجمالي المدفوع' : 'Total Paid'}</span>
-                                        <span className="text-xs font-bold text-emerald-600">{payments.filter((p)=>p.status==='paid').reduce((s:number, p)=>s+Number(p.amount),0).toLocaleString()} / {Number(c.total_amount).toLocaleString()} {c.currency_code}</span>
+                                        <span className="text-xs font-bold text-success">{payments.filter((p)=>p.status==='paid').reduce((s:number, p)=>s+Number(p.amount),0).toLocaleString()} / {Number(c.total_amount).toLocaleString()} {c.currency_code}</span>
                                       </div>
-                                      <Progress value={Number(c.total_amount) > 0 ? (payments.filter((p)=>p.status==='paid').reduce((s:number, p)=>s+Number(p.amount),0) / Number(c.total_amount)) * 100 : 0} className="h-1.5 [&>div]:bg-emerald-500" />
+                                      <Progress value={Number(c.total_amount) > 0 ? (payments.filter((p)=>p.status==='paid').reduce((s:number, p)=>s+Number(p.amount),0) / Number(c.total_amount)) * 100 : 0} className="h-1.5 [&>div]:bg-success" />
                                     </div>
                                   </div>
                                 ) : <p className="text-center py-8 text-muted-foreground text-xs">{isRTL ? 'لا توجد دفعات' : 'No payments yet'}</p>}
@@ -1822,7 +1822,7 @@ const DashboardContracts = () => {
                                       return (
                                         <div key={w.id} className="p-3.5 rounded-xl border border-border/40 bg-card">
                                           <div className="flex items-center justify-between mb-2">
-                                            <h4 className="text-xs font-semibold flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-emerald-600" />{isRTL ? (w.title_ar || 'شهادة الضمان') : (w.title_en || w.title_ar || 'Warranty')}</h4>
+                                            <h4 className="text-xs font-semibold flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-success" />{isRTL ? (w.title_ar || 'شهادة الضمان') : (w.title_en || w.title_ar || 'Warranty')}</h4>
                                             {daysLeft !== null && (
                                               <Badge variant={daysLeft > 90 ? 'default' : daysLeft > 0 ? 'secondary' : 'destructive'} className="text-[9px]">
                                                 {daysLeft > 0 ? (isRTL ? `${daysLeft} يوم` : `${daysLeft}d`) : (isRTL ? 'منتهي' : 'Expired')}
@@ -1907,7 +1907,7 @@ const DashboardContracts = () => {
                                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                     {attachments.map((a) => (
                                       <a key={a.id} href={a.file_url} target="_blank" rel="noopener noreferrer" className="p-3 rounded-xl border border-border/40 bg-card hover:border-accent/30 hover:shadow-sm transition-all flex items-center gap-3 group">
-                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-lg ${a.file_type === 'image' ? 'bg-blue-500/10' : 'bg-orange-500/10'}`}>
+                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-lg ${a.file_type === 'image' ? 'bg-info/10' : 'bg-urgent/10'}`}>
                                           {a.file_type === 'image' ? '🖼️' : '📄'}
                                         </div>
                                         <div className="min-w-0 flex-1">
@@ -1968,7 +1968,7 @@ const DashboardContracts = () => {
                                       );
                                       const typeLabels: Record<string, string> = { scope_change: isRTL ? 'نطاق العمل' : 'Scope', financial: isRTL ? 'مالي' : 'Financial', extension: isRTL ? 'تمديد' : 'Extension', other: isRTL ? 'أخرى' : 'Other' };
                                       return (
-                                        <div key={a.id} className={`p-3.5 rounded-xl border ${a.status === 'approved' ? 'border-emerald-200/50 bg-emerald-50/20 dark:border-emerald-800/20 dark:bg-emerald-950/10' : a.status === 'rejected' ? 'border-red-200/50 bg-red-50/20' : 'border-amber-200/50 bg-amber-50/20 dark:border-amber-800/20'}`}>
+                                        <div key={a.id} className={`p-3.5 rounded-xl border ${a.status === 'approved' ? 'border-success/50 bg-success/20 dark:border-success/20 dark:bg-success/10' : a.status === 'rejected' ? 'border-destructive/50 bg-destructive/20' : 'border-warning/50 bg-warning/20 dark:border-warning/20'}`}>
                                           <div className="flex items-center justify-between gap-2 mb-1.5">
                                             <h4 className="text-xs font-semibold truncate">{a.title_ar}</h4>
                                             <div className="flex items-center gap-1 shrink-0">
@@ -1986,7 +1986,7 @@ const DashboardContracts = () => {
                                             <span>{formatDate(a.created_at)}</span>
                                           </div>
                                           {canApproveAmendment && (
-                                            <Button size="sm" variant="outline" className="h-7 text-[10px] gap-1 mt-2.5 text-emerald-600 border-emerald-300 hover:bg-emerald-50" onClick={() => approveAmendmentMutation.mutate({ amendmentId: a.id, contract: c })}>
+                                            <Button size="sm" variant="outline" className="h-7 text-[10px] gap-1 mt-2.5 text-success border-success hover:bg-success" onClick={() => approveAmendmentMutation.mutate({ amendmentId: a.id, contract: c })}>
                                               <CircleCheck className="w-3.5 h-3.5" />{isRTL ? 'موافقة على الملحق' : 'Approve Amendment'}
                                             </Button>
                                           )}
@@ -2005,9 +2005,9 @@ const DashboardContracts = () => {
                                     { icon: Copy, label: isRTL ? 'نسخ العقد' : 'Duplicate', onClick: () => handleDuplicate(c), show: true },
                                     { icon: Share2, label: isRTL ? 'مشاركة' : 'Share', onClick: () => handleShareContract(c), show: true },
                                     { icon: Send, label: isRTL ? 'إرسال للمراجعة' : 'Send for Review', onClick: () => setSendConfirm(c), show: c.status === 'draft' && user?.id === c.provider_id, className: 'text-primary border-primary/30' },
-                                    { icon: CircleCheck, label: isRTL ? 'موافقة' : 'Approve', onClick: () => setApproveConfirm(c), show: ((user?.id === c.client_id && !c.client_accepted_at) || (user?.id === c.provider_id && !c.provider_accepted_at)) && c.status !== 'completed' && c.status !== 'cancelled', className: 'text-emerald-600 border-emerald-300' },
+                                    { icon: CircleCheck, label: isRTL ? 'موافقة' : 'Approve', onClick: () => setApproveConfirm(c), show: ((user?.id === c.client_id && !c.client_accepted_at) || (user?.id === c.provider_id && !c.provider_accepted_at)) && c.status !== 'completed' && c.status !== 'cancelled', className: 'text-success border-success' },
                                     { icon: Edit3, label: isRTL ? 'تعديل' : 'Edit', onClick: () => openEditContract(c), show: !locked && user?.id === c.provider_id },
-                                    { icon: FileText, label: isRTL ? 'طلب ملحق' : 'Amendment', onClick: () => setShowAddAmendment(c.id), show: locked, className: 'text-amber-600 border-amber-300' },
+                                    { icon: FileText, label: isRTL ? 'طلب ملحق' : 'Amendment', onClick: () => setShowAddAmendment(c.id), show: locked, className: 'text-warning border-warning' },
                                     { icon: ExternalLink, label: isRTL ? 'عرض كامل' : 'Full View', onClick: () => navigate(`/contracts/${c.id}`), show: true },
                                   ].filter(a => a.show).map((action, i) => (
                                     <Button key={i} variant="outline" size="sm" className={`gap-2 text-xs h-10 ${action.className || ''}`} onClick={action.onClick} disabled={action.disabled}>
@@ -2038,7 +2038,7 @@ const DashboardContracts = () => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{isRTL ? 'إلغاء' : 'Cancel'}</AlertDialogCancel>
-            <AlertDialogAction className="bg-emerald-600 text-white hover:bg-emerald-700" onClick={() => approveConfirm && approveMutation.mutate(approveConfirm)}>
+            <AlertDialogAction className="bg-success text-white hover:bg-success" onClick={() => approveConfirm && approveMutation.mutate(approveConfirm)}>
               <CircleCheck className="w-4 h-4 me-2" />{isRTL ? 'موافقة' : 'Approve'}
             </AlertDialogAction>
           </AlertDialogFooter>

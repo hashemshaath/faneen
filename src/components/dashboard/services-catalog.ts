@@ -29,7 +29,7 @@ export const serviceCatalog: ServiceGroup[] = [
     name_ar: 'الألمنيوم',
     name_en: 'Aluminum',
     icon: '🏗️',
-    color: 'bg-sky-500/10 text-sky-600',
+    color: 'bg-info/10 text-info',
     services: [
       { name_ar: 'نوافذ ألمنيوم', name_en: 'Aluminum Windows', description_ar: 'تصنيع وتركيب نوافذ الألمنيوم بجميع الأنواع والمقاسات', description_en: 'Manufacturing and installation of aluminum windows in all types and sizes' },
       { name_ar: 'أبواب ألمنيوم', name_en: 'Aluminum Doors', description_ar: 'أبواب ألمنيوم داخلية وخارجية بتصاميم عصرية', description_en: 'Interior and exterior aluminum doors with modern designs' },
@@ -74,7 +74,7 @@ export const serviceCatalog: ServiceGroup[] = [
     name_ar: 'الزجاج',
     name_en: 'Glass',
     icon: '🪟',
-    color: 'bg-cyan-500/10 text-cyan-600',
+    color: 'bg-info/10 text-info',
     services: [
       { name_ar: 'زجاج مزدوج عازل', name_en: 'Double Glazed Glass', description_ar: 'زجاج مزدوج للعزل الحراري والصوتي', description_en: 'Double glazed glass for thermal and sound insulation' },
       { name_ar: 'زجاج سيكوريت', name_en: 'Tempered Glass', description_ar: 'زجاج مقسّى للأبواب والواجهات والطاولات', description_en: 'Tempered glass for doors, facades and tables' },
@@ -89,7 +89,7 @@ export const serviceCatalog: ServiceGroup[] = [
     name_ar: 'الخشب',
     name_en: 'Wood',
     icon: '🪵',
-    color: 'bg-amber-500/10 text-amber-700',
+    color: 'bg-warning/10 text-warning',
     services: [
       { name_ar: 'أبواب خشب داخلية', name_en: 'Interior Wood Doors', description_ar: 'أبواب خشبية داخلية بتشكيلة واسعة من التصاميم والأخشاب', description_en: 'Interior wooden doors with a wide variety of designs and woods' },
       { name_ar: 'أبواب خشب خارجية', name_en: 'Exterior Wood Doors', description_ar: 'أبواب خارجية مقاومة للعوامل الجوية من أجود الأخشاب', description_en: 'Weather-resistant exterior doors from finest woods' },
@@ -107,7 +107,7 @@ export const serviceCatalog: ServiceGroup[] = [
     name_ar: 'المطابخ',
     name_en: 'Kitchens',
     icon: '🍳',
-    color: 'bg-orange-500/10 text-orange-600',
+    color: 'bg-urgent/10 text-urgent',
     services: [
       { name_ar: 'مطابخ ألمنيوم', name_en: 'Aluminum Kitchens', description_ar: 'مطابخ ألمنيوم عملية ومقاومة للرطوبة بتصاميم عصرية', description_en: 'Practical moisture-resistant aluminum kitchens with modern designs' },
       { name_ar: 'مطابخ خشب طبيعي', name_en: 'Solid Wood Kitchens', description_ar: 'مطابخ من الخشب الطبيعي الفاخر بتشطيبات راقية', description_en: 'Luxury solid wood kitchens with premium finishes' },
@@ -141,7 +141,7 @@ export const serviceCatalog: ServiceGroup[] = [
     name_ar: 'الخزائن والدواليب',
     name_en: 'Closets & Wardrobes',
     icon: '🚪',
-    color: 'bg-violet-500/10 text-violet-600',
+    color: 'bg-secondary/10 text-secondary',
     services: [
       { name_ar: 'خزائن ملابس مدمجة', name_en: 'Built-in Wardrobes', description_ar: 'خزائن ملابس مدمجة بتصميم مخصص حسب المساحة', description_en: 'Built-in wardrobes with custom design based on space' },
       { name_ar: 'غرف ملابس (دريسنج روم)', name_en: 'Walk-in Closets', description_ar: 'تصميم وتنفيذ غرف ملابس متكاملة فاخرة', description_en: 'Design and execution of complete luxury walk-in closets' },
@@ -167,7 +167,7 @@ export const serviceCatalog: ServiceGroup[] = [
     name_ar: 'UPVC',
     name_en: 'UPVC',
     icon: '🪟',
-    color: 'bg-emerald-500/10 text-emerald-600',
+    color: 'bg-success/10 text-success',
     services: [
       { name_ar: 'نوافذ UPVC', name_en: 'UPVC Windows', description_ar: 'نوافذ UPVC بعزل حراري وصوتي عالي', description_en: 'UPVC windows with high thermal and sound insulation' },
       { name_ar: 'أبواب UPVC', name_en: 'UPVC Doors', description_ar: 'أبواب UPVC مقاومة للعوامل الجوية', description_en: 'Weather-resistant UPVC doors' },

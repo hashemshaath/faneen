@@ -751,7 +751,7 @@ const DashboardServices = () => {
                                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-1.5 animate-in fade-in-0 duration-150">
                                   {group.brands.map((brand, bi) => (
                                     <div key={bi} className="flex items-center gap-2 p-2 rounded-xl bg-muted/30 border border-border/20">
-                                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${brand.type === 'international' ? 'bg-blue-500/10 text-blue-600' : 'bg-primary/10 text-primary'}`}>
+                                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${brand.type === 'international' ? 'bg-info/10 text-info' : 'bg-primary/10 text-primary'}`}>
                                         {brand.type === 'international' ? <Globe className="w-3 h-3" /> : <MapPin className="w-3 h-3" />}
                                       </div>
                                       <div className="min-w-0">

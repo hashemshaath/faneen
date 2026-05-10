@@ -19,13 +19,13 @@ import {
 
 const recommendationLabels: Record<string, { ar: string; en: string; color: string }> = {
   premium: { ar: 'احترافي', en: 'Premium', color: 'bg-gold text-primary-foreground' },
-  recommended: { ar: 'موصى به', en: 'Recommended', color: 'bg-green-100 text-green-700' },
+  recommended: { ar: 'موصى به', en: 'Recommended', color: 'bg-success text-success' },
   standard: { ar: 'قياسي', en: 'Standard', color: 'bg-muted text-muted-foreground' },
 };
 
 const RatingCell = ({ value, max = 10 }: { value: number; max?: number }) => {
   const pct = (value / max) * 100;
-  const color = pct >= 80 ? 'bg-green-500' : pct >= 50 ? 'bg-gold' : 'bg-orange-400';
+  const color = pct >= 80 ? 'bg-success' : pct >= 50 ? 'bg-gold' : 'bg-urgent';
   return (
     <div className="flex items-center justify-center gap-2">
       <div className="w-20 h-2 bg-muted rounded-full overflow-hidden">
@@ -283,7 +283,7 @@ const CompareProfiles = () => {
                 {/* Thermal */}
                 <tr>
                   <td className="sticky start-0 bg-background p-3 text-sm font-medium flex items-center gap-2">
-                    <Thermometer className="ic-sm text-orange-500" />{isRTL ? 'العزل الحراري' : 'Thermal Insulation'}
+                    <Thermometer className="ic-sm text-urgent" />{isRTL ? 'العزل الحراري' : 'Thermal Insulation'}
                   </td>
                   {selectedProfiles.map((p) => (
                     <td key={p.id} className="p-3 border-b border-border/50"><RatingCell value={p.thermal_insulation_rating || 0} /></td>
@@ -292,7 +292,7 @@ const CompareProfiles = () => {
                 {/* Sound */}
                 <tr className="bg-muted/20">
                   <td className="sticky start-0 bg-muted/20 p-3 text-sm font-medium flex items-center gap-2">
-                    <Volume2 className="ic-sm text-blue-500" />{isRTL ? 'العزل الصوتي' : 'Sound Insulation'}
+                    <Volume2 className="ic-sm text-info" />{isRTL ? 'العزل الصوتي' : 'Sound Insulation'}
                   </td>
                   {selectedProfiles.map((p) => (
                     <td key={p.id} className="p-3 border-b border-border/50"><RatingCell value={p.sound_insulation_rating || 0} /></td>
@@ -301,7 +301,7 @@ const CompareProfiles = () => {
                 {/* Strength */}
                 <tr>
                   <td className="sticky start-0 bg-background p-3 text-sm font-medium flex items-center gap-2">
-                    <Shield className="ic-sm text-green-500" />{isRTL ? 'قوة التحمل' : 'Strength'}
+                    <Shield className="ic-sm text-success" />{isRTL ? 'قوة التحمل' : 'Strength'}
                   </td>
                   {selectedProfiles.map((p) => (
                     <td key={p.id} className="p-3 border-b border-border/50"><RatingCell value={p.strength_rating || 0} /></td>
@@ -388,7 +388,7 @@ const CompareProfiles = () => {
                           return (
                             <td key={p.id} className="p-3 text-center border-b border-border/50">
                               {has
-                                ? <CheckCircle2 className="ic-lg text-green-500 mx-auto" />
+                                ? <CheckCircle2 className="ic-lg text-success mx-auto" />
                                 : <XCircle className="ic-lg text-muted-foreground/30 mx-auto" />}
                             </td>
                           );
@@ -411,7 +411,7 @@ const CompareProfiles = () => {
                     const maxPrice = Math.max(...suppliers.map((s) => s.price_range_to || 0));
                     return (
                       <td key={p.id} className="p-3 text-center text-sm">
-                        <span className="font-mono font-medium text-green-600">
+                        <span className="font-mono font-medium text-success">
                           {minPrice !== Infinity ? `${minPrice.toLocaleString()} - ${maxPrice.toLocaleString()} SAR` : '-'}
                         </span>
                       </td>

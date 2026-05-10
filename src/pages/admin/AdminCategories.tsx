@@ -201,7 +201,7 @@ const SortableTreeItem = React.memo(({
       {businessCount > 0 && (
         <Tooltip>
           <TooltipTrigger asChild>
-            <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/8 text-emerald-600 text-[10px] font-medium shrink-0">
+            <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-success/8 text-success text-[10px] font-medium shrink-0">
               <Building2 className="w-3 h-3" />
               {businessCount}
             </div>
@@ -219,7 +219,7 @@ const SortableTreeItem = React.memo(({
             <button
               onClick={() => onToggleActive(node.id, !node.is_active)}
               className={`w-2.5 h-2.5 rounded-full shrink-0 transition-all ring-2 ring-offset-1 ring-offset-background ${
-                node.is_active ? 'bg-emerald-500 ring-emerald-500/30' : 'bg-muted-foreground/30 ring-muted-foreground/10'
+                node.is_active ? 'bg-success ring-success/30' : 'bg-muted-foreground/30 ring-muted-foreground/10'
               }`}
             />
           </TooltipTrigger>
@@ -512,9 +512,9 @@ const AdminCategories = () => {
 
   const statCards = [
     { label: isRTL ? 'إجمالي التصنيفات' : 'Total Categories', value: stats.total, icon: Layers, gradient: 'from-primary/15 to-primary/5', iconColor: 'text-primary' },
-    { label: isRTL ? 'تصنيفات رئيسية' : 'Root Categories', value: stats.roots, icon: TreePine, gradient: 'from-blue-500/15 to-blue-500/5', iconColor: 'text-blue-600' },
-    { label: isRTL ? 'تصنيفات فرعية' : 'Sub-Categories', value: stats.subs, icon: Network, gradient: 'from-amber-500/15 to-amber-500/5', iconColor: 'text-amber-600' },
-    { label: isRTL ? 'منشآت مرتبطة' : 'Linked Businesses', value: totalBusinesses, icon: Building2, gradient: 'from-emerald-500/15 to-emerald-500/5', iconColor: 'text-emerald-600' },
+    { label: isRTL ? 'تصنيفات رئيسية' : 'Root Categories', value: stats.roots, icon: TreePine, gradient: 'from-info/15 to-info/5', iconColor: 'text-info' },
+    { label: isRTL ? 'تصنيفات فرعية' : 'Sub-Categories', value: stats.subs, icon: Network, gradient: 'from-warning/15 to-warning/5', iconColor: 'text-warning' },
+    { label: isRTL ? 'منشآت مرتبطة' : 'Linked Businesses', value: totalBusinesses, icon: Building2, gradient: 'from-success/15 to-success/5', iconColor: 'text-success' },
   ];
 
   return (
@@ -582,7 +582,7 @@ const AdminCategories = () => {
                 <div className="flex h-3 rounded-full overflow-hidden bg-muted/40 mb-3">
                   {rootDistribution.filter(r => r.businesses > 0).map((r, i) => {
                     const percent = totalBusinesses > 0 ? (r.businesses / totalBusinesses) * 100 : 0;
-                    const colors = ['bg-primary', 'bg-blue-500', 'bg-amber-500', 'bg-emerald-500', 'bg-purple-500', 'bg-rose-500'];
+                    const colors = ['bg-primary', 'bg-info', 'bg-warning', 'bg-success', 'bg-secondary', 'bg-destructive'];
                     return (
                       <Tooltip key={r.id}>
                         <TooltipTrigger asChild>
@@ -599,7 +599,7 @@ const AdminCategories = () => {
                 {/* Legend */}
                 <div className="flex flex-wrap gap-x-4 gap-y-1.5">
                   {rootDistribution.map((r, i) => {
-                    const colors = ['bg-primary', 'bg-blue-500', 'bg-amber-500', 'bg-emerald-500', 'bg-purple-500', 'bg-rose-500'];
+                    const colors = ['bg-primary', 'bg-info', 'bg-warning', 'bg-success', 'bg-secondary', 'bg-destructive'];
                     return (
                       <div key={r.id} className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
                         <span className={`w-2 h-2 rounded-full ${colors[i % colors.length]}`} />

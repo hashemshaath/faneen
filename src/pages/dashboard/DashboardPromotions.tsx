@@ -55,9 +55,9 @@ const emptyForm: PromotionForm = {
 };
 
 const typeConfig: Record<string, { ar: string; en: string; icon: React.ElementType; color: string }> = {
-  ad: { ar: 'إعلان', en: 'Ad', icon: Megaphone, color: 'text-blue-600 bg-blue-500/10' },
+  ad: { ar: 'إعلان', en: 'Ad', icon: Megaphone, color: 'text-info bg-info/10' },
   offer: { ar: 'عرض خاص', en: 'Offer', icon: Tag, color: 'text-primary bg-primary/10' },
-  video: { ar: 'فيديو', en: 'Video', icon: Video, color: 'text-violet-600 bg-violet-500/10' },
+  video: { ar: 'فيديو', en: 'Video', icon: Video, color: 'text-secondary bg-secondary/10' },
 };
 
 /* ── Sortable Promo Card ── */
@@ -93,7 +93,7 @@ const SortablePromoCard = React.memo(({ promo: p, rtl, viewMode, isSelected, onE
                 <Icon className="w-2.5 h-2.5 me-0.5" />{t?.[rtl ? 'ar' : 'en']}
               </Badge>
               {isExpired && <Badge variant="destructive" className="text-[9px] shadow-sm px-1.5 py-0.5">{rtl ? 'منتهي' : 'Expired'}</Badge>}
-              {isEndingSoon && !isExpired && <Badge className="text-[9px] bg-amber-500 text-white shadow-sm px-1.5 py-0.5">{rtl ? `${daysLeft} أيام` : `${daysLeft}d left`}</Badge>}
+              {isEndingSoon && !isExpired && <Badge className="text-[9px] bg-warning text-white shadow-sm px-1.5 py-0.5">{rtl ? `${daysLeft} أيام` : `${daysLeft}d left`}</Badge>}
               {!p.is_active && !isExpired && <Badge variant="outline" className="text-[9px] bg-background/80 backdrop-blur-sm px-1.5 py-0.5">{rtl ? 'غير نشط' : 'Inactive'}</Badge>}
             </div>
             {/* Select + Grip */}
@@ -160,7 +160,7 @@ const SortablePromoCard = React.memo(({ promo: p, rtl, viewMode, isSelected, onE
             <h3 className="font-semibold text-sm truncate">{title}</h3>
             <Badge className={`text-[8px] border-0 px-1 py-0 h-3.5 ${t?.color || ''}`}>{t?.[rtl ? 'ar' : 'en']}</Badge>
             {isExpired && <Badge variant="destructive" className="text-[8px] px-1 py-0 h-3.5">{rtl ? 'منتهي' : 'Expired'}</Badge>}
-            {isEndingSoon && !isExpired && <Badge className="text-[8px] bg-amber-500 text-white px-1 py-0 h-3.5">{rtl ? `${daysLeft} أيام` : `${daysLeft}d`}</Badge>}
+            {isEndingSoon && !isExpired && <Badge className="text-[8px] bg-warning text-white px-1 py-0 h-3.5">{rtl ? `${daysLeft} أيام` : `${daysLeft}d`}</Badge>}
             {!p.is_active && !isExpired && <Badge variant="outline" className="text-[8px] px-1 py-0 h-3.5">{rtl ? 'غير نشط' : 'Off'}</Badge>}
           </div>
           <div className="flex items-center gap-2 mt-0.5 flex-wrap">
@@ -173,7 +173,7 @@ const SortablePromoCard = React.memo(({ promo: p, rtl, viewMode, isSelected, onE
         </div>
         <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
           <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => onToggle(p)}>
-            {p.is_active ? <PowerOff className="w-3.5 h-3.5 text-amber-500" /> : <Power className="w-3.5 h-3.5 text-primary" />}
+            {p.is_active ? <PowerOff className="w-3.5 h-3.5 text-warning" /> : <Power className="w-3.5 h-3.5 text-primary" />}
           </Button>
           <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => onEdit(p)}><Pencil className="w-3.5 h-3.5" /></Button>
           <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => onDuplicate(p)}><Copy className="w-3.5 h-3.5" /></Button>
@@ -428,7 +428,7 @@ const DashboardPromotions = () => {
               { l: rtl ? 'إجمالي' : 'Total', v: stats.total, icon: Megaphone, cls: 'text-primary bg-primary/10' },
               { l: rtl ? 'نشطة' : 'Active', v: stats.active, icon: CheckCircle2, cls: 'text-primary bg-primary/10' },
               { l: rtl ? 'غير نشطة' : 'Inactive', v: stats.inactive, icon: EyeOff, cls: 'text-muted-foreground bg-muted' },
-              { l: rtl ? 'منتهية' : 'Expired', v: stats.expired, icon: Clock, cls: 'text-amber-600 bg-amber-500/10' },
+              { l: rtl ? 'منتهية' : 'Expired', v: stats.expired, icon: Clock, cls: 'text-warning bg-warning/10' },
               { l: rtl ? 'مشاهدات' : 'Views', v: stats.totalViews, icon: TrendingUp, cls: 'text-primary bg-primary/10' },
             ].map((s, i) => (
               <div key={i} className="flex items-center gap-2.5 p-3 rounded-2xl border border-border/30 bg-card/50 hover:bg-card transition-colors">

@@ -309,7 +309,7 @@ const Compare = () => {
                     return (
                       <td key={b.id} className="p-3 text-center text-sm">
                         {s?.is_enabled ? (
-                          <span className="text-green-600 font-medium">{isRTL ? `حتى ${s.max_installments} أقساط` : `Up to ${s.max_installments}`}</span>
+                          <span className="text-success font-medium">{isRTL ? `حتى ${s.max_installments} أقساط` : `Up to ${s.max_installments}`}</span>
                         ) : (
                           <span className="text-muted-foreground">-</span>
                         )}

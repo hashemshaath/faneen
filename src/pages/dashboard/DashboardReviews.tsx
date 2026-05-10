@@ -48,7 +48,7 @@ const RatingStars = React.memo(({ rating, size = 'sm' }: { rating: number; size?
   return (
     <div className="flex gap-0.5">
       {[1, 2, 3, 4, 5].map(s => (
-        <Star key={s} className={`${w} ${s <= rating ? 'text-amber-400 fill-amber-400' : 'text-muted-foreground/30'}`} />
+        <Star key={s} className={`${w} ${s <= rating ? 'text-warning fill-warning' : 'text-muted-foreground/30'}`} />
       ))}
     </div>
   );
@@ -78,8 +78,8 @@ const ReviewCard = React.memo(({
   });
   const timeAgo = getTimeAgo(review.created_at, isRTL);
   const sentiment = review.rating >= 4 ? 'positive' : review.rating >= 3 ? 'neutral' : 'negative';
-  const sentimentColor = sentiment === 'positive' ? 'text-emerald-500' : sentiment === 'neutral' ? 'text-amber-500' : 'text-rose-500';
-  const sentimentBg = sentiment === 'positive' ? 'bg-emerald-500/10' : sentiment === 'neutral' ? 'bg-amber-500/10' : 'bg-rose-500/10';
+  const sentimentColor = sentiment === 'positive' ? 'text-success' : sentiment === 'neutral' ? 'text-warning' : 'text-destructive';
+  const sentimentBg = sentiment === 'positive' ? 'bg-success/10' : sentiment === 'neutral' ? 'bg-warning/10' : 'bg-destructive/10';
 
   const displayName = review.reviewer_name || (isRTL ? 'مستخدم' : 'User');
   const initials = displayName.slice(0, 2).toUpperCase();
@@ -106,7 +106,7 @@ const ReviewCard = React.memo(({
                 </Badge>
               )}
               {review.is_verified && (
-                <Badge variant="secondary" className="text-[8px] px-1.5 py-0 h-4 gap-0.5 bg-emerald-500/10 text-emerald-600">
+                <Badge variant="secondary" className="text-[8px] px-1.5 py-0 h-4 gap-0.5 bg-success/10 text-success">
                   ✓ {isRTL ? 'موثق' : 'Verified'}
                 </Badge>
               )}
@@ -141,7 +141,7 @@ const ReviewCard = React.memo(({
                   {review.rating}/5
                 </Badge>
                 {review.is_verified && (
-                  <Badge variant="secondary" className="text-[8px] px-1.5 py-0 h-4 gap-0.5 bg-emerald-500/10 text-emerald-600">
+                  <Badge variant="secondary" className="text-[8px] px-1.5 py-0 h-4 gap-0.5 bg-success/10 text-success">
                     ✓ {isRTL ? 'موثق' : 'Verified'}
                   </Badge>
                 )}
@@ -325,17 +325,17 @@ const DashboardReviews = () => {
           {[
             {
               label: isRTL ? 'متوسط التقييم' : 'Avg Rating', value: stats.avg.toFixed(1),
-              icon: Star, color: 'text-amber-500 bg-amber-500/10',
+              icon: Star, color: 'text-warning bg-warning/10',
               extra: stats.trend !== 0 ? (
-                <span className={`text-[9px] flex items-center gap-0.5 ${stats.trend > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                <span className={`text-[9px] flex items-center gap-0.5 ${stats.trend > 0 ? 'text-success' : 'text-destructive'}`}>
                   {stats.trend > 0 ? <TrendingUp className="w-2.5 h-2.5" /> : <TrendingDown className="w-2.5 h-2.5" />}
                   {Math.abs(stats.trend).toFixed(1)}
                 </span>
               ) : null,
             },
-            { label: isRTL ? 'الإجمالي' : 'Total', value: stats.total, icon: MessageCircle, color: 'text-blue-500 bg-blue-500/10' },
-            { label: isRTL ? 'إيجابية' : 'Positive', value: stats.positive, icon: ThumbsUp, color: 'text-emerald-500 bg-emerald-500/10' },
-            { label: isRTL ? 'سلبية' : 'Negative', value: stats.negative, icon: ThumbsDown, color: 'text-rose-500 bg-rose-500/10' },
+            { label: isRTL ? 'الإجمالي' : 'Total', value: stats.total, icon: MessageCircle, color: 'text-info bg-info/10' },
+            { label: isRTL ? 'إيجابية' : 'Positive', value: stats.positive, icon: ThumbsUp, color: 'text-success bg-success/10' },
+            { label: isRTL ? 'سلبية' : 'Negative', value: stats.negative, icon: ThumbsDown, color: 'text-destructive bg-destructive/10' },
             { label: isRTL ? 'مرتبطة بمشروع' : 'Project', value: stats.projectCount, icon: FolderOpen, color: 'text-primary bg-primary/10' },
             { label: isRTL ? 'تقييم عام' : 'General', value: stats.generalCount, icon: User, color: 'text-muted-foreground bg-muted' },
           ].map((s, i) => (
@@ -372,9 +372,9 @@ const DashboardReviews = () => {
                     <button key={star} onClick={() => setFilterMode(filterMode === String(star) ? 'all' : String(star) as FilterMode)}
                       className={`flex items-center gap-2 w-full group/bar rounded-md px-1.5 py-0.5 transition-colors ${filterMode === String(star) ? 'bg-primary/5' : 'hover:bg-muted/50'}`}>
                       <span className="text-xs font-medium w-6 text-end">{star}</span>
-                      <Star className="w-3 h-3 text-amber-400 fill-amber-400 shrink-0" />
+                      <Star className="w-3 h-3 text-warning fill-warning shrink-0" />
                       <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                        <div className="h-full bg-amber-400 rounded-full transition-all duration-500" style={{ width: `${pct}%` }} />
+                        <div className="h-full bg-warning rounded-full transition-all duration-500" style={{ width: `${pct}%` }} />
                       </div>
                       <span className="text-[10px] text-muted-foreground w-8 text-end">{count}</span>
                       <span className="text-[10px] text-muted-foreground w-10 text-end">{pct.toFixed(0)}%</span>
