@@ -37,6 +37,9 @@ jobs:
       - name: Image & Alt-Text Audit
         run: node scripts/image-alt-audit.mjs
 
+      - name: Contrast / Semantic-Tokens Audit
+        run: node scripts/contrast-tokens-audit.mjs
+
       - name: Membership Data Integrity Audit
         run: node scripts/membership-data-audit.mjs
 
