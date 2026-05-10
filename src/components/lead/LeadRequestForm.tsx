@@ -134,6 +134,7 @@ export const LeadRequestForm: React.FC<Props> = ({ businessId, businessName, sou
         source_page: source ?? 'business-profile',
         inquiry_type: parsed.data.contact_preference,
         is_authenticated: !!user,
+        ...getAttributionPayload(),
       });
       setSubmitted(true);
       toast.success(isRTL ? 'تم إرسال طلبك بنجاح' : 'Your request has been sent');
