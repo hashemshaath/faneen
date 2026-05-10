@@ -62,32 +62,78 @@ export const KEY_FROM_FIELD = Object.fromEntries(
 /** Re-exported from the central `brandThemeUtils` so callers have one home. */
 export const hexToHslString = _hexToHslString;
 
+/**
+ * Full mapping: BrandColorTokens field ↔ `platform_settings.setting_key`.
+ * Used by `AdminBranding` to read/write the full brand palette (not just
+ * the 6 legacy fields exposed via `ThemeColors`). `dark` is stored under
+ * the historical `theme_color_navy` key for backward compat.
+ */
+export const BRAND_THEME_KEY_BY_FIELD: Partial<Record<keyof BrandColorTokens, string>> = {
+  primary:       'theme_color_primary',
+  primaryHover:  'theme_color_primary_hover',
+  primaryDark:   'theme_color_primary_dark',
+  secondary:     'theme_color_secondary',
+  secondaryDark: 'theme_color_secondary_dark',
+  accent:        'theme_color_accent',
+  accentHover:   'theme_color_accent_hover',
+  background:    'theme_color_background',
+  surface:       'theme_color_surface',
+  text:          'theme_color_text',
+  textMuted:     'theme_color_text_muted',
+  border:        'theme_color_border',
+  success:       'theme_color_success',
+  warning:       'theme_color_warning',
+  error:         'theme_color_error',
+  info:          'theme_color_info',
+  dark:          'theme_color_navy',
+};
+
+export const BRAND_THEME_FIELD_BY_KEY: Record<string, keyof BrandColorTokens> = Object.fromEntries(
+  Object.entries(BRAND_THEME_KEY_BY_FIELD).map(([f, k]) => [k as string, f as keyof BrandColorTokens]),
+);
+
 export function useThemeColors() {
   const { data, isLoading } = useQuery({
     queryKey: ['theme-colors'],
-    queryFn: async (): Promise<ThemeColors> => {
+    queryFn: async (): Promise<{ theme: ThemeColors; overrides: BrandThemeOverrides }> => {
       const { data: rows, error } = await supabase
         .from('platform_settings')
         .select('setting_key, setting_value')
         .eq('category', 'theme');
-      if (error) return DEFAULT_THEME;
-      const merged: ThemeColors = { ...DEFAULT_THEME };
+      if (error) return { theme: DEFAULT_THEME, overrides: {} };
+
+      // Decode the full brand palette (16+ fields) into a sanitized
+      // BrandThemeOverrides — invalid/forbidden values are silently dropped.
+      const overrides: BrandThemeOverrides = {};
       for (const r of rows ?? []) {
-        const f = FIELD_FROM_KEY[r.setting_key];
-        if (!f || !r.setting_value) continue;
-        const value = r.setting_value.trim();
-        // Reject malformed and forbidden values — fall through to default.
-        if (!validateHexColor(value)) continue;
-        if (isForbiddenBrandColor(value)) continue;
-        merged[f] = value;
+        const field = BRAND_THEME_FIELD_BY_KEY[r.setting_key];
+        if (!field || !r.setting_value) continue;
+        const v = r.setting_value.trim();
+        if (!validateHexColor(v) || isForbiddenBrandColor(v)) continue;
+        overrides[field] = v;
       }
-      return merged;
+
+      // Project the full overrides onto the legacy ThemeColors shape so
+      // existing consumers (`AdminBranding` legacy imports) keep working.
+      const theme: ThemeColors = {
+        primary:       overrides.primary       ?? DEFAULT_THEME.primary,
+        primaryDark:   overrides.primaryDark   ?? DEFAULT_THEME.primaryDark,
+        secondary:     overrides.secondary     ?? DEFAULT_THEME.secondary,
+        secondaryDark: overrides.secondaryDark ?? DEFAULT_THEME.secondaryDark,
+        accent:        overrides.accent        ?? DEFAULT_THEME.accent,
+        navy:          overrides.dark          ?? DEFAULT_THEME.navy,
+      };
+      return { theme, overrides };
     },
     staleTime: 10 * 60 * 1000,
     gcTime: 60 * 60 * 1000,
-    placeholderData: DEFAULT_THEME,
+    placeholderData: { theme: DEFAULT_THEME, overrides: {} },
   });
-  return { theme: data ?? DEFAULT_THEME, isLoading };
+  return {
+    theme: data?.theme ?? DEFAULT_THEME,
+    overrides: data?.overrides ?? {},
+    isLoading,
+  };
 }
 
 /**
@@ -101,8 +147,16 @@ export function useThemeColors() {
  *  3. Legacy aliases (`--primary`, `--accent`, `--gold`, `--navy`,
  *     `--brand-blue`, `--gradient-gold`, `--shadow-gold`) so existing
  *     Tailwind tokens and CSS keep working without churn.
+ *
+ * The optional `extraOverrides` argument lets callers (e.g. `ThemeApplier`)
+ * forward the full admin-saved BrandColorTokens overrides — not just the
+ * 6 legacy fields exposed via `ThemeColors` — so neutrals/status tokens
+ * also flow into `--brand-*` and `--color-*` CSS variables.
  */
-export function buildCssVars(theme: ThemeColors): string {
+export function buildCssVars(
+  theme: ThemeColors,
+  extraOverrides?: BrandThemeOverrides,
+): string {
   // Map legacy ThemeColors → BrandThemeOverrides so admin DB values cascade
   // through the central merger. Anything invalid was already filtered above.
   const overrides: BrandThemeOverrides = {
@@ -112,6 +166,7 @@ export function buildCssVars(theme: ThemeColors): string {
     secondaryDark: theme.secondaryDark,
     accent: theme.accent,
     dark: theme.navy,
+    ...(extraOverrides ?? {}),
   };
   const merged = mergeBrandThemeWithOverrides(BRAND_THEME, overrides);
   const c: BrandColorTokens = merged.colors;
