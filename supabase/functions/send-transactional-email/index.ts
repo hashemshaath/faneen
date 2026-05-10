@@ -26,6 +26,7 @@ const corsHeaders = {
 // transactional/system and only the master `email_enabled` flag applies.
 const TEMPLATE_CATEGORY: Record<string, string> = {
   'welcome-signup': 'email_marketing',
+  'welcome-business': 'email_marketing',
   'lead-confirmation': 'email_leads',
   'lead-notification': 'email_leads',
   'booking-confirmation': 'email_bookings',
