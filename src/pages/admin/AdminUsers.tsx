@@ -43,6 +43,23 @@ interface BusinessInfo {
   membership_tier: string; business_number: number;
 }
 
+type StaffRole = 'owner' | 'manager' | 'editor' | 'viewer';
+
+interface BusinessLink {
+  business: BusinessInfo;
+  role: StaffRole;
+  staffId: string | null; // null = ownership inferred from businesses.user_id with no staff row
+  isOwnerByEntity: boolean; // owns the business record itself
+  isActive: boolean;
+}
+
+const staffRoleConfig: Record<StaffRole, { ar: string; en: string; color: string }> = {
+  owner:   { ar: 'مالك',     en: 'Owner',   color: 'bg-emerald-500/15 text-emerald-700 border-emerald-500/40 dark:text-emerald-300' },
+  manager: { ar: 'مدير',     en: 'Manager', color: 'bg-blue-500/15 text-blue-700 border-blue-500/40 dark:text-blue-300' },
+  editor:  { ar: 'محرر',     en: 'Editor',  color: 'bg-amber-500/15 text-amber-700 border-amber-500/40 dark:text-amber-300' },
+  viewer:  { ar: 'مشاهد',    en: 'Viewer',  color: 'bg-muted text-muted-foreground border-border' },
+};
+
 const roleConfig = {
   super_admin: { icon: ShieldAlert, badge: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 border-purple-200 dark:border-purple-800', iconBg: 'bg-purple-500/15 text-purple-600 dark:text-purple-400', labelAr: 'مشرف أعلى', labelEn: 'Super Admin', rank: 0 },
   admin: { icon: Crown, badge: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800', iconBg: 'bg-red-500/15 text-red-600 dark:text-red-400', labelAr: 'مشرف', labelEn: 'Admin', rank: 1 },
