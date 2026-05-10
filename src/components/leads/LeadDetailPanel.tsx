@@ -64,9 +64,6 @@ export const LeadDetailPanel: React.FC<Props> = ({ lead, pending, onAction, onOp
     if (validUntil && validUntil < today) {
       next.valid_until = isRTL ? 'يجب أن يكون اليوم أو بعده' : 'Must be today or later';
     }
-    if (note.length > 1000) {
-      // shouldn't happen due to maxLength, but guard anyway
-    }
     setErrs(next);
     if (Object.keys(next).length > 0) return;
     onSendQuote?.({
