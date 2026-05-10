@@ -17,7 +17,7 @@ import { AuthDivider } from './AuthDivider';
 import { FieldError } from './FieldError';
 import { AuthErrorHelpLinks } from './AuthErrorHelpLinks';
 import { useFieldValidation } from '@/hooks/useFieldValidation';
-import { trackLoginSuccess } from '@/lib/analytics-events';
+import { trackLoginSuccess, trackLoginFailed, categorizeReason } from '@/lib/analytics-events';
 
 interface LoginFormProps {
   onSwitchToRegister: () => void;
