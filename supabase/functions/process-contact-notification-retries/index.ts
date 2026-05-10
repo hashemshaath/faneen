@@ -107,7 +107,7 @@ serve(async (req) => {
       const recipients = (((s.alert_recipients as string[]) ?? []).filter((e) => /\S+@\S+\.\S+/.test(e)));
       if (recipients.length === 0) recipients.push(Deno.env.get("ADMIN_CONTACT_EMAIL") || "info@qitaat.com");
       const items = exhaustedDetails.map((d) =>
-        `<li><b>${d.channel}</b> → <code>${d.recipient}</code><br><small style="color:#b91c1c">${(d.error_message ?? "").slice(0, 200)}</small></li>`
+        `<li><b>${d.channel}</b> → <code>${B.error}">${(d.error_message ?? "").slice(0, 200)}</code></li>`.replace('${B.error}">', `${B.error};">`).replace('<code>', '<code><small style="color:').replace('</code></li>', '</small></li>')
       ).join("");
       const html = `<!doctype html><html><body style="font-family:system-ui;padding:24px;max-width:560px;margin:auto">
 <h2 style="color:#b91c1c">⚠️ Notification delivery exhausted</h2>
