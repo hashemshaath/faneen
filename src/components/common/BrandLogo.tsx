@@ -47,7 +47,15 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
   const lightSrc = variant === 'mark' ? branding.markUrl : branding.fullLightUrl;
   const darkSrc  = variant === 'mark' ? branding.markUrl : branding.fullDarkUrl;
 
+  // Provide an explicit width to satisfy Lighthouse's "explicit width and
+  // height" check and reserve layout space (prevents CLS). The logo aspect
+  // ratios are stable: full ≈ 1.96:1 and mark ≈ 0.96:1 (~square). CSS still
+  // overrides the rendered width via `width: auto` to keep proportions.
+  const aspectRatio = variant === 'mark' ? 1 : 1.96;
+  const width = Math.round(height * aspectRatio);
+
   const commonImgProps = {
+    width,
     height,
     style: { height, width: 'auto' as const },
     loading: priority ? ('eager' as const) : ('lazy' as const),
