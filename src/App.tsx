@@ -73,6 +73,8 @@ const AdminTags = lazyRetry(() => import("./pages/admin/AdminTags"));
 const AdminBusinesses = lazyRetry(() => import("./pages/admin/AdminBusinesses"));
 const AdminMemberships = lazyRetry(() => import("./pages/admin/AdminMemberships"));
 const AdminContactMessages = lazyRetry(() => import("./pages/admin/AdminContactMessages"));
+const AdminContactInboxSettings = lazyRetry(() => import("./pages/admin/AdminContactInboxSettings"));
+const AdminContactAuditLog = lazyRetry(() => import("./pages/admin/AdminContactAuditLog"));
 const AdminLeadRequests = lazyRetry(() => import("./pages/admin/AdminLeadRequests"));
 const AdminEmailDeliverability = lazyRetry(() => import("./pages/admin/AdminEmailDeliverability"));
 const AdminSiteAudit = lazyRetry(() => import("./pages/admin/AdminSiteAudit"));
@@ -193,6 +195,8 @@ const AppRoutes = () => (
           <Route path="/admin/provider-review" element={<ProtectedRoute requireAdmin><AdminProviderReview /></ProtectedRoute>} />
           <Route path="/admin/memberships" element={<ProtectedRoute requireAdmin><AdminMemberships /></ProtectedRoute>} />
           <Route path="/admin/contact-messages" element={<ProtectedRoute requireAdmin><AdminContactMessages /></ProtectedRoute>} />
+          <Route path="/admin/contact-inbox-settings" element={<ProtectedRoute requireAdmin><AdminContactInboxSettings /></ProtectedRoute>} />
+          <Route path="/admin/contact-audit-log" element={<ProtectedRoute requireAdmin><AdminContactAuditLog /></ProtectedRoute>} />
           <Route path="/admin/lead-requests" element={<ProtectedRoute requireAdmin><AdminLeadRequests /></ProtectedRoute>} />
           <Route path="/admin/email-deliverability" element={<ProtectedRoute requireAdmin><AdminEmailDeliverability /></ProtectedRoute>} />
           <Route path="/admin/site-audit" element={<ProtectedRoute requireAdmin><AdminSiteAudit /></ProtectedRoute>} />
