@@ -169,6 +169,12 @@ export default {
           DEFAULT: "hsl(var(--surface-nav))",
           foreground: "hsl(var(--surface-nav-foreground))",
         },
+        urgent: {
+          DEFAULT: "hsl(var(--urgent))",
+          foreground: "hsl(var(--urgent-foreground))",
+          hover: "hsl(var(--urgent-hover))",
+          light: "hsl(var(--urgent-light))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",

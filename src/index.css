@@ -33,64 +33,75 @@
     outline: none;
   }
   :root {
-    --background: 220 20% 97%;
-    --foreground: 220 30% 12%;
+    /* Qitaat brand identity v1.0 — May 2026
+       Source of truth: industrial green #0E9E6F + structural blue #2F62AE.
+       Logo green #14B481 is reserved for the logo only. */
+    --background: 220 17% 97%;       /* #F7F8FA */
+    --foreground: 218 30% 14%;       /* #1A2230 */
 
     --card: 0 0% 100%;
-    --card-foreground: 220 30% 12%;
+    --card-foreground: 218 30% 14%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 30% 12%;
+    --popover-foreground: 218 30% 14%;
 
-    /* Brand-driven palette — green primary, blue secondary, derived from logo */
-    --primary: 158 65% 42%;            /* logo green */
+    /* Brand-driven palette — industrial green primary, structural blue secondary */
+    --primary: 159 76% 34%;            /* #0E9E6F */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 225 60% 47%;          /* logo blue */
+    --secondary: 215 58% 43%;          /* #2F62AE */
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 220 15% 92%;
-    --muted-foreground: 220 10% 45%;
+    --muted: 220 17% 94%;              /* #EDEFF3 */
+    --muted-foreground: 217 13% 48%;   /* #6B7689 */
 
-    --accent: 158 65% 42%;             /* same as primary green */
+    /* Accent stays aliased to primary green so existing bg-accent CTAs
+       remain on-brand. The orange industrial accent lives in --urgent. */
+    --accent: 159 76% 34%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 67% 46%;          /* #C42626 */
     --destructive-foreground: 210 40% 98%;
 
-    --border: 220 15% 88%;
-    --input: 220 15% 88%;
-    --ring: 158 65% 42%;
+    --border: 220 23% 91%;             /* #E2E6EE */
+    --input: 220 23% 91%;
+    --ring: 159 76% 34%;
 
     --radius: 0.75rem;
 
-    /* Brand tokens — "gold" name kept for backwards compatibility, now mapped
-       to the logo green so existing utilities (text-gold, bg-gradient-gold,
-       border-gold/20…) automatically align with the new identity. */
-    --gold: 158 65% 42%;
-    --gold-light: 158 60% 55%;
-    --gold-dark: 158 70% 32%;
-    --brand-blue: 225 60% 47%;
-    --brand-blue-light: 225 65% 60%;
-    --brand-blue-dark: 225 65% 35%;
-    --navy: 220 35% 15%;
-    --navy-light: 220 25% 25%;
-    --slate-warm: 220 10% 45%;
-    --cream: 158 30% 96%;
+    /* Brand tokens — "gold" name kept for backwards compatibility, mapped
+       to industrial green so existing utilities (text-gold, bg-gradient-gold,
+       border-gold/20…) align with the new identity. */
+    --gold: 159 76% 34%;               /* #0E9E6F primary */
+    --gold-light: 154 49% 59%;         /* #5ECCA3 primary-300 */
+    --gold-dark: 159 86% 20%;          /* #075E42 primary-800 */
+    --brand-blue: 215 58% 43%;         /* #2F62AE secondary */
+    --brand-blue-light: 215 50% 64%;   /* #769BD1 secondary-300 */
+    --brand-blue-dark: 217 60% 20%;    /* #142D52 secondary-800 */
+    --navy: 222 27% 10%;               /* #131722 slate-900 */
+    --navy-light: 222 22% 16%;         /* #232936 slate-800 */
+    --slate-warm: 217 13% 48%;
+    --cream: 150 60% 96%;              /* #E6F7F0 primary-light */
+
+    /* Industrial orange — reserved for urgent/featured CTAs only. */
+    --urgent: 28 87% 54%;              /* #F08A24 */
+    --urgent-foreground: 0 0% 100%;
+    --urgent-hover: 31 93% 42%;        /* #D17008 */
+    --urgent-light: 32 89% 90%;        /* #FCE7CE */
 
     /* Navbar/Footer surface — light in light mode (so the colored logo shines),
        dark navy in dark mode for contrast. */
     --surface-nav: 0 0% 100%;
-    --surface-nav-foreground: 220 30% 12%;
+    --surface-nav-foreground: 218 30% 14%;
 
-    --gradient-gold: linear-gradient(135deg, hsl(158 65% 42%), hsl(225 60% 47%));
-    --gradient-brand: linear-gradient(135deg, hsl(158 65% 42%), hsl(225 60% 47%));
-    --gradient-navy: linear-gradient(135deg, hsl(220 35% 15%), hsl(220 25% 25%));
-    --gradient-hero: linear-gradient(180deg, hsl(220 35% 10% / 0.85), hsl(220 35% 15% / 0.7));
+    --gradient-gold: linear-gradient(135deg, hsl(159 76% 34%), hsl(215 58% 43%));
+    --gradient-brand: linear-gradient(135deg, hsl(159 76% 34%), hsl(215 58% 43%));
+    --gradient-navy: linear-gradient(135deg, hsl(222 27% 10%), hsl(222 22% 16%));
+    --gradient-hero: linear-gradient(180deg, hsl(222 27% 8% / 0.85), hsl(222 27% 12% / 0.7));
 
-    --shadow-card: 0 4px 24px -4px hsl(220 35% 15% / 0.08);
-    --shadow-card-hover: 0 12px 40px -8px hsl(220 35% 15% / 0.15);
-    --shadow-gold: 0 4px 20px -4px hsl(158 65% 42% / 0.4);
+    --shadow-card: 0 4px 12px hsl(218 30% 14% / 0.06), 0 2px 4px hsl(218 30% 14% / 0.04);
+    --shadow-card-hover: 0 12px 32px hsl(218 30% 14% / 0.10), 0 4px 8px hsl(218 30% 14% / 0.04);
+    --shadow-gold: 0 4px 20px -4px hsl(159 76% 34% / 0.35);
 
     /* ============================================================
        Design Tokens — additive, RTL-aware, non-breaking.
@@ -151,11 +162,11 @@
     --z-toast: 60;
 
     /* Semantic state colors (paired with .dark overrides) */
-    --success: 152 62% 40%;
+    --success: 159 76% 34%;            /* #0E9E6F */
     --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 220 35% 10%;
-    --info: 210 90% 50%;
+    --warning: 33 92% 36%;             /* #B45309 */
+    --warning-foreground: 0 0% 100%;
+    --info: 215 58% 43%;               /* #2F62AE */
     --info-foreground: 0 0% 100%;
 
     /* Icon size tokens — single source of truth for lucide size */
