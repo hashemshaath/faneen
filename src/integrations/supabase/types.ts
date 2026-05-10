@@ -2529,10 +2529,56 @@ export type Database = {
           },
         ]
       }
+      lead_request_events: {
+        Row: {
+          actor_id: string | null
+          actor_role: string | null
+          created_at: string
+          event_type: string
+          from_status: string | null
+          id: string
+          lead_request_id: string
+          note: string | null
+          to_status: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          actor_role?: string | null
+          created_at?: string
+          event_type: string
+          from_status?: string | null
+          id?: string
+          lead_request_id: string
+          note?: string | null
+          to_status?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          actor_role?: string | null
+          created_at?: string
+          event_type?: string
+          from_status?: string | null
+          id?: string
+          lead_request_id?: string
+          note?: string | null
+          to_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_request_events_lead_request_id_fkey"
+            columns: ["lead_request_id"]
+            isOneToOne: false
+            referencedRelation: "lead_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_requests: {
         Row: {
+          accepted_at: string | null
           budget_range: string | null
           business_id: string
+          closed_at: string | null
           contact_preference: string
           created_at: string
           email: string
@@ -2540,9 +2586,12 @@ export type Database = {
           internal_notes: string | null
           message: string
           name: string
+          needs_info_at: string | null
           phone: string | null
           priority: string
           project_scope: string | null
+          ref_id: string | null
+          rejected_at: string | null
           responded_at: string | null
           responded_by: string | null
           source: string | null
@@ -2550,10 +2599,13 @@ export type Database = {
           subject: string | null
           updated_at: string
           user_id: string | null
+          viewed_at: string | null
         }
         Insert: {
+          accepted_at?: string | null
           budget_range?: string | null
           business_id: string
+          closed_at?: string | null
           contact_preference?: string
           created_at?: string
           email: string
@@ -2561,9 +2613,12 @@ export type Database = {
           internal_notes?: string | null
           message: string
           name: string
+          needs_info_at?: string | null
           phone?: string | null
           priority?: string
           project_scope?: string | null
+          ref_id?: string | null
+          rejected_at?: string | null
           responded_at?: string | null
           responded_by?: string | null
           source?: string | null
@@ -2571,10 +2626,13 @@ export type Database = {
           subject?: string | null
           updated_at?: string
           user_id?: string | null
+          viewed_at?: string | null
         }
         Update: {
+          accepted_at?: string | null
           budget_range?: string | null
           business_id?: string
+          closed_at?: string | null
           contact_preference?: string
           created_at?: string
           email?: string
@@ -2582,9 +2640,12 @@ export type Database = {
           internal_notes?: string | null
           message?: string
           name?: string
+          needs_info_at?: string | null
           phone?: string | null
           priority?: string
           project_scope?: string | null
+          ref_id?: string | null
+          rejected_at?: string | null
           responded_at?: string | null
           responded_by?: string | null
           source?: string | null
@@ -2592,6 +2653,7 @@ export type Database = {
           subject?: string | null
           updated_at?: string
           user_id?: string | null
+          viewed_at?: string | null
         }
         Relationships: [
           {

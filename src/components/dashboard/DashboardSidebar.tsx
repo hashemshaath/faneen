@@ -27,6 +27,7 @@ import {
   Search as SearchIcon,
   ShieldCheck,
   Palette,
+  Inbox,
 } from 'lucide-react';
 
 interface MenuItem {
@@ -78,6 +79,7 @@ const providerGroups: MenuGroup[] = [
     groupLabel: { ar: 'التواصل', en: 'Communication' },
     icon: MessageSquare,
     items: [
+      { label: { ar: 'طلبات الخدمة', en: 'Service Requests' }, url: '/dashboard/leads', icon: Inbox },
       { label: { ar: 'الرسائل', en: 'Messages' }, url: '/dashboard/messages', icon: MessageSquare },
       { label: { ar: 'حجز المواعيد', en: 'Bookings' }, url: '/dashboard/bookings', icon: CalendarClock },
       { label: { ar: 'التقييمات', en: 'Reviews' }, url: '/dashboard/reviews', icon: Star },

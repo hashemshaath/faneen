@@ -65,7 +65,13 @@ export type QitaatEvent =
   // Provider lifecycle (Phase 6) — fired from admin review actions.
   | "provider_approved"
   | "provider_rejected"
-  | "provider_needs_changes";
+  | "provider_needs_changes"
+  // Service Requests (Phase SR-1) — provider inbox lifecycle.
+  | "service_request_viewed"
+  | "service_request_accepted"
+  | "service_request_rejected"
+  | "service_request_needs_info"
+  | "service_request_closed";
 
 /** Allow-listed parameters. Anything not in this set is dropped. */
 export type AllowedParam =
@@ -103,6 +109,9 @@ export type AllowedParam =
   | "flow"
   | "item_type"
   | "action"
+  // Service Requests — booleans/buckets only, never PII.
+  | "has_budget"
+  | "response_time_bucket"
   // Attribution (UTM + first/last touch) — added by analytics-attribution helper.
   // Only attached to conversion events (lead/register/contact) — never blanket.
   | "utm_source"
@@ -149,6 +158,8 @@ const ALLOWED: ReadonlySet<AllowedParam> = new Set<AllowedParam>([
   "flow",
   "item_type",
   "action",
+  "has_budget",
+  "response_time_bucket",
   "utm_source",
   "utm_medium",
   "utm_campaign",
