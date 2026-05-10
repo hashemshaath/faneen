@@ -1,4 +1,19 @@
 import { setupArabicDoc, getArabicTableStyles, printContractSection } from './pdf-arabic-font';
+import { BRAND_DOCUMENTS } from '@/config/brandTheme';
+import { hexToRgbTuple } from '@/lib/theme/brandThemeUtils';
+
+// ── Central brand document tokens (resolved once per module load) ──
+// Falls back to the literal hex if the util ever returns null (it won't for
+// these compile-time constants), so the PDF renderer always has a tuple.
+const HEADER_RGB = hexToRgbTuple(BRAND_DOCUMENTS.pdfHeader)  ?? [19, 23, 34];
+const ACCENT_RGB = hexToRgbTuple(BRAND_DOCUMENTS.pdfAccent)  ?? [14, 158, 111];
+const TEXT_RGB   = hexToRgbTuple(BRAND_DOCUMENTS.invoiceText)   ?? [26, 34, 48];
+const MUTED_RGB  = hexToRgbTuple(BRAND_DOCUMENTS.invoiceMuted)  ?? [107, 118, 137];
+const BORDER_RGB = hexToRgbTuple(BRAND_DOCUMENTS.invoiceBorder) ?? [226, 230, 238];
+// Soft tint for highlighted total rows — derived from primaryLight (#E6F7F0).
+// Inlined as RGB because jsPDF doesn't accept hex strings for fillColor.
+const HIGHLIGHT_RGB: [number, number, number] = [230, 247, 240];
+const SURFACE2_RGB: [number, number, number] = [242, 244, 248];
 
 export interface ContractExportData {
   contractNumber: string;
@@ -37,8 +52,11 @@ export const exportContractPDF = async (data: ContractExportData) => {
   const h = doc.internal.pageSize.getHeight();
   let y = 15;
 
-  const accentR = 180, accentG = 140, accentB = 60;
-  const darkR = 24, darkG = 24, darkB = 32;
+  const [accentR, accentG, accentB] = ACCENT_RGB;
+  const [darkR,   darkG,   darkB]   = HEADER_RGB;
+  const [textR,   textG,   textB]   = TEXT_RGB;
+  const [mutedR,  mutedG,  mutedB]  = MUTED_RGB;
+  const [borderR, borderG, borderB] = BORDER_RGB;
 
   // ── Header ──
   doc.setFillColor(darkR, darkG, darkB);
@@ -53,7 +71,7 @@ export const exportContractPDF = async (data: ContractExportData) => {
   doc.setTextColor(accentR, accentG, accentB);
   doc.text(`#${data.contractNumber}`, w / 2, 24, { align: 'center' });
   doc.setFontSize(9);
-  doc.setTextColor(200, 200, 200);
+  doc.setTextColor(borderR, borderG, borderB);
   doc.text(data.title.slice(0, 80), w / 2, 31, { align: 'center' });
   if (data.businessName) {
     doc.setFontSize(8);
@@ -61,7 +79,7 @@ export const exportContractPDF = async (data: ContractExportData) => {
   }
 
   y = 50;
-  doc.setTextColor(0, 0, 0);
+  doc.setTextColor(textR, textG, textB);
 
   const sectionTitle = (text: string) => {
     if (y > h - 30) { doc.addPage(); y = 15; }
@@ -92,10 +110,10 @@ export const exportContractPDF = async (data: ContractExportData) => {
 
   autoTable(doc, {
     startY: y, body: partiesData, theme: 'plain',
-    styles: { fontSize: 9, cellPadding: 3.5, ...rtlStyles, lineColor: [230, 230, 230], lineWidth: 0.2 },
-    columnStyles: { 0: { fontStyle: 'bold', cellWidth: 45, textColor: [100, 100, 100] } },
+    styles: { fontSize: 9, cellPadding: 3.5, ...rtlStyles, lineColor: BORDER_RGB, lineWidth: 0.2 },
+    columnStyles: { 0: { fontStyle: 'bold', cellWidth: 45, textColor: MUTED_RGB } },
     margin: { left: 15, right: 15 },
-    alternateRowStyles: { fillColor: [248, 248, 248] },
+    alternateRowStyles: { fillColor: SURFACE2_RGB },
   });
   y = (doc as any).lastAutoTable.finalY + 12;
 
@@ -120,13 +138,13 @@ export const exportContractPDF = async (data: ContractExportData) => {
 
   autoTable(doc, {
     startY: y, body: finData, theme: 'plain',
-    styles: { fontSize: 9, cellPadding: 3.5, ...rtlStyles, lineColor: [230, 230, 230], lineWidth: 0.2 },
-    columnStyles: { 0: { fontStyle: 'bold', cellWidth: 55, textColor: [100, 100, 100] } },
+    styles: { fontSize: 9, cellPadding: 3.5, ...rtlStyles, lineColor: BORDER_RGB, lineWidth: 0.2 },
+    columnStyles: { 0: { fontStyle: 'bold', cellWidth: 55, textColor: MUTED_RGB } },
     margin: { left: 15, right: 15 },
     didParseCell: (hookData: any) => {
       if (hookData.row.index === 2) {
         hookData.cell.styles.fontStyle = 'bold';
-        hookData.cell.styles.fillColor = [255, 248, 230];
+        hookData.cell.styles.fillColor = HIGHLIGHT_RGB;
       }
     },
   });
@@ -145,8 +163,8 @@ export const exportContractPDF = async (data: ContractExportData) => {
       ]),
       theme: 'grid',
       styles: { fontSize: 8, cellPadding: 3, ...rtlStyles },
-      headStyles: { fillColor: [darkR, darkG, darkB], textColor: [255, 255, 255], fontStyle: 'bold' },
-      alternateRowStyles: { fillColor: [250, 250, 250] },
+      headStyles: { fillColor: HEADER_RGB, textColor: [255, 255, 255], fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: SURFACE2_RGB },
       margin: { left: 15, right: 15 },
     });
     y = (doc as any).lastAutoTable.finalY + 12;
@@ -176,9 +194,9 @@ export const exportContractPDF = async (data: ContractExportData) => {
       ],
       theme: 'grid',
       styles: { fontSize: 7, cellPadding: 2.5, ...rtlStyles },
-      headStyles: { fillColor: [darkR, darkG, darkB], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7 },
-      alternateRowStyles: { fillColor: [250, 250, 250] },
-      footStyles: { fillColor: [255, 248, 230], fontStyle: 'bold', fontSize: 7 },
+      headStyles: { fillColor: HEADER_RGB, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7 },
+      alternateRowStyles: { fillColor: SURFACE2_RGB },
+      footStyles: { fillColor: HIGHLIGHT_RGB, fontStyle: 'bold', fontSize: 7 },
       margin: { left: 10, right: 10 },
     });
     y = (doc as any).lastAutoTable.finalY + 12;
@@ -188,7 +206,7 @@ export const exportContractPDF = async (data: ContractExportData) => {
   if (data.terms) {
     sectionTitle(data.isRTL ? 'الشروط والالتزامات' : 'Terms & Conditions');
     doc.setFontSize(8);
-    doc.setTextColor(80, 80, 80);
+    doc.setTextColor(mutedR, mutedG, mutedB);
     const lines = doc.splitTextToSize(data.terms, w - 30);
     if (y + lines.length * 4 > h - 20) { doc.addPage(); y = 15; }
     doc.text(lines, data.isRTL ? w - 15 : 15, y, { align: data.isRTL ? 'right' : 'left' });
@@ -198,14 +216,14 @@ export const exportContractPDF = async (data: ContractExportData) => {
   // ── Signatures ──
   if (y > h - 45) { doc.addPage(); y = 15; }
   y += 5;
-  doc.setFillColor(248, 248, 248);
+  doc.setFillColor(...SURFACE2_RGB);
   doc.rect(15, y, w - 30, 35, 'F');
   doc.setDrawColor(accentR, accentG, accentB);
   doc.setLineWidth(0.5);
   doc.line(25, y + 25, 85, y + 25);
   doc.line(w - 85, y + 25, w - 25, y + 25);
   doc.setFontSize(8);
-  doc.setTextColor(100, 100, 100);
+  doc.setTextColor(mutedR, mutedG, mutedB);
   doc.text(data.isRTL ? 'توقيع المزود' : 'Client Signature', 55, y + 30, { align: 'center' });
   doc.text(data.isRTL ? 'توقيع العميل' : 'Provider Signature', w - 55, y + 30, { align: 'center' });
 
@@ -216,7 +234,7 @@ export const exportContractPDF = async (data: ContractExportData) => {
     doc.setFillColor(accentR, accentG, accentB);
     doc.rect(0, h - 10, w, 0.5, 'F');
     doc.setFontSize(7);
-    doc.setTextColor(150, 150, 150);
+    doc.setTextColor(mutedR, mutedG, mutedB);
     doc.text(`${data.isRTL ? 'صفحة' : 'Page'} ${i}/${pageCount}`, w / 2, h - 5, { align: 'center' });
     doc.text(data.contractNumber, 15, h - 5);
     doc.text(new Date().toLocaleDateString(data.isRTL ? 'ar-SA' : 'en-US'), w - 15, h - 5, { align: 'right' });
@@ -243,15 +261,15 @@ export const exportMeasurementsPDF = async (opts: {
   const w = doc.internal.pageSize.getWidth();
   const h = doc.internal.pageSize.getHeight();
 
-  doc.setFillColor(24, 24, 32);
+  doc.setFillColor(...HEADER_RGB);
   doc.rect(0, 0, w, 20, 'F');
-  doc.setFillColor(180, 140, 60);
+  doc.setFillColor(...ACCENT_RGB);
   doc.rect(0, 20, w, 1, 'F');
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(14);
   doc.text(opts.isRTL ? 'جدول المقاسات' : 'Measurements Schedule', w / 2, 10, { align: 'center' });
   doc.setFontSize(9);
-  doc.setTextColor(180, 140, 60);
+  doc.setTextColor(...ACCENT_RGB);
   doc.text(`${opts.contractNumber}${opts.businessName ? ' — ' + opts.businessName : ''}`, w / 2, 17, { align: 'center' });
 
   const totalArea = opts.measurements.reduce((s, m) => s + m.areaSqm, 0);
@@ -275,9 +293,9 @@ export const exportMeasurementsPDF = async (opts: {
     ],
     theme: 'grid',
     styles: { fontSize: 7, cellPadding: 2.5, ...rtlStyles },
-    headStyles: { fillColor: [24, 24, 32], textColor: [255, 255, 255], fontStyle: 'bold' },
-    footStyles: { fillColor: [255, 248, 230], fontStyle: 'bold' },
-    alternateRowStyles: { fillColor: [250, 250, 250] },
+    headStyles: { fillColor: HEADER_RGB, textColor: [255, 255, 255], fontStyle: 'bold' },
+    footStyles: { fillColor: HIGHLIGHT_RGB, fontStyle: 'bold' },
+    alternateRowStyles: { fillColor: SURFACE2_RGB },
     margin: { left: 10, right: 10 },
   });
 
@@ -285,7 +303,7 @@ export const exportMeasurementsPDF = async (opts: {
   for (let i = 1; i <= pages; i++) {
     doc.setPage(i);
     doc.setFontSize(7);
-    doc.setTextColor(150, 150, 150);
+    doc.setTextColor(...MUTED_RGB);
     doc.text(`${opts.isRTL ? 'صفحة' : 'Page'} ${i}/${pages}`, w / 2, h - 5, { align: 'center' });
   }
 
@@ -321,7 +339,7 @@ export const printMeasurements = (opts: {
 
   const html = `
     <h1>${opts.isRTL ? 'جدول المقاسات' : 'Measurements Schedule'}</h1>
-    <p style="text-align:center;color:#888;margin-bottom:6mm;">${opts.contractNumber}${opts.businessName ? ' — ' + opts.businessName : ''}</p>
+    <p style="text-align:center;color:#6B7689;margin-bottom:6mm;">${opts.contractNumber}${opts.businessName ? ' — ' + opts.businessName : ''}</p>
     <table>
       <thead><tr>
         <th>#</th><th>${opts.isRTL ? 'رقم القطعة' : 'Piece #'}</th><th>${opts.isRTL ? 'الاسم' : 'Name'}</th>

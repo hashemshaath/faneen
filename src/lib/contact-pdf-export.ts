@@ -1,4 +1,11 @@
 import { setupArabicDoc, getArabicTableStyles } from './pdf-arabic-font';
+import { BRAND_DOCUMENTS } from '@/config/brandTheme';
+import { hexToRgbTuple } from '@/lib/theme/brandThemeUtils';
+
+// Centralized brand document tokens — see `src/config/brandTheme.ts`.
+const HEADER_RGB = hexToRgbTuple(BRAND_DOCUMENTS.pdfHeader)    ?? [19, 23, 34];
+const TEXT_RGB   = hexToRgbTuple(BRAND_DOCUMENTS.invoiceText)  ?? [26, 34, 48];
+const MUTED_RGB  = hexToRgbTuple(BRAND_DOCUMENTS.invoiceMuted) ?? [107, 118, 137];
 
 export type ContactExportField =
   | 'ticket_number'
@@ -109,9 +116,10 @@ export const exportContactsPDF = async (
   const styles = getArabicTableStyles(isRTL, fontLoaded);
 
   doc.setFontSize(16);
+  doc.setTextColor(...TEXT_RGB);
   doc.text(isRTL ? 'تقرير رسائل التواصل' : 'Contact Messages Report', pageWidth / 2, 14, { align: 'center' });
   doc.setFontSize(9);
-  doc.setTextColor(120, 120, 120);
+  doc.setTextColor(...MUTED_RGB);
   doc.text(
     `qitaat.com — ${new Date().toLocaleString(isRTL ? 'ar-SA' : 'en-US')} — ${
       isRTL ? `${rows.length} من ${meta.totalCount}` : `${rows.length} of ${meta.totalCount}`
@@ -142,12 +150,12 @@ export const exportContactsPDF = async (
     body,
     theme: 'grid',
     styles: { ...styles, fontSize: 7, cellPadding: 1.5 },
-    headStyles: { ...styles, fontSize: 8, fillColor: [40, 40, 40], textColor: 255 },
+    headStyles: { ...styles, fontSize: 8, fillColor: HEADER_RGB, textColor: 255 },
     didDrawPage: () => {
       const pageCount = doc.getNumberOfPages();
       const current = doc.getCurrentPageInfo().pageNumber;
       doc.setFontSize(8);
-      doc.setTextColor(150, 150, 150);
+      doc.setTextColor(...MUTED_RGB);
       doc.text(`${current} / ${pageCount}`, pageWidth / 2, doc.internal.pageSize.getHeight() - 6, { align: 'center' });
     },
   });
