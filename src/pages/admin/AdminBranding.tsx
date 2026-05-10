@@ -553,7 +553,7 @@ const AdminBranding: React.FC = () => {
                             dir="ltr"
                             onChange={(e) => updateTheme(f.key, e.target.value)}
                             className="h-10 tech-content text-xs uppercase"
-                            placeholder="#0E9E6F"
+                            placeholder={BRAND_COLORS.primary}
                           />
                         </div>
                         {error && (
