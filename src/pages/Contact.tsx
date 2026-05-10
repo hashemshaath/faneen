@@ -99,6 +99,7 @@ const Contact = () => {
 
       setSent(true);
       track.quoteRequestSubmit({ contact_type: 'contact_form' });
+      track.contactFormSubmitted({ contact_type: 'contact_form' });
       toast.success(isRTL ? 'تم إرسال رسالتك بنجاح' : 'Message sent successfully');
     } catch {
       toast.error(isRTL ? 'حدث خطأ، يرجى المحاولة لاحقاً' : 'An error occurred, please try again');
