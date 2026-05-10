@@ -34,3 +34,12 @@
 
 /manifest.webmanifest
   Cache-Control: public, max-age=3600
+
+# Conservative security headers applied site-wide.
+# CSP / HSTS / COOP / Trusted Types intentionally omitted: they require
+# coordinated rollout with GTM, Supabase, Google Fonts and the embed flows.
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: SAMEORIGIN
+  Permissions-Policy: camera=(), microphone=(), geolocation=(self)

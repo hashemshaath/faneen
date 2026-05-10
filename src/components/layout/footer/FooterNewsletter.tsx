@@ -77,6 +77,7 @@ export const FooterNewsletter = ({ visible }: { visible: boolean }) => {
               <Button
                 type="submit"
                 disabled={subscribed || loading}
+                aria-label={isRTL ? 'اشتراك في النشرة البريدية' : 'Subscribe to newsletter'}
                 className={`h-11 sm:h-12 px-5 sm:px-6 gap-2 font-bold text-sm rounded-xl transition-all duration-500 shrink-0 ${
                   subscribed
                     ? 'bg-success hover:bg-success text-success-foreground scale-105'
@@ -87,7 +88,7 @@ export const FooterNewsletter = ({ visible }: { visible: boolean }) => {
                   <>✓ {isRTL ? 'تم!' : 'Done!'}</>
                 ) : (
                   <>
-                    <Send className="w-4 h-4" />
+                    <Send aria-hidden="true" className="w-4 h-4" />
                     <span className="hidden sm:inline">{isRTL ? 'اشتراك' : 'Subscribe'}</span>
                   </>
                 )}
