@@ -26,6 +26,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { getLocalizedValue, useDirection } from "@/lib/direction";
 import { cn } from "@/lib/utils";
+import { maskPhone, maskEmail } from "@/lib/masking";
+import { Button } from "@/components/ui/button";
 import {
   useBranches,
   usePortfolio,
@@ -668,20 +670,52 @@ export const BranchesTab = ({ businessId }: { businessId: string }) => {
   );
 };
 
-export const ContactTab = ({ business }: { business: any }) => {
+interface ContactTabProps {
+  business: any;
+  isAuthenticated?: boolean;
+  onRequestContact?: () => void;
+  onRevealContact?: (kind: "phone" | "email") => void;
+}
+
+export const ContactTab = ({
+  business,
+  isAuthenticated = false,
+  onRequestContact,
+  onRevealContact,
+}: ContactTabProps) => {
   const { language } = useLanguage();
   const cityName = getLocalizedValue(language, business.cities?.name_ar, business.cities?.name_en);
   const countryName = getLocalizedValue(language, business.countries?.name_ar, business.countries?.name_en);
 
+  // Phone/email are masked for unauthenticated visitors to deter scraping.
+  // Authenticated users see real values + tel:/mailto: links and trigger
+  // a `supplier_*_revealed` analytics event when they tap one.
+  const buildPhoneItem = (icon: React.ElementType, label: string, value: string) => ({
+    icon,
+    label,
+    value: isAuthenticated ? value : maskPhone(value),
+    href: isAuthenticated ? `tel:${value}` : undefined,
+    dir: "ltr" as const,
+    revealKind: "phone" as const,
+  });
+  const buildEmailItem = (icon: React.ElementType, label: string, value: string) => ({
+    icon,
+    label,
+    value: isAuthenticated ? value : maskEmail(value),
+    href: isAuthenticated ? `mailto:${value}` : undefined,
+    dir: "ltr" as const,
+    revealKind: "email" as const,
+  });
+
   const contactItems = [
     business.contact_person && { icon: User, label: language === "ar" ? "مسؤول التواصل" : "Contact Person", value: business.contact_person },
-    business.phone && { icon: Phone, label: language === "ar" ? "اتصل بنا" : "Call us", value: business.phone, href: `tel:${business.phone}`, dir: "ltr" as const },
-    business.mobile && { icon: PhoneCall, label: language === "ar" ? "الجوال" : "Mobile", value: business.mobile, href: `tel:${business.mobile}`, dir: "ltr" as const },
-    business.unified_number && { icon: Hash, label: language === "ar" ? "الرقم الموحد" : "Unified Number", value: business.unified_number, href: `tel:${business.unified_number}`, dir: "ltr" as const },
-    business.customer_service_phone && { icon: PhoneCall, label: language === "ar" ? "خدمة العملاء" : "Customer Service", value: business.customer_service_phone, href: `tel:${business.customer_service_phone}`, dir: "ltr" as const },
-    business.email && { icon: Mail, label: language === "ar" ? "راسلنا" : "Email us", value: business.email, href: `mailto:${business.email}`, dir: "ltr" as const },
+    business.phone && buildPhoneItem(Phone, language === "ar" ? "اتصل بنا" : "Call us", business.phone),
+    business.mobile && buildPhoneItem(PhoneCall, language === "ar" ? "الجوال" : "Mobile", business.mobile),
+    business.unified_number && buildPhoneItem(Hash, language === "ar" ? "الرقم الموحد" : "Unified Number", business.unified_number),
+    business.customer_service_phone && buildPhoneItem(PhoneCall, language === "ar" ? "خدمة العملاء" : "Customer Service", business.customer_service_phone),
+    business.email && buildEmailItem(Mail, language === "ar" ? "راسلنا" : "Email us", business.email),
     business.website && { icon: Globe, label: language === "ar" ? "الموقع" : "Website", value: business.website.replace(/^https?:\/\//, ""), href: business.website, dir: "ltr" as const, external: true, leadType: "website" as const },
-  ].filter(Boolean) as Array<{ icon: React.ElementType; label: string; value: string; href?: string; dir?: "ltr"; external?: boolean; leadType?: "website" }>;
+  ].filter(Boolean) as Array<{ icon: React.ElementType; label: string; value: string; href?: string; dir?: "ltr"; external?: boolean; leadType?: "website"; revealKind?: "phone" | "email" }>;
 
   const addressParts = [
     business.district,
@@ -693,6 +727,26 @@ export const ContactTab = ({ business }: { business: any }) => {
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 sm:gap-6">
       <div className="space-y-3">
+        {!isAuthenticated && onRequestContact && (
+          <div className="rounded-2xl border border-accent/20 bg-accent/5 p-3 sm:p-4">
+            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+              {language === "ar"
+                ? "لحماية المورّد، تظهر بيانات التواصل بشكل مخفي للزوار. أرسل طلبك عبر النموذج وسيتواصل معك مباشرة."
+                : "Contact details are masked for guests. Send a request and the supplier will reach out to you directly."}
+            </p>
+            <Button
+              type="button"
+              variant="hero"
+              size="sm"
+              className="mt-3 h-10 w-full gap-1.5 rounded-xl sm:w-auto"
+              onClick={onRequestContact}
+            >
+              <MessageSquare className="h-4 w-4" />
+              {language === "ar" ? "تواصل مع المورّد" : "Contact supplier"}
+            </Button>
+          </div>
+        )}
+
         {contactItems.map((item, index) => {
           const Wrapper: any = item.href ? "a" : "div";
           const wrapperProps = item.href
@@ -700,6 +754,9 @@ export const ContactTab = ({ business }: { business: any }) => {
             : {};
           if (item.href && item.leadType) {
             (wrapperProps as Record<string, string>)["data-contact-type"] = item.leadType;
+          }
+          if (item.href && item.revealKind && onRevealContact) {
+            (wrapperProps as Record<string, unknown>).onClick = () => onRevealContact(item.revealKind!);
           }
 
           return (
