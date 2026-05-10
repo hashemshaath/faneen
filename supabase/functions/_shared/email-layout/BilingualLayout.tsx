@@ -500,9 +500,9 @@ const langDividerText = {
 const signature = { textAlign: 'center' as const, padding: '20px 16px 0' }
 const sigName = { fontSize: '13px', fontWeight: 600, color: B.text, margin: '0 0 4px' }
 const sigMeta = { fontSize: '12px', color: B.muted, margin: '0 0 10px' }
-const sigLink = { color: 'hsl(42, 85%, 38%)', textDecoration: 'none', fontWeight: 600 }
-const sigDisclaimer = { fontSize: '11px', color: 'hsl(220, 10%, 55%)', margin: '6px 0 0', lineHeight: '1.6' }
-const sigDisclaimerEn = { fontSize: '11px', color: 'hsl(220, 10%, 55%)', margin: '2px 0 0', lineHeight: '1.5' }
+const sigLink = { color: B.primaryButton, textDecoration: 'none', fontWeight: 600 }
+const sigDisclaimer = { fontSize: '11px', color: B.muted, margin: '6px 0 0', lineHeight: '1.6' }
+const sigDisclaimerEn = { fontSize: '11px', color: B.muted, margin: '2px 0 0', lineHeight: '1.5' }
 
 /* Auth-style code/OTP block reused by some templates */
 export const otpStyle = {
@@ -511,10 +511,10 @@ export const otpStyle = {
   fontSize: '32px',
   fontWeight: 700,
   letterSpacing: '8px',
-  color: 'hsl(220, 35%, 15%)',
+  color: B.text,
   textAlign: 'center' as const,
-  backgroundColor: 'hsl(220, 25%, 97%)',
-  border: '1px solid hsl(220, 15%, 90%)',
+  backgroundColor: B.bodyBg,
+  border: `1px solid ${B.border}`,
   borderRadius: '12px',
   padding: '18px 12px',
   margin: '12px 0',
