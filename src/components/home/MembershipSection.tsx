@@ -33,7 +33,7 @@ export const MembershipSection = () => {
   return (
     <section className="py-8 sm:py-16 bg-background overflow-hidden relative">
       <div className="absolute inset-0 pointer-events-none opacity-20">
-        <div className="absolute top-1/2 start-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-accent/10 rounded-full blur-[120px]" />
+        <div className="absolute top-1/2 start-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[120px]" />
       </div>
       <div className="container-app relative">
         <div className="text-center mb-12 sm:mb-20">
@@ -61,7 +61,7 @@ export const MembershipSection = () => {
                 className={`group relative p-7 sm:p-10 rounded-2xl sm:rounded-3xl border transition-all duration-500 ${
                   isFeatured
                     ? "bg-[#142D52] border-primary/40 md:scale-105 shadow-2xl hover:shadow-[0_20px_60px_-10px_rgba(14,158,111,0.35)] md:hover:scale-[1.08]"
-                    : "bg-card dark:bg-card/60 border-border/50 dark:border-border/30 hover:border-accent/40 active:scale-[0.97] sm:hover:-translate-y-3 hover:shadow-xl hover:shadow-accent/5"
+                    : "bg-card dark:bg-card/60 border-border/50 dark:border-border/30 hover:border-primary/40 active:scale-[0.97] sm:hover:-translate-y-3 hover:shadow-xl hover:shadow-primary/5"
                 } ${isVisible ? 'animate-card-slide-up' : ''}`}
                 style={{ animationDelay: `${idx * 150}ms`, animationFillMode: 'both' }}
               >

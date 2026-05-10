@@ -38,7 +38,7 @@ export const FooterBottom = ({ visible }: { visible: boolean }) => {
                 target="_blank"
                 rel="noopener noreferrer"
                 data-tappable
-                className="w-10 h-10 sm:w-9 sm:h-9 rounded-full bg-surface-nav-foreground/[0.06] border border-surface-nav-foreground/15 flex items-center justify-center text-surface-nav-foreground/85 hover:bg-gold/15 hover:text-gold hover:border-gold/35 transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none"
+                className="w-10 h-10 sm:w-9 sm:h-9 rounded-full bg-surface-nav-foreground/[0.06] border border-surface-nav-foreground/15 flex items-center justify-center text-surface-nav-foreground/85 hover:bg-primary/15 hover:text-primary hover:border-primary/35 transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
               >
                 <s.icon className="w-4 h-4" />
               </a>
@@ -49,7 +49,7 @@ export const FooterBottom = ({ visible }: { visible: boolean }) => {
             <button
               onClick={scrollToTop}
               aria-label={isRTL ? 'العودة إلى الأعلى' : 'Scroll to top'}
-              className="w-10 h-10 sm:w-9 sm:h-9 rounded-full bg-gold/10 border border-gold/25 flex items-center justify-center text-gold hover:bg-gold hover:text-secondary-foreground hover:border-gold transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none"
+              className="w-10 h-10 sm:w-9 sm:h-9 rounded-full bg-primary/10 border border-primary/25 flex items-center justify-center text-primary hover:bg-primary hover:text-secondary-foreground hover:border-primary transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
             >
               <ArrowUp className="w-4 h-4" />
             </button>

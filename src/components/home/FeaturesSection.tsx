@@ -21,8 +21,8 @@ export const FeaturesSection = () => {
     <section id="features" className="relative py-12 sm:py-20 bg-muted/30 dark:bg-card/20 overflow-hidden">
       {/* Ambient backdrop */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute -top-24 start-[-10%] w-[380px] h-[380px] bg-accent/10 rounded-full blur-[120px]" />
-        <div className="absolute bottom-[-10%] end-[-10%] w-[380px] h-[380px] bg-accent/[0.06] rounded-full blur-[120px]" />
+        <div className="absolute -top-24 start-[-10%] w-[380px] h-[380px] bg-primary/10 rounded-full blur-[120px]" />
+        <div className="absolute bottom-[-10%] end-[-10%] w-[380px] h-[380px] bg-primary/[0.06] rounded-full blur-[120px]" />
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-border/60 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-border/60 to-transparent" />
       </div>
@@ -30,9 +30,9 @@ export const FeaturesSection = () => {
       <div className="container-app relative">
         {/* Header */}
         <div className="text-center mb-8 sm:mb-14 max-w-2xl mx-auto px-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent/10 border border-accent/20 mb-4 sm:mb-5">
-            <Sparkles className="w-3.5 h-3.5 text-accent" />
-            <span className="font-body text-[11px] sm:text-xs font-semibold text-accent tracking-wide">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-4 sm:mb-5">
+            <Sparkles className="w-3.5 h-3.5 text-primary" />
+            <span className="font-body text-[11px] sm:text-xs font-semibold text-primary tracking-wide">
               {t('features.label')}
             </span>
           </div>
@@ -46,13 +46,13 @@ export const FeaturesSection = () => {
           {features.map((feat, i) => (
             <div
               key={feat.titleKey}
-              className={`group relative rounded-2xl bg-card/80 dark:bg-card/50 backdrop-blur-sm border border-border/50 dark:border-border/30 p-3.5 sm:p-6 overflow-hidden hover:border-accent/40 hover:shadow-[0_18px_40px_-22px_hsl(var(--accent)/0.35)] active:scale-[0.97] sm:hover:-translate-y-1.5 transition-all duration-500 ${isVisible ? 'animate-card-slide-up' : ''}`}
+              className={`group relative rounded-2xl bg-card/80 dark:bg-card/50 backdrop-blur-sm border border-border/50 dark:border-border/30 p-3.5 sm:p-6 overflow-hidden hover:border-primary/40 hover:shadow-[0_18px_40px_-22px_hsl(var(--primary)/0.35)] active:scale-[0.97] sm:hover:-translate-y-1.5 transition-all duration-500 ${isVisible ? 'animate-card-slide-up' : ''}`}
               style={{ animationDelay: `${i * 70}ms`, animationFillMode: 'both' }}
             >
               {/* Gradient sheen on hover */}
-              <div className="absolute inset-0 bg-gradient-to-br from-accent/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               {/* Top corner glow */}
-              <div className="absolute -top-10 -end-10 w-24 h-24 bg-accent/10 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="absolute -top-10 -end-10 w-24 h-24 bg-primary/10 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
               <div className="relative z-10 flex flex-col h-full">
                 {/* Icon */}
@@ -61,7 +61,7 @@ export const FeaturesSection = () => {
                 </div>
 
                 {/* Title */}
-                <h3 className="font-heading font-bold text-[13px] sm:text-base leading-snug text-foreground mb-1.5 sm:mb-2 group-hover:text-accent transition-colors duration-300 line-clamp-2">
+                <h3 className="font-heading font-bold text-[13px] sm:text-base leading-snug text-foreground mb-1.5 sm:mb-2 group-hover:text-primary transition-colors duration-300 line-clamp-2">
                   {t(feat.titleKey)}
                 </h3>
 

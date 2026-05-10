@@ -106,8 +106,8 @@ export const TopProvidersSection = () => {
   return (
     <section ref={sectionRef} className="py-8 sm:py-16 bg-background overflow-hidden relative">
       <div className="absolute inset-0 pointer-events-none opacity-30">
-        <div className="absolute top-20 end-10 w-72 h-72 bg-accent/10 rounded-full blur-[100px]" />
-        <div className="absolute bottom-20 start-10 w-72 h-72 bg-accent/5 rounded-full blur-[100px]" />
+        <div className="absolute top-20 end-10 w-72 h-72 bg-primary/10 rounded-full blur-[100px]" />
+        <div className="absolute bottom-20 start-10 w-72 h-72 bg-primary/5 rounded-full blur-[100px]" />
       </div>
 
       <div className="container-app relative">
@@ -141,7 +141,7 @@ export const TopProvidersSection = () => {
                     key={biz.id}
                     to={`/${biz.username}`}
                     onClick={() => track("card_click", biz.id, biz.username)}
-                    className={`card-ds card-interactive card-pad-md group relative flex flex-col hover:shadow-accent/5 hover-lift ${
+                    className={`card-ds card-interactive card-pad-md group relative flex flex-col hover:shadow-primary/5 hover-lift ${
                       isVisible ? "animate-card-slide-up" : "opacity-0"
                     }`}
                     style={{ animationDelay: `${i * 70}ms`, animationFillMode: "both" }}
@@ -149,14 +149,14 @@ export const TopProvidersSection = () => {
                     {/* Header row */}
                     <div className="flex items-start gap-3 mb-4">
                       <div className="relative shrink-0">
-                        <Avatar className="w-14 h-14 rounded-2xl ring-2 ring-border/40 group-hover:ring-accent/30 transition-all">
+                        <Avatar className="w-14 h-14 rounded-2xl ring-2 ring-border/40 group-hover:ring-primary/30 transition-all">
                           <AvatarImage src={biz.logo_url || undefined} className="object-cover" />
-                          <AvatarFallback className="rounded-2xl bg-accent/10 text-accent font-bold text-lg">
+                          <AvatarFallback className="rounded-2xl bg-primary/10 text-primary font-bold text-lg">
                             {name?.charAt(0)}
                           </AvatarFallback>
                         </Avatar>
                         {isPremium && (
-                          <span className="absolute -bottom-1 -end-1 flex items-center justify-center w-5 h-5 rounded-full bg-accent text-accent-foreground ring-2 ring-card">
+                          <span className="absolute -bottom-1 -end-1 flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-foreground ring-2 ring-card">
                             <Crown className="w-2.5 h-2.5" />
                           </span>
                         )}
@@ -164,7 +164,7 @@ export const TopProvidersSection = () => {
 
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5 min-w-0">
-                          <h3 className="font-heading font-bold text-[15px] text-foreground truncate group-hover:text-accent transition-colors">
+                          <h3 className="font-heading font-bold text-[15px] text-foreground truncate group-hover:text-primary transition-colors">
                             {name}
                           </h3>
                           {biz.is_verified && <VerifiedBadge size="sm" iconOnly />}
@@ -195,7 +195,7 @@ export const TopProvidersSection = () => {
                     </div>
 
                     {/* CTA */}
-                    <span className="mt-auto flex items-center justify-center gap-1.5 w-full py-2.5 text-xs rounded-xl font-semibold bg-muted/40 dark:bg-muted/15 text-foreground group-hover:bg-accent group-hover:text-accent-foreground transition-all duration-300">
+                    <span className="mt-auto flex items-center justify-center gap-1.5 w-full py-2.5 text-xs rounded-xl font-semibold bg-muted/40 dark:bg-muted/15 text-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300">
                       {isRTL ? "عرض الملف" : "View Profile"}
                       <ArrowIcon className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5" />
                     </span>
@@ -211,7 +211,7 @@ export const TopProvidersSection = () => {
               onClick={() => track("view_all_click")}
               variant="outline"
               size="lg"
-              className="gap-2 rounded-xl h-12 px-6 hover:border-accent/40 hover:text-accent hover:bg-accent/5"
+              className="gap-2 rounded-xl h-12 px-6 hover:border-primary/40 hover:text-primary hover:bg-primary/5"
             >
               {isRTL ? "عرض جميع المزودين" : "View All Providers"}
               <ArrowIcon className="w-4 h-4" />

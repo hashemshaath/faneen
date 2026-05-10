@@ -52,7 +52,7 @@ export const LatestOffersSection = () => {
       <div className="container-app">
         <div className="flex items-center justify-between mb-10 sm:mb-14">
           <div>
-            <span className="text-xs sm:text-sm font-body text-accent font-semibold tracking-wide">
+            <span className="text-xs sm:text-sm font-body text-primary font-semibold tracking-wide">
               {isRTL ? "عروض حصرية" : "Exclusive Deals"}
             </span>
             <h2 className="font-heading font-bold text-xl sm:text-3xl md:text-4xl text-foreground mt-1.5 sm:mt-2.5">
