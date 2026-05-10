@@ -1,4 +1,12 @@
 import { setupArabicDoc, getArabicTableStyles } from './pdf-arabic-font';
+import { BRAND_DOCUMENTS } from '@/config/brandTheme';
+import { hexToRgbTuple } from '@/lib/theme/brandThemeUtils';
+
+// Centralized brand document tokens — see `src/config/brandTheme.ts`.
+const HEADER_RGB = hexToRgbTuple(BRAND_DOCUMENTS.pdfHeader)     ?? [19, 23, 34];
+const TEXT_RGB   = hexToRgbTuple(BRAND_DOCUMENTS.invoiceText)   ?? [26, 34, 48];
+const MUTED_RGB  = hexToRgbTuple(BRAND_DOCUMENTS.invoiceMuted)  ?? [107, 118, 137];
+const SURFACE2_RGB: [number, number, number] = [242, 244, 248];
 
 interface ExportBusiness {
   name: string;
@@ -32,11 +40,11 @@ export const exportComparePDF = async (data: ExportData) => {
 
   // Title
   doc.setFontSize(18);
-  doc.setTextColor(40, 40, 40);
+  doc.setTextColor(...TEXT_RGB);
   doc.text(data.isRTL ? 'مقارنة مقدمي الخدمات' : 'Service Provider Comparison', pageWidth / 2, 20, { align: 'center' });
 
   doc.setFontSize(10);
-  doc.setTextColor(128, 128, 128);
+  doc.setTextColor(...MUTED_RGB);
   doc.text(`qitaat.com — ${new Date().toLocaleDateString(data.isRTL ? 'ar-SA' : 'en-US')}`, pageWidth / 2, 27, { align: 'center' });
 
   // Overview Table
@@ -58,9 +66,9 @@ export const exportComparePDF = async (data: ExportData) => {
     head: [overviewHeaders],
     body: overviewRows,
     theme: 'grid',
-    headStyles: { fillColor: [200, 167, 103], textColor: [30, 30, 30], fontStyle: 'bold', halign: 'center', ...( data.isRTL ? { font: 'ArabicFont' } : {}) },
+    headStyles: { fillColor: HEADER_RGB, textColor: [255, 255, 255], fontStyle: 'bold', halign: 'center', ...( data.isRTL ? { font: 'ArabicFont' } : {}) },
     styles: { halign: 'center', fontSize: 9, cellPadding: 3, ...(data.isRTL ? { font: 'ArabicFont' } : {}) },
-    alternateRowStyles: { fillColor: [248, 248, 248] },
+    alternateRowStyles: { fillColor: SURFACE2_RGB },
   });
 
   // Services comparison
@@ -85,9 +93,9 @@ export const exportComparePDF = async (data: ExportData) => {
       head: [serviceHeaders],
       body: serviceRows,
       theme: 'grid',
-      headStyles: { fillColor: [200, 167, 103], textColor: [30, 30, 30], fontStyle: 'bold', halign: 'center', ...(data.isRTL ? { font: 'ArabicFont' } : {}) },
+      headStyles: { fillColor: HEADER_RGB, textColor: [255, 255, 255], fontStyle: 'bold', halign: 'center', ...(data.isRTL ? { font: 'ArabicFont' } : {}) },
       styles: { halign: 'center', fontSize: 9, cellPadding: 3, ...(data.isRTL ? { font: 'ArabicFont' } : {}) },
-      alternateRowStyles: { fillColor: [248, 248, 248] },
+      alternateRowStyles: { fillColor: SURFACE2_RGB },
     });
   }
 
@@ -96,7 +104,7 @@ export const exportComparePDF = async (data: ExportData) => {
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
     doc.setFontSize(8);
-    doc.setTextColor(180, 180, 180);
+    doc.setTextColor(...MUTED_RGB);
     doc.text('qitaat.com', 14, doc.internal.pageSize.getHeight() - 8);
     doc.text(`${i} / ${pageCount}`, pageWidth - 14, doc.internal.pageSize.getHeight() - 8, { align: 'right' });
   }
