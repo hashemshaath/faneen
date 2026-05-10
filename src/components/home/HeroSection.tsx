@@ -9,16 +9,56 @@ import {
   getSearchHistory,
   addToSearchHistory,
 } from "@/services/search/useSearch";
-// HeroParticles is purely decorative — defer it past LCP to keep the main
-// thread free during the initial paint (improves INP/TBT on mobile).
+// HeroParticles is purely decorative — defer it past LCP and skip it
+// entirely on mobile / reduced-motion / low-end devices to avoid the
+// chunk download + canvas init competing with the hero paint.
 const HeroParticles = lazy(() =>
   import("./HeroParticles").then((m) => ({ default: m.HeroParticles })),
 );
-// First slide is served from /public so we can <link rel="preload"> it from
-// index.html — that preload only matches if the URL is identical here.
-const heroBg1 = "/hero-bg.webp";
+// All hero slides are bundled (hashed /assets/*) so they get the immutable
+// long-cache headers Vite/Lovable applies to /assets/.
+import heroBg1 from "@/assets/hero-bg.webp";
 import heroBg2 from "@/assets/hero-slide-2.webp";
 import heroBg3 from "@/assets/hero-slide-3.webp";
+
+// Eagerly preload the LCP hero image at module-evaluation time — fires
+// before React mounts so the request races with the JS chunk parse.
+if (typeof document !== "undefined") {
+  try {
+    const existing = document.querySelector(
+      'link[rel="preload"][as="image"][data-hero="1"]',
+    );
+    if (!existing) {
+      const l = document.createElement("link");
+      l.rel = "preload";
+      l.as = "image";
+      l.href = heroBg1;
+      l.type = "image/webp";
+      l.setAttribute("fetchpriority", "high");
+      l.setAttribute("data-hero", "1");
+      document.head.appendChild(l);
+    }
+  } catch { /* never break boot */ }
+}
+
+// Decide once whether the decorative particle canvas should render at all.
+// Mobile / reduced-motion / saveData / 2g connections skip it entirely so
+// the chunk is never even downloaded. Re-evaluated on every mount, which is
+// fine — the hero section only mounts once per session.
+function shouldRenderParticles(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return false;
+    if (window.matchMedia?.("(max-width: 768px)").matches) return false;
+    type ConnNav = Navigator & {
+      connection?: { saveData?: boolean; effectiveType?: string };
+    };
+    const conn = (navigator as ConnNav).connection;
+    if (conn?.saveData) return false;
+    if (conn?.effectiveType === "2g" || conn?.effectiveType === "slow-2g") return false;
+  } catch { /* fall through */ }
+  return true;
+}
 
 const slidesData = [
   {
