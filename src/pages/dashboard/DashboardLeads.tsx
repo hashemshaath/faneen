@@ -99,6 +99,12 @@ const DashboardLeads: React.FC = () => {
     mutationFn: async ({ id, next }: { id: string; next: LeadStatus }) => {
       const { error } = await supabase.from('lead_requests').update({ status: next }).eq('id', id);
       if (error) throw error;
+      // Fire-and-forget lifecycle notifier — must not block the optimistic UX.
+      try {
+        await supabase.functions.invoke('notify-customer-lead-update', {
+          body: { lead_id: id, status: next },
+        });
+      } catch { /* fail-soft */ }
       return next;
     },
     onMutate: ({ id }) => setPendingId(id),

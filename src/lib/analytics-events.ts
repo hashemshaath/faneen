@@ -71,7 +71,9 @@ export type QitaatEvent =
   | "service_request_accepted"
   | "service_request_rejected"
   | "service_request_needs_info"
-  | "service_request_closed";
+  | "service_request_closed"
+  | "service_request_cancelled"
+  | "service_request_customer_viewed";
 
 /** Allow-listed parameters. Anything not in this set is dropped. */
 export type AllowedParam =

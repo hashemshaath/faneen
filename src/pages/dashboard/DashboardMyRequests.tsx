@@ -1,0 +1,321 @@
+import React, { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
+import { useLanguage } from '@/i18n/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Inbox, ChevronDown, ChevronUp, Send, Eye, HelpCircle, CheckCircle2,
+  XCircle, Archive, X, Wallet, FileText, MessageSquare, Loader2,
+} from 'lucide-react';
+import { toast } from 'sonner';
+import { useNoIndex } from '@/hooks/useNoIndex';
+import { LeadStatusBadge } from '@/components/leads/LeadStatusBadge';
+import { trackEvent } from '@/lib/analytics-events';
+
+interface MyLeadRow {
+  id: string;
+  ref_id: string | null;
+  business_id: string;
+  user_id: string | null;
+  subject: string | null;
+  status: string;
+  contact_preference: string | null;
+  budget_range: string | null;
+  project_scope: string | null;
+  created_at: string;
+  updated_at: string | null;
+  viewed_at: string | null;
+  needs_info_at: string | null;
+  accepted_at: string | null;
+  rejected_at: string | null;
+  closed_at: string | null;
+  cancelled_at: string | null;
+}
+
+function safeTrack(event: Parameters<typeof trackEvent>[0], payload: Parameters<typeof trackEvent>[1]) {
+  try { trackEvent(event, payload); } catch { /* analytics must not throw */ }
+}
+
+const CANCELLABLE = new Set(['new', 'viewed', 'needs_info']);
+
+const DashboardMyRequests: React.FC = () => {
+  useNoIndex();
+  const { isRTL } = useLanguage();
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [pendingId, setPendingId] = useState<string | null>(null);
+
+  const { data: leads, isLoading } = useQuery({
+    queryKey: ['my-service-requests', user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('lead_requests')
+        .select('id, ref_id, business_id, user_id, subject, status, contact_preference, budget_range, project_scope, created_at, updated_at, viewed_at, needs_info_at, accepted_at, rejected_at, closed_at, cancelled_at')
+        .eq('user_id', user!.id)
+        .order('created_at', { ascending: false })
+        .limit(200);
+      if (error) throw error;
+      return (data ?? []) as MyLeadRow[];
+    },
+  });
+
+  const businessIds = useMemo(
+    () => Array.from(new Set((leads ?? []).map((l) => l.business_id))).filter(Boolean),
+    [leads],
+  );
+
+  const { data: businesses } = useQuery({
+    queryKey: ['my-requests-businesses', businessIds.join(',')],
+    enabled: businessIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('businesses')
+        .select('id, name_ar, name_en, username')
+        .in('id', businessIds);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const businessMap = useMemo(() => {
+    const m = new Map<string, { name: string; username: string | null }>();
+    (businesses ?? []).forEach((b) => {
+      const name = (isRTL ? b.name_ar : b.name_en) ?? b.name_ar ?? b.name_en ?? '—';
+      m.set(b.id, { name, username: b.username ?? null });
+    });
+    return m;
+  }, [businesses, isRTL]);
+
+  const cancelMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('lead_requests')
+        .update({ status: 'cancelled' })
+        .eq('id', id);
+      if (error) throw error;
+      try {
+        await supabase.functions.invoke('notify-customer-lead-update', {
+          body: { lead_id: id, status: 'cancelled' },
+        });
+      } catch { /* fail-soft */ }
+    },
+    onMutate: (id) => setPendingId(id),
+    onSuccess: (_void, id) => {
+      const lead = leads?.find((l) => l.id === id);
+      safeTrack('service_request_cancelled', {
+        source_page: 'dashboard_my_requests',
+        outcome: 'cancelled',
+        has_budget: !!lead?.budget_range,
+      } as Parameters<typeof trackEvent>[1]);
+      toast.success(isRTL ? 'تم إلغاء الطلب' : 'Request cancelled');
+      qc.invalidateQueries({ queryKey: ['my-service-requests'] });
+    },
+    onError: (err: unknown) => {
+      const msg = err instanceof Error ? err.message : 'Cancel failed';
+      toast.error(isRTL ? `تعذر الإلغاء: ${msg}` : `Cancel failed: ${msg}`);
+    },
+    onSettled: () => setPendingId(null),
+  });
+
+  const handleToggle = (id: string) => {
+    setOpenId((curr) => {
+      if (curr === id) return null;
+      safeTrack('service_request_customer_viewed', {
+        source_page: 'dashboard_my_requests',
+      } as Parameters<typeof trackEvent>[1]);
+      return id;
+    });
+  };
+
+  return (
+    <DashboardLayout>
+      <div className="space-y-5">
+        <header>
+          <h1 className="font-heading font-bold text-xl sm:text-2xl flex items-center gap-2">
+            <Inbox className="h-5 w-5" />
+            {isRTL ? 'طلباتي' : 'My Requests'}
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {isRTL ? 'تابع حالة طلبات الخدمة التي أرسلتها للمنشآت' : 'Track the status of the service requests you sent to providers'}
+          </p>
+        </header>
+
+        {isLoading && (
+          <div className="space-y-3">
+            {[0, 1, 2].map((i) => <Skeleton key={i} className="h-24 w-full rounded-xl" />)}
+          </div>
+        )}
+
+        {!isLoading && (leads?.length ?? 0) === 0 && (
+          <Card>
+            <CardContent className="py-14 text-center space-y-4">
+              <Inbox className="mx-auto h-12 w-12 text-muted-foreground" />
+              <div>
+                <p className="font-medium">
+                  {isRTL ? 'لا توجد طلبات خدمة حتى الآن' : 'No service requests yet'}
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {isRTL ? 'ابدأ بتصفح المنشآت أو القطاعات وأرسل طلب عرض سعر.' : 'Browse providers or sectors to send a quote request.'}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2 justify-center">
+                <Button asChild className="min-h-[44px]">
+                  <Link to="/search">{isRTL ? 'البحث عن مزودين' : 'Search providers'}</Link>
+                </Button>
+                <Button asChild variant="outline" className="min-h-[44px]">
+                  <Link to="/sectors">{isRTL ? 'القطاعات' : 'Sectors'}</Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        <div className="space-y-3">
+          {(leads ?? []).map((lead) => {
+            const open = openId === lead.id;
+            const biz = businessMap.get(lead.business_id);
+            const canCancel = CANCELLABLE.has(lead.status);
+            return (
+              <Card key={lead.id} className="overflow-hidden">
+                <CardContent className="p-0">
+                  <button
+                    type="button"
+                    onClick={() => handleToggle(lead.id)}
+                    className="w-full text-start p-4 sm:p-5 flex flex-wrap items-center gap-3 hover:bg-muted/40 transition-colors min-h-[64px]"
+                    aria-expanded={open}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2 mb-1">
+                        <span className="font-mono text-xs text-muted-foreground tech-content">{lead.ref_id ?? '—'}</span>
+                        <LeadStatusBadge status={lead.status} />
+                      </div>
+                      <div className="font-medium truncate">
+                        {lead.subject || (biz?.name ?? (isRTL ? 'طلب خدمة' : 'Service request'))}
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-0.5 truncate">
+                        {biz?.name ?? '—'} · {new Date(lead.created_at).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')}
+                      </div>
+                    </div>
+                    {open ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+                  </button>
+
+                  {open && (
+                    <div className="border-t border-border p-4 sm:p-5 space-y-5 bg-muted/20">
+                      {/* Timeline */}
+                      <ol className="space-y-2.5" aria-label={isRTL ? 'الجدول الزمني' : 'Timeline'}>
+                        <TimelineItem icon={<Send className="h-4 w-4" />} label={isRTL ? 'تم الإرسال' : 'Sent'} at={lead.created_at} done isRTL={isRTL} />
+                        <TimelineItem icon={<Eye className="h-4 w-4" />} label={isRTL ? 'تمت المشاهدة' : 'Viewed by provider'} at={lead.viewed_at} done={!!lead.viewed_at} isRTL={isRTL} />
+                        {lead.needs_info_at && (
+                          <TimelineItem icon={<HelpCircle className="h-4 w-4" />} label={isRTL ? 'بحاجة معلومات' : 'Needs info'} at={lead.needs_info_at} done isRTL={isRTL} tone="warning" />
+                        )}
+                        {lead.accepted_at && (
+                          <TimelineItem icon={<CheckCircle2 className="h-4 w-4" />} label={isRTL ? 'تم القبول' : 'Accepted'} at={lead.accepted_at} done isRTL={isRTL} tone="success" />
+                        )}
+                        {lead.rejected_at && (
+                          <TimelineItem icon={<XCircle className="h-4 w-4" />} label={isRTL ? 'تم الرفض' : 'Rejected'} at={lead.rejected_at} done isRTL={isRTL} tone="danger" />
+                        )}
+                        {lead.cancelled_at && (
+                          <TimelineItem icon={<X className="h-4 w-4" />} label={isRTL ? 'تم الإلغاء' : 'Cancelled'} at={lead.cancelled_at} done isRTL={isRTL} />
+                        )}
+                        {lead.closed_at && (
+                          <TimelineItem icon={<Archive className="h-4 w-4" />} label={isRTL ? 'مغلق' : 'Closed'} at={lead.closed_at} done isRTL={isRTL} />
+                        )}
+                      </ol>
+
+                      {/* Details */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                        {lead.contact_preference && (
+                          <DetailRow icon={<MessageSquare className="h-4 w-4" />} label={isRTL ? 'وسيلة التواصل' : 'Contact preference'} value={lead.contact_preference} />
+                        )}
+                        {lead.budget_range && (
+                          <DetailRow icon={<Wallet className="h-4 w-4" />} label={isRTL ? 'الميزانية' : 'Budget'} value={lead.budget_range} />
+                        )}
+                        {lead.project_scope && (
+                          <div className="sm:col-span-2 flex items-start gap-2 text-muted-foreground">
+                            <FileText className="h-4 w-4 mt-0.5" />
+                            <span className="leading-6 text-foreground/90">{lead.project_scope}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex flex-wrap gap-2 pt-1">
+                        {biz?.username && (
+                          <Button asChild variant="outline" className="min-h-[44px]">
+                            <Link to={`/${biz.username}`}>
+                              {isRTL ? 'فتح ملف المنشأة' : 'Open provider profile'}
+                            </Link>
+                          </Button>
+                        )}
+                        {canCancel && (
+                          <Button
+                            variant="outline"
+                            className="min-h-[44px] text-destructive hover:text-destructive"
+                            disabled={pendingId === lead.id}
+                            onClick={() => {
+                              if (window.confirm(isRTL ? 'هل تريد إلغاء هذا الطلب؟' : 'Cancel this request?')) {
+                                cancelMutation.mutate(lead.id);
+                              }
+                            }}
+                            aria-label={isRTL ? 'إلغاء الطلب' : 'Cancel request'}
+                          >
+                            {pendingId === lead.id ? <Loader2 className="animate-spin" /> : <X />}
+                            <span>{isRTL ? 'إلغاء الطلب' : 'Cancel request'}</span>
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      </div>
+    </DashboardLayout>
+  );
+};
+
+const TimelineItem: React.FC<{
+  icon: React.ReactNode;
+  label: string;
+  at: string | null;
+  done: boolean;
+  isRTL: boolean;
+  tone?: 'success' | 'danger' | 'warning';
+}> = ({ icon, label, at, done, isRTL, tone }) => {
+  const toneCls =
+    tone === 'success' ? 'bg-success/10 text-success border-success/30' :
+    tone === 'danger' ? 'bg-destructive/10 text-destructive border-destructive/30' :
+    tone === 'warning' ? 'bg-warning/10 text-warning border-warning/30' :
+    done ? 'bg-muted text-foreground border-border' : 'bg-background text-muted-foreground border-border';
+  return (
+    <li className="flex items-center gap-3 text-sm">
+      <span className={`inline-flex h-7 w-7 items-center justify-center rounded-full border ${toneCls}`}>
+        {icon}
+      </span>
+      <span className={done ? 'text-foreground' : 'text-muted-foreground'}>{label}</span>
+      {at && (
+        <span className="text-xs text-muted-foreground tech-content">
+          · {new Date(at).toLocaleString(isRTL ? 'ar-SA' : 'en-US')}
+        </span>
+      )}
+    </li>
+  );
+};
+
+const DetailRow: React.FC<{ icon: React.ReactNode; label: string; value: string }> = ({ icon, label, value }) => (
+  <div className="flex items-center gap-2 text-muted-foreground">
+    {icon}
+    <span className="text-foreground/80"><strong className="font-medium text-foreground">{label}:</strong> {value}</span>
+  </div>
+);
+
+export default DashboardMyRequests;

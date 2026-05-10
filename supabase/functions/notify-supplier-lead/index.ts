@@ -62,7 +62,7 @@ Deno.serve(async (req) => {
     const { data: lead, error: leadErr } = await admin
       .from('lead_requests')
       .select(
-        'id, name, email, phone, message, budget_range, contact_preference, business_id',
+        'id, ref_id, name, email, phone, message, budget_range, contact_preference, business_id',
       )
       .eq('id', leadId)
       .maybeSingle()
@@ -178,6 +178,27 @@ Deno.serve(async (req) => {
         JSON.stringify({ ok: false, error: 'email_send_failed' }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       )
+    }
+
+    // SR-2: Send customer confirmation (fail-soft — never block on errors).
+    if (lead.email) {
+      try {
+        await admin.functions.invoke('send-transactional-email', {
+          body: {
+            templateName: 'lead-confirmation',
+            recipientEmail: lead.email,
+            idempotencyKey: `lead-confirmation-${lead.id}`,
+            templateData: {
+              name: lead.name ?? undefined,
+              businessName,
+              refId: lead.ref_id ?? undefined,
+            },
+          },
+        })
+      } catch (e) {
+        const m = e instanceof Error ? e.message : 'unknown'
+        console.warn('notify-supplier-lead: customer confirmation failed', m)
+      }
     }
 
     return new Response(
