@@ -60,7 +60,7 @@ export const MembershipSection = () => {
                 key={plan.id}
                 className={`group relative p-7 sm:p-10 rounded-2xl sm:rounded-3xl border transition-all duration-500 ${
                   isFeatured
-                    ? "bg-gradient-navy border-gold/40 md:scale-105 shadow-2xl shadow-gold/10 hover:shadow-[0_20px_60px_-10px_hsl(var(--gold)/0.3)] md:hover:scale-[1.08]"
+                    ? "bg-[#142D52] border-primary/40 md:scale-105 shadow-2xl hover:shadow-[0_20px_60px_-10px_rgba(14,158,111,0.35)] md:hover:scale-[1.08]"
                     : "bg-card dark:bg-card/60 border-border/50 dark:border-border/30 hover:border-accent/40 active:scale-[0.97] sm:hover:-translate-y-3 hover:shadow-xl hover:shadow-accent/5"
                 } ${isVisible ? 'animate-card-slide-up' : ''}`}
                 style={{ animationDelay: `${idx * 150}ms`, animationFillMode: 'both' }}
@@ -70,7 +70,7 @@ export const MembershipSection = () => {
                     <div className="absolute inset-0 rounded-2xl sm:rounded-3xl overflow-hidden pointer-events-none">
                       <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
                     </div>
-                    <div className="absolute -top-4 end-1/2 translate-x-1/2 px-5 py-1.5 rounded-full bg-gradient-gold text-xs font-heading font-bold text-secondary-foreground shadow-lg shadow-gold/20">
+                    <div className="absolute -top-4 end-1/2 translate-x-1/2 px-5 py-1.5 rounded-full bg-primary text-xs font-heading font-bold text-white shadow-lg">
                       <Sparkles className="w-3 h-3 inline me-1" />
                       {t('membership.popular')}
                     </div>
@@ -78,27 +78,27 @@ export const MembershipSection = () => {
                 )}
 
                 <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center mb-5 sm:mb-6 ${
-                  isFeatured ? 'bg-gold/20' : 'bg-accent/10 dark:bg-accent/15 group-hover:bg-gradient-gold'
+                  isFeatured ? 'bg-primary/20' : 'bg-primary-light dark:bg-primary/15 group-hover:bg-primary'
                 } transition-all duration-300`}>
-                  <Icon className={`w-7 h-7 sm:w-8 sm:h-8 ${isFeatured ? 'text-gold' : 'text-accent group-hover:text-secondary-foreground'} transition-colors`} />
+                  <Icon className={`w-7 h-7 sm:w-8 sm:h-8 ${isFeatured ? 'text-white' : 'text-primary group-hover:text-white'} transition-colors`} />
                 </div>
 
-                <h3 className={`font-heading font-bold text-xl sm:text-2xl mb-2 sm:mb-3 ${isFeatured ? "text-surface-nav-foreground" : "text-foreground group-hover:text-accent"} transition-colors duration-300`}>{name}</h3>
-                <p className={`font-body text-sm sm:text-base mb-6 sm:mb-8 leading-relaxed ${isFeatured ? "text-surface-nav-foreground/60" : "text-muted-foreground"}`}>{desc}</p>
+                <h3 className={`font-heading font-bold text-xl sm:text-2xl mb-2 sm:mb-3 ${isFeatured ? "text-white" : "text-foreground group-hover:text-primary"} transition-colors duration-300`}>{name}</h3>
+                <p className={`font-body text-sm sm:text-base mb-6 sm:mb-8 leading-relaxed ${isFeatured ? "text-white/70" : "text-muted-foreground"}`}>{desc}</p>
 
                 {plan.price_monthly > 0 && (
                   <div className="mb-4">
-                    <span className={`font-heading font-bold text-2xl ${isFeatured ? 'text-gold' : 'text-foreground'}`}>
+                    <span className={`font-heading font-bold text-2xl ${isFeatured ? 'text-white' : 'text-foreground'}`}>
                       {plan.price_monthly}
                     </span>
-                    <span className={`text-xs ms-1 ${isFeatured ? 'text-surface-nav-foreground/50' : 'text-muted-foreground'}`}>
+                    <span className={`text-xs ms-1 ${isFeatured ? 'text-white/60' : 'text-muted-foreground'}`}>
                       {isRTL ? 'ر.س/شهر' : 'SAR/mo'}
                     </span>
                   </div>
                 )}
                 {plan.price_monthly === 0 && (
                   <div className="mb-4">
-                    <span className={`font-heading font-bold text-2xl ${isFeatured ? 'text-gold' : 'text-foreground'}`}>
+                    <span className={`font-heading font-bold text-2xl ${isFeatured ? 'text-white' : 'text-foreground'}`}>
                       {isRTL ? 'مجاناً' : 'Free'}
                     </span>
                   </div>
@@ -108,11 +108,11 @@ export const MembershipSection = () => {
                   {features.slice(0, 5).map((feat, fi) => (
                     <li
                       key={fi}
-                      className={`flex items-center gap-3 font-body text-sm ${isFeatured ? "text-surface-nav-foreground/80" : "text-muted-foreground group-hover:text-foreground"} transition-all duration-300`}
+                      className={`flex items-center gap-3 font-body text-sm ${isFeatured ? "text-white/85" : "text-muted-foreground group-hover:text-foreground"} transition-all duration-300`}
                       style={{ transitionDelay: `${fi * 50}ms` }}
                     >
-                      <div className={`w-5.5 h-5.5 rounded-full flex items-center justify-center shrink-0 ${isFeatured ? 'bg-gold/20' : 'bg-accent/10'}`}>
-                        <Check className={`w-3 h-3 ${isFeatured ? 'text-gold' : 'text-accent'}`} />
+                      <div className={`w-5.5 h-5.5 rounded-full flex items-center justify-center shrink-0 ${isFeatured ? 'bg-white/15' : 'bg-primary-light'}`}>
+                        <Check className={`w-3 h-3 ${isFeatured ? 'text-white' : 'text-primary'}`} />
                       </div>
                       {feat}
                     </li>
@@ -120,7 +120,7 @@ export const MembershipSection = () => {
                 </ul>
 
                 <Link to="/membership">
-                  <Button variant={isFeatured ? "hero" : "outline"} className={`w-full text-sm sm:text-base py-3 transition-all duration-300 active:scale-95 ${!isFeatured ? "group-hover:bg-accent group-hover:text-accent-foreground group-hover:border-accent" : "shadow-lg shadow-gold/20"}`}>
+                  <Button variant={isFeatured ? "primary" : "outline"} className={`w-full text-sm sm:text-base py-3 transition-all duration-300 active:scale-95 ${!isFeatured ? "group-hover:bg-primary group-hover:text-white group-hover:border-primary" : "shadow-lg"}`}>
                     {t('membership.start')}
                   </Button>
                 </Link>
