@@ -200,7 +200,7 @@ const AdminLeadRequests: React.FC = () => {
           </div>
           <div className="rounded-xl border border-border bg-card p-3">
             <div className="text-xs text-muted-foreground">{isRTL ? 'سجلات قديمة' : 'Legacy records'}</div>
-            <div className="text-2xl font-bold tech-content">{kpis.legacy}</div>
+            <div className="text-2xl font-bold tech-content">{(kpis as unknown as Record<string, number>).legacy ?? 0}</div>
           </div>
         </div>
 
