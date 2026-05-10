@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { EMAIL_BRAND as B, EMAIL_TINTS as T } from "../_shared/brandTheme.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -175,17 +176,17 @@ serve(async (req) => {
       };
       const lbl = labelMap[payload.event_type] ?? { ar: payload.event_type, en: payload.event_type };
 
-      const html = `<!doctype html><html><body style="font-family:system-ui;padding:24px;max-width:560px;margin:auto;line-height:1.6;color:#1e293b">
+      const html = `<!doctype html><html><body style="font-family:system-ui;padding:24px;max-width:560px;margin:auto;line-height:1.6;color:${B.text}">
 <h2 style="margin:0 0 8px">🔔 ${lbl.en} · ${lbl.ar}</h2>
-<p style="color:#64748b;margin:0 0 16px">${msg.ticket_number ?? msg.id} — ${msg.name}</p>
-<table style="width:100%;border-collapse:collapse;background:#f8fafc;border-radius:8px;overflow:hidden">
-  <tr><td style="padding:10px;border-bottom:1px solid #e2e8f0"><b>${lbl.en}</b></td><td style="padding:10px;border-bottom:1px solid #e2e8f0;text-align:end">${payload.from_value ?? "—"} → <b>${payload.to_value ?? "—"}</b></td></tr>
-  <tr><td style="padding:10px;border-bottom:1px solid #e2e8f0">Subject</td><td style="padding:10px;border-bottom:1px solid #e2e8f0;text-align:end">${(msg.subject ?? "").toString().slice(0, 80) || "—"}</td></tr>
-  <tr><td style="padding:10px;border-bottom:1px solid #e2e8f0">Priority</td><td style="padding:10px;border-bottom:1px solid #e2e8f0;text-align:end">${msg.priority}</td></tr>
+<p style="color:${B.muted};margin:0 0 16px">${msg.ticket_number ?? msg.id} — ${msg.name}</p>
+<table style="width:100%;border-collapse:collapse;background:${T.neutral};border-radius:8px;overflow:hidden">
+  <tr><td style="padding:10px;border-bottom:1px solid ${B.border}"><b>${lbl.en}</b></td><td style="padding:10px;border-bottom:1px solid ${B.border};text-align:end">${payload.from_value ?? "—"} → <b>${payload.to_value ?? "—"}</b></td></tr>
+  <tr><td style="padding:10px;border-bottom:1px solid ${B.border}">Subject</td><td style="padding:10px;border-bottom:1px solid ${B.border};text-align:end">${(msg.subject ?? "").toString().slice(0, 80) || "—"}</td></tr>
+  <tr><td style="padding:10px;border-bottom:1px solid ${B.border}">Priority</td><td style="padding:10px;border-bottom:1px solid ${B.border};text-align:end">${msg.priority}</td></tr>
   <tr><td style="padding:10px">Status</td><td style="padding:10px;text-align:end">${msg.status}</td></tr>
 </table>
-<p style="margin:20px 0"><a href="${dashboardUrl}" style="background:#0ea5e9;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none">Open ticket</a></p>
-<p style="font-size:12px;color:#94a3b8">You receive this because your role is subscribed to "${payload.event_type}". Mute notifications from /dashboard/communication-preferences.</p>
+<p style="margin:20px 0"><a href="${dashboardUrl}" style="background:${B.primaryButton};color:${B.primaryButtonText};padding:10px 18px;border-radius:8px;text-decoration:none">Open ticket</a></p>
+<p style="font-size:12px;color:${B.muted}">You receive this because your role is subscribed to "${payload.event_type}". Mute notifications from /dashboard/communication-preferences.</p>
 </body></html>`;
 
       for (const to of recipientEmails) {

@@ -43,7 +43,7 @@ interface TagForm {
 
 const emptyForm: TagForm = {
   name_ar: '', name_en: '', slug: '', tag_group: 'general',
-  icon: '', color: '#3b82f6', is_active: true, sort_order: 0,
+  icon: '', color: '#0E9E6F', is_active: true, sort_order: 0,
 };
 
 const tagGroups = [
@@ -83,7 +83,7 @@ const SortableTagRow = React.memo(({
       </button>
 
       {/* Color dot */}
-      <div className="w-3 h-3 rounded-full shrink-0 ring-2 ring-background shadow-sm" style={{ backgroundColor: tag.color || '#94a3b8' }} />
+      <div className="w-3 h-3 rounded-full shrink-0 ring-2 ring-background shadow-sm" style={{ backgroundColor: tag.color || '#94A0B2' }} />
 
       {/* Icon */}
       <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-muted/50">
@@ -166,7 +166,7 @@ SortableTagRow.displayName = 'SortableTagRow';
 const DragOverlayTag = ({ tag, isRTL }: { tag: Tag; isRTL: boolean }) => (
   <div className="flex items-center gap-3 py-2.5 px-4 bg-card border border-primary/30 rounded-xl shadow-xl">
     <GripVertical className="w-4 h-4 text-muted-foreground/50" />
-    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: tag.color || '#94a3b8' }} />
+    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: tag.color || '#94A0B2' }} />
     {tag.icon && <span>{tag.icon}</span>}
     <span className="font-medium text-sm">{isRTL ? tag.name_ar : tag.name_en}</span>
   </div>
@@ -270,7 +270,7 @@ const AdminTags = () => {
     setEditingId(tag.id);
     setForm({
       name_ar: tag.name_ar, name_en: tag.name_en, slug: tag.slug,
-      tag_group: tag.tag_group, icon: tag.icon || '', color: tag.color || '#3b82f6',
+      tag_group: tag.tag_group, icon: tag.icon || '', color: tag.color || '#0E9E6F',
       is_active: tag.is_active, sort_order: tag.sort_order,
     });
     setShowForm(true);
@@ -282,7 +282,7 @@ const AdminTags = () => {
     setForm({
       name_ar: tag.name_ar + (isRTL ? ' (نسخة)' : ' (copy)'),
       name_en: tag.name_en + ' (copy)', slug: tag.slug + '-copy',
-      tag_group: tag.tag_group, icon: tag.icon || '', color: tag.color || '#3b82f6',
+      tag_group: tag.tag_group, icon: tag.icon || '', color: tag.color || '#0E9E6F',
       is_active: tag.is_active, sort_order: tag.sort_order + 1,
     });
     setShowForm(true);
@@ -436,10 +436,10 @@ const AdminTags = () => {
                   <div className="space-y-1.5">
                     <Label className="text-xs">{isRTL ? 'اللون' : 'Color'}</Label>
                     <div className="flex items-center gap-2">
-                      <Input type="color" value={form.color || '#3b82f6'} onChange={e => setForm(f => ({ ...f, color: e.target.value }))} className="h-9 w-12 p-1 cursor-pointer" />
-                      <Input value={form.color || '#3b82f6'} onChange={e => setForm(f => ({ ...f, color: e.target.value }))} className="h-9 w-24 font-mono text-xs" dir="ltr" />
+                      <Input type="color" value={form.color || '#0E9E6F'} onChange={e => setForm(f => ({ ...f, color: e.target.value }))} className="h-9 w-12 p-1 cursor-pointer" />
+                      <Input value={form.color || '#0E9E6F'} onChange={e => setForm(f => ({ ...f, color: e.target.value }))} className="h-9 w-24 font-mono text-xs" dir="ltr" />
                       {/* Preview */}
-                      <Badge style={{ backgroundColor: form.color || '#3b82f6', color: '#fff' }} className="text-xs">
+                      <Badge style={{ backgroundColor: form.color || '#0E9E6F', color: '#FFFFFF' }} className="text-xs">
                         {form.icon || '🏷️'} {form.name_ar || (isRTL ? 'معاينة' : 'Preview')}
                       </Badge>
                     </div>
@@ -527,10 +527,10 @@ const AdminTags = () => {
                 const GroupIcon = group.icon;
                 return (
                   <Card key={tag.id} className={`group relative overflow-hidden hover:shadow-md transition-all border-border/50 ${!tag.is_active ? 'opacity-50' : ''}`}>
-                    <div className="absolute top-0 inset-x-0 h-1" style={{ backgroundColor: tag.color || '#94a3b8' }} />
+                    <div className="absolute top-0 inset-x-0 h-1" style={{ backgroundColor: tag.color || '#94A0B2' }} />
                     <CardContent className="p-4 pt-4">
                       <div className="flex items-start justify-between mb-3">
-                        <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg" style={{ backgroundColor: (tag.color || '#94a3b8') + '20' }}>
+                        <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg" style={{ backgroundColor: (tag.color || '#94A0B2') + '20' }}>
                           {tag.icon || '🏷️'}
                         </div>
                         <DropdownMenu>

@@ -3,7 +3,7 @@ import * as React from 'npm:react@18.3.1'
 import {
   Body, Container, Head, Heading, Html, Link, Preview, Section, Text, Hr, Button, Row, Column,
 } from 'npm:@react-email/components@0.0.22'
-import { EMAIL_BRAND as B } from '../brandTheme.ts'
+import { EMAIL_BRAND as B, EMAIL_TINTS as T } from '../brandTheme.ts'
 
 export const SITE_NAME_AR = 'قِطاعات'
 export const SITE_NAME_EN = 'Qitaat'
@@ -44,14 +44,8 @@ export interface BilingualEmailProps {
 }
 
 /* Status tones — soft tinted backgrounds + readable foregrounds, all sourced
-   from the central brand status palette (no hardcoded random hues). */
-const TONE_BG: Record<BadgeTone, string> = {
-  neutral: '#EEF1F6',
-  success: '#E6F5EE',
-  warning: '#FBEEDC',
-  info:    '#E6EEF8',
-  danger:  '#F8E1E1',
-}
+   from the shared brand status palette (no hardcoded random hues). */
+const TONE_BG: Record<BadgeTone, string> = { ...T }
 const TONE_FG: Record<BadgeTone, string> = {
   neutral: B.text,
   success: B.success,
@@ -405,14 +399,14 @@ const detailValueMonoEn = {
   fontFamily: "'SF Mono', Menlo, Consolas, monospace",
 }
 const highlightBoxRtl = {
-  backgroundColor: '#E6F5EE',
+  backgroundColor: T.success,
   borderRadius: '12px',
   padding: '14px 18px',
   margin: '12px 0',
   borderRight: `4px solid ${B.primaryButton}`,
 }
 const highlightBoxLtr = {
-  backgroundColor: '#E6F5EE',
+  backgroundColor: T.success,
   borderRadius: '12px',
   padding: '14px 18px',
   margin: '12px 0',
@@ -448,7 +442,7 @@ const highlightTextEn = {
   whiteSpace: 'pre-wrap' as const,
 }
 const tipBoxAr = {
-  backgroundColor: '#E6EEF8',
+  backgroundColor: T.info,
   borderRadius: '10px',
   padding: '12px 16px',
   margin: '8px 0 16px',

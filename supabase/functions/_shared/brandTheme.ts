@@ -36,3 +36,17 @@ export const EMAIL_BRAND = {
 } as const;
 
 export type EmailBrand = typeof EMAIL_BRAND;
+
+/**
+ * Soft tinted backgrounds for status badges / highlight boxes inside emails.
+ * Derived from the brand status palette — keep in sync with `BilingualLayout`.
+ */
+export const EMAIL_TINTS = {
+  neutral: '#EEF1F6',
+  success: '#E6F5EE',
+  warning: '#FBEEDC',
+  info:    '#E6EEF8',
+  danger:  '#F8E1E1',
+} as const;
+
+export type EmailTints = typeof EMAIL_TINTS;
