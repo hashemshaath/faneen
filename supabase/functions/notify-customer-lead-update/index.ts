@@ -25,6 +25,7 @@ const CUSTOMER_TEMPLATES: Record<string, string> = {
   accepted: 'lead-accepted',
   rejected: 'lead-rejected',
   needs_info: 'lead-needs-info',
+  quoted: 'lead-quoted',
 }
 
 Deno.serve(async (req) => {
@@ -58,7 +59,7 @@ Deno.serve(async (req) => {
 
     const { data: lead } = await admin
       .from('lead_requests')
-      .select('id, ref_id, name, email, status, business_id, user_id')
+      .select('id, ref_id, name, email, status, business_id, user_id, quote_amount, quote_currency, quote_valid_until')
       .eq('id', leadId)
       .maybeSingle()
 
@@ -88,6 +89,9 @@ Deno.serve(async (req) => {
             name: lead.name ?? undefined,
             businessName,
             refId: lead.ref_id ?? undefined,
+            amount: status === 'quoted' ? (lead.quote_amount ?? undefined) : undefined,
+            currency: status === 'quoted' ? (lead.quote_currency ?? 'SAR') : undefined,
+            validUntil: status === 'quoted' ? (lead.quote_valid_until ?? undefined) : undefined,
           },
         },
       })
@@ -95,11 +99,12 @@ Deno.serve(async (req) => {
     }
 
     // ---- In-app notification for the customer ----
-    if (lead.user_id && (status === 'accepted' || status === 'rejected' || status === 'needs_info')) {
+    if (lead.user_id && (status === 'accepted' || status === 'rejected' || status === 'needs_info' || status === 'quoted')) {
       const titles: Record<string, { ar: string; en: string }> = {
         accepted:   { ar: 'تم قبول طلبك', en: 'Your request was accepted' },
         rejected:   { ar: 'تعذر قبول طلبك حاليًا', en: 'Your request was not accepted' },
         needs_info: { ar: 'المنشأة بحاجة معلومات إضافية', en: 'The provider needs more info' },
+        quoted:     { ar: 'تم إرسال عرض سعر', en: 'A quote was sent for your request' },
       }
       const t = titles[status]
       const { error: notifErr } = await admin.from('notifications').insert({
