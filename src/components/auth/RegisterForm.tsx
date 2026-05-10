@@ -69,11 +69,19 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onE
       });
       onEmailSent(email);
       const attribution = getAttributionPayload();
-      track.signupCompleted({ account_type: registerType, method: 'email', ...attribution });
+      // Canonical conversion event (Phase 6). `signupCompleted` deprecated.
       track.registerCompleted({ account_type: registerType, method: 'email', ...attribution });
       toast.success(isRTL ? 'تم إرسال رابط التحقق إلى بريدك الإلكتروني' : 'Verification link sent to your email');
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
+      try {
+        trackRegisterFailed({
+          account_type: registerType,
+          method: 'email',
+          source_page: 'auth_register',
+          reason_category: msg.includes('already registered') ? 'validation' : categorizeReason(err),
+        });
+      } catch { /* analytics never breaks register */ }
       if (msg.includes('already registered')) {
         setEmailExists(true);
         toast.error(isRTL ? 'هذا البريد مسجل بالفعل' : 'This email is already registered');
