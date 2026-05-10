@@ -76,18 +76,36 @@ export const ProjectImageGallery = ({ images, title }: Props) => {
 
       {lightboxOpen && (
         <div className="fixed inset-0 z-50 bg-black/95 flex flex-col" dir={isRTL ? 'rtl' : 'ltr'}>
-          <Button variant="ghost" size="icon" className="absolute top-3 end-3 z-10 text-white hover:bg-white/20 rounded-full" onClick={() => setLightboxOpen(false)}>
-            <X className="w-5 h-5" />
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-3 end-3 z-10 text-white hover:bg-white/20 rounded-full"
+            onClick={() => setLightboxOpen(false)}
+            aria-label={isRTL ? 'إغلاق' : 'Close'}
+          >
+            <X className="w-5 h-5" aria-hidden="true" />
           </Button>
           <div className="flex-1 flex items-center justify-center p-4 relative">
             <img src={images[currentImageIndex]?.image_url} alt={images[currentImageIndex]?.caption_ar || images[currentImageIndex]?.caption_en || `${title} - ${currentImageIndex + 1}`} className="max-w-full max-h-full object-contain rounded-lg" />
             {images.length > 1 && (
               <>
-                <Button variant="ghost" size="icon" className="absolute start-2 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 rounded-full w-10 h-10" onClick={isRTL ? goNext : goPrev}>
-                  {isRTL ? <ChevronRight className="w-6 h-6" /> : <ChevronLeft className="w-6 h-6" />}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute start-2 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 rounded-full w-10 h-10"
+                  onClick={isRTL ? goNext : goPrev}
+                  aria-label={isRTL ? 'الصورة التالية' : 'Previous image'}
+                >
+                  {isRTL ? <ChevronRight className="w-6 h-6" aria-hidden="true" /> : <ChevronLeft className="w-6 h-6" aria-hidden="true" />}
                 </Button>
-                <Button variant="ghost" size="icon" className="absolute end-2 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 rounded-full w-10 h-10" onClick={isRTL ? goPrev : goNext}>
-                  {isRTL ? <ChevronLeft className="w-6 h-6" /> : <ChevronRight className="w-6 h-6" />}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute end-2 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 rounded-full w-10 h-10"
+                  onClick={isRTL ? goPrev : goNext}
+                  aria-label={isRTL ? 'الصورة السابقة' : 'Next image'}
+                >
+                  {isRTL ? <ChevronLeft className="w-6 h-6" aria-hidden="true" /> : <ChevronRight className="w-6 h-6" aria-hidden="true" />}
                 </Button>
               </>
             )}
