@@ -6,6 +6,7 @@ import { startWebVitals } from "./utils/reportWebVitals";
 import { installDiagnostics } from "./lib/diagnostics";
 import { initGtm } from "./lib/gtm";
 import { startConsentWatchdog } from "./lib/consent-watchdog";
+import { captureAttribution } from "./lib/analytics-attribution";
 
 validateEnv();
 
@@ -19,6 +20,11 @@ initGtm();
 // Self-healing consent watchdog: detects "stuck-denied" state and re-pushes
 // the user's stored decision. Boots after initGtm() so the dataLayer exists.
 startConsentWatchdog();
+
+// Capture UTM + referrer attribution into localStorage (qitaat_attribution_v1).
+// PII-safe: stores only utm_*, referrer hostname, landing pathname (no query).
+// first_touch is written once; last_touch refreshes on fresh UTM hits.
+try { captureAttribution(); } catch { /* never break boot */ }
 
 // One-time legacy storage cleanup: removes any leftover `faneen_*` keys
 // from beta-tester browsers. Safe no-op once it has run on a device.
