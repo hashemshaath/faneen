@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import {
   Wrench, Image, Star, FileText, Shield, TrendingUp, Eye,
-  DollarSign, Plus, Send, BarChart3, ArrowUpRight, ArrowDownRight,
+  DollarSign, Plus, Send, BarChart3, ArrowUpRight,
   FolderOpen, Users, Clock, CheckCircle2, AlertCircle, MessageSquare,
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell } from 'recharts';
