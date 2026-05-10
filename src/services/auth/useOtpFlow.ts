@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { OTP_COOLDOWN_SECONDS, OTP_LENGTH } from './constants';
+import { track } from '@/lib/analytics-events';
 
 interface UseOtpFlowOptions {
   onSendOtp: () => Promise<{ success: boolean; demo_otp?: string; error?: string; message?: string }>;
@@ -37,6 +38,7 @@ export function useOtpFlow({ onSendOtp, onVerifyOtp, isRTL }: UseOtpFlowOptions)
       setOtpCode('');
       setOtpStep(true);
       setCooldown(OTP_COOLDOWN_SECONDS);
+      track.otpSent({ method: 'otp' });
       return true;
     } catch {
       setError(isRTL ? 'حدث خطأ، حاول مرة أخرى' : 'An error occurred, try again');
@@ -55,6 +57,7 @@ export function useOtpFlow({ onSendOtp, onVerifyOtp, isRTL }: UseOtpFlowOptions)
     setError(null);
     try {
       await onVerifyOtp(otpCode);
+      track.otpVerified({ method: 'otp' });
       return true;
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : (isRTL ? 'تعذر التحقق من الرمز' : 'Could not verify the code'));
