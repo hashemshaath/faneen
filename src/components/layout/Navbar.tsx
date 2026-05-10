@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { useGlobalSearch } from "@/hooks/useGlobalSearch";
+import { BrandLogo } from "@/components/common/BrandLogo";
 
 export const Navbar = () => {
   const { t, language, setLanguage, isRTL } = useLanguage();
