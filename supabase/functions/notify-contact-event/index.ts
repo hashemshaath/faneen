@@ -39,6 +39,8 @@ serve(async (req) => {
       .eq("id", 1)
       .maybeSingle();
     const s = settingsRow ?? {};
+    const sObj = s as Record<string, unknown>;
+    const maxAttempts = (sObj.max_notification_attempts as number) ?? 5;
 
     const channelKey = (() => {
       switch (payload.event_type) {
@@ -63,38 +65,63 @@ serve(async (req) => {
 
     const dashboardUrl = `https://qitaat.com/admin/contact-messages?id=${msg.id}`;
 
+    // helper: log a delivery attempt
+    const logAttempt = async (row: Record<string, unknown>) => {
+      try { await admin.from("contact_notification_log").insert(row); } catch (_) { /* swallow */ }
+    };
+
     // 3. Webhook
     if (wantWebhook && (s as Record<string, unknown>).webhook_url) {
       const url = (s as Record<string, string>).webhook_url;
       const secret = (s as Record<string, string | null>).webhook_secret;
+      const webhookBody = {
+        event_type: payload.event_type,
+        from: payload.from_value ?? null,
+        to: payload.to_value ?? null,
+        actor_id: payload.actor_id ?? null,
+        message: {
+          id: msg.id, ticket_number: msg.ticket_number, name: msg.name, email: msg.email,
+          subject: msg.subject, status: msg.status, priority: msg.priority,
+          assigned_to: msg.assigned_to, created_at: msg.created_at,
+        },
+        dashboard_url: dashboardUrl,
+        sent_at: new Date().toISOString(),
+      };
       try {
-        await fetch(url, {
+        const res = await fetch(url, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             ...(secret ? { "X-Qitaat-Signature": secret } : {}),
           },
-          body: JSON.stringify({
-            event_type: payload.event_type,
-            from: payload.from_value ?? null,
-            to: payload.to_value ?? null,
-            actor_id: payload.actor_id ?? null,
-            message: {
-              id: msg.id,
-              ticket_number: msg.ticket_number,
-              name: msg.name,
-              email: msg.email,
-              subject: msg.subject,
-              status: msg.status,
-              priority: msg.priority,
-              assigned_to: msg.assigned_to,
-              created_at: msg.created_at,
-            },
-            dashboard_url: dashboardUrl,
-            sent_at: new Date().toISOString(),
-          }),
+          body: JSON.stringify(webhookBody),
         });
-      } catch (_) { /* silent */ }
+        const respText = (await res.text()).slice(0, 2000);
+        const success = res.ok;
+        await logAttempt({
+          event_id: payload.event_id ?? null, message_id: msg.id, event_type: payload.event_type,
+          channel: "webhook", recipient: url,
+          status: success ? "success" : "pending",
+          attempt_count: 1, max_attempts: maxAttempts,
+          http_status: res.status,
+          error_code: success ? null : `HTTP_${res.status}`,
+          error_message: success ? null : respText.slice(0, 500),
+          request_payload: webhookBody, response_body: respText,
+          last_attempt_at: new Date().toISOString(),
+          next_retry_at: success ? null : new Date(Date.now() + ((sObj.retry_backoff_seconds as number) ?? 60) * 1000).toISOString(),
+        });
+      } catch (e) {
+        const msgErr = e instanceof Error ? e.message : String(e);
+        await logAttempt({
+          event_id: payload.event_id ?? null, message_id: msg.id, event_type: payload.event_type,
+          channel: "webhook", recipient: url, status: "pending",
+          attempt_count: 1, max_attempts: maxAttempts,
+          error_code: "NETWORK_ERROR", error_message: msgErr,
+          request_payload: webhookBody,
+          last_attempt_at: new Date().toISOString(),
+          next_retry_at: new Date(Date.now() + ((sObj.retry_backoff_seconds as number) ?? 60) * 1000).toISOString(),
+        });
+      }
     }
 
     // 4. Email subscribers (admins matching role_subscriptions, not muted)
@@ -162,17 +189,32 @@ serve(async (req) => {
 </body></html>`;
 
       for (const to of recipientEmails) {
+        const emailPayload = { to, subject: `🔔 ${lbl.en} — ${msg.ticket_number ?? msg.name}`, html, template_name: `contact-event-${payload.event_type}`, skip_preferences: true };
         try {
-          await admin.functions.invoke("send-transactional-email", {
-            body: {
-              to,
-              subject: `🔔 ${lbl.en} — ${msg.ticket_number ?? msg.name}`,
-              html,
-              template_name: `contact-event-${payload.event_type}`,
-              skip_preferences: true,
-            },
+          const { error } = await admin.functions.invoke("send-transactional-email", { body: emailPayload });
+          await logAttempt({
+            event_id: payload.event_id ?? null, message_id: msg.id, event_type: payload.event_type,
+            channel: "email", recipient: to,
+            status: error ? "pending" : "success",
+            attempt_count: 1, max_attempts: maxAttempts,
+            error_code: error ? "EMAIL_DISPATCH_ERROR" : null,
+            error_message: error ? (error.message ?? String(error)) : null,
+            request_payload: { to, subject: emailPayload.subject, template_name: emailPayload.template_name },
+            last_attempt_at: new Date().toISOString(),
+            next_retry_at: error ? new Date(Date.now() + ((sObj.retry_backoff_seconds as number) ?? 60) * 1000).toISOString() : null,
           });
-        } catch (_) { /* swallow per-recipient */ }
+        } catch (e) {
+          const msgErr = e instanceof Error ? e.message : String(e);
+          await logAttempt({
+            event_id: payload.event_id ?? null, message_id: msg.id, event_type: payload.event_type,
+            channel: "email", recipient: to, status: "pending",
+            attempt_count: 1, max_attempts: maxAttempts,
+            error_code: "EMAIL_EXCEPTION", error_message: msgErr,
+            request_payload: { to, subject: emailPayload.subject, template_name: emailPayload.template_name },
+            last_attempt_at: new Date().toISOString(),
+            next_retry_at: new Date(Date.now() + ((sObj.retry_backoff_seconds as number) ?? 60) * 1000).toISOString(),
+          });
+        }
       }
     }
 

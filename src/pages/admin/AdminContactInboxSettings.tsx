@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import { Loader2, Save, Send, Bell, Webhook, Clock, Mail, Plus, X } from 'lucide-react';
+import { PlayCircle, RefreshCw, AlertTriangle } from 'lucide-react';
 import { useNoIndex } from '@/hooks/useNoIndex';
 
 type Settings = {
@@ -28,6 +29,10 @@ type Settings = {
   webhook_secret: string | null;
   role_subscriptions: Record<string, string[]>;
   weekly_report_recipients: string[];
+  max_notification_attempts: number;
+  retry_backoff_seconds: number;
+  alert_on_max_retries: boolean;
+  alert_recipients: string[];
 };
 
 const ROLES = ['super_admin', 'admin', 'moderator'] as const;
@@ -53,6 +58,12 @@ export default function AdminContactInboxSettings() {
   const qc = useQueryClient();
   const [form, setForm] = useState<Settings | null>(null);
   const [newRecipient, setNewRecipient] = useState('');
+  const [newAlertRecipient, setNewAlertRecipient] = useState('');
+  const [testResult, setTestResult] = useState<{
+    ok: boolean; url?: string; payload?: unknown; http_status?: number | null;
+    response_body?: string; error?: string | null; duration_ms?: number;
+  } | null>(null);
+  const [testing, setTesting] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ['contact-inbox-settings'],
@@ -63,7 +74,17 @@ export default function AdminContactInboxSettings() {
     },
   });
 
-  useEffect(() => { if (data) setForm(data); }, [data]);
+  useEffect(() => {
+    if (data) {
+      setForm({
+        ...data,
+        alert_recipients: data.alert_recipients ?? [],
+        max_notification_attempts: data.max_notification_attempts ?? 5,
+        retry_backoff_seconds: data.retry_backoff_seconds ?? 60,
+        alert_on_max_retries: data.alert_on_max_retries ?? true,
+      });
+    }
+  }, [data]);
 
   const save = useMutation({
     mutationFn: async (patch: Partial<Settings>) => {
@@ -115,6 +136,35 @@ export default function AdminContactInboxSettings() {
 
   const removeRecipient = (e: string) =>
     update('weekly_report_recipients', form.weekly_report_recipients.filter((x) => x !== e));
+
+  const addAlertRecipient = () => {
+    const e = newAlertRecipient.trim();
+    if (!/\S+@\S+\.\S+/.test(e)) { toast.error(isRTL ? 'بريد غير صالح' : 'Invalid email'); return; }
+    if (form.alert_recipients.includes(e)) return;
+    update('alert_recipients', [...form.alert_recipients, e]);
+    setNewAlertRecipient('');
+  };
+  const removeAlertRecipient = (e: string) =>
+    update('alert_recipients', form.alert_recipients.filter((x) => x !== e));
+
+  const runWebhookTest = async () => {
+    setTesting(true);
+    setTestResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('test-contact-webhook', {
+        body: { override_url: form.webhook_url, override_secret: form.webhook_secret },
+      });
+      if (error) throw error;
+      setTestResult(data as typeof testResult);
+      const result = data as { ok: boolean };
+      if (result?.ok) toast.success(isRTL ? 'نجح الاختبار' : 'Test succeeded');
+      else toast.error(isRTL ? 'فشل الاختبار — راجع التفاصيل' : 'Test failed — see details');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : String(e));
+    } finally {
+      setTesting(false);
+    }
+  };
 
   return (
     <DashboardLayout>
@@ -288,6 +338,123 @@ export default function AdminContactInboxSettings() {
                 </Badge>
               ))}
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Retry & alerting */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><RefreshCw className="w-5 h-5" />
+              {isRTL ? 'إعادة المحاولة والتنبيهات' : 'Retries & alerting'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label>{isRTL ? 'الحد الأقصى للمحاولات' : 'Max attempts'}</Label>
+                <Input type="number" min={1} max={20} className="h-12 rounded-xl tech-content"
+                  value={form.max_notification_attempts}
+                  onChange={(e) => update('max_notification_attempts', Number(e.target.value) || 1)} />
+              </div>
+              <div className="space-y-2">
+                <Label>{isRTL ? 'فاصل إعادة المحاولة (ثانية)' : 'Retry backoff (seconds)'}</Label>
+                <Input type="number" min={10} max={3600} className="h-12 rounded-xl tech-content"
+                  value={form.retry_backoff_seconds}
+                  onChange={(e) => update('retry_backoff_seconds', Number(e.target.value) || 10)} />
+                <p className="text-xs text-muted-foreground">
+                  {isRTL ? 'يتضاعف الفاصل أسياً مع كل محاولة' : 'Doubles exponentially per attempt'}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-amber-600" />
+                  {isRTL ? 'تنبيه عند بلوغ الحد' : 'Alert at max retries'}
+                </Label>
+                <div className="h-12 flex items-center">
+                  <Switch checked={form.alert_on_max_retries}
+                    onCheckedChange={(v) => update('alert_on_max_retries', v)} />
+                </div>
+              </div>
+            </div>
+            <Separator />
+            <div className="space-y-2">
+              <Label>{isRTL ? 'مستلمو تنبيهات الفشل' : 'Failure alert recipients'}</Label>
+              <div className="flex gap-2">
+                <Input dir="auto" placeholder="ops@example.com" value={newAlertRecipient}
+                  onChange={(e) => setNewAlertRecipient(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addAlertRecipient())}
+                  className="h-12 rounded-xl tech-content" />
+                <Button onClick={addAlertRecipient} className="h-12 rounded-xl"><Plus className="w-4 h-4" /></Button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {form.alert_recipients.length === 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    {isRTL ? 'لا يوجد مستلمون — سيستخدم البريد الإداري الافتراضي' : 'No recipients — admin email used'}
+                  </p>
+                )}
+                {form.alert_recipients.map((e) => (
+                  <Badge key={e} variant="secondary" className="rounded-lg gap-1 pe-1">
+                    <span className="tech-content">{e}</span>
+                    <button onClick={() => removeAlertRecipient(e)} className="hover:text-destructive">
+                      <X className="w-3 h-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Test webhook */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between flex-wrap gap-2">
+              <span className="flex items-center gap-2"><PlayCircle className="w-5 h-5" />
+                {isRTL ? 'اختبار Webhook' : 'Test webhook'}
+              </span>
+              <Button size="sm" onClick={runWebhookTest} disabled={testing || !form.webhook_url} className="rounded-lg">
+                {testing ? <Loader2 className="w-3 h-3 animate-spin me-2" /> : <PlayCircle className="w-3 h-3 me-2" />}
+                {isRTL ? 'إرسال إشعار تجريبي' : 'Send test notification'}
+              </Button>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {!form.webhook_url && (
+              <p className="text-xs text-muted-foreground">
+                {isRTL ? 'أدخل Webhook URL أعلاه أولاً' : 'Set a Webhook URL above first'}
+              </p>
+            )}
+            {testResult && (
+              <div className="space-y-3">
+                <div className={`p-3 rounded-xl flex items-center gap-3 flex-wrap ${
+                  testResult.ok ? 'bg-emerald-50 text-emerald-900' : 'bg-rose-50 text-rose-900'
+                }`}>
+                  <Badge className={testResult.ok ? 'bg-emerald-600' : 'bg-rose-600'}>
+                    {testResult.ok ? (isRTL ? 'نجح' : 'OK') : (isRTL ? 'فشل' : 'FAILED')}
+                  </Badge>
+                  {testResult.http_status != null && (
+                    <span className="text-sm tech-content">HTTP {testResult.http_status}</span>
+                  )}
+                  {testResult.duration_ms != null && (
+                    <span className="text-xs text-muted-foreground tech-content">{testResult.duration_ms} ms</span>
+                  )}
+                  {testResult.error && (
+                    <span className="text-xs tech-content" dir="ltr">{testResult.error}</span>
+                  )}
+                </div>
+                <div className="grid md:grid-cols-2 gap-3">
+                  <div>
+                    <div className="text-xs font-medium mb-1 text-muted-foreground">Payload sent</div>
+                    <pre className="text-[11px] bg-muted/50 p-3 rounded-lg max-h-64 overflow-auto tech-content" dir="ltr">
+{JSON.stringify(testResult.payload, null, 2)}</pre>
+                  </div>
+                  <div>
+                    <div className="text-xs font-medium mb-1 text-muted-foreground">Response body</div>
+                    <pre className="text-[11px] bg-muted/50 p-3 rounded-lg max-h-64 overflow-auto tech-content whitespace-pre-wrap break-all" dir="ltr">
+{testResult.response_body || (isRTL ? '(فارغ)' : '(empty)')}</pre>
+                  </div>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

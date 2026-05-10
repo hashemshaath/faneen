@@ -1219,7 +1219,10 @@ export type Database = {
       }
       contact_inbox_settings: {
         Row: {
+          alert_on_max_retries: boolean
+          alert_recipients: string[]
           id: number
+          max_notification_attempts: number
           muted_user_ids: string[]
           notify_email_on_assign: boolean
           notify_email_on_priority_change: boolean
@@ -1227,6 +1230,7 @@ export type Database = {
           notify_webhook_on_assign: boolean
           notify_webhook_on_priority_change: boolean
           notify_webhook_on_status_change: boolean
+          retry_backoff_seconds: number
           role_subscriptions: Json
           stale_hours: number
           target_resolution_hours: number
@@ -1238,7 +1242,10 @@ export type Database = {
           weekly_report_recipients: string[]
         }
         Insert: {
+          alert_on_max_retries?: boolean
+          alert_recipients?: string[]
           id: number
+          max_notification_attempts?: number
           muted_user_ids?: string[]
           notify_email_on_assign?: boolean
           notify_email_on_priority_change?: boolean
@@ -1246,6 +1253,7 @@ export type Database = {
           notify_webhook_on_assign?: boolean
           notify_webhook_on_priority_change?: boolean
           notify_webhook_on_status_change?: boolean
+          retry_backoff_seconds?: number
           role_subscriptions?: Json
           stale_hours?: number
           target_resolution_hours?: number
@@ -1257,7 +1265,10 @@ export type Database = {
           weekly_report_recipients?: string[]
         }
         Update: {
+          alert_on_max_retries?: boolean
+          alert_recipients?: string[]
           id?: number
+          max_notification_attempts?: number
           muted_user_ids?: string[]
           notify_email_on_assign?: boolean
           notify_email_on_priority_change?: boolean
@@ -1265,6 +1276,7 @@ export type Database = {
           notify_webhook_on_assign?: boolean
           notify_webhook_on_priority_change?: boolean
           notify_webhook_on_status_change?: boolean
+          retry_backoff_seconds?: number
           role_subscriptions?: Json
           stale_hours?: number
           target_resolution_hours?: number
@@ -1413,6 +1425,84 @@ export type Database = {
           work_state_updated_at?: string | null
         }
         Relationships: []
+      }
+      contact_notification_log: {
+        Row: {
+          attempt_count: number
+          channel: string
+          created_at: string
+          error_code: string | null
+          error_message: string | null
+          event_id: string | null
+          event_type: string | null
+          http_status: number | null
+          id: string
+          last_attempt_at: string | null
+          max_attempts: number
+          message_id: string | null
+          next_retry_at: string | null
+          recipient: string | null
+          request_payload: Json | null
+          response_body: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          attempt_count?: number
+          channel: string
+          created_at?: string
+          error_code?: string | null
+          error_message?: string | null
+          event_id?: string | null
+          event_type?: string | null
+          http_status?: number | null
+          id?: string
+          last_attempt_at?: string | null
+          max_attempts?: number
+          message_id?: string | null
+          next_retry_at?: string | null
+          recipient?: string | null
+          request_payload?: Json | null
+          response_body?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          attempt_count?: number
+          channel?: string
+          created_at?: string
+          error_code?: string | null
+          error_message?: string | null
+          event_id?: string | null
+          event_type?: string | null
+          http_status?: number | null
+          id?: string
+          last_attempt_at?: string | null
+          max_attempts?: number
+          message_id?: string | null
+          next_retry_at?: string | null
+          recipient?: string | null
+          request_payload?: Json | null
+          response_body?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contact_notification_log_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "contact_message_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contact_notification_log_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "contact_messages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       content_interactions: {
         Row: {
@@ -5122,7 +5212,10 @@ export type Database = {
       get_contact_inbox_settings: {
         Args: never
         Returns: {
+          alert_on_max_retries: boolean
+          alert_recipients: string[]
           id: number
+          max_notification_attempts: number
           muted_user_ids: string[]
           notify_email_on_assign: boolean
           notify_email_on_priority_change: boolean
@@ -5130,6 +5223,7 @@ export type Database = {
           notify_webhook_on_assign: boolean
           notify_webhook_on_priority_change: boolean
           notify_webhook_on_status_change: boolean
+          retry_backoff_seconds: number
           role_subscriptions: Json
           stale_hours: number
           target_resolution_hours: number
@@ -5146,6 +5240,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      get_contact_sla_compliance: {
+        Args: { _from?: string; _group_by?: string; _to?: string }
+        Returns: Json
       }
       get_contact_sla_weekly: { Args: never; Returns: Json }
       get_contract_counterpart_profile: {
@@ -5391,6 +5489,36 @@ export type Database = {
           to_value: string
         }[]
       }
+      list_contact_notification_log: {
+        Args: {
+          _channel?: string
+          _event_type?: string
+          _from?: string
+          _limit?: number
+          _message_id?: string
+          _status?: string
+          _to?: string
+        }
+        Returns: {
+          attempt_count: number
+          channel: string
+          created_at: string
+          error_code: string
+          error_message: string
+          event_id: string
+          event_type: string
+          http_status: number
+          id: string
+          last_attempt_at: string
+          max_attempts: number
+          message_id: string
+          next_retry_at: string
+          recipient: string
+          response_body: string
+          status: string
+          ticket_number: string
+        }[]
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string
@@ -5445,7 +5573,10 @@ export type Database = {
       update_contact_inbox_settings: {
         Args: { _patch: Json }
         Returns: {
+          alert_on_max_retries: boolean
+          alert_recipients: string[]
           id: number
+          max_notification_attempts: number
           muted_user_ids: string[]
           notify_email_on_assign: boolean
           notify_email_on_priority_change: boolean
@@ -5453,6 +5584,7 @@ export type Database = {
           notify_webhook_on_assign: boolean
           notify_webhook_on_priority_change: boolean
           notify_webhook_on_status_change: boolean
+          retry_backoff_seconds: number
           role_subscriptions: Json
           stale_hours: number
           target_resolution_hours: number
