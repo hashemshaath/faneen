@@ -105,6 +105,24 @@ const DashboardLeads: React.FC = () => {
           body: { lead_id: id, status: next },
         });
       } catch { /* fail-soft */ }
+      // SR-3A: when provider engages, ensure a conversation exists so both
+      // sides can chat. Fail-soft — never block status update.
+      if (next === 'accepted' || next === 'needs_info') {
+        try {
+          const lead = leads?.find((l) => l.id === id);
+          if (lead?.user_id) {
+            const { data: convId } = await supabase.rpc('create_or_get_lead_conversation', { _lead_id: id });
+            if (convId) {
+              safeTrack('service_request_conversation_created', {
+                source_page: 'dashboard_leads',
+                outcome: next,
+                is_authenticated: true,
+                has_budget: !!lead?.budget_range,
+              } as Parameters<typeof trackEvent>[1]);
+            }
+          }
+        } catch { /* fail-soft */ }
+      }
       return next;
     },
     onMutate: ({ id }) => setPendingId(id),
@@ -136,6 +154,30 @@ const DashboardLeads: React.FC = () => {
   });
 
   const handleAction = (id: string, next: LeadStatus) => updateStatus.mutate({ id, next });
+
+  const ensureConversation = useMutation({
+    mutationFn: async (id: string) => {
+      const { data, error } = await supabase.rpc('create_or_get_lead_conversation', { _lead_id: id });
+      if (error) throw error;
+      return data as string;
+    },
+    onMutate: (id) => setPendingId(id),
+    onSuccess: (convId, id) => {
+      const lead = leads?.find((l) => l.id === id);
+      safeTrack('service_request_conversation_opened', {
+        source_page: 'dashboard_leads',
+        outcome: lead?.status ?? 'unknown',
+        is_authenticated: true,
+      } as Parameters<typeof trackEvent>[1]);
+      qc.invalidateQueries({ queryKey: ['provider-leads'] });
+      window.location.assign(`/dashboard/messages?conversation=${convId}`);
+    },
+    onError: (err: unknown) => {
+      const msg = err instanceof Error ? err.message : 'Failed to open conversation';
+      toast.error(isRTL ? `تعذر فتح المحادثة: ${msg}` : `Could not open conversation: ${msg}`);
+    },
+    onSettled: () => setPendingId(null),
+  });
 
   return (
     <DashboardLayout>
@@ -237,6 +279,7 @@ const DashboardLeads: React.FC = () => {
                         lead={{ ...lead, business_name: businessNameMap.get(lead.business_id) ?? null }}
                         pending={pendingId === lead.id}
                         onAction={(next) => handleAction(lead.id, next)}
+                        onOpenConversation={() => ensureConversation.mutate(lead.id)}
                       />
                     </div>
                   )}
