@@ -211,7 +211,7 @@ const AdminLeadRequests: React.FC = () => {
             const label = s === 'all' ? (isRTL ? 'الكل' : 'All')
               : s === 'legacy' ? (isRTL ? 'قديم' : 'Legacy')
               : (isRTL ? statusLabels[s].ar : statusLabels[s].en);
-            const count = kpis[s] ?? 0;
+            const count = (kpis as unknown as Record<string, number>)[s] ?? 0;
             return (
               <button
                 key={s}
