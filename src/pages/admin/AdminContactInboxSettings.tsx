@@ -74,7 +74,17 @@ export default function AdminContactInboxSettings() {
     },
   });
 
-  useEffect(() => { if (data) setForm(data); }, [data]);
+  useEffect(() => {
+    if (data) {
+      setForm({
+        ...data,
+        alert_recipients: data.alert_recipients ?? [],
+        max_notification_attempts: data.max_notification_attempts ?? 5,
+        retry_backoff_seconds: data.retry_backoff_seconds ?? 60,
+        alert_on_max_retries: data.alert_on_max_retries ?? true,
+      });
+    }
+  }, [data]);
 
   const save = useMutation({
     mutationFn: async (patch: Partial<Settings>) => {
