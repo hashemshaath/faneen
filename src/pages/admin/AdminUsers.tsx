@@ -601,6 +601,17 @@ const AdminUsers = () => {
     enabled: !!user,
   });
 
+  const { data: businessStaff = [] } = useQuery({
+    queryKey: ['admin-business-staff'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('business_staff')
+        .select('id, business_id, user_id, role, is_active');
+      if (error) throw error;
+      return data as Array<{ id: string; business_id: string; user_id: string; role: StaffRole; is_active: boolean }>;
+    },
+    enabled: !!user,
+  });
+
   const { data: recentAdminActivity = [] } = useQuery({
     queryKey: ['admin-recent-activity'],
     queryFn: async () => {
@@ -618,6 +629,37 @@ const AdminUsers = () => {
     businesses.forEach(b => { const arr = m.get(b.user_id) || []; arr.push(b); m.set(b.user_id, arr); });
     return m;
   }, [businesses]);
+
+  // Per-user list of business links (combining ownership and staff rows, de-duplicated by business_id).
+  const businessLinksMap = useMemo(() => {
+    const bizById = new Map(businesses.map(b => [b.id, b]));
+    const m = new Map<string, BusinessLink[]>();
+    // Seed with ownership (businesses.user_id)
+    businesses.forEach(b => {
+      const arr = m.get(b.user_id) || [];
+      arr.push({ business: b, role: 'owner', staffId: null, isOwnerByEntity: true, isActive: b.is_active });
+      m.set(b.user_id, arr);
+    });
+    // Add staff rows (skip duplicates per (user, business))
+    businessStaff.forEach(s => {
+      const biz = bizById.get(s.business_id);
+      if (!biz) return;
+      const arr = m.get(s.user_id) || [];
+      const existing = arr.find(l => l.business.id === s.business_id);
+      if (existing) {
+        // If user is the entity owner, keep it locked but record the staffId for the underlying row.
+        if (existing.isOwnerByEntity) {
+          existing.staffId = s.id;
+          existing.isActive = existing.isActive && s.is_active;
+          return;
+        }
+        return;
+      }
+      arr.push({ business: biz, role: s.role, staffId: s.id, isOwnerByEntity: false, isActive: s.is_active });
+      m.set(s.user_id, arr);
+    });
+    return m;
+  }, [businesses, businessStaff]);
 
   const roleMap = useMemo(() => {
     const m = new Map<string, UserRole[]>();
