@@ -127,6 +127,21 @@ export default function AdminProviderReview() {
         _notes: vars.notes ?? null,
       });
       if (error) throw error;
+      // Best-effort: notify the provider (in-app + email). Failures must
+      // never block the approval action itself.
+      try {
+        const target = (rows ?? []).find((r) => r.id === vars.id);
+        if (target) {
+          await notifyProviderOfStatusChange({
+            status: vars.status,
+            notes: vars.notes,
+            target,
+          });
+        }
+      } catch (notifyErr) {
+        // eslint-disable-next-line no-console
+        console.warn('[AdminProviderReview] notify failed', notifyErr);
+      }
     },
     onSuccess: (_d, vars) => {
       toast.success(language === 'ar' ? 'تم تحديث الحالة' : 'Status updated');
