@@ -322,17 +322,35 @@ const AdminBranding: React.FC = () => {
       setUploadingFor(null);
       return;
     }
+    // Admin-only branding bucket: SVG is permitted (vector logos). For raster
+    // images we additionally verify magic bytes via validateImageFile and
+    // re-encode through compressImage to strip EXIF.
     if (!/^image\/(png|jpeg|webp|svg\+xml)$/.test(file.type)) {
       toast.error(isRTL ? 'نوع الملف غير مدعوم (PNG/JPG/WEBP/SVG)' : 'Unsupported type (PNG/JPG/WEBP/SVG)');
       setUploadingFor(null);
       return;
     }
-    const ext = file.name.split('.').pop() || 'png';
+    let toUpload: File = file;
+    if (file.type !== 'image/svg+xml') {
+      const { validateImageFile, getImageRejectionMessage, ALLOWED_PUBLIC_IMAGE_MIMES } = await import('@/lib/image-validate');
+      const { compressImage } = await import('@/lib/image-compress');
+      const check = await validateImageFile(file, {
+        allowed: [...ALLOWED_PUBLIC_IMAGE_MIMES],
+        maxBytes: 2 * 1024 * 1024,
+      });
+      if (!check.ok) {
+        toast.error(getImageRejectionMessage(check.reason ?? 'unsupported_type', isRTL));
+        setUploadingFor(null);
+        return;
+      }
+      toUpload = await compressImage(file);
+    }
+    const ext = toUpload.name.split('.').pop() || 'png';
     const path = `${uploadingFor}-${Date.now()}.${ext}`;
     try {
       const { error: upErr } = await supabase.storage
         .from('brand-assets')
-        .upload(path, file, { upsert: true, contentType: file.type, cacheControl: '3600' });
+        .upload(path, toUpload, { upsert: true, contentType: toUpload.type, cacheControl: '3600' });
       if (upErr) throw upErr;
       const { data: pub } = supabase.storage.from('brand-assets').getPublicUrl(path);
       update(uploadingFor, pub.publicUrl);
