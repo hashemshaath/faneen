@@ -108,7 +108,7 @@ export const SearchResults = ({
           {totalCount > 0 && (
             <button
               onClick={handleShareSearch}
-              className="p-2 rounded-lg text-muted-foreground hover:text-accent hover:bg-accent/10 transition-all"
+              className="p-2 min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-lg text-muted-foreground hover:text-accent hover:bg-accent/10 transition-all"
               title={isRTL ? 'مشاركة البحث' : 'Share search'}
               aria-label={isRTL ? 'مشاركة البحث' : 'Share search'}
             >
@@ -122,7 +122,7 @@ export const SearchResults = ({
               <button
                 key={mode}
                 onClick={() => onViewModeChange(mode)}
-                className={`p-1.5 sm:p-2 rounded-lg transition-all duration-200 ${viewMode === mode ? 'bg-card dark:bg-card/80 shadow-sm text-accent ring-1 ring-accent/20' : 'text-muted-foreground hover:text-foreground'}`}
+                className={`p-1.5 sm:p-2 min-h-[40px] min-w-[40px] sm:min-h-0 sm:min-w-0 inline-flex items-center justify-center rounded-lg transition-all duration-200 ${viewMode === mode ? 'bg-card dark:bg-card/80 shadow-sm text-accent ring-1 ring-accent/20' : 'text-muted-foreground hover:text-foreground'}`}
                 title={isRTL ? labelAr : label}
                 aria-label={isRTL ? `عرض النتائج: ${labelAr}` : `View as ${label}`}
                 aria-pressed={viewMode === mode}
