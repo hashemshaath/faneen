@@ -322,29 +322,26 @@ const AdminBranding: React.FC = () => {
       setUploadingFor(null);
       return;
     }
-    // Admin-only branding bucket: SVG is permitted (vector logos). For raster
-    // images we additionally verify magic bytes via validateImageFile and
-    // re-encode through compressImage to strip EXIF.
-    if (!/^image\/(png|jpeg|webp|svg\+xml)$/.test(file.type)) {
-      toast.error(isRTL ? 'نوع الملف غير مدعوم (PNG/JPG/WEBP/SVG)' : 'Unsupported type (PNG/JPG/WEBP/SVG)');
+    // Admin-only branding bucket. Phase 5.1: SVG is blocked at the storage
+    // layer until SVG sanitization (DOMPurify) ships, so reject it here too
+    // to give a clean error instead of a server-side rejection.
+    if (!/^image\/(png|jpeg|webp)$/.test(file.type)) {
+      toast.error(isRTL ? 'نوع الملف غير مدعوم (PNG/JPG/WEBP)' : 'Unsupported type (PNG/JPG/WEBP)');
       setUploadingFor(null);
       return;
     }
-    let toUpload: File = file;
-    if (file.type !== 'image/svg+xml') {
-      const { validateImageFile, getImageRejectionMessage, ALLOWED_PUBLIC_IMAGE_MIMES } = await import('@/lib/image-validate');
-      const { compressImage } = await import('@/lib/image-compress');
-      const check = await validateImageFile(file, {
-        allowed: [...ALLOWED_PUBLIC_IMAGE_MIMES],
-        maxBytes: 2 * 1024 * 1024,
-      });
-      if (!check.ok) {
-        toast.error(getImageRejectionMessage(check.reason ?? 'unsupported_type', isRTL));
-        setUploadingFor(null);
-        return;
-      }
-      toUpload = await compressImage(file);
+    const { validateImageFile, getImageRejectionMessage, ALLOWED_PUBLIC_IMAGE_MIMES } = await import('@/lib/image-validate');
+    const { compressImage } = await import('@/lib/image-compress');
+    const check = await validateImageFile(file, {
+      allowed: [...ALLOWED_PUBLIC_IMAGE_MIMES],
+      maxBytes: 2 * 1024 * 1024,
+    });
+    if (!check.ok) {
+      toast.error(getImageRejectionMessage(check.reason ?? 'unsupported_type', isRTL));
+      setUploadingFor(null);
+      return;
     }
+    const toUpload: File = await compressImage(file);
     const ext = toUpload.name.split('.').pop() || 'png';
     const path = `${uploadingFor}-${Date.now()}.${ext}`;
     try {
