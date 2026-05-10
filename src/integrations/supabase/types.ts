@@ -2581,6 +2581,7 @@ export type Database = {
           cancelled_at: string | null
           closed_at: string | null
           contact_preference: string
+          conversation_id: string | null
           created_at: string
           email: string
           id: string
@@ -2609,6 +2610,7 @@ export type Database = {
           cancelled_at?: string | null
           closed_at?: string | null
           contact_preference?: string
+          conversation_id?: string | null
           created_at?: string
           email: string
           id?: string
@@ -2637,6 +2639,7 @@ export type Database = {
           cancelled_at?: string | null
           closed_at?: string | null
           contact_preference?: string
+          conversation_id?: string | null
           created_at?: string
           email?: string
           id?: string
@@ -2671,6 +2674,13 @@ export type Database = {
             columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_requests_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
             referencedColumns: ["id"]
           },
         ]
@@ -5260,6 +5270,10 @@ export type Database = {
           _type: string
           _user_id: string
         }
+        Returns: string
+      }
+      create_or_get_lead_conversation: {
+        Args: { _lead_id: string }
         Returns: string
       }
       delete_email: {
