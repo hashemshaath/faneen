@@ -16,6 +16,7 @@ import { template as contactAdminNotification } from './contact-admin-notificati
 import { template as maintenanceStatusUpdate } from './maintenance-status-update.tsx'
 import { template as paymentReminder } from './payment-reminder.tsx'
 import { template as welcomeSignup } from './welcome-signup.tsx'
+import { template as welcomeBusiness } from './welcome-business.tsx'
 import { template as contractSigned } from './contract-signed.tsx'
 import { template as leadConfirmation } from './lead-confirmation.tsx'
 import { template as leadNotification } from './lead-notification.tsx'
@@ -31,6 +32,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'maintenance-status-update': maintenanceStatusUpdate,
   'payment-reminder': paymentReminder,
   'welcome-signup': welcomeSignup,
+  'welcome-business': welcomeBusiness,
   'contract-signed': contractSigned,
   'lead-confirmation': leadConfirmation,
   'lead-notification': leadNotification,
