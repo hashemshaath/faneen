@@ -811,9 +811,15 @@ const AdminUsers = () => {
       const matchesRole = filterRole === 'all' || (filterRole === 'no_role' && roles.length === 0) || roles.some(r => r.role === filterRole);
       const matchesType = filterAccountType === 'all' || p.account_type === filterAccountType;
       const matchesTier = filterTier === 'all' || p.membership_tier === filterTier;
-      return matchesSearch && matchesRole && matchesType && matchesTier;
+      const linkCount = (businessLinksMap.get(p.user_id) || []).length;
+      const matchesBizLink =
+        filterBusinessLink === 'all'
+        || (filterBusinessLink === 'none' && linkCount === 0)
+        || (filterBusinessLink === 'single' && linkCount === 1)
+        || (filterBusinessLink === 'multi' && linkCount > 1);
+      return matchesSearch && matchesRole && matchesType && matchesTier && matchesBizLink;
     });
-  }, [profiles, deferredSearch, filterRole, filterAccountType, filterTier, roleMap, businessMap]);
+  }, [profiles, deferredSearch, filterRole, filterAccountType, filterTier, filterBusinessLink, roleMap, businessMap, businessLinksMap]);
 
   const tabFiltered = useMemo(() => {
     if (tab === 'staff') return baseFiltered.filter(p => {
