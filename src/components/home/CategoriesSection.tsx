@@ -34,17 +34,17 @@ export const CategoriesSection = () => {
     <section id="categories" className="relative py-14 sm:py-24 bg-background overflow-hidden">
       {/* Ambient backdrop */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute -top-24 start-[-10%] w-[420px] h-[420px] bg-accent/10 rounded-full blur-[120px]" />
-        <div className="absolute bottom-[-10%] end-[-10%] w-[420px] h-[420px] bg-accent/[0.06] rounded-full blur-[120px]" />
+        <div className="absolute -top-24 start-[-10%] w-[420px] h-[420px] bg-primary/10 rounded-full blur-[120px]" />
+        <div className="absolute bottom-[-10%] end-[-10%] w-[420px] h-[420px] bg-primary/[0.06] rounded-full blur-[120px]" />
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-border/60 to-transparent" />
       </div>
 
       <div className="container-app relative">
         {/* Header */}
         <div className="text-center mb-10 sm:mb-16 max-w-2xl mx-auto px-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent/10 border border-accent/20 mb-4 sm:mb-5">
-            <Sparkles className="w-3.5 h-3.5 text-accent" />
-            <span className="font-body text-[11px] sm:text-xs font-semibold text-accent tracking-wide">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-4 sm:mb-5">
+            <Sparkles className="w-3.5 h-3.5 text-primary" />
+            <span className="font-body text-[11px] sm:text-xs font-semibold text-primary tracking-wide">
               {t('categories.label')}
             </span>
           </div>
@@ -63,7 +63,7 @@ export const CategoriesSection = () => {
               to={`/search?category=${cat.categoryId}`}
               key={cat.titleKey}
               aria-label={t(cat.titleKey)}
-              className={`group relative rounded-2xl sm:rounded-[22px] overflow-hidden bg-card border border-border/50 dark:border-border/20 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-[0_20px_40px_-20px_hsl(var(--accent)/0.25)] hover:border-accent/40 active:scale-[0.98] sm:hover:-translate-y-1.5 transition-all duration-500 ${isVisible ? 'animate-card-slide-up' : ''}`}
+              className={`group relative rounded-2xl sm:rounded-[22px] overflow-hidden bg-card border border-border/50 dark:border-border/20 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-[0_20px_40px_-20px_hsl(var(--primary)/0.25)] hover:border-primary/40 active:scale-[0.98] sm:hover:-translate-y-1.5 transition-all duration-500 ${isVisible ? 'animate-card-slide-up' : ''}`}
               style={{ animationDelay: `${i * 70}ms`, animationFillMode: 'both' }}
             >
               {/* Image area */}
@@ -80,7 +80,7 @@ export const CategoriesSection = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
                 {/* Top-start icon chip */}
                 <div className="absolute top-2.5 start-2.5 sm:top-3.5 sm:start-3.5">
-                  <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-white/15 backdrop-blur-md border border-white/25 flex items-center justify-center shadow-sm group-hover:bg-accent group-hover:border-accent transition-colors duration-300">
+                  <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-white/15 backdrop-blur-md border border-white/25 flex items-center justify-center shadow-sm group-hover:bg-primary group-hover:border-primary transition-colors duration-300">
                     <cat.icon className="w-4 h-4 sm:w-5 sm:h-5 text-white transition-colors duration-300" />
                   </div>
                 </div>
@@ -94,18 +94,18 @@ export const CategoriesSection = () => {
 
               {/* Body — desktop/tablet */}
               <div className="hidden sm:flex flex-col p-5 lg:p-6">
-                <h3 className="font-heading font-bold text-lg lg:text-xl text-foreground leading-tight group-hover:text-accent transition-colors duration-300">
+                <h3 className="font-heading font-bold text-lg lg:text-xl text-foreground leading-tight group-hover:text-primary transition-colors duration-300">
                   {t(cat.titleKey)}
                 </h3>
                 <p className="font-body text-muted-foreground text-[13px] lg:text-sm leading-relaxed mt-1.5 line-clamp-2">
                   {t(cat.descKey)}
                 </p>
                 <div className="mt-4 pt-4 border-t border-border/50 flex items-center justify-between">
-                  <span className="font-body text-[12.5px] font-semibold text-accent tracking-wide">
+                  <span className="font-body text-[12.5px] font-semibold text-primary tracking-wide">
                     {isRTL ? 'استكشف القسم' : 'Explore'}
                   </span>
-                  <span className="w-7 h-7 rounded-full bg-accent/10 flex items-center justify-center group-hover:bg-accent transition-colors duration-300">
-                    <ArrowIcon className="w-3.5 h-3.5 text-accent group-hover:text-accent-foreground transition-colors duration-300" />
+                  <span className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary transition-colors duration-300">
+                    <ArrowIcon className="w-3.5 h-3.5 text-primary group-hover:text-primary-foreground transition-colors duration-300" />
                   </span>
                 </div>
               </div>
@@ -115,7 +115,7 @@ export const CategoriesSection = () => {
                 <p className="font-body text-muted-foreground text-[11px] leading-snug line-clamp-1 flex-1">
                   {t(cat.descKey)}
                 </p>
-                <ArrowIcon className="w-3.5 h-3.5 text-accent shrink-0 ms-2" />
+                <ArrowIcon className="w-3.5 h-3.5 text-primary shrink-0 ms-2" />
               </div>
             </Link>
           ))}
