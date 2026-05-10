@@ -5,17 +5,18 @@ import { join } from 'node:path';
 const root = process.cwd();
 
 describe('Core Web Vitals optimizations for public routes', () => {
-  it('preloads the hero LCP image only on the home route', () => {
-    const html = readFileSync(join(root, 'index.html'), 'utf8');
-    expect(html).toMatch(/preload-hero\.js/);
-    const preload = readFileSync(join(root, 'public/preload-hero.js'), 'utf8');
-    expect(preload).toMatch(/rel\s*=\s*['"]preload['"]/);
-    expect(preload).toContain('/hero-bg.webp');
-    expect(preload).toMatch(/location\.pathname\s*===\s*['"]\/['"]/);
+  it('preloads the hero LCP image from the HeroSection module', () => {
+    const hero = readFileSync(
+      join(root, 'src/components/home/HeroSection.tsx'),
+      'utf8',
+    );
+    expect(hero).toMatch(/rel\s*=\s*["']preload["']/);
+    expect(hero).toMatch(/import\s+heroBg1\s+from\s+["']@\/assets\/hero-bg\.webp["']/);
+    expect(hero).toMatch(/fetchpriority/i);
   });
 
-  it('serves the hero image from /public so the preload URL is stable', () => {
-    expect(() => readFileSync(join(root, 'public/hero-bg.webp'))).not.toThrow();
+  it('bundles the hero image as a hashed asset (long-cache via /assets/*)', () => {
+    expect(() => readFileSync(join(root, 'src/assets/hero-bg.webp'))).not.toThrow();
   });
 
   it('lazy-loads SearchMap (leaflet) in the search results component', () => {
