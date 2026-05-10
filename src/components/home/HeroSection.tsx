@@ -349,6 +349,8 @@ export const HeroSection = () => {
   const navigate = useNavigate();
   const [current, setCurrent] = useState(0);
   const [tagsExpanded, setTagsExpanded] = useState(false);
+  // Decide once on mount whether the canvas chunk should load at all.
+  const [enableParticles, setEnableParticles] = useState(false);
   // Only the previous slide stays mounted briefly to crossfade out.
   // This caps DOM <img> count to 2 instead of `slides.length`.
   const [prevIdx, setPrevIdx] = useState<number | null>(null);
@@ -358,6 +360,23 @@ export const HeroSection = () => {
   const imgRefs = useRef<Record<number, HTMLImageElement | null>>({});
   const sectionRef = useRef<HTMLElement | null>(null);
   const currentRef = useRef(0);
+
+  // Defer the particles decision past first paint so it never blocks LCP.
+  useEffect(() => {
+    if (!shouldRenderParticles()) return;
+    type RICWindow = Window & {
+      requestIdleCallback?: (cb: () => void, opts?: { timeout?: number }) => number;
+    };
+    const w = window as RICWindow;
+    let id: number | undefined;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    if (typeof w.requestIdleCallback === "function") {
+      id = w.requestIdleCallback(() => setEnableParticles(true), { timeout: 2500 });
+    } else {
+      timer = setTimeout(() => setEnableParticles(true), 1500);
+    }
+    return () => { if (timer) clearTimeout(timer); };
+  }, []);
 
   const { data: categories = [] } = useQuery({
     queryKey: ['nav-categories'],
@@ -512,9 +531,11 @@ export const HeroSection = () => {
       <div className="absolute inset-0" style={{ background: "rgba(19, 23, 34, 0.55)" }} />
 
       {/* Particles — deferred past first paint, no fallback (purely decorative) */}
-      <Suspense fallback={null}>
-        <HeroParticles />
-      </Suspense>
+      {enableParticles && (
+        <Suspense fallback={null}>
+          <HeroParticles />
+        </Suspense>
+      )}
 
       {/* Content */}
       <div className="relative z-10 container text-center px-4 sm:px-6 pt-24 sm:pt-28 pb-8">
