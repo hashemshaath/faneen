@@ -72,8 +72,9 @@ export const CategoriesSection = () => {
                   src={cat.image}
                   alt={t(cat.titleKey)}
                   loading="lazy"
-                  width={640}
-                  height={480}
+                  width={480}
+                  height={384}
+                  decoding="async"
                   className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.08]"
                 />
                 {/* Soft tint for legibility */}
