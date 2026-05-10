@@ -817,7 +817,7 @@ html { transition: none; }
   color: hsl(var(--muted-foreground));
 }
 
-/* Section eyebrow — the small accent pill above section titles */
+/* Section eyebrow — small primary pill above section titles */
 .section-eyebrow {
   display: inline-flex;
   align-items: center;
@@ -825,8 +825,8 @@ html { transition: none; }
   height: 28px;
   padding-inline: 0.875rem;
   border-radius: 9999px;
-  background-color: hsl(var(--accent) / 0.1);
-  color: hsl(var(--accent));
+  background-color: hsl(var(--primary) / 0.1);
+  color: hsl(var(--primary));
   font-size: var(--fs-xs);
   font-weight: 600;
   line-height: 1;
