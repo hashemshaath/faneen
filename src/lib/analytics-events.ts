@@ -222,6 +222,11 @@ export const track = {
   supplierEmailRevealed: (p: EventPayload = {}) => trackEvent("supplier_email_revealed", p),
 };
 
+// Extra wrappers (Phase 3)
+export const trackLoginSuccess = (p: EventPayload = {}) => trackEvent("login_success", p);
+export const trackNotificationOpened = (p: EventPayload = {}) => trackEvent("notification_opened", p);
+export const trackMessageSent = (p: EventPayload = {}) => trackEvent("message_sent", p);
+
 /** Extract a hostname safely (used for outbound link tagging, never for PII). */
 export function getDomain(url: string): string | undefined {
   try {
