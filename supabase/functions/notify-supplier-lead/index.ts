@@ -2,8 +2,10 @@
 // lead_request row is created on the BusinessProfile contact flow.
 // Failure here MUST NOT block lead capture — the caller already inserted
 // the row before invoking this function.
-// TODO: Add backend rate limiting for supplier lead submissions using a
-// dedicated throttle table or RPC.
+// Backend rate limiting (EM-01): uses public.check_rate_limit RPC with a
+// SHA-256 hashed identifier built from (ip + business_id) and
+// (email + business_id). No raw IP / email / phone / name / message is
+// stored — only opaque hashes. Limit: 3 requests per identifier per hour.
 import { createClient } from 'npm:@supabase/supabase-js@2'
 
 const corsHeaders = {
@@ -14,6 +16,25 @@ const corsHeaders = {
 
 interface Body {
   lead_id?: string
+}
+
+async function sha256Hex(input: string): Promise<string> {
+  const data = new TextEncoder().encode(input)
+  const buf = await crypto.subtle.digest('SHA-256', data)
+  return Array.from(new Uint8Array(buf))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('')
+}
+
+function extractClientIp(req: Request): string {
+  const xff = req.headers.get('x-forwarded-for') || ''
+  const first = xff.split(',')[0]?.trim()
+  if (first) return first
+  return (
+    req.headers.get('cf-connecting-ip') ||
+    req.headers.get('x-real-ip') ||
+    'unknown'
+  )
 }
 
 Deno.serve(async (req) => {
@@ -52,6 +73,53 @@ Deno.serve(async (req) => {
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       )
     }
+
+    // ---------- Rate limiting (EM-01) ----------
+    // Salt prevents cross-project rainbow-table style enumeration; falls back
+    // to the project URL so it is always non-empty.
+    const salt =
+      Deno.env.get('RATE_LIMIT_SALT') || supabaseUrl || 'qitaat-default-salt'
+    const ip = extractClientIp(req)
+    const ipHash = await sha256Hex(`${ip}|${salt}`)
+    const ipIdent = `lead:ip:${ipHash}:${lead.business_id}`
+    const { data: ipAllowed } = await admin.rpc('check_rate_limit', {
+      _identifier: ipIdent,
+      _type: 'supplier_lead',
+      _max_attempts: 3,
+      _window_minutes: 60,
+      _block_minutes: 60,
+    })
+    let allowed = ipAllowed !== false
+
+    if (allowed && typeof lead.email === 'string' && lead.email.trim()) {
+      const emailHash = await sha256Hex(
+        `${lead.email.trim().toLowerCase()}|${salt}`,
+      )
+      const emailIdent = `lead:email:${emailHash}:${lead.business_id}`
+      const { data: emailAllowed } = await admin.rpc('check_rate_limit', {
+        _identifier: emailIdent,
+        _type: 'supplier_lead',
+        _max_attempts: 3,
+        _window_minutes: 60,
+        _block_minutes: 60,
+      })
+      if (emailAllowed === false) allowed = false
+    }
+
+    if (!allowed) {
+      // Do NOT log identifier values — only emit a generic counter.
+      console.warn('notify-supplier-lead: rate limit hit')
+      return new Response(
+        JSON.stringify({
+          ok: false,
+          error: 'rate_limited',
+          message:
+            'تم استلام عدة طلبات خلال وقت قصير. يرجى المحاولة لاحقًا.',
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
+    }
+    // -------------------------------------------
 
     const { data: biz } = await admin
       .from('businesses')
