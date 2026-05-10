@@ -79,7 +79,7 @@ export const FooterNewsletter = ({ visible }: { visible: boolean }) => {
                 disabled={subscribed || loading}
                 className={`h-11 sm:h-12 px-5 sm:px-6 gap-2 font-bold text-sm rounded-xl transition-all duration-500 shrink-0 ${
                   subscribed
-                    ? 'bg-emerald-500 hover:bg-emerald-500 text-white scale-105'
+                    ? 'bg-success hover:bg-success text-success-foreground scale-105'
                     : 'bg-gradient-gold text-secondary-foreground hover:shadow-lg hover:shadow-gold/25 hover:scale-[1.02]'
                 }`}
               >

@@ -23,7 +23,20 @@ export const Footer = () => {
   const { ref: footerRef, visible } = useInView();
 
   return (
-    <footer ref={footerRef} role="contentinfo" aria-label={language === 'ar' ? 'تذييل الموقع' : 'Site footer'} className="relative bg-surface-nav overflow-hidden">
+    <footer
+      ref={footerRef}
+      role="contentinfo"
+      aria-label={language === 'ar' ? 'تذييل الموقع' : 'Site footer'}
+      className="relative bg-surface-nav overflow-hidden"
+      // Brand spec: footer is a single dark navy block (#131722) with light text.
+      // Locally override the surface-nav tokens so all child styles
+      // (text-surface-nav-foreground, bg-surface-nav-foreground/* …) flip
+      // to white-on-navy without touching the global navbar surface.
+      style={{
+        ['--surface-nav' as string]: '222 27% 10%',
+        ['--surface-nav-foreground' as string]: '0 0% 100%',
+      }}
+    >
       {/* Decorative blur — single, lighter, desktop-only */}
       <div className="hidden lg:block absolute inset-0 pointer-events-none">
         <div className="absolute top-0 start-1/3 w-[480px] h-[480px] bg-gold/[0.025] rounded-full blur-[120px]" />
