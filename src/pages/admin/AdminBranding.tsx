@@ -1,0 +1,373 @@
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
+import { useLanguage } from '@/i18n/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Slider } from '@/components/ui/slider';
+import { Separator } from '@/components/ui/separator';
+import { toast } from 'sonner';
+import { Loader2, Save, RotateCcw, Upload, Image as ImageIcon, Palette, Eye } from 'lucide-react';
+import { useNoIndex } from '@/hooks/useNoIndex';
+import { BrandLogo } from '@/components/common/BrandLogo';
+import { DEFAULT_BRANDING, BRANDING_KEYS, type BrandingConfig } from '@/hooks/useBranding';
+
+type FieldKey =
+  | 'fullLightUrl' | 'fullDarkUrl' | 'markUrl'
+  | 'sizeNavbar' | 'sizeFooter' | 'sizeAuth' | 'sizeLoader' | 'sizeMark';
+
+const SETTING_BY_FIELD: Record<FieldKey, string> = {
+  fullLightUrl: 'brand_logo_full_light',
+  fullDarkUrl: 'brand_logo_full_dark',
+  markUrl: 'brand_logo_mark',
+  sizeNavbar: 'brand_size_navbar',
+  sizeFooter: 'brand_size_footer',
+  sizeAuth: 'brand_size_auth',
+  sizeLoader: 'brand_size_loader',
+  sizeMark: 'brand_size_mark',
+};
+
+const FIELD_BY_SETTING = Object.fromEntries(
+  Object.entries(SETTING_BY_FIELD).map(([k, v]) => [v, k as FieldKey]),
+) as Record<string, FieldKey>;
+
+const META = {
+  fullLightUrl: { ar: 'الشعار الكامل (خلفية فاتحة)', en: 'Full Logo (light bg)', desc: 'يظهر على الخلفيات الفاتحة' },
+  fullDarkUrl:  { ar: 'الشعار الكامل (خلفية معتمة)', en: 'Full Logo (dark bg)', desc: 'يظهر على الشريط العلوي والتذييل' },
+  markUrl:      { ar: 'الرمز فقط (Icon)', en: 'Mark / Icon only', desc: 'يستخدم لشاشات التحميل والمصغرات' },
+} as const;
+
+const SIZE_LIMITS = { min: 24, max: 96 };
+
+const AdminBranding: React.FC = () => {
+  useNoIndex();
+  const { isRTL } = useLanguage();
+  const { isSuperAdmin, isAdmin } = useAuth();
+  const queryClient = useQueryClient();
+  const [values, setValues] = useState<BrandingConfig>(DEFAULT_BRANDING);
+  const [dirty, setDirty] = useState<Set<FieldKey>>(new Set());
+  const uploadInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingFor, setUploadingFor] = useState<FieldKey | null>(null);
+
+  const { data: rows = [], isLoading } = useQuery({
+    queryKey: ['branding-settings-admin'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('platform_settings')
+        .select('id, setting_key, setting_value')
+        .eq('category', 'branding');
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: isAdmin,
+  });
+
+  useEffect(() => {
+    const next: BrandingConfig = { ...DEFAULT_BRANDING };
+    for (const r of rows) {
+      const f = FIELD_BY_SETTING[r.setting_key];
+      if (!f || !r.setting_value) continue;
+      if (f.startsWith('size')) {
+        const n = parseInt(r.setting_value, 10);
+        if (!Number.isNaN(n)) (next as unknown as Record<string, number | string>)[f] = n;
+      } else {
+        (next as unknown as Record<string, number | string>)[f] = r.setting_value;
+      }
+    }
+    setValues(next);
+    setDirty(new Set());
+  }, [rows]);
+
+  const update = useCallback((field: FieldKey, value: string | number) => {
+    setValues(prev => ({ ...prev, [field]: value } as BrandingConfig));
+    setDirty(prev => { const n = new Set(prev); n.add(field); return n; });
+  }, []);
+
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      for (const field of dirty) {
+        const settingKey = SETTING_BY_FIELD[field];
+        const newValue = String(values[field]);
+        const existing = rows.find(r => r.setting_key === settingKey);
+        if (existing) {
+          const { error } = await supabase.from('platform_settings').update({
+            setting_value: newValue,
+            updated_at: new Date().toISOString(),
+          }).eq('id', existing.id);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase.from('platform_settings').insert({
+            setting_key: settingKey,
+            setting_value: newValue,
+            category: 'branding',
+            setting_label_ar: 'إعداد العلامة التجارية',
+            setting_label_en: 'Branding setting',
+            description_ar: 'يحدد شعار وحجوم العلامة التجارية',
+            description_en: 'Controls brand logos and sizes',
+            is_secret: false,
+            is_active: true,
+          });
+          if (error) throw error;
+        }
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['branding-settings-admin'] });
+      queryClient.invalidateQueries({ queryKey: ['branding-config'] });
+      toast.success(isRTL ? 'تم حفظ إعدادات العلامة التجارية' : 'Branding saved');
+      setDirty(new Set());
+    },
+    onError: (err: unknown) => {
+      const msg = err instanceof Error ? err.message : 'unknown';
+      toast.error((isRTL ? 'فشل الحفظ: ' : 'Save failed: ') + msg);
+    },
+  });
+
+  const resetDefaults = useCallback(() => {
+    setValues(DEFAULT_BRANDING);
+    setDirty(new Set(BRANDING_KEYS.map(k => FIELD_BY_SETTING[k])));
+    toast.info(isRTL ? 'تم استعادة الإعدادات الافتراضية — اضغط حفظ للتطبيق' : 'Defaults restored — click Save to apply');
+  }, [isRTL]);
+
+  const onUpload = (field: FieldKey) => {
+    setUploadingFor(field);
+    uploadInputRef.current?.click();
+  };
+
+  const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file || !uploadingFor) return;
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error(isRTL ? 'حجم الملف يجب ألا يتجاوز 2MB' : 'File must be ≤ 2MB');
+      setUploadingFor(null);
+      return;
+    }
+    if (!/^image\/(png|jpeg|webp|svg\+xml)$/.test(file.type)) {
+      toast.error(isRTL ? 'نوع الملف غير مدعوم (PNG/JPG/WEBP/SVG)' : 'Unsupported type (PNG/JPG/WEBP/SVG)');
+      setUploadingFor(null);
+      return;
+    }
+    const ext = file.name.split('.').pop() || 'png';
+    const path = `${uploadingFor}-${Date.now()}.${ext}`;
+    try {
+      const { error: upErr } = await supabase.storage
+        .from('brand-assets')
+        .upload(path, file, { upsert: true, contentType: file.type, cacheControl: '3600' });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from('brand-assets').getPublicUrl(path);
+      update(uploadingFor, pub.publicUrl);
+      toast.success(isRTL ? 'تم الرفع — اضغط حفظ للتطبيق' : 'Uploaded — click Save to apply');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'unknown';
+      toast.error((isRTL ? 'فشل الرفع: ' : 'Upload failed: ') + msg);
+    } finally {
+      setUploadingFor(null);
+    }
+  };
+
+  if (!isAdmin) {
+    return (
+      <DashboardLayout>
+        <div className="p-8 text-center text-muted-foreground">
+          {isRTL ? 'الوصول مقصور على المشرفين' : 'Admins only'}
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  const renderImageField = (field: 'fullLightUrl' | 'fullDarkUrl' | 'markUrl', previewBg: 'light' | 'dark') => {
+    const meta = META[field];
+    return (
+      <Card className="overflow-hidden">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <ImageIcon className="w-4 h-4 text-accent" />
+            {isRTL ? meta.ar : meta.en}
+          </CardTitle>
+          <CardDescription className="text-xs">{meta.desc}</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div
+            className={`flex items-center justify-center rounded-xl border border-border h-28 ${
+              previewBg === 'dark' ? 'bg-surface-nav' : 'bg-muted/40'
+            }`}
+          >
+            {values[field] ? (
+              <img
+                src={values[field]}
+                alt="preview"
+                className="max-h-20 max-w-[80%] object-contain"
+              />
+            ) : (
+              <span className="text-xs text-muted-foreground">{isRTL ? 'لا يوجد' : 'None'}</span>
+            )}
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">{isRTL ? 'رابط الصورة' : 'Image URL'}</Label>
+            <Input
+              value={values[field]}
+              dir="ltr"
+              onChange={(e) => update(field, e.target.value)}
+              className="h-10 tech-content text-xs"
+              placeholder="https://..."
+            />
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full h-10"
+            onClick={() => onUpload(field)}
+            disabled={uploadingFor === field}
+          >
+            {uploadingFor === field ? (
+              <Loader2 className="w-4 h-4 animate-spin me-2" />
+            ) : (
+              <Upload className="w-4 h-4 me-2" />
+            )}
+            {isRTL ? 'رفع صورة جديدة' : 'Upload new image'}
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  };
+
+  const renderSizeField = (
+    field: 'sizeNavbar' | 'sizeFooter' | 'sizeAuth' | 'sizeLoader' | 'sizeMark',
+    label: { ar: string; en: string },
+  ) => (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <Label className="text-sm">{isRTL ? label.ar : label.en}</Label>
+        <span className="text-xs text-muted-foreground tech-content">
+          {values[field]}px
+        </span>
+      </div>
+      <Slider
+        min={SIZE_LIMITS.min}
+        max={SIZE_LIMITS.max}
+        step={2}
+        value={[values[field] as number]}
+        onValueChange={([v]) => update(field, v)}
+      />
+    </div>
+  );
+
+  return (
+    <DashboardLayout>
+      <input
+        ref={uploadInputRef}
+        type="file"
+        accept="image/png,image/jpeg,image/webp,image/svg+xml"
+        className="hidden"
+        onChange={handleFileSelected}
+      />
+      <div className="container mx-auto p-4 sm:p-6 space-y-6 max-w-6xl">
+        {/* Header */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-bold flex items-center gap-2">
+              <Palette className="w-6 h-6 text-accent" />
+              {isRTL ? 'العلامة التجارية والشعار' : 'Branding & Logo'}
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              {isRTL
+                ? 'تحكم بصور الشعار وحجم ظهوره في كل قسم من المنصة'
+                : 'Control logo images and their size across every section'}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={resetDefaults} disabled={saveMutation.isPending}>
+              <RotateCcw className="w-4 h-4 me-2" />
+              {isRTL ? 'افتراضي' : 'Defaults'}
+            </Button>
+            <Button
+              onClick={() => saveMutation.mutate()}
+              disabled={dirty.size === 0 || saveMutation.isPending}
+            >
+              {saveMutation.isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin me-2" />
+              ) : (
+                <Save className="w-4 h-4 me-2" />
+              )}
+              {isRTL ? `حفظ (${dirty.size})` : `Save (${dirty.size})`}
+            </Button>
+          </div>
+        </div>
+
+        {isLoading ? (
+          <div className="py-20 text-center text-muted-foreground">
+            <Loader2 className="w-6 h-6 animate-spin mx-auto" />
+          </div>
+        ) : (
+          <>
+            {/* Logos */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {renderImageField('fullLightUrl', 'light')}
+              {renderImageField('fullDarkUrl', 'dark')}
+              {renderImageField('markUrl', 'light')}
+            </div>
+
+            {/* Sizes */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">{isRTL ? 'أحجام الشعار في المنصة' : 'Logo sizes across the platform'}</CardTitle>
+                <CardDescription className="text-xs">
+                  {isRTL ? 'يتم تطبيق التغييرات فوراً بعد الحفظ' : 'Changes apply immediately after Save'}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
+                {renderSizeField('sizeNavbar', { ar: 'الشريط العلوي', en: 'Top navbar' })}
+                {renderSizeField('sizeFooter', { ar: 'التذييل', en: 'Footer' })}
+                {renderSizeField('sizeAuth', { ar: 'صفحة الدخول', en: 'Auth page' })}
+                {renderSizeField('sizeLoader', { ar: 'شاشة التحميل', en: 'Loading screen' })}
+                {renderSizeField('sizeMark', { ar: 'الرمز (افتراضي)', en: 'Mark (default)' })}
+              </CardContent>
+            </Card>
+
+            {/* Live preview */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Eye className="w-4 h-4 text-accent" />
+                  {isRTL ? 'معاينة مباشرة' : 'Live preview'}
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  {isRTL ? 'تعكس الإعدادات المحفوظة حالياً (يجب الحفظ لرؤية التعديلات الجديدة).' : 'Reflects currently saved settings.'}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="rounded-xl border border-border bg-surface-nav p-6 flex items-center justify-center">
+                  <BrandLogo variant="full" tone="dark" size="navbar" />
+                </div>
+                <div className="rounded-xl border border-border bg-background p-6 flex items-center justify-center">
+                  <BrandLogo variant="full" tone="light" size="navbar" />
+                </div>
+                <div className="rounded-xl border border-border bg-surface-nav p-6 flex items-center justify-center">
+                  <BrandLogo variant="full" tone="dark" size="footer" />
+                </div>
+                <div className="rounded-xl border border-border bg-background p-6 flex items-center justify-center">
+                  <BrandLogo variant="mark" size="mark" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Separator />
+
+            <p className="text-xs text-muted-foreground">
+              {isRTL
+                ? '💡 تظهر الشعارات لجميع الزوار. يحتاج المتصفح أحياناً إلى تحديث (Ctrl+R) لمسح الكاش بعد التغيير.'
+                : '💡 Logos render for all visitors. Hard refresh may be needed to clear browser cache.'}
+            </p>
+          </>
+        )}
+      </div>
+    </DashboardLayout>
+  );
+};
+
+export default AdminBranding;
