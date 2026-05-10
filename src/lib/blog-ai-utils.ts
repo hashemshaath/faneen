@@ -100,3 +100,66 @@ export function calculateLocalSeoScore(form: {
 
   return Math.round((score / checks) * 100);
 }
+
+/* ─── Slug sanitization ─── */
+export function sanitizeSlug(s: string): string {
+  return (s || '')
+    .toString()
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 60);
+}
+
+/* ─── Meta validation ─── */
+export interface MetaValidationErrors {
+  slug?: string;
+  meta_title_ar?: string;
+  meta_title_en?: string;
+  meta_description_ar?: string;
+  meta_description_en?: string;
+}
+
+export function validateMetaFields(form: {
+  slug?: string;
+  meta_title_ar?: string; meta_title_en?: string;
+  meta_description_ar?: string; meta_description_en?: string;
+}, isRTL: boolean): MetaValidationErrors {
+  const errors: MetaValidationErrors = {};
+  const slug = form.slug || '';
+  if (slug) {
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+      errors.slug = isRTL ? 'يجب أحرف صغيرة وأرقام وواصلات (-) فقط' : 'Lowercase letters, digits and hyphens only';
+    } else if (slug.length > 60) {
+      errors.slug = isRTL ? 'الحد الأقصى 60 حرف' : 'Max 60 characters';
+    } else if (slug.length < 3) {
+      errors.slug = isRTL ? 'الحد الأدنى 3 أحرف' : 'Min 3 characters';
+    }
+  }
+  const tAr = form.meta_title_ar || '';
+  if (tAr && (tAr.length < 30 || tAr.length > 60)) {
+    errors.meta_title_ar = isRTL ? `الطول ${tAr.length} — المطلوب 30-60` : `Length ${tAr.length} — must be 30-60`;
+  }
+  const tEn = form.meta_title_en || '';
+  if (tEn && (tEn.length < 30 || tEn.length > 60)) {
+    errors.meta_title_en = isRTL ? `الطول ${tEn.length} — المطلوب 30-60` : `Length ${tEn.length} — must be 30-60`;
+  }
+  const dAr = form.meta_description_ar || '';
+  if (dAr && (dAr.length < 100 || dAr.length > 160)) {
+    errors.meta_description_ar = isRTL ? `الطول ${dAr.length} — المطلوب 100-160` : `Length ${dAr.length} — must be 100-160`;
+  }
+  const dEn = form.meta_description_en || '';
+  if (dEn && (dEn.length < 100 || dEn.length > 160)) {
+    errors.meta_description_en = isRTL ? `الطول ${dEn.length} — المطلوب 100-160` : `Length ${dEn.length} — must be 100-160`;
+  }
+  return errors;
+}
+
+export function hasMetaErrors(e: MetaValidationErrors): boolean {
+  return Object.values(e).some(Boolean);
+}
