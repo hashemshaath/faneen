@@ -825,8 +825,8 @@ html { transition: none; }
   height: 28px;
   padding-inline: 0.875rem;
   border-radius: 9999px;
-  background-color: hsl(var(--primary) / 0.16);
-  color: hsl(var(--primary));
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
   font-size: var(--fs-xs);
   font-weight: 600;
   line-height: 1;
