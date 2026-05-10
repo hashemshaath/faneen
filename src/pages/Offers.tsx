@@ -145,11 +145,11 @@ const Offers = () => {
       <ScrollToTop />
 
       {/* Hero Cover */}
-      <section className="bg-gradient-navy pt-24 sm:pt-28 pb-12 sm:pb-16 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 30% 50%, hsl(42 85% 55% / 0.4) 0%, transparent 50%), radial-gradient(circle at 70% 80%, hsl(42 85% 55% / 0.2) 0%, transparent 40%)" }} />
+      <section className="bg-primary pt-24 sm:pt-28 pb-12 sm:pb-16 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 30% 50%, hsl(var(--accent) / 0.4) 0%, transparent 50%), radial-gradient(circle at 70% 80%, hsl(var(--accent) / 0.2) 0%, transparent 40%)" }} />
         <div className="container-app relative z-10 text-center">
-          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-gold flex items-center justify-center mx-auto mb-4 shadow-lg shadow-gold/30">
-            <Megaphone className={`w-8 h-8 sm:w-10 sm:h-10 text-secondary-foreground ${isRTL ? '-scale-x-100' : ''}`} />
+          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-accent flex items-center justify-center mx-auto mb-4 shadow-lg shadow-accent/30">
+            <Megaphone className={`w-8 h-8 sm:w-10 sm:h-10 text-accent-foreground ${isRTL ? '-scale-x-100' : ''}`} />
           </div>
           <h1 className="font-heading font-bold text-2xl sm:text-4xl text-surface-nav-foreground mb-3">
             {isRTL ? 'العروض والإعلانات' : 'Offers & Promotions'}
@@ -361,7 +361,7 @@ const Offers = () => {
                           <div className="absolute bottom-3 end-3">
                             <Badge className={`text-[9px] border-0 shadow-lg ${
                               biz.membership_tier === 'enterprise' ? 'bg-secondary/90 text-white' :
-                              biz.membership_tier === 'premium' ? 'bg-gradient-gold text-secondary-foreground' :
+                              biz.membership_tier === 'premium' ? 'bg-accent text-accent-foreground' :
                               'bg-info/90 text-white'
                             }`}>
                               {biz.membership_tier === 'enterprise' ? (isRTL ? 'مؤسسي' : 'Enterprise') :

@@ -61,7 +61,7 @@ export const SearchHeader = ({
       <Navbar />
       <div className="bg-surface-nav pt-20 sm:pt-24 pb-10 sm:pb-14 relative overflow-hidden">
         {/* Background effects */}
-        <div className="absolute inset-0 opacity-[0.07]" style={{ backgroundImage: "radial-gradient(circle at 30% 40%, hsl(42 85% 55%) 0%, transparent 50%), radial-gradient(circle at 70% 60%, hsl(42 85% 55%) 0%, transparent 40%)" }} />
+        <div className="absolute inset-0 opacity-[0.07]" style={{ backgroundImage: "radial-gradient(circle at 30% 40%, hsl(var(--accent)) 0%, transparent 50%), radial-gradient(circle at 70% 60%, hsl(var(--accent)) 0%, transparent 40%)" }} />
         <div className="absolute inset-0 opacity-[0.02]" style={{ backgroundImage: 'repeating-linear-gradient(45deg, currentColor 0, currentColor 1px, transparent 0, transparent 50%)', backgroundSize: '20px 20px' }} />
         
         <div className="container relative z-10 text-center px-3 sm:px-4">

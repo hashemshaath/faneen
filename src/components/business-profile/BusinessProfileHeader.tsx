@@ -144,7 +144,7 @@ export const BusinessProfileHeader = ({
 
   return (
     <header className="relative">
-      <div className="relative h-28 overflow-hidden bg-gradient-navy sm:h-52 md:h-72">
+      <div className="relative h-28 overflow-hidden bg-primary sm:h-52 md:h-72">
         {business.cover_url ? (
           <img src={business.cover_url} alt={name} className="h-full w-full object-cover" loading="eager" />
         ) : (

@@ -22,7 +22,7 @@ const AboutHero = ({ isRTL }: { isRTL: boolean }) => (
     <div className="absolute inset-0 pointer-events-none">
       <div className="absolute -top-24 -start-24 w-[28rem] h-[28rem] rounded-full bg-gold/15 blur-3xl" />
       <div className="absolute -bottom-32 -end-24 w-[32rem] h-[32rem] rounded-full bg-accent/10 blur-3xl" />
-      <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: 'radial-gradient(hsl(var(--gold)) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
+      <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: 'radial-gradient(hsl(var(--accent)) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
     </div>
     <div className="container relative px-4 sm:px-6 text-center max-w-3xl">
       <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-gold/30 bg-gold/10 backdrop-blur mb-6 animate-fade-in">
