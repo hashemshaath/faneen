@@ -21,6 +21,7 @@ const FILTERS: Array<{ key: 'all' | LeadStatus; ar: string; en: string }> = [
   { key: 'viewed',     ar: 'تمت المشاهدة',    en: 'Viewed' },
   { key: 'needs_info', ar: 'بحاجة معلومات',   en: 'Needs info' },
   { key: 'accepted',   ar: 'مقبول',           en: 'Accepted' },
+  { key: 'quoted',     ar: 'تم إرسال عرض',    en: 'Quoted' },
   { key: 'rejected',   ar: 'مرفوض',           en: 'Rejected' },
   { key: 'closed',     ar: 'مغلق',            en: 'Closed' },
 ];
@@ -179,6 +180,60 @@ const DashboardLeads: React.FC = () => {
     onSettled: () => setPendingId(null),
   });
 
+  // SR-3B: Send a quote — updates lead_requests with quote fields and status=quoted.
+  const sendQuote = useMutation({
+    mutationFn: async (input: { id: string; amount: number; currency: 'SAR'; note: string | null; valid_until: string | null }) => {
+      const { error } = await supabase
+        .from('lead_requests')
+        .update({
+          status: 'quoted',
+          quote_amount: input.amount,
+          quote_currency: input.currency,
+          quote_note: input.note,
+          quote_valid_until: input.valid_until,
+        })
+        .eq('id', input.id);
+      if (error) throw error;
+      // Lifecycle email + in-app notification (fail-soft).
+      try {
+        await supabase.functions.invoke('notify-customer-lead-update', {
+          body: { lead_id: input.id, status: 'quoted' },
+        });
+      } catch { /* fail-soft */ }
+      // Ensure conversation exists for registered customer (fail-soft).
+      const lead = leads?.find((l) => l.id === input.id);
+      if (lead?.user_id) {
+        try { await supabase.rpc('create_or_get_lead_conversation', { _lead_id: input.id }); } catch { /* fail-soft */ }
+      }
+      return input;
+    },
+    onMutate: ({ id }) => setPendingId(id),
+    onSuccess: (input) => {
+      const lead = leads?.find((l) => l.id === input.id);
+      const validityBucket: 'none' | '1-7d' | '8-30d' | '30d_plus' = (() => {
+        if (!input.valid_until) return 'none';
+        const days = Math.ceil((new Date(input.valid_until).getTime() - Date.now()) / 86_400_000);
+        if (days <= 7) return '1-7d';
+        if (days <= 30) return '8-30d';
+        return '30d_plus';
+      })();
+      safeTrack('service_request_quoted', {
+        source_page: 'dashboard_leads',
+        outcome: 'quoted',
+        has_budget: !!lead?.budget_range,
+        has_quote_amount: true,
+        quote_validity_bucket: validityBucket,
+      } as Parameters<typeof trackEvent>[1]);
+      toast.success(isRTL ? 'تم إرسال عرض السعر' : 'Quote sent');
+      qc.invalidateQueries({ queryKey: ['provider-leads'] });
+    },
+    onError: (err: unknown) => {
+      const msg = err instanceof Error ? err.message : 'Failed to send quote';
+      toast.error(isRTL ? `تعذر الإرسال: ${msg}` : `Could not send quote: ${msg}`);
+    },
+    onSettled: () => setPendingId(null),
+  });
+
   return (
     <DashboardLayout>
       <div className="space-y-5">
@@ -280,6 +335,7 @@ const DashboardLeads: React.FC = () => {
                         pending={pendingId === lead.id}
                         onAction={(next) => handleAction(lead.id, next)}
                         onOpenConversation={() => ensureConversation.mutate(lead.id)}
+                        onSendQuote={(input) => sendQuote.mutate({ id: lead.id, ...input })}
                       />
                     </div>
                   )}
