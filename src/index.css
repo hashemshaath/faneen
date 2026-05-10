@@ -78,10 +78,11 @@
     --slate-warm: 220 10% 45%;
     --cream: 158 30% 96%;
 
-    /* Navbar/Footer surface — light in light mode (so the colored logo shines),
-       dark navy in dark mode for contrast. */
-    --surface-nav: 0 0% 100%;
-    --surface-nav-foreground: 220 30% 12%;
+    /* Navbar/Footer surface — always dark navy so the white logo always sits
+       on a dark background. The colored logo is reserved for genuinely light
+       surfaces (auth screens, admin previews, business headers). */
+    --surface-nav: 220 35% 12%;
+    --surface-nav-foreground: 0 0% 98%;
 
     --gradient-gold: linear-gradient(135deg, hsl(158 65% 42%), hsl(225 60% 47%));
     --gradient-brand: linear-gradient(135deg, hsl(158 65% 42%), hsl(225 60% 47%));

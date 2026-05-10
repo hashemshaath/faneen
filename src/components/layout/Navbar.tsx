@@ -95,7 +95,7 @@ export const Navbar = () => {
           <Link to="/" aria-label={language === 'ar' ? 'قِطاعات — الصفحة الرئيسية' : 'Qitaat — Home'} className="flex items-center group rounded-xl focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none">
             <BrandLogo
               variant="full"
-              tone="auto"
+              tone="dark"
               size="navbar"
               priority
               alt={language === 'ar' ? 'قِطاعات — الصفحة الرئيسية' : 'Qitaat — Home'}
