@@ -115,11 +115,22 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
 
   const handleLogout = async () => { await signOut(); navigate('/'); };
 
+  // Admin context: render permanent orange top strip per brand spec §15.
+  const isAdminContext = location.pathname.startsWith('/admin');
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
         <DashboardSidebar />
         <div className="flex-1 flex flex-col min-w-0">
+          {isAdminContext && (
+            <div
+              role="presentation"
+              aria-hidden="true"
+              className="admin-mode-bar"
+              title={isRTL ? 'وضع الإدارة' : 'Admin mode'}
+            />
+          )}
           {/* Header */}
           <header className="sticky top-0 z-10 border-b border-border/30 bg-card/95 backdrop-blur-2xl dark:border-border/15 dark:bg-card/80 shadow-sm shadow-black/[0.02]">
             <div className="flex items-center h-14 sm:h-[4.25rem] px-3 sm:px-6 gap-3">
@@ -146,7 +157,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
                           <AvatarImage src={profile?.avatar_url || undefined} />
                           <AvatarFallback className="bg-accent/15 text-accent text-xs sm:text-sm font-bold">{initial}</AvatarFallback>
                         </Avatar>
-                        <span className="absolute -bottom-0.5 -end-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-card rounded-full" />
+                        <span className="absolute -bottom-0.5 -end-0.5 w-2.5 h-2.5 bg-success border-2 border-card rounded-full" />
                       </div>
                       <div className="hidden sm:flex flex-col items-start min-w-0">
                         <span className="text-xs font-semibold text-foreground truncate max-w-[120px] leading-tight">
@@ -190,7 +201,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
                           <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
                             <Phone className="w-3 h-3 shrink-0" />
                             <span className="tech-content" dir="ltr">{profile.phone}</span>
-                            {profile.phone_verified && <CheckCircle2 className="w-3 h-3 text-emerald-500" />}
+                            {profile.phone_verified && <CheckCircle2 className="w-3 h-3 text-success" />}
                           </div>
                         )}
                         {profile?.ref_id && (
@@ -212,7 +223,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
                         <span className="text-xs">{isRTL ? 'الأمان وكلمة المرور' : 'Security & Password'}</span>
                       </DropdownMenuItem>
                       {!profile?.phone_verified && (
-                        <DropdownMenuItem onClick={() => navigate('/dashboard/settings?tab=account')} className="gap-2 py-2.5 rounded-lg cursor-pointer text-amber-600">
+                        <DropdownMenuItem onClick={() => navigate('/dashboard/settings?tab=account')} className="gap-2 py-2.5 rounded-lg cursor-pointer text-warning">
                           <Phone className="w-4 h-4" />
                           <span className="text-xs">{isRTL ? 'تأكيد رقم الجوال' : 'Verify Phone'}</span>
                         </DropdownMenuItem>
