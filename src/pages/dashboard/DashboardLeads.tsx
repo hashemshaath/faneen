@@ -104,21 +104,20 @@ const DashboardLeads: React.FC = () => {
     onMutate: ({ id }) => setPendingId(id),
     onSuccess: (next, { id }) => {
       const lead = leads?.find((l) => l.id === id);
-      const eventMap: Record<LeadStatus, Parameters<typeof trackEvent>[0] | null> = {
-        new: null,
-        viewed: 'service_request_viewed' as never,
-        accepted: 'service_request_accepted' as never,
-        rejected: 'service_request_rejected' as never,
-        needs_info: 'service_request_needs_info' as never,
-        closed: 'service_request_closed' as never,
+      const eventMap: Partial<Record<string, string>> = {
+        viewed: 'service_request_viewed',
+        accepted: 'service_request_accepted',
+        rejected: 'service_request_rejected',
+        needs_info: 'service_request_needs_info',
+        closed: 'service_request_closed',
       };
       const ev = eventMap[next];
       if (ev) {
-        safeTrack(ev, {
+        safeTrack(ev as Parameters<typeof trackEvent>[0], {
           source_page: 'dashboard_leads',
           outcome: next,
           has_budget: !!lead?.budget_range,
-        } as never);
+        } as Parameters<typeof trackEvent>[1]);
       }
       toast.success(isRTL ? 'تم تحديث حالة الطلب' : 'Request status updated');
       qc.invalidateQueries({ queryKey: ['provider-leads'] });
