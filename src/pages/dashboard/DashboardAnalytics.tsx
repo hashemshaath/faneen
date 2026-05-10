@@ -24,9 +24,16 @@ import { cn } from '@/lib/utils';
 import { format, subDays, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, eachMonthOfInterval } from 'date-fns';
 import { useNoIndex } from "@/hooks/useNoIndex";
 
+// Brand-aligned chart palette — sourced from central design tokens.
 const CHART_COLORS = [
-  'hsl(var(--accent))', 'hsl(270 50% 60%)', 'hsl(150 50% 50%)',
-  'hsl(200 70% 55%)', 'hsl(0 60% 55%)', 'hsl(40 80% 55%)',
+  'hsl(var(--primary))',
+  'hsl(var(--secondary))',
+  'hsl(var(--accent))',
+  'hsl(var(--success))',
+  'hsl(var(--info))',
+  'hsl(var(--warning))',
+  'hsl(var(--destructive))',
+  'hsl(var(--muted-foreground))',
 ];
 
 const tooltipStyle = {
@@ -357,7 +364,7 @@ const DashboardAnalytics = () => {
                         <XAxis dataKey="date" tick={{ fontSize: 9 }} stroke="hsl(var(--muted-foreground))" />
                         <YAxis tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" allowDecimals={false} />
                         <Tooltip contentStyle={tooltipStyle} />
-                        <Bar dataKey="count" fill="hsl(200 70% 55%)" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="count" fill="hsl(var(--secondary))" radius={[4, 4, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -442,7 +449,7 @@ const DashboardAnalytics = () => {
                         <XAxis type="number" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" allowDecimals={false} />
                         <YAxis type="category" dataKey="stars" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" width={40} />
                         <Tooltip contentStyle={tooltipStyle} />
-                        <Bar dataKey="count" fill="hsl(40 80% 55%)" radius={[0, 4, 4, 0]} />
+                        <Bar dataKey="count" fill="hsl(var(--warning))" radius={[0, 4, 4, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>

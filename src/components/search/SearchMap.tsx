@@ -13,14 +13,22 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 });
 
-const goldIcon = new L.Icon({
-  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-gold.png',
+// Brand-aligned marker — green to match the primary identity color.
+const primaryIcon = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
   iconSize: [25, 41],
   iconAnchor: [12, 41],
   popupAnchor: [1, -34],
   shadowSize: [41, 41],
 });
+
+/** Read a CSS HSL triplet (e.g. "159 76% 34%") from :root and wrap as hsl(...). */
+const readToken = (name: string, fallback: string): string => {
+  if (typeof window === 'undefined') return fallback;
+  const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  return v ? `hsl(${v})` : fallback;
+};
 
 interface SearchMapProps {
   businesses: Array<Record<string, unknown>>;
@@ -49,6 +57,14 @@ export const SearchMap = ({ businesses, className }: SearchMapProps) => {
   useEffect(() => {
     if (!containerRef.current) return;
 
+    // Resolve brand tokens for popup styling (re-read on each effect run so theme changes apply).
+    const cText    = readToken('--foreground',        'hsl(220 23% 14%)');
+    const cMuted   = readToken('--muted-foreground',  'hsl(220 9% 47%)');
+    const cSurface = readToken('--card',              'hsl(0 0% 100%)');
+    const cBorder  = readToken('--border',            'hsl(220 13% 91%)');
+    const cAction  = readToken('--primary',           'hsl(159 76% 34%)');
+    const cActionFg= readToken('--primary-foreground','hsl(0 0% 100%)');
+
     // Create map
     const map = L.map(containerRef.current, {
       center,
@@ -68,21 +84,21 @@ export const SearchMap = ({ businesses, className }: SearchMapProps) => {
       const verified = b.is_verified ? '✓' : '';
 
       const popupContent = `
-        <div style="min-width:180px;font-family:inherit;direction:${language === 'ar' ? 'rtl' : 'ltr'}">
-          <a href="/${b.username}" style="font-weight:700;font-size:14px;color:#1A2230;text-decoration:none;display:block;margin-bottom:4px">
-            ${name} ${verified ? '<span style="color:#0E9E6F">✓</span>' : ''}
+        <div style="min-width:180px;font-family:inherit;direction:${language === 'ar' ? 'rtl' : 'ltr'};background:${cSurface};border:1px solid ${cBorder};border-radius:10px;padding:8px">
+          <a href="/${b.username}" style="font-weight:700;font-size:14px;color:${cText};text-decoration:none;display:block;margin-bottom:4px">
+            ${name} ${verified ? `<span style="color:${cAction}">✓</span>` : ''}
           </a>
-          <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#6B7689">
+          <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:${cMuted}">
             <span>⭐ ${rating}</span>
             ${cityName ? `<span>📍 ${cityName}</span>` : ''}
           </div>
-          <a href="/${b.username}" style="display:block;text-align:center;margin-top:8px;padding:6px 12px;background:#0E9E6F;color:#FFFFFF;border-radius:8px;text-decoration:none;font-size:12px;font-weight:600">
+          <a href="/${b.username}" style="display:block;text-align:center;margin-top:8px;padding:6px 12px;background:${cAction};color:${cActionFg};border-radius:8px;text-decoration:none;font-size:12px;font-weight:600">
             ${language === 'ar' ? 'عرض الملف' : 'View Profile'}
           </a>
         </div>
       `;
 
-      L.marker([Number(b.latitude), Number(b.longitude)], { icon: goldIcon })
+      L.marker([Number(b.latitude), Number(b.longitude)], { icon: primaryIcon })
         .addTo(map)
         .bindPopup(popupContent);
     });
@@ -107,7 +123,7 @@ export const SearchMap = ({ businesses, className }: SearchMapProps) => {
 
       <div className="bg-card border-t border-border px-4 py-2 flex items-center justify-between">
         <span className="text-xs text-muted-foreground font-body flex items-center gap-1.5">
-          <MapPin className="w-3.5 h-3.5 text-accent" />
+          <MapPin className="w-3.5 h-3.5 text-primary" />
           <span className="font-semibold text-foreground">{mappable.length}</span>
           {language === 'ar' ? 'مزود على الخريطة' : 'providers on map'}
         </span>
