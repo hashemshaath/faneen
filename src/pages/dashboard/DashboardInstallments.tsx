@@ -61,9 +61,9 @@ const fmtNum = (n: number) => Number(n).toLocaleString();
 const PaymentDonut = React.memo(({ stats, isRTL }: { stats: any; isRTL: boolean }) => {
   useNoIndex();
   const data = [
-    { name: isRTL ? 'مدفوع' : 'Paid', value: stats.paidAmount, color: '#10b981' },
-    { name: isRTL ? 'معلق' : 'Pending', value: stats.pendingAmount, color: '#f59e0b' },
-    { name: isRTL ? 'متأخر' : 'Overdue', value: stats.overdueAmount, color: '#ef4444' },
+    { name: isRTL ? 'مدفوع' : 'Paid', value: stats.paidAmount, color: '#0E9E6F' },
+    { name: isRTL ? 'معلق' : 'Pending', value: stats.pendingAmount, color: '#B45309' },
+    { name: isRTL ? 'متأخر' : 'Overdue', value: stats.overdueAmount, color: '#C42626' },
   ].filter(d => d.value > 0);
 
   if (data.length === 0) return null;
