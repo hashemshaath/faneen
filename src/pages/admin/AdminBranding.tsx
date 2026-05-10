@@ -63,6 +63,8 @@ const AdminBranding: React.FC = () => {
   const queryClient = useQueryClient();
   const [values, setValues] = useState<BrandingConfig>(DEFAULT_BRANDING);
   const [dirty, setDirty] = useState<Set<FieldKey>>(new Set());
+  const [theme, setTheme] = useState<ThemeColors>(DEFAULT_THEME);
+  const [themeDirty, setThemeDirty] = useState<Set<keyof ThemeColors>>(new Set());
   const uploadInputRef = useRef<HTMLInputElement>(null);
   const [uploadingFor, setUploadingFor] = useState<FieldKey | null>(null);
 
@@ -73,6 +75,19 @@ const AdminBranding: React.FC = () => {
         .from('platform_settings')
         .select('id, setting_key, setting_value')
         .eq('category', 'branding');
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: isAdmin,
+  });
+
+  const { data: themeRows = [] } = useQuery({
+    queryKey: ['theme-settings-admin'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('platform_settings')
+        .select('id, setting_key, setting_value')
+        .eq('category', 'theme');
       if (error) throw error;
       return data ?? [];
     },
@@ -95,9 +110,26 @@ const AdminBranding: React.FC = () => {
     setDirty(new Set());
   }, [rows]);
 
+  useEffect(() => {
+    const next: ThemeColors = { ...DEFAULT_THEME };
+    for (const r of themeRows) {
+      const f = THEME_FIELD_FROM_KEY[r.setting_key];
+      if (f && r.setting_value && /^#[0-9a-f]{6}$/i.test(r.setting_value)) {
+        next[f] = r.setting_value;
+      }
+    }
+    setTheme(next);
+    setThemeDirty(new Set());
+  }, [themeRows]);
+
   const update = useCallback((field: FieldKey, value: string | number) => {
     setValues(prev => ({ ...prev, [field]: value } as BrandingConfig));
     setDirty(prev => { const n = new Set(prev); n.add(field); return n; });
+  }, []);
+
+  const updateTheme = useCallback((field: keyof ThemeColors, value: string) => {
+    setTheme(prev => ({ ...prev, [field]: value }));
+    setThemeDirty(prev => { const n = new Set(prev); n.add(field); return n; });
   }, []);
 
   const saveMutation = useMutation({
