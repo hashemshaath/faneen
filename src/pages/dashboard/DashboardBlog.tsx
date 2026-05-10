@@ -1029,11 +1029,15 @@ const DashboardBlog = () => {
                   <SeoScorePanel isRTL={isRTL} analysis={seoAnalysis as any} localScore={localScore}
                     isAnalyzing={aiLoading === 'analyze'} contentStats={contentStats} focusKeyword={form.focus_keyword}
                     onApplyFix={(field, value) => {
-                      setField(field as keyof typeof form, value);
+                      const v = field === 'slug' ? sanitizeSlug(value) : value;
+                      setField(field as keyof typeof form, v);
                       toast.success(isRTL ? 'تم التطبيق' : 'Applied');
                     }}
                     onApplyAll={(fixes) => {
-                      fixes.forEach(f => setField(f.field as keyof typeof form, f.suggested_value));
+                      fixes.forEach(f => {
+                        const v = f.field === 'slug' ? sanitizeSlug(f.suggested_value) : f.suggested_value;
+                        setField(f.field as keyof typeof form, v);
+                      });
                       toast.success(isRTL ? `تم تطبيق ${fixes.length} تحسينات` : `Applied ${fixes.length} fixes`);
                     }} />
                 </div>
