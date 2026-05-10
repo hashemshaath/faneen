@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Inbox, ChevronDown, ChevronUp, Send, Eye, HelpCircle, CheckCircle2,
-  XCircle, Archive, X, Wallet, FileText, MessageSquare, Loader2,
+  XCircle, Archive, X, Wallet, FileText, MessageSquare, Loader2, ReceiptText, Calendar,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNoIndex } from '@/hooks/useNoIndex';
@@ -36,6 +36,11 @@ interface MyLeadRow {
   closed_at: string | null;
   cancelled_at: string | null;
   conversation_id: string | null;
+  quoted_at: string | null;
+  quote_amount: number | string | null;
+  quote_currency: string | null;
+  quote_note: string | null;
+  quote_valid_until: string | null;
 }
 
 function safeTrack(event: Parameters<typeof trackEvent>[0], payload: Parameters<typeof trackEvent>[1]) {
@@ -58,7 +63,7 @@ const DashboardMyRequests: React.FC = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('lead_requests')
-        .select('id, ref_id, business_id, user_id, subject, status, contact_preference, budget_range, project_scope, created_at, updated_at, viewed_at, needs_info_at, accepted_at, rejected_at, closed_at, cancelled_at, conversation_id')
+        .select('id, ref_id, business_id, user_id, subject, status, contact_preference, budget_range, project_scope, created_at, updated_at, viewed_at, needs_info_at, accepted_at, rejected_at, closed_at, cancelled_at, conversation_id, quoted_at, quote_amount, quote_currency, quote_note, quote_valid_until')
         .eq('user_id', user!.id)
         .order('created_at', { ascending: false })
         .limit(200);
@@ -225,10 +230,45 @@ const DashboardMyRequests: React.FC = () => {
                         {lead.cancelled_at && (
                           <TimelineItem icon={<X className="h-4 w-4" />} label={isRTL ? 'تم الإلغاء' : 'Cancelled'} at={lead.cancelled_at} done isRTL={isRTL} />
                         )}
+                        {lead.quoted_at && (
+                          <TimelineItem icon={<ReceiptText className="h-4 w-4" />} label={isRTL ? 'تم إرسال عرض سعر' : 'Quote sent'} at={lead.quoted_at} done isRTL={isRTL} tone="success" />
+                        )}
                         {lead.closed_at && (
                           <TimelineItem icon={<Archive className="h-4 w-4" />} label={isRTL ? 'مغلق' : 'Closed'} at={lead.closed_at} done isRTL={isRTL} />
                         )}
                       </ol>
+
+                      {lead.status === 'quoted' && lead.quote_amount != null && (
+                        <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 space-y-2">
+                          <div className="flex items-center gap-2">
+                            <ReceiptText className="h-4 w-4 text-primary" />
+                            <h4 className="font-medium text-sm">{isRTL ? 'عرض السعر المستلم' : 'Quote received'}</h4>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                            <div className="flex items-center gap-2">
+                              <Wallet className="h-4 w-4 text-muted-foreground" />
+                              <span className="tech-content font-medium">
+                                {Number(lead.quote_amount).toLocaleString('en-US', { maximumFractionDigits: 2 })} {lead.quote_currency ?? 'SAR'}
+                              </span>
+                            </div>
+                            {lead.quote_valid_until && (
+                              <div className="flex items-center gap-2 text-muted-foreground">
+                                <Calendar className="h-4 w-4" />
+                                <span className="tech-content">{isRTL ? 'صالح حتى: ' : 'Valid until: '}{lead.quote_valid_until}</span>
+                              </div>
+                            )}
+                            {lead.quote_note && (
+                              <div className="sm:col-span-2 flex items-start gap-2">
+                                <FileText className="h-4 w-4 text-muted-foreground mt-0.5" />
+                                <p className="leading-6 whitespace-pre-wrap text-foreground/90">{lead.quote_note}</p>
+                              </div>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground pt-1">
+                            {isRTL ? 'يمكنك التواصل مع المزود عبر المحادثة لمناقشة التفاصيل.' : 'You can chat with the provider to discuss the details.'}
+                          </p>
+                        </div>
+                      )}
 
                       {/* Details */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
@@ -248,7 +288,7 @@ const DashboardMyRequests: React.FC = () => {
 
                       {/* Actions */}
                       <div className="flex flex-wrap gap-2 pt-1">
-                        {lead.conversation_id && (lead.status === 'accepted' || lead.status === 'needs_info') && (
+                        {lead.conversation_id && (lead.status === 'accepted' || lead.status === 'needs_info' || lead.status === 'quoted') && (
                           <Button
                             asChild
                             variant="default"
