@@ -77,7 +77,7 @@ const DashboardMyRequests: React.FC = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('businesses')
-        .select('id, name_ar, name_en, slug')
+        .select('id, name_ar, name_en, username')
         .in('id', businessIds);
       if (error) throw error;
       return data ?? [];
@@ -85,10 +85,10 @@ const DashboardMyRequests: React.FC = () => {
   });
 
   const businessMap = useMemo(() => {
-    const m = new Map<string, { name: string; slug: string | null }>();
+    const m = new Map<string, { name: string; username: string | null }>();
     (businesses ?? []).forEach((b) => {
       const name = (isRTL ? b.name_ar : b.name_en) ?? b.name_ar ?? b.name_en ?? '—';
-      m.set(b.id, { name, slug: b.slug ?? null });
+      m.set(b.id, { name, username: b.username ?? null });
     });
     return m;
   }, [businesses, isRTL]);
@@ -247,9 +247,9 @@ const DashboardMyRequests: React.FC = () => {
 
                       {/* Actions */}
                       <div className="flex flex-wrap gap-2 pt-1">
-                        {biz?.slug && (
+                        {biz?.username && (
                           <Button asChild variant="outline" className="min-h-[44px]">
-                            <Link to={`/business/${biz.slug}`}>
+                            <Link to={`/${biz.username}`}>
                               {isRTL ? 'فتح ملف المنشأة' : 'Open provider profile'}
                             </Link>
                           </Button>
