@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Send, CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { track } from '@/lib/analytics-events';
+import { getAttributionPayload } from '@/lib/analytics-attribution';
 
 /**
  * Inline lead-request form (NO popups, per UX policy).
@@ -133,6 +134,7 @@ export const LeadRequestForm: React.FC<Props> = ({ businessId, businessName, sou
         source_page: source ?? 'business-profile',
         inquiry_type: parsed.data.contact_preference,
         is_authenticated: !!user,
+        ...getAttributionPayload(),
       });
       setSubmitted(true);
       toast.success(isRTL ? 'تم إرسال طلبك بنجاح' : 'Your request has been sent');

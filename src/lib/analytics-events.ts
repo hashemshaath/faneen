@@ -81,7 +81,18 @@ export type AllowedParam =
   // Supplier lead capture
   | "source_page"
   | "inquiry_type"
-  | "is_authenticated";
+  | "is_authenticated"
+  // Attribution (UTM + first/last touch) — added by analytics-attribution helper.
+  // Only attached to conversion events (lead/register/contact) — never blanket.
+  | "utm_source"
+  | "utm_medium"
+  | "utm_campaign"
+  | "utm_content"
+  | "utm_term"
+  | "referrer_domain"
+  | "landing_path"
+  | "first_touch"
+  | "last_touch";
 
 export type EventPayload = Partial<Record<AllowedParam, string | number | boolean>>;
 
@@ -111,6 +122,15 @@ const ALLOWED: ReadonlySet<AllowedParam> = new Set<AllowedParam>([
   "source_page",
   "inquiry_type",
   "is_authenticated",
+  "utm_source",
+  "utm_medium",
+  "utm_campaign",
+  "utm_content",
+  "utm_term",
+  "referrer_domain",
+  "landing_path",
+  "first_touch",
+  "last_touch",
 ]);
 
 /** Looks like an email or phone number — used as a defensive PII guard. */
