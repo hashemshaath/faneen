@@ -362,14 +362,14 @@ const AdminBranding: React.FC = () => {
             </Button>
             <Button
               onClick={() => saveMutation.mutate()}
-              disabled={dirty.size === 0 || saveMutation.isPending}
+              disabled={(dirty.size === 0 && themeDirty.size === 0) || saveMutation.isPending}
             >
               {saveMutation.isPending ? (
                 <Loader2 className="w-4 h-4 animate-spin me-2" />
               ) : (
                 <Save className="w-4 h-4 me-2" />
               )}
-              {isRTL ? `حفظ (${dirty.size})` : `Save (${dirty.size})`}
+              {isRTL ? `حفظ (${dirty.size + themeDirty.size})` : `Save (${dirty.size + themeDirty.size})`}
             </Button>
           </div>
         </div>
@@ -386,6 +386,62 @@ const AdminBranding: React.FC = () => {
               {renderImageField('fullDarkUrl', 'dark')}
               {renderImageField('markUrl', 'light')}
             </div>
+
+            {/* Colors */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Palette className="w-4 h-4 text-accent" />
+                  {isRTL ? 'ألوان العلامة التجارية' : 'Brand colors'}
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  {isRTL
+                    ? 'يتم تطبيق الألوان فوراً على المنصة بعد الحفظ. الألوان الافتراضية مأخوذة من اللوجو.'
+                    : 'Colors apply across the platform after Save. Defaults are derived from the logo.'}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {THEME_FIELDS.map(f => {
+                  const valid = /^#[0-9a-f]{6}$/i.test(theme[f.key]);
+                  return (
+                    <div key={f.key} className="rounded-xl border border-border p-3 space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="min-w-0">
+                          <Label className="text-sm block truncate">{isRTL ? f.ar : f.en}</Label>
+                          <p className="text-[11px] text-muted-foreground truncate">{f.desc}</p>
+                        </div>
+                        <div
+                          className="w-9 h-9 rounded-lg border border-border shrink-0"
+                          style={{ background: valid ? theme[f.key] : 'transparent' }}
+                          aria-hidden="true"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="color"
+                          value={valid ? theme[f.key] : '#000000'}
+                          onChange={(e) => updateTheme(f.key, e.target.value.toUpperCase())}
+                          className="h-10 w-12 rounded-lg border border-border cursor-pointer bg-background"
+                          aria-label={f.en}
+                        />
+                        <Input
+                          value={theme[f.key]}
+                          dir="ltr"
+                          onChange={(e) => updateTheme(f.key, e.target.value.toUpperCase())}
+                          className="h-10 tech-content text-xs uppercase"
+                          placeholder="#1FBA82"
+                        />
+                      </div>
+                      {!valid && (
+                        <p className="text-[11px] text-destructive">
+                          {isRTL ? 'صيغة HEX غير صحيحة' : 'Invalid HEX'}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </CardContent>
+            </Card>
 
             {/* Sizes */}
             <Card>
