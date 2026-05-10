@@ -59,7 +59,7 @@ const THEME_FIELDS: Array<{ key: keyof ThemeColors; ar: string; en: string; desc
 const AdminBranding: React.FC = () => {
   useNoIndex();
   const { isRTL } = useLanguage();
-  const { isSuperAdmin, isAdmin } = useAuth();
+  const { isAdmin } = useAuth();
   const queryClient = useQueryClient();
   const [values, setValues] = useState<BrandingConfig>(DEFAULT_BRANDING);
   const [dirty, setDirty] = useState<Set<FieldKey>>(new Set());
