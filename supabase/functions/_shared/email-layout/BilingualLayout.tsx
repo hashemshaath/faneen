@@ -3,6 +3,7 @@ import * as React from 'npm:react@18.3.1'
 import {
   Body, Container, Head, Heading, Html, Link, Preview, Section, Text, Hr, Button, Row, Column,
 } from 'npm:@react-email/components@0.0.22'
+import { EMAIL_BRAND as B } from '../brandTheme.ts'
 
 export const SITE_NAME_AR = 'قِطاعات'
 export const SITE_NAME_EN = 'Qitaat'
@@ -42,19 +43,21 @@ export interface BilingualEmailProps {
   hideSignature?: boolean
 }
 
+/* Status tones — soft tinted backgrounds + readable foregrounds, all sourced
+   from the central brand status palette (no hardcoded random hues). */
 const TONE_BG: Record<BadgeTone, string> = {
-  neutral: 'hsl(220, 20%, 95%)',
-  success: 'hsl(142, 60%, 94%)',
-  warning: 'hsl(42, 90%, 92%)',
-  info: 'hsl(210, 90%, 95%)',
-  danger: 'hsl(0, 80%, 95%)',
+  neutral: '#EEF1F6',
+  success: '#E6F5EE',
+  warning: '#FBEEDC',
+  info:    '#E6EEF8',
+  danger:  '#F8E1E1',
 }
 const TONE_FG: Record<BadgeTone, string> = {
-  neutral: 'hsl(220, 30%, 25%)',
-  success: 'hsl(142, 71%, 25%)',
-  warning: 'hsl(28, 80%, 30%)',
-  info: 'hsl(210, 80%, 30%)',
-  danger: 'hsl(0, 75%, 35%)',
+  neutral: B.text,
+  success: B.success,
+  warning: B.warning,
+  info:    B.info,
+  danger:  B.error,
 }
 
 export const BilingualEmail: React.FC<BilingualEmailProps> = ({
@@ -248,7 +251,7 @@ export const BilingualEmail: React.FC<BilingualEmailProps> = ({
 /* ─────────── Styles ─────────── */
 
 const main = {
-  backgroundColor: 'hsl(220, 20%, 97%)',
+  backgroundColor: B.bodyBg,
   margin: 0,
   padding: '24px 12px',
   fontFamily: "'Noto Sans Arabic', 'Inter', 'Segoe UI', Tahoma, Arial, sans-serif",
@@ -261,8 +264,8 @@ const brandMark = {
   height: '52px',
   lineHeight: '52px',
   borderRadius: '14px',
-  background: 'linear-gradient(135deg, hsl(220, 35%, 15%), hsl(220, 35%, 22%))',
-  color: 'hsl(42, 100%, 95%)',
+  backgroundColor: B.headerBg,
+  color: '#FFFFFF',
   fontSize: '28px',
   fontWeight: 700,
   margin: '0 auto 8px',
@@ -271,7 +274,7 @@ const brandMark = {
 const brandName = {
   fontSize: '15px',
   fontWeight: 700,
-  color: 'hsl(220, 35%, 15%)',
+  color: B.headerBg,
   letterSpacing: '0.3px',
   margin: '0 0 2px',
   textAlign: 'center' as const,
@@ -279,21 +282,21 @@ const brandName = {
 const brandTag = {
   fontSize: '11px',
   fontWeight: 500,
-  color: 'hsl(220, 10%, 50%)',
+  color: B.muted,
   margin: 0,
   textAlign: 'center' as const,
   letterSpacing: '0.2px',
 }
 const card = {
-  backgroundColor: '#ffffff',
+  backgroundColor: B.cardBg,
   borderRadius: '16px',
-  border: '1px solid hsl(220, 15%, 90%)',
+  border: `1px solid ${B.border}`,
   overflow: 'hidden' as const,
   boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)',
 }
 const accentBar = {
   height: '4px',
-  background: 'linear-gradient(90deg, hsl(42, 85%, 55%), hsl(220, 35%, 15%))',
+  backgroundColor: B.primaryButton,
   padding: 0,
   margin: 0,
 }
@@ -311,7 +314,7 @@ const langBlock = { padding: '20px 28px 8px' }
 const h1Ar = {
   fontSize: '22px',
   fontWeight: 700,
-  color: 'hsl(220, 35%, 15%)',
+  color: B.text,
   lineHeight: '1.4',
   margin: '8px 0 12px',
   textAlign: 'right' as const,
@@ -319,7 +322,7 @@ const h1Ar = {
 const h1En = {
   fontSize: '22px',
   fontWeight: 700,
-  color: 'hsl(220, 35%, 15%)',
+  color: B.text,
   lineHeight: '1.4',
   margin: '8px 0 12px',
   textAlign: 'left' as const,
@@ -327,34 +330,34 @@ const h1En = {
 const greetAr = {
   fontSize: '15px',
   fontWeight: 600,
-  color: 'hsl(220, 30%, 20%)',
+  color: B.text,
   margin: '0 0 8px',
   textAlign: 'right' as const,
 }
 const greetEn = {
   fontSize: '15px',
   fontWeight: 600,
-  color: 'hsl(220, 30%, 20%)',
+  color: B.text,
   margin: '0 0 8px',
   textAlign: 'left' as const,
 }
 const textAr = {
   fontSize: '15px',
-  color: 'hsl(220, 12%, 32%)',
+  color: B.text,
   lineHeight: '1.85',
   margin: '0 0 12px',
   textAlign: 'right' as const,
 }
 const textEn = {
   fontSize: '15px',
-  color: 'hsl(220, 12%, 32%)',
+  color: B.text,
   lineHeight: '1.7',
   margin: '0 0 12px',
   textAlign: 'left' as const,
 }
 const detailsBox = {
-  backgroundColor: 'hsl(220, 25%, 98%)',
-  border: '1px solid hsl(220, 15%, 92%)',
+  backgroundColor: B.bodyBg,
+  border: `1px solid ${B.border}`,
   borderRadius: '12px',
   padding: '12px 16px',
   margin: '12px 0 16px',
@@ -365,14 +368,14 @@ const detailLabelCellEn = { width: '40%', verticalAlign: 'top' as const, padding
 const detailValueCellEn = { width: '60%', verticalAlign: 'top' as const }
 const detailLabelAr = {
   fontSize: '13px',
-  color: 'hsl(220, 10%, 45%)',
+  color: B.muted,
   margin: 0,
   textAlign: 'right' as const,
   fontWeight: 500,
 }
 const detailValueAr = {
   fontSize: '14px',
-  color: 'hsl(220, 30%, 15%)',
+  color: B.text,
   margin: 0,
   textAlign: 'right' as const,
   fontWeight: 600,
@@ -385,14 +388,14 @@ const detailValueMonoAr = {
 }
 const detailLabelEn = {
   fontSize: '13px',
-  color: 'hsl(220, 10%, 45%)',
+  color: B.muted,
   margin: 0,
   textAlign: 'left' as const,
   fontWeight: 500,
 }
 const detailValueEn = {
   fontSize: '14px',
-  color: 'hsl(220, 30%, 15%)',
+  color: B.text,
   margin: 0,
   textAlign: 'left' as const,
   fontWeight: 600,
@@ -402,23 +405,23 @@ const detailValueMonoEn = {
   fontFamily: "'SF Mono', Menlo, Consolas, monospace",
 }
 const highlightBoxRtl = {
-  backgroundColor: 'hsl(42, 90%, 97%)',
+  backgroundColor: '#E6F5EE',
   borderRadius: '12px',
   padding: '14px 18px',
   margin: '12px 0',
-  borderRight: '4px solid hsl(42, 85%, 55%)',
+  borderRight: `4px solid ${B.primaryButton}`,
 }
 const highlightBoxLtr = {
-  backgroundColor: 'hsl(42, 90%, 97%)',
+  backgroundColor: '#E6F5EE',
   borderRadius: '12px',
   padding: '14px 18px',
   margin: '12px 0',
-  borderLeft: '4px solid hsl(42, 85%, 55%)',
+  borderLeft: `4px solid ${B.primaryButton}`,
 }
 const highlightLabelAr = {
   fontSize: '12px',
   fontWeight: 700,
-  color: 'hsl(28, 80%, 30%)',
+  color: B.success,
   margin: '0 0 6px',
   textAlign: 'right' as const,
   letterSpacing: '0.3px',
@@ -430,7 +433,7 @@ const highlightLabelEn = {
 }
 const highlightTextAr = {
   fontSize: '14px',
-  color: 'hsl(220, 30%, 15%)',
+  color: B.text,
   margin: 0,
   lineHeight: '1.8',
   textAlign: 'right' as const,
@@ -438,14 +441,14 @@ const highlightTextAr = {
 }
 const highlightTextEn = {
   fontSize: '14px',
-  color: 'hsl(220, 30%, 15%)',
+  color: B.text,
   margin: 0,
   lineHeight: '1.7',
   textAlign: 'left' as const,
   whiteSpace: 'pre-wrap' as const,
 }
 const tipBoxAr = {
-  backgroundColor: 'hsl(210, 80%, 97%)',
+  backgroundColor: '#E6EEF8',
   borderRadius: '10px',
   padding: '12px 16px',
   margin: '8px 0 16px',
@@ -453,22 +456,22 @@ const tipBoxAr = {
 const tipBoxEn = { ...tipBoxAr }
 const tipTextAr = {
   fontSize: '13px',
-  color: 'hsl(210, 60%, 25%)',
+  color: B.info,
   margin: 0,
   textAlign: 'right' as const,
   lineHeight: '1.7',
 }
 const tipTextEn = {
   fontSize: '13px',
-  color: 'hsl(210, 60%, 25%)',
+  color: B.info,
   margin: 0,
   textAlign: 'left' as const,
   lineHeight: '1.6',
 }
 const ctaWrap = { textAlign: 'center' as const, margin: '20px 0 8px' }
 const button = {
-  backgroundColor: 'hsl(220, 35%, 15%)',
-  color: 'hsl(42, 100%, 95%)',
+  backgroundColor: B.primaryButton,
+  color: B.primaryButtonText,
   fontSize: '15px',
   fontWeight: 600,
   borderRadius: '12px',
@@ -481,25 +484,25 @@ const langDivider = {
   textAlign: 'center' as const,
   padding: '4px 0 8px',
   margin: '4px 28px',
-  borderTop: '1px dashed hsl(220, 15%, 90%)',
+  borderTop: `1px dashed ${B.border}`,
 }
 const langDividerText = {
   display: 'inline-block',
   marginTop: '-8px',
   padding: '0 10px',
-  backgroundColor: '#ffffff',
+  backgroundColor: B.cardBg,
   fontSize: '10px',
   letterSpacing: '1.2px',
   textTransform: 'uppercase' as const,
-  color: 'hsl(220, 10%, 55%)',
+  color: B.muted,
   fontWeight: 600,
 }
 const signature = { textAlign: 'center' as const, padding: '20px 16px 0' }
-const sigName = { fontSize: '13px', fontWeight: 600, color: 'hsl(220, 30%, 25%)', margin: '0 0 4px' }
-const sigMeta = { fontSize: '12px', color: 'hsl(220, 10%, 45%)', margin: '0 0 10px' }
-const sigLink = { color: 'hsl(42, 85%, 38%)', textDecoration: 'none', fontWeight: 600 }
-const sigDisclaimer = { fontSize: '11px', color: 'hsl(220, 10%, 55%)', margin: '6px 0 0', lineHeight: '1.6' }
-const sigDisclaimerEn = { fontSize: '11px', color: 'hsl(220, 10%, 55%)', margin: '2px 0 0', lineHeight: '1.5' }
+const sigName = { fontSize: '13px', fontWeight: 600, color: B.text, margin: '0 0 4px' }
+const sigMeta = { fontSize: '12px', color: B.muted, margin: '0 0 10px' }
+const sigLink = { color: B.primaryButton, textDecoration: 'none', fontWeight: 600 }
+const sigDisclaimer = { fontSize: '11px', color: B.muted, margin: '6px 0 0', lineHeight: '1.6' }
+const sigDisclaimerEn = { fontSize: '11px', color: B.muted, margin: '2px 0 0', lineHeight: '1.5' }
 
 /* Auth-style code/OTP block reused by some templates */
 export const otpStyle = {
@@ -508,10 +511,10 @@ export const otpStyle = {
   fontSize: '32px',
   fontWeight: 700,
   letterSpacing: '8px',
-  color: 'hsl(220, 35%, 15%)',
+  color: B.text,
   textAlign: 'center' as const,
-  backgroundColor: 'hsl(220, 25%, 97%)',
-  border: '1px solid hsl(220, 15%, 90%)',
+  backgroundColor: B.bodyBg,
+  border: `1px solid ${B.border}`,
   borderRadius: '12px',
   padding: '18px 12px',
   margin: '12px 0',
