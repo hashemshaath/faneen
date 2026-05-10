@@ -24,9 +24,16 @@ import { cn } from '@/lib/utils';
 import { format, subDays, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, eachMonthOfInterval } from 'date-fns';
 import { useNoIndex } from "@/hooks/useNoIndex";
 
+// Brand-aligned chart palette — sourced from central design tokens.
 const CHART_COLORS = [
-  'hsl(var(--accent))', 'hsl(270 50% 60%)', 'hsl(150 50% 50%)',
-  'hsl(200 70% 55%)', 'hsl(0 60% 55%)', 'hsl(40 80% 55%)',
+  'hsl(var(--primary))',
+  'hsl(var(--secondary))',
+  'hsl(var(--accent))',
+  'hsl(var(--success))',
+  'hsl(var(--info))',
+  'hsl(var(--warning))',
+  'hsl(var(--destructive))',
+  'hsl(var(--muted-foreground))',
 ];
 
 const tooltipStyle = {
