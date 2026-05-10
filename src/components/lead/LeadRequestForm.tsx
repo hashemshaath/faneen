@@ -105,12 +105,34 @@ export const LeadRequestForm: React.FC<Props> = ({ businessId, businessName, sou
         contact_preference: parsed.data.contact_preference,
         source: source ?? 'business-profile',
       };
-      const { error } = await supabase.from('lead_requests').insert(payload);
+      const { data: inserted, error } = await supabase
+        .from('lead_requests')
+        .insert(payload)
+        .select('id')
+        .single();
       if (error) throw error;
+
+      // Fire-and-forget owner email notification. Failure must NOT break lead capture.
+      if (inserted?.id) {
+        try {
+          void supabase.functions.invoke('notify-supplier-lead', {
+            body: { lead_id: inserted.id },
+          });
+        } catch (notifyErr) {
+          // swallow — DB trigger already creates the in-app notification
+          console.warn('notify-supplier-lead invoke failed', notifyErr);
+        }
+      }
+
       // PII-safe analytics — no name/email/phone in dataLayer
       track.leadRequestSubmitted({
         contact_preference: parsed.data.contact_preference,
         method: source ?? 'business-profile',
+      });
+      track.supplierLeadSubmitted({
+        source_page: source ?? 'business-profile',
+        inquiry_type: parsed.data.contact_preference,
+        is_authenticated: !!user,
       });
       setSubmitted(true);
       toast.success(isRTL ? 'تم إرسال طلبك بنجاح' : 'Your request has been sent');
