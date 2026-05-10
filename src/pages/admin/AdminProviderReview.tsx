@@ -187,16 +187,19 @@ export default function AdminProviderReview() {
       // 2) Transactional email (requires recipient email).
       if (target.email) {
         try {
+          // Only the rejection / revision templates show notes; the
+          // approved template never displays them.
+          const includeNotes = vars.status === 'rejected' || vars.status === 'needs_changes';
           await supabase.functions.invoke('send-transactional-email', {
             body: {
               templateName: copy.template,
               recipientEmail: target.email,
-              idempotencyKey: `provider-${vars.status}-${target.id}-${Date.now()}`,
+              idempotencyKey: `provider-${vars.status}-${target.id}`,
               templateData: {
                 recipientName: target.name_ar ?? target.name_en ?? undefined,
                 businessName: target.name_ar ?? target.name_en ?? undefined,
                 username: target.username ?? undefined,
-                notes: vars.notes ?? undefined,
+                notes: includeNotes ? (vars.notes ?? undefined) : undefined,
               },
             },
           });
@@ -206,13 +209,10 @@ export default function AdminProviderReview() {
         }
       }
     },
-    onSuccess: (_d, vars) => {
+    onSuccess: () => {
       toast.success(language === 'ar' ? 'تم تحديث الحالة' : 'Status updated');
       qc.invalidateQueries({ queryKey: ['admin-provider-review'] });
       setNotes('');
-      if (vars.status === 'approved' || vars.status === 'published') {
-        // keep selection
-      }
     },
     onError: (e: unknown) => {
       toast.error(e instanceof Error ? e.message : 'Error');
