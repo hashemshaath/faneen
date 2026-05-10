@@ -119,9 +119,9 @@ const SortableTreeItem = React.memo(({
 
   const depthColors = [
     'border-s-primary/60',
-    'border-s-blue-400/50',
-    'border-s-amber-400/50',
-    'border-s-emerald-400/50',
+    'border-s-info/50',
+    'border-s-warning/50',
+    'border-s-success/50',
   ];
 
   return (

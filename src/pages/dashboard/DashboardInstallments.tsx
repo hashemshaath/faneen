@@ -325,7 +325,7 @@ const PlanCard = React.memo(({ plan, user, isRTL, language, onMarkPaid, isPendin
     <Card className={cn(
       "border-border/40 overflow-hidden group hover:shadow-lg transition-all duration-300",
       overdueCount > 0 && "border-s-2 border-s-destructive",
-      plan.status === 'completed' && "border-s-2 border-s-emerald-500"
+      plan.status === 'completed' && "border-s-2 border-s-success"
     )}>
       <CardContent className="p-0">
         {/* Color accent bar */}
