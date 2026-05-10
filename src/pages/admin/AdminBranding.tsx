@@ -15,6 +15,10 @@ import { Loader2, Save, RotateCcw, Upload, Image as ImageIcon, Palette, Eye } fr
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { BrandLogo } from '@/components/common/BrandLogo';
 import { DEFAULT_BRANDING, BRANDING_KEYS, type BrandingConfig } from '@/hooks/useBranding';
+import {
+  DEFAULT_THEME, KEY_FROM_FIELD as THEME_KEY_FROM_FIELD,
+  FIELD_FROM_KEY as THEME_FIELD_FROM_KEY, type ThemeColors, hexToHslString,
+} from '@/hooks/useThemeColors';
 
 type FieldKey =
   | 'fullLightUrl' | 'fullDarkUrl' | 'markUrl'
@@ -43,13 +47,24 @@ const META = {
 
 const SIZE_LIMITS = { min: 24, max: 96 };
 
+const THEME_FIELDS: Array<{ key: keyof ThemeColors; ar: string; en: string; desc: string }> = [
+  { key: 'primary',       ar: 'اللون الأساسي (أخضر اللوجو)', en: 'Primary (logo green)',     desc: 'الأزرار، الروابط، التأكيدات' },
+  { key: 'primaryDark',   ar: 'الأخضر الداكن',               en: 'Primary dark',              desc: 'تدرجات وحالات hover' },
+  { key: 'secondary',     ar: 'اللون الثانوي (أزرق اللوجو)', en: 'Secondary (logo blue)',     desc: 'العناصر الثانوية والتدرجات' },
+  { key: 'secondaryDark', ar: 'الأزرق الداكن',               en: 'Secondary dark',            desc: 'تدرجات وعمق' },
+  { key: 'accent',        ar: 'لون التمييز (Accent)',        en: 'Accent',                    desc: 'الشارات والروابط الفعّالة' },
+  { key: 'navy',          ar: 'لون السطح الداكن (Navy)',     en: 'Surface navy',              desc: 'الفوتر والأقسام الداكنة' },
+];
+
 const AdminBranding: React.FC = () => {
   useNoIndex();
   const { isRTL } = useLanguage();
-  const { isSuperAdmin, isAdmin } = useAuth();
+  const { isAdmin } = useAuth();
   const queryClient = useQueryClient();
   const [values, setValues] = useState<BrandingConfig>(DEFAULT_BRANDING);
   const [dirty, setDirty] = useState<Set<FieldKey>>(new Set());
+  const [theme, setTheme] = useState<ThemeColors>(DEFAULT_THEME);
+  const [themeDirty, setThemeDirty] = useState<Set<keyof ThemeColors>>(new Set());
   const uploadInputRef = useRef<HTMLInputElement>(null);
   const [uploadingFor, setUploadingFor] = useState<FieldKey | null>(null);
 
@@ -60,6 +75,19 @@ const AdminBranding: React.FC = () => {
         .from('platform_settings')
         .select('id, setting_key, setting_value')
         .eq('category', 'branding');
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: isAdmin,
+  });
+
+  const { data: themeRows = [] } = useQuery({
+    queryKey: ['theme-settings-admin'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('platform_settings')
+        .select('id, setting_key, setting_value')
+        .eq('category', 'theme');
       if (error) throw error;
       return data ?? [];
     },
@@ -82,9 +110,26 @@ const AdminBranding: React.FC = () => {
     setDirty(new Set());
   }, [rows]);
 
+  useEffect(() => {
+    const next: ThemeColors = { ...DEFAULT_THEME };
+    for (const r of themeRows) {
+      const f = THEME_FIELD_FROM_KEY[r.setting_key];
+      if (f && r.setting_value && /^#[0-9a-f]{6}$/i.test(r.setting_value)) {
+        next[f] = r.setting_value;
+      }
+    }
+    setTheme(next);
+    setThemeDirty(new Set());
+  }, [themeRows]);
+
   const update = useCallback((field: FieldKey, value: string | number) => {
     setValues(prev => ({ ...prev, [field]: value } as BrandingConfig));
     setDirty(prev => { const n = new Set(prev); n.add(field); return n; });
+  }, []);
+
+  const updateTheme = useCallback((field: keyof ThemeColors, value: string) => {
+    setTheme(prev => ({ ...prev, [field]: value }));
+    setThemeDirty(prev => { const n = new Set(prev); n.add(field); return n; });
   }, []);
 
   const saveMutation = useMutation({
@@ -114,12 +159,40 @@ const AdminBranding: React.FC = () => {
           if (error) throw error;
         }
       }
+      for (const field of themeDirty) {
+        const settingKey = THEME_KEY_FROM_FIELD[field];
+        const newValue = theme[field];
+        const existing = themeRows.find(r => r.setting_key === settingKey);
+        if (existing) {
+          const { error } = await supabase.from('platform_settings').update({
+            setting_value: newValue,
+            updated_at: new Date().toISOString(),
+          }).eq('id', existing.id);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase.from('platform_settings').insert({
+            setting_key: settingKey,
+            setting_value: newValue,
+            category: 'theme',
+            setting_label_ar: 'لون العلامة التجارية',
+            setting_label_en: 'Brand color',
+            description_ar: 'يتحكم بألوان نظام التصميم',
+            description_en: 'Controls design system colors',
+            is_secret: false,
+            is_active: true,
+          });
+          if (error) throw error;
+        }
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['branding-settings-admin'] });
       queryClient.invalidateQueries({ queryKey: ['branding-config'] });
+      queryClient.invalidateQueries({ queryKey: ['theme-settings-admin'] });
+      queryClient.invalidateQueries({ queryKey: ['theme-colors'] });
       toast.success(isRTL ? 'تم حفظ إعدادات العلامة التجارية' : 'Branding saved');
       setDirty(new Set());
+      setThemeDirty(new Set());
     },
     onError: (err: unknown) => {
       const msg = err instanceof Error ? err.message : 'unknown';
@@ -130,6 +203,8 @@ const AdminBranding: React.FC = () => {
   const resetDefaults = useCallback(() => {
     setValues(DEFAULT_BRANDING);
     setDirty(new Set(BRANDING_KEYS.map(k => FIELD_BY_SETTING[k])));
+    setTheme(DEFAULT_THEME);
+    setThemeDirty(new Set(THEME_FIELDS.map(f => f.key)));
     toast.info(isRTL ? 'تم استعادة الإعدادات الافتراضية — اضغط حفظ للتطبيق' : 'Defaults restored — click Save to apply');
   }, [isRTL]);
 
@@ -287,14 +362,14 @@ const AdminBranding: React.FC = () => {
             </Button>
             <Button
               onClick={() => saveMutation.mutate()}
-              disabled={dirty.size === 0 || saveMutation.isPending}
+              disabled={(dirty.size === 0 && themeDirty.size === 0) || saveMutation.isPending}
             >
               {saveMutation.isPending ? (
                 <Loader2 className="w-4 h-4 animate-spin me-2" />
               ) : (
                 <Save className="w-4 h-4 me-2" />
               )}
-              {isRTL ? `حفظ (${dirty.size})` : `Save (${dirty.size})`}
+              {isRTL ? `حفظ (${dirty.size + themeDirty.size})` : `Save (${dirty.size + themeDirty.size})`}
             </Button>
           </div>
         </div>
@@ -311,6 +386,62 @@ const AdminBranding: React.FC = () => {
               {renderImageField('fullDarkUrl', 'dark')}
               {renderImageField('markUrl', 'light')}
             </div>
+
+            {/* Colors */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Palette className="w-4 h-4 text-accent" />
+                  {isRTL ? 'ألوان العلامة التجارية' : 'Brand colors'}
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  {isRTL
+                    ? 'يتم تطبيق الألوان فوراً على المنصة بعد الحفظ. الألوان الافتراضية مأخوذة من اللوجو.'
+                    : 'Colors apply across the platform after Save. Defaults are derived from the logo.'}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {THEME_FIELDS.map(f => {
+                  const valid = /^#[0-9a-f]{6}$/i.test(theme[f.key]);
+                  return (
+                    <div key={f.key} className="rounded-xl border border-border p-3 space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="min-w-0">
+                          <Label className="text-sm block truncate">{isRTL ? f.ar : f.en}</Label>
+                          <p className="text-[11px] text-muted-foreground truncate">{f.desc}</p>
+                        </div>
+                        <div
+                          className="w-9 h-9 rounded-lg border border-border shrink-0"
+                          style={{ background: valid ? theme[f.key] : 'transparent' }}
+                          aria-hidden="true"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="color"
+                          value={valid ? theme[f.key] : '#000000'}
+                          onChange={(e) => updateTheme(f.key, e.target.value.toUpperCase())}
+                          className="h-10 w-12 rounded-lg border border-border cursor-pointer bg-background"
+                          aria-label={f.en}
+                        />
+                        <Input
+                          value={theme[f.key]}
+                          dir="ltr"
+                          onChange={(e) => updateTheme(f.key, e.target.value.toUpperCase())}
+                          className="h-10 tech-content text-xs uppercase"
+                          placeholder="#1FBA82"
+                        />
+                      </div>
+                      {!valid && (
+                        <p className="text-[11px] text-destructive">
+                          {isRTL ? 'صيغة HEX غير صحيحة' : 'Invalid HEX'}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </CardContent>
+            </Card>
 
             {/* Sizes */}
             <Card>

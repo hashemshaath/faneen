@@ -23,7 +23,7 @@
 
   /* Global focus-visible styles for keyboard accessibility */
   :focus-visible {
-    outline: 2px solid hsl(var(--gold, 42 85% 55%));
+    outline: 2px solid hsl(var(--gold, 158 65% 42%));
     outline-offset: 2px;
     border-radius: 4px;
   }
@@ -42,46 +42,55 @@
     --popover: 0 0% 100%;
     --popover-foreground: 220 30% 12%;
 
-    --primary: 220 35% 15%;
-    --primary-foreground: 42 100% 95%;
+    /* Brand-driven palette — green primary, blue secondary, derived from logo */
+    --primary: 158 65% 42%;            /* logo green */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 42 85% 55%;
-    --secondary-foreground: 220 35% 10%;
+    --secondary: 225 60% 47%;          /* logo blue */
+    --secondary-foreground: 0 0% 100%;
 
     --muted: 220 15% 92%;
     --muted-foreground: 220 10% 45%;
 
-    --accent: 42 85% 55%;
-    --accent-foreground: 220 35% 10%;
+    --accent: 158 65% 42%;             /* same as primary green */
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
     --border: 220 15% 88%;
     --input: 220 15% 88%;
-    --ring: 42 85% 55%;
+    --ring: 158 65% 42%;
 
     --radius: 0.75rem;
 
-    --gold: 42 85% 55%;
-    --gold-light: 42 90% 70%;
-    --gold-dark: 42 80% 40%;
+    /* Brand tokens — "gold" name kept for backwards compatibility, now mapped
+       to the logo green so existing utilities (text-gold, bg-gradient-gold,
+       border-gold/20…) automatically align with the new identity. */
+    --gold: 158 65% 42%;
+    --gold-light: 158 60% 55%;
+    --gold-dark: 158 70% 32%;
+    --brand-blue: 225 60% 47%;
+    --brand-blue-light: 225 65% 60%;
+    --brand-blue-dark: 225 65% 35%;
     --navy: 220 35% 15%;
     --navy-light: 220 25% 25%;
     --slate-warm: 220 10% 45%;
-    --cream: 42 40% 96%;
+    --cream: 158 30% 96%;
 
-    /* Surface tokens for Navbar/Footer - stays dark in both modes */
-    --surface-nav: 220 35% 15%;
-    --surface-nav-foreground: 42 100% 95%;
+    /* Navbar/Footer surface — light in light mode (so the colored logo shines),
+       dark navy in dark mode for contrast. */
+    --surface-nav: 0 0% 100%;
+    --surface-nav-foreground: 220 30% 12%;
 
-    --gradient-gold: linear-gradient(135deg, hsl(42 85% 55%), hsl(42 90% 70%));
+    --gradient-gold: linear-gradient(135deg, hsl(158 65% 42%), hsl(225 60% 47%));
+    --gradient-brand: linear-gradient(135deg, hsl(158 65% 42%), hsl(225 60% 47%));
     --gradient-navy: linear-gradient(135deg, hsl(220 35% 15%), hsl(220 25% 25%));
     --gradient-hero: linear-gradient(180deg, hsl(220 35% 10% / 0.85), hsl(220 35% 15% / 0.7));
 
     --shadow-card: 0 4px 24px -4px hsl(220 35% 15% / 0.08);
     --shadow-card-hover: 0 12px 40px -8px hsl(220 35% 15% / 0.15);
-    --shadow-gold: 0 4px 20px -4px hsl(42 85% 55% / 0.4);
+    --shadow-gold: 0 4px 20px -4px hsl(158 65% 42% / 0.4);
 
     /* ============================================================
        Design Tokens — additive, RTL-aware, non-breaking.
@@ -197,23 +206,34 @@
     --card-foreground: 42 20% 92%;
     --popover: 220 30% 12%;
     --popover-foreground: 42 20% 92%;
-    --primary: 42 85% 55%;
-    --primary-foreground: 220 35% 10%;
-    --secondary: 220 25% 20%;
-    --secondary-foreground: 42 20% 92%;
+    --primary: 158 60% 48%;
+    --primary-foreground: 220 35% 8%;
+    --secondary: 225 60% 58%;
+    --secondary-foreground: 0 0% 100%;
     --muted: 220 25% 18%;
     --muted-foreground: 220 10% 60%;
-    --accent: 42 85% 55%;
-    --accent-foreground: 220 35% 10%;
+    --accent: 158 60% 48%;
+    --accent-foreground: 220 35% 8%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
     --border: 220 25% 20%;
     --input: 220 25% 20%;
-    --ring: 42 85% 55%;
+    --ring: 158 60% 48%;
 
-    /* Nav surface stays dark but slightly lighter than background */
+    /* Nav surface — dark navy in dark mode for contrast with bright logo */
     --surface-nav: 220 30% 10%;
-    --surface-nav-foreground: 42 20% 92%;
+    --surface-nav-foreground: 0 0% 98%;
+
+    /* Brand colors slightly brightened for dark mode */
+    --gold: 158 60% 48%;
+    --gold-light: 158 55% 60%;
+    --gold-dark: 158 65% 38%;
+    --brand-blue: 225 65% 60%;
+    --brand-blue-light: 225 70% 70%;
+    --brand-blue-dark: 225 65% 45%;
+    --gradient-gold: linear-gradient(135deg, hsl(158 60% 48%), hsl(225 65% 60%));
+    --gradient-brand: linear-gradient(135deg, hsl(158 60% 48%), hsl(225 65% 60%));
+    --shadow-gold: 0 4px 20px -4px hsl(158 60% 48% / 0.45);
 
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
