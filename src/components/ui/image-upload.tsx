@@ -7,6 +7,11 @@ import { Upload, X, Loader2, ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { compressImage } from '@/lib/image-compress';
+import {
+  ALLOWED_PUBLIC_IMAGE_MIMES,
+  validateImageFile,
+  getImageRejectionMessage,
+} from '@/lib/image-validate';
 
 interface ImageUploadProps {
   bucket: string;
@@ -23,14 +28,15 @@ interface ImageUploadProps {
 }
 
 // Per-bucket upload constraints (mirrors storage.buckets server-side limits).
-// Keep in sync with the storage hardening migration.
-// SVG intentionally excluded for business-assets until server-side
-// sanitization (DOMPurify) is in place — see backlog IMG-01.
+// Phase 5: GIF removed across all public/business image buckets — none of these
+// flows need animation, and dropping GIF reduces XSS-via-tracking-pixel risk
+// and saves bandwidth. SVG remains blocked everywhere except admin-only
+// brand-assets (handled in AdminBranding).
 const BUCKET_CONSTRAINTS: Record<string, { maxMB: number; mimes: string[] }> = {
-  'business-assets':  { maxMB: 2, mimes: ['image/jpeg','image/png','image/webp','image/gif'] },
-  'portfolio-images': { maxMB: 5, mimes: ['image/jpeg','image/png','image/webp','image/gif'] },
-  'project-images':   { maxMB: 5, mimes: ['image/jpeg','image/png','image/webp','image/gif'] },
-  'blog-images':      { maxMB: 5, mimes: ['image/jpeg','image/png','image/webp','image/gif'] },
+  'business-assets':  { maxMB: 2, mimes: [...ALLOWED_PUBLIC_IMAGE_MIMES] },
+  'portfolio-images': { maxMB: 5, mimes: [...ALLOWED_PUBLIC_IMAGE_MIMES] },
+  'project-images':   { maxMB: 5, mimes: [...ALLOWED_PUBLIC_IMAGE_MIMES] },
+  'blog-images':      { maxMB: 5, mimes: [...ALLOWED_PUBLIC_IMAGE_MIMES] },
 };
 
 export const ImageUpload: React.FC<ImageUploadProps> = ({
@@ -54,11 +60,6 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   const tx = {
     placeholder: placeholder ?? (isRTL ? 'اضغط لرفع صورة' : 'Click to upload an image'),
     loginFirst: isRTL ? 'يجب تسجيل الدخول أولاً' : 'You must be logged in first',
-    sizeLimit: (mb: number) => isRTL ? `حجم الملف يجب أن لا يتجاوز ${mb}MB` : `File must not exceed ${mb}MB`,
-    typeNotAllowed: isRTL ? 'نوع الملف غير مدعوم. الأنواع المسموحة: JPEG, PNG, WebP, GIF' : 'File type not allowed. Allowed: JPEG, PNG, WebP, GIF',
-    svgBlocked: isRTL
-      ? 'صيغة SVG غير مدعومة حاليًا لأسباب أمنية. يرجى رفع PNG أو JPG أو WebP.'
-      : 'SVG is temporarily disabled for security reasons. Please upload PNG, JPG, or WebP.',
     uploadOk: isRTL ? 'تم رفع الصورة بنجاح' : 'Image uploaded successfully',
     uploadFail: isRTL ? 'فشل رفع الصورة' : 'Failed to upload image',
     uploading: isRTL ? 'جاري الرفع...' : 'Uploading…',
@@ -76,17 +77,12 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
       return;
     }
 
-    if (file.type === 'image/svg+xml' && allowedMimes && !allowedMimes.includes('image/svg+xml')) {
-      toast.error(tx.svgBlocked);
-      return;
-    }
-    if (allowedMimes && !allowedMimes.includes(file.type)) {
-      toast.error(tx.typeNotAllowed);
-      return;
-    }
-
-    if (file.size > effectiveMaxMB * 1024 * 1024) {
-      toast.error(tx.sizeLimit(effectiveMaxMB));
+    const check = await validateImageFile(file, {
+      allowed: allowedMimes ?? [...ALLOWED_PUBLIC_IMAGE_MIMES],
+      maxBytes: effectiveMaxMB * 1024 * 1024,
+    });
+    if (!check.ok) {
+      toast.error(getImageRejectionMessage(check.reason ?? 'unsupported_type', isRTL));
       return;
     }
 
@@ -111,9 +107,10 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
 
       onChange(publicUrl);
       toast.success(tx.uploadOk);
-    } catch (err: any) {
-      console.error('Upload error:', err);
-      toast.error(err.message || tx.uploadFail);
+    } catch (err: unknown) {
+      // Do not log file names or contents.
+      if (import.meta.env.DEV) console.warn('Upload error');
+      toast.error(err instanceof Error ? err.message : tx.uploadFail);
     } finally {
       setUploading(false);
     }
@@ -302,8 +299,12 @@ export const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
 
     try {
       for (const file of toUpload) {
-        if (file.size > maxSizeMB * 1024 * 1024) {
-          toast.error(`${file.name} أكبر من ${maxSizeMB}MB`);
+        const check = await validateImageFile(file, {
+          allowed: [...ALLOWED_PUBLIC_IMAGE_MIMES],
+          maxBytes: maxSizeMB * 1024 * 1024,
+        });
+        if (!check.ok) {
+          toast.error(getImageRejectionMessage(check.reason ?? 'unsupported_type', true));
           continue;
         }
 
@@ -319,7 +320,7 @@ export const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
           .upload(path, compressed, { cacheControl: '3600', upsert: false });
 
         if (error) {
-          console.error('Upload error:', error);
+          if (import.meta.env.DEV) console.warn('Upload error');
           continue;
         }
 
@@ -334,8 +335,8 @@ export const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
         onChange([...images, ...newUrls]);
         toast.success(`تم رفع ${newUrls.length} صورة`);
       }
-    } catch (err: any) {
-      toast.error(err.message || 'فشل رفع الصور');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'فشل رفع الصور');
     } finally {
       setUploading(false);
     }

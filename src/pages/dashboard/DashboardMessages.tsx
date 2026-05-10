@@ -33,8 +33,11 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { useNoIndex } from "@/hooks/useNoIndex";
 import { trackMessageSent } from '@/lib/analytics-events';
+import { compressImage } from '@/lib/image-compress';
+import { validateImageFile, getImageRejectionMessage, ALLOWED_PUBLIC_IMAGE_MIMES } from '@/lib/image-validate';
 
-const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+// Phase 5: GIF removed for security/size; PDF/doc attachments unaffected.
+const IMAGE_TYPES = [...ALLOWED_PUBLIC_IMAGE_MIMES] as string[];
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const EMOJI_QUICK = ['👍', '❤️', '😊', '👏', '🙏', '✅', '🎉', '💯', '🔥', '😂', '😍', '🤝', '💪', '👀', '🙌', '🥳', '🤔', '💬'];
 const EMOJI_REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
@@ -786,13 +789,25 @@ const DashboardMessages = () => {
   const removeAttachment = useCallback(() => { setAttachedFile(null); setAttachedPreview(null); }, []);
 
   const uploadFile = useCallback(async (file: File): Promise<string> => {
-    const ext = file.name.split('.').pop() || 'bin';
+    let toUpload: File = file;
+    // Only re-encode/strip EXIF for image attachments. Leave PDFs/docs intact.
+    if (file.type.startsWith('image/') && IMAGE_TYPES.includes(file.type)) {
+      const check = await validateImageFile(file, {
+        allowed: IMAGE_TYPES,
+        maxBytes: MAX_FILE_SIZE,
+      });
+      if (!check.ok) {
+        throw new Error(getImageRejectionMessage(check.reason ?? 'unsupported_type', isRTL));
+      }
+      toUpload = await compressImage(file);
+    }
+    const ext = toUpload.name.split('.').pop() || 'bin';
     const fileName = `${user!.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-    const { error } = await supabase.storage.from('chat-attachments').upload(fileName, file, { contentType: file.type });
+    const { error } = await supabase.storage.from('chat-attachments').upload(fileName, toUpload, { contentType: toUpload.type });
     if (error) throw error;
     const { data: urlData } = supabase.storage.from('chat-attachments').getPublicUrl(fileName);
     return urlData.publicUrl;
-  }, [user]);
+  }, [user, isRTL]);
 
   /* ─── Send message ─── */
   const sendMutation = useMutation({

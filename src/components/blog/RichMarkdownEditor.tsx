@@ -5,6 +5,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { ImageUpload } from '@/components/ui/image-upload';
 import { supabase } from '@/integrations/supabase/client';
+import { compressImage } from '@/lib/image-compress';
+import {
+  ALLOWED_PUBLIC_IMAGE_MIMES,
+  validateImageFile,
+  getImageRejectionMessage,
+} from '@/lib/image-validate';
 import { toast } from 'sonner';
 import {
   Bold, Italic, Heading1, Heading2, Heading3, List, ListOrdered,
@@ -162,17 +168,24 @@ export const RichMarkdownEditor: React.FC<RichEditorProps> = ({
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith('image/')) { toast.error(isRTL ? 'يرجى اختيار صورة' : 'Please select an image'); return; }
-    if (file.size > 5 * 1024 * 1024) { toast.error(isRTL ? 'الحد الأقصى 5 ميجابايت' : 'Max 5MB'); return; }
-    const ext = file.name.split('.').pop() || 'jpg';
+    const check = await validateImageFile(file, {
+      allowed: [...ALLOWED_PUBLIC_IMAGE_MIMES],
+      maxBytes: 5 * 1024 * 1024,
+    });
+    if (!check.ok) {
+      toast.error(getImageRejectionMessage(check.reason ?? 'unsupported_type', isRTL));
+      return;
+    }
+    const processed = await compressImage(file);
+    const ext = processed.name.split('.').pop() || 'webp';
     const path = `content/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
     toast.loading(isRTL ? 'جاري الرفع...' : 'Uploading...');
-    const { error } = await supabase.storage.from('blog-images').upload(path, file);
+    const { error } = await supabase.storage.from('blog-images').upload(path, processed, { contentType: processed.type });
     if (error) { toast.dismiss(); toast.error(error.message); return; }
     const { data: urlData } = supabase.storage.from('blog-images').getPublicUrl(path);
     toast.dismiss();
     toast.success(isRTL ? 'تم الرفع' : 'Uploaded');
-    handleInsertImage(urlData.publicUrl, file.name.split('.')[0]);
+    handleInsertImage(urlData.publicUrl, processed.name.split('.')[0]);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
