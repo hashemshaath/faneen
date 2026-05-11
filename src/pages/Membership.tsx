@@ -6,7 +6,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
-import { Shield } from 'lucide-react';
+import { Shield, Info } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { MembershipHeader } from '@/components/membership/MembershipHeader';
@@ -134,6 +134,15 @@ const Membership = () => {
       <Navbar />
       <div className="container px-4 py-10 sm:py-16">
         <MembershipHeader isRTL={isRTL} billingCycle={billingCycle} setBillingCycle={setBillingCycle} plans={plans} />
+
+        <div className="max-w-3xl mx-auto mb-6 rounded-xl border border-info/30 bg-info/5 px-4 py-3 flex items-start gap-2 text-xs text-foreground/80">
+          <Info className="w-4 h-4 text-info shrink-0 mt-0.5" />
+          <p className="leading-relaxed">
+            {isRTL
+              ? 'الباقات في مرحلة التجربة: يتم تفعيل الترقية يدوياً دون أي رسوم حالياً. سيتم إضافة الدفع الإلكتروني لاحقاً.'
+              : 'Plans are in beta: upgrades are activated manually with no charge for now. Online payment will be added later.'}
+          </p>
+        </div>
 
         {user && mySubscription && (
           <CurrentSubscriptionCard
