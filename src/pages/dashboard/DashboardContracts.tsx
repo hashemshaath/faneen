@@ -1455,12 +1455,14 @@ const DashboardContracts = () => {
                   const isExpanded = expandedId === c.id;
                   const locked = isContractLocked(c);
                   const isProvider = user?.id === c.provider_id;
-                  const measurementTotal = measurements.reduce((s: number, m) => s + Number(m.total_cost || 0), 0);
-                  const lineItemTotal = lineItems.reduce((s: number, l) => s + Number(l.total_cost || 0), 0);
+                  // Sourced from measurements + line_items (line_items table currently empty — see C2/C3).
+                  const measurementTotal = calculateMeasurementsTotal(measurements);
+                  const lineItemTotal = calculateLineItemsTotal(lineItems);
                   const subtotal = measurementTotal + lineItemTotal;
-                  const vatRate = Number(c.vat_rate || 15);
-                  const vatAmount = c.vat_inclusive ? (subtotal * vatRate) / (100 + vatRate) : (subtotal * vatRate) / 100;
-                  const grandTotal = c.vat_inclusive ? subtotal : subtotal + vatAmount;
+                  const _vat = calculateVatBreakdown({ amount: subtotal, vatRate: c.vat_rate, vatInclusive: c.vat_inclusive });
+                  const vatRate = _vat.vatRate;
+                  const vatAmount = _vat.vatAmount;
+                  const grandTotal = _vat.total;
 
                   return (
                     <div key={c.id} className="space-y-0">
