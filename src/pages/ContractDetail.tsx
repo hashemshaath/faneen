@@ -22,6 +22,13 @@ import { calculateVatBreakdown } from '@/lib/contract-financials';
 import { PaymentScheduleGenerator } from '@/components/contract/PaymentScheduleGenerator';
 import { ContractFinancialCoverage } from '@/components/contract/ContractFinancialCoverage';
 import {
+  validateAttachmentFile,
+  attachmentErrorMessage,
+  openAttachment as openAttachmentSigned,
+  downloadAttachment as downloadAttachmentSigned,
+  type AttachmentRow,
+} from '@/lib/contract-attachments';
+import {
   FileText, Shield, Wrench, CheckCircle2, Clock,
   Calendar, DollarSign, AlertTriangle, XCircle, ListChecks, Plus, Send,
   Building2, User, Download, Copy, Hash, Banknote,
