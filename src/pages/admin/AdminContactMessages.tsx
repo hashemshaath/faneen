@@ -1,6 +1,13 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
+import { DashboardLayout as RealDashboardLayout } from '@/components/dashboard/DashboardLayout';
+import { useAdminEmbedded } from '@/contexts/AdminTabsContext';
+/** Phase B: when embedded inside AdminContactCenter tabs, the parent already
+ *  renders DashboardLayout, so this wrapper collapses to a Fragment. */
+const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const embedded = useAdminEmbedded();
+  return embedded ? <>{children}</> : <RealDashboardLayout>{children}</RealDashboardLayout>;
+};
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
