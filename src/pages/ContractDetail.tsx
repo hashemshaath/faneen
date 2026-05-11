@@ -19,6 +19,7 @@ import { Footer } from '@/components/layout/Footer';
 import type { ImportedMeasurement } from '@/lib/contract-pdf-export';
 import { getContractStatusMeta, isContractLockedByStatus } from '@/lib/contract-statuses';
 import { calculateVatBreakdown } from '@/lib/contract-financials';
+import { PaymentScheduleGenerator } from '@/components/contract/PaymentScheduleGenerator';
 import {
   FileText, Shield, Wrench, CheckCircle2, Clock,
   Calendar, DollarSign, AlertTriangle, XCircle, ListChecks, Plus, Send,
