@@ -28,7 +28,22 @@ import { TIERS, tierIcons, tierColors, statusConfig } from '@/lib/membership-tie
 import { LIMIT_FIELDS, LIMIT_CATEGORIES, parseLimits, limitsToJson, getExtraLimitKeys } from '@/lib/membership-limits';
 
 import { useNoIndex } from "@/hooks/useNoIndex";
-type Tab = 'overview' | 'plans' | 'subscriptions' | 'businesses';
+type Tab = 'overview' | 'plans' | 'subscriptions' | 'businesses' | 'usage';
+
+/* ─── Admin Usage Report ─── */
+type UsageReportRow = {
+  business_id: string;
+  business_name_ar: string | null;
+  business_name_en: string | null;
+  owner_user_id: string;
+  tier: string | null;
+  metric: string;
+  used: number;
+  limit_value: number;
+  period: string;
+  near_cap: boolean;
+  over_limit: boolean;
+};
 
 /* ─── Plan Card ─── */
 const PlanCard = React.memo(({ plan, isRTL, language, subsCount, onEdit }: { plan: any; isRTL: boolean; language: string; subsCount: number; onEdit: (p: any) => void }) => {
@@ -507,6 +522,22 @@ const AdminMemberships = () => {
     enabled: activeTab === 'businesses',
   });
 
+  /* ─── M3A: Admin usage report (over-limit & near-cap) ─── */
+  const [usageOnlyFlagged, setUsageOnlyFlagged] = useState(true);
+  const { data: usageReport = [], isLoading: loadingUsage } = useQuery({
+    queryKey: ['admin-membership-usage', usageOnlyFlagged],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('admin_list_membership_usage', {
+        _only_over_or_near: usageOnlyFlagged,
+        _limit: 500,
+      });
+      if (error) throw error;
+      return (data ?? []) as UsageReportRow[];
+    },
+    enabled: activeTab === 'usage' && isAdmin,
+    staleTime: 60 * 1000,
+  });
+
   /* ─── Enriched subscriptions ─── */
   const enrichedSubs = useMemo(() => {
     const profileMap = new Map(profiles.map((p) => [p.user_id, p]));
@@ -707,6 +738,7 @@ const AdminMemberships = () => {
     { key: 'plans', icon: CreditCard, label: isRTL ? 'الخطط' : 'Plans', count: plans.length },
     { key: 'subscriptions', icon: Users, label: isRTL ? 'الاشتراكات' : 'Subscriptions', count: stats.active },
     { key: 'businesses', icon: Building2, label: isRTL ? 'الجهات' : 'Businesses' },
+    { key: 'usage', icon: Activity, label: isRTL ? 'الاستخدام' : 'Usage' },
   ];
 
   // Defense-in-depth: ProtectedRoute requireAdmin already gates this route,
@@ -1140,6 +1172,98 @@ const AdminMemberships = () => {
                       </Card>
                     );
                   })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ═══════ USAGE (M3A read-only) ═══════ */}
+          {activeTab === 'usage' && (
+            <div className="space-y-3">
+              <Card className="border-info/30 bg-info/5">
+                <CardContent className="p-3 text-[11px] text-foreground/80 flex items-start gap-2">
+                  <AlertTriangle className="w-3.5 h-3.5 text-info shrink-0 mt-0.5" />
+                  <span>
+                    {isRTL
+                      ? 'هذه مؤشرات استخدام فقط. لا يتم فرض الحدود تلقائيًا بعد.'
+                      : 'Usage indicators only. Limits are not enforced automatically yet.'}
+                  </span>
+                </CardContent>
+              </Card>
+
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={usageOnlyFlagged}
+                    onCheckedChange={setUsageOnlyFlagged}
+                  />
+                  <Label className="text-xs">
+                    {isRTL ? 'إظهار المتجاوزين/القريبين من الحد فقط' : 'Show only over-limit / near-cap'}
+                  </Label>
+                </div>
+                <Badge variant="outline" className="h-7 px-2 text-[10px] gap-1">
+                  <Activity className="w-3 h-3" />
+                  {usageReport.length}
+                </Badge>
+              </div>
+
+              {loadingUsage ? (
+                <div className="flex justify-center py-12">
+                  <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                </div>
+              ) : usageReport.length === 0 ? (
+                <Card className="border-dashed">
+                  <CardContent className="p-8 text-center text-xs text-muted-foreground">
+                    {isRTL ? 'لا توجد جهات قريبة من الحد أو متجاوزة.' : 'No businesses near or over their limits.'}
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="overflow-x-auto rounded-xl border border-border">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="bg-muted/30 text-muted-foreground">
+                        <th className="text-start p-2 font-semibold">{isRTL ? 'الجهة' : 'Business'}</th>
+                        <th className="text-start p-2 font-semibold">{isRTL ? 'الباقة' : 'Tier'}</th>
+                        <th className="text-start p-2 font-semibold">{isRTL ? 'المؤشر' : 'Metric'}</th>
+                        <th className="text-center p-2 font-semibold">{isRTL ? 'الاستخدام' : 'Used / Limit'}</th>
+                        <th className="text-start p-2 font-semibold">{isRTL ? 'الفترة' : 'Period'}</th>
+                        <th className="text-center p-2 font-semibold">{isRTL ? 'الحالة' : 'Status'}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {usageReport.map((r, i) => {
+                        const limText = r.limit_value === 0
+                          ? (isRTL ? 'غير محدود' : '∞')
+                          : String(r.limit_value);
+                        return (
+                          <tr key={`${r.business_id}-${r.metric}-${i}`} className="border-t border-border/30 hover:bg-muted/10">
+                            <td className="p-2 truncate max-w-[180px]">
+                              {isRTL ? r.business_name_ar : (r.business_name_en || r.business_name_ar)}
+                            </td>
+                            <td className="p-2 capitalize">{r.tier || '—'}</td>
+                            <td className="p-2 capitalize">{r.metric}</td>
+                            <td className="p-2 text-center tech-content font-bold">
+                              {r.used} / {limText}
+                            </td>
+                            <td className="p-2 text-[10px] text-muted-foreground">{r.period}</td>
+                            <td className="p-2 text-center">
+                              {r.over_limit ? (
+                                <Badge className="text-[9px] bg-destructive/15 text-destructive">
+                                  {isRTL ? 'تجاوز الحد' : 'Over limit'}
+                                </Badge>
+                              ) : r.near_cap ? (
+                                <Badge className="text-[9px] bg-warning/15 text-warning">
+                                  {isRTL ? 'اقترب من الحد' : 'Near cap'}
+                                </Badge>
+                              ) : (
+                                <Badge variant="outline" className="text-[9px]">OK</Badge>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </div>
