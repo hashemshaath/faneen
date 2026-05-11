@@ -1619,36 +1619,67 @@ export type Database = {
       }
       contract_attachments: {
         Row: {
+          amendment_id: string | null
           contract_id: string
           created_at: string
+          description: string | null
           file_name: string
+          file_size: number | null
           file_type: string
           file_url: string
           id: string
+          measurement_id: string | null
           milestone_id: string | null
+          payment_id: string | null
+          storage_path: string | null
+          updated_at: string
           user_id: string
+          visibility: string
         }
         Insert: {
+          amendment_id?: string | null
           contract_id: string
           created_at?: string
+          description?: string | null
           file_name: string
+          file_size?: number | null
           file_type?: string
           file_url: string
           id?: string
+          measurement_id?: string | null
           milestone_id?: string | null
+          payment_id?: string | null
+          storage_path?: string | null
+          updated_at?: string
           user_id: string
+          visibility?: string
         }
         Update: {
+          amendment_id?: string | null
           contract_id?: string
           created_at?: string
+          description?: string | null
           file_name?: string
+          file_size?: number | null
           file_type?: string
           file_url?: string
           id?: string
+          measurement_id?: string | null
           milestone_id?: string | null
+          payment_id?: string | null
+          storage_path?: string | null
+          updated_at?: string
           user_id?: string
+          visibility?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "contract_attachments_amendment_id_fkey"
+            columns: ["amendment_id"]
+            isOneToOne: false
+            referencedRelation: "contract_amendments"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "contract_attachments_contract_id_fkey"
             columns: ["contract_id"]
@@ -1657,10 +1688,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "contract_attachments_measurement_id_fkey"
+            columns: ["measurement_id"]
+            isOneToOne: false
+            referencedRelation: "contract_measurements"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "contract_attachments_milestone_id_fkey"
             columns: ["milestone_id"]
             isOneToOne: false
             referencedRelation: "contract_milestones"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_attachments_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "installment_payments"
             referencedColumns: ["id"]
           },
         ]
@@ -5366,6 +5411,41 @@ export type Database = {
           },
         ]
       }
+      v_contract_attachments_unparsed: {
+        Row: {
+          contract_id: string | null
+          created_at: string | null
+          file_name: string | null
+          file_type: string | null
+          file_url: string | null
+          id: string | null
+        }
+        Insert: {
+          contract_id?: string | null
+          created_at?: string | null
+          file_name?: string | null
+          file_type?: string | null
+          file_url?: string | null
+          id?: string | null
+        }
+        Update: {
+          contract_id?: string | null
+          created_at?: string | null
+          file_name?: string | null
+          file_type?: string | null
+          file_url?: string | null
+          id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_attachments_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       _membership_free_defaults: { Args: never; Returns: Json }
@@ -5388,6 +5468,23 @@ export type Database = {
           tier: string
           used: number
         }[]
+      }
+      admin_list_unparsed_attachments: {
+        Args: never
+        Returns: {
+          contract_id: string | null
+          created_at: string | null
+          file_name: string | null
+          file_type: string | null
+          file_url: string | null
+          id: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "v_contract_attachments_unparsed"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       admin_update_business_approval: {
         Args: {
