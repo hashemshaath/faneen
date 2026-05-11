@@ -31,6 +31,7 @@ import {
   TrendingUp, ArrowUpRight, Filter, RefreshCw, Copy, MoreHorizontal,
   Activity, Zap, Languages, ArrowUpDown, ChevronLeft, ChevronRight,
   CheckSquare, Square, AlertTriangle,
+  FlaskConical,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useNoIndex } from "@/hooks/useNoIndex";
