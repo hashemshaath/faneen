@@ -9,7 +9,7 @@ import {
   AlertTriangle, CheckCircle2, RefreshCw, ShieldAlert, Clock, Activity, Inbox,
 } from 'lucide-react';
 import {
-  dedupeByMessageId, classifyError, CURRENT_SENDER_DOMAIN,
+  dedupeByMessageId, classifyDlqRow, CURRENT_SENDER_DOMAIN,
   type EmailLogRow,
 } from '@/lib/email-center/email-log-utils';
 
@@ -120,17 +120,15 @@ export const EmailHealthAlerts: React.FC = () => {
       });
     }
 
-    // 3. no_matching_sender after e.qitaat.com verification
-    const nmsRecent = dlqRows.filter(
-      (r) => classifyError(r.error_message) === 'no_matching_sender',
-    );
-    if (nmsRecent.length > 0) {
+    // 3. FRESH no_matching_sender (last 48h) — distinct from historical archive rows
+    const nmsFresh = dlqRows.filter((r) => classifyDlqRow(r).isFreshNoMatchingSender);
+    if (nmsFresh.length > 0) {
       out.push({
         id: 'no-matching-sender', severity: 'critical', icon: AlertTriangle,
-        titleAr: 'تم رصد no_matching_sender حديثاً',
-        titleEn: 'Recent no_matching_sender errors',
-        detailAr: `${nmsRecent.length} رسالة فشلت رغم تفعيل ${CURRENT_SENDER_DOMAIN}. تحقّق من SENDER_DOMAIN في الدوال.`,
-        detailEn: `${nmsRecent.length} message(s) failed despite ${CURRENT_SENDER_DOMAIN} being verified. Verify SENDER_DOMAIN in edge functions.`,
+        titleAr: 'no_matching_sender نشط (آخر 48 ساعة)',
+        titleEn: 'Fresh no_matching_sender (last 48h)',
+        detailAr: `${nmsFresh.length} رسالة فشلت رغم تفعيل ${CURRENT_SENDER_DOMAIN}. إذا تكرّر، أعد نشر send-transactional-email و auth-email-hook وتأكّد أن SENDER_DOMAIN=${CURRENT_SENDER_DOMAIN}.`,
+        detailEn: `${nmsFresh.length} message(s) failed despite ${CURRENT_SENDER_DOMAIN} being verified. If recurring, redeploy send-transactional-email and auth-email-hook and verify SENDER_DOMAIN=${CURRENT_SENDER_DOMAIN}.`,
       });
     }
 
