@@ -618,12 +618,15 @@ const AdminBusinesses = () => {
         (filterStatus === 'inactive' && !b.is_active) ||
         (filterStatus === 'contract' && contractBusinessIds.includes(b.id));
       const matchTier = filterTier === 'all' || b.membership_tier === filterTier;
+      const matchOrigin = filterOrigin === 'all'
+        || (filterOrigin === 'demo' && b.is_demo === true)
+        || (filterOrigin === 'production' && !b.is_demo);
       const tc = translationCompleteness(b);
       const matchTrans = filterTranslation === 'all'
         || (filterTranslation === 'missing_en' && !tc.en)
         || (filterTranslation === 'missing_ar' && !tc.ar)
         || (filterTranslation === 'complete' && tc.full);
-      return matchSearch && matchStatus && matchTier && matchTrans;
+      return matchSearch && matchStatus && matchTier && matchTrans && matchOrigin;
     });
     const tierRank: Record<string, number> = { enterprise: 0, premium: 1, basic: 2, free: 3 };
     arr.sort((a, b) => {
@@ -639,7 +642,7 @@ const AdminBusinesses = () => {
       }
     });
     return arr;
-  }, [businesses, search, filterStatus, filterTier, filterTranslation, sortBy, language, contractBusinessIds, translationCompleteness]);
+  }, [businesses, search, filterStatus, filterTier, filterTranslation, filterOrigin, sortBy, language, contractBusinessIds, translationCompleteness]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(Math.max(1, page), totalPages);
