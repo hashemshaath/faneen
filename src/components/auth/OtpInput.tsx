@@ -15,11 +15,12 @@ interface OtpInputProps {
   onResend: () => void;
   onBack: () => void;
   isRTL: boolean;
+  error?: string | null;
 }
 
 export const OtpInput: React.FC<OtpInputProps> = ({
   otpCode, onCodeChange, demoOtp, cooldown, loading,
-  onVerify, onResend, onBack, isRTL,
+  onVerify, onResend, onBack, isRTL, error,
 }) => (
   <div className="space-y-4 animate-fade-in">
     <div className="space-y-2">
@@ -27,11 +28,19 @@ export const OtpInput: React.FC<OtpInputProps> = ({
       <Input
         value={otpCode}
         onChange={(e) => onCodeChange(e.target.value)}
+        onKeyDown={(e) => { if (e.key === 'Enter' && !loading && otpCode.length === 6) onVerify(); }}
         placeholder="000000"
         dir="ltr"
-        className="text-center text-xl tracking-[0.5em] font-mono h-12"
+        className={`text-center text-xl tracking-[0.5em] font-mono h-12 ${error ? 'border-destructive focus-visible:ring-destructive' : ''}`}
         maxLength={OTP_LENGTH}
+        inputMode="numeric"
+        autoComplete="one-time-code"
+        aria-invalid={!!error}
+        aria-describedby="otp-status"
       />
+      <p id="otp-status" role="status" aria-live="polite" className="text-xs min-h-[1rem] text-destructive">
+        {error || ''}
+      </p>
     </div>
 
     {demoOtp && (
