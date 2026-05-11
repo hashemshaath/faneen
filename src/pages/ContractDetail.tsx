@@ -24,6 +24,7 @@ import { ContractFinancialCoverage } from '@/components/contract/ContractFinanci
 import { SignedAttachmentImage } from '@/components/contract/SignedAttachment';
 import { ContractAttachmentsTab } from '@/components/contract/ContractAttachmentsTab';
 import { MeasurementAttachmentsPanel } from '@/components/contract/MeasurementAttachmentsPanel';
+import { PaymentReceiptPanel } from '@/components/contract/PaymentReceiptPanel';
 import {
   openAttachment as openAttachmentSigned,
   type AttachmentRow,
@@ -701,6 +702,19 @@ const ContractDetail = () => {
         const arr = map.get(a.measurement_id) || [];
         arr.push(a);
         map.set(a.measurement_id, arr);
+      }
+    }
+    return map;
+  }, [attachments]);
+
+  // Group attachments by payment_id once to avoid N+1 queries.
+  const attachmentsByPayment = useMemo(() => {
+    const map = new Map<string, AttachmentRow[]>();
+    for (const a of (attachments || []) as AttachmentRow[]) {
+      if (a.payment_id) {
+        const arr = map.get(a.payment_id) || [];
+        arr.push(a);
+        map.set(a.payment_id, arr);
       }
     }
     return map;
@@ -1552,6 +1566,19 @@ const ContractDetail = () => {
                                 </div>
                               )}
                             </div>
+                          )}
+                          {/* C4B.4 — Payment receipts */}
+                          {id && user && (
+                            <PaymentReceiptPanel
+                              contractId={id}
+                              paymentId={pay.id}
+                              userId={user.id}
+                              isRTL={isRTL}
+                              isPaid={isPaid}
+                              locked={isContractLocked}
+                              attachments={attachmentsByPayment.get(pay.id) || []}
+                              formatDate={formatDate}
+                            />
                           )}
                         </div>
                       );
