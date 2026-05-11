@@ -22,7 +22,7 @@ import {
   Crown, Pencil, Loader2, Users, CreditCard, X, Check, Save,
   Zap, Building2, AlertTriangle, Clock, Ban,
   RefreshCw, BarChart3, Search, UserCheck, CalendarDays, DollarSign, Shield, ArrowUpCircle,
-  Download, Hash, Activity, Layers, Settings2, Megaphone, Eye, Sparkles,
+  Download, Hash, Activity, Layers, Settings2, Eye, Sparkles, Plus, Lock,
 } from 'lucide-react';
 import { TIERS, tierIcons, tierColors, statusConfig } from '@/lib/membership-tiers';
 import { LIMIT_FIELDS, LIMIT_CATEGORIES, parseLimits, limitsToJson } from '@/lib/membership-limits';
@@ -563,21 +563,36 @@ const AdminMemberships = () => {
       if (!editingPlan) return;
       const features = featuresText.split('\n').map(l => l.trim()).filter(Boolean);
       const limits = limitsToJson(editLimits);
-      const { error } = await supabase.from('membership_plans').update({
-        name_ar: form.name_ar, name_en: form.name_en,
-        description_ar: form.description_ar || null, description_en: form.description_en || null,
-        price_monthly: form.price_monthly, price_yearly: form.price_yearly,
-        is_active: form.is_active, sort_order: form.sort_order,
-        features, limits,
-      }).eq('id', (editingPlan as any).id);
-      if (error) throw error;
+      const isNew = !(editingPlan as any).id;
+      if (isNew) {
+        const tier = (editingPlan as any).tier || 'free';
+        const { error } = await supabase.from('membership_plans').insert({
+          tier,
+          name_ar: form.name_ar, name_en: form.name_en,
+          description_ar: form.description_ar || null, description_en: form.description_en || null,
+          price_monthly: form.price_monthly, price_yearly: form.price_yearly,
+          is_active: form.is_active, sort_order: form.sort_order,
+          features, limits,
+        });
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from('membership_plans').update({
+          name_ar: form.name_ar, name_en: form.name_en,
+          description_ar: form.description_ar || null, description_en: form.description_en || null,
+          price_monthly: form.price_monthly, price_yearly: form.price_yearly,
+          is_active: form.is_active, sort_order: form.sort_order,
+          features, limits,
+        }).eq('id', (editingPlan as any).id);
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-membership-plans'] });
       queryClient.invalidateQueries({ queryKey: ['membership-plans'] });
       queryClient.invalidateQueries({ queryKey: ['membership-plans-comparison'] });
+      queryClient.invalidateQueries({ queryKey: ['home-membership-plans'] });
       setEditingPlan(null);
-      toast.success(isRTL ? 'تم تحديث الخطة بنجاح' : 'Plan updated successfully');
+      toast.success(isRTL ? 'تم حفظ الخطة بنجاح' : 'Plan saved successfully');
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -644,6 +659,18 @@ const AdminMemberships = () => {
     });
   }, []);
 
+  const openCreate = useCallback((tier: typeof TIERS[number]) => {
+    setEditingPlan({ tier, _new: true });
+    setFeaturesText('');
+    setEditLimits(parseLimits(undefined));
+    setForm({
+      name_ar: '', name_en: '',
+      description_ar: '', description_en: '',
+      price_monthly: 0, price_yearly: 0,
+      is_active: true, sort_order: plans.length,
+    });
+  }, [plans.length]);
+
   /* ─── CSV Export ─── */
   const exportCSV = useCallback(() => {
     const bom = '\uFEFF';
@@ -670,7 +697,25 @@ const AdminMemberships = () => {
     { key: 'businesses', icon: Building2, label: isRTL ? 'الجهات' : 'Businesses' },
   ];
 
-  if (!isAdmin) return null;
+  // Defense-in-depth: ProtectedRoute requireAdmin already gates this route,
+  // but render an explicit unauthorized state if somehow reached without admin.
+  if (!isAdmin) {
+    return (
+      <DashboardLayout>
+        <div className="max-w-md mx-auto mt-16 text-center space-y-3">
+          <div className="w-14 h-14 mx-auto rounded-2xl bg-destructive/10 flex items-center justify-center">
+            <Lock className="w-6 h-6 text-destructive" />
+          </div>
+          <h2 className="font-heading font-bold text-base">
+            {isRTL ? 'وصول غير مصرّح به' : 'Unauthorized'}
+          </h2>
+          <p className="text-xs text-muted-foreground">
+            {isRTL ? 'هذه الصفحة متاحة لمسؤولي النظام فقط.' : 'This page is restricted to administrators.'}
+          </p>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -802,14 +847,41 @@ const AdminMemberships = () => {
           {/* ═══════ PLANS ═══════ */}
           {activeTab === 'plans' && (
             <div className="space-y-4">
+              {/* Create Plan toolbar — appears only when not editing */}
+              {!editingPlan && (
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <p className="text-[11px] text-muted-foreground">
+                    {isRTL
+                      ? 'الخطط تُعرض على /membership تلقائياً عند تفعيلها.'
+                      : 'Active plans are auto-listed on /membership.'}
+                  </p>
+                  <div className="flex items-center gap-1.5">
+                    <Label className="text-[10px] text-muted-foreground">{isRTL ? 'إنشاء بمستوى:' : 'Create as:'}</Label>
+                    <Select onValueChange={(v) => openCreate(v as typeof TIERS[number])}>
+                      <SelectTrigger className="h-8 w-[140px] text-xs gap-1.5">
+                        <Plus className="w-3 h-3" />
+                        <SelectValue placeholder={isRTL ? 'اختر المستوى' : 'Pick tier'} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {TIERS.map(t => (
+                          <SelectItem key={t} value={t} className="capitalize text-xs">{t}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
+
               {/* Inline Edit Form */}
               {editingPlan && (
                 <Card className="border-accent/30 bg-accent/5 shadow-lg">
                   <CardContent className="p-4 sm:p-5 space-y-4">
                     <div className="flex items-center justify-between">
                       <h3 className="font-heading font-bold text-sm flex items-center gap-2">
-                        <Pencil className="w-4 h-4 text-accent" />
-                        {isRTL ? 'تعديل الخطة' : 'Edit Plan'}
+                        {(editingPlan as any)._new ? <Plus className="w-4 h-4 text-accent" /> : <Pencil className="w-4 h-4 text-accent" />}
+                        {(editingPlan as any)._new
+                          ? (isRTL ? 'إنشاء خطة جديدة' : 'Create Plan')
+                          : (isRTL ? 'تعديل الخطة' : 'Edit Plan')}
                         <Badge className={cn('text-[9px]', tierColors[editingPlan.tier]?.badge)}>{editingPlan.tier}</Badge>
                       </h3>
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditingPlan(null)}><X className="w-4 h-4" /></Button>

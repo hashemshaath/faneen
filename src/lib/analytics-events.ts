@@ -32,6 +32,7 @@ export type QitaatEvent =
   | "compare_start"
   | "compare_profile_added"
   | "membership_plan_click"
+  | "membership_plan_view"
   | "outbound_click"
   // Communication & onboarding (no PII)
   | "signup_started"
@@ -272,6 +273,7 @@ export const track = {
   compareStart: (p: EventPayload) => trackEvent("compare_start", p),
   compareProfileAdded: (p: EventPayload) => trackEvent("compare_profile_added", p),
   membershipPlanClick: (p: EventPayload) => trackEvent("membership_plan_click", p),
+  membershipPlanView: (p: EventPayload = {}) => trackEvent("membership_plan_view", p),
   outboundClick: (p: EventPayload) => trackEvent("outbound_click", p),
   // Communication & onboarding
   signupStarted: (p: EventPayload = {}) => trackEvent("signup_started", p),
