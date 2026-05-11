@@ -1204,9 +1204,48 @@ const ContractDetail = () => {
                           </div>
                           {pay.notes && <p className="mt-2 text-[10px] text-muted-foreground/80 font-body border-t border-border pt-2">{pay.notes}</p>}
                           <Progress value={isPaid ? 100 : 0} className="h-1 mt-2" />
-                          {/* C3A: read-only milestone link */}
+                          {/* C3B: milestone link — editable for provider, read-only for others */}
                           {(() => {
                             const linked = pay.milestone_id ? milestones?.find(m => m.id === pay.milestone_id) : null;
+                            if (isProvider && !isContractLocked) {
+                              return (
+                                <div className="mt-2">
+                                  <Select
+                                    value={pay.milestone_id || '__none__'}
+                                    onValueChange={async (v) => {
+                                      const newVal = v === '__none__' ? null : v;
+                                      const { error } = await supabase
+                                        .from('installment_payments')
+                                        .update({ milestone_id: newVal })
+                                        .eq('id', pay.id);
+                                      if (error) {
+                                        toast({ title: isRTL ? 'تعذّر الحفظ' : 'Could not save', description: error.message, variant: 'destructive' });
+                                      } else {
+                                        queryClient.invalidateQueries({ queryKey: ['installment-payments'] });
+                                      }
+                                    }}
+                                    disabled={!milestones || milestones.length === 0}
+                                  >
+                                    <SelectTrigger className="h-7 text-[10px]">
+                                      <SelectValue placeholder={isRTL ? 'ربط بمرحلة' : 'Link milestone'} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="__none__">{isRTL ? 'غير مرتبط' : 'Unlinked'}</SelectItem>
+                                      {(milestones || []).map(m => (
+                                        <SelectItem key={m.id} value={m.id}>
+                                          {(isRTL ? m.title_ar : (m.title_en || m.title_ar)) || (isRTL ? 'مرحلة' : 'Milestone')}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                  {(!milestones || milestones.length === 0) && (
+                                    <p className="text-[9px] text-muted-foreground/80 font-body italic mt-1">
+                                      {isRTL ? 'أضف مراحل العمل أولاً لربطها بالدفعات.' : 'Add milestones first to link them.'}
+                                    </p>
+                                  )}
+                                </div>
+                              );
+                            }
                             return (
                               <div className="mt-2 text-[10px] font-body flex items-center gap-1 text-muted-foreground">
                                 {linked ? (
