@@ -1700,6 +1700,11 @@ const AdminBusinesses = () => {
                             </h3>
                             {!biz.is_active && <Badge variant="destructive" className="text-[9px] gap-0.5 px-1.5 py-0"><Ban className="w-2.5 h-2.5" />{isRTL ? 'معطل' : 'Disabled'}</Badge>}
                             {hasContract && <Badge variant="outline" className="text-[9px] gap-0.5 px-1.5 py-0"><FileText className="w-2.5 h-2.5" />{isRTL ? 'عقود' : 'Contracts'}</Badge>}
+                            {biz.is_demo && (
+                              <Badge variant="outline" className="text-[9px] gap-0.5 px-1.5 py-0 border-amber-500/40 text-amber-600 dark:text-amber-400" title={isRTL ? 'بيانات تجريبية' : 'Demo data'}>
+                                <FlaskConical className="w-2.5 h-2.5" />{isRTL ? 'تجريبي' : 'Demo'}
+                              </Badge>
+                            )}
                             {!tc.full && (
                               <Badge variant="outline" className="text-[9px] gap-0.5 px-1.5 py-0 border-warning/40 text-warning" title={isRTL ? 'الترجمة غير مكتملة' : 'Translation incomplete'}>
                                 <AlertTriangle className="w-2.5 h-2.5" />{tc.ar ? 'EN' : 'AR'}
