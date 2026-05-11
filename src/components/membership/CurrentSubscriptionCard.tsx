@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Clock, AlertTriangle, Loader2, Ban, Zap } from 'lucide-react';
+import { Clock, AlertTriangle, Loader2, Ban, Zap, Undo2, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { tierIcons, tierGradients } from '@/lib/membership-tiers';
 
@@ -20,6 +20,7 @@ export const CurrentSubscriptionCard = ({
 }: CurrentSubscriptionCardProps) => {
   const Icon = tierIcons[currentTier] || Zap;
   const gradient = tierGradients[currentTier] || tierGradients.free;
+  const [confirming, setConfirming] = useState(false);
 
   return (
     <Card className="max-w-2xl mx-auto mb-8 border-accent/20 bg-accent/5">
@@ -58,13 +59,48 @@ export const CurrentSubscriptionCard = ({
               </div>
             )}
 
-            <div className="flex gap-2 mt-3">
-              <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1 text-destructive border-destructive/20 hover:bg-destructive/10"
-                onClick={() => cancelMutation.mutate()} disabled={cancelMutation.isPending}>
-                {cancelMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Ban className="w-3 h-3" />}
-                {isRTL ? 'إلغاء الاشتراك' : 'Cancel'}
-              </Button>
-            </div>
+            {!confirming ? (
+              <div className="flex gap-2 mt-3">
+                <Button
+                  variant="outline" size="sm"
+                  className="text-[10px] h-7 gap-1 text-destructive border-destructive/20 hover:bg-destructive/10"
+                  onClick={() => setConfirming(true)}
+                  disabled={cancelMutation.isPending}
+                >
+                  <Ban className="w-3 h-3" />
+                  {isRTL ? 'إلغاء الاشتراك' : 'Cancel subscription'}
+                </Button>
+              </div>
+            ) : (
+              <div className="mt-3 rounded-lg border border-destructive/30 bg-destructive/5 p-2.5">
+                <p className="text-[11px] text-foreground/80 leading-relaxed mb-2 flex items-start gap-1.5">
+                  <AlertTriangle className="w-3 h-3 text-destructive shrink-0 mt-0.5" />
+                  {isRTL
+                    ? 'سيؤدي إلغاء الاشتراك إلى العودة للباقة المجانية.'
+                    : 'Cancelling will return you to the Free plan.'}
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm" variant="destructive"
+                    className="text-[10px] h-7 gap-1"
+                    onClick={() => { cancelMutation.mutate(); setConfirming(false); }}
+                    disabled={cancelMutation.isPending}
+                  >
+                    {cancelMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
+                    {isRTL ? 'تأكيد الإلغاء' : 'Confirm cancel'}
+                  </Button>
+                  <Button
+                    size="sm" variant="outline"
+                    className="text-[10px] h-7 gap-1"
+                    onClick={() => setConfirming(false)}
+                    disabled={cancelMutation.isPending}
+                  >
+                    <Undo2 className="w-3 h-3" />
+                    {isRTL ? 'تراجع' : 'Go back'}
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </CardContent>
