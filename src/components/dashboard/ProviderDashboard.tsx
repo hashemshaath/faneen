@@ -16,6 +16,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, A
 import { Link } from 'react-router-dom';
 import { useCountUp } from '@/hooks/useCountUp';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
+import { ProviderMembershipCard } from './ProviderMembershipCard';
 
 // Brand-aligned chart palette — sourced from central design tokens.
 const CHART_COLORS = [
@@ -203,15 +204,16 @@ export const ProviderDashboard: React.FC = () => {
               : (isRTL ? 'أنشئ صفحة أعمالك للبدء' : 'Create your business page to get started')}
           </p>
         </div>
-        {business?.membership_tier && (
-          <Badge className="self-start sm:self-auto bg-accent/10 text-accent border-accent/30 hover:bg-accent/20">
-            {business.membership_tier === 'free' ? (isRTL ? 'مجاني' : 'Free') :
-             business.membership_tier === 'basic' ? (isRTL ? 'أساسي' : 'Basic') :
-             business.membership_tier === 'premium' ? (isRTL ? 'بريميوم' : 'Premium') :
-             (isRTL ? 'مؤسسات' : 'Enterprise')}
-          </Badge>
-        )}
       </div>
+
+      {/* Membership status & limits */}
+      {user && (
+        <ProviderMembershipCard
+          userId={user.id}
+          businessId={business?.id}
+          tier={business?.membership_tier || 'free'}
+        />
+      )}
 
       {/* Main Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
