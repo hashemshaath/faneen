@@ -6,14 +6,15 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
-import { Shield, Info } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Shield, Info, AlertTriangle, Check, Undo2, Building2, Send } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { MembershipHeader } from '@/components/membership/MembershipHeader';
 import { CurrentSubscriptionCard } from '@/components/membership/CurrentSubscriptionCard';
 import { PlanCard } from '@/components/membership/PlanCard';
 import { FeatureComparisonTable } from '@/components/membership/FeatureComparisonTable';
 import { track } from '@/lib/analytics-events';
+import { Button } from '@/components/ui/button';
 
 const tierOrder = ['free', 'basic', 'premium', 'enterprise'];
 
@@ -28,6 +29,8 @@ const Membership = () => {
   const queryClient = useQueryClient();
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [subscribingPlanId, setSubscribingPlanId] = useState<string | null>(null);
+  const [pendingDowngrade, setPendingDowngrade] = useState<{ id: string; tier: string } | null>(null);
+  const [noBusinessNotice, setNoBusinessNotice] = useState(false);
 
   // Privacy-safe: tier of current user (or 'anonymous') — no PII.
   React.useEffect(() => {
@@ -112,15 +115,29 @@ const Membership = () => {
     track.membershipPlanClick({ membership_tier: plan.tier });
     if (!user) { navigate('/auth'); return; }
     if (!myBusiness) {
-      toast.error(isRTL ? 'يجب إنشاء نشاط تجاري أولاً من لوحة التحكم' : 'Create a business profile first from dashboard');
+      setNoBusinessNotice(true);
+      return;
+    }
+    const planTierIndex = tierOrder.indexOf(plan.tier);
+    const isDowngradeAction = planTierIndex < currentTierIndex;
+    // Free clicked while on a paid plan = downgrade-like; needs confirmation.
+    if (isDowngradeAction) {
+      setPendingDowngrade({ id: plan.id, tier: plan.tier });
       return;
     }
     if (plan.tier === 'free') {
-      toast.info(isRTL ? 'هذه الخطة المجانية الافتراضية' : 'This is the default free plan');
+      // Already on free, nothing to do.
       return;
     }
     setSubscribingPlanId(plan.id);
     subscribeMutation.mutate(plan.id);
+  };
+
+  const confirmDowngrade = () => {
+    if (!pendingDowngrade) return;
+    setSubscribingPlanId(pendingDowngrade.id);
+    subscribeMutation.mutate(pendingDowngrade.id);
+    setPendingDowngrade(null);
   };
 
   const daysRemaining = useMemo(() => {
@@ -139,10 +156,57 @@ const Membership = () => {
           <Info className="w-4 h-4 text-info shrink-0 mt-0.5" />
           <p className="leading-relaxed">
             {isRTL
-              ? 'الباقات في مرحلة التجربة: يتم تفعيل الترقية يدوياً دون أي رسوم حالياً. سيتم إضافة الدفع الإلكتروني لاحقاً.'
-              : 'Plans are in beta: upgrades are activated manually with no charge for now. Online payment will be added later.'}
+              ? 'نسخة تجريبية — يتم تفعيل الترقيات يدوياً حالياً دون أي رسوم. سيتم إضافة الدفع الإلكتروني لاحقاً.'
+              : 'Beta — upgrades are manually activated for now with no charge. Online payment will be added later.'}
           </p>
         </div>
+
+        {user && noBusinessNotice && !myBusiness && (
+          <div className="max-w-3xl mx-auto mb-6 rounded-xl border border-warning/30 bg-warning/5 px-4 py-3 flex items-start gap-3">
+            <Building2 className="w-5 h-5 text-warning shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm text-foreground leading-relaxed mb-2">
+                {isRTL ? 'للاشتراك في باقة، أضف منشأتك أولاً.' : 'To subscribe to a plan, add your business first.'}
+              </p>
+              <div className="flex gap-2">
+                <Link to="/onboarding">
+                  <Button size="sm" className="h-8 text-xs gap-1.5">
+                    <Building2 className="w-3.5 h-3.5" />
+                    {isRTL ? 'إضافة منشأة' : 'Add business'}
+                  </Button>
+                </Link>
+                <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => setNoBusinessNotice(false)}>
+                  {isRTL ? 'إخفاء' : 'Dismiss'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {pendingDowngrade && (
+          <div className="max-w-3xl mx-auto mb-6 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3">
+            <p className="text-sm text-foreground leading-relaxed mb-3 flex items-start gap-2">
+              <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+              {pendingDowngrade.tier === 'free'
+                ? (isRTL
+                    ? 'سيؤدي الانتقال للباقة المجانية إلى تقليل المزايا والحدود المتاحة.'
+                    : 'Switching to the Free plan will reduce your benefits and limits.')
+                : (isRTL
+                    ? 'سيؤدي خفض الباقة إلى تقليل بعض المزايا والحدود المتاحة.'
+                    : 'Downgrading will reduce some of your benefits and limits.')}
+            </p>
+            <div className="flex gap-2">
+              <Button size="sm" variant="destructive" className="h-8 text-xs gap-1.5" onClick={confirmDowngrade} disabled={subscribeMutation.isPending}>
+                <Check className="w-3.5 h-3.5" />
+                {isRTL ? 'تأكيد خفض الباقة' : 'Confirm downgrade'}
+              </Button>
+              <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5" onClick={() => setPendingDowngrade(null)}>
+                <Undo2 className="w-3.5 h-3.5" />
+                {isRTL ? 'إلغاء' : 'Cancel'}
+              </Button>
+            </div>
+          </div>
+        )}
 
         {user && mySubscription && (
           <CurrentSubscriptionCard
