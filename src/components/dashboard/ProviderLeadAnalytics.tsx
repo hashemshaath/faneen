@@ -4,7 +4,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Inbox, GitBranch, TrendingUp } from 'lucide-react';
+import { Inbox, GitBranch, TrendingUp, Info, AlertTriangle, RefreshCcw, FileSignature, CheckCircle2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
   BarChart, Bar,
@@ -45,16 +47,17 @@ export const ProviderLeadAnalytics: React.FC<Props> = ({ businessId, period }) =
     return { start, end };
   }, [period]);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ['provider-lead-analytics', businessId, period],
     enabled: !!businessId,
     staleTime: 60000,
     queryFn: async () => {
-      const { data: leads } = await supabase
+      const { data: leads, error } = await supabase
         .from('lead_requests')
         .select('id, status, created_at, viewed_at, quoted_at, accepted_at, rejected_at, closed_at, converted_contract_id, converted_at')
         .eq('business_id', businessId!)
         .gte('created_at', range.start.toISOString());
+      if (error) throw new Error('lead_analytics_fetch_failed');
       return leads ?? [];
     },
   });
@@ -101,9 +104,17 @@ export const ProviderLeadAnalytics: React.FC<Props> = ({ businessId, period }) =
   }, [data, isRTL]);
 
   const conversion = useMemo(() => {
-    if (!data || data.length === 0) return { converted: 0, total: 0, rate: 0 };
+    if (!data || data.length === 0) return { converted: 0, total: 0, rate: 0, acceptedNotConverted: 0 };
     const converted = data.filter((l) => !!l.converted_contract_id).length;
-    return { converted, total: data.length, rate: Math.round((converted / data.length) * 100) };
+    const acceptedNotConverted = data.filter(
+      (l) => !l.converted_contract_id && (!!l.accepted_at || l.status === 'accepted' || l.status === 'won')
+    ).length;
+    return {
+      converted,
+      total: data.length,
+      rate: Math.round((converted / data.length) * 100),
+      acceptedNotConverted,
+    };
   }, [data]);
 
   if (isLoading) {
@@ -112,6 +123,33 @@ export const ProviderLeadAnalytics: React.FC<Props> = ({ businessId, period }) =
         <Skeleton className="h-[260px] rounded-xl" />
         <Skeleton className="h-[260px] rounded-xl" />
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Card className="border-destructive/40">
+        <CardContent className="p-6 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+          <div className="w-10 h-10 rounded-xl bg-destructive/10 text-destructive flex items-center justify-center shrink-0">
+            <AlertTriangle className="w-5 h-5" />
+          </div>
+          <div className="flex-1">
+            <p className="text-sm font-medium">
+              {isRTL ? 'تعذّر تحميل تحليلات الطلبات حالياً.' : 'Unable to load lead analytics right now.'}
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refetch()}
+            disabled={isFetching}
+            className="gap-2"
+          >
+            <RefreshCcw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin' : ''}`} />
+            {isRTL ? 'إعادة المحاولة' : 'Retry'}
+          </Button>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -139,6 +177,41 @@ export const ProviderLeadAnalytics: React.FC<Props> = ({ businessId, period }) =
         ))}
       </div>
 
+      {/* KPI explanation */}
+      <TooltipProvider delayDuration={150}>
+        <div className="flex items-start gap-2 text-[11px] text-muted-foreground px-1">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button type="button" className="shrink-0 mt-0.5" aria-label={isRTL ? 'كيف يتم الحساب' : 'How metrics are calculated'}>
+                <Info className="w-3.5 h-3.5" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="max-w-xs text-xs leading-relaxed">
+              {isRTL ? (
+                <ul className="space-y-1 list-disc ps-4">
+                  <li>إجمالي الطلبات = جميع طلبات العملاء خلال الفترة.</li>
+                  <li>تم التسعير = الطلبات التي تم تسعيرها.</li>
+                  <li>محول لعقد = الطلبات المرتبطة بعقد.</li>
+                  <li>نسبة التحويل = المحولة ÷ الإجمالي.</li>
+                </ul>
+              ) : (
+                <ul className="space-y-1 list-disc ps-4">
+                  <li>Total leads = all lead requests in the selected period.</li>
+                  <li>Quoted = leads with a quote sent.</li>
+                  <li>Converted = leads linked to a contract.</li>
+                  <li>Conversion rate = converted ÷ total.</li>
+                </ul>
+              )}
+            </TooltipContent>
+          </Tooltip>
+          <p className="leading-relaxed">
+            {isRTL
+              ? 'يتم حساب المؤشرات من طلبات العملاء خلال الفترة المحددة. التحويل يعني أن الطلب تم ربطه بعقد.'
+              : 'Metrics are calculated from lead requests in the selected period. A conversion means the lead was linked to a contract.'}
+          </p>
+        </div>
+      </TooltipProvider>
+
       {total === 0 ? (
         <Card className="border-border/40">
           <CardContent className="p-6 text-center text-sm text-muted-foreground">
@@ -148,6 +221,37 @@ export const ProviderLeadAnalytics: React.FC<Props> = ({ businessId, period }) =
           </CardContent>
         </Card>
       ) : (
+        <>
+        {/* Converted split */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <Card className="border-border/40">
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-success/10 text-success flex items-center justify-center shrink-0">
+                <FileSignature className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xl font-bold leading-none tech-content">{conversion.converted}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {isRTL ? 'محول إلى عقد' : 'Converted to contract'}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border-border/40">
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-warning/10 text-warning flex items-center justify-center shrink-0">
+                <CheckCircle2 className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xl font-bold leading-none tech-content">{conversion.acceptedNotConverted}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {isRTL ? 'مقبول ولم يتحول لعقد' : 'Accepted, not converted'}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Lead trend */}
           <Card className="border-border/40">
@@ -201,6 +305,7 @@ export const ProviderLeadAnalytics: React.FC<Props> = ({ businessId, period }) =
             </CardContent>
           </Card>
         </div>
+        </>
       )}
     </div>
   );
