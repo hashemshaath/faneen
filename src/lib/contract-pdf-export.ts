@@ -1,6 +1,7 @@
 import { setupArabicDoc, getArabicTableStyles, printContractSection } from './pdf-arabic-font';
 import { BRAND_DOCUMENTS } from '@/config/brandTheme';
 import { hexToRgbTuple } from '@/lib/theme/brandThemeUtils';
+import { calculateVatBreakdown } from '@/lib/contract-financials';
 
 // ── Central brand document tokens (resolved once per module load) ──
 // Falls back to the literal hex if the util ever returns null (it won't for
@@ -119,11 +120,12 @@ export const exportContractPDF = async (data: ContractExportData) => {
 
   // ── Financial ──
   sectionTitle(data.isRTL ? 'البيانات المالية' : 'Financial Summary');
-  const vatRate = data.vatRate ?? 15;
-  const vatInclusive = data.vatInclusive ?? false;
-  const vatAmount = vatInclusive ? (data.totalAmount * vatRate) / (100 + vatRate) : (data.totalAmount * vatRate) / 100;
-  const subtotal = vatInclusive ? data.totalAmount - vatAmount : data.totalAmount;
-  const grandTotal = vatInclusive ? data.totalAmount : data.totalAmount + vatAmount;
+  const _financial = calculateVatBreakdown({ amount: data.totalAmount, vatRate: data.vatRate ?? 15, vatInclusive: data.vatInclusive ?? false });
+  const vatRate = _financial.vatRate;
+  const vatInclusive = _financial.vatInclusive;
+  const vatAmount = _financial.vatAmount;
+  const subtotal = _financial.subtotal;
+  const grandTotal = _financial.total;
 
   const fmtNum = (n: number) => n.toLocaleString(data.isRTL ? 'ar-SA' : 'en-US', { minimumFractionDigits: 2 });
 
@@ -175,8 +177,9 @@ export const exportContractPDF = async (data: ContractExportData) => {
     sectionTitle(data.isRTL ? 'جدول المقاسات' : 'Measurements Schedule');
     const totalArea = data.measurements.reduce((s, m) => s + m.areaSqm, 0);
     const totalCost = data.measurements.reduce((s, m) => s + m.totalCost, 0);
-    const mVat = vatInclusive ? totalCost * vatRate / (100 + vatRate) : totalCost * vatRate / 100;
-    const mGrand = vatInclusive ? totalCost : totalCost + mVat;
+    const _mv = calculateVatBreakdown({ amount: totalCost, vatRate, vatInclusive });
+    const mVat = _mv.vatAmount;
+    const mGrand = _mv.total;
 
     autoTable(doc, {
       startY: y,
@@ -274,8 +277,9 @@ export const exportMeasurementsPDF = async (opts: {
 
   const totalArea = opts.measurements.reduce((s, m) => s + m.areaSqm, 0);
   const totalCost = opts.measurements.reduce((s, m) => s + m.totalCost, 0);
-  const vat = opts.vatInclusive ? totalCost * opts.vatRate / (100 + opts.vatRate) : totalCost * opts.vatRate / 100;
-  const grand = opts.vatInclusive ? totalCost : totalCost + vat;
+  const _mvb = calculateVatBreakdown({ amount: totalCost, vatRate: opts.vatRate, vatInclusive: opts.vatInclusive });
+  const vat = _mvb.vatAmount;
+  const grand = _mvb.total;
   const locale = opts.isRTL ? 'ar-SA' : 'en-US';
 
   autoTable(doc, {
@@ -323,8 +327,9 @@ export const printMeasurements = (opts: {
   const locale = opts.isRTL ? 'ar-SA' : 'en-US';
   const totalArea = opts.measurements.reduce((s, m) => s + m.areaSqm, 0);
   const totalCost = opts.measurements.reduce((s, m) => s + m.totalCost, 0);
-  const vat = opts.vatInclusive ? totalCost * opts.vatRate / (100 + opts.vatRate) : totalCost * opts.vatRate / 100;
-  const grand = opts.vatInclusive ? totalCost : totalCost + vat;
+  const _mvc = calculateVatBreakdown({ amount: totalCost, vatRate: opts.vatRate, vatInclusive: opts.vatInclusive });
+  const vat = _mvc.vatAmount;
+  const grand = _mvc.total;
 
   const rows = opts.measurements.map((m, i) => `
     <tr>
@@ -388,8 +393,9 @@ export const exportMeasurementsExcel = (opts: {
   ]);
 
   const totalCost = opts.measurements.reduce((s, m) => s + m.totalCost, 0);
-  const vat = opts.vatInclusive ? totalCost * opts.vatRate / (100 + opts.vatRate) : totalCost * opts.vatRate / 100;
-  const grand = opts.vatInclusive ? totalCost : totalCost + vat;
+  const _mvd = calculateVatBreakdown({ amount: totalCost, vatRate: opts.vatRate, vatInclusive: opts.vatInclusive });
+  const vat = _mvd.vatAmount;
+  const grand = _mvd.total;
 
   rows.push([]);
   rows.push([opts.isRTL ? 'المجموع' : 'Subtotal', '', '', '', '', '', '', '', '', totalCost, '']);

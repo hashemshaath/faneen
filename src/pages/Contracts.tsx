@@ -11,31 +11,27 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   FileText, Calendar, DollarSign,
-  Shield, AlertTriangle, CheckCircle2, Clock, XCircle, ChevronRight, ChevronLeft,
+  CheckCircle2, ChevronRight, ChevronLeft,
   Search, Plus, Timer, TrendingUp,
 } from 'lucide-react';
 import type { Tables } from '@/integrations/supabase/types';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
+import {
+  CONTRACT_STATUS_KEYS,
+  getContractStatusMeta,
+  type ContractStatus,
+} from '@/lib/contract-statuses';
 
 type Contract = Tables<'contracts'>;
 
-const statusConfig: Record<string, { icon: React.ElementType; color: string; bgCard: string; label_ar: string; label_en: string }> = {
-  draft: { icon: FileText, color: 'bg-muted text-muted-foreground', bgCard: 'border-muted-foreground/10', label_ar: 'مسودة', label_en: 'Draft' },
-  pending_approval: { icon: Clock, color: 'bg-warning text-warning dark:bg-warning/30 dark:text-warning', bgCard: 'border-warning dark:border-warning/30', label_ar: 'بانتظار الموافقة', label_en: 'Pending' },
-  active: { icon: CheckCircle2, color: 'bg-success text-success dark:bg-success/30 dark:text-success', bgCard: 'border-success dark:border-success/30', label_ar: 'نشط', label_en: 'Active' },
-  completed: { icon: Shield, color: 'bg-info text-info dark:bg-info/30 dark:text-info', bgCard: 'border-info dark:border-info/30', label_ar: 'مكتمل', label_en: 'Completed' },
-  cancelled: { icon: XCircle, color: 'bg-destructive text-destructive dark:bg-destructive/30 dark:text-destructive', bgCard: 'border-destructive dark:border-destructive/30', label_ar: 'ملغي', label_en: 'Cancelled' },
-  disputed: { icon: AlertTriangle, color: 'bg-urgent text-urgent dark:bg-urgent/30 dark:text-urgent', bgCard: 'border-urgent dark:border-urgent/30', label_ar: 'نزاع', label_en: 'Disputed' },
-};
-
-const STATUS_FILTERS = ['all', 'active', 'pending_approval', 'draft', 'completed', 'cancelled', 'disputed'] as const;
+const STATUS_FILTERS: readonly (ContractStatus | 'all')[] = ['all', ...CONTRACT_STATUS_KEYS] as const;
 
 const ContractCard: React.FC<{ contract: Contract; role: 'client' | 'provider' }> = React.memo(({ contract, role }) => {
   const { t, language, isRTL } = useLanguage();
   const title = language === 'ar' ? contract.title_ar : (contract.title_en || contract.title_ar);
   const date = new Date(contract.created_at).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-  const cfg = statusConfig[contract.status] || statusConfig.draft;
+  const cfg = getContractStatusMeta(contract.status);
   const StatusIcon = cfg.icon;
   const NextIcon = isRTL ? ChevronLeft : ChevronRight;
 
@@ -45,13 +41,13 @@ const ContractCard: React.FC<{ contract: Contract; role: 'client' | 'provider' }
     : null;
 
   return (
-    <Link to={`/contracts/${contract.id}`} className={`block p-4 sm:p-5 rounded-xl bg-card border ${cfg.bgCard} hover:border-accent/40 hover:shadow-lg dark:hover:shadow-accent/5 transition-all duration-300 group active:scale-[0.98]`}>
-      <div className="flex items-start justify-between gap-2 mb-3">
+    <Link to={`/contracts/${contract.id}`} className={`block p-4 sm:p-5 rounded-xl bg-card border ${cfg.border} hover:border-accent/40 hover:shadow-lg dark:hover:shadow-accent/5 transition-all duration-300 group active:scale-[0.98]`}>
+      <div className={`flex items-start justify-between gap-2 mb-3`}>
         <div className="flex-1 min-w-0">
           <h3 className="font-heading font-bold text-sm sm:text-base text-foreground group-hover:text-accent transition-colors truncate">{title}</h3>
           <p className="text-[10px] sm:text-xs text-muted-foreground font-body mt-0.5 font-mono" dir="ltr">{contract.contract_number}</p>
         </div>
-        <Badge className={`${cfg.color} gap-1 text-[10px] sm:text-xs flex-shrink-0`}>
+        <Badge className={`${cfg.badge} gap-1 text-[10px] sm:text-xs flex-shrink-0`}>
           <StatusIcon className="w-3 h-3" />
           {isRTL ? cfg.label_ar : cfg.label_en}
         </Badge>
@@ -254,7 +250,7 @@ const Contracts = () => {
               {STATUS_FILTERS.map(s => {
                 const count = s === 'all' ? allContracts.length : (statusCounts[s] || 0);
                 if (s !== 'all' && count === 0) return null;
-                const cfg = s !== 'all' ? statusConfig[s] : null;
+                const cfg = s !== 'all' ? getContractStatusMeta(s) : null;
                 const active = statusFilter === s;
                 return (
                   <button
