@@ -872,12 +872,6 @@ const ContractDetail = () => {
     setImportedMeasurements(prev => prev.filter((_, i) => i !== idx));
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) uploadAttachment.mutate(file);
-    e.target.value = '';
-  };
-
   const shareContract = async () => {
     const url = window.location.href;
     if (navigator.share) {
