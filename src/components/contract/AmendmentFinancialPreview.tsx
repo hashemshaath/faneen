@@ -3,7 +3,7 @@ import { AlertTriangle, Info, ArrowRight } from 'lucide-react';
 import {
   previewAmendmentFinancialImpact,
   type AmendmentPreviewInput,
-  type AmendmentFinancialPreview,
+  type AmendmentFinancialPreview as AmendmentFinancialPreviewResult,
 } from '@/lib/contract-financials';
 
 interface Props {
@@ -32,7 +32,7 @@ const fmtMoney = (n: number, currency: string) =>
   `${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency}`;
 
 export const AmendmentFinancialPreview = ({ input, isRTL }: Props) => {
-  const p: AmendmentFinancialPreview = previewAmendmentFinancialImpact(input);
+  const p: AmendmentFinancialPreviewResult = previewAmendmentFinancialImpact(input);
   const isAmount = p.type === 'amount_change';
   const isDate = p.type === 'date_change';
   const isMeasurement = p.type === 'measurement_change';
