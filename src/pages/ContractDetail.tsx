@@ -1277,6 +1277,168 @@ const ContractDetail = () => {
                               </div>
                             );
                           })()}
+                          {/* C3D — Manual payment confirmation (provider only, contract not locked, status=pending) */}
+                          {isProvider && !isContractLocked && pay.status === 'pending' && (
+                            <div className="mt-3">
+                              {confirmingPayId !== pay.id ? (
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="outline"
+                                  className="w-full h-8 text-[11px]"
+                                  onClick={() => {
+                                    setPayConfirmForm({
+                                      paid_at: new Date().toISOString().slice(0, 10),
+                                      payment_method: pay.payment_method || 'bank_transfer',
+                                      notes: '',
+                                    });
+                                    setConfirmingPayId(pay.id);
+                                  }}
+                                >
+                                  <CheckCircle2 className="w-3.5 h-3.5" />
+                                  {isRTL ? 'تسجيل دفعة' : 'Record payment'}
+                                </Button>
+                              ) : (
+                                <div className="rounded-lg border border-border bg-background p-3 space-y-2">
+                                  <p className="text-[11px] font-heading font-bold">
+                                    {isRTL ? 'تأكيد تسجيل الدفعة' : 'Confirm payment'}
+                                  </p>
+                                  <p className="text-[10px] text-muted-foreground font-body">
+                                    {isRTL
+                                      ? 'تأكد من صحة المبلغ وتاريخ الدفع قبل الحفظ.'
+                                      : 'Verify the amount and date before saving.'}
+                                  </p>
+                                  <div className="grid grid-cols-2 gap-2">
+                                    <div>
+                                      <label className="text-[10px] text-muted-foreground font-body block mb-1">
+                                        {isRTL ? 'المبلغ' : 'Amount'}
+                                      </label>
+                                      <div className="h-8 px-2 rounded-md border border-input bg-muted/40 flex items-center text-[11px] tech-content" dir="ltr">
+                                        {Number(pay.amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {plan.currency_code}
+                                      </div>
+                                    </div>
+                                    <div>
+                                      <label className="text-[10px] text-muted-foreground font-body block mb-1">
+                                        {isRTL ? 'تاريخ الدفع' : 'Payment date'}
+                                      </label>
+                                      <Input
+                                        type="date"
+                                        value={payConfirmForm.paid_at}
+                                        onChange={(e) => setPayConfirmForm(f => ({ ...f, paid_at: e.target.value }))}
+                                        className="h-8 text-[11px]"
+                                        dir="ltr"
+                                        max={new Date().toISOString().slice(0, 10)}
+                                      />
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <label className="text-[10px] text-muted-foreground font-body block mb-1">
+                                      {isRTL ? 'طريقة الدفع' : 'Payment method'}
+                                    </label>
+                                    <Select
+                                      value={payConfirmForm.payment_method}
+                                      onValueChange={(v) => setPayConfirmForm(f => ({ ...f, payment_method: v }))}
+                                    >
+                                      <SelectTrigger className="h-8 text-[11px]"><SelectValue /></SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="bank_transfer">{isRTL ? 'تحويل بنكي' : 'Bank transfer'}</SelectItem>
+                                        <SelectItem value="cash">{isRTL ? 'نقداً' : 'Cash'}</SelectItem>
+                                        <SelectItem value="cheque">{isRTL ? 'شيك' : 'Cheque'}</SelectItem>
+                                        <SelectItem value="card">{isRTL ? 'بطاقة' : 'Card'}</SelectItem>
+                                        <SelectItem value="other">{isRTL ? 'أخرى' : 'Other'}</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                  <div>
+                                    <label className="text-[10px] text-muted-foreground font-body block mb-1">
+                                      {isRTL ? 'ملاحظة (اختياري)' : 'Note (optional)'}
+                                    </label>
+                                    <Input
+                                      value={payConfirmForm.notes}
+                                      onChange={(e) => setPayConfirmForm(f => ({ ...f, notes: e.target.value.slice(0, 200) }))}
+                                      className="h-8 text-[11px]"
+                                      maxLength={200}
+                                      placeholder={isRTL ? 'مرجع، رقم تحويل، إلخ' : 'Reference, transfer #, etc.'}
+                                    />
+                                  </div>
+                                  <div className="flex items-center justify-end gap-2 pt-1">
+                                    <Button
+                                      type="button"
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-8 text-[11px]"
+                                      disabled={confirmingPayBusy}
+                                      onClick={() => setConfirmingPayId(null)}
+                                    >
+                                      {isRTL ? 'إلغاء' : 'Cancel'}
+                                    </Button>
+                                    <Button
+                                      type="button"
+                                      size="sm"
+                                      className="h-8 text-[11px]"
+                                      disabled={confirmingPayBusy || !payConfirmForm.paid_at}
+                                      onClick={async () => {
+                                        // Safety: re-verify status client-side; RLS still enforces server-side.
+                                        if (pay.status !== 'pending') {
+                                          toast({ title: isRTL ? 'لا يمكن التعديل' : 'Cannot modify', description: isRTL ? 'الدفعة ليست في حالة معلق' : 'Payment is not pending', variant: 'destructive' });
+                                          return;
+                                        }
+                                        setConfirmingPayBusy(true);
+                                        try {
+                                          const updates: Record<string, unknown> = {
+                                            status: 'paid',
+                                            paid_at: new Date(payConfirmForm.paid_at).toISOString(),
+                                            payment_method: payConfirmForm.payment_method,
+                                          };
+                                          const trimmedNote = payConfirmForm.notes.trim();
+                                          if (trimmedNote) {
+                                            const prior = pay.notes ? `${pay.notes}\n` : '';
+                                            updates.notes = `${prior}${trimmedNote}`.slice(0, 1000);
+                                          }
+                                          // Guard against double-confirm with eq('status','pending')
+                                          const { data: updated, error } = await supabase
+                                            .from('installment_payments')
+                                            .update(updates)
+                                            .eq('id', pay.id)
+                                            .eq('status', 'pending')
+                                            .select('id')
+                                            .maybeSingle();
+                                          if (error) throw error;
+                                          if (!updated) {
+                                            toast({ title: isRTL ? 'تعذّر تسجيل الدفعة' : 'Could not record payment', description: isRTL ? 'قد تكون قد سُجلت من جهة أخرى' : 'May have been recorded elsewhere', variant: 'destructive' });
+                                          } else {
+                                            // Best-effort audit note (non-fatal if RLS blocks)
+                                            try {
+                                              if (user?.id && contract?.id) {
+                                                await supabase.from('contract_notes').insert({
+                                                  contract_id: contract.id,
+                                                  user_id: user.id,
+                                                  note_type: 'note',
+                                                  content: (isRTL ? 'تسجيل دفعة #' : 'Payment recorded #') + pay.installment_number + ' — ' + Number(pay.amount).toFixed(2) + ' ' + plan.currency_code + ' (' + payConfirmForm.payment_method + ')',
+                                                });
+                                              }
+                                            } catch { /* audit is best-effort */ }
+                                            toast({ title: isRTL ? 'تم تسجيل الدفعة' : 'Payment recorded' });
+                                            queryClient.invalidateQueries({ queryKey: ['installment-payments'] });
+                                            queryClient.invalidateQueries({ queryKey: ['contract-notes', id] });
+                                            setConfirmingPayId(null);
+                                          }
+                                        } catch (e: unknown) {
+                                          const msg = e instanceof Error ? e.message : (isRTL ? 'حدث خطأ' : 'Unknown error');
+                                          toast({ title: isRTL ? 'فشل الحفظ' : 'Save failed', description: msg, variant: 'destructive' });
+                                        } finally {
+                                          setConfirmingPayBusy(false);
+                                        }
+                                      }}
+                                    >
+                                      <CheckCircle2 className="w-3.5 h-3.5" />
+                                      {confirmingPayBusy ? (isRTL ? 'جارٍ الحفظ...' : 'Saving...') : (isRTL ? 'تسجيل الدفعة' : 'Record payment')}
+                                    </Button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       );
                     })}
