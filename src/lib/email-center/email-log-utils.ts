@@ -96,3 +96,87 @@ export function classifyError(message: string | null | undefined): keyof typeof 
   if (m.includes('429') || m.includes('rate')) return 'rate_limited';
   return 'other';
 }
+
+export const CURRENT_SENDER_DOMAIN = 'e.qitaat.com';
+export const LEGACY_SENDER_DOMAINS = ['notify.qitaat.com', 'mail.qitaat.com'];
+
+export type DlqDisposition =
+  | 'retryable'
+  | 'not_retryable_suppressed'
+  | 'not_retryable_unsubscribed'
+  | 'not_retryable_missing_template'
+  | 'not_retryable_historical_sender'
+  | 'not_retryable_other';
+
+export interface DlqClassification {
+  errorKind: keyof typeof DLQ_RECOMMENDATIONS | 'other';
+  isHistorical: boolean;
+  disposition: DlqDisposition;
+  retryable: boolean;
+  reasonAr: string;
+  reasonEn: string;
+}
+
+/** Extract sender_domain from the raw error_message JSON if present. */
+function extractSenderDomain(row: EmailLogRow): string | null {
+  const meta = row.metadata as Record<string, unknown> | null;
+  const fromMeta =
+    (meta?.sender_domain as string | undefined) ??
+    (meta?.senderDomain as string | undefined);
+  if (fromMeta) return fromMeta;
+  // best-effort scan of error message for known legacy domains
+  const msg = (row.error_message ?? '').toLowerCase();
+  for (const d of LEGACY_SENDER_DOMAINS) if (msg.includes(d)) return d;
+  return null;
+}
+
+export function classifyDlqRow(row: EmailLogRow): DlqClassification {
+  const errorKind = classifyError(row.error_message);
+  const senderDomain = extractSenderDomain(row);
+  const isLegacySender = senderDomain ? LEGACY_SENDER_DOMAINS.includes(senderDomain) : false;
+  // Heuristic: historical = no_matching_sender from before domain switch.
+  // All current verified-domain sends use e.qitaat.com, so any no_matching_sender
+  // row is treated as historical (cannot retry safely without payload).
+  const isHistorical = errorKind === 'no_matching_sender' || isLegacySender;
+
+  if (errorKind === 'no_matching_sender' || isLegacySender) {
+    return {
+      errorKind,
+      isHistorical: true,
+      disposition: 'not_retryable_historical_sender',
+      retryable: false,
+      reasonAr: 'سجل تاريخي من نطاق مرسل قديم — لا تتم إعادة المحاولة.',
+      reasonEn: 'Historical record from a legacy sender domain — not retryable.',
+    };
+  }
+  if (errorKind === 'suppressed') {
+    return {
+      errorKind, isHistorical, disposition: 'not_retryable_suppressed', retryable: false,
+      reasonAr: 'المستلم في قائمة المنع — أزل المنع قبل المحاولة.',
+      reasonEn: 'Recipient is suppressed — clear suppression first.',
+    };
+  }
+  if (errorKind === 'unsubscribe') {
+    return {
+      errorKind, isHistorical, disposition: 'not_retryable_unsubscribed', retryable: false,
+      reasonAr: 'المستلم ألغى الاشتراك — لا تُعد المحاولة.',
+      reasonEn: 'Recipient unsubscribed — do not retry.',
+    };
+  }
+  if (errorKind === 'missing_template') {
+    return {
+      errorKind, isHistorical, disposition: 'not_retryable_missing_template', retryable: false,
+      reasonAr: 'القالب غير موجود في السجل — أصلح التسجيل أولاً.',
+      reasonEn: 'Template missing from registry — fix registration first.',
+    };
+  }
+  // rate_limited, rejected, other → safe to retry once
+  return {
+    errorKind,
+    isHistorical,
+    disposition: 'retryable',
+    retryable: true,
+    reasonAr: 'يبدو خطأ مؤقتاً — يمكن إعادة المحاولة بحذر.',
+    reasonEn: 'Looks transient — single retry is safe.',
+  };
+}
