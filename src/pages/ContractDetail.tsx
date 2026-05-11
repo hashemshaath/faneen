@@ -21,6 +21,14 @@ import { getContractStatusMeta, isContractLockedByStatus } from '@/lib/contract-
 import { calculateVatBreakdown } from '@/lib/contract-financials';
 import { PaymentScheduleGenerator } from '@/components/contract/PaymentScheduleGenerator';
 import { ContractFinancialCoverage } from '@/components/contract/ContractFinancialCoverage';
+import { SignedAttachmentImage } from '@/components/contract/SignedAttachment';
+import {
+  validateAttachmentFile,
+  attachmentErrorMessage,
+  openAttachment as openAttachmentSigned,
+  downloadAttachment as downloadAttachmentSigned,
+  type AttachmentRow,
+} from '@/lib/contract-attachments';
 import {
   FileText, Shield, Wrench, CheckCircle2, Clock,
   Calendar, DollarSign, AlertTriangle, XCircle, ListChecks, Plus, Send,
@@ -397,13 +405,22 @@ const ContractDetail = () => {
 
   const uploadAttachment = useMutation({
     mutationFn: async (file: File) => {
+      const vErr = validateAttachmentFile(file);
+      if (vErr) {
+        throw new Error(attachmentErrorMessage(vErr, isRTL));
+      }
       setUploading(true);
       const ext = file.name.split('.').pop();
       const path = `${id}/${Date.now()}.${ext}`;
-      const { error: uploadError } = await supabase.storage.from('contract-attachments').upload(path, file);
+      const { error: uploadError } = await supabase.storage.from('contract-attachments').upload(path, file, {
+        contentType: file.type || 'application/octet-stream',
+        upsert: false,
+      });
       if (uploadError) throw uploadError;
+      // Bucket is private; we still store a deterministic path-bearing URL so
+      // existing callers keep working, but actual access uses createSignedUrl.
       const { data: urlData } = supabase.storage.from('contract-attachments').getPublicUrl(path);
-      const fileType = file.type.startsWith('image/') ? 'image/jpeg' : file.type || 'application/pdf';
+      const fileType = file.type || 'application/octet-stream';
       const { error } = await supabase.from('contract_attachments').insert({
         contract_id: id!,
         user_id: user!.id,
@@ -418,24 +435,82 @@ const ContractDetail = () => {
       queryClient.invalidateQueries({ queryKey: ['contract-attachments', id] });
       toast({ title: isRTL ? 'تم رفع المرفق بنجاح' : 'Attachment uploaded' });
     },
-    onError: () => {
+    onError: (err: Error) => {
       setUploading(false);
-      toast({ title: isRTL ? 'فشل رفع الملف' : 'Upload failed', variant: 'destructive' });
+      toast({ title: err.message || (isRTL ? 'فشل رفع الملف' : 'Upload failed'), variant: 'destructive' });
     },
   });
 
   /* ─── Measurement CRUD ─── */
   const resetMForm = () => { setMForm({ name_ar: '', piece_number: '', floor_label: 'ground_floor', location_ar: '', length_mm: '', width_mm: '', quantity: '1', unit_price: '', notes: '' }); setEditingMeasurement(null); setShowMeasurementForm(false); };
 
+  type MeasurementPayload = {
+    contract_id: string;
+    name_ar: string;
+    piece_number: string;
+    floor_label: string;
+    location_ar: string;
+    length_mm: number;
+    width_mm: number;
+    quantity: number;
+    unit_price: number;
+    area_sqm: number;
+    total_cost: number;
+    notes: string | null;
+    sort_order: number;
+  };
+
+  const lockedMsg = () => isRTL
+    ? 'لا يمكن تعديل المقاسات بعد قفل العقد.'
+    : 'Measurements cannot be modified after the contract is locked.';
+
+  const safeNum = (v: string | number): number => {
+    const n = typeof v === 'number' ? v : Number(v);
+    return Number.isFinite(n) ? n : NaN;
+  };
+
+  const validateMeasurementNumbers = (m: { length_mm: number; width_mm: number; quantity: number; unit_price: number; }): string | null => {
+    const fields: Array<[string, number, boolean]> = [
+      // [label, value, allowZero]
+      [isRTL ? 'الطول' : 'Length', m.length_mm, false],
+      [isRTL ? 'العرض' : 'Width', m.width_mm, false],
+      [isRTL ? 'الكمية' : 'Quantity', m.quantity, false],
+      [isRTL ? 'سعر الوحدة' : 'Unit price', m.unit_price, true],
+    ];
+    for (const [label, value, allowZero] of fields) {
+      if (!Number.isFinite(value)) return `${label}: ${isRTL ? 'قيمة غير صالحة' : 'invalid value'}`;
+      if (value < 0) return `${label}: ${isRTL ? 'لا يمكن أن تكون سالبة' : 'cannot be negative'}`;
+      if (!allowZero && value <= 0) return `${label}: ${isRTL ? 'يجب أن تكون أكبر من صفر' : 'must be greater than 0'}`;
+    }
+    return null;
+  };
+
+  const recalcContractTotal = async (): Promise<void> => {
+    if (!id) return;
+    const { data: fresh } = await supabase
+      .from('contract_measurements')
+      .select('total_cost')
+      .eq('contract_id', id);
+    const newTotal = (fresh || []).reduce((s, m) => s + (Number(m.total_cost) || 0), 0);
+    await supabase.from('contracts').update({ total_amount: newTotal }).eq('id', id);
+    await queryClient.invalidateQueries({ queryKey: ['contract', id] });
+  };
+
   const addMeasurementMutation = useMutation({
     mutationFn: async () => {
-      const area = (Number(mForm.length_mm) * Number(mForm.width_mm)) / 1000000;
-      const totalCost = Number(mForm.unit_price) * Number(mForm.quantity);
-      const payload: any = {
+      if (isContractLocked) throw new Error(lockedMsg());
+      const length_mm = safeNum(mForm.length_mm);
+      const width_mm = safeNum(mForm.width_mm);
+      const quantity = safeNum(mForm.quantity);
+      const unit_price = safeNum(mForm.unit_price);
+      const vErr = validateMeasurementNumbers({ length_mm, width_mm, quantity, unit_price });
+      if (vErr) throw new Error(vErr);
+      const area = (length_mm * width_mm) / 1_000_000;
+      const totalCost = unit_price * quantity;
+      const payload: MeasurementPayload = {
         contract_id: id!, name_ar: mForm.name_ar, piece_number: mForm.piece_number,
         floor_label: mForm.floor_label, location_ar: mForm.location_ar,
-        length_mm: Number(mForm.length_mm), width_mm: Number(mForm.width_mm),
-        quantity: Number(mForm.quantity), unit_price: Number(mForm.unit_price),
+        length_mm, width_mm, quantity, unit_price,
         area_sqm: area, total_cost: totalCost, notes: mForm.notes || null,
         sort_order: (measurements?.length || 0) + 1,
       };
@@ -451,42 +526,40 @@ const ContractDetail = () => {
       await queryClient.invalidateQueries({ queryKey: ['contract-measurements', id] });
       resetMForm();
       toast({ title: isRTL ? (editingMeasurement ? 'تم تحديث المقاس' : 'تم إضافة المقاس') : (editingMeasurement ? 'Measurement updated' : 'Measurement added') });
-      // Auto-update contract total from measurements
-      setTimeout(() => updateContractTotalFromMeasurements(), 500);
+      await recalcContractTotal();
     },
     onError: (err: Error) => toast({ title: err.message, variant: 'destructive' }),
   });
 
   const deleteMeasurementMutation = useMutation({
     mutationFn: async (measurementId: string) => {
+      if (isContractLocked) throw new Error(lockedMsg());
       const { error } = await supabase.from('contract_measurements').delete().eq('id', measurementId);
       if (error) throw error;
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['contract-measurements', id] });
       toast({ title: isRTL ? 'تم حذف المقاس' : 'Measurement deleted' });
-      setTimeout(() => updateContractTotalFromMeasurements(), 500);
+      await recalcContractTotal();
     },
+    onError: (err: Error) => toast({ title: err.message, variant: 'destructive' }),
   });
 
-  const updateContractTotalFromMeasurements = async () => {
-    const { data: freshMeasurements } = await supabase.from('contract_measurements').select('total_cost').eq('contract_id', id!);
-    if (freshMeasurements && freshMeasurements.length > 0) {
-      const newTotal = freshMeasurements.reduce((s, m) => s + Number(m.total_cost || 0), 0);
-      if (newTotal > 0) {
-        await supabase.from('contracts').update({ total_amount: newTotal }).eq('id', id!);
-        queryClient.invalidateQueries({ queryKey: ['contract', id] });
-      }
+  const startEditMeasurement = (m: {
+    name_ar?: string | null; piece_number?: string | null; floor_label?: string | null;
+    location_ar?: string | null; length_mm?: number | string | null; width_mm?: number | string | null;
+    quantity?: number | string | null; unit_price?: number | string | null; notes?: string | null;
+  } & { id: string }) => {
+    if (isContractLocked) {
+      toast({ title: lockedMsg(), variant: 'destructive' });
+      return;
     }
-  };
-
-  const startEditMeasurement = (m: any) => {
     setMForm({
       name_ar: m.name_ar || '', piece_number: m.piece_number || '', floor_label: m.floor_label || 'ground_floor',
       location_ar: m.location_ar || '', length_mm: String(m.length_mm || ''), width_mm: String(m.width_mm || ''),
       quantity: String(m.quantity || 1), unit_price: String(m.unit_price || ''), notes: m.notes || '',
     });
-    setEditingMeasurement(m);
+    setEditingMeasurement(m as typeof editingMeasurement);
     setShowMeasurementForm(true);
   };
 
@@ -792,28 +865,45 @@ const ContractDetail = () => {
 
   const confirmImportMeasurements = async () => {
     if (!id || importedMeasurements.length === 0) return;
+    if (isContractLocked) {
+      toast({ title: lockedMsg(), variant: 'destructive' });
+      return;
+    }
     const startOrder = (measurements?.length || 0) + 1;
-    const records = importedMeasurements.map((m, i) => {
-      const area = (m.length_mm * m.width_mm) / 1000000;
-      return {
+    const records: MeasurementPayload[] = [];
+    for (let i = 0; i < importedMeasurements.length; i++) {
+      const m = importedMeasurements[i];
+      const length_mm = safeNum(m.length_mm);
+      const width_mm = safeNum(m.width_mm);
+      const quantity = safeNum(m.quantity);
+      const unit_price = safeNum(m.unit_price);
+      const vErr = validateMeasurementNumbers({ length_mm, width_mm, quantity, unit_price });
+      if (vErr) {
+        toast({
+          title: `${isRTL ? 'صف' : 'Row'} ${i + 1}: ${vErr}`,
+          variant: 'destructive',
+        });
+        return;
+      }
+      const area = (length_mm * width_mm) / 1_000_000;
+      records.push({
         contract_id: id, name_ar: m.name_ar, piece_number: m.piece_number,
         floor_label: m.floor_label, location_ar: m.location_ar,
-        length_mm: m.length_mm, width_mm: m.width_mm,
-        quantity: m.quantity, unit_price: m.unit_price,
-        area_sqm: area, total_cost: m.unit_price * m.quantity,
+        length_mm, width_mm, quantity, unit_price,
+        area_sqm: area, total_cost: unit_price * quantity,
         notes: m.notes || null, sort_order: startOrder + i,
-      };
-    });
+      });
+    }
     const { error } = await supabase.from('contract_measurements').insert(records);
     if (error) {
       toast({ title: error.message, variant: 'destructive' });
       return;
     }
-    queryClient.invalidateQueries({ queryKey: ['contract-measurements', id] });
+    await queryClient.invalidateQueries({ queryKey: ['contract-measurements', id] });
     setShowImportPreview(false);
     setImportedMeasurements([]);
     toast({ title: isRTL ? `تم استيراد ${records.length} مقاس بنجاح` : `${records.length} measurements imported` });
-    setTimeout(() => updateContractTotalFromMeasurements(), 500);
+    await recalcContractTotal();
   };
 
   const updateImportedRow = (idx: number, field: keyof ImportedMeasurement, value: string | number) => {
@@ -1680,9 +1770,9 @@ const ContractDetail = () => {
                             <p className="text-[10px] font-heading font-semibold mb-1.5">{isRTL ? 'المرفقات' : 'Attachments'}</p>
                             <div className="flex flex-wrap gap-2">
                               {milestoneAtts.map(a => (
-                                <a key={a.id} href={a.file_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-[10px] text-accent hover:underline font-body bg-accent/5 rounded-lg px-3 py-1.5 border border-accent/10">
+                                <button key={a.id} type="button" onClick={async () => { const ok = await openAttachmentSigned(a as AttachmentRow); if (!ok) toast({ title: isRTL ? 'تعذر فتح المرفق' : 'Could not open attachment', variant: 'destructive' }); }} className="flex items-center gap-1.5 text-[10px] text-accent hover:underline font-body bg-accent/5 rounded-lg px-3 py-1.5 border border-accent/10">
                                   <Paperclip className="w-3 h-3" />{a.file_name}<ExternalLink className="w-2.5 h-2.5" />
-                                </a>
+                                </button>
                               ))}
                             </div>
                           </div>
@@ -2267,15 +2357,11 @@ const ContractDetail = () => {
                       {attachments.filter(a => a.file_type.startsWith('image')).map(att => (
                         <div key={att.id} className="group relative rounded-xl overflow-hidden border border-border bg-muted hover:border-accent/50 hover:shadow-md transition-all">
                           <div className="aspect-[4/3]">
-                            <img src={att.file_url} alt={att.file_name} className="w-full h-full object-cover" loading="lazy" />
+                            <SignedAttachmentImage att={att as AttachmentRow} className="w-full h-full object-cover" />
                           </div>
                           <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/40 transition-colors flex items-center justify-center gap-2">
-                            <a href={att.file_url} target="_blank" rel="noopener noreferrer">
-                              <Button variant="secondary" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"><Eye className="w-4 h-4" /></Button>
-                            </a>
-                            <a href={att.file_url} download={att.file_name}>
-                              <Button variant="secondary" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"><Download className="w-4 h-4" /></Button>
-                            </a>
+                            <Button variant="secondary" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg" onClick={() => openAttachmentSigned(att as AttachmentRow)}><Eye className="w-4 h-4" /></Button>
+                            <Button variant="secondary" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg" onClick={() => downloadAttachmentSigned(att as AttachmentRow)}><Download className="w-4 h-4" /></Button>
                           </div>
                           <div className="p-2 bg-card border-t border-border">
                             <p className="font-heading font-medium text-[10px] truncate">{att.file_name}</p>
@@ -2311,8 +2397,8 @@ const ContractDetail = () => {
                                 )}
                               </div>
                             </div>
-                            <a href={att.file_url} target="_blank" rel="noopener noreferrer"><Button variant="ghost" size="icon" className="h-8 w-8"><ExternalLink className="w-3.5 h-3.5" /></Button></a>
-                            <a href={att.file_url} download={att.file_name}><Button variant="outline" size="icon" className="h-8 w-8"><Download className="w-3.5 h-3.5" /></Button></a>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openAttachmentSigned(att as AttachmentRow)}><ExternalLink className="w-3.5 h-3.5" /></Button>
+                            <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => downloadAttachmentSigned(att as AttachmentRow)}><Download className="w-3.5 h-3.5" /></Button>
                           </div>
                         );
                       })}
