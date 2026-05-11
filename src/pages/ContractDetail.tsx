@@ -142,7 +142,6 @@ const ContractDetail = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [showMaintForm, setShowMaintForm] = useState(false);
   const [maintTitle, setMaintTitle] = useState('');
@@ -156,7 +155,6 @@ const ContractDetail = () => {
   const [expandedMilestone, setExpandedMilestone] = useState<string | null>(null);
   const [expandedMaint, setExpandedMaint] = useState<string | null>(null);
   const [measurementFilter, setMeasurementFilter] = useState<string>('all');
-  const [uploading, setUploading] = useState(false);
   // Measurement CRUD
   const [showMeasurementForm, setShowMeasurementForm] = useState(false);
   const [editingMeasurement, setEditingMeasurement] = useState<any>(null);
@@ -399,44 +397,6 @@ const ContractDetail = () => {
       await supabase.from('contract_notes').delete().eq('id', noteId);
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['contract-notes', id] }),
-  });
-
-  const uploadAttachment = useMutation({
-    mutationFn: async (file: File) => {
-      const vErr = validateAttachmentFile(file);
-      if (vErr) {
-        throw new Error(attachmentErrorMessage(vErr, isRTL));
-      }
-      setUploading(true);
-      const ext = file.name.split('.').pop();
-      const path = `${id}/${Date.now()}.${ext}`;
-      const { error: uploadError } = await supabase.storage.from('contract-attachments').upload(path, file, {
-        contentType: file.type || 'application/octet-stream',
-        upsert: false,
-      });
-      if (uploadError) throw uploadError;
-      // Bucket is private; we still store a deterministic path-bearing URL so
-      // existing callers keep working, but actual access uses createSignedUrl.
-      const { data: urlData } = supabase.storage.from('contract-attachments').getPublicUrl(path);
-      const fileType = file.type || 'application/octet-stream';
-      const { error } = await supabase.from('contract_attachments').insert({
-        contract_id: id!,
-        user_id: user!.id,
-        file_name: file.name,
-        file_type: fileType,
-        file_url: urlData.publicUrl,
-      });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      setUploading(false);
-      queryClient.invalidateQueries({ queryKey: ['contract-attachments', id] });
-      toast({ title: isRTL ? 'تم رفع المرفق بنجاح' : 'Attachment uploaded' });
-    },
-    onError: (err: Error) => {
-      setUploading(false);
-      toast({ title: err.message || (isRTL ? 'فشل رفع الملف' : 'Upload failed'), variant: 'destructive' });
-    },
   });
 
   /* ─── Measurement CRUD ─── */
