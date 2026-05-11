@@ -13,6 +13,7 @@ import { EmailSuppressionCenter } from '@/components/admin/email-center/EmailSup
 import { EmailQueueHealth } from '@/components/admin/email-center/EmailQueueHealth';
 import { EmailConfigurationPanel } from '@/components/admin/email-center/EmailConfigurationPanel';
 import { EmailReports } from '@/components/admin/email-center/EmailReports';
+import { EmailHealthAlerts } from '@/components/admin/email-center/EmailHealthAlerts';
 import type { EmailTemplateMeta } from '@/lib/email-center/email-template-catalog';
 
 const AdminEmailCenter: React.FC = () => {
@@ -36,6 +37,7 @@ const AdminEmailCenter: React.FC = () => {
         <Tabs defaultValue="overview" className="space-y-4">
           <TabsList className="flex flex-wrap h-auto justify-start gap-1">
             <TabsTrigger value="overview">{isRTL ? 'نظرة عامة' : 'Overview'}</TabsTrigger>
+            <TabsTrigger value="alerts">{isRTL ? 'التنبيهات' : 'Alerts'}</TabsTrigger>
             <TabsTrigger value="library">{isRTL ? 'مكتبة القوالب' : 'Templates'}</TabsTrigger>
             <TabsTrigger value="logs">{isRTL ? 'سجل التسليم' : 'Logs'}</TabsTrigger>
             <TabsTrigger value="dlq">DLQ</TabsTrigger>
@@ -46,6 +48,7 @@ const AdminEmailCenter: React.FC = () => {
           </TabsList>
 
           <TabsContent value="overview"><EmailOverviewCards /></TabsContent>
+          <TabsContent value="alerts"><EmailHealthAlerts /></TabsContent>
           <TabsContent value="library" className="space-y-4">
             {previewing && <EmailTemplatePreview template={previewing} onClose={() => setPreviewing(null)} />}
             <EmailTemplateLibrary onPreview={setPreviewing} />
