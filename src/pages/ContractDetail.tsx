@@ -2600,8 +2600,16 @@ const ContractDetail = () => {
               isClient={isClient}
               isProvider={isProvider}
               isContractLocked={isContractLocked}
+              currentUserId={user?.id ?? null}
+              isAdmin={isAdmin}
               onApprove={(a) => approveAmendmentMutation.mutate(a)}
               approving={approveAmendmentMutation.isPending}
+              onReject={(amId, reason) => rejectAmendmentMutation.mutate({ id: amId, reason })}
+              rejecting={rejectAmendmentMutation.isPending}
+              onCancel={(amId) => cancelAmendmentMutation.mutate(amId)}
+              cancelling={cancelAmendmentMutation.isPending}
+              onApply={(amId) => applyAmendmentMutation.mutate(amId)}
+              applying={applyAmendmentMutation.isPending}
             />
           </TabsContent>
         </Tabs>
