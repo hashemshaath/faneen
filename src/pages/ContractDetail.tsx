@@ -23,6 +23,7 @@ import { PaymentScheduleGenerator } from '@/components/contract/PaymentScheduleG
 import { ContractFinancialCoverage } from '@/components/contract/ContractFinancialCoverage';
 import { SignedAttachmentImage } from '@/components/contract/SignedAttachment';
 import { ContractAttachmentsTab } from '@/components/contract/ContractAttachmentsTab';
+import { MeasurementAttachmentsPanel } from '@/components/contract/MeasurementAttachmentsPanel';
 import {
   openAttachment as openAttachmentSigned,
   type AttachmentRow,
