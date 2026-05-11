@@ -18,6 +18,7 @@ import {
   ShieldAlert, Zap, CalendarDays, Target, Megaphone, Loader2,
   AlertTriangle, RefreshCw, Sparkles, Timer, Percent,
   PieChart as PieChartIcon,
+  Inbox, UserPlus, ShieldCheck,
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
@@ -30,6 +31,7 @@ import { cn } from '@/lib/utils';
 import { tierIcons } from '@/lib/membership-tiers';
 import { ProviderReadinessCard } from '@/components/dashboard/ProviderReadinessCard';
 import { useNoIndex } from "@/hooks/useNoIndex";
+import { maskEmail } from '@/lib/masking';
 
 // ═══ Shared utils ═══
 // Brand-aligned chart palette — sourced from central design tokens.
@@ -306,7 +308,15 @@ const AdminDashboardView = React.memo(({ isRTL }: { isRTL: boolean }) => {
   const { data: stats } = useQuery({
     queryKey: ['admin-overview-stats'],
     queryFn: async () => {
-      const [users, businesses, contracts, categories, messages, subscriptions, roles, recentUsers, recentActivity, blogPosts, contactMessages, userGrowth] = await Promise.all([
+      const startOfToday = new Date(); startOfToday.setHours(0, 0, 0, 0);
+      const todayIso = startOfToday.toISOString();
+      const fresh48hIso = new Date(Date.now() - 48 * 3600 * 1000).toISOString();
+      const [
+        users, businesses, contracts, categories, messages, subscriptions, roles,
+        recentUsers, recentActivity, blogPosts, contactMessages, userGrowth,
+        leadsTodayQ, contractsTodayQ, providersTodayQ,
+        leadsPendingQ, providersPendingQ, dlqActiveQ, contractsPendingQ,
+      ] = await Promise.all([
         supabase.from('profiles').select('id', { count: 'exact', head: true }),
         supabase.from('businesses').select('id', { count: 'exact', head: true }),
         supabase.from('contracts').select('id, status, total_amount, created_at', { count: 'exact' }),
@@ -319,6 +329,15 @@ const AdminDashboardView = React.memo(({ isRTL }: { isRTL: boolean }) => {
         supabase.from('blog_posts').select('id', { count: 'exact', head: true }),
         supabase.from('contact_messages').select('id', { count: 'exact', head: true }).eq('status', 'new'),
         supabase.from('profiles').select('created_at').order('created_at', { ascending: true }),
+        // Today's pulse — operational counters (counts only, no PII)
+        supabase.from('lead_requests').select('id', { count: 'exact', head: true }).gte('created_at', todayIso),
+        supabase.from('contracts').select('id', { count: 'exact', head: true }).gte('created_at', todayIso),
+        supabase.from('businesses').select('id', { count: 'exact', head: true }).gte('created_at', todayIso),
+        // Needs attention — actionable backlogs
+        supabase.from('lead_requests').select('id', { count: 'exact', head: true }).eq('status', 'new'),
+        supabase.from('businesses').select('id', { count: 'exact', head: true }).in('approval_status', ['submitted', 'under_review']),
+        supabase.from('email_send_log').select('id', { count: 'exact', head: true }).eq('status', 'dlq').gte('created_at', fresh48hIso),
+        supabase.from('contracts').select('id', { count: 'exact', head: true }).eq('status', 'pending_approval'),
       ]);
 
       const allContracts = contracts.data || [];
@@ -340,6 +359,13 @@ const AdminDashboardView = React.memo(({ isRTL }: { isRTL: boolean }) => {
         monthlyContracts: buildMonthlyData(allContracts, isRTL),
         monthlyUsers: buildMonthlyData(userGrowth.data || [], isRTL),
         recentUsers: recentUsers.data || [], recentActivity: recentActivity.data || [],
+        leadsToday: ((leadsTodayQ as { count?: number }).count) ?? null,
+        contractsToday: ((contractsTodayQ as { count?: number }).count) ?? null,
+        providersToday: ((providersTodayQ as { count?: number }).count) ?? null,
+        leadsPending: ((leadsPendingQ as { count?: number }).count) ?? null,
+        providersPending: ((providersPendingQ as { count?: number }).count) ?? null,
+        dlqActive: ((dlqActiveQ as { count?: number }).count) ?? null,
+        contractsPending: ((contractsPendingQ as { count?: number }).count) ?? null,
       };
     },
     staleTime: 30000,
@@ -397,6 +423,83 @@ const AdminDashboardView = React.memo(({ isRTL }: { isRTL: boolean }) => {
           <MembershipWidget isRTL={isRTL} userId={user.id} />
         </div>
       )}
+
+      {/* Today's Pulse — operational counters (counts only, no PII) */}
+      <Card className="border-border/40">
+        <CardHeader className="pb-1 px-4 pt-3">
+          <CardTitle className="text-xs flex items-center gap-2">
+            <Zap className="w-3.5 h-3.5 text-accent" />
+            {isRTL ? 'نبض اليوم' : "Today's Pulse"}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="px-4 pb-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            {([
+              { icon: MessageSquare, label: isRTL ? 'طلبات اليوم' : 'Leads today', value: stats?.leadsToday, tone: 'text-info', bg: 'bg-info/10' },
+              { icon: FileText,      label: isRTL ? 'عقود اليوم' : 'Contracts today', value: stats?.contractsToday, tone: 'text-accent', bg: 'bg-accent/10' },
+              { icon: UserPlus,      label: isRTL ? 'تسجيل مزودين' : 'New providers', value: stats?.providersToday, tone: 'text-primary', bg: 'bg-primary/10' },
+              { icon: AlertTriangle, label: isRTL ? 'بريد فاشل (48س)' : 'Email DLQ (48h)', value: stats?.dlqActive, tone: 'text-destructive', bg: 'bg-destructive/10' },
+            ] as const).map((m) => (
+              <div key={m.label} className="rounded-xl border border-border/40 p-3 flex items-center gap-2.5">
+                <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center shrink-0', m.bg, m.tone)}>
+                  <m.icon className="w-3.5 h-3.5" />
+                </div>
+                <div className="min-w-0">
+                  <p className={cn('text-lg font-bold leading-none tech-content', m.tone)}>
+                    {m.value === null || m.value === undefined ? '—' : m.value}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground mt-1 truncate">{m.label}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Needs Attention — actionable backlogs with deep-links to existing admin pages */}
+      <Card className="border-border/40">
+        <CardHeader className="pb-1 px-4 pt-3">
+          <CardTitle className="text-xs flex items-center gap-2">
+            <AlertCircle className="w-3.5 h-3.5 text-urgent" />
+            {isRTL ? 'بحاجة إلى إجراء' : 'Needs attention'}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="px-4 pb-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
+            {([
+              { icon: MessageSquare, label: isRTL ? 'طلبات جديدة' : 'New leads',           value: stats?.leadsPending,       to: '/admin/lead-requests',   tone: 'text-info' },
+              { icon: ShieldCheck,   label: isRTL ? 'مراجعة مزودين' : 'Provider review',   value: stats?.providersPending,   to: '/admin/provider-review', tone: 'text-warning' },
+              { icon: AlertTriangle, label: isRTL ? 'بريد DLQ نشط' : 'Email DLQ',          value: stats?.dlqActive,          to: '/admin/email-center',    tone: 'text-destructive' },
+              { icon: Inbox,         label: isRTL ? 'رسائل تواصل' : 'Contact messages',    value: stats?.newContactMessages, to: '/admin/contact-messages',tone: 'text-info' },
+              { icon: FileText,      label: isRTL ? 'عقود بانتظار الموافقة' : 'Contracts pending', value: stats?.contractsPending, to: '/dashboard/contracts', tone: 'text-warning' },
+            ] as const).map((m) => {
+              const v = m.value;
+              const empty = v === null || v === undefined;
+              const zero = v === 0;
+              return (
+                <Link
+                  key={m.label}
+                  to={m.to}
+                  className="group rounded-xl border border-border/40 p-3 flex items-center justify-between gap-2 hover:border-accent/40 hover:bg-muted/30 transition-colors"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-muted/40', m.tone)}>
+                      <m.icon className="w-3.5 h-3.5" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className={cn('text-lg font-bold leading-none tech-content', empty || zero ? 'text-muted-foreground' : m.tone)}>
+                        {empty ? '—' : v}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-1 truncate">{m.label}</p>
+                    </div>
+                  </div>
+                  <ArrowUpRight className="w-3.5 h-3.5 text-muted-foreground/40 group-hover:text-accent transition-colors" />
+                </Link>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -529,7 +632,7 @@ const AdminDashboardView = React.memo(({ isRTL }: { isRTL: boolean }) => {
                   </Avatar>
                   <div className="min-w-0 flex-1">
                     <p className="text-[10px] font-medium truncate">{u.full_name || (isRTL ? 'بدون اسم' : 'No name')}</p>
-                    <p className="text-[9px] text-muted-foreground truncate">{u.email}</p>
+                    <p className="text-[9px] text-muted-foreground truncate tech-content" title={isRTL ? 'البريد مخفي لحماية الخصوصية' : 'Email masked for privacy'}>{maskEmail(u.email)}</p>
                   </div>
                   <Badge variant="outline" className="text-[8px] h-4 shrink-0">
                     {['business', 'company', 'provider'].includes(u.account_type) ? (isRTL ? 'مزود' : 'Provider') : (isRTL ? 'مستخدم' : 'User')}
