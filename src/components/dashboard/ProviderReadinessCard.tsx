@@ -1,5 +1,4 @@
-import { useMemo } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { CheckCircle2, AlertCircle, Send, Loader2, Clock, ShieldAlert, ShieldCheck } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,10 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
-
-type ApprovalStatus =
-  | 'draft' | 'submitted' | 'under_review'
-  | 'approved' | 'rejected' | 'needs_changes' | 'published';
+import { useProviderReadiness, type ApprovalStatus } from '@/hooks/useProviderReadiness';
 
 const STATUS_LABEL: Record<ApprovalStatus, { ar: string; en: string; tone: 'muted' | 'info' | 'warn' | 'success' | 'danger' }> = {
   draft:         { ar: 'مسودة',           en: 'Draft',          tone: 'muted'   },
@@ -42,20 +38,7 @@ export function ProviderReadinessCard() {
   const { language, isRTL } = useLanguage();
   const qc = useQueryClient();
 
-  const { data: business } = useQuery({
-    queryKey: ['provider-readiness', user?.id],
-    enabled: !!user?.id,
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('businesses')
-        .select('id, name_ar, username, logo_url, description_ar, short_description_ar, category_id, city_id, phone, mobile, email, address, approval_status, approval_notes, onboarding_completion, username_status, is_active')
-        .eq('user_id', user!.id)
-        .order('created_at', { ascending: true })
-        .limit(1)
-        .maybeSingle();
-      return data;
-    },
-  });
+  const { business, missing, status, completion, isPublic, canSubmit } = useProviderReadiness(user?.id);
 
   const submitMutation = useMutation({
     mutationFn: async () => {
@@ -82,28 +65,9 @@ export function ProviderReadinessCard() {
     },
   });
 
-  const missing = useMemo(() => {
-    if (!business) return [] as { key: string; ar: string; en: string }[];
-    const items: { key: string; ar: string; en: string }[] = [];
-    if (!business.logo_url) items.push({ key: 'logo', ar: 'الشعار', en: 'Logo' });
-    if (!(business.description_ar || business.short_description_ar)) {
-      items.push({ key: 'desc', ar: 'وصف النشاط', en: 'Description' });
-    }
-    if (!business.category_id) items.push({ key: 'category', ar: 'القطاع', en: 'Sector' });
-    if (!business.city_id) items.push({ key: 'city', ar: 'المدينة', en: 'City' });
-    if (!(business.phone || business.mobile)) items.push({ key: 'phone', ar: 'رقم التواصل', en: 'Phone' });
-    if (!business.email) items.push({ key: 'email', ar: 'البريد الإلكتروني', en: 'Email' });
-    if (!business.address) items.push({ key: 'address', ar: 'العنوان', en: 'Address' });
-    return items;
-  }, [business]);
-
   if (!user || !business) return null;
 
-  const status = (business.approval_status ?? 'draft') as ApprovalStatus;
-  const completion = business.onboarding_completion ?? 0;
   const label = STATUS_LABEL[status];
-  const canSubmit = status === 'draft' || status === 'needs_changes' || status === 'rejected';
-  const isPublic = status === 'approved' || status === 'published';
 
   return (
     <Card className="overflow-hidden border-accent/20" dir={isRTL ? 'rtl' : 'ltr'}>
