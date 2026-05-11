@@ -274,7 +274,7 @@ export const ProviderLeadAnalytics: React.FC<Props> = ({ businessId, period }) =
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
                     <XAxis dataKey="date" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
                     <YAxis tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" allowDecimals={false} />
-                    <Tooltip contentStyle={tooltipStyle} />
+                    <RTooltip contentStyle={tooltipStyle} />
                     <Area type="monotone" dataKey="count" stroke="hsl(var(--info))" fill="url(#leadGrad)" strokeWidth={2} />
                   </AreaChart>
                 </ResponsiveContainer>
@@ -297,7 +297,7 @@ export const ProviderLeadAnalytics: React.FC<Props> = ({ businessId, period }) =
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
                     <XAxis type="number" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" allowDecimals={false} />
                     <YAxis type="category" dataKey="label" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" width={90} />
-                    <Tooltip contentStyle={tooltipStyle} />
+                    <RTooltip contentStyle={tooltipStyle} />
                     <Bar dataKey="value" fill="hsl(var(--accent))" radius={[0, 4, 4, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
