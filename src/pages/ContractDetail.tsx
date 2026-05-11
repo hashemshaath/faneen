@@ -20,6 +20,7 @@ import type { ImportedMeasurement } from '@/lib/contract-pdf-export';
 import { getContractStatusMeta, isContractLockedByStatus } from '@/lib/contract-statuses';
 import { calculateVatBreakdown } from '@/lib/contract-financials';
 import { PaymentScheduleGenerator } from '@/components/contract/PaymentScheduleGenerator';
+import { ContractFinancialCoverage } from '@/components/contract/ContractFinancialCoverage';
 import {
   FileText, Shield, Wrench, CheckCircle2, Clock,
   Calendar, DollarSign, AlertTriangle, XCircle, ListChecks, Plus, Send,
@@ -1139,6 +1140,15 @@ const ContractDetail = () => {
             </div>
           </div>
         </div>
+
+        {/* ─── Financial Coverage Summary (C3C) ─── */}
+        {contract && (
+          <ContractFinancialCoverage
+            contract={contract}
+            payments={installmentPayments || []}
+            milestones={(milestones || []) as any}
+          />
+        )}
 
         {/* ─── Payment Schedule Generator (C3B) ─── */}
         {contract && (
