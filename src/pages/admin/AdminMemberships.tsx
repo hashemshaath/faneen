@@ -28,7 +28,22 @@ import { TIERS, tierIcons, tierColors, statusConfig } from '@/lib/membership-tie
 import { LIMIT_FIELDS, LIMIT_CATEGORIES, parseLimits, limitsToJson, getExtraLimitKeys } from '@/lib/membership-limits';
 
 import { useNoIndex } from "@/hooks/useNoIndex";
-type Tab = 'overview' | 'plans' | 'subscriptions' | 'businesses';
+type Tab = 'overview' | 'plans' | 'subscriptions' | 'businesses' | 'usage';
+
+/* ─── Admin Usage Report ─── */
+type UsageReportRow = {
+  business_id: string;
+  business_name_ar: string | null;
+  business_name_en: string | null;
+  owner_user_id: string;
+  tier: string | null;
+  metric: string;
+  used: number;
+  limit_value: number;
+  period: string;
+  near_cap: boolean;
+  over_limit: boolean;
+};
 
 /* ─── Plan Card ─── */
 const PlanCard = React.memo(({ plan, isRTL, language, subsCount, onEdit }: { plan: any; isRTL: boolean; language: string; subsCount: number; onEdit: (p: any) => void }) => {
