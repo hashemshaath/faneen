@@ -1,0 +1,1 @@
+UPDATE public.membership_subscriptions SET is_demo = true WHERE business_id IN (SELECT id FROM public.businesses WHERE is_demo = true) AND is_demo = false;
