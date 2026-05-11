@@ -404,13 +404,22 @@ const ContractDetail = () => {
 
   const uploadAttachment = useMutation({
     mutationFn: async (file: File) => {
+      const vErr = validateAttachmentFile(file);
+      if (vErr) {
+        throw new Error(attachmentErrorMessage(vErr, isRTL));
+      }
       setUploading(true);
       const ext = file.name.split('.').pop();
       const path = `${id}/${Date.now()}.${ext}`;
-      const { error: uploadError } = await supabase.storage.from('contract-attachments').upload(path, file);
+      const { error: uploadError } = await supabase.storage.from('contract-attachments').upload(path, file, {
+        contentType: file.type || 'application/octet-stream',
+        upsert: false,
+      });
       if (uploadError) throw uploadError;
+      // Bucket is private; we still store a deterministic path-bearing URL so
+      // existing callers keep working, but actual access uses createSignedUrl.
       const { data: urlData } = supabase.storage.from('contract-attachments').getPublicUrl(path);
-      const fileType = file.type.startsWith('image/') ? 'image/jpeg' : file.type || 'application/pdf';
+      const fileType = file.type || 'application/octet-stream';
       const { error } = await supabase.from('contract_attachments').insert({
         contract_id: id!,
         user_id: user!.id,
@@ -425,9 +434,9 @@ const ContractDetail = () => {
       queryClient.invalidateQueries({ queryKey: ['contract-attachments', id] });
       toast({ title: isRTL ? 'تم رفع المرفق بنجاح' : 'Attachment uploaded' });
     },
-    onError: () => {
+    onError: (err: Error) => {
       setUploading(false);
-      toast({ title: isRTL ? 'فشل رفع الملف' : 'Upload failed', variant: 'destructive' });
+      toast({ title: err.message || (isRTL ? 'فشل رفع الملف' : 'Upload failed'), variant: 'destructive' });
     },
   });
 
