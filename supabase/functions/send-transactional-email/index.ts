@@ -403,10 +403,25 @@ Deno.serve(async (req) => {
   )
 
   // Resolve subject — supports static string or dynamic function
-  const resolvedSubject =
+  let resolvedSubject =
     typeof template.subject === 'function'
       ? template.subject(templateData)
       : template.subject
+
+  // Email Operations Center test-send: prefix subject once when caller marks
+  // the payload as a test send. Production calls never set __test_send so
+  // normal emails are unaffected. Idempotent: if the prefix already appears
+  // (case/whitespace-insensitive), skip to avoid double-prefixing.
+  if (templateData?.__test_send === true) {
+    const rawPrefix =
+      typeof templateData.__prefix === 'string' && templateData.__prefix.trim().length > 0
+        ? templateData.__prefix.trim()
+        : '[اختبار قِطاعات]'
+    const subjectStr = String(resolvedSubject ?? '')
+    if (!subjectStr.trimStart().startsWith(rawPrefix)) {
+      resolvedSubject = `${rawPrefix} ${subjectStr}`.trim()
+    }
+  }
 
   // 5. Enqueue the pre-rendered email for async processing by the dispatcher.
   // The dispatcher (process-email-queue) handles sending, retries, and rate-limit backoff.
