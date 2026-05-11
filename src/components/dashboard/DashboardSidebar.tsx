@@ -157,6 +157,7 @@ const adminBaseGroups: MenuGroup[] = [
       { label: { ar: 'سجل إرسال الإشعارات', en: 'Notification Log' }, url: '/admin/contact-notification-log', icon: Mail },
       { label: { ar: 'طلبات العملاء (Leads)', en: 'Lead Requests' }, url: '/admin/lead-requests', icon: MessageSquare },
       { label: { ar: 'مراقبة البريد', en: 'Email Deliverability' }, url: '/admin/email-deliverability', icon: Mail },
+      { label: { ar: 'مركز البريد', en: 'Email Center' }, url: '/admin/email-center', icon: Mail },
       { label: { ar: 'تدقيق الأداء و SEO', en: 'Performance & SEO Audit' }, url: '/admin/site-audit', icon: Gauge },
       { label: { ar: 'سيو القطاعات', en: 'Sector SEO' }, url: '/admin/sector-seo', icon: SearchIcon },
       { label: { ar: 'حالة Sitemap', en: 'Sitemap Status' }, url: '/admin/sitemap-status', icon: SearchIcon },
