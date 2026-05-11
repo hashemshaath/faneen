@@ -30,6 +30,10 @@ import { template as providerRejected } from './provider-rejected.tsx'
 import { template as providerRevisionRequested } from './provider-revision-requested.tsx'
 import { template as contractDraftCreatedClient } from './contract-draft-created-client.tsx'
 import { template as contractDraftCreatedProvider } from './contract-draft-created-provider.tsx'
+import { template as membershipUpgradeRequestSubmitted } from './membership-upgrade-request-submitted.tsx'
+import { template as membershipUpgradeRequestApproved } from './membership-upgrade-request-approved.tsx'
+import { template as membershipUpgradeRequestRejected } from './membership-upgrade-request-rejected.tsx'
+import { template as membershipSubscriptionCancelled } from './membership-subscription-cancelled.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'booking-confirmation': bookingConfirmation,
@@ -53,4 +57,8 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'provider-revision-requested': providerRevisionRequested,
   'contract-draft-created-client': contractDraftCreatedClient,
   'contract-draft-created-provider': contractDraftCreatedProvider,
+  'membership-upgrade-request-submitted': membershipUpgradeRequestSubmitted,
+  'membership-upgrade-request-approved': membershipUpgradeRequestApproved,
+  'membership-upgrade-request-rejected': membershipUpgradeRequestRejected,
+  'membership-subscription-cancelled': membershipSubscriptionCancelled,
 }

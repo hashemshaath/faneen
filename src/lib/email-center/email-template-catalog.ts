@@ -14,7 +14,8 @@ export type EmailCategory =
   | 'contact'
   | 'payment'
   | 'maintenance'
-  | 'admin_system';
+  | 'admin_system'
+  | 'membership';
 
 export type EmailRecipientType =
   | 'user'
@@ -53,6 +54,7 @@ export const CATEGORY_LABELS: Record<EmailCategory, { ar: string; en: string }> 
   payment: { ar: 'المدفوعات', en: 'Payments' },
   maintenance: { ar: 'الصيانة والحالة', en: 'Maintenance & Status' },
   admin_system: { ar: 'إداري/نظامي', en: 'Admin / System' },
+  membership: { ar: 'العضوية', en: 'Membership' },
 };
 
 export const RECIPIENT_LABELS: Record<EmailRecipientType, { ar: string; en: string }> = {
@@ -104,6 +106,12 @@ export const EMAIL_TEMPLATE_CATALOG: EmailTemplateMeta[] = [
   { name: 'booking-confirmation', displayNameAr: 'تأكيد الحجز', displayNameEn: 'Booking confirmation', category: 'maintenance', recipient: 'client', trigger: 'BookingWidget confirm', descriptionAr: 'تأكيد حجز موعد.', descriptionEn: 'Booking confirmation.', active: true, variables: ['bookingId', 'date'], kind: 'transactional' },
   { name: 'maintenance-status-update', displayNameAr: 'تحديث حالة الصيانة', displayNameEn: 'Maintenance status', category: 'maintenance', recipient: 'client', trigger: 'Maintenance status change', descriptionAr: 'تحديث على حالة طلب الصيانة.', descriptionEn: 'Maintenance status change.', active: true, variables: ['ticketId', 'status'], kind: 'transactional' },
   { name: 'payment-reminder', displayNameAr: 'تذكير بالدفع', displayNameEn: 'Payment reminder', category: 'payment', recipient: 'client', trigger: 'Scheduled / overdue invoice', descriptionAr: 'تذكير بدفع مستحق.', descriptionEn: 'Payment due reminder.', active: true, variables: ['amount', 'dueDate'], kind: 'transactional' },
+
+  // ── Membership / Subscriptions ──────────────────────────
+  { name: 'membership-upgrade-request-submitted', displayNameAr: 'طلب ترقية باقة — تم الاستلام', displayNameEn: 'Upgrade request submitted', category: 'membership', recipient: 'provider', trigger: 'Membership.tsx — provider submits upgrade request', descriptionAr: 'تأكيد استلام طلب ترقية الباقة.', descriptionEn: 'Confirms receipt of an upgrade request.', active: true, variables: ['recipientName', 'businessName', 'requestedTier'], kind: 'transactional' },
+  { name: 'membership-upgrade-request-approved', displayNameAr: 'طلب ترقية باقة — موافقة', displayNameEn: 'Upgrade request approved', category: 'membership', recipient: 'provider', trigger: 'AdminUpgradeRequestsPanel approve', descriptionAr: 'إخطار المزود بالموافقة على ترقية باقته.', descriptionEn: 'Notifies provider that the upgrade was approved.', active: true, variables: ['recipientName', 'businessName', 'approvedTier'], kind: 'transactional' },
+  { name: 'membership-upgrade-request-rejected', displayNameAr: 'طلب ترقية باقة — رفض', displayNameEn: 'Upgrade request rejected', category: 'membership', recipient: 'provider', trigger: 'AdminUpgradeRequestsPanel reject', descriptionAr: 'إخطار المزود بعدم اعتماد طلب الترقية.', descriptionEn: 'Notifies provider that the upgrade was not approved.', active: true, variables: ['recipientName', 'businessName', 'requestedTier'], kind: 'transactional' },
+  { name: 'membership-subscription-cancelled', displayNameAr: 'اشتراك — تم الإلغاء', displayNameEn: 'Subscription cancelled', category: 'membership', recipient: 'provider', trigger: 'Membership.tsx cancel_subscription', descriptionAr: 'إخطار بإلغاء الاشتراك والعودة للباقة المجانية.', descriptionEn: 'Confirms subscription cancellation and downgrade to free.', active: true, variables: ['recipientName', 'businessName'], kind: 'transactional' },
 ];
 
 export const TEMPLATE_BY_NAME: Record<string, EmailTemplateMeta> = Object.fromEntries(

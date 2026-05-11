@@ -108,24 +108,60 @@ const Membership = () => {
         .eq('status', 'pending')
         .maybeSingle();
       if (existing) return { duplicate: true };
-      const { error } = await supabase.from('membership_upgrade_requests').insert({
+      const { data: inserted, error } = await supabase.from('membership_upgrade_requests').insert({
         user_id: user.id,
         business_id: myBusiness.id,
         current_tier: currentTier,
         requested_tier: plan.tier,
         requested_plan_id: plan.id,
         billing_cycle: billingCycle,
-      });
+      }).select('id').maybeSingle();
       if (error) throw error;
-      return { duplicate: false };
+      return { duplicate: false, requestId: inserted?.id as string | undefined, tier: plan.tier };
     },
-    onSuccess: (res) => {
+    onSuccess: async (res) => {
       setSubscribingPlanId(null);
       queryClient.invalidateQueries({ queryKey: ['my-upgrade-requests'] });
       if (res?.duplicate) {
         toast.info(isRTL ? 'لديك طلب ترقية معلّق لهذه الباقة بالفعل.' : 'You already have a pending request for this plan.');
+        return;
       } else {
         toast.success(isRTL ? 'تم إرسال طلب الترقية، وسيتواصل معك فريق قطاعات قريباً.' : 'Upgrade request sent. Our team will contact you shortly.');
+      }
+      // Best-effort: in-app notification + confirmation email. Never blocks success.
+      const requestId = res?.requestId;
+      if (!requestId || !user) return;
+      const businessName = myBusiness?.name_ar || myBusiness?.name_en || undefined;
+      try {
+        await supabase.from('notifications').insert({
+          user_id: user.id,
+          title_ar: 'تم استلام طلب ترقية الباقة',
+          title_en: 'Upgrade request received',
+          body_ar: 'سيقوم فريق قِطاعات بمراجعة طلبك والتواصل معك قريباً.',
+          body_en: 'The Qitaat team will review your request and contact you shortly.',
+          notification_type: 'system',
+          reference_type: 'membership_upgrade_request',
+          reference_id: requestId,
+          action_url: '/membership',
+        });
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.warn('[Membership] notification insert failed', err);
+      }
+      if (user.email) {
+        try {
+          await supabase.functions.invoke('send-transactional-email', {
+            body: {
+              templateName: 'membership-upgrade-request-submitted',
+              recipientEmail: user.email,
+              idempotencyKey: `membership-upgrade-submitted-${requestId}`,
+              templateData: { businessName, requestedTier: res?.tier },
+            },
+          });
+        } catch (err) {
+          // eslint-disable-next-line no-console
+          console.warn('[Membership] upgrade-submitted email failed', err);
+        }
       }
     },
     onError: (e: Error) => { setSubscribingPlanId(null); toast.error(e.message); },
@@ -150,13 +186,49 @@ const Membership = () => {
   const cancelMutation = useMutation({
     mutationFn: async () => {
       if (!mySubscription) throw new Error('No active subscription');
-      const { error } = await supabase.rpc('cancel_subscription' , { _subscription_id: mySubscription.id });
+      const subId = mySubscription.id as string;
+      const { error } = await supabase.rpc('cancel_subscription' , { _subscription_id: subId });
       if (error) throw error;
+      return { subId };
     },
-    onSuccess: () => {
+    onSuccess: async (res) => {
       queryClient.invalidateQueries({ queryKey: ['my-subscription'] });
       queryClient.invalidateQueries({ queryKey: ['my-business-membership'] });
       toast.success(isRTL ? 'تم إلغاء الاشتراك' : 'Subscription cancelled');
+      const subId = res?.subId;
+      if (!user || !subId) return;
+      const businessName = myBusiness?.name_ar || myBusiness?.name_en || undefined;
+      try {
+        await supabase.from('notifications').insert({
+          user_id: user.id,
+          title_ar: 'تم إلغاء الاشتراك',
+          title_en: 'Subscription cancelled',
+          body_ar: 'تم إلغاء الاشتراك والعودة إلى الباقة المجانية. يمكنك طلب الترقية في أي وقت.',
+          body_en: 'Subscription cancelled and your account is on the Free plan. You can request an upgrade anytime.',
+          notification_type: 'system',
+          reference_type: 'membership_subscription_cancelled',
+          reference_id: subId,
+          action_url: '/membership',
+        });
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.warn('[Membership] cancel notification failed', err);
+      }
+      if (user.email) {
+        try {
+          await supabase.functions.invoke('send-transactional-email', {
+            body: {
+              templateName: 'membership-subscription-cancelled',
+              recipientEmail: user.email,
+              idempotencyKey: `membership-cancelled-${subId}`,
+              templateData: { businessName },
+            },
+          });
+        } catch (err) {
+          // eslint-disable-next-line no-console
+          console.warn('[Membership] cancel email failed', err);
+        }
+      }
     },
     onError: (e: Error) => toast.error(e.message),
   });
