@@ -632,7 +632,7 @@ const AdminDashboardView = React.memo(({ isRTL }: { isRTL: boolean }) => {
                   </Avatar>
                   <div className="min-w-0 flex-1">
                     <p className="text-[10px] font-medium truncate">{u.full_name || (isRTL ? 'بدون اسم' : 'No name')}</p>
-                    <p className="text-[9px] text-muted-foreground truncate">{u.email}</p>
+                    <p className="text-[9px] text-muted-foreground truncate tech-content" title={isRTL ? 'البريد مخفي لحماية الخصوصية' : 'Email masked for privacy'}>{maskEmail(u.email)}</p>
                   </div>
                   <Badge variant="outline" className="text-[8px] h-4 shrink-0">
                     {['business', 'company', 'provider'].includes(u.account_type) ? (isRTL ? 'مزود' : 'Provider') : (isRTL ? 'مستخدم' : 'User')}
