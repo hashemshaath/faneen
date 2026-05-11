@@ -649,24 +649,16 @@ const DashboardContracts = () => {
   });
 
   const approveAmendmentMutation = useMutation({
-    mutationFn: async ({ amendmentId, contract }: { amendmentId: string; contract: ContractWithRole }) => {
-      const isClient = user?.id === contract.client_id;
-      const field = isClient ? 'client_approved_at' : 'provider_approved_at';
-      const update: any = { [field]: new Date().toISOString() };
-      const amendment = allAmendments.find((a) => a.id === amendmentId);
-      const otherApproved = isClient ? amendment?.provider_approved_at : amendment?.client_approved_at;
-      if (otherApproved) update.status = 'approved';
-      const { error } = await supabase.from('contract_amendments').update(update).eq('id', amendmentId);
+    mutationFn: async ({ amendmentId }: { amendmentId: string; contract: ContractWithRole }) => {
+      const { error } = await supabase.rpc('approve_contract_amendment', { _amendment_id: amendmentId });
       if (error) throw error;
-      if (otherApproved && amendment?.new_amount) {
-        await supabase.from('contracts').update({ total_amount: amendment.new_amount }).eq('id', contract.id);
-      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-contract-amendments'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-contracts'] });
       toast.success(isRTL ? 'تمت الموافقة على التعديل' : 'Amendment approved');
     },
+    onError: (err: unknown) => toast.error(err instanceof Error ? err.message : 'Error'),
   });
 
   /* ── Maintenance Request Mutation ── */
