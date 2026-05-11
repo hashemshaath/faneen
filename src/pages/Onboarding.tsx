@@ -353,7 +353,11 @@ const Onboarding = () => {
               {isRTL ? 'بيانات النشاط التجاري' : 'Business Details'}
             </h2>
             <Progress value={completionPct} className="h-1.5" />
-            <p className="text-center text-xs text-muted-foreground tech-content">
+            <p
+              className="text-center text-xs text-muted-foreground tech-content"
+              role="status"
+              aria-live="polite"
+            >
               {completionPct}% — {isRTL ? 'يمكنك الحفظ والمتابعة لاحقاً' : 'You can save and continue later'}
             </p>
           </div>
@@ -413,7 +417,11 @@ const Onboarding = () => {
             {isRTL ? 'القطاعات والخدمات' : 'Sectors & Services'}
           </h2>
           <Progress value={completionPct} className="h-1.5" />
-          <p className="text-center text-xs text-muted-foreground">
+          <p
+            className="text-center text-xs text-muted-foreground"
+            role="status"
+            aria-live="polite"
+          >
             {isRTL
               ? 'اختر القطاع/القطاعات والخدمات الفرعية التي يقدمها نشاطك'
               : 'Pick the sectors and sub-services your business operates in'}
@@ -447,9 +455,10 @@ const Onboarding = () => {
             disabled={loading || sectors.length === 0}
             variant="hero"
             className="sm:w-64"
+            aria-label={isRTL ? 'إنشاء الحساب وحفظ كمسودة' : 'Create account and save as draft'}
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin me-2" /> : null}
-            {isRTL ? 'إنشاء الحساب وإرسال للمراجعة' : 'Create account & save as draft'}
+            {isRTL ? 'إنشاء الحساب وحفظ كمسودة' : 'Create account & save as draft'}
           </Button>
         </div>
       </div>
