@@ -693,6 +693,19 @@ const ContractDetail = () => {
 
   const floors = useMemo(() => Object.keys(measurementsByFloor), [measurementsByFloor]);
 
+  // Group attachments by measurement_id once to avoid N+1 queries.
+  const attachmentsByMeasurement = useMemo(() => {
+    const map = new Map<string, AttachmentRow[]>();
+    for (const a of (attachments || []) as AttachmentRow[]) {
+      if (a.measurement_id) {
+        const arr = map.get(a.measurement_id) || [];
+        arr.push(a);
+        map.set(a.measurement_id, arr);
+      }
+    }
+    return map;
+  }, [attachments]);
+
   // Installment payment totals
   const paymentsTotals = useMemo(() => {
     if (!installmentPayments) return { paid: 0, total: 0, paidCount: 0, totalCount: 0 };
