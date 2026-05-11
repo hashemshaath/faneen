@@ -1567,6 +1567,19 @@ const ContractDetail = () => {
                               )}
                             </div>
                           )}
+                          {/* C4B.4 — Payment receipts */}
+                          {id && user && (
+                            <PaymentReceiptPanel
+                              contractId={id}
+                              paymentId={pay.id}
+                              userId={user.id}
+                              isRTL={isRTL}
+                              isPaid={isPaid}
+                              locked={isContractLocked}
+                              attachments={attachmentsByPayment.get(pay.id) || []}
+                              formatDate={formatDate}
+                            />
+                          )}
                         </div>
                       );
                     })}
