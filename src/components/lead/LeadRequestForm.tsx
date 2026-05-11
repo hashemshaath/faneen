@@ -94,7 +94,9 @@ export const LeadRequestForm: React.FC<Props> = ({ businessId, businessName, sou
     setErrors({});
     setSubmitting(true);
     try {
+      const leadId = crypto.randomUUID();
       const payload = {
+        id: leadId,
         business_id: businessId,
         user_id: user?.id ?? null,
         name: parsed.data.name,
@@ -106,23 +108,19 @@ export const LeadRequestForm: React.FC<Props> = ({ businessId, businessName, sou
         contact_preference: parsed.data.contact_preference,
         source: source ?? 'business-profile',
       };
-      const { data: inserted, error } = await supabase
+      const { error } = await supabase
         .from('lead_requests')
-        .insert(payload)
-        .select('id')
-        .single();
+        .insert(payload);
       if (error) throw error;
 
       // Fire-and-forget owner email notification. Failure must NOT break lead capture.
-      if (inserted?.id) {
-        try {
-          void supabase.functions.invoke('notify-supplier-lead', {
-            body: { lead_id: inserted.id },
-          });
-        } catch (notifyErr) {
-          // swallow — DB trigger already creates the in-app notification
-          console.warn('notify-supplier-lead invoke failed', notifyErr);
-        }
+      try {
+        void supabase.functions.invoke('notify-supplier-lead', {
+          body: { lead_id: leadId },
+        });
+      } catch (notifyErr) {
+        // swallow — DB trigger already creates the in-app notification
+        console.warn('notify-supplier-lead invoke failed', notifyErr);
       }
 
       // Canonical lead conversion event (Phase 6). `lead_request_submitted` deprecated.
@@ -230,7 +228,7 @@ export const LeadRequestForm: React.FC<Props> = ({ businessId, businessName, sou
 
           <div className="space-y-1">
             <Label className="text-xs">{isRTL ? 'الميزانية المتوقعة' : 'Expected budget'}</Label>
-            <Select value={form.budget_range || ''} onValueChange={(v) => setForm({ ...form, budget_range: v })}>
+            <Select value={form.budget_range || 'none'} onValueChange={(v) => setForm({ ...form, budget_range: v === 'none' ? '' : v })}>
               <SelectTrigger className="h-10 text-xs"><SelectValue placeholder={isRTL ? 'اختر' : 'Select'} /></SelectTrigger>
               <SelectContent>
                 {BUDGET_OPTIONS.map((o) => (
