@@ -179,6 +179,105 @@ export const exportContractPDF = async (data: ContractExportData) => {
       margin: { left: 15, right: 15 },
     });
     y = (doc as any).lastAutoTable.finalY + 12;
+    // If milestones carry no financial values, add a neutral note.
+    const milestonesHaveAmounts = data.milestones.some((m) => Number(m.amount) > 0);
+    if (!milestonesHaveAmounts) {
+      doc.setFontSize(8);
+      doc.setTextColor(mutedR, mutedG, mutedB);
+      const note = data.isRTL
+        ? 'المراحل تنظيمية وقد لا تكون مرتبطة بقيم مالية مباشرة.'
+        : 'Milestones are organisational and may not carry direct financial values.';
+      doc.text(note, data.isRTL ? w - 15 : 15, y, { align: data.isRTL ? 'right' : 'left' });
+      y += 8;
+    }
+  }
+
+  // ── Payment Schedule ──
+  if (data.payments && data.payments.length > 0) {
+    sectionTitle(data.isRTL ? 'جدول الدفعات' : 'Payment Schedule');
+    const totalForPct = data.totalAmount > 0 ? data.totalAmount : 0;
+    autoTable(doc, {
+      startY: y,
+      head: [[
+        '#',
+        data.isRTL ? 'عنوان الدفعة' : 'Title',
+        data.isRTL ? 'النسبة' : '%',
+        data.isRTL ? 'المبلغ' : 'Amount',
+        data.isRTL ? 'تاريخ الاستحقاق' : 'Due Date',
+        data.isRTL ? 'الحالة' : 'Status',
+        data.isRTL ? 'المرحلة المرتبطة' : 'Linked Milestone',
+        data.isRTL ? 'تاريخ الدفع' : 'Paid At',
+      ]],
+      body: data.payments.map((p) => {
+        const pct = totalForPct > 0 ? `${((Number(p.amount) / totalForPct) * 100).toFixed(1)}%` : '-';
+        return [
+          String(p.installmentNumber),
+          p.title || (data.isRTL ? `الدفعة #${p.installmentNumber}` : `Payment #${p.installmentNumber}`),
+          pct,
+          `${fmtNum(Number(p.amount))} ${data.currency}`,
+          p.dueDate || '-',
+          p.status,
+          p.milestoneTitle || '-',
+          p.paidAt || '-',
+        ];
+      }),
+      theme: 'grid',
+      styles: { fontSize: 7.5, cellPadding: 2.5, ...rtlStyles },
+      headStyles: { fillColor: HEADER_RGB, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7.5 },
+      alternateRowStyles: { fillColor: SURFACE2_RGB },
+      margin: { left: 12, right: 12 },
+    });
+    y = (doc as any).lastAutoTable.finalY + 10;
+
+    // Paid / Remaining + Coverage summary using shared helper (single source of truth).
+    const coverage = calculateContractCoverage({
+      contract: {
+        total_amount: data.totalAmount,
+        vat_rate: data.vatRate,
+        vat_inclusive: data.vatInclusive,
+        currency_code: data.currency,
+      },
+      payments: data.payments.map((p) => ({
+        amount: Number(p.amount),
+        status: p.status,
+        milestone_id: p.milestoneTitle ? 'linked' : null,
+      })),
+      milestones: data.milestones.map((m) => ({ id: m.id, amount: Number(m.amount) })),
+    });
+
+    const coverageLabel = (state: string): string => {
+      if (data.isRTL) {
+        if (state === 'matched') return 'مطابقة';
+        if (state === 'over') return 'تجاوز قيمة العقد';
+        if (state === 'under') return 'أقل من قيمة العقد';
+        return 'لا يوجد جدول';
+      }
+      if (state === 'matched') return 'Matched';
+      if (state === 'over') return 'Exceeds contract total';
+      if (state === 'under') return 'Below contract total';
+      return 'No schedule';
+    };
+
+    const summaryRows: string[][] = [
+      [data.isRTL ? 'إجمالي الدفعات المجدولة' : 'Scheduled total', `${fmtNum(coverage.paymentsTotal)} ${data.currency}`],
+      [data.isRTL ? 'المدفوع' : 'Paid', `${fmtNum(coverage.paidAmount)} ${data.currency} (${coverage.paidCount}/${coverage.paymentsCount})`],
+      [data.isRTL ? 'المعلّق' : 'Pending', `${fmtNum(coverage.pendingAmount)} ${data.currency}`],
+      [data.isRTL ? 'المتبقي على العقد' : 'Remaining on contract', `${fmtNum(coverage.remainingBalance)} ${data.currency}`],
+      [data.isRTL ? 'تغطية الدفعات' : 'Payments coverage', coverageLabel(coverage.paymentsState)],
+    ];
+    autoTable(doc, {
+      startY: y, body: summaryRows, theme: 'plain',
+      styles: { fontSize: 9, cellPadding: 3.5, ...rtlStyles, lineColor: BORDER_RGB, lineWidth: 0.2 },
+      columnStyles: { 0: { fontStyle: 'bold', cellWidth: 65, textColor: MUTED_RGB } },
+      margin: { left: 15, right: 15 },
+      didParseCell: (hookData: any) => {
+        if (hookData.row.index === 3) {
+          hookData.cell.styles.fontStyle = 'bold';
+          hookData.cell.styles.fillColor = HIGHLIGHT_RGB;
+        }
+      },
+    });
+    y = (doc as any).lastAutoTable.finalY + 12;
   }
 
   // ── Measurements ──
