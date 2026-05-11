@@ -212,16 +212,6 @@ export const ProviderDashboard: React.FC = () => {
           userId={user.id}
           businessId={business?.id}
           tier={business?.membership_tier || 'free'}
-          usage={
-            stats
-              ? {
-                  contracts: stats.totalContracts,
-                  services: stats.services,
-                  projects: stats.portfolio,
-                  // branches usage not tracked here yet
-                }
-              : undefined
-          }
         />
       )}
 
