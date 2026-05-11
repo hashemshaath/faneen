@@ -335,7 +335,7 @@ const AdminDashboardView = React.memo(({ isRTL }: { isRTL: boolean }) => {
         supabase.from('businesses').select('id', { count: 'exact', head: true }).gte('created_at', todayIso),
         // Needs attention — actionable backlogs
         supabase.from('lead_requests').select('id', { count: 'exact', head: true }).eq('status', 'new'),
-        supabase.from('businesses').select('id', { count: 'exact', head: true }).eq('approval_status', 'pending'),
+        supabase.from('businesses').select('id', { count: 'exact', head: true }).in('approval_status', ['submitted', 'under_review']),
         supabase.from('email_send_log').select('id', { count: 'exact', head: true }).eq('status', 'dlq').gte('created_at', fresh48hIso),
         supabase.from('contracts').select('id', { count: 'exact', head: true }).eq('status', 'pending_approval'),
       ]);
