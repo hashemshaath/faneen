@@ -81,6 +81,10 @@ export const DLQ_RECOMMENDATIONS: Record<string, { ar: string; en: string }> = {
     ar: 'تحقّق من أن SENDER_DOMAIN في الدالة يطابق نطاقاً موثّقاً (e.qitaat.com).',
     en: 'Verify SENDER_DOMAIN matches a verified domain (e.qitaat.com).',
   },
+  no_matching_sender_fresh: {
+    ar: 'إذا تكرّر هذا الخطأ حديثاً، أعد نشر send-transactional-email و auth-email-hook وتأكّد أن SENDER_DOMAIN=e.qitaat.com.',
+    en: 'If fresh no_matching_sender recurs, redeploy send-transactional-email and auth-email-hook and verify SENDER_DOMAIN=e.qitaat.com.',
+  },
   suppressed: {
     ar: 'المستلم في قائمة المنع (ارتداد/شكوى/إلغاء اشتراك). لا يُعاد الإرسال تلقائياً.',
     en: 'Recipient is suppressed (bounce/complaint/unsub). Will not auto-resend.',
@@ -117,6 +121,8 @@ export function classifyError(message: string | null | undefined): keyof typeof 
 
 export const CURRENT_SENDER_DOMAIN = 'e.qitaat.com';
 export const LEGACY_SENDER_DOMAINS = ['notify.qitaat.com', 'mail.qitaat.com'];
+/** Window (hours) within which a no_matching_sender row is treated as a FRESH active issue. */
+export const FRESH_NMS_WINDOW_HOURS = 48;
 
 export type DlqDisposition =
   | 'retryable'
@@ -129,6 +135,8 @@ export type DlqDisposition =
 export interface DlqClassification {
   errorKind: keyof typeof DLQ_RECOMMENDATIONS | 'other';
   isHistorical: boolean;
+  /** True when errorKind is no_matching_sender AND created within FRESH_NMS_WINDOW_HOURS. */
+  isFreshNoMatchingSender: boolean;
   disposition: DlqDisposition;
   retryable: boolean;
   reasonAr: string;
@@ -152,38 +160,52 @@ export function classifyDlqRow(row: EmailLogRow): DlqClassification {
   const errorKind = classifyError(row.error_message);
   const senderDomain = extractSenderDomain(row);
   const isLegacySender = senderDomain ? LEGACY_SENDER_DOMAINS.includes(senderDomain) : false;
-  // Heuristic: historical = no_matching_sender from before domain switch.
-  // All current verified-domain sends use e.qitaat.com, so any no_matching_sender
-  // row is treated as historical (cannot retry safely without payload).
-  const isHistorical = errorKind === 'no_matching_sender' || isLegacySender;
+  const ageHours = (Date.now() - new Date(row.created_at).getTime()) / 3_600_000;
+  const isFreshNoMatchingSender =
+    errorKind === 'no_matching_sender' &&
+    !isLegacySender &&
+    ageHours <= FRESH_NMS_WINDOW_HOURS;
 
   if (errorKind === 'no_matching_sender' || isLegacySender) {
+    if (isFreshNoMatchingSender) {
+      return {
+        errorKind,
+        isHistorical: false,
+        isFreshNoMatchingSender: true,
+        disposition: 'not_retryable_historical_sender',
+        retryable: false,
+        reasonAr: 'خطأ نشط: لم يُطابق مرسل موثّق (آخر 48 ساعة). أعد نشر دوال الإرسال وتأكّد أن SENDER_DOMAIN=e.qitaat.com.',
+        reasonEn: 'Active issue: no matching verified sender (last 48h). Redeploy send-transactional-email and auth-email-hook and verify SENDER_DOMAIN=e.qitaat.com.',
+      };
+    }
     return {
       errorKind,
       isHistorical: true,
+      isFreshNoMatchingSender: false,
       disposition: 'not_retryable_historical_sender',
       retryable: false,
-      reasonAr: 'سجل تاريخي من نطاق مرسل قديم — لا تتم إعادة المحاولة.',
-      reasonEn: 'Historical record from a legacy sender domain — not retryable.',
+      reasonAr: 'سجل تاريخي من نطاق مرسل قديم أو قبل التحقق — لا تتم إعادة المحاولة.',
+      reasonEn: 'Historical record from a legacy/pre-verification sender — not retryable.',
     };
   }
+  const isHistorical = false;
   if (errorKind === 'suppressed') {
     return {
-      errorKind, isHistorical, disposition: 'not_retryable_suppressed', retryable: false,
+      errorKind, isHistorical, isFreshNoMatchingSender: false, disposition: 'not_retryable_suppressed', retryable: false,
       reasonAr: 'المستلم في قائمة المنع — أزل المنع قبل المحاولة.',
       reasonEn: 'Recipient is suppressed — clear suppression first.',
     };
   }
   if (errorKind === 'unsubscribe') {
     return {
-      errorKind, isHistorical, disposition: 'not_retryable_unsubscribed', retryable: false,
+      errorKind, isHistorical, isFreshNoMatchingSender: false, disposition: 'not_retryable_unsubscribed', retryable: false,
       reasonAr: 'المستلم ألغى الاشتراك — لا تُعد المحاولة.',
       reasonEn: 'Recipient unsubscribed — do not retry.',
     };
   }
   if (errorKind === 'missing_template') {
     return {
-      errorKind, isHistorical, disposition: 'not_retryable_missing_template', retryable: false,
+      errorKind, isHistorical, isFreshNoMatchingSender: false, disposition: 'not_retryable_missing_template', retryable: false,
       reasonAr: 'القالب غير موجود في السجل — أصلح التسجيل أولاً.',
       reasonEn: 'Template missing from registry — fix registration first.',
     };
@@ -192,6 +214,7 @@ export function classifyDlqRow(row: EmailLogRow): DlqClassification {
   return {
     errorKind,
     isHistorical,
+    isFreshNoMatchingSender: false,
     disposition: 'retryable',
     retryable: true,
     reasonAr: 'يبدو خطأ مؤقتاً — يمكن إعادة المحاولة بحذر.',
