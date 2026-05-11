@@ -1385,7 +1385,12 @@ const ContractDetail = () => {
                                         }
                                         setConfirmingPayBusy(true);
                                         try {
-                                          const updates: Record<string, unknown> = {
+                                          const updates: {
+                                            status: 'paid';
+                                            paid_at: string;
+                                            payment_method: string;
+                                            notes?: string;
+                                          } = {
                                             status: 'paid',
                                             paid_at: new Date(payConfirmForm.paid_at).toISOString(),
                                             payment_method: payConfirmForm.payment_method,
