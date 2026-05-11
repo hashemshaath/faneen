@@ -34,6 +34,9 @@ import { template as membershipUpgradeRequestSubmitted } from './membership-upgr
 import { template as membershipUpgradeRequestApproved } from './membership-upgrade-request-approved.tsx'
 import { template as membershipUpgradeRequestRejected } from './membership-upgrade-request-rejected.tsx'
 import { template as membershipSubscriptionCancelled } from './membership-subscription-cancelled.tsx'
+import { template as contractPaymentRecorded } from './contract-payment-recorded.tsx'
+import { template as contractPaymentDue } from './contract-payment-due.tsx'
+import { template as contractMilestoneCompleted } from './contract-milestone-completed.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'booking-confirmation': bookingConfirmation,
@@ -61,4 +64,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'membership-upgrade-request-approved': membershipUpgradeRequestApproved,
   'membership-upgrade-request-rejected': membershipUpgradeRequestRejected,
   'membership-subscription-cancelled': membershipSubscriptionCancelled,
+  'contract-payment-recorded': contractPaymentRecorded,
+  'contract-payment-due': contractPaymentDue,
+  'contract-milestone-completed': contractMilestoneCompleted,
 }

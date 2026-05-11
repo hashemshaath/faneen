@@ -1427,6 +1427,46 @@ const ContractDetail = () => {
                                             queryClient.invalidateQueries({ queryKey: ['installment-payments'] });
                                             queryClient.invalidateQueries({ queryKey: ['contract-notes', id] });
                                             setConfirmingPayId(null);
+                                            // Best-effort: notify client in-app + email. Never block payment update.
+                                            try {
+                                              if (contract?.client_id) {
+                                                const refId = (contract as any).ref_id || contract.id;
+                                                const titleAr = (contract as any).title_ar || (contract as any).title || '';
+                                                const titleEn = (contract as any).title_en || (contract as any).title || titleAr;
+                                                void supabase.from('notifications').insert({
+                                                  user_id: contract.client_id,
+                                                  title_ar: 'تم تسجيل دفعة على عقدك',
+                                                  title_en: 'A payment was recorded on your contract',
+                                                  body_ar: `تم تسجيل دفعة #${pay.installment_number} على العقد ${refId}.`,
+                                                  body_en: `Payment #${pay.installment_number} was recorded on contract ${refId}.`,
+                                                  notification_type: 'contract_payment_recorded',
+                                                  reference_id: contract.id,
+                                                  reference_type: 'contract',
+                                                  action_url: `/contracts/${contract.id}`,
+                                                });
+                                                const clientEmail = (clientProfile as any)?.email;
+                                                const clientName = (clientProfile as any)?.full_name;
+                                                if (clientEmail) {
+                                                  void supabase.functions.invoke('send-transactional-email', {
+                                                    body: {
+                                                      templateName: 'contract-payment-recorded',
+                                                      recipientEmail: clientEmail,
+                                                      idempotencyKey: `contract-payment-recorded-${pay.id}`,
+                                                      templateData: {
+                                                        recipientName: clientName,
+                                                        contractRefId: refId,
+                                                        contractTitle: isRTL ? titleAr : titleEn,
+                                                        installmentNumber: pay.installment_number,
+                                                        amount: Number(pay.amount).toLocaleString('en-US', { minimumFractionDigits: 2 }),
+                                                        currency: plan.currency_code,
+                                                        contractId: contract.id,
+                                                        contractUrl: `${window.location.origin}/contracts/${contract.id}`,
+                                                      },
+                                                    },
+                                                  }).catch(() => { /* queue retries */ });
+                                                }
+                                              }
+                                            } catch { /* notify is best-effort */ }
                                           }
                                         } catch (e: unknown) {
                                           const msg = e instanceof Error ? e.message : (isRTL ? 'حدث خطأ' : 'Unknown error');

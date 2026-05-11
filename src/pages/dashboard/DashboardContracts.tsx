@@ -803,6 +803,52 @@ const DashboardContracts = () => {
       if (status === 'completed') update.completed_at = new Date().toISOString();
       const { error } = await supabase.from('contract_milestones').update(update).eq('id', id);
       if (error) throw error;
+      // Best-effort: notify client + email when a milestone is updated by provider.
+      if (status === 'completed') {
+        try {
+          const ms = allMilestones.find((m) => m.id === id);
+          if (ms) {
+            const contract = contracts.find((c) => c.id === ms.contract_id);
+            if (contract && contract.client_id && contract.client_id !== user?.id) {
+              const refId = (contract as any).ref_id || contract.id;
+              const titleAr = (contract as any).title_ar || '';
+              const titleEn = (contract as any).title_en || titleAr;
+              const msTitle = isRTL ? ((ms as any).title_ar || (ms as any).title_en || '') : ((ms as any).title_en || (ms as any).title_ar || '');
+              void supabase.from('notifications').insert({
+                user_id: contract.client_id,
+                title_ar: 'تم تحديث مرحلة في عقدك',
+                title_en: 'A milestone in your contract was updated',
+                body_ar: msTitle ? `المرحلة: ${msTitle}` : `العقد ${refId}`,
+                body_en: msTitle ? `Milestone: ${msTitle}` : `Contract ${refId}`,
+                notification_type: 'contract_milestone_completed',
+                reference_id: contract.id,
+                reference_type: 'contract',
+                action_url: `/contracts/${contract.id}`,
+              });
+              const clientProfile = profiles.find((p: any) => p.user_id === contract.client_id) as any;
+              const clientEmail = clientProfile?.email;
+              const clientName = clientProfile?.full_name;
+              if (clientEmail) {
+                void supabase.functions.invoke('send-transactional-email', {
+                  body: {
+                    templateName: 'contract-milestone-completed',
+                    recipientEmail: clientEmail,
+                    idempotencyKey: `contract-milestone-completed-${id}`,
+                    templateData: {
+                      recipientName: clientName,
+                      contractRefId: refId,
+                      contractTitle: isRTL ? titleAr : titleEn,
+                      milestoneTitle: msTitle || undefined,
+                      contractId: contract.id,
+                      contractUrl: `${window.location.origin}/contracts/${contract.id}`,
+                    },
+                  },
+                }).catch(() => { /* queue retries */ });
+              }
+            }
+          }
+        } catch { /* notify is best-effort */ }
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-milestones'] });
