@@ -5240,9 +5240,26 @@ export type Database = {
       }
     }
     Functions: {
+      _membership_free_defaults: { Args: never; Returns: Json }
       admin_convert_lead_to_contract: {
         Args: { _lead_id: string }
         Returns: string
+      }
+      admin_list_membership_usage: {
+        Args: { _limit?: number; _only_over_or_near?: boolean }
+        Returns: {
+          business_id: string
+          business_name_ar: string
+          business_name_en: string
+          limit_value: number
+          metric: string
+          near_cap: boolean
+          over_limit: boolean
+          owner_user_id: string
+          period: string
+          tier: string
+          used: number
+        }[]
       }
       admin_update_business_approval: {
         Args: {
@@ -5325,6 +5342,10 @@ export type Database = {
       generate_ref_id: {
         Args: { _prefix: string; _seq_name: string }
         Returns: string
+      }
+      get_active_membership_limits: {
+        Args: { _business_id?: string; _user_id: string }
+        Returns: Json
       }
       get_contact_inbox_settings: {
         Args: never
@@ -5418,6 +5439,17 @@ export type Database = {
         }[]
       }
       get_home_stats: { Args: never; Returns: Json }
+      get_membership_usage: {
+        Args: { _business_id?: string; _user_id?: string }
+        Returns: {
+          limit_value: number
+          metric: string
+          near_cap: boolean
+          over_limit: boolean
+          period: string
+          used: number
+        }[]
+      }
       get_migration_epoch: { Args: never; Returns: number }
       get_migration_failure_stats_24h: {
         Args: never
