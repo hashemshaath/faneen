@@ -81,6 +81,7 @@ const AdminContactSlaDashboard = lazyRetry(() => import("./pages/admin/AdminCont
 const AdminContactNotificationLog = lazyRetry(() => import("./pages/admin/AdminContactNotificationLog"));
 const AdminLeadRequests = lazyRetry(() => import("./pages/admin/AdminLeadRequests"));
 const AdminEmailDeliverability = lazyRetry(() => import("./pages/admin/AdminEmailDeliverability"));
+const AdminEmailCenter = lazyRetry(() => import("./pages/admin/AdminEmailCenter"));
 const AdminSiteAudit = lazyRetry(() => import("./pages/admin/AdminSiteAudit"));
 const AdminSectorSeo = lazyRetry(() => import("./pages/admin/AdminSectorSeo"));
 const AdminSitemapStatus = lazyRetry(() => import("./pages/admin/AdminSitemapStatus"));
@@ -210,6 +211,7 @@ const AppRoutes = () => (
           <Route path="/admin/contact-notification-log" element={<ProtectedRoute requireAdmin><AdminContactNotificationLog /></ProtectedRoute>} />
           <Route path="/admin/lead-requests" element={<ProtectedRoute requireAdmin><AdminLeadRequests /></ProtectedRoute>} />
           <Route path="/admin/email-deliverability" element={<ProtectedRoute requireAdmin><AdminEmailDeliverability /></ProtectedRoute>} />
+          <Route path="/admin/email-center" element={<ProtectedRoute requireAdmin><AdminEmailCenter /></ProtectedRoute>} />
           <Route path="/admin/site-audit" element={<ProtectedRoute requireAdmin><AdminSiteAudit /></ProtectedRoute>} />
           <Route path="/admin/sector-seo" element={<ProtectedRoute requireAdmin><AdminSectorSeo /></ProtectedRoute>} />
           <Route path="/admin/sitemap-status" element={<ProtectedRoute requireAdmin><AdminSitemapStatus /></ProtectedRoute>} />
