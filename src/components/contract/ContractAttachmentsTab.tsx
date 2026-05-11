@@ -56,8 +56,6 @@ export const ContractAttachmentsTab: React.FC<Props> = ({
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [description, setDescription] = useState('');
-  // C4B.2 Safety Patch: visibility is forced to 'parties' on insert until RLS is added.
-  const [visibility] = useState<AttachmentVisibility>('parties');
   const [linkType, setLinkType] = useState<LinkType>('contract');
   const [linkId, setLinkId] = useState<string>('');
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
