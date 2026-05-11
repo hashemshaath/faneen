@@ -1,7 +1,7 @@
 import { setupArabicDoc, getArabicTableStyles, printContractSection } from './pdf-arabic-font';
 import { BRAND_DOCUMENTS } from '@/config/brandTheme';
 import { hexToRgbTuple } from '@/lib/theme/brandThemeUtils';
-import { calculateVatBreakdown } from '@/lib/contract-financials';
+import { calculateVatBreakdown, calculateContractCoverage } from '@/lib/contract-financials';
 
 // ── Central brand document tokens (resolved once per module load) ──
 // Falls back to the literal hex if the util ever returns null (it won't for
@@ -30,7 +30,16 @@ export interface ContractExportData {
   supervisorPhone?: string;
   supervisorEmail?: string;
   terms?: string;
-  milestones: { title: string; amount: number; dueDate?: string; status: string }[];
+  milestones: { id?: string; title: string; amount: number; dueDate?: string; status: string }[];
+  payments?: {
+    installmentNumber: number;
+    title?: string;
+    amount: number;
+    dueDate?: string;
+    status: string;
+    milestoneTitle?: string;
+    paidAt?: string;
+  }[];
   measurements?: { pieceNumber: string; name: string; location: string; floor: string; lengthMm: number; widthMm: number; areaSqm: number; unitPrice: number; quantity: number; totalCost: number; status: string }[];
   vatRate?: number;
   vatInclusive?: boolean;
