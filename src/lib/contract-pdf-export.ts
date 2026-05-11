@@ -41,6 +41,19 @@ export interface ContractExportData {
     paidAt?: string;
   }[];
   measurements?: { pieceNumber: string; name: string; location: string; floor: string; lengthMm: number; widthMm: number; areaSqm: number; unitPrice: number; quantity: number; totalCost: number; status: string }[];
+  /**
+   * Attachment index entries — metadata only. Never include signed URLs,
+   * storage paths, or `file_url` here. Visibility filtering happens in the
+   * caller (RLS already gates the underlying query).
+   */
+  attachments?: {
+    fileName: string;
+    fileType?: string;
+    fileSize?: number | null;
+    linkedTo: string;
+    description?: string | null;
+    uploadedAt?: string | null;
+  }[];
   vatRate?: number;
   vatInclusive?: boolean;
   businessName?: string;
