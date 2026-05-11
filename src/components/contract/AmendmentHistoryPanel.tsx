@@ -6,6 +6,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { CheckCircle2, FileText, Info, Clock, XCircle, Ban, PlayCircle, PenLine, AlertTriangle } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
+import { AmendmentFinancialPreview } from './AmendmentFinancialPreview';
+import { previewAmendmentFinancialImpact, type AmendmentPreviewPayment } from '@/lib/contract-financials';
 
 type Amendment = Database['public']['Tables']['contract_amendments']['Row'];
 type AuditRow = Database['public']['Tables']['contract_amendment_audit']['Row'];
@@ -27,6 +29,14 @@ interface Props {
   cancelling: boolean;
   onApply: (amendmentId: string) => void;
   applying: boolean;
+  contract?: {
+    total_amount?: number | string | null;
+    vat_rate?: number | string | null;
+    vat_inclusive?: boolean | null;
+    currency_code?: string | null;
+    end_date?: string | null;
+  } | null;
+  installmentPayments?: AmendmentPreviewPayment[] | null;
 }
 
 const STATUS_LABEL: Record<string, { ar: string; en: string; cls: string }> = {
@@ -66,6 +76,7 @@ export const AmendmentHistoryPanel = ({
   onReject, rejecting,
   onCancel, cancelling,
   onApply, applying,
+  contract, installmentPayments,
 }: Props) => {
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState('');
