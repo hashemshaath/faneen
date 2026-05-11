@@ -139,6 +139,31 @@ const StatCard = ({ icon: Icon, label, value, sub, accent }: { icon: React.Eleme
   </div>
 );
 
+const mapAmendmentError = (err: unknown, isRTL: boolean): string => {
+  const msg = err instanceof Error ? err.message : String(err ?? '');
+  const arMap: Record<string, string> = {
+    requester_cannot_self_approve: 'لا يمكن للمنشئ الموافقة على طلبه',
+    not_contract_party: 'لست طرفاً في هذا العقد',
+    invalid_status: 'حالة غير صالحة لهذا الإجراء',
+    already_terminal: 'تم إنهاء هذا الطلب مسبقاً',
+    missing_rejection_reason: 'سبب الرفض مطلوب',
+    contract_not_found: 'العقد غير موجود',
+    amendment_not_found: 'طلب التعديل غير موجود',
+  };
+  const enMap: Record<string, string> = {
+    requester_cannot_self_approve: 'Requester cannot approve their own request',
+    not_contract_party: 'You are not a party to this contract',
+    invalid_status: 'Invalid status for this action',
+    already_terminal: 'Request has already been finalized',
+    missing_rejection_reason: 'Rejection reason is required',
+    contract_not_found: 'Contract not found',
+    amendment_not_found: 'Amendment not found',
+  };
+  const map = isRTL ? arMap : enMap;
+  for (const key of Object.keys(map)) if (msg.includes(key)) return map[key];
+  return msg || (isRTL ? 'حدث خطأ غير متوقع' : 'Unexpected error');
+};
+
 const ContractDetail = () => {
   // C5C: friendly Arabic/English mapping for amendment RPC error codes.
   // Defined inside component so it can capture isRTL via closure-style call.
