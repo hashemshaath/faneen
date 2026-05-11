@@ -34,6 +34,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useNoIndex } from "@/hooks/useNoIndex";
+import { parseMembershipLimitError } from '@/lib/membership-errors';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
@@ -448,7 +449,10 @@ const AdminBusinesses = () => {
       setEditingBranchId(null);
       toast.success(isRTL ? 'تم حفظ الفرع' : 'Branch saved');
     },
-    onError: (err: Error) => toast.error(err.message),
+    onError: (err: Error) => {
+      const mapped = parseMembershipLimitError(err, isRTL);
+      toast.error(mapped?.message ?? err.message);
+    },
   });
 
   const deleteBranchMutation = useMutation({
@@ -468,6 +472,10 @@ const AdminBusinesses = () => {
       if (error) throw error;
     },
     onSuccess: () => refetchBranches(),
+    onError: (err: Error) => {
+      const mapped = parseMembershipLimitError(err, isRTL);
+      toast.error(mapped?.message ?? err.message);
+    },
   });
 
   /* ─── Realtime ─── */
