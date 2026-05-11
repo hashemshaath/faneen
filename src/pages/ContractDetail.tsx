@@ -692,11 +692,23 @@ const ContractDetail = () => {
       vatInclusive,
       businessName: bizName || undefined,
       milestones: (milestones || []).map(m => ({
+        id: m.id,
         title: language === 'ar' ? m.title_ar : (m.title_en || m.title_ar),
         amount: Number(m.amount),
         dueDate: m.due_date || undefined,
         status: m.status,
       })),
+      payments: (installmentPayments || []).map(p => {
+        const linkedMs = p.milestone_id ? (milestones || []).find(m => m.id === p.milestone_id) : null;
+        return {
+          installmentNumber: p.installment_number,
+          amount: Number(p.amount),
+          dueDate: p.due_date || undefined,
+          status: p.status,
+          milestoneTitle: linkedMs ? (language === 'ar' ? linkedMs.title_ar : (linkedMs.title_en || linkedMs.title_ar)) : undefined,
+          paidAt: p.paid_at ? new Date(p.paid_at).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US') : undefined,
+        };
+      }),
       measurements: (measurements || []).map(m => ({
         pieceNumber: m.piece_number, name: language === 'ar' ? m.name_ar : (m.name_en || m.name_ar),
         location: (language === 'ar' ? m.location_ar : (m.location_en || m.location_ar)) || '',
