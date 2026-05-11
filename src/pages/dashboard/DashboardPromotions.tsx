@@ -421,6 +421,8 @@ const DashboardPromotions = () => {
           </div>
         </div>
 
+        <MembershipUsageWarning userId={user?.id} businessId={businessId} metric="promotions" />
+
         {/* ═══ Stats ═══ */}
         {promotions.length > 0 && (
           <div className="grid grid-cols-2 md:grid-cols-5 gap-2">

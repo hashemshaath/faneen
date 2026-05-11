@@ -417,6 +417,8 @@ const DashboardPortfolio = () => {
           </div>
         </div>
 
+        <MembershipUsageWarning userId={user?.id} businessId={businessId} metric="portfolio" />
+
         {/* ═══ Stats ═══ */}
         {items.length > 0 && (
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-2">
