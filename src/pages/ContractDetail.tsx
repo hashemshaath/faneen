@@ -168,7 +168,14 @@ const ContractDetail = () => {
   const [msForm, setMsForm] = useState({ title_ar: '', amount: '', due_date: '', description_ar: '' });
   // Amendment
   const [showAmendmentForm, setShowAmendmentForm] = useState(false);
-  const [amForm, setAmForm] = useState({ title_ar: '', description_ar: '', amendment_type: 'scope_change', new_amount: '' });
+  const [amForm, setAmForm] = useState({
+    title_ar: '', title_en: '',
+    description_ar: '', description_en: '',
+    reason: '',
+    amendment_type: 'scope_change',
+    new_amount: '',
+    new_end_date: '',
+  });
   // Import measurements
   const importFileRef = useRef<HTMLInputElement>(null);
   const [importedMeasurements, setImportedMeasurements] = useState<ImportedMeasurement[]>([]);
@@ -548,21 +555,46 @@ const ContractDetail = () => {
   /* ─── Amendment ─── */
   const addAmendmentMutation = useMutation({
     mutationFn: async () => {
+      // Client-side validation
+      if (!amForm.title_ar.trim()) throw new Error(isRTL ? 'العنوان بالعربية مطلوب' : 'Arabic title required');
+      if (!amForm.description_ar.trim()) throw new Error(isRTL ? 'الوصف مطلوب' : 'Description required');
+      if (!amForm.reason.trim()) throw new Error(isRTL ? 'سبب التعديل مطلوب' : 'Reason required');
+      let newAmount: number | null = null;
+      if (amForm.amendment_type === 'amount_change') {
+        const n = Number(amForm.new_amount);
+        if (!isFinite(n) || n <= 0) throw new Error(isRTL ? 'المبلغ الجديد يجب أن يكون رقماً موجباً' : 'New amount must be a positive number');
+        newAmount = n;
+      }
+      let newEndDate: string | null = null;
+      if (amForm.amendment_type === 'date_change') {
+        if (!amForm.new_end_date) throw new Error(isRTL ? 'تاريخ الانتهاء الجديد مطلوب' : 'New end date required');
+        newEndDate = amForm.new_end_date;
+      }
+      const oldTotal = contract?.total_amount != null ? Number(contract.total_amount) : null;
       const { error } = await supabase.from('contract_amendments').insert({
-        contract_id: id!, requested_by: user!.id,
-        title_ar: amForm.title_ar, description_ar: amForm.description_ar || null,
+        contract_id: id!,
+        requested_by: user!.id,
         amendment_type: amForm.amendment_type,
-        new_amount: amForm.new_amount ? Number(amForm.new_amount) : null,
+        title_ar: amForm.title_ar.trim(),
+        title_en: amForm.title_en.trim() || null,
+        description_ar: amForm.description_ar.trim(),
+        description_en: amForm.description_en.trim() || null,
+        reason: amForm.reason.trim(),
+        new_amount: newAmount,
+        new_end_date: newEndDate,
+        old_total: oldTotal,
+        amount_delta: newAmount != null && oldTotal != null ? newAmount - oldTotal : null,
+        status: 'pending',
       });
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contract-amendments', id] });
       setShowAmendmentForm(false);
-      setAmForm({ title_ar: '', description_ar: '', amendment_type: 'scope_change', new_amount: '' });
+      setAmForm({ title_ar: '', title_en: '', description_ar: '', description_en: '', reason: '', amendment_type: 'scope_change', new_amount: '', new_end_date: '' });
       toast({ title: isRTL ? 'تم إرسال طلب الملحق' : 'Amendment request sent' });
     },
-    onError: (err: Error) => toast({ title: err.message, variant: 'destructive' }),
+    onError: (err: unknown) => toast({ title: err instanceof Error ? err.message : 'Error', variant: 'destructive' }),
   });
 
   const approveAmendmentMutation = useMutation({
