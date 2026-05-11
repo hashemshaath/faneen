@@ -164,6 +164,7 @@ const AdminBusinesses = () => {
   const filterStatus = searchParams.get('status') || 'all';
   const filterTier = searchParams.get('tier') || 'all';
   const filterTranslation = searchParams.get('translation') || 'all'; // all|missing_en|missing_ar|complete
+  const filterOrigin = searchParams.get('origin') || 'all'; // all|demo|production
   const sortBy = (searchParams.get('sort') || 'recent') as 'recent' | 'rating' | 'name' | 'tier';
   const page = parseInt(searchParams.get('page') || '1', 10) || 1;
   const viewMode = (searchParams.get('view') || 'cards') as 'cards' | 'table';
@@ -185,6 +186,7 @@ const AdminBusinesses = () => {
   }, [searchInput]);
   const setFilterStatus = (v: string) => updateParam({ status: v === 'all' ? null : v, page: null });
   const setFilterTier = (v: string) => updateParam({ tier: v === 'all' ? null : v, page: null });
+  const setFilterOrigin = (v: string) => updateParam({ origin: v === 'all' ? null : v, page: null });
   const setSortBy = (v: string) => updateParam({ sort: v === 'recent' ? null : v });
   const setViewMode = (v: 'cards' | 'table') => updateParam({ view: v === 'cards' ? null : v });
   const setSearch = (v: string) => { setSearchInput(v); };
