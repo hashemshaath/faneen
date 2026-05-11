@@ -508,3 +508,244 @@ export function calculateContractCoverage(input: {
     currency,
   };
 }
+
+/* ── C5D.1: Amendment financial impact preview ────────────────────────── */
+
+export interface AmendmentPreviewPayment {
+  id: string;
+  installment_number?: number | string | null;
+  amount?: number | string | null;
+  status?: string | null;
+  milestone_id?: string | null;
+  due_date?: string | null;
+}
+
+export interface AmendmentPreviewInput {
+  contract: {
+    total_amount?: number | string | null;
+    vat_rate?: number | string | null;
+    vat_inclusive?: boolean | null;
+    currency_code?: string | null;
+    end_date?: string | null;
+  } | null | undefined;
+  amendment: {
+    amendment_type?: string | null;
+    new_amount?: number | string | null;
+    new_end_date?: string | null;
+  } | null | undefined;
+  payments?: AmendmentPreviewPayment[] | null;
+  tolerance?: number;
+}
+
+export interface AmendmentRowDiff {
+  id: string;
+  installmentNumber: number | null;
+  status: string;
+  oldAmount: number;
+  newAmount: number;
+  isPaid: boolean;
+  adjusted: boolean;
+  milestoneId: string | null;
+  milestonePreserved: boolean;
+}
+
+export type AmendmentBlockingError =
+  | 'missing_new_amount'
+  | 'invalid_new_amount'
+  | 'overpaid_refund_required'
+  | 'invalid_vat'
+  | 'currency_missing';
+
+export type AmendmentWarning =
+  | 'manual_schedule_required'
+  | 'milestone_dates_not_shifted'
+  | 'pending_row_zeroed'
+  | 'milestone_link_drift'
+  | 'rpc_does_not_redistribute_yet'
+  | 'documentation_only';
+
+export interface AmendmentFinancialPreview {
+  type: string;
+  currency: string;
+  oldTotal: number;
+  newTotal: number;
+  amountDelta: number;
+  oldVatAmount: number;
+  newVatAmount: number;
+  vatRate: number;
+  vatInclusive: boolean;
+  paidTotal: number;
+  pendingTotalBefore: number;
+  pendingTotalAfter: number;
+  newRemaining: number;
+  scheduleAdjusted: boolean;
+  manualScheduleRequired: boolean;
+  refundNeeded: boolean;
+  oldEndDate: string | null;
+  newEndDate: string | null;
+  blockingErrors: AmendmentBlockingError[];
+  warnings: AmendmentWarning[];
+  rowDiffs: AmendmentRowDiff[];
+}
+
+const PAID_STATUSES = new Set(['paid', 'completed', 'settled']);
+
+/**
+ * Pure preview of how an approved amendment would impact a contract's
+ * financials and payment schedule. Does not mutate any inputs and never
+ * returns NaN. Implements the C5D proposal §3 redistribution algorithm.
+ */
+export function previewAmendmentFinancialImpact(
+  input: AmendmentPreviewInput,
+): AmendmentFinancialPreview {
+  const tolerance = input.tolerance ?? 0.01;
+  const type = input.amendment?.amendment_type || 'other';
+  const currency = (input.contract?.currency_code || 'SAR').toUpperCase();
+  const vatRate = clampNonNeg(safeNum(input.contract?.vat_rate ?? 15));
+  const vatInclusive = !!input.contract?.vat_inclusive;
+
+  const oldTotal = round2(clampNonNeg(safeNum(input.contract?.total_amount)));
+  const hasNewAmount = input.amendment?.new_amount != null && input.amendment.new_amount !== '';
+  const newTotalRaw = hasNewAmount ? safeNum(input.amendment?.new_amount) : oldTotal;
+  const newTotal = round2(newTotalRaw);
+  const amountDelta = round2(newTotal - oldTotal);
+
+  const blockingErrors: AmendmentBlockingError[] = [];
+  const warnings: AmendmentWarning[] = [];
+
+  if (!input.contract?.currency_code) blockingErrors.push('currency_missing');
+  if (!Number.isFinite(vatRate) || vatRate < 0) blockingErrors.push('invalid_vat');
+
+  if (type === 'amount_change') {
+    if (!hasNewAmount) blockingErrors.push('missing_new_amount');
+    else if (!Number.isFinite(newTotalRaw) || newTotal <= 0) blockingErrors.push('invalid_new_amount');
+  }
+
+  const oldVat = calculateVatBreakdown({ amount: oldTotal, vatRate, vatInclusive });
+  const newVat = calculateVatBreakdown({ amount: newTotal, vatRate, vatInclusive });
+
+  const payments = Array.isArray(input.payments) ? input.payments.slice() : [];
+  // Stable order: installment_number asc, then due_date, then id
+  payments.sort((a, b) => {
+    const an = safeNum(a.installment_number);
+    const bn = safeNum(b.installment_number);
+    if (an !== bn) return an - bn;
+    const ad = a.due_date ?? '';
+    const bd = b.due_date ?? '';
+    if (ad !== bd) return ad < bd ? -1 : 1;
+    return a.id.localeCompare(b.id);
+  });
+
+  const paidRows = payments.filter(p => PAID_STATUSES.has((p.status ?? '').toLowerCase()));
+  const pendingRows = payments.filter(p => !PAID_STATUSES.has((p.status ?? '').toLowerCase()));
+
+  const paidTotal = round2(paidRows.reduce((s, p) => s + clampNonNeg(safeNum(p.amount)), 0));
+  const pendingTotalBefore = round2(pendingRows.reduce((s, p) => s + clampNonNeg(safeNum(p.amount)), 0));
+
+  let newRemaining = round2(newTotal - paidTotal);
+  let refundNeeded = false;
+  let manualScheduleRequired = false;
+  let scheduleAdjusted = false;
+
+  if (newRemaining < -tolerance) {
+    refundNeeded = true;
+    blockingErrors.push('overpaid_refund_required');
+    newRemaining = round2(newRemaining); // keep negative for display
+  }
+
+  // Compute proposed redistribution (preview only — never persisted here)
+  const newAmountsById = new Map<string, number>();
+  for (const p of paidRows) newAmountsById.set(p.id, round2(clampNonNeg(safeNum(p.amount))));
+
+  if (pendingRows.length === 0) {
+    if (newRemaining > tolerance) {
+      manualScheduleRequired = true;
+      warnings.push('manual_schedule_required');
+    }
+  } else if (refundNeeded) {
+    // Leave pending rows unchanged in preview when blocked
+    for (const p of pendingRows) newAmountsById.set(p.id, round2(clampNonNeg(safeNum(p.amount))));
+  } else if (Math.abs(newRemaining - pendingTotalBefore) <= tolerance) {
+    for (const p of pendingRows) newAmountsById.set(p.id, round2(clampNonNeg(safeNum(p.amount))));
+  } else {
+    const target = clampNonNeg(newRemaining);
+    const factor = pendingTotalBefore > 0 ? target / pendingTotalBefore : 0;
+    let running = 0;
+    pendingRows.forEach((p, i) => {
+      let next: number;
+      if (i < pendingRows.length - 1) {
+        next = round2(Math.max(0, clampNonNeg(safeNum(p.amount)) * factor));
+        running += next;
+      } else {
+        next = round2(Math.max(0, target - running));
+      }
+      newAmountsById.set(p.id, next);
+    });
+    scheduleAdjusted = true;
+  }
+
+  const rowDiffs: AmendmentRowDiff[] = payments.map(p => {
+    const oldAmt = round2(clampNonNeg(safeNum(p.amount)));
+    const newAmt = newAmountsById.get(p.id) ?? oldAmt;
+    const isPaid = PAID_STATUSES.has((p.status ?? '').toLowerCase());
+    const adjusted = !isPaid && Math.abs(newAmt - oldAmt) > tolerance;
+    if (!isPaid && adjusted && newAmt <= tolerance && !warnings.includes('pending_row_zeroed')) {
+      warnings.push('pending_row_zeroed');
+    }
+    const numRaw = safeNum(p.installment_number);
+    return {
+      id: p.id,
+      installmentNumber: Number.isFinite(numRaw) && numRaw > 0 ? numRaw : null,
+      status: (p.status ?? 'pending').toLowerCase(),
+      oldAmount: oldAmt,
+      newAmount: newAmt,
+      isPaid,
+      adjusted,
+      milestoneId: p.milestone_id ?? null,
+      milestonePreserved: true, // we never drop milestone_id in preview
+    };
+  });
+
+  const pendingTotalAfter = round2(
+    rowDiffs.filter(r => !r.isPaid).reduce((s, r) => s + r.newAmount, 0),
+  );
+
+  // Date-impact warnings
+  const oldEndDate = input.contract?.end_date ?? null;
+  const newEndDate = input.amendment?.new_end_date ?? null;
+  if (newEndDate && newEndDate !== oldEndDate) {
+    warnings.push('milestone_dates_not_shifted');
+  }
+
+  // Documentation-only types
+  if (type === 'measurement_change') warnings.push('documentation_only');
+
+  // Always surface the C5D.2 limitation while RPC has not been upgraded
+  if (type === 'amount_change' && (scheduleAdjusted || manualScheduleRequired)) {
+    warnings.push('rpc_does_not_redistribute_yet');
+  }
+
+  return {
+    type,
+    currency,
+    oldTotal,
+    newTotal,
+    amountDelta,
+    oldVatAmount: oldVat.vatAmount,
+    newVatAmount: newVat.vatAmount,
+    vatRate,
+    vatInclusive,
+    paidTotal,
+    pendingTotalBefore,
+    pendingTotalAfter,
+    newRemaining,
+    scheduleAdjusted,
+    manualScheduleRequired,
+    refundNeeded,
+    oldEndDate,
+    newEndDate,
+    blockingErrors,
+    warnings,
+    rowDiffs,
+  };
+}
