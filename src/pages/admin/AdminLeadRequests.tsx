@@ -166,10 +166,53 @@ const AdminLeadRequests: React.FC = () => {
   });
 
   const convertLead = useMutation({
-    mutationFn: async (id: string) => {
-      const { data, error } = await supabase.rpc('admin_convert_lead_to_contract', { _lead_id: id });
+    mutationFn: async (lead: LeadRow) => {
+      const { data, error } = await supabase.rpc('admin_convert_lead_to_contract', { _lead_id: lead.id });
       if (error) throw error;
-      return data as string;
+      const contractId = data as string;
+      // Fail-soft: send draft-contract emails to client + provider. Errors are logged
+      // but never roll back the conversion (contract + in-app notifications already
+      // committed). converted_contract_id guard in RPC prevents duplicate sends.
+      try {
+        const [{ data: contract }, { data: business }] = await Promise.all([
+          supabase.from('contracts').select('contract_number, provider_id').eq('id', contractId).maybeSingle(),
+          supabase.from('businesses').select('name_ar, name_en, user_id, email').eq('id', lead.business_id).maybeSingle(),
+        ]);
+        const businessName = business?.name_ar || business?.name_en || undefined;
+        const contractNumber = contract?.contract_number || undefined;
+        const providerUserId = contract?.provider_id || business?.user_id;
+        let providerEmail: string | undefined = business?.email || undefined;
+        if (!providerEmail && providerUserId) {
+          const { data: prof } = await supabase
+            .from('profiles').select('email, login_email').eq('user_id', providerUserId).maybeSingle();
+          providerEmail = prof?.email || prof?.login_email || undefined;
+        }
+        const sends: Promise<unknown>[] = [];
+        if (lead.email) {
+          sends.push(supabase.functions.invoke('send-transactional-email', {
+            body: {
+              templateName: 'contract-draft-created-client',
+              recipientEmail: lead.email,
+              idempotencyKey: `contract-draft-client-${contractId}`,
+              templateData: { name: lead.name, businessName, contractNumber, contractId },
+            },
+          }));
+        }
+        if (providerEmail) {
+          sends.push(supabase.functions.invoke('send-transactional-email', {
+            body: {
+              templateName: 'contract-draft-created-provider',
+              recipientEmail: providerEmail,
+              idempotencyKey: `contract-draft-provider-${contractId}`,
+              templateData: { businessName, contractNumber, contractId },
+            },
+          }));
+        }
+        await Promise.allSettled(sends);
+      } catch (mailErr) {
+        console.warn('[convert-lead] email side-effect failed (non-blocking)', mailErr);
+      }
+      return contractId;
     },
     onSuccess: () => {
       toast.success(isRTL ? 'تم تحويل الطلب إلى عقد مسودة' : 'Lead converted to draft contract');
@@ -441,7 +484,7 @@ const AdminLeadRequests: React.FC = () => {
                       <div className="flex gap-2">
                         <Button
                           size="sm"
-                          onClick={() => convertLead.mutate(r.id)}
+                          onClick={() => convertLead.mutate(r)}
                           disabled={convertLead.isPending}
                           aria-label={isRTL ? 'تأكيد التحويل' : 'Confirm conversion'}
                         >
