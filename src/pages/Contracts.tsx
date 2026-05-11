@@ -41,7 +41,7 @@ const ContractCard: React.FC<{ contract: Contract; role: 'client' | 'provider' }
     : null;
 
   return (
-    <Link to={`/contracts/${contract.id}`} className={`block p-4 sm:p-5 rounded-xl bg-card border ${cfg.bgCard} hover:border-accent/40 hover:shadow-lg dark:hover:shadow-accent/5 transition-all duration-300 group active:scale-[0.98]`}>
+    <Link to={`/contracts/${contract.id}`} className={`block p-4 sm:p-5 rounded-xl bg-card border ${cfg.border} hover:border-accent/40 hover:shadow-lg dark:hover:shadow-accent/5 transition-all duration-300 group active:scale-[0.98]`}>
       <div className={`flex items-start justify-between gap-2 mb-3`}>
         <div className="flex-1 min-w-0">
           <h3 className="font-heading font-bold text-sm sm:text-base text-foreground group-hover:text-accent transition-colors truncate">{title}</h3>
