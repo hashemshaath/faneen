@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
-import { User, Building2, Phone, Globe, Check, Loader2 } from 'lucide-react';
+import { User, Building2, Phone, Globe, Check, Loader2, CheckCircle2, ArrowLeft, ArrowRight, AlertCircle } from 'lucide-react';
 import { track } from '@/lib/analytics-events';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { SectorPicker } from '@/components/onboarding/SectorPicker';
@@ -31,7 +31,8 @@ type OnboardingStep =
   | 'details'
   | 'phone-verify'
   | 'business-details'
-  | 'business-sectors';
+  | 'business-sectors'
+  | 'summary';
 
 const STEP_ORDER: OnboardingStep[] = [
   'account-type',
@@ -39,6 +40,7 @@ const STEP_ORDER: OnboardingStep[] = [
   'phone-verify',
   'business-details',
   'business-sectors',
+  'summary',
 ];
 
 const Onboarding = () => {
@@ -109,7 +111,9 @@ const Onboarding = () => {
 
   useEffect(() => {
     if (!user) { navigate('/auth'); return; }
-    if (profile?.is_onboarded) { navigate(getTargetRoute()); return; }
+    // Allow the user to stay on the post-completion summary screen even
+    // after `is_onboarded` flips true (refreshProfile fires before redirect).
+    if (profile?.is_onboarded && step !== 'summary') { navigate(getTargetRoute()); return; }
     let cancelled = false;
     (async () => {
       const draft = await pullRemoteDraft(user.id);
@@ -183,16 +187,19 @@ const Onboarding = () => {
         track.providerSignupSubmit({});
       }
       track.onboardingCompleted({ account_type: accountType });
-      toast.success(isRTL ? 'تم إكمال التسجيل بنجاح!' : 'Registration completed successfully!');
-      
-      // Role-based redirect after onboarding
+      toast.success(isRTL ? 'تم حفظ بيانات منشأتك' : 'Your business profile is saved');
+
       if (accountType === 'business') {
-        navigate('/dashboard');
+        // Show end-of-onboarding summary instead of redirecting immediately.
+        setStep('summary');
       } else {
         navigate('/');
       }
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Unknown error');
+      const fallback = isRTL
+        ? 'تعذّر إكمال التسجيل. يرجى المحاولة مرة أخرى.'
+        : 'Could not complete registration. Please try again.';
+      toast.error(err instanceof Error && err.message ? err.message : fallback);
     } finally {
       setLoading(false);
     }
