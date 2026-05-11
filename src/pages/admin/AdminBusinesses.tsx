@@ -1594,7 +1594,14 @@ const AdminBusinesses = () => {
                             </Avatar>
                             <div>
                               <p className="text-xs font-semibold truncate max-w-[180px]" dir="auto">{language === 'ar' ? biz.name_ar : (biz.name_en || biz.name_ar)}</p>
-                              <p className="text-[10px] text-muted-foreground tech-content">{biz.ref_id}</p>
+                              <div className="flex items-center gap-1">
+                                <p className="text-[10px] text-muted-foreground tech-content">{biz.ref_id}</p>
+                                {biz.is_demo && (
+                                  <Badge variant="outline" className="text-[9px] h-4 px-1 gap-0.5 border-amber-500/40 text-amber-600 dark:text-amber-400" title={isRTL ? 'بيانات تجريبية' : 'Demo data'}>
+                                    <FlaskConical className="w-2.5 h-2.5" />{isRTL ? 'تجريبي' : 'Demo'}
+                                  </Badge>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </TableCell>
