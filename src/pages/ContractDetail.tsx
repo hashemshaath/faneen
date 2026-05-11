@@ -168,7 +168,14 @@ const ContractDetail = () => {
   const [msForm, setMsForm] = useState({ title_ar: '', amount: '', due_date: '', description_ar: '' });
   // Amendment
   const [showAmendmentForm, setShowAmendmentForm] = useState(false);
-  const [amForm, setAmForm] = useState({ title_ar: '', description_ar: '', amendment_type: 'scope_change', new_amount: '' });
+  const [amForm, setAmForm] = useState({
+    title_ar: '', title_en: '',
+    description_ar: '', description_en: '',
+    reason: '',
+    amendment_type: 'scope_change',
+    new_amount: '',
+    new_end_date: '',
+  });
   // Import measurements
   const importFileRef = useRef<HTMLInputElement>(null);
   const [importedMeasurements, setImportedMeasurements] = useState<ImportedMeasurement[]>([]);
@@ -548,21 +555,46 @@ const ContractDetail = () => {
   /* ─── Amendment ─── */
   const addAmendmentMutation = useMutation({
     mutationFn: async () => {
+      // Client-side validation
+      if (!amForm.title_ar.trim()) throw new Error(isRTL ? 'العنوان بالعربية مطلوب' : 'Arabic title required');
+      if (!amForm.description_ar.trim()) throw new Error(isRTL ? 'الوصف مطلوب' : 'Description required');
+      if (!amForm.reason.trim()) throw new Error(isRTL ? 'سبب التعديل مطلوب' : 'Reason required');
+      let newAmount: number | null = null;
+      if (amForm.amendment_type === 'amount_change') {
+        const n = Number(amForm.new_amount);
+        if (!isFinite(n) || n <= 0) throw new Error(isRTL ? 'المبلغ الجديد يجب أن يكون رقماً موجباً' : 'New amount must be a positive number');
+        newAmount = n;
+      }
+      let newEndDate: string | null = null;
+      if (amForm.amendment_type === 'date_change') {
+        if (!amForm.new_end_date) throw new Error(isRTL ? 'تاريخ الانتهاء الجديد مطلوب' : 'New end date required');
+        newEndDate = amForm.new_end_date;
+      }
+      const oldTotal = contract?.total_amount != null ? Number(contract.total_amount) : null;
       const { error } = await supabase.from('contract_amendments').insert({
-        contract_id: id!, requested_by: user!.id,
-        title_ar: amForm.title_ar, description_ar: amForm.description_ar || null,
+        contract_id: id!,
+        requested_by: user!.id,
         amendment_type: amForm.amendment_type,
-        new_amount: amForm.new_amount ? Number(amForm.new_amount) : null,
+        title_ar: amForm.title_ar.trim(),
+        title_en: amForm.title_en.trim() || null,
+        description_ar: amForm.description_ar.trim(),
+        description_en: amForm.description_en.trim() || null,
+        reason: amForm.reason.trim(),
+        new_amount: newAmount,
+        new_end_date: newEndDate,
+        old_total: oldTotal,
+        amount_delta: newAmount != null && oldTotal != null ? newAmount - oldTotal : null,
+        status: 'pending',
       });
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contract-amendments', id] });
       setShowAmendmentForm(false);
-      setAmForm({ title_ar: '', description_ar: '', amendment_type: 'scope_change', new_amount: '' });
+      setAmForm({ title_ar: '', title_en: '', description_ar: '', description_en: '', reason: '', amendment_type: 'scope_change', new_amount: '', new_end_date: '' });
       toast({ title: isRTL ? 'تم إرسال طلب الملحق' : 'Amendment request sent' });
     },
-    onError: (err: Error) => toast({ title: err.message, variant: 'destructive' }),
+    onError: (err: unknown) => toast({ title: err instanceof Error ? err.message : 'Error', variant: 'destructive' }),
   });
 
   const approveAmendmentMutation = useMutation({
@@ -2397,40 +2429,102 @@ const ContractDetail = () => {
 
           {/* ── Amendments ── */}
           <TabsContent value="amendments">
-            {isContractLocked && (isProvider || isClient) && (
+            {(isProvider || isClient) && (
               <div className="mb-4">
+                {isContractLocked && (
+                  <p className="text-[11px] text-warning mb-2">
+                    {isRTL
+                      ? 'لا يمكن تعديل العقد مباشرة بعد الاعتماد. يمكنك تقديم طلب تعديل عبر ملحق.'
+                      : 'Active contracts cannot be edited directly. Submit an amendment request instead.'}
+                  </p>
+                )}
                 {showAmendmentForm ? (
                   <div className="p-4 rounded-xl bg-card border-2 border-dashed border-primary/30 space-y-3">
-                    <h3 className="font-heading font-bold text-sm flex items-center gap-2"><Plus className="w-4 h-4 text-accent" />{isRTL ? 'طلب ملحق عقد' : 'Request Amendment'}</h3>
+                    <h3 className="font-heading font-bold text-sm flex items-center gap-2">
+                      <Plus className="w-4 h-4 text-accent" />{isRTL ? 'طلب تعديل على العقد' : 'Request Contract Amendment'}
+                    </h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <Input placeholder={isRTL ? 'عنوان التعديل *' : 'Amendment title *'} value={amForm.title_ar} onChange={e => setAmForm(f => ({ ...f, title_ar: e.target.value }))} className="text-sm" />
+                      <Input
+                        placeholder={isRTL ? 'العنوان بالعربية *' : 'Title (Arabic) *'}
+                        value={amForm.title_ar} dir="auto"
+                        onChange={e => setAmForm(f => ({ ...f, title_ar: e.target.value }))}
+                        maxLength={150} className="text-sm"
+                      />
+                      <Input
+                        placeholder={isRTL ? 'العنوان بالإنجليزية (اختياري)' : 'Title (English, optional)'}
+                        value={amForm.title_en} dir="auto"
+                        onChange={e => setAmForm(f => ({ ...f, title_en: e.target.value }))}
+                        maxLength={150} className="text-sm"
+                      />
                       <Select value={amForm.amendment_type} onValueChange={v => setAmForm(f => ({ ...f, amendment_type: v }))}>
                         <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="scope_change">{isRTL ? 'تعديل نطاق العمل' : 'Scope Change'}</SelectItem>
-                          <SelectItem value="financial">{isRTL ? 'تعديل مالي' : 'Financial'}</SelectItem>
-                          <SelectItem value="extension">{isRTL ? 'تمديد المدة' : 'Extension'}</SelectItem>
+                          <SelectItem value="scope_change">{isRTL ? 'تغيير نطاق العمل' : 'Scope change'}</SelectItem>
+                          <SelectItem value="amount_change">{isRTL ? 'تغيير قيمة العقد' : 'Amount change'}</SelectItem>
+                          <SelectItem value="date_change">{isRTL ? 'تغيير تاريخ الانتهاء' : 'End-date change'}</SelectItem>
+                          <SelectItem value="measurement_change">{isRTL ? 'تغيير المقاسات' : 'Measurement change'}</SelectItem>
                           <SelectItem value="other">{isRTL ? 'أخرى' : 'Other'}</SelectItem>
                         </SelectContent>
                       </Select>
+                      {amForm.amendment_type === 'amount_change' && (
+                        <Input
+                          type="number" min="0" step="0.01" inputMode="decimal" dir="ltr"
+                          placeholder={isRTL ? 'المبلغ الجديد *' : 'New amount *'}
+                          value={amForm.new_amount}
+                          onChange={e => setAmForm(f => ({ ...f, new_amount: e.target.value }))}
+                          className="text-sm tech-content"
+                        />
+                      )}
+                      {amForm.amendment_type === 'date_change' && (
+                        <Input
+                          type="date" dir="ltr"
+                          value={amForm.new_end_date}
+                          onChange={e => setAmForm(f => ({ ...f, new_end_date: e.target.value }))}
+                          className="text-sm tech-content"
+                        />
+                      )}
                     </div>
-                    <Textarea placeholder={isRTL ? 'وصف التعديل المطلوب...' : 'Describe the amendment...'} value={amForm.description_ar} onChange={e => setAmForm(f => ({ ...f, description_ar: e.target.value }))} rows={3} className="text-sm" />
-                    {amForm.amendment_type === 'financial' && (
-                      <Input type="number" placeholder={isRTL ? 'المبلغ الجديد' : 'New Amount'} value={amForm.new_amount} onChange={e => setAmForm(f => ({ ...f, new_amount: e.target.value }))} dir="ltr" className="text-sm" />
-                    )}
+                    <Textarea
+                      placeholder={isRTL ? 'وصف التعديل المطلوب *' : 'Describe the requested amendment *'}
+                      value={amForm.description_ar} dir="auto"
+                      onChange={e => setAmForm(f => ({ ...f, description_ar: e.target.value }))}
+                      rows={3} maxLength={2000} className="text-sm"
+                    />
+                    <Textarea
+                      placeholder={isRTL ? 'الوصف بالإنجليزية (اختياري)' : 'Description (English, optional)'}
+                      value={amForm.description_en} dir="auto"
+                      onChange={e => setAmForm(f => ({ ...f, description_en: e.target.value }))}
+                      rows={2} maxLength={2000} className="text-sm"
+                    />
+                    <Textarea
+                      placeholder={isRTL ? 'سبب التعديل *' : 'Reason for the amendment *'}
+                      value={amForm.reason} dir="auto"
+                      onChange={e => setAmForm(f => ({ ...f, reason: e.target.value }))}
+                      rows={2} maxLength={1000} className="text-sm"
+                    />
+                    <p className="text-[10px] text-muted-foreground">
+                      {isRTL ? 'سيتم إرسال الطلب للطرف الآخر للمراجعة. لن يتم تعديل العقد إلا بعد موافقة الطرفين.' : 'The other party will review this request. The contract is not changed until both parties approve.'}
+                    </p>
                     <div className="flex gap-2">
-                      <Button variant="hero" size="sm" className="gap-1.5 text-xs" disabled={!amForm.title_ar || addAmendmentMutation.isPending} onClick={() => addAmendmentMutation.mutate()}>
-                        <Send className="w-3.5 h-3.5" />{isRTL ? 'إرسال الطلب' : 'Submit'}
+                      <Button
+                        variant="hero" size="sm" className="gap-1.5 text-xs"
+                        disabled={addAmendmentMutation.isPending}
+                        onClick={() => addAmendmentMutation.mutate()}
+                      >
+                        <Send className="w-3.5 h-3.5" />{isRTL ? 'إرسال طلب التعديل' : 'Submit amendment request'}
                       </Button>
-                      <Button variant="outline" size="sm" className="text-xs" onClick={() => setShowAmendmentForm(false)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+                      <Button variant="outline" size="sm" className="text-xs" onClick={() => setShowAmendmentForm(false)}>
+                        {isRTL ? 'إلغاء' : 'Cancel'}
+                      </Button>
                     </div>
                   </div>
                 ) : (
-                  <Button variant="outline" className="gap-1.5 text-xs" onClick={() => setShowAmendmentForm(true)}><Plus className="w-3.5 h-3.5" />{isRTL ? 'طلب ملحق عقد' : 'Request Amendment'}</Button>
+                  <Button variant="outline" className="gap-1.5 text-xs" onClick={() => setShowAmendmentForm(true)}>
+                    <Plus className="w-3.5 h-3.5" />{isRTL ? 'طلب تعديل على العقد' : 'Request Amendment'}
+                  </Button>
                 )}
               </div>
             )}
-            {!isContractLocked && <p className="text-center py-4 text-muted-foreground text-xs">{isRTL ? 'العقد لم يُعتمد بعد - يمكنك تعديله مباشرة من الأقسام الأخرى' : 'Contract not yet approved - you can edit it directly'}</p>}
             <AmendmentHistoryPanel
               amendments={amendments ?? []}
               currencyCode={contract.currency_code}
