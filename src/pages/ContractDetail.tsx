@@ -864,28 +864,45 @@ const ContractDetail = () => {
 
   const confirmImportMeasurements = async () => {
     if (!id || importedMeasurements.length === 0) return;
+    if (isContractLocked) {
+      toast({ title: lockedMsg(), variant: 'destructive' });
+      return;
+    }
     const startOrder = (measurements?.length || 0) + 1;
-    const records = importedMeasurements.map((m, i) => {
-      const area = (m.length_mm * m.width_mm) / 1000000;
-      return {
+    const records: MeasurementPayload[] = [];
+    for (let i = 0; i < importedMeasurements.length; i++) {
+      const m = importedMeasurements[i];
+      const length_mm = safeNum(m.length_mm);
+      const width_mm = safeNum(m.width_mm);
+      const quantity = safeNum(m.quantity);
+      const unit_price = safeNum(m.unit_price);
+      const vErr = validateMeasurementNumbers({ length_mm, width_mm, quantity, unit_price });
+      if (vErr) {
+        toast({
+          title: `${isRTL ? 'صف' : 'Row'} ${i + 1}: ${vErr}`,
+          variant: 'destructive',
+        });
+        return;
+      }
+      const area = (length_mm * width_mm) / 1_000_000;
+      records.push({
         contract_id: id, name_ar: m.name_ar, piece_number: m.piece_number,
         floor_label: m.floor_label, location_ar: m.location_ar,
-        length_mm: m.length_mm, width_mm: m.width_mm,
-        quantity: m.quantity, unit_price: m.unit_price,
-        area_sqm: area, total_cost: m.unit_price * m.quantity,
+        length_mm, width_mm, quantity, unit_price,
+        area_sqm: area, total_cost: unit_price * quantity,
         notes: m.notes || null, sort_order: startOrder + i,
-      };
-    });
+      });
+    }
     const { error } = await supabase.from('contract_measurements').insert(records);
     if (error) {
       toast({ title: error.message, variant: 'destructive' });
       return;
     }
-    queryClient.invalidateQueries({ queryKey: ['contract-measurements', id] });
+    await queryClient.invalidateQueries({ queryKey: ['contract-measurements', id] });
     setShowImportPreview(false);
     setImportedMeasurements([]);
     toast({ title: isRTL ? `تم استيراد ${records.length} مقاس بنجاح` : `${records.length} measurements imported` });
-    setTimeout(() => updateContractTotalFromMeasurements(), 500);
+    await recalcContractTotal();
   };
 
   const updateImportedRow = (idx: number, field: keyof ImportedMeasurement, value: string | number) => {
