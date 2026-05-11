@@ -722,6 +722,7 @@ const AdminMemberships = () => {
     { key: 'plans', icon: CreditCard, label: isRTL ? 'الخطط' : 'Plans', count: plans.length },
     { key: 'subscriptions', icon: Users, label: isRTL ? 'الاشتراكات' : 'Subscriptions', count: stats.active },
     { key: 'businesses', icon: Building2, label: isRTL ? 'الجهات' : 'Businesses' },
+    { key: 'usage', icon: Activity, label: isRTL ? 'الاستخدام' : 'Usage' },
   ];
 
   // Defense-in-depth: ProtectedRoute requireAdmin already gates this route,
