@@ -25,7 +25,7 @@ import {
   Download, Hash, Activity, Layers, Settings2, Eye, Sparkles, Plus, Lock,
 } from 'lucide-react';
 import { TIERS, tierIcons, tierColors, statusConfig } from '@/lib/membership-tiers';
-import { LIMIT_FIELDS, LIMIT_CATEGORIES, parseLimits, limitsToJson } from '@/lib/membership-limits';
+import { LIMIT_FIELDS, LIMIT_CATEGORIES, parseLimits, limitsToJson, getExtraLimitKeys } from '@/lib/membership-limits';
 
 import { useNoIndex } from "@/hooks/useNoIndex";
 type Tab = 'overview' | 'plans' | 'subscriptions' | 'businesses';
@@ -36,6 +36,7 @@ const PlanCard = React.memo(({ plan, isRTL, language, subsCount, onEdit }: { pla
   const colors = tierColors[plan.tier] || tierColors.free;
   const features = Array.isArray(plan.features) ? plan.features : [];
   const limits = parseLimits(plan.limits as Record<string, any> | undefined);
+  const extraKeys = getExtraLimitKeys(plan.limits as Record<string, unknown> | undefined);
   const enabledBoolLimits = LIMIT_FIELDS.filter(f => f.type === 'boolean' && limits[f.key] === true).length;
   const totalBoolLimits = LIMIT_FIELDS.filter(f => f.type === 'boolean').length;
   const benefitPct = totalBoolLimits > 0 ? Math.round((enabledBoolLimits / totalBoolLimits) * 100) : 0;
@@ -231,6 +232,16 @@ const PlanCard = React.memo(({ plan, isRTL, language, subsCount, onEdit }: { pla
               );
             })}
           </div>
+          {extraKeys.length > 0 && (
+            <p
+              className="mt-2 text-[8px] text-muted-foreground/80 italic"
+              title={extraKeys.join(', ')}
+            >
+              {isRTL
+                ? `محفوظ ${extraKeys.length} مفتاح إضافي للنظام الخلفي`
+                : `${extraKeys.length} additional backend key(s) preserved`}
+            </p>
+          )}
         </div>
       </CardContent>
     </Card>
@@ -562,7 +573,8 @@ const AdminMemberships = () => {
     mutationFn: async () => {
       if (!editingPlan) return;
       const features = featuresText.split('\n').map(l => l.trim()).filter(Boolean);
-      const limits = limitsToJson(editLimits);
+      const originalLimits = (editingPlan as any)?.limits as Record<string, unknown> | null | undefined;
+      const limits = limitsToJson(editLimits, originalLimits);
       const isNew = !(editingPlan as any).id;
       if (isNew) {
         const tier = (editingPlan as any).tier || 'free';
