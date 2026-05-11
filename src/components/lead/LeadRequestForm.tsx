@@ -137,7 +137,15 @@ export const LeadRequestForm: React.FC<Props> = ({ businessId, businessName, sou
       toast.success(isRTL ? 'تم إرسال طلبك بنجاح' : 'Your request has been sent');
       onSuccess?.();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Unknown error';
+      // Supabase errors are plain objects with { message, code, details, hint }.
+      let message = 'Unknown error';
+      if (err instanceof Error) {
+        message = err.message;
+      } else if (err && typeof err === 'object') {
+        const e = err as { message?: string; details?: string; hint?: string; code?: string };
+        message = e.message || e.details || e.hint || e.code || 'Unknown error';
+      }
+      console.error('LeadRequestForm submit failed:', err);
       try {
         trackLeadFailed({
           source_page: source ?? 'business-profile',
