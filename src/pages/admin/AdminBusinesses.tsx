@@ -804,6 +804,16 @@ const AdminBusinesses = () => {
                 <SelectItem value="complete">{isRTL ? 'مكتملة الترجمة' : 'Translation Complete'}</SelectItem>
               </SelectContent>
             </Select>
+            <Select value={filterOrigin} onValueChange={setFilterOrigin}>
+              <SelectTrigger className="w-full sm:w-40 h-10 rounded-xl">
+                <FlaskConical className="w-4 h-4 me-2 text-muted-foreground" /><SelectValue />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl">
+                <SelectItem value="all">{isRTL ? 'الكل (تجريبي + إنتاج)' : 'All (Demo + Production)'}</SelectItem>
+                <SelectItem value="demo">{isRTL ? 'تجريبي فقط' : 'Demo only'}</SelectItem>
+                <SelectItem value="production">{isRTL ? 'إنتاج فقط' : 'Production only'}</SelectItem>
+              </SelectContent>
+            </Select>
             <Select value={sortBy} onValueChange={setSortBy}>
               <SelectTrigger className="w-full sm:w-40 h-10 rounded-xl">
                 <ArrowUpDown className="w-4 h-4 me-2 text-muted-foreground" /><SelectValue />
