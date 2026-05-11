@@ -8,7 +8,7 @@ import { Inbox, GitBranch, TrendingUp, Info, AlertTriangle, RefreshCcw, FileSign
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
-  AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
+  AreaChart, Area, XAxis, YAxis, Tooltip as RTooltip, ResponsiveContainer, CartesianGrid,
   BarChart, Bar,
 } from 'recharts';
 import { eachDayOfInterval, eachMonthOfInterval, format, subDays, subMonths } from 'date-fns';
