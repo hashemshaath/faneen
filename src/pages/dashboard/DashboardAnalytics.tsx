@@ -23,6 +23,8 @@ import {
 import { cn } from '@/lib/utils';
 import { format, subDays, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, eachMonthOfInterval } from 'date-fns';
 import { useNoIndex } from "@/hooks/useNoIndex";
+import { ProviderLeadAnalytics } from '@/components/dashboard/ProviderLeadAnalytics';
+import { ProviderTipsCard } from '@/components/dashboard/ProviderTipsCard';
 
 // Brand-aligned chart palette — sourced from central design tokens.
 const CHART_COLORS = [
@@ -456,6 +458,12 @@ const DashboardAnalytics = () => {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Lead activity (P5.1) */}
+            <ProviderLeadAnalytics businessId={business?.id} period={period} />
+
+            {/* Actionable tips (P5.4) */}
+            <ProviderTipsCard businessId={business?.id} />
           </>
         )}
       </div>
