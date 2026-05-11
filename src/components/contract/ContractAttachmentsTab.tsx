@@ -342,15 +342,18 @@ export const ContractAttachmentsTab: React.FC<Props> = ({
               )}
               <div>
                 <label className="text-[10px] font-heading font-semibold text-muted-foreground">{isRTL ? 'الظهور' : 'Visibility'}</label>
-                <Select value={visibility} onValueChange={(v) => setVisibility(v as AttachmentVisibility)}>
+                {/* C4B.2 Safety Patch: only 'parties' is enforced today. */}
+                <Select value="parties" disabled>
                   <SelectTrigger className="text-xs h-9 mt-1"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="parties">{visibilityLabel('parties', isRTL)}</SelectItem>
-                    <SelectItem value="provider_only">{visibilityLabel('provider_only', isRTL)}</SelectItem>
-                    <SelectItem value="client_only">{visibilityLabel('client_only', isRTL)}</SelectItem>
-                    {isAdmin && <SelectItem value="admin_only">{visibilityLabel('admin_only', isRTL)}</SelectItem>}
                   </SelectContent>
                 </Select>
+                <p className="text-[9px] text-muted-foreground/80 font-body mt-1 leading-relaxed">
+                  {isRTL
+                    ? 'خصوصية المرفقات المتقدمة ستتوفر لاحقًا. حالياً تظهر المرفقات لأطراف العقد المصرح لهم.'
+                    : 'Advanced attachment visibility will be available later. For now, attachments are visible to authorized contract parties.'}
+                </p>
               </div>
               <div className="sm:col-span-2">
                 <label className="text-[10px] font-heading font-semibold text-muted-foreground">{isRTL ? 'وصف (اختياري)' : 'Description (optional)'}</label>
