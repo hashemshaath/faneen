@@ -156,6 +156,7 @@ const ContractDetail = () => {
   const [expandedMilestone, setExpandedMilestone] = useState<string | null>(null);
   const [expandedMaint, setExpandedMaint] = useState<string | null>(null);
   const [measurementFilter, setMeasurementFilter] = useState<string>('all');
+  const [expandedMeasurementAttId, setExpandedMeasurementAttId] = useState<string | null>(null);
   // Measurement CRUD
   const [showMeasurementForm, setShowMeasurementForm] = useState(false);
   const [editingMeasurement, setEditingMeasurement] = useState<any>(null);
