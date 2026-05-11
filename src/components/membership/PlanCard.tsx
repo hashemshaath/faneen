@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Check, Sparkles, ArrowUp, Loader2, Zap } from 'lucide-react';
+import { Check, Sparkles, ArrowUp, Loader2, Zap, Send } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { tierIcons, tierGradients } from '@/lib/membership-tiers';
 
@@ -91,11 +91,11 @@ export const PlanCard = React.memo(({
         ) : isCurrentPlan ? (
           <><Check className="w-3.5 h-3.5" />{isRTL ? 'خطتك الحالية' : 'Current Plan'}</>
         ) : isUpgrade ? (
-          <><ArrowUp className="w-3.5 h-3.5" />{isRTL ? 'ترقية الآن' : 'Upgrade Now'}</>
+          <><Send className="w-3.5 h-3.5" />{isRTL ? 'طلب الترقية' : 'Request Upgrade'}</>
         ) : isDowngrade ? (
-          <>{isRTL ? 'تخفيض' : 'Downgrade'}</>
+          <>{isRTL ? 'خفض الباقة' : 'Downgrade'}</>
         ) : (
-          <>{isRTL ? 'اشترك الآن' : 'Subscribe Now'}</>
+          <><Send className="w-3.5 h-3.5" />{isRTL ? 'طلب الاشتراك' : 'Request Subscription'}</>
         )}
       </Button>
     </div>
