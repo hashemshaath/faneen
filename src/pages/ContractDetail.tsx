@@ -21,6 +21,7 @@ import { getContractStatusMeta, isContractLockedByStatus } from '@/lib/contract-
 import { calculateVatBreakdown } from '@/lib/contract-financials';
 import { PaymentScheduleGenerator } from '@/components/contract/PaymentScheduleGenerator';
 import { ContractFinancialCoverage } from '@/components/contract/ContractFinancialCoverage';
+import { SignedAttachmentImage } from '@/components/contract/SignedAttachment';
 import {
   validateAttachmentFile,
   attachmentErrorMessage,
