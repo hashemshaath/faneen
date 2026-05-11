@@ -31,6 +31,7 @@ import {
   TrendingUp, ArrowUpRight, Filter, RefreshCw, Copy, MoreHorizontal,
   Activity, Zap, Languages, ArrowUpDown, ChevronLeft, ChevronRight,
   CheckSquare, Square, AlertTriangle,
+  FlaskConical,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useNoIndex } from "@/hooks/useNoIndex";
@@ -163,6 +164,7 @@ const AdminBusinesses = () => {
   const filterStatus = searchParams.get('status') || 'all';
   const filterTier = searchParams.get('tier') || 'all';
   const filterTranslation = searchParams.get('translation') || 'all'; // all|missing_en|missing_ar|complete
+  const filterOrigin = searchParams.get('origin') || 'all'; // all|demo|production
   const sortBy = (searchParams.get('sort') || 'recent') as 'recent' | 'rating' | 'name' | 'tier';
   const page = parseInt(searchParams.get('page') || '1', 10) || 1;
   const viewMode = (searchParams.get('view') || 'cards') as 'cards' | 'table';
@@ -184,6 +186,7 @@ const AdminBusinesses = () => {
   }, [searchInput]);
   const setFilterStatus = (v: string) => updateParam({ status: v === 'all' ? null : v, page: null });
   const setFilterTier = (v: string) => updateParam({ tier: v === 'all' ? null : v, page: null });
+  const setFilterOrigin = (v: string) => updateParam({ origin: v === 'all' ? null : v, page: null });
   const setSortBy = (v: string) => updateParam({ sort: v === 'recent' ? null : v });
   const setViewMode = (v: 'cards' | 'table') => updateParam({ view: v === 'cards' ? null : v });
   const setSearch = (v: string) => { setSearchInput(v); };
@@ -615,12 +618,15 @@ const AdminBusinesses = () => {
         (filterStatus === 'inactive' && !b.is_active) ||
         (filterStatus === 'contract' && contractBusinessIds.includes(b.id));
       const matchTier = filterTier === 'all' || b.membership_tier === filterTier;
+      const matchOrigin = filterOrigin === 'all'
+        || (filterOrigin === 'demo' && b.is_demo === true)
+        || (filterOrigin === 'production' && !b.is_demo);
       const tc = translationCompleteness(b);
       const matchTrans = filterTranslation === 'all'
         || (filterTranslation === 'missing_en' && !tc.en)
         || (filterTranslation === 'missing_ar' && !tc.ar)
         || (filterTranslation === 'complete' && tc.full);
-      return matchSearch && matchStatus && matchTier && matchTrans;
+      return matchSearch && matchStatus && matchTier && matchTrans && matchOrigin;
     });
     const tierRank: Record<string, number> = { enterprise: 0, premium: 1, basic: 2, free: 3 };
     arr.sort((a, b) => {
@@ -636,7 +642,7 @@ const AdminBusinesses = () => {
       }
     });
     return arr;
-  }, [businesses, search, filterStatus, filterTier, filterTranslation, sortBy, language, contractBusinessIds, translationCompleteness]);
+  }, [businesses, search, filterStatus, filterTier, filterTranslation, filterOrigin, sortBy, language, contractBusinessIds, translationCompleteness]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(Math.max(1, page), totalPages);
@@ -798,6 +804,16 @@ const AdminBusinesses = () => {
                 <SelectItem value="complete">{isRTL ? 'مكتملة الترجمة' : 'Translation Complete'}</SelectItem>
               </SelectContent>
             </Select>
+            <Select value={filterOrigin} onValueChange={setFilterOrigin}>
+              <SelectTrigger className="w-full sm:w-40 h-10 rounded-xl">
+                <FlaskConical className="w-4 h-4 me-2 text-muted-foreground" /><SelectValue />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl">
+                <SelectItem value="all">{isRTL ? 'الكل (تجريبي + إنتاج)' : 'All (Demo + Production)'}</SelectItem>
+                <SelectItem value="demo">{isRTL ? 'تجريبي فقط' : 'Demo only'}</SelectItem>
+                <SelectItem value="production">{isRTL ? 'إنتاج فقط' : 'Production only'}</SelectItem>
+              </SelectContent>
+            </Select>
             <Select value={sortBy} onValueChange={setSortBy}>
               <SelectTrigger className="w-full sm:w-40 h-10 rounded-xl">
                 <ArrowUpDown className="w-4 h-4 me-2 text-muted-foreground" /><SelectValue />
@@ -810,13 +826,14 @@ const AdminBusinesses = () => {
               </SelectContent>
             </Select>
           </div>
-          {(search || filterStatus !== 'all' || filterTier !== 'all' || filterTranslation !== 'all' || sortBy !== 'recent') && (
+          {(search || filterStatus !== 'all' || filterTier !== 'all' || filterTranslation !== 'all' || filterOrigin !== 'all' || sortBy !== 'recent') && (
             <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/20">
               <span className="text-[11px] text-muted-foreground">{isRTL ? 'النتائج:' : 'Results:'} {filtered.length}</span>
               {search && <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-lg" onClick={() => { setSearchInput(''); updateParam({ q: null }); }}>"{search}" <X className="w-2.5 h-2.5" /></Badge>}
               {filterStatus !== 'all' && <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-lg" onClick={() => setFilterStatus('all')}>{filterStatus} <X className="w-2.5 h-2.5" /></Badge>}
               {filterTier !== 'all' && <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-lg" onClick={() => setFilterTier('all')}>{filterTier} <X className="w-2.5 h-2.5" /></Badge>}
               {filterTranslation !== 'all' && <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-lg" onClick={() => updateParam({ translation: null })}>{filterTranslation} <X className="w-2.5 h-2.5" /></Badge>}
+              {filterOrigin !== 'all' && <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-lg" onClick={() => setFilterOrigin('all')}>{filterOrigin === 'demo' ? (isRTL ? 'تجريبي' : 'Demo') : (isRTL ? 'إنتاج' : 'Production')} <X className="w-2.5 h-2.5" /></Badge>}
               {sortBy !== 'recent' && <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-lg" onClick={() => setSortBy('recent')}>{sortBy} <X className="w-2.5 h-2.5" /></Badge>}
               <button className="text-[10px] text-primary hover:underline ms-auto"
                 onClick={() => { setSearchInput(''); setSearchParams(new URLSearchParams(), { replace: false }); }}>
@@ -1577,7 +1594,14 @@ const AdminBusinesses = () => {
                             </Avatar>
                             <div>
                               <p className="text-xs font-semibold truncate max-w-[180px]" dir="auto">{language === 'ar' ? biz.name_ar : (biz.name_en || biz.name_ar)}</p>
-                              <p className="text-[10px] text-muted-foreground tech-content">{biz.ref_id}</p>
+                              <div className="flex items-center gap-1">
+                                <p className="text-[10px] text-muted-foreground tech-content">{biz.ref_id}</p>
+                                {biz.is_demo && (
+                                  <Badge variant="outline" className="text-[9px] h-4 px-1 gap-0.5 border-amber-500/40 text-amber-600 dark:text-amber-400" title={isRTL ? 'بيانات تجريبية' : 'Demo data'}>
+                                    <FlaskConical className="w-2.5 h-2.5" />{isRTL ? 'تجريبي' : 'Demo'}
+                                  </Badge>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </TableCell>
@@ -1676,6 +1700,11 @@ const AdminBusinesses = () => {
                             </h3>
                             {!biz.is_active && <Badge variant="destructive" className="text-[9px] gap-0.5 px-1.5 py-0"><Ban className="w-2.5 h-2.5" />{isRTL ? 'معطل' : 'Disabled'}</Badge>}
                             {hasContract && <Badge variant="outline" className="text-[9px] gap-0.5 px-1.5 py-0"><FileText className="w-2.5 h-2.5" />{isRTL ? 'عقود' : 'Contracts'}</Badge>}
+                            {biz.is_demo && (
+                              <Badge variant="outline" className="text-[9px] gap-0.5 px-1.5 py-0 border-amber-500/40 text-amber-600 dark:text-amber-400" title={isRTL ? 'بيانات تجريبية' : 'Demo data'}>
+                                <FlaskConical className="w-2.5 h-2.5" />{isRTL ? 'تجريبي' : 'Demo'}
+                              </Badge>
+                            )}
                             {!tc.full && (
                               <Badge variant="outline" className="text-[9px] gap-0.5 px-1.5 py-0 border-warning/40 text-warning" title={isRTL ? 'الترجمة غير مكتملة' : 'Translation incomplete'}>
                                 <AlertTriangle className="w-2.5 h-2.5" />{tc.ar ? 'EN' : 'AR'}
