@@ -847,6 +847,31 @@ const AdminMemberships = () => {
           {/* ═══════ PLANS ═══════ */}
           {activeTab === 'plans' && (
             <div className="space-y-4">
+              {/* Create Plan toolbar — appears only when not editing */}
+              {!editingPlan && (
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <p className="text-[11px] text-muted-foreground">
+                    {isRTL
+                      ? 'الخطط تُعرض على /membership تلقائياً عند تفعيلها.'
+                      : 'Active plans are auto-listed on /membership.'}
+                  </p>
+                  <div className="flex items-center gap-1.5">
+                    <Label className="text-[10px] text-muted-foreground">{isRTL ? 'إنشاء بمستوى:' : 'Create as:'}</Label>
+                    <Select onValueChange={(v) => openCreate(v as typeof TIERS[number])}>
+                      <SelectTrigger className="h-8 w-[140px] text-xs gap-1.5">
+                        <Plus className="w-3 h-3" />
+                        <SelectValue placeholder={isRTL ? 'اختر المستوى' : 'Pick tier'} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {TIERS.map(t => (
+                          <SelectItem key={t} value={t} className="capitalize text-xs">{t}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
+
               {/* Inline Edit Form */}
               {editingPlan && (
                 <Card className="border-accent/30 bg-accent/5 shadow-lg">
