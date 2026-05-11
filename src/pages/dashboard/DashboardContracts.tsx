@@ -567,7 +567,7 @@ const DashboardContracts = () => {
   });
 
   /* ── Helper: isLocked ── */
-  const isContractLocked = (c: ContractRow) => ['active', 'completed', 'cancelled'].includes(c.status);
+  const isContractLocked = (c: ContractRow) => isContractLockedByStatus(c.status);
 
   /* ── Mutations ── */
   const addNoteMutation = useMutation({
