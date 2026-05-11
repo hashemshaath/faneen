@@ -95,6 +95,22 @@ export const ProviderMembershipCard: React.FC<Props> = ({ userId, businessId, ti
   }, [usageRows]);
   const hasUsage = (usageRows?.length ?? 0) > 0;
 
+  // Multi-business indicator (Phase M3B): inform provider that usage is
+  // scoped to the currently selected business only.
+  const { data: businessCount } = useQuery({
+    queryKey: ['provider-business-count', userId],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from('businesses')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', userId);
+      return count ?? 0;
+    },
+    enabled: !!userId,
+    staleTime: 5 * 60 * 1000,
+  });
+  const hasMultipleBusinesses = (businessCount ?? 0) > 1;
+
   const fmtLimit = (v: number | boolean): string => {
     if (typeof v === 'boolean') return v ? '✓' : '—';
     return v === 0 ? (isRTL ? 'غير محدود' : 'Unlimited') : String(v);
@@ -227,6 +243,14 @@ export const ProviderMembershipCard: React.FC<Props> = ({ userId, businessId, ti
             ? 'هذه مؤشرات استخدام فقط. لا يتم فرض الحدود تلقائيًا بعد.'
             : 'Usage indicators only. Limits are not enforced automatically yet.'}
         </p>
+        {hasMultipleBusinesses && (
+          <p className="mt-1 text-[10px] text-muted-foreground/80 flex items-center gap-1">
+            <Building2 className="w-2.5 h-2.5" />
+            {isRTL
+              ? 'يتم عرض الاستخدام حسب المنشأة الحالية.'
+              : 'Usage is shown for the currently selected business.'}
+          </p>
+        )}
         {hasUsage && (usageRows ?? []).some((r) => r.over_limit) && (
           <p className="mt-1 text-[10px] text-destructive flex items-center gap-1">
             <AlertTriangle className="w-2.5 h-2.5" />
