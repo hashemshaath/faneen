@@ -1,6 +1,7 @@
 import { setupArabicDoc, getArabicTableStyles, printContractSection } from './pdf-arabic-font';
 import { BRAND_DOCUMENTS } from '@/config/brandTheme';
 import { hexToRgbTuple } from '@/lib/theme/brandThemeUtils';
+import { calculateVatBreakdown } from '@/lib/contract-financials';
 
 // ── Central brand document tokens (resolved once per module load) ──
 // Falls back to the literal hex if the util ever returns null (it won't for
@@ -119,11 +120,12 @@ export const exportContractPDF = async (data: ContractExportData) => {
 
   // ── Financial ──
   sectionTitle(data.isRTL ? 'البيانات المالية' : 'Financial Summary');
-  const vatRate = data.vatRate ?? 15;
-  const vatInclusive = data.vatInclusive ?? false;
-  const vatAmount = vatInclusive ? (data.totalAmount * vatRate) / (100 + vatRate) : (data.totalAmount * vatRate) / 100;
-  const subtotal = vatInclusive ? data.totalAmount - vatAmount : data.totalAmount;
-  const grandTotal = vatInclusive ? data.totalAmount : data.totalAmount + vatAmount;
+  const _financial = calculateVatBreakdown({ amount: data.totalAmount, vatRate: data.vatRate ?? 15, vatInclusive: data.vatInclusive ?? false });
+  const vatRate = _financial.vatRate;
+  const vatInclusive = _financial.vatInclusive;
+  const vatAmount = _financial.vatAmount;
+  const subtotal = _financial.subtotal;
+  const grandTotal = _financial.total;
 
   const fmtNum = (n: number) => n.toLocaleString(data.isRTL ? 'ar-SA' : 'en-US', { minimumFractionDigits: 2 });
 
