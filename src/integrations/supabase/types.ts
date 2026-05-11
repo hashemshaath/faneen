@@ -2921,6 +2921,79 @@ export type Database = {
           },
         ]
       }
+      membership_upgrade_requests: {
+        Row: {
+          admin_note: string | null
+          billing_cycle: string
+          business_id: string
+          created_at: string
+          current_tier: string | null
+          id: string
+          note: string | null
+          requested_plan_id: string | null
+          requested_tier: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_note?: string | null
+          billing_cycle?: string
+          business_id: string
+          created_at?: string
+          current_tier?: string | null
+          id?: string
+          note?: string | null
+          requested_plan_id?: string | null
+          requested_tier: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_note?: string | null
+          billing_cycle?: string
+          business_id?: string
+          created_at?: string
+          current_tier?: string | null
+          id?: string
+          note?: string | null
+          requested_plan_id?: string | null
+          requested_tier?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "membership_upgrade_requests_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "membership_upgrade_requests_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "membership_upgrade_requests_requested_plan_id_fkey"
+            columns: ["requested_plan_id"]
+            isOneToOne: false
+            referencedRelation: "membership_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       message_templates: {
         Row: {
           business_id: string | null

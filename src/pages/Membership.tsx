@@ -6,7 +6,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
-import { Shield, Info, AlertTriangle, Check, Undo2, Building2, Send } from 'lucide-react';
+import { Shield, Info, AlertTriangle, Check, Undo2, Building2, Send, Clock } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { MembershipHeader } from '@/components/membership/MembershipHeader';
@@ -94,6 +94,59 @@ const Membership = () => {
     onError: (e: Error) => { setSubscribingPlanId(null); toast.error(e.message); },
   });
 
+  // Manual upgrade request flow (paid plans). Replaces self-serve activation in beta.
+  const requestUpgradeMutation = useMutation({
+    mutationFn: async (plan: { id: string; tier: string }) => {
+      if (!user || !myBusiness) throw new Error(isRTL ? 'يجب تسجيل الدخول وإنشاء نشاط تجاري أولاً' : 'Login and create a business first');
+      // Prevent duplicate pending requests for same business+tier
+      const { data: existing } = await supabase
+        .from('membership_upgrade_requests')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('business_id', myBusiness.id)
+        .eq('requested_tier', plan.tier)
+        .eq('status', 'pending')
+        .maybeSingle();
+      if (existing) return { duplicate: true };
+      const { error } = await supabase.from('membership_upgrade_requests').insert({
+        user_id: user.id,
+        business_id: myBusiness.id,
+        current_tier: currentTier,
+        requested_tier: plan.tier,
+        requested_plan_id: plan.id,
+        billing_cycle: billingCycle,
+      });
+      if (error) throw error;
+      return { duplicate: false };
+    },
+    onSuccess: (res) => {
+      setSubscribingPlanId(null);
+      queryClient.invalidateQueries({ queryKey: ['my-upgrade-requests'] });
+      if (res?.duplicate) {
+        toast.info(isRTL ? 'لديك طلب ترقية معلّق لهذه الباقة بالفعل.' : 'You already have a pending request for this plan.');
+      } else {
+        toast.success(isRTL ? 'تم إرسال طلب الترقية، وسيتواصل معك فريق قطاعات قريباً.' : 'Upgrade request sent. Our team will contact you shortly.');
+      }
+    },
+    onError: (e: Error) => { setSubscribingPlanId(null); toast.error(e.message); },
+  });
+
+  // Show pending upgrade requests for current user (status banner).
+  const { data: pendingRequests = [] } = useQuery({
+    queryKey: ['my-upgrade-requests', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data } = await supabase
+        .from('membership_upgrade_requests')
+        .select('id, requested_tier, status, created_at')
+        .eq('user_id', user.id)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false });
+      return data ?? [];
+    },
+    enabled: !!user,
+  });
+
   const cancelMutation = useMutation({
     mutationFn: async () => {
       if (!mySubscription) throw new Error('No active subscription');
@@ -129,8 +182,9 @@ const Membership = () => {
       // Already on free, nothing to do.
       return;
     }
+    // Paid upgrade — manual request flow (no immediate activation in beta).
     setSubscribingPlanId(plan.id);
-    subscribeMutation.mutate(plan.id);
+    requestUpgradeMutation.mutate(plan);
   };
 
   const confirmDowngrade = () => {
@@ -180,6 +234,17 @@ const Membership = () => {
                 </Button>
               </div>
             </div>
+          </div>
+        )}
+
+        {pendingRequests.length > 0 && (
+          <div className="max-w-3xl mx-auto mb-6 rounded-xl border border-info/30 bg-info/5 px-4 py-3 flex items-start gap-2 text-xs text-foreground/80">
+            <Clock className="w-4 h-4 text-info shrink-0 mt-0.5" />
+            <p className="leading-relaxed">
+              {isRTL
+                ? `لديك ${pendingRequests.length} طلب ترقية قيد المراجعة من فريق قطاعات.`
+                : `You have ${pendingRequests.length} upgrade request(s) being reviewed by the Qitaat team.`}
+            </p>
           </div>
         )}
 
