@@ -1108,6 +1108,11 @@ const AdminMemberships = () => {
             </div>
           )}
 
+          {/* ═══════ UPGRADE REQUESTS ═══════ */}
+          {activeTab === 'requests' && (
+            <AdminUpgradeRequestsPanel isRTL={isRTL} />
+          )}
+
           {/* ═══════ BUSINESSES ═══════ */}
           {activeTab === 'businesses' && (
             <div className="space-y-4">
