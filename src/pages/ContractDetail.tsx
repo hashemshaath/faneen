@@ -1769,9 +1769,9 @@ const ContractDetail = () => {
                             <p className="text-[10px] font-heading font-semibold mb-1.5">{isRTL ? 'المرفقات' : 'Attachments'}</p>
                             <div className="flex flex-wrap gap-2">
                               {milestoneAtts.map(a => (
-                                <a key={a.id} href={a.file_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-[10px] text-accent hover:underline font-body bg-accent/5 rounded-lg px-3 py-1.5 border border-accent/10">
+                                <button key={a.id} type="button" onClick={async () => { const ok = await openAttachmentSigned(a as AttachmentRow); if (!ok) toast({ title: isRTL ? 'تعذر فتح المرفق' : 'Could not open attachment', variant: 'destructive' }); }} className="flex items-center gap-1.5 text-[10px] text-accent hover:underline font-body bg-accent/5 rounded-lg px-3 py-1.5 border border-accent/10">
                                   <Paperclip className="w-3 h-3" />{a.file_name}<ExternalLink className="w-2.5 h-2.5" />
-                                </a>
+                                </button>
                               ))}
                             </div>
                           </div>
