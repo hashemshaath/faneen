@@ -6,6 +6,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { CheckCircle2, FileText, Info, Clock, XCircle, Ban, PlayCircle, PenLine, AlertTriangle } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
+import { AmendmentFinancialPreview } from './AmendmentFinancialPreview';
+import { previewAmendmentFinancialImpact, type AmendmentPreviewPayment } from '@/lib/contract-financials';
 
 type Amendment = Database['public']['Tables']['contract_amendments']['Row'];
 type AuditRow = Database['public']['Tables']['contract_amendment_audit']['Row'];
@@ -27,6 +29,14 @@ interface Props {
   cancelling: boolean;
   onApply: (amendmentId: string) => void;
   applying: boolean;
+  contract?: {
+    total_amount?: number | string | null;
+    vat_rate?: number | string | null;
+    vat_inclusive?: boolean | null;
+    currency_code?: string | null;
+    end_date?: string | null;
+  } | null;
+  installmentPayments?: AmendmentPreviewPayment[] | null;
 }
 
 const STATUS_LABEL: Record<string, { ar: string; en: string; cls: string }> = {
@@ -66,6 +76,7 @@ export const AmendmentHistoryPanel = ({
   onReject, rejecting,
   onCancel, cancelling,
   onApply, applying,
+  contract, installmentPayments,
 }: Props) => {
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState('');
@@ -130,6 +141,15 @@ export const AmendmentHistoryPanel = ({
         const canReject = a.status === 'pending' && (isClient || isProvider) && !isRequester;
         const canCancel = isRequester && (a.status === 'pending' || a.status === 'approved');
         const canApply = a.status === 'approved' && (isProvider || isAdmin);
+
+        // C5D.1 financial preview (only meaningful for approved amendments)
+        const previewInput = contract
+          ? { contract, amendment: a, payments: installmentPayments ?? [] }
+          : null;
+        const preview = a.status === 'approved' && previewInput
+          ? previewAmendmentFinancialImpact(previewInput)
+          : null;
+        const applyBlocked = !!preview && preview.blockingErrors.length > 0;
 
         return (
           <div key={a.id} className="rounded-xl border border-border/60 bg-card/60 p-4 space-y-3 hover-lift">
@@ -236,6 +256,11 @@ export const AmendmentHistoryPanel = ({
               </div>
             )}
 
+            {/* C5D.1: financial impact preview for approved amendments */}
+            {a.status === 'approved' && previewInput && (
+              <AmendmentFinancialPreview input={previewInput} isRTL={isRTL} />
+            )}
+
             {/* Action buttons */}
             {(canApprove || canReject || canCancel || canApply) && rejectingId !== a.id && cancellingId !== a.id && (
               <div className="flex flex-wrap gap-2 pt-1">
@@ -271,8 +296,9 @@ export const AmendmentHistoryPanel = ({
                   <Button
                     size="sm" variant="outline"
                     className="h-7 text-[10px] gap-1 text-primary border-primary/60"
-                    disabled={applying}
+                    disabled={applying || applyBlocked}
                     onClick={() => onApply(a.id)}
+                    title={applyBlocked ? (isRTL ? 'يتعذر التطبيق — راجع الأخطاء أعلاه' : 'Cannot apply — see errors above') : undefined}
                   >
                     <PlayCircle className="w-3 h-3" />{isRTL ? 'تطبيق على العقد' : 'Apply to contract'}
                   </Button>
@@ -280,7 +306,7 @@ export const AmendmentHistoryPanel = ({
               </div>
             )}
 
-            {canApply && (
+            {canApply && !preview && (
               <div className="rounded-lg border border-warning/40 bg-warning/5 p-2 flex items-start gap-2 text-[10px] text-warning">
                 <AlertTriangle className="w-3 h-3 mt-0.5 shrink-0" />
                 <span>{isRTL

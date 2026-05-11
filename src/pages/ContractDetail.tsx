@@ -2610,6 +2610,8 @@ const ContractDetail = () => {
               cancelling={cancelAmendmentMutation.isPending}
               onApply={(amId) => applyAmendmentMutation.mutate(amId)}
               applying={applyAmendmentMutation.isPending}
+              contract={contract}
+              installmentPayments={installmentPayments ?? []}
             />
           </TabsContent>
         </Tabs>
