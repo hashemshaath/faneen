@@ -159,10 +159,10 @@ export function parseLimits(limits: Record<string, any> | null | undefined): Rec
 export function limitsToJson(
   limits: Record<string, number | boolean>,
   original?: Record<string, unknown> | null,
-): Record<string, unknown> {
+): Record<string, any> {
   const knownKeys = new Set(LIMIT_FIELDS.map((f) => f.key));
   // 1) Preserve any unknown/backend keys present in the original record
-  const result: Record<string, unknown> = {};
+  const result: Record<string, any> = {};
   if (original && typeof original === 'object') {
     for (const [k, v] of Object.entries(original)) {
       if (!knownKeys.has(k)) result[k] = v;
