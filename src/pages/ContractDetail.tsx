@@ -673,6 +673,8 @@ const ContractDetail = () => {
       queryClient.invalidateQueries({ queryKey: ['contract-amendments', id] });
       queryClient.invalidateQueries({ queryKey: ['contract', id] });
       queryClient.invalidateQueries({ queryKey: ['amendment-audit'] });
+      queryClient.invalidateQueries({ queryKey: ['installment-payments'] });
+      queryClient.invalidateQueries({ queryKey: ['installment-plans', id] });
       toast({ title: isRTL ? 'تم تطبيق الملحق على العقد' : 'Amendment applied to contract' });
     },
     onError: (err: unknown) => toast({ title: mapAmendmentError(err, isRTL), variant: 'destructive' }),
