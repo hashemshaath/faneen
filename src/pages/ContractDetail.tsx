@@ -142,7 +142,7 @@ const StatCard = ({ icon: Icon, label, value, sub, accent }: { icon: React.Eleme
 const ContractDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { t, language, isRTL } = useLanguage();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
@@ -605,9 +605,50 @@ const ContractDetail = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contract-amendments', id] });
       queryClient.invalidateQueries({ queryKey: ['contract', id] });
+      queryClient.invalidateQueries({ queryKey: ['amendment-audit'] });
       toast({ title: isRTL ? 'تمت الموافقة على الملحق' : 'Amendment approved' });
     },
-    onError: (err: unknown) => toast({ title: err instanceof Error ? err.message : 'Error', variant: 'destructive' }),
+    onError: (err: unknown) => toast({ title: mapAmendmentError(err, isRTL), variant: 'destructive' }),
+  });
+
+  const rejectAmendmentMutation = useMutation({
+    mutationFn: async ({ id: amId, reason }: { id: string; reason: string }) => {
+      const { error } = await supabase.rpc('reject_contract_amendment', { _amendment_id: amId, _reason: reason });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contract-amendments', id] });
+      queryClient.invalidateQueries({ queryKey: ['amendment-audit'] });
+      toast({ title: isRTL ? 'تم رفض طلب التعديل' : 'Amendment rejected' });
+    },
+    onError: (err: unknown) => toast({ title: mapAmendmentError(err, isRTL), variant: 'destructive' }),
+  });
+
+  const cancelAmendmentMutation = useMutation({
+    mutationFn: async (amId: string) => {
+      const { error } = await supabase.rpc('cancel_contract_amendment', { _amendment_id: amId });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contract-amendments', id] });
+      queryClient.invalidateQueries({ queryKey: ['amendment-audit'] });
+      toast({ title: isRTL ? 'تم إلغاء طلب التعديل' : 'Amendment cancelled' });
+    },
+    onError: (err: unknown) => toast({ title: mapAmendmentError(err, isRTL), variant: 'destructive' }),
+  });
+
+  const applyAmendmentMutation = useMutation({
+    mutationFn: async (amId: string) => {
+      const { error } = await supabase.rpc('apply_contract_amendment', { _amendment_id: amId });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contract-amendments', id] });
+      queryClient.invalidateQueries({ queryKey: ['contract', id] });
+      queryClient.invalidateQueries({ queryKey: ['amendment-audit'] });
+      toast({ title: isRTL ? 'تم تطبيق الملحق على العقد' : 'Amendment applied to contract' });
+    },
+    onError: (err: unknown) => toast({ title: mapAmendmentError(err, isRTL), variant: 'destructive' }),
   });
 
   /* ─── Derived ─── */
