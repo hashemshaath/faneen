@@ -35,18 +35,29 @@ export const ProviderTipsCard: React.FC<Props> = ({ businessId }) => {
     enabled: !!businessId && !!user?.id,
     staleTime: 60000,
     queryFn: async () => {
-      const [services, portfolio, projects, leads, unread] = await Promise.all([
+      const [services, portfolio, projects, leads, convs] = await Promise.all([
         supabase.from('business_services').select('id', { count: 'exact', head: true }).eq('business_id', businessId!).eq('is_active', true),
         supabase.from('portfolio_items').select('id', { count: 'exact', head: true }).eq('business_id', businessId!),
         supabase.from('projects').select('id', { count: 'exact', head: true }).eq('business_id', businessId!),
         supabase.from('lead_requests').select('id', { count: 'exact', head: true }).eq('business_id', businessId!),
-        supabase.from('messages').select('id', { count: 'exact', head: true }).eq('recipient_id', user!.id).eq('is_read', false),
+        supabase.from('conversations').select('id').or(`participant_1.eq.${user!.id},participant_2.eq.${user!.id}`),
       ]);
+      const convIds = (convs.data ?? []).map((c) => c.id);
+      let unreadCount = 0;
+      if (convIds.length > 0) {
+        const { count } = await supabase
+          .from('messages')
+          .select('id', { count: 'exact', head: true })
+          .in('conversation_id', convIds)
+          .eq('is_read', false)
+          .neq('sender_id', user!.id);
+        unreadCount = count ?? 0;
+      }
       return {
         services: services.count ?? 0,
         portfolio: (portfolio.count ?? 0) + (projects.count ?? 0),
         leads: leads.count ?? 0,
-        unread: unread.count ?? 0,
+        unread: unreadCount,
       };
     },
   });
