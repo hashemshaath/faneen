@@ -56,7 +56,6 @@ export const ContractAttachmentsTab: React.FC<Props> = ({
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [description, setDescription] = useState('');
-  const [visibility, setVisibility] = useState<AttachmentVisibility>('parties');
   const [linkType, setLinkType] = useState<LinkType>('contract');
   const [linkId, setLinkId] = useState<string>('');
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
@@ -64,7 +63,6 @@ export const ContractAttachmentsTab: React.FC<Props> = ({
   const resetForm = () => {
     setPendingFile(null);
     setDescription('');
-    setVisibility('parties');
     setLinkType('contract');
     setLinkId('');
     setProgress(0);
@@ -111,7 +109,7 @@ export const ContractAttachmentsTab: React.FC<Props> = ({
       // actual access uses signed URLs via storage_path).
       const { data: urlData } = supabase.storage.from('contract-attachments').getPublicUrl(path);
 
-      const insertPayload = {
+              const insertPayload = {
         contract_id: contractId,
         user_id: userId,
         file_name: pendingFile.name,
@@ -120,7 +118,9 @@ export const ContractAttachmentsTab: React.FC<Props> = ({
         storage_path: path,
         file_size: pendingFile.size,
         description: description.trim() || null,
-        visibility,
+        // C4B.2 Safety Patch: visibility is not yet RLS-enforced.
+        // Force every new upload to 'parties' until visibility-aware RLS lands.
+        visibility: 'parties' as AttachmentVisibility,
         milestone_id:   linkType === 'milestone'   ? linkId : null,
         measurement_id: linkType === 'measurement' ? linkId : null,
         payment_id:     linkType === 'payment'     ? linkId : null,
@@ -227,7 +227,15 @@ export const ContractAttachmentsTab: React.FC<Props> = ({
             </div>
             <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
               {linkedChip(att)}
-              <Badge variant="outline" className="text-[8px] gap-0.5">
+              <Badge
+                variant="outline"
+                className="text-[8px] gap-0.5"
+                title={
+                  att.visibility && att.visibility !== 'parties'
+                    ? (isRTL ? 'لم يتم تفعيل قيود العرض المتقدمة بعد.' : 'Advanced visibility restrictions are not enforced yet.')
+                    : undefined
+                }
+              >
                 <ShieldCheck className="w-2.5 h-2.5" />{visibilityLabel(att.visibility, isRTL)}
               </Badge>
             </div>
@@ -340,15 +348,18 @@ export const ContractAttachmentsTab: React.FC<Props> = ({
               )}
               <div>
                 <label className="text-[10px] font-heading font-semibold text-muted-foreground">{isRTL ? 'الظهور' : 'Visibility'}</label>
-                <Select value={visibility} onValueChange={(v) => setVisibility(v as AttachmentVisibility)}>
+                {/* C4B.2 Safety Patch: only 'parties' is enforced today. */}
+                <Select value="parties" disabled>
                   <SelectTrigger className="text-xs h-9 mt-1"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="parties">{visibilityLabel('parties', isRTL)}</SelectItem>
-                    <SelectItem value="provider_only">{visibilityLabel('provider_only', isRTL)}</SelectItem>
-                    <SelectItem value="client_only">{visibilityLabel('client_only', isRTL)}</SelectItem>
-                    {isAdmin && <SelectItem value="admin_only">{visibilityLabel('admin_only', isRTL)}</SelectItem>}
                   </SelectContent>
                 </Select>
+                <p className="text-[9px] text-muted-foreground/80 font-body mt-1 leading-relaxed">
+                  {isRTL
+                    ? 'خصوصية المرفقات المتقدمة ستتوفر لاحقًا. حالياً تظهر المرفقات لأطراف العقد المصرح لهم.'
+                    : 'Advanced attachment visibility will be available later. For now, attachments are visible to authorized contract parties.'}
+                </p>
               </div>
               <div className="sm:col-span-2">
                 <label className="text-[10px] font-heading font-semibold text-muted-foreground">{isRTL ? 'وصف (اختياري)' : 'Description (optional)'}</label>
