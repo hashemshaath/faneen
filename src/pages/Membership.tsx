@@ -6,7 +6,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
-import { Shield, Info, AlertTriangle, Check, Undo2, Building2, Send } from 'lucide-react';
+import { Shield, Info, AlertTriangle, Check, Undo2, Building2, Send, Clock } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { MembershipHeader } from '@/components/membership/MembershipHeader';
@@ -234,6 +234,17 @@ const Membership = () => {
                 </Button>
               </div>
             </div>
+          </div>
+        )}
+
+        {pendingRequests.length > 0 && (
+          <div className="max-w-3xl mx-auto mb-6 rounded-xl border border-info/30 bg-info/5 px-4 py-3 flex items-start gap-2 text-xs text-foreground/80">
+            <Clock className="w-4 h-4 text-info shrink-0 mt-0.5" />
+            <p className="leading-relaxed">
+              {isRTL
+                ? `لديك ${pendingRequests.length} طلب ترقية قيد المراجعة من فريق قطاعات.`
+                : `You have ${pendingRequests.length} upgrade request(s) being reviewed by the Qitaat team.`}
+            </p>
           </div>
         )}
 
