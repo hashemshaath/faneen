@@ -707,6 +707,19 @@ const ContractDetail = () => {
     return map;
   }, [attachments]);
 
+  // Group attachments by payment_id once to avoid N+1 queries.
+  const attachmentsByPayment = useMemo(() => {
+    const map = new Map<string, AttachmentRow[]>();
+    for (const a of (attachments || []) as AttachmentRow[]) {
+      if (a.payment_id) {
+        const arr = map.get(a.payment_id) || [];
+        arr.push(a);
+        map.set(a.payment_id, arr);
+      }
+    }
+    return map;
+  }, [attachments]);
+
   // Installment payment totals
   const paymentsTotals = useMemo(() => {
     if (!installmentPayments) return { paid: 0, total: 0, paidCount: 0, totalCount: 0 };
