@@ -36,6 +36,7 @@ const PlanCard = React.memo(({ plan, isRTL, language, subsCount, onEdit }: { pla
   const colors = tierColors[plan.tier] || tierColors.free;
   const features = Array.isArray(plan.features) ? plan.features : [];
   const limits = parseLimits(plan.limits as Record<string, any> | undefined);
+  const extraKeys = getExtraLimitKeys(plan.limits as Record<string, unknown> | undefined);
   const enabledBoolLimits = LIMIT_FIELDS.filter(f => f.type === 'boolean' && limits[f.key] === true).length;
   const totalBoolLimits = LIMIT_FIELDS.filter(f => f.type === 'boolean').length;
   const benefitPct = totalBoolLimits > 0 ? Math.round((enabledBoolLimits / totalBoolLimits) * 100) : 0;
