@@ -6,7 +6,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Crown, Zap, Star, Building2, ArrowUpRight, Calendar, FileText, Wrench, FolderOpen, MapPin, AlertTriangle, Info, Users } from 'lucide-react';
+import { Crown, Zap, Star, Building2, ArrowUpRight, Calendar, FileText, Wrench, FolderOpen, MapPin, AlertTriangle, Info, Users, Send } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { parseLimits } from '@/lib/membership-limits';
 import { Progress } from '@/components/ui/progress';
@@ -170,12 +170,19 @@ export const ProviderMembershipCard: React.FC<Props> = ({ userId, businessId, ti
           </div>
           <Link to="/membership" className="shrink-0">
             <Button size="sm" variant={isFreePlan ? 'default' : 'outline'} className="h-8 text-xs gap-1.5">
-              <ArrowUpRight className="w-3 h-3" />
+              {isFreePlan ? <Send className="w-3 h-3" /> : <ArrowUpRight className="w-3 h-3" />}
               {isFreePlan
-                ? (isRTL ? 'ترقية الباقة' : 'Upgrade')
-                : (isRTL ? 'إدارة الاشتراك' : 'Manage')}
+                ? (isRTL ? 'طلب الترقية' : 'Request upgrade')
+                : (isRTL ? 'إدارة الاشتراك' : 'Manage subscription')}
             </Button>
           </Link>
+        </div>
+
+        <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-info/30 bg-info/5 px-2.5 py-0.5 text-[10px] text-info">
+          <Info className="w-2.5 h-2.5" />
+          {isRTL
+            ? 'نسخة تجريبية — يتم تفعيل الترقيات يدوياً حالياً'
+            : 'Beta — upgrades are manually activated for now'}
         </div>
 
         {isFreePlan && (
