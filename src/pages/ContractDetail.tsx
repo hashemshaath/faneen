@@ -635,6 +635,19 @@ const ContractDetail = () => {
     };
   }, [filteredMeasurements]);
 
+  // VAT breakdown for the measurements subtotal — single source via helper.
+  // Note: measurements are currently the practical source of contract value
+  // when contract_line_items is empty. DB `total_amount` may differ until
+  // C3/C5 introduce auto-recalc triggers.
+  const measurementsVat = useMemo(
+    () => calculateVatBreakdown({
+      amount: measurementsTotals.totalCost,
+      vatRate: contract?.vat_rate,
+      vatInclusive: contract?.vat_inclusive,
+    }),
+    [measurementsTotals.totalCost, contract?.vat_rate, contract?.vat_inclusive],
+  );
+
   const floors = useMemo(() => Object.keys(measurementsByFloor), [measurementsByFloor]);
 
   // Installment payment totals
