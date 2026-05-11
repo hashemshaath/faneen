@@ -2357,15 +2357,11 @@ const ContractDetail = () => {
                       {attachments.filter(a => a.file_type.startsWith('image')).map(att => (
                         <div key={att.id} className="group relative rounded-xl overflow-hidden border border-border bg-muted hover:border-accent/50 hover:shadow-md transition-all">
                           <div className="aspect-[4/3]">
-                            <img src={att.file_url} alt={att.file_name} className="w-full h-full object-cover" loading="lazy" />
+                            <SignedAttachmentImage att={att as AttachmentRow} className="w-full h-full object-cover" />
                           </div>
                           <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/40 transition-colors flex items-center justify-center gap-2">
-                            <a href={att.file_url} target="_blank" rel="noopener noreferrer">
-                              <Button variant="secondary" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"><Eye className="w-4 h-4" /></Button>
-                            </a>
-                            <a href={att.file_url} download={att.file_name}>
-                              <Button variant="secondary" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"><Download className="w-4 h-4" /></Button>
-                            </a>
+                            <Button variant="secondary" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg" onClick={() => openAttachmentSigned(att as AttachmentRow)}><Eye className="w-4 h-4" /></Button>
+                            <Button variant="secondary" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg" onClick={() => downloadAttachmentSigned(att as AttachmentRow)}><Download className="w-4 h-4" /></Button>
                           </div>
                           <div className="p-2 bg-card border-t border-border">
                             <p className="font-heading font-medium text-[10px] truncate">{att.file_name}</p>
@@ -2401,8 +2397,8 @@ const ContractDetail = () => {
                                 )}
                               </div>
                             </div>
-                            <a href={att.file_url} target="_blank" rel="noopener noreferrer"><Button variant="ghost" size="icon" className="h-8 w-8"><ExternalLink className="w-3.5 h-3.5" /></Button></a>
-                            <a href={att.file_url} download={att.file_name}><Button variant="outline" size="icon" className="h-8 w-8"><Download className="w-3.5 h-3.5" /></Button></a>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openAttachmentSigned(att as AttachmentRow)}><ExternalLink className="w-3.5 h-3.5" /></Button>
+                            <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => downloadAttachmentSigned(att as AttachmentRow)}><Download className="w-3.5 h-3.5" /></Button>
                           </div>
                         );
                       })}
