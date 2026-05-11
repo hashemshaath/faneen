@@ -24,6 +24,7 @@ import { ContractFinancialCoverage } from '@/components/contract/ContractFinanci
 import { SignedAttachmentImage } from '@/components/contract/SignedAttachment';
 import { ContractAttachmentsTab } from '@/components/contract/ContractAttachmentsTab';
 import { MeasurementAttachmentsPanel } from '@/components/contract/MeasurementAttachmentsPanel';
+import { PaymentReceiptPanel } from '@/components/contract/PaymentReceiptPanel';
 import {
   openAttachment as openAttachmentSigned,
   type AttachmentRow,
