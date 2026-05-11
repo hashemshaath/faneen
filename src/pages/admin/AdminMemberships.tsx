@@ -25,7 +25,7 @@ import {
   Download, Hash, Activity, Layers, Settings2, Eye, Sparkles, Plus, Lock,
 } from 'lucide-react';
 import { TIERS, tierIcons, tierColors, statusConfig } from '@/lib/membership-tiers';
-import { LIMIT_FIELDS, LIMIT_CATEGORIES, parseLimits, limitsToJson } from '@/lib/membership-limits';
+import { LIMIT_FIELDS, LIMIT_CATEGORIES, parseLimits, limitsToJson, getExtraLimitKeys } from '@/lib/membership-limits';
 
 import { useNoIndex } from "@/hooks/useNoIndex";
 type Tab = 'overview' | 'plans' | 'subscriptions' | 'businesses';
@@ -562,7 +562,8 @@ const AdminMemberships = () => {
     mutationFn: async () => {
       if (!editingPlan) return;
       const features = featuresText.split('\n').map(l => l.trim()).filter(Boolean);
-      const limits = limitsToJson(editLimits);
+      const originalLimits = (editingPlan as any)?.limits as Record<string, unknown> | null | undefined;
+      const limits = limitsToJson(editLimits, originalLimits);
       const isNew = !(editingPlan as any).id;
       if (isNew) {
         const tier = (editingPlan as any).tier || 'free';
