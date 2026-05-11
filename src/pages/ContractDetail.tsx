@@ -1554,9 +1554,9 @@ const ContractDetail = () => {
                   <span className="font-heading font-bold text-sm text-accent ms-auto">{measurementsTotals.totalCost.toLocaleString()} {contract.currency_code}</span>
                 </div>
                 <div className="flex items-center gap-3 flex-wrap text-[10px] font-body text-muted-foreground border-t border-accent/10 pt-2">
-                  <span>{isRTL ? 'المبلغ قبل الضريبة:' : 'Before VAT:'} <strong className="text-foreground">{(vatInclusive ? measurementsTotals.totalCost - (measurementsTotals.totalCost * vatRate / (100 + vatRate)) : measurementsTotals.totalCost).toLocaleString(undefined, { maximumFractionDigits: 2 })}</strong></span>
-                  <span>{isRTL ? `ضريبة ${vatRate}%:` : `VAT ${vatRate}%:`} <strong className="text-warning dark:text-warning">{(vatInclusive ? measurementsTotals.totalCost * vatRate / (100 + vatRate) : measurementsTotals.totalCost * vatRate / 100).toLocaleString(undefined, { maximumFractionDigits: 2 })}</strong></span>
-                  <span>{isRTL ? 'الإجمالي شامل الضريبة:' : 'Total incl. VAT:'} <strong className="text-accent">{(vatInclusive ? measurementsTotals.totalCost : measurementsTotals.totalCost + measurementsTotals.totalCost * vatRate / 100).toLocaleString(undefined, { maximumFractionDigits: 2 })}</strong> {contract.currency_code}</span>
+                  <span>{isRTL ? 'المبلغ قبل الضريبة:' : 'Before VAT:'} <strong className="text-foreground">{measurementsVat.subtotal.toLocaleString(undefined, { maximumFractionDigits: 2 })}</strong></span>
+                  <span>{isRTL ? `ضريبة ${vatRate}%:` : `VAT ${vatRate}%:`} <strong className="text-warning dark:text-warning">{measurementsVat.vatAmount.toLocaleString(undefined, { maximumFractionDigits: 2 })}</strong></span>
+                  <span>{isRTL ? 'الإجمالي شامل الضريبة:' : 'Total incl. VAT:'} <strong className="text-accent">{measurementsVat.total.toLocaleString(undefined, { maximumFractionDigits: 2 })}</strong> {contract.currency_code}</span>
                 </div>
               </div>
             )}
@@ -1654,7 +1654,7 @@ const ContractDetail = () => {
                           <td className="p-2.5" dir="ltr"></td>
                           <td className="p-2.5"></td>
                           <td className="p-2.5 text-warning dark:text-warning font-semibold" dir="ltr">
-                            {(vatInclusive ? measurementsTotals.totalCost * vatRate / (100 + vatRate) : measurementsTotals.totalCost * vatRate / 100).toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                            {measurementsVat.vatAmount.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                           </td>
                           <td className="p-2.5"></td>
                           {!isContractLocked && <td className="p-2.5"></td>}
@@ -1664,7 +1664,7 @@ const ContractDetail = () => {
                           <td className="p-2.5" dir="ltr"></td>
                           <td className="p-2.5"></td>
                           <td className="p-2.5 text-accent text-sm" dir="ltr">
-                            {(vatInclusive ? measurementsTotals.totalCost : measurementsTotals.totalCost + measurementsTotals.totalCost * vatRate / 100).toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                            {measurementsVat.total.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                           </td>
                           <td className="p-2.5"></td>
                           {!isContractLocked && <td className="p-2.5"></td>}
