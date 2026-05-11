@@ -19,6 +19,7 @@ import { Footer } from '@/components/layout/Footer';
 import type { ImportedMeasurement } from '@/lib/contract-pdf-export';
 import { getContractStatusMeta, isContractLockedByStatus } from '@/lib/contract-statuses';
 import { calculateVatBreakdown } from '@/lib/contract-financials';
+import { PaymentScheduleGenerator } from '@/components/contract/PaymentScheduleGenerator';
 import {
   FileText, Shield, Wrench, CheckCircle2, Clock,
   Calendar, DollarSign, AlertTriangle, XCircle, ListChecks, Plus, Send,
@@ -1139,6 +1140,19 @@ const ContractDetail = () => {
           </div>
         </div>
 
+        {/* ─── Payment Schedule Generator (C3B) ─── */}
+        {contract && (
+          <PaymentScheduleGenerator
+            contractId={contract.id}
+            totalAmount={Number(contract.total_amount) || 0}
+            currency={contract.currency_code || 'SAR'}
+            milestones={(milestones || []).map((m: any) => ({ id: m.id, title_ar: m.title_ar, title_en: m.title_en, status: m.status }))}
+            hasExistingPlan={!!installmentPlans && installmentPlans.length > 0}
+            isProvider={user?.id === contract.provider_id}
+            isLocked={isContractLocked}
+          />
+        )}
+
         {/* ─── Installment Payments ─── */}
         {installmentPlans && installmentPlans.length > 0 && (
           <div className="rounded-xl border border-border bg-card p-4 sm:p-5 mb-5 sm:mb-6">
@@ -1190,9 +1204,48 @@ const ContractDetail = () => {
                           </div>
                           {pay.notes && <p className="mt-2 text-[10px] text-muted-foreground/80 font-body border-t border-border pt-2">{pay.notes}</p>}
                           <Progress value={isPaid ? 100 : 0} className="h-1 mt-2" />
-                          {/* C3A: read-only milestone link */}
+                          {/* C3B: milestone link — editable for provider, read-only for others */}
                           {(() => {
                             const linked = pay.milestone_id ? milestones?.find(m => m.id === pay.milestone_id) : null;
+                            if (isProvider && !isContractLocked) {
+                              return (
+                                <div className="mt-2">
+                                  <Select
+                                    value={pay.milestone_id || '__none__'}
+                                    onValueChange={async (v) => {
+                                      const newVal = v === '__none__' ? null : v;
+                                      const { error } = await supabase
+                                        .from('installment_payments')
+                                        .update({ milestone_id: newVal })
+                                        .eq('id', pay.id);
+                                      if (error) {
+                                        toast({ title: isRTL ? 'تعذّر الحفظ' : 'Could not save', description: error.message, variant: 'destructive' });
+                                      } else {
+                                        queryClient.invalidateQueries({ queryKey: ['installment-payments'] });
+                                      }
+                                    }}
+                                    disabled={!milestones || milestones.length === 0}
+                                  >
+                                    <SelectTrigger className="h-7 text-[10px]">
+                                      <SelectValue placeholder={isRTL ? 'ربط بمرحلة' : 'Link milestone'} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="__none__">{isRTL ? 'غير مرتبط' : 'Unlinked'}</SelectItem>
+                                      {(milestones || []).map(m => (
+                                        <SelectItem key={m.id} value={m.id}>
+                                          {(isRTL ? m.title_ar : (m.title_en || m.title_ar)) || (isRTL ? 'مرحلة' : 'Milestone')}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                  {(!milestones || milestones.length === 0) && (
+                                    <p className="text-[9px] text-muted-foreground/80 font-body italic mt-1">
+                                      {isRTL ? 'أضف مراحل العمل أولاً لربطها بالدفعات.' : 'Add milestones first to link them.'}
+                                    </p>
+                                  )}
+                                </div>
+                              );
+                            }
                             return (
                               <div className="mt-2 text-[10px] font-body flex items-center gap-1 text-muted-foreground">
                                 {linked ? (

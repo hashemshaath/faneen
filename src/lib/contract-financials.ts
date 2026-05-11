@@ -176,3 +176,154 @@ export function formatMoney(
   }).format(n);
   return `${formatted} ${currency}`.trim();
 }
+
+/* ── Payment schedule presets (C3B) ───────────────────────────────────
+ *
+ * Pure helpers. No DB writes here. Consumed by the Payment Schedule
+ * Generator UI to materialize installment_plans + installment_payments.
+ *
+ * Presets define percentages that MUST sum to 100. Generated row amounts
+ * sum back to `totalAmount` exactly — the last row absorbs rounding drift
+ * so the schedule never produces NaN, negatives, or over/undershoots.
+ */
+
+export interface PaymentPresetRow {
+  percentage: number;     // 0..100
+  title_ar: string;
+  title_en: string;
+  /** Days from `startDate` for the suggested due date. Optional. */
+  dayOffset?: number;
+}
+
+export interface PaymentPreset {
+  id: '30_40_30' | '50_50' | '100' | 'custom';
+  label_ar: string;
+  label_en: string;
+  rows: PaymentPresetRow[];
+}
+
+export const PAYMENT_PRESETS: PaymentPreset[] = [
+  {
+    id: '30_40_30',
+    label_ar: '30 / 40 / 30',
+    label_en: '30 / 40 / 30',
+    rows: [
+      { percentage: 30, title_ar: 'دفعة مقدمة', title_en: 'Advance Payment', dayOffset: 0 },
+      { percentage: 40, title_ar: 'دفعة منتصف المشروع', title_en: 'Mid-Project Payment', dayOffset: 30 },
+      { percentage: 30, title_ar: 'دفعة نهائية', title_en: 'Final Payment', dayOffset: 60 },
+    ],
+  },
+  {
+    id: '50_50',
+    label_ar: '50 / 50',
+    label_en: '50 / 50',
+    rows: [
+      { percentage: 50, title_ar: 'دفعة مقدمة', title_en: 'Advance Payment', dayOffset: 0 },
+      { percentage: 50, title_ar: 'دفعة نهائية', title_en: 'Final Payment', dayOffset: 30 },
+    ],
+  },
+  {
+    id: '100',
+    label_ar: 'دفعة كاملة مقدماً',
+    label_en: 'Full Upfront',
+    rows: [
+      { percentage: 100, title_ar: 'دفعة كاملة', title_en: 'Full Payment', dayOffset: 0 },
+    ],
+  },
+];
+
+export interface GeneratedPaymentRow {
+  installment_number: number;
+  title_ar: string;
+  title_en: string;
+  percentage: number;
+  amount: number;
+  due_date: string; // YYYY-MM-DD
+  milestone_id: string | null;
+}
+
+export interface PercentageSumValidation {
+  sum: number;          // sum of percentages (rounded to 2dp)
+  isValid: boolean;     // |sum - 100| <= tolerance and no negatives
+  hasNegative: boolean;
+  tolerance: number;
+}
+
+/** Sum percentages and report whether they make a valid 100% schedule. */
+export function validatePercentageSum(
+  percentages: Array<number | string | null | undefined>,
+  tolerance = 0.01,
+): PercentageSumValidation {
+  let sum = 0;
+  let hasNegative = false;
+  for (const p of percentages) {
+    const n = safeNum(p);
+    if (n < 0) hasNegative = true;
+    sum += clampNonNeg(n);
+  }
+  sum = round2(sum);
+  return {
+    sum,
+    hasNegative,
+    tolerance,
+    isValid: !hasNegative && Math.abs(sum - 100) <= tolerance,
+  };
+}
+
+/**
+ * Build a payment schedule from percentages + a contract total.
+ *
+ * - Rounds every row to 2dp.
+ * - Last row absorbs the residual so the sum exactly equals `totalAmount`.
+ * - Returns rows with positive amounts only; invalid input yields `[]`.
+ */
+export function generatePaymentSchedule(input: {
+  totalAmount: number | string | null | undefined;
+  rows: Array<Pick<PaymentPresetRow, 'percentage' | 'title_ar' | 'title_en' | 'dayOffset'>>;
+  startDate?: Date | string;
+  /** Optional explicit due dates per row (YYYY-MM-DD). Overrides dayOffset. */
+  dueDates?: Array<string | undefined>;
+  milestoneIds?: Array<string | null | undefined>;
+}): GeneratedPaymentRow[] {
+  const total = round2(clampNonNeg(safeNum(input.totalAmount)));
+  if (total <= 0 || !Array.isArray(input.rows) || input.rows.length === 0) return [];
+
+  const validation = validatePercentageSum(input.rows.map((r) => r.percentage));
+  if (!validation.isValid) return [];
+
+  const startDate = input.startDate ? new Date(input.startDate) : new Date();
+  if (Number.isNaN(startDate.getTime())) startDate.setTime(Date.now());
+
+  const out: GeneratedPaymentRow[] = [];
+  let running = 0;
+
+  input.rows.forEach((row, idx) => {
+    const isLast = idx === input.rows.length - 1;
+    const pct = clampNonNeg(safeNum(row.percentage));
+    let amount = isLast ? round2(total - running) : round2((total * pct) / 100);
+    if (amount < 0) amount = 0;
+    running = round2(running + amount);
+
+    const explicit = input.dueDates?.[idx];
+    let dueDate: string;
+    if (explicit && /^\d{4}-\d{2}-\d{2}$/.test(explicit)) {
+      dueDate = explicit;
+    } else {
+      const d = new Date(startDate);
+      d.setDate(d.getDate() + (row.dayOffset ?? 0));
+      dueDate = d.toISOString().slice(0, 10);
+    }
+
+    out.push({
+      installment_number: idx + 1,
+      title_ar: row.title_ar,
+      title_en: row.title_en,
+      percentage: pct,
+      amount,
+      due_date: dueDate,
+      milestone_id: input.milestoneIds?.[idx] ?? null,
+    });
+  });
+
+  return out;
+}
