@@ -142,6 +142,15 @@ export const AmendmentHistoryPanel = ({
         const canCancel = isRequester && (a.status === 'pending' || a.status === 'approved');
         const canApply = a.status === 'approved' && (isProvider || isAdmin);
 
+        // C5D.1 financial preview (only meaningful for approved amendments)
+        const previewInput = contract
+          ? { contract, amendment: a, payments: installmentPayments ?? [] }
+          : null;
+        const preview = a.status === 'approved' && previewInput
+          ? previewAmendmentFinancialImpact(previewInput)
+          : null;
+        const applyBlocked = !!preview && preview.blockingErrors.length > 0;
+
         return (
           <div key={a.id} className="rounded-xl border border-border/60 bg-card/60 p-4 space-y-3 hover-lift">
             {/* Header */}
@@ -247,6 +256,11 @@ export const AmendmentHistoryPanel = ({
               </div>
             )}
 
+            {/* C5D.1: financial impact preview for approved amendments */}
+            {a.status === 'approved' && previewInput && (
+              <AmendmentFinancialPreview input={previewInput} isRTL={isRTL} />
+            )}
+
             {/* Action buttons */}
             {(canApprove || canReject || canCancel || canApply) && rejectingId !== a.id && cancellingId !== a.id && (
               <div className="flex flex-wrap gap-2 pt-1">
@@ -282,8 +296,9 @@ export const AmendmentHistoryPanel = ({
                   <Button
                     size="sm" variant="outline"
                     className="h-7 text-[10px] gap-1 text-primary border-primary/60"
-                    disabled={applying}
+                    disabled={applying || applyBlocked}
                     onClick={() => onApply(a.id)}
+                    title={applyBlocked ? (isRTL ? 'يتعذر التطبيق — راجع الأخطاء أعلاه' : 'Cannot apply — see errors above') : undefined}
                   >
                     <PlayCircle className="w-3 h-3" />{isRTL ? 'تطبيق على العقد' : 'Apply to contract'}
                   </Button>
@@ -291,7 +306,7 @@ export const AmendmentHistoryPanel = ({
               </div>
             )}
 
-            {canApply && (
+            {canApply && !preview && (
               <div className="rounded-lg border border-warning/40 bg-warning/5 p-2 flex items-start gap-2 text-[10px] text-warning">
                 <AlertTriangle className="w-3 h-3 mt-0.5 shrink-0" />
                 <span>{isRTL
