@@ -32,6 +32,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useNoIndex } from "@/hooks/useNoIndex";
+import { MembershipUsageWarning } from '@/components/membership/MembershipUsageWarning';
 
 interface PortfolioItem {
   id: string; business_id: string; title_ar: string; title_en: string | null;
@@ -416,6 +417,8 @@ const DashboardPortfolio = () => {
             </Button>
           </div>
         </div>
+
+        <MembershipUsageWarning userId={user?.id} businessId={businessId} metric="portfolio" />
 
         {/* ═══ Stats ═══ */}
         {items.length > 0 && (

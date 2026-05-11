@@ -37,6 +37,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useNoIndex } from "@/hooks/useNoIndex";
+import { MembershipUsageWarning } from '@/components/membership/MembershipUsageWarning';
 
 type FilterMode = 'all' | 'active' | 'inactive' | 'no-price';
 type SortMode = 'custom' | 'name' | 'price' | 'date';
@@ -407,6 +408,8 @@ const DashboardServices = () => {
             </Button>
           </div>
         </div>
+
+        <MembershipUsageWarning userId={user?.id} businessId={businessId} metric="services" />
 
         {/* ═══ Stats Grid ═══ */}
         {services.length > 0 && (
