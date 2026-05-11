@@ -41,6 +41,19 @@ export interface ContractExportData {
     paidAt?: string;
   }[];
   measurements?: { pieceNumber: string; name: string; location: string; floor: string; lengthMm: number; widthMm: number; areaSqm: number; unitPrice: number; quantity: number; totalCost: number; status: string }[];
+  /**
+   * Attachment index entries — metadata only. Never include signed URLs,
+   * storage paths, or `file_url` here. Visibility filtering happens in the
+   * caller (RLS already gates the underlying query).
+   */
+  attachments?: {
+    fileName: string;
+    fileType?: string;
+    fileSize?: number | null;
+    linkedTo: string;
+    description?: string | null;
+    uploadedAt?: string | null;
+  }[];
   vatRate?: number;
   vatInclusive?: boolean;
   businessName?: string;
@@ -322,6 +335,61 @@ export const exportContractPDF = async (data: ContractExportData) => {
     if (y + lines.length * 4 > h - 20) { doc.addPage(); y = 15; }
     doc.text(lines, data.isRTL ? w - 15 : 15, y, { align: data.isRTL ? 'right' : 'left' });
     y += lines.length * 4 + 12;
+  }
+
+  // ── Attachments Index (metadata only — no URLs/paths) ──
+  if (data.attachments) {
+    sectionTitle(data.isRTL ? 'فهرس المرفقات' : 'Attachments Index');
+    if (data.attachments.length === 0) {
+      doc.setFontSize(8);
+      doc.setTextColor(mutedR, mutedG, mutedB);
+      const msg = data.isRTL ? 'لا توجد مرفقات مسجلة لهذا العقد.' : 'No attachments recorded for this contract.';
+      if (y + 8 > h - 20) { doc.addPage(); y = 15; }
+      doc.text(msg, data.isRTL ? w - 15 : 15, y, { align: data.isRTL ? 'right' : 'left' });
+      y += 12;
+    } else {
+      const fmtSize = (b?: number | null): string => {
+        if (b == null || !Number.isFinite(b) || b <= 0) return '-';
+        const units = ['B', 'KB', 'MB', 'GB'];
+        let i = 0; let n = b;
+        while (n >= 1024 && i < units.length - 1) { n /= 1024; i++; }
+        return `${n.toFixed(n >= 10 || i === 0 ? 0 : 1)} ${units[i]}`;
+      };
+      const shortType = (t?: string): string => {
+        if (!t) return '-';
+        const slash = t.indexOf('/');
+        return (slash === -1 ? t : t.slice(slash + 1)).toUpperCase().slice(0, 12);
+      };
+      autoTable(doc, {
+        startY: y,
+        head: [[
+          '#',
+          data.isRTL ? 'اسم الملف' : 'File name',
+          data.isRTL ? 'النوع' : 'Type',
+          data.isRTL ? 'الحجم' : 'Size',
+          data.isRTL ? 'مرتبط بـ' : 'Linked to',
+          data.isRTL ? 'الوصف' : 'Description',
+          data.isRTL ? 'تاريخ الرفع' : 'Uploaded',
+        ]],
+        body: data.attachments.map((a, idx) => [
+          String(idx + 1),
+          (a.fileName || '-').slice(0, 60),
+          shortType(a.fileType),
+          fmtSize(a.fileSize),
+          (a.linkedTo || (data.isRTL ? 'عام' : 'General')).slice(0, 60),
+          (a.description || '-').slice(0, 80),
+          a.uploadedAt
+            ? new Date(a.uploadedAt).toLocaleDateString(data.isRTL ? 'ar-SA' : 'en-US')
+            : '-',
+        ]),
+        theme: 'grid',
+        styles: { fontSize: 7, cellPadding: 2.2, ...rtlStyles },
+        headStyles: { fillColor: HEADER_RGB, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7 },
+        alternateRowStyles: { fillColor: SURFACE2_RGB },
+        margin: { left: 10, right: 10 },
+      });
+      y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 12;
+    }
   }
 
   // ── Signatures ──

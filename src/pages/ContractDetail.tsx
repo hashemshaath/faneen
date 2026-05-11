@@ -776,6 +776,33 @@ const ContractDetail = () => {
         areaSqm: Number(m.area_sqm), unitPrice: Number(m.unit_price), quantity: Number(m.quantity),
         totalCost: Number(m.total_cost), status: m.status,
       })),
+      attachments: (attachments || []).map(a => {
+        // Resolve "linked to" label without exposing IDs/URLs.
+        let linkedTo = isRTL ? 'العقد' : 'Contract';
+        if (a.measurement_id) {
+          const m = (measurements || []).find(x => x.id === a.measurement_id);
+          const label = m
+            ? `${m.piece_number ? `#${m.piece_number} ` : ''}${(language === 'ar' ? m.name_ar : (m.name_en || m.name_ar)) || ''}`.trim()
+            : '';
+          linkedTo = `${isRTL ? 'مقاس: ' : 'Measurement: '}${label || '—'}`;
+        } else if (a.payment_id) {
+          const p = (installmentPayments || []).find(x => x.id === a.payment_id);
+          const label = p ? `#${p.installment_number}` : '—';
+          linkedTo = `${isRTL ? 'دفعة: ' : 'Payment: '}${label}`;
+        } else if (a.milestone_id) {
+          const m = (milestones || []).find(x => x.id === a.milestone_id);
+          const label = m ? ((language === 'ar' ? m.title_ar : (m.title_en || m.title_ar)) || '') : '';
+          linkedTo = `${isRTL ? 'مرحلة: ' : 'Milestone: '}${label || '—'}`;
+        }
+        return {
+          fileName: a.file_name,
+          fileType: a.file_type,
+          fileSize: a.file_size ?? null,
+          linkedTo,
+          description: a.description ?? null,
+          uploadedAt: a.created_at ?? null,
+        };
+      }),
       isRTL,
     });
   };
