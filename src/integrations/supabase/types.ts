@@ -2582,6 +2582,9 @@ export type Database = {
           closed_at: string | null
           contact_preference: string
           conversation_id: string | null
+          converted_at: string | null
+          converted_by: string | null
+          converted_contract_id: string | null
           created_at: string
           email: string
           id: string
@@ -2617,6 +2620,9 @@ export type Database = {
           closed_at?: string | null
           contact_preference?: string
           conversation_id?: string | null
+          converted_at?: string | null
+          converted_by?: string | null
+          converted_contract_id?: string | null
           created_at?: string
           email: string
           id?: string
@@ -2652,6 +2658,9 @@ export type Database = {
           closed_at?: string | null
           contact_preference?: string
           conversation_id?: string | null
+          converted_at?: string | null
+          converted_by?: string | null
+          converted_contract_id?: string | null
           created_at?: string
           email?: string
           id?: string
@@ -2699,6 +2708,13 @@ export type Database = {
             columns: ["conversation_id"]
             isOneToOne: false
             referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_requests_converted_contract_id_fkey"
+            columns: ["converted_contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
             referencedColumns: ["id"]
           },
         ]
@@ -5224,6 +5240,10 @@ export type Database = {
       }
     }
     Functions: {
+      admin_convert_lead_to_contract: {
+        Args: { _lead_id: string }
+        Returns: string
+      }
       admin_update_business_approval: {
         Args: {
           _business_id: string
