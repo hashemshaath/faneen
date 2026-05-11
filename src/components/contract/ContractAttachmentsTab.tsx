@@ -111,7 +111,7 @@ export const ContractAttachmentsTab: React.FC<Props> = ({
       // actual access uses signed URLs via storage_path).
       const { data: urlData } = supabase.storage.from('contract-attachments').getPublicUrl(path);
 
-      const insertPayload: Record<string, unknown> = {
+      const insertPayload = {
         contract_id: contractId,
         user_id: userId,
         file_name: pendingFile.name,
@@ -121,10 +121,10 @@ export const ContractAttachmentsTab: React.FC<Props> = ({
         file_size: pendingFile.size,
         description: description.trim() || null,
         visibility,
+        milestone_id:   linkType === 'milestone'   ? linkId : null,
+        measurement_id: linkType === 'measurement' ? linkId : null,
+        payment_id:     linkType === 'payment'     ? linkId : null,
       };
-      if (linkType === 'milestone')   insertPayload.milestone_id = linkId;
-      if (linkType === 'measurement') insertPayload.measurement_id = linkId;
-      if (linkType === 'payment')     insertPayload.payment_id = linkId;
 
       const { error } = await supabase.from('contract_attachments').insert(insertPayload);
       if (error) {
@@ -238,15 +238,13 @@ export const ContractAttachmentsTab: React.FC<Props> = ({
           <div className="flex items-center gap-1 shrink-0">
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openAttachmentSigned(att)} title={isRTL ? 'فتح' : 'Open'}><ExternalLink className="w-3.5 h-3.5" /></Button>
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => downloadAttachmentSigned(att)} title={isRTL ? 'تنزيل' : 'Download'}><Download className="w-3.5 h-3.5" /></Button>
-            {att.user_id_can_delete !== false && (
-              <Button
+            <Button
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8 text-destructive hover:text-destructive"
                 onClick={() => setConfirmDeleteId(att.id)}
                 title={isRTL ? 'حذف' : 'Delete'}
               ><Trash2 className="w-3.5 h-3.5" /></Button>
-            )}
           </div>
         </div>
         {isConfirming && (
@@ -398,11 +396,3 @@ export const ContractAttachmentsTab: React.FC<Props> = ({
     </div>
   );
 };
-
-// Augment AttachmentRow optional flag (RLS will reject illegal deletes anyway).
-declare module '@/lib/contract-attachments' {
-  interface AttachmentRow {
-    user_id_can_delete?: boolean;
-    user_id?: string;
-  }
-}
