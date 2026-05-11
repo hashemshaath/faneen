@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Inbox, Search, Loader2, Mail, Phone, Filter, RefreshCw, Send, Wallet, Calendar, ReceiptText, FileText } from 'lucide-react';
+import { Inbox, Search, Loader2, Mail, Phone, Filter, RefreshCw, Send, Wallet, Calendar, ReceiptText, FileText, FileSignature, CheckCircle2, X } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -47,6 +47,10 @@ interface LeadRow {
   quote_currency: string | null;
   quote_valid_until: string | null;
   quote_note: string | null;
+  converted_contract_id: string | null;
+  converted_at: string | null;
+  converted_by: string | null;
+  user_id: string | null;
 }
 
 const priorityConfig: Record<Priority, { ar: string; en: string; color: string }> = {
@@ -80,6 +84,7 @@ const AdminLeadRequests: React.FC = () => {
   const qc = useQueryClient();
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [search, setSearch] = useState('');
+  const [confirmConvertId, setConfirmConvertId] = useState<string | null>(null);
 
   const { data, isLoading, refetch, isFetching } = useQuery({
     queryKey: ['admin-lead-requests', statusFilter],
@@ -160,6 +165,35 @@ const AdminLeadRequests: React.FC = () => {
       toast.error(e instanceof Error ? e.message : isRTL ? 'فشل التحديث' : 'Failed to update');
     },
   });
+
+  const convertLead = useMutation({
+    mutationFn: async (id: string) => {
+      const { data, error } = await supabase.rpc('admin_convert_lead_to_contract', { _lead_id: id });
+      if (error) throw error;
+      return data as string;
+    },
+    onSuccess: () => {
+      toast.success(isRTL ? 'تم تحويل الطلب إلى عقد مسودة' : 'Lead converted to draft contract');
+      setConfirmConvertId(null);
+      qc.invalidateQueries({ queryKey: ['admin-lead-requests'] });
+    },
+    onError: (e: unknown) => {
+      const raw = e instanceof Error ? e.message : '';
+      const map: Record<string, { ar: string; en: string }> = {
+        forbidden: { ar: 'صلاحيات غير كافية', en: 'Insufficient permissions' },
+        already_converted: { ar: 'تم تحويل هذا الطلب مسبقًا', en: 'Already converted' },
+        invalid_status: { ar: 'لا يمكن التحويل من هذه الحالة', en: 'Status not eligible for conversion' },
+        lead_has_no_registered_user: { ar: 'الطلب غير مرتبط بحساب مسجل', en: 'Lead is not linked to a registered user' },
+        business_has_no_owner: { ar: 'لا يوجد مالك للمنشأة', en: 'Business has no owner' },
+      };
+      const key = Object.keys(map).find(k => raw.includes(k));
+      const msg = key ? (isRTL ? map[key].ar : map[key].en) : (raw || (isRTL ? 'فشل التحويل' : 'Conversion failed'));
+      toast.error(msg);
+    },
+  });
+
+  const isEligible = (r: LeadRow) =>
+    !r.converted_contract_id && (r.status === 'accepted' || r.status === 'quoted') && !!r.user_id;
 
   return (
     <DashboardLayout>
@@ -379,7 +413,55 @@ const AdminLeadRequests: React.FC = () => {
                         </a>
                       </Button>
                     )}
+                    {r.converted_contract_id ? (
+                      <Badge variant="outline" className="bg-success/10 text-success border-success/30">
+                        <FileSignature className="h-3.5 w-3.5 me-1" />
+                        {isRTL ? 'تم التحويل إلى عقد' : 'Converted to contract'}
+                      </Badge>
+                    ) : isEligible(r) && (
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={() => setConfirmConvertId(r.id)}
+                        disabled={convertLead.isPending}
+                        aria-label={isRTL ? 'تحويل إلى عقد' : 'Convert to contract'}
+                      >
+                        <FileSignature className="h-4 w-4" />
+                        {isRTL ? 'تحويل إلى عقد' : 'Convert to contract'}
+                      </Button>
+                    )}
                   </div>
+
+                  {confirmConvertId === r.id && (
+                    <div className="rounded-lg border border-primary/40 bg-primary/5 p-3 space-y-2">
+                      <div className="text-sm font-medium">
+                        {isRTL
+                          ? 'هل تريد إنشاء عقد مسودة من هذا الطلب؟ سيتم ربط العميل والمزود تلقائيًا.'
+                          : 'Create a draft contract from this request? Client and provider will be linked automatically.'}
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          onClick={() => convertLead.mutate(r.id)}
+                          disabled={convertLead.isPending}
+                          aria-label={isRTL ? 'تأكيد التحويل' : 'Confirm conversion'}
+                        >
+                          {convertLead.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                          {isRTL ? 'تأكيد' : 'Confirm'}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setConfirmConvertId(null)}
+                          disabled={convertLead.isPending}
+                          aria-label={isRTL ? 'إلغاء' : 'Cancel'}
+                        >
+                          <X className="h-4 w-4" />
+                          {isRTL ? 'إلغاء' : 'Cancel'}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))}
