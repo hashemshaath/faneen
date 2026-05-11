@@ -35,12 +35,13 @@ export const EmailDlqMonitor: React.FC = () => {
     staleTime: 60_000,
   });
 
-  const { byError, byTemplate, historical, active, rows } = useMemo(() => {
+  const { byError, byTemplate, historical, active, freshNms, rows } = useMemo(() => {
     const list = data ?? [];
     const errorMap = new Map<string, number>();
     const tplMap = new Map<string, number>();
     let activeCount = 0;
     let historicalCount = 0;
+    let freshNmsCount = 0;
     for (const r of list) {
       const k = classifyError(r.error_message);
       errorMap.set(k, (errorMap.get(k) ?? 0) + 1);
@@ -48,12 +49,14 @@ export const EmailDlqMonitor: React.FC = () => {
       tplMap.set(tk, (tplMap.get(tk) ?? 0) + 1);
       const cls = classifyDlqRow(r);
       if (cls.isHistorical) historicalCount++; else activeCount++;
+      if (cls.isFreshNoMatchingSender) freshNmsCount++;
     }
     return {
       byError: [...errorMap.entries()].sort((a, b) => b[1] - a[1]),
       byTemplate: [...tplMap.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6),
       historical: historicalCount,
       active: activeCount,
+      freshNms: freshNmsCount,
       rows: list,
     };
   }, [data]);
@@ -79,6 +82,16 @@ export const EmailDlqMonitor: React.FC = () => {
 
   return (
     <div className="space-y-4">
+      {freshNms > 0 && (
+        <Alert variant="destructive">
+          <AlertTriangle className="size-4" />
+          <AlertDescription className="text-xs">
+            {isRTL
+              ? `رُصد ${freshNms} خطأ no_matching_sender حديث (آخر 48 ساعة). إذا تكرّر، أعد نشر send-transactional-email و auth-email-hook وتأكّد أن SENDER_DOMAIN=${CURRENT_SENDER_DOMAIN}.`
+              : `${freshNms} fresh no_matching_sender error(s) detected in the last 48h. If this recurs, redeploy send-transactional-email and auth-email-hook and verify SENDER_DOMAIN=${CURRENT_SENDER_DOMAIN}.`}
+          </AlertDescription>
+        </Alert>
+      )}
       <div className="grid sm:grid-cols-3 gap-3">
         <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">{isRTL ? 'إجمالي DLQ' : 'Total DLQ'}</p><p className="text-2xl font-bold tech-content">{rows.length}</p></CardContent></Card>
         <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">{isRTL ? 'مشكلة نشطة' : 'Active issue'}</p><p className="text-2xl font-bold tech-content text-destructive">{active}</p></CardContent></Card>
