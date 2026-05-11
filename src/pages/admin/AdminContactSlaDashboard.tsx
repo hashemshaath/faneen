@@ -1,5 +1,10 @@
 import React, { useMemo, useState } from 'react';
-import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
+import { DashboardLayout as RealDashboardLayout } from '@/components/dashboard/DashboardLayout';
+import { useAdminEmbedded } from '@/contexts/AdminTabsContext';
+const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const embedded = useAdminEmbedded();
+  return embedded ? <>{children}</> : <RealDashboardLayout>{children}</RealDashboardLayout>;
+};
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
