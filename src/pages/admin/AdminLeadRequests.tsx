@@ -184,8 +184,8 @@ const AdminLeadRequests: React.FC = () => {
         let providerEmail: string | undefined = business?.email || undefined;
         if (!providerEmail && providerUserId) {
           const { data: prof } = await supabase
-            .from('profiles').select('email, login_email').eq('user_id', providerUserId).maybeSingle();
-          providerEmail = prof?.email || prof?.login_email || undefined;
+            .from('profiles').select('email').eq('user_id', providerUserId).maybeSingle();
+          providerEmail = prof?.email || undefined;
         }
         const sends: Promise<unknown>[] = [];
         if (lead.email) {
