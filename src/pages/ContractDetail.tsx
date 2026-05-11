@@ -17,6 +17,8 @@ import { toast } from '@/hooks/use-toast';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import type { ImportedMeasurement } from '@/lib/contract-pdf-export';
+import { getContractStatusMeta, isContractLockedByStatus } from '@/lib/contract-statuses';
+import { calculateVatBreakdown } from '@/lib/contract-financials';
 import {
   FileText, Shield, Wrench, CheckCircle2, Clock,
   Calendar, DollarSign, AlertTriangle, XCircle, ListChecks, Plus, Send,
@@ -32,16 +34,25 @@ import {
   Star, Share2, Flag, RefreshCw, ArrowUpDown,
 } from 'lucide-react';
 
-/* ─── Status config ─── */
+/* ─── Status config ───
+ * Contract-level statuses are sourced from `@/lib/contract-statuses` (single
+ * source of truth). The extra entries below (pending, in_progress, paid,
+ * overdue, submitted, expired, installed) are NOT contract enum values —
+ * they belong to milestones, payments, and measurements which are rendered
+ * from this same file. They live here for now and will move to
+ * `getSecondaryStatusMeta()` in a future cleanup pass.
+ */
 const statusConfig: Record<string, { icon: React.ElementType; color: string; bg: string; label_ar: string; label_en: string }> = {
-  draft: { icon: FileText, color: 'text-muted-foreground', bg: 'bg-muted text-muted-foreground', label_ar: 'مسودة', label_en: 'Draft' },
-  pending_approval: { icon: Clock, color: 'text-warning', bg: 'bg-warning text-warning dark:bg-warning/30 dark:text-warning', label_ar: 'بانتظار الموافقة', label_en: 'Pending' },
+  // ── Contract statuses (mirrored from contract-statuses.ts) ──
+  ...(Object.fromEntries(
+    ['draft', 'pending_approval', 'active', 'completed', 'cancelled', 'disputed'].map((k) => {
+      const m = getContractStatusMeta(k);
+      return [k, { icon: m.icon, color: m.text, bg: m.badge, label_ar: m.label_ar, label_en: m.label_en }];
+    }),
+  ) as Record<string, { icon: React.ElementType; color: string; bg: string; label_ar: string; label_en: string }>),
+  // ── Secondary statuses (milestones / payments / measurements / amendments) ──
   pending: { icon: Clock, color: 'text-warning', bg: 'bg-warning text-warning dark:bg-warning/30 dark:text-warning', label_ar: 'معلق', label_en: 'Pending' },
-  active: { icon: CheckCircle2, color: 'text-success', bg: 'bg-success text-success dark:bg-success/30 dark:text-success', label_ar: 'نشط', label_en: 'Active' },
   in_progress: { icon: Timer, color: 'text-info', bg: 'bg-info text-info dark:bg-info/30 dark:text-info', label_ar: 'قيد التنفيذ', label_en: 'In Progress' },
-  completed: { icon: Shield, color: 'text-info', bg: 'bg-info text-info dark:bg-info/30 dark:text-info', label_ar: 'مكتمل', label_en: 'Completed' },
-  cancelled: { icon: XCircle, color: 'text-destructive', bg: 'bg-destructive text-destructive dark:bg-destructive/30 dark:text-destructive', label_ar: 'ملغي', label_en: 'Cancelled' },
-  disputed: { icon: AlertTriangle, color: 'text-urgent', bg: 'bg-urgent text-urgent dark:bg-urgent/30 dark:text-urgent', label_ar: 'نزاع', label_en: 'Disputed' },
   paid: { icon: CheckCircle2, color: 'text-success', bg: 'bg-success text-success dark:bg-success/30 dark:text-success', label_ar: 'مسدد', label_en: 'Paid' },
   overdue: { icon: AlertTriangle, color: 'text-destructive', bg: 'bg-destructive text-destructive dark:bg-destructive/30 dark:text-destructive', label_ar: 'متأخر', label_en: 'Overdue' },
   submitted: { icon: Send, color: 'text-warning', bg: 'bg-warning text-warning dark:bg-warning/30 dark:text-warning', label_ar: 'مرسل', label_en: 'Submitted' },
@@ -537,7 +548,7 @@ const ContractDetail = () => {
   const StatusIcon = cfg.icon;
   const isClient = user?.id === contract?.client_id;
   const isProvider = user?.id === contract?.provider_id;
-  const isContractLocked = contract ? ['active', 'completed', 'cancelled'].includes(contract.status) : false;
+  const isContractLocked = contract ? isContractLockedByStatus(contract.status) : false;
   const canAccept = contract && ((isClient && !contract.client_accepted_at) || (isProvider && !contract.provider_accepted_at));
   const formatDate = (d: string | null) => d ? new Date(d).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '-';
 
@@ -546,13 +557,12 @@ const ContractDetail = () => {
   const milestonePaid = milestones?.filter(m => m.status === 'completed').reduce((s, m) => s + Number(m.amount), 0) || 0;
   const progressPct = totalMilestones > 0 ? Math.round((completedMilestones / totalMilestones) * 100) : 0;
   const totalAmount = Number(contract?.total_amount || 0);
-  const vatRate = Number(contract?.vat_rate || 15);
-  const vatInclusive = contract?.vat_inclusive ?? false;
-  const vatAmount = vatInclusive
-    ? (totalAmount * vatRate) / (100 + vatRate)
-    : (totalAmount * vatRate) / 100;
-  const subtotalBeforeVat = vatInclusive ? totalAmount - vatAmount : totalAmount;
-  const grandTotalWithVat = vatInclusive ? totalAmount : totalAmount + vatAmount;
+  const _contractVat = calculateVatBreakdown({ amount: totalAmount, vatRate: contract?.vat_rate, vatInclusive: contract?.vat_inclusive });
+  const vatRate = _contractVat.vatRate;
+  const vatInclusive = _contractVat.vatInclusive;
+  const vatAmount = _contractVat.vatAmount;
+  const subtotalBeforeVat = _contractVat.subtotal;
+  const grandTotalWithVat = _contractVat.total;
   const bizName = business ? (language === 'ar' ? business.name_ar : (business.name_en || business.name_ar)) : '';
 
   const copyContractNumber = () => {
