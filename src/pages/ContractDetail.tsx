@@ -139,10 +139,37 @@ const StatCard = ({ icon: Icon, label, value, sub, accent }: { icon: React.Eleme
   </div>
 );
 
+const mapAmendmentError = (err: unknown, isRTL: boolean): string => {
+  const msg = err instanceof Error ? err.message : String(err ?? '');
+  const arMap: Record<string, string> = {
+    requester_cannot_self_approve: 'لا يمكن للمنشئ الموافقة على طلبه',
+    not_contract_party: 'لست طرفاً في هذا العقد',
+    invalid_status: 'حالة غير صالحة لهذا الإجراء',
+    already_terminal: 'تم إنهاء هذا الطلب مسبقاً',
+    missing_rejection_reason: 'سبب الرفض مطلوب',
+    contract_not_found: 'العقد غير موجود',
+    amendment_not_found: 'طلب التعديل غير موجود',
+  };
+  const enMap: Record<string, string> = {
+    requester_cannot_self_approve: 'Requester cannot approve their own request',
+    not_contract_party: 'You are not a party to this contract',
+    invalid_status: 'Invalid status for this action',
+    already_terminal: 'Request has already been finalized',
+    missing_rejection_reason: 'Rejection reason is required',
+    contract_not_found: 'Contract not found',
+    amendment_not_found: 'Amendment not found',
+  };
+  const map = isRTL ? arMap : enMap;
+  for (const key of Object.keys(map)) if (msg.includes(key)) return map[key];
+  return msg || (isRTL ? 'حدث خطأ غير متوقع' : 'Unexpected error');
+};
+
 const ContractDetail = () => {
+  // C5C: friendly Arabic/English mapping for amendment RPC error codes.
+  // Defined inside component so it can capture isRTL via closure-style call.
   const { id } = useParams<{ id: string }>();
   const { t, language, isRTL } = useLanguage();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
@@ -605,9 +632,50 @@ const ContractDetail = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contract-amendments', id] });
       queryClient.invalidateQueries({ queryKey: ['contract', id] });
+      queryClient.invalidateQueries({ queryKey: ['amendment-audit'] });
       toast({ title: isRTL ? 'تمت الموافقة على الملحق' : 'Amendment approved' });
     },
-    onError: (err: unknown) => toast({ title: err instanceof Error ? err.message : 'Error', variant: 'destructive' }),
+    onError: (err: unknown) => toast({ title: mapAmendmentError(err, isRTL), variant: 'destructive' }),
+  });
+
+  const rejectAmendmentMutation = useMutation({
+    mutationFn: async ({ id: amId, reason }: { id: string; reason: string }) => {
+      const { error } = await supabase.rpc('reject_contract_amendment', { _amendment_id: amId, _reason: reason });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contract-amendments', id] });
+      queryClient.invalidateQueries({ queryKey: ['amendment-audit'] });
+      toast({ title: isRTL ? 'تم رفض طلب التعديل' : 'Amendment rejected' });
+    },
+    onError: (err: unknown) => toast({ title: mapAmendmentError(err, isRTL), variant: 'destructive' }),
+  });
+
+  const cancelAmendmentMutation = useMutation({
+    mutationFn: async (amId: string) => {
+      const { error } = await supabase.rpc('cancel_contract_amendment', { _amendment_id: amId });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contract-amendments', id] });
+      queryClient.invalidateQueries({ queryKey: ['amendment-audit'] });
+      toast({ title: isRTL ? 'تم إلغاء طلب التعديل' : 'Amendment cancelled' });
+    },
+    onError: (err: unknown) => toast({ title: mapAmendmentError(err, isRTL), variant: 'destructive' }),
+  });
+
+  const applyAmendmentMutation = useMutation({
+    mutationFn: async (amId: string) => {
+      const { error } = await supabase.rpc('apply_contract_amendment', { _amendment_id: amId });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contract-amendments', id] });
+      queryClient.invalidateQueries({ queryKey: ['contract', id] });
+      queryClient.invalidateQueries({ queryKey: ['amendment-audit'] });
+      toast({ title: isRTL ? 'تم تطبيق الملحق على العقد' : 'Amendment applied to contract' });
+    },
+    onError: (err: unknown) => toast({ title: mapAmendmentError(err, isRTL), variant: 'destructive' }),
   });
 
   /* ─── Derived ─── */
@@ -2532,8 +2600,16 @@ const ContractDetail = () => {
               isClient={isClient}
               isProvider={isProvider}
               isContractLocked={isContractLocked}
+              currentUserId={user?.id ?? null}
+              isAdmin={isAdmin}
               onApprove={(a) => approveAmendmentMutation.mutate(a)}
               approving={approveAmendmentMutation.isPending}
+              onReject={(amId, reason) => rejectAmendmentMutation.mutate({ id: amId, reason })}
+              rejecting={rejectAmendmentMutation.isPending}
+              onCancel={(amId) => cancelAmendmentMutation.mutate(amId)}
+              cancelling={cancelAmendmentMutation.isPending}
+              onApply={(amId) => applyAmendmentMutation.mutate(amId)}
+              applying={applyAmendmentMutation.isPending}
             />
           </TabsContent>
         </Tabs>
