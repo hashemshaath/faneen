@@ -22,6 +22,7 @@ import { calculateVatBreakdown } from '@/lib/contract-financials';
 import { PaymentScheduleGenerator } from '@/components/contract/PaymentScheduleGenerator';
 import { ContractFinancialCoverage } from '@/components/contract/ContractFinancialCoverage';
 import { SignedAttachmentImage } from '@/components/contract/SignedAttachment';
+import { ContractAttachmentsTab } from '@/components/contract/ContractAttachmentsTab';
 import {
   validateAttachmentFile,
   attachmentErrorMessage,
@@ -2332,86 +2333,18 @@ const ContractDetail = () => {
 
           {/* ── Attachments ── */}
           <TabsContent value="attachments">
-            <div className="flex flex-wrap items-center gap-2 mb-4">
-              <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileUpload} accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" multiple />
-              <Button variant="outline" className="gap-1.5 text-xs" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
-                {uploading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
-                {uploading ? (isRTL ? 'جاري الرفع...' : 'Uploading...') : (isRTL ? 'رفع مرفق' : 'Upload File')}
-              </Button>
-              {attachments && attachments.length > 0 && (
-                <span className="text-[10px] text-muted-foreground font-body ms-auto">
-                  {attachments.length} {isRTL ? 'ملف' : 'files'} — {attachments.filter(a => a.file_type.startsWith('image')).length} {isRTL ? 'صور' : 'images'}, {attachments.filter(a => !a.file_type.startsWith('image')).length} {isRTL ? 'مستندات' : 'docs'}
-                </span>
-              )}
-            </div>
-            {attachments && attachments.length > 0 ? (
-              <div className="space-y-5">
-                {/* Image gallery */}
-                {attachments.filter(a => a.file_type.startsWith('image')).length > 0 && (
-                  <div>
-                    <h3 className="font-heading font-bold text-xs mb-3 flex items-center gap-1.5">
-                      <FileImage className="w-3.5 h-3.5 text-accent" />
-                      {isRTL ? 'معرض الصور' : 'Photo Gallery'} ({attachments.filter(a => a.file_type.startsWith('image')).length})
-                    </h3>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                      {attachments.filter(a => a.file_type.startsWith('image')).map(att => (
-                        <div key={att.id} className="group relative rounded-xl overflow-hidden border border-border bg-muted hover:border-accent/50 hover:shadow-md transition-all">
-                          <div className="aspect-[4/3]">
-                            <SignedAttachmentImage att={att as AttachmentRow} className="w-full h-full object-cover" />
-                          </div>
-                          <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/40 transition-colors flex items-center justify-center gap-2">
-                            <Button variant="secondary" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg" onClick={() => openAttachmentSigned(att as AttachmentRow)}><Eye className="w-4 h-4" /></Button>
-                            <Button variant="secondary" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg" onClick={() => downloadAttachmentSigned(att as AttachmentRow)}><Download className="w-4 h-4" /></Button>
-                          </div>
-                          <div className="p-2 bg-card border-t border-border">
-                            <p className="font-heading font-medium text-[10px] truncate">{att.file_name}</p>
-                            <p className="text-[9px] text-muted-foreground font-body">{formatDate(att.created_at)}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {/* Document list */}
-                {attachments.filter(a => !a.file_type.startsWith('image')).length > 0 && (
-                  <div>
-                    <h3 className="font-heading font-bold text-xs mb-3 flex items-center gap-1.5"><Paperclip className="w-3.5 h-3.5 text-accent" />{isRTL ? 'المستندات والملفات' : 'Documents & Files'} ({attachments.filter(a => !a.file_type.startsWith('image')).length})</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {attachments.filter(a => !a.file_type.startsWith('image')).map(att => {
-                        const linkedMilestone = milestones?.find(m => m.id === att.milestone_id);
-                        const ext = att.file_name.split('.').pop()?.toUpperCase() || 'FILE';
-                        const extColors: Record<string, string> = { PDF: 'bg-destructive text-destructive dark:bg-destructive/30 dark:text-destructive', DOC: 'bg-info text-info dark:bg-info/30 dark:text-info', DOCX: 'bg-info text-info dark:bg-info/30 dark:text-info', XLS: 'bg-success text-success dark:bg-success/30 dark:text-success', XLSX: 'bg-success text-success dark:bg-success/30 dark:text-success' };
-                        return (
-                          <div key={att.id} className="p-3.5 rounded-xl bg-card border border-border flex items-center gap-3 hover:border-accent/30 hover:shadow-sm transition-all group">
-                            <div className={`w-11 h-11 rounded-lg flex items-center justify-center shrink-0 font-heading font-bold text-[10px] ${extColors[ext] || 'bg-muted text-muted-foreground'}`}>
-                              {ext}
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <p className="font-heading font-medium text-xs truncate">{att.file_name}</p>
-                              <div className="flex items-center gap-2 text-[10px] text-muted-foreground font-body mt-0.5">
-                                <span>{formatDate(att.created_at)}</span>
-                                {linkedMilestone && (
-                                  <Badge variant="outline" className="text-[8px] gap-0.5">
-                                    <ListChecks className="w-2.5 h-2.5" />{(language === 'ar' ? linkedMilestone.title_ar : (linkedMilestone.title_en || linkedMilestone.title_ar)).slice(0, 20)}
-                                  </Badge>
-                                )}
-                              </div>
-                            </div>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openAttachmentSigned(att as AttachmentRow)}><ExternalLink className="w-3.5 h-3.5" /></Button>
-                            <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => downloadAttachmentSigned(att as AttachmentRow)}><Download className="w-3.5 h-3.5" /></Button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="text-center py-12 rounded-xl border border-dashed border-border">
-                <Paperclip className="w-10 h-10 mx-auto text-muted-foreground/20 mb-3" />
-                <p className="text-muted-foreground font-body text-sm mb-1">{isRTL ? 'لا توجد مرفقات بعد' : 'No attachments yet'}</p>
-                <p className="text-[10px] text-muted-foreground/60 font-body">{isRTL ? 'ارفع الصور والمستندات المتعلقة بالعقد' : 'Upload photos and documents related to the contract'}</p>
-              </div>
+            {id && user && (
+              <ContractAttachmentsTab
+                contractId={id}
+                userId={user.id}
+                language={language as 'ar' | 'en'}
+                isRTL={isRTL}
+                attachments={(attachments || []) as Parameters<typeof ContractAttachmentsTab>[0]['attachments']}
+                milestones={(milestones || []) as Parameters<typeof ContractAttachmentsTab>[0]['milestones']}
+                measurements={(measurements || []) as Parameters<typeof ContractAttachmentsTab>[0]['measurements']}
+                payments={(installmentPayments || []) as Parameters<typeof ContractAttachmentsTab>[0]['payments']}
+                formatDate={formatDate}
+              />
             )}
           </TabsContent>
 

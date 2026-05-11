@@ -12,12 +12,29 @@ export const ALLOWED_ATTACHMENT_MIME = [
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 ] as const;
 
+export type AttachmentVisibility = 'parties' | 'provider_only' | 'client_only' | 'admin_only';
+
 export type AttachmentRow = {
   id: string;
   file_name: string;
   file_type: string;
   file_url: string;
+  storage_path?: string | null;
+  file_size?: number | null;
+  description?: string | null;
+  visibility?: AttachmentVisibility | string | null;
+  milestone_id?: string | null;
+  measurement_id?: string | null;
+  payment_id?: string | null;
+  amendment_id?: string | null;
+  created_at?: string | null;
 };
+
+/** Resolve the canonical storage path: prefer the stored column, fall back to URL parsing. */
+export function resolveAttachmentPath(att: Pick<AttachmentRow, 'storage_path' | 'file_url'>): string | null {
+  if (att.storage_path && att.storage_path.length > 0) return att.storage_path;
+  return extractStoragePath(att.file_url || '');
+}
 
 /**
  * Try to derive the storage object path from a previously stored URL.
@@ -44,7 +61,7 @@ export function extractStoragePath(url: string, bucket = ATTACHMENT_BUCKET): str
  * Falls back to the stored URL only if path cannot be derived.
  */
 export async function getAttachmentSignedUrl(att: AttachmentRow, expiresInSec = 3600): Promise<string | null> {
-  const path = extractStoragePath(att.file_url);
+  const path = resolveAttachmentPath(att);
   if (!path) return att.file_url || null;
   const { data, error } = await supabase.storage.from(ATTACHMENT_BUCKET).createSignedUrl(path, expiresInSec);
   if (error || !data?.signedUrl) return null;
@@ -76,7 +93,7 @@ export async function downloadAttachment(att: AttachmentRow): Promise<boolean> {
  * Storage failures are non-fatal; the DB row is always removed.
  */
 export async function deleteAttachmentWithStorage(att: AttachmentRow): Promise<{ ok: boolean; storageRemoved: boolean; error?: string }> {
-  const path = extractStoragePath(att.file_url);
+  const path = resolveAttachmentPath(att);
   let storageRemoved = false;
   if (path) {
     const { error: storageErr } = await supabase.storage.from(ATTACHMENT_BUCKET).remove([path]);
@@ -109,5 +126,25 @@ export function attachmentErrorMessage(err: AttachmentValidationError, isRTL: bo
       case 'bad_type': return 'Unsupported file type. Allowed: images, PDF, Word, Excel';
       case 'empty': return 'File is empty or invalid';
     }
+  }
+}
+
+/** Format byte size for display (Arabic/English compatible). */
+export function formatFileSize(bytes: number | null | undefined): string {
+  if (bytes == null || !Number.isFinite(bytes) || bytes <= 0) return '—';
+  const units = ['B', 'KB', 'MB', 'GB'];
+  let i = 0;
+  let n = bytes;
+  while (n >= 1024 && i < units.length - 1) { n /= 1024; i++; }
+  return `${n.toFixed(n >= 10 || i === 0 ? 0 : 1)} ${units[i]}`;
+}
+
+export function visibilityLabel(v: string | null | undefined, isRTL: boolean): string {
+  switch (v) {
+    case 'provider_only': return isRTL ? 'مزوّد فقط' : 'Provider only';
+    case 'client_only':   return isRTL ? 'عميل فقط'   : 'Client only';
+    case 'admin_only':    return isRTL ? 'إدارة فقط'  : 'Admin only';
+    case 'parties':
+    default:              return isRTL ? 'الطرفان'    : 'Both parties';
   }
 }
