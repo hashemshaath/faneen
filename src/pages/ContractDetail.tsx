@@ -2430,41 +2430,16 @@ const ContractDetail = () => {
               </div>
             )}
             {!isContractLocked && <p className="text-center py-4 text-muted-foreground text-xs">{isRTL ? 'العقد لم يُعتمد بعد - يمكنك تعديله مباشرة من الأقسام الأخرى' : 'Contract not yet approved - you can edit it directly'}</p>}
-            {amendments && amendments.length > 0 ? (
-              <div className="space-y-3">
-                {amendments.map((a) => {
-                  const canApprove = a.status === 'pending' && ((isClient && !a.client_approved_at) || (isProvider && !a.provider_approved_at));
-                  const typeLabels: Record<string, string> = { scope_change: isRTL ? 'نطاق العمل' : 'Scope', financial: isRTL ? 'مالي' : 'Financial', extension: isRTL ? 'تمديد' : 'Extension', other: isRTL ? 'أخرى' : 'Other' };
-                  return (
-                    <div key={a.id} className={`p-4 rounded-xl border ${a.status === 'approved' ? 'border-success/50 bg-success/30 dark:border-success/20 dark:bg-success/10' : a.status === 'rejected' ? 'border-destructive/50 bg-destructive/30' : 'border-warning/50 bg-warning/30 dark:border-warning/20 dark:bg-warning/10'}`}>
-                      <div className="flex items-center justify-between gap-2 mb-2">
-                        <h4 className="font-heading font-bold text-sm">{a.title_ar}</h4>
-                        <div className="flex items-center gap-1.5">
-                          <Badge variant="outline" className="text-[9px]">{typeLabels[a.amendment_type] || a.amendment_type}</Badge>
-                          <Badge variant={a.status === 'approved' ? 'default' : a.status === 'rejected' ? 'destructive' : 'secondary'} className="text-[10px]">
-                            {a.status === 'approved' ? (isRTL ? 'معتمد' : 'Approved') : a.status === 'rejected' ? (isRTL ? 'مرفوض' : 'Rejected') : (isRTL ? 'بانتظار الموافقة' : 'Pending')}
-                          </Badge>
-                        </div>
-                      </div>
-                      {a.description_ar && <p className="text-xs text-muted-foreground font-body mb-2">{a.description_ar}</p>}
-                      <div className="flex items-center gap-4 text-[10px] text-muted-foreground font-body">
-                        {a.new_amount && <span className="font-medium">{isRTL ? 'المبلغ الجديد:' : 'New amount:'} <strong className="text-accent">{Number(a.new_amount).toLocaleString()} {contract.currency_code}</strong></span>}
-                        <span>{isRTL ? 'العميل:' : 'Client:'} {a.client_approved_at ? '✅' : '⏳'}</span>
-                        <span>{isRTL ? 'المزود:' : 'Provider:'} {a.provider_approved_at ? '✅' : '⏳'}</span>
-                        <span>{formatDate(a.created_at)}</span>
-                      </div>
-                      {canApprove && (
-                        <Button size="sm" variant="outline" className="h-7 text-[10px] gap-1 mt-3 text-success border-success" onClick={() => approveAmendmentMutation.mutate(a)}>
-                          <CheckCircle2 className="w-3 h-3" />{isRTL ? 'موافقة على الملحق' : 'Approve Amendment'}
-                        </Button>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            ) : isContractLocked ? (
-              <div className="text-center py-8"><FileText className="w-10 h-10 mx-auto text-muted-foreground/20 mb-3" /><p className="text-muted-foreground font-body text-sm">{isRTL ? 'لا توجد ملاحق بعد' : 'No amendments yet'}</p></div>
-            ) : null}
+            <AmendmentHistoryPanel
+              amendments={amendments ?? []}
+              currencyCode={contract.currency_code}
+              isRTL={isRTL}
+              isClient={isClient}
+              isProvider={isProvider}
+              isContractLocked={isContractLocked}
+              onApprove={(a) => approveAmendmentMutation.mutate(a)}
+              approving={approveAmendmentMutation.isPending}
+            />
           </TabsContent>
         </Tabs>
       </div>
