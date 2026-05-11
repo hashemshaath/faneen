@@ -6,7 +6,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Crown, Zap, Star, Building2, ArrowUpRight, Calendar, FileText, Wrench, FolderOpen, MapPin, AlertTriangle, Info } from 'lucide-react';
+import { Crown, Zap, Star, Building2, ArrowUpRight, Calendar, FileText, Wrench, FolderOpen, MapPin, AlertTriangle, Info, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { parseLimits } from '@/lib/membership-limits';
 import { Progress } from '@/components/ui/progress';
@@ -31,17 +31,18 @@ interface Props {
   userId: string;
   businessId?: string | null;
   tier: string;
-  /** Optional usage counts for the current billing period.
-   * When omitted, the card shows limits only with a "coming soon" note. */
-  usage?: {
-    contracts?: number;
-    services?: number;
-    projects?: number;
-    branches?: number;
-  };
 }
 
-export const ProviderMembershipCard: React.FC<Props> = ({ userId, businessId, tier, usage }) => {
+type UsageRow = {
+  metric: string;
+  used: number;
+  limit_value: number;
+  period: string;
+  near_cap: boolean;
+  over_limit: boolean;
+};
+
+export const ProviderMembershipCard: React.FC<Props> = ({ userId, businessId, tier }) => {
   const { isRTL } = useLanguage();
 
   const { data: subscription } = useQuery({
@@ -72,7 +73,27 @@ export const ProviderMembershipCard: React.FC<Props> = ({ userId, businessId, ti
     : null;
   const expiringSoon = daysLeft !== null && daysLeft <= 7;
 
-  const hasUsage = !!usage;
+  // Real usage from server (Phase M3A — read-only, no enforcement)
+  const { data: usageRows } = useQuery({
+    queryKey: ['membership-usage', userId, businessId ?? null],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_membership_usage', {
+        _business_id: businessId ?? undefined,
+        _user_id: userId,
+      });
+      if (error) throw error;
+      return (data ?? []) as UsageRow[];
+    },
+    enabled: !!userId,
+    staleTime: 60 * 1000,
+  });
+
+  const usageMap = React.useMemo(() => {
+    const m = new Map<string, UsageRow>();
+    for (const r of usageRows ?? []) m.set(r.metric, r);
+    return m;
+  }, [usageRows]);
+  const hasUsage = (usageRows?.length ?? 0) > 0;
 
   const fmtLimit = (v: number | boolean): string => {
     if (typeof v === 'boolean') return v ? '✓' : '—';
@@ -82,14 +103,15 @@ export const ProviderMembershipCard: React.FC<Props> = ({ userId, businessId, ti
   type LimitRow = {
     icon: React.ElementType;
     label: string;
-    limit: number;
-    used?: number;
+    metric: string;
+    fallbackLimit: number;
   };
   const keyLimits: LimitRow[] = [
-    { icon: FileText, label: isRTL ? 'العقود' : 'Contracts', limit: Number(limits.max_contracts) || 0, used: usage?.contracts },
-    { icon: Wrench, label: isRTL ? 'الخدمات' : 'Services', limit: Number(limits.max_services) || 0, used: usage?.services },
-    { icon: FolderOpen, label: isRTL ? 'المشاريع' : 'Portfolio', limit: Number(limits.max_projects) || 0, used: usage?.projects },
-    { icon: MapPin, label: isRTL ? 'الفروع' : 'Branches', limit: Number(limits.max_branches) || 0, used: usage?.branches },
+    { icon: FileText, label: isRTL ? 'العقود/الشهر' : 'Contracts/mo', metric: 'contracts', fallbackLimit: Number(limits.max_contracts) || 0 },
+    { icon: Wrench, label: isRTL ? 'الخدمات' : 'Services', metric: 'services', fallbackLimit: Number(limits.max_services) || 0 },
+    { icon: FolderOpen, label: isRTL ? 'المشاريع' : 'Portfolio', metric: 'portfolio', fallbackLimit: Number(limits.max_projects) || 0 },
+    { icon: MapPin, label: isRTL ? 'الفروع' : 'Branches', metric: 'branches', fallbackLimit: Number(limits.max_branches) || 0 },
+    { icon: Users, label: isRTL ? 'الفريق' : 'Staff', metric: 'staff', fallbackLimit: Number(limits.max_staff) || 0 },
   ];
 
   const isFreePlan = planTier === 'free' || !subscription;
@@ -148,16 +170,23 @@ export const ProviderMembershipCard: React.FC<Props> = ({ userId, businessId, ti
           </p>
         )}
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
           {keyLimits.map((item) => {
-            const limitText = fmtLimit(item.limit);
-            const showBar = hasUsage && typeof item.used === 'number' && item.limit > 0;
-            const pct = showBar ? Math.min(100, Math.round((item.used! / item.limit) * 100)) : 0;
-            const nearCap = pct >= 80;
+            const row = usageMap.get(item.metric);
+            const lim = row?.limit_value ?? item.fallbackLimit;
+            const used = row?.used;
+            const limitText = fmtLimit(lim);
+            const showBar = typeof used === 'number' && lim > 0;
+            const pct = showBar ? Math.min(100, Math.round((used / lim) * 100)) : 0;
+            const nearCap = !!row?.near_cap;
+            const overLimit = !!row?.over_limit;
             return (
               <div
                 key={item.label}
-                className="flex flex-col gap-1 px-2.5 py-2 rounded-xl bg-background/60 border border-border/20"
+                className={cn(
+                  'flex flex-col gap-1 px-2.5 py-2 rounded-xl bg-background/60 border',
+                  overLimit ? 'border-destructive/40' : nearCap ? 'border-warning/40' : 'border-border/20',
+                )}
               >
                 <div className="flex items-center gap-2">
                   <div className="w-6 h-6 rounded-lg bg-muted/40 flex items-center justify-center shrink-0">
@@ -165,9 +194,14 @@ export const ProviderMembershipCard: React.FC<Props> = ({ userId, businessId, ti
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-[8px] text-muted-foreground truncate">{item.label}</p>
-                    <p className={cn('text-[11px] font-bold leading-tight tech-content', colors.text)}>
-                      {hasUsage && typeof item.used === 'number'
-                        ? `${item.used} / ${limitText}`
+                    <p
+                      className={cn(
+                        'text-[11px] font-bold leading-tight tech-content',
+                        overLimit ? 'text-destructive' : nearCap ? 'text-warning' : colors.text,
+                      )}
+                    >
+                      {typeof used === 'number'
+                        ? `${used} / ${limitText}`
                         : limitText}
                     </p>
                   </div>
@@ -175,7 +209,11 @@ export const ProviderMembershipCard: React.FC<Props> = ({ userId, businessId, ti
                 {showBar && (
                   <Progress
                     value={pct}
-                    className={cn('h-1', nearCap && '[&>div]:bg-warning')}
+                    className={cn(
+                      'h-1',
+                      overLimit && '[&>div]:bg-destructive',
+                      !overLimit && nearCap && '[&>div]:bg-warning',
+                    )}
                   />
                 )}
               </div>
@@ -183,10 +221,18 @@ export const ProviderMembershipCard: React.FC<Props> = ({ userId, businessId, ti
           })}
         </div>
 
-        {!hasUsage && (
-          <p className="mt-2 text-[10px] text-muted-foreground/80 flex items-center gap-1">
-            <Info className="w-2.5 h-2.5" />
-            {isRTL ? 'تتبّع الاستخدام قريباً' : 'Usage tracking coming soon'}
+        <p className="mt-2 text-[10px] text-muted-foreground/80 flex items-center gap-1">
+          <Info className="w-2.5 h-2.5" />
+          {isRTL
+            ? 'هذه مؤشرات استخدام فقط. لا يتم فرض الحدود تلقائيًا بعد.'
+            : 'Usage indicators only. Limits are not enforced automatically yet.'}
+        </p>
+        {hasUsage && (usageRows ?? []).some((r) => r.over_limit) && (
+          <p className="mt-1 text-[10px] text-destructive flex items-center gap-1">
+            <AlertTriangle className="w-2.5 h-2.5" />
+            {isRTL
+              ? 'تجاوزت الحد في بعض المؤشرات. يمكنك الترقية للحصول على حدود أعلى.'
+              : 'You have exceeded limits on some metrics. Upgrade for higher limits.'}
           </p>
         )}
       </CardContent>
