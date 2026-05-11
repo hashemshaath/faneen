@@ -1140,6 +1140,19 @@ const ContractDetail = () => {
           </div>
         </div>
 
+        {/* ─── Payment Schedule Generator (C3B) ─── */}
+        {contract && (
+          <PaymentScheduleGenerator
+            contractId={contract.id}
+            totalAmount={Number(contract.total_amount) || 0}
+            currency={contract.currency_code || 'SAR'}
+            milestones={(milestones || []).map((m: any) => ({ id: m.id, title_ar: m.title_ar, title_en: m.title_en, status: m.status }))}
+            hasExistingPlan={!!installmentPlans && installmentPlans.length > 0}
+            isProvider={user?.id === contract.provider_id}
+            isLocked={isContractLocked}
+          />
+        )}
+
         {/* ─── Installment Payments ─── */}
         {installmentPlans && installmentPlans.length > 0 && (
           <div className="rounded-xl border border-border bg-card p-4 sm:p-5 mb-5 sm:mb-6">
