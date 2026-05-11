@@ -443,15 +443,73 @@ const ContractDetail = () => {
   /* ─── Measurement CRUD ─── */
   const resetMForm = () => { setMForm({ name_ar: '', piece_number: '', floor_label: 'ground_floor', location_ar: '', length_mm: '', width_mm: '', quantity: '1', unit_price: '', notes: '' }); setEditingMeasurement(null); setShowMeasurementForm(false); };
 
+  type MeasurementPayload = {
+    contract_id: string;
+    name_ar: string;
+    piece_number: string;
+    floor_label: string;
+    location_ar: string;
+    length_mm: number;
+    width_mm: number;
+    quantity: number;
+    unit_price: number;
+    area_sqm: number;
+    total_cost: number;
+    notes: string | null;
+    sort_order: number;
+  };
+
+  const lockedMsg = () => isRTL
+    ? 'لا يمكن تعديل المقاسات بعد قفل العقد.'
+    : 'Measurements cannot be modified after the contract is locked.';
+
+  const safeNum = (v: string | number): number => {
+    const n = typeof v === 'number' ? v : Number(v);
+    return Number.isFinite(n) ? n : NaN;
+  };
+
+  const validateMeasurementNumbers = (m: { length_mm: number; width_mm: number; quantity: number; unit_price: number; }): string | null => {
+    const fields: Array<[string, number, boolean]> = [
+      // [label, value, allowZero]
+      [isRTL ? 'الطول' : 'Length', m.length_mm, false],
+      [isRTL ? 'العرض' : 'Width', m.width_mm, false],
+      [isRTL ? 'الكمية' : 'Quantity', m.quantity, false],
+      [isRTL ? 'سعر الوحدة' : 'Unit price', m.unit_price, true],
+    ];
+    for (const [label, value, allowZero] of fields) {
+      if (!Number.isFinite(value)) return `${label}: ${isRTL ? 'قيمة غير صالحة' : 'invalid value'}`;
+      if (value < 0) return `${label}: ${isRTL ? 'لا يمكن أن تكون سالبة' : 'cannot be negative'}`;
+      if (!allowZero && value <= 0) return `${label}: ${isRTL ? 'يجب أن تكون أكبر من صفر' : 'must be greater than 0'}`;
+    }
+    return null;
+  };
+
+  const recalcContractTotal = async (): Promise<void> => {
+    if (!id) return;
+    const { data: fresh } = await supabase
+      .from('contract_measurements')
+      .select('total_cost')
+      .eq('contract_id', id);
+    const newTotal = (fresh || []).reduce((s, m) => s + (Number(m.total_cost) || 0), 0);
+    await supabase.from('contracts').update({ total_amount: newTotal }).eq('id', id);
+    await queryClient.invalidateQueries({ queryKey: ['contract', id] });
+  };
+
   const addMeasurementMutation = useMutation({
     mutationFn: async () => {
-      const area = (Number(mForm.length_mm) * Number(mForm.width_mm)) / 1000000;
-      const totalCost = Number(mForm.unit_price) * Number(mForm.quantity);
-      const payload: any = {
+      if (isContractLocked) throw new Error(lockedMsg());
+      const length_mm = safeNum(mForm.length_mm);
+      const width_mm = safeNum(mForm.width_mm);
+      const quantity = safeNum(mForm.quantity);
+      const unit_price = safeNum(mForm.unit_price);
+      const vErr = validateMeasurementNumbers({ length_mm, width_mm, quantity, unit_price });
+      if (vErr) throw new Error(vErr);
+      const area = (length_mm * width_mm) / 1_000_000;
+      const totalCost = unit_price * quantity;
+      const payload: MeasurementPayload = {
         contract_id: id!, name_ar: mForm.name_ar, piece_number: mForm.piece_number,
         floor_label: mForm.floor_label, location_ar: mForm.location_ar,
-        length_mm: Number(mForm.length_mm), width_mm: Number(mForm.width_mm),
-        quantity: Number(mForm.quantity), unit_price: Number(mForm.unit_price),
+        length_mm, width_mm, quantity, unit_price,
         area_sqm: area, total_cost: totalCost, notes: mForm.notes || null,
         sort_order: (measurements?.length || 0) + 1,
       };
@@ -467,42 +525,40 @@ const ContractDetail = () => {
       await queryClient.invalidateQueries({ queryKey: ['contract-measurements', id] });
       resetMForm();
       toast({ title: isRTL ? (editingMeasurement ? 'تم تحديث المقاس' : 'تم إضافة المقاس') : (editingMeasurement ? 'Measurement updated' : 'Measurement added') });
-      // Auto-update contract total from measurements
-      setTimeout(() => updateContractTotalFromMeasurements(), 500);
+      await recalcContractTotal();
     },
     onError: (err: Error) => toast({ title: err.message, variant: 'destructive' }),
   });
 
   const deleteMeasurementMutation = useMutation({
     mutationFn: async (measurementId: string) => {
+      if (isContractLocked) throw new Error(lockedMsg());
       const { error } = await supabase.from('contract_measurements').delete().eq('id', measurementId);
       if (error) throw error;
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['contract-measurements', id] });
       toast({ title: isRTL ? 'تم حذف المقاس' : 'Measurement deleted' });
-      setTimeout(() => updateContractTotalFromMeasurements(), 500);
+      await recalcContractTotal();
     },
+    onError: (err: Error) => toast({ title: err.message, variant: 'destructive' }),
   });
 
-  const updateContractTotalFromMeasurements = async () => {
-    const { data: freshMeasurements } = await supabase.from('contract_measurements').select('total_cost').eq('contract_id', id!);
-    if (freshMeasurements && freshMeasurements.length > 0) {
-      const newTotal = freshMeasurements.reduce((s, m) => s + Number(m.total_cost || 0), 0);
-      if (newTotal > 0) {
-        await supabase.from('contracts').update({ total_amount: newTotal }).eq('id', id!);
-        queryClient.invalidateQueries({ queryKey: ['contract', id] });
-      }
+  const startEditMeasurement = (m: {
+    name_ar?: string | null; piece_number?: string | null; floor_label?: string | null;
+    location_ar?: string | null; length_mm?: number | string | null; width_mm?: number | string | null;
+    quantity?: number | string | null; unit_price?: number | string | null; notes?: string | null;
+  } & { id: string }) => {
+    if (isContractLocked) {
+      toast({ title: lockedMsg(), variant: 'destructive' });
+      return;
     }
-  };
-
-  const startEditMeasurement = (m: any) => {
     setMForm({
       name_ar: m.name_ar || '', piece_number: m.piece_number || '', floor_label: m.floor_label || 'ground_floor',
       location_ar: m.location_ar || '', length_mm: String(m.length_mm || ''), width_mm: String(m.width_mm || ''),
       quantity: String(m.quantity || 1), unit_price: String(m.unit_price || ''), notes: m.notes || '',
     });
-    setEditingMeasurement(m);
+    setEditingMeasurement(m as typeof editingMeasurement);
     setShowMeasurementForm(true);
   };
 
