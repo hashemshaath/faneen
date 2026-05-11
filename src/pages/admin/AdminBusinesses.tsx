@@ -826,13 +826,14 @@ const AdminBusinesses = () => {
               </SelectContent>
             </Select>
           </div>
-          {(search || filterStatus !== 'all' || filterTier !== 'all' || filterTranslation !== 'all' || sortBy !== 'recent') && (
+          {(search || filterStatus !== 'all' || filterTier !== 'all' || filterTranslation !== 'all' || filterOrigin !== 'all' || sortBy !== 'recent') && (
             <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/20">
               <span className="text-[11px] text-muted-foreground">{isRTL ? 'النتائج:' : 'Results:'} {filtered.length}</span>
               {search && <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-lg" onClick={() => { setSearchInput(''); updateParam({ q: null }); }}>"{search}" <X className="w-2.5 h-2.5" /></Badge>}
               {filterStatus !== 'all' && <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-lg" onClick={() => setFilterStatus('all')}>{filterStatus} <X className="w-2.5 h-2.5" /></Badge>}
               {filterTier !== 'all' && <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-lg" onClick={() => setFilterTier('all')}>{filterTier} <X className="w-2.5 h-2.5" /></Badge>}
               {filterTranslation !== 'all' && <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-lg" onClick={() => updateParam({ translation: null })}>{filterTranslation} <X className="w-2.5 h-2.5" /></Badge>}
+              {filterOrigin !== 'all' && <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-lg" onClick={() => setFilterOrigin('all')}>{filterOrigin === 'demo' ? (isRTL ? 'تجريبي' : 'Demo') : (isRTL ? 'إنتاج' : 'Production')} <X className="w-2.5 h-2.5" /></Badge>}
               {sortBy !== 'recent' && <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer rounded-lg" onClick={() => setSortBy('recent')}>{sortBy} <X className="w-2.5 h-2.5" /></Badge>}
               <button className="text-[10px] text-primary hover:underline ms-auto"
                 onClick={() => { setSearchInput(''); setSearchParams(new URLSearchParams(), { replace: false }); }}>
