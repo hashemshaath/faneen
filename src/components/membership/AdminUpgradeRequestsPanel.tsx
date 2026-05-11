@@ -24,7 +24,7 @@ type UpgradeRequest = {
   reviewed_at: string | null;
   created_at: string;
   business?: { name_ar: string | null; name_en: string | null } | null;
-  profile?: { full_name: string | null; ref_id: string | null } | null;
+  profile?: { full_name: string | null; ref_id: string | null; email: string | null } | null;
 };
 
 const statusBadge: Record<string, string> = {
@@ -45,7 +45,7 @@ export function AdminUpgradeRequestsPanel({ isRTL }: { isRTL: boolean }) {
     queryFn: async () => {
       let q = supabase
         .from('membership_upgrade_requests')
-        .select('*, business:businesses(name_ar, name_en), profile:profiles!membership_upgrade_requests_user_id_fkey(full_name, ref_id)')
+        .select('*, business:businesses(name_ar, name_en), profile:profiles!membership_upgrade_requests_user_id_fkey(full_name, ref_id, email)')
         .order('created_at', { ascending: false })
         .limit(200);
       if (filter === 'pending') q = q.eq('status', 'pending');
@@ -83,6 +83,37 @@ export function AdminUpgradeRequestsPanel({ isRTL }: { isRTL: boolean }) {
         })
         .eq('id', req.id);
       if (updErr) throw updErr;
+      // Best-effort: in-app notification + provider email. Never blocks approval.
+      const businessName = req.business?.name_ar || req.business?.name_en || undefined;
+      try {
+        await supabase.from('notifications').insert({
+          user_id: req.user_id,
+          title_ar: 'تمت الموافقة على ترقية باقتك',
+          title_en: 'Your upgrade has been approved',
+          body_ar: 'تم تفعيل الباقة الجديدة على حسابك.',
+          body_en: 'Your new plan is now active on your account.',
+          notification_type: 'system',
+          reference_type: 'membership_upgrade_approved',
+          reference_id: req.id,
+          action_url: '/dashboard',
+        });
+      } catch (err) { console.warn('[AdminUpgrade] notification failed', err); }
+      if (req.profile?.email) {
+        try {
+          await supabase.functions.invoke('send-transactional-email', {
+            body: {
+              templateName: 'membership-upgrade-request-approved',
+              recipientEmail: req.profile.email,
+              idempotencyKey: `membership-upgrade-approved-${req.id}`,
+              templateData: {
+                recipientName: req.profile.full_name ?? undefined,
+                businessName,
+                approvedTier: req.requested_tier,
+              },
+            },
+          });
+        } catch (err) { console.warn('[AdminUpgrade] approve email failed', err); }
+      }
     },
     onSuccess: () => {
       toast.success(isRTL ? 'تمت الموافقة وتفعيل الباقة' : 'Approved and activated');
@@ -104,6 +135,36 @@ export function AdminUpgradeRequestsPanel({ isRTL }: { isRTL: boolean }) {
         })
         .eq('id', req.id);
       if (error) throw error;
+      const businessName = req.business?.name_ar || req.business?.name_en || undefined;
+      try {
+        await supabase.from('notifications').insert({
+          user_id: req.user_id,
+          title_ar: 'تحديث بخصوص طلب ترقية الباقة',
+          title_en: 'Update on your upgrade request',
+          body_ar: 'لم يتم اعتماد طلب ترقية الباقة حالياً. يمكنك التواصل مع فريق قِطاعات لمزيد من التفاصيل.',
+          body_en: 'Your upgrade request was not approved at this time. Please contact the Qitaat team for more details.',
+          notification_type: 'system',
+          reference_type: 'membership_upgrade_rejected',
+          reference_id: req.id,
+          action_url: '/membership',
+        });
+      } catch (err) { console.warn('[AdminUpgrade] notification failed', err); }
+      if (req.profile?.email) {
+        try {
+          await supabase.functions.invoke('send-transactional-email', {
+            body: {
+              templateName: 'membership-upgrade-request-rejected',
+              recipientEmail: req.profile.email,
+              idempotencyKey: `membership-upgrade-rejected-${req.id}`,
+              templateData: {
+                recipientName: req.profile.full_name ?? undefined,
+                businessName,
+                requestedTier: req.requested_tier,
+              },
+            },
+          });
+        } catch (err) { console.warn('[AdminUpgrade] reject email failed', err); }
+      }
     },
     onSuccess: () => {
       toast.success(isRTL ? 'تم رفض الطلب' : 'Request rejected');
