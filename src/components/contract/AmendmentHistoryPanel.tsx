@@ -37,10 +37,13 @@ const ACTION_META: Record<string, { ar: string; en: string; Icon: typeof CheckCi
 };
 
 const TYPE_LABEL: Record<string, { ar: string; en: string }> = {
-  scope_change: { ar: 'نطاق العمل', en: 'Scope' },
-  financial:    { ar: 'مالي',        en: 'Financial' },
-  extension:    { ar: 'تمديد',       en: 'Extension' },
-  other:        { ar: 'أخرى',        en: 'Other' },
+  scope_change:        { ar: 'نطاق العمل',        en: 'Scope' },
+  amount_change:       { ar: 'قيمة العقد',         en: 'Amount' },
+  date_change:         { ar: 'تاريخ الانتهاء',     en: 'End date' },
+  measurement_change:  { ar: 'المقاسات',           en: 'Measurements' },
+  financial:           { ar: 'مالي',                en: 'Financial' },
+  extension:           { ar: 'تمديد',               en: 'Extension' },
+  other:               { ar: 'أخرى',                en: 'Other' },
 };
 
 const fmt = (d: string | null | undefined, isRTL: boolean) =>
