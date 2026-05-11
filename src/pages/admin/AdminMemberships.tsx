@@ -22,7 +22,7 @@ import {
   Crown, Pencil, Loader2, Users, CreditCard, X, Check, Save,
   Zap, Building2, AlertTriangle, Clock, Ban,
   RefreshCw, BarChart3, Search, UserCheck, CalendarDays, DollarSign, Shield, ArrowUpCircle,
-  Download, Hash, Activity, Layers, Settings2, Megaphone, Eye, Sparkles,
+  Download, Hash, Activity, Layers, Settings2, Eye, Sparkles, Plus, Lock,
 } from 'lucide-react';
 import { TIERS, tierIcons, tierColors, statusConfig } from '@/lib/membership-tiers';
 import { LIMIT_FIELDS, LIMIT_CATEGORIES, parseLimits, limitsToJson } from '@/lib/membership-limits';
