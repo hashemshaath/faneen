@@ -498,6 +498,7 @@ export type Database = {
           created_at: string
           end_time: string
           id: string
+          is_demo: boolean
           notes: string | null
           ref_id: string
           start_time: string
@@ -515,6 +516,7 @@ export type Database = {
           created_at?: string
           end_time: string
           id?: string
+          is_demo?: boolean
           notes?: string | null
           ref_id?: string
           start_time: string
@@ -532,6 +534,7 @@ export type Database = {
           created_at?: string
           end_time?: string
           id?: string
+          is_demo?: boolean
           notes?: string | null
           ref_id?: string
           start_time?: string
@@ -682,6 +685,7 @@ export type Database = {
           email: string | null
           id: string
           is_active: boolean
+          is_demo: boolean
           is_main: boolean
           latitude: number | null
           longitude: number | null
@@ -711,6 +715,7 @@ export type Database = {
           email?: string | null
           id?: string
           is_active?: boolean
+          is_demo?: boolean
           is_main?: boolean
           latitude?: number | null
           longitude?: number | null
@@ -740,6 +745,7 @@ export type Database = {
           email?: string | null
           id?: string
           is_active?: boolean
+          is_demo?: boolean
           is_main?: boolean
           latitude?: number | null
           longitude?: number | null
@@ -852,6 +858,7 @@ export type Database = {
           description_en: string | null
           id: string
           is_active: boolean
+          is_demo: boolean
           name_ar: string
           name_en: string | null
           price_from: number | null
@@ -866,6 +873,7 @@ export type Database = {
           description_en?: string | null
           id?: string
           is_active?: boolean
+          is_demo?: boolean
           name_ar: string
           name_en?: string | null
           price_from?: number | null
@@ -880,6 +888,7 @@ export type Database = {
           description_en?: string | null
           id?: string
           is_active?: boolean
+          is_demo?: boolean
           name_ar?: string
           name_en?: string | null
           price_from?: number | null
@@ -972,6 +981,7 @@ export type Database = {
           email: string | null
           id: string
           is_active: boolean
+          is_demo: boolean
           is_verified: boolean
           latitude: number | null
           logo_url: string | null
@@ -1022,6 +1032,7 @@ export type Database = {
           email?: string | null
           id?: string
           is_active?: boolean
+          is_demo?: boolean
           is_verified?: boolean
           latitude?: number | null
           logo_url?: string | null
@@ -1072,6 +1083,7 @@ export type Database = {
           email?: string | null
           id?: string
           is_active?: boolean
+          is_demo?: boolean
           is_verified?: boolean
           latitude?: number | null
           logo_url?: string | null
@@ -1964,6 +1976,7 @@ export type Database = {
           description_en: string | null
           end_date: string | null
           id: string
+          is_demo: boolean
           provider_accepted_at: string | null
           provider_id: string
           start_date: string | null
@@ -1994,6 +2007,7 @@ export type Database = {
           description_en?: string | null
           end_date?: string | null
           id?: string
+          is_demo?: boolean
           provider_accepted_at?: string | null
           provider_id: string
           start_date?: string | null
@@ -2024,6 +2038,7 @@ export type Database = {
           description_en?: string | null
           end_date?: string | null
           id?: string
+          is_demo?: boolean
           provider_accepted_at?: string | null
           provider_id?: string
           start_date?: string | null
@@ -2105,6 +2120,7 @@ export type Database = {
           id: string
           is_archived_by_p1: boolean
           is_archived_by_p2: boolean
+          is_demo: boolean
           is_group: boolean
           is_pinned_by_p1: boolean
           is_pinned_by_p2: boolean
@@ -2124,6 +2140,7 @@ export type Database = {
           id?: string
           is_archived_by_p1?: boolean
           is_archived_by_p2?: boolean
+          is_demo?: boolean
           is_group?: boolean
           is_pinned_by_p1?: boolean
           is_pinned_by_p2?: boolean
@@ -2143,6 +2160,7 @@ export type Database = {
           id?: string
           is_archived_by_p1?: boolean
           is_archived_by_p2?: boolean
+          is_demo?: boolean
           is_group?: boolean
           is_pinned_by_p1?: boolean
           is_pinned_by_p2?: boolean
@@ -2589,6 +2607,7 @@ export type Database = {
           email: string
           id: string
           internal_notes: string | null
+          is_demo: boolean
           message: string
           name: string
           needs_info_at: string | null
@@ -2627,6 +2646,7 @@ export type Database = {
           email: string
           id?: string
           internal_notes?: string | null
+          is_demo?: boolean
           message: string
           name: string
           needs_info_at?: string | null
@@ -2665,6 +2685,7 @@ export type Database = {
           email?: string
           id?: string
           internal_notes?: string | null
+          is_demo?: boolean
           message?: string
           name?: string
           needs_info_at?: string | null
@@ -2857,6 +2878,7 @@ export type Database = {
           expires_at: string | null
           external_subscription_id: string | null
           id: string
+          is_demo: boolean
           payment_method: string | null
           plan_id: string
           ref_id: string
@@ -2873,6 +2895,7 @@ export type Database = {
           expires_at?: string | null
           external_subscription_id?: string | null
           id?: string
+          is_demo?: boolean
           payment_method?: string | null
           plan_id: string
           ref_id?: string
@@ -2889,6 +2912,7 @@ export type Database = {
           expires_at?: string | null
           external_subscription_id?: string | null
           id?: string
+          is_demo?: boolean
           payment_method?: string | null
           plan_id?: string
           ref_id?: string
@@ -2929,6 +2953,7 @@ export type Database = {
           created_at: string
           current_tier: string | null
           id: string
+          is_demo: boolean
           note: string | null
           requested_plan_id: string | null
           requested_tier: string
@@ -2945,6 +2970,7 @@ export type Database = {
           created_at?: string
           current_tier?: string | null
           id?: string
+          is_demo?: boolean
           note?: string | null
           requested_plan_id?: string | null
           requested_tier: string
@@ -2961,6 +2987,7 @@ export type Database = {
           created_at?: string
           current_tier?: string | null
           id?: string
+          is_demo?: boolean
           note?: string | null
           requested_plan_id?: string | null
           requested_tier?: string
@@ -3059,6 +3086,7 @@ export type Database = {
           created_at: string
           delivered_at: string | null
           id: string
+          is_demo: boolean
           is_read: boolean
           message_type: string
           read_at: string | null
@@ -3071,6 +3099,7 @@ export type Database = {
           created_at?: string
           delivered_at?: string | null
           id?: string
+          is_demo?: boolean
           is_read?: boolean
           message_type?: string
           read_at?: string | null
@@ -3083,6 +3112,7 @@ export type Database = {
           created_at?: string
           delivered_at?: string | null
           id?: string
+          is_demo?: boolean
           is_read?: boolean
           message_type?: string
           read_at?: string | null
@@ -3285,6 +3315,7 @@ export type Database = {
           body_en: string | null
           created_at: string
           id: string
+          is_demo: boolean
           is_read: boolean
           notification_type: string
           reference_id: string | null
@@ -3299,6 +3330,7 @@ export type Database = {
           body_en?: string | null
           created_at?: string
           id?: string
+          is_demo?: boolean
           is_read?: boolean
           notification_type?: string
           reference_id?: string | null
@@ -3313,6 +3345,7 @@ export type Database = {
           body_en?: string | null
           created_at?: string
           id?: string
+          is_demo?: boolean
           is_read?: boolean
           notification_type?: string
           reference_id?: string | null
@@ -3548,6 +3581,7 @@ export type Database = {
           description_ar: string | null
           description_en: string | null
           id: string
+          is_demo: boolean
           is_featured: boolean
           media_type: string
           media_url: string
@@ -3564,6 +3598,7 @@ export type Database = {
           description_ar?: string | null
           description_en?: string | null
           id?: string
+          is_demo?: boolean
           is_featured?: boolean
           media_type?: string
           media_url: string
@@ -3580,6 +3615,7 @@ export type Database = {
           description_ar?: string | null
           description_en?: string | null
           id?: string
+          is_demo?: boolean
           is_featured?: boolean
           media_type?: string
           media_url?: string
@@ -4042,6 +4078,7 @@ export type Database = {
           description_en: string | null
           duration_days: number | null
           id: string
+          is_demo: boolean
           is_featured: boolean
           project_cost: number | null
           ref_id: string | null
@@ -4067,6 +4104,7 @@ export type Database = {
           description_en?: string | null
           duration_days?: number | null
           id?: string
+          is_demo?: boolean
           is_featured?: boolean
           project_cost?: number | null
           ref_id?: string | null
@@ -4092,6 +4130,7 @@ export type Database = {
           description_en?: string | null
           duration_days?: number | null
           id?: string
+          is_demo?: boolean
           is_featured?: boolean
           project_cost?: number | null
           ref_id?: string | null
@@ -4148,6 +4187,7 @@ export type Database = {
           id: string
           image_url: string | null
           is_active: boolean
+          is_demo: boolean
           offer_price: number | null
           original_price: number | null
           promotion_type: Database["public"]["Enums"]["promotion_type"]
@@ -4172,6 +4212,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean
+          is_demo?: boolean
           offer_price?: number | null
           original_price?: number | null
           promotion_type?: Database["public"]["Enums"]["promotion_type"]
@@ -4196,6 +4237,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean
+          is_demo?: boolean
           offer_price?: number | null
           original_price?: number | null
           promotion_type?: Database["public"]["Enums"]["promotion_type"]
@@ -4660,6 +4702,7 @@ export type Database = {
           content: string | null
           created_at: string
           id: string
+          is_demo: boolean
           is_verified: boolean
           project_id: string | null
           rating: number
@@ -4672,6 +4715,7 @@ export type Database = {
           content?: string | null
           created_at?: string
           id?: string
+          is_demo?: boolean
           is_verified?: boolean
           project_id?: string | null
           rating: number
@@ -4684,6 +4728,7 @@ export type Database = {
           content?: string | null
           created_at?: string
           id?: string
+          is_demo?: boolean
           is_verified?: boolean
           project_id?: string | null
           rating?: number
