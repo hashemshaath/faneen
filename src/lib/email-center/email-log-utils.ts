@@ -43,6 +43,24 @@ export function recipientDomain(email: string | null | undefined): string {
   return email.split('@')[1].toLowerCase();
 }
 
+/** Bucket a recipient email into a coarse provider/domain group (no PII). */
+export function recipientDomainBucket(email: string | null | undefined): string {
+  const d = recipientDomain(email);
+  if (d === '—') return 'unknown';
+  if (d === 'gmail.com' || d.endsWith('.gmail.com')) return 'gmail.com';
+  if (
+    d === 'outlook.com' || d === 'hotmail.com' || d === 'live.com' ||
+    d === 'msn.com' || d.endsWith('.outlook.com')
+  ) return 'outlook/hotmail';
+  if (d === 'yahoo.com' || d.endsWith('.yahoo.com')) return 'yahoo.com';
+  if (d === 'icloud.com' || d === 'me.com' || d === 'mac.com') return 'icloud.com';
+  if (d.endsWith('.qitaat.com') || d === 'qitaat.com') return 'qitaat.com';
+  if (d.endsWith('.sa')) return 'corporate (.sa)';
+  if (d.endsWith('.gov') || d.endsWith('.gov.sa')) return 'government';
+  if (d.endsWith('.edu') || d.endsWith('.edu.sa')) return 'education';
+  return 'other corporate';
+}
+
 export const STATUS_TONE: Record<string, string> = {
   sent: 'bg-success/10 text-success border-success/30',
   pending: 'bg-info/10 text-info border-info/30',
