@@ -32,6 +32,7 @@ export type QitaatEvent =
   | "compare_start"
   | "compare_profile_added"
   | "membership_plan_click"
+  | "membership_plan_view"
   | "outbound_click"
   // Communication & onboarding (no PII)
   | "signup_started"
