@@ -56,7 +56,8 @@ export const ContractAttachmentsTab: React.FC<Props> = ({
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [description, setDescription] = useState('');
-  const [visibility, setVisibility] = useState<AttachmentVisibility>('parties');
+  // C4B.2 Safety Patch: visibility is forced to 'parties' on insert until RLS is added.
+  const [visibility] = useState<AttachmentVisibility>('parties');
   const [linkType, setLinkType] = useState<LinkType>('contract');
   const [linkId, setLinkId] = useState<string>('');
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
@@ -64,7 +65,6 @@ export const ContractAttachmentsTab: React.FC<Props> = ({
   const resetForm = () => {
     setPendingFile(null);
     setDescription('');
-    setVisibility('parties');
     setLinkType('contract');
     setLinkId('');
     setProgress(0);
@@ -229,7 +229,15 @@ export const ContractAttachmentsTab: React.FC<Props> = ({
             </div>
             <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
               {linkedChip(att)}
-              <Badge variant="outline" className="text-[8px] gap-0.5">
+              <Badge
+                variant="outline"
+                className="text-[8px] gap-0.5"
+                title={
+                  att.visibility && att.visibility !== 'parties'
+                    ? (isRTL ? 'لم يتم تفعيل قيود العرض المتقدمة بعد.' : 'Advanced visibility restrictions are not enforced yet.')
+                    : undefined
+                }
+              >
                 <ShieldCheck className="w-2.5 h-2.5" />{visibilityLabel(att.visibility, isRTL)}
               </Badge>
             </div>
