@@ -327,3 +327,184 @@ export function generatePaymentSchedule(input: {
 
   return out;
 }
+
+/* ── Contract financial coverage (C3C) ────────────────────────────────
+ *
+ * Read-only aggregate validator. Pure function — no DB writes, no status
+ * mutation, no side effects. Used by ContractFinancialCoverage to render
+ * the inline validation summary near the payment schedule.
+ *
+ * All numeric fields are guaranteed non-NaN and rounded to 2 decimals.
+ */
+
+export interface PaymentLike {
+  amount?: number | string | null;
+  status?: string | null;
+  milestone_id?: string | null;
+}
+
+export type CoverageState =
+  | 'no_schedule'        // No installment plan / payments at all
+  | 'matched'            // Sum equals contract total within tolerance
+  | 'under'              // Sum < contract total
+  | 'over';              // Sum > contract total
+
+export interface ContractCoverage {
+  // Money
+  contractTotal: number;
+  subtotal: number;
+  vatAmount: number;
+  vatRate: number;
+  vatInclusive: boolean;
+
+  // Payments
+  paymentsTotal: number;
+  paidAmount: number;
+  pendingAmount: number;
+  remainingBalance: number;       // contractTotal - paidAmount, never negative
+  paymentsCount: number;
+  paidCount: number;
+
+  // Milestones
+  milestonesTotal: number;
+  milestonesCount: number;
+  milestonesHaveAmounts: boolean; // any milestone with amount > 0
+
+  // Coverage
+  paymentsCoverageDifference: number;   // paymentsTotal - contractTotal (signed)
+  milestonesCoverageDifference: number; // milestonesTotal - contractTotal (signed)
+  paymentsState: CoverageState;
+  milestonesCoverState: CoverageState;
+  paymentsCoverContract: boolean;
+  milestonesCoverContract: boolean;
+
+  // Linking
+  unlinkedPaymentsCount: number;        // payments with milestone_id null
+  milestonesWithoutPaymentsCount: number;
+  hasLinkingGaps: boolean;
+
+  // VAT consistency
+  vatBreakdownConsistent: boolean;      // subtotal+vat == contract total within tolerance
+
+  tolerance: number;
+  currency: string;
+}
+
+function classifyCoverage(actual: number, expected: number, tolerance: number): CoverageState {
+  if (expected <= 0 && actual <= 0) return 'no_schedule';
+  const diff = actual - expected;
+  if (Math.abs(diff) <= tolerance) return 'matched';
+  return diff < 0 ? 'under' : 'over';
+}
+
+export function calculateContractCoverage(input: {
+  contract: {
+    total_amount?: number | string | null;
+    vat_rate?: number | string | null;
+    vat_inclusive?: boolean | null;
+    currency_code?: string | null;
+  } | null | undefined;
+  payments?: PaymentLike[] | null;
+  milestones?: MilestoneLike[] | null;
+  tolerance?: number;
+}): ContractCoverage {
+  const tolerance = input.tolerance ?? 0.01;
+  const currency = (input.contract?.currency_code || 'SAR').toUpperCase();
+
+  const contractTotal = round2(clampNonNeg(safeNum(input.contract?.total_amount)));
+  const vat = calculateVatBreakdown({
+    amount: contractTotal,
+    vatRate: input.contract?.vat_rate,
+    vatInclusive: input.contract?.vat_inclusive,
+  });
+
+  const payments = Array.isArray(input.payments) ? input.payments : [];
+  const milestones = Array.isArray(input.milestones) ? input.milestones : [];
+
+  let paymentsTotal = 0;
+  let paidAmount = 0;
+  let pendingAmount = 0;
+  let paidCount = 0;
+  let unlinkedPaymentsCount = 0;
+  for (const p of payments) {
+    const amt = clampNonNeg(safeNum(p.amount));
+    paymentsTotal += amt;
+    if (p.status === 'paid') {
+      paidAmount += amt;
+      paidCount += 1;
+    } else {
+      pendingAmount += amt;
+    }
+    if (!p.milestone_id) unlinkedPaymentsCount += 1;
+  }
+  paymentsTotal = round2(paymentsTotal);
+  paidAmount = round2(paidAmount);
+  pendingAmount = round2(pendingAmount);
+
+  const milestonesTotal = calculateMilestoneTotal(milestones);
+  const milestonesHaveAmounts = milestones.some((m) => safeNum(m.amount) > 0);
+
+  // Linking — milestones with at least one payment referencing them
+  const linkedMilestoneIds = new Set<string>();
+  for (const p of payments) {
+    const mid = (p as { milestone_id?: string | null }).milestone_id;
+    if (mid) linkedMilestoneIds.add(mid);
+  }
+  let milestonesWithoutPaymentsCount = 0;
+  for (const m of milestones as Array<MilestoneLike & { id?: string }>) {
+    if (m.id && !linkedMilestoneIds.has(m.id)) milestonesWithoutPaymentsCount += 1;
+  }
+
+  const paymentsState: CoverageState =
+    payments.length === 0 ? 'no_schedule' : classifyCoverage(paymentsTotal, contractTotal, tolerance);
+  const milestonesCoverState: CoverageState =
+    !milestonesHaveAmounts || milestones.length === 0
+      ? 'no_schedule'
+      : classifyCoverage(milestonesTotal, contractTotal, tolerance);
+
+  const remainingBalance = round2(clampNonNeg(contractTotal - paidAmount));
+  const paymentsCoverageDifference = round2(paymentsTotal - contractTotal);
+  const milestonesCoverageDifference = round2(milestonesTotal - contractTotal);
+
+  // VAT consistency: subtotal + vat should equal grand total (always true by construction
+  // for our helper, but flag malformed inputs e.g. negative VAT rate or NaN-sourced).
+  const vatBreakdownConsistent =
+    Math.abs(vat.subtotal + vat.vatAmount - vat.total) <= tolerance && vat.vatRate >= 0;
+
+  return {
+    contractTotal,
+    subtotal: vat.subtotal,
+    vatAmount: vat.vatAmount,
+    vatRate: vat.vatRate,
+    vatInclusive: vat.vatInclusive,
+
+    paymentsTotal,
+    paidAmount,
+    pendingAmount,
+    remainingBalance,
+    paymentsCount: payments.length,
+    paidCount,
+
+    milestonesTotal,
+    milestonesCount: milestones.length,
+    milestonesHaveAmounts,
+
+    paymentsCoverageDifference,
+    milestonesCoverageDifference,
+    paymentsState,
+    milestonesCoverState,
+    paymentsCoverContract: paymentsState === 'matched',
+    milestonesCoverContract: milestonesCoverState === 'matched',
+
+    unlinkedPaymentsCount,
+    milestonesWithoutPaymentsCount,
+    hasLinkingGaps:
+      payments.length > 0 &&
+      milestones.length > 0 &&
+      (unlinkedPaymentsCount > 0 || milestonesWithoutPaymentsCount > 0),
+
+    vatBreakdownConsistent,
+    tolerance,
+    currency,
+  };
+}
