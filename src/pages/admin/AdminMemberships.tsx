@@ -522,6 +522,22 @@ const AdminMemberships = () => {
     enabled: activeTab === 'businesses',
   });
 
+  /* ─── M3A: Admin usage report (over-limit & near-cap) ─── */
+  const [usageOnlyFlagged, setUsageOnlyFlagged] = useState(true);
+  const { data: usageReport = [], isLoading: loadingUsage } = useQuery({
+    queryKey: ['admin-membership-usage', usageOnlyFlagged],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('admin_list_membership_usage', {
+        _only_over_or_near: usageOnlyFlagged,
+        _limit: 500,
+      });
+      if (error) throw error;
+      return (data ?? []) as UsageReportRow[];
+    },
+    enabled: activeTab === 'usage' && isAdmin,
+    staleTime: 60 * 1000,
+  });
+
   /* ─── Enriched subscriptions ─── */
   const enrichedSubs = useMemo(() => {
     const profileMap = new Map(profiles.map((p) => [p.user_id, p]));
