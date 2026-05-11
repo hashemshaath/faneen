@@ -24,10 +24,7 @@ import { ContractFinancialCoverage } from '@/components/contract/ContractFinanci
 import { SignedAttachmentImage } from '@/components/contract/SignedAttachment';
 import { ContractAttachmentsTab } from '@/components/contract/ContractAttachmentsTab';
 import {
-  validateAttachmentFile,
-  attachmentErrorMessage,
   openAttachment as openAttachmentSigned,
-  downloadAttachment as downloadAttachmentSigned,
   type AttachmentRow,
 } from '@/lib/contract-attachments';
 import {
