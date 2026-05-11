@@ -32,6 +32,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useNoIndex } from "@/hooks/useNoIndex";
+import { MembershipUsageWarning } from '@/components/membership/MembershipUsageWarning';
 
 interface PortfolioItem {
   id: string; business_id: string; title_ar: string; title_en: string | null;
