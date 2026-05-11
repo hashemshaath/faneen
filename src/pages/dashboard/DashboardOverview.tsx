@@ -31,6 +31,7 @@ import { cn } from '@/lib/utils';
 import { tierIcons } from '@/lib/membership-tiers';
 import { ProviderReadinessCard } from '@/components/dashboard/ProviderReadinessCard';
 import { ProviderMembershipCard } from '@/components/dashboard/ProviderMembershipCard';
+import { ProviderCompletionSummary } from '@/components/dashboard/ProviderCompletionSummary';
 import { useNoIndex } from "@/hooks/useNoIndex";
 import { maskEmail } from '@/lib/masking';
 
@@ -823,6 +824,9 @@ const ProviderDashboardView = React.memo(({ isRTL, user, profile }: { isRTL: boo
         </div>
       </div>
 
+      {/* Profile completion hero summary (P3) */}
+      <ProviderCompletionSummary />
+
       {/* Widgets row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <OverdueAlerts isRTL={isRTL} userId={user.id} />
@@ -837,7 +841,9 @@ const ProviderDashboardView = React.memo(({ isRTL, user, profile }: { isRTL: boo
       />
 
       {/* Provider readiness — approval status, completion %, missing fields */}
-      <ProviderReadinessCard />
+      <div id="provider-readiness" className="scroll-mt-24">
+        <ProviderReadinessCard />
+      </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
