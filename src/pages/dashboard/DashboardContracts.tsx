@@ -39,6 +39,8 @@ import {
 } from '@/components/ui/alert-dialog';
 import type { ContractExportData } from '@/lib/contract-pdf-export';
 import type { Database } from '@/integrations/supabase/types';
+import { getContractStatusMeta, isContractLockedByStatus } from '@/lib/contract-statuses';
+import { calculateVatBreakdown, calculateLineItemsTotal, calculateMeasurementsTotal } from '@/lib/contract-financials';
 
 type ContractRow = Database['public']['Tables']['contracts']['Row'];
 type MilestoneRow = Database['public']['Tables']['contract_milestones']['Row'];
@@ -65,15 +67,15 @@ const templateCategoryConfig: Record<string, { ar: string; en: string; icon: Rea
   glass_securit: { ar: 'زجاج وسيكوريت', en: 'Glass & Securit', icon: GlassWater, color: 'text-info bg-info/10' },
 };
 
-/* ── Status Config ── */
-const statusConfig: Record<string, { icon: React.ElementType; color: string; label_ar: string; label_en: string; ring: string; gradient: string }> = {
-  draft: { icon: FileText, color: 'bg-muted text-muted-foreground', label_ar: 'مسودة', label_en: 'Draft', ring: 'ring-muted-foreground/20', gradient: 'from-slate-400 to-slate-500' },
-  pending_approval: { icon: Clock, color: 'bg-warning text-warning dark:bg-warning/30 dark:text-warning', label_ar: 'بانتظار الموافقة', label_en: 'Pending', ring: 'ring-warning/30', gradient: 'from-warning to-urgent' },
-  active: { icon: CheckCircle2, color: 'bg-success text-success dark:bg-success/30 dark:text-success', label_ar: 'نشط', label_en: 'Active', ring: 'ring-success/30', gradient: 'from-success to-success' },
-  completed: { icon: Shield, color: 'bg-info text-info dark:bg-info/30 dark:text-info', label_ar: 'مكتمل', label_en: 'Completed', ring: 'ring-info/30', gradient: 'from-info to-secondary' },
-  cancelled: { icon: XCircle, color: 'bg-destructive text-destructive dark:bg-destructive/30 dark:text-destructive', label_ar: 'ملغي', label_en: 'Cancelled', ring: 'ring-destructive/30', gradient: 'from-destructive to-destructive' },
-  disputed: { icon: AlertTriangle, color: 'bg-urgent text-urgent dark:bg-urgent/30 dark:text-urgent', label_ar: 'متنازع', label_en: 'Disputed', ring: 'ring-urgent/30', gradient: 'from-urgent to-destructive' },
-};
+/* ── Status Config (centralized in @/lib/contract-statuses) ── */
+// `color` is mapped from the central `badge` field for back-compat with this
+// file's existing JSX; `ring`/`gradient` come straight from the central source.
+const statusConfig = (Object.fromEntries(
+  ['draft', 'pending_approval', 'active', 'completed', 'cancelled', 'disputed'].map((k) => {
+    const m = getContractStatusMeta(k);
+    return [k, { icon: m.icon, color: m.badge, label_ar: m.label_ar, label_en: m.label_en, ring: m.ring, gradient: m.gradient }];
+  }),
+) as Record<string, { icon: React.ElementType; color: string; label_ar: string; label_en: string; ring: string; gradient: string }>);
 
 interface ContractForm {
   title_ar: string; title_en: string; description_ar: string; description_en: string;
