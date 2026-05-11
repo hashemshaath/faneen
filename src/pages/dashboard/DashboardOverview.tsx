@@ -30,6 +30,7 @@ import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { cn } from '@/lib/utils';
 import { tierIcons } from '@/lib/membership-tiers';
 import { ProviderReadinessCard } from '@/components/dashboard/ProviderReadinessCard';
+import { ProviderMembershipCard } from '@/components/dashboard/ProviderMembershipCard';
 import { useNoIndex } from "@/hooks/useNoIndex";
 import { maskEmail } from '@/lib/masking';
 
@@ -691,7 +692,12 @@ AdminDashboardView.displayName = 'AdminDashboardView';
 /* ═══════════════════════════════════════════════════
    PROVIDER Dashboard
    ═══════════════════════════════════════════════════ */
-const ProviderDashboardView = React.memo(({ isRTL, user, profile }: { isRTL: boolean; user: { id: string }; profile: any }) => {
+type ProviderProfile = {
+  full_name?: string | null;
+  ref_id?: string | null;
+  membership_tier?: string | null;
+} | null | undefined;
+const ProviderDashboardView = React.memo(({ isRTL, user, profile }: { isRTL: boolean; user: { id: string }; profile: ProviderProfile }) => {
   const { data: business } = useQuery({
     queryKey: ['my-business', user?.id],
     queryFn: async () => {
@@ -711,7 +717,7 @@ const ProviderDashboardView = React.memo(({ isRTL, user, profile }: { isRTL: boo
         businessId ? supabase.from('business_services').select('id', { count: 'exact', head: true }).eq('business_id', businessId) : { count: 0 },
         businessId ? supabase.from('portfolio_items').select('id', { count: 'exact', head: true }).eq('business_id', businessId) : { count: 0 },
         businessId ? supabase.from('reviews').select('id, rating', { count: 'exact' }).eq('business_id', businessId) : { count: 0, data: [] },
-        supabase.from('contracts').select('id, total_amount, status, created_at', { count: 'exact' }).or(`provider_id.eq.${user.id},client_id.eq.${user.id}`),
+        supabase.from('contracts').select('id, total_amount, status, created_at', { count: 'exact' }).eq('provider_id', user.id),
         businessId ? supabase.from('projects').select('id', { count: 'exact', head: true }).eq('business_id', businessId) : { count: 0 },
         supabase.from('operations_log').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
         supabase.from('conversations').select('id', { count: 'exact', head: true }).or(`participant_1.eq.${user.id},participant_2.eq.${user.id}`),
@@ -818,11 +824,17 @@ const ProviderDashboardView = React.memo(({ isRTL, user, profile }: { isRTL: boo
       </div>
 
       {/* Widgets row */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <OverdueAlerts isRTL={isRTL} userId={user.id} />
         <TodaySummary isRTL={isRTL} userId={user.id} />
-        <MembershipWidget isRTL={isRTL} userId={user.id} />
       </div>
+
+      {/* Membership — real M3A/M3B usage rows (Phase P1) */}
+      <ProviderMembershipCard
+        userId={user.id}
+        businessId={businessId ?? null}
+        tier={business?.membership_tier ?? profile?.membership_tier ?? 'free'}
+      />
 
       {/* Provider readiness — approval status, completion %, missing fields */}
       <ProviderReadinessCard />
