@@ -50,7 +50,6 @@ interface LeadRow {
   converted_contract_id: string | null;
   converted_at: string | null;
   converted_by: string | null;
-  user_id: string | null;
 }
 
 const priorityConfig: Record<Priority, { ar: string; en: string; color: string }> = {
