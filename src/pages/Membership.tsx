@@ -29,6 +29,12 @@ const Membership = () => {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [subscribingPlanId, setSubscribingPlanId] = useState<string | null>(null);
 
+  // Privacy-safe: tier of current user (or 'anonymous') — no PII.
+  React.useEffect(() => {
+    track.membershipPlanView({});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const { data: plans = [] } = useQuery({
     queryKey: ['membership-plans'],
     queryFn: async () => {
