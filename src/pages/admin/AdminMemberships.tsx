@@ -563,21 +563,36 @@ const AdminMemberships = () => {
       if (!editingPlan) return;
       const features = featuresText.split('\n').map(l => l.trim()).filter(Boolean);
       const limits = limitsToJson(editLimits);
-      const { error } = await supabase.from('membership_plans').update({
-        name_ar: form.name_ar, name_en: form.name_en,
-        description_ar: form.description_ar || null, description_en: form.description_en || null,
-        price_monthly: form.price_monthly, price_yearly: form.price_yearly,
-        is_active: form.is_active, sort_order: form.sort_order,
-        features, limits,
-      }).eq('id', (editingPlan as any).id);
-      if (error) throw error;
+      const isNew = !(editingPlan as any).id;
+      if (isNew) {
+        const tier = (editingPlan as any).tier || 'free';
+        const { error } = await supabase.from('membership_plans').insert({
+          tier,
+          name_ar: form.name_ar, name_en: form.name_en,
+          description_ar: form.description_ar || null, description_en: form.description_en || null,
+          price_monthly: form.price_monthly, price_yearly: form.price_yearly,
+          is_active: form.is_active, sort_order: form.sort_order,
+          features, limits,
+        });
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from('membership_plans').update({
+          name_ar: form.name_ar, name_en: form.name_en,
+          description_ar: form.description_ar || null, description_en: form.description_en || null,
+          price_monthly: form.price_monthly, price_yearly: form.price_yearly,
+          is_active: form.is_active, sort_order: form.sort_order,
+          features, limits,
+        }).eq('id', (editingPlan as any).id);
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-membership-plans'] });
       queryClient.invalidateQueries({ queryKey: ['membership-plans'] });
       queryClient.invalidateQueries({ queryKey: ['membership-plans-comparison'] });
+      queryClient.invalidateQueries({ queryKey: ['home-membership-plans'] });
       setEditingPlan(null);
-      toast.success(isRTL ? 'تم تحديث الخطة بنجاح' : 'Plan updated successfully');
+      toast.success(isRTL ? 'تم حفظ الخطة بنجاح' : 'Plan saved successfully');
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -644,6 +659,18 @@ const AdminMemberships = () => {
     });
   }, []);
 
+  const openCreate = useCallback((tier: typeof TIERS[number]) => {
+    setEditingPlan({ tier, _new: true });
+    setFeaturesText('');
+    setEditLimits(parseLimits(undefined));
+    setForm({
+      name_ar: '', name_en: '',
+      description_ar: '', description_en: '',
+      price_monthly: 0, price_yearly: 0,
+      is_active: true, sort_order: plans.length,
+    });
+  }, [plans.length]);
+
   /* ─── CSV Export ─── */
   const exportCSV = useCallback(() => {
     const bom = '\uFEFF';
@@ -670,7 +697,25 @@ const AdminMemberships = () => {
     { key: 'businesses', icon: Building2, label: isRTL ? 'الجهات' : 'Businesses' },
   ];
 
-  if (!isAdmin) return null;
+  // Defense-in-depth: ProtectedRoute requireAdmin already gates this route,
+  // but render an explicit unauthorized state if somehow reached without admin.
+  if (!isAdmin) {
+    return (
+      <DashboardLayout>
+        <div className="max-w-md mx-auto mt-16 text-center space-y-3">
+          <div className="w-14 h-14 mx-auto rounded-2xl bg-destructive/10 flex items-center justify-center">
+            <Lock className="w-6 h-6 text-destructive" />
+          </div>
+          <h2 className="font-heading font-bold text-base">
+            {isRTL ? 'وصول غير مصرّح به' : 'Unauthorized'}
+          </h2>
+          <p className="text-xs text-muted-foreground">
+            {isRTL ? 'هذه الصفحة متاحة لمسؤولي النظام فقط.' : 'This page is restricted to administrators.'}
+          </p>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
