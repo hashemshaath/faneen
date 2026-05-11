@@ -853,8 +853,10 @@ const AdminMemberships = () => {
                   <CardContent className="p-4 sm:p-5 space-y-4">
                     <div className="flex items-center justify-between">
                       <h3 className="font-heading font-bold text-sm flex items-center gap-2">
-                        <Pencil className="w-4 h-4 text-accent" />
-                        {isRTL ? 'تعديل الخطة' : 'Edit Plan'}
+                        {(editingPlan as any)._new ? <Plus className="w-4 h-4 text-accent" /> : <Pencil className="w-4 h-4 text-accent" />}
+                        {(editingPlan as any)._new
+                          ? (isRTL ? 'إنشاء خطة جديدة' : 'Create Plan')
+                          : (isRTL ? 'تعديل الخطة' : 'Edit Plan')}
                         <Badge className={cn('text-[9px]', tierColors[editingPlan.tier]?.badge)}>{editingPlan.tier}</Badge>
                       </h3>
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditingPlan(null)}><X className="w-4 h-4" /></Button>
