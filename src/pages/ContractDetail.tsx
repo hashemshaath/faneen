@@ -166,6 +166,14 @@ const ContractDetail = () => {
   const [importedMeasurements, setImportedMeasurements] = useState<ImportedMeasurement[]>([]);
   const [showImportPreview, setShowImportPreview] = useState(false);
   const [editingImportIdx, setEditingImportIdx] = useState<number | null>(null);
+  // C3D — Manual payment confirmation (no gateway, no auto-status)
+  const [confirmingPayId, setConfirmingPayId] = useState<string | null>(null);
+  const [payConfirmForm, setPayConfirmForm] = useState({
+    paid_at: new Date().toISOString().slice(0, 10),
+    payment_method: 'bank_transfer',
+    notes: '',
+  });
+  const [confirmingPayBusy, setConfirmingPayBusy] = useState(false);
 
   /* ─── Queries ─── */
   const { data: contract, isLoading } = useQuery({
