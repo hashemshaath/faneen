@@ -1549,9 +1549,55 @@ export type Database = {
         }
         Relationships: []
       }
+      contract_amendment_audit: {
+        Row: {
+          action: string
+          actor_id: string | null
+          amendment_id: string
+          created_at: string
+          id: string
+          metadata: Json
+          new_status: string | null
+          old_status: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          amendment_id: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          new_status?: string | null
+          old_status?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          amendment_id?: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          new_status?: string | null
+          old_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_amendment_audit_amendment_id_fkey"
+            columns: ["amendment_id"]
+            isOneToOne: false
+            referencedRelation: "contract_amendments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contract_amendments: {
         Row: {
           amendment_type: string
+          amount_delta: number | null
+          applied_at: string | null
+          applied_by: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
           client_approved_at: string | null
           contract_id: string
           created_at: string
@@ -1560,7 +1606,9 @@ export type Database = {
           id: string
           new_amount: number | null
           new_end_date: string | null
+          old_total: number | null
           provider_approved_at: string | null
+          reason: string | null
           rejected_by: string | null
           rejection_reason: string | null
           requested_by: string
@@ -1571,6 +1619,11 @@ export type Database = {
         }
         Insert: {
           amendment_type?: string
+          amount_delta?: number | null
+          applied_at?: string | null
+          applied_by?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           client_approved_at?: string | null
           contract_id: string
           created_at?: string
@@ -1579,7 +1632,9 @@ export type Database = {
           id?: string
           new_amount?: number | null
           new_end_date?: string | null
+          old_total?: number | null
           provider_approved_at?: string | null
+          reason?: string | null
           rejected_by?: string | null
           rejection_reason?: string | null
           requested_by: string
@@ -1590,6 +1645,11 @@ export type Database = {
         }
         Update: {
           amendment_type?: string
+          amount_delta?: number | null
+          applied_at?: string | null
+          applied_by?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           client_approved_at?: string | null
           contract_id?: string
           created_at?: string
@@ -1598,7 +1658,9 @@ export type Database = {
           id?: string
           new_amount?: number | null
           new_end_date?: string | null
+          old_total?: number | null
           provider_approved_at?: string | null
+          reason?: string | null
           rejected_by?: string | null
           rejection_reason?: string | null
           requested_by?: string
@@ -5510,7 +5572,112 @@ export type Database = {
         }
         Returns: string
       }
+      apply_contract_amendment: {
+        Args: { _amendment_id: string }
+        Returns: {
+          amendment_type: string
+          amount_delta: number | null
+          applied_at: string | null
+          applied_by: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
+          client_approved_at: string | null
+          contract_id: string
+          created_at: string
+          description_ar: string | null
+          description_en: string | null
+          id: string
+          new_amount: number | null
+          new_end_date: string | null
+          old_total: number | null
+          provider_approved_at: string | null
+          reason: string | null
+          rejected_by: string | null
+          rejection_reason: string | null
+          requested_by: string
+          status: string
+          title_ar: string
+          title_en: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "contract_amendments"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      approve_contract_amendment: {
+        Args: { _amendment_id: string }
+        Returns: {
+          amendment_type: string
+          amount_delta: number | null
+          applied_at: string | null
+          applied_by: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
+          client_approved_at: string | null
+          contract_id: string
+          created_at: string
+          description_ar: string | null
+          description_en: string | null
+          id: string
+          new_amount: number | null
+          new_end_date: string | null
+          old_total: number | null
+          provider_approved_at: string | null
+          reason: string | null
+          rejected_by: string | null
+          rejection_reason: string | null
+          requested_by: string
+          status: string
+          title_ar: string
+          title_en: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "contract_amendments"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       bump_migration_epoch: { Args: { _reason?: string }; Returns: number }
+      cancel_contract_amendment: {
+        Args: { _amendment_id: string }
+        Returns: {
+          amendment_type: string
+          amount_delta: number | null
+          applied_at: string | null
+          applied_by: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
+          client_approved_at: string | null
+          contract_id: string
+          created_at: string
+          description_ar: string | null
+          description_en: string | null
+          id: string
+          new_amount: number | null
+          new_end_date: string | null
+          old_total: number | null
+          provider_approved_at: string | null
+          reason: string | null
+          rejected_by: string | null
+          rejection_reason: string | null
+          requested_by: string
+          status: string
+          title_ar: string
+          title_en: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "contract_amendments"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       cancel_subscription: {
         Args: { _subscription_id: string }
         Returns: undefined
@@ -5916,6 +6083,41 @@ export type Database = {
         Returns: undefined
       }
       record_email_open: { Args: { _message_id: string }; Returns: undefined }
+      reject_contract_amendment: {
+        Args: { _amendment_id: string; _reason: string }
+        Returns: {
+          amendment_type: string
+          amount_delta: number | null
+          applied_at: string | null
+          applied_by: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
+          client_approved_at: string | null
+          contract_id: string
+          created_at: string
+          description_ar: string | null
+          description_en: string | null
+          id: string
+          new_amount: number | null
+          new_end_date: string | null
+          old_total: number | null
+          provider_approved_at: string | null
+          reason: string | null
+          rejected_by: string | null
+          rejection_reason: string | null
+          requested_by: string
+          status: string
+          title_ar: string
+          title_en: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "contract_amendments"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       set_my_inbox_notification_mute: {
         Args: { _muted: boolean }
         Returns: undefined
