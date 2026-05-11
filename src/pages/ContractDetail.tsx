@@ -23,6 +23,7 @@ import { PaymentScheduleGenerator } from '@/components/contract/PaymentScheduleG
 import { ContractFinancialCoverage } from '@/components/contract/ContractFinancialCoverage';
 import { SignedAttachmentImage } from '@/components/contract/SignedAttachment';
 import { ContractAttachmentsTab } from '@/components/contract/ContractAttachmentsTab';
+import { MeasurementAttachmentsPanel } from '@/components/contract/MeasurementAttachmentsPanel';
 import {
   openAttachment as openAttachmentSigned,
   type AttachmentRow,
@@ -155,6 +156,7 @@ const ContractDetail = () => {
   const [expandedMilestone, setExpandedMilestone] = useState<string | null>(null);
   const [expandedMaint, setExpandedMaint] = useState<string | null>(null);
   const [measurementFilter, setMeasurementFilter] = useState<string>('all');
+  const [expandedMeasurementAttId, setExpandedMeasurementAttId] = useState<string | null>(null);
   // Measurement CRUD
   const [showMeasurementForm, setShowMeasurementForm] = useState(false);
   const [editingMeasurement, setEditingMeasurement] = useState<any>(null);
@@ -690,6 +692,19 @@ const ContractDetail = () => {
   );
 
   const floors = useMemo(() => Object.keys(measurementsByFloor), [measurementsByFloor]);
+
+  // Group attachments by measurement_id once to avoid N+1 queries.
+  const attachmentsByMeasurement = useMemo(() => {
+    const map = new Map<string, AttachmentRow[]>();
+    for (const a of (attachments || []) as AttachmentRow[]) {
+      if (a.measurement_id) {
+        const arr = map.get(a.measurement_id) || [];
+        arr.push(a);
+        map.set(a.measurement_id, arr);
+      }
+    }
+    return map;
+  }, [attachments]);
 
   // Installment payment totals
   const paymentsTotals = useMemo(() => {
@@ -1954,7 +1969,11 @@ const ContractDetail = () => {
                           const mName = language === 'ar' ? m.name_ar : (m.name_en || m.name_ar);
                           const mLoc = language === 'ar' ? m.location_ar : (m.location_en || m.location_ar);
                           const sCfg = statusConfig[m.status] || statusConfig.draft;
+                          const mAtts = attachmentsByMeasurement.get(m.id) || [];
+                          const isExpanded = expandedMeasurementAttId === m.id;
+                          const colCount = !isContractLocked ? 10 : 9;
                           return (
+                          <React.Fragment key={m.id}>
                             <tr key={m.id} className="border-t border-border hover:bg-muted/20 transition-colors group">
                               <td className="p-2.5 font-heading font-bold text-accent" dir="ltr">{m.piece_number}</td>
                               <td className="p-2.5">
@@ -1967,7 +1986,20 @@ const ContractDetail = () => {
                               <td className="p-2.5 font-heading font-bold" dir="ltr">{Number(m.area_sqm).toFixed(3)}</td>
                               <td className="p-2.5 font-heading font-semibold" dir="ltr">{Number(m.unit_price).toLocaleString()}</td>
                               <td className="p-2.5 font-heading font-bold text-accent" dir="ltr">{Number(m.total_cost).toLocaleString()}</td>
-                              <td className="p-2.5"><Badge className={`${sCfg.bg} text-[9px]`}>{isRTL ? sCfg.label_ar : sCfg.label_en}</Badge></td>
+                              <td className="p-2.5">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <Badge className={`${sCfg.bg} text-[9px]`}>{isRTL ? sCfg.label_ar : sCfg.label_en}</Badge>
+                                  <button
+                                    type="button"
+                                    onClick={() => setExpandedMeasurementAttId(isExpanded ? null : m.id)}
+                                    title={isRTL ? 'مرفقات المقاس' : 'Measurement attachments'}
+                                    className={`inline-flex items-center gap-1 px-1.5 h-5 rounded-md text-[9px] font-body border transition-colors ${isExpanded ? 'bg-accent/10 border-accent/30 text-accent' : 'bg-muted/30 border-border text-muted-foreground hover:bg-muted'}`}
+                                  >
+                                    <Paperclip className="w-2.5 h-2.5" />
+                                    <span className="tech-content">{mAtts.length}</span>
+                                  </button>
+                                </div>
+                              </td>
                               {!isContractLocked && (
                                 <td className="p-2.5">
                                   <div className="flex items-center gap-1">
@@ -1981,6 +2013,22 @@ const ContractDetail = () => {
                                 </td>
                               )}
                             </tr>
+                            {isExpanded && id && user && (
+                              <tr className="border-t border-border bg-muted/10">
+                                <td colSpan={colCount} className="p-3">
+                                  <MeasurementAttachmentsPanel
+                                    contractId={id}
+                                    measurementId={m.id}
+                                    userId={user.id}
+                                    isRTL={isRTL}
+                                    locked={isContractLocked}
+                                    attachments={mAtts}
+                                    formatDate={formatDate}
+                                  />
+                                </td>
+                              </tr>
+                            )}
+                          </React.Fragment>
                           );
                         })}
                       </tbody>
