@@ -111,7 +111,7 @@ export const ContractAttachmentsTab: React.FC<Props> = ({
       // actual access uses signed URLs via storage_path).
       const { data: urlData } = supabase.storage.from('contract-attachments').getPublicUrl(path);
 
-      const insertPayload = {
+              const insertPayload = {
         contract_id: contractId,
         user_id: userId,
         file_name: pendingFile.name,
@@ -120,7 +120,9 @@ export const ContractAttachmentsTab: React.FC<Props> = ({
         storage_path: path,
         file_size: pendingFile.size,
         description: description.trim() || null,
-        visibility,
+        // C4B.2 Safety Patch: visibility is not yet RLS-enforced.
+        // Force every new upload to 'parties' until visibility-aware RLS lands.
+        visibility: 'parties' as AttachmentVisibility,
         milestone_id:   linkType === 'milestone'   ? linkId : null,
         measurement_id: linkType === 'measurement' ? linkId : null,
         payment_id:     linkType === 'payment'     ? linkId : null,
