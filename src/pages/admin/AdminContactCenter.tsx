@@ -80,7 +80,7 @@ const AdminContactCenter: React.FC = () => {
               })}
             </TabsList>
 
-            <TabsContent value="inbox" forceMount={undefined}>
+            <TabsContent value="inbox">
               <Suspense fallback={<PanelFallback />}><InboxPage /></Suspense>
             </TabsContent>
             <TabsContent value="settings">
