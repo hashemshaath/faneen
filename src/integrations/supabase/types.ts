@@ -2451,6 +2451,7 @@ export type Database = {
           due_date: string
           id: string
           installment_number: number
+          milestone_id: string | null
           notes: string | null
           paid_at: string | null
           payment_method: string | null
@@ -2463,6 +2464,7 @@ export type Database = {
           due_date: string
           id?: string
           installment_number: number
+          milestone_id?: string | null
           notes?: string | null
           paid_at?: string | null
           payment_method?: string | null
@@ -2475,6 +2477,7 @@ export type Database = {
           due_date?: string
           id?: string
           installment_number?: number
+          milestone_id?: string | null
           notes?: string | null
           paid_at?: string | null
           payment_method?: string | null
@@ -2482,6 +2485,13 @@ export type Database = {
           status?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "installment_payments_milestone_id_fkey"
+            columns: ["milestone_id"]
+            isOneToOne: false
+            referencedRelation: "contract_milestones"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "installment_payments_plan_id_fkey"
             columns: ["plan_id"]

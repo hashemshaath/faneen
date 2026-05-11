@@ -1190,6 +1190,22 @@ const ContractDetail = () => {
                           </div>
                           {pay.notes && <p className="mt-2 text-[10px] text-muted-foreground/80 font-body border-t border-border pt-2">{pay.notes}</p>}
                           <Progress value={isPaid ? 100 : 0} className="h-1 mt-2" />
+                          {/* C3A: read-only milestone link */}
+                          {(() => {
+                            const linked = pay.milestone_id ? milestones?.find(m => m.id === pay.milestone_id) : null;
+                            return (
+                              <div className="mt-2 text-[10px] font-body flex items-center gap-1 text-muted-foreground">
+                                {linked ? (
+                                  <>
+                                    <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+                                    <span className="truncate">{isRTL ? 'مرتبط بمرحلة:' : 'Linked milestone:'} <span className="text-foreground font-medium">{isRTL ? linked.title_ar : (linked.title_en || linked.title_ar)}</span></span>
+                                  </>
+                                ) : (
+                                  <span className="opacity-70">{isRTL ? 'غير مرتبط بمرحلة' : 'Unlinked'}</span>
+                                )}
+                              </div>
+                            );
+                          })()}
                         </div>
                       );
                     })}

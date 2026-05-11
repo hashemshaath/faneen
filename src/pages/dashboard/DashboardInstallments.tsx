@@ -24,7 +24,7 @@ import {
   ExternalLink, Info, ShieldCheck, Users, Banknote, Star,
   Calculator, Download, CalendarDays, Bell, PieChart,
   ArrowUpRight, Wallet, Receipt, CircleDollarSign, Sparkles,
-  TrendingDown, Target, Zap, Activity,
+  TrendingDown, Target, Zap, Activity, Link2, Unlink,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -297,6 +297,18 @@ const PaymentItem = React.memo(({ payment, plan, isProvider, isRTL, language, on
         <Badge className={`text-[8px] px-1.5 py-0 h-[14px] ${statusColors[payment.status] || ''}`}>
           {statusLabels[payment.status]?.[isRTL ? 'ar' : 'en'] || payment.status}
         </Badge>
+        {/* C3A: read-only milestone link indicator */}
+        {payment.milestone_id ? (
+          <Badge variant="outline" className="text-[8px] px-1.5 py-0 h-[14px] gap-0.5 border-accent/40 text-accent" title={isRTL ? 'مرتبط بمرحلة' : 'Linked to milestone'}>
+            <Link2 className="w-2.5 h-2.5" />
+            {isRTL ? 'مرحلة' : 'Milestone'}
+          </Badge>
+        ) : (
+          <Badge variant="outline" className="text-[8px] px-1.5 py-0 h-[14px] gap-0.5 text-muted-foreground" title={isRTL ? 'غير مرتبط بمرحلة' : 'Unlinked'}>
+            <Unlink className="w-2.5 h-2.5" />
+            {isRTL ? 'غير مرتبط' : 'Unlinked'}
+          </Badge>
+        )}
         {payment.status === 'pending' && isProvider && (
           <Button size="sm" variant="outline" className="h-5 text-[9px] px-1.5 gap-0.5 opacity-0 group-hover/item:opacity-100 transition-opacity" onClick={() => onMarkPaid(payment.id)} disabled={isPending}>
             <CheckCircle className="w-2.5 h-2.5" />{isRTL ? 'تسجيل' : 'Paid'}
