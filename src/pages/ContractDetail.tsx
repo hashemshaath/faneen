@@ -140,6 +140,8 @@ const StatCard = ({ icon: Icon, label, value, sub, accent }: { icon: React.Eleme
 );
 
 const ContractDetail = () => {
+  // C5C: friendly Arabic/English mapping for amendment RPC error codes.
+  // Defined inside component so it can capture isRTL via closure-style call.
   const { id } = useParams<{ id: string }>();
   const { t, language, isRTL } = useLanguage();
   const { user, isAdmin } = useAuth();
