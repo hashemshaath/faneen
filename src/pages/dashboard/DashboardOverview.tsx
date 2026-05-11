@@ -18,6 +18,7 @@ import {
   ShieldAlert, Zap, CalendarDays, Target, Megaphone, Loader2,
   AlertTriangle, RefreshCw, Sparkles, Timer, Percent,
   PieChart as PieChartIcon,
+  Inbox, UserPlus, ShieldCheck,
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
@@ -30,6 +31,7 @@ import { cn } from '@/lib/utils';
 import { tierIcons } from '@/lib/membership-tiers';
 import { ProviderReadinessCard } from '@/components/dashboard/ProviderReadinessCard';
 import { useNoIndex } from "@/hooks/useNoIndex";
+import { maskEmail } from '@/lib/masking';
 
 // ═══ Shared utils ═══
 // Brand-aligned chart palette — sourced from central design tokens.
