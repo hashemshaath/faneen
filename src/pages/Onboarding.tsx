@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
-import { User, Building2, Phone, Globe, Check, Loader2 } from 'lucide-react';
+import { User, Building2, Phone, Globe, Check, Loader2, CheckCircle2, ArrowLeft, ArrowRight, AlertCircle } from 'lucide-react';
 import { track } from '@/lib/analytics-events';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { SectorPicker } from '@/components/onboarding/SectorPicker';
@@ -31,7 +31,8 @@ type OnboardingStep =
   | 'details'
   | 'phone-verify'
   | 'business-details'
-  | 'business-sectors';
+  | 'business-sectors'
+  | 'summary';
 
 const STEP_ORDER: OnboardingStep[] = [
   'account-type',
@@ -39,6 +40,7 @@ const STEP_ORDER: OnboardingStep[] = [
   'phone-verify',
   'business-details',
   'business-sectors',
+  'summary',
 ];
 
 const Onboarding = () => {
@@ -109,7 +111,9 @@ const Onboarding = () => {
 
   useEffect(() => {
     if (!user) { navigate('/auth'); return; }
-    if (profile?.is_onboarded) { navigate(getTargetRoute()); return; }
+    // Allow the user to stay on the post-completion summary screen even
+    // after `is_onboarded` flips true (refreshProfile fires before redirect).
+    if (profile?.is_onboarded && step !== 'summary') { navigate(getTargetRoute()); return; }
     let cancelled = false;
     (async () => {
       const draft = await pullRemoteDraft(user.id);
@@ -183,16 +187,19 @@ const Onboarding = () => {
         track.providerSignupSubmit({});
       }
       track.onboardingCompleted({ account_type: accountType });
-      toast.success(isRTL ? 'تم إكمال التسجيل بنجاح!' : 'Registration completed successfully!');
-      
-      // Role-based redirect after onboarding
+      toast.success(isRTL ? 'تم حفظ بيانات منشأتك' : 'Your business profile is saved');
+
       if (accountType === 'business') {
-        navigate('/dashboard');
+        // Show end-of-onboarding summary instead of redirecting immediately.
+        setStep('summary');
       } else {
         navigate('/');
       }
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Unknown error');
+      const fallback = isRTL
+        ? 'تعذّر إكمال التسجيل. يرجى المحاولة مرة أخرى.'
+        : 'Could not complete registration. Please try again.';
+      toast.error(err instanceof Error && err.message ? err.message : fallback);
     } finally {
       setLoading(false);
     }
@@ -346,7 +353,11 @@ const Onboarding = () => {
               {isRTL ? 'بيانات النشاط التجاري' : 'Business Details'}
             </h2>
             <Progress value={completionPct} className="h-1.5" />
-            <p className="text-center text-xs text-muted-foreground tech-content">
+            <p
+              className="text-center text-xs text-muted-foreground tech-content"
+              role="status"
+              aria-live="polite"
+            >
               {completionPct}% — {isRTL ? 'يمكنك الحفظ والمتابعة لاحقاً' : 'You can save and continue later'}
             </p>
           </div>
@@ -398,6 +409,101 @@ const Onboarding = () => {
   }
 
   // Final business step: sector picker + sub-services
+  if (step === 'summary') {
+    // Required-fields readiness for the post-completion guidance line.
+    const missing: { ar: string; en: string }[] = [];
+    if (!businessDescription.trim()) missing.push({ ar: 'وصف النشاط', en: 'Description' });
+    if (sectors.length === 0) missing.push({ ar: 'القطاعات', en: 'Sectors' });
+    if (!phone) missing.push({ ar: 'رقم التواصل', en: 'Phone' });
+    const readyToSubmit = completionPct >= 50 && missing.length === 0;
+    const Arrow = isRTL ? ArrowLeft : ArrowRight;
+
+    return (
+      <AuthLayout>
+        <div className="space-y-6" role="status" aria-live="polite">
+          <div className="text-center space-y-3">
+            <div className="w-16 h-16 mx-auto rounded-full bg-success/10 flex items-center justify-center">
+              <CheckCircle2 className="w-8 h-8 text-success" />
+            </div>
+            <h2 className="font-heading font-bold text-2xl text-foreground">
+              {isRTL ? 'تم حفظ بيانات منشأتك' : 'Your business profile is saved'}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {isRTL
+                ? 'يمكنك إكمال أي بيانات ناقصة من لوحة التحكم ثم إرسال الملف للمراجعة.'
+                : 'You can complete any remaining fields from the dashboard, then submit your profile for review.'}
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-border/60 bg-muted/30 p-4 space-y-3">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">
+                {isRTL ? 'نسبة الإكمال' : 'Completion'}
+              </span>
+              <span className="tech-content font-bold text-foreground">{completionPct}%</span>
+            </div>
+            <Progress value={completionPct} className="h-2" />
+
+            {readyToSubmit ? (
+              <p className="text-xs text-success flex items-center gap-1.5">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                {isRTL
+                  ? 'يمكنك الآن إرسال الملف للمراجعة من لوحة التحكم.'
+                  : 'You can now submit your profile for review from the dashboard.'}
+              </p>
+            ) : missing.length > 0 ? (
+              <div className="space-y-2">
+                <p className="text-xs text-muted-foreground">
+                  {isRTL ? 'بيانات يُنصح بإكمالها لزيادة فرص الظهور:' : 'Fields to complete for better visibility:'}
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {missing.slice(0, 4).map((m) => (
+                    <span key={m.en} className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-card px-2 py-0.5 text-[11px]">
+                      <AlertCircle className="w-3 h-3 text-warning" />
+                      {isRTL ? m.ar : m.en}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+          </div>
+
+          <div className="rounded-xl border border-accent/20 bg-accent/5 p-3 text-xs text-muted-foreground">
+            <p className="font-semibold text-foreground mb-1">
+              {isRTL ? 'ماذا يحدث بعد ذلك؟' : "What happens next?"}
+            </p>
+            <ul className="space-y-1 list-disc list-inside">
+              <li>{isRTL ? 'يبقى ملفك كمسودة حتى تُرسله للمراجعة.' : 'Your profile stays as a draft until you submit it.'}</li>
+              <li>{isRTL ? 'بعد الإرسال يقوم الفريق بمراجعته خلال فترة قصيرة.' : 'After submission, our team reviews it shortly.'}</li>
+              <li>{isRTL ? 'سيظهر ملفك للجمهور بعد الموافقة.' : 'Your profile becomes public after approval.'}</li>
+            </ul>
+          </div>
+
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-between">
+            <Button
+              variant="ghost"
+              onClick={() => navigate('/dashboard/settings')}
+              className="text-sm"
+            >
+              {isRTL ? 'إكمال البيانات الآن' : 'Complete fields now'}
+            </Button>
+            <Button
+              variant="hero"
+              className="sm:w-72"
+              onClick={() => navigate(readyToSubmit ? '/dashboard#provider-readiness' : '/dashboard')}
+            >
+              {readyToSubmit
+                ? (isRTL ? 'الانتقال للمراجعة' : 'Go to review')
+                : (isRTL ? 'الذهاب إلى لوحة التحكم' : 'Go to dashboard')}
+              <Arrow className="w-4 h-4 ms-1" />
+            </Button>
+          </div>
+        </div>
+      </AuthLayout>
+    );
+  }
+
+  // Final business step: sector picker + sub-services
   return (
     <AuthLayout>
       <div className="space-y-6">
@@ -406,7 +512,11 @@ const Onboarding = () => {
             {isRTL ? 'القطاعات والخدمات' : 'Sectors & Services'}
           </h2>
           <Progress value={completionPct} className="h-1.5" />
-          <p className="text-center text-xs text-muted-foreground">
+          <p
+            className="text-center text-xs text-muted-foreground"
+            role="status"
+            aria-live="polite"
+          >
             {isRTL
               ? 'اختر القطاع/القطاعات والخدمات الفرعية التي يقدمها نشاطك'
               : 'Pick the sectors and sub-services your business operates in'}
@@ -440,9 +550,10 @@ const Onboarding = () => {
             disabled={loading || sectors.length === 0}
             variant="hero"
             className="sm:w-64"
+            aria-label={isRTL ? 'إنشاء الحساب وحفظ كمسودة' : 'Create account and save as draft'}
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin me-2" /> : null}
-            {isRTL ? 'إنشاء الحساب وإرسال للمراجعة' : 'Create account & save as draft'}
+            {isRTL ? 'إنشاء الحساب وحفظ كمسودة' : 'Create account & save as draft'}
           </Button>
         </div>
       </div>
