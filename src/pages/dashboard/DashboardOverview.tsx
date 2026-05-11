@@ -308,7 +308,15 @@ const AdminDashboardView = React.memo(({ isRTL }: { isRTL: boolean }) => {
   const { data: stats } = useQuery({
     queryKey: ['admin-overview-stats'],
     queryFn: async () => {
-      const [users, businesses, contracts, categories, messages, subscriptions, roles, recentUsers, recentActivity, blogPosts, contactMessages, userGrowth] = await Promise.all([
+      const startOfToday = new Date(); startOfToday.setHours(0, 0, 0, 0);
+      const todayIso = startOfToday.toISOString();
+      const fresh48hIso = new Date(Date.now() - 48 * 3600 * 1000).toISOString();
+      const [
+        users, businesses, contracts, categories, messages, subscriptions, roles,
+        recentUsers, recentActivity, blogPosts, contactMessages, userGrowth,
+        leadsTodayQ, contractsTodayQ, providersTodayQ,
+        leadsPendingQ, providersPendingQ, dlqActiveQ, contractsPendingQ,
+      ] = await Promise.all([
         supabase.from('profiles').select('id', { count: 'exact', head: true }),
         supabase.from('businesses').select('id', { count: 'exact', head: true }),
         supabase.from('contracts').select('id, status, total_amount, created_at', { count: 'exact' }),
@@ -321,6 +329,15 @@ const AdminDashboardView = React.memo(({ isRTL }: { isRTL: boolean }) => {
         supabase.from('blog_posts').select('id', { count: 'exact', head: true }),
         supabase.from('contact_messages').select('id', { count: 'exact', head: true }).eq('status', 'new'),
         supabase.from('profiles').select('created_at').order('created_at', { ascending: true }),
+        // Today's pulse — operational counters (counts only, no PII)
+        supabase.from('lead_requests').select('id', { count: 'exact', head: true }).gte('created_at', todayIso),
+        supabase.from('contracts').select('id', { count: 'exact', head: true }).gte('created_at', todayIso),
+        supabase.from('businesses').select('id', { count: 'exact', head: true }).gte('created_at', todayIso),
+        // Needs attention — actionable backlogs
+        supabase.from('lead_requests').select('id', { count: 'exact', head: true }).eq('status', 'new'),
+        supabase.from('businesses').select('id', { count: 'exact', head: true }).eq('approval_status', 'pending'),
+        supabase.from('email_send_log').select('id', { count: 'exact', head: true }).eq('status', 'dlq').gte('created_at', fresh48hIso),
+        supabase.from('contracts').select('id', { count: 'exact', head: true }).eq('status', 'pending_approval'),
       ]);
 
       const allContracts = contracts.data || [];
@@ -342,6 +359,13 @@ const AdminDashboardView = React.memo(({ isRTL }: { isRTL: boolean }) => {
         monthlyContracts: buildMonthlyData(allContracts, isRTL),
         monthlyUsers: buildMonthlyData(userGrowth.data || [], isRTL),
         recentUsers: recentUsers.data || [], recentActivity: recentActivity.data || [],
+        leadsToday: ((leadsTodayQ as { count?: number }).count) ?? null,
+        contractsToday: ((contractsTodayQ as { count?: number }).count) ?? null,
+        providersToday: ((providersTodayQ as { count?: number }).count) ?? null,
+        leadsPending: ((leadsPendingQ as { count?: number }).count) ?? null,
+        providersPending: ((providersPendingQ as { count?: number }).count) ?? null,
+        dlqActive: ((dlqActiveQ as { count?: number }).count) ?? null,
+        contractsPending: ((contractsPendingQ as { count?: number }).count) ?? null,
       };
     },
     staleTime: 30000,
