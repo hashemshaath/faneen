@@ -28,6 +28,8 @@ import { template as leadQuoted } from './lead-quoted.tsx'
 import { template as providerApproved } from './provider-approved.tsx'
 import { template as providerRejected } from './provider-rejected.tsx'
 import { template as providerRevisionRequested } from './provider-revision-requested.tsx'
+import { template as contractDraftCreatedClient } from './contract-draft-created-client.tsx'
+import { template as contractDraftCreatedProvider } from './contract-draft-created-provider.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'booking-confirmation': bookingConfirmation,
@@ -49,4 +51,6 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'provider-approved': providerApproved,
   'provider-rejected': providerRejected,
   'provider-revision-requested': providerRevisionRequested,
+  'contract-draft-created-client': contractDraftCreatedClient,
+  'contract-draft-created-provider': contractDraftCreatedProvider,
 }
