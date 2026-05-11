@@ -150,11 +150,8 @@ const adminBaseGroups: MenuGroup[] = [
     items: [
       { label: { ar: 'لوحة التحكم', en: 'Dashboard' }, url: '/dashboard', icon: LayoutDashboard, end: true },
       { label: { ar: 'سجل النشاط', en: 'Activity Log' }, url: '/admin/activity-log', icon: BarChart3 },
-      { label: { ar: 'رسائل التواصل', en: 'Contact Messages' }, url: '/admin/contact-messages', icon: MessageSquare },
-      { label: { ar: 'إعدادات الصندوق و SLA', en: 'Inbox & SLA Settings' }, url: '/admin/contact-inbox-settings', icon: Mail },
-      { label: { ar: 'سجل تدقيق الرسائل', en: 'Contact Audit Log' }, url: '/admin/contact-audit-log', icon: BarChart3 },
-      { label: { ar: 'لوحة امتثال SLA', en: 'SLA Compliance' }, url: '/admin/contact-sla-dashboard', icon: TrendingUp },
-      { label: { ar: 'سجل إرسال الإشعارات', en: 'Notification Log' }, url: '/admin/contact-notification-log', icon: Mail },
+      // Phase B — Unified contact center (5 pages → 1 tabbed surface).
+      { label: { ar: 'مركز التواصل', en: 'Contact Center' }, url: '/admin/contact-messages', icon: MessageSquare },
       { label: { ar: 'طلبات العملاء (Leads)', en: 'Lead Requests' }, url: '/admin/lead-requests', icon: MessageSquare },
       { label: { ar: 'مراقبة البريد', en: 'Email Deliverability' }, url: '/admin/email-deliverability', icon: Mail },
       { label: { ar: 'مركز البريد', en: 'Email Center' }, url: '/admin/email-center', icon: Mail },
