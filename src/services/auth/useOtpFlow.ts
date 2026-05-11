@@ -58,6 +58,7 @@ export function useOtpFlow({ onSendOtp, onVerifyOtp, isRTL }: UseOtpFlowOptions)
   }, [onSendOtp, isRTL]);
 
   const verifyOtp = useCallback(async () => {
+    if (loading) return false;
     if (otpCode.length !== OTP_LENGTH) {
       setError(isRTL ? 'أدخل رمز التحقق المكون من 6 أرقام' : 'Enter 6-digit code');
       return false;
@@ -78,7 +79,7 @@ export function useOtpFlow({ onSendOtp, onVerifyOtp, isRTL }: UseOtpFlowOptions)
     } finally {
       setLoading(false);
     }
-  }, [otpCode, onVerifyOtp, isRTL]);
+  }, [otpCode, onVerifyOtp, isRTL, loading]);
 
   const resetOtp = useCallback(() => {
     setOtpStep(false);
