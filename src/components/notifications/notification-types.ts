@@ -20,6 +20,8 @@ export type NotificationType =
   | 'profile_verified'
   | 'warranty_expiring'
   | 'quote_received'
+  | 'contract_draft_created_for_client'
+  | 'contract_draft_created_for_provider'
   // Legacy generic types (backward-compatible)
   | 'contract'
   | 'installment'
@@ -55,6 +57,8 @@ export const notificationTypeMeta: Record<string, NotificationTypeMeta> = {
   profile_verified:    { icon: Shield,        colorClass: 'bg-success/10 text-success dark:text-success', label: { ar: 'منشأة موثقة', en: 'Profile Verified' }, urgency: 'info' },
   warranty_expiring:   { icon: AlertTriangle, colorClass: 'bg-warning/10 text-warning dark:text-warning',  label: { ar: 'ضمان ينتهي', en: 'Warranty Expiring' }, urgency: 'important' },
   quote_received:      { icon: FileText,      colorClass: 'bg-accent/10 text-accent',                            label: { ar: 'عرض سعر', en: 'Quote Received' }, urgency: 'important' },
+  contract_draft_created_for_client:   { icon: FileText, colorClass: 'bg-info/10 text-info dark:text-info', label: { ar: 'مسودة عقد لطلبك', en: 'Contract Draft Created' }, urgency: 'important' },
+  contract_draft_created_for_provider: { icon: FileText, colorClass: 'bg-info/10 text-info dark:text-info', label: { ar: 'مسودة عقد جديدة', en: 'New Contract Draft' }, urgency: 'important' },
   // Legacy generic types
   contract:    { icon: FileText,      colorClass: 'bg-info/10 text-info dark:text-info',     label: { ar: 'العقود', en: 'Contracts' }, urgency: 'important' },
   installment: { icon: CreditCard,    colorClass: 'bg-success/10 text-success dark:text-success', label: { ar: 'الأقساط', en: 'Installments' }, urgency: 'important' },
