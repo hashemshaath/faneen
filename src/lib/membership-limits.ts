@@ -156,8 +156,19 @@ export function parseLimits(limits: Record<string, any> | null | undefined): Rec
 }
 
 /** Convert structured limits back to a plain object for DB storage */
-export function limitsToJson(limits: Record<string, number | boolean>): Record<string, any> {
-  const result: Record<string, any> = {};
+export function limitsToJson(
+  limits: Record<string, number | boolean>,
+  original?: Record<string, unknown> | null,
+): Record<string, unknown> {
+  const knownKeys = new Set(LIMIT_FIELDS.map((f) => f.key));
+  // 1) Preserve any unknown/backend keys present in the original record
+  const result: Record<string, unknown> = {};
+  if (original && typeof original === 'object') {
+    for (const [k, v] of Object.entries(original)) {
+      if (!knownKeys.has(k)) result[k] = v;
+    }
+  }
+  // 2) Write canonical keys (skip when equal to default to keep payload small)
   for (const field of LIMIT_FIELDS) {
     const val = limits[field.key];
     if (val !== undefined && val !== field.defaultValue) {
@@ -165,4 +176,41 @@ export function limitsToJson(limits: Record<string, number | boolean>): Record<s
     }
   }
   return result;
+}
+
+/** Returns the keys present in `limits` that are NOT part of LIMIT_FIELDS. */
+export function getExtraLimitKeys(limits: Record<string, unknown> | null | undefined): string[] {
+  if (!limits || typeof limits !== 'object') return [];
+  const known = new Set(LIMIT_FIELDS.map((f) => f.key));
+  return Object.keys(limits).filter((k) => !known.has(k));
+}
+
+/**
+ * Format a single limit value for display.
+ * - boolean: ✓ / —
+ * - numeric "max_*" with 0: "Unlimited"
+ * - numeric otherwise: stringified
+ */
+export function formatLimitValue(
+  field: LimitField,
+  value: number | boolean | undefined,
+  isRTL: boolean,
+): string {
+  if (field.type === 'boolean') {
+    return value ? (isRTL ? 'مفعّل' : 'Enabled') : (isRTL ? 'غير متوفر' : 'Not included');
+  }
+  const n = typeof value === 'number' ? value : Number(value ?? 0);
+  if (field.key.startsWith('max_') && n === 0) return isRTL ? 'غير محدود' : 'Unlimited';
+  return String(n);
+}
+
+/** Compact display value for matrix cells (uses ✓ / — / number / ∞). */
+export function getPlanLimitDisplayValue(
+  field: LimitField,
+  value: number | boolean | undefined,
+): { kind: 'bool'; on: boolean } | { kind: 'num'; text: string } {
+  if (field.type === 'boolean') return { kind: 'bool', on: !!value };
+  const n = typeof value === 'number' ? value : Number(value ?? 0);
+  if (field.key.startsWith('max_') && n === 0) return { kind: 'num', text: '∞' };
+  return { kind: 'num', text: String(n) };
 }
