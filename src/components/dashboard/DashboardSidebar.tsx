@@ -145,61 +145,69 @@ const userGroups: MenuGroup[] = [
 // ══════════════════════════════════════════
 const adminBaseGroups: MenuGroup[] = [
   {
-    groupLabel: { ar: 'لوحة المراقبة', en: 'Dashboard' },
-    icon: LayoutDashboard,
+    // Operations — daily admin work (most-used links first).
+    groupLabel: { ar: 'العمليات', en: 'Operations' },
+    icon: Activity,
     items: [
       { label: { ar: 'لوحة التحكم', en: 'Dashboard' }, url: '/dashboard', icon: LayoutDashboard, end: true },
-      { label: { ar: 'سجل النشاط', en: 'Activity Log' }, url: '/admin/activity-log', icon: BarChart3 },
-      // Phase B — Unified contact center (5 pages → 1 tabbed surface).
+      { label: { ar: 'طلبات العملاء', en: 'Lead Requests' }, url: '/admin/lead-requests', icon: Inbox },
       { label: { ar: 'مركز التواصل', en: 'Contact Center' }, url: '/admin/contact-messages', icon: MessageSquare },
-      { label: { ar: 'طلبات العملاء (Leads)', en: 'Lead Requests' }, url: '/admin/lead-requests', icon: MessageSquare },
-      { label: { ar: 'مراقبة البريد', en: 'Email Deliverability' }, url: '/admin/email-deliverability', icon: Mail },
-      { label: { ar: 'مركز البريد', en: 'Email Center' }, url: '/admin/email-center', icon: Mail },
-      { label: { ar: 'تدقيق الأداء و SEO', en: 'Performance & SEO Audit' }, url: '/admin/site-audit', icon: Gauge },
-      { label: { ar: 'سيو القطاعات', en: 'Sector SEO' }, url: '/admin/sector-seo', icon: SearchIcon },
-      { label: { ar: 'حالة Sitemap', en: 'Sitemap Status' }, url: '/admin/sitemap-status', icon: SearchIcon },
-      { label: { ar: 'تحليلات المزودين', en: 'Provider Analytics' }, url: '/admin/provider-analytics', icon: TrendingUp },
-      { label: { ar: 'صفحة هبوط المزودين', en: 'Provider Landing' }, url: '/admin/provider-landing', icon: Gauge },
+      { label: { ar: 'العقود', en: 'Contracts' }, url: '/dashboard/contracts', icon: FileText },
+      { label: { ar: 'مراجعة المزودين', en: 'Provider Review' }, url: '/admin/provider-review', icon: ShieldCheck },
     ],
   },
   {
-    groupLabel: { ar: 'إدارة المستخدمين', en: 'User Management' },
-    icon: UserCog,
+    groupLabel: { ar: 'المنشآت والمزودون', en: 'Businesses & Providers' },
+    icon: Building2,
     items: [
-      { label: { ar: 'المستخدمين', en: 'Users' }, url: '/admin/users', icon: Users, superAdminOnly: true },
-      { label: { ar: 'إدارة الوصول', en: 'Access Management' }, url: '/admin/access-management', icon: ShieldAlert, superAdminOnly: true },
       { label: { ar: 'المنشآت', en: 'Businesses' }, url: '/admin/businesses', icon: Building2 },
-      { label: { ar: 'مراجعة المزودين', en: 'Provider Review' }, url: '/admin/provider-review', icon: ShieldCheck },
+      { label: { ar: 'تحليلات المزودين', en: 'Provider Analytics' }, url: '/admin/provider-analytics', icon: TrendingUp },
+      { label: { ar: 'العضويات', en: 'Memberships' }, url: '/admin/memberships', icon: Crown },
+    ],
+  },
+  {
+    groupLabel: { ar: 'الاتصالات', en: 'Communications' },
+    icon: Mail,
+    items: [
+      { label: { ar: 'مركز البريد', en: 'Email Center' }, url: '/admin/email-center', icon: Mail },
+      { label: { ar: 'مراقبة البريد', en: 'Email Deliverability' }, url: '/admin/email-deliverability', icon: Activity },
       { label: { ar: 'كل المحادثات', en: 'All Conversations' }, url: '/dashboard/messages', icon: MessageSquare, superAdminOnly: true },
     ],
   },
   {
-    groupLabel: { ar: 'إدارة المحتوى', en: 'Content Management' },
+    groupLabel: { ar: 'المحتوى والـ SEO', en: 'Content & SEO' },
     icon: Database,
     items: [
+      { label: { ar: 'المدونة', en: 'Blog Editor' }, url: '/dashboard/blog', icon: PenSquare },
       { label: { ar: 'التصنيفات', en: 'Categories' }, url: '/admin/categories', icon: FolderTree },
       { label: { ar: 'الوسوم', en: 'Tags' }, url: '/admin/tags', icon: Tags },
-      { label: { ar: 'المدونة', en: 'Blog Editor' }, url: '/dashboard/blog', icon: PenSquare },
       { label: { ar: 'القطاعات', en: 'Profile Systems' }, url: '/dashboard/profile-systems', icon: Layers },
-    ],
-  },
-  {
-    groupLabel: { ar: 'المالية والاشتراكات', en: 'Finance & Subscriptions' },
-    icon: Crown,
-    items: [
-      { label: { ar: 'العضويات', en: 'Memberships' }, url: '/admin/memberships', icon: Crown },
-      { label: { ar: 'العقود', en: 'Contracts' }, url: '/dashboard/contracts', icon: FileText },
+      { label: { ar: 'تدقيق الأداء و SEO', en: 'Site Audit' }, url: '/admin/site-audit', icon: Gauge },
+      { label: { ar: 'حالة Sitemap', en: 'Sitemap Status' }, url: '/admin/sitemap-status', icon: SearchIcon },
+      { label: { ar: 'سيو القطاعات', en: 'Sector SEO' }, url: '/admin/sector-seo', icon: SearchIcon },
     ],
   },
   {
     groupLabel: { ar: 'النظام والأمان', en: 'System & Security' },
     icon: Cog,
     items: [
-      { label: { ar: 'مركز الذكاء', en: 'AI Center' }, url: '/admin/ai-center', icon: Brain },
-      { label: { ar: 'إعدادات النظام', en: 'System Settings' }, url: '/admin/system-settings', icon: ShieldAlert, superAdminOnly: true },
-      { label: { ar: 'العلامة التجارية', en: 'Branding & Logo' }, url: '/admin/branding', icon: Palette },
-      { label: { ar: 'إعدادات API والتكاملات', en: 'API & Integrations' }, url: '/admin/api-settings', icon: Key },
+      { label: { ar: 'المستخدمين', en: 'Users' }, url: '/admin/users', icon: Users, superAdminOnly: true },
+      { label: { ar: 'إدارة الوصول', en: 'Access Management' }, url: '/admin/access-management', icon: ShieldAlert, superAdminOnly: true },
+      { label: { ar: 'إعدادات النظام', en: 'System Settings' }, url: '/admin/system-settings', icon: Cog, superAdminOnly: true },
       { label: { ar: 'التحليلات والموافقة', en: 'Analytics & Consent' }, url: '/admin/analytics-settings', icon: BarChart3 },
+      { label: { ar: 'سجل النشاط', en: 'Activity Log' }, url: '/admin/activity-log', icon: Activity },
+      { label: { ar: 'تشخيص النظام', en: 'Diagnostics' }, url: '/diagnostics', icon: Server },
+    ],
+  },
+  {
+    groupLabel: { ar: 'الإعدادات والتكاملات', en: 'Configuration' },
+    icon: Settings,
+    items: [
+      { label: { ar: 'العلامة التجارية', en: 'Branding & Logo' }, url: '/admin/branding', icon: Palette },
+      { label: { ar: 'إعدادات API', en: 'API Settings' }, url: '/admin/api-settings', icon: Key },
+      { label: { ar: 'توثيق API', en: 'API Docs' }, url: '/admin/api-docs', icon: Book },
+      { label: { ar: 'صفحة هبوط المزودين', en: 'Provider Landing' }, url: '/admin/provider-landing', icon: Gauge },
+      { label: { ar: 'مركز الذكاء', en: 'AI Center' }, url: '/admin/ai-center', icon: Brain },
     ],
   },
   {
