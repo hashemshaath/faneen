@@ -26,9 +26,10 @@ import {
 } from 'lucide-react';
 import { TIERS, tierIcons, tierColors, statusConfig } from '@/lib/membership-tiers';
 import { LIMIT_FIELDS, LIMIT_CATEGORIES, parseLimits, limitsToJson, getExtraLimitKeys } from '@/lib/membership-limits';
+import { AdminUpgradeRequestsPanel } from '@/components/membership/AdminUpgradeRequestsPanel';
 
 import { useNoIndex } from "@/hooks/useNoIndex";
-type Tab = 'overview' | 'plans' | 'subscriptions' | 'businesses' | 'usage';
+type Tab = 'overview' | 'plans' | 'subscriptions' | 'requests' | 'businesses' | 'usage';
 
 /* ─── Admin Usage Report ─── */
 type UsageReportRow = {
@@ -737,6 +738,7 @@ const AdminMemberships = () => {
     { key: 'overview', icon: BarChart3, label: isRTL ? 'نظرة عامة' : 'Overview' },
     { key: 'plans', icon: CreditCard, label: isRTL ? 'الخطط' : 'Plans', count: plans.length },
     { key: 'subscriptions', icon: Users, label: isRTL ? 'الاشتراكات' : 'Subscriptions', count: stats.active },
+    { key: 'requests', icon: ArrowUpCircle, label: isRTL ? 'طلبات الترقية' : 'Upgrade Requests' },
     { key: 'businesses', icon: Building2, label: isRTL ? 'الجهات' : 'Businesses' },
     { key: 'usage', icon: Activity, label: isRTL ? 'الاستخدام' : 'Usage' },
   ];
