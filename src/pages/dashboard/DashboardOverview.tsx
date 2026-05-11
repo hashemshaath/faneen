@@ -424,6 +424,83 @@ const AdminDashboardView = React.memo(({ isRTL }: { isRTL: boolean }) => {
         </div>
       )}
 
+      {/* Today's Pulse — operational counters (counts only, no PII) */}
+      <Card className="border-border/40">
+        <CardHeader className="pb-1 px-4 pt-3">
+          <CardTitle className="text-xs flex items-center gap-2">
+            <Zap className="w-3.5 h-3.5 text-accent" />
+            {isRTL ? 'نبض اليوم' : "Today's Pulse"}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="px-4 pb-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            {([
+              { icon: MessageSquare, label: isRTL ? 'طلبات اليوم' : 'Leads today', value: stats?.leadsToday, tone: 'text-info', bg: 'bg-info/10' },
+              { icon: FileText,      label: isRTL ? 'عقود اليوم' : 'Contracts today', value: stats?.contractsToday, tone: 'text-accent', bg: 'bg-accent/10' },
+              { icon: UserPlus,      label: isRTL ? 'تسجيل مزودين' : 'New providers', value: stats?.providersToday, tone: 'text-primary', bg: 'bg-primary/10' },
+              { icon: AlertTriangle, label: isRTL ? 'بريد فاشل (48س)' : 'Email DLQ (48h)', value: stats?.dlqActive, tone: 'text-destructive', bg: 'bg-destructive/10' },
+            ] as const).map((m) => (
+              <div key={m.label} className="rounded-xl border border-border/40 p-3 flex items-center gap-2.5">
+                <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center shrink-0', m.bg, m.tone)}>
+                  <m.icon className="w-3.5 h-3.5" />
+                </div>
+                <div className="min-w-0">
+                  <p className={cn('text-lg font-bold leading-none tech-content', m.tone)}>
+                    {m.value === null || m.value === undefined ? '—' : m.value}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground mt-1 truncate">{m.label}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Needs Attention — actionable backlogs with deep-links to existing admin pages */}
+      <Card className="border-border/40">
+        <CardHeader className="pb-1 px-4 pt-3">
+          <CardTitle className="text-xs flex items-center gap-2">
+            <AlertCircle className="w-3.5 h-3.5 text-urgent" />
+            {isRTL ? 'بحاجة إلى إجراء' : 'Needs attention'}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="px-4 pb-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
+            {([
+              { icon: MessageSquare, label: isRTL ? 'طلبات جديدة' : 'New leads',           value: stats?.leadsPending,       to: '/admin/lead-requests',   tone: 'text-info' },
+              { icon: ShieldCheck,   label: isRTL ? 'مراجعة مزودين' : 'Provider review',   value: stats?.providersPending,   to: '/admin/provider-review', tone: 'text-warning' },
+              { icon: AlertTriangle, label: isRTL ? 'بريد DLQ نشط' : 'Email DLQ',          value: stats?.dlqActive,          to: '/admin/email-center',    tone: 'text-destructive' },
+              { icon: Inbox,         label: isRTL ? 'رسائل تواصل' : 'Contact messages',    value: stats?.newContactMessages, to: '/admin/contact-messages',tone: 'text-info' },
+              { icon: FileText,      label: isRTL ? 'عقود بانتظار الموافقة' : 'Contracts pending', value: stats?.contractsPending, to: '/dashboard/contracts', tone: 'text-warning' },
+            ] as const).map((m) => {
+              const v = m.value;
+              const empty = v === null || v === undefined;
+              const zero = v === 0;
+              return (
+                <Link
+                  key={m.label}
+                  to={m.to}
+                  className="group rounded-xl border border-border/40 p-3 flex items-center justify-between gap-2 hover:border-accent/40 hover:bg-muted/30 transition-colors"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-muted/40', m.tone)}>
+                      <m.icon className="w-3.5 h-3.5" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className={cn('text-lg font-bold leading-none tech-content', empty || zero ? 'text-muted-foreground' : m.tone)}>
+                        {empty ? '—' : v}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-1 truncate">{m.label}</p>
+                    </div>
+                  </div>
+                  <ArrowUpRight className="w-3.5 h-3.5 text-muted-foreground/40 group-hover:text-accent transition-colors" />
+                </Link>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
         {adminCards.map((card) => <StatCard key={card.label} {...card} />)}
