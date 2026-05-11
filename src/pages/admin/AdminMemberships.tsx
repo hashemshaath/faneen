@@ -232,6 +232,16 @@ const PlanCard = React.memo(({ plan, isRTL, language, subsCount, onEdit }: { pla
               );
             })}
           </div>
+          {extraKeys.length > 0 && (
+            <p
+              className="mt-2 text-[8px] text-muted-foreground/80 italic"
+              title={extraKeys.join(', ')}
+            >
+              {isRTL
+                ? `محفوظ ${extraKeys.length} مفتاح إضافي للنظام الخلفي`
+                : `${extraKeys.length} additional backend key(s) preserved`}
+            </p>
+          )}
         </div>
       </CardContent>
     </Card>
