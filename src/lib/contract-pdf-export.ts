@@ -587,6 +587,94 @@ export const exportContractPDF = async (data: ContractExportData) => {
     y += lines.length * 4 + 12;
   }
 
+  // ── CT6: Template clauses from frozen snapshot (published only) ──
+  const snapSections = data.templateSnapshot?.sections;
+  if (snapSections && snapSections.length > 0) {
+    sectionTitle(data.isRTL ? 'بنود القالب' : 'Template Clauses');
+    const ordered = [...snapSections].sort(
+      (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0),
+    );
+    for (const s of ordered) {
+      const sTitle = data.isRTL ? (s.title_ar || s.title_en) : (s.title_en || s.title_ar);
+      if (!sTitle) continue;
+      if (y > h - 25) { doc.addPage(); y = 15; }
+      doc.setFontSize(10);
+      doc.setTextColor(darkR, darkG, darkB);
+      doc.text(String(sTitle), data.isRTL ? w - 15 : 15, y, { align: data.isRTL ? 'right' : 'left' });
+      y += 5;
+      const clauses = [...(s.clauses || [])].sort(
+        (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0),
+      );
+      for (let i = 0; i < clauses.length; i++) {
+        const c = clauses[i];
+        const body = data.isRTL ? (c.body_ar || c.body_en) : (c.body_en || c.body_ar);
+        if (!body) continue;
+        const mandatory = c.is_mandatory
+          ? (data.isRTL ? '★ ' : '★ ')
+          : '';
+        const prefix = `${mandatory}${i + 1}. `;
+        doc.setFontSize(8);
+        doc.setTextColor(textR, textG, textB);
+        const wrapped = doc.splitTextToSize(`${prefix}${String(body)}`, w - 34);
+        if (y + wrapped.length * 4 > h - 20) { doc.addPage(); y = 15; }
+        doc.text(wrapped, data.isRTL ? w - 17 : 17, y, { align: data.isRTL ? 'right' : 'left' });
+        y += wrapped.length * 4 + 1;
+      }
+      y += 4;
+    }
+    // Mandatory legend
+    doc.setFontSize(7);
+    doc.setTextColor(mutedR, mutedG, mutedB);
+    const legend = data.isRTL ? '★ بند إلزامي' : '★ Mandatory clause';
+    if (y + 4 > h - 20) { doc.addPage(); y = 15; }
+    doc.text(legend, data.isRTL ? w - 15 : 15, y, { align: data.isRTL ? 'right' : 'left' });
+    y += 10;
+  }
+
+  // ── CT6: Document precedence (no URLs, no storage paths) ──
+  {
+    const snapAtt = data.templateSnapshot?.attachments;
+    let order: string[] = [];
+    if (snapAtt && snapAtt.length > 0) {
+      order = [...snapAtt]
+        .sort((a, b) => (a.precedence_order ?? 0) - (b.precedence_order ?? 0))
+        .map((a, idx) => {
+          const t = data.isRTL ? (a.title_ar || a.title_en) : (a.title_en || a.title_ar);
+          const mark = a.is_mandatory ? (data.isRTL ? ' (إلزامي)' : ' (mandatory)') : '';
+          return `${idx + 1}. ${t || a.kind || '-'}${mark}`;
+        });
+    } else {
+      order = data.isRTL
+        ? [
+            '1. آخر ملحق معتمد',
+            '2. عرض السعر / جدول الكميات المعتمد',
+            '3. المقاسات وبنود العمل',
+            '4. المخططات والمواصفات',
+            '5. شروط خاصة',
+            '6. شروط عامة',
+          ]
+        : [
+            '1. Latest approved amendment',
+            '2. Approved quote / BOQ',
+            '3. Measurements and line items',
+            '4. Drawings and specifications',
+            '5. Special terms',
+            '6. General terms',
+          ];
+    }
+    if (order.length > 0) {
+      sectionTitle(data.isRTL ? 'أولوية المستندات' : 'Document Precedence');
+      doc.setFontSize(8);
+      doc.setTextColor(textR, textG, textB);
+      for (const line of order) {
+        if (y + 5 > h - 20) { doc.addPage(); y = 15; }
+        doc.text(line, data.isRTL ? w - 17 : 17, y, { align: data.isRTL ? 'right' : 'left' });
+        y += 5;
+      }
+      y += 6;
+    }
+  }
+
   // ── Attachments Index (metadata only — no URLs/paths) ──
   if (data.attachments) {
     sectionTitle(data.isRTL ? 'فهرس المرفقات' : 'Attachments Index');
