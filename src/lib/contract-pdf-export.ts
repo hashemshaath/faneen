@@ -411,6 +411,111 @@ export const exportContractPDF = async (data: ContractExportData) => {
     }
   }
 
+  // ── Amendments Appendix (metadata only — no audit, no PII, no URLs) ──
+  if (data.amendments && data.amendments.length > 0) {
+    sectionTitle(data.isRTL ? 'ملحقات وتعديلات العقد' : 'Contract Amendments');
+
+    const STATUS_LABEL: Record<string, { ar: string; en: string }> = {
+      pending:   { ar: 'قيد المراجعة', en: 'Pending' },
+      approved:  { ar: 'معتمد',         en: 'Approved' },
+      rejected:  { ar: 'مرفوض',         en: 'Rejected' },
+      cancelled: { ar: 'ملغي',          en: 'Cancelled' },
+      applied:   { ar: 'مطبق',          en: 'Applied' },
+    };
+    const TYPE_LABEL: Record<string, { ar: string; en: string }> = {
+      scope_change:       { ar: 'نطاق العمل',     en: 'Scope' },
+      amount_change:      { ar: 'قيمة العقد',      en: 'Amount' },
+      date_change:        { ar: 'تاريخ الانتهاء',  en: 'End date' },
+      measurement_change: { ar: 'المقاسات',        en: 'Measurements' },
+      financial:          { ar: 'مالي',             en: 'Financial' },
+      extension:          { ar: 'تمديد',            en: 'Extension' },
+      other:              { ar: 'أخرى',             en: 'Other' },
+    };
+    const fmtDate = (d?: string | null): string =>
+      d ? new Date(d).toLocaleDateString(data.isRTL ? 'ar-SA' : 'en-US') : '-';
+    const fmtMoney = (n?: number | null): string =>
+      n == null || !Number.isFinite(n) ? '-' : `${fmtNum(Number(n))} ${data.currency}`;
+    const fmtDelta = (n?: number | null): string => {
+      if (n == null || !Number.isFinite(n)) return '-';
+      const v = Number(n);
+      const sign = v > 0 ? '+' : '';
+      return `${sign}${fmtNum(v)} ${data.currency}`;
+    };
+
+    autoTable(doc, {
+      startY: y,
+      head: [[
+        '#',
+        data.isRTL ? 'التاريخ' : 'Date',
+        data.isRTL ? 'النوع' : 'Type',
+        data.isRTL ? 'الحالة' : 'Status',
+        data.isRTL ? 'العنوان' : 'Title',
+        data.isRTL ? 'القيمة السابقة' : 'Old total',
+        data.isRTL ? 'القيمة الجديدة' : 'New amount',
+        data.isRTL ? 'الفرق' : 'Delta',
+        data.isRTL ? 'تاريخ النهاية الجديد' : 'New end',
+        data.isRTL ? 'موافقة العميل' : 'Client appr.',
+        data.isRTL ? 'موافقة المزود' : 'Provider appr.',
+        data.isRTL ? 'تاريخ التطبيق' : 'Applied',
+      ]],
+      body: data.amendments.map(a => {
+        const t = TYPE_LABEL[a.type] ?? { ar: a.type, en: a.type };
+        const s = STATUS_LABEL[a.status] ?? { ar: a.status, en: a.status };
+        return [
+          String(a.number),
+          fmtDate(a.createdAt),
+          data.isRTL ? t.ar : t.en,
+          data.isRTL ? s.ar : s.en,
+          (a.title || '-').slice(0, 60),
+          fmtMoney(a.oldTotal),
+          fmtMoney(a.newAmount),
+          fmtDelta(a.amountDelta),
+          a.newEndDate || '-',
+          fmtDate(a.clientApprovedAt),
+          fmtDate(a.providerApprovedAt),
+          fmtDate(a.appliedAt),
+        ];
+      }),
+      theme: 'grid',
+      styles: { fontSize: 7, cellPadding: 2.2, ...rtlStyles },
+      headStyles: { fillColor: HEADER_RGB, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7 },
+      alternateRowStyles: { fillColor: SURFACE2_RGB },
+      margin: { left: 10, right: 10 },
+      didParseCell: (hookData: { section: string; column: { index: number }; row: { index: number }; cell: { styles: { fontStyle?: string; fillColor?: [number, number, number]; textColor?: [number, number, number] } } }) => {
+        if (hookData.section !== 'body') return;
+        const a = data.amendments![hookData.row.index];
+        if (!a) return;
+        // Emphasize approved/applied in the Status column.
+        if (hookData.column.index === 3 && (a.status === 'approved' || a.status === 'applied')) {
+          hookData.cell.styles.fontStyle = 'bold';
+          hookData.cell.styles.fillColor = HIGHLIGHT_RGB;
+        }
+      },
+    });
+    y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 8;
+
+    // Compact reasons list for amendments that carry a reason — kept short.
+    const withReason = data.amendments.filter(a => a.reason && a.reason.trim().length > 0);
+    if (withReason.length > 0) {
+      doc.setFontSize(7.5);
+      doc.setTextColor(mutedR, mutedG, mutedB);
+      const label = data.isRTL ? 'الأسباب المسجلة:' : 'Recorded reasons:';
+      if (y + 6 > h - 20) { doc.addPage(); y = 15; }
+      doc.text(label, data.isRTL ? w - 15 : 15, y, { align: data.isRTL ? 'right' : 'left' });
+      y += 4.5;
+      for (const a of withReason) {
+        const line = `#${a.number} — ${(a.reason || '').slice(0, 160)}`;
+        const wrapped = doc.splitTextToSize(line, w - 30);
+        if (y + wrapped.length * 4 > h - 20) { doc.addPage(); y = 15; }
+        doc.text(wrapped, data.isRTL ? w - 15 : 15, y, { align: data.isRTL ? 'right' : 'left' });
+        y += wrapped.length * 4;
+      }
+      y += 8;
+    } else {
+      y += 4;
+    }
+  }
+
   // ── Signatures ──
   if (y > h - 45) { doc.addPage(); y = 15; }
   y += 5;
