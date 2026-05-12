@@ -2524,6 +2524,21 @@ const DashboardContracts = () => {
                                       <div className="flex gap-2">
                                         <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5" onClick={() => setShowAddMeasurement(c.id)}><Plus className="w-3.5 h-3.5" />{isRTL ? 'مقاس' : 'Measurement'}</Button>
                                         <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5" onClick={() => setShowAddLineItem(c.id)}><Plus className="w-3.5 h-3.5" />{isRTL ? 'بند إضافي' : 'Line Item'}</Button>
+                                        {(() => {
+                                          const cv = (c as { template_version_id?: string | null }).template_version_id ?? null;
+                                          const cat = cv ? (publishedVersions.find(v => v.version_id === cv)?.category ?? 'general') : 'general';
+                                          return (
+                                            <Button
+                                              variant="outline" size="sm" className="h-8 text-xs gap-1.5"
+                                              disabled={addStarterBoqMutation.isPending}
+                                              onClick={() => addStarterBoqMutation.mutate({ contractId: c.id, category: cat })}
+                                              title={isRTL ? 'إضافة مجموعة بنود مقترحة حسب نوع العمل' : 'Add suggested BOQ groups for this work type'}
+                                            >
+                                              {addStarterBoqMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ClipboardList className="w-3.5 h-3.5" />}
+                                              {isRTL ? 'مجموعة بنود مقترحة' : 'Suggested BOQ'}
+                                            </Button>
+                                          );
+                                        })()}
                                       </div>
                                     )}
                                   </div>
