@@ -920,7 +920,17 @@ export const buildContractPDF = async (data: ContractExportData) => {
     doc.text(new Date().toLocaleDateString(data.isRTL ? 'ar-SA' : 'en-US'), w - 15, h - 5, { align: 'right' });
   }
 
+  return doc;
+};
+
+/**
+ * PDF-QA1: User-facing export wrapper. Builds the document and triggers the
+ * browser download. Kept as the public API so existing callers are unchanged.
+ */
+export const exportContractPDF = async (data: ContractExportData) => {
+  const doc = await buildContractPDF(data);
   doc.save(`contract-${data.contractNumber}.pdf`);
+  return doc;
 };
 
 // ── Export Measurements as PDF ──
