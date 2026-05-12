@@ -1125,6 +1125,82 @@ const ContractDetail = () => {
     }
   };
 
+  // PDF-AR3: Single-button "Export + Analyze" flow.
+  // 1) Builds the contract PDF (same export pipeline as the user-facing
+  //    Download button) and triggers a local download.
+  // 2) Uploads the bytes to the `verify-pdf-arabic` edge function which
+  //    runs a server-side mojibake scan and returns a pdftotext-style
+  //    report.
+  // 3) Displays the backend report inline in the diagnostics panel.
+  const handleExportAndAnalyzePDF = async () => {
+    if (!contract || isAnalyzingPdf) return;
+    const data = buildPdfPayload();
+    if (!data) return;
+    setIsAnalyzingPdf(true);
+    setPdfBackendReport(null);
+    try {
+      const [{ buildContractPdfForAnalysis }, { getArabicFontDiagnostics, setBackendVerification }] = await Promise.all([
+        import('@/lib/contract-pdf-export'),
+        import('@/lib/pdf-arabic-font'),
+      ]);
+      const { bytes, blob, fileName } = await buildContractPdfForAnalysis(data);
+
+      // Trigger local download so the QA reviewer keeps the same artifact
+      // that was sent to the analyzer.
+      const dlUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = dlUrl; a.download = fileName; document.body.appendChild(a); a.click();
+      a.remove();
+      setTimeout(() => { try { URL.revokeObjectURL(dlUrl); } catch { /* noop */ } }, 1000);
+
+      // Encode bytes → base64 in chunks (avoid call-stack overflow).
+      let binary = '';
+      const chunk = 0x8000;
+      for (let i = 0; i < bytes.length; i += chunk) {
+        binary += String.fromCharCode(...bytes.subarray(i, Math.min(i + chunk, bytes.length)));
+      }
+      const pdfBase64 = btoa(binary);
+
+      const { data: backend, error } = await supabase.functions.invoke('verify-pdf-arabic', {
+        body: { pdfBase64, fileName },
+      });
+      if (error) throw error;
+
+      const status = backend?.status === 'PASS' ? 'PASS' : 'FAIL';
+      setBackendVerification({
+        status,
+        mojibakeDetected: !!backend?.mojibakeDetected,
+        mojibakeCount: Number(backend?.mojibakeCount ?? 0),
+        sample: String(backend?.sample ?? ''),
+        verifiedAt: String(backend?.verifiedAt ?? new Date().toISOString()),
+        source: 'backend',
+        report: typeof backend?.report === 'string' ? backend.report : undefined,
+      });
+      setPdfBackendReport(typeof backend?.report === 'string' ? backend.report : JSON.stringify(backend, null, 2));
+      setPdfDiagnostics(getArabicFontDiagnostics());
+
+      toast({
+        title: status === 'PASS'
+          ? (isRTL ? 'تحليل الـ PDF: ناجح' : 'PDF analysis: PASS')
+          : (isRTL ? 'تحليل الـ PDF: فشل' : 'PDF analysis: FAIL'),
+        description: status === 'PASS'
+          ? (isRTL ? 'لم يُكتشف نص مشوّش، تم تضمين الخط العربي بشكل صحيح.' : 'No mojibake detected; Arabic font embedded correctly.')
+          : (isRTL ? 'تم اكتشاف نص مشوّش (mojibake) في طبقة النص.' : 'Mojibake detected in the text layer.'),
+        variant: status === 'PASS' ? 'default' : 'destructive',
+      });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      setPdfBackendReport(`status: FAIL\nerror: ${message}`);
+      toast({
+        title: isRTL ? 'تعذّر تحليل الـ PDF' : 'PDF analysis failed',
+        description: message,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsAnalyzingPdf(false);
+    }
+  };
+
   const handleClosePreview = () => {
     setPreviewOpen(false);
     if (previewUrl) {
