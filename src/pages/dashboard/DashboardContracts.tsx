@@ -1639,14 +1639,100 @@ const DashboardContracts = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               {/* CT4B — Step 1: Client (search picker with email fallback) */}
-              {!editingId && (
+              {!editingId && inviteMode === 'idle' && (
                 <ClientPicker
                   isRTL={isRTL}
                   selected={selectedClient}
                   onSelect={setSelectedClient}
                   fallbackEmail={form.client_email}
                   onFallbackEmail={(v) => setForm(f => ({ ...f, client_email: v }))}
+                  onRequestInvite={(prefill) => {
+                    setInviteForm({ email: prefill.includes('@') ? prefill : '', name: '', phone: '' });
+                    setInviteMode('composing');
+                  }}
                 />
+              )}
+
+              {/* CT4C.3 — Compose invitation */}
+              {!editingId && inviteMode === 'composing' && (
+                <div className="p-4 rounded-xl border-2 border-info/40 bg-info/5 space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <Label className="text-xs font-semibold flex items-center gap-1.5">
+                      <Send className="w-3.5 h-3.5 text-info" />
+                      {isRTL ? 'إرسال دعوة لعميل جديد' : 'Invite a new client'}
+                    </Label>
+                    <Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-[10px]" onClick={() => { setInviteMode('idle'); setInviteForm({ email: '', name: '', phone: '' }); }}>
+                      <X className="w-3 h-3 me-1" />
+                      {isRTL ? 'إلغاء' : 'Cancel'}
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <div className="space-y-1 sm:col-span-1">
+                      <Label className="text-[10px]">{isRTL ? 'البريد الإلكتروني' : 'Email'} <span className="text-destructive">*</span></Label>
+                      <Input dir="ltr" type="email" className="h-9 text-xs" value={inviteForm.email} onChange={(e) => setInviteForm(f => ({ ...f, email: e.target.value }))} placeholder="client@email.com" />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-[10px]">{isRTL ? 'الاسم (اختياري)' : 'Name (optional)'}</Label>
+                      <Input className="h-9 text-xs" value={inviteForm.name} onChange={(e) => setInviteForm(f => ({ ...f, name: e.target.value }))} />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-[10px]">{isRTL ? 'الجوال (اختياري)' : 'Phone (optional)'}</Label>
+                      <Input dir="ltr" className="h-9 text-xs" value={inviteForm.phone} onChange={(e) => setInviteForm(f => ({ ...f, phone: e.target.value }))} />
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground leading-relaxed">
+                    {isRTL
+                      ? 'سيتم إرسال رابط آمن للعميل لإنشاء حسابه أو تسجيل الدخول. لن يتم إنشاء العقد إلا بعد قبول الدعوة.'
+                      : 'A secure link will be emailed to the client to create their account or sign in. The contract is not created until the invitation is accepted.'}
+                  </p>
+                  <Button type="button" variant="hero" size="sm" className="h-9 gap-1.5 text-xs" disabled={!inviteForm.email.trim() || sendInviteMutation.isPending} onClick={() => sendInviteMutation.mutate()}>
+                    {sendInviteMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                    {isRTL ? 'إرسال الدعوة' : 'Send invitation'}
+                  </Button>
+                </div>
+              )}
+
+              {/* CT4C.3 — Awaiting acceptance */}
+              {!editingId && inviteMode === 'awaiting' && pendingInvite && (
+                <div className="p-4 rounded-xl border-2 border-warning/40 bg-warning/5 space-y-3">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-warning" />
+                      <span className="text-xs font-semibold">{isRTL ? 'بانتظار قبول الدعوة' : 'Awaiting invitation acceptance'}</span>
+                      <Badge variant="secondary" className="text-[9px]">{pendingInvite.ref_id}</Badge>
+                    </div>
+                    <Badge variant="outline" className="text-[9px]">{isRTL ? 'قيد الانتظار' : 'Pending'}</Badge>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-[11px]">
+                    <div>
+                      <div className="text-muted-foreground text-[9px]">{isRTL ? 'البريد' : 'Email'}</div>
+                      <div dir="ltr" className="font-mono">{maskInviteEmail(pendingInvite.email_lower)}</div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground text-[9px]">{isRTL ? 'صالحة حتى' : 'Valid until'}</div>
+                      <div dir="ltr">{new Date(pendingInvite.expires_at).toISOString().slice(0, 10)}</div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground text-[9px]">{isRTL ? 'التذكيرات' : 'Reminders'}</div>
+                      <div>{pendingInvite.reminder_count} / 2</div>
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground leading-relaxed">
+                    {isRTL
+                      ? 'بعد قبول العميل للدعوة، يمكنك إنشاء العقد أو سيتم ربط المسودة حسب الخطوة التالية.'
+                      : 'After the client accepts the invitation, you can create the contract or the draft will be linked in the next step.'}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <Button type="button" variant="outline" size="sm" className="h-8 gap-1.5 text-[11px]" disabled={resendInviteMutation.isPending || pendingInvite.reminder_count >= 2} onClick={() => resendInviteMutation.mutate()}>
+                      {resendInviteMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+                      {isRTL ? 'إعادة إرسال' : 'Resend'}
+                    </Button>
+                    <Button type="button" variant="ghost" size="sm" className="h-8 gap-1.5 text-[11px] text-destructive" disabled={cancelInviteMutation.isPending} onClick={() => cancelInviteMutation.mutate()}>
+                      {cancelInviteMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <XCircle className="w-3 h-3" />}
+                      {isRTL ? 'إلغاء الدعوة' : 'Cancel invitation'}
+                    </Button>
+                  </div>
+                </div>
               )}
 
               {/* CT4B — Step 2: Work / service type (auto-suggests template) */}
