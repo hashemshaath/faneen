@@ -18,7 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
-import { mapContractLockError } from '@/lib/contract-errors';
+import { mapContractLockError, mapContractCreateError } from '@/lib/contract-errors';
 import { dispatchAmendmentEvent } from '@/lib/amendment-notify';
 import {
   FileText, Eye, Plus, CheckCircle2, Clock, XCircle, AlertTriangle,
