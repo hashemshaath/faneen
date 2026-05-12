@@ -867,6 +867,7 @@ const DashboardContracts = () => {
         pricing_method: lineItemForm.pricing_method,
         unit_of_measure: formatUnitOfMeasure(lineItemForm.pricing_method),
         formula_inputs: fi,
+        boq_group_key: lineItemForm.boq_group_key || 'other',
       });
       if (error) throw error;
       // C6.4a — recompute via RPC.
