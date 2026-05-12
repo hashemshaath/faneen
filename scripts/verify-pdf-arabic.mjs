@@ -13,7 +13,7 @@ const mojibake = /þ|Ã|Â|Ù|WOFF/i;
 
 const magic = (buf) => Array.from(buf.subarray(0, 4)).map((b) => b.toString(16).padStart(2, '0')).join(' ');
 const isTtf = (buf) => ['00 01 00 00', '4f 54 54 4f', '74 72 75 65', '74 79 70 31'].includes(magic(buf));
-const normalize = (s) => s.normalize('NFKC').replace(/[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED\u200E\u200F\u202A-\u202E]/g, '');
+const normalize = (s) => s.normalize('NFKC').replace(/[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED\u200E\u200F\u202A-\u202E]/g, '').replace(/ٱ/g, 'ا').replace(/ﷲ/g, 'الله');
 
 if (!existsSync(regularPath)) throw new Error(`Missing Arabic font: ${regularPath}`);
 execFileSync('pdftotext', ['-v'], { stdio: 'ignore' });
