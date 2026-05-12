@@ -108,6 +108,7 @@ const DashboardCommunicationPreferences = lazyRetry(() => import("./pages/dashbo
 const AdminProviderLanding = lazyRetry(() => import("./pages/admin/AdminProviderLanding"));
 const AdminAnalyticsSettings = lazyRetry(() => import("./pages/admin/AdminAnalyticsSettings"));
 const AdminBranding = lazyRetry(() => import("./pages/admin/AdminBranding"));
+const AdminContractTemplates = lazyRetry(() => import("./pages/admin/AdminContractTemplates"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -222,6 +223,7 @@ const AppRoutes = () => (
           <Route path="/admin/system-settings" element={<ProtectedRoute requireSuperAdmin><AdminSystemSettings /></ProtectedRoute>} />
           <Route path="/admin/analytics-settings" element={<ProtectedRoute requireAdmin><AdminAnalyticsSettings /></ProtectedRoute>} />
           <Route path="/admin/branding" element={<ProtectedRoute requireAdmin><AdminBranding /></ProtectedRoute>} />
+          <Route path="/admin/contract-templates" element={<ProtectedRoute requireAdmin><AdminContractTemplates /></ProtectedRoute>} />
 
           <Route path="/:username" element={<BusinessProfile />} />
           <Route path="*" element={<NotFound />} />
