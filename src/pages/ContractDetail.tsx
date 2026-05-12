@@ -1314,8 +1314,8 @@ const ContractDetail = () => {
                   <CheckCircle2 className="w-3.5 h-3.5" />{isRTL ? 'قبول العقد' : 'Accept'}
                 </Button>
               )}
-              <Button variant="heroOutline" size="sm" className="text-xs border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 gap-1" onClick={handleExportPDF}>
-                <Download className="w-3.5 h-3.5" />PDF
+              <Button variant="heroOutline" size="sm" disabled={isExportingPDF} className="text-xs border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 gap-1" onClick={handleExportPDF}>
+                <Download className="w-3.5 h-3.5" />{isExportingPDF ? '…' : 'PDF'}
               </Button>
               <Button variant="heroOutline" size="sm" className="text-xs border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 gap-1" onClick={() => window.print()}>
                 <Printer className="w-3.5 h-3.5" />{isRTL ? 'طباعة' : 'Print'}
