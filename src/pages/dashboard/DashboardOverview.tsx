@@ -155,22 +155,28 @@ const TodaySummary = React.memo(({ isRTL, userId }: { isRTL: boolean; userId: st
   ];
 
   return (
-    <Card className="border-border/40">
-      <CardContent className="p-3">
-        <div className="flex items-center gap-2 mb-2">
-          <CalendarDays className="w-3.5 h-3.5 text-accent" />
-          <h3 className="font-heading font-bold text-xs">{isRTL ? 'ملخص اليوم' : "Today's Summary"}</h3>
+    <Card className="border-border/60">
+      <CardContent className="p-3 sm:p-4">
+        <div className="flex items-center gap-2 mb-2.5">
+          <CalendarDays className="w-4 h-4 text-accent" aria-hidden="true" />
+          <h3 className="font-heading font-bold text-sm">{isRTL ? 'ملخص اليوم' : "Today's Summary"}</h3>
         </div>
         <div className="grid grid-cols-2 gap-2">
-          {items.map((item, i) => (
-            <div key={i} className="flex items-center gap-2 p-2 rounded-lg bg-muted/20">
-              <item.icon className="w-3.5 h-3.5 text-muted-foreground" />
-              <div>
-                <p className="text-sm font-bold leading-none">{item.value}</p>
-                <p className="text-[8px] text-muted-foreground">{item.label}</p>
+          {items.map((item, i) => {
+            const isEmpty = item.value === 0;
+            return (
+              <div
+                key={i}
+                className={`flex items-center gap-2.5 p-2.5 rounded-lg border ${isEmpty ? 'bg-muted/20 border-border/40' : 'bg-accent/5 border-accent/20'}`}
+              >
+                <item.icon className={`w-4 h-4 shrink-0 ${isEmpty ? 'text-muted-foreground/70' : 'text-accent'}`} aria-hidden="true" />
+                <div className="min-w-0">
+                  <p className={`text-base font-bold leading-none tech-content ${isEmpty ? 'text-muted-foreground' : 'text-foreground'}`}>{item.value}</p>
+                  <p className="text-[11px] text-muted-foreground mt-1 truncate">{item.label}</p>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </CardContent>
     </Card>
@@ -801,26 +807,41 @@ const ProviderDashboardView = React.memo(({ isRTL, user, profile }: { isRTL: boo
   return (
     <div className="space-y-5" ref={ref}>
       {/* Welcome */}
-      <div className="rounded-2xl border border-border/30 bg-gradient-to-br from-card via-card to-primary/5 p-5 sm:p-6 dark:from-card/80 dark:to-primary/10">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-xl bg-accent/15 flex items-center justify-center shrink-0 overflow-hidden">
-              {business?.logo_url ? <img src={business.logo_url} alt={isRTL ? business.name_ar : (business.name_en || business.name_ar)} className="w-full h-full object-cover" /> : <Building2 className="w-5 h-5 text-accent" />}
+      <div className="rounded-2xl border border-border/60 bg-gradient-to-br from-card via-card to-primary/5 p-5 sm:p-6 dark:from-card/80 dark:to-primary/10">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-12 h-12 rounded-xl bg-accent/15 flex items-center justify-center shrink-0 overflow-hidden ring-1 ring-accent/20">
+              {business?.logo_url
+                ? <img src={business.logo_url} alt={isRTL ? business.name_ar : (business.name_en || business.name_ar)} className="w-full h-full object-cover" />
+                : <Building2 className="w-6 h-6 text-accent" aria-hidden="true" />}
             </div>
-            <div>
-              <h1 className="font-heading font-bold text-base sm:text-lg flex items-center gap-2">
+            <div className="min-w-0">
+              <h1 className="font-heading font-bold text-lg sm:text-xl flex items-center gap-2 flex-wrap leading-tight">
                 {isRTL ? 'لوحة مزود الخدمة' : 'Provider Dashboard'}
-                {business?.is_verified && <Badge variant="secondary" className="text-[9px] bg-success/10 text-success border-0"><CheckCircle2 className="w-2.5 h-2.5 me-0.5" />{isRTL ? 'موثق' : 'Verified'}</Badge>}
+                {business?.is_verified && (
+                  <Badge variant="secondary" className="text-[11px] bg-success/10 text-success border border-success/20 gap-1 h-5 px-1.5">
+                    <CheckCircle2 className="w-3 h-3" aria-hidden="true" />
+                    {isRTL ? 'موثق' : 'Verified'}
+                  </Badge>
+                )}
               </h1>
-              <p className="text-[10px] text-muted-foreground">
+              <p className="text-[13px] text-muted-foreground mt-0.5 truncate">
                 {isRTL ? `مرحباً ${profile?.full_name || ''}` : `Welcome ${profile?.full_name || ''}`}
-                {business && <> — {isRTL ? business.name_ar : (business.name_en || business.name_ar)}</>}
+                {business && <> — <span className="text-foreground/80 font-medium">{isRTL ? business.name_ar : (business.name_en || business.name_ar)}</span></>}
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-1.5">
-            {profile?.ref_id && <Badge variant="outline" className="text-[9px] h-5">{profile.ref_id}</Badge>}
-            {business?.membership_tier && <Badge className="bg-accent/10 text-accent border-accent/30 text-[9px] h-5">{business.membership_tier}</Badge>}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {profile?.ref_id && (
+              <Badge variant="outline" className="text-[11px] h-6 px-2 tech-content border-border/60">
+                {profile.ref_id}
+              </Badge>
+            )}
+            {business?.membership_tier && (
+              <Badge className="bg-accent/10 text-accent border border-accent/30 text-[11px] h-6 px-2 capitalize">
+                {business.membership_tier}
+              </Badge>
+            )}
           </div>
         </div>
       </div>

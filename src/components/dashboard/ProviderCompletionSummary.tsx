@@ -93,12 +93,24 @@ export function ProviderCompletionSummary() {
               </p>
             </div>
           </div>
-          <Badge variant="outline" className="tech-content text-xs font-bold shrink-0">
+          <Badge
+            variant="outline"
+            className={`tech-content text-sm font-bold shrink-0 px-2.5 h-7 border ${
+              isPublic ? 'border-success/40 text-success bg-success/5'
+                : needsAttention ? 'border-warning/40 text-warning bg-warning/5'
+                : 'border-accent/40 text-accent bg-accent/5'
+            }`}
+            aria-label={`${language === 'ar' ? 'الاكتمال' : 'Completion'} ${completion}%`}
+          >
             {completion}%
           </Badge>
         </div>
 
-        <Progress value={completion} className="h-2" />
+        <Progress
+          value={completion}
+          className={`h-2 ${isPublic ? '[&>div]:bg-success' : needsAttention ? '[&>div]:bg-warning' : '[&>div]:bg-accent'}`}
+          aria-label={`${language === 'ar' ? 'الاكتمال' : 'Completion'} ${completion}%`}
+        />
 
         {missing.length > 0 && (
           <div className="flex flex-wrap items-center gap-1.5">
