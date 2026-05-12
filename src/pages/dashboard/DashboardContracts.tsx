@@ -2775,6 +2775,19 @@ const DashboardContracts = () => {
                                                   {g.subtotal.toLocaleString()} {c.currency_code}
                                                 </span>
                                               </div>
+                                              {(() => {
+                                                const groupVat = sumLineVatBreakdowns(
+                                                  g.items.map(it => lineVatById.get(it.id)).filter((b): b is NonNullable<typeof b> => !!b)
+                                                );
+                                                if (groupVat.vat <= 0 && groupVat.gross <= 0) return null;
+                                                return (
+                                                  <div className="px-2 flex items-center justify-end gap-3 text-[9px] text-muted-foreground">
+                                                    <span>{isRTL ? 'الصافي' : 'Net'}: <span className="font-mono text-foreground/80">{groupVat.net.toLocaleString()}</span></span>
+                                                    <span>{isRTL ? 'الضريبة' : 'VAT'}: <span className="font-mono text-foreground/80">{groupVat.vat.toLocaleString()}</span></span>
+                                                    <span>{isRTL ? 'الإجمالي' : 'Gross'}: <span className="font-mono text-accent">{groupVat.gross.toLocaleString()}</span></span>
+                                                  </div>
+                                                );
+                                              })()}
                                               {g.items.map((li) => (
                                                 <div key={li.id} className="p-3 rounded-xl bg-card border border-border/30 flex items-center justify-between gap-3 hover:border-primary/20 transition-colors">
                                                   <div className="flex items-center gap-3 min-w-0">
@@ -2791,6 +2804,19 @@ const DashboardContracts = () => {
                                                         {li.quantity} × {Number(li.unit_price).toLocaleString()}
                                                       </p>
                                                       <p className="text-xs font-bold">{Number(li.total_cost || 0).toLocaleString()} {c.currency_code}</p>
+                                                      {(() => {
+                                                        const b = lineVatById.get(li.id);
+                                                        if (!b) return null;
+                                                        const handlingLabel = formatVatHandlingLabel(b.vatHandling, isRTL ? 'ar' : 'en');
+                                                        if (b.vatHandling === 'exempt' || b.vat <= 0) {
+                                                          return <p className="text-[9px] text-muted-foreground mt-0.5">{handlingLabel}</p>;
+                                                        }
+                                                        return (
+                                                          <p className="text-[9px] text-muted-foreground mt-0.5 font-mono">
+                                                            {handlingLabel} • {isRTL ? 'صافي' : 'Net'} {b.net.toLocaleString()} • {isRTL ? 'ض' : 'VAT'} {b.vat.toLocaleString()}
+                                                          </p>
+                                                        );
+                                                      })()}
                                                     </div>
                                                     {!locked && isProvider && (
                                                       <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/10" onClick={() => deleteLineItemMutation.mutate({ id: li.id, contractId: c.id })}>
