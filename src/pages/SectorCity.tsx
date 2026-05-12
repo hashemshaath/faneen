@@ -244,6 +244,13 @@ const SectorCity: React.FC = () => {
   const Arrow = isRTL ? ArrowLeft : ArrowRight;
   const sectorServices = SERVICES_CATALOG.filter((s) => s.sector === sector.slug).slice(0, 4);
 
+  const tierLabel = (tier: string | null): string | null => {
+    if (tier === 'platinum') return isRTL ? 'بلاتيني' : 'Platinum';
+    if (tier === 'gold') return isRTL ? 'ذهبي' : 'Gold';
+    if (tier === 'silver') return isRTL ? 'فضي' : 'Silver';
+    return null;
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
