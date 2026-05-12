@@ -847,7 +847,6 @@ const DashboardBadge: React.FC = () => {
                 </Card>
               </TabsContent>
             </Tabs>
-              {/* DIAGNOSTICS — wrapped above; this dummy comment keeps anchor unique */}
           </>
         )}
       </div>
