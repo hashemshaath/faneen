@@ -10,7 +10,15 @@ import { AmendmentFinancialPreview } from './AmendmentFinancialPreview';
 import { previewAmendmentFinancialImpact, type AmendmentPreviewPayment } from '@/lib/contract-financials';
 
 type Amendment = Database['public']['Tables']['contract_amendments']['Row'];
-type AuditRow = Database['public']['Tables']['contract_amendment_audit']['Row'];
+// C6.4b-S — read party-safe view (no actor_id / metadata) instead of raw audit table.
+type AuditRow = {
+  id: string;
+  amendment_id: string;
+  action: string;
+  old_status: string | null;
+  new_status: string | null;
+  created_at: string;
+};
 type ApprovalEvidence = {
   id: string | null;
   amendment_id: string | null;
@@ -108,12 +116,13 @@ export const AmendmentHistoryPanel = ({
     queryKey: ['amendment-audit', ids.join(',')],
     queryFn: async (): Promise<AuditRow[]> => {
       if (ids.length === 0) return [];
-      const { data } = await supabase
-        .from('contract_amendment_audit')
-        .select('*')
+      const { data, error } = await supabase
+        .from('contract_amendment_audit_safe' as never)
+        .select('id, amendment_id, action, old_status, new_status, created_at')
         .in('amendment_id', ids)
         .order('created_at', { ascending: true });
-      return data ?? [];
+      if (error) return [];
+      return ((data ?? []) as unknown) as AuditRow[];
     },
     enabled: ids.length > 0,
   });
