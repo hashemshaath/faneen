@@ -380,10 +380,19 @@ const SectorLanding: React.FC = () => {
       <SectorTopTechnicians sectorName={meta.name} technicians={topTechnicians} />
 
       {/* Buyer guides — HowTo content per sector */}
-      <SectorGuides sectorName={meta.name} guides={guides} />
+      <SectorGuides
+        sectorName={meta.name}
+        sectorSlug={sector.slug}
+        guides={guides}
+        featuredProvider={topTechnicians[0] ?? null}
+      />
 
       {/* Project examples — real completed work in this sector */}
-      <SectorProjectExamples sectorName={meta.name} categoryIds={categoryIds} />
+      <SectorProjectExamples
+        sectorName={meta.name}
+        sectorSlug={sector.slug}
+        categoryIds={categoryIds}
+      />
 
       {/* Results grid */}
       <main className="container py-8 px-4">
