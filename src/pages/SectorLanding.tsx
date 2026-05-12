@@ -19,6 +19,7 @@ import { getSectorGuides } from '@/lib/sector-guides';
 import { SectorGuides } from '@/components/sector/SectorGuides';
 import { SectorTopTechnicians } from '@/components/sector/SectorTopTechnicians';
 import { SectorProjectExamples } from '@/components/sector/SectorProjectExamples';
+import { SA_CITIES } from '@/lib/sa-cities';
 
 /**
  * Maps a sector slug → list of category slugs that should be included
@@ -347,11 +348,22 @@ const SectorLanding: React.FC = () => {
           </h2>
           <div className="flex flex-wrap gap-2">
             {topCities.map((c) => {
-              const params = new URLSearchParams();
-              if (categoryIds[0]) params.set('category', categoryIds[0]);
-              params.set('city', c.id);
+              // Prefer the indexable /sectors/:slug/:city landing page when
+              // we have a known slug for this city; otherwise fall back to
+              // the filtered /search URL (still indexable in sitemap).
+              const known = SA_CITIES.find(
+                (sc) => sc.nameEn.toLowerCase() === (c.name_en || '').toLowerCase(),
+              );
+              const href = known
+                ? `/sectors/${sector.slug}/${known.slug}`
+                : (() => {
+                    const params = new URLSearchParams();
+                    if (categoryIds[0]) params.set('category', categoryIds[0]);
+                    params.set('city', c.id);
+                    return `/search?${params.toString()}`;
+                  })();
               return (
-                <Link key={c.id} to={`/search?${params.toString()}`}>
+                <Link key={c.id} to={href}>
                   <Badge variant="secondary" className="hover-lift gap-1.5 px-3 py-1.5 cursor-pointer">
                     <MapPin className="w-3 h-3" />
                     {language === 'ar' ? c.name_ar : (c.name_en || c.name_ar)}
