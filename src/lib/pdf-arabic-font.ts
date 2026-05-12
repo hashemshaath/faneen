@@ -1,46 +1,100 @@
 // Arabic font loader for jsPDF
 // Caches the font in memory after first load
 
-// PDF-AR1 (v3): Bundle the Arabic TTF locally instead of fetching from a CDN
-// at runtime. Earlier builds depended on jsdelivr; when that fetch failed
-// (CORS, offline, slow network, ad-blocker) the export silently fell back
-// to Helvetica, which can't encode Arabic Unicode and produced
-// `þòþäþ³` mojibake in the PDF text layer. Bundling guarantees the font
-// is always present and same-origin.
+// PDF-AR2: Bundle Arabic TTF files locally and register versioned VFS names.
+// The failed real exports showed only Helvetica in `pdffonts`, so the Arabic
+// loader had failed and the official export silently fell back to WinAnsi.
 import notoNaskhRegularUrl from '@/assets/fonts/NotoNaskhArabic-Regular.ttf?url';
 import notoNaskhBoldUrl from '@/assets/fonts/NotoNaskhArabic-Bold.ttf?url';
 
-let cachedFont: string | null = null;
-let cachedFontBold: string | null = null;
-
-const ARABIC_FONT_FILE = 'ArabicFont.ttf';
-const ARABIC_FONT_FILE_BOLD = 'ArabicFont-Bold.ttf';
+const ARABIC_FONT_CACHE_VERSION = import.meta.env.VITE_APP_VERSION || 'pdf-ar2-v1';
+const ARABIC_FONT_FILE = `ArabicFont-Regular-${ARABIC_FONT_CACHE_VERSION}.ttf`;
+const ARABIC_FONT_FILE_BOLD = `ArabicFont-Bold-${ARABIC_FONT_CACHE_VERSION}.ttf`;
 const ARABIC_FONT_NAME = 'ArabicFont';
 const ARABIC_FONT_STYLES = ['normal', 'bold', 'italic', 'bolditalic'] as const;
 
+type FontSource = 'bundled' | 'memory-cache' | 'unloaded' | 'failed';
+
+export interface ArabicFontDiagnostics {
+  selectedFontUrl: string;
+  contentType: string;
+  magicBytes: string;
+  isTrueType: boolean;
+  registeredFontName: string;
+  registeredStyles: string[];
+  fontSource: FontSource;
+  loadedAt: string | null;
+  normalizationRan: boolean;
+  lastGeneratedPdfAt: string | null;
+  sameLoaderForPreviewAndDownload: boolean;
+  fallbackFontUsed: boolean;
+  error?: string;
+}
+
+let cachedFont: string | null = null;
+let cachedFontBold: string | null = null;
+let lastDiagnostics: ArabicFontDiagnostics = {
+  selectedFontUrl: withFontVersion(notoNaskhRegularUrl),
+  contentType: 'pending',
+  magicBytes: 'pending',
+  isTrueType: false,
+  registeredFontName: ARABIC_FONT_NAME,
+  registeredStyles: [],
+  fontSource: 'unloaded',
+  loadedAt: null,
+  normalizationRan: false,
+  lastGeneratedPdfAt: null,
+  sameLoaderForPreviewAndDownload: true,
+  fallbackFontUsed: false,
+};
+
+function withFontVersion(url: string): string {
+  const separator = url.includes('?') ? '&' : '?';
+  return `${url}${separator}v=${encodeURIComponent(ARABIC_FONT_CACHE_VERSION)}`;
+}
+
+const bytesToMagic = (bytes: Uint8Array): string =>
+  Array.from(bytes.slice(0, 4)).map((b) => b.toString(16).padStart(2, '0')).join(' ');
+
 // Validate the first bytes of the response are a real TrueType / OpenType
 // signature. This guards against accidental WOFF/HTML/error pages being
-// registered as fonts (which is exactly what produced the original
-// mojibake bug).
+// registered as fonts.
 export const isTrueTypeSignature = (bytes: Uint8Array): boolean => {
   if (bytes.length < 4) return false;
   const b0 = bytes[0], b1 = bytes[1], b2 = bytes[2], b3 = bytes[3];
-  // 0x00010000 = TrueType, 'OTTO' = OpenType-CFF, 'true'/'typ1' = legacy TTF
   if (b0 === 0x00 && b1 === 0x01 && b2 === 0x00 && b3 === 0x00) return true;
   if (b0 === 0x4F && b1 === 0x54 && b2 === 0x54 && b3 === 0x4F) return true; // OTTO
-  if (b0 === 0x74 && b1 === 0x72 && b2 === 0x75 && b3 === 0x65) return true; // 'true'
-  if (b0 === 0x74 && b1 === 0x79 && b2 === 0x70 && b3 === 0x31) return true; // 'typ1'
+  if (b0 === 0x74 && b1 === 0x72 && b2 === 0x75 && b3 === 0x65) return true; // true
+  if (b0 === 0x74 && b1 === 0x79 && b2 === 0x70 && b3 === 0x31) return true; // typ1
   return false;
 };
 
 const shouldDebugArabicPdf = (): boolean => {
-  if (!import.meta.env.DEV) return false;
+  if (!import.meta.env.DEV && import.meta.env.VITE_ENABLE_PDF_DEBUG !== 'true') return false;
   try {
-    return window.localStorage.getItem('qitaat_pdf_arabic_debug') === '1';
+    return import.meta.env.VITE_ENABLE_PDF_DEBUG === 'true' || window.localStorage.getItem('qitaat_pdf_arabic_debug') === '1';
   } catch {
-    return false;
+    return import.meta.env.VITE_ENABLE_PDF_DEBUG === 'true';
   }
 };
+
+const debugArabicFont = (details: Record<string, unknown>) => {
+  if (!shouldDebugArabicPdf()) return;
+  console.debug('[PDF-AR2] Arabic font verification', details);
+};
+
+const markGenerated = () => {
+  lastDiagnostics = { ...lastDiagnostics, lastGeneratedPdfAt: new Date().toISOString() };
+};
+
+export const getArabicFontDiagnostics = (): ArabicFontDiagnostics => ({ ...lastDiagnostics });
+
+export class ArabicPdfFontError extends Error {
+  constructor(message = 'PDF_ARABIC_FONT_UNAVAILABLE') {
+    super(message);
+    this.name = 'ArabicPdfFontError';
+  }
+}
 
 const registerArabicFontBytes = (
   doc: { addFileToVFS: (file: string, data: string) => void; addFont: (file: string, name: string, style: string) => void },
@@ -60,30 +114,28 @@ const registerArabicFontBytes = (
   }
 };
 
-const debugArabicFont = (details: Record<string, unknown>) => {
-  if (!shouldDebugArabicPdf()) return;
-  // Development-only, opt-in via localStorage flag; never logs in production.
-  console.debug('[PDF-AR1] Arabic font verification', details);
-};
-
-const fetchAsBase64 = async (url: string): Promise<string | null> => {
+const fetchAsBase64 = async (rawUrl: string): Promise<{ base64: string; contentType: string; magicBytes: string; url: string } | null> => {
+  const url = withFontVersion(rawUrl);
   try {
-    const response = await fetch(url);
-    if (!response.ok) return null;
-    const buffer = await response.arrayBuffer();
-    const bytes = new Uint8Array(buffer);
-    if (!isTrueTypeSignature(bytes)) {
-      debugArabicFont({ url, reason: 'invalid-signature', magic: Array.from(bytes.slice(0, 4)) });
+    const response = await fetch(url, { cache: 'force-cache' });
+    if (!response.ok) {
+      lastDiagnostics = { ...lastDiagnostics, selectedFontUrl: url, fontSource: 'failed', fallbackFontUsed: true, error: `HTTP ${response.status}` };
       return null;
     }
+    const contentType = response.headers.get('content-type') ?? 'unknown';
+    const buffer = await response.arrayBuffer();
+    const bytes = new Uint8Array(buffer);
+    const magicBytes = bytesToMagic(bytes);
+    const isTrueType = isTrueTypeSignature(bytes);
+    lastDiagnostics = { ...lastDiagnostics, selectedFontUrl: url, contentType, magicBytes, isTrueType };
+    if (!isTrueType) return null;
+
     let binary = '';
-    const chunk = 0x8000;
-    for (let i = 0; i < bytes.length; i += chunk) {
-      binary += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + chunk)) as unknown as number[]);
-    }
-    return btoa(binary);
+    for (let i = 0; i < bytes.length; i += 1) binary += String.fromCharCode(bytes[i]);
+    return { base64: btoa(binary), contentType, magicBytes, url };
   } catch (err) {
-    debugArabicFont({ url, error: err instanceof Error ? err.message : String(err) });
+    const error = err instanceof Error ? err.message : String(err);
+    lastDiagnostics = { ...lastDiagnostics, selectedFontUrl: url, fontSource: 'failed', fallbackFontUsed: true, error };
     return null;
   }
 };
@@ -92,39 +144,74 @@ export const registerArabicFont = async (doc: { addFileToVFS: (file: string, dat
   if (cachedFont) {
     try {
       registerArabicFontBytes(doc, cachedFont, cachedFontBold);
-      debugArabicFont({ source: 'memory-cache', registeredFont: ARABIC_FONT_NAME, hasBold: !!cachedFontBold });
+      lastDiagnostics = {
+        ...lastDiagnostics,
+        fontSource: 'memory-cache',
+        registeredFontName: ARABIC_FONT_NAME,
+        registeredStyles: [...ARABIC_FONT_STYLES],
+        fallbackFontUsed: false,
+      };
+      debugArabicFont({ ...lastDiagnostics });
       return true;
-    } catch {
+    } catch (err) {
+      lastDiagnostics = { ...lastDiagnostics, fontSource: 'failed', fallbackFontUsed: true, error: err instanceof Error ? err.message : String(err) };
       return false;
     }
   }
 
-  // Bundled, same-origin URLs produced by Vite. No CORS, no network races.
   const regular = await fetchAsBase64(notoNaskhRegularUrl);
   if (!regular) return false;
   const bold = await fetchAsBase64(notoNaskhBoldUrl);
-  cachedFont = regular;
-  cachedFontBold = bold;
+  cachedFont = regular.base64;
+  cachedFontBold = bold?.base64 ?? null;
   try {
-    registerArabicFontBytes(doc, regular, bold);
-    debugArabicFont({ source: 'bundled', registered: ARABIC_FONT_NAME, hasBold: !!bold });
+    registerArabicFontBytes(doc, regular.base64, cachedFontBold);
+    lastDiagnostics = {
+      ...lastDiagnostics,
+      selectedFontUrl: regular.url,
+      contentType: regular.contentType,
+      magicBytes: regular.magicBytes,
+      isTrueType: true,
+      registeredFontName: ARABIC_FONT_NAME,
+      registeredStyles: [...ARABIC_FONT_STYLES],
+      fontSource: 'bundled',
+      loadedAt: new Date().toISOString(),
+      fallbackFontUsed: false,
+    };
+    debugArabicFont({ ...lastDiagnostics, fontList: doc.getFontList?.()[ARABIC_FONT_NAME] });
     return true;
-  } catch {
+  } catch (err) {
+    lastDiagnostics = { ...lastDiagnostics, fontSource: 'failed', fallbackFontUsed: true, error: err instanceof Error ? err.message : String(err) };
     return false;
   }
 };
 
+export const hasRegisteredArabicFont = (doc: { getFontList?: () => Record<string, string[]> }): boolean => {
+  const styles = doc.getFontList?.()[ARABIC_FONT_NAME] ?? [];
+  return styles.includes('normal') && styles.includes('bold');
+};
+
+export const verifyArabicFontReady = (doc: { getFontList?: () => Record<string, string[]> }, isRTL: boolean): boolean => {
+  if (!isRTL) return true;
+  const ready = lastDiagnostics.isTrueType && hasRegisteredArabicFont(doc) && !lastDiagnostics.fallbackFontUsed;
+  if (!ready) {
+    lastDiagnostics = { ...lastDiagnostics, fallbackFontUsed: true };
+  }
+  return ready;
+};
+
 export const setupArabicDoc = async (doc: { setFont: (fontName: string, fontStyle?: string) => void; addFileToVFS: (file: string, data: string) => void; addFont: (file: string, name: string, style: string) => void; getFontList?: () => Record<string, string[]> }, isRTL: boolean) => {
   const loaded = await registerArabicFont(doc);
-  if (loaded && isRTL) {
-    doc.setFont(ARABIC_FONT_NAME, 'normal');
-  }
+  if (loaded && isRTL) doc.setFont(ARABIC_FONT_NAME, 'normal');
+  if (loaded) markGenerated();
   return loaded;
 };
 
 export const getArabicTableStyles = (isRTL: boolean, fontLoaded: boolean) => ({
   ...(isRTL && fontLoaded ? { font: ARABIC_FONT_NAME } : {}),
   halign: isRTL ? 'right' as const : 'left' as const,
+  valign: 'middle' as const,
+  overflow: 'linebreak' as const,
 });
 
 type JsPdfFontLookup = {
@@ -146,6 +233,7 @@ export const normalizeArabicPdfTextLayer = (doc: unknown) => {
       if (first && normalized.length === 1) map[key] = first;
     }
   }
+  lastDiagnostics = { ...lastDiagnostics, normalizationRan: true };
 };
 
 // ── Print helper: renders content in a print-friendly popup ──
@@ -153,17 +241,14 @@ export const printContractSection = (title: string, contentHtml: string, isRTL: 
   const win = window.open('', '_blank', 'width=900,height=700');
   if (!win) return;
 
-  // Brand document tokens — kept inline (window.open popup is a fresh document
-  // with no access to our app's CSS variables, so we hard-code the brand hex
-  // values from `BRAND_DOCUMENTS` in `src/config/brandTheme.ts`).
   const C = {
-    header:  '#131722', // pdfHeader / invoiceHeader
-    accent:  '#0E9E6F', // pdfAccent  / invoiceAccent
-    text:    '#1A2230', // invoiceText
-    muted:   '#6B7689', // invoiceMuted
-    border:  '#E2E6EE', // invoiceBorder
-    surface2:'#F2F4F8', // surface-2 (zebra rows)
-    accentSoft: '#E6F7F0', // primary-light (highlight tint, no gradients)
+    header:  '#131722',
+    accent:  '#0E9E6F',
+    text:    '#1A2230',
+    muted:   '#6B7689',
+    border:  '#E2E6EE',
+    surface2:'#F2F4F8',
+    accentSoft: '#E6F7F0',
   };
 
   win.document.write(`<!DOCTYPE html>
@@ -201,4 +286,3 @@ export const printContractSection = (title: string, contentHtml: string, isRTL: 
 </html>`);
   win.document.close();
 };
-

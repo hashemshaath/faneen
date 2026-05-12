@@ -1,4 +1,4 @@
-import { setupArabicDoc, getArabicTableStyles, normalizeArabicPdfTextLayer, printContractSection } from './pdf-arabic-font';
+import { ArabicPdfFontError, setupArabicDoc, getArabicTableStyles, normalizeArabicPdfTextLayer, printContractSection, verifyArabicFontReady } from './pdf-arabic-font';
 import { BRAND_DOCUMENTS } from '@/config/brandTheme';
 import { hexToRgbTuple } from '@/lib/theme/brandThemeUtils';
 import { calculateVatBreakdown, calculateContractCoverage } from '@/lib/contract-financials';
@@ -56,6 +56,41 @@ const BORDER_RGB = hexToRgbTuple(BRAND_DOCUMENTS.invoiceBorder) ?? [226, 230, 23
 // Inlined as RGB because jsPDF doesn't accept hex strings for fillColor.
 const HIGHLIGHT_RGB: [number, number, number] = [230, 247, 240];
 const SURFACE2_RGB: [number, number, number] = [242, 244, 248];
+const PDF_PAGE_MARGIN = 16;
+const PDF_TABLE_MARGIN = { left: PDF_PAGE_MARGIN, right: PDF_PAGE_MARGIN };
+const PDF_DENSE_TABLE_MARGIN = { left: 12, right: 12 };
+
+type JsPdfWithAutoTable = { lastAutoTable?: { finalY?: number } };
+
+const lastTableY = (doc: unknown, fallback: number): number =>
+  (doc as JsPdfWithAutoTable).lastAutoTable?.finalY ?? fallback;
+
+const ensureArabicPdfFont = (doc: { getFontList?: () => Record<string, string[]> }, isRTL: boolean) => {
+  if (!isRTL) return;
+  if (!verifyArabicFontReady(doc, isRTL)) {
+    throw new ArabicPdfFontError('تعذر تضمين الخط العربي. قد لا يعمل البحث أو النسخ داخل ملف PDF بشكل صحيح.');
+  }
+};
+
+const arabicFontStyle = (isRTL: boolean, fontLoaded: boolean) =>
+  isRTL && fontLoaded ? { font: 'ArabicFont' } : {};
+
+const tableHeadStyles = (isRTL: boolean, fontLoaded: boolean, fontSize = 7) => ({
+  fillColor: HEADER_RGB,
+  textColor: [255, 255, 255] as [number, number, number],
+  fontStyle: 'bold' as const,
+  fontSize,
+  halign: isRTL ? 'right' as const : 'left' as const,
+  ...arabicFontStyle(isRTL, fontLoaded),
+});
+
+const tableFootStyles = (isRTL: boolean, fontLoaded: boolean, fontSize = 7) => ({
+  fillColor: HIGHLIGHT_RGB,
+  fontStyle: 'bold' as const,
+  fontSize,
+  halign: isRTL ? 'right' as const : 'left' as const,
+  ...arabicFontStyle(isRTL, fontLoaded),
+});
 
 export interface ContractExportData {
   contractNumber: string;
@@ -199,14 +234,12 @@ export const buildContractPDF = async (data: ContractExportData) => {
 
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   const fontLoaded = await setupArabicDoc(doc, data.isRTL);
-  if (data.isRTL && !fontLoaded && import.meta.env.DEV) {
-    console.warn('PDF_ARABIC_FONT_UNAVAILABLE: Arabic contract PDF generated without a verified TTF/OTF font.');
-  }
+  ensureArabicPdfFont(doc, data.isRTL);
   const rtlStyles = getArabicTableStyles(data.isRTL, fontLoaded);
 
   const w = doc.internal.pageSize.getWidth();
   const h = doc.internal.pageSize.getHeight();
-  let y = 15;
+  let y = 16;
 
   const [accentR, accentG, accentB] = ACCENT_RGB;
   const [darkR,   darkG,   darkB]   = HEADER_RGB;
@@ -268,10 +301,10 @@ export const buildContractPDF = async (data: ContractExportData) => {
     startY: y, body: partiesData, theme: 'plain',
     styles: { fontSize: 9, cellPadding: 3.5, ...rtlStyles, lineColor: BORDER_RGB, lineWidth: 0.2 },
     columnStyles: { 0: { fontStyle: 'bold', cellWidth: 45, textColor: MUTED_RGB } },
-    margin: { left: 15, right: 15 },
+    margin: PDF_TABLE_MARGIN,
     alternateRowStyles: { fillColor: SURFACE2_RGB },
   });
-  y = (doc as any).lastAutoTable.finalY + 12;
+  y = lastTableY(doc, y) + 12;
 
   // ── CT6: Template metadata (compact) ──
   if (data.template) {
@@ -289,10 +322,10 @@ export const buildContractPDF = async (data: ContractExportData) => {
         startY: y, body: rows, theme: 'plain',
         styles: { fontSize: 9, cellPadding: 3.5, ...rtlStyles, lineColor: BORDER_RGB, lineWidth: 0.2 },
         columnStyles: { 0: { fontStyle: 'bold', cellWidth: 55, textColor: MUTED_RGB } },
-        margin: { left: 15, right: 15 },
+        margin: PDF_TABLE_MARGIN,
         alternateRowStyles: { fillColor: SURFACE2_RGB },
       });
-      y = (doc as any).lastAutoTable.finalY + 12;
+      y = lastTableY(doc, y) + 12;
     }
   } else {
     // Legacy contract — single-line note (no section header to avoid noise).
@@ -328,7 +361,7 @@ export const buildContractPDF = async (data: ContractExportData) => {
     startY: y, body: finData, theme: 'plain',
     styles: { fontSize: 9, cellPadding: 3.5, ...rtlStyles, lineColor: BORDER_RGB, lineWidth: 0.2 },
     columnStyles: { 0: { fontStyle: 'bold', cellWidth: 55, textColor: MUTED_RGB } },
-    margin: { left: 15, right: 15 },
+    margin: PDF_TABLE_MARGIN,
     didParseCell: (hookData: any) => {
       if (hookData.row.index === 2) {
         hookData.cell.styles.fontStyle = 'bold';
@@ -336,7 +369,7 @@ export const buildContractPDF = async (data: ContractExportData) => {
       }
     },
   });
-  y = (doc as any).lastAutoTable.finalY + 12;
+  y = lastTableY(doc, y) + 12;
 
   // ── Milestones ──
   if (data.milestones.length > 0) {
@@ -351,11 +384,11 @@ export const buildContractPDF = async (data: ContractExportData) => {
       ]),
       theme: 'grid',
       styles: { fontSize: 8, cellPadding: 3, ...rtlStyles },
-      headStyles: { fillColor: HEADER_RGB, textColor: [255, 255, 255], fontStyle: 'bold' },
+      headStyles: tableHeadStyles(data.isRTL, fontLoaded),
       alternateRowStyles: { fillColor: SURFACE2_RGB },
-      margin: { left: 15, right: 15 },
+      margin: PDF_TABLE_MARGIN,
     });
-    y = (doc as any).lastAutoTable.finalY + 12;
+    y = lastTableY(doc, y) + 12;
     // If milestones carry no financial values, add a neutral note.
     const milestonesHaveAmounts = data.milestones.some((m) => Number(m.amount) > 0);
     if (!milestonesHaveAmounts) {
@@ -400,11 +433,11 @@ export const buildContractPDF = async (data: ContractExportData) => {
       }),
       theme: 'grid',
       styles: { fontSize: 7.5, cellPadding: 2.5, ...rtlStyles },
-      headStyles: { fillColor: HEADER_RGB, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7.5 },
+      headStyles: tableHeadStyles(data.isRTL, fontLoaded, 7.5),
       alternateRowStyles: { fillColor: SURFACE2_RGB },
-      margin: { left: 12, right: 12 },
+      margin: PDF_DENSE_TABLE_MARGIN,
     });
-    y = (doc as any).lastAutoTable.finalY + 10;
+    y = lastTableY(doc, y) + 10;
 
     // Paid / Remaining + Coverage summary using shared helper (single source of truth).
     const coverage = calculateContractCoverage({
@@ -446,7 +479,7 @@ export const buildContractPDF = async (data: ContractExportData) => {
       startY: y, body: summaryRows, theme: 'plain',
       styles: { fontSize: 9, cellPadding: 3.5, ...rtlStyles, lineColor: BORDER_RGB, lineWidth: 0.2 },
       columnStyles: { 0: { fontStyle: 'bold', cellWidth: 65, textColor: MUTED_RGB } },
-      margin: { left: 15, right: 15 },
+      margin: PDF_TABLE_MARGIN,
       didParseCell: (hookData: any) => {
         if (hookData.row.index === 3) {
           hookData.cell.styles.fontStyle = 'bold';
@@ -454,7 +487,7 @@ export const buildContractPDF = async (data: ContractExportData) => {
         }
       },
     });
-    y = (doc as any).lastAutoTable.finalY + 12;
+    y = lastTableY(doc, y) + 12;
   }
 
   // ── Measurements ──
@@ -482,12 +515,12 @@ export const buildContractPDF = async (data: ContractExportData) => {
       ],
       theme: 'grid',
       styles: { fontSize: 7, cellPadding: 2.5, ...rtlStyles },
-      headStyles: { fillColor: HEADER_RGB, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7 },
+      headStyles: tableHeadStyles(data.isRTL, fontLoaded, 7),
       alternateRowStyles: { fillColor: SURFACE2_RGB },
-      footStyles: { fillColor: HIGHLIGHT_RGB, fontStyle: 'bold', fontSize: 7 },
-      margin: { left: 10, right: 10 },
+      footStyles: tableFootStyles(data.isRTL, fontLoaded, 7),
+      margin: PDF_DENSE_TABLE_MARGIN,
     });
-    y = (doc as any).lastAutoTable.finalY + 12;
+    y = lastTableY(doc, y) + 12;
   }
 
   // ── CT6: BOQ Line Items grouped by boq_group_key ──
@@ -565,12 +598,12 @@ export const buildContractPDF = async (data: ContractExportData) => {
         ]],
         theme: 'grid',
         styles: { fontSize: 7, cellPadding: 2.2, ...rtlStyles },
-        headStyles: { fillColor: HEADER_RGB, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7 },
+        headStyles: tableHeadStyles(data.isRTL, fontLoaded, 7),
         alternateRowStyles: { fillColor: SURFACE2_RGB },
-        footStyles: { fillColor: HIGHLIGHT_RGB, fontStyle: 'bold', fontSize: 7 },
-        margin: { left: 10, right: 10 },
+        footStyles: tableFootStyles(data.isRTL, fontLoaded, 7),
+        margin: PDF_DENSE_TABLE_MARGIN,
       });
-      y = (doc as any).lastAutoTable.finalY + 6;
+      y = lastTableY(doc, y) + 6;
     }
 
     // Grand total
@@ -732,11 +765,11 @@ export const buildContractPDF = async (data: ContractExportData) => {
         ]),
         theme: 'grid',
         styles: { fontSize: 7, cellPadding: 2.2, ...rtlStyles },
-        headStyles: { fillColor: HEADER_RGB, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7 },
+        headStyles: tableHeadStyles(data.isRTL, fontLoaded, 7),
         alternateRowStyles: { fillColor: SURFACE2_RGB },
-        margin: { left: 10, right: 10 },
+        margin: PDF_DENSE_TABLE_MARGIN,
       });
-      y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 12;
+      y = lastTableY(doc, y) + 12;
     }
   }
 
@@ -807,9 +840,9 @@ export const buildContractPDF = async (data: ContractExportData) => {
       }),
       theme: 'grid',
       styles: { fontSize: 7, cellPadding: 2.2, ...rtlStyles },
-      headStyles: { fillColor: HEADER_RGB, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7 },
+      headStyles: tableHeadStyles(data.isRTL, fontLoaded, 7),
       alternateRowStyles: { fillColor: SURFACE2_RGB },
-      margin: { left: 10, right: 10 },
+      margin: PDF_DENSE_TABLE_MARGIN,
       didParseCell: (hookData: any) => {
         if (hookData.section !== 'body') return;
         const a = data.amendments![hookData.row.index];
@@ -821,7 +854,7 @@ export const buildContractPDF = async (data: ContractExportData) => {
         }
       },
     });
-    y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 8;
+    y = lastTableY(doc, y) + 8;
 
     // Compact reasons list for amendments that carry a reason — kept short.
     const withReason = data.amendments.filter(a => a.reason && a.reason.trim().length > 0);
@@ -956,6 +989,81 @@ export const previewContractPDF = async (
   return { url, blob, fileName: `contract-${data.contractNumber}.pdf` };
 };
 
+export const buildArabicFontTestPDF = async () => {
+  const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([import('jspdf'), import('jspdf-autotable')]);
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const fontLoaded = await setupArabicDoc(doc, true);
+  ensureArabicPdfFont(doc, true);
+  const rtlStyles = getArabicTableStyles(true, fontLoaded);
+  const w = doc.internal.pageSize.getWidth();
+  let y = 18;
+
+  doc.setTextColor(...TEXT_RGB);
+  doc.setFontSize(18);
+  doc.text('اختبار الخط العربي في PDF', w / 2, y, { align: 'center' });
+  y += 10;
+  doc.setFontSize(10);
+  doc.setTextColor(...MUTED_RGB);
+  doc.text('ملف آمن للتشخيص فقط — ليس جزءاً من محتوى العقد القانوني.', w / 2, y, { align: 'center' });
+  y += 12;
+
+  doc.setTextColor(...TEXT_RGB);
+  doc.setFontSize(11);
+  const paragraph = 'هذا نص عربي لاختبار وضوح القراءة والهوامش واتجاه الكتابة. يتضمن العقد والضريبة والضمان والشروط وأرقاماً مثل 1000×2000 mm ومبلغ 12,500 SAR.';
+  const paragraphLines = doc.splitTextToSize(paragraph, w - 34);
+  doc.text(paragraphLines, w - PDF_PAGE_MARGIN, y, { align: 'right' });
+  y += paragraphLines.length * 5 + 8;
+
+  doc.setFontSize(10);
+  doc.setTextColor(...MUTED_RGB);
+  doc.text('نص قرآني لاختبار عرض الخط العربي فقط', w - PDF_PAGE_MARGIN, y, { align: 'right' });
+  y += 7;
+  doc.setFontSize(14);
+  doc.setTextColor(...TEXT_RGB);
+  for (const line of ['بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ', 'قُلْ هُوَ اللَّهُ أَحَدٌ', 'اللَّهُ الصَّمَدُ']) {
+    doc.text(line, w - PDF_PAGE_MARGIN, y, { align: 'right' });
+    y += 8;
+  }
+
+  y += 4;
+  autoTable(doc, {
+    startY: y,
+    head: [['#', 'البند', 'الكمية', 'السعر', 'الإجمالي']],
+    body: [
+      ['1', 'اختبار العقد', '2', '1,000 SAR', '2,000 SAR'],
+      ['2', 'اختبار الضريبة والضمان', '1', '500 SAR', '500 SAR'],
+      ['3', 'اختبار الشروط والأبعاد 1000×2000 mm', '1', '250 SAR', '250 SAR'],
+    ],
+    foot: [['', 'الإجمالي شامل الضريبة', '', '', '2,750 SAR']],
+    theme: 'grid',
+    styles: { fontSize: 9, cellPadding: 3, ...rtlStyles },
+    headStyles: tableHeadStyles(true, fontLoaded, 9),
+    footStyles: tableFootStyles(true, fontLoaded, 9),
+    alternateRowStyles: { fillColor: SURFACE2_RGB },
+    margin: PDF_TABLE_MARGIN,
+  });
+  y = lastTableY(doc, y) + 14;
+
+  doc.setFillColor(...SURFACE2_RGB);
+  doc.rect(PDF_PAGE_MARGIN, y, w - PDF_PAGE_MARGIN * 2, 30, 'F');
+  doc.setDrawColor(...ACCENT_RGB);
+  doc.line(w - 85, y + 20, w - 25, y + 20);
+  doc.line(25, y + 20, 85, y + 20);
+  doc.setFontSize(8);
+  doc.setTextColor(...MUTED_RGB);
+  doc.text('توقيع المزود', w - 55, y + 25, { align: 'center' });
+  doc.text('توقيع العميل', 55, y + 25, { align: 'center' });
+
+  normalizeArabicPdfTextLayer(doc);
+  return doc;
+};
+
+export const exportArabicFontTestPDF = async () => {
+  const doc = await buildArabicFontTestPDF();
+  doc.save(`qitaat-arabic-font-test-${Date.now()}.pdf`);
+  return doc;
+};
+
 // ── Export Measurements as PDF ──
 export const exportMeasurementsPDF = async (opts: {
   contractNumber: string;
@@ -1007,10 +1115,10 @@ export const exportMeasurementsPDF = async (opts: {
     ],
     theme: 'grid',
     styles: { fontSize: 7, cellPadding: 2.5, ...rtlStyles },
-    headStyles: { fillColor: HEADER_RGB, textColor: [255, 255, 255], fontStyle: 'bold' },
-    footStyles: { fillColor: HIGHLIGHT_RGB, fontStyle: 'bold' },
+    headStyles: tableHeadStyles(opts.isRTL, fontLoaded),
+    footStyles: tableFootStyles(opts.isRTL, fontLoaded),
     alternateRowStyles: { fillColor: SURFACE2_RGB },
-    margin: { left: 10, right: 10 },
+    margin: PDF_DENSE_TABLE_MARGIN,
   });
 
   const pages = doc.getNumberOfPages();

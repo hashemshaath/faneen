@@ -17,6 +17,7 @@
  */
 import { describe, it, expect, vi } from 'vitest';
 import { execFile } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -26,9 +27,12 @@ import { promisify } from 'node:util';
 // is unreliable and unrelated to what we are testing. Force fallback to
 // the default helvetica font so RTL fixtures still build.
 vi.mock('@/lib/pdf-arabic-font', () => ({
-  registerArabicFont: async () => false,
-  setupArabicDoc: async () => false,
+  ArabicPdfFontError: class ArabicPdfFontError extends Error {},
+  registerArabicFont: async () => true,
+  setupArabicDoc: async () => true,
+  verifyArabicFontReady: () => true,
   getArabicTableStyles: () => ({}),
+  normalizeArabicPdfTextLayer: () => {},
   printContractSection: () => {},
 }));
 
@@ -184,6 +188,17 @@ describe('PDF-AR1 — Arabic searchable text layer', () => {
   it('exports readable Arabic text without mojibake in pdftotext extraction', async () => {
     vi.resetModules();
     vi.doUnmock('@/lib/pdf-arabic-font');
+    const regular = readFileSync('src/assets/fonts/NotoNaskhArabic-Regular.ttf');
+    const bold = readFileSync('src/assets/fonts/NotoNaskhArabic-Bold.ttf');
+    vi.stubGlobal('fetch', async (url: string) => {
+      const bytes = url.includes('Bold') ? bold : regular;
+      return {
+        ok: true,
+        headers: { get: () => 'font/ttf' },
+        arrayBuffer: async () => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength),
+      };
+    });
+
     const [{ buildContractPDF: buildRealContractPDF }, { longArabicContractFixture: arFixture }] = await Promise.all([
       import('@/lib/contract-pdf-export'),
       import('@/test/fixtures/contract-pdf-fixtures'),

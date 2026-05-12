@@ -17,6 +17,7 @@ import { toast } from '@/hooks/use-toast';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import type { ImportedMeasurement } from '@/lib/contract-pdf-export';
+import type { ArabicFontDiagnostics } from '@/lib/pdf-arabic-font';
 import { getContractStatusMeta, isContractLockedByStatus } from '@/lib/contract-statuses';
 import { mapContractLockError } from '@/lib/contract-errors';
 import { dispatchAmendmentEvent } from '@/lib/amendment-notify';
@@ -193,6 +194,8 @@ const ContractDetail = () => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewFileName, setPreviewFileName] = useState<string>('contract.pdf');
   const [previewError, setPreviewError] = useState<string | null>(null);
+  const [pdfDiagnostics, setPdfDiagnostics] = useState<ArabicFontDiagnostics | null>(null);
+  const pdfDebugEnabled = (import.meta.env.DEV || import.meta.env.VITE_ENABLE_PDF_DEBUG === 'true') && isAdmin;
   const navigate = useNavigate();
 
   const [showMaintForm, setShowMaintForm] = useState(false);
@@ -1047,13 +1050,18 @@ const ContractDetail = () => {
     try {
       const { exportContractPDF } = await import('@/lib/contract-pdf-export');
       await exportContractPDF(data);
+      const { getArabicFontDiagnostics } = await import('@/lib/pdf-arabic-font');
+      setPdfDiagnostics(getArabicFontDiagnostics());
       // Fire-and-forget export history log (PDF-QA2). Server validates auth.
       void recordContractPdfExport(contract.id, 'contract_detail', language)
         .then(() => queryClient.invalidateQueries({ queryKey: ['contract-pdf-exports', contract.id] }));
-    } catch {
+    } catch (err: unknown) {
+      const isArabicFontError = err instanceof Error && err.name === 'ArabicPdfFontError';
       toast({
         title: isRTL ? 'فشل التصدير' : 'Export failed',
-        description: isRTL ? 'تعذر إنشاء ملف PDF. يرجى المحاولة مرة أخرى.' : 'Could not generate the PDF. Please try again.',
+        description: isArabicFontError
+          ? (isRTL ? 'تعذر تضمين الخط العربي. قد لا يعمل البحث أو النسخ داخل ملف PDF بشكل صحيح.' : 'Arabic font could not be embedded. Copy/search may not work correctly.')
+          : (isRTL ? 'تعذر إنشاء ملف PDF. يرجى المحاولة مرة أخرى.' : 'Could not generate the PDF. Please try again.'),
         variant: 'destructive',
       });
     } finally {
@@ -1076,13 +1084,16 @@ const ContractDetail = () => {
     try {
       const { previewContractPDF } = await import('@/lib/contract-pdf-export');
       const { url, fileName } = await previewContractPDF(data);
+      const { getArabicFontDiagnostics } = await import('@/lib/pdf-arabic-font');
       setPreviewUrl(url);
       setPreviewFileName(fileName);
-    } catch {
+      setPdfDiagnostics(getArabicFontDiagnostics());
+    } catch (err: unknown) {
+      const isArabicFontError = err instanceof Error && err.name === 'ArabicPdfFontError';
       setPreviewUrl(null);
-      setPreviewError(isRTL
-        ? 'تعذر إنشاء ملف PDF. يرجى المحاولة مرة أخرى.'
-        : 'Could not generate the PDF. Please try again.');
+      setPreviewError(isArabicFontError
+        ? (isRTL ? 'تعذر تضمين الخط العربي. قد لا يعمل البحث أو النسخ داخل ملف PDF بشكل صحيح.' : 'Arabic font could not be embedded. Copy/search may not work correctly.')
+        : (isRTL ? 'تعذر إنشاء ملف PDF. يرجى المحاولة مرة أخرى.' : 'Could not generate the PDF. Please try again.'));
     } finally {
       setPreviewLoading(false);
     }
@@ -1092,6 +1103,24 @@ const ContractDetail = () => {
     if (!contract) return;
     setPreviewOpen(true);
     if (!previewUrl) await generatePreview();
+  };
+
+  const handleArabicFontTestPDF = async () => {
+    try {
+      const [{ exportArabicFontTestPDF }, { getArabicFontDiagnostics }] = await Promise.all([
+        import('@/lib/contract-pdf-export'),
+        import('@/lib/pdf-arabic-font'),
+      ]);
+      await exportArabicFontTestPDF();
+      setPdfDiagnostics(getArabicFontDiagnostics());
+      toast({ title: isRTL ? 'تم إنشاء اختبار الخط العربي' : 'Arabic font test generated' });
+    } catch {
+      toast({
+        title: isRTL ? 'تعذر إنشاء اختبار الخط' : 'Font test failed',
+        description: isRTL ? 'تعذر تضمين الخط العربي. قد لا يعمل البحث أو النسخ داخل ملف PDF بشكل صحيح.' : 'Arabic font could not be embedded. Copy/search may not work correctly.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleClosePreview = () => {
@@ -1394,6 +1423,11 @@ const ContractDetail = () => {
               <Button variant="heroOutline" size="sm" disabled={isExportingPDF} className="text-xs border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 gap-1" onClick={handleExportPDF}>
                 <Download className="w-3.5 h-3.5" />{isExportingPDF ? '…' : (isRTL ? 'تحميل PDF' : 'Download PDF')}
               </Button>
+              {pdfDebugEnabled && (
+                <Button variant="heroOutline" size="sm" className="text-xs border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 gap-1" onClick={handleArabicFontTestPDF}>
+                  <BookOpen className="w-3.5 h-3.5" />{isRTL ? 'اختبار الخط العربي في PDF' : 'Test Arabic PDF Font'}
+                </Button>
+              )}
               <Button variant="heroOutline" size="sm" className="text-xs border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 gap-1" onClick={() => window.print()}>
                 <Printer className="w-3.5 h-3.5" />{isRTL ? 'طباعة' : 'Print'}
               </Button>
@@ -1409,6 +1443,25 @@ const ContractDetail = () => {
       </div>
 
       <div className="container py-5 sm:py-8 px-4 sm:px-6 max-w-5xl mx-auto">
+        {pdfDebugEnabled && pdfDiagnostics && (
+          <div className="rounded-xl border border-border bg-card p-3 sm:p-4 mb-5 sm:mb-6 text-xs">
+            <div className="flex items-center gap-2 font-semibold mb-3">
+              <ShieldCheck className="w-4 h-4 text-success" />
+              {isRTL ? 'تشخيص الخط العربي للـ PDF' : 'Arabic PDF font diagnostics'}
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2 text-muted-foreground">
+              <span>font: {pdfDiagnostics.registeredFontName}</span>
+              <span>source: {pdfDiagnostics.fontSource}</span>
+              <span>content-type: {pdfDiagnostics.contentType}</span>
+              <span>magic: {pdfDiagnostics.magicBytes}</span>
+              <span>TTF/OTF: {String(pdfDiagnostics.isTrueType)}</span>
+              <span>fallback: {String(pdfDiagnostics.fallbackFontUsed)}</span>
+              <span>normalization: {String(pdfDiagnostics.normalizationRan)}</span>
+              <span>loaded: {pdfDiagnostics.loadedAt ?? '-'}</span>
+              <span>generated: {pdfDiagnostics.lastGeneratedPdfAt ?? '-'}</span>
+            </div>
+          </div>
+        )}
         {/* ─── Quick Stats ─── */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5 sm:mb-6">
           <StatCard icon={StatusIcon} label={isRTL ? 'الحالة' : 'Status'} value={isRTL ? cfg.label_ar : cfg.label_en} />
