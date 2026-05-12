@@ -305,20 +305,44 @@ const DashboardBadge: React.FC = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-3 gap-3">
-                  {[
-                    { label: isRTL ? 'إجمالي النقرات' : 'Total clicks', value: clickStats.total },
-                    { label: isRTL ? 'آخر 7 أيام' : 'Last 7 days', value: clickStats.last7 },
-                    { label: isRTL ? 'آخر 30 يومًا' : 'Last 30 days', value: clickStats.last30 },
-                  ].map((s) => (
-                    <div key={s.label} className="rounded-xl border bg-card p-3">
-                      <div className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
-                        <MousePointerClick className="w-3 h-3" />
-                        {s.label}
-                      </div>
-                      <div className="mt-1 text-2xl font-heading font-bold tech-content">{s.value}</div>
-                    </div>
-                  ))}
+                {/* 3 rows × 3 cols: impressions, clicks, CTR — by total / 7d / 30d */}
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
+                        <th className="text-start py-2 pe-3"></th>
+                        <th className="text-end py-2 px-3">{isRTL ? 'الإجمالي' : 'Total'}</th>
+                        <th className="text-end py-2 px-3">{isRTL ? 'آخر 7 أيام' : 'Last 7 days'}</th>
+                        <th className="text-end py-2 ps-3">{isRTL ? 'آخر 30 يومًا' : 'Last 30 days'}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      <tr>
+                        <td className="py-2 pe-3 flex items-center gap-1.5 text-muted-foreground">
+                          <Eye className="w-3.5 h-3.5" />{isRTL ? 'الانطباعات' : 'Impressions'}
+                        </td>
+                        <td className="py-2 px-3 text-end font-heading font-bold tech-content">{impressionStats.total}</td>
+                        <td className="py-2 px-3 text-end font-heading font-bold tech-content">{impressionStats.last7}</td>
+                        <td className="py-2 ps-3 text-end font-heading font-bold tech-content">{impressionStats.last30}</td>
+                      </tr>
+                      <tr>
+                        <td className="py-2 pe-3 flex items-center gap-1.5 text-muted-foreground">
+                          <MousePointerClick className="w-3.5 h-3.5" />{isRTL ? 'النقرات' : 'Clicks'}
+                        </td>
+                        <td className="py-2 px-3 text-end font-heading font-bold tech-content">{clickStats.total}</td>
+                        <td className="py-2 px-3 text-end font-heading font-bold tech-content">{clickStats.last7}</td>
+                        <td className="py-2 ps-3 text-end font-heading font-bold tech-content">{clickStats.last30}</td>
+                      </tr>
+                      <tr>
+                        <td className="py-2 pe-3 flex items-center gap-1.5 text-muted-foreground">
+                          <Percent className="w-3.5 h-3.5" />{isRTL ? 'معدّل النقر (CTR)' : 'CTR'}
+                        </td>
+                        <td className="py-2 px-3 text-end font-heading font-bold text-success tech-content">{ctr.total.toFixed(1)}%</td>
+                        <td className="py-2 px-3 text-end font-heading font-bold text-success tech-content">{ctr.last7.toFixed(1)}%</td>
+                        <td className="py-2 ps-3 text-end font-heading font-bold text-success tech-content">{ctr.last30.toFixed(1)}%</td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
 
                 <div>
