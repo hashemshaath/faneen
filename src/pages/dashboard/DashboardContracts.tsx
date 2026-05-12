@@ -1303,6 +1303,8 @@ const DashboardContracts = () => {
 
   const closeForm = useCallback(() => {
     setViewSection('list'); setForm(emptyForm); setEditingId(null); setSelectedTemplate(null); setTemplatePreview(null);
+    setSelectedClient(null); setSelectedWorkType('general'); setWorkTypeTouched(false);
+    setSelectedVersionId(null); setSelectedPricingMethod(null);
   }, []);
 
   const handleShareContract = useCallback(async (c: ContractWithRole) => {
