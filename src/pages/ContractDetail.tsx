@@ -340,6 +340,37 @@ const ContractDetail = () => {
     enabled: !!id && !!user,
   });
 
+  // CT6 — Line items (BOQ) for PDF.
+  const { data: lineItems } = useQuery({
+    queryKey: ['contract-line-items', id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('contract_line_items')
+        .select('id, name_ar, name_en, pricing_method, unit_of_measure, boq_group_key, quantity, unit_price, total_cost, formula_inputs, sort_order')
+        .eq('contract_id', id!)
+        .order('sort_order');
+      return data ?? [];
+    },
+    enabled: !!id && !!user,
+  });
+
+  // CT6 — Frozen template snapshot for PDF clauses + precedence.
+  const { data: templateSnapshot } = useQuery({
+    queryKey: ['contract-template-snapshot', id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('contract_template_snapshots')
+        .select('frozen_payload')
+        .eq('contract_id', id!)
+        .maybeSingle();
+      return (data?.frozen_payload ?? null) as null | {
+        sections?: unknown;
+        attachments?: unknown;
+      };
+    },
+    enabled: !!id && !!user,
+  });
+
   const { data: amendments } = useQuery({
     queryKey: ['contract-amendments', id],
     queryFn: async () => {
@@ -891,6 +922,31 @@ const ContractDetail = () => {
       vatInclusive,
       businessName: bizName || undefined,
       documentHash: contract.document_hash || undefined,
+      template: templateMeta ? {
+        nameAr: (templateMeta as any).contract_templates?.name_ar ?? null,
+        nameEn: (templateMeta as any).contract_templates?.name_en ?? null,
+        versionNumber: (templateMeta as any).version_number ?? null,
+        category: (templateMeta as any).contract_templates?.category ?? null,
+        pricingMethod: contractAny?.pricing_method ?? null,
+        languagePrecedence: (templateMeta as any).language_precedence ?? null,
+      } : null,
+      templateSnapshot: templateSnapshot
+        ? {
+            sections: ((templateSnapshot as any).sections ?? []) as any,
+            attachments: ((templateSnapshot as any).attachments ?? []) as any,
+          }
+        : null,
+      lineItems: (lineItems || []).map((li: any) => ({
+        nameAr: li.name_ar ?? null,
+        nameEn: li.name_en ?? null,
+        pricingMethod: li.pricing_method ?? null,
+        unitOfMeasure: li.unit_of_measure ?? null,
+        boqGroupKey: li.boq_group_key ?? null,
+        quantity: Number(li.quantity || 0),
+        unitPrice: Number(li.unit_price || 0),
+        totalCost: Number(li.total_cost || 0),
+        formulaInputs: li.formula_inputs ?? null,
+      })),
       milestones: (milestones || []).map(m => ({
         id: m.id,
         title: language === 'ar' ? m.title_ar : (m.title_en || m.title_ar),

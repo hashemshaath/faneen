@@ -1161,6 +1161,37 @@ const DashboardContracts = () => {
       const clientP = profiles.find((p) => p.user_id === c.client_id);
       const providerP = profiles.find((p) => p.user_id === c.provider_id);
       const ms = allMilestones.filter((m) => m.contract_id === c.id);
+
+      // CT6 — Pull line items, frozen template snapshot, and template meta
+      // on demand. RLS gates everything; failures fall back to legacy export.
+      const cAny = c as unknown as { template_version_id?: string | null; pricing_method?: string | null };
+      const [liRes, snapRes, tplRes] = await Promise.all([
+        supabase
+          .from('contract_line_items')
+          .select('name_ar, name_en, pricing_method, unit_of_measure, boq_group_key, quantity, unit_price, total_cost, formula_inputs, sort_order')
+          .eq('contract_id', c.id)
+          .order('sort_order'),
+        supabase
+          .from('contract_template_snapshots')
+          .select('frozen_payload')
+          .eq('contract_id', c.id)
+          .maybeSingle(),
+        cAny.template_version_id
+          ? supabase
+              .from('contract_template_versions')
+              .select('version_number, language_precedence, contract_templates!inner(name_ar, name_en, category)')
+              .eq('id', cAny.template_version_id)
+              .maybeSingle()
+          : Promise.resolve({ data: null, error: null }),
+      ]);
+      const lineItemsRows = (liRes.data ?? []) as Array<Record<string, unknown>>;
+      const snap = (snapRes.data?.frozen_payload ?? null) as null | { sections?: unknown; attachments?: unknown };
+      const tplMeta = (tplRes.data ?? null) as null | {
+        version_number?: number | null;
+        language_precedence?: string | null;
+        contract_templates?: { name_ar?: string | null; name_en?: string | null; category?: string | null };
+      };
+
       const data: ContractExportData = {
         contractNumber: c.contract_number, title: isRTL ? c.title_ar : (c.title_en || c.title_ar),
         totalAmount: Number(c.total_amount), currency: c.currency_code,
@@ -1178,6 +1209,29 @@ const DashboardContracts = () => {
           status: m.status,
         })),
         documentHash: c.document_hash || undefined,
+        template: tplMeta ? {
+          nameAr: tplMeta.contract_templates?.name_ar ?? null,
+          nameEn: tplMeta.contract_templates?.name_en ?? null,
+          versionNumber: tplMeta.version_number ?? null,
+          category: tplMeta.contract_templates?.category ?? null,
+          pricingMethod: cAny.pricing_method ?? null,
+          languagePrecedence: tplMeta.language_precedence ?? null,
+        } : null,
+        templateSnapshot: snap ? {
+          sections: ((snap as { sections?: unknown }).sections ?? []) as never,
+          attachments: ((snap as { attachments?: unknown }).attachments ?? []) as never,
+        } : null,
+        lineItems: lineItemsRows.map((li) => ({
+          nameAr: (li.name_ar as string | null) ?? null,
+          nameEn: (li.name_en as string | null) ?? null,
+          pricingMethod: (li.pricing_method as string | null) ?? null,
+          unitOfMeasure: (li.unit_of_measure as string | null) ?? null,
+          boqGroupKey: (li.boq_group_key as string | null) ?? null,
+          quantity: Number(li.quantity || 0),
+          unitPrice: Number(li.unit_price || 0),
+          totalCost: Number(li.total_cost || 0),
+          formulaInputs: li.formula_inputs ?? null,
+        })),
         isRTL,
       };
       const { exportContractPDF } = await import('@/lib/contract-pdf-export');

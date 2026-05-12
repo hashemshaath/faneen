@@ -2,6 +2,47 @@ import { setupArabicDoc, getArabicTableStyles, printContractSection } from './pd
 import { BRAND_DOCUMENTS } from '@/config/brandTheme';
 import { hexToRgbTuple } from '@/lib/theme/brandThemeUtils';
 import { calculateVatBreakdown, calculateContractCoverage } from '@/lib/contract-financials';
+import { groupLineItemsByBoqGroup, hasMixedPricing, listPricingMethodsUsed } from './contract-boq';
+
+// ── CT6: Pricing method labels (display only — no formula execution) ──
+const PRICING_METHOD_LABEL: Record<string, { ar: string; en: string }> = {
+  unit:         { ar: 'بالوحدة',          en: 'Per unit' },
+  linear_meter: { ar: 'بالمتر الطولي',    en: 'Linear meter' },
+  square_meter: { ar: 'بالمتر المربع',    en: 'Square meter' },
+  cubic_meter:  { ar: 'بالمتر المكعب',    en: 'Cubic meter' },
+  kilogram:     { ar: 'بالكيلوغرام',      en: 'Kilogram' },
+  ton:          { ar: 'بالطن',             en: 'Ton' },
+  lump_sum:     { ar: 'مبلغ مقطوع',       en: 'Lump sum' },
+};
+const UOM_FALLBACK: Record<string, string> = {
+  unit: 'pcs', linear_meter: 'm', square_meter: 'm²', cubic_meter: 'm³',
+  kilogram: 'kg', ton: 't', lump_sum: '—',
+};
+const labelForMethod = (m: string | null | undefined, isRTL: boolean): string => {
+  const key = (m || 'unit') as keyof typeof PRICING_METHOD_LABEL;
+  const x = PRICING_METHOD_LABEL[key] ?? PRICING_METHOD_LABEL.unit;
+  return isRTL ? x.ar : x.en;
+};
+const summarizeFormulaInputs = (inputs: unknown, isRTL: boolean): string => {
+  if (!inputs || typeof inputs !== 'object') return '-';
+  const o = inputs as Record<string, unknown>;
+  const parts: string[] = [];
+  const num = (k: string): number | null => {
+    const v = o[k];
+    if (v == null || v === '') return null;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+  };
+  const L = num('length_mm'), W = num('width_mm'), H = num('height_mm');
+  const wKg = num('weight_kg'), wT = num('weight_ton'), amt = num('amount');
+  if (L != null && W != null && H != null) parts.push(`${L}×${W}×${H} mm`);
+  else if (L != null && W != null)         parts.push(`${L}×${W} mm`);
+  else if (L != null)                      parts.push(`${L} mm`);
+  if (wKg != null) parts.push(`${wKg} kg`);
+  if (wT  != null) parts.push(`${wT} t`);
+  if (amt != null) parts.push(isRTL ? `مبلغ: ${amt}` : `amt: ${amt}`);
+  return parts.length ? parts.join(' • ') : '-';
+};
 
 // ── Central brand document tokens (resolved once per module load) ──
 // Falls back to the literal hex if the util ever returns null (it won't for
@@ -77,6 +118,59 @@ export interface ContractExportData {
     providerApprovedAt?: string | null;
     appliedAt?: string | null;
   }[];
+  /**
+   * CT6: Optional template metadata block. Caller supplies safe display
+   * fields only — never raw IDs, draft content, or admin notes.
+   */
+  template?: {
+    nameAr?: string | null;
+    nameEn?: string | null;
+    versionNumber?: number | null;
+    category?: string | null;
+    pricingMethod?: string | null;
+    languagePrecedence?: string | null;
+  } | null;
+  /**
+   * CT6: Frozen template snapshot payload. Only `sections[].clauses[]` and
+   * `attachments[]` (precedence_order, kind, title_ar/en, is_mandatory) are
+   * read here. file_url and storage paths are NEVER rendered.
+   */
+  templateSnapshot?: {
+    sections?: Array<{
+      title_ar?: string;
+      title_en?: string | null;
+      sort_order?: number;
+      is_required?: boolean;
+      clauses?: Array<{
+        body_ar?: string;
+        body_en?: string | null;
+        sort_order?: number;
+        is_mandatory?: boolean;
+      }>;
+    }>;
+    attachments?: Array<{
+      kind?: string;
+      title_ar?: string;
+      title_en?: string | null;
+      precedence_order?: number;
+      is_mandatory?: boolean;
+    }>;
+  } | null;
+  /**
+   * CT6: Contract line items grouped by BOQ in PDF. Items must come from
+   * `contract_line_items` (server-authoritative `total_cost`).
+   */
+  lineItems?: Array<{
+    nameAr?: string | null;
+    nameEn?: string | null;
+    pricingMethod?: string | null;
+    unitOfMeasure?: string | null;
+    boqGroupKey?: string | null;
+    quantity: number;
+    unitPrice: number;
+    totalCost: number;
+    formulaInputs?: unknown;
+  }>;
   isRTL: boolean;
   /**
    * C6.6: optional public verification hash (contract.document_hash). When
@@ -168,6 +262,37 @@ export const exportContractPDF = async (data: ContractExportData) => {
     alternateRowStyles: { fillColor: SURFACE2_RGB },
   });
   y = (doc as any).lastAutoTable.finalY + 12;
+
+  // ── CT6: Template metadata (compact) ──
+  if (data.template) {
+    const t = data.template;
+    const tName = data.isRTL ? (t.nameAr || t.nameEn) : (t.nameEn || t.nameAr);
+    if (tName || t.versionNumber || t.category || t.pricingMethod || t.languagePrecedence) {
+      sectionTitle(data.isRTL ? 'قالب العقد' : 'Contract Template');
+      const rows: string[][] = [];
+      rows.push([data.isRTL ? 'القالب' : 'Template', tName || (data.isRTL ? 'عام / إرث' : 'General / Legacy')]);
+      if (t.versionNumber) rows.push([data.isRTL ? 'الإصدار' : 'Version', `v${t.versionNumber}`]);
+      if (t.category)      rows.push([data.isRTL ? 'الفئة' : 'Category', String(t.category)]);
+      if (t.pricingMethod) rows.push([data.isRTL ? 'طريقة التسعير' : 'Pricing method', labelForMethod(t.pricingMethod, data.isRTL)]);
+      if (t.languagePrecedence) rows.push([data.isRTL ? 'لغة الأسبقية' : 'Language precedence', t.languagePrecedence.toUpperCase()]);
+      autoTable(doc, {
+        startY: y, body: rows, theme: 'plain',
+        styles: { fontSize: 9, cellPadding: 3.5, ...rtlStyles, lineColor: BORDER_RGB, lineWidth: 0.2 },
+        columnStyles: { 0: { fontStyle: 'bold', cellWidth: 55, textColor: MUTED_RGB } },
+        margin: { left: 15, right: 15 },
+        alternateRowStyles: { fillColor: SURFACE2_RGB },
+      });
+      y = (doc as any).lastAutoTable.finalY + 12;
+    }
+  } else {
+    // Legacy contract — single-line note (no section header to avoid noise).
+    sectionTitle(data.isRTL ? 'قالب العقد' : 'Contract Template');
+    doc.setFontSize(8);
+    doc.setTextColor(mutedR, mutedG, mutedB);
+    const note = data.isRTL ? 'القالب: عام / إرث' : 'Template: General / Legacy';
+    doc.text(note, data.isRTL ? w - 15 : 15, y, { align: data.isRTL ? 'right' : 'left' });
+    y += 10;
+  }
 
   // ── Financial ──
   sectionTitle(data.isRTL ? 'البيانات المالية' : 'Financial Summary');
@@ -355,6 +480,102 @@ export const exportContractPDF = async (data: ContractExportData) => {
     y = (doc as any).lastAutoTable.finalY + 12;
   }
 
+  // ── CT6: BOQ Line Items grouped by boq_group_key ──
+  if (data.lineItems && data.lineItems.length > 0) {
+    sectionTitle(data.isRTL ? 'بنود الأعمال (BOQ)' : 'Line Items (BOQ)');
+
+    const itemsForGrouping = data.lineItems.map((li, idx) => ({
+      id: String(idx),
+      boq_group_key: li.boqGroupKey ?? null,
+      pricing_method: li.pricingMethod ?? 'unit',
+      total_cost: li.totalCost,
+      _src: li,
+    }));
+    const groups = groupLineItemsByBoqGroup(itemsForGrouping);
+    const grandTotal = data.lineItems.reduce((s, li) => s + Number(li.totalCost || 0), 0);
+
+    // Mixed-pricing badge line
+    if (hasMixedPricing(itemsForGrouping)) {
+      const used = listPricingMethodsUsed(itemsForGrouping)
+        .map((m) => labelForMethod(m, data.isRTL))
+        .join(' / ');
+      doc.setFontSize(8);
+      doc.setTextColor(mutedR, mutedG, mutedB);
+      const txt = (data.isRTL ? 'تسعير مختلط: ' : 'Mixed pricing: ') + used;
+      doc.text(txt, data.isRTL ? w - 15 : 15, y, { align: data.isRTL ? 'right' : 'left' });
+      y += 6;
+    }
+
+    for (const g of groups) {
+      if (y > h - 40) { doc.addPage(); y = 15; }
+      // Group title bar
+      doc.setFillColor(...SURFACE2_RGB);
+      doc.rect(15, y - 2, w - 30, 7, 'F');
+      doc.setFontSize(9);
+      doc.setTextColor(darkR, darkG, darkB);
+      doc.text(
+        data.isRTL ? g.label_ar : g.label_en,
+        data.isRTL ? w - 18 : 18,
+        y + 3,
+        { align: data.isRTL ? 'right' : 'left' },
+      );
+      y += 7;
+
+      autoTable(doc, {
+        startY: y,
+        head: [[
+          '#',
+          data.isRTL ? 'البند' : 'Item',
+          data.isRTL ? 'طريقة التسعير' : 'Method',
+          data.isRTL ? 'الوحدة' : 'Unit',
+          data.isRTL ? 'الأبعاد/الوزن' : 'Dims/Weight',
+          data.isRTL ? 'الكمية' : 'Qty',
+          data.isRTL ? 'سعر/وحدة' : 'Unit price',
+          data.isRTL ? 'الإجمالي' : 'Total',
+        ]],
+        body: g.items.map((row, i) => {
+          const li = row._src;
+          const name = data.isRTL ? (li.nameAr || li.nameEn || '-') : (li.nameEn || li.nameAr || '-');
+          const method = li.pricingMethod || 'unit';
+          const uom = li.unitOfMeasure || UOM_FALLBACK[method] || '-';
+          return [
+            String(i + 1),
+            String(name).slice(0, 60),
+            labelForMethod(method, data.isRTL),
+            uom,
+            summarizeFormulaInputs(li.formulaInputs, data.isRTL),
+            String(li.quantity),
+            fmtNum(Number(li.unitPrice)),
+            fmtNum(Number(li.totalCost)),
+          ];
+        }),
+        foot: [[
+          '', data.isRTL ? 'مجموع المجموعة' : 'Group subtotal',
+          '', '', '', '', '', `${fmtNum(g.subtotal)} ${data.currency}`,
+        ]],
+        theme: 'grid',
+        styles: { fontSize: 7, cellPadding: 2.2, ...rtlStyles },
+        headStyles: { fillColor: HEADER_RGB, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7 },
+        alternateRowStyles: { fillColor: SURFACE2_RGB },
+        footStyles: { fillColor: HIGHLIGHT_RGB, fontStyle: 'bold', fontSize: 7 },
+        margin: { left: 10, right: 10 },
+      });
+      y = (doc as any).lastAutoTable.finalY + 6;
+    }
+
+    // Grand total
+    if (y > h - 18) { doc.addPage(); y = 15; }
+    doc.setFillColor(...HIGHLIGHT_RGB);
+    doc.rect(15, y, w - 30, 9, 'F');
+    doc.setFontSize(10);
+    doc.setTextColor(darkR, darkG, darkB);
+    const gtLabel = data.isRTL ? 'الإجمالي العام للبنود' : 'BOQ Grand Total';
+    const gtValue = `${fmtNum(grandTotal)} ${data.currency}`;
+    doc.text(gtLabel, data.isRTL ? w - 18 : 18, y + 6, { align: data.isRTL ? 'right' : 'left' });
+    doc.text(gtValue, data.isRTL ? 18 : w - 18, y + 6, { align: data.isRTL ? 'left' : 'right' });
+    y += 14;
+  }
+
   // ── Terms ──
   if (data.terms) {
     sectionTitle(data.isRTL ? 'الشروط والالتزامات' : 'Terms & Conditions');
@@ -364,6 +585,94 @@ export const exportContractPDF = async (data: ContractExportData) => {
     if (y + lines.length * 4 > h - 20) { doc.addPage(); y = 15; }
     doc.text(lines, data.isRTL ? w - 15 : 15, y, { align: data.isRTL ? 'right' : 'left' });
     y += lines.length * 4 + 12;
+  }
+
+  // ── CT6: Template clauses from frozen snapshot (published only) ──
+  const snapSections = data.templateSnapshot?.sections;
+  if (snapSections && snapSections.length > 0) {
+    sectionTitle(data.isRTL ? 'بنود القالب' : 'Template Clauses');
+    const ordered = [...snapSections].sort(
+      (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0),
+    );
+    for (const s of ordered) {
+      const sTitle = data.isRTL ? (s.title_ar || s.title_en) : (s.title_en || s.title_ar);
+      if (!sTitle) continue;
+      if (y > h - 25) { doc.addPage(); y = 15; }
+      doc.setFontSize(10);
+      doc.setTextColor(darkR, darkG, darkB);
+      doc.text(String(sTitle), data.isRTL ? w - 15 : 15, y, { align: data.isRTL ? 'right' : 'left' });
+      y += 5;
+      const clauses = [...(s.clauses || [])].sort(
+        (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0),
+      );
+      for (let i = 0; i < clauses.length; i++) {
+        const c = clauses[i];
+        const body = data.isRTL ? (c.body_ar || c.body_en) : (c.body_en || c.body_ar);
+        if (!body) continue;
+        const mandatory = c.is_mandatory
+          ? (data.isRTL ? '★ ' : '★ ')
+          : '';
+        const prefix = `${mandatory}${i + 1}. `;
+        doc.setFontSize(8);
+        doc.setTextColor(textR, textG, textB);
+        const wrapped = doc.splitTextToSize(`${prefix}${String(body)}`, w - 34);
+        if (y + wrapped.length * 4 > h - 20) { doc.addPage(); y = 15; }
+        doc.text(wrapped, data.isRTL ? w - 17 : 17, y, { align: data.isRTL ? 'right' : 'left' });
+        y += wrapped.length * 4 + 1;
+      }
+      y += 4;
+    }
+    // Mandatory legend
+    doc.setFontSize(7);
+    doc.setTextColor(mutedR, mutedG, mutedB);
+    const legend = data.isRTL ? '★ بند إلزامي' : '★ Mandatory clause';
+    if (y + 4 > h - 20) { doc.addPage(); y = 15; }
+    doc.text(legend, data.isRTL ? w - 15 : 15, y, { align: data.isRTL ? 'right' : 'left' });
+    y += 10;
+  }
+
+  // ── CT6: Document precedence (no URLs, no storage paths) ──
+  {
+    const snapAtt = data.templateSnapshot?.attachments;
+    let order: string[] = [];
+    if (snapAtt && snapAtt.length > 0) {
+      order = [...snapAtt]
+        .sort((a, b) => (a.precedence_order ?? 0) - (b.precedence_order ?? 0))
+        .map((a, idx) => {
+          const t = data.isRTL ? (a.title_ar || a.title_en) : (a.title_en || a.title_ar);
+          const mark = a.is_mandatory ? (data.isRTL ? ' (إلزامي)' : ' (mandatory)') : '';
+          return `${idx + 1}. ${t || a.kind || '-'}${mark}`;
+        });
+    } else {
+      order = data.isRTL
+        ? [
+            '1. آخر ملحق معتمد',
+            '2. عرض السعر / جدول الكميات المعتمد',
+            '3. المقاسات وبنود العمل',
+            '4. المخططات والمواصفات',
+            '5. شروط خاصة',
+            '6. شروط عامة',
+          ]
+        : [
+            '1. Latest approved amendment',
+            '2. Approved quote / BOQ',
+            '3. Measurements and line items',
+            '4. Drawings and specifications',
+            '5. Special terms',
+            '6. General terms',
+          ];
+    }
+    if (order.length > 0) {
+      sectionTitle(data.isRTL ? 'أولوية المستندات' : 'Document Precedence');
+      doc.setFontSize(8);
+      doc.setTextColor(textR, textG, textB);
+      for (const line of order) {
+        if (y + 5 > h - 20) { doc.addPage(); y = 15; }
+        doc.text(line, data.isRTL ? w - 17 : 17, y, { align: data.isRTL ? 'right' : 'left' });
+        y += 5;
+      }
+      y += 6;
+    }
   }
 
   // ── Attachments Index (metadata only — no URLs/paths) ──
