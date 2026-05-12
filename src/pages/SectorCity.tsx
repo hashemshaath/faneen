@@ -187,19 +187,37 @@ const SectorCity: React.FC = () => {
   useMultiJsonLd(
     useMemo(() => {
       if (!sector || !city || !meta) return null;
-      const breadcrumb = buildBreadcrumbList([
+      const pageUrl = `${SITE_URL}/sectors/${sector.slug}/${city.slug}`;
+      const cityBlock = {
+        '@type': 'City',
+        name: city.nameEn,
+        alternateName: city.nameAr,
+        address: {
+          '@type': 'PostalAddress',
+          addressLocality: city.nameEn,
+          addressRegion: city.nameEn,
+          addressCountry: 'SA',
+        },
+      } as const;
+      const breadcrumb = {
+        ...buildBreadcrumbList([
         { name: isRTL ? 'القطاعات' : 'Sectors', url: '/sectors' },
         { name: meta.name, url: `/sectors/${sector.slug}` },
         { name: cityName, url: `/sectors/${sector.slug}/${city.slug}` },
-      ])!;
+        ])!,
+        '@id': `${pageUrl}#breadcrumbs`,
+      };
       const collection = {
         '@context': 'https://schema.org',
         '@type': 'CollectionPage',
+        '@id': `${pageUrl}#collection`,
         name: `${meta.name} ${cityIn}`,
         description,
-        url: `${SITE_URL}/sectors/${sector.slug}/${city.slug}`,
+        url: pageUrl,
         inLanguage: isRTL ? 'ar' : 'en',
         isPartOf: { '@type': 'WebSite', name: 'قِطاعات Qitaat', url: SITE_URL },
+        about: cityBlock,
+        spatialCoverage: cityBlock,
       };
 
       // ── Numbered ItemList of providers, each enriched with a LocalBusiness item ──
@@ -210,11 +228,14 @@ const SectorCity: React.FC = () => {
         ? {
             '@context': 'https://schema.org',
             '@type': 'ItemList',
+            '@id': `${pageUrl}#providers`,
             name: isRTL ? `أفضل ${top.length} من مزودي ${meta.name} ${cityIn}` : `Top ${top.length} ${meta.name} providers ${cityIn}`,
             description: isRTL
               ? `قائمة مرتّبة بأفضل ${top.length} من ورش ${meta.name} ${cityIn} وفقاً للتقييم وحالة التحقق على منصة قِطاعات.`
               : `Ranked list of the top ${top.length} ${meta.name} workshops ${cityIn} by rating and verification on Qitaat.`,
-            url: `${SITE_URL}/sectors/${sector.slug}/${city.slug}`,
+            url: pageUrl,
+            about: cityBlock,
+            areaServed: cityBlock,
             itemListOrder: 'https://schema.org/ItemListOrderDescending',
             numberOfItems: top.length,
             itemListElement: top.map((b, i) => {
@@ -321,7 +342,11 @@ const SectorCity: React.FC = () => {
         }
       }
 
-      const faq = buildFaqPage(cityFaqEntries)!;
+      const faq = {
+        ...buildFaqPage(cityFaqEntries)!,
+        '@id': `${pageUrl}#faq`,
+        about: cityBlock,
+      };
 
       const blocks: Record<string, unknown>[] = [breadcrumb, collection, faq];
       if (itemList) blocks.splice(2, 0, itemList);
