@@ -2860,6 +2860,18 @@ const ContractDetail = () => {
       </div>
 
       <Footer />
+      {previewOpen && (
+        <ContractPdfPreviewOverlay
+          isRTL={isRTL}
+          url={previewUrl}
+          fileName={previewFileName}
+          loading={previewLoading}
+          error={previewError}
+          onClose={handleClosePreview}
+          onDownload={handleExportPDF}
+          onRefresh={generatePreview}
+        />
+      )}
     </div>
   );
 };
