@@ -24,6 +24,8 @@ interface BusinessRow {
 }
 
 const SITE_URL = 'https://qitaat.com';
+// Public edge function that records an impression and returns a 1×1 GIF.
+const PIXEL_URL = `https://hckpxwhjycmdflaneihd.supabase.co/functions/v1/badge-pixel`;
 
 /**
  * Build a self-contained inline-SVG anchor — no external CSS, safe to paste
@@ -42,12 +44,16 @@ function buildBadgeHtml(opts: {
   const label = isRTL ? 'موثّق على قِطاعات' : 'Verified on Qitaat';
   const sub = isRTL ? `قِطاعات · ${displayName}` : `Qitaat · ${displayName}`;
   const safeName = displayName.replace(/"/g, '&quot;');
+  // Tracking pixel — fires one `badge_impressions` row per render. Hidden,
+  // no layout impact, never blocks the badge from showing.
+  const pixel = `<img src="${PIXEL_URL}?u=${encodeURIComponent(username)}&v=${variant}" alt="" width="1" height="1" style="position:absolute;width:1px;height:1px;opacity:0;border:0;pointer-events:none;" referrerpolicy="no-referrer-when-downgrade" loading="eager" />`;
 
   if (variant === 'compact') {
     // 28px tall, just the seal + word — perfect for email signatures
     return `<a href="${href}" target="_blank" rel="noopener" title="${safeName} — ${label}" style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border:1px solid #d1fae5;border-radius:9999px;background:#ecfdf5;color:#065f46;font:600 12px/1 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;text-decoration:none;">
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-8 9-4.5-1.5-8-4-8-9V5l8-3 8 3z"/><path d="m9 12 2 2 4-4"/></svg>
   <span>${label}</span>
+  ${pixel}
 </a>`;
   }
 
@@ -67,6 +73,7 @@ function buildBadgeHtml(opts: {
     <span style="font-size:13px;font-weight:700;">${label}</span>
     <span style="font-size:11px;font-weight:500;color:${subFg};">${sub}</span>
   </span>
+  ${pixel}
 </a>`;
 }
 
