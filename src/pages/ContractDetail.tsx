@@ -22,6 +22,7 @@ import { mapContractLockError } from '@/lib/contract-errors';
 import { dispatchAmendmentEvent } from '@/lib/amendment-notify';
 import { recordContractPdfExport } from '@/lib/contract-pdf-history';
 import { ContractPdfExportHistory } from '@/components/contract/ContractPdfExportHistory';
+import { ContractPdfPreviewOverlay } from '@/components/contract/ContractPdfPreviewOverlay';
 import { calculateVatBreakdown } from '@/lib/contract-financials';
 import { PaymentScheduleGenerator } from '@/components/contract/PaymentScheduleGenerator';
 import { ContractFinancialCoverage } from '@/components/contract/ContractFinancialCoverage';
