@@ -618,6 +618,66 @@ export type Database = {
           },
         ]
       }
+      business_badge_status: {
+        Row: {
+          business_id: string
+          checked_url: string | null
+          consecutive_misses: number
+          created_at: string
+          error: string | null
+          found: boolean
+          http_status: number | null
+          id: string
+          last_checked_at: string | null
+          last_found_at: string | null
+          matched_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          checked_url?: string | null
+          consecutive_misses?: number
+          created_at?: string
+          error?: string | null
+          found?: boolean
+          http_status?: number | null
+          id?: string
+          last_checked_at?: string | null
+          last_found_at?: string | null
+          matched_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          checked_url?: string | null
+          consecutive_misses?: number
+          created_at?: string
+          error?: string | null
+          found?: boolean
+          http_status?: number | null
+          id?: string
+          last_checked_at?: string | null
+          last_found_at?: string | null
+          matched_url?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_badge_status_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: true
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_badge_status_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: true
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_bnpl_providers: {
         Row: {
           bnpl_provider_id: string
