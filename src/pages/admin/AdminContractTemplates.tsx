@@ -11,21 +11,22 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { FileText, Plus, Copy, Archive, Eye, ScrollText, Calculator, ListChecks, Paperclip, History, Search } from 'lucide-react';
+import { FileText, Copy, Archive, Eye, ScrollText, Calculator, ListChecks, Paperclip, History, Search, Scale } from 'lucide-react';
 import { Navigate } from 'react-router-dom';
 import {
   SectionsClausesPanel, PricingRulesPanel, RequiredFieldsPanel,
   AttachmentsPanel, PreviewPanel,
 } from '@/components/admin/contract-templates/EditorPanels';
+import { LegalReviewPanel } from '@/components/admin/contract-templates/LegalReviewPanel';
 import {
-  CTTemplate, CTVersion, CTVersionStatus, CTMeasurementMethod,
+  CTTemplate, CTVersion, CTMeasurementMethod,
   VERSION_STATUS_META,
 } from '@/components/admin/contract-templates/types';
 
 const AdminContractTemplates: React.FC = () => {
   useNoIndex();
   const { isRTL } = useLanguage();
-  const { isAdmin, user } = useAuth();
+  const { isAdmin } = useAuth();
   const qc = useQueryClient();
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [selectedVersionId, setSelectedVersionId] = useState<string | null>(null);
@@ -208,34 +209,6 @@ const AdminContractTemplates: React.FC = () => {
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Failed'),
   });
 
-  const setVersionStatus = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: CTVersionStatus }) => {
-      const patch: {
-        status: CTVersionStatus;
-        published_at?: string;
-        published_by?: string | null;
-        archived_at?: string;
-      } = { status };
-      if (status === 'published') {
-        patch.published_at = new Date().toISOString();
-        patch.published_by = user?.id || null;
-      }
-      if (status === 'archived') patch.archived_at = new Date().toISOString();
-      const { error } = await supabase.from('contract_template_versions').update(patch).eq('id', id);
-      if (error) throw error;
-      if (status === 'published' && selectedTemplate) {
-        await supabase.from('contract_templates')
-          .update({ current_version_id: id }).eq('id', selectedTemplate.id);
-      }
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['ct-versions', selectedTemplateId] });
-      qc.invalidateQueries({ queryKey: ['ct-templates'] });
-      toast.success(isRTL ? 'تم التحديث' : 'Updated');
-    },
-    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Failed'),
-  });
-
   const archiveTemplate = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from('contract_templates')
@@ -368,45 +341,7 @@ const AdminContractTemplates: React.FC = () => {
                             <Badge variant="outline" className={meta?.cls}>{isRTL ? meta?.ar : meta?.en}</Badge>
                             {isCur && <Badge variant="secondary" className="text-[10px]">{isRTL ? 'الحالية' : 'current'}</Badge>}
                           </div>
-                          <div className="flex items-center gap-1">
-                            {v.status === 'draft' && (
-                              <Button size="sm" variant="ghost"
-                                onClick={(e) => { e.stopPropagation(); setVersionStatus.mutate({ id: v.id, status: 'in_review' }); }}>
-                                {isRTL ? 'إرسال للمراجعة' : 'Send to review'}
-                              </Button>
-                            )}
-                            {v.status === 'in_review' && (
-                              <>
-                                <Button size="sm" variant="ghost"
-                                  onClick={(e) => { e.stopPropagation(); setVersionStatus.mutate({ id: v.id, status: 'legal_approved' }); }}>
-                                  {isRTL ? 'اعتماد قانوني' : 'Legal approve'}
-                                </Button>
-                                <Button size="sm" variant="ghost"
-                                  onClick={(e) => { e.stopPropagation(); setVersionStatus.mutate({ id: v.id, status: 'changes_requested' }); }}>
-                                  {isRTL ? 'طلب تعديلات' : 'Request changes'}
-                                </Button>
-                              </>
-                            )}
-                            {v.status === 'legal_approved' && (
-                              <Button size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (window.confirm(isRTL
-                                    ? 'سيتم نشر هذه النسخة وجعلها النسخة الحالية. هل أنت متأكد؟'
-                                    : 'This will publish this version and set it as current. Continue?')) {
-                                    setVersionStatus.mutate({ id: v.id, status: 'published' });
-                                  }
-                                }}>
-                                {isRTL ? 'نشر' : 'Publish'}
-                              </Button>
-                            )}
-                            {(v.status === 'published' || v.status === 'legal_approved') && !isCur && (
-                              <Button size="sm" variant="ghost"
-                                onClick={(e) => { e.stopPropagation(); setVersionStatus.mutate({ id: v.id, status: 'archived' }); }}>
-                                {isRTL ? 'أرشفة' : 'Archive'}
-                              </Button>
-                            )}
-                          </div>
+                          <Scale className="h-3.5 w-3.5 text-muted-foreground" />
                         </button>
                       );
                     })}
@@ -415,6 +350,15 @@ const AdminContractTemplates: React.FC = () => {
                     )}
                   </div>
                 </CardContent></Card>
+
+                {/* Legal Review (CT7) — gated workflow actions */}
+                {selectedVersion && selectedTemplate && (
+                  <LegalReviewPanel
+                    version={selectedVersion}
+                    templateId={selectedTemplate.id}
+                    isRTL={isRTL}
+                  />
+                )}
 
                 {/* Editor tabs */}
                 {selectedVersion && (
