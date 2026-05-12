@@ -20,6 +20,8 @@ import { SectorGuides } from '@/components/sector/SectorGuides';
 import { SectorTopTechnicians } from '@/components/sector/SectorTopTechnicians';
 import { SectorProjectExamples } from '@/components/sector/SectorProjectExamples';
 import { SA_CITIES } from '@/lib/sa-cities';
+import { SectorFAQ } from '@/components/sector/SectorFAQ';
+import { getSectorFaqs } from '@/lib/sector-faqs';
 
 /**
  * Maps a sector slug → list of category slugs that should be included
@@ -250,30 +252,19 @@ const SectorLanding: React.FC = () => {
             })),
           }
         : null;
-      const faq = buildFaqPage([
-        {
-          q: isRTL
-            ? `كيف أختار أفضل مزود ${meta.name} ${selectedCityName ? `في ${selectedCityName}` : 'في السعودية'}؟`
-            : `How do I pick the best ${meta.name} provider ${selectedCityName ? `in ${selectedCityName}` : 'in Saudi Arabia'}?`,
-          a: isRTL
-            ? `استعرض دليل قِطاعات لمزودي ${meta.name}${selectedCityName ? ` في ${selectedCityName}` : ''}، صفِّ النتائج حسب التقييم وحالة التحقق، ثم قارن المعارض والأسعار قبل التواصل.`
-            : `Browse the Qitaat directory of ${meta.name} providers${selectedCityName ? ` in ${selectedCityName}` : ''}, filter by rating and verification, then compare portfolios and quotes before reaching out.`,
-        },
-        {
-          q: isRTL
-            ? `ما الخدمات الشائعة في قطاع ${meta.name}؟`
-            : `What services are common in the ${meta.name} sector?`,
-          a: meta.description,
-        },
-        {
-          q: isRTL
-            ? `هل يمكنني طلب عرض سعر مجاني لـ${meta.name}${selectedCityName ? ` في ${selectedCityName}` : ''}؟`
-            : `Can I request a free quote for ${meta.name}${selectedCityName ? ` in ${selectedCityName}` : ''}?`,
-          a: isRTL
-            ? `نعم، تواصل مع أي مزود مدرج في قِطاعات مباشرةً عبر صفحته للحصول على عرض سعر مجاني وغير ملزم.`
-            : `Yes — contact any listed provider directly from their Qitaat page to get a free, no-obligation quote.`,
-        },
-      ])!;
+      // Full sector FAQ — city-aware question phrasing for richer snippets.
+      const sectorFaqs = getSectorFaqs(sector.slug);
+      const faqQa = sectorFaqs.map((f) => {
+        const q = isRTL ? f.q_ar : f.q_en;
+        const a = isRTL ? f.a_ar : f.a_en;
+        if (!selectedCityName) return { q, a };
+        // Inject the city into the question phrasing when relevant
+        const qWithCity = isRTL
+          ? q.replace(/في السعودية/g, `في ${selectedCityName}`)
+          : q.replace(/in Saudi Arabia/g, `in ${selectedCityName}`);
+        return { q: qWithCity, a };
+      });
+      const faq = buildFaqPage(faqQa)!;
       const blocks: Record<string, unknown>[] = [breadcrumb, collection, faq];
       if (itemList) blocks.splice(2, 0, itemList);
       // HowTo JSON-LD per buyer-guide (search engines pick up rich results).
@@ -456,6 +447,13 @@ const SectorLanding: React.FC = () => {
         sectorSlug={sector.slug}
         categoryIds={categoryIds}
         cityId={cityId === 'all' ? null : cityId}
+        cityName={selectedCityName}
+      />
+
+      {/* Sector FAQ — categorized Q&A, matching FAQPage JSON-LD above */}
+      <SectorFAQ
+        sectorName={meta.name}
+        faqs={getSectorFaqs(sector.slug)}
         cityName={selectedCityName}
       />
 
