@@ -613,7 +613,7 @@ const DashboardContracts = () => {
       if (contractTemplateVersionIds.length === 0) return [];
       const { data } = await supabase
         .from('contract_template_pricing_rules')
-        .select('version_id, method')
+        .select('version_id, method, vat_handling')
         .in('version_id', contractTemplateVersionIds);
       return data ?? [];
     },
@@ -627,6 +627,21 @@ const DashboardContracts = () => {
       const list = map.get(r.version_id) ?? [];
       list.push(r.method);
       map.set(r.version_id, list);
+    }
+    return map;
+  }, [contractPricingRules]);
+
+  /**
+   * CT5G.2 — Map of template_version_id → (pricing_method → vat_handling).
+   * Used to derive per-line VAT breakdown for display only. Defaults to
+   * 'inherit' when no rule is configured for a given (version, method).
+   */
+  const vatHandlingByVersionMethod = useMemo(() => {
+    const map = new Map<string, Map<string, string>>();
+    for (const r of contractPricingRules as Array<{ version_id: string; method: string; vat_handling?: string | null }>) {
+      const inner = map.get(r.version_id) ?? new Map<string, string>();
+      inner.set(r.method, (r.vat_handling || 'inherit'));
+      map.set(r.version_id, inner);
     }
     return map;
   }, [contractPricingRules]);
@@ -2292,6 +2307,26 @@ const DashboardContracts = () => {
                   const vatAmount = _vat.vatAmount;
                   const grandTotal = _vat.total;
 
+                  /* ── CT5G.2 — Derived per-line VAT breakdown (display only). ── */
+                  const cTpl = (c as { template_version_id?: string | null }).template_version_id ?? null;
+                  const lineVatRulesMap = cTpl ? vatHandlingByVersionMethod.get(cTpl) : undefined;
+                  const resolveLineVatHandling = (method: string | null | undefined): string => {
+                    const m = (method || 'unit');
+                    return lineVatRulesMap?.get(m) || 'inherit';
+                  };
+                  const lineVatRows = lineItems.map((li) => ({
+                    id: li.id,
+                    breakdown: calculateLineVatBreakdown({
+                      amount: li.total_cost,
+                      vatHandling: resolveLineVatHandling((li as { pricing_method?: string | null }).pricing_method),
+                      contractVatRate: c.vat_rate,
+                      contractVatInclusive: c.vat_inclusive,
+                    }),
+                  }));
+                  const lineVatById = new Map(lineVatRows.map(r => [r.id, r.breakdown]));
+                  const lineVatTotals = sumLineVatBreakdowns(lineVatRows.map(r => r.breakdown));
+                  const hasAnyLineVat = lineVatTotals.vat > 0 || lineVatRows.some(r => r.breakdown.vatHandling !== 'inherit');
+
                   return (
                     <div key={c.id} className="space-y-0">
                       <ContractCard
@@ -2740,6 +2775,19 @@ const DashboardContracts = () => {
                                                   {g.subtotal.toLocaleString()} {c.currency_code}
                                                 </span>
                                               </div>
+                                              {(() => {
+                                                const groupVat = sumLineVatBreakdowns(
+                                                  g.items.map(it => lineVatById.get(it.id)).filter((b): b is NonNullable<typeof b> => !!b)
+                                                );
+                                                if (groupVat.vat <= 0 && groupVat.gross <= 0) return null;
+                                                return (
+                                                  <div className="px-2 flex items-center justify-end gap-3 text-[9px] text-muted-foreground">
+                                                    <span>{isRTL ? 'الصافي' : 'Net'}: <span className="font-mono text-foreground/80">{groupVat.net.toLocaleString()}</span></span>
+                                                    <span>{isRTL ? 'الضريبة' : 'VAT'}: <span className="font-mono text-foreground/80">{groupVat.vat.toLocaleString()}</span></span>
+                                                    <span>{isRTL ? 'الإجمالي' : 'Gross'}: <span className="font-mono text-accent">{groupVat.gross.toLocaleString()}</span></span>
+                                                  </div>
+                                                );
+                                              })()}
                                               {g.items.map((li) => (
                                                 <div key={li.id} className="p-3 rounded-xl bg-card border border-border/30 flex items-center justify-between gap-3 hover:border-primary/20 transition-colors">
                                                   <div className="flex items-center gap-3 min-w-0">
@@ -2756,6 +2804,19 @@ const DashboardContracts = () => {
                                                         {li.quantity} × {Number(li.unit_price).toLocaleString()}
                                                       </p>
                                                       <p className="text-xs font-bold">{Number(li.total_cost || 0).toLocaleString()} {c.currency_code}</p>
+                                                      {(() => {
+                                                        const b = lineVatById.get(li.id);
+                                                        if (!b) return null;
+                                                        const handlingLabel = formatVatHandlingLabel(b.vatHandling, isRTL ? 'ar' : 'en');
+                                                        if (b.vatHandling === 'exempt' || b.vat <= 0) {
+                                                          return <p className="text-[9px] text-muted-foreground mt-0.5">{handlingLabel}</p>;
+                                                        }
+                                                        return (
+                                                          <p className="text-[9px] text-muted-foreground mt-0.5 font-mono">
+                                                            {handlingLabel} • {isRTL ? 'صافي' : 'Net'} {b.net.toLocaleString()} • {isRTL ? 'ض' : 'VAT'} {b.vat.toLocaleString()}
+                                                          </p>
+                                                        );
+                                                      })()}
                                                     </div>
                                                     {!locked && isProvider && (
                                                       <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/10" onClick={() => deleteLineItemMutation.mutate({ id: li.id, contractId: c.id })}>
@@ -2802,6 +2863,34 @@ const DashboardContracts = () => {
                                       <span>{isRTL ? 'الإجمالي النهائي' : 'Grand Total'}</span>
                                       <span>{grandTotal.toLocaleString()} {c.currency_code}</span>
                                     </div>
+                                  </div>
+                                )}
+
+                                {/* CT5G.2 — Derived per-line/per-group VAT breakdown (display only). */}
+                                {lineItems.length > 0 && (
+                                  <div className="p-3 rounded-xl bg-muted/30 border border-border/30 space-y-1.5">
+                                    <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                                      <span className="font-semibold">{isRTL ? 'تفصيل ضريبة البنود (تقديري للعرض فقط)' : 'Line VAT Breakdown (display only)'}</span>
+                                    </div>
+                                    {hasAnyLineVat ? (
+                                      <>
+                                        <div className="flex items-center justify-between text-[11px]">
+                                          <span className="text-muted-foreground">{isRTL ? 'إجمالي الصافي' : 'Total Net'}</span>
+                                          <span className="font-mono">{lineVatTotals.net.toLocaleString()} {c.currency_code}</span>
+                                        </div>
+                                        <div className="flex items-center justify-between text-[11px]">
+                                          <span className="text-muted-foreground">{isRTL ? 'إجمالي الضريبة' : 'Total VAT'}</span>
+                                          <span className="font-mono">{lineVatTotals.vat.toLocaleString()} {c.currency_code}</span>
+                                        </div>
+                                        <Separator className="my-1" />
+                                        <div className="flex items-center justify-between text-[11px] font-semibold">
+                                          <span>{isRTL ? 'الإجمالي شامل الضريبة' : 'Total Gross'}</span>
+                                          <span className="font-mono">{lineVatTotals.gross.toLocaleString()} {c.currency_code}</span>
+                                        </div>
+                                      </>
+                                    ) : (
+                                      <p className="text-[10px] text-muted-foreground">{isRTL ? 'لا توجد ضريبة على البنود' : 'No VAT applied to line items'}</p>
+                                    )}
                                   </div>
                                 )}
                               </TabsContent>
