@@ -1,4 +1,4 @@
-import { setupArabicDoc, getArabicTableStyles, printContractSection } from './pdf-arabic-font';
+import { setupArabicDoc, getArabicTableStyles, normalizeArabicPdfTextLayer, printContractSection } from './pdf-arabic-font';
 import { BRAND_DOCUMENTS } from '@/config/brandTheme';
 import { hexToRgbTuple } from '@/lib/theme/brandThemeUtils';
 import { calculateVatBreakdown, calculateContractCoverage } from '@/lib/contract-financials';
@@ -199,6 +199,9 @@ export const buildContractPDF = async (data: ContractExportData) => {
 
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   const fontLoaded = await setupArabicDoc(doc, data.isRTL);
+  if (data.isRTL && !fontLoaded && import.meta.env.DEV) {
+    console.warn('PDF_ARABIC_FONT_UNAVAILABLE: Arabic contract PDF generated without a verified TTF/OTF font.');
+  }
   const rtlStyles = getArabicTableStyles(data.isRTL, fontLoaded);
 
   const w = doc.internal.pageSize.getWidth();
@@ -919,6 +922,8 @@ export const buildContractPDF = async (data: ContractExportData) => {
     doc.text(data.contractNumber, 15, h - 5);
     doc.text(new Date().toLocaleDateString(data.isRTL ? 'ar-SA' : 'en-US'), w - 15, h - 5, { align: 'right' });
   }
+
+  if (fontLoaded) normalizeArabicPdfTextLayer(doc);
 
   return doc;
 };
