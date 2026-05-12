@@ -56,6 +56,7 @@ import { ClientPicker, type SelectedClient } from '@/components/contracts/Client
 import { WORK_TYPES, getWorkType, pickTemplateForWorkType, type WorkTypeKey } from '@/lib/contract-work-types';
 import { getStatusGuidance } from '@/lib/contract-status-guidance';
 import { serializeDraftPayload, maskEmail as maskInviteEmail, type PendingInvite } from '@/lib/contract-invitations';
+import type { Json } from '@/integrations/supabase/types';
 
 type ContractRow = Database['public']['Tables']['contracts']['Row'];
 type MilestoneRow = Database['public']['Tables']['contract_milestones']['Row'];
