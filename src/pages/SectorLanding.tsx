@@ -22,6 +22,7 @@ import { SectorProjectExamples } from '@/components/sector/SectorProjectExamples
 import { SA_CITIES } from '@/lib/sa-cities';
 import { SectorFAQ } from '@/components/sector/SectorFAQ';
 import { getSectorFaqs } from '@/lib/sector-faqs';
+import { useSectorPageviewTracking } from '@/hooks/useSectorPageviewTracking';
 
 /**
  * Maps a sector slug → list of category slugs that should be included
@@ -58,6 +59,8 @@ const SectorLanding: React.FC = () => {
 
   const sectorSlug = slug as SectorSlug;
   const sector = sectorSlug && SECTOR_KEYWORDS[sectorSlug] ? SECTOR_KEYWORDS[sectorSlug] : null;
+
+  useSectorPageviewTracking(sector?.slug ?? null, null);
 
   const [query, setQuery] = useState('');
   const [cityId, setCityId] = useState<string>('all');

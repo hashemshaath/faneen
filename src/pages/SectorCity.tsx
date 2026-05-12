@@ -22,6 +22,7 @@ import { VerifiedBadge } from '@/components/common/VerifiedBadge';
 import { SECTOR_KEYWORDS, type SectorSlug, getSectorMeta } from '@/lib/sector-keywords';
 import { getCityBySlug, SA_CITIES } from '@/lib/sa-cities';
 import { SERVICES_CATALOG, UNIT_LABEL } from '@/lib/services-catalog';
+import { useSectorPageviewTracking } from '@/hooks/useSectorPageviewTracking';
 
 const SECTOR_TO_CATEGORY_SLUGS: Record<SectorSlug, string[]> = {
   aluminum: ['aluminum'],
@@ -60,6 +61,8 @@ const SectorCity: React.FC = () => {
   const sectorSlug = sectorParam as SectorSlug;
   const sector = sectorSlug && SECTOR_KEYWORDS[sectorSlug] ? SECTOR_KEYWORDS[sectorSlug] : null;
   const city = getCityBySlug(cityParam);
+
+  useSectorPageviewTracking(sector?.slug ?? null, city?.slug ?? null);
 
   const [query, setQuery] = useState('');
   const [verifiedOnly, setVerifiedOnly] = useState(false);

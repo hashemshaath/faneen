@@ -187,6 +187,7 @@ const adminBaseGroups: MenuGroup[] = [
       { label: { ar: 'تدقيق الأداء و SEO', en: 'Site Audit' }, url: '/admin/site-audit', icon: Gauge },
       { label: { ar: 'حالة Sitemap', en: 'Sitemap Status' }, url: '/admin/sitemap-status', icon: SearchIcon },
       { label: { ar: 'سيو القطاعات', en: 'Sector SEO' }, url: '/admin/sector-seo', icon: SearchIcon },
+      { label: { ar: 'تحليلات السوق', en: 'Market Analytics' }, url: '/admin/market-analytics', icon: TrendingUp },
     ],
   },
   {
