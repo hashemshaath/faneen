@@ -27,7 +27,7 @@ interface Props {
   rejecting: boolean;
   onCancel: (amendmentId: string) => void;
   cancelling: boolean;
-  onApply: (amendmentId: string) => void;
+  onApply: (amendmentId: string, scheduleAdjustedHint: boolean) => void;
   applying: boolean;
   contract?: {
     total_amount?: number | string | null;
@@ -81,6 +81,16 @@ export const AmendmentHistoryPanel = ({
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState('');
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [confirmingApplyId, setConfirmingApplyId] = useState<string | null>(null);
+
+  const BLOCK_REASON: Record<string, { ar: string; en: string }> = {
+    overpaid_refund_required: {
+      ar: 'لا يمكن تطبيق التعديل لأن المبلغ الجديد أقل من إجمالي الدفعات المدفوعة.',
+      en: 'Cannot apply: new total is below the total already paid.',
+    },
+    invalid_new_amount: { ar: 'قيمة العقد الجديدة غير صالحة.', en: 'New contract amount is invalid.' },
+    missing_new_amount: { ar: 'قيمة العقد الجديدة غير محددة.', en: 'New contract amount is missing.' },
+  };
 
   const ids = amendments.map(a => a.id);
 
@@ -261,8 +271,23 @@ export const AmendmentHistoryPanel = ({
               <AmendmentFinancialPreview input={previewInput} isRTL={isRTL} />
             )}
 
+            {/* Blocking error reasons (prominent, prevents apply) */}
+            {canApply && preview && preview.blockingErrors.length > 0 && (
+              <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-2 space-y-1">
+                {preview.blockingErrors.map(code => {
+                  const lbl = BLOCK_REASON[code] ?? { ar: code, en: code };
+                  return (
+                    <div key={code} className="flex items-start gap-1.5 text-[11px] text-destructive font-medium">
+                      <AlertTriangle className="w-3 h-3 mt-0.5 shrink-0" />
+                      <span>{isRTL ? lbl.ar : lbl.en}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
             {/* Action buttons */}
-            {(canApprove || canReject || canCancel || canApply) && rejectingId !== a.id && cancellingId !== a.id && (
+            {(canApprove || canReject || canCancel || canApply) && rejectingId !== a.id && cancellingId !== a.id && confirmingApplyId !== a.id && (
               <div className="flex flex-wrap gap-2 pt-1">
                 {canApprove && (
                   <Button
@@ -297,21 +322,42 @@ export const AmendmentHistoryPanel = ({
                     size="sm" variant="outline"
                     className="h-7 text-[10px] gap-1 text-primary border-primary/60"
                     disabled={applying || applyBlocked}
-                    onClick={() => onApply(a.id)}
+                    onClick={() => setConfirmingApplyId(a.id)}
                     title={applyBlocked ? (isRTL ? 'يتعذر التطبيق — راجع الأخطاء أعلاه' : 'Cannot apply — see errors above') : undefined}
                   >
-                    <PlayCircle className="w-3 h-3" />{isRTL ? 'تطبيق على العقد' : 'Apply to contract'}
+                    <PlayCircle className="w-3 h-3" />{isRTL ? 'تطبيق التعديل' : 'Apply amendment'}
                   </Button>
                 )}
               </div>
             )}
 
-            {canApply && !preview && (
-              <div className="rounded-lg border border-warning/40 bg-warning/5 p-2 flex items-start gap-2 text-[10px] text-warning">
-                <AlertTriangle className="w-3 h-3 mt-0.5 shrink-0" />
-                <span>{isRTL
-                  ? 'سيتم تطبيق التعديل على العقد. لا يتم حالياً إعادة توزيع جدول الدفعات تلقائياً.'
-                  : 'This will apply the amendment to the contract. Payment schedule is not automatically redistributed.'}</span>
+            {/* Inline two-step apply confirmation */}
+            {confirmingApplyId === a.id && canApply && (
+              <div className="rounded-lg border border-primary/40 bg-primary/5 p-3 space-y-2">
+                <div className="text-xs text-foreground">
+                  {isRTL
+                    ? 'سيتم تطبيق التعديل على العقد وتحديث الدفعات المعلقة حسب المعاينة أعلاه.'
+                    : 'This will apply the amendment to the contract and update pending payments per the preview above.'}
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm" className="h-7 text-[10px] gap-1"
+                    disabled={applying || applyBlocked}
+                    onClick={() => {
+                      const scheduleAdjustedHint = !!preview && preview.rowDiffs.some(r => r.adjusted);
+                      onApply(a.id, scheduleAdjustedHint);
+                      setConfirmingApplyId(null);
+                    }}
+                  >
+                    <PlayCircle className="w-3 h-3" />{isRTL ? 'تأكيد التطبيق' : 'Confirm apply'}
+                  </Button>
+                  <Button
+                    size="sm" variant="outline" className="h-7 text-[10px]"
+                    onClick={() => setConfirmingApplyId(null)}
+                  >
+                    {isRTL ? 'تراجع' : 'Back'}
+                  </Button>
+                </div>
               </div>
             )}
 
