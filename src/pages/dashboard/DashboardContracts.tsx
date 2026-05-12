@@ -1940,6 +1940,28 @@ const DashboardContracts = () => {
                                         <Input type="number" min="0" placeholder={isRTL ? 'الكمية' : 'Qty'} value={lineItemForm.quantity} onChange={e => setLineItemForm(f => ({ ...f, quantity: e.target.value }))} dir="ltr" className="h-9 text-xs" />
                                       )}
                                     </div>
+                                    {/* BOQ group selector — auto-suggests pricing method when group has one. */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                      <Select
+                                        value={lineItemForm.boq_group_key}
+                                        onValueChange={(v) => setLineItemForm(f => {
+                                          const suggested = getSuggestedPricingMethod(v) as PricingMethod | undefined;
+                                          // Only auto-apply when user has not customized pricing or is still on default 'unit'.
+                                          const next: typeof f = { ...f, boq_group_key: v as BoqGroupKey };
+                                          if (suggested && SUPPORTED_PRICING_METHODS.includes(suggested) && f.pricing_method === 'unit') {
+                                            next.pricing_method = suggested;
+                                          }
+                                          return next;
+                                        })}
+                                      >
+                                        <SelectTrigger className="h-9 text-xs"><SelectValue placeholder={isRTL ? 'مجموعة البند' : 'BOQ Group'} /></SelectTrigger>
+                                        <SelectContent>
+                                          {BOQ_GROUPS.map(g => (
+                                            <SelectItem key={g.key} value={g.key}>{isRTL ? g.ar : g.en}</SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
                                     {/* Conditional dimension/weight inputs per method */}
                                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                                       {(lineItemForm.pricing_method === 'linear_meter' || lineItemForm.pricing_method === 'square_meter' || lineItemForm.pricing_method === 'cubic_meter') && (
