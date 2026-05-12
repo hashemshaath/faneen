@@ -78,6 +78,16 @@ export interface ContractExportData {
     appliedAt?: string | null;
   }[];
   isRTL: boolean;
+  /**
+   * C6.6: optional public verification hash (contract.document_hash). When
+   * provided, a QR code + short verification block is rendered above the
+   * signature panel. The QR encodes a public, no-PII verify URL backed by
+   * the `verify_contract_public` RPC. When omitted (e.g., draft exports),
+   * the verification block is skipped entirely.
+   */
+  documentHash?: string | null;
+  /** Origin used for the verification URL (defaults to https://qitaat.com). */
+  verifyOrigin?: string;
 }
 
 export const exportContractPDF = async (data: ContractExportData) => {
