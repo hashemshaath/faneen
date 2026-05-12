@@ -248,6 +248,51 @@ export type Database = {
           },
         ]
       }
+      badge_impressions: {
+        Row: {
+          business_id: string
+          created_at: string
+          id: string
+          referrer_host: string | null
+          user_agent: string | null
+          username: string
+          variant: string | null
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          id?: string
+          referrer_host?: string | null
+          user_agent?: string | null
+          username: string
+          variant?: string | null
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          id?: string
+          referrer_host?: string | null
+          user_agent?: string | null
+          username?: string
+          variant?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "badge_impressions_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "badge_impressions_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       blog_bookmarks: {
         Row: {
           created_at: string

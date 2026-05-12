@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
-import { ShieldCheck, Copy, Check, ExternalLink, AlertCircle, Code2, BarChart3, MousePointerClick, Globe } from 'lucide-react';
+import { ShieldCheck, Copy, Check, ExternalLink, AlertCircle, Code2, BarChart3, MousePointerClick, Globe, Eye, Percent } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNoIndex } from '@/hooks/useNoIndex';
 
@@ -24,6 +24,8 @@ interface BusinessRow {
 }
 
 const SITE_URL = 'https://qitaat.com';
+// Public edge function that records an impression and returns a 1×1 GIF.
+const PIXEL_URL = `https://hckpxwhjycmdflaneihd.supabase.co/functions/v1/badge-pixel`;
 
 /**
  * Build a self-contained inline-SVG anchor — no external CSS, safe to paste
@@ -42,12 +44,16 @@ function buildBadgeHtml(opts: {
   const label = isRTL ? 'موثّق على قِطاعات' : 'Verified on Qitaat';
   const sub = isRTL ? `قِطاعات · ${displayName}` : `Qitaat · ${displayName}`;
   const safeName = displayName.replace(/"/g, '&quot;');
+  // Tracking pixel — fires one `badge_impressions` row per render. Hidden,
+  // no layout impact, never blocks the badge from showing.
+  const pixel = `<img src="${PIXEL_URL}?u=${encodeURIComponent(username)}&v=${variant}" alt="" width="1" height="1" style="position:absolute;width:1px;height:1px;opacity:0;border:0;pointer-events:none;" referrerpolicy="no-referrer-when-downgrade" loading="eager" />`;
 
   if (variant === 'compact') {
     // 28px tall, just the seal + word — perfect for email signatures
     return `<a href="${href}" target="_blank" rel="noopener" title="${safeName} — ${label}" style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border:1px solid #d1fae5;border-radius:9999px;background:#ecfdf5;color:#065f46;font:600 12px/1 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;text-decoration:none;">
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-8 9-4.5-1.5-8-4-8-9V5l8-3 8 3z"/><path d="m9 12 2 2 4-4"/></svg>
   <span>${label}</span>
+  ${pixel}
 </a>`;
   }
 
@@ -67,6 +73,7 @@ function buildBadgeHtml(opts: {
     <span style="font-size:13px;font-weight:700;">${label}</span>
     <span style="font-size:11px;font-weight:500;color:${subFg};">${sub}</span>
   </span>
+  ${pixel}
 </a>`;
 }
 
@@ -107,6 +114,22 @@ const DashboardBadge: React.FC = () => {
     },
   });
 
+  // Impressions — every badge render fires the `badge-pixel` edge function.
+  const { data: impressions = [] } = useQuery({
+    queryKey: ['badge-impressions', business?.id],
+    enabled: !!business?.id,
+    refetchInterval: 60_000,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('badge_impressions')
+        .select('id, variant, referrer_host, created_at')
+        .eq('business_id', business!.id)
+        .order('created_at', { ascending: false })
+        .limit(2000);
+      return data ?? [];
+    },
+  });
+
   const clickStats = useMemo(() => {
     const now = Date.now();
     const day = 24 * 60 * 60 * 1000;
@@ -125,6 +148,24 @@ const DashboardBadge: React.FC = () => {
       .slice(0, 5);
     return { total: clicks.length, last7, last30, topReferrers };
   }, [clicks]);
+
+  const impressionStats = useMemo(() => {
+    const now = Date.now();
+    const day = 24 * 60 * 60 * 1000;
+    const last7 = impressions.filter((i) => now - new Date(i.created_at).getTime() <= 7 * day).length;
+    const last30 = impressions.filter((i) => now - new Date(i.created_at).getTime() <= 30 * day).length;
+    return { total: impressions.length, last7, last30 };
+  }, [impressions]);
+
+  // Click-Through Rate — clicks ÷ impressions. Guard against zero divisions.
+  const ctr = useMemo(() => {
+    const r = (c: number, i: number) => (i > 0 ? (c / i) * 100 : 0);
+    return {
+      total: r(clickStats.total, impressionStats.total),
+      last7: r(clickStats.last7, impressionStats.last7),
+      last30: r(clickStats.last30, impressionStats.last30),
+    };
+  }, [clickStats, impressionStats]);
 
   const displayName = useMemo(() => {
     if (!business) return '';
@@ -264,20 +305,44 @@ const DashboardBadge: React.FC = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-3 gap-3">
-                  {[
-                    { label: isRTL ? 'إجمالي النقرات' : 'Total clicks', value: clickStats.total },
-                    { label: isRTL ? 'آخر 7 أيام' : 'Last 7 days', value: clickStats.last7 },
-                    { label: isRTL ? 'آخر 30 يومًا' : 'Last 30 days', value: clickStats.last30 },
-                  ].map((s) => (
-                    <div key={s.label} className="rounded-xl border bg-card p-3">
-                      <div className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
-                        <MousePointerClick className="w-3 h-3" />
-                        {s.label}
-                      </div>
-                      <div className="mt-1 text-2xl font-heading font-bold tech-content">{s.value}</div>
-                    </div>
-                  ))}
+                {/* 3 rows × 3 cols: impressions, clicks, CTR — by total / 7d / 30d */}
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
+                        <th className="text-start py-2 pe-3"></th>
+                        <th className="text-end py-2 px-3">{isRTL ? 'الإجمالي' : 'Total'}</th>
+                        <th className="text-end py-2 px-3">{isRTL ? 'آخر 7 أيام' : 'Last 7 days'}</th>
+                        <th className="text-end py-2 ps-3">{isRTL ? 'آخر 30 يومًا' : 'Last 30 days'}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      <tr>
+                        <td className="py-2 pe-3 flex items-center gap-1.5 text-muted-foreground">
+                          <Eye className="w-3.5 h-3.5" />{isRTL ? 'الانطباعات' : 'Impressions'}
+                        </td>
+                        <td className="py-2 px-3 text-end font-heading font-bold tech-content">{impressionStats.total}</td>
+                        <td className="py-2 px-3 text-end font-heading font-bold tech-content">{impressionStats.last7}</td>
+                        <td className="py-2 ps-3 text-end font-heading font-bold tech-content">{impressionStats.last30}</td>
+                      </tr>
+                      <tr>
+                        <td className="py-2 pe-3 flex items-center gap-1.5 text-muted-foreground">
+                          <MousePointerClick className="w-3.5 h-3.5" />{isRTL ? 'النقرات' : 'Clicks'}
+                        </td>
+                        <td className="py-2 px-3 text-end font-heading font-bold tech-content">{clickStats.total}</td>
+                        <td className="py-2 px-3 text-end font-heading font-bold tech-content">{clickStats.last7}</td>
+                        <td className="py-2 ps-3 text-end font-heading font-bold tech-content">{clickStats.last30}</td>
+                      </tr>
+                      <tr>
+                        <td className="py-2 pe-3 flex items-center gap-1.5 text-muted-foreground">
+                          <Percent className="w-3.5 h-3.5" />{isRTL ? 'معدّل النقر (CTR)' : 'CTR'}
+                        </td>
+                        <td className="py-2 px-3 text-end font-heading font-bold text-success tech-content">{ctr.total.toFixed(1)}%</td>
+                        <td className="py-2 px-3 text-end font-heading font-bold text-success tech-content">{ctr.last7.toFixed(1)}%</td>
+                        <td className="py-2 ps-3 text-end font-heading font-bold text-success tech-content">{ctr.last30.toFixed(1)}%</td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
 
                 <div>
