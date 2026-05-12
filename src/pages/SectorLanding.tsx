@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { Link, useParams, Navigate } from 'react-router-dom';
+import React, { useCallback, useMemo } from 'react';
+import { Link, useParams, Navigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -12,7 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Building2, MapPin, Search as SearchIcon, Star, ShieldCheck, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Building2, MapPin, Search as SearchIcon, Star, ShieldCheck, ArrowLeft, ArrowRight, X } from 'lucide-react';
 import { VerifiedBadge } from '@/components/common/VerifiedBadge';
 import { SECTOR_KEYWORDS, ALL_SECTORS, type SectorSlug, getSectorMeta } from '@/lib/sector-keywords';
 import { getSectorGuides } from '@/lib/sector-guides';
@@ -62,11 +62,46 @@ const SectorLanding: React.FC = () => {
 
   useSectorPageviewTracking(sector?.slug ?? null, null);
 
-  const [query, setQuery] = useState('');
-  const [cityId, setCityId] = useState<string>('all');
-  const [verifiedOnly, setVerifiedOnly] = useState(false);
-  const [minRating, setMinRating] = useState(0);
-  const [page, setPage] = useState(1);
+  // ── URL-driven state ────────────────────────────────────────────────────
+  // Filters live in the query string so users can share/bookmark a filtered
+  // view, the browser back/forward buttons "just work", and switching cities
+  // updates the page in-place (no full reload).
+  const [searchParams, setSearchParams] = useSearchParams();
+  const query = searchParams.get('q') ?? '';
+  const cityId = searchParams.get('city') ?? 'all';
+  const verifiedOnly = searchParams.get('verified') === '1';
+  const minRating = Number(searchParams.get('rating') ?? '0') || 0;
+  const page = Math.max(1, Number(searchParams.get('page') ?? '1') || 1);
+
+  const updateParams = useCallback(
+    (patch: Record<string, string | number | boolean | null | undefined>) => {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          for (const [k, v] of Object.entries(patch)) {
+            if (v === null || v === undefined || v === '' || v === false || v === 'all' || v === 0 || v === '0') {
+              next.delete(k);
+            } else {
+              next.set(k, String(v));
+            }
+          }
+          // Any filter change resets pagination unless `page` was explicitly set.
+          if (!('page' in patch)) next.delete('page');
+          return next;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
+
+  const setQuery = (v: string) => updateParams({ q: v });
+  const setCityId = (v: string) => updateParams({ city: v });
+  const setVerifiedOnly = (v: boolean) => updateParams({ verified: v });
+  const setMinRating = (v: number) => updateParams({ rating: v });
+  const setPage = (v: number) => updateParams({ page: v > 1 ? v : null });
+  const clearAllFilters = () =>
+    setSearchParams(new URLSearchParams(), { replace: true });
 
   // Resolve the category ids for this sector (one or more rows in `categories`).
   const categorySlugs = sector ? SECTOR_TO_CATEGORY_SLUGS[sector.slug] : [];
