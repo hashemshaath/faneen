@@ -17,6 +17,7 @@ import { toast } from '@/hooks/use-toast';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import type { ImportedMeasurement } from '@/lib/contract-pdf-export';
+import type { ArabicFontDiagnostics } from '@/lib/pdf-arabic-font';
 import { getContractStatusMeta, isContractLockedByStatus } from '@/lib/contract-statuses';
 import { mapContractLockError } from '@/lib/contract-errors';
 import { dispatchAmendmentEvent } from '@/lib/amendment-notify';
@@ -193,6 +194,8 @@ const ContractDetail = () => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewFileName, setPreviewFileName] = useState<string>('contract.pdf');
   const [previewError, setPreviewError] = useState<string | null>(null);
+  const [pdfDiagnostics, setPdfDiagnostics] = useState<ArabicFontDiagnostics | null>(null);
+  const pdfDebugEnabled = (import.meta.env.DEV || import.meta.env.VITE_ENABLE_PDF_DEBUG === 'true') && isAdmin;
   const navigate = useNavigate();
 
   const [showMaintForm, setShowMaintForm] = useState(false);
