@@ -2438,12 +2438,12 @@ const ContractDetail = () => {
                             <td className="p-2 font-heading font-bold text-accent" dir="ltr">{(m.unit_price * m.quantity).toLocaleString()}</td>
                             <td className="p-2">
                               <div className="flex gap-1">
-                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setEditingImportIdx(editingImportIdx === idx ? null : idx)}>
-                                  <PenTool className="w-3 h-3 text-muted-foreground" />
-                                </Button>
-                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeImportedRow(idx)}>
-                                  <Trash2 className="w-3 h-3 text-destructive" />
-                                </Button>
+                                 <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setEditingImportIdx(editingImportIdx === idx ? null : idx)} aria-label={isRTL ? 'تعديل' : 'Edit'} title={isRTL ? 'تعديل' : 'Edit'}>
+                                   <PenTool className="w-3 h-3 text-muted-foreground" aria-hidden="true" />
+                                 </Button>
+                                 <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeImportedRow(idx)} aria-label={isRTL ? 'حذف' : 'Delete'} title={isRTL ? 'حذف' : 'Delete'}>
+                                   <Trash2 className="w-3 h-3 text-destructive" aria-hidden="true" />
+                                 </Button>
                               </div>
                             </td>
                           </tr>
@@ -2924,7 +2924,11 @@ const ContractDetail = () => {
                           <span className="text-[10px] text-muted-foreground font-body">{formatDate(n.created_at)}</span>
                           {authorName && <span className="text-[10px] text-accent font-body">— {authorName}</span>}
                         </div>
-                        {isOwn && <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteNote.mutate(n.id)}><Trash2 className="w-3 h-3 text-destructive" /></Button>}
+                        {isOwn && (
+                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteNote.mutate(n.id)} aria-label={isRTL ? 'حذف الملاحظة' : 'Delete note'} title={isRTL ? 'حذف الملاحظة' : 'Delete note'}>
+                            <Trash2 className="w-3 h-3 text-destructive" aria-hidden="true" />
+                          </Button>
+                        )}
                       </div>
                       <p className="text-xs text-muted-foreground font-body whitespace-pre-wrap leading-relaxed">{n.content}</p>
                     </div>
