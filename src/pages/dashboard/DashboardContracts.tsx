@@ -52,6 +52,9 @@ import {
   getSuggestedPricingMethod,
   type BoqGroupKey,
 } from '@/lib/contract-boq';
+import { ClientPicker, type SelectedClient } from '@/components/contracts/ClientPicker';
+import { WORK_TYPES, getWorkType, pickTemplateForWorkType, type WorkTypeKey } from '@/lib/contract-work-types';
+import { getStatusGuidance } from '@/lib/contract-status-guidance';
 
 type ContractRow = Database['public']['Tables']['contracts']['Row'];
 type MilestoneRow = Database['public']['Tables']['contract_milestones']['Row'];
@@ -416,6 +419,10 @@ const DashboardContracts = () => {
   /* CT4 — Selected published template version + pricing method for new contracts. */
   const [selectedVersionId, setSelectedVersionId] = useState<string | null>(null);
   const [selectedPricingMethod, setSelectedPricingMethod] = useState<string | null>(null);
+  /* CT4B — Client picker + work type selection. */
+  const [selectedClient, setSelectedClient] = useState<SelectedClient | null>(null);
+  const [selectedWorkType, setSelectedWorkType] = useState<WorkTypeKey>('general');
+  const [workTypeTouched, setWorkTypeTouched] = useState(false);
   const [approveConfirm, setApproveConfirm] = useState<any | null>(null);
   const [sendConfirm, setSendConfirm] = useState<any | null>(null);
   const [isExporting, setIsExporting] = useState(false);
@@ -687,6 +694,21 @@ const DashboardContracts = () => {
     () => publishedVersions.find(v => v.version_id === selectedVersionId) ?? generalVersion,
     [publishedVersions, selectedVersionId, generalVersion],
   );
+
+  /* CT4B — Auto-suggest published template version from selected work type
+   * unless the user manually picked a different template. */
+  React.useEffect(() => {
+    if (publishedVersions.length === 0) return;
+    if (selectedVersionId) return;
+    const suggested = pickTemplateForWorkType(selectedWorkType, publishedVersions);
+    if (suggested) {
+      setSelectedVersionId(suggested.version_id);
+      setSelectedPricingMethod(null);
+    }
+    // We deliberately depend only on workType + the published list. If the user
+    // overrides the dropdown, `selectedVersionId` becomes truthy and we stop.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedWorkType, publishedVersions]);
 
   const { data: businessId } = useQuery({
     queryKey: ['my-business-id-contracts', user?.id],
@@ -1021,12 +1043,19 @@ const DashboardContracts = () => {
 
   const createContractMutation = useMutation({
     mutationFn: async () => {
-      const { data: clientProfile, error: clientProfileError } = await supabase.from('profiles').select('user_id').eq('email', form.client_email.trim()).maybeSingle();
-      if (clientProfileError) throw clientProfileError;
-      if (!clientProfile) throw new Error(isRTL ? 'لم يتم العثور على العميل بهذا البريد الإلكتروني' : 'Client not found with this email');
+      // CT4B — Prefer the picker-selected client; fall back to manual email lookup.
+      let clientUserId: string | null = selectedClient?.user_id ?? null;
+      if (!clientUserId && !editingId) {
+        const email = form.client_email.trim();
+        if (!email) throw new Error(isRTL ? 'يرجى اختيار العميل أولاً' : 'Please select a client first');
+        const { data: cp, error: cpe } = await supabase.from('profiles').select('user_id').eq('email', email).maybeSingle();
+        if (cpe) throw cpe;
+        if (!cp) throw new Error(isRTL ? 'لم يتم العثور على العميل بهذا البريد الإلكتروني' : 'Client not found with this email');
+        clientUserId = cp.user_id;
+      }
 
       const payload: any = {
-        provider_id: user!.id, client_id: clientProfile.user_id, business_id: businessId || null,
+        provider_id: user!.id, client_id: clientUserId!, business_id: businessId || null,
         title_ar: form.title_ar, title_en: form.title_en || null,
         description_ar: form.description_ar || null, description_en: form.description_en || null,
         total_amount: Number(form.total_amount), currency_code: form.currency_code,
@@ -1059,6 +1088,7 @@ const DashboardContracts = () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-contracts'] });
       setViewSection('list'); setForm(emptyForm); setEditingId(null);
       setSelectedVersionId(null); setSelectedPricingMethod(null); setSelectedTemplate(null);
+      setSelectedClient(null); setSelectedWorkType('general'); setWorkTypeTouched(false);
       toast.success(editingId ? (isRTL ? 'تم تحديث العقد' : 'Contract updated') : (isRTL ? 'تم إنشاء العقد' : 'Contract created'));
     },
     onError: (err: Error) => toast.error(err.message),
@@ -1288,6 +1318,8 @@ const DashboardContracts = () => {
 
   const closeForm = useCallback(() => {
     setViewSection('list'); setForm(emptyForm); setEditingId(null); setSelectedTemplate(null); setTemplatePreview(null);
+    setSelectedClient(null); setSelectedWorkType('general'); setWorkTypeTouched(false);
+    setSelectedVersionId(null); setSelectedPricingMethod(null);
   }, []);
 
   const handleShareContract = useCallback(async (c: ContractWithRole) => {
@@ -1498,12 +1530,51 @@ const DashboardContracts = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Client Email */}
+              {/* CT4B — Step 1: Client (search picker with email fallback) */}
               {!editingId && (
-                <div className="p-4 rounded-xl border-2 border-dashed border-accent/30 bg-accent/5 space-y-2">
-                  <Label className="text-xs font-semibold flex items-center gap-1.5"><Mail className="w-3.5 h-3.5 text-accent" />{isRTL ? 'بريد العميل' : 'Client Email'} <span className="text-destructive">*</span></Label>
-                  <Input type="email" value={form.client_email} onChange={e => setForm({ ...form, client_email: e.target.value })} placeholder="client@email.com" dir="ltr" className="h-10" />
-                  <p className="text-[9px] text-muted-foreground">{isRTL ? 'أدخل البريد الإلكتروني المسجل للعميل' : 'Enter the registered email of the client'}</p>
+                <ClientPicker
+                  isRTL={isRTL}
+                  selected={selectedClient}
+                  onSelect={setSelectedClient}
+                  fallbackEmail={form.client_email}
+                  onFallbackEmail={(v) => setForm(f => ({ ...f, client_email: v }))}
+                />
+              )}
+
+              {/* CT4B — Step 2: Work / service type (auto-suggests template) */}
+              {!editingId && (
+                <div className="p-4 rounded-xl border border-border/40 bg-muted/20 space-y-2">
+                  <div className="flex items-center gap-1.5">
+                    <Briefcase className="w-3.5 h-3.5 text-primary" />
+                    <Label className="text-xs font-semibold">{isRTL ? 'نوع العمل / الخدمة' : 'Work / Service Type'} <span className="text-destructive">*</span></Label>
+                  </div>
+                  <Select
+                    value={selectedWorkType}
+                    onValueChange={(v) => { setSelectedWorkType(v as WorkTypeKey); setWorkTypeTouched(true); setSelectedVersionId(null); setSelectedPricingMethod(null); }}
+                  >
+                    <SelectTrigger className="h-10 text-xs"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {WORK_TYPES.map(w => (
+                        <SelectItem key={w.key} value={w.key} className="text-xs">{isRTL ? w.ar : w.en}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-[9px] text-muted-foreground">
+                    {isRTL ? 'سيتم استخدام قالب عقد مناسب لنوع العمل المحدد.' : 'A contract template matching the selected work type will be used.'}
+                  </p>
+                  {workTypeTouched && (() => {
+                    const w = getWorkType(selectedWorkType);
+                    if (!w || w.defaultBoqGroups.length === 0) return null;
+                    return (
+                      <div className="flex flex-wrap gap-1 pt-1">
+                        <span className="text-[9px] text-muted-foreground me-1">{isRTL ? 'مجموعات BOQ المقترحة:' : 'Suggested BOQ groups:'}</span>
+                        {w.defaultBoqGroups.map(g => {
+                          const meta = BOQ_GROUPS.find(b => b.key === g);
+                          return <Badge key={g} variant="outline" className="text-[9px]">{meta ? (isRTL ? meta.ar : meta.en) : g}</Badge>;
+                        })}
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
 
@@ -1665,7 +1736,45 @@ const DashboardContracts = () => {
                 </div>
               </div>
 
-              <Button variant="hero" className="w-full gap-2 h-11 shadow-lg" disabled={!form.title_ar || !form.total_amount || (!editingId && !form.client_email) || createContractMutation.isPending} onClick={() => createContractMutation.mutate()}>
+              {/* CT4B — Review summary + status guidance before submit. */}
+              {!editingId && (() => {
+                const guide = getStatusGuidance('draft');
+                const w = getWorkType(selectedWorkType);
+                const missing: string[] = [];
+                if (!selectedClient && !form.client_email) missing.push(isRTL ? 'العميل' : 'Client');
+                if (!form.title_ar) missing.push(isRTL ? 'عنوان العقد' : 'Title');
+                if (!form.total_amount || Number(form.total_amount) <= 0) missing.push(isRTL ? 'المبلغ' : 'Amount');
+                if (!effectiveVersion) missing.push(isRTL ? 'قالب عقد منشور' : 'Published template');
+                return (
+                  <div className="p-4 rounded-xl border border-primary/20 bg-primary/5 space-y-2">
+                    <h4 className="text-xs font-semibold flex items-center gap-1.5"><FileCheck className="w-3.5 h-3.5 text-primary" />{isRTL ? 'مراجعة قبل الحفظ' : 'Review before saving'}</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                      <div><span className="text-muted-foreground">{isRTL ? 'العميل:' : 'Client:'}</span> {selectedClient?.full_name || form.client_email || '—'}</div>
+                      <div><span className="text-muted-foreground">{isRTL ? 'نوع العمل:' : 'Work type:'}</span> {w ? (isRTL ? w.ar : w.en) : '—'}</div>
+                      <div><span className="text-muted-foreground">{isRTL ? 'القالب:' : 'Template:'}</span> {effectiveVersion ? `${isRTL ? effectiveVersion.name_ar : (effectiveVersion.name_en || effectiveVersion.name_ar)} · v${effectiveVersion.version_number}` : '—'}</div>
+                      <div><span className="text-muted-foreground">{isRTL ? 'طريقة التسعير:' : 'Pricing method:'}</span> {selectedPricingMethod || (isRTL ? 'افتراضي' : 'Default')}</div>
+                      <div><span className="text-muted-foreground">{isRTL ? 'المبلغ:' : 'Amount:'}</span> {form.total_amount ? `${form.total_amount} ${form.currency_code}` : '—'}</div>
+                      <div><span className="text-muted-foreground">{isRTL ? 'الضريبة:' : 'VAT:'}</span> {form.vat_inclusive ? (isRTL ? `شاملة ${form.vat_rate}%` : `Inclusive ${form.vat_rate}%`) : (isRTL ? `تُضاف ${form.vat_rate}%` : `Added ${form.vat_rate}%`)}</div>
+                      <div><span className="text-muted-foreground">{isRTL ? 'تاريخ البدء/الانتهاء:' : 'Dates:'}</span> {(form.start_date || '—') + ' → ' + (form.end_date || '—')}</div>
+                    </div>
+                    {missing.length > 0 && (
+                      <div className="text-[10px] text-warning bg-warning/10 border border-warning/20 rounded-lg p-2">
+                        {isRTL ? 'حقول مطلوبة ناقصة: ' : 'Missing required fields: '}{missing.join(' · ')}
+                      </div>
+                    )}
+                    <div className="text-[10px] text-muted-foreground border-t border-border/30 pt-2">
+                      <strong className="text-foreground">{isRTL ? 'الحالة الأولى:' : 'Initial status:'}</strong> {isRTL ? 'مسودة' : 'Draft'} — {isRTL ? guide.meaning_ar : guide.meaning_en}
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {(isRTL ? guide.next_actions_ar : guide.next_actions_en).map((a) => (
+                        <Badge key={a} variant="outline" className="text-[9px]">{a}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              <Button variant="hero" className="w-full gap-2 h-11 shadow-lg" disabled={!form.title_ar || !form.total_amount || (!editingId && !selectedClient && !form.client_email) || createContractMutation.isPending} onClick={() => createContractMutation.mutate()}>
                 {createContractMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : editingId ? <CheckCircle2 className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
                 {editingId ? (isRTL ? 'تحديث العقد' : 'Update Contract') : (isRTL ? 'إنشاء العقد' : 'Create Contract')}
               </Button>
