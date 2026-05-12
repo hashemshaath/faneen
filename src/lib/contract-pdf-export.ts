@@ -1115,8 +1115,8 @@ export const exportMeasurementsPDF = async (opts: {
     ],
     theme: 'grid',
     styles: { fontSize: 7, cellPadding: 2.5, ...rtlStyles },
-    headStyles: tableHeadStyles(data.isRTL, fontLoaded),
-    footStyles: { fillColor: HIGHLIGHT_RGB, fontStyle: 'bold' },
+    headStyles: tableHeadStyles(opts.isRTL, fontLoaded),
+    footStyles: tableFootStyles(opts.isRTL, fontLoaded),
     alternateRowStyles: { fillColor: SURFACE2_RGB },
     margin: PDF_DENSE_TABLE_MARGIN,
   });
