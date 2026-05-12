@@ -933,6 +933,24 @@ export const exportContractPDF = async (data: ContractExportData) => {
   return doc;
 };
 
+/**
+ * PDF-UX1: Build the contract PDF and return a Blob + Object URL suitable for
+ * inline `<iframe>` preview. The caller is responsible for revoking the URL
+ * via `URL.revokeObjectURL(url)` when the preview is dismissed.
+ *
+ * No file is uploaded, persisted, or logged here — preview is a pure
+ * client-side render and is intentionally NOT recorded in the export history
+ * (only confirmed downloads are logged).
+ */
+export const previewContractPDF = async (
+  data: ContractExportData,
+): Promise<{ url: string; blob: Blob; fileName: string }> => {
+  const doc = await buildContractPDF(data);
+  const blob = (doc as unknown as { output: (kind: 'blob') => Blob }).output('blob');
+  const url = URL.createObjectURL(blob);
+  return { url, blob, fileName: `contract-${data.contractNumber}.pdf` };
+};
+
 // ── Export Measurements as PDF ──
 export const exportMeasurementsPDF = async (opts: {
   contractNumber: string;
