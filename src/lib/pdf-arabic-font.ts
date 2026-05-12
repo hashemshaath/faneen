@@ -13,7 +13,23 @@ const ARABIC_FONT_FILE_BOLD = `ArabicFont-Bold-${ARABIC_FONT_CACHE_VERSION}.ttf`
 const ARABIC_FONT_NAME = 'ArabicFont';
 const ARABIC_FONT_STYLES = ['normal', 'bold', 'italic', 'bolditalic'] as const;
 
+// PDF-AR3: Build identifiers shown in the diagnostics panel so QA can confirm
+// the running bundle matches the deployed one. `EXPORT_PATH` reflects the
+// single source-of-truth export pipeline (no second/legacy path exists).
+export const PDF_BUILD_VERSION = ARABIC_FONT_CACHE_VERSION;
+export const PDF_EXPORT_PATH = 'src/lib/contract-pdf-export.ts → buildContractPDF()';
+
 type FontSource = 'bundled' | 'memory-cache' | 'unloaded' | 'failed';
+
+export interface PdfVerificationResult {
+  status: 'PASS' | 'FAIL';
+  mojibakeDetected: boolean;
+  mojibakeCount: number;
+  sample: string;
+  verifiedAt: string;
+  source: 'client' | 'backend';
+  report?: string;
+}
 
 export interface ArabicFontDiagnostics {
   selectedFontUrl: string;
@@ -28,6 +44,9 @@ export interface ArabicFontDiagnostics {
   lastGeneratedPdfAt: string | null;
   sameLoaderForPreviewAndDownload: boolean;
   fallbackFontUsed: boolean;
+  buildVersion: string;
+  exportPath: string;
+  lastVerification: PdfVerificationResult | null;
   error?: string;
 }
 
@@ -46,6 +65,9 @@ let lastDiagnostics: ArabicFontDiagnostics = {
   lastGeneratedPdfAt: null,
   sameLoaderForPreviewAndDownload: true,
   fallbackFontUsed: false,
+  buildVersion: PDF_BUILD_VERSION,
+  exportPath: PDF_EXPORT_PATH,
+  lastVerification: null,
 };
 
 function withFontVersion(url: string): string {
@@ -88,6 +110,47 @@ const markGenerated = () => {
 };
 
 export const getArabicFontDiagnostics = (): ArabicFontDiagnostics => ({ ...lastDiagnostics });
+
+// PDF-AR3: Auto verification. Scans an exported PDF byte stream for mojibake
+// markers that prove a non-Arabic font was used (jsPDF defaults to Helvetica
+// + WinAnsi, where each Arabic UTF-8 byte 0xC?/0xD? is rendered as a literal
+// `þ` pair). The scan inspects text-showing operands `(...)Tj` and `[...]TJ`
+// in uncompressed jsPDF output. This catches the failure mode our QA hit
+// without needing a server-side PDF parser.
+const TEXT_OPERAND_REGEX = /\(((?:[^()\\]|\\.|\\[0-7]{1,3})*)\)\s*(?:Tj|TJ|')/g;
+const MOJIBAKE_MARKER = /þ\S?þ\S?þ|þ.{0,2}ò|þ.{0,2}ª|þ.{0,2}ä/;
+
+export const verifyPdfBytesForMojibake = (bytes: Uint8Array): PdfVerificationResult => {
+  let raw = '';
+  for (let i = 0; i < bytes.length; i += 1) raw += String.fromCharCode(bytes[i]);
+  const operands: string[] = [];
+  let match: RegExpExecArray | null;
+  TEXT_OPERAND_REGEX.lastIndex = 0;
+  while ((match = TEXT_OPERAND_REGEX.exec(raw)) !== null) {
+    operands.push(match[1]);
+    if (operands.length > 4000) break;
+  }
+  const joined = operands.join('\n');
+  const mojibakeCount = (joined.match(/þ/g) ?? []).length;
+  const mojibakeDetected = MOJIBAKE_MARKER.test(joined) || mojibakeCount > 6;
+  const sampleSource = mojibakeDetected
+    ? operands.find((op) => /þ/.test(op)) ?? joined
+    : operands.find((op) => /[\u0600-\u06FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(op)) ?? operands[0] ?? '';
+  const result: PdfVerificationResult = {
+    status: mojibakeDetected ? 'FAIL' : 'PASS',
+    mojibakeDetected,
+    mojibakeCount,
+    sample: sampleSource.slice(0, 240),
+    verifiedAt: new Date().toISOString(),
+    source: 'client',
+  };
+  lastDiagnostics = { ...lastDiagnostics, lastVerification: result };
+  return result;
+};
+
+export const setBackendVerification = (result: PdfVerificationResult) => {
+  lastDiagnostics = { ...lastDiagnostics, lastVerification: { ...result, source: 'backend' } };
+};
 
 export class ArabicPdfFontError extends Error {
   constructor(message = 'PDF_ARABIC_FONT_UNAVAILABLE') {
