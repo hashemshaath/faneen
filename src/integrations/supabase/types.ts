@@ -2276,6 +2276,8 @@ export type Database = {
       contract_pdf_exports: {
         Row: {
           amendment_count: number
+          archived_at: string | null
+          archived_reason: string | null
           boq_group_count: number
           contract_id: string
           contract_number: string | null
@@ -2292,6 +2294,8 @@ export type Database = {
           ip_hash: string | null
           line_item_count: number
           official_version_number: number | null
+          retention_expires_at: string | null
+          retention_policy_months: number | null
           source: string
           template_name_ar: string | null
           template_name_en: string | null
@@ -2301,6 +2305,8 @@ export type Database = {
         }
         Insert: {
           amendment_count?: number
+          archived_at?: string | null
+          archived_reason?: string | null
           boq_group_count?: number
           contract_id: string
           contract_number?: string | null
@@ -2317,6 +2323,8 @@ export type Database = {
           ip_hash?: string | null
           line_item_count?: number
           official_version_number?: number | null
+          retention_expires_at?: string | null
+          retention_policy_months?: number | null
           source?: string
           template_name_ar?: string | null
           template_name_en?: string | null
@@ -2326,6 +2334,8 @@ export type Database = {
         }
         Update: {
           amendment_count?: number
+          archived_at?: string | null
+          archived_reason?: string | null
           boq_group_count?: number
           contract_id?: string
           contract_number?: string | null
@@ -2342,6 +2352,8 @@ export type Database = {
           ip_hash?: string | null
           line_item_count?: number
           official_version_number?: number | null
+          retention_expires_at?: string | null
+          retention_policy_months?: number | null
           source?: string
           template_name_ar?: string | null
           template_name_en?: string | null
@@ -6979,6 +6991,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      archive_expired_contract_pdf_exports: { Args: never; Returns: number }
       bump_migration_epoch: { Args: { _reason?: string }; Returns: number }
       calculate_contract_line_item_total: {
         Args: {
