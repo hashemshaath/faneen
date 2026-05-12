@@ -187,6 +187,12 @@ const ContractDetail = () => {
   const { user, isAdmin } = useAuth();
   const queryClient = useQueryClient();
   const [isExportingPDF, setIsExportingPDF] = useState(false);
+  // PDF-UX1: inline fullscreen preview state.
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewFileName, setPreviewFileName] = useState<string>('contract.pdf');
+  const [previewError, setPreviewError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const [showMaintForm, setShowMaintForm] = useState(false);
