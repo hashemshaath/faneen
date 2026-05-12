@@ -210,7 +210,12 @@ const AdminContractTemplates: React.FC = () => {
 
   const setVersionStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: CTVersionStatus }) => {
-      const patch: Record<string, unknown> = { status };
+      const patch: {
+        status: CTVersionStatus;
+        published_at?: string;
+        published_by?: string | null;
+        archived_at?: string;
+      } = { status };
       if (status === 'published') {
         patch.published_at = new Date().toISOString();
         patch.published_by = user?.id || null;
