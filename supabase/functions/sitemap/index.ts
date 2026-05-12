@@ -15,7 +15,7 @@ const BASE = "https://qitaat.com";
 // don't leak the internal Supabase Functions host in robots/sitemap output.
 const FUNC = `${BASE}/functions/v1/sitemap`;
 
-const TYPES = ["static", "businesses", "blog", "categories", "cities", "profiles", "projects", "sectors"] as const;
+const TYPES = ["static", "businesses", "blog", "categories", "cities", "profiles", "projects", "sectors", "services"] as const;
 type SitemapType = (typeof TYPES)[number];
 
 function esc(s: string) {
@@ -100,9 +100,26 @@ Deno.serve(async (req) => {
       }
     } else if (type === "sectors") {
       const sectors = ["aluminum", "iron", "glass", "wood", "cabinets"];
+      const saCities = [
+        "riyadh","jeddah","makkah","madinah","dammam","khobar","taif",
+        "buraidah","tabuk","abha","khamis-mushait","hail","jazan","najran","yanbu",
+      ];
       entries.push(entry(`${BASE}/sectors`, { lastmod: today, changefreq: "weekly", priority: "0.8" }));
       for (const s of sectors) {
         entries.push(entry(`${BASE}/sectors/${s}`, { lastmod: today, changefreq: "weekly", priority: "0.85" }));
+        for (const c of saCities) {
+          entries.push(entry(`${BASE}/sectors/${s}/${c}`, { lastmod: today, changefreq: "weekly", priority: "0.75" }));
+        }
+      }
+    } else if (type === "services") {
+      const services = [
+        "aluminum-windows","aluminum-cladding","aluminum-pergolas",
+        "steel-canopies","iron-gates","glass-shopfronts","glass-shower-cabins",
+        "wood-doors","wood-flooring","kitchen-cabinets","wardrobes",
+      ];
+      entries.push(entry(`${BASE}/services`, { lastmod: today, changefreq: "weekly", priority: "0.8" }));
+      for (const s of services) {
+        entries.push(entry(`${BASE}/services/${s}`, { lastmod: today, changefreq: "weekly", priority: "0.7" }));
       }
     } else if (type === "businesses") {
       const { data } = await supabase.from("businesses").select("username, updated_at").eq("is_active", true).order("rating_avg", { ascending: false }).limit(50000);
