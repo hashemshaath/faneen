@@ -2307,6 +2307,26 @@ const DashboardContracts = () => {
                   const vatAmount = _vat.vatAmount;
                   const grandTotal = _vat.total;
 
+                  /* ── CT5G.2 — Derived per-line VAT breakdown (display only). ── */
+                  const cTpl = (c as { template_version_id?: string | null }).template_version_id ?? null;
+                  const lineVatRulesMap = cTpl ? vatHandlingByVersionMethod.get(cTpl) : undefined;
+                  const resolveLineVatHandling = (method: string | null | undefined): string => {
+                    const m = (method || 'unit');
+                    return lineVatRulesMap?.get(m) || 'inherit';
+                  };
+                  const lineVatRows = lineItems.map((li) => ({
+                    id: li.id,
+                    breakdown: calculateLineVatBreakdown({
+                      amount: li.total_cost,
+                      vatHandling: resolveLineVatHandling((li as { pricing_method?: string | null }).pricing_method),
+                      contractVatRate: c.vat_rate,
+                      contractVatInclusive: c.vat_inclusive,
+                    }),
+                  }));
+                  const lineVatById = new Map(lineVatRows.map(r => [r.id, r.breakdown]));
+                  const lineVatTotals = sumLineVatBreakdowns(lineVatRows.map(r => r.breakdown));
+                  const hasAnyLineVat = lineVatTotals.vat > 0 || lineVatRows.some(r => r.breakdown.vatHandling !== 'inherit');
+
                   return (
                     <div key={c.id} className="space-y-0">
                       <ContractCard
