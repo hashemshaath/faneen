@@ -14,6 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
  */
 
 const STORAGE_PREFIX = 'qitaat_badge_session_';
+const DEDUPE_PREFIX = 'qitaat_badge_event_';
 
 export type BadgeEventType =
   | 'profile_view'
@@ -50,6 +51,14 @@ export async function recordBadgeConversion(
   if (!businessId) return;
   const token = getBadgeSessionToken(businessId);
   if (!token) return;
+  // Dedupe: count each event once per session_token within this visit.
+  const dedupeKey = `${DEDUPE_PREFIX}${token}_${eventType}`;
+  try {
+    if (sessionStorage.getItem(dedupeKey)) return;
+    sessionStorage.setItem(dedupeKey, '1');
+  } catch {
+    /* private mode — fall through and still attempt insert */
+  }
   try {
     await supabase.from('badge_conversions').insert({
       business_id: businessId,
@@ -58,6 +67,7 @@ export async function recordBadgeConversion(
       source_page: sourcePage ?? null,
     });
   } catch {
-    /* analytics is best-effort */
+    /* analytics is best-effort — release dedupe so a retry can succeed */
+    try { sessionStorage.removeItem(dedupeKey); } catch { /* ignore */ }
   }
 }
