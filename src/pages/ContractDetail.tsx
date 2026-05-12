@@ -1061,6 +1061,59 @@ const ContractDetail = () => {
     }
   };
 
+  // PDF-UX1: client-side preview via Blob URL. Object URL is revoked on
+  // close/refresh/unmount. Preview is intentionally NOT logged in the
+  // export history — only confirmed downloads are.
+  const generatePreview = async () => {
+    const data = buildPdfPayload();
+    if (!data || previewLoading) return;
+    setPreviewError(null);
+    setPreviewLoading(true);
+    // Revoke any previous URL before regenerating.
+    if (previewUrl) {
+      try { URL.revokeObjectURL(previewUrl); } catch { /* noop */ }
+    }
+    try {
+      const { previewContractPDF } = await import('@/lib/contract-pdf-export');
+      const { url, fileName } = await previewContractPDF(data);
+      setPreviewUrl(url);
+      setPreviewFileName(fileName);
+    } catch {
+      setPreviewUrl(null);
+      setPreviewError(isRTL
+        ? 'تعذر إنشاء ملف PDF. يرجى المحاولة مرة أخرى.'
+        : 'Could not generate the PDF. Please try again.');
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
+  const handlePreviewPDF = async () => {
+    if (!contract) return;
+    setPreviewOpen(true);
+    if (!previewUrl) await generatePreview();
+  };
+
+  const handleClosePreview = () => {
+    setPreviewOpen(false);
+    if (previewUrl) {
+      try { URL.revokeObjectURL(previewUrl); } catch { /* noop */ }
+      setPreviewUrl(null);
+    }
+    setPreviewError(null);
+  };
+
+  // Revoke any lingering Object URL on unmount.
+  React.useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        try { URL.revokeObjectURL(previewUrl); } catch { /* noop */ }
+      }
+    };
+    // We intentionally only revoke the URL captured at unmount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleExportMeasurementsPDF = async () => {
     if (!contract || !measurements || measurements.length === 0) return;
     const { exportMeasurementsPDF } = await import('@/lib/contract-pdf-export');
