@@ -450,6 +450,13 @@ const SectorLanding: React.FC = () => {
         cityName={selectedCityName}
       />
 
+      {/* Sector FAQ — categorized Q&A, matching FAQPage JSON-LD above */}
+      <SectorFAQ
+        sectorName={meta.name}
+        faqs={getSectorFaqs(sector.slug)}
+        cityName={selectedCityName}
+      />
+
       {/* Results grid */}
       <main className="container py-8 px-4">
         <div className="flex items-center justify-between mb-4">
