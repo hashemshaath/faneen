@@ -1506,6 +1506,11 @@ const ContractDetail = () => {
                   <BookOpen className="w-3.5 h-3.5" />{isRTL ? 'اختبار الخط العربي في PDF' : 'Test Arabic PDF Font'}
                 </Button>
               )}
+              {pdfDebugEnabled && (
+                <Button variant="heroOutline" size="sm" disabled={isAnalyzingPdf} className="text-xs border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 gap-1" onClick={handleExportAndAnalyzePDF}>
+                  <ShieldCheck className="w-3.5 h-3.5" />{isAnalyzingPdf ? '…' : (isRTL ? 'تصدير + تحليل' : 'Export + Analyze')}
+                </Button>
+              )}
               <Button variant="heroOutline" size="sm" className="text-xs border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 gap-1" onClick={() => window.print()}>
                 <Printer className="w-3.5 h-3.5" />{isRTL ? 'طباعة' : 'Print'}
               </Button>
