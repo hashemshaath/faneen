@@ -16,6 +16,11 @@
  *   - QR rendering (`qrcode` npm) works in node and produces a data URL.
  */
 import { describe, it, expect, vi } from 'vitest';
+import { execFile } from 'node:child_process';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { promisify } from 'node:util';
 
 // Mock the Arabic font loader: in jsdom the CDN fetch + jsPDF font wiring
 // is unreliable and unrelated to what we are testing. Force fallback to
@@ -173,4 +178,39 @@ describe('PDF-QA1 — QR / public verification URL', () => {
     // No signed URL markers
     expect(urlLine).not.toMatch(/signature=|X-Amz-Signature|token=/i);
   });
+});
+
+describe('PDF-AR1 — Arabic searchable text layer', () => {
+  it('exports readable Arabic text without mojibake in pdftotext extraction', async () => {
+    vi.resetModules();
+    vi.doUnmock('@/lib/pdf-arabic-font');
+    const [{ buildContractPDF: buildRealContractPDF }, { longArabicContractFixture: arFixture }] = await Promise.all([
+      import('@/lib/contract-pdf-export'),
+      import('@/test/fixtures/contract-pdf-fixtures'),
+    ]);
+    const doc = await buildRealContractPDF({
+      ...arFixture,
+      contractNumber: 'CNT-1000007',
+      title: 'العقد الرسمي لاختبار الضريبة والضمان والشروط',
+      terms: 'العقد يتضمن الضريبة والضمان والشروط باللغة العربية.',
+      documentHash: 'abc123def456789012345678deadbeef',
+      verifyOrigin: 'https://qitaat.com',
+    });
+
+    const dir = await mkdtemp(join(tmpdir(), 'qitaat-pdf-ar1-'));
+    try {
+      const pdfPath = join(dir, 'contract-CNT-1000007.pdf');
+      const txtPath = join(dir, 'contract-CNT-1000007.txt');
+      await writeFile(pdfPath, Buffer.from(doc.output('arraybuffer') as ArrayBuffer));
+      await promisify(execFile)('pdftotext', ['-layout', pdfPath, txtPath]);
+      const extracted = await readFile(txtPath, 'utf8');
+      expect(extracted).not.toContain('þ');
+      expect(extracted.normalize('NFKC')).toContain('العقد');
+      expect(extracted.normalize('NFKC')).toContain('الضريبة');
+      expect(extracted.normalize('NFKC')).toContain('الضمان');
+      expect(extracted.normalize('NFKC')).toContain('الشروط');
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  }, 60_000);
 });
