@@ -60,12 +60,18 @@ export async function recordBadgeConversion(
     /* private mode — fall through and still attempt insert */
   }
   try {
-    await supabase.from('badge_conversions').insert({
+    const { error } = await supabase.from('badge_conversions').insert({
       business_id: businessId,
       session_token: token,
       event_type: eventType,
       source_page: sourcePage ?? null,
     });
+    if (error) {
+      // 23505 = unique_violation. Race with another tab/request — already
+      // counted in DB, treat as success and keep dedupe key in place.
+      if (error.code === '23505') return;
+      throw error;
+    }
   } catch {
     /* analytics is best-effort — release dedupe so a retry can succeed */
     try { sessionStorage.removeItem(dedupeKey); } catch { /* ignore */ }
