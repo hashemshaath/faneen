@@ -906,6 +906,10 @@ const ContractDetail = () => {
           const m = (milestones || []).find(x => x.id === a.milestone_id);
           const label = m ? ((language === 'ar' ? m.title_ar : (m.title_en || m.title_ar)) || '') : '';
           linkedTo = `${isRTL ? 'مرحلة: ' : 'Milestone: '}${label || '—'}`;
+        } else if (a.amendment_id) {
+          const am = (amendments || []).find(x => x.id === a.amendment_id);
+          const label = am ? ((language === 'ar' ? am.title_ar : (am.title_en || am.title_ar)) || '') : '';
+          linkedTo = `${isRTL ? 'ملحق: ' : 'Amendment: '}${label || '—'}`;
         }
         return {
           fileName: a.file_name,
@@ -914,6 +918,26 @@ const ContractDetail = () => {
           linkedTo,
           description: a.description ?? null,
           uploadedAt: a.created_at ?? null,
+        };
+      }),
+      amendments: (amendments || []).slice().reverse().map((a, idx) => {
+        const oldTotal = a.applied_at && a.amount_delta != null && a.new_amount != null
+          ? Number(a.new_amount) - Number(a.amount_delta)
+          : null;
+        return {
+          number: idx + 1,
+          createdAt: a.created_at,
+          type: a.amendment_type,
+          status: a.status,
+          title: language === 'ar' ? a.title_ar : (a.title_en || a.title_ar),
+          reason: a.reason ?? null,
+          oldTotal,
+          newAmount: a.new_amount != null ? Number(a.new_amount) : null,
+          amountDelta: a.amount_delta != null ? Number(a.amount_delta) : null,
+          newEndDate: a.new_end_date ?? null,
+          clientApprovedAt: a.client_approved_at ?? null,
+          providerApprovedAt: a.provider_approved_at ?? null,
+          appliedAt: a.applied_at ?? null,
         };
       }),
       isRTL,
