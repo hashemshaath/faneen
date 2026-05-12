@@ -675,17 +675,24 @@ const ContractDetail = () => {
   });
 
   const applyAmendmentMutation = useMutation({
-    mutationFn: async (amId: string) => {
-      const { error } = await supabase.rpc('apply_contract_amendment', { _amendment_id: amId });
+    mutationFn: async (args: { amId: string; scheduleAdjustedHint?: boolean }) => {
+      const { error } = await supabase.rpc('apply_contract_amendment', { _amendment_id: args.amId });
       if (error) throw error;
+      return args;
     },
-    onSuccess: () => {
+    onSuccess: (args) => {
       queryClient.invalidateQueries({ queryKey: ['contract-amendments', id] });
       queryClient.invalidateQueries({ queryKey: ['contract', id] });
       queryClient.invalidateQueries({ queryKey: ['amendment-audit'] });
       queryClient.invalidateQueries({ queryKey: ['installment-payments'] });
       queryClient.invalidateQueries({ queryKey: ['installment-plans', id] });
-      toast({ title: isRTL ? 'تم تطبيق الملحق على العقد' : 'Amendment applied to contract' });
+      queryClient.invalidateQueries({ queryKey: ['contract-coverage', id] });
+      toast({
+        title: isRTL ? 'تم تطبيق التعديل وتحديث العقد بنجاح.' : 'Amendment applied and contract updated successfully.',
+        description: args?.scheduleAdjustedHint
+          ? (isRTL ? 'تم تحديث الدفعات المعلقة وفق القيمة الجديدة.' : 'Pending payments were updated to reflect the new amount.')
+          : undefined,
+      });
     },
     onError: (err: unknown) => toast({ title: mapAmendmentError(err, isRTL), variant: 'destructive' }),
   });
