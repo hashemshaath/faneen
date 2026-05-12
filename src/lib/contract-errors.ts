@@ -50,6 +50,20 @@ export function mapContractCreateError(err: unknown, isRTL: boolean): { code: Co
   const raw = err instanceof Error ? err.message : typeof err === 'string' ? err : '';
   const upper = raw.toUpperCase();
 
+  // Provider Contract UX 2 — Part C: structured exact-code parser.
+  // Match `CONTRACT_CREATE:<CODE>` or `TEMPLATE_VERSION_LOCKED` precisely
+  // before falling back to heuristics.
+  const structured = raw.match(/CONTRACT_CREATE:([A-Z_]+)/);
+  if (structured) {
+    const code = structured[1] as ContractCreateErrorCode;
+    if (CREATE_MESSAGES[code]) {
+      return { code, message: isRTL ? CREATE_MESSAGES[code].ar : CREATE_MESSAGES[code].en };
+    }
+  }
+  if (/\bTEMPLATE_VERSION_LOCKED\b/.test(raw)) {
+    return { code: 'CONTRACT_LOCKED', message: isRTL ? CREATE_MESSAGES.CONTRACT_LOCKED.ar : CREATE_MESSAGES.CONTRACT_LOCKED.en };
+  }
+
   // Reuse pricing/lock detection first
   const lock = mapContractLockError(err, isRTL);
   if (lock.code === 'INVALID_LINE_ITEM_PRICING') {

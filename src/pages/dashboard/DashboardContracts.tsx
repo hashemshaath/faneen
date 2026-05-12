@@ -58,6 +58,7 @@ import {
   type BoqGroupKey,
 } from '@/lib/contract-boq';
 import { ClientPicker, type SelectedClient } from '@/components/contracts/ClientPicker';
+import { DimensionHelper } from '@/components/contracts/DimensionHelper';
 import { WORK_TYPES, getWorkType, pickTemplateForWorkType, type WorkTypeKey } from '@/lib/contract-work-types';
 import { getStatusGuidance } from '@/lib/contract-status-guidance';
 import { serializeDraftPayload, maskEmail as maskInviteEmail, type PendingInvite } from '@/lib/contract-invitations';
@@ -468,6 +469,27 @@ const DashboardContracts = () => {
   const [maintenanceImages, setMaintenanceImages] = useState<File[]>([]);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const maintenanceImageRef = React.useRef<HTMLInputElement>(null);
+
+  /* Provider Contract UX 2 — Part A: navigable stepper section refs. */
+  type StepKey = 'client' | 'work' | 'template' | 'details' | 'pricing' | 'review';
+  const stepRefs = {
+    client: React.useRef<HTMLDivElement>(null),
+    work: React.useRef<HTMLDivElement>(null),
+    template: React.useRef<HTMLDivElement>(null),
+    details: React.useRef<HTMLDivElement>(null),
+    pricing: React.useRef<HTMLDivElement>(null),
+    review: React.useRef<HTMLDivElement>(null),
+  } as const;
+  const stepOrder: StepKey[] = ['client', 'work', 'template', 'details', 'pricing', 'review'];
+  const [activeStep, setActiveStep] = useState<StepKey>('client');
+  const goToStep = useCallback((key: StepKey) => {
+    setActiveStep(key);
+    const el = stepRefs[key]?.current;
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, []);
+
   const [uploadingContractId, setUploadingContractId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'cards' | 'compact'>('cards');
 
@@ -1794,17 +1816,28 @@ const DashboardContracts = () => {
                   { key: 'details',  ar: 'التفاصيل',     en: 'Details',   done: !!form.title_ar && !!form.total_amount && Number(form.total_amount) > 0 },
                   { key: 'pricing',  ar: 'التسعير/VAT',  en: 'Pricing/VAT', done: !!form.vat_rate },
                   { key: 'review',   ar: 'المراجعة',     en: 'Review',    done: false },
-                ];
+                ] as Array<{ key: StepKey; ar: string; en: string; done: boolean }>;
                 return (
                   <div className="mt-3 flex items-center gap-1 overflow-x-auto no-scrollbar" role="list" aria-label={isRTL ? 'خطوات إنشاء العقد' : 'Contract creation steps'}>
                     {steps.map((s, i) => (
                       <React.Fragment key={s.key}>
-                        <div role="listitem" className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-[10px] whitespace-nowrap ${s.done ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400' : 'border-border/40 bg-muted/30 text-muted-foreground'}`}>
-                          <span className={`w-4 h-4 rounded-full inline-flex items-center justify-center text-[9px] font-bold ${s.done ? 'bg-emerald-500 text-white' : 'bg-muted text-muted-foreground'}`}>
+                        <button
+                          type="button"
+                          onClick={() => goToStep(s.key)}
+                          aria-current={activeStep === s.key ? 'step' : undefined}
+                          className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-[10px] whitespace-nowrap transition-colors hover:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/40 ${
+                            activeStep === s.key
+                              ? 'border-primary/60 bg-primary/10 text-primary'
+                              : s.done
+                                ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
+                                : 'border-border/40 bg-muted/30 text-muted-foreground'
+                          }`}
+                        >
+                          <span className={`w-4 h-4 rounded-full inline-flex items-center justify-center text-[9px] font-bold ${s.done ? 'bg-emerald-500 text-white' : activeStep === s.key ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
                             {s.done ? '✓' : i + 1}
                           </span>
                           {isRTL ? s.ar : s.en}
-                        </div>
+                        </button>
                         {i < steps.length - 1 && <span className="text-muted-foreground/40 text-[10px]">·</span>}
                       </React.Fragment>
                     ))}
@@ -1813,6 +1846,7 @@ const DashboardContracts = () => {
               })()}
             </CardHeader>
             <CardContent className="space-y-4">
+              <div ref={stepRefs.client} className="space-y-4 scroll-mt-24">
               {/* CT4C.5 — Accepted invitations awaiting contract completion */}
               {!editingId && inviteMode === 'idle' && acceptedInvitations.length > 0 && (
                 <div className="p-4 rounded-xl border-2 border-emerald-500/40 bg-emerald-500/5 space-y-3">
@@ -2010,8 +2044,10 @@ const DashboardContracts = () => {
                   </div>
                 </div>
               )}
+              </div>
 
               {/* CT4B — Step 2: Work / service type (auto-suggests template) */}
+              <div ref={stepRefs.work} className="scroll-mt-24">
               {!editingId && (
                 <div className="p-4 rounded-xl border border-border/40 bg-muted/20 space-y-2">
                   <div className="flex items-center gap-1.5">
@@ -2047,8 +2083,10 @@ const DashboardContracts = () => {
                   })()}
                 </div>
               )}
+              </div>
 
               {/* CT4 — Template selector (new contracts only) */}
+              <div ref={stepRefs.template} className="scroll-mt-24">
               {!editingId && publishedVersions.length > 0 && (
                 <div className="p-4 rounded-xl border border-border/40 bg-muted/20 space-y-3">
                   <div className="flex items-center gap-1.5">
@@ -2098,8 +2136,10 @@ const DashboardContracts = () => {
                   )}
                 </div>
               )}
+              </div>
 
-              {/* Titles */}
+              {/* Titles + descriptions + dates + supervisor + terms = Details step */}
+              <div ref={stepRefs.details} className="space-y-4 scroll-mt-24">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between flex-wrap gap-1">
@@ -2161,8 +2201,10 @@ const DashboardContracts = () => {
                   <Input type="date" value={form.end_date} onChange={e => setForm({ ...form, end_date: e.target.value })} dir="ltr" className="h-10" />
                 </div>
               </div>
+              </div>
 
-              {/* VAT Settings */}
+              {/* VAT Settings — Pricing/VAT step */}
+              <div ref={stepRefs.pricing} className="space-y-4 scroll-mt-24">
               <div className="p-4 rounded-xl bg-muted/30 border border-border/40 space-y-3">
                 <h4 className="text-xs font-semibold flex items-center gap-1.5"><Percent className="w-3.5 h-3.5 text-primary" />{isRTL ? 'ضريبة القيمة المضافة' : 'Value Added Tax (VAT)'}</h4>
                 <div className="flex items-center gap-4 flex-wrap">
@@ -2205,8 +2247,10 @@ const DashboardContracts = () => {
                   <Textarea value={form.terms_en} onChange={e => setForm({ ...form, terms_en: e.target.value })} rows={6} dir="ltr" className="text-xs" />
                 </div>
               </div>
+              </div>
 
               {/* CT4B — Review summary + status guidance before submit. */}
+              <div ref={stepRefs.review} className="space-y-4 scroll-mt-24">
               {!editingId && (() => {
                 const guide = getStatusGuidance('draft');
                 const w = getWorkType(selectedWorkType);
@@ -2244,10 +2288,52 @@ const DashboardContracts = () => {
                 );
               })()}
 
-              <Button variant="hero" className="w-full gap-2 h-11 shadow-lg" disabled={!form.title_ar || !form.total_amount || (!editingId && !selectedClient && !form.client_email) || createContractMutation.isPending} onClick={() => createContractMutation.mutate()}>
-                {createContractMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : editingId ? <CheckCircle2 className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-                {editingId ? (isRTL ? 'تحديث العقد' : 'Update Contract') : (isRTL ? 'إنشاء العقد' : 'Create Contract')}
-              </Button>
+              {/* Provider Contract UX 2 — Part A: Back / Next + Save Draft inline. */}
+              {(() => {
+                const idx = stepOrder.indexOf(activeStep);
+                const prev = idx > 0 ? stepOrder[idx - 1] : null;
+                const next = idx < stepOrder.length - 1 ? stepOrder[idx + 1] : null;
+                const saveDisabled = !form.title_ar || !form.total_amount || (!editingId && !selectedClient && !form.client_email) || createContractMutation.isPending;
+                return (
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
+                    <Button type="button" variant="outline" size="sm" className="h-9 text-xs" disabled={!prev} onClick={() => prev && goToStep(prev)}>
+                      {isRTL ? '→ السابق' : '← Back'}
+                    </Button>
+                    <Button type="button" variant="outline" size="sm" className="h-9 text-xs" disabled={!next} onClick={() => next && goToStep(next)}>
+                      {isRTL ? 'التالي ←' : 'Next →'}
+                    </Button>
+                    <div className="flex-1" />
+                    <Button variant="hero" className="gap-2 h-10 shadow-lg" disabled={saveDisabled} onClick={() => createContractMutation.mutate()}>
+                      {createContractMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : editingId ? <CheckCircle2 className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                      {editingId ? (isRTL ? 'تحديث العقد' : 'Update Contract') : (isRTL ? 'حفظ المسودة' : 'Save Draft')}
+                    </Button>
+                  </div>
+                );
+              })()}
+              </div>
+
+              {/* Provider Contract UX 2 — Part D: sticky mobile action bar. */}
+              <div className="lg:hidden sticky bottom-0 -mx-4 sm:-mx-6 px-4 sm:px-6 py-2.5 bg-background/95 backdrop-blur border-t border-border/40 flex items-center gap-2 z-20">
+                <div className="flex-1 min-w-0">
+                  <div className="text-[9px] text-muted-foreground leading-none">{isRTL ? 'الإجمالي' : 'Total'}</div>
+                  <div className="text-xs font-bold tech-content truncate">
+                    {form.total_amount ? `${Number(form.total_amount).toLocaleString()} ${form.currency_code}` : '—'}
+                    <span className="ms-1 text-[9px] text-muted-foreground font-normal">
+                      {form.vat_inclusive ? (isRTL ? `شاملة ${form.vat_rate}%` : `incl. ${form.vat_rate}%`) : (isRTL ? `+${form.vat_rate}%` : `+${form.vat_rate}%`)}
+                    </span>
+                  </div>
+                </div>
+                <Button
+                  variant="hero"
+                  size="sm"
+                  className="h-10 text-xs gap-1.5"
+                  disabled={!form.title_ar || !form.total_amount || (!editingId && !selectedClient && !form.client_email) || createContractMutation.isPending}
+                  onClick={() => createContractMutation.mutate()}
+                >
+                  {createContractMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                  {editingId ? (isRTL ? 'تحديث' : 'Update') : (isRTL ? 'حفظ المسودة' : 'Save Draft')}
+                </Button>
+              </div>
             </CardContent>
           </Card>
         )}
@@ -2705,6 +2791,16 @@ const DashboardContracts = () => {
                                         <Input type="number" min="0" placeholder={isRTL ? `سعر / ${formatUnitOfMeasure(lineItemForm.pricing_method)}` : `Price / ${formatUnitOfMeasure(lineItemForm.pricing_method)}`} value={lineItemForm.unit_price} onChange={e => setLineItemForm(f => ({ ...f, unit_price: e.target.value }))} dir="ltr" className="h-9 text-xs" />
                                       )}
                                     </div>
+                                    <DimensionHelper
+                                      isRTL={isRTL}
+                                      method={lineItemForm.pricing_method}
+                                      lengthMm={lineItemForm.length_mm}
+                                      widthMm={lineItemForm.width_mm}
+                                      heightMm={lineItemForm.height_mm}
+                                      weightKg={lineItemForm.weight_kg}
+                                      weightTon={lineItemForm.weight_ton}
+                                      amount={lineItemForm.amount}
+                                    />
                                     <Input placeholder={isRTL ? 'وصف البند (اختياري)' : 'Description (optional)'} value={lineItemForm.description_ar} onChange={e => setLineItemForm(f => ({ ...f, description_ar: e.target.value }))} className="h-9 text-xs" />
                                     {(() => {
                                       const fi: Record<string, number> = {};
