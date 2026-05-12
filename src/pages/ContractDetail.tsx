@@ -195,6 +195,8 @@ const ContractDetail = () => {
   const [previewFileName, setPreviewFileName] = useState<string>('contract.pdf');
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [pdfDiagnostics, setPdfDiagnostics] = useState<ArabicFontDiagnostics | null>(null);
+  const [pdfBackendReport, setPdfBackendReport] = useState<string | null>(null);
+  const [isAnalyzingPdf, setIsAnalyzingPdf] = useState(false);
   const pdfDebugEnabled = (import.meta.env.DEV || import.meta.env.VITE_ENABLE_PDF_DEBUG === 'true') && isAdmin;
   const navigate = useNavigate();
 
