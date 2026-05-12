@@ -7138,6 +7138,18 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      search_contract_clients: {
+        Args: { _q: string }
+        Returns: {
+          account_type: string
+          email_masked: string
+          full_name: string
+          phone_masked: string
+          ref_id: string
+          source: string
+          user_id: string
+        }[]
+      }
       send_contract_for_approval: {
         Args: { _contract_id: string }
         Returns: {
