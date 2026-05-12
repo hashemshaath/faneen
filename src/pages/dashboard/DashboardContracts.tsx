@@ -1515,6 +1515,11 @@ const DashboardContracts = () => {
       };
       const { exportContractPDF } = await import('@/lib/contract-pdf-export');
       await exportContractPDF(data);
+      // PDF-QA2: log the export. Server validates auth & resolves metadata.
+      try {
+        const { recordContractPdfExport } = await import('@/lib/contract-pdf-history');
+        await recordContractPdfExport(c.id, 'dashboard_contracts', isRTL ? 'ar' : 'en');
+      } catch { /* non-blocking */ }
       toast.success(isRTL ? 'تم تصدير العقد' : 'Contract exported');
     } catch {
       toast.error(isRTL ? 'فشل التصدير' : 'Export failed');
