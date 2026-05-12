@@ -197,6 +197,57 @@ export type Database = {
         }
         Relationships: []
       }
+      badge_clicks: {
+        Row: {
+          business_id: string
+          created_at: string
+          id: string
+          referrer: string | null
+          user_agent: string | null
+          username: string
+          utm_campaign: string | null
+          utm_medium: string | null
+          utm_source: string | null
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          id?: string
+          referrer?: string | null
+          user_agent?: string | null
+          username: string
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          id?: string
+          referrer?: string | null
+          user_agent?: string | null
+          username?: string
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "badge_clicks_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "badge_clicks_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       blog_bookmarks: {
         Row: {
           created_at: string
