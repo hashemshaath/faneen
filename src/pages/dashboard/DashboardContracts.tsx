@@ -1370,6 +1370,57 @@ const DashboardContracts = () => {
                 </div>
               )}
 
+              {/* CT4 — Template selector (new contracts only) */}
+              {!editingId && publishedVersions.length > 0 && (
+                <div className="p-4 rounded-xl border border-border/40 bg-muted/20 space-y-3">
+                  <div className="flex items-center gap-1.5">
+                    <BookOpen className="w-3.5 h-3.5 text-primary" />
+                    <Label className="text-xs font-semibold">{isRTL ? 'قالب العقد الرسمي' : 'Official Contract Template'}</Label>
+                    {effectiveVersion && (
+                      <Badge variant="secondary" className="text-[9px] gap-0.5">v{effectiveVersion.version_number}</Badge>
+                    )}
+                  </div>
+                  <Select
+                    value={effectiveVersion?.version_id ?? ''}
+                    onValueChange={(v) => { setSelectedVersionId(v); setSelectedPricingMethod(null); }}
+                  >
+                    <SelectTrigger className="h-10 text-xs"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {publishedVersions.map(v => {
+                        const cfg = templateCategoryConfig[v.category];
+                        const label = isRTL ? v.name_ar : (v.name_en || v.name_ar);
+                        const catLabel = cfg ? cfg[isRTL ? 'ar' : 'en'] : v.category;
+                        return (
+                          <SelectItem key={v.version_id} value={v.version_id} className="text-xs">
+                            {label} · {catLabel} · v{v.version_number}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                  {effectiveVersion && effectiveVersion.pricing_methods.length > 0 && (
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] text-muted-foreground">{isRTL ? 'طريقة التسعير' : 'Pricing Method'}</Label>
+                      <Select value={selectedPricingMethod ?? ''} onValueChange={(v) => setSelectedPricingMethod(v || null)}>
+                        <SelectTrigger className="h-9 text-xs"><SelectValue placeholder={isRTL ? 'اختياري' : 'Optional'} /></SelectTrigger>
+                        <SelectContent>
+                          {effectiveVersion.pricing_methods.map(m => (
+                            <SelectItem key={m} value={m} className="text-xs">{m}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                  {effectiveVersion && effectiveVersion.required_field_count > 0 && (
+                    <p className="text-[10px] text-warning bg-warning/10 border border-warning/20 rounded-lg p-2">
+                      {isRTL
+                        ? `هذا القالب يحتوي على ${effectiveVersion.required_field_count} حقل مطلوب سيتم دعمها بالكامل في CT5.`
+                        : `This template has ${effectiveVersion.required_field_count} required fields — full support arrives in CT5.`}
+                    </p>
+                  )}
+                </div>
+              )}
+
               {/* Titles */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
