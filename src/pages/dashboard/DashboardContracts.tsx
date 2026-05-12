@@ -404,6 +404,9 @@ const DashboardContracts = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<any | null>(null);
   const [templatePreview, setTemplatePreview] = useState<any | null>(null);
+  /* CT4 — Selected published template version + pricing method for new contracts. */
+  const [selectedVersionId, setSelectedVersionId] = useState<string | null>(null);
+  const [selectedPricingMethod, setSelectedPricingMethod] = useState<string | null>(null);
   const [approveConfirm, setApproveConfirm] = useState<any | null>(null);
   const [sendConfirm, setSendConfirm] = useState<any | null>(null);
   const [isExporting, setIsExporting] = useState(false);
