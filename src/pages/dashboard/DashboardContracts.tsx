@@ -1454,7 +1454,8 @@ const DashboardContracts = () => {
           .maybeSingle(),
         cAny.template_version_id
           ? supabase
-              .from('contract_template_versions')
+              // CT7B: non-admin path uses safe public view.
+              .from('contract_template_versions_public')
               .select('version_number, language_precedence, contract_templates!inner(name_ar, name_en, category)')
               .eq('id', cAny.template_version_id)
               .maybeSingle()
