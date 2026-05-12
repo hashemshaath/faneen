@@ -30,6 +30,15 @@ const Auth = () => {
   useEffect(() => {
     if (loading) return;
     if (user) {
+      // CT4C.4 — honor pending invite token captured before auth
+      try {
+        const pending = sessionStorage.getItem('qitaat_pending_invite_token');
+        if (pending) {
+          sessionStorage.removeItem('qitaat_pending_invite_token');
+          window.location.replace(`/invite/${encodeURIComponent(pending)}`);
+          return;
+        }
+      } catch { /* ignore storage errors */ }
       redirectByRole();
     }
   }, [user, loading, redirectByRole]);
