@@ -100,7 +100,18 @@ export const registerArabicFont = async (doc: { addFileToVFS: (file: string, dat
   }
 
   // Bundled, same-origin URLs produced by Vite. No CORS, no network races.
-  const regular
+  const regular = await fetchAsBase64(notoNaskhRegularUrl);
+  if (!regular) return false;
+  const bold = await fetchAsBase64(notoNaskhBoldUrl);
+  cachedFont = regular;
+  cachedFontBold = bold;
+  try {
+    registerArabicFontBytes(doc, regular, bold);
+    debugArabicFont({ source: 'bundled', registered: ARABIC_FONT_NAME, hasBold: !!bold });
+    return true;
+  } catch {
+    return false;
+  }
 };
 
 export const setupArabicDoc = async (doc: { setFont: (fontName: string, fontStyle?: string) => void; addFileToVFS: (file: string, data: string) => void; addFont: (file: string, name: string, style: string) => void; getFontList?: () => Record<string, string[]> }, isRTL: boolean) => {
