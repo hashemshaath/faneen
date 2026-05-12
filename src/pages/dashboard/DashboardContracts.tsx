@@ -2791,6 +2791,16 @@ const DashboardContracts = () => {
                                         <Input type="number" min="0" placeholder={isRTL ? `سعر / ${formatUnitOfMeasure(lineItemForm.pricing_method)}` : `Price / ${formatUnitOfMeasure(lineItemForm.pricing_method)}`} value={lineItemForm.unit_price} onChange={e => setLineItemForm(f => ({ ...f, unit_price: e.target.value }))} dir="ltr" className="h-9 text-xs" />
                                       )}
                                     </div>
+                                    <DimensionHelper
+                                      isRTL={isRTL}
+                                      method={lineItemForm.pricing_method}
+                                      lengthMm={lineItemForm.length_mm}
+                                      widthMm={lineItemForm.width_mm}
+                                      heightMm={lineItemForm.height_mm}
+                                      weightKg={lineItemForm.weight_kg}
+                                      weightTon={lineItemForm.weight_ton}
+                                      amount={lineItemForm.amount}
+                                    />
                                     <Input placeholder={isRTL ? 'وصف البند (اختياري)' : 'Description (optional)'} value={lineItemForm.description_ar} onChange={e => setLineItemForm(f => ({ ...f, description_ar: e.target.value }))} className="h-9 text-xs" />
                                     {(() => {
                                       const fi: Record<string, number> = {};
