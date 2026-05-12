@@ -271,8 +271,23 @@ export const AmendmentHistoryPanel = ({
               <AmendmentFinancialPreview input={previewInput} isRTL={isRTL} />
             )}
 
+            {/* Blocking error reasons (prominent, prevents apply) */}
+            {canApply && preview && preview.blockingErrors.length > 0 && (
+              <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-2 space-y-1">
+                {preview.blockingErrors.map(code => {
+                  const lbl = BLOCK_REASON[code] ?? { ar: code, en: code };
+                  return (
+                    <div key={code} className="flex items-start gap-1.5 text-[11px] text-destructive font-medium">
+                      <AlertTriangle className="w-3 h-3 mt-0.5 shrink-0" />
+                      <span>{isRTL ? lbl.ar : lbl.en}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
             {/* Action buttons */}
-            {(canApprove || canReject || canCancel || canApply) && rejectingId !== a.id && cancellingId !== a.id && (
+            {(canApprove || canReject || canCancel || canApply) && rejectingId !== a.id && cancellingId !== a.id && confirmingApplyId !== a.id && (
               <div className="flex flex-wrap gap-2 pt-1">
                 {canApprove && (
                   <Button
