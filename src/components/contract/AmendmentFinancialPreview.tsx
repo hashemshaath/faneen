@@ -24,7 +24,7 @@ const WARN_LABEL: Record<string, { ar: string; en: string }> = {
   milestone_dates_not_shifted:   { ar: 'تواريخ المراحل لن تُعدّل تلقائياً، راجعها يدوياً.',              en: 'Milestone dates are not auto-shifted; review manually.' },
   pending_row_zeroed:            { ar: 'بعض الدفعات غير المدفوعة ستصبح صفراً بعد إعادة التوزيع.',         en: 'Some unpaid installments will become zero after redistribution.' },
   milestone_link_drift:          { ar: 'قد تنحرف ارتباطات المراحل بعد التطبيق.',                          en: 'Milestone links may drift after apply.' },
-  rpc_does_not_redistribute_yet: { ar: 'إعادة توزيع الدفعات ستُفعّل في مرحلة لاحقة. حالياً قد تحتاج لمراجعة جدول الدفعات يدوياً بعد التطبيق.', en: 'Automatic schedule redistribution will be enabled in a later phase. You may need to review the schedule manually after applying.' },
+  rpc_does_not_redistribute_yet: { ar: 'سيتم تحديث الدفعات المعلقة فقط. الدفعات المدفوعة لن تتغير.', en: 'Only pending payments will be updated. Paid payments will remain unchanged.' },
   documentation_only:            { ar: 'هذا التعديل توثيقي فقط ولا يؤثر مالياً.',                          en: 'This amendment is documentation-only and has no financial impact.' },
 };
 
@@ -180,8 +180,8 @@ export const AmendmentFinancialPreview = ({ input, isRTL }: Props) => {
 
       <p className="text-[10px] text-muted-foreground">
         {isRTL
-          ? 'هذه معاينة فقط، ولن يتم تعديل جدول الدفعات تلقائياً في هذه المرحلة.'
-          : 'Preview only — the payment schedule will not be modified automatically in this phase.'}
+          ? 'سيتم تحديث الدفعات المعلقة فقط. الدفعات المدفوعة لن تتغير.'
+          : 'Only pending payments will be updated. Paid payments will remain unchanged.'}
       </p>
     </div>
   );
