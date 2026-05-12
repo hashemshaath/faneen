@@ -49,7 +49,17 @@ const defaultForm = {
   meta_title_ar: '', meta_title_en: '', meta_description_ar: '', meta_description_en: '',
   focus_keyword: '', keywords: '', canonical_url: '', og_image_url: '',
   scheduled_at: '',
+  guide_topic: '' as '' | 'installation' | 'material-selection' | 'maintenance' | 'specs' | 'safety',
+  faq: [] as Array<{ q: string; a: string }>,
 };
+
+const guideTopics: { value: string; ar: string; en: string }[] = [
+  { value: 'installation', ar: 'التركيب', en: 'Installation' },
+  { value: 'material-selection', ar: 'اختيار المواد', en: 'Material Selection' },
+  { value: 'maintenance', ar: 'الصيانة', en: 'Maintenance' },
+  { value: 'specs', ar: 'المواصفات', en: 'Specs' },
+  { value: 'safety', ar: 'السلامة', en: 'Safety' },
+];
 
 /* helpers */
 function countInText(text: string, keyword: string): number {
@@ -190,7 +200,7 @@ const DashboardBlog = () => {
   const generateSlug = (title: string) =>
     title.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').trim() || `post-${Date.now()}`;
 
-  const setField = useCallback((key: string, value: string) => {
+  const setField = useCallback((key: string, value: unknown) => {
     setForm(f => ({ ...f, [key]: value }));
   }, []);
 
@@ -318,6 +328,10 @@ const DashboardBlog = () => {
         focus_keyword: form.focus_keyword || null, keywords: keywordsArr,
         canonical_url: form.canonical_url || null, og_image_url: form.og_image_url || form.cover_image_url || null,
         seo_score: seoAnalysis?.score || localScore, reading_time_minutes: readingTime,
+        guide_topic: form.category === 'guides' && form.guide_topic ? form.guide_topic : null,
+        faq: form.category === 'guides'
+          ? (form.faq || []).filter(it => it.q.trim() && it.a.trim()).map(it => ({ q: it.q.trim(), a: it.a.trim() }))
+          : [],
       };
       if (editId) {
         const { error } = await supabase.from('blog_posts').update(payload).eq('id', editId);
@@ -357,6 +371,8 @@ const DashboardBlog = () => {
       focus_keyword: p.focus_keyword || '', keywords: (p.keywords || []).join(', '),
       canonical_url: p.canonical_url || '', og_image_url: p.og_image_url || '',
       scheduled_at: p.scheduled_at || '',
+      guide_topic: p.guide_topic || '',
+      faq: Array.isArray(p.faq) ? p.faq : [],
     });
     setEditId(p.id);
     setSeoAnalysis(null);
@@ -931,6 +947,94 @@ const DashboardBlog = () => {
                           </Select>
                         </div>
                       </div>
+
+                      {/* Guide-specific: topic + FAQ */}
+                      {form.category === 'guides' && (
+                        <div className="space-y-3 p-4 rounded-xl border border-primary/20 bg-primary/[0.03]">
+                          <div className="flex items-center justify-between gap-3 flex-wrap">
+                            <Label className="text-xs font-semibold flex items-center gap-1.5">
+                              <BookOpen className="w-3.5 h-3.5 text-primary" />
+                              {isRTL ? 'إعدادات الدليل الفني' : 'Technical Guide Settings'}
+                            </Label>
+                            <a href="/guides" target="_blank" rel="noreferrer" className="text-[10px] text-primary hover:underline inline-flex items-center gap-1">
+                              <ExternalLink className="w-3 h-3" />
+                              {isRTL ? 'مكتبة الأدلة' : 'Guides Library'}
+                            </a>
+                          </div>
+
+                          <div>
+                            <Label className="text-[11px] text-muted-foreground">{isRTL ? 'موضوع الدليل' : 'Guide Topic'}</Label>
+                            <Select value={form.guide_topic || ''} onValueChange={v => setField('guide_topic', v)}>
+                              <SelectTrigger className="mt-1 h-10 rounded-xl">
+                                <SelectValue placeholder={isRTL ? 'اختر الموضوع' : 'Select topic'} />
+                              </SelectTrigger>
+                              <SelectContent className="rounded-xl">
+                                {guideTopics.map(t => (
+                                  <SelectItem key={t.value} value={t.value}>{language === 'ar' ? t.ar : t.en}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div>
+                            <div className="flex items-center justify-between mb-2">
+                              <Label className="text-[11px] text-muted-foreground">
+                                {isRTL ? 'الأسئلة الشائعة (تنشأ FAQPage Schema تلقائياً)' : 'FAQs (auto-generates FAQPage Schema)'}
+                              </Label>
+                              <Button
+                                type="button" size="sm" variant="outline"
+                                onClick={() => setField('faq', [...(form.faq || []), { q: '', a: '' }])}
+                                className="h-7 px-2.5 text-[11px] rounded-lg gap-1"
+                              >
+                                <Plus className="w-3 h-3" />
+                                {isRTL ? 'إضافة سؤال' : 'Add FAQ'}
+                              </Button>
+                            </div>
+                            <div className="space-y-2">
+                              {(form.faq || []).map((item, idx) => (
+                                <div key={idx} className="rounded-xl border border-border bg-card p-3 space-y-2">
+                                  <div className="flex items-start gap-2">
+                                    <span className="text-[10px] font-mono text-muted-foreground mt-2.5 shrink-0">Q{idx + 1}</span>
+                                    <Input
+                                      value={item.q}
+                                      onChange={e => {
+                                        const next = [...form.faq]; next[idx] = { ...next[idx], q: e.target.value };
+                                        setField('faq', next);
+                                      }}
+                                      placeholder={isRTL ? 'السؤال...' : 'Question...'}
+                                      dir="auto"
+                                      className="h-9 rounded-lg text-xs"
+                                    />
+                                    <Button
+                                      type="button" size="icon" variant="ghost"
+                                      onClick={() => setField('faq', form.faq.filter((_, i) => i !== idx))}
+                                      className="h-9 w-9 shrink-0 text-destructive hover:bg-destructive/10"
+                                    >
+                                      <X className="w-3.5 h-3.5" />
+                                    </Button>
+                                  </div>
+                                  <Textarea
+                                    value={item.a}
+                                    onChange={e => {
+                                      const next = [...form.faq]; next[idx] = { ...next[idx], a: e.target.value };
+                                      setField('faq', next);
+                                    }}
+                                    placeholder={isRTL ? 'الإجابة...' : 'Answer...'}
+                                    dir="auto"
+                                    rows={3}
+                                    className="rounded-lg text-xs resize-none"
+                                  />
+                                </div>
+                              ))}
+                              {(!form.faq || form.faq.length === 0) && (
+                                <p className="text-[11px] text-muted-foreground text-center py-3 border border-dashed border-border rounded-lg">
+                                  {isRTL ? 'لا توجد أسئلة بعد. أضف 3-5 أسئلة شائعة لتحسين الظهور في Google.' : 'No FAQs yet. Add 3-5 to boost Google rich results.'}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
 
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>

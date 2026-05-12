@@ -338,7 +338,9 @@ export type Database = {
           created_at: string
           excerpt_ar: string | null
           excerpt_en: string | null
+          faq: Json
           focus_keyword: string | null
+          guide_topic: string | null
           id: string
           keywords: string[] | null
           meta_description_ar: string | null
@@ -369,7 +371,9 @@ export type Database = {
           created_at?: string
           excerpt_ar?: string | null
           excerpt_en?: string | null
+          faq?: Json
           focus_keyword?: string | null
+          guide_topic?: string | null
           id?: string
           keywords?: string[] | null
           meta_description_ar?: string | null
@@ -400,7 +404,9 @@ export type Database = {
           created_at?: string
           excerpt_ar?: string | null
           excerpt_en?: string | null
+          faq?: Json
           focus_keyword?: string | null
+          guide_topic?: string | null
           id?: string
           keywords?: string[] | null
           meta_description_ar?: string | null

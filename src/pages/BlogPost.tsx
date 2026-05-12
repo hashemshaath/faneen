@@ -1,6 +1,6 @@
 import React, { useMemo, useEffect, useState, useRef, useCallback } from 'react';
 import DOMPurify from 'dompurify';
-import { usePageMeta, useJsonLd } from '@/hooks/usePageMeta';
+import { usePageMeta, useJsonLd, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { buildBreadcrumbList, ogImageFor } from '@/lib/seo/structured-data';
 import { useContentTracking } from '@/hooks/useContentTracking';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -346,6 +346,29 @@ const BlogPost = () => {
       },
     };
   }, [post, language, author]));
+
+  // FAQ structured data — only when the post carries Q/A pairs (typically guides).
+  const faqItems = useMemo(() => {
+    const raw = (post as { faq?: unknown } | null)?.faq;
+    if (!Array.isArray(raw)) return [];
+    return raw
+      .filter((it): it is { q: string; a: string } => !!it && typeof (it as { q?: unknown }).q === 'string' && typeof (it as { a?: unknown }).a === 'string')
+      .map((it) => ({ q: it.q.trim(), a: it.a.trim() }))
+      .filter((it) => it.q && it.a);
+  }, [post]);
+
+  useMultiJsonLd(useMemo(() => {
+    if (faqItems.length === 0) return null;
+    return [{
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: faqItems.map((it) => ({
+        '@type': 'Question',
+        name: it.q,
+        acceptedAnswer: { '@type': 'Answer', text: it.a },
+      })),
+    }];
+  }, [faqItems]));
 
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
   const title = post ? (language === 'ar' ? post.title_ar : (post.title_en || post.title_ar)) : '';
@@ -773,6 +796,32 @@ const BlogPost = () => {
               ">
               <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(renderedHTML) }} />
             </article>
+
+            {/* ── FAQ (guides) ── */}
+            {faqItems.length > 0 && (
+              <section className="mb-8 sm:mb-10 border-t border-border/50 pt-6 sm:pt-8" aria-labelledby="faq-heading">
+                <h3 id="faq-heading" className="font-heading font-bold text-base sm:text-xl mb-4 sm:mb-5 flex items-center gap-2">
+                  <span aria-hidden>❓</span>
+                  {isRTL ? 'الأسئلة الشائعة' : 'Frequently Asked Questions'}
+                </h3>
+                <div className="space-y-2.5">
+                  {faqItems.map((it, idx) => (
+                    <details
+                      key={idx}
+                      className="group rounded-xl border border-border bg-card p-4 open:border-primary/30 open:shadow-sm transition-colors"
+                    >
+                      <summary className="cursor-pointer list-none font-heading font-semibold text-sm sm:text-base flex items-start justify-between gap-3">
+                        <span>{it.q}</span>
+                        <ChevronDown className="ic-sm shrink-0 mt-0.5 transition-transform group-open:rotate-180" />
+                      </summary>
+                      <p className="mt-3 text-sm text-muted-foreground leading-relaxed whitespace-pre-line" dir="auto">
+                        {it.a}
+                      </p>
+                    </details>
+                  ))}
+                </div>
+              </section>
+            )}
 
             {/* Tags footer */}
             {post.tags?.length > 0 && (
