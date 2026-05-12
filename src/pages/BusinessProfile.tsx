@@ -415,7 +415,10 @@ const BusinessProfile = () => {
               variant="outline"
               size="app"
               className="gap-2"
-              onClick={() => setBookingOpen(true)}
+              onClick={() => {
+                void recordBadgeConversion(business?.id, 'booking', 'desktop_quick_action');
+                setBookingOpen(true);
+              }}
             >
               <CalendarClock className="ic-sm" />
               {language === "ar" ? "حجز موعد" : "Book appointment"}
