@@ -42,7 +42,10 @@ import {
 import type { ContractExportData } from '@/lib/contract-pdf-export';
 import type { Database } from '@/integrations/supabase/types';
 import { getContractStatusMeta, isContractLockedByStatus } from '@/lib/contract-statuses';
-import { calculateVatBreakdown, calculateLineItemsTotal, calculateMeasurementsTotal } from '@/lib/contract-financials';
+import {
+  calculateVatBreakdown, calculateLineItemsTotal, calculateMeasurementsTotal,
+  calculateLineVatBreakdown, sumLineVatBreakdowns, formatVatHandlingLabel,
+} from '@/lib/contract-financials';
 import { calculateLineTotal, formatPricingMethodLabel, formatUnitOfMeasure, SUPPORTED_PRICING_METHODS, type PricingMethod } from '@/lib/contract-pricing';
 import {
   BOQ_GROUPS,
@@ -50,6 +53,8 @@ import {
   hasMixedPricing,
   listPricingMethodsUsed,
   getSuggestedPricingMethod,
+  getWorkTypeBoqPresets,
+  dedupeStarterRows,
   type BoqGroupKey,
 } from '@/lib/contract-boq';
 import { ClientPicker, type SelectedClient } from '@/components/contracts/ClientPicker';
@@ -961,6 +966,52 @@ const DashboardContracts = () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-contract-line-items'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-contracts'] });
       toast.success(isRTL ? 'تم حذف البند' : 'Item deleted');
+    },
+    onError: (err: unknown) => toast.error(mapContractLockError(err, isRTL).message),
+  });
+
+  /* ── CT5G — Bulk-insert starter BOQ rows for a work type. Idempotent. ── */
+  const addStarterBoqMutation = useMutation({
+    mutationFn: async ({ contractId, category }: { contractId: string; category: string | null | undefined }) => {
+      const existing = allLineItems.filter((li) => li.contract_id === contractId);
+      const presets = getWorkTypeBoqPresets(category);
+      const allowedKey = (contracts.find(c => c.id === contractId) as { template_version_id?: string | null } | undefined)?.template_version_id;
+      const allowed = allowedKey ? allowedMethodsByVersion.get(allowedKey) : undefined;
+      const filtered = (allowed && allowed.length > 0)
+        ? presets.filter(p => allowed.includes(p.pricing_method))
+        : presets;
+      const toInsert = dedupeStarterRows(filtered, existing);
+      if (toInsert.length === 0) return { inserted: 0 };
+      const baseSort = existing.length;
+      const rows = toInsert.map((p, idx) => ({
+        contract_id: contractId,
+        name_ar: p.name_ar,
+        name_en: p.name_en,
+        description_ar: null,
+        quantity: 1,
+        unit_price: 0,
+        total_cost: 0,
+        item_type: 'material' as const,
+        sort_order: baseSort + idx + 1,
+        pricing_method: p.pricing_method,
+        unit_of_measure: formatUnitOfMeasure(p.pricing_method),
+        formula_inputs: {},
+        boq_group_key: p.boq_group_key,
+      }));
+      const { error } = await supabase.from('contract_line_items').insert(rows);
+      if (error) throw error;
+      await supabase.rpc('recalc_contract_total', { _contract_id: contractId });
+      return { inserted: toInsert.length };
+    },
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard-contract-line-items'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-contracts'] });
+      const n = res?.inserted ?? 0;
+      if (n === 0) {
+        toast.info(isRTL ? 'البنود المقترحة موجودة مسبقاً' : 'Suggested items already added');
+      } else {
+        toast.success(isRTL ? `أُضيفت ${n} بنود مقترحة` : `Added ${n} suggested items`);
+      }
     },
     onError: (err: unknown) => toast.error(mapContractLockError(err, isRTL).message),
   });
@@ -2473,6 +2524,21 @@ const DashboardContracts = () => {
                                       <div className="flex gap-2">
                                         <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5" onClick={() => setShowAddMeasurement(c.id)}><Plus className="w-3.5 h-3.5" />{isRTL ? 'مقاس' : 'Measurement'}</Button>
                                         <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5" onClick={() => setShowAddLineItem(c.id)}><Plus className="w-3.5 h-3.5" />{isRTL ? 'بند إضافي' : 'Line Item'}</Button>
+                                        {(() => {
+                                          const cv = (c as { template_version_id?: string | null }).template_version_id ?? null;
+                                          const cat = cv ? (publishedVersions.find(v => v.version_id === cv)?.category ?? 'general') : 'general';
+                                          return (
+                                            <Button
+                                              variant="outline" size="sm" className="h-8 text-xs gap-1.5"
+                                              disabled={addStarterBoqMutation.isPending}
+                                              onClick={() => addStarterBoqMutation.mutate({ contractId: c.id, category: cat })}
+                                              title={isRTL ? 'إضافة مجموعة بنود مقترحة حسب نوع العمل' : 'Add suggested BOQ groups for this work type'}
+                                            >
+                                              {addStarterBoqMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ClipboardList className="w-3.5 h-3.5" />}
+                                              {isRTL ? 'مجموعة بنود مقترحة' : 'Suggested BOQ'}
+                                            </Button>
+                                          );
+                                        })()}
                                       </div>
                                     )}
                                   </div>

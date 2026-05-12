@@ -124,6 +124,96 @@ export function calculateMilestoneTotal(milestones: MilestoneLike[] | null | und
   return round2(milestones.reduce((s, m) => s + clampNonNeg(safeNum(m.amount)), 0));
 }
 
+/* ── CT5G — VAT handling per line item / group ───────────────────────────
+ *
+ * `vat_handling` lives on `contract_template_pricing_rules` and influences
+ * how a line item's stored `total_cost` should be split into net + VAT for
+ * UI summaries:
+ *
+ *   - 'inherit'   → use the contract's vat_inclusive + vat_rate
+ *   - 'inclusive' → treat the line total as VAT-inclusive
+ *   - 'exclusive' → treat the line total as VAT-exclusive
+ *   - 'exempt'    → no VAT applied to that line / group
+ *
+ * IMPORTANT: stored `total_cost` semantics are NOT changed — this helper
+ * returns a derived breakdown for display only. `contract.total_amount`
+ * stays authoritative.
+ */
+
+export type VatHandling = 'inherit' | 'inclusive' | 'exclusive' | 'exempt';
+
+export const VAT_HANDLING_LABELS: Record<VatHandling, { ar: string; en: string; help_ar: string; help_en: string }> = {
+  inherit:   { ar: 'حسب العقد',  en: 'Inherit',   help_ar: 'يستخدم إعدادات الضريبة على مستوى العقد.',         help_en: "Uses the contract's VAT settings." },
+  inclusive: { ar: 'شاملة',      en: 'Inclusive', help_ar: 'سعر البند يشمل الضريبة بالفعل.',                   help_en: 'Line total already includes VAT.' },
+  exclusive: { ar: 'حصرية',      en: 'Exclusive', help_ar: 'سعر البند بدون ضريبة، تضاف الضريبة فوقه.',         help_en: 'Line total excludes VAT — VAT added on top.' },
+  exempt:    { ar: 'معفاة',      en: 'Exempt',    help_ar: 'لا تطبق ضريبة على هذا البند.',                     help_en: 'No VAT is applied to this line.' },
+};
+
+export function formatVatHandlingLabel(v: string | null | undefined, locale: 'ar' | 'en' = 'ar'): string {
+  const key = (v || 'inherit') as VatHandling;
+  const meta = VAT_HANDLING_LABELS[key] ?? VAT_HANDLING_LABELS.inherit;
+  return locale === 'ar' ? meta.ar : meta.en;
+}
+
+export interface LineVatBreakdown {
+  net: number;
+  vat: number;
+  gross: number;
+  vatHandling: VatHandling;
+  vatRate: number;
+}
+
+/**
+ * Compute net / VAT / gross for a line item amount based on its `vat_handling`.
+ *
+ * `amount` is the stored `total_cost` (for line items) or `subtotal` (for groups).
+ * For 'inherit', the contract's vat_inclusive flag determines whether `amount`
+ * is treated as inclusive or exclusive — preserving existing behaviour.
+ */
+export function calculateLineVatBreakdown(input: {
+  amount: number | string | null | undefined;
+  vatHandling?: string | null;
+  contractVatRate?: number | string | null;
+  contractVatInclusive?: boolean | null;
+}): LineVatBreakdown {
+  const amount = clampNonNeg(safeNum(input.amount));
+  const handling = (input.vatHandling || 'inherit') as VatHandling;
+  const vatRate = clampNonNeg(safeNum(input.contractVatRate ?? 15));
+
+  if (handling === 'exempt') {
+    return { net: round2(amount), vat: 0, gross: round2(amount), vatHandling: handling, vatRate: 0 };
+  }
+
+  let inclusive: boolean;
+  if (handling === 'inclusive')      inclusive = true;
+  else if (handling === 'exclusive') inclusive = false;
+  else                                inclusive = !!input.contractVatInclusive;
+
+  const vat = inclusive
+    ? (amount * vatRate) / (100 + vatRate)
+    : (amount * vatRate) / 100;
+  const net   = inclusive ? amount - vat : amount;
+  const gross = inclusive ? amount       : amount + vat;
+
+  return {
+    net: round2(net),
+    vat: round2(vat),
+    gross: round2(gross),
+    vatHandling: handling,
+    vatRate,
+  };
+}
+
+/**
+ * Aggregate line VAT breakdowns into a single net/vat/gross summary.
+ * Group-level helper used by the BOQ summary UI.
+ */
+export function sumLineVatBreakdowns(rows: LineVatBreakdown[]): { net: number; vat: number; gross: number } {
+  let net = 0, vat = 0, gross = 0;
+  for (const r of rows) { net += r.net; vat += r.vat; gross += r.gross; }
+  return { net: round2(net), vat: round2(vat), gross: round2(gross) };
+}
+
 /* ── Schedule reconciliation ──────────────────────────────────────────── */
 
 export interface PaymentScheduleValidation {

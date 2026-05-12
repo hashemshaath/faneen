@@ -139,3 +139,118 @@ export function listPricingMethodsUsed<T extends BoqLineItemLike>(items: T[]): s
   for (const i of items) set.add((i.pricing_method || 'unit'));
   return Array.from(set);
 }
+
+/* ── CT5G — Work-type starter BOQ presets ─────────────────────────────
+ *
+ * Pure metadata. Maps a contract template `category` (a.k.a. work type) to
+ * a set of starter BOQ rows so providers can populate a contract's BOQ in
+ * one click instead of typing each row manually.
+ *
+ * Each preset row only carries:
+ *   - boq_group_key
+ *   - suggested pricing_method
+ *   - bilingual placeholder name
+ *
+ * No quantities / prices / dimensions are seeded — the UI inserts the rows
+ * as empty placeholders and the provider fills the financial values. This
+ * keeps `contracts.total_amount` and stored `total_cost` semantics unchanged
+ * until the provider explicitly enters values.
+ */
+
+import type { PricingMethod } from './contract-pricing';
+
+export interface BoqStarterRow {
+  /** Stable client-side key — used for de-duplication. */
+  preset_key: string;
+  boq_group_key: BoqGroupKey;
+  pricing_method: PricingMethod;
+  name_ar: string;
+  name_en: string;
+}
+
+/** Keyed by template `category`. */
+export const WORK_TYPE_BOQ_PRESETS: Record<string, BoqStarterRow[]> = {
+  kitchens: [
+    { preset_key: 'kitchens.cabinets',     boq_group_key: 'cabinets',     pricing_method: 'linear_meter', name_ar: 'خزائن المطبخ',      name_en: 'Cabinets' },
+    { preset_key: 'kitchens.countertops',  boq_group_key: 'countertops',  pricing_method: 'square_meter', name_ar: 'أسطح العمل',        name_en: 'Countertops' },
+    { preset_key: 'kitchens.accessories',  boq_group_key: 'accessories',  pricing_method: 'unit',         name_ar: 'إكسسوارات',          name_en: 'Accessories' },
+    { preset_key: 'kitchens.appliances',   boq_group_key: 'appliances',   pricing_method: 'unit',         name_ar: 'أجهزة',              name_en: 'Appliances' },
+    { preset_key: 'kitchens.installation', boq_group_key: 'installation', pricing_method: 'lump_sum',     name_ar: 'تركيب وتجهيز',       name_en: 'Installation' },
+  ],
+  aluminum_doors_windows: [
+    { preset_key: 'alum.frames',       boq_group_key: 'materials',    pricing_method: 'linear_meter', name_ar: 'إطارات ألمنيوم',   name_en: 'Aluminum frames' },
+    { preset_key: 'alum.glass',        boq_group_key: 'materials',    pricing_method: 'square_meter', name_ar: 'ألواح زجاج',        name_en: 'Glass panels' },
+    { preset_key: 'alum.accessories',  boq_group_key: 'accessories',  pricing_method: 'unit',         name_ar: 'إكسسوارات',         name_en: 'Accessories' },
+    { preset_key: 'alum.installation', boq_group_key: 'installation', pricing_method: 'lump_sum',     name_ar: 'تركيب',              name_en: 'Installation' },
+  ],
+  upvc: [
+    { preset_key: 'upvc.frames',       boq_group_key: 'materials',    pricing_method: 'linear_meter', name_ar: 'إطارات UPVC',       name_en: 'UPVC frames' },
+    { preset_key: 'upvc.glass',        boq_group_key: 'materials',    pricing_method: 'square_meter', name_ar: 'ألواح زجاج',        name_en: 'Glass panels' },
+    { preset_key: 'upvc.accessories',  boq_group_key: 'accessories',  pricing_method: 'unit',         name_ar: 'إكسسوارات',         name_en: 'Accessories' },
+    { preset_key: 'upvc.installation', boq_group_key: 'installation', pricing_method: 'lump_sum',     name_ar: 'تركيب',              name_en: 'Installation' },
+  ],
+  facades: [
+    { preset_key: 'facade.panels',       boq_group_key: 'materials',    pricing_method: 'square_meter', name_ar: 'ألواح الواجهة',   name_en: 'Facade panels' },
+    { preset_key: 'facade.structure',    boq_group_key: 'materials',    pricing_method: 'linear_meter', name_ar: 'هيكل حامل',        name_en: 'Support structure' },
+    { preset_key: 'facade.installation', boq_group_key: 'installation', pricing_method: 'lump_sum',     name_ar: 'تركيب',             name_en: 'Installation' },
+    { preset_key: 'facade.access',       boq_group_key: 'labor',        pricing_method: 'lump_sum',     name_ar: 'سقالات ووصول',     name_en: 'Access / scaffolding' },
+  ],
+  glass_securit: [
+    { preset_key: 'glass.panels',       boq_group_key: 'materials',    pricing_method: 'square_meter', name_ar: 'ألواح زجاج',        name_en: 'Glass panels' },
+    { preset_key: 'glass.fittings',     boq_group_key: 'accessories',  pricing_method: 'unit',         name_ar: 'إكسسوارات وقواعد',  name_en: 'Fittings & accessories' },
+    { preset_key: 'glass.installation', boq_group_key: 'installation', pricing_method: 'lump_sum',     name_ar: 'تركيب',              name_en: 'Installation' },
+  ],
+  wood_doors: [
+    { preset_key: 'wood.doors',         boq_group_key: 'materials',    pricing_method: 'unit',         name_ar: 'أبواب خشبية',       name_en: 'Wood doors' },
+    { preset_key: 'wood.accessories',   boq_group_key: 'accessories',  pricing_method: 'unit',         name_ar: 'إكسسوارات',         name_en: 'Accessories' },
+    { preset_key: 'wood.installation',  boq_group_key: 'installation', pricing_method: 'lump_sum',     name_ar: 'تركيب',              name_en: 'Installation' },
+  ],
+  fire_doors: [
+    { preset_key: 'fire.doors',         boq_group_key: 'materials',    pricing_method: 'unit',         name_ar: 'أبواب مقاومة للحريق', name_en: 'Fire-rated doors' },
+    { preset_key: 'fire.accessories',   boq_group_key: 'accessories',  pricing_method: 'unit',         name_ar: 'إكسسوارات',         name_en: 'Accessories' },
+    { preset_key: 'fire.installation',  boq_group_key: 'installation', pricing_method: 'lump_sum',     name_ar: 'تركيب',              name_en: 'Installation' },
+  ],
+  iron_doors_windows: [
+    { preset_key: 'iron.material',      boq_group_key: 'materials',    pricing_method: 'kilogram',     name_ar: 'حديد (وزن)',         name_en: 'Iron material (weight)' },
+    { preset_key: 'iron.fabrication',   boq_group_key: 'labor',        pricing_method: 'lump_sum',     name_ar: 'تصنيع',              name_en: 'Fabrication' },
+    { preset_key: 'iron.installation',  boq_group_key: 'installation', pricing_method: 'lump_sum',     name_ar: 'تركيب',              name_en: 'Installation' },
+  ],
+  gates_structures: [
+    { preset_key: 'gates.material',     boq_group_key: 'materials',    pricing_method: 'kilogram',     name_ar: 'مادة حديدية (وزن)',  name_en: 'Steel material (weight)' },
+    { preset_key: 'gates.fabrication',  boq_group_key: 'labor',        pricing_method: 'lump_sum',     name_ar: 'تصنيع',              name_en: 'Fabrication' },
+    { preset_key: 'gates.installation', boq_group_key: 'installation', pricing_method: 'lump_sum',     name_ar: 'تركيب',              name_en: 'Installation' },
+  ],
+  wardrobes_closets: [
+    { preset_key: 'wardrobe.cabinets',     boq_group_key: 'cabinets',     pricing_method: 'linear_meter', name_ar: 'دواليب',          name_en: 'Wardrobes' },
+    { preset_key: 'wardrobe.accessories',  boq_group_key: 'accessories',  pricing_method: 'unit',         name_ar: 'إكسسوارات',       name_en: 'Accessories' },
+    { preset_key: 'wardrobe.installation', boq_group_key: 'installation', pricing_method: 'lump_sum',     name_ar: 'تركيب',            name_en: 'Installation' },
+  ],
+  general: [
+    { preset_key: 'general.materials',    boq_group_key: 'materials',    pricing_method: 'unit',     name_ar: 'مواد',         name_en: 'Materials' },
+    { preset_key: 'general.labor',        boq_group_key: 'labor',        pricing_method: 'lump_sum', name_ar: 'عمالة',        name_en: 'Labor' },
+    { preset_key: 'general.installation', boq_group_key: 'installation', pricing_method: 'lump_sum', name_ar: 'تركيب',         name_en: 'Installation' },
+  ],
+};
+
+/** Return the starter rows for a template category, or general fallback. */
+export function getWorkTypeBoqPresets(category: string | null | undefined): BoqStarterRow[] {
+  const key = (category || 'general').toLowerCase();
+  return WORK_TYPE_BOQ_PRESETS[key] || WORK_TYPE_BOQ_PRESETS.general;
+}
+
+/** Filter starter rows so we don't duplicate ones already present (matched by name). */
+export function dedupeStarterRows<T extends { name_ar?: string | null; name_en?: string | null }>(
+  starters: BoqStarterRow[],
+  existing: T[],
+): BoqStarterRow[] {
+  const seen = new Set(
+    existing
+      .map((e) => (e.name_ar || e.name_en || '').trim().toLowerCase())
+      .filter(Boolean),
+  );
+  return starters.filter((s) => {
+    const ar = s.name_ar.trim().toLowerCase();
+    const en = s.name_en.trim().toLowerCase();
+    return !seen.has(ar) && !seen.has(en);
+  });
+}
