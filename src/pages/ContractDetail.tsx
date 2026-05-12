@@ -195,6 +195,8 @@ const ContractDetail = () => {
   const [previewFileName, setPreviewFileName] = useState<string>('contract.pdf');
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [pdfDiagnostics, setPdfDiagnostics] = useState<ArabicFontDiagnostics | null>(null);
+  const [pdfBackendReport, setPdfBackendReport] = useState<string | null>(null);
+  const [isAnalyzingPdf, setIsAnalyzingPdf] = useState(false);
   const pdfDebugEnabled = (import.meta.env.DEV || import.meta.env.VITE_ENABLE_PDF_DEBUG === 'true') && isAdmin;
   const navigate = useNavigate();
 
@@ -1123,6 +1125,82 @@ const ContractDetail = () => {
     }
   };
 
+  // PDF-AR3: Single-button "Export + Analyze" flow.
+  // 1) Builds the contract PDF (same export pipeline as the user-facing
+  //    Download button) and triggers a local download.
+  // 2) Uploads the bytes to the `verify-pdf-arabic` edge function which
+  //    runs a server-side mojibake scan and returns a pdftotext-style
+  //    report.
+  // 3) Displays the backend report inline in the diagnostics panel.
+  const handleExportAndAnalyzePDF = async () => {
+    if (!contract || isAnalyzingPdf) return;
+    const data = buildPdfPayload();
+    if (!data) return;
+    setIsAnalyzingPdf(true);
+    setPdfBackendReport(null);
+    try {
+      const [{ buildContractPdfForAnalysis }, { getArabicFontDiagnostics, setBackendVerification }] = await Promise.all([
+        import('@/lib/contract-pdf-export'),
+        import('@/lib/pdf-arabic-font'),
+      ]);
+      const { bytes, blob, fileName } = await buildContractPdfForAnalysis(data);
+
+      // Trigger local download so the QA reviewer keeps the same artifact
+      // that was sent to the analyzer.
+      const dlUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = dlUrl; a.download = fileName; document.body.appendChild(a); a.click();
+      a.remove();
+      setTimeout(() => { try { URL.revokeObjectURL(dlUrl); } catch { /* noop */ } }, 1000);
+
+      // Encode bytes → base64 in chunks (avoid call-stack overflow).
+      let binary = '';
+      const chunk = 0x8000;
+      for (let i = 0; i < bytes.length; i += chunk) {
+        binary += String.fromCharCode(...bytes.subarray(i, Math.min(i + chunk, bytes.length)));
+      }
+      const pdfBase64 = btoa(binary);
+
+      const { data: backend, error } = await supabase.functions.invoke('verify-pdf-arabic', {
+        body: { pdfBase64, fileName },
+      });
+      if (error) throw error;
+
+      const status = backend?.status === 'PASS' ? 'PASS' : 'FAIL';
+      setBackendVerification({
+        status,
+        mojibakeDetected: !!backend?.mojibakeDetected,
+        mojibakeCount: Number(backend?.mojibakeCount ?? 0),
+        sample: String(backend?.sample ?? ''),
+        verifiedAt: String(backend?.verifiedAt ?? new Date().toISOString()),
+        source: 'backend',
+        report: typeof backend?.report === 'string' ? backend.report : undefined,
+      });
+      setPdfBackendReport(typeof backend?.report === 'string' ? backend.report : JSON.stringify(backend, null, 2));
+      setPdfDiagnostics(getArabicFontDiagnostics());
+
+      toast({
+        title: status === 'PASS'
+          ? (isRTL ? 'تحليل الـ PDF: ناجح' : 'PDF analysis: PASS')
+          : (isRTL ? 'تحليل الـ PDF: فشل' : 'PDF analysis: FAIL'),
+        description: status === 'PASS'
+          ? (isRTL ? 'لم يُكتشف نص مشوّش، تم تضمين الخط العربي بشكل صحيح.' : 'No mojibake detected; Arabic font embedded correctly.')
+          : (isRTL ? 'تم اكتشاف نص مشوّش (mojibake) في طبقة النص.' : 'Mojibake detected in the text layer.'),
+        variant: status === 'PASS' ? 'default' : 'destructive',
+      });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      setPdfBackendReport(`status: FAIL\nerror: ${message}`);
+      toast({
+        title: isRTL ? 'تعذّر تحليل الـ PDF' : 'PDF analysis failed',
+        description: message,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsAnalyzingPdf(false);
+    }
+  };
+
   const handleClosePreview = () => {
     setPreviewOpen(false);
     if (previewUrl) {
@@ -1428,6 +1506,11 @@ const ContractDetail = () => {
                   <BookOpen className="w-3.5 h-3.5" />{isRTL ? 'اختبار الخط العربي في PDF' : 'Test Arabic PDF Font'}
                 </Button>
               )}
+              {pdfDebugEnabled && (
+                <Button variant="heroOutline" size="sm" disabled={isAnalyzingPdf} className="text-xs border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 gap-1" onClick={handleExportAndAnalyzePDF}>
+                  <ShieldCheck className="w-3.5 h-3.5" />{isAnalyzingPdf ? '…' : (isRTL ? 'تصدير + تحليل' : 'Export + Analyze')}
+                </Button>
+              )}
               <Button variant="heroOutline" size="sm" className="text-xs border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 gap-1" onClick={() => window.print()}>
                 <Printer className="w-3.5 h-3.5" />{isRTL ? 'طباعة' : 'Print'}
               </Button>
@@ -1448,18 +1531,41 @@ const ContractDetail = () => {
             <div className="flex items-center gap-2 font-semibold mb-3">
               <ShieldCheck className="w-4 h-4 text-success" />
               {isRTL ? 'تشخيص الخط العربي للـ PDF' : 'Arabic PDF font diagnostics'}
+              {pdfDiagnostics.lastVerification && (
+                <span className={`ml-auto rounded-md px-2 py-0.5 text-[10px] font-bold ${pdfDiagnostics.lastVerification.status === 'PASS' ? 'bg-success/15 text-success' : 'bg-destructive/15 text-destructive'}`}>
+                  {pdfDiagnostics.lastVerification.status} · {pdfDiagnostics.lastVerification.source}
+                </span>
+              )}
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2 text-muted-foreground">
+              <span>build: {pdfDiagnostics.buildVersion}</span>
+              <span className="lg:col-span-2 truncate" title={pdfDiagnostics.exportPath}>export: {pdfDiagnostics.exportPath}</span>
               <span>font: {pdfDiagnostics.registeredFontName}</span>
               <span>source: {pdfDiagnostics.fontSource}</span>
               <span>content-type: {pdfDiagnostics.contentType}</span>
               <span>magic: {pdfDiagnostics.magicBytes}</span>
               <span>TTF/OTF: {String(pdfDiagnostics.isTrueType)}</span>
-              <span>fallback: {String(pdfDiagnostics.fallbackFontUsed)}</span>
+              <span className={pdfDiagnostics.fallbackFontUsed ? 'text-destructive font-semibold' : ''}>
+                fallback: {String(pdfDiagnostics.fallbackFontUsed)}
+              </span>
               <span>normalization: {String(pdfDiagnostics.normalizationRan)}</span>
               <span>loaded: {pdfDiagnostics.loadedAt ?? '-'}</span>
               <span>generated: {pdfDiagnostics.lastGeneratedPdfAt ?? '-'}</span>
+              {pdfDiagnostics.lastVerification && (
+                <>
+                  <span>verified: {pdfDiagnostics.lastVerification.verifiedAt}</span>
+                  <span>mojibake: {pdfDiagnostics.lastVerification.mojibakeCount}</span>
+                  <span className="lg:col-span-3 truncate" title={pdfDiagnostics.lastVerification.sample}>
+                    sample: {pdfDiagnostics.lastVerification.sample || '-'}
+                  </span>
+                </>
+              )}
             </div>
+            {pdfBackendReport && (
+              <pre className="mt-3 max-h-56 overflow-auto rounded-md bg-muted/40 p-2 text-[11px] leading-snug text-foreground whitespace-pre-wrap break-all" dir="ltr">
+{pdfBackendReport}
+              </pre>
+            )}
           </div>
         )}
         {/* ─── Quick Stats ─── */}
