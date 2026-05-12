@@ -293,7 +293,11 @@ const MembershipWidget = React.memo(({ isRTL, userId }: { isRTL: boolean; userId
                   <span>{isRTL ? `${daysRemaining} يوم متبقي` : `${daysRemaining} days left`}</span>
                   <span>{Math.round((daysRemaining / (sub?.billing_cycle === 'yearly' ? 365 : 30)) * 100)}%</span>
                 </div>
-                <Progress value={Math.max(5, (daysRemaining / (sub?.billing_cycle === 'yearly' ? 365 : 30)) * 100)} className="h-1 mt-0.5" />
+                <Progress
+                  value={Math.max(5, (daysRemaining / (sub?.billing_cycle === 'yearly' ? 365 : 30)) * 100)}
+                  className="h-1 mt-0.5"
+                  aria-label={isRTL ? `${daysRemaining} يوم متبقي من الاشتراك` : `${daysRemaining} days left in subscription`}
+                />
               </>
             )}
           </div>
@@ -907,7 +911,11 @@ const ProviderDashboardView = React.memo(({ isRTL, user, profile }: { isRTL: boo
                 <div key={star} className="flex items-center gap-1.5 text-[10px]">
                   <span className="w-2.5 text-muted-foreground">{star}</span>
                   <Star className="w-2.5 h-2.5 text-accent fill-accent" />
-                  <Progress value={pct} className="flex-1 h-1.5" />
+                  <Progress
+                    value={pct}
+                    className="flex-1 h-1.5"
+                    aria-label={isRTL ? `${star} نجوم: ${count} تقييم` : `${star} stars: ${count} reviews`}
+                  />
                   <span className="w-4 text-end text-muted-foreground text-[9px]">{count}</span>
                 </div>
               );
