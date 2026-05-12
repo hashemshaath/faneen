@@ -37,6 +37,12 @@ import { template as membershipSubscriptionCancelled } from './membership-subscr
 import { template as contractPaymentRecorded } from './contract-payment-recorded.tsx'
 import { template as contractPaymentDue } from './contract-payment-due.tsx'
 import { template as contractMilestoneCompleted } from './contract-milestone-completed.tsx'
+import { template as contractAmendmentCreated } from './contract-amendment-created.tsx'
+import { template as contractAmendmentPendingApproval } from './contract-amendment-pending-approval.tsx'
+import { template as contractAmendmentApproved } from './contract-amendment-approved.tsx'
+import { template as contractAmendmentApplied } from './contract-amendment-applied.tsx'
+import { template as contractAmendmentRejected } from './contract-amendment-rejected.tsx'
+import { template as contractAmendmentCancelled } from './contract-amendment-cancelled.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'booking-confirmation': bookingConfirmation,
@@ -67,4 +73,10 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'contract-payment-recorded': contractPaymentRecorded,
   'contract-payment-due': contractPaymentDue,
   'contract-milestone-completed': contractMilestoneCompleted,
+  'contract-amendment-created': contractAmendmentCreated,
+  'contract-amendment-pending-approval': contractAmendmentPendingApproval,
+  'contract-amendment-approved': contractAmendmentApproved,
+  'contract-amendment-applied': contractAmendmentApplied,
+  'contract-amendment-rejected': contractAmendmentRejected,
+  'contract-amendment-cancelled': contractAmendmentCancelled,
 }

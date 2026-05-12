@@ -19,6 +19,7 @@ import { Footer } from '@/components/layout/Footer';
 import type { ImportedMeasurement } from '@/lib/contract-pdf-export';
 import { getContractStatusMeta, isContractLockedByStatus } from '@/lib/contract-statuses';
 import { mapContractLockError } from '@/lib/contract-errors';
+import { dispatchAmendmentEvent } from '@/lib/amendment-notify';
 import { calculateVatBreakdown } from '@/lib/contract-financials';
 import { PaymentScheduleGenerator } from '@/components/contract/PaymentScheduleGenerator';
 import { ContractFinancialCoverage } from '@/components/contract/ContractFinancialCoverage';
@@ -603,7 +604,7 @@ const ContractDetail = () => {
         newEndDate = amForm.new_end_date;
       }
       const oldTotal = contract?.total_amount != null ? Number(contract.total_amount) : null;
-      const { error } = await supabase.from('contract_amendments').insert({
+      const { data: inserted, error } = await supabase.from('contract_amendments').insert({
         contract_id: id!,
         requested_by: user!.id,
         amendment_type: amForm.amendment_type,
@@ -617,14 +618,16 @@ const ContractDetail = () => {
         old_total: oldTotal,
         amount_delta: newAmount != null && oldTotal != null ? newAmount - oldTotal : null,
         status: 'pending',
-      });
+      }).select('id').single();
       if (error) throw error;
+      return inserted?.id as string | undefined;
     },
-    onSuccess: () => {
+    onSuccess: (newAmendmentId) => {
       queryClient.invalidateQueries({ queryKey: ['contract-amendments', id] });
       setShowAmendmentForm(false);
       setAmForm({ title_ar: '', title_en: '', description_ar: '', description_en: '', reason: '', amendment_type: 'scope_change', new_amount: '', new_end_date: '' });
       toast({ title: isRTL ? 'تم إرسال طلب الملحق' : 'Amendment request sent' });
+      if (newAmendmentId) dispatchAmendmentEvent(newAmendmentId, 'created');
     },
     onError: (err: unknown) => toast({ title: err instanceof Error ? err.message : 'Error', variant: 'destructive' }),
   });
@@ -633,12 +636,14 @@ const ContractDetail = () => {
     mutationFn: async (amendment: { id: string }) => {
       const { error } = await supabase.rpc('approve_contract_amendment', { _amendment_id: amendment.id });
       if (error) throw error;
+      return amendment.id;
     },
-    onSuccess: () => {
+    onSuccess: (amId) => {
       queryClient.invalidateQueries({ queryKey: ['contract-amendments', id] });
       queryClient.invalidateQueries({ queryKey: ['contract', id] });
       queryClient.invalidateQueries({ queryKey: ['amendment-audit'] });
       toast({ title: isRTL ? 'تمت الموافقة على الملحق' : 'Amendment approved' });
+      if (amId) dispatchAmendmentEvent(amId, 'approved');
     },
     onError: (err: unknown) => toast({ title: mapAmendmentError(err, isRTL), variant: 'destructive' }),
   });
@@ -647,11 +652,13 @@ const ContractDetail = () => {
     mutationFn: async ({ id: amId, reason }: { id: string; reason: string }) => {
       const { error } = await supabase.rpc('reject_contract_amendment', { _amendment_id: amId, _reason: reason });
       if (error) throw error;
+      return amId;
     },
-    onSuccess: () => {
+    onSuccess: (amId) => {
       queryClient.invalidateQueries({ queryKey: ['contract-amendments', id] });
       queryClient.invalidateQueries({ queryKey: ['amendment-audit'] });
       toast({ title: isRTL ? 'تم رفض طلب التعديل' : 'Amendment rejected' });
+      if (amId) dispatchAmendmentEvent(amId, 'rejected');
     },
     onError: (err: unknown) => toast({ title: mapAmendmentError(err, isRTL), variant: 'destructive' }),
   });
@@ -660,11 +667,13 @@ const ContractDetail = () => {
     mutationFn: async (amId: string) => {
       const { error } = await supabase.rpc('cancel_contract_amendment', { _amendment_id: amId });
       if (error) throw error;
+      return amId;
     },
-    onSuccess: () => {
+    onSuccess: (amId) => {
       queryClient.invalidateQueries({ queryKey: ['contract-amendments', id] });
       queryClient.invalidateQueries({ queryKey: ['amendment-audit'] });
       toast({ title: isRTL ? 'تم إلغاء طلب التعديل' : 'Amendment cancelled' });
+      if (amId) dispatchAmendmentEvent(amId, 'cancelled');
     },
     onError: (err: unknown) => toast({ title: mapAmendmentError(err, isRTL), variant: 'destructive' }),
   });
@@ -688,6 +697,7 @@ const ContractDetail = () => {
           ? (isRTL ? 'تم تحديث الدفعات المعلقة وفق القيمة الجديدة.' : 'Pending payments were updated to reflect the new amount.')
           : undefined,
       });
+      if (args?.amId) dispatchAmendmentEvent(args.amId, 'applied');
     },
     onError: (err: unknown) => toast({ title: mapAmendmentError(err, isRTL), variant: 'destructive' }),
   });
