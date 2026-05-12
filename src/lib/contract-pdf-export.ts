@@ -184,7 +184,14 @@ export interface ContractExportData {
   verifyOrigin?: string;
 }
 
-export const exportContractPDF = async (data: ContractExportData) => {
+/**
+ * PDF-QA1: Pure builder. Constructs the contract PDF document and returns
+ * the jsPDF instance WITHOUT triggering a browser download. Used by both
+ * the user-facing `exportContractPDF` wrapper and automated test suites
+ * (which inspect `doc.output('text')` for content + privacy assertions).
+ * No user-visible behavior change.
+ */
+export const buildContractPDF = async (data: ContractExportData) => {
   const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
     import('jspdf'),
     import('jspdf-autotable'),
