@@ -376,42 +376,130 @@ const SectorCity: React.FC = () => {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filtered.map((b) => (
-                <Card key={b.id} className="hover-lift">
-                  <CardContent className="p-4">
-                    <Link to={`/${b.username}`} className="flex items-start gap-3">
-                      <div className="h-12 w-12 rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0">
-                        {b.logo_url ? (
-                          <img src={b.logo_url} alt={b.name_ar} className="h-full w-full object-cover" loading="lazy" />
-                        ) : (
-                          <Building2 className="h-5 w-5 text-muted-foreground" />
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5">
-                          <h3 className="font-semibold truncate">
-                            {language === 'ar' ? b.name_ar : (b.name_en || b.name_ar)}
-                          </h3>
-                          {b.is_verified && <VerifiedBadge size="xs" />}
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-0.5 inline-flex items-center gap-1">
-                          <MapPin className="h-3 w-3" />
-                          {language === 'ar' ? (b.cities?.name_ar || cityName) : (b.cities?.name_en || cityName)}
-                        </p>
-                        {Number(b.rating_avg ?? 0) > 0 && (
-                          <p className="text-xs mt-1 inline-flex items-center gap-1">
-                            <Star className="h-3 w-3 text-amber-500" />
-                            <span className="tech-content">{Number(b.rating_avg).toFixed(1)}</span>
-                            <span className="text-muted-foreground tech-content">({b.rating_count ?? 0})</span>
-                          </p>
-                        )}
-                      </div>
-                    </Link>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            <>
+              <h2 className="text-xl md:text-2xl font-bold mb-4 inline-flex items-center gap-2">
+                <Trophy className="h-5 w-5 text-amber-500" />
+                {isRTL ? `أفضل ${top10.length} مزودي ${meta.name} ${cityIn}` : `Top ${top10.length} ${meta.name} providers ${cityIn}`}
+              </h2>
+              <ol className="space-y-3 mb-6">
+                {top10.map((b, i) => {
+                  const tier = tierLabel(b.membership_tier);
+                  const dispName = language === 'ar' ? b.name_ar : (b.name_en || b.name_ar);
+                  const desc = language === 'ar' ? b.short_description_ar : (b.short_description_en || b.short_description_ar);
+                  const callPhone = b.mobile || b.phone;
+                  const rankCls = i === 0
+                    ? 'bg-amber-500/15 text-amber-600 ring-2 ring-amber-500/30'
+                    : i === 1 ? 'bg-zinc-300/30 text-zinc-700 dark:text-zinc-300 ring-2 ring-zinc-400/30'
+                    : i === 2 ? 'bg-orange-700/15 text-orange-700 dark:text-orange-400 ring-2 ring-orange-700/30'
+                    : 'bg-muted text-muted-foreground';
+                  return (
+                    <li key={b.id}>
+                      <Card className="hover-lift overflow-hidden">
+                        <CardContent className="p-4 md:p-5 flex flex-col md:flex-row gap-4 md:items-center">
+                          <div className="flex items-center gap-3 md:gap-4 flex-1 min-w-0">
+                            <div className={`shrink-0 h-10 w-10 rounded-full grid place-items-center font-bold text-sm tech-content ${rankCls}`}>#{i + 1}</div>
+                            <Link to={`/${b.username}`} className="h-14 w-14 md:h-16 md:w-16 rounded-xl bg-muted flex items-center justify-center overflow-hidden shrink-0">
+                              {b.logo_url ? (
+                                <img src={b.logo_url} alt={dispName} width={64} height={64} loading={i < 4 ? 'eager' : 'lazy'} decoding="async" className="h-full w-full object-cover" />
+                              ) : (
+                                <Building2 className="h-6 w-6 text-muted-foreground" />
+                              )}
+                            </Link>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <h3 className="font-semibold text-base md:text-lg truncate">
+                                  <Link to={`/${b.username}`} className="hover:underline">{dispName}</Link>
+                                </h3>
+                                {b.is_verified && <VerifiedBadge size="xs" />}
+                                {tier && (
+                                  <Badge variant="outline" className="gap-1 h-5 text-[10px] border-amber-500/40 text-amber-700 dark:text-amber-400">
+                                    <Crown className="h-3 w-3" />{tier}
+                                  </Badge>
+                                )}
+                              </div>
+                              {desc && <p className="text-xs md:text-sm text-muted-foreground mt-1 line-clamp-2">{desc}</p>}
+                              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-xs">
+                                {Number(b.rating_avg ?? 0) > 0 && (
+                                  <span className="inline-flex items-center gap-1">
+                                    <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
+                                    <span className="tech-content font-medium">{Number(b.rating_avg).toFixed(1)}</span>
+                                    <span className="text-muted-foreground tech-content">({b.rating_count ?? 0})</span>
+                                  </span>
+                                )}
+                                <span className="inline-flex items-center gap-1 text-muted-foreground">
+                                  <MapPin className="h-3.5 w-3.5" />
+                                  {language === 'ar' ? (b.cities?.name_ar || cityName) : (b.cities?.name_en || cityName)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex flex-col sm:flex-row md:flex-col gap-2 md:w-auto w-full md:min-w-[180px]">
+                            <Button asChild size="sm" className="w-full">
+                              <Link to={`/${b.username}?ref=top10&action=quote`}>
+                                <MessageSquare className="h-4 w-4 me-1.5" />
+                                {isRTL ? 'اطلب سعراً' : 'Get quote'}
+                              </Link>
+                            </Button>
+                            <Button asChild size="sm" variant="outline" className="w-full">
+                              <Link to={`/${b.username}?ref=top10&action=book`}>
+                                <CalendarCheck className="h-4 w-4 me-1.5" />
+                                {isRTL ? 'احجز' : 'Book'}
+                              </Link>
+                            </Button>
+                            {callPhone && (
+                              <Button asChild size="sm" variant="ghost" className="w-full">
+                                <a href={`tel:${callPhone}`}>
+                                  <Phone className="h-4 w-4 me-1.5" />
+                                  {isRTL ? 'اتصل' : 'Call'}
+                                </a>
+                              </Button>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </li>
+                  );
+                })}
+              </ol>
+              {rest.length > 0 && (
+                <details className="mb-4 group">
+                  <summary className="cursor-pointer text-sm font-medium text-primary hover:underline list-none inline-flex items-center gap-1">
+                    <span>{isRTL ? `عرض ${rest.length} مزوداً إضافياً ${cityIn}` : `Show ${rest.length} more providers ${cityIn}`}</span>
+                    <span className="group-open:rotate-180 transition">▾</span>
+                  </summary>
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-4">
+                    {rest.map((b) => (
+                      <Card key={b.id} className="hover-lift">
+                        <CardContent className="p-3">
+                          <Link to={`/${b.username}`} className="flex items-start gap-3">
+                            <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0">
+                              {b.logo_url ? (
+                                <img src={b.logo_url} alt={b.name_ar} width={40} height={40} className="h-full w-full object-cover" loading="lazy" decoding="async" />
+                              ) : (
+                                <Building2 className="h-4 w-4 text-muted-foreground" />
+                              )}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-1.5">
+                                <h3 className="font-medium text-sm truncate">{language === 'ar' ? b.name_ar : (b.name_en || b.name_ar)}</h3>
+                                {b.is_verified && <VerifiedBadge size="xs" />}
+                              </div>
+                              {Number(b.rating_avg ?? 0) > 0 && (
+                                <p className="text-xs mt-0.5 inline-flex items-center gap-1">
+                                  <Star className="h-3 w-3 text-amber-500" />
+                                  <span className="tech-content">{Number(b.rating_avg).toFixed(1)}</span>
+                                  <span className="text-muted-foreground tech-content">({b.rating_count ?? 0})</span>
+                                </p>
+                              )}
+                            </div>
+                          </Link>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </details>
+              )}
+            </>
           )}
 
           {/* Services in this sector */}
