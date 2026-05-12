@@ -4,19 +4,27 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Card, CardContent } from '@/components/ui/card';
-import { Briefcase, MapPin, Calendar } from 'lucide-react';
+import { Briefcase, MapPin, Calendar, Building2, ArrowLeft, ArrowRight } from 'lucide-react';
+import { SA_CITIES } from '@/lib/sa-cities';
+import type { SectorSlug } from '@/lib/sector-keywords';
 
 interface Props {
   sectorName: string;
+  /** Sector slug — used to deep-link the "more in sector" CTA. */
+  sectorSlug?: SectorSlug;
   categoryIds: string[];
 }
 
 /**
- * Renders up to 6 real, completed projects in this sector. Pulled from
- * `public.projects` filtered by category_id, only published rows.
+ * Up to 6 real, completed projects in this sector. Each card now exposes
+ * THREE separate internal links to maximize session depth:
+ *   - cover/title → /projects/:id (project detail)
+ *   - business name → /:username (provider profile)
+ *   - city → /sectors/:slug/:city when slug is known, else /search?city=…
  */
-export const SectorProjectExamples: React.FC<Props> = ({ sectorName, categoryIds }) => {
+export const SectorProjectExamples: React.FC<Props> = ({ sectorName, sectorSlug, categoryIds }) => {
   const { isRTL, language } = useLanguage();
+  const Arrow = isRTL ? ArrowLeft : ArrowRight;
 
   const { data: projects = [], isLoading } = useQuery({
     queryKey: ['sector-projects', categoryIds],
@@ -45,8 +53,12 @@ export const SectorProjectExamples: React.FC<Props> = ({ sectorName, categoryIds
             {isRTL ? `أمثلة أعمال ${sectorName}` : `${sectorName} project examples`}
           </h2>
         </div>
-        <Link to="/projects" className="text-xs text-primary hover:underline">
-          {isRTL ? 'كل الأعمال' : 'All projects'}
+        <Link
+          to={sectorSlug ? `/projects?sector=${sectorSlug}` : '/projects'}
+          className="text-xs text-primary hover:underline inline-flex items-center gap-1"
+        >
+          {isRTL ? `كل أعمال ${sectorName}` : `All ${sectorName} work`}
+          <Arrow className="w-3 h-3" />
         </Link>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -54,9 +66,17 @@ export const SectorProjectExamples: React.FC<Props> = ({ sectorName, categoryIds
           const biz = p.businesses as { username?: string; name_ar?: string; name_en?: string | null } | null;
           const city = p.cities as { name_ar?: string; name_en?: string | null } | null;
           const title = language === 'ar' ? p.title_ar : (p.title_en || p.title_ar);
+          const citySlug = city?.name_en
+            ? SA_CITIES.find((c) => c.nameEn.toLowerCase() === city.name_en!.toLowerCase())?.slug
+            : null;
+          const cityHref = citySlug && sectorSlug
+            ? `/sectors/${sectorSlug}/${citySlug}`
+            : null;
+
           return (
-            <Link key={p.id} to={biz?.username ? `/${biz.username}` : '/projects'} className="block group">
-              <Card className="hover-lift overflow-hidden h-full">
+            <Card key={p.id} className="hover-lift overflow-hidden h-full flex flex-col">
+              {/* Cover + title → project detail */}
+              <Link to={`/projects/${p.id}`} className="block group">
                 <div className="aspect-[16/11] bg-muted overflow-hidden">
                   {p.cover_image_url ? (
                     <img
@@ -71,32 +91,51 @@ export const SectorProjectExamples: React.FC<Props> = ({ sectorName, categoryIds
                     </div>
                   )}
                 </div>
-                <CardContent className="p-3">
+              </Link>
+
+              <CardContent className="p-3 flex-1 flex flex-col">
+                <Link to={`/projects/${p.id}`} className="group">
                   <h3 className="font-heading font-bold text-sm text-foreground line-clamp-2 group-hover:text-gold transition-colors">
                     {title}
                   </h3>
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-[11px] text-muted-foreground">
-                    {biz?.name_ar && (
-                      <span className="line-clamp-1">
-                        {language === 'ar' ? biz.name_ar : (biz.name_en || biz.name_ar)}
-                      </span>
-                    )}
-                    {city && (
-                      <span className="flex items-center gap-1">
+                </Link>
+
+                {/* Separate inline links for provider + city + completion year */}
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-[11px] text-muted-foreground">
+                  {biz?.username && biz?.name_ar && (
+                    <Link
+                      to={`/${biz.username}`}
+                      className="inline-flex items-center gap-1 hover:text-primary hover:underline line-clamp-1"
+                    >
+                      <Building2 className="w-3 h-3" />
+                      {language === 'ar' ? biz.name_ar : (biz.name_en || biz.name_ar)}
+                    </Link>
+                  )}
+                  {city && (
+                    cityHref ? (
+                      <Link
+                        to={cityHref}
+                        className="inline-flex items-center gap-1 hover:text-primary hover:underline"
+                      >
+                        <MapPin className="w-3 h-3" />
+                        {language === 'ar' ? city.name_ar : (city.name_en || city.name_ar)}
+                      </Link>
+                    ) : (
+                      <span className="inline-flex items-center gap-1">
                         <MapPin className="w-3 h-3" />
                         {language === 'ar' ? city.name_ar : (city.name_en || city.name_ar)}
                       </span>
-                    )}
-                    {p.completion_date && (
-                      <span className="flex items-center gap-1 tech-content">
-                        <Calendar className="w-3 h-3" />
-                        {new Date(p.completion_date).getFullYear()}
-                      </span>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
+                    )
+                  )}
+                  {p.completion_date && (
+                    <span className="inline-flex items-center gap-1 tech-content">
+                      <Calendar className="w-3 h-3" />
+                      {new Date(p.completion_date).getFullYear()}
+                    </span>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           );
         })}
       </div>
