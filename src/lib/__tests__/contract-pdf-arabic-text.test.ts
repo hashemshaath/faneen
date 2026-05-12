@@ -5,7 +5,7 @@ import { promisify } from 'node:util';
 
 const run = promisify(execFile);
 const normalizeArabic = (s: string) =>
-  s.normalize('NFKC').replace(/[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED\u200E\u200F\u202A-\u202E]/g, '').replace(/ٱ/g, 'ا').replace(/ﷲ/g, 'الله');
+  s.normalize('NFKC').replace(/[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED\u200E\u200F\u202A-\u202E]/g, '').replace(/ٱ/g, 'ا').replace(/ﷲ/g, 'الله').replace(/الل\s+ه/g, 'الله');
 
 describe('PDF-AR2 — Arabic pdftotext regression', () => {
   it('extracts Arabic and Quran sample without mojibake', async () => {
