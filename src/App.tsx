@@ -161,6 +161,7 @@ const AppRoutes = () => (
           <Route path="/terms" element={<Terms />} />
           <Route path="/forbidden" element={<Forbidden />} />
           <Route path="/unsubscribe" element={<Unsubscribe />} />
+          <Route path="/v/c/:number" element={<VerifyContract />} />
           <Route path="/diagnostics" element={<Diagnostics />} />
           <Route path="/for-providers" element={<ForProviders />} />
           <Route path="/join-as-provider" element={<ForProviders />} />
