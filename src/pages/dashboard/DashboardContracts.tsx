@@ -44,6 +44,14 @@ import type { Database } from '@/integrations/supabase/types';
 import { getContractStatusMeta, isContractLockedByStatus } from '@/lib/contract-statuses';
 import { calculateVatBreakdown, calculateLineItemsTotal, calculateMeasurementsTotal } from '@/lib/contract-financials';
 import { calculateLineTotal, formatPricingMethodLabel, formatUnitOfMeasure, SUPPORTED_PRICING_METHODS, type PricingMethod } from '@/lib/contract-pricing';
+import {
+  BOQ_GROUPS,
+  groupLineItemsByBoqGroup,
+  hasMixedPricing,
+  listPricingMethodsUsed,
+  getSuggestedPricingMethod,
+  type BoqGroupKey,
+} from '@/lib/contract-boq';
 
 type ContractRow = Database['public']['Tables']['contracts']['Row'];
 type MilestoneRow = Database['public']['Tables']['contract_milestones']['Row'];
@@ -437,6 +445,7 @@ const DashboardContracts = () => {
     weight_kg: '',
     weight_ton: '',
     amount: '',
+    boq_group_key: 'other' as BoqGroupKey,
   });
   const [maintenanceImages, setMaintenanceImages] = useState<File[]>([]);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -858,6 +867,7 @@ const DashboardContracts = () => {
         pricing_method: lineItemForm.pricing_method,
         unit_of_measure: formatUnitOfMeasure(lineItemForm.pricing_method),
         formula_inputs: fi,
+        boq_group_key: lineItemForm.boq_group_key || 'other',
       });
       if (error) throw error;
       // C6.4a — recompute via RPC.
@@ -870,6 +880,7 @@ const DashboardContracts = () => {
       setLineItemForm({
         name_ar: '', description_ar: '', quantity: '1', unit_price: '', item_type: 'service',
         pricing_method: 'unit', length_mm: '', width_mm: '', height_mm: '', weight_kg: '', weight_ton: '', amount: '',
+        boq_group_key: 'other',
       });
       toast.success(isRTL ? 'تمت إضافة البند وتحديث قيمة العقد' : 'Item added & total updated');
     },
@@ -1929,6 +1940,28 @@ const DashboardContracts = () => {
                                         <Input type="number" min="0" placeholder={isRTL ? 'الكمية' : 'Qty'} value={lineItemForm.quantity} onChange={e => setLineItemForm(f => ({ ...f, quantity: e.target.value }))} dir="ltr" className="h-9 text-xs" />
                                       )}
                                     </div>
+                                    {/* BOQ group selector — auto-suggests pricing method when group has one. */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                      <Select
+                                        value={lineItemForm.boq_group_key}
+                                        onValueChange={(v) => setLineItemForm(f => {
+                                          const suggested = getSuggestedPricingMethod(v) as PricingMethod | undefined;
+                                          // Only auto-apply when user has not customized pricing or is still on default 'unit'.
+                                          const next: typeof f = { ...f, boq_group_key: v as BoqGroupKey };
+                                          if (suggested && SUPPORTED_PRICING_METHODS.includes(suggested) && f.pricing_method === 'unit') {
+                                            next.pricing_method = suggested;
+                                          }
+                                          return next;
+                                        })}
+                                      >
+                                        <SelectTrigger className="h-9 text-xs"><SelectValue placeholder={isRTL ? 'مجموعة البند' : 'BOQ Group'} /></SelectTrigger>
+                                        <SelectContent>
+                                          {BOQ_GROUPS.map(g => (
+                                            <SelectItem key={g.key} value={g.key}>{isRTL ? g.ar : g.en}</SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
                                     {/* Conditional dimension/weight inputs per method */}
                                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                                       {(lineItemForm.pricing_method === 'linear_meter' || lineItemForm.pricing_method === 'square_meter' || lineItemForm.pricing_method === 'cubic_meter') && (
@@ -2024,35 +2057,68 @@ const DashboardContracts = () => {
                                 {/* Line Items List */}
                                 {lineItems.length > 0 && (
                                   <div className="space-y-2">
-                                    <h5 className="text-[10px] font-semibold text-muted-foreground flex items-center gap-1"><ClipboardList className="w-3 h-3" />{isRTL ? 'بنود إضافية' : 'Additional Items'}</h5>
-                                    {lineItems.map((li) => {
+                                    {(() => {
                                       const typeLabels: Record<string, string> = { service: isRTL ? 'خدمة' : 'Service', material: isRTL ? 'مادة' : 'Material', installation: isRTL ? 'تركيب' : 'Install', other: isRTL ? 'أخرى' : 'Other' };
+                                      const groups = groupLineItemsByBoqGroup(lineItems);
+                                      const mixed = hasMixedPricing(lineItems);
+                                      const methodsUsed = listPricingMethodsUsed(lineItems);
                                       return (
-                                        <div key={li.id} className="p-3 rounded-xl bg-card border border-border/30 flex items-center justify-between gap-3 hover:border-primary/20 transition-colors">
-                                          <div className="flex items-center gap-3 min-w-0">
-                                            <Badge variant="secondary" className="text-[8px] shrink-0">{typeLabels[li.item_type] || li.item_type}</Badge>
-                                            <div className="min-w-0">
-                                              <p className="text-xs font-medium truncate">{li.name_ar}</p>
-                                              {li.description_ar && <p className="text-[9px] text-muted-foreground truncate">{li.description_ar}</p>}
-                                            </div>
-                                          </div>
-                                          <div className="flex items-center gap-2">
-                                            <div className="text-end shrink-0">
-                                              <p className="text-[10px] text-muted-foreground">
-                                                {li.pricing_method && li.pricing_method !== 'unit' ? `${formatPricingMethodLabel(li.pricing_method, isRTL ? 'ar' : 'en')} • ` : ''}
-                                                {li.quantity} × {Number(li.unit_price).toLocaleString()}
-                                              </p>
-                                              <p className="text-xs font-bold">{Number(li.total_cost || 0).toLocaleString()} {c.currency_code}</p>
-                                            </div>
-                                            {!locked && isProvider && (
-                                              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/10" onClick={() => deleteLineItemMutation.mutate({ id: li.id, contractId: c.id })}>
-                                                <X className="w-3 h-3" />
-                                              </Button>
+                                        <>
+                                          <div className="flex items-center justify-between flex-wrap gap-2">
+                                            <h5 className="text-[10px] font-semibold text-muted-foreground flex items-center gap-1">
+                                              <ClipboardList className="w-3 h-3" />{isRTL ? 'بنود إضافية' : 'Additional Items'}
+                                            </h5>
+                                            {mixed && (
+                                              <div className="flex items-center gap-1.5 flex-wrap">
+                                                <Badge variant="outline" className="text-[9px] border-accent/40 text-accent">
+                                                  {isRTL ? 'تسعير مختلط' : 'Mixed pricing'}
+                                                </Badge>
+                                                <span className="text-[9px] text-muted-foreground">
+                                                  {methodsUsed.map(m => formatPricingMethodLabel(m, isRTL ? 'ar' : 'en')).join(' • ')}
+                                                </span>
+                                              </div>
                                             )}
                                           </div>
-                                        </div>
+                                          {groups.map((g) => (
+                                            <div key={g.key} className="space-y-1.5">
+                                              <div className="flex items-center justify-between px-2">
+                                                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
+                                                  {isRTL ? g.label_ar : g.label_en}
+                                                </span>
+                                                <span className="text-[10px] font-bold text-accent">
+                                                  {g.subtotal.toLocaleString()} {c.currency_code}
+                                                </span>
+                                              </div>
+                                              {g.items.map((li) => (
+                                                <div key={li.id} className="p-3 rounded-xl bg-card border border-border/30 flex items-center justify-between gap-3 hover:border-primary/20 transition-colors">
+                                                  <div className="flex items-center gap-3 min-w-0">
+                                                    <Badge variant="secondary" className="text-[8px] shrink-0">{typeLabels[li.item_type] || li.item_type}</Badge>
+                                                    <div className="min-w-0">
+                                                      <p className="text-xs font-medium truncate">{li.name_ar}</p>
+                                                      {li.description_ar && <p className="text-[9px] text-muted-foreground truncate">{li.description_ar}</p>}
+                                                    </div>
+                                                  </div>
+                                                  <div className="flex items-center gap-2">
+                                                    <div className="text-end shrink-0">
+                                                      <p className="text-[10px] text-muted-foreground">
+                                                        {li.pricing_method && li.pricing_method !== 'unit' ? `${formatPricingMethodLabel(li.pricing_method, isRTL ? 'ar' : 'en')} • ` : ''}
+                                                        {li.quantity} × {Number(li.unit_price).toLocaleString()}
+                                                      </p>
+                                                      <p className="text-xs font-bold">{Number(li.total_cost || 0).toLocaleString()} {c.currency_code}</p>
+                                                    </div>
+                                                    {!locked && isProvider && (
+                                                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/10" onClick={() => deleteLineItemMutation.mutate({ id: li.id, contractId: c.id })}>
+                                                        <X className="w-3 h-3" />
+                                                      </Button>
+                                                    )}
+                                                  </div>
+                                                </div>
+                                              ))}
+                                            </div>
+                                          ))}
+                                        </>
                                       );
-                                    })}
+                                    })()}
                                   </div>
                                 )}
 
