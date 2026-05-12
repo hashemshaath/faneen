@@ -322,21 +322,42 @@ export const AmendmentHistoryPanel = ({
                     size="sm" variant="outline"
                     className="h-7 text-[10px] gap-1 text-primary border-primary/60"
                     disabled={applying || applyBlocked}
-                    onClick={() => onApply(a.id)}
+                    onClick={() => setConfirmingApplyId(a.id)}
                     title={applyBlocked ? (isRTL ? 'يتعذر التطبيق — راجع الأخطاء أعلاه' : 'Cannot apply — see errors above') : undefined}
                   >
-                    <PlayCircle className="w-3 h-3" />{isRTL ? 'تطبيق على العقد' : 'Apply to contract'}
+                    <PlayCircle className="w-3 h-3" />{isRTL ? 'تطبيق التعديل' : 'Apply amendment'}
                   </Button>
                 )}
               </div>
             )}
 
-            {canApply && !preview && (
-              <div className="rounded-lg border border-warning/40 bg-warning/5 p-2 flex items-start gap-2 text-[10px] text-warning">
-                <AlertTriangle className="w-3 h-3 mt-0.5 shrink-0" />
-                <span>{isRTL
-                  ? 'سيتم تطبيق التعديل على العقد. لا يتم حالياً إعادة توزيع جدول الدفعات تلقائياً.'
-                  : 'This will apply the amendment to the contract. Payment schedule is not automatically redistributed.'}</span>
+            {/* Inline two-step apply confirmation */}
+            {confirmingApplyId === a.id && canApply && (
+              <div className="rounded-lg border border-primary/40 bg-primary/5 p-3 space-y-2">
+                <div className="text-xs text-foreground">
+                  {isRTL
+                    ? 'سيتم تطبيق التعديل على العقد وتحديث الدفعات المعلقة حسب المعاينة أعلاه.'
+                    : 'This will apply the amendment to the contract and update pending payments per the preview above.'}
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm" className="h-7 text-[10px] gap-1"
+                    disabled={applying || applyBlocked}
+                    onClick={() => {
+                      const scheduleAdjustedHint = !!preview && preview.rowDiffs.some(r => r.adjusted);
+                      onApply(a.id, scheduleAdjustedHint);
+                      setConfirmingApplyId(null);
+                    }}
+                  >
+                    <PlayCircle className="w-3 h-3" />{isRTL ? 'تأكيد التطبيق' : 'Confirm apply'}
+                  </Button>
+                  <Button
+                    size="sm" variant="outline" className="h-7 text-[10px]"
+                    onClick={() => setConfirmingApplyId(null)}
+                  >
+                    {isRTL ? 'تراجع' : 'Back'}
+                  </Button>
+                </div>
               </div>
             )}
 
