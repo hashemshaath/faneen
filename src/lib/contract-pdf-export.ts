@@ -301,10 +301,10 @@ export const buildContractPDF = async (data: ContractExportData) => {
     startY: y, body: partiesData, theme: 'plain',
     styles: { fontSize: 9, cellPadding: 3.5, ...rtlStyles, lineColor: BORDER_RGB, lineWidth: 0.2 },
     columnStyles: { 0: { fontStyle: 'bold', cellWidth: 45, textColor: MUTED_RGB } },
-    margin: { left: 15, right: 15 },
+    margin: PDF_TABLE_MARGIN,
     alternateRowStyles: { fillColor: SURFACE2_RGB },
   });
-  y = (doc as any).lastAutoTable.finalY + 12;
+  y = lastTableY(doc, y) + 12;
 
   // ── CT6: Template metadata (compact) ──
   if (data.template) {
@@ -322,10 +322,10 @@ export const buildContractPDF = async (data: ContractExportData) => {
         startY: y, body: rows, theme: 'plain',
         styles: { fontSize: 9, cellPadding: 3.5, ...rtlStyles, lineColor: BORDER_RGB, lineWidth: 0.2 },
         columnStyles: { 0: { fontStyle: 'bold', cellWidth: 55, textColor: MUTED_RGB } },
-        margin: { left: 15, right: 15 },
+        margin: PDF_TABLE_MARGIN,
         alternateRowStyles: { fillColor: SURFACE2_RGB },
       });
-      y = (doc as any).lastAutoTable.finalY + 12;
+      y = lastTableY(doc, y) + 12;
     }
   } else {
     // Legacy contract — single-line note (no section header to avoid noise).
@@ -361,7 +361,7 @@ export const buildContractPDF = async (data: ContractExportData) => {
     startY: y, body: finData, theme: 'plain',
     styles: { fontSize: 9, cellPadding: 3.5, ...rtlStyles, lineColor: BORDER_RGB, lineWidth: 0.2 },
     columnStyles: { 0: { fontStyle: 'bold', cellWidth: 55, textColor: MUTED_RGB } },
-    margin: { left: 15, right: 15 },
+    margin: PDF_TABLE_MARGIN,
     didParseCell: (hookData: any) => {
       if (hookData.row.index === 2) {
         hookData.cell.styles.fontStyle = 'bold';
@@ -369,7 +369,7 @@ export const buildContractPDF = async (data: ContractExportData) => {
       }
     },
   });
-  y = (doc as any).lastAutoTable.finalY + 12;
+  y = lastTableY(doc, y) + 12;
 
   // ── Milestones ──
   if (data.milestones.length > 0) {
@@ -384,11 +384,11 @@ export const buildContractPDF = async (data: ContractExportData) => {
       ]),
       theme: 'grid',
       styles: { fontSize: 8, cellPadding: 3, ...rtlStyles },
-      headStyles: { fillColor: HEADER_RGB, textColor: [255, 255, 255], fontStyle: 'bold' },
+      headStyles: tableHeadStyles(data.isRTL, fontLoaded),
       alternateRowStyles: { fillColor: SURFACE2_RGB },
-      margin: { left: 15, right: 15 },
+      margin: PDF_TABLE_MARGIN,
     });
-    y = (doc as any).lastAutoTable.finalY + 12;
+    y = lastTableY(doc, y) + 12;
     // If milestones carry no financial values, add a neutral note.
     const milestonesHaveAmounts = data.milestones.some((m) => Number(m.amount) > 0);
     if (!milestonesHaveAmounts) {
@@ -433,11 +433,11 @@ export const buildContractPDF = async (data: ContractExportData) => {
       }),
       theme: 'grid',
       styles: { fontSize: 7.5, cellPadding: 2.5, ...rtlStyles },
-      headStyles: { fillColor: HEADER_RGB, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7.5 },
+      headStyles: tableHeadStyles(data.isRTL, fontLoaded, 7.5),
       alternateRowStyles: { fillColor: SURFACE2_RGB },
-      margin: { left: 12, right: 12 },
+      margin: PDF_DENSE_TABLE_MARGIN,
     });
-    y = (doc as any).lastAutoTable.finalY + 10;
+    y = lastTableY(doc, y) + 10;
 
     // Paid / Remaining + Coverage summary using shared helper (single source of truth).
     const coverage = calculateContractCoverage({
@@ -479,7 +479,7 @@ export const buildContractPDF = async (data: ContractExportData) => {
       startY: y, body: summaryRows, theme: 'plain',
       styles: { fontSize: 9, cellPadding: 3.5, ...rtlStyles, lineColor: BORDER_RGB, lineWidth: 0.2 },
       columnStyles: { 0: { fontStyle: 'bold', cellWidth: 65, textColor: MUTED_RGB } },
-      margin: { left: 15, right: 15 },
+      margin: PDF_TABLE_MARGIN,
       didParseCell: (hookData: any) => {
         if (hookData.row.index === 3) {
           hookData.cell.styles.fontStyle = 'bold';
@@ -487,7 +487,7 @@ export const buildContractPDF = async (data: ContractExportData) => {
         }
       },
     });
-    y = (doc as any).lastAutoTable.finalY + 12;
+    y = lastTableY(doc, y) + 12;
   }
 
   // ── Measurements ──
@@ -515,12 +515,12 @@ export const buildContractPDF = async (data: ContractExportData) => {
       ],
       theme: 'grid',
       styles: { fontSize: 7, cellPadding: 2.5, ...rtlStyles },
-      headStyles: { fillColor: HEADER_RGB, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7 },
+      headStyles: tableHeadStyles(data.isRTL, fontLoaded, 7),
       alternateRowStyles: { fillColor: SURFACE2_RGB },
-      footStyles: { fillColor: HIGHLIGHT_RGB, fontStyle: 'bold', fontSize: 7 },
-      margin: { left: 10, right: 10 },
+      footStyles: tableFootStyles(data.isRTL, fontLoaded, 7),
+      margin: PDF_DENSE_TABLE_MARGIN,
     });
-    y = (doc as any).lastAutoTable.finalY + 12;
+    y = lastTableY(doc, y) + 12;
   }
 
   // ── CT6: BOQ Line Items grouped by boq_group_key ──
@@ -598,12 +598,12 @@ export const buildContractPDF = async (data: ContractExportData) => {
         ]],
         theme: 'grid',
         styles: { fontSize: 7, cellPadding: 2.2, ...rtlStyles },
-        headStyles: { fillColor: HEADER_RGB, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7 },
+        headStyles: tableHeadStyles(data.isRTL, fontLoaded, 7),
         alternateRowStyles: { fillColor: SURFACE2_RGB },
-        footStyles: { fillColor: HIGHLIGHT_RGB, fontStyle: 'bold', fontSize: 7 },
-        margin: { left: 10, right: 10 },
+        footStyles: tableFootStyles(data.isRTL, fontLoaded, 7),
+        margin: PDF_DENSE_TABLE_MARGIN,
       });
-      y = (doc as any).lastAutoTable.finalY + 6;
+      y = lastTableY(doc, y) + 6;
     }
 
     // Grand total
@@ -765,11 +765,11 @@ export const buildContractPDF = async (data: ContractExportData) => {
         ]),
         theme: 'grid',
         styles: { fontSize: 7, cellPadding: 2.2, ...rtlStyles },
-        headStyles: { fillColor: HEADER_RGB, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7 },
+        headStyles: tableHeadStyles(data.isRTL, fontLoaded, 7),
         alternateRowStyles: { fillColor: SURFACE2_RGB },
-        margin: { left: 10, right: 10 },
+        margin: PDF_DENSE_TABLE_MARGIN,
       });
-      y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 12;
+      y = lastTableY(doc, y) + 12;
     }
   }
 
@@ -840,9 +840,9 @@ export const buildContractPDF = async (data: ContractExportData) => {
       }),
       theme: 'grid',
       styles: { fontSize: 7, cellPadding: 2.2, ...rtlStyles },
-      headStyles: { fillColor: HEADER_RGB, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7 },
+      headStyles: tableHeadStyles(data.isRTL, fontLoaded, 7),
       alternateRowStyles: { fillColor: SURFACE2_RGB },
-      margin: { left: 10, right: 10 },
+      margin: PDF_DENSE_TABLE_MARGIN,
       didParseCell: (hookData: any) => {
         if (hookData.section !== 'body') return;
         const a = data.amendments![hookData.row.index];
@@ -854,7 +854,7 @@ export const buildContractPDF = async (data: ContractExportData) => {
         }
       },
     });
-    y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 8;
+    y = lastTableY(doc, y) + 8;
 
     // Compact reasons list for amendments that carry a reason — kept short.
     const withReason = data.amendments.filter(a => a.reason && a.reason.trim().length > 0);
@@ -1040,10 +1040,10 @@ export const exportMeasurementsPDF = async (opts: {
     ],
     theme: 'grid',
     styles: { fontSize: 7, cellPadding: 2.5, ...rtlStyles },
-    headStyles: { fillColor: HEADER_RGB, textColor: [255, 255, 255], fontStyle: 'bold' },
+    headStyles: tableHeadStyles(data.isRTL, fontLoaded),
     footStyles: { fillColor: HIGHLIGHT_RGB, fontStyle: 'bold' },
     alternateRowStyles: { fillColor: SURFACE2_RGB },
-    margin: { left: 10, right: 10 },
+    margin: PDF_DENSE_TABLE_MARGIN,
   });
 
   const pages = doc.getNumberOfPages();
