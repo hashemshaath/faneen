@@ -879,6 +879,7 @@ const DashboardContracts = () => {
       setLineItemForm({
         name_ar: '', description_ar: '', quantity: '1', unit_price: '', item_type: 'service',
         pricing_method: 'unit', length_mm: '', width_mm: '', height_mm: '', weight_kg: '', weight_ton: '', amount: '',
+        boq_group_key: 'other',
       });
       toast.success(isRTL ? 'تمت إضافة البند وتحديث قيمة العقد' : 'Item added & total updated');
     },
