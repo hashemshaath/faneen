@@ -341,45 +341,7 @@ const AdminContractTemplates: React.FC = () => {
                             <Badge variant="outline" className={meta?.cls}>{isRTL ? meta?.ar : meta?.en}</Badge>
                             {isCur && <Badge variant="secondary" className="text-[10px]">{isRTL ? 'الحالية' : 'current'}</Badge>}
                           </div>
-                          <div className="flex items-center gap-1">
-                            {v.status === 'draft' && (
-                              <Button size="sm" variant="ghost"
-                                onClick={(e) => { e.stopPropagation(); setVersionStatus.mutate({ id: v.id, status: 'in_review' }); }}>
-                                {isRTL ? 'إرسال للمراجعة' : 'Send to review'}
-                              </Button>
-                            )}
-                            {v.status === 'in_review' && (
-                              <>
-                                <Button size="sm" variant="ghost"
-                                  onClick={(e) => { e.stopPropagation(); setVersionStatus.mutate({ id: v.id, status: 'legal_approved' }); }}>
-                                  {isRTL ? 'اعتماد قانوني' : 'Legal approve'}
-                                </Button>
-                                <Button size="sm" variant="ghost"
-                                  onClick={(e) => { e.stopPropagation(); setVersionStatus.mutate({ id: v.id, status: 'changes_requested' }); }}>
-                                  {isRTL ? 'طلب تعديلات' : 'Request changes'}
-                                </Button>
-                              </>
-                            )}
-                            {v.status === 'legal_approved' && (
-                              <Button size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (window.confirm(isRTL
-                                    ? 'سيتم نشر هذه النسخة وجعلها النسخة الحالية. هل أنت متأكد؟'
-                                    : 'This will publish this version and set it as current. Continue?')) {
-                                    setVersionStatus.mutate({ id: v.id, status: 'published' });
-                                  }
-                                }}>
-                                {isRTL ? 'نشر' : 'Publish'}
-                              </Button>
-                            )}
-                            {(v.status === 'published' || v.status === 'legal_approved') && !isCur && (
-                              <Button size="sm" variant="ghost"
-                                onClick={(e) => { e.stopPropagation(); setVersionStatus.mutate({ id: v.id, status: 'archived' }); }}>
-                                {isRTL ? 'أرشفة' : 'Archive'}
-                              </Button>
-                            )}
-                          </div>
+                          <Scale className="h-3.5 w-3.5 text-muted-foreground" />
                         </button>
                       );
                     })}
@@ -388,6 +350,15 @@ const AdminContractTemplates: React.FC = () => {
                     )}
                   </div>
                 </CardContent></Card>
+
+                {/* Legal Review (CT7) — gated workflow actions */}
+                {selectedVersion && selectedTemplate && (
+                  <LegalReviewPanel
+                    version={selectedVersion}
+                    templateId={selectedTemplate.id}
+                    isRTL={isRTL}
+                  />
+                )}
 
                 {/* Editor tabs */}
                 {selectedVersion && (
