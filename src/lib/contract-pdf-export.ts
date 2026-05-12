@@ -184,7 +184,14 @@ export interface ContractExportData {
   verifyOrigin?: string;
 }
 
-export const exportContractPDF = async (data: ContractExportData) => {
+/**
+ * PDF-QA1: Pure builder. Constructs the contract PDF document and returns
+ * the jsPDF instance WITHOUT triggering a browser download. Used by both
+ * the user-facing `exportContractPDF` wrapper and automated test suites
+ * (which inspect `doc.output('text')` for content + privacy assertions).
+ * No user-visible behavior change.
+ */
+export const buildContractPDF = async (data: ContractExportData) => {
   const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
     import('jspdf'),
     import('jspdf-autotable'),
@@ -913,7 +920,17 @@ export const exportContractPDF = async (data: ContractExportData) => {
     doc.text(new Date().toLocaleDateString(data.isRTL ? 'ar-SA' : 'en-US'), w - 15, h - 5, { align: 'right' });
   }
 
+  return doc;
+};
+
+/**
+ * PDF-QA1: User-facing export wrapper. Builds the document and triggers the
+ * browser download. Kept as the public API so existing callers are unchanged.
+ */
+export const exportContractPDF = async (data: ContractExportData) => {
+  const doc = await buildContractPDF(data);
   doc.save(`contract-${data.contractNumber}.pdf`);
+  return doc;
 };
 
 // ── Export Measurements as PDF ──
