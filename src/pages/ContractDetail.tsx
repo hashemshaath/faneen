@@ -348,6 +348,27 @@ const ContractDetail = () => {
     },
     enabled: !!id && !!user,
   });
+
+  /* CT4 — Fetch template metadata for display (only if contract has a template). */
+  const contractAny = contract as unknown as {
+    template_version_id?: string | null;
+    pricing_method?: string | null;
+    service_category_id?: string | null;
+  } | null | undefined;
+  const templateVersionId = contractAny?.template_version_id ?? null;
+  const { data: templateMeta } = useQuery({
+    queryKey: ['contract-template-meta', templateVersionId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('contract_template_versions')
+        .select('id, version_number, language_precedence, contract_templates!inner(name_ar, name_en, category, slug)')
+        .eq('id', templateVersionId!)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!templateVersionId,
+  });
+
   const acceptMutation = useMutation({
     mutationFn: async () => {
       // C6.4a — go through SECURITY DEFINER RPC instead of direct table update.
@@ -1249,6 +1270,26 @@ const ContractDetail = () => {
           <StatCard icon={ListChecks} label={isRTL ? 'المراحل' : 'Milestones'} value={`${completedMilestones}/${totalMilestones}`} sub={`${progressPct}% ${isRTL ? 'مكتمل' : 'complete'}`} />
           <StatCard icon={CreditCard} label={isRTL ? 'المسدد' : 'Paid'} value={`${paymentsTotals.paid.toLocaleString()}`} sub={`${paymentsTotals.paidCount}/${paymentsTotals.totalCount} ${isRTL ? 'دفعات' : 'payments'}`} />
         </div>
+
+        {/* CT4 — Template metadata (display only) */}
+        {templateMeta && (
+          <div className="rounded-xl border border-border bg-card p-3 sm:p-4 mb-5 sm:mb-6 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs">
+            <div className="flex items-center gap-1.5 font-semibold">
+              <FileText className="w-3.5 h-3.5 text-accent" />
+              {isRTL ? 'القالب الرسمي' : 'Official Template'}
+            </div>
+            <span className="text-muted-foreground">
+              {isRTL ? (templateMeta as any).contract_templates?.name_ar : ((templateMeta as any).contract_templates?.name_en || (templateMeta as any).contract_templates?.name_ar)}
+            </span>
+            <Badge variant="secondary" className="text-[10px]">v{(templateMeta as any).version_number}</Badge>
+            {(templateMeta as any).contract_templates?.category && (
+              <Badge variant="outline" className="text-[10px]">{(templateMeta as any).contract_templates.category}</Badge>
+            )}
+            {contractAny?.pricing_method && (
+              <Badge variant="outline" className="text-[10px] gap-1"><Hash className="w-2.5 h-2.5" />{contractAny.pricing_method}</Badge>
+            )}
+          </div>
+        )}
 
         {/* ─── Milestone Pipeline ─── */}
         {milestones && milestones.length > 0 && (

@@ -6304,6 +6304,10 @@ export type Database = {
       }
     }
     Functions: {
+      _build_template_snapshot_payload: {
+        Args: { _version_id: string }
+        Returns: Json
+      }
       _membership_free_defaults: { Args: never; Returns: Json }
       accept_contract: {
         Args: { _contract_id: string }
@@ -6694,6 +6698,14 @@ export type Database = {
         Returns: Json
       }
       contract_snapshot_hash: { Args: { _snapshot: Json }; Returns: string }
+      create_contract_from_template: {
+        Args: {
+          _payload: Json
+          _pricing_method?: string
+          _template_version_id: string
+        }
+        Returns: string
+      }
       create_notification: {
         Args: {
           _action_url?: string
@@ -7166,6 +7178,14 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      set_contract_template: {
+        Args: {
+          _contract_id: string
+          _pricing_method?: string
+          _template_version_id: string
+        }
+        Returns: string
       }
       set_my_inbox_notification_mute: {
         Args: { _muted: boolean }

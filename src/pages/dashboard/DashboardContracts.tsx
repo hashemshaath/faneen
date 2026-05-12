@@ -51,6 +51,21 @@ type TemplateRow = Database['public']['Tables']['contract_templates']['Row'];
 type AmendmentRow = Database['public']['Tables']['contract_amendments']['Row'];
 type ContractWithRole = ContractRow & { _role: string };
 
+/* CT4 — published template version row used in the contract creation flow. */
+interface PublishedTemplateOption {
+  template_id: string;
+  version_id: string;
+  version_number: number;
+  status: string;
+  slug: string | null;
+  category: string;
+  name_ar: string;
+  name_en: string | null;
+  service_category_id: string | null;
+  pricing_methods: string[];
+  required_field_count: number;
+}
+
 import { FieldAiActions } from '@/components/blog/FieldAiActions';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useNoIndex } from "@/hooks/useNoIndex";
@@ -389,6 +404,9 @@ const DashboardContracts = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<any | null>(null);
   const [templatePreview, setTemplatePreview] = useState<any | null>(null);
+  /* CT4 — Selected published template version + pricing method for new contracts. */
+  const [selectedVersionId, setSelectedVersionId] = useState<string | null>(null);
+  const [selectedPricingMethod, setSelectedPricingMethod] = useState<string | null>(null);
   const [approveConfirm, setApproveConfirm] = useState<any | null>(null);
   const [sendConfirm, setSendConfirm] = useState<any | null>(null);
   const [isExporting, setIsExporting] = useState(false);
@@ -558,6 +576,60 @@ const DashboardContracts = () => {
     },
     enabled: !!user,
   });
+
+  /* CT4 — Published template versions only (for contract creation selector). */
+  const { data: publishedVersions = [] } = useQuery<PublishedTemplateOption[]>({
+    queryKey: ['contract-template-versions', 'published'],
+    queryFn: async () => {
+      const { data: versions, error } = await supabase
+        .from('contract_template_versions')
+        .select('id, version_number, status, template_id, contract_templates!inner(id, slug, category, name_ar, name_en, service_category_id, is_active)')
+        .eq('status', 'published')
+        .order('version_number', { ascending: false });
+      if (error) throw error;
+      const versionIds = (versions ?? []).map((v: any) => v.id);
+      const { data: rules } = versionIds.length
+        ? await supabase.from('contract_template_pricing_rules').select('version_id, method').in('version_id', versionIds)
+        : { data: [] as { version_id: string; method: string }[] };
+      const { data: fields } = versionIds.length
+        ? await supabase.from('contract_template_required_fields').select('version_id').in('version_id', versionIds)
+        : { data: [] as { version_id: string }[] };
+      const rulesByVer = new Map<string, string[]>();
+      (rules ?? []).forEach((r: any) => {
+        const arr = rulesByVer.get(r.version_id) ?? [];
+        arr.push(r.method);
+        rulesByVer.set(r.version_id, arr);
+      });
+      const fieldsByVer = new Map<string, number>();
+      (fields ?? []).forEach((f: any) => fieldsByVer.set(f.version_id, (fieldsByVer.get(f.version_id) ?? 0) + 1));
+      return (versions ?? [])
+        .filter((v: any) => v.contract_templates?.is_active !== false)
+        .map((v: any): PublishedTemplateOption => ({
+          template_id: v.template_id,
+          version_id: v.id,
+          version_number: v.version_number,
+          status: v.status,
+          slug: v.contract_templates?.slug ?? null,
+          category: v.contract_templates?.category ?? 'general',
+          name_ar: v.contract_templates?.name_ar ?? '',
+          name_en: v.contract_templates?.name_en ?? null,
+          service_category_id: v.contract_templates?.service_category_id ?? null,
+          pricing_methods: rulesByVer.get(v.id) ?? [],
+          required_field_count: fieldsByVer.get(v.id) ?? 0,
+        }));
+    },
+    enabled: !!user,
+  });
+
+  /* CT4 — Default to General template when none selected. */
+  const generalVersion = useMemo(
+    () => publishedVersions.find(v => v.slug === 'general' || v.category === 'general') ?? publishedVersions[0] ?? null,
+    [publishedVersions],
+  );
+  const effectiveVersion = useMemo(
+    () => publishedVersions.find(v => v.version_id === selectedVersionId) ?? generalVersion,
+    [publishedVersions, selectedVersionId, generalVersion],
+  );
 
   const { data: businessId } = useQuery({
     queryKey: ['my-business-id-contracts', user?.id],
@@ -886,13 +958,24 @@ const DashboardContracts = () => {
         const { error } = await supabase.from('contracts').update(payload).eq('id', editingId);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from('contracts').insert(payload);
+        // CT4 — Always create new contracts via the SECURITY DEFINER RPC so the
+        // template snapshot is frozen atomically. Falls back to General v1.
+        const versionId = effectiveVersion?.version_id ?? null;
+        if (!versionId) {
+          throw new Error(isRTL ? 'لا يوجد قالب عقد منشور' : 'No published contract template available');
+        }
+        const { error } = await supabase.rpc('create_contract_from_template', {
+          _payload: payload,
+          _template_version_id: versionId,
+          _pricing_method: selectedPricingMethod,
+        });
         if (error) throw error;
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-contracts'] });
       setViewSection('list'); setForm(emptyForm); setEditingId(null);
+      setSelectedVersionId(null); setSelectedPricingMethod(null); setSelectedTemplate(null);
       toast.success(editingId ? (isRTL ? 'تم تحديث العقد' : 'Contract updated') : (isRTL ? 'تم إنشاء العقد' : 'Contract created'));
     },
     onError: (err: Error) => toast.error(err.message),
@@ -1284,6 +1367,57 @@ const DashboardContracts = () => {
                   <Label className="text-xs font-semibold flex items-center gap-1.5"><Mail className="w-3.5 h-3.5 text-accent" />{isRTL ? 'بريد العميل' : 'Client Email'} <span className="text-destructive">*</span></Label>
                   <Input type="email" value={form.client_email} onChange={e => setForm({ ...form, client_email: e.target.value })} placeholder="client@email.com" dir="ltr" className="h-10" />
                   <p className="text-[9px] text-muted-foreground">{isRTL ? 'أدخل البريد الإلكتروني المسجل للعميل' : 'Enter the registered email of the client'}</p>
+                </div>
+              )}
+
+              {/* CT4 — Template selector (new contracts only) */}
+              {!editingId && publishedVersions.length > 0 && (
+                <div className="p-4 rounded-xl border border-border/40 bg-muted/20 space-y-3">
+                  <div className="flex items-center gap-1.5">
+                    <BookOpen className="w-3.5 h-3.5 text-primary" />
+                    <Label className="text-xs font-semibold">{isRTL ? 'قالب العقد الرسمي' : 'Official Contract Template'}</Label>
+                    {effectiveVersion && (
+                      <Badge variant="secondary" className="text-[9px] gap-0.5">v{effectiveVersion.version_number}</Badge>
+                    )}
+                  </div>
+                  <Select
+                    value={effectiveVersion?.version_id ?? ''}
+                    onValueChange={(v) => { setSelectedVersionId(v); setSelectedPricingMethod(null); }}
+                  >
+                    <SelectTrigger className="h-10 text-xs"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {publishedVersions.map(v => {
+                        const cfg = templateCategoryConfig[v.category];
+                        const label = isRTL ? v.name_ar : (v.name_en || v.name_ar);
+                        const catLabel = cfg ? cfg[isRTL ? 'ar' : 'en'] : v.category;
+                        return (
+                          <SelectItem key={v.version_id} value={v.version_id} className="text-xs">
+                            {label} · {catLabel} · v{v.version_number}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                  {effectiveVersion && effectiveVersion.pricing_methods.length > 0 && (
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] text-muted-foreground">{isRTL ? 'طريقة التسعير' : 'Pricing Method'}</Label>
+                      <Select value={selectedPricingMethod ?? ''} onValueChange={(v) => setSelectedPricingMethod(v || null)}>
+                        <SelectTrigger className="h-9 text-xs"><SelectValue placeholder={isRTL ? 'اختياري' : 'Optional'} /></SelectTrigger>
+                        <SelectContent>
+                          {effectiveVersion.pricing_methods.map(m => (
+                            <SelectItem key={m} value={m} className="text-xs">{m}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                  {effectiveVersion && effectiveVersion.required_field_count > 0 && (
+                    <p className="text-[10px] text-warning bg-warning/10 border border-warning/20 rounded-lg p-2">
+                      {isRTL
+                        ? `هذا القالب يحتوي على ${effectiveVersion.required_field_count} حقل مطلوب سيتم دعمها بالكامل في CT5.`
+                        : `This template has ${effectiveVersion.required_field_count} required fields — full support arrives in CT5.`}
+                    </p>
+                  )}
                 </div>
               )}
 
