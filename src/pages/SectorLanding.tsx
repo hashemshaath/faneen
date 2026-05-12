@@ -145,22 +145,48 @@ const SectorLanding: React.FC = () => {
     [filtered, page],
   );
 
+  // ── Selected city (from filter) — drives city-aware sections + meta ───
+  const selectedCity = useMemo(() => {
+    if (cityId === 'all') return null;
+    return cities.find((c) => c.id === cityId) ?? null;
+  }, [cityId, cities]);
+  const selectedCityName = selectedCity
+    ? (language === 'ar' ? selectedCity.name_ar : (selectedCity.name_en || selectedCity.name_ar))
+    : null;
+  const selectedCitySlug = selectedCity?.name_en
+    ? (SA_CITIES.find((sc) => sc.nameEn.toLowerCase() === selectedCity.name_en!.toLowerCase())?.slug ?? null)
+    : null;
+
   // ── SEO ────────────────────────────────────────────────────────────────
   const meta = sector ? getSectorMeta(sector.slug, isRTL) : null;
   usePageMeta({
     title: meta
-      ? isRTL
-        ? `${meta.name} — ${meta.tagline} | قِطاعات`
-        : `${meta.name} — ${meta.tagline} | Qitaat`
+      ? selectedCityName
+        ? (isRTL
+            ? `${meta.name} في ${selectedCityName} — ${meta.tagline} | قِطاعات`
+            : `${meta.name} in ${selectedCityName} — ${meta.tagline} | Qitaat`)
+        : (isRTL
+            ? `${meta.name} — ${meta.tagline} | قِطاعات`
+            : `${meta.name} — ${meta.tagline} | Qitaat`)
       : isRTL
         ? 'قطاع غير معروف | قِطاعات'
         : 'Unknown sector | Qitaat',
-    description: meta?.description ?? '',
+    description: meta
+      ? (selectedCityName
+          ? (isRTL
+              ? `أفضل مزودي ${meta.name} في ${selectedCityName}: ورش ومصانع موثّقة، أسعار، أعمال سابقة، ودليل اختيار. ${meta.description}`
+              : `Top ${meta.name} providers in ${selectedCityName}: verified workshops, prices, past projects and a buyer guide. ${meta.description}`)
+          : meta.description)
+      : '',
     keywords: meta?.keywords,
-    canonical: `https://qitaat.com/sectors/${sectorSlug}`,
+    canonical: selectedCitySlug
+      ? `https://qitaat.com/sectors/${sectorSlug}/${selectedCitySlug}`
+      : `https://qitaat.com/sectors/${sectorSlug}`,
     ogImage: ogImageFor(`sector-${sectorSlug}`, {
       type: 'sector',
-      title: meta?.name || (isRTL ? 'قطاع' : 'Sector'),
+      title: selectedCityName
+        ? `${meta?.name || ''} — ${selectedCityName}`
+        : (meta?.name || (isRTL ? 'قطاع' : 'Sector')),
       subtitle: meta?.tagline || (isRTL ? 'دليل قِطاعات' : 'Qitaat directory'),
     }),
     ogType: 'website',
@@ -172,21 +198,49 @@ const SectorLanding: React.FC = () => {
       const breadcrumb = buildBreadcrumbList([
         { name: isRTL ? 'القطاعات' : 'Sectors', url: '/sectors' },
         { name: meta.name, url: `/sectors/${sector.slug}` },
+        ...(selectedCityName
+          ? [{ name: selectedCityName, url: selectedCitySlug
+              ? `/sectors/${sector.slug}/${selectedCitySlug}`
+              : `/sectors/${sector.slug}` }]
+          : []),
       ])!;
       const collection = {
         '@context': 'https://schema.org',
         '@type': 'CollectionPage',
-        name: meta.name,
-        description: meta.description,
-        url: `https://qitaat.com/sectors/${sector.slug}`,
+        name: selectedCityName ? `${meta.name} — ${selectedCityName}` : meta.name,
+        description: selectedCityName
+          ? (isRTL
+              ? `${meta.name} في ${selectedCityName}. ${meta.description}`
+              : `${meta.name} in ${selectedCityName}. ${meta.description}`)
+          : meta.description,
+        url: selectedCitySlug
+          ? `https://qitaat.com/sectors/${sector.slug}/${selectedCitySlug}`
+          : `https://qitaat.com/sectors/${sector.slug}`,
         inLanguage: isRTL ? 'ar' : 'en',
         keywords: meta.keywords,
+        ...(selectedCityName
+          ? {
+              about: {
+                '@type': 'Place',
+                name: selectedCityName,
+                address: {
+                  '@type': 'PostalAddress',
+                  addressLocality: selectedCityName,
+                  addressCountry: 'SA',
+                },
+              },
+            }
+          : {}),
       };
       const itemList = filtered.length > 0
         ? {
             '@context': 'https://schema.org',
             '@type': 'ItemList',
-            name: isRTL ? `أفضل مزودي ${meta.name}` : `Top ${meta.name} providers`,
+            name: selectedCityName
+              ? (isRTL
+                  ? `أفضل مزودي ${meta.name} في ${selectedCityName}`
+                  : `Top ${meta.name} providers in ${selectedCityName}`)
+              : (isRTL ? `أفضل مزودي ${meta.name}` : `Top ${meta.name} providers`),
             numberOfItems: Math.min(filtered.length, 10),
             itemListElement: filtered.slice(0, 10).map((b, i) => ({
               '@type': 'ListItem',
@@ -199,11 +253,11 @@ const SectorLanding: React.FC = () => {
       const faq = buildFaqPage([
         {
           q: isRTL
-            ? `كيف أختار أفضل مزود ${meta.name} في السعودية؟`
-            : `How do I pick the best ${meta.name} provider in Saudi Arabia?`,
+            ? `كيف أختار أفضل مزود ${meta.name} ${selectedCityName ? `في ${selectedCityName}` : 'في السعودية'}؟`
+            : `How do I pick the best ${meta.name} provider ${selectedCityName ? `in ${selectedCityName}` : 'in Saudi Arabia'}?`,
           a: isRTL
-            ? `استعرض دليل قِطاعات لمزودي ${meta.name}، صفِّ النتائج حسب المدينة والتقييم وحالة التحقق، ثم قارن المعارض والأسعار قبل التواصل.`
-            : `Browse the Qitaat directory of ${meta.name} providers, filter by city, rating and verification, then compare portfolios and quotes before reaching out.`,
+            ? `استعرض دليل قِطاعات لمزودي ${meta.name}${selectedCityName ? ` في ${selectedCityName}` : ''}، صفِّ النتائج حسب التقييم وحالة التحقق، ثم قارن المعارض والأسعار قبل التواصل.`
+            : `Browse the Qitaat directory of ${meta.name} providers${selectedCityName ? ` in ${selectedCityName}` : ''}, filter by rating and verification, then compare portfolios and quotes before reaching out.`,
         },
         {
           q: isRTL
@@ -213,8 +267,8 @@ const SectorLanding: React.FC = () => {
         },
         {
           q: isRTL
-            ? `هل يمكنني طلب عرض سعر مجاني لـ${meta.name}؟`
-            : `Can I request a free quote for ${meta.name}?`,
+            ? `هل يمكنني طلب عرض سعر مجاني لـ${meta.name}${selectedCityName ? ` في ${selectedCityName}` : ''}؟`
+            : `Can I request a free quote for ${meta.name}${selectedCityName ? ` in ${selectedCityName}` : ''}?`,
           a: isRTL
             ? `نعم، تواصل مع أي مزود مدرج في قِطاعات مباشرةً عبر صفحته للحصول على عرض سعر مجاني وغير ملزم.`
             : `Yes — contact any listed provider directly from their Qitaat page to get a free, no-obligation quote.`,
@@ -228,7 +282,9 @@ const SectorLanding: React.FC = () => {
         blocks.push({
           '@context': 'https://schema.org',
           '@type': 'HowTo',
-          name: isRTL ? g.title_ar : g.title_en,
+          name: selectedCityName
+            ? (isRTL ? `${g.title_ar} — ${selectedCityName}` : `${g.title_en} — ${selectedCityName}`)
+            : (isRTL ? g.title_ar : g.title_en),
           description: isRTL ? g.excerpt_ar : g.excerpt_en,
           inLanguage: isRTL ? 'ar' : 'en',
           step: (isRTL ? g.steps_ar : g.steps_en).map((s, i) => ({
@@ -239,7 +295,7 @@ const SectorLanding: React.FC = () => {
         });
       }
       return blocks;
-    }, [sector, meta, isRTL, language, filtered]),
+    }, [sector, meta, isRTL, language, filtered, selectedCityName, selectedCitySlug]),
   );
 
   // Unknown sector → soft 404 to /sectors index (handled below).
@@ -255,9 +311,10 @@ const SectorLanding: React.FC = () => {
     () =>
       [...businesses]
         .filter((b) => b.is_verified && Number(b.rating_avg ?? 0) >= 4)
+        .filter((b) => (cityId === 'all' ? true : b.city_id === cityId))
         .sort((a, b) => Number(b.rating_avg ?? 0) - Number(a.rating_avg ?? 0))
         .slice(0, 4),
-    [businesses],
+    [businesses, cityId],
   );
   const relatedSectors = sector.relatedSlugs
     .map((s) => {
@@ -377,7 +434,11 @@ const SectorLanding: React.FC = () => {
       )}
 
       {/* Top technicians strip — featured verified providers */}
-      <SectorTopTechnicians sectorName={meta.name} technicians={topTechnicians} />
+      <SectorTopTechnicians
+        sectorName={meta.name}
+        technicians={topTechnicians}
+        cityName={selectedCityName}
+      />
 
       {/* Buyer guides — HowTo content per sector */}
       <SectorGuides
@@ -385,6 +446,8 @@ const SectorLanding: React.FC = () => {
         sectorSlug={sector.slug}
         guides={guides}
         featuredProvider={topTechnicians[0] ?? null}
+        cityName={selectedCityName}
+        citySlug={selectedCitySlug}
       />
 
       {/* Project examples — real completed work in this sector */}
@@ -392,6 +455,8 @@ const SectorLanding: React.FC = () => {
         sectorName={meta.name}
         sectorSlug={sector.slug}
         categoryIds={categoryIds}
+        cityId={cityId === 'all' ? null : cityId}
+        cityName={selectedCityName}
       />
 
       {/* Results grid */}

@@ -13,6 +13,10 @@ interface Props {
   /** Sector slug — used to deep-link the "more in sector" CTA. */
   sectorSlug?: SectorSlug;
   categoryIds: string[];
+  /** Optional city filter — when set, only projects in this city are shown. */
+  cityId?: string | null;
+  /** Optional city display name — used in the heading and CTA labels. */
+  cityName?: string | null;
 }
 
 /**
@@ -22,19 +26,21 @@ interface Props {
  *   - business name → /:username (provider profile)
  *   - city → /sectors/:slug/:city when slug is known, else /search?city=…
  */
-export const SectorProjectExamples: React.FC<Props> = ({ sectorName, sectorSlug, categoryIds }) => {
+export const SectorProjectExamples: React.FC<Props> = ({ sectorName, sectorSlug, categoryIds, cityId, cityName }) => {
   const { isRTL, language } = useLanguage();
   const Arrow = isRTL ? ArrowLeft : ArrowRight;
 
   const { data: projects = [], isLoading } = useQuery({
-    queryKey: ['sector-projects', categoryIds],
+    queryKey: ['sector-projects', categoryIds, cityId ?? 'all'],
     enabled: categoryIds.length > 0,
     queryFn: async () => {
-      const { data } = await supabase
+      let q = supabase
         .from('projects')
         .select('id, title_ar, title_en, cover_image_url, completion_date, business_id, city_id, cities(name_ar, name_en), businesses(username, name_ar, name_en)')
         .in('category_id', categoryIds)
-        .eq('status', 'published')
+        .eq('status', 'published');
+      if (cityId) q = q.eq('city_id', cityId);
+      const { data } = await q
         .order('is_featured', { ascending: false })
         .order('completion_date', { ascending: false, nullsFirst: false })
         .limit(6);
@@ -50,7 +56,9 @@ export const SectorProjectExamples: React.FC<Props> = ({ sectorName, sectorSlug,
         <div className="flex items-center gap-2">
           <Briefcase className="w-5 h-5 text-info" />
           <h2 id="sector-projects-heading" className="font-heading text-lg sm:text-xl font-bold">
-            {isRTL ? `أمثلة أعمال ${sectorName}` : `${sectorName} project examples`}
+            {cityName
+              ? (isRTL ? `أمثلة أعمال ${sectorName} في ${cityName}` : `${sectorName} project examples in ${cityName}`)
+              : (isRTL ? `أمثلة أعمال ${sectorName}` : `${sectorName} project examples`)}
           </h2>
         </div>
         <Link

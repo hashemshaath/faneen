@@ -19,6 +19,9 @@ interface Props {
   guides: SectorGuide[];
   /** Top provider in this sector — surfaced as a "recommended workshop" link in each guide card. */
   featuredProvider?: FeaturedProvider | null;
+  /** Optional selected-city — when set, the heading and "project examples" link are scoped to that city. */
+  cityName?: string | null;
+  citySlug?: string | null;
 }
 
 /**
@@ -30,7 +33,7 @@ interface Props {
  *
  * HowTo JSON-LD is emitted by the parent page.
  */
-export const SectorGuides: React.FC<Props> = ({ sectorName, sectorSlug, guides, featuredProvider }) => {
+export const SectorGuides: React.FC<Props> = ({ sectorName, sectorSlug, guides, featuredProvider, cityName, citySlug }) => {
   const { isRTL, language } = useLanguage();
   if (!guides.length) return null;
 
@@ -41,7 +44,9 @@ export const SectorGuides: React.FC<Props> = ({ sectorName, sectorSlug, guides, 
       <div className="flex items-center gap-2 mb-4">
         <BookOpen className="w-5 h-5 text-primary" />
         <h2 id="sector-guides-heading" className="font-heading text-lg sm:text-xl font-bold">
-          {isRTL ? `دليل المشتري — ${sectorName}` : `Buyer guide — ${sectorName}`}
+          {cityName
+            ? (isRTL ? `دليل المشتري — ${sectorName} في ${cityName}` : `Buyer guide — ${sectorName} in ${cityName}`)
+            : (isRTL ? `دليل المشتري — ${sectorName}` : `Buyer guide — ${sectorName}`)}
         </h2>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -80,11 +85,15 @@ export const SectorGuides: React.FC<Props> = ({ sectorName, sectorSlug, guides, 
                     <Arrow className="w-3 h-3 ms-auto" />
                   </Link>
                   <Link
-                    to={`/projects?sector=${sectorSlug}`}
+                    to={citySlug ? `/sectors/${sectorSlug}/${citySlug}` : `/projects?sector=${sectorSlug}`}
                     className="inline-flex items-center gap-1.5 text-info hover:underline"
                   >
                     <Briefcase className="w-3.5 h-3.5" />
-                    <span>{isRTL ? `أمثلة أعمال ${sectorName}` : `${sectorName} project examples`}</span>
+                    <span>
+                      {cityName
+                        ? (isRTL ? `أمثلة أعمال ${sectorName} في ${cityName}` : `${sectorName} examples in ${cityName}`)
+                        : (isRTL ? `أمثلة أعمال ${sectorName}` : `${sectorName} project examples`)}
+                    </span>
                     <Arrow className="w-3 h-3 ms-auto" />
                   </Link>
                   {featuredProvider && (
