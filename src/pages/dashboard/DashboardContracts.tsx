@@ -424,7 +424,20 @@ const DashboardContracts = () => {
   const [amendmentForm, setAmendmentForm] = useState({ title_ar: '', description_ar: '', amendment_type: 'scope_change', new_amount: '' });
   const [maintenanceForm, setMaintenanceForm] = useState({ title_ar: '', description_ar: '', priority: 'normal' as string, scheduled_date: '' });
   const [paymentForm, setPaymentForm] = useState({ amount: '', due_date: '', notes: '' });
-  const [lineItemForm, setLineItemForm] = useState({ name_ar: '', description_ar: '', quantity: '1', unit_price: '', item_type: 'service' });
+  const [lineItemForm, setLineItemForm] = useState({
+    name_ar: '',
+    description_ar: '',
+    quantity: '1',
+    unit_price: '',
+    item_type: 'service',
+    pricing_method: 'unit' as PricingMethod,
+    length_mm: '',
+    width_mm: '',
+    height_mm: '',
+    weight_kg: '',
+    weight_ton: '',
+    amount: '',
+  });
   const [maintenanceImages, setMaintenanceImages] = useState<File[]>([]);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const maintenanceImageRef = React.useRef<HTMLInputElement>(null);
