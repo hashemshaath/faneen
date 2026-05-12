@@ -1917,15 +1917,83 @@ const DashboardContracts = () => {
                                           <SelectItem value="other">{isRTL ? 'أخرى' : 'Other'}</SelectItem>
                                         </SelectContent>
                                       </Select>
-                                      <Input type="number" placeholder={isRTL ? 'الكمية' : 'Qty'} value={lineItemForm.quantity} onChange={e => setLineItemForm(f => ({ ...f, quantity: e.target.value }))} dir="ltr" className="h-9 text-xs" />
-                                      <Input type="number" placeholder={isRTL ? 'سعر الوحدة' : 'Unit Price'} value={lineItemForm.unit_price} onChange={e => setLineItemForm(f => ({ ...f, unit_price: e.target.value }))} dir="ltr" className="h-9 text-xs" />
+                                      <Select value={lineItemForm.pricing_method} onValueChange={v => setLineItemForm(f => ({ ...f, pricing_method: v as PricingMethod }))}>
+                                        <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                          {SUPPORTED_PRICING_METHODS.map(m => (
+                                            <SelectItem key={m} value={m}>{formatPricingMethodLabel(m, isRTL ? 'ar' : 'en')}</SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                      {lineItemForm.pricing_method !== 'lump_sum' && (
+                                        <Input type="number" min="0" placeholder={isRTL ? 'الكمية' : 'Qty'} value={lineItemForm.quantity} onChange={e => setLineItemForm(f => ({ ...f, quantity: e.target.value }))} dir="ltr" className="h-9 text-xs" />
+                                      )}
+                                    </div>
+                                    {/* Conditional dimension/weight inputs per method */}
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                                      {(lineItemForm.pricing_method === 'linear_meter' || lineItemForm.pricing_method === 'square_meter' || lineItemForm.pricing_method === 'cubic_meter') && (
+                                        <Input type="number" min="0" placeholder={isRTL ? 'الطول (مم)' : 'Length (mm)'} value={lineItemForm.length_mm} onChange={e => setLineItemForm(f => ({ ...f, length_mm: e.target.value }))} dir="ltr" className="h-9 text-xs" />
+                                      )}
+                                      {(lineItemForm.pricing_method === 'square_meter' || lineItemForm.pricing_method === 'cubic_meter') && (
+                                        <Input type="number" min="0" placeholder={isRTL ? 'العرض (مم)' : 'Width (mm)'} value={lineItemForm.width_mm} onChange={e => setLineItemForm(f => ({ ...f, width_mm: e.target.value }))} dir="ltr" className="h-9 text-xs" />
+                                      )}
+                                      {lineItemForm.pricing_method === 'cubic_meter' && (
+                                        <Input type="number" min="0" placeholder={isRTL ? 'الارتفاع (مم)' : 'Height (mm)'} value={lineItemForm.height_mm} onChange={e => setLineItemForm(f => ({ ...f, height_mm: e.target.value }))} dir="ltr" className="h-9 text-xs" />
+                                      )}
+                                      {lineItemForm.pricing_method === 'kilogram' && (
+                                        <Input type="number" min="0" placeholder={isRTL ? 'الوزن (كجم)' : 'Weight (kg)'} value={lineItemForm.weight_kg} onChange={e => setLineItemForm(f => ({ ...f, weight_kg: e.target.value }))} dir="ltr" className="h-9 text-xs" />
+                                      )}
+                                      {lineItemForm.pricing_method === 'ton' && (
+                                        <Input type="number" min="0" placeholder={isRTL ? 'الوزن (طن)' : 'Weight (t)'} value={lineItemForm.weight_ton} onChange={e => setLineItemForm(f => ({ ...f, weight_ton: e.target.value }))} dir="ltr" className="h-9 text-xs" />
+                                      )}
+                                      {lineItemForm.pricing_method === 'lump_sum' ? (
+                                        <Input type="number" min="0" placeholder={isRTL ? 'المبلغ المقطوع' : 'Lump Sum Amount'} value={lineItemForm.amount} onChange={e => setLineItemForm(f => ({ ...f, amount: e.target.value }))} dir="ltr" className="h-9 text-xs" />
+                                      ) : (
+                                        <Input type="number" min="0" placeholder={isRTL ? `سعر / ${formatUnitOfMeasure(lineItemForm.pricing_method)}` : `Price / ${formatUnitOfMeasure(lineItemForm.pricing_method)}`} value={lineItemForm.unit_price} onChange={e => setLineItemForm(f => ({ ...f, unit_price: e.target.value }))} dir="ltr" className="h-9 text-xs" />
+                                      )}
                                     </div>
                                     <Input placeholder={isRTL ? 'وصف البند (اختياري)' : 'Description (optional)'} value={lineItemForm.description_ar} onChange={e => setLineItemForm(f => ({ ...f, description_ar: e.target.value }))} className="h-9 text-xs" />
-                                    {lineItemForm.unit_price && <p className="text-[11px] text-muted-foreground">{isRTL ? 'التكلفة:' : 'Cost:'} <strong className="text-accent">{(Number(lineItemForm.unit_price) * Number(lineItemForm.quantity || 1)).toLocaleString()} {c.currency_code}</strong></p>}
+                                    {(() => {
+                                      const fi: Record<string, number> = {};
+                                      const set = (k: string, v: string) => { if (v !== '' && Number.isFinite(Number(v))) fi[k] = Number(v); };
+                                      set('length_mm', lineItemForm.length_mm); set('width_mm', lineItemForm.width_mm); set('height_mm', lineItemForm.height_mm);
+                                      set('weight_kg', lineItemForm.weight_kg); set('weight_ton', lineItemForm.weight_ton); set('amount', lineItemForm.amount);
+                                      const calc = calculateLineTotal({
+                                        pricing_method: lineItemForm.pricing_method,
+                                        quantity: lineItemForm.quantity || 1,
+                                        unit_price: lineItemForm.unit_price || 0,
+                                        formula_inputs: fi,
+                                      });
+                                      if (calc.ok && calc.total > 0) {
+                                        return <p className="text-[11px] text-muted-foreground">{isRTL ? 'التكلفة:' : 'Cost:'} <strong className="text-accent">{calc.total.toLocaleString()} {c.currency_code}</strong></p>;
+                                      }
+                                      if (!calc.ok && calc.errorCode === 'negative_value') {
+                                        return <p className="text-[11px] text-destructive">{isRTL ? 'لا يمكن إدخال قيم سالبة' : 'Negative values not allowed'}</p>;
+                                      }
+                                      if (!calc.ok && calc.errorCode === 'value_too_large') {
+                                        return <p className="text-[11px] text-destructive">{isRTL ? 'القيم كبيرة جداً' : 'Values are too large'}</p>;
+                                      }
+                                      return null;
+                                    })()}
                                     <div className="flex gap-2">
-                                      <Button size="sm" className="h-8 text-xs gap-1" disabled={!lineItemForm.name_ar || !lineItemForm.unit_price || addLineItemMutation.isPending} onClick={() => addLineItemMutation.mutate({ contractId: c.id })}>
-                                        {addLineItemMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}{isRTL ? 'إضافة' : 'Add'}
-                                      </Button>
+                                      {(() => {
+                                        const fi: Record<string, number> = {};
+                                        const set = (k: string, v: string) => { if (v !== '' && Number.isFinite(Number(v))) fi[k] = Number(v); };
+                                        set('length_mm', lineItemForm.length_mm); set('width_mm', lineItemForm.width_mm); set('height_mm', lineItemForm.height_mm);
+                                        set('weight_kg', lineItemForm.weight_kg); set('weight_ton', lineItemForm.weight_ton); set('amount', lineItemForm.amount);
+                                        const calc = calculateLineTotal({
+                                          pricing_method: lineItemForm.pricing_method,
+                                          quantity: lineItemForm.quantity || 1,
+                                          unit_price: lineItemForm.unit_price || 0,
+                                          formula_inputs: fi,
+                                        });
+                                        const disabled = !lineItemForm.name_ar || !calc.ok || calc.total <= 0 || addLineItemMutation.isPending;
+                                        return (
+                                          <Button size="sm" className="h-8 text-xs gap-1" disabled={disabled} onClick={() => addLineItemMutation.mutate({ contractId: c.id })}>
+                                            {addLineItemMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}{isRTL ? 'إضافة' : 'Add'}
+                                          </Button>
+                                        );
+                                      })()}
                                       <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => setShowAddLineItem(null)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
                                     </div>
                                   </div>
