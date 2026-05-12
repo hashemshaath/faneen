@@ -19,6 +19,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Loader2, Search, User, X, Mail } from 'lucide-react';
+import { Send } from 'lucide-react';
 
 export interface SelectedClient {
   user_id: string;
@@ -36,9 +37,15 @@ interface Props {
   /** Manual email fallback used when the client cannot be searched. */
   fallbackEmail: string;
   onFallbackEmail: (email: string) => void;
+  /**
+   * CT4C.3 — Optional "Send invitation" handler. If provided, the picker
+   * shows a CTA when the search returns 0 results so the user can invite
+   * an unregistered client to join the platform.
+   */
+  onRequestInvite?: (prefillEmail: string) => void;
 }
 
-export function ClientPicker({ isRTL, selected, onSelect, fallbackEmail, onFallbackEmail }: Props) {
+export function ClientPicker({ isRTL, selected, onSelect, fallbackEmail, onFallbackEmail, onRequestInvite }: Props) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SelectedClient[]>([]);
   const [loading, setLoading] = useState(false);
@@ -128,7 +135,21 @@ export function ClientPicker({ isRTL, selected, onSelect, fallbackEmail, onFallb
             </div>
           )}
           {open && !loading && query.trim().length >= 2 && results.length === 0 && (
-            <p className="text-[10px] text-muted-foreground">{isRTL ? 'لا توجد نتائج. تحقق من التهجئة.' : 'No matches. Check the spelling.'}</p>
+            <div className="space-y-2">
+              <p className="text-[10px] text-muted-foreground">{isRTL ? 'لا توجد نتائج. تحقق من التهجئة.' : 'No matches. Check the spelling.'}</p>
+              {onRequestInvite && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-8 gap-1.5 text-[11px]"
+                  onClick={() => onRequestInvite(query.trim())}
+                >
+                  <Send className="w-3 h-3" />
+                  {isRTL ? 'إرسال دعوة للعميل' : 'Send client invitation'}
+                </Button>
+              )}
+            </div>
           )}
           <p className="text-[9px] text-muted-foreground">{helper}</p>
           <button
