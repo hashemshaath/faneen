@@ -409,14 +409,14 @@ const SectorLanding: React.FC = () => {
             <Input
               dir="auto"
               value={query}
-              onChange={(e) => { setQuery(e.target.value); setPage(1); }}
+              onChange={(e) => setQuery(e.target.value)}
               placeholder={isRTL ? `ابحث داخل ${meta.name}…` : `Search within ${meta.name}…`}
               className="h-11 ps-9 rounded-xl"
             />
           </div>
           <select
             value={cityId}
-            onChange={(e) => { setCityId(e.target.value); setPage(1); }}
+            onChange={(e) => setCityId(e.target.value)}
             className="h-11 rounded-xl border bg-background px-3 text-sm min-w-[160px]"
             aria-label={isRTL ? 'المدينة' : 'City'}
           >
@@ -429,7 +429,7 @@ const SectorLanding: React.FC = () => {
           </select>
           <select
             value={String(minRating)}
-            onChange={(e) => { setMinRating(Number(e.target.value)); setPage(1); }}
+            onChange={(e) => setMinRating(Number(e.target.value))}
             className="h-11 rounded-xl border bg-background px-3 text-sm"
             aria-label={isRTL ? 'التقييم' : 'Rating'}
           >
@@ -442,7 +442,7 @@ const SectorLanding: React.FC = () => {
             type="button"
             variant={verifiedOnly ? 'default' : 'outline'}
             className="h-11 rounded-xl gap-2"
-            onClick={() => { setVerifiedOnly((v) => !v); setPage(1); }}
+            onClick={() => setVerifiedOnly(!verifiedOnly)}
           >
             <ShieldCheck className="w-4 h-4" />
             {isRTL ? 'موثّق فقط' : 'Verified only'}
@@ -592,7 +592,7 @@ const SectorLanding: React.FC = () => {
             <Button
               variant="outline" size="sm"
               disabled={page === 1}
-              onClick={() => { setPage((p) => Math.max(1, p - 1)); window.scrollTo({ top: 200, behavior: 'smooth' }); }}
+              onClick={() => { setPage(Math.max(1, page - 1)); window.scrollTo({ top: 200, behavior: 'smooth' }); }}
             >
               {isRTL ? 'السابق' : 'Previous'}
             </Button>
@@ -600,7 +600,7 @@ const SectorLanding: React.FC = () => {
             <Button
               variant="outline" size="sm"
               disabled={page === totalPages}
-              onClick={() => { setPage((p) => Math.min(totalPages, p + 1)); window.scrollTo({ top: 200, behavior: 'smooth' }); }}
+              onClick={() => { setPage(Math.min(totalPages, page + 1)); window.scrollTo({ top: 200, behavior: 'smooth' }); }}
             >
               {isRTL ? 'التالي' : 'Next'}
             </Button>
