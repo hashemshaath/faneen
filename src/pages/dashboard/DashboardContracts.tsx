@@ -42,7 +42,10 @@ import {
 import type { ContractExportData } from '@/lib/contract-pdf-export';
 import type { Database } from '@/integrations/supabase/types';
 import { getContractStatusMeta, isContractLockedByStatus } from '@/lib/contract-statuses';
-import { calculateVatBreakdown, calculateLineItemsTotal, calculateMeasurementsTotal } from '@/lib/contract-financials';
+import {
+  calculateVatBreakdown, calculateLineItemsTotal, calculateMeasurementsTotal,
+  calculateLineVatBreakdown, sumLineVatBreakdowns, formatVatHandlingLabel,
+} from '@/lib/contract-financials';
 import { calculateLineTotal, formatPricingMethodLabel, formatUnitOfMeasure, SUPPORTED_PRICING_METHODS, type PricingMethod } from '@/lib/contract-pricing';
 import {
   BOQ_GROUPS,
@@ -50,6 +53,8 @@ import {
   hasMixedPricing,
   listPricingMethodsUsed,
   getSuggestedPricingMethod,
+  getWorkTypeBoqPresets,
+  dedupeStarterRows,
   type BoqGroupKey,
 } from '@/lib/contract-boq';
 import { ClientPicker, type SelectedClient } from '@/components/contracts/ClientPicker';
