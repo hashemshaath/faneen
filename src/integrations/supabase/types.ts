@@ -2068,6 +2068,73 @@ export type Database = {
         }
         Relationships: []
       }
+      contract_versions: {
+        Row: {
+          amendment_id: string | null
+          contract_id: string
+          created_at: string
+          created_by: string | null
+          document_hash: string
+          id: string
+          kind: string
+          pdf_storage_path: string | null
+          prev_document_hash: string | null
+          prev_version_id: string | null
+          snapshot: Json
+          version_number: number
+        }
+        Insert: {
+          amendment_id?: string | null
+          contract_id: string
+          created_at?: string
+          created_by?: string | null
+          document_hash: string
+          id?: string
+          kind: string
+          pdf_storage_path?: string | null
+          prev_document_hash?: string | null
+          prev_version_id?: string | null
+          snapshot: Json
+          version_number: number
+        }
+        Update: {
+          amendment_id?: string | null
+          contract_id?: string
+          created_at?: string
+          created_by?: string | null
+          document_hash?: string
+          id?: string
+          kind?: string
+          pdf_storage_path?: string | null
+          prev_document_hash?: string | null
+          prev_version_id?: string | null
+          snapshot?: Json
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_versions_amendment_id_fkey"
+            columns: ["amendment_id"]
+            isOneToOne: false
+            referencedRelation: "contract_amendments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_versions_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_versions_prev_version_id_fkey"
+            columns: ["prev_version_id"]
+            isOneToOne: false
+            referencedRelation: "contract_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contracts: {
         Row: {
           business_id: string | null
@@ -2077,13 +2144,19 @@ export type Database = {
           client_id: string
           completed_at: string | null
           contract_number: string
+          contract_version: number
           created_at: string
           currency_code: string
           description_ar: string | null
           description_en: string | null
+          document_hash: string | null
           end_date: string | null
           id: string
           is_demo: boolean
+          last_pdf_generated_at: string | null
+          last_pdf_snapshot_id: string | null
+          locked_at: string | null
+          official_version_number: number
           provider_accepted_at: string | null
           provider_id: string
           start_date: string | null
@@ -2108,13 +2181,19 @@ export type Database = {
           client_id: string
           completed_at?: string | null
           contract_number?: string
+          contract_version?: number
           created_at?: string
           currency_code?: string
           description_ar?: string | null
           description_en?: string | null
+          document_hash?: string | null
           end_date?: string | null
           id?: string
           is_demo?: boolean
+          last_pdf_generated_at?: string | null
+          last_pdf_snapshot_id?: string | null
+          locked_at?: string | null
+          official_version_number?: number
           provider_accepted_at?: string | null
           provider_id: string
           start_date?: string | null
@@ -2139,13 +2218,19 @@ export type Database = {
           client_id?: string
           completed_at?: string | null
           contract_number?: string
+          contract_version?: number
           created_at?: string
           currency_code?: string
           description_ar?: string | null
           description_en?: string | null
+          document_hash?: string | null
           end_date?: string | null
           id?: string
           is_demo?: boolean
+          last_pdf_generated_at?: string | null
+          last_pdf_snapshot_id?: string | null
+          locked_at?: string | null
+          official_version_number?: number
           provider_accepted_at?: string | null
           provider_id?: string
           start_date?: string | null
@@ -2175,6 +2260,13 @@ export type Database = {
             columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_last_pdf_snapshot_id_fkey"
+            columns: ["last_pdf_snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "contract_versions"
             referencedColumns: ["id"]
           },
         ]
@@ -5705,6 +5797,11 @@ export type Database = {
         Args: { _business_id: string }
         Returns: number
       }
+      contract_canonical_snapshot: {
+        Args: { _contract_id: string }
+        Returns: Json
+      }
+      contract_snapshot_hash: { Args: { _snapshot: Json }; Returns: string }
       create_notification: {
         Args: {
           _action_url?: string
