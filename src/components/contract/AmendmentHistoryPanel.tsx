@@ -27,7 +27,7 @@ interface Props {
   rejecting: boolean;
   onCancel: (amendmentId: string) => void;
   cancelling: boolean;
-  onApply: (amendmentId: string) => void;
+  onApply: (amendmentId: string, scheduleAdjustedHint: boolean) => void;
   applying: boolean;
   contract?: {
     total_amount?: number | string | null;
