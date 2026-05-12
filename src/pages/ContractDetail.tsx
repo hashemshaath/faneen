@@ -869,6 +869,7 @@ const ContractDetail = () => {
       vatRate,
       vatInclusive,
       businessName: bizName || undefined,
+      documentHash: contract.document_hash || undefined,
       milestones: (milestones || []).map(m => ({
         id: m.id,
         title: language === 'ar' ? m.title_ar : (m.title_en || m.title_ar),
