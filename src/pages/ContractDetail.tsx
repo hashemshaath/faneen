@@ -1531,18 +1531,41 @@ const ContractDetail = () => {
             <div className="flex items-center gap-2 font-semibold mb-3">
               <ShieldCheck className="w-4 h-4 text-success" />
               {isRTL ? 'تشخيص الخط العربي للـ PDF' : 'Arabic PDF font diagnostics'}
+              {pdfDiagnostics.lastVerification && (
+                <span className={`ml-auto rounded-md px-2 py-0.5 text-[10px] font-bold ${pdfDiagnostics.lastVerification.status === 'PASS' ? 'bg-success/15 text-success' : 'bg-destructive/15 text-destructive'}`}>
+                  {pdfDiagnostics.lastVerification.status} · {pdfDiagnostics.lastVerification.source}
+                </span>
+              )}
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2 text-muted-foreground">
+              <span>build: {pdfDiagnostics.buildVersion}</span>
+              <span className="lg:col-span-2 truncate" title={pdfDiagnostics.exportPath}>export: {pdfDiagnostics.exportPath}</span>
               <span>font: {pdfDiagnostics.registeredFontName}</span>
               <span>source: {pdfDiagnostics.fontSource}</span>
               <span>content-type: {pdfDiagnostics.contentType}</span>
               <span>magic: {pdfDiagnostics.magicBytes}</span>
               <span>TTF/OTF: {String(pdfDiagnostics.isTrueType)}</span>
-              <span>fallback: {String(pdfDiagnostics.fallbackFontUsed)}</span>
+              <span className={pdfDiagnostics.fallbackFontUsed ? 'text-destructive font-semibold' : ''}>
+                fallback: {String(pdfDiagnostics.fallbackFontUsed)}
+              </span>
               <span>normalization: {String(pdfDiagnostics.normalizationRan)}</span>
               <span>loaded: {pdfDiagnostics.loadedAt ?? '-'}</span>
               <span>generated: {pdfDiagnostics.lastGeneratedPdfAt ?? '-'}</span>
+              {pdfDiagnostics.lastVerification && (
+                <>
+                  <span>verified: {pdfDiagnostics.lastVerification.verifiedAt}</span>
+                  <span>mojibake: {pdfDiagnostics.lastVerification.mojibakeCount}</span>
+                  <span className="lg:col-span-3 truncate" title={pdfDiagnostics.lastVerification.sample}>
+                    sample: {pdfDiagnostics.lastVerification.sample || '-'}
+                  </span>
+                </>
+              )}
             </div>
+            {pdfBackendReport && (
+              <pre className="mt-3 max-h-56 overflow-auto rounded-md bg-muted/40 p-2 text-[11px] leading-snug text-foreground whitespace-pre-wrap break-all" dir="ltr">
+{pdfBackendReport}
+              </pre>
+            )}
           </div>
         )}
         {/* ─── Quick Stats ─── */}
