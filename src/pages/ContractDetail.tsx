@@ -348,13 +348,10 @@ const ContractDetail = () => {
   });
   const acceptMutation = useMutation({
     mutationFn: async () => {
-      const isClientUser = user?.id === contract?.client_id;
-      const updateField = isClientUser ? 'client_accepted_at' : 'provider_accepted_at';
-      const update: any = { [updateField]: new Date().toISOString() };
-      const otherAccepted = isClientUser ? contract?.provider_accepted_at : contract?.client_accepted_at;
-      if (otherAccepted) update.status = 'active';
-      else if (contract?.status === 'draft') update.status = 'pending_approval';
-      await supabase.from('contracts').update(update).eq('id', id!);
+      // C6.4a — go through SECURITY DEFINER RPC instead of direct table update.
+      const { data: updated, error } = await supabase.rpc('accept_contract', { _contract_id: id! });
+      if (error) throw error;
+      const update = (updated ?? {}) as { status?: string };
 
       // When both parties have accepted → contract becomes active = signed.
       // Send a bilingual signature confirmation to both client and provider.
