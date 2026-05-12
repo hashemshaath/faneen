@@ -6837,9 +6837,50 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      admin_contract_pdf_exports_summary: {
+        Args: never
+        Returns: {
+          archived_count: number
+          exports_7d: number
+          exports_today: number
+          top_source: string
+          unique_contracts_30d: number
+        }[]
+      }
       admin_convert_lead_to_contract: {
         Args: { _lead_id: string }
         Returns: string
+      }
+      admin_list_contract_pdf_exports: {
+        Args: {
+          _contract_status?: string
+          _date_from?: string
+          _date_to?: string
+          _limit?: number
+          _offset?: number
+          _search?: string
+          _source?: string
+          _template_version_number?: number
+        }
+        Returns: {
+          amendment_count: number
+          boq_group_count: number
+          contract_number: string
+          contract_status: string
+          contract_version: number
+          document_hash_prefix: string
+          export_locale: string
+          export_ref: string
+          exported_at: string
+          exporter_display_name: string
+          line_item_count: number
+          official_version_number: number
+          source: string
+          template_name_ar: string
+          template_name_en: string
+          template_version_number: number
+          total_count: number
+        }[]
       }
       admin_list_membership_usage: {
         Args: { _limit?: number; _only_over_or_near?: boolean }
