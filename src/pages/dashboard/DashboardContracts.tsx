@@ -970,6 +970,52 @@ const DashboardContracts = () => {
     onError: (err: unknown) => toast.error(mapContractLockError(err, isRTL).message),
   });
 
+  /* ── CT5G — Bulk-insert starter BOQ rows for a work type. Idempotent. ── */
+  const addStarterBoqMutation = useMutation({
+    mutationFn: async ({ contractId, category }: { contractId: string; category: string | null | undefined }) => {
+      const existing = allLineItems.filter((li) => li.contract_id === contractId);
+      const presets = getWorkTypeBoqPresets(category);
+      const allowedKey = (contracts.find(c => c.id === contractId) as { template_version_id?: string | null } | undefined)?.template_version_id;
+      const allowed = allowedKey ? allowedMethodsByVersion.get(allowedKey) : undefined;
+      const filtered = (allowed && allowed.length > 0)
+        ? presets.filter(p => allowed.includes(p.pricing_method))
+        : presets;
+      const toInsert = dedupeStarterRows(filtered, existing);
+      if (toInsert.length === 0) return { inserted: 0 };
+      const baseSort = existing.length;
+      const rows = toInsert.map((p, idx) => ({
+        contract_id: contractId,
+        name_ar: p.name_ar,
+        name_en: p.name_en,
+        description_ar: null,
+        quantity: 1,
+        unit_price: 0,
+        total_cost: 0,
+        item_type: 'material' as const,
+        sort_order: baseSort + idx + 1,
+        pricing_method: p.pricing_method,
+        unit_of_measure: formatUnitOfMeasure(p.pricing_method),
+        formula_inputs: {},
+        boq_group_key: p.boq_group_key,
+      }));
+      const { error } = await supabase.from('contract_line_items').insert(rows);
+      if (error) throw error;
+      await supabase.rpc('recalc_contract_total', { _contract_id: contractId });
+      return { inserted: toInsert.length };
+    },
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard-contract-line-items'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-contracts'] });
+      const n = res?.inserted ?? 0;
+      if (n === 0) {
+        toast.info(isRTL ? 'البنود المقترحة موجودة مسبقاً' : 'Suggested items already added');
+      } else {
+        toast.success(isRTL ? `أُضيفت ${n} بنود مقترحة` : `Added ${n} suggested items`);
+      }
+    },
+    onError: (err: unknown) => toast.error(mapContractLockError(err, isRTL).message),
+  });
+
   /* ── Update Milestone Status ── */
   const updateMilestoneMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
