@@ -19,6 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBadgeClickTracking } from "@/hooks/useBadgeClickTracking";
+import { recordBadgeConversion } from "@/lib/badge-attribution";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { getLocalizedValue, useDirection } from "@/lib/direction";
@@ -318,6 +319,7 @@ const BusinessProfile = () => {
       source_page: sourcePage,
       is_authenticated: !!user,
     });
+    void recordBadgeConversion(business?.id, 'contact', sourcePage);
     if (!user) {
       setContactSheetOpen(true);
       return;
@@ -332,11 +334,13 @@ const BusinessProfile = () => {
         business_slug: business?.username || undefined,
         is_authenticated: !!user,
       });
+      void recordBadgeConversion(business?.id, 'phone_reveal');
     } else {
       track.supplierEmailRevealed({
         business_slug: business?.username || undefined,
         is_authenticated: !!user,
       });
+      void recordBadgeConversion(business?.id, 'email_reveal');
     }
   };
 
@@ -411,7 +415,10 @@ const BusinessProfile = () => {
               variant="outline"
               size="app"
               className="gap-2"
-              onClick={() => setBookingOpen(true)}
+              onClick={() => {
+                void recordBadgeConversion(business?.id, 'booking', 'desktop_quick_action');
+                setBookingOpen(true);
+              }}
             >
               <CalendarClock className="ic-sm" />
               {language === "ar" ? "حجز موعد" : "Book appointment"}

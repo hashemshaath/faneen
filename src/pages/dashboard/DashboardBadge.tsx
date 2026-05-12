@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
-import { ShieldCheck, Copy, Check, ExternalLink, AlertCircle, Code2, BarChart3, MousePointerClick, Globe, Eye, Percent } from 'lucide-react';
+import { ShieldCheck, Copy, Check, ExternalLink, AlertCircle, Code2, BarChart3, MousePointerClick, Globe, Eye, Percent, MessageSquare, CalendarClock, Phone, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNoIndex } from '@/hooks/useNoIndex';
 
@@ -130,6 +130,22 @@ const DashboardBadge: React.FC = () => {
     },
   });
 
+  // Conversion funnel — every action a badge-attributed visitor took.
+  const { data: conversions = [] } = useQuery({
+    queryKey: ['badge-conversions', business?.id],
+    enabled: !!business?.id,
+    refetchInterval: 60_000,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('badge_conversions')
+        .select('id, session_token, event_type, source_page, created_at')
+        .eq('business_id', business!.id)
+        .order('created_at', { ascending: false })
+        .limit(2000);
+      return data ?? [];
+    },
+  });
+
   const clickStats = useMemo(() => {
     const now = Date.now();
     const day = 24 * 60 * 60 * 1000;
@@ -166,6 +182,43 @@ const DashboardBadge: React.FC = () => {
       last30: r(clickStats.last30, impressionStats.last30),
     };
   }, [clickStats, impressionStats]);
+
+  /**
+   * Conversion funnel for badge-attributed sessions.
+   *  - clicks         → unique session tokens that landed on the profile.
+   *  - profileViews   → unique sessions that opened ≥1 profile page (≈clicks).
+   *  - contacts       → unique sessions that hit any contact CTA.
+   *  - bookings       → unique sessions that opened the booking flow.
+   * Conversion rate is computed against the originating click count.
+   */
+  const funnel = useMemo(() => {
+    const uniqByEvent = (type: string) =>
+      new Set(
+        conversions.filter((c) => c.event_type === type).map((c) => c.session_token),
+      ).size;
+
+    const profileViews = uniqByEvent('profile_view');
+    const contacts = uniqByEvent('contact');
+    const phoneReveals = uniqByEvent('phone_reveal');
+    const emailReveals = uniqByEvent('email_reveal');
+    const bookings = uniqByEvent('booking');
+    const anyContact = new Set(
+      conversions
+        .filter((c) => ['contact', 'phone_reveal', 'email_reveal'].includes(c.event_type))
+        .map((c) => c.session_token),
+    ).size;
+    const base = clickStats.total || profileViews || 1;
+    return {
+      profileViews,
+      contacts,
+      phoneReveals,
+      emailReveals,
+      bookings,
+      anyContact,
+      contactRate: (anyContact / base) * 100,
+      bookingRate: (bookings / base) * 100,
+    };
+  }, [conversions, clickStats.total]);
 
   const displayName = useMemo(() => {
     if (!business) return '';
@@ -375,6 +428,54 @@ const DashboardBadge: React.FC = () => {
                       : `Last click: ${new Date(clicks[0].created_at).toLocaleString()}`}
                   </p>
                 )}
+
+                {/* Attribution funnel — clicks → profile → contact → booking */}
+                <div>
+                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+                    {isRTL ? 'مسار التحويل من الشارة' : 'Badge conversion funnel'}
+                  </h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {[
+                      { icon: MousePointerClick, label: isRTL ? 'نقرات' : 'Clicks', value: clickStats.total, tone: 'text-foreground' },
+                      { icon: Eye, label: isRTL ? 'زيارات الملف' : 'Profile views', value: funnel.profileViews, tone: 'text-foreground' },
+                      { icon: MessageSquare, label: isRTL ? 'تواصل' : 'Contacts', value: funnel.anyContact, tone: 'text-primary' },
+                      { icon: CalendarClock, label: isRTL ? 'طلبات حجز' : 'Bookings', value: funnel.bookings, tone: 'text-success' },
+                    ].map((step, i, arr) => (
+                      <div key={step.label} className="relative rounded-xl border bg-card p-3">
+                        <div className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
+                          <step.icon className="w-3 h-3" />
+                          {step.label}
+                        </div>
+                        <div className={`mt-1 text-2xl font-heading font-bold tech-content ${step.tone}`}>{step.value}</div>
+                        {i < arr.length - 1 && (
+                          <ArrowRight className={`hidden sm:block absolute top-1/2 -translate-y-1/2 ${isRTL ? '-start-3 rotate-180' : '-end-3'} w-4 h-4 text-muted-foreground/40`} />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 mt-3 text-xs">
+                    <div className="rounded-lg bg-muted/40 px-3 py-2 flex items-center justify-between">
+                      <span className="text-muted-foreground">{isRTL ? 'تواصل ÷ نقرات' : 'Contact rate'}</span>
+                      <span className="font-heading font-bold text-primary tech-content">{funnel.contactRate.toFixed(1)}%</span>
+                    </div>
+                    <div className="rounded-lg bg-muted/40 px-3 py-2 flex items-center justify-between">
+                      <span className="text-muted-foreground">{isRTL ? 'حجز ÷ نقرات' : 'Booking rate'}</span>
+                      <span className="font-heading font-bold text-success tech-content">{funnel.bookingRate.toFixed(1)}%</span>
+                    </div>
+                  </div>
+                  {(funnel.phoneReveals > 0 || funnel.emailReveals > 0) && (
+                    <div className="mt-2 flex flex-wrap gap-2 text-[11px] text-muted-foreground">
+                      <span className="inline-flex items-center gap-1">
+                        <Phone className="w-3 h-3" />
+                        {isRTL ? `كشف هاتف: ${funnel.phoneReveals}` : `Phone reveals: ${funnel.phoneReveals}`}
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <ExternalLink className="w-3 h-3" />
+                        {isRTL ? `كشف بريد: ${funnel.emailReveals}` : `Email reveals: ${funnel.emailReveals}`}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </CardContent>
             </Card>
 
