@@ -52,6 +52,7 @@ export const FooterLinks = () => {
         links={[
           { label: isRTL ? 'المشاريع' : 'Projects', to: '/projects' },
           { label: isRTL ? 'المدونة' : 'Blog', to: '/blog' },
+          { label: isRTL ? 'الأدلة الفنية' : 'Technical Guides', to: '/guides' },
           { label: isRTL ? 'العروض' : 'Offers', to: '/offers' },
           { label: t('footer.contracts'), to: '/contracts' },
           { label: isRTL ? 'العضويات' : 'Membership', to: '/membership' },
