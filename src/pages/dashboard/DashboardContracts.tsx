@@ -218,14 +218,14 @@ const ContractCard = React.memo(({
   const measurementTotal = measurements.reduce((s: number, m) => s + Number(m.total_cost || 0), 0);
 
   return (
-    <Card className={`overflow-hidden transition-all duration-300 hover:shadow-lg group ${isExpanded ? 'ring-2 ring-accent/20 shadow-xl' : 'hover:border-accent/20'}`}>
+    <Card className={`overflow-hidden transition-all duration-300 hover:shadow-md group border-border/70 ${isExpanded ? 'ring-2 ring-accent/30 shadow-lg' : 'hover:border-accent/40'}`}>
       <CardContent className="p-0">
-        {/* Gradient Status Strip */}
-        <div className={`h-1.5 w-full bg-gradient-to-r ${cfg.gradient}`} />
+        {/* Status accent strip — calmer single-tone tint */}
+        <div className={`h-1 w-full bg-gradient-to-r ${cfg.gradient} opacity-80`} aria-hidden="true" />
 
         <div className="p-4 sm:p-5">
           {/* Header */}
-          <div className="flex items-start gap-3 mb-4">
+          <div className="flex items-start gap-3 mb-4 flex-wrap sm:flex-nowrap">
             {/* Health Circle */}
             <div className="relative shrink-0 hidden sm:block">
               <CircularProgress
@@ -234,29 +234,40 @@ const ContractCard = React.memo(({
                 stroke={3.5}
                 color={healthScore >= 70 ? 'text-success' : healthScore >= 40 ? 'text-warning' : 'text-destructive'}
               />
-              <span className={`absolute inset-0 flex items-center justify-center text-[9px] font-bold ${healthScore >= 70 ? 'text-success' : healthScore >= 40 ? 'text-warning' : 'text-destructive'}`}>
+              <span
+                className={`absolute inset-0 flex items-center justify-center text-[10px] font-bold ${healthScore >= 70 ? 'text-success' : healthScore >= 40 ? 'text-warning' : 'text-destructive'}`}
+                aria-label={isRTL ? `صحة العقد ${healthScore}%` : `Contract health ${healthScore}%`}
+              >
                 {healthScore}%
               </span>
             </div>
 
             <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2 flex-wrap mb-1.5">
-                <h3 className="font-heading font-bold text-sm sm:text-base text-foreground leading-tight">{title}</h3>
-                <Badge className={`${cfg.color} gap-1 text-[9px] sm:text-[10px] px-2 py-0.5 shrink-0`}>
-                  <StatusIcon className="w-3 h-3" />
+              <div className="flex items-center gap-2 flex-wrap mb-2">
+                <h3 className="font-heading font-bold text-base sm:text-[17px] text-foreground leading-snug break-words">{title}</h3>
+                <Badge className={`${cfg.color} gap-1 text-[11px] px-2 py-0.5 shrink-0 font-medium`}>
+                  <StatusIcon className="w-3 h-3" aria-hidden="true" />
                   {isRTL ? cfg.label_ar : cfg.label_en}
                 </Badge>
-                {locked && <Badge variant="outline" className="text-[8px] gap-0.5 px-1.5 h-4 border-warning text-warning"><Shield className="w-2.5 h-2.5" />{isRTL ? 'مقفل' : 'Locked'}</Badge>}
+                {locked && (
+                  <Badge variant="outline" className="text-[10px] gap-1 px-1.5 h-5 border-warning/60 text-warning bg-warning/5">
+                    <Shield className="w-3 h-3" aria-hidden="true" />
+                    {isRTL ? 'مقفل' : 'Locked'}
+                  </Badge>
+                )}
               </div>
-              <div className="flex items-center gap-2 flex-wrap text-[10px] text-muted-foreground">
-                <span className="font-mono bg-muted/50 px-1.5 py-0.5 rounded text-[9px]">{c.contract_number}</span>
-                <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 gap-0.5">
-                  {isProvider ? <Briefcase className="w-2.5 h-2.5" /> : <User className="w-2.5 h-2.5" />}
+              <div className="flex items-center gap-2 flex-wrap text-[11px] text-muted-foreground">
+                <span className="font-mono bg-muted px-2 py-0.5 rounded text-[11px] text-foreground/80 tech-content">{c.contract_number}</span>
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 gap-1 border-border/60">
+                  {isProvider ? <Briefcase className="w-3 h-3" aria-hidden="true" /> : <User className="w-3 h-3" aria-hidden="true" />}
                   {isProvider ? (isRTL ? 'مزود خدمة' : 'Provider') : (isRTL ? 'عميل' : 'Client')}
                 </Badge>
                 {daysRemaining !== null && c.status === 'active' && (
-                  <Badge variant={daysRemaining < 7 ? 'destructive' : daysRemaining < 30 ? 'secondary' : 'outline'} className="text-[9px] px-1.5 py-0 h-4 gap-0.5 animate-pulse">
-                    <Timer className="w-2.5 h-2.5" />
+                  <Badge
+                    variant={daysRemaining < 7 ? 'destructive' : daysRemaining < 30 ? 'secondary' : 'outline'}
+                    className="text-[10px] px-1.5 py-0 h-5 gap-1"
+                  >
+                    <Timer className="w-3 h-3" aria-hidden="true" />
                     {daysRemaining > 0 ? (isRTL ? `${daysRemaining} يوم` : `${daysRemaining}d left`) : (isRTL ? 'منتهي' : 'Overdue')}
                   </Badge>
                 )}
@@ -265,53 +276,90 @@ const ContractCard = React.memo(({
 
             {/* Quick Actions */}
             <TooltipProvider delayDuration={200}>
-              <div className="flex items-center gap-0.5 shrink-0">
+              <div className="flex items-center gap-0.5 shrink-0 ms-auto" role="group" aria-label={isRTL ? 'إجراءات العقد' : 'Contract actions'}>
                 {canAccept && c.status !== 'completed' && c.status !== 'cancelled' && (
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-success hover:bg-success dark:hover:bg-success/20" onClick={() => onApprove(c)}>
-                        <CircleCheck className="w-4 h-4" />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-success hover:bg-success/10 dark:hover:bg-success/20 focus-visible:ring-2 focus-visible:ring-success/40"
+                        onClick={() => onApprove(c)}
+                        aria-label={isRTL ? 'موافقة' : 'Approve'}
+                      >
+                        <CircleCheck className="w-4 h-4" aria-hidden="true" />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent side="bottom" className="text-[10px]">{isRTL ? 'موافقة' : 'Approve'}</TooltipContent>
+                    <TooltipContent side="bottom" className="text-[11px]">{isRTL ? 'موافقة' : 'Approve'}</TooltipContent>
                   </Tooltip>
                 )}
                 {c.status === 'draft' && user?.id === c.provider_id && (
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:bg-primary/5" onClick={() => onSendForApproval(c)}>
-                        <Send className="w-3.5 h-3.5" />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-primary hover:bg-primary/10"
+                        onClick={() => onSendForApproval(c)}
+                        aria-label={isRTL ? 'إرسال للمراجعة' : 'Send for Review'}
+                      >
+                        <Send className="w-3.5 h-3.5" aria-hidden="true" />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent side="bottom" className="text-[10px]">{isRTL ? 'إرسال للمراجعة' : 'Send for Review'}</TooltipContent>
+                    <TooltipContent side="bottom" className="text-[11px]">{isRTL ? 'إرسال للمراجعة' : 'Send for Review'}</TooltipContent>
                   </Tooltip>
                 )}
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onExportPDF(c)}>
-                      <Download className="w-3.5 h-3.5" />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                      onClick={() => onExportPDF(c)}
+                      aria-label={isRTL ? 'تصدير PDF' : 'Export PDF'}
+                    >
+                      <Download className="w-3.5 h-3.5" aria-hidden="true" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent side="bottom" className="text-[10px]">PDF</TooltipContent>
+                  <TooltipContent side="bottom" className="text-[11px]">PDF</TooltipContent>
                 </Tooltip>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onShare(c)}>
-                      <Share2 className="w-3.5 h-3.5" />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                      onClick={() => onShare(c)}
+                      aria-label={isRTL ? 'مشاركة' : 'Share'}
+                    >
+                      <Share2 className="w-3.5 h-3.5" aria-hidden="true" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent side="bottom" className="text-[10px]">{isRTL ? 'مشاركة' : 'Share'}</TooltipContent>
+                  <TooltipContent side="bottom" className="text-[11px]">{isRTL ? 'مشاركة' : 'Share'}</TooltipContent>
                 </Tooltip>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onNavigate(`/contracts/${c.id}`)}>
-                      <ExternalLink className="w-3.5 h-3.5" />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                      onClick={() => onNavigate(`/contracts/${c.id}`)}
+                      aria-label={isRTL ? 'عرض العقد' : 'View contract'}
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" aria-hidden="true" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent side="bottom" className="text-[10px]">{isRTL ? 'عرض' : 'View'}</TooltipContent>
+                  <TooltipContent side="bottom" className="text-[11px]">{isRTL ? 'عرض' : 'View'}</TooltipContent>
                 </Tooltip>
-                <Button variant="ghost" size="icon" className={`h-8 w-8 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} onClick={() => onExpand(isExpanded ? null : c.id)}>
-                  <ChevronDown className="w-4 h-4" />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={`h-8 w-8 text-muted-foreground hover:text-foreground transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                  onClick={() => onExpand(isExpanded ? null : c.id)}
+                  aria-label={isExpanded ? (isRTL ? 'طي' : 'Collapse') : (isRTL ? 'توسيع' : 'Expand')}
+                  aria-expanded={isExpanded}
+                >
+                  <ChevronDown className="w-4 h-4" aria-hidden="true" />
                 </Button>
               </div>
             </TooltipProvider>
@@ -319,64 +367,86 @@ const ContractCard = React.memo(({
 
           {/* Financial KPIs Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
-            <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-accent/5 to-accent/10 dark:from-accent/10 dark:to-accent/20 p-3 border border-accent/10">
-              <DollarSign className="absolute -top-1 -end-1 w-8 h-8 text-accent/10" />
-              <p className="text-[9px] text-muted-foreground mb-0.5">{isRTL ? 'قيمة العقد' : 'Contract Value'}</p>
-              <p className="text-sm font-bold text-foreground">{Number(c.total_amount).toLocaleString()}</p>
-              <p className="text-[8px] text-accent font-medium">{c.currency_code}</p>
+            {/* Contract Value — neutral surface, accent left bar */}
+            <div className="relative overflow-hidden rounded-xl bg-card p-3 border border-border/70 ps-[14px] before:absolute before:start-0 before:inset-y-2 before:w-1 before:rounded-full before:bg-accent/70">
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-[11px] text-muted-foreground font-medium">{isRTL ? 'قيمة العقد' : 'Contract Value'}</p>
+                <DollarSign className="w-3.5 h-3.5 text-muted-foreground/60" aria-hidden="true" />
+              </div>
+              <p className="text-base font-bold text-foreground tracking-tight tech-content leading-tight">
+                {Number(c.total_amount).toLocaleString()}
+                <span className="text-[10px] font-medium text-muted-foreground ms-1">{c.currency_code}</span>
+              </p>
             </div>
-            <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-success to-success/50 dark:from-success/20 dark:to-success/10 p-3 border border-success/30 dark:border-success/20">
-              <TrendingUp className="absolute -top-1 -end-1 w-8 h-8 text-success/10" />
-              <p className="text-[9px] text-muted-foreground mb-0.5">{isRTL ? 'المحصّل' : 'Collected'}</p>
-              <p className="text-sm font-bold text-success dark:text-success">{totalPaid.toLocaleString()}</p>
-              <div className="flex items-center gap-1 mt-0.5">
-                <Progress value={paymentPercent} className="h-1 flex-1 [&>div]:bg-success" />
-                <span className="text-[8px] font-semibold text-success">{paymentPercent}%</span>
+            {/* Collected — subtle success tint */}
+            <div className="relative overflow-hidden rounded-xl bg-success/5 dark:bg-success/10 p-3 border border-success/20 ps-[14px] before:absolute before:start-0 before:inset-y-2 before:w-1 before:rounded-full before:bg-success/70">
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-[11px] text-muted-foreground font-medium">{isRTL ? 'المحصّل' : 'Collected'}</p>
+                <TrendingUp className="w-3.5 h-3.5 text-success/70" aria-hidden="true" />
+              </div>
+              <p className="text-base font-bold text-foreground tracking-tight tech-content leading-tight">
+                {totalPaid.toLocaleString()}
+                <span className="text-[10px] font-medium text-muted-foreground ms-1">{c.currency_code}</span>
+              </p>
+              <div className="flex items-center gap-2 mt-1.5">
+                <Progress value={paymentPercent} className="h-1.5 flex-1 [&>div]:bg-success" aria-label={isRTL ? `نسبة التحصيل ${paymentPercent}٪` : `Collected ${paymentPercent}%`} />
+                <span className="text-[10px] font-semibold text-success tech-content">{paymentPercent}%</span>
               </div>
             </div>
-            <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-info to-info/50 dark:from-info/20 dark:to-info/10 p-3 border border-info/30 dark:border-info/20">
-              <Ruler className="absolute -top-1 -end-1 w-8 h-8 text-info/10" />
-              <p className="text-[9px] text-muted-foreground mb-0.5">{isRTL ? 'المقاسات' : 'Measurements'}</p>
-              <p className="text-sm font-bold text-info dark:text-info">{measurements.length}</p>
-              <p className="text-[8px] text-info">{measurementTotal.toLocaleString()} {c.currency_code}</p>
+            {/* Measurements — subtle info tint */}
+            <div className="relative overflow-hidden rounded-xl bg-info/5 dark:bg-info/10 p-3 border border-info/20 ps-[14px] before:absolute before:start-0 before:inset-y-2 before:w-1 before:rounded-full before:bg-info/70">
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-[11px] text-muted-foreground font-medium">{isRTL ? 'المقاسات' : 'Measurements'}</p>
+                <Ruler className="w-3.5 h-3.5 text-info/70" aria-hidden="true" />
+              </div>
+              <p className="text-base font-bold text-foreground tracking-tight tech-content leading-tight">{measurements.length}</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5 tech-content truncate">
+                {measurementTotal.toLocaleString()} <span className="text-[10px]">{c.currency_code}</span>
+              </p>
             </div>
-            <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-secondary to-secondary/50 dark:from-secondary/20 dark:to-secondary/10 p-3 border border-secondary/30 dark:border-secondary/20">
-              <ListChecks className="absolute -top-1 -end-1 w-8 h-8 text-secondary/10" />
-              <p className="text-[9px] text-muted-foreground mb-0.5">{isRTL ? 'التقدم' : 'Progress'}</p>
-              <p className="text-sm font-bold text-secondary dark:text-secondary">{completedMs}/{totalMs}</p>
+            {/* Progress — subtle primary tint */}
+            <div className="relative overflow-hidden rounded-xl bg-primary/5 dark:bg-primary/10 p-3 border border-primary/20 ps-[14px] before:absolute before:start-0 before:inset-y-2 before:w-1 before:rounded-full before:bg-primary/70">
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-[11px] text-muted-foreground font-medium">{isRTL ? 'التقدم' : 'Progress'}</p>
+                <ListChecks className="w-3.5 h-3.5 text-primary/70" aria-hidden="true" />
+              </div>
+              <p className="text-base font-bold text-foreground tracking-tight tech-content leading-tight">{completedMs}/{totalMs}</p>
               {totalMs > 0 && (
-                <div className="flex items-center gap-1 mt-0.5">
-                  <Progress value={progress} className="h-1 flex-1 [&>div]:bg-secondary" />
-                  <span className="text-[8px] font-semibold text-secondary">{progress}%</span>
+                <div className="flex items-center gap-2 mt-1.5">
+                  <Progress value={progress} className="h-1.5 flex-1 [&>div]:bg-primary" aria-label={isRTL ? `تقدم ${progress}٪` : `Progress ${progress}%`} />
+                  <span className="text-[10px] font-semibold text-primary tech-content">{progress}%</span>
                 </div>
               )}
             </div>
           </div>
 
           {/* Parties & Meta */}
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-4">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-4 flex-wrap">
               {[
                 { label: isRTL ? 'العميل' : 'Client', p: clientP, isMe: user?.id === c.client_id, accepted: !!c.client_accepted_at },
                 { label: isRTL ? 'المزود' : 'Provider', p: providerP, isMe: user?.id === c.provider_id, accepted: !!c.provider_accepted_at },
               ].map(party => (
                 <div key={party.label} className="flex items-center gap-2">
                   <div className="relative">
-                    <Avatar className="w-7 h-7 ring-1 ring-border">
+                    <Avatar className="w-8 h-8 ring-1 ring-border">
                       <AvatarImage src={party.p?.avatar_url || undefined} />
-                      <AvatarFallback className="text-[9px] bg-accent/10 text-accent font-bold">{(party.p?.full_name || '?').charAt(0)}</AvatarFallback>
+                      <AvatarFallback className="text-[11px] bg-accent/10 text-accent font-bold">{(party.p?.full_name || '?').charAt(0)}</AvatarFallback>
                     </Avatar>
                     {party.accepted && (
-                      <div className="absolute -bottom-0.5 -end-0.5 w-3.5 h-3.5 rounded-full bg-success text-white flex items-center justify-center ring-2 ring-card">
-                        <CheckCircle2 className="w-2.5 h-2.5" />
+                      <div
+                        className="absolute -bottom-0.5 -end-0.5 w-4 h-4 rounded-full bg-success text-success-foreground flex items-center justify-center ring-2 ring-card"
+                        title={isRTL ? 'تم القبول' : 'Accepted'}
+                      >
+                        <CheckCircle2 className="w-3 h-3" aria-hidden="true" />
                       </div>
                     )}
                   </div>
                   <div>
-                    <p className="text-[9px] text-muted-foreground leading-none">{party.label}</p>
-                    <p className="text-[10px] font-semibold leading-tight">
+                    <p className="text-[10px] text-muted-foreground leading-none mb-0.5">{party.label}</p>
+                    <p className="text-xs font-semibold leading-tight text-foreground">
                       {party.p?.full_name || '-'}
-                      {party.isMe && <span className="text-accent ms-1 text-[8px]">({isRTL ? 'أنت' : 'You'})</span>}
+                      {party.isMe && <span className="text-accent ms-1 text-[10px]">({isRTL ? 'أنت' : 'You'})</span>}
                     </p>
                   </div>
                 </div>
@@ -385,17 +455,33 @@ const ContractCard = React.memo(({
 
             {/* Quick Counters */}
             <div className="flex items-center gap-1.5">
-              {notes.length > 0 && <Badge variant="outline" className="text-[8px] gap-0.5 px-1.5 h-5"><StickyNote className="w-2.5 h-2.5" />{notes.length}</Badge>}
-              {attachments.length > 0 && <Badge variant="outline" className="text-[8px] gap-0.5 px-1.5 h-5"><Paperclip className="w-2.5 h-2.5" />{attachments.length}</Badge>}
+              {notes.length > 0 && (
+                <Badge variant="outline" className="text-[10px] gap-1 px-1.5 h-5 border-border/60" aria-label={isRTL ? `${notes.length} ملاحظات` : `${notes.length} notes`}>
+                  <StickyNote className="w-3 h-3" aria-hidden="true" />{notes.length}
+                </Badge>
+              )}
+              {attachments.length > 0 && (
+                <Badge variant="outline" className="text-[10px] gap-1 px-1.5 h-5 border-border/60" aria-label={isRTL ? `${attachments.length} مرفقات` : `${attachments.length} attachments`}>
+                  <Paperclip className="w-3 h-3" aria-hidden="true" />{attachments.length}
+                </Badge>
+              )}
             </div>
           </div>
 
           {/* Supervisor Row */}
           {(c.supervisor_name || c.supervisor_phone) && (
-            <div className="flex flex-wrap items-center gap-2.5 mt-3 pt-3 border-t border-border/30 text-[9px] text-muted-foreground">
-              <span className="flex items-center gap-1"><User className="w-3 h-3" />{c.supervisor_name || '-'}</span>
-              {c.supervisor_phone && <a href={`tel:${c.supervisor_phone}`} className="flex items-center gap-1 hover:text-accent transition-colors"><Phone className="w-3 h-3" />{c.supervisor_phone}</a>}
-              {c.supervisor_email && <a href={`mailto:${c.supervisor_email}`} className="flex items-center gap-1 hover:text-accent transition-colors"><Mail className="w-3 h-3" />{c.supervisor_email}</a>}
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 mt-3 pt-3 border-t border-border/50 text-[11px] text-muted-foreground">
+              <span className="flex items-center gap-1"><User className="w-3 h-3" aria-hidden="true" />{c.supervisor_name || '-'}</span>
+              {c.supervisor_phone && (
+                <a href={`tel:${c.supervisor_phone}`} className="flex items-center gap-1 hover:text-accent transition-colors tech-content focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded">
+                  <Phone className="w-3 h-3" aria-hidden="true" />{c.supervisor_phone}
+                </a>
+              )}
+              {c.supervisor_email && (
+                <a href={`mailto:${c.supervisor_email}`} className="flex items-center gap-1 hover:text-accent transition-colors tech-content focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded">
+                  <Mail className="w-3 h-3" aria-hidden="true" />{c.supervisor_email}
+                </a>
+              )}
             </div>
           )}
         </div>
