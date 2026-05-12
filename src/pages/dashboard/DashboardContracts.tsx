@@ -1949,8 +1949,26 @@ const DashboardContracts = () => {
 
                                 {/* Line Item Form */}
                                 {showAddLineItem === c.id && !locked && isProvider && (
+                                  (() => {
+                                    const cTemplateVersion = (c as { template_version_id?: string | null }).template_version_id ?? null;
+                                    const templateAllowed = cTemplateVersion ? allowedMethodsByVersion.get(cTemplateVersion) : undefined;
+                                    const hasAllowList = !!templateAllowed && templateAllowed.length > 0;
+                                    const methodOptions = hasAllowList
+                                      ? SUPPORTED_PRICING_METHODS.filter(m => templateAllowed!.includes(m))
+                                      : SUPPORTED_PRICING_METHODS;
+                                    // Auto-correct selected method if it's not allowed.
+                                    if (hasAllowList && methodOptions.length > 0 && !methodOptions.includes(lineItemForm.pricing_method)) {
+                                      // Defer state update to next tick to avoid setState-during-render warning.
+                                      queueMicrotask(() => setLineItemForm(f => ({ ...f, pricing_method: methodOptions[0] })));
+                                    }
+                                    return (
                                   <div className="p-4 rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 space-y-3">
                                     <h4 className="text-xs font-semibold">{isRTL ? 'إضافة بند إضافي (خدمة/مادة)' : 'Add Line Item (Service/Material)'}</h4>
+                                    {hasAllowList && (
+                                      <p className="text-[10px] text-muted-foreground">
+                                        {isRTL ? 'طرق التسعير المتاحة حسب قالب العقد.' : 'Pricing methods available per contract template.'}
+                                      </p>
+                                    )}
                                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                                       <Input placeholder={isRTL ? 'اسم البند' : 'Item Name'} value={lineItemForm.name_ar} onChange={e => setLineItemForm(f => ({ ...f, name_ar: e.target.value }))} className="h-9 text-xs" />
                                       <Select value={lineItemForm.item_type} onValueChange={v => setLineItemForm(f => ({ ...f, item_type: v }))}>
@@ -1965,7 +1983,7 @@ const DashboardContracts = () => {
                                       <Select value={lineItemForm.pricing_method} onValueChange={v => setLineItemForm(f => ({ ...f, pricing_method: v as PricingMethod }))}>
                                         <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
                                         <SelectContent>
-                                          {SUPPORTED_PRICING_METHODS.map(m => (
+                                          {methodOptions.map(m => (
                                             <SelectItem key={m} value={m}>{formatPricingMethodLabel(m, isRTL ? 'ar' : 'en')}</SelectItem>
                                           ))}
                                         </SelectContent>
