@@ -2774,6 +2774,11 @@ const ContractDetail = () => {
               installmentPayments={installmentPayments ?? []}
             />
           </TabsContent>
+
+          {/* ── PDF Export History (PDF-QA2) ── */}
+          <TabsContent value="exports">
+            <ContractPdfExportHistory contractId={contract.id} isRTL={isRTL} />
+          </TabsContent>
         </Tabs>
       </div>
 
