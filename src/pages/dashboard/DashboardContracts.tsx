@@ -18,7 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
-import { mapContractLockError } from '@/lib/contract-errors';
+import { mapContractLockError, mapContractCreateError } from '@/lib/contract-errors';
 import { dispatchAmendmentEvent } from '@/lib/amendment-notify';
 import {
   FileText, Eye, Plus, CheckCircle2, Clock, XCircle, AlertTriangle,
@@ -1025,7 +1025,7 @@ const DashboardContracts = () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-contracts'] });
       const n = res?.inserted ?? 0;
       if (n === 0) {
-        toast.info(isRTL ? 'البنود المقترحة موجودة مسبقاً' : 'Suggested items already added');
+        toast.info(isRTL ? 'تمت إضافة البنود المقترحة' : 'Suggested BOQ items already added');
       } else {
         toast.success(isRTL ? `أُضيفت ${n} بنود مقترحة` : `Added ${n} suggested items`);
       }
@@ -1165,7 +1165,10 @@ const DashboardContracts = () => {
       setSelectedClient(null); setSelectedWorkType('general'); setWorkTypeTouched(false);
       toast.success(editingId ? (isRTL ? 'تم تحديث العقد' : 'Contract updated') : (isRTL ? 'تم إنشاء العقد' : 'Contract created'));
     },
-    onError: (err: Error) => toast.error(err.message),
+    onError: (err: Error) => {
+      const mapped = mapContractCreateError(err, isRTL);
+      toast.error(mapped.message);
+    },
   });
 
   /* CT4C.3 — Client invitation mutations. */
@@ -1783,6 +1786,31 @@ const DashboardContracts = () => {
                 {editingId ? (isRTL ? 'تعديل العقد' : 'Edit Contract') : (isRTL ? 'إنشاء عقد جديد' : 'Create New Contract')}
                 {selectedTemplate && <Badge variant="secondary" className="text-[9px] gap-0.5"><Sparkles className="w-2.5 h-2.5" />{isRTL ? 'من قالب' : 'From template'}</Badge>}
               </CardTitle>
+              {!editingId && (() => {
+                const steps = [
+                  { key: 'client',   ar: 'العميل',       en: 'Client',   done: !!(selectedClient || form.client_email || pendingInvite) },
+                  { key: 'work',     ar: 'نوع العمل',    en: 'Work type', done: !!selectedWorkType && workTypeTouched },
+                  { key: 'template', ar: 'القالب',       en: 'Template',  done: !!effectiveVersion },
+                  { key: 'details',  ar: 'التفاصيل',     en: 'Details',   done: !!form.title_ar && !!form.total_amount && Number(form.total_amount) > 0 },
+                  { key: 'pricing',  ar: 'التسعير/VAT',  en: 'Pricing/VAT', done: !!form.vat_rate },
+                  { key: 'review',   ar: 'المراجعة',     en: 'Review',    done: false },
+                ];
+                return (
+                  <div className="mt-3 flex items-center gap-1 overflow-x-auto no-scrollbar" role="list" aria-label={isRTL ? 'خطوات إنشاء العقد' : 'Contract creation steps'}>
+                    {steps.map((s, i) => (
+                      <React.Fragment key={s.key}>
+                        <div role="listitem" className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-[10px] whitespace-nowrap ${s.done ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400' : 'border-border/40 bg-muted/30 text-muted-foreground'}`}>
+                          <span className={`w-4 h-4 rounded-full inline-flex items-center justify-center text-[9px] font-bold ${s.done ? 'bg-emerald-500 text-white' : 'bg-muted text-muted-foreground'}`}>
+                            {s.done ? '✓' : i + 1}
+                          </span>
+                          {isRTL ? s.ar : s.en}
+                        </div>
+                        {i < steps.length - 1 && <span className="text-muted-foreground/40 text-[10px]">·</span>}
+                      </React.Fragment>
+                    ))}
+                  </div>
+                );
+              })()}
             </CardHeader>
             <CardContent className="space-y-4">
               {/* CT4C.5 — Accepted invitations awaiting contract completion */}
