@@ -290,7 +290,7 @@ function Shell({ children, isRTL }: { children: React.ReactNode; isRTL: boolean 
     >
       <div className="w-full max-w-md space-y-6">
         <div className="flex justify-center">
-          <BrandLogo variant="mark" tone="auto" size="md" alt="قِطاعات" />
+          <BrandLogo variant="mark" tone="auto" size="auth" alt="قِطاعات" />
         </div>
         {children}
       </div>
