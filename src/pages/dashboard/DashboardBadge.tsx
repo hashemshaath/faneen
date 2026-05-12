@@ -19,7 +19,8 @@ import {
   ShieldCheck, Copy, Check, ExternalLink, AlertCircle, Code2, BarChart3,
   MousePointerClick, Globe, Eye, Percent, MessageSquare, CalendarClock,
   Phone, ArrowRight, QrCode, Download, Share2, Mail, Sparkles, Target,
-  TrendingUp, TrendingDown, Activity, FileText, Palette,
+  TrendingUp, TrendingDown, Activity, FileText, Palette, Stethoscope,
+  CircleDot, Database, RefreshCw,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNoIndex } from '@/hooks/useNoIndex';
@@ -104,7 +105,7 @@ const DashboardBadge: React.FC = () => {
     },
   });
 
-  const { data: clicks = [] } = useQuery({
+  const { data: clicks = [], isLoading: clicksLoading, isError: clicksError, dataUpdatedAt: clicksUpdatedAt, refetch: refetchClicks } = useQuery({
     queryKey: ['badge-clicks', business?.id],
     enabled: !!business?.id,
     refetchInterval: 60_000,
@@ -119,7 +120,7 @@ const DashboardBadge: React.FC = () => {
     },
   });
 
-  const { data: impressions = [] } = useQuery({
+  const { data: impressions = [], isLoading: impressionsLoading, isError: impressionsError, dataUpdatedAt: impressionsUpdatedAt, refetch: refetchImpressions } = useQuery({
     queryKey: ['badge-impressions', business?.id],
     enabled: !!business?.id,
     refetchInterval: 60_000,
@@ -134,7 +135,7 @@ const DashboardBadge: React.FC = () => {
     },
   });
 
-  const { data: conversions = [] } = useQuery({
+  const { data: conversions = [], isLoading: conversionsLoading, isError: conversionsError, dataUpdatedAt: conversionsUpdatedAt, refetch: refetchConversions } = useQuery({
     queryKey: ['badge-conversions', business?.id],
     enabled: !!business?.id,
     refetchInterval: 60_000,
