@@ -832,11 +832,32 @@ const DashboardContracts = () => {
   const addLineItemMutation = useMutation({
     mutationFn: async ({ contractId }: { contractId: string }) => {
       const existing = allLineItems.filter((li) => li.contract_id === contractId);
+      const fi: Record<string, number> = {};
+      const setIf = (k: string, v: string) => { if (v !== '' && Number.isFinite(Number(v))) fi[k] = Number(v); };
+      setIf('length_mm', lineItemForm.length_mm);
+      setIf('width_mm', lineItemForm.width_mm);
+      setIf('height_mm', lineItemForm.height_mm);
+      setIf('weight_kg', lineItemForm.weight_kg);
+      setIf('weight_ton', lineItemForm.weight_ton);
+      setIf('amount', lineItemForm.amount);
+      const calc = calculateLineTotal({
+        pricing_method: lineItemForm.pricing_method,
+        quantity: lineItemForm.quantity,
+        unit_price: lineItemForm.unit_price,
+        formula_inputs: fi,
+      });
+      if (!calc.ok) {
+        throw new Error(isRTL ? 'قيم البند غير صالحة' : 'Invalid line item values');
+      }
       const { error } = await supabase.from('contract_line_items').insert({
         contract_id: contractId, name_ar: lineItemForm.name_ar,
         description_ar: lineItemForm.description_ar || null,
-        quantity: Number(lineItemForm.quantity), unit_price: Number(lineItemForm.unit_price),
+        quantity: Number(lineItemForm.quantity || 1),
+        unit_price: Number(lineItemForm.unit_price || 0),
         item_type: lineItemForm.item_type, sort_order: existing.length + 1,
+        pricing_method: lineItemForm.pricing_method,
+        unit_of_measure: formatUnitOfMeasure(lineItemForm.pricing_method),
+        formula_inputs: fi,
       });
       if (error) throw error;
       // C6.4a — recompute via RPC.
