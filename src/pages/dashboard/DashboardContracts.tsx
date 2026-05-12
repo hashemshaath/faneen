@@ -579,6 +579,40 @@ const DashboardContracts = () => {
     enabled: contractIds.length > 0,
   });
 
+  // CT5D — allowed pricing methods per active contract template version.
+  const contractTemplateVersionIds = useMemo(() => {
+    const set = new Set<string>();
+    for (const c of contracts) {
+      const v = (c as { template_version_id?: string | null }).template_version_id;
+      if (v) set.add(v);
+    }
+    return Array.from(set);
+  }, [contracts]);
+
+  const { data: contractPricingRules = [] } = useQuery({
+    queryKey: ['dashboard-contract-pricing-rules', contractTemplateVersionIds],
+    queryFn: async () => {
+      if (contractTemplateVersionIds.length === 0) return [];
+      const { data } = await supabase
+        .from('contract_template_pricing_rules')
+        .select('version_id, method')
+        .in('version_id', contractTemplateVersionIds);
+      return data ?? [];
+    },
+    enabled: contractTemplateVersionIds.length > 0,
+  });
+
+  /** Map of template_version_id → allowed pricing methods (empty array if no rules configured). */
+  const allowedMethodsByVersion = useMemo(() => {
+    const map = new Map<string, string[]>();
+    for (const r of contractPricingRules) {
+      const list = map.get(r.version_id) ?? [];
+      list.push(r.method);
+      map.set(r.version_id, list);
+    }
+    return map;
+  }, [contractPricingRules]);
+
   const { data: profiles = [] } = useQuery({
     queryKey: ['contract-profiles', contractIds],
     queryFn: async () => {
