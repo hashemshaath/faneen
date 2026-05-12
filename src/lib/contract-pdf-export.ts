@@ -200,7 +200,7 @@ export const buildContractPDF = async (data: ContractExportData) => {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   const fontLoaded = await setupArabicDoc(doc, data.isRTL);
   if (data.isRTL && !fontLoaded && import.meta.env.DEV) {
-    throw new Error('PDF_ARABIC_FONT_UNAVAILABLE');
+    console.warn('PDF_ARABIC_FONT_UNAVAILABLE: Arabic contract PDF generated without a verified TTF/OTF font.');
   }
   const rtlStyles = getArabicTableStyles(data.isRTL, fontLoaded);
 
