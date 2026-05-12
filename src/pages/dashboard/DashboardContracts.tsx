@@ -1028,12 +1028,19 @@ const DashboardContracts = () => {
 
   const createContractMutation = useMutation({
     mutationFn: async () => {
-      const { data: clientProfile, error: clientProfileError } = await supabase.from('profiles').select('user_id').eq('email', form.client_email.trim()).maybeSingle();
-      if (clientProfileError) throw clientProfileError;
-      if (!clientProfile) throw new Error(isRTL ? 'لم يتم العثور على العميل بهذا البريد الإلكتروني' : 'Client not found with this email');
+      // CT4B — Prefer the picker-selected client; fall back to manual email lookup.
+      let clientUserId: string | null = selectedClient?.user_id ?? null;
+      if (!clientUserId && !editingId) {
+        const email = form.client_email.trim();
+        if (!email) throw new Error(isRTL ? 'يرجى اختيار العميل أولاً' : 'Please select a client first');
+        const { data: cp, error: cpe } = await supabase.from('profiles').select('user_id').eq('email', email).maybeSingle();
+        if (cpe) throw cpe;
+        if (!cp) throw new Error(isRTL ? 'لم يتم العثور على العميل بهذا البريد الإلكتروني' : 'Client not found with this email');
+        clientUserId = cp.user_id;
+      }
 
       const payload: any = {
-        provider_id: user!.id, client_id: clientProfile.user_id, business_id: businessId || null,
+        provider_id: user!.id, client_id: clientUserId!, business_id: businessId || null,
         title_ar: form.title_ar, title_en: form.title_en || null,
         description_ar: form.description_ar || null, description_en: form.description_en || null,
         total_amount: Number(form.total_amount), currency_code: form.currency_code,
@@ -1066,6 +1073,7 @@ const DashboardContracts = () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-contracts'] });
       setViewSection('list'); setForm(emptyForm); setEditingId(null);
       setSelectedVersionId(null); setSelectedPricingMethod(null); setSelectedTemplate(null);
+      setSelectedClient(null); setSelectedWorkType('general'); setWorkTypeTouched(false);
       toast.success(editingId ? (isRTL ? 'تم تحديث العقد' : 'Contract updated') : (isRTL ? 'تم إنشاء العقد' : 'Contract created'));
     },
     onError: (err: Error) => toast.error(err.message),
