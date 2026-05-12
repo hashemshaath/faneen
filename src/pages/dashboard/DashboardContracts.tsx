@@ -2038,7 +2038,10 @@ const DashboardContracts = () => {
                                           </div>
                                           <div className="flex items-center gap-2">
                                             <div className="text-end shrink-0">
-                                              <p className="text-[10px] text-muted-foreground">{li.quantity} × {Number(li.unit_price).toLocaleString()}</p>
+                                              <p className="text-[10px] text-muted-foreground">
+                                                {li.pricing_method && li.pricing_method !== 'unit' ? `${formatPricingMethodLabel(li.pricing_method, isRTL ? 'ar' : 'en')} • ` : ''}
+                                                {li.quantity} × {Number(li.unit_price).toLocaleString()}
+                                              </p>
                                               <p className="text-xs font-bold">{Number(li.total_cost || 0).toLocaleString()} {c.currency_code}</p>
                                             </div>
                                             {!locked && isProvider && (
