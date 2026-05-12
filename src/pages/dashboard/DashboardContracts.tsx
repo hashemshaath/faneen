@@ -1115,7 +1115,7 @@ const DashboardContracts = () => {
         _name: inviteForm.name.trim() || null,
         _phone: inviteForm.phone.trim() || null,
         _business_id: businessId || null,
-        _draft_payload: Object.keys(draft).length > 0 ? draft : null,
+        _draft_payload: Object.keys(draft).length > 0 ? (draft as unknown as Record<string, unknown>) : null,
         _template_version_id: effectiveVersion?.version_id ?? null,
         _work_type: selectedWorkType || null,
       });
