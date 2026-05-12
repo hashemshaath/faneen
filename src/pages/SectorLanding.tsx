@@ -448,6 +448,71 @@ const SectorLanding: React.FC = () => {
             {isRTL ? 'موثّق فقط' : 'Verified only'}
           </Button>
         </div>
+
+        {/* Quick city filter — pill row, updates URL in-place (no reload) */}
+        {topCities.length > 0 && (
+          <div className="container px-4 pb-4">
+            <div className="flex items-center gap-2 mb-2">
+              <MapPin className="w-3.5 h-3.5 text-muted-foreground" />
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                {isRTL ? 'فلترة سريعة بالمدينة' : 'Quick city filter'}
+              </span>
+              {(cityId !== 'all' || query || verifiedOnly || minRating > 0) && (
+                <button
+                  type="button"
+                  onClick={clearAllFilters}
+                  className="ms-auto inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <X className="w-3 h-3" />
+                  {isRTL ? 'مسح الفلاتر' : 'Clear filters'}
+                </button>
+              )}
+            </div>
+            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+              <button
+                type="button"
+                onClick={() => setCityId('all')}
+                className={`shrink-0 h-9 px-3 rounded-full border text-xs font-medium transition-all ${
+                  cityId === 'all'
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'bg-background hover:bg-muted border-border'
+                }`}
+              >
+                {isRTL ? `كل المدن (${businesses.length})` : `All cities (${businesses.length})`}
+              </button>
+              {topCities.map((c) => {
+                const active = cityId === c.id;
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setCityId(c.id)}
+                    className={`shrink-0 h-9 px-3 rounded-full border text-xs font-medium inline-flex items-center gap-1.5 transition-all ${
+                      active
+                        ? 'bg-primary text-primary-foreground border-primary'
+                        : 'bg-background hover:bg-muted border-border'
+                    }`}
+                    aria-pressed={active}
+                  >
+                    <MapPin className="w-3 h-3" />
+                    {language === 'ar' ? c.name_ar : (c.name_en || c.name_ar)}
+                    <span className={active ? 'text-primary-foreground/80' : 'text-muted-foreground'}>
+                      ({c.count})
+                    </span>
+                    {active && <X className="w-3 h-3 ms-0.5" onClick={(e) => { e.stopPropagation(); setCityId('all'); }} />}
+                  </button>
+                );
+              })}
+            </div>
+            {selectedCityName && (
+              <p className="text-xs text-muted-foreground mt-2">
+                {isRTL
+                  ? `تعرض الآن مزودي ${meta.name} في ${selectedCityName} فقط.`
+                  : `Showing ${meta.name} providers in ${selectedCityName} only.`}
+              </p>
+            )}
+          </div>
+        )}
       </section>
 
       {/* City chips → deep link to /search for indexable combos */}
