@@ -1229,6 +1229,110 @@ export type Database = {
           },
         ]
       }
+      client_invitations: {
+        Row: {
+          accepted_at: string | null
+          accepted_by: string | null
+          bound_contract_id: string | null
+          business_id: string | null
+          cancelled_at: string | null
+          created_at: string
+          draft_payload: Json | null
+          email_hmac: string | null
+          email_lower: string
+          expires_at: string
+          id: string
+          invited_by: string
+          last_reminder_at: string | null
+          recipient_name: string | null
+          recipient_phone: string | null
+          ref_id: string
+          reminder_count: number
+          status: Database["public"]["Enums"]["client_invite_status"]
+          template_version_id: string | null
+          token_hash: string
+          updated_at: string
+          work_type: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          bound_contract_id?: string | null
+          business_id?: string | null
+          cancelled_at?: string | null
+          created_at?: string
+          draft_payload?: Json | null
+          email_hmac?: string | null
+          email_lower: string
+          expires_at?: string
+          id?: string
+          invited_by: string
+          last_reminder_at?: string | null
+          recipient_name?: string | null
+          recipient_phone?: string | null
+          ref_id: string
+          reminder_count?: number
+          status?: Database["public"]["Enums"]["client_invite_status"]
+          template_version_id?: string | null
+          token_hash: string
+          updated_at?: string
+          work_type?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          bound_contract_id?: string | null
+          business_id?: string | null
+          cancelled_at?: string | null
+          created_at?: string
+          draft_payload?: Json | null
+          email_hmac?: string | null
+          email_lower?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string
+          last_reminder_at?: string | null
+          recipient_name?: string | null
+          recipient_phone?: string | null
+          ref_id?: string
+          reminder_count?: number
+          status?: Database["public"]["Enums"]["client_invite_status"]
+          template_version_id?: string | null
+          token_hash?: string
+          updated_at?: string
+          work_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_invitations_bound_contract_id_fkey"
+            columns: ["bound_contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_invitations_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_invitations_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_invitations_template_version_id_fkey"
+            columns: ["template_version_id"]
+            isOneToOne: false
+            referencedRelation: "contract_template_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contact_inbox_settings: {
         Row: {
           alert_on_max_retries: boolean
@@ -6309,6 +6413,7 @@ export type Database = {
         Returns: Json
       }
       _membership_free_defaults: { Args: never; Returns: Json }
+      accept_client_invitation: { Args: { _token: string }; Returns: Json }
       accept_contract: {
         Args: { _contract_id: string }
         Returns: {
@@ -6523,6 +6628,7 @@ export type Database = {
         }
         Returns: Json
       }
+      cancel_client_invitation: { Args: { _id: string }; Returns: Json }
       cancel_contract: {
         Args: { _contract_id: string; _reason?: string }
         Returns: {
@@ -6707,6 +6813,18 @@ export type Database = {
         Returns: Json
       }
       contract_snapshot_hash: { Args: { _snapshot: Json }; Returns: string }
+      create_client_invitation: {
+        Args: {
+          _business_id?: string
+          _draft_payload?: Json
+          _email: string
+          _name?: string
+          _phone?: string
+          _template_version_id?: string
+          _work_type?: string
+        }
+        Returns: Json
+      }
       create_contract_from_template: {
         Args: {
           _payload: Json
@@ -6741,6 +6859,7 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      expire_client_invitations: { Args: never; Returns: Json }
       generate_ref_id: {
         Args: { _prefix: string; _seq_name: string }
         Returns: string
@@ -7138,6 +7257,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      resend_client_invitation: { Args: { _id: string }; Returns: Json }
       search_contract_clients: {
         Args: { _q: string }
         Returns: {
@@ -7295,6 +7415,12 @@ export type Database = {
         | "needs_changes"
         | "published"
       business_staff_role: "owner" | "manager" | "editor" | "viewer"
+      client_invite_status:
+        | "pending"
+        | "accepted"
+        | "expired"
+        | "cancelled"
+        | "revoked"
       contract_status:
         | "draft"
         | "pending_approval"
@@ -7461,6 +7587,13 @@ export const Constants = {
         "published",
       ],
       business_staff_role: ["owner", "manager", "editor", "viewer"],
+      client_invite_status: [
+        "pending",
+        "accepted",
+        "expired",
+        "cancelled",
+        "revoked",
+      ],
       contract_status: [
         "draft",
         "pending_approval",
