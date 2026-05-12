@@ -310,12 +310,31 @@ export const PricingRulesPanel: React.FC<{
   return (
     <div className="space-y-4">
       {readOnly && <ReadOnlyNotice isRTL={isRTL} />}
-      <div className="flex items-center gap-2 rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-sm text-amber-800">
-        <AlertTriangle className="h-4 w-4" />
-        {isRTL
-          ? 'تنفيذ الصيغة (Formula) غير مفعّل بعد. هذه إعدادات فقط.'
-          : 'Formula execution is not active yet. This is configuration only.'}
+      <div className="flex items-start gap-2 rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-sm text-amber-800">
+        <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+        <span>
+          {isRTL
+            ? 'هذه الطرق سيتم فرضها على بنود العقد المرتبطة بهذا القالب. أي طريقة غير مضافة هنا لن تكون متاحة للمزود.'
+            : 'These methods will be enforced on contract line items using this template. Any method not added here will not be available to the provider.'}
+        </span>
       </div>
+      <div className="flex items-center gap-2">
+        <Badge variant="secondary">
+          {isRTL
+            ? `عدد طرق التسعير المسموحة: ${(rulesQ.data || []).length}`
+            : `Allowed pricing methods: ${(rulesQ.data || []).length}`}
+        </Badge>
+        <span className="text-xs text-muted-foreground">
+          {isRTL ? 'تنفيذ المعادلات المخصصة غير مفعل بعد.' : 'Custom formula execution is not enabled yet.'}
+        </span>
+      </div>
+      {(rulesQ.data || []).length === 0 && (
+        <div className="rounded-md border border-dashed px-3 py-4 text-sm text-muted-foreground text-center">
+          {isRTL
+            ? 'لا توجد طرق تسعير محددة. سيتم السماح بجميع الطرق الأساسية حتى يتم إضافة قواعد.'
+            : 'No pricing methods defined. All standard methods will be allowed until rules are added.'}
+        </div>
+      )}
       {!readOnly && (
         <Button size="sm" onClick={() => add.mutate()} disabled={add.isPending}>
           <Plus className="h-4 w-4" />{isRTL ? 'إضافة قاعدة تسعير' : 'Add pricing rule'}
