@@ -139,7 +139,12 @@ const PageLoader = () => (
 );
 
 const AppRoutes = () => (
-  <BrowserRouter>
+  <BrowserRouter
+    future={{
+      v7_startTransition: true,
+      v7_relativeSplatPath: true,
+    }}
+  >
     <AppDirectionShell>
       <RouteScrollToTop />
       <GlobalLinkTracker />

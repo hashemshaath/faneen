@@ -19,7 +19,8 @@ import {
   ShieldCheck, Copy, Check, ExternalLink, AlertCircle, Code2, BarChart3,
   MousePointerClick, Globe, Eye, Percent, MessageSquare, CalendarClock,
   Phone, ArrowRight, QrCode, Download, Share2, Mail, Sparkles, Target,
-  TrendingUp, TrendingDown, Activity, FileText, Palette,
+  TrendingUp, TrendingDown, Activity, FileText, Palette, Stethoscope,
+  CircleDot, Database, RefreshCw,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNoIndex } from '@/hooks/useNoIndex';
@@ -104,7 +105,7 @@ const DashboardBadge: React.FC = () => {
     },
   });
 
-  const { data: clicks = [] } = useQuery({
+  const { data: clicks = [], isLoading: clicksLoading, isError: clicksError, dataUpdatedAt: clicksUpdatedAt, refetch: refetchClicks } = useQuery({
     queryKey: ['badge-clicks', business?.id],
     enabled: !!business?.id,
     refetchInterval: 60_000,
@@ -119,7 +120,7 @@ const DashboardBadge: React.FC = () => {
     },
   });
 
-  const { data: impressions = [] } = useQuery({
+  const { data: impressions = [], isLoading: impressionsLoading, isError: impressionsError, dataUpdatedAt: impressionsUpdatedAt, refetch: refetchImpressions } = useQuery({
     queryKey: ['badge-impressions', business?.id],
     enabled: !!business?.id,
     refetchInterval: 60_000,
@@ -134,7 +135,7 @@ const DashboardBadge: React.FC = () => {
     },
   });
 
-  const { data: conversions = [] } = useQuery({
+  const { data: conversions = [], isLoading: conversionsLoading, isError: conversionsError, dataUpdatedAt: conversionsUpdatedAt, refetch: refetchConversions } = useQuery({
     queryKey: ['badge-conversions', business?.id],
     enabled: !!business?.id,
     refetchInterval: 60_000,
@@ -432,6 +433,7 @@ const DashboardBadge: React.FC = () => {
                 <TabsTrigger value="analytics" className="gap-1.5"><BarChart3 className="w-3.5 h-3.5" />{isRTL ? 'التحليلات' : 'Analytics'}</TabsTrigger>
                 <TabsTrigger value="share" className="gap-1.5"><Share2 className="w-3.5 h-3.5" />{isRTL ? 'المشاركة' : 'Share'}</TabsTrigger>
                 <TabsTrigger value="playbook" className="gap-1.5"><Target className="w-3.5 h-3.5" />{isRTL ? 'الدليل' : 'Playbook'}</TabsTrigger>
+                <TabsTrigger value="diag" className="gap-1.5"><Stethoscope className="w-3.5 h-3.5" />{isRTL ? 'التشخيص' : 'Diagnostics'}</TabsTrigger>
               </TabsList>
 
               {/* GENERATOR */}
@@ -843,6 +845,157 @@ const DashboardBadge: React.FC = () => {
                     </ul>
                   </CardContent>
                 </Card>
+              </TabsContent>
+
+              {/* DIAGNOSTICS */}
+              <TabsContent value="diag" className="space-y-4 mt-4">
+                {(() => {
+                  const lastImpression = impressions[0]?.created_at ?? null;
+                  const lastClick = clicks[0]?.created_at ?? null;
+                  const lastConversion = conversions[0]?.created_at ?? null;
+                  const anyLoading = clicksLoading || impressionsLoading || conversionsLoading;
+                  const anyError = clicksError || impressionsError || conversionsError;
+                  const anyData = impressions.length + clicks.length + conversions.length > 0;
+                  const maskedId = business.id.slice(0, 8) + '…';
+                  const lastUpdated = Math.max(clicksUpdatedAt || 0, impressionsUpdatedAt || 0, conversionsUpdatedAt || 0);
+                  const refreshAll = () => { void refetchClicks(); void refetchImpressions(); void refetchConversions(); };
+                  return (
+                    <>
+                      <Card>
+                        <CardHeader className="flex-row items-center justify-between gap-2">
+                          <CardTitle className="text-base flex items-center gap-2">
+                            <Stethoscope className="w-4 h-4" />{isRTL ? 'تشخيص الشارة' : 'Badge diagnostics'}
+                          </CardTitle>
+                          <Button size="sm" variant="outline" className="gap-1.5" onClick={refreshAll} aria-label={isRTL ? 'تحديث' : 'Refresh'}>
+                            <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
+                            {isRTL ? 'تحديث' : 'Refresh'}
+                          </Button>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          {/* Status */}
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                            {[
+                              {
+                                label: isRTL ? 'حالة التتبع' : 'Tracking status',
+                                value: anyError ? (isRTL ? 'خطأ' : 'Error') : anyLoading ? (isRTL ? 'يحمّل…' : 'Loading…') : anyData ? (isRTL ? 'نشط' : 'Active') : (isRTL ? 'بانتظار أحداث' : 'Awaiting events'),
+                                tone: anyError ? 'text-destructive' : anyData ? 'text-success' : 'text-muted-foreground',
+                              },
+                              {
+                                label: isRTL ? 'مرات الظهور' : 'Impressions',
+                                value: impressions.length.toLocaleString(),
+                                tone: 'text-foreground',
+                              },
+                              {
+                                label: isRTL ? 'النقرات' : 'Clicks',
+                                value: clicks.length.toLocaleString(),
+                                tone: 'text-primary',
+                              },
+                              {
+                                label: isRTL ? 'التحويلات' : 'Conversions',
+                                value: conversions.length.toLocaleString(),
+                                tone: 'text-success',
+                              },
+                            ].map((s) => (
+                              <div key={s.label} className="rounded-xl border bg-card p-3">
+                                <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{s.label}</div>
+                                <div className={`mt-1 text-lg font-heading font-bold tech-content ${s.tone}`}>{s.value}</div>
+                              </div>
+                            ))}
+                          </div>
+
+                          {anyError && (
+                            <div role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 p-3 flex items-start gap-2">
+                              <AlertCircle className="w-4 h-4 text-destructive shrink-0 mt-0.5" aria-hidden="true" />
+                              <p className="text-xs text-destructive">
+                                {isRTL ? 'تعذر تحميل بيانات التتبع. حاول التحديث أو راجع الاتصال بالشبكة.' : 'Could not load tracking data. Try refreshing or check your network connection.'}
+                              </p>
+                            </div>
+                          )}
+
+                          {/* Last activity */}
+                          <div className="rounded-xl border bg-card p-3">
+                            <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wide text-muted-foreground mb-2">
+                              <Activity className="w-3 h-3" aria-hidden="true" />{isRTL ? 'آخر نشاط' : 'Last activity'}
+                            </div>
+                            <ul className="space-y-1.5 text-xs">
+                              <li className="flex items-center justify-between">
+                                <span className="text-muted-foreground inline-flex items-center gap-1.5"><Eye className="w-3 h-3" aria-hidden="true" />{isRTL ? 'آخر ظهور' : 'Last impression'}</span>
+                                <span className="tech-content font-medium">{lastImpression ? relativeTime(lastImpression, isRTL) : (isRTL ? 'لا يوجد' : '—')}</span>
+                              </li>
+                              <li className="flex items-center justify-between">
+                                <span className="text-muted-foreground inline-flex items-center gap-1.5"><MousePointerClick className="w-3 h-3" aria-hidden="true" />{isRTL ? 'آخر نقرة' : 'Last click'}</span>
+                                <span className="tech-content font-medium">{lastClick ? relativeTime(lastClick, isRTL) : (isRTL ? 'لا يوجد' : '—')}</span>
+                              </li>
+                              <li className="flex items-center justify-between">
+                                <span className="text-muted-foreground inline-flex items-center gap-1.5"><Sparkles className="w-3 h-3" aria-hidden="true" />{isRTL ? 'آخر تحويل' : 'Last conversion'}</span>
+                                <span className="tech-content font-medium">{lastConversion ? relativeTime(lastConversion, isRTL) : (isRTL ? 'لا يوجد' : '—')}</span>
+                              </li>
+                            </ul>
+                          </div>
+
+                          {/* Data source */}
+                          <div className="rounded-xl border bg-card p-3">
+                            <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wide text-muted-foreground mb-2">
+                              <Database className="w-3 h-3" aria-hidden="true" />{isRTL ? 'مصدر البيانات' : 'Data source'}
+                            </div>
+                            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
+                              <div className="flex items-center justify-between">
+                                <dt className="text-muted-foreground">{isRTL ? 'الورشة' : 'Workshop'}</dt>
+                                <dd className="tech-content font-mono" dir="ltr">@{business.username}</dd>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <dt className="text-muted-foreground">{isRTL ? 'مُعرّف داخلي' : 'Internal ID'}</dt>
+                                <dd className="tech-content font-mono text-muted-foreground" dir="ltr" title={isRTL ? 'مُختصر لأغراض الخصوصية' : 'Truncated for privacy'}>{maskedId}</dd>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <dt className="text-muted-foreground">{isRTL ? 'موثّقة' : 'Verified'}</dt>
+                                <dd>
+                                  {business.is_verified
+                                    ? <Badge className="bg-success text-success-foreground">{isRTL ? 'نعم' : 'Yes'}</Badge>
+                                    : <Badge variant="outline" className="text-warning border-warning/40">{isRTL ? 'لا' : 'No'}</Badge>}
+                                </dd>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <dt className="text-muted-foreground">{isRTL ? 'سكربت التتبع' : 'Tracking script'}</dt>
+                                <dd className="inline-flex items-center gap-1">
+                                  <CircleDot className="w-3 h-3 text-success" aria-hidden="true" />
+                                  <span className="text-success font-semibold">{isRTL ? 'مُضمّن في الكود' : 'Embedded'}</span>
+                                </dd>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <dt className="text-muted-foreground">{isRTL ? 'استلام الأحداث' : 'Receiving events'}</dt>
+                                <dd className={anyData ? 'text-success font-semibold' : 'text-muted-foreground'}>
+                                  {anyData ? (isRTL ? 'نعم' : 'Yes') : (isRTL ? 'لا (انتظر بعد النشر)' : 'No (wait after embedding)')}
+                                </dd>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <dt className="text-muted-foreground">{isRTL ? 'آخر مزامنة' : 'Last sync'}</dt>
+                                <dd className="tech-content">{lastUpdated ? relativeTime(new Date(lastUpdated).toISOString(), isRTL) : '—'}</dd>
+                              </div>
+                            </dl>
+                          </div>
+
+                          {!anyData && !anyLoading && !anyError && (
+                            <div className="rounded-xl border border-dashed bg-muted/20 p-4 text-center">
+                              <p className="text-xs text-muted-foreground">
+                                {isRTL
+                                  ? 'لم تُسجَّل أحداث بعد. انسخ كود الشارة من تبويب «المولّد» وألصقه في موقعك؛ ستظهر الأحداث هنا خلال دقائق.'
+                                  : 'No events recorded yet. Copy the badge code from the Generator tab into your site; events will appear here within minutes.'}
+                              </p>
+                            </div>
+                          )}
+
+                          <p className="text-[11px] text-muted-foreground flex items-start gap-1.5">
+                            <AlertCircle className="w-3 h-3 shrink-0 mt-0.5" aria-hidden="true" />
+                            {isRTL
+                              ? 'تُستخدم هذه البيانات لأغراض التشخيص فقط. لا تُعرض أي مفاتيح أو رموز خاصة.'
+                              : 'This panel is for diagnostics only. No private tokens or secrets are exposed.'}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    </>
+                  );
+                })()}
               </TabsContent>
             </Tabs>
           </>
