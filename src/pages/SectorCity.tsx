@@ -22,6 +22,7 @@ import { VerifiedBadge } from '@/components/common/VerifiedBadge';
 import { SECTOR_KEYWORDS, type SectorSlug, getSectorMeta } from '@/lib/sector-keywords';
 import { getCityBySlug, SA_CITIES } from '@/lib/sa-cities';
 import { SERVICES_CATALOG, UNIT_LABEL } from '@/lib/services-catalog';
+import { getSectorFaqs } from '@/lib/sector-faqs';
 import { useSectorPageviewTracking } from '@/hooks/useSectorPageviewTracking';
 
 const SECTOR_TO_CATEGORY_SLUGS: Record<SectorSlug, string[]> = {
@@ -200,40 +201,128 @@ const SectorCity: React.FC = () => {
         inLanguage: isRTL ? 'ar' : 'en',
         isPartOf: { '@type': 'WebSite', name: 'قِطاعات Qitaat', url: SITE_URL },
       };
-      const itemList = filtered.length > 0
+
+      // ── Numbered ItemList of providers, each enriched with a LocalBusiness item ──
+      const top = filtered.slice(0, 10);
+      const verifiedCount = filtered.filter((b) => b.is_verified).length;
+      const ratedTop = top.filter((b) => (b.rating_count ?? 0) > 0);
+      const itemList = top.length > 0
         ? {
             '@context': 'https://schema.org',
             '@type': 'ItemList',
-            name: isRTL ? `أفضل مزودي ${meta.name} ${cityIn}` : `Top ${meta.name} providers ${cityIn}`,
-            numberOfItems: Math.min(filtered.length, 10),
-            itemListElement: filtered.slice(0, 10).map((b, i) => ({
-              '@type': 'ListItem',
-              position: i + 1,
-              url: `${SITE_URL}/${b.username}`,
-              name: language === 'ar' ? b.name_ar : (b.name_en || b.name_ar),
-            })),
+            name: isRTL ? `أفضل ${top.length} من مزودي ${meta.name} ${cityIn}` : `Top ${top.length} ${meta.name} providers ${cityIn}`,
+            description: isRTL
+              ? `قائمة مرتّبة بأفضل ${top.length} من ورش ${meta.name} ${cityIn} وفقاً للتقييم وحالة التحقق على منصة قِطاعات.`
+              : `Ranked list of the top ${top.length} ${meta.name} workshops ${cityIn} by rating and verification on Qitaat.`,
+            url: `${SITE_URL}/sectors/${sector.slug}/${city.slug}`,
+            itemListOrder: 'https://schema.org/ItemListOrderDescending',
+            numberOfItems: top.length,
+            itemListElement: top.map((b, i) => {
+              const name = language === 'ar' ? b.name_ar : (b.name_en || b.name_ar);
+              const url = `${SITE_URL}/${b.username}`;
+              const localBusiness: Record<string, unknown> = {
+                '@type': 'LocalBusiness',
+                '@id': url,
+                name,
+                url,
+                ...(b.logo_url ? { image: b.logo_url, logo: b.logo_url } : {}),
+                address: {
+                  '@type': 'PostalAddress',
+                  addressLocality: city.nameEn,
+                  addressRegion: city.nameEn,
+                  addressCountry: 'SA',
+                },
+                areaServed: { '@type': 'City', name: city.nameEn },
+                priceRange: 'SAR',
+              };
+              if ((b.rating_count ?? 0) > 0 && b.rating_avg != null) {
+                localBusiness.aggregateRating = {
+                  '@type': 'AggregateRating',
+                  ratingValue: Number(b.rating_avg).toFixed(1),
+                  reviewCount: b.rating_count,
+                  bestRating: 5,
+                  worstRating: 1,
+                };
+              }
+              return {
+                '@type': 'ListItem',
+                position: i + 1,
+                url,
+                name,
+                item: localBusiness,
+              };
+            }),
           }
         : null;
-      const faq = buildFaqPage([
-        {
-          q: isRTL ? `كيف أجد أفضل ورشة ${meta.name} ${cityIn}؟` : `How do I find the best ${meta.name} workshop ${cityIn}?`,
+
+      // ── City-aware FAQ: city/sector contextual Qs + curated sector FAQs ──
+      const sectorServices = SERVICES_CATALOG.filter((s) => s.sector === sector.slug);
+      const priceMin = sectorServices.length > 0 ? Math.min(...sectorServices.map((s) => s.price_min)) : null;
+      const priceMax = sectorServices.length > 0 ? Math.max(...sectorServices.map((s) => s.price_max)) : null;
+      const leadMin = sectorServices.length > 0 ? Math.min(...sectorServices.map((s) => s.lead_time_days)) : null;
+      const leadMax = sectorServices.length > 0 ? Math.max(...sectorServices.map((s) => s.lead_time_days)) : null;
+      const avgRatingTop = ratedTop.length > 0
+        ? (ratedTop.reduce((a, b) => a + Number(b.rating_avg ?? 0), 0) / ratedTop.length)
+        : null;
+      const providersCount = filtered.length;
+
+      const cityFaqEntries: Array<{ q: string; a: string }> = [];
+
+      cityFaqEntries.push({
+        q: isRTL ? `كم عدد ورش ${meta.name} المعتمدة ${cityIn}؟` : `How many verified ${meta.name} workshops are listed ${cityIn}?`,
+        a: isRTL
+          ? `يضم دليل قِطاعات حالياً ${providersCount} ${providersCount === 1 ? 'ورشة' : 'ورشة'} ${meta.name} ${cityIn}، منها ${verifiedCount} موثّقة بعد التحقق من الهوية والسجل التجاري.`
+          : `Qitaat currently lists ${providersCount} ${meta.name} workshop${providersCount === 1 ? '' : 's'} ${cityIn}, including ${verifiedCount} verified after ID & commercial-registration checks.`,
+      });
+
+      if (priceMin != null && priceMax != null) {
+        cityFaqEntries.push({
+          q: isRTL ? `كم متوسط أسعار ${meta.name} ${cityIn}؟` : `What is the typical ${meta.name} price ${cityIn}?`,
           a: isRTL
-            ? `تصفّح قائمة قِطاعات لمزودي ${meta.name} ${cityIn}، صفِّ النتائج حسب التقييم وحالة التحقق، ثم قارن أعمالهم وأسعارهم قبل التواصل.`
-            : `Browse the Qitaat listing of ${meta.name} providers ${cityIn}, filter by rating and verification, then compare portfolios and quotes before contacting.`,
-        },
-        {
-          q: isRTL ? `هل خدمة طلب عرض السعر مجانية ${cityIn}؟` : `Is requesting a quote free ${cityIn}?`,
+            ? `تتراوح أسعار خدمات ${meta.name} ${cityIn} بين ${priceMin} و${priceMax} ريالاً للوحدة (متر مربع، متر طولي أو قطعة) شاملة المواد والتركيب، وتختلف حسب نوع الخدمة والمواصفات. قارن 3 عروض على الأقل قبل التعاقد.`
+            : `${meta.name} services ${cityIn} typically range from SAR ${priceMin} to SAR ${priceMax} per unit (m², lin. m or piece) including materials and installation, varying by service type and specifications. Compare at least 3 quotes before signing.`,
+        });
+      }
+
+      if (leadMin != null && leadMax != null) {
+        cityFaqEntries.push({
+          q: isRTL ? `كم تستغرق مدة تنفيذ مشروع ${meta.name} ${cityIn}؟` : `How long does a ${meta.name} project take ${cityIn}?`,
           a: isRTL
-            ? `نعم، يمكنك التواصل مع أي مزود ${meta.name} مدرج ${cityIn} مباشرة عبر صفحته للحصول على عرض سعر مجاني وغير ملزم.`
-            : `Yes — contact any listed ${meta.name} provider ${cityIn} directly from their page for a free, no-obligation quote.`,
-        },
-        {
-          q: isRTL ? `كم متوسط أسعار ${meta.name} ${cityIn}؟` : `What is the average ${meta.name} price ${cityIn}?`,
+            ? `تتراوح مدة التصنيع والتركيب لمشاريع ${meta.name} ${cityIn} بين ${leadMin} و${leadMax} يوم عمل بحسب حجم المشروع وتعقيد التصميم وتوفّر المواد.`
+            : `${meta.name} fabrication and installation ${cityIn} typically takes ${leadMin}–${leadMax} working days depending on project size, design complexity and material availability.`,
+        });
+      }
+
+      if (avgRatingTop != null) {
+        cityFaqEntries.push({
+          q: isRTL ? `ما متوسط تقييم أفضل ورش ${meta.name} ${cityIn}؟` : `What is the average rating of top ${meta.name} workshops ${cityIn}?`,
           a: isRTL
-            ? `راجع صفحة الأسعار والمقارنة لاطلاع كامل على نطاقات الأسعار حسب نوع الخدمة، أو اطلب عروضاً من 3 ورش لمقارنتها.`
-            : `Check our prices & comparison page for full ranges by service type, or request 3 quotes to compare.`,
-        },
-      ])!;
+            ? `يبلغ متوسط تقييم أفضل ${ratedTop.length} ورشة ${meta.name} ${cityIn} على قِطاعات نحو ${avgRatingTop.toFixed(1)} من 5، وفق مراجعات حقيقية لعملاء سابقين.`
+            : `The top ${ratedTop.length} ${meta.name} workshops ${cityIn} average ${avgRatingTop.toFixed(1)} out of 5 on Qitaat, based on verified customer reviews.`,
+        });
+      }
+
+      cityFaqEntries.push({
+        q: isRTL ? `هل طلب عرض سعر ${meta.name} ${cityIn} مجاني؟` : `Is requesting a ${meta.name} quote ${cityIn} free?`,
+        a: isRTL
+          ? `نعم، التواصل مع أي مزود ${meta.name} مدرج ${cityIn} مجاني وغير ملزم. يمكنك إرسال طلب عرض سعر واحد إلى عدة ورش دفعة واحدة من خلال زر "اطلب عروض أسعار" أعلى الصفحة.`
+          : `Yes — contacting any listed ${meta.name} provider ${cityIn} is free and non-binding. You can send one RFQ to multiple workshops at once via the "Request quotes" button above.`,
+      });
+
+      // Append up to 4 sector-wide curated FAQs (avoid duplicates by question text).
+      const seenQ = new Set(cityFaqEntries.map((e) => e.q.trim()));
+      const sectorFaqs = getSectorFaqs(sector.slug).slice(0, 4);
+      for (const f of sectorFaqs) {
+        const q = isRTL ? f.q_ar : f.q_en;
+        const a = isRTL ? f.a_ar : f.a_en;
+        if (!seenQ.has(q.trim())) {
+          cityFaqEntries.push({ q, a });
+          seenQ.add(q.trim());
+        }
+      }
+
+      const faq = buildFaqPage(cityFaqEntries)!;
+
       const blocks: Record<string, unknown>[] = [breadcrumb, collection, faq];
       if (itemList) blocks.splice(2, 0, itemList);
       return blocks;
