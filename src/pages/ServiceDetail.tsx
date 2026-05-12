@@ -12,6 +12,7 @@ import { Star, Clock, ShieldCheck, ArrowLeft, ArrowRight, CheckCircle2 } from 'l
 import {
   getServiceBySlug, getRelatedServices, SECTOR_LABEL, QUALITY_LABEL, UNIT_LABEL,
 } from '@/lib/services-catalog';
+import { getServiceContent, SECTOR_HERO } from '@/lib/service-seo-content';
 
 const ServiceDetail: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -81,6 +82,8 @@ const ServiceDetail: React.FC = () => {
 
   const related = getRelatedServices(service.slug, 3);
   const midPrice = Math.round((service.price_min + service.price_max) / 2);
+  const content = getServiceContent(service.slug);
+  const heroImg = SECTOR_HERO[service.sector];
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -113,12 +116,35 @@ const ServiceDetail: React.FC = () => {
                 </p>
               </header>
 
+              {heroImg && (
+                <figure className="rounded-xl overflow-hidden border bg-muted">
+                  <img
+                    src={heroImg}
+                    alt={isRTL ? `${name} — ${sectorName} في السعودية` : `${name} — ${sectorName} in Saudi Arabia`}
+                    width={1280}
+                    height={720}
+                    loading="eager"
+                    decoding="async"
+                    fetchPriority="high"
+                    className="w-full h-auto object-cover aspect-[16/9]"
+                  />
+                  <figcaption className="sr-only">
+                    {isRTL ? service.tagline_ar : service.tagline_en}
+                  </figcaption>
+                </figure>
+              )}
+
               <Card>
                 <CardContent className="p-6">
                   <h2 className="text-xl font-semibold mb-3">
                     {isRTL ? 'وصف الخدمة' : 'Service overview'}
                   </h2>
                   <p className="text-muted-foreground leading-relaxed">{desc}</p>
+                  {content && (
+                    <p className="mt-3 text-foreground/90 leading-relaxed">
+                      {isRTL ? content.intro_ar : content.intro_en}
+                    </p>
+                  )}
                 </CardContent>
               </Card>
 
@@ -137,6 +163,114 @@ const ServiceDetail: React.FC = () => {
                   </ul>
                 </CardContent>
               </Card>
+
+              {content && content.sections.length > 0 && (
+                <article className="space-y-6">
+                  {content.sections.map((sec, i) => (
+                    <Card key={i}>
+                      <CardContent className="p-6">
+                        <h2 className="text-xl md:text-2xl font-semibold mb-3 tracking-tight">
+                          {isRTL ? sec.h2_ar : sec.h2_en}
+                        </h2>
+                        <p className="text-muted-foreground leading-relaxed">
+                          {isRTL ? sec.body_ar : sec.body_en}
+                        </p>
+                        {sec.subsections && sec.subsections.length > 0 && (
+                          <div className="mt-4 grid sm:grid-cols-2 gap-4">
+                            {sec.subsections.map((sub, j) => (
+                              <div key={j} className="rounded-lg border p-4 bg-muted/30">
+                                <h3 className="font-semibold mb-1.5">
+                                  {isRTL ? sub.h3_ar : sub.h3_en}
+                                </h3>
+                                <p className="text-sm text-muted-foreground leading-relaxed">
+                                  {isRTL ? sub.body_ar : sub.body_en}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </article>
+              )}
+
+              {content && content.cases.length > 0 && (
+                <Card>
+                  <CardContent className="p-6">
+                    <h2 className="text-xl md:text-2xl font-semibold mb-4 tracking-tight">
+                      {isRTL ? 'حالات واقعية من السوق السعودي' : 'Real cases from the Saudi market'}
+                    </h2>
+                    <div className="space-y-4">
+                      {content.cases.map((c, i) => (
+                        <div key={i} className="rounded-lg border p-4 bg-muted/20">
+                          <h3 className="font-semibold mb-1">
+                            {isRTL ? c.title_ar : c.title_en}
+                          </h3>
+                          <p className="text-xs text-muted-foreground mb-3">
+                            {isRTL ? `📍 ${c.city_ar}` : `📍 ${c.city_en}`}
+                          </p>
+                          <dl className="grid sm:grid-cols-3 gap-3 text-sm">
+                            <div>
+                              <dt className="font-medium text-foreground/80 mb-1">
+                                {isRTL ? 'التحدي' : 'Challenge'}
+                              </dt>
+                              <dd className="text-muted-foreground">{isRTL ? c.problem_ar : c.problem_en}</dd>
+                            </div>
+                            <div>
+                              <dt className="font-medium text-foreground/80 mb-1">
+                                {isRTL ? 'الحل' : 'Solution'}
+                              </dt>
+                              <dd className="text-muted-foreground">{isRTL ? c.solution_ar : c.solution_en}</dd>
+                            </div>
+                            <div>
+                              <dt className="font-medium text-emerald-700 dark:text-emerald-400 mb-1">
+                                {isRTL ? 'النتيجة' : 'Outcome'}
+                              </dt>
+                              <dd className="text-muted-foreground">{isRTL ? c.outcome_ar : c.outcome_en}</dd>
+                            </div>
+                          </dl>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {content && (
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <Card>
+                    <CardContent className="p-6">
+                      <h2 className="text-lg font-semibold mb-3 text-emerald-700 dark:text-emerald-400">
+                        {isRTL ? '✓ نصائح قبل الشراء' : '✓ Tips before buying'}
+                      </h2>
+                      <ul className="space-y-2 text-sm">
+                        {(isRTL ? content.tips_ar : content.tips_en).map((t, i) => (
+                          <li key={i} className="flex items-start gap-2">
+                            <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
+                            <span className="text-muted-foreground">{t}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-6">
+                      <h2 className="text-lg font-semibold mb-3 text-rose-700 dark:text-rose-400">
+                        {isRTL ? '✕ أخطاء شائعة تجنّبها' : '✕ Common mistakes to avoid'}
+                      </h2>
+                      <ul className="space-y-2 text-sm">
+                        {(isRTL ? content.mistakes_ar : content.mistakes_en).map((m, i) => (
+                          <li key={i} className="flex items-start gap-2">
+                            <span className="text-rose-600 mt-0.5 shrink-0">✕</span>
+                            <span className="text-muted-foreground">{m}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
 
               {service.faq.length > 0 && (
                 <Card>
