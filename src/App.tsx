@@ -227,6 +227,7 @@ const AppRoutes = () => (
           <Route path="/admin/analytics-settings" element={<ProtectedRoute requireAdmin><AdminAnalyticsSettings /></ProtectedRoute>} />
           <Route path="/admin/branding" element={<ProtectedRoute requireAdmin><AdminBranding /></ProtectedRoute>} />
           <Route path="/admin/contract-templates" element={<ProtectedRoute requireAdmin><AdminContractTemplates /></ProtectedRoute>} />
+          <Route path="/admin/pdf-exports" element={<ProtectedRoute requireAdmin><AdminPdfExportAudit /></ProtectedRoute>} />
 
           <Route path="/:username" element={<BusinessProfile />} />
           <Route path="*" element={<NotFound />} />
