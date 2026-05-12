@@ -149,6 +149,11 @@ const mapAmendmentError = (err: unknown, isRTL: boolean): string => {
     missing_rejection_reason: 'سبب الرفض مطلوب',
     contract_not_found: 'العقد غير موجود',
     amendment_not_found: 'طلب التعديل غير موجود',
+    overpaid_refund_required: 'لا يمكن تطبيق التعديل لأن المبلغ الجديد أقل من إجمالي الدفعات المدفوعة',
+    amendment_not_approved: 'لا يمكن التطبيق — التعديل غير معتمد',
+    not_authorized: 'لا تملك صلاحية تنفيذ هذا الإجراء',
+    invalid_new_amount: 'قيمة العقد الجديدة غير صالحة',
+    missing_new_amount: 'قيمة العقد الجديدة غير محددة',
   };
   const enMap: Record<string, string> = {
     requester_cannot_self_approve: 'Requester cannot approve their own request',
@@ -158,6 +163,11 @@ const mapAmendmentError = (err: unknown, isRTL: boolean): string => {
     missing_rejection_reason: 'Rejection reason is required',
     contract_not_found: 'Contract not found',
     amendment_not_found: 'Amendment not found',
+    overpaid_refund_required: 'Cannot apply — new total is below total paid amount',
+    amendment_not_approved: 'Cannot apply — amendment is not approved',
+    not_authorized: 'You are not authorized for this action',
+    invalid_new_amount: 'New contract amount is invalid',
+    missing_new_amount: 'New contract amount is missing',
   };
   const map = isRTL ? arMap : enMap;
   for (const key of Object.keys(map)) if (msg.includes(key)) return map[key];
