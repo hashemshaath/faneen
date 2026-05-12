@@ -490,12 +490,8 @@ const ContractDetail = () => {
 
   const recalcContractTotal = async (): Promise<void> => {
     if (!id) return;
-    const { data: fresh } = await supabase
-      .from('contract_measurements')
-      .select('total_cost')
-      .eq('contract_id', id);
-    const newTotal = (fresh || []).reduce((s, m) => s + (Number(m.total_cost) || 0), 0);
-    await supabase.from('contracts').update({ total_amount: newTotal }).eq('id', id);
+    // C6.4a — recompute via SECURITY DEFINER RPC (sums measurements + line items).
+    await supabase.rpc('recalc_contract_total', { _contract_id: id });
     await queryClient.invalidateQueries({ queryKey: ['contract', id] });
   };
 
