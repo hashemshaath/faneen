@@ -1,4 +1,4 @@
-import { setupArabicDoc, getArabicTableStyles, normalizeArabicPdfTextLayer, printContractSection } from './pdf-arabic-font';
+import { ArabicPdfFontError, setupArabicDoc, getArabicTableStyles, normalizeArabicPdfTextLayer, printContractSection, verifyArabicFontReady } from './pdf-arabic-font';
 import { BRAND_DOCUMENTS } from '@/config/brandTheme';
 import { hexToRgbTuple } from '@/lib/theme/brandThemeUtils';
 import { calculateVatBreakdown, calculateContractCoverage } from '@/lib/contract-financials';
@@ -56,6 +56,21 @@ const BORDER_RGB = hexToRgbTuple(BRAND_DOCUMENTS.invoiceBorder) ?? [226, 230, 23
 // Inlined as RGB because jsPDF doesn't accept hex strings for fillColor.
 const HIGHLIGHT_RGB: [number, number, number] = [230, 247, 240];
 const SURFACE2_RGB: [number, number, number] = [242, 244, 248];
+const PDF_PAGE_MARGIN = 16;
+const PDF_TABLE_MARGIN = { left: PDF_PAGE_MARGIN, right: PDF_PAGE_MARGIN };
+const PDF_DENSE_TABLE_MARGIN = { left: 12, right: 12 };
+
+type JsPdfWithAutoTable = { lastAutoTable?: { finalY?: number } };
+
+const lastTableY = (doc: unknown, fallback: number): number =>
+  (doc as JsPdfWithAutoTable).lastAutoTable?.finalY ?? fallback;
+
+const ensureArabicPdfFont = (doc: { getFontList?: () => Record<string, string[]> }, isRTL: boolean) => {
+  if (!isRTL) return;
+  if (!verifyArabicFontReady(doc, isRTL)) {
+    throw new ArabicPdfFontError('تعذر تضمين الخط العربي. قد لا يعمل البحث أو النسخ داخل ملف PDF بشكل صحيح.');
+  }
+};
 
 export interface ContractExportData {
   contractNumber: string;
