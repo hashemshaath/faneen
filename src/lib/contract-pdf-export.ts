@@ -2,6 +2,47 @@ import { setupArabicDoc, getArabicTableStyles, printContractSection } from './pd
 import { BRAND_DOCUMENTS } from '@/config/brandTheme';
 import { hexToRgbTuple } from '@/lib/theme/brandThemeUtils';
 import { calculateVatBreakdown, calculateContractCoverage } from '@/lib/contract-financials';
+import { groupLineItemsByBoqGroup, hasMixedPricing, listPricingMethodsUsed } from './contract-boq';
+
+// ── CT6: Pricing method labels (display only — no formula execution) ──
+const PRICING_METHOD_LABEL: Record<string, { ar: string; en: string }> = {
+  unit:         { ar: 'بالوحدة',          en: 'Per unit' },
+  linear_meter: { ar: 'بالمتر الطولي',    en: 'Linear meter' },
+  square_meter: { ar: 'بالمتر المربع',    en: 'Square meter' },
+  cubic_meter:  { ar: 'بالمتر المكعب',    en: 'Cubic meter' },
+  kilogram:     { ar: 'بالكيلوغرام',      en: 'Kilogram' },
+  ton:          { ar: 'بالطن',             en: 'Ton' },
+  lump_sum:     { ar: 'مبلغ مقطوع',       en: 'Lump sum' },
+};
+const UOM_FALLBACK: Record<string, string> = {
+  unit: 'pcs', linear_meter: 'm', square_meter: 'm²', cubic_meter: 'm³',
+  kilogram: 'kg', ton: 't', lump_sum: '—',
+};
+const labelForMethod = (m: string | null | undefined, isRTL: boolean): string => {
+  const key = (m || 'unit') as keyof typeof PRICING_METHOD_LABEL;
+  const x = PRICING_METHOD_LABEL[key] ?? PRICING_METHOD_LABEL.unit;
+  return isRTL ? x.ar : x.en;
+};
+const summarizeFormulaInputs = (inputs: unknown, isRTL: boolean): string => {
+  if (!inputs || typeof inputs !== 'object') return '-';
+  const o = inputs as Record<string, unknown>;
+  const parts: string[] = [];
+  const num = (k: string): number | null => {
+    const v = o[k];
+    if (v == null || v === '') return null;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+  };
+  const L = num('length_mm'), W = num('width_mm'), H = num('height_mm');
+  const wKg = num('weight_kg'), wT = num('weight_ton'), amt = num('amount');
+  if (L != null && W != null && H != null) parts.push(`${L}×${W}×${H} mm`);
+  else if (L != null && W != null)         parts.push(`${L}×${W} mm`);
+  else if (L != null)                      parts.push(`${L} mm`);
+  if (wKg != null) parts.push(`${wKg} kg`);
+  if (wT  != null) parts.push(`${wT} t`);
+  if (amt != null) parts.push(isRTL ? `مبلغ: ${amt}` : `amt: ${amt}`);
+  return parts.length ? parts.join(' • ') : '-';
+};
 
 // ── Central brand document tokens (resolved once per module load) ──
 // Falls back to the literal hex if the util ever returns null (it won't for
@@ -77,6 +118,59 @@ export interface ContractExportData {
     providerApprovedAt?: string | null;
     appliedAt?: string | null;
   }[];
+  /**
+   * CT6: Optional template metadata block. Caller supplies safe display
+   * fields only — never raw IDs, draft content, or admin notes.
+   */
+  template?: {
+    nameAr?: string | null;
+    nameEn?: string | null;
+    versionNumber?: number | null;
+    category?: string | null;
+    pricingMethod?: string | null;
+    languagePrecedence?: string | null;
+  } | null;
+  /**
+   * CT6: Frozen template snapshot payload. Only `sections[].clauses[]` and
+   * `attachments[]` (precedence_order, kind, title_ar/en, is_mandatory) are
+   * read here. file_url and storage paths are NEVER rendered.
+   */
+  templateSnapshot?: {
+    sections?: Array<{
+      title_ar?: string;
+      title_en?: string | null;
+      sort_order?: number;
+      is_required?: boolean;
+      clauses?: Array<{
+        body_ar?: string;
+        body_en?: string | null;
+        sort_order?: number;
+        is_mandatory?: boolean;
+      }>;
+    }>;
+    attachments?: Array<{
+      kind?: string;
+      title_ar?: string;
+      title_en?: string | null;
+      precedence_order?: number;
+      is_mandatory?: boolean;
+    }>;
+  } | null;
+  /**
+   * CT6: Contract line items grouped by BOQ in PDF. Items must come from
+   * `contract_line_items` (server-authoritative `total_cost`).
+   */
+  lineItems?: Array<{
+    nameAr?: string | null;
+    nameEn?: string | null;
+    pricingMethod?: string | null;
+    unitOfMeasure?: string | null;
+    boqGroupKey?: string | null;
+    quantity: number;
+    unitPrice: number;
+    totalCost: number;
+    formulaInputs?: unknown;
+  }>;
   isRTL: boolean;
   /**
    * C6.6: optional public verification hash (contract.document_hash). When
