@@ -272,11 +272,29 @@ const SectorCity: React.FC = () => {
                 <MapPin className="h-3 w-3" />{cityName}
               </Badge>
               <Badge variant="outline">{meta.name}</Badge>
+              <Badge variant="outline" className="gap-1 border-amber-500/40 text-amber-700 dark:text-amber-400">
+                <Trophy className="h-3 w-3" />
+                {isRTL ? `أفضل 10 ${cityIn}` : `Top 10 ${cityIn}`}
+              </Badge>
             </div>
             <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3">
               {isRTL ? `${meta.name} ${cityIn}` : `${meta.name} ${cityIn}`}
             </h1>
             <p className="text-muted-foreground max-w-3xl">{description}</p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Button asChild size="sm">
+                <Link to={`/contact?topic=${sector.slug}&city=${city.slug}`}>
+                  <MessageSquare className="h-4 w-4 me-1.5" />
+                  {isRTL ? 'اطلب عروض أسعار من 3 ورش' : 'Request quotes from 3 workshops'}
+                </Link>
+              </Button>
+              <Button asChild size="sm" variant="outline">
+                <Link to={`/services?sector=${sector.slug}`}>
+                  {isRTL ? 'تصفّح الأسعار التقديرية' : 'Browse estimated prices'}
+                  <Arrow className="h-4 w-4 ms-1" />
+                </Link>
+              </Button>
+            </div>
           </header>
 
           {/* Filters */}
