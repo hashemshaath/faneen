@@ -3669,6 +3669,51 @@ export type Database = {
           },
         ]
       }
+      legacy_contract_normalization_log: {
+        Row: {
+          action: string
+          contract_id: string
+          created_at: string
+          id: number
+          inferred_category: string | null
+          new_pricing_method: string | null
+          new_template_snapshot_id: string | null
+          new_template_version_id: string | null
+          notes: string | null
+          old_pricing_method: string | null
+          old_template_snapshot_id: string | null
+          old_template_version_id: string | null
+        }
+        Insert: {
+          action: string
+          contract_id: string
+          created_at?: string
+          id?: number
+          inferred_category?: string | null
+          new_pricing_method?: string | null
+          new_template_snapshot_id?: string | null
+          new_template_version_id?: string | null
+          notes?: string | null
+          old_pricing_method?: string | null
+          old_template_snapshot_id?: string | null
+          old_template_version_id?: string | null
+        }
+        Update: {
+          action?: string
+          contract_id?: string
+          created_at?: string
+          id?: number
+          inferred_category?: string | null
+          new_pricing_method?: string | null
+          new_template_snapshot_id?: string | null
+          new_template_version_id?: string | null
+          notes?: string | null
+          old_pricing_method?: string | null
+          old_template_snapshot_id?: string | null
+          old_template_version_id?: string | null
+        }
+        Relationships: []
+      }
       maintenance_requests: {
         Row: {
           client_id: string
