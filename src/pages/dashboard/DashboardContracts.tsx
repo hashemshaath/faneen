@@ -695,6 +695,21 @@ const DashboardContracts = () => {
     [publishedVersions, selectedVersionId, generalVersion],
   );
 
+  /* CT4B — Auto-suggest published template version from selected work type
+   * unless the user manually picked a different template. */
+  React.useEffect(() => {
+    if (publishedVersions.length === 0) return;
+    if (selectedVersionId) return;
+    const suggested = pickTemplateForWorkType(selectedWorkType, publishedVersions);
+    if (suggested) {
+      setSelectedVersionId(suggested.version_id);
+      setSelectedPricingMethod(null);
+    }
+    // We deliberately depend only on workType + the published list. If the user
+    // overrides the dropdown, `selectedVersionId` becomes truthy and we stop.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedWorkType, publishedVersions]);
+
   const { data: businessId } = useQuery({
     queryKey: ['my-business-id-contracts', user?.id],
     queryFn: async () => {
