@@ -1592,10 +1592,13 @@ export type Database = {
       }
       contract_amendments: {
         Row: {
+          after_snapshot_id: string | null
+          amendment_number: number | null
           amendment_type: string
           amount_delta: number | null
           applied_at: string | null
           applied_by: string | null
+          before_snapshot_id: string | null
           cancelled_at: string | null
           cancelled_by: string | null
           client_approved_at: string | null
@@ -1604,24 +1607,33 @@ export type Database = {
           description_ar: string | null
           description_en: string | null
           id: string
+          internal_note: string | null
           new_amount: number | null
           new_end_date: string | null
+          new_scope_summary: string | null
+          old_end_date: string | null
+          old_scope_summary: string | null
           old_total: number | null
           provider_approved_at: string | null
+          public_reason: string | null
           reason: string | null
           rejected_by: string | null
           rejection_reason: string | null
           requested_by: string
           status: string
+          superseded_by: string | null
           title_ar: string
           title_en: string | null
           updated_at: string
         }
         Insert: {
+          after_snapshot_id?: string | null
+          amendment_number?: number | null
           amendment_type?: string
           amount_delta?: number | null
           applied_at?: string | null
           applied_by?: string | null
+          before_snapshot_id?: string | null
           cancelled_at?: string | null
           cancelled_by?: string | null
           client_approved_at?: string | null
@@ -1630,24 +1642,33 @@ export type Database = {
           description_ar?: string | null
           description_en?: string | null
           id?: string
+          internal_note?: string | null
           new_amount?: number | null
           new_end_date?: string | null
+          new_scope_summary?: string | null
+          old_end_date?: string | null
+          old_scope_summary?: string | null
           old_total?: number | null
           provider_approved_at?: string | null
+          public_reason?: string | null
           reason?: string | null
           rejected_by?: string | null
           rejection_reason?: string | null
           requested_by: string
           status?: string
+          superseded_by?: string | null
           title_ar: string
           title_en?: string | null
           updated_at?: string
         }
         Update: {
+          after_snapshot_id?: string | null
+          amendment_number?: number | null
           amendment_type?: string
           amount_delta?: number | null
           applied_at?: string | null
           applied_by?: string | null
+          before_snapshot_id?: string | null
           cancelled_at?: string | null
           cancelled_by?: string | null
           client_approved_at?: string | null
@@ -1656,25 +1677,52 @@ export type Database = {
           description_ar?: string | null
           description_en?: string | null
           id?: string
+          internal_note?: string | null
           new_amount?: number | null
           new_end_date?: string | null
+          new_scope_summary?: string | null
+          old_end_date?: string | null
+          old_scope_summary?: string | null
           old_total?: number | null
           provider_approved_at?: string | null
+          public_reason?: string | null
           reason?: string | null
           rejected_by?: string | null
           rejection_reason?: string | null
           requested_by?: string
           status?: string
+          superseded_by?: string | null
           title_ar?: string
           title_en?: string | null
           updated_at?: string
         }
         Relationships: [
           {
+            foreignKeyName: "contract_amendments_after_snapshot_id_fkey"
+            columns: ["after_snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "contract_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_amendments_before_snapshot_id_fkey"
+            columns: ["before_snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "contract_versions"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "contract_amendments_contract_id_fkey"
             columns: ["contract_id"]
             isOneToOne: false
             referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_amendments_superseded_by_fkey"
+            columns: ["superseded_by"]
+            isOneToOne: false
+            referencedRelation: "contract_amendments"
             referencedColumns: ["id"]
           },
         ]
@@ -5667,10 +5715,13 @@ export type Database = {
       apply_contract_amendment: {
         Args: { _amendment_id: string }
         Returns: {
+          after_snapshot_id: string | null
+          amendment_number: number | null
           amendment_type: string
           amount_delta: number | null
           applied_at: string | null
           applied_by: string | null
+          before_snapshot_id: string | null
           cancelled_at: string | null
           cancelled_by: string | null
           client_approved_at: string | null
@@ -5679,15 +5730,21 @@ export type Database = {
           description_ar: string | null
           description_en: string | null
           id: string
+          internal_note: string | null
           new_amount: number | null
           new_end_date: string | null
+          new_scope_summary: string | null
+          old_end_date: string | null
+          old_scope_summary: string | null
           old_total: number | null
           provider_approved_at: string | null
+          public_reason: string | null
           reason: string | null
           rejected_by: string | null
           rejection_reason: string | null
           requested_by: string
           status: string
+          superseded_by: string | null
           title_ar: string
           title_en: string | null
           updated_at: string
@@ -5702,10 +5759,13 @@ export type Database = {
       approve_contract_amendment: {
         Args: { _amendment_id: string }
         Returns: {
+          after_snapshot_id: string | null
+          amendment_number: number | null
           amendment_type: string
           amount_delta: number | null
           applied_at: string | null
           applied_by: string | null
+          before_snapshot_id: string | null
           cancelled_at: string | null
           cancelled_by: string | null
           client_approved_at: string | null
@@ -5714,15 +5774,21 @@ export type Database = {
           description_ar: string | null
           description_en: string | null
           id: string
+          internal_note: string | null
           new_amount: number | null
           new_end_date: string | null
+          new_scope_summary: string | null
+          old_end_date: string | null
+          old_scope_summary: string | null
           old_total: number | null
           provider_approved_at: string | null
+          public_reason: string | null
           reason: string | null
           rejected_by: string | null
           rejection_reason: string | null
           requested_by: string
           status: string
+          superseded_by: string | null
           title_ar: string
           title_en: string | null
           updated_at: string
@@ -5738,10 +5804,13 @@ export type Database = {
       cancel_contract_amendment: {
         Args: { _amendment_id: string }
         Returns: {
+          after_snapshot_id: string | null
+          amendment_number: number | null
           amendment_type: string
           amount_delta: number | null
           applied_at: string | null
           applied_by: string | null
+          before_snapshot_id: string | null
           cancelled_at: string | null
           cancelled_by: string | null
           client_approved_at: string | null
@@ -5750,15 +5819,21 @@ export type Database = {
           description_ar: string | null
           description_en: string | null
           id: string
+          internal_note: string | null
           new_amount: number | null
           new_end_date: string | null
+          new_scope_summary: string | null
+          old_end_date: string | null
+          old_scope_summary: string | null
           old_total: number | null
           provider_approved_at: string | null
+          public_reason: string | null
           reason: string | null
           rejected_by: string | null
           rejection_reason: string | null
           requested_by: string
           status: string
+          superseded_by: string | null
           title_ar: string
           title_en: string | null
           updated_at: string
@@ -6183,10 +6258,13 @@ export type Database = {
       reject_contract_amendment: {
         Args: { _amendment_id: string; _reason: string }
         Returns: {
+          after_snapshot_id: string | null
+          amendment_number: number | null
           amendment_type: string
           amount_delta: number | null
           applied_at: string | null
           applied_by: string | null
+          before_snapshot_id: string | null
           cancelled_at: string | null
           cancelled_by: string | null
           client_approved_at: string | null
@@ -6195,15 +6273,21 @@ export type Database = {
           description_ar: string | null
           description_en: string | null
           id: string
+          internal_note: string | null
           new_amount: number | null
           new_end_date: string | null
+          new_scope_summary: string | null
+          old_end_date: string | null
+          old_scope_summary: string | null
           old_total: number | null
           provider_approved_at: string | null
+          public_reason: string | null
           reason: string | null
           rejected_by: string | null
           rejection_reason: string | null
           requested_by: string
           status: string
+          superseded_by: string | null
           title_ar: string
           title_en: string | null
           updated_at: string
