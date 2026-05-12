@@ -1549,6 +1549,69 @@ export type Database = {
         }
         Relationships: []
       }
+      contract_amendment_approvals: {
+        Row: {
+          amendment_hash: string | null
+          amendment_id: string
+          approval_method: string
+          approved_at: string
+          approver_id: string
+          approver_role: string
+          contract_hash_at_approval: string | null
+          contract_id: string
+          created_at: string
+          id: string
+          ip_hash: string | null
+          notes: string | null
+          user_agent_hash: string | null
+        }
+        Insert: {
+          amendment_hash?: string | null
+          amendment_id: string
+          approval_method?: string
+          approved_at?: string
+          approver_id: string
+          approver_role: string
+          contract_hash_at_approval?: string | null
+          contract_id: string
+          created_at?: string
+          id?: string
+          ip_hash?: string | null
+          notes?: string | null
+          user_agent_hash?: string | null
+        }
+        Update: {
+          amendment_hash?: string | null
+          amendment_id?: string
+          approval_method?: string
+          approved_at?: string
+          approver_id?: string
+          approver_role?: string
+          contract_hash_at_approval?: string | null
+          contract_id?: string
+          created_at?: string
+          id?: string
+          ip_hash?: string | null
+          notes?: string | null
+          user_agent_hash?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_amendment_approvals_amendment_id_fkey"
+            columns: ["amendment_id"]
+            isOneToOne: false
+            referencedRelation: "contract_amendments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_amendment_approvals_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contract_amendment_audit: {
         Row: {
           action: string
@@ -5575,6 +5638,57 @@ export type Database = {
           },
         ]
       }
+      contract_amendment_approvals_safe: {
+        Row: {
+          amendment_hash: string | null
+          amendment_id: string | null
+          approval_method: string | null
+          approved_at: string | null
+          approver_role: string | null
+          contract_hash_at_approval: string | null
+          contract_id: string | null
+          created_at: string | null
+          id: string | null
+        }
+        Insert: {
+          amendment_hash?: string | null
+          amendment_id?: string | null
+          approval_method?: string | null
+          approved_at?: string | null
+          approver_role?: string | null
+          contract_hash_at_approval?: string | null
+          contract_id?: string | null
+          created_at?: string | null
+          id?: string | null
+        }
+        Update: {
+          amendment_hash?: string | null
+          amendment_id?: string | null
+          approval_method?: string | null
+          approved_at?: string | null
+          approver_role?: string | null
+          contract_hash_at_approval?: string | null
+          contract_id?: string | null
+          created_at?: string | null
+          id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_amendment_approvals_amendment_id_fkey"
+            columns: ["amendment_id"]
+            isOneToOne: false
+            referencedRelation: "contract_amendments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_amendment_approvals_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reviews_public: {
         Row: {
           business_id: string | null
@@ -5712,6 +5826,11 @@ export type Database = {
         }
         Returns: string
       }
+      amendment_canonical_safe_payload: {
+        Args: { _amendment_id: string }
+        Returns: Json
+      }
+      amendment_safe_hash: { Args: { _amendment_id: string }; Returns: string }
       apply_contract_amendment: {
         Args: { _amendment_id: string }
         Returns: {
