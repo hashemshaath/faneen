@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { FileText, Plus, Copy, Archive, Eye, ScrollText, Calculator, ListChecks, Paperclip, History, Search } from 'lucide-react';
+import { FileText, Copy, Archive, Eye, ScrollText, Calculator, ListChecks, Paperclip, History, Search, Scale } from 'lucide-react';
 import { Navigate } from 'react-router-dom';
 import {
   SectionsClausesPanel, PricingRulesPanel, RequiredFieldsPanel,
@@ -26,7 +26,7 @@ import {
 const AdminContractTemplates: React.FC = () => {
   useNoIndex();
   const { isRTL } = useLanguage();
-  const { isAdmin, user } = useAuth();
+  const { isAdmin } = useAuth();
   const qc = useQueryClient();
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [selectedVersionId, setSelectedVersionId] = useState<string | null>(null);
