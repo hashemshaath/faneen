@@ -774,6 +774,7 @@ const DashboardContracts = () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-contracts'] });
       toast.success(isRTL ? 'تم حذف البند' : 'Item deleted');
     },
+    onError: (err: unknown) => toast.error(mapContractLockError(err, isRTL).message),
   });
 
   /* ── Update Milestone Status ── */
