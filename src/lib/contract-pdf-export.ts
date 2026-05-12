@@ -989,6 +989,81 @@ export const previewContractPDF = async (
   return { url, blob, fileName: `contract-${data.contractNumber}.pdf` };
 };
 
+export const buildArabicFontTestPDF = async () => {
+  const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([import('jspdf'), import('jspdf-autotable')]);
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const fontLoaded = await setupArabicDoc(doc, true);
+  ensureArabicPdfFont(doc, true);
+  const rtlStyles = getArabicTableStyles(true, fontLoaded);
+  const w = doc.internal.pageSize.getWidth();
+  let y = 18;
+
+  doc.setTextColor(...TEXT_RGB);
+  doc.setFontSize(18);
+  doc.text('اختبار الخط العربي في PDF', w / 2, y, { align: 'center' });
+  y += 10;
+  doc.setFontSize(10);
+  doc.setTextColor(...MUTED_RGB);
+  doc.text('ملف آمن للتشخيص فقط — ليس جزءاً من محتوى العقد القانوني.', w / 2, y, { align: 'center' });
+  y += 12;
+
+  doc.setTextColor(...TEXT_RGB);
+  doc.setFontSize(11);
+  const paragraph = 'هذا نص عربي لاختبار وضوح القراءة والهوامش واتجاه الكتابة. يتضمن العقد والضريبة والضمان والشروط وأرقاماً مثل 1000×2000 mm ومبلغ 12,500 SAR.';
+  const paragraphLines = doc.splitTextToSize(paragraph, w - 34);
+  doc.text(paragraphLines, w - PDF_PAGE_MARGIN, y, { align: 'right' });
+  y += paragraphLines.length * 5 + 8;
+
+  doc.setFontSize(10);
+  doc.setTextColor(...MUTED_RGB);
+  doc.text('نص قرآني لاختبار عرض الخط العربي فقط', w - PDF_PAGE_MARGIN, y, { align: 'right' });
+  y += 7;
+  doc.setFontSize(14);
+  doc.setTextColor(...TEXT_RGB);
+  for (const line of ['بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ', 'قُلْ هُوَ اللَّهُ أَحَدٌ', 'اللَّهُ الصَّمَدُ']) {
+    doc.text(line, w - PDF_PAGE_MARGIN, y, { align: 'right' });
+    y += 8;
+  }
+
+  y += 4;
+  autoTable(doc, {
+    startY: y,
+    head: [['#', 'البند', 'الكمية', 'السعر', 'الإجمالي']],
+    body: [
+      ['1', 'اختبار العقد', '2', '1,000 SAR', '2,000 SAR'],
+      ['2', 'اختبار الضريبة والضمان', '1', '500 SAR', '500 SAR'],
+      ['3', 'اختبار الشروط والأبعاد 1000×2000 mm', '1', '250 SAR', '250 SAR'],
+    ],
+    foot: [['', 'الإجمالي شامل الضريبة', '', '', '2,750 SAR']],
+    theme: 'grid',
+    styles: { fontSize: 9, cellPadding: 3, ...rtlStyles },
+    headStyles: tableHeadStyles(true, fontLoaded, 9),
+    footStyles: tableFootStyles(true, fontLoaded, 9),
+    alternateRowStyles: { fillColor: SURFACE2_RGB },
+    margin: PDF_TABLE_MARGIN,
+  });
+  y = lastTableY(doc, y) + 14;
+
+  doc.setFillColor(...SURFACE2_RGB);
+  doc.rect(PDF_PAGE_MARGIN, y, w - PDF_PAGE_MARGIN * 2, 30, 'F');
+  doc.setDrawColor(...ACCENT_RGB);
+  doc.line(w - 85, y + 20, w - 25, y + 20);
+  doc.line(25, y + 20, 85, y + 20);
+  doc.setFontSize(8);
+  doc.setTextColor(...MUTED_RGB);
+  doc.text('توقيع المزود', w - 55, y + 25, { align: 'center' });
+  doc.text('توقيع العميل', 55, y + 25, { align: 'center' });
+
+  normalizeArabicPdfTextLayer(doc);
+  return doc;
+};
+
+export const exportArabicFontTestPDF = async () => {
+  const doc = await buildArabicFontTestPDF();
+  doc.save(`qitaat-arabic-font-test-${Date.now()}.pdf`);
+  return doc;
+};
+
 // ── Export Measurements as PDF ──
 export const exportMeasurementsPDF = async (opts: {
   contractNumber: string;
