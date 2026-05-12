@@ -1029,6 +1029,12 @@ const ContractDetail = () => {
       }),
       isRTL,
     });
+      // Fire-and-forget export history log (PDF-QA2). Server validates auth.
+      void recordContractPdfExport(contract.id, 'contract_detail', language);
+      qc.invalidateQueries({ queryKey: ['contract-pdf-exports', contract.id] });
+    } finally {
+      setIsExportingPDF(false);
+    }
   };
 
   const handleExportMeasurementsPDF = async () => {
