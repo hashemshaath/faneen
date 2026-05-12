@@ -65,6 +65,7 @@ const providerGroups: MenuGroup[] = [
       { label: { ar: 'معرض الأعمال', en: 'Portfolio' }, url: '/dashboard/portfolio', icon: Image },
       { label: { ar: 'المشاريع', en: 'Projects' }, url: '/dashboard/projects', icon: FolderOpen },
       { label: { ar: 'العروض', en: 'Promotions' }, url: '/dashboard/promotions', icon: Megaphone },
+      { label: { ar: 'شارة موثّق', en: 'Verified Badge' }, url: '/dashboard/badge', icon: ShieldCheck },
     ],
   },
   {
