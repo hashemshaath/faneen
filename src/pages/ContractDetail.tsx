@@ -1097,6 +1097,24 @@ const ContractDetail = () => {
     if (!previewUrl) await generatePreview();
   };
 
+  const handleArabicFontTestPDF = async () => {
+    try {
+      const [{ exportArabicFontTestPDF }, { getArabicFontDiagnostics }] = await Promise.all([
+        import('@/lib/contract-pdf-export'),
+        import('@/lib/pdf-arabic-font'),
+      ]);
+      await exportArabicFontTestPDF();
+      setPdfDiagnostics(getArabicFontDiagnostics());
+      toast({ title: isRTL ? 'تم إنشاء اختبار الخط العربي' : 'Arabic font test generated' });
+    } catch {
+      toast({
+        title: isRTL ? 'تعذر إنشاء اختبار الخط' : 'Font test failed',
+        description: isRTL ? 'تعذر تضمين الخط العربي. قد لا يعمل البحث أو النسخ داخل ملف PDF بشكل صحيح.' : 'Arabic font could not be embedded. Copy/search may not work correctly.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const handleClosePreview = () => {
     setPreviewOpen(false);
     if (previewUrl) {
