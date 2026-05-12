@@ -1,10 +1,22 @@
 // C6.4a — Helper for future contract lock error mapping.
-// No trigger is enforced yet; this is a forward-compatible utility.
+// CT5B — Extended with INVALID_LINE_ITEM_PRICING:* mapping.
 export type ContractLockErrorCode = 'CONTRACT_LOCKED' | 'CONTRACT_STATUS_LOCKED';
 
+export type LineItemPricingErrorCode =
+  | 'unsupported_method'
+  | 'missing_length'
+  | 'missing_width'
+  | 'missing_height'
+  | 'missing_weight'
+  | 'negative_value'
+  | 'value_too_large'
+  | 'invalid_number'
+  | 'invalid_total';
+
 export interface MappedContractError {
-  code: ContractLockErrorCode | 'GENERIC';
+  code: ContractLockErrorCode | 'INVALID_LINE_ITEM_PRICING' | 'GENERIC';
   message: string;
+  pricingError?: LineItemPricingErrorCode;
 }
 
 const MESSAGES: Record<ContractLockErrorCode, { ar: string; en: string }> = {
@@ -18,9 +30,49 @@ const MESSAGES: Record<ContractLockErrorCode, { ar: string; en: string }> = {
   },
 };
 
+const PRICING_MESSAGES: Record<LineItemPricingErrorCode, { ar: string; en: string }> = {
+  unsupported_method: {
+    ar: 'طريقة التسعير غير مدعومة حالياً.',
+    en: 'This pricing method is not supported yet.',
+  },
+  missing_length: { ar: 'يرجى إدخال الطول بشكل صحيح.', en: 'Please enter a valid length.' },
+  missing_width:  { ar: 'يرجى إدخال العرض بشكل صحيح.', en: 'Please enter a valid width.' },
+  missing_height: { ar: 'يرجى إدخال الارتفاع بشكل صحيح.', en: 'Please enter a valid height.' },
+  missing_weight: { ar: 'يرجى إدخال الوزن بشكل صحيح.', en: 'Please enter a valid weight.' },
+  negative_value: {
+    ar: 'لا يمكن استخدام قيم سالبة في حساب التكلفة.',
+    en: 'Negative values are not allowed in pricing.',
+  },
+  value_too_large: {
+    ar: 'القيمة المدخلة كبيرة جداً. يرجى مراجعة القياسات.',
+    en: 'The value entered is too large. Please review the measurements.',
+  },
+  invalid_number: {
+    ar: 'تعذر احتساب تكلفة البند. يرجى مراجعة البيانات.',
+    en: 'Could not calculate the line item cost. Please review the inputs.',
+  },
+  invalid_total: {
+    ar: 'تعذر احتساب تكلفة البند. يرجى مراجعة البيانات.',
+    en: 'Could not calculate the line item cost. Please review the inputs.',
+  },
+};
+
 export function mapContractLockError(err: unknown, isRTL: boolean): MappedContractError {
   const raw = err instanceof Error ? err.message : typeof err === 'string' ? err : '';
   const upper = raw.toUpperCase();
+
+  // CT5B — Pricing trigger error: INVALID_LINE_ITEM_PRICING:<code>
+  const pricingMatch = raw.match(/INVALID_LINE_ITEM_PRICING:([a-z_]+)/i);
+  if (pricingMatch) {
+    const code = pricingMatch[1].toLowerCase() as LineItemPricingErrorCode;
+    const meta = PRICING_MESSAGES[code] ?? PRICING_MESSAGES.invalid_total;
+    return {
+      code: 'INVALID_LINE_ITEM_PRICING',
+      pricingError: code,
+      message: isRTL ? meta.ar : meta.en,
+    };
+  }
+
   // Legacy alias: the older `contracts_financial_lock` trigger raises
   // `contract_locked_use_amendment` for total/date/terms changes on active+ rows.
   if (upper.includes('CONTRACT_LOCKED_USE_AMENDMENT')) {
