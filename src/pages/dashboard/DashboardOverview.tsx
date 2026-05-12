@@ -155,22 +155,28 @@ const TodaySummary = React.memo(({ isRTL, userId }: { isRTL: boolean; userId: st
   ];
 
   return (
-    <Card className="border-border/40">
-      <CardContent className="p-3">
-        <div className="flex items-center gap-2 mb-2">
-          <CalendarDays className="w-3.5 h-3.5 text-accent" />
-          <h3 className="font-heading font-bold text-xs">{isRTL ? 'ملخص اليوم' : "Today's Summary"}</h3>
+    <Card className="border-border/60">
+      <CardContent className="p-3 sm:p-4">
+        <div className="flex items-center gap-2 mb-2.5">
+          <CalendarDays className="w-4 h-4 text-accent" aria-hidden="true" />
+          <h3 className="font-heading font-bold text-sm">{isRTL ? 'ملخص اليوم' : "Today's Summary"}</h3>
         </div>
         <div className="grid grid-cols-2 gap-2">
-          {items.map((item, i) => (
-            <div key={i} className="flex items-center gap-2 p-2 rounded-lg bg-muted/20">
-              <item.icon className="w-3.5 h-3.5 text-muted-foreground" />
-              <div>
-                <p className="text-sm font-bold leading-none">{item.value}</p>
-                <p className="text-[8px] text-muted-foreground">{item.label}</p>
+          {items.map((item, i) => {
+            const isEmpty = item.value === 0;
+            return (
+              <div
+                key={i}
+                className={`flex items-center gap-2.5 p-2.5 rounded-lg border ${isEmpty ? 'bg-muted/20 border-border/40' : 'bg-accent/5 border-accent/20'}`}
+              >
+                <item.icon className={`w-4 h-4 shrink-0 ${isEmpty ? 'text-muted-foreground/70' : 'text-accent'}`} aria-hidden="true" />
+                <div className="min-w-0">
+                  <p className={`text-base font-bold leading-none tech-content ${isEmpty ? 'text-muted-foreground' : 'text-foreground'}`}>{item.value}</p>
+                  <p className="text-[11px] text-muted-foreground mt-1 truncate">{item.label}</p>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </CardContent>
     </Card>
