@@ -904,8 +904,11 @@ const ContractDetail = () => {
 
   const handleExportPDF = async () => {
     if (!contract) return;
+    if (isExportingPDF) return;
+    setIsExportingPDF(true);
+    try {
     const { exportContractPDF } = await import('@/lib/contract-pdf-export');
-    exportContractPDF({
+    await exportContractPDF({
       contractNumber: contract.contract_number,
       title,
       description: desc || undefined,
