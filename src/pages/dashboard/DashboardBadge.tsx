@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -9,11 +9,30 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
-import { ShieldCheck, Copy, Check, ExternalLink, AlertCircle, Code2, BarChart3, MousePointerClick, Globe, Eye, Percent, MessageSquare, CalendarClock, Phone, ArrowRight } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Progress } from '@/components/ui/progress';
+import { VerifiedBadge } from '@/components/common/VerifiedBadge';
+import {
+  ShieldCheck, Copy, Check, ExternalLink, AlertCircle, Code2, BarChart3,
+  MousePointerClick, Globe, Eye, Percent, MessageSquare, CalendarClock,
+  Phone, ArrowRight, QrCode, Download, Share2, Mail, Sparkles, Target,
+  TrendingUp, TrendingDown, Activity, FileText, Palette,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { useNoIndex } from '@/hooks/useNoIndex';
-
-type BadgeVariant = 'light' | 'dark' | 'compact';
+import {
+  Area, AreaChart, ResponsiveContainer, Tooltip as RTooltip, XAxis, YAxis, CartesianGrid,
+} from 'recharts';
+import {
+  buildBadgeHtml, buildBadgeMarkdown, buildBadgeJsx, buildBadgeIframe,
+  buildEmailSignature, buildBadgeSvg, buildProfileLink,
+  type BadgeVariant, type BadgeSize, type BadgeAccent,
+} from '@/lib/badge/snippets';
+import { exportRowsToCsv } from '@/lib/badge/csv';
+import { generateQrSvg, downloadQrPng } from '@/lib/badge/qr';
 
 interface BusinessRow {
   id: string;
@@ -23,66 +42,54 @@ interface BusinessRow {
   is_verified: boolean | null;
 }
 
-const SITE_URL = 'https://qitaat.com';
-// Public edge function that records an impression and returns a 1×1 GIF.
-const PIXEL_URL = `https://hckpxwhjycmdflaneihd.supabase.co/functions/v1/badge-pixel`;
+type SnippetKind = 'html' | 'md' | 'jsx' | 'iframe' | 'email' | 'link' | 'svg';
 
-/**
- * Build a self-contained inline-SVG anchor — no external CSS, safe to paste
- * into any CMS, WordPress widget, Wix block, or HTML email signature.
- * The anchor always points to the live profile with `?ref=badge` so
- * traffic from these badges is attributable in analytics.
- */
-function buildBadgeHtml(opts: {
-  username: string;
-  displayName: string;
-  variant: BadgeVariant;
-  isRTL: boolean;
-}): string {
-  const { username, displayName, variant, isRTL } = opts;
-  const href = `${SITE_URL}/${username}?ref=badge&utm_source=workshop_site&utm_medium=badge&utm_campaign=verified`;
-  const label = isRTL ? 'موثّق على قِطاعات' : 'Verified on Qitaat';
-  const sub = isRTL ? `قِطاعات · ${displayName}` : `Qitaat · ${displayName}`;
-  const safeName = displayName.replace(/"/g, '&quot;');
-  // Tracking pixel — fires one `badge_impressions` row per render. Hidden,
-  // no layout impact, never blocks the badge from showing.
-  const pixel = `<img src="${PIXEL_URL}?u=${encodeURIComponent(username)}&v=${variant}" alt="" width="1" height="1" style="position:absolute;width:1px;height:1px;opacity:0;border:0;pointer-events:none;" referrerpolicy="no-referrer-when-downgrade" loading="eager" />`;
+const ACCENT_SWATCHES: { id: BadgeAccent; hex: string; ar: string; en: string }[] = [
+  { id: 'emerald', hex: '#10b981', ar: 'زمردي', en: 'Emerald' },
+  { id: 'brand',   hex: '#1f8a4c', ar: 'العلامة', en: 'Brand' },
+  { id: 'blue',    hex: '#2563eb', ar: 'أزرق',  en: 'Blue' },
+  { id: 'slate',   hex: '#475569', ar: 'رمادي', en: 'Slate' },
+];
 
-  if (variant === 'compact') {
-    // 28px tall, just the seal + word — perfect for email signatures
-    return `<a href="${href}" target="_blank" rel="noopener" title="${safeName} — ${label}" style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border:1px solid #d1fae5;border-radius:9999px;background:#ecfdf5;color:#065f46;font:600 12px/1 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;text-decoration:none;">
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-8 9-4.5-1.5-8-4-8-9V5l8-3 8 3z"/><path d="m9 12 2 2 4-4"/></svg>
-  <span>${label}</span>
-  ${pixel}
-</a>`;
-  }
+const VARIANTS: { id: BadgeVariant; ar: string; en: string }[] = [
+  { id: 'light',    ar: 'فاتح',    en: 'Light' },
+  { id: 'dark',     ar: 'داكن',    en: 'Dark' },
+  { id: 'gradient', ar: 'متدرّج',  en: 'Gradient' },
+  { id: 'compact',  ar: 'مضغوط',   en: 'Compact' },
+  { id: 'minimal',  ar: 'بسيط',    en: 'Minimal' },
+];
 
-  const isDark = variant === 'dark';
-  const bg = isDark ? '#0f172a' : '#ffffff';
-  const border = isDark ? '#1e293b' : '#e2e8f0';
-  const fg = isDark ? '#f8fafc' : '#0f172a';
-  const subFg = isDark ? '#94a3b8' : '#64748b';
-  const sealBg = '#10b981';
-  const dir = isRTL ? 'rtl' : 'ltr';
+const SIZES: { id: BadgeSize; ar: string; en: string }[] = [
+  { id: 'sm', ar: 'صغير',  en: 'Small' },
+  { id: 'md', ar: 'متوسط', en: 'Medium' },
+  { id: 'lg', ar: 'كبير',  en: 'Large' },
+];
 
-  return `<a href="${href}" target="_blank" rel="noopener" title="${safeName} — ${label}" dir="${dir}" style="display:inline-flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid ${border};border-radius:12px;background:${bg};color:${fg};font:600 13px/1.2 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;text-decoration:none;box-shadow:0 1px 2px rgba(0,0,0,.04);">
-  <span style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:9999px;background:${sealBg};color:#fff;flex:none;">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-8 9-4.5-1.5-8-4-8-9V5l8-3 8 3z"/><path d="m9 12 2 2 4-4"/></svg>
-  </span>
-  <span style="display:inline-flex;flex-direction:column;gap:2px;line-height:1.15;">
-    <span style="font-size:13px;font-weight:700;">${label}</span>
-    <span style="font-size:11px;font-weight:500;color:${subFg};">${sub}</span>
-  </span>
-  ${pixel}
-</a>`;
+function relativeTime(iso: string, isRTL: boolean): string {
+  const diff = (Date.now() - new Date(iso).getTime()) / 1000;
+  const fmt = (n: number, ar: string, en: string) =>
+    isRTL ? `قبل ${Math.floor(n)} ${ar}` : `${Math.floor(n)} ${en} ago`;
+  if (diff < 60) return isRTL ? 'الآن' : 'just now';
+  if (diff < 3600) return fmt(diff / 60, 'دقيقة', 'min');
+  if (diff < 86400) return fmt(diff / 3600, 'ساعة', 'h');
+  if (diff < 604800) return fmt(diff / 86400, 'يوم', 'd');
+  return new Date(iso).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US');
 }
 
 const DashboardBadge: React.FC = () => {
   useNoIndex();
   const { user } = useAuth();
   const { isRTL, language } = useLanguage();
+
+  // Customization state
   const [variant, setVariant] = useState<BadgeVariant>('light');
-  const [copied, setCopied] = useState<'html' | 'link' | 'md' | null>(null);
+  const [size, setSize] = useState<BadgeSize>('md');
+  const [accent, setAccent] = useState<BadgeAccent>('emerald');
+  const [showSubLabel, setShowSubLabel] = useState(true);
+  const [forceLang, setForceLang] = useState<'auto' | 'ar' | 'en'>('auto');
+  const [snippetKind, setSnippetKind] = useState<SnippetKind>('html');
+  const [copied, setCopied] = useState<string | null>(null);
+  const [qrSvg, setQrSvg] = useState<string>('');
 
   const { data: business, isLoading } = useQuery({
     queryKey: ['badge-generator-business', user?.id],
@@ -97,8 +104,6 @@ const DashboardBadge: React.FC = () => {
     },
   });
 
-  // Click analytics — every visit landing on the profile with `?ref=badge`
-  // is recorded in `badge_clicks`. Owners see only their own rows (RLS).
   const { data: clicks = [] } = useQuery({
     queryKey: ['badge-clicks', business?.id],
     enabled: !!business?.id,
@@ -109,12 +114,11 @@ const DashboardBadge: React.FC = () => {
         .select('id, referrer, utm_source, utm_campaign, created_at')
         .eq('business_id', business!.id)
         .order('created_at', { ascending: false })
-        .limit(500);
+        .limit(2000);
       return data ?? [];
     },
   });
 
-  // Impressions — every badge render fires the `badge-pixel` edge function.
   const { data: impressions = [] } = useQuery({
     queryKey: ['badge-impressions', business?.id],
     enabled: !!business?.id,
@@ -125,12 +129,11 @@ const DashboardBadge: React.FC = () => {
         .select('id, variant, referrer_host, created_at')
         .eq('business_id', business!.id)
         .order('created_at', { ascending: false })
-        .limit(2000);
+        .limit(5000);
       return data ?? [];
     },
   });
 
-  // Conversion funnel — every action a badge-attributed visitor took.
   const { data: conversions = [] } = useQuery({
     queryKey: ['badge-conversions', business?.id],
     enabled: !!business?.id,
@@ -141,139 +144,224 @@ const DashboardBadge: React.FC = () => {
         .select('id, session_token, event_type, source_page, created_at')
         .eq('business_id', business!.id)
         .order('created_at', { ascending: false })
-        .limit(2000);
+        .limit(5000);
       return data ?? [];
     },
   });
-
-  const clickStats = useMemo(() => {
-    const now = Date.now();
-    const day = 24 * 60 * 60 * 1000;
-    const last7 = clicks.filter((c) => now - new Date(c.created_at).getTime() <= 7 * day).length;
-    const last30 = clicks.filter((c) => now - new Date(c.created_at).getTime() <= 30 * day).length;
-    const referrerMap = new Map<string, number>();
-    for (const c of clicks) {
-      let host = '—';
-      if (c.referrer) {
-        try { host = new URL(c.referrer).hostname.replace(/^www\./, ''); } catch { /* keep dash */ }
-      }
-      referrerMap.set(host, (referrerMap.get(host) ?? 0) + 1);
-    }
-    const topReferrers = [...referrerMap.entries()]
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5);
-    return { total: clicks.length, last7, last30, topReferrers };
-  }, [clicks]);
-
-  const impressionStats = useMemo(() => {
-    const now = Date.now();
-    const day = 24 * 60 * 60 * 1000;
-    const last7 = impressions.filter((i) => now - new Date(i.created_at).getTime() <= 7 * day).length;
-    const last30 = impressions.filter((i) => now - new Date(i.created_at).getTime() <= 30 * day).length;
-    return { total: impressions.length, last7, last30 };
-  }, [impressions]);
-
-  // Click-Through Rate — clicks ÷ impressions. Guard against zero divisions.
-  const ctr = useMemo(() => {
-    const r = (c: number, i: number) => (i > 0 ? (c / i) * 100 : 0);
-    return {
-      total: r(clickStats.total, impressionStats.total),
-      last7: r(clickStats.last7, impressionStats.last7),
-      last30: r(clickStats.last30, impressionStats.last30),
-    };
-  }, [clickStats, impressionStats]);
-
-  /**
-   * Conversion funnel for badge-attributed sessions.
-   *  - clicks         → unique session tokens that landed on the profile.
-   *  - profileViews   → unique sessions that opened ≥1 profile page (≈clicks).
-   *  - contacts       → unique sessions that hit any contact CTA.
-   *  - bookings       → unique sessions that opened the booking flow.
-   * Conversion rate is computed against the originating click count.
-   */
-  const funnel = useMemo(() => {
-    const uniqByEvent = (type: string) =>
-      new Set(
-        conversions.filter((c) => c.event_type === type).map((c) => c.session_token),
-      ).size;
-
-    const profileViews = uniqByEvent('profile_view');
-    const contacts = uniqByEvent('contact');
-    const phoneReveals = uniqByEvent('phone_reveal');
-    const emailReveals = uniqByEvent('email_reveal');
-    const bookings = uniqByEvent('booking');
-    const anyContact = new Set(
-      conversions
-        .filter((c) => ['contact', 'phone_reveal', 'email_reveal'].includes(c.event_type))
-        .map((c) => c.session_token),
-    ).size;
-    const base = clickStats.total || profileViews || 1;
-    return {
-      profileViews,
-      contacts,
-      phoneReveals,
-      emailReveals,
-      bookings,
-      anyContact,
-      contactRate: (anyContact / base) * 100,
-      bookingRate: (bookings / base) * 100,
-    };
-  }, [conversions, clickStats.total]);
 
   const displayName = useMemo(() => {
     if (!business) return '';
     return language === 'ar' ? business.name_ar : (business.name_en || business.name_ar);
   }, [business, language]);
 
-  const html = useMemo(() => {
-    if (!business?.username) return '';
-    return buildBadgeHtml({
-      username: business.username,
-      displayName,
-      variant,
-      isRTL,
-    });
-  }, [business?.username, displayName, variant, isRTL]);
+  const badgeIsRTL = forceLang === 'auto' ? isRTL : forceLang === 'ar';
 
-  const profileLink = business?.username
-    ? `${SITE_URL}/${business.username}?ref=badge`
-    : '';
+  const buildOpts = useMemo(() => business?.username ? {
+    username: business.username,
+    displayName,
+    variant,
+    size,
+    accent,
+    isRTL: badgeIsRTL,
+    showSubLabel,
+  } : null, [business?.username, displayName, variant, size, accent, badgeIsRTL, showSubLabel]);
 
-  const markdown = business?.username
-    ? `[![${isRTL ? 'موثّق على قِطاعات' : 'Verified on Qitaat'}](https://qitaat.com/badge/verified.svg)](${profileLink})`
-    : '';
+  const html = useMemo(() => buildOpts ? buildBadgeHtml(buildOpts) : '', [buildOpts]);
+  const markdown = useMemo(() => buildOpts ? buildBadgeMarkdown(buildOpts) : '', [buildOpts]);
+  const jsx = useMemo(() => buildOpts ? buildBadgeJsx(buildOpts) : '', [buildOpts]);
+  const iframe = useMemo(() => buildOpts ? buildBadgeIframe(buildOpts) : '', [buildOpts]);
+  const emailSig = useMemo(() => buildOpts ? buildEmailSignature(buildOpts) : '', [buildOpts]);
+  const svgStandalone = useMemo(() => buildOpts ? buildBadgeSvg(buildOpts) : '', [buildOpts]);
 
-  const copy = async (text: string, kind: 'html' | 'link' | 'md') => {
+  const profileLink = business?.username ? buildProfileLink(business.username) : '';
+
+  // QR generation — re-runs when profile link changes.
+  useEffect(() => {
+    if (!profileLink) { setQrSvg(''); return; }
+    let cancelled = false;
+    generateQrSvg(profileLink, 220).then((svg) => { if (!cancelled) setQrSvg(svg); }).catch(() => undefined);
+    return () => { cancelled = true; };
+  }, [profileLink]);
+
+  // Bucket impressions + clicks by day for the last 30 days.
+  const dailySeries = useMemo(() => {
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    const days: { date: string; label: string; impressions: number; clicks: number }[] = [];
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      days.push({
+        date: key,
+        label: `${d.getDate()}/${d.getMonth() + 1}`,
+        impressions: 0,
+        clicks: 0,
+      });
+    }
+    const idx = new Map(days.map((d, i) => [d.date, i]));
+    for (const i of impressions) {
+      const k = i.created_at.slice(0, 10);
+      const j = idx.get(k); if (j !== undefined) days[j].impressions++;
+    }
+    for (const c of clicks) {
+      const k = c.created_at.slice(0, 10);
+      const j = idx.get(k); if (j !== undefined) days[j].clicks++;
+    }
+    return days;
+  }, [impressions, clicks]);
+
+  const periodStats = useMemo(() => {
+    const day = 86400000;
+    const now = Date.now();
+    const inWindow = <T extends { created_at: string }>(arr: T[], from: number, to: number) =>
+      arr.filter((x) => {
+        const t = new Date(x.created_at).getTime();
+        return t >= from && t < to;
+      }).length;
+    const last7 = { from: now - 7 * day, to: now };
+    const prev7 = { from: now - 14 * day, to: now - 7 * day };
+    const last30 = { from: now - 30 * day, to: now };
+    const prev30 = { from: now - 60 * day, to: now - 30 * day };
+    const ctr = (c: number, i: number) => i > 0 ? (c / i) * 100 : 0;
+    const iL7 = inWindow(impressions, last7.from, last7.to);
+    const iP7 = inWindow(impressions, prev7.from, prev7.to);
+    const cL7 = inWindow(clicks, last7.from, last7.to);
+    const cP7 = inWindow(clicks, prev7.from, prev7.to);
+    const iL30 = inWindow(impressions, last30.from, last30.to);
+    const iP30 = inWindow(impressions, prev30.from, prev30.to);
+    const cL30 = inWindow(clicks, last30.from, last30.to);
+    const cP30 = inWindow(clicks, prev30.from, prev30.to);
+    const delta = (cur: number, prev: number) =>
+      prev === 0 ? (cur > 0 ? 100 : 0) : ((cur - prev) / prev) * 100;
+    return {
+      total: { impressions: impressions.length, clicks: clicks.length, ctr: ctr(clicks.length, impressions.length) },
+      last7: { impressions: iL7, clicks: cL7, ctr: ctr(cL7, iL7) },
+      last30: { impressions: iL30, clicks: cL30, ctr: ctr(cL30, iL30) },
+      delta7: { impressions: delta(iL7, iP7), clicks: delta(cL7, cP7), ctr: delta(ctr(cL7, iL7), ctr(cP7, iP7)) },
+      delta30: { impressions: delta(iL30, iP30), clicks: delta(cL30, cP30), ctr: delta(ctr(cL30, iL30), ctr(cP30, iP30)) },
+    };
+  }, [impressions, clicks]);
+
+  const referrerStats = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const c of clicks) {
+      let host = '—';
+      if (c.referrer) { try { host = new URL(c.referrer).hostname.replace(/^www\./, ''); } catch { /* ignore */ } }
+      m.set(host, (m.get(host) ?? 0) + 1);
+    }
+    return [...m.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8);
+  }, [clicks]);
+
+  const sourcePageStats = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const c of conversions) {
+      const k = c.source_page || '—';
+      m.set(k, (m.get(k) ?? 0) + 1);
+    }
+    return [...m.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6);
+  }, [conversions]);
+
+  const funnel = useMemo(() => {
+    const uniq = (type: string) =>
+      new Set(conversions.filter((c) => c.event_type === type).map((c) => c.session_token)).size;
+    const profileViews = uniq('profile_view');
+    const phoneReveals = uniq('phone_reveal');
+    const emailReveals = uniq('email_reveal');
+    const bookings = uniq('booking');
+    const anyContact = new Set(
+      conversions.filter((c) => ['contact', 'phone_reveal', 'email_reveal'].includes(c.event_type)).map((c) => c.session_token),
+    ).size;
+    const base = clicks.length || profileViews || 1;
+    return {
+      profileViews, phoneReveals, emailReveals, bookings, anyContact,
+      contactRate: (anyContact / base) * 100,
+      bookingRate: (bookings / base) * 100,
+    };
+  }, [conversions, clicks.length]);
+
+  const recentActivity = useMemo(() => {
+    type Ev = { id: string; ts: string; kind: 'click' | 'impression' | 'conversion'; meta: string };
+    const items: Ev[] = [];
+    for (const c of clicks.slice(0, 20)) {
+      let host = '—';
+      if (c.referrer) { try { host = new URL(c.referrer).hostname.replace(/^www\./, ''); } catch { /* ignore */ } }
+      items.push({ id: `c-${c.id}`, ts: c.created_at, kind: 'click', meta: host });
+    }
+    for (const i of impressions.slice(0, 20)) {
+      items.push({ id: `i-${i.id}`, ts: i.created_at, kind: 'impression', meta: i.referrer_host || (i.variant ?? '—') });
+    }
+    for (const cv of conversions.slice(0, 20)) {
+      items.push({ id: `v-${cv.id}`, ts: cv.created_at, kind: 'conversion', meta: cv.event_type });
+    }
+    return items.sort((a, b) => b.ts.localeCompare(a.ts)).slice(0, 15);
+  }, [clicks, impressions, conversions]);
+
+  // Goals — persisted per-business in localStorage.
+  const goalsKey = business?.id ? `qitaat_badge_goals_${business.id}` : '';
+  const [goalImpr, setGoalImpr] = useState<number>(1000);
+  const [goalClicks, setGoalClicks] = useState<number>(100);
+  useEffect(() => {
+    if (!goalsKey) return;
+    try {
+      const raw = localStorage.getItem(goalsKey);
+      if (raw) {
+        const v = JSON.parse(raw) as { impressions?: number; clicks?: number };
+        if (typeof v.impressions === 'number') setGoalImpr(v.impressions);
+        if (typeof v.clicks === 'number') setGoalClicks(v.clicks);
+      }
+    } catch { /* ignore */ }
+  }, [goalsKey]);
+  useEffect(() => {
+    if (!goalsKey) return;
+    try { localStorage.setItem(goalsKey, JSON.stringify({ impressions: goalImpr, clicks: goalClicks })); } catch { /* ignore */ }
+  }, [goalsKey, goalImpr, goalClicks]);
+
+  const copy = async (text: string, kind: string) => {
     try {
       await navigator.clipboard.writeText(text);
       setCopied(kind);
-      toast.success(isRTL ? 'تم النسخ إلى الحافظة' : 'Copied to clipboard');
-      setTimeout(() => setCopied(null), 2000);
+      toast.success(isRTL ? 'تم النسخ' : 'Copied');
+      setTimeout(() => setCopied(null), 1800);
     } catch {
       toast.error(isRTL ? 'تعذّر النسخ' : 'Copy failed');
     }
   };
 
+  const shareUrl = encodeURIComponent(profileLink);
+  const shareText = encodeURIComponent(isRTL
+    ? `تعرّف على ورشتنا الموثّقة على قِطاعات: ${displayName}`
+    : `Check out our verified workshop on Qitaat: ${displayName}`);
+
+  const downloadSvg = () => {
+    const blob = new Blob([svgStandalone], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `qitaat-badge-${variant}-${size}.svg`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const snippetMap: Record<SnippetKind, string> = {
+    html, md: markdown, jsx, iframe, email: emailSig, link: profileLink, svg: svgStandalone,
+  };
+  const currentSnippet = snippetMap[snippetKind];
+
+  // Today's stats for hero
+  const today = useMemo(() => {
+    const start = new Date(); start.setHours(0, 0, 0, 0);
+    const t = start.getTime();
+    const i = impressions.filter((x) => new Date(x.created_at).getTime() >= t).length;
+    const c = clicks.filter((x) => new Date(x.created_at).getTime() >= t).length;
+    return { impressions: i, clicks: c, ctr: i > 0 ? (c / i) * 100 : 0 };
+  }, [impressions, clicks]);
+
   return (
     <DashboardLayout>
-      <div className="space-y-6 max-w-5xl">
-        {/* Header */}
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <ShieldCheck className="w-6 h-6 text-success" />
-            <h1 className="text-2xl font-heading font-bold">
-              {isRTL ? 'مولّد شارة الورشة الموثّقة' : 'Verified Workshop Badge Generator'}
-            </h1>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            {isRTL
-              ? 'انسخ كود HTML جاهز وألصقه في موقع ورشتك أو توقيع البريد للحصول على باك لينك صحيح إلى صفحتك على قِطاعات.'
-              : 'Copy ready-to-paste HTML and embed it on your workshop website or email signature for a correct backlink to your Qitaat profile.'}
-          </p>
-        </div>
-
+      <div className="space-y-6 max-w-6xl">
         {isLoading ? (
-          <Skeleton className="h-64 rounded-xl" />
+          <Skeleton className="h-72 rounded-2xl" />
         ) : !business ? (
           <Card>
             <CardContent className="p-8 text-center">
@@ -281,319 +369,482 @@ const DashboardBadge: React.FC = () => {
               <p className="text-sm text-muted-foreground">
                 {isRTL
                   ? 'لم نعثر على ورشة مرتبطة بحسابك. أنشئ ملف الورشة أولاً ثم عُد إلى هذه الصفحة.'
-                  : 'No workshop is linked to your account yet. Create your workshop profile first.'}
+                  : 'No workshop linked to your account yet. Create your workshop profile first.'}
               </p>
             </CardContent>
           </Card>
         ) : (
           <>
-            {/* Status banner */}
-            {!business.is_verified && (
-              <Card className="border-warning/30 bg-warning/5">
-                <CardContent className="p-4 flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-warning shrink-0 mt-0.5" />
-                  <div className="text-sm">
-                    <p className="font-semibold">
-                      {isRTL ? 'حسابك ليس موثّقاً بعد' : 'Your account is not verified yet'}
-                    </p>
-                    <p className="text-muted-foreground mt-1">
-                      {isRTL
-                        ? 'يمكنك إنشاء الكود الآن للمعاينة، لكن استخدم الشارة فقط بعد توثيق ورشتك من فريق قِطاعات.'
-                        : 'You can preview the code now, but only display the badge after your workshop is verified by the Qitaat team.'}
+            {/* Hero */}
+            <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-success/10 via-primary/5 to-background p-5 sm:p-6">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,hsl(var(--success)/0.15),transparent_60%)] pointer-events-none" />
+              <div className="relative flex flex-col lg:flex-row lg:items-center gap-4 lg:gap-6">
+                <div className="flex items-start gap-3 flex-1 min-w-0">
+                  <div className="w-12 h-12 rounded-2xl bg-success/15 text-success grid place-items-center shrink-0">
+                    <ShieldCheck className="w-6 h-6" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h1 className="text-xl sm:text-2xl font-heading font-bold truncate">
+                        {isRTL ? 'مولّد شارة الورشة الموثّقة' : 'Verified Workshop Badge'}
+                      </h1>
+                      {business.is_verified
+                        ? <VerifiedBadge size="sm" />
+                        : <Badge variant="outline" className="text-warning border-warning/40 bg-warning/5">{isRTL ? 'بانتظار التوثيق' : 'Pending verification'}</Badge>}
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-1 truncate">
+                      {displayName} · <span className="tech-content" dir="ltr">@{business.username}</span>
                     </p>
                   </div>
-                </CardContent>
-              </Card>
-            )}
+                </div>
+                <div className="grid grid-cols-3 gap-2 lg:gap-3 shrink-0">
+                  {[
+                    { icon: Eye, label: isRTL ? 'انطباعات اليوم' : 'Impr. today', value: today.impressions, tone: 'text-foreground' },
+                    { icon: MousePointerClick, label: isRTL ? 'نقرات اليوم' : 'Clicks today', value: today.clicks, tone: 'text-primary' },
+                    { icon: Percent, label: 'CTR', value: `${today.ctr.toFixed(1)}%`, tone: 'text-success' },
+                  ].map((s) => (
+                    <div key={s.label} className="rounded-xl bg-card/80 backdrop-blur border px-3 py-2 min-w-[88px]">
+                      <div className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground">
+                        <s.icon className="w-3 h-3" />{s.label}
+                      </div>
+                      <div className={`text-lg font-heading font-bold tech-content ${s.tone}`}>{s.value}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {/* Quick profile link chip */}
+              <div className="relative mt-4 flex items-center gap-2 rounded-xl border bg-card/70 backdrop-blur px-3 py-2">
+                <ExternalLink className="w-4 h-4 text-muted-foreground shrink-0" />
+                <span className="font-mono text-xs tech-content truncate flex-1" dir="ltr">{profileLink}</span>
+                <Button size="sm" variant="ghost" className="h-7 gap-1" onClick={() => copy(profileLink, 'hero-link')}>
+                  {copied === 'hero-link' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                </Button>
+                <Button size="sm" variant="ghost" className="h-7 gap-1" asChild>
+                  <a href={profileLink} target="_blank" rel="noopener"><ExternalLink className="w-3.5 h-3.5" /></a>
+                </Button>
+              </div>
+            </div>
 
-            {/* Variant picker */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">
-                  {isRTL ? 'اختر شكل الشارة' : 'Pick a badge style'}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex flex-wrap gap-2">
-                  {(['light', 'dark', 'compact'] as BadgeVariant[]).map((v) => (
-                    <button
-                      key={v}
-                      type="button"
-                      onClick={() => setVariant(v)}
-                      className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-full"
-                      aria-pressed={variant === v}
-                    >
-                      <Badge
-                        variant={variant === v ? 'default' : 'secondary'}
-                        className="px-4 py-2 cursor-pointer text-sm"
-                      >
-                        {v === 'light' && (isRTL ? 'فاتح' : 'Light')}
-                        {v === 'dark' && (isRTL ? 'داكن' : 'Dark')}
-                        {v === 'compact' && (isRTL ? 'مضغوط' : 'Compact')}
-                      </Badge>
-                    </button>
+            {/* Tabs */}
+            <Tabs defaultValue="generator" className="w-full">
+              <TabsList className="w-full justify-start overflow-x-auto no-scrollbar">
+                <TabsTrigger value="generator" className="gap-1.5"><Sparkles className="w-3.5 h-3.5" />{isRTL ? 'المولّد' : 'Generator'}</TabsTrigger>
+                <TabsTrigger value="analytics" className="gap-1.5"><BarChart3 className="w-3.5 h-3.5" />{isRTL ? 'التحليلات' : 'Analytics'}</TabsTrigger>
+                <TabsTrigger value="share" className="gap-1.5"><Share2 className="w-3.5 h-3.5" />{isRTL ? 'المشاركة' : 'Share'}</TabsTrigger>
+                <TabsTrigger value="playbook" className="gap-1.5"><Target className="w-3.5 h-3.5" />{isRTL ? 'الدليل' : 'Playbook'}</TabsTrigger>
+              </TabsList>
+
+              {/* GENERATOR */}
+              <TabsContent value="generator" className="space-y-4 mt-4">
+                <div className="grid lg:grid-cols-[1.2fr,1fr] gap-4">
+                  {/* Customization */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base flex items-center gap-2"><Palette className="w-4 h-4" />{isRTL ? 'تخصيص الشارة' : 'Customize'}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-5">
+                      <div>
+                        <Label className="text-xs uppercase tracking-wide text-muted-foreground mb-2 block">{isRTL ? 'الأسلوب' : 'Style'}</Label>
+                        <div className="flex flex-wrap gap-2">
+                          {VARIANTS.map((v) => (
+                            <button key={v.id} type="button" onClick={() => setVariant(v.id)} aria-pressed={variant === v.id} className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-full">
+                              <Badge variant={variant === v.id ? 'default' : 'secondary'} className="px-3 py-1.5 cursor-pointer">{isRTL ? v.ar : v.en}</Badge>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="text-xs uppercase tracking-wide text-muted-foreground mb-2 block">{isRTL ? 'الحجم' : 'Size'}</Label>
+                        <div className="flex flex-wrap gap-2">
+                          {SIZES.map((s) => (
+                            <button key={s.id} type="button" onClick={() => setSize(s.id)} aria-pressed={size === s.id} className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-full">
+                              <Badge variant={size === s.id ? 'default' : 'secondary'} className="px-3 py-1.5 cursor-pointer">{isRTL ? s.ar : s.en}</Badge>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="text-xs uppercase tracking-wide text-muted-foreground mb-2 block">{isRTL ? 'اللون' : 'Accent'}</Label>
+                        <div className="flex flex-wrap gap-2">
+                          {ACCENT_SWATCHES.map((a) => (
+                            <button key={a.id} type="button" onClick={() => setAccent(a.id)} aria-pressed={accent === a.id} title={isRTL ? a.ar : a.en}
+                              className={`relative h-9 w-9 rounded-full border-2 transition-all hover-lift ${accent === a.id ? 'border-foreground scale-110' : 'border-transparent'}`}
+                              style={{ background: a.hex }}>
+                              {accent === a.id && <Check className="absolute inset-0 m-auto w-4 h-4 text-white" />}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="grid sm:grid-cols-2 gap-3">
+                        <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
+                          <div className="text-sm">
+                            <div className="font-medium">{isRTL ? 'إظهار العنوان الفرعي' : 'Show sub-label'}</div>
+                            <div className="text-xs text-muted-foreground">{isRTL ? 'اسم الورشة تحت العنوان' : 'Workshop name under title'}</div>
+                          </div>
+                          <Switch checked={showSubLabel} onCheckedChange={setShowSubLabel} />
+                        </div>
+                        <div className="rounded-lg border p-3">
+                          <div className="text-sm font-medium mb-2">{isRTL ? 'لغة الشارة' : 'Badge language'}</div>
+                          <div className="flex gap-1">
+                            {(['auto', 'ar', 'en'] as const).map((l) => (
+                              <button key={l} type="button" onClick={() => setForceLang(l)} aria-pressed={forceLang === l}
+                                className={`flex-1 text-xs py-1.5 rounded-md border transition-colors ${forceLang === l ? 'bg-primary text-primary-foreground border-primary' : 'bg-card hover:bg-muted'}`}>
+                                {l === 'auto' ? (isRTL ? 'تلقائي' : 'Auto') : l.toUpperCase()}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Live preview on dual canvases */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base flex items-center gap-2"><Eye className="w-4 h-4" />{isRTL ? 'معاينة مباشرة' : 'Live preview'}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="rounded-xl border bg-white p-6 flex items-center justify-center min-h-[110px]" dangerouslySetInnerHTML={{ __html: html }} />
+                      <div className="rounded-xl border bg-slate-900 p-6 flex items-center justify-center min-h-[110px]" dangerouslySetInnerHTML={{ __html: html }} />
+                      <p className="text-[11px] text-muted-foreground text-center">{isRTL ? 'معاينة على خلفية فاتحة وداكنة' : 'Preview on light + dark backgrounds'}</p>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Snippets */}
+                <Card>
+                  <CardHeader className="flex-row items-center justify-between gap-2">
+                    <CardTitle className="text-base flex items-center gap-2"><Code2 className="w-4 h-4" />{isRTL ? 'كود الإلصاق' : 'Embed code'}</CardTitle>
+                    <Button size="sm" onClick={() => copy(currentSnippet, snippetKind)} className="gap-2">
+                      {copied === snippetKind ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                      {isRTL ? (copied === snippetKind ? 'تم النسخ' : 'نسخ') : (copied === snippetKind ? 'Copied' : 'Copy')}
+                    </Button>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex flex-wrap gap-1.5">
+                      {(['html', 'md', 'jsx', 'iframe', 'email', 'link', 'svg'] as SnippetKind[]).map((k) => (
+                        <button key={k} type="button" onClick={() => setSnippetKind(k)} aria-pressed={snippetKind === k}
+                          className={`px-3 py-1.5 text-xs font-semibold rounded-md border transition-colors ${snippetKind === k ? 'bg-primary text-primary-foreground border-primary' : 'bg-card hover:bg-muted border-border'}`}>
+                          {k === 'md' ? 'Markdown' : k === 'jsx' ? 'React/JSX' : k === 'email' ? (isRTL ? 'توقيع بريد' : 'Email sig') : k === 'link' ? (isRTL ? 'رابط' : 'Link') : k.toUpperCase()}
+                        </button>
+                      ))}
+                    </div>
+                    <Textarea value={currentSnippet} readOnly rows={snippetKind === 'svg' || snippetKind === 'jsx' ? 12 : 8}
+                      className="font-mono text-xs tech-content" dir="ltr"
+                      onClick={(e) => (e.currentTarget as HTMLTextAreaElement).select()} />
+                    <div className="flex flex-wrap gap-2">
+                      <Button size="sm" variant="outline" className="gap-2" onClick={downloadSvg}>
+                        <Download className="w-3.5 h-3.5" />{isRTL ? 'تنزيل SVG' : 'Download SVG'}
+                      </Button>
+                      <p className="text-xs text-muted-foreground self-center">
+                        {isRTL ? 'بدون CSS أو JS خارجي. كل الأكواد تتضمن تتبع تلقائي.' : 'No external CSS/JS. All snippets include attribution tracking.'}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* ANALYTICS */}
+              <TabsContent value="analytics" className="space-y-4 mt-4">
+                {/* KPI grid */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                  {[
+                    { icon: Eye, label: isRTL ? 'انطباعات (30 يوم)' : 'Impressions (30d)', value: periodStats.last30.impressions, delta: periodStats.delta30.impressions, tone: 'text-foreground' },
+                    { icon: MousePointerClick, label: isRTL ? 'نقرات (30 يوم)' : 'Clicks (30d)', value: periodStats.last30.clicks, delta: periodStats.delta30.clicks, tone: 'text-primary' },
+                    { icon: Percent, label: 'CTR (30d)', value: `${periodStats.last30.ctr.toFixed(1)}%`, delta: periodStats.delta30.ctr, tone: 'text-success' },
+                    { icon: CalendarClock, label: isRTL ? 'حجوزات' : 'Bookings', value: funnel.bookings, delta: 0, tone: 'text-success' },
+                  ].map((k) => (
+                    <Card key={k.label} className="hover-lift">
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wide text-muted-foreground"><k.icon className="w-3 h-3" />{k.label}</div>
+                        <div className={`mt-1 text-2xl font-heading font-bold tech-content ${k.tone}`}>{k.value}</div>
+                        {k.delta !== 0 && (
+                          <div className={`mt-1 inline-flex items-center gap-1 text-[11px] font-semibold ${k.delta >= 0 ? 'text-success' : 'text-destructive'}`}>
+                            {k.delta >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                            {k.delta >= 0 ? '+' : ''}{k.delta.toFixed(0)}%
+                            <span className="text-muted-foreground font-normal">{isRTL ? 'مقابل السابق' : 'vs prev'}</span>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
                   ))}
                 </div>
 
-                {/* Live preview — render the actual HTML the user will copy */}
-                <div className="border rounded-xl p-6 bg-muted/30">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-                    {isRTL ? 'معاينة مباشرة' : 'Live preview'}
-                  </p>
-                  <div
-                    className="flex items-center gap-3 flex-wrap"
-                    // eslint-disable-next-line react/no-danger
-                    dangerouslySetInnerHTML={{ __html: html }}
-                  />
-                </div>
-              </CardContent>
-            </Card>
+                {/* Chart */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2"><Activity className="w-4 h-4" />{isRTL ? 'آخر 30 يومًا' : 'Last 30 days'}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-64 w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={dailySeries} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
+                          <defs>
+                            <linearGradient id="impGrad" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="hsl(var(--success))" stopOpacity={0.4} />
+                              <stop offset="95%" stopColor="hsl(var(--success))" stopOpacity={0} />
+                            </linearGradient>
+                            <linearGradient id="clkGrad" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
+                              <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                          <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} interval={4} />
+                          <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} width={28} allowDecimals={false} />
+                          <RTooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }} />
+                          <Area type="monotone" dataKey="impressions" stroke="hsl(var(--success))" fill="url(#impGrad)" strokeWidth={2} name={isRTL ? 'انطباعات' : 'Impressions'} />
+                          <Area type="monotone" dataKey="clicks" stroke="hsl(var(--primary))" fill="url(#clkGrad)" strokeWidth={2} name={isRTL ? 'نقرات' : 'Clicks'} />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </CardContent>
+                </Card>
 
-            {/* Click analytics — `?ref=badge` events recorded on the public profile */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <BarChart3 className="w-4 h-4" />
-                  {isRTL ? 'تحليلات نقرات الشارة' : 'Badge click analytics'}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* 3 rows × 3 cols: impressions, clicks, CTR — by total / 7d / 30d */}
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
-                        <th className="text-start py-2 pe-3"></th>
-                        <th className="text-end py-2 px-3">{isRTL ? 'الإجمالي' : 'Total'}</th>
-                        <th className="text-end py-2 px-3">{isRTL ? 'آخر 7 أيام' : 'Last 7 days'}</th>
-                        <th className="text-end py-2 ps-3">{isRTL ? 'آخر 30 يومًا' : 'Last 30 days'}</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y">
-                      <tr>
-                        <td className="py-2 pe-3 flex items-center gap-1.5 text-muted-foreground">
-                          <Eye className="w-3.5 h-3.5" />{isRTL ? 'الانطباعات' : 'Impressions'}
-                        </td>
-                        <td className="py-2 px-3 text-end font-heading font-bold tech-content">{impressionStats.total}</td>
-                        <td className="py-2 px-3 text-end font-heading font-bold tech-content">{impressionStats.last7}</td>
-                        <td className="py-2 ps-3 text-end font-heading font-bold tech-content">{impressionStats.last30}</td>
-                      </tr>
-                      <tr>
-                        <td className="py-2 pe-3 flex items-center gap-1.5 text-muted-foreground">
-                          <MousePointerClick className="w-3.5 h-3.5" />{isRTL ? 'النقرات' : 'Clicks'}
-                        </td>
-                        <td className="py-2 px-3 text-end font-heading font-bold tech-content">{clickStats.total}</td>
-                        <td className="py-2 px-3 text-end font-heading font-bold tech-content">{clickStats.last7}</td>
-                        <td className="py-2 ps-3 text-end font-heading font-bold tech-content">{clickStats.last30}</td>
-                      </tr>
-                      <tr>
-                        <td className="py-2 pe-3 flex items-center gap-1.5 text-muted-foreground">
-                          <Percent className="w-3.5 h-3.5" />{isRTL ? 'معدّل النقر (CTR)' : 'CTR'}
-                        </td>
-                        <td className="py-2 px-3 text-end font-heading font-bold text-success tech-content">{ctr.total.toFixed(1)}%</td>
-                        <td className="py-2 px-3 text-end font-heading font-bold text-success tech-content">{ctr.last7.toFixed(1)}%</td>
-                        <td className="py-2 ps-3 text-end font-heading font-bold text-success tech-content">{ctr.last30.toFixed(1)}%</td>
-                      </tr>
-                    </tbody>
-                  </table>
+                {/* Funnel */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">{isRTL ? 'مسار التحويل من الشارة' : 'Conversion funnel'}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {[
+                        { icon: MousePointerClick, label: isRTL ? 'نقرات' : 'Clicks', value: clicks.length },
+                        { icon: Eye, label: isRTL ? 'زيارات الملف' : 'Profile views', value: funnel.profileViews },
+                        { icon: MessageSquare, label: isRTL ? 'تواصل' : 'Contacts', value: funnel.anyContact },
+                        { icon: CalendarClock, label: isRTL ? 'حجوزات' : 'Bookings', value: funnel.bookings },
+                      ].map((s, i, arr) => (
+                        <div key={s.label} className="relative rounded-xl border bg-card p-3">
+                          <div className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
+                            <s.icon className="w-3 h-3" />{s.label}
+                          </div>
+                          <div className="mt-1 text-2xl font-heading font-bold tech-content">{s.value}</div>
+                          {i < arr.length - 1 && (
+                            <ArrowRight className={`hidden sm:block absolute top-1/2 -translate-y-1/2 ${isRTL ? '-start-3 rotate-180' : '-end-3'} w-4 h-4 text-muted-foreground/40`} />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 mt-3 text-xs">
+                      <div className="rounded-lg bg-muted/40 px-3 py-2 flex items-center justify-between">
+                        <span className="text-muted-foreground">{isRTL ? 'تواصل ÷ نقرات' : 'Contact rate'}</span>
+                        <span className="font-heading font-bold text-primary tech-content">{funnel.contactRate.toFixed(1)}%</span>
+                      </div>
+                      <div className="rounded-lg bg-muted/40 px-3 py-2 flex items-center justify-between">
+                        <span className="text-muted-foreground">{isRTL ? 'حجز ÷ نقرات' : 'Booking rate'}</span>
+                        <span className="font-heading font-bold text-success tech-content">{funnel.bookingRate.toFixed(1)}%</span>
+                      </div>
+                    </div>
+                    {(funnel.phoneReveals > 0 || funnel.emailReveals > 0) && (
+                      <div className="mt-2 flex flex-wrap gap-3 text-[11px] text-muted-foreground">
+                        <span className="inline-flex items-center gap-1"><Phone className="w-3 h-3" />{isRTL ? `كشف هاتف: ${funnel.phoneReveals}` : `Phone reveals: ${funnel.phoneReveals}`}</span>
+                        <span className="inline-flex items-center gap-1"><Mail className="w-3 h-3" />{isRTL ? `كشف بريد: ${funnel.emailReveals}` : `Email reveals: ${funnel.emailReveals}`}</span>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Referrers + Source pages */}
+                <div className="grid md:grid-cols-2 gap-4">
+                  <Card>
+                    <CardHeader><CardTitle className="text-base flex items-center gap-2"><Globe className="w-4 h-4" />{isRTL ? 'أهم المواقع المُحيلة' : 'Top referrers'}</CardTitle></CardHeader>
+                    <CardContent>
+                      {referrerStats.length === 0 ? (
+                        <p className="text-xs text-muted-foreground">{isRTL ? 'لا توجد نقرات بعد.' : 'No clicks yet.'}</p>
+                      ) : (
+                        <ul className="divide-y rounded-xl border bg-card">
+                          {referrerStats.map(([host, count]) => (
+                            <li key={host} className="flex items-center justify-between px-3 py-2 text-sm">
+                              <span className="font-mono text-xs tech-content truncate" dir="ltr">{host}</span>
+                              <Badge variant="secondary" className="tech-content">{count}</Badge>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader><CardTitle className="text-base flex items-center gap-2"><FileText className="w-4 h-4" />{isRTL ? 'الصفحات المصدر' : 'Top source pages'}</CardTitle></CardHeader>
+                    <CardContent>
+                      {sourcePageStats.length === 0 ? (
+                        <p className="text-xs text-muted-foreground">{isRTL ? 'لا توجد بيانات بعد.' : 'No data yet.'}</p>
+                      ) : (
+                        <ul className="divide-y rounded-xl border bg-card">
+                          {sourcePageStats.map(([page, count]) => (
+                            <li key={page} className="flex items-center justify-between px-3 py-2 text-sm gap-2">
+                              <span className="font-mono text-xs tech-content truncate" dir="ltr">{page}</span>
+                              <Badge variant="secondary" className="tech-content shrink-0">{count}</Badge>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </CardContent>
+                  </Card>
                 </div>
 
-                <div>
-                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1.5">
-                    <Globe className="w-3.5 h-3.5" />
-                    {isRTL ? 'أهم المواقع المُحيلة' : 'Top referrers'}
-                  </h3>
-                  {clickStats.topReferrers.length === 0 ? (
-                    <p className="text-xs text-muted-foreground">
-                      {isRTL
-                        ? 'لا توجد نقرات بعد. الصق كود الشارة على موقعك ثم عُد لاحقًا.'
-                        : 'No clicks yet. Embed the badge on your site, then check back later.'}
-                    </p>
-                  ) : (
-                    <ul className="divide-y rounded-xl border bg-card">
-                      {clickStats.topReferrers.map(([host, count]) => (
-                        <li key={host} className="flex items-center justify-between px-3 py-2 text-sm">
-                          <span className="font-mono text-xs tech-content truncate" dir="ltr">{host}</span>
-                          <Badge variant="secondary" className="tech-content">{count}</Badge>
+                {/* Recent activity + CSV */}
+                <Card>
+                  <CardHeader className="flex-row items-center justify-between gap-2">
+                    <CardTitle className="text-base flex items-center gap-2"><Activity className="w-4 h-4" />{isRTL ? 'النشاط الأخير' : 'Recent activity'}</CardTitle>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline" className="gap-1.5" onClick={() => exportRowsToCsv(clicks, `badge-clicks-${business.username}.csv`)} disabled={!clicks.length}>
+                        <Download className="w-3.5 h-3.5" />{isRTL ? 'نقرات CSV' : 'Clicks CSV'}
+                      </Button>
+                      <Button size="sm" variant="outline" className="gap-1.5" onClick={() => exportRowsToCsv(conversions, `badge-conversions-${business.username}.csv`)} disabled={!conversions.length}>
+                        <Download className="w-3.5 h-3.5" />{isRTL ? 'تحويلات CSV' : 'Conv. CSV'}
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {recentActivity.length === 0 ? (
+                      <p className="text-xs text-muted-foreground">{isRTL ? 'لا يوجد نشاط بعد.' : 'No activity yet.'}</p>
+                    ) : (
+                      <ul className="divide-y rounded-xl border">
+                        {recentActivity.map((e) => {
+                          const Icon = e.kind === 'click' ? MousePointerClick : e.kind === 'impression' ? Eye : Sparkles;
+                          const tone = e.kind === 'click' ? 'text-primary' : e.kind === 'impression' ? 'text-success' : 'text-foreground';
+                          return (
+                            <li key={e.id} className="flex items-center gap-3 px-3 py-2 text-sm">
+                              <Icon className={`w-3.5 h-3.5 ${tone} shrink-0`} />
+                              <span className="text-xs text-muted-foreground capitalize">{e.kind}</span>
+                              <span className="font-mono text-xs tech-content truncate flex-1" dir="ltr">{e.meta}</span>
+                              <span className="text-[11px] text-muted-foreground shrink-0">{relativeTime(e.ts, isRTL)}</span>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* SHARE */}
+              <TabsContent value="share" className="space-y-4 mt-4">
+                <div className="grid md:grid-cols-2 gap-4">
+                  <Card>
+                    <CardHeader><CardTitle className="text-base flex items-center gap-2"><QrCode className="w-4 h-4" />{isRTL ? 'رمز QR' : 'QR code'}</CardTitle></CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="flex justify-center rounded-xl border bg-white p-4 min-h-[220px] items-center" dangerouslySetInnerHTML={{ __html: qrSvg }} />
+                      <p className="text-xs text-muted-foreground text-center">{isRTL ? 'اطبعه على البطاقات والمنشورات' : 'Print on cards and flyers'}</p>
+                      <Button size="sm" variant="outline" className="w-full gap-2" onClick={() => downloadQrPng(profileLink, `qitaat-qr-${business.username}.png`)}>
+                        <Download className="w-3.5 h-3.5" />{isRTL ? 'تنزيل PNG' : 'Download PNG'}
+                      </Button>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader><CardTitle className="text-base flex items-center gap-2"><Share2 className="w-4 h-4" />{isRTL ? 'مشاركة سريعة' : 'Quick share'}</CardTitle></CardHeader>
+                    <CardContent className="space-y-2">
+                      {[
+                        { label: 'WhatsApp', href: `https://wa.me/?text=${shareText}%20${shareUrl}`, color: 'bg-[#25D366]/10 text-[#128C7E] hover:bg-[#25D366]/20' },
+                        { label: 'X / Twitter', href: `https://twitter.com/intent/tweet?text=${shareText}&url=${shareUrl}`, color: 'bg-foreground/5 hover:bg-foreground/10' },
+                        { label: 'LinkedIn', href: `https://www.linkedin.com/sharing/share-offsite/?url=${shareUrl}`, color: 'bg-[#0077B5]/10 text-[#0077B5] hover:bg-[#0077B5]/20' },
+                        { label: isRTL ? 'البريد الإلكتروني' : 'Email', href: `mailto:?subject=${shareText}&body=${shareUrl}`, color: 'bg-muted hover:bg-muted/70' },
+                      ].map((s) => (
+                        <a key={s.label} href={s.href} target="_blank" rel="noopener" className={`flex items-center justify-between rounded-lg px-4 py-3 text-sm font-medium transition-colors ${s.color}`}>
+                          <span>{s.label}</span>
+                          <ExternalLink className="w-4 h-4" />
+                        </a>
+                      ))}
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <Card>
+                  <CardHeader className="flex-row items-center justify-between gap-2">
+                    <CardTitle className="text-base flex items-center gap-2"><Mail className="w-4 h-4" />{isRTL ? 'توقيع البريد الإلكتروني' : 'Email signature'}</CardTitle>
+                    <Button size="sm" onClick={() => copy(emailSig, 'email-sig')} className="gap-2">
+                      {copied === 'email-sig' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                      {isRTL ? 'نسخ' : 'Copy'}
+                    </Button>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="rounded-xl border bg-card p-4" dangerouslySetInnerHTML={{ __html: emailSig }} />
+                    <Textarea value={emailSig} readOnly rows={4} className="font-mono text-xs tech-content" dir="ltr" onClick={(e) => (e.currentTarget as HTMLTextAreaElement).select()} />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* PLAYBOOK */}
+              <TabsContent value="playbook" className="space-y-4 mt-4">
+                {!business.is_verified && (
+                  <Card className="border-warning/30 bg-warning/5">
+                    <CardContent className="p-4 flex items-start gap-3">
+                      <AlertCircle className="w-5 h-5 text-warning shrink-0 mt-0.5" />
+                      <div className="text-sm flex-1">
+                        <p className="font-semibold">{isRTL ? 'وثّق ورشتك أولاً' : 'Get verified first'}</p>
+                        <p className="text-muted-foreground mt-1">
+                          {isRTL ? 'لا تنشر الشارة قبل توثيق ورشتك من فريق قِطاعات لتفادي تضليل العملاء.' : 'Do not publish the badge before your workshop is verified by the Qitaat team.'}
+                        </p>
+                      </div>
+                      <Button size="sm" variant="outline" asChild><a href="/dashboard/verification">{isRTL ? 'ابدأ التوثيق' : 'Start verification'}</a></Button>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Goals */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2"><Target className="w-4 h-4" />{isRTL ? 'أهداف الشهر' : 'Monthly goals'}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <Label className="text-xs">{isRTL ? 'هدف الانطباعات (30 يوم)' : 'Impression goal (30d)'}</Label>
+                          <Input type="number" value={goalImpr} onChange={(e) => setGoalImpr(Math.max(0, Number(e.target.value) || 0))} className="h-8 w-24 text-end tech-content" />
+                        </div>
+                        <Progress value={Math.min(100, (periodStats.last30.impressions / Math.max(goalImpr, 1)) * 100)} className="h-2" />
+                        <div className="flex items-center justify-between text-xs text-muted-foreground mt-1">
+                          <span className="tech-content">{periodStats.last30.impressions} / {goalImpr}</span>
+                          <span>{((periodStats.last30.impressions / Math.max(goalImpr, 1)) * 100).toFixed(0)}%</span>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <Label className="text-xs">{isRTL ? 'هدف النقرات (30 يوم)' : 'Click goal (30d)'}</Label>
+                          <Input type="number" value={goalClicks} onChange={(e) => setGoalClicks(Math.max(0, Number(e.target.value) || 0))} className="h-8 w-24 text-end tech-content" />
+                        </div>
+                        <Progress value={Math.min(100, (periodStats.last30.clicks / Math.max(goalClicks, 1)) * 100)} className="h-2" />
+                        <div className="flex items-center justify-between text-xs text-muted-foreground mt-1">
+                          <span className="tech-content">{periodStats.last30.clicks} / {goalClicks}</span>
+                          <span>{((periodStats.last30.clicks / Math.max(goalClicks, 1)) * 100).toFixed(0)}%</span>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Tips */}
+                <Card>
+                  <CardHeader><CardTitle className="text-base">{isRTL ? 'أين تعرض الشارة لأقصى أثر؟' : 'Where to display for maximum impact'}</CardTitle></CardHeader>
+                  <CardContent>
+                    <ul className="grid sm:grid-cols-2 gap-2 text-sm">
+                      {(isRTL ? [
+                        'فوتر موقع ورشتك الإلكتروني',
+                        'صفحتي "من نحن" و "تواصل معنا"',
+                        'توقيع البريد الإلكتروني (الأسلوب المضغوط)',
+                        'Google Business Profile و LinkedIn',
+                        'عروض الأسعار وملفات PDF التعريفية',
+                        'بطاقات العمل والمنشورات الورقية (QR)',
+                      ] : [
+                        'Your workshop website footer',
+                        'About and Contact pages',
+                        'Email signature (Compact style)',
+                        'Google Business Profile and LinkedIn',
+                        'Quotation PDFs and company profiles',
+                        'Business cards and printed flyers (QR)',
+                      ]).map((t, i) => (
+                        <li key={i} className="flex items-start gap-2 rounded-lg border bg-card p-3">
+                          <Check className="w-4 h-4 text-success shrink-0 mt-0.5" />
+                          <span>{t}</span>
                         </li>
                       ))}
                     </ul>
-                  )}
-                </div>
-
-                {clicks.length > 0 && (
-                  <p className="text-[11px] text-muted-foreground">
-                    {isRTL
-                      ? `آخر نقرة: ${new Date(clicks[0].created_at).toLocaleString('ar-SA')}`
-                      : `Last click: ${new Date(clicks[0].created_at).toLocaleString()}`}
-                  </p>
-                )}
-
-                {/* Attribution funnel — clicks → profile → contact → booking */}
-                <div>
-                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-                    {isRTL ? 'مسار التحويل من الشارة' : 'Badge conversion funnel'}
-                  </h3>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {[
-                      { icon: MousePointerClick, label: isRTL ? 'نقرات' : 'Clicks', value: clickStats.total, tone: 'text-foreground' },
-                      { icon: Eye, label: isRTL ? 'زيارات الملف' : 'Profile views', value: funnel.profileViews, tone: 'text-foreground' },
-                      { icon: MessageSquare, label: isRTL ? 'تواصل' : 'Contacts', value: funnel.anyContact, tone: 'text-primary' },
-                      { icon: CalendarClock, label: isRTL ? 'طلبات حجز' : 'Bookings', value: funnel.bookings, tone: 'text-success' },
-                    ].map((step, i, arr) => (
-                      <div key={step.label} className="relative rounded-xl border bg-card p-3">
-                        <div className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
-                          <step.icon className="w-3 h-3" />
-                          {step.label}
-                        </div>
-                        <div className={`mt-1 text-2xl font-heading font-bold tech-content ${step.tone}`}>{step.value}</div>
-                        {i < arr.length - 1 && (
-                          <ArrowRight className={`hidden sm:block absolute top-1/2 -translate-y-1/2 ${isRTL ? '-start-3 rotate-180' : '-end-3'} w-4 h-4 text-muted-foreground/40`} />
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 mt-3 text-xs">
-                    <div className="rounded-lg bg-muted/40 px-3 py-2 flex items-center justify-between">
-                      <span className="text-muted-foreground">{isRTL ? 'تواصل ÷ نقرات' : 'Contact rate'}</span>
-                      <span className="font-heading font-bold text-primary tech-content">{funnel.contactRate.toFixed(1)}%</span>
-                    </div>
-                    <div className="rounded-lg bg-muted/40 px-3 py-2 flex items-center justify-between">
-                      <span className="text-muted-foreground">{isRTL ? 'حجز ÷ نقرات' : 'Booking rate'}</span>
-                      <span className="font-heading font-bold text-success tech-content">{funnel.bookingRate.toFixed(1)}%</span>
-                    </div>
-                  </div>
-                  {(funnel.phoneReveals > 0 || funnel.emailReveals > 0) && (
-                    <div className="mt-2 flex flex-wrap gap-2 text-[11px] text-muted-foreground">
-                      <span className="inline-flex items-center gap-1">
-                        <Phone className="w-3 h-3" />
-                        {isRTL ? `كشف هاتف: ${funnel.phoneReveals}` : `Phone reveals: ${funnel.phoneReveals}`}
-                      </span>
-                      <span className="inline-flex items-center gap-1">
-                        <ExternalLink className="w-3 h-3" />
-                        {isRTL ? `كشف بريد: ${funnel.emailReveals}` : `Email reveals: ${funnel.emailReveals}`}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* HTML snippet */}
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Code2 className="w-4 h-4" />
-                  {isRTL ? 'كود HTML الجاهز' : 'Ready-to-paste HTML'}
-                </CardTitle>
-                <Button
-                  size="sm"
-                  onClick={() => copy(html, 'html')}
-                  className="gap-2"
-                >
-                  {copied === 'html' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                  {isRTL ? (copied === 'html' ? 'تم النسخ' : 'نسخ HTML') : (copied === 'html' ? 'Copied' : 'Copy HTML')}
-                </Button>
-              </CardHeader>
-              <CardContent>
-                <Textarea
-                  value={html}
-                  readOnly
-                  rows={10}
-                  className="font-mono text-xs tech-content"
-                  dir="ltr"
-                  onClick={(e) => (e.currentTarget as HTMLTextAreaElement).select()}
-                />
-                <p className="text-xs text-muted-foreground mt-2">
-                  {isRTL
-                    ? 'الصق الكود في صفحة "من نحن" أو الفوتر بموقعك. لا يحتاج CSS أو JavaScript خارجي.'
-                    : 'Paste this on your About page or footer. No external CSS or JavaScript required.'}
-                </p>
-              </CardContent>
-            </Card>
-
-            {/* Plain link + Markdown */}
-            <div className="grid md:grid-cols-2 gap-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <ExternalLink className="w-4 h-4" />
-                    {isRTL ? 'رابط ملفك على قِطاعات' : 'Your Qitaat profile link'}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="rounded-lg border bg-muted/30 px-3 py-2 text-xs font-mono break-all tech-content" dir="ltr">
-                    {profileLink}
-                  </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="w-full gap-2"
-                    onClick={() => copy(profileLink, 'link')}
-                  >
-                    {copied === 'link' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                    {isRTL ? (copied === 'link' ? 'تم النسخ' : 'نسخ الرابط') : (copied === 'link' ? 'Copied' : 'Copy link')}
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Code2 className="w-4 h-4" />
-                    Markdown
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="rounded-lg border bg-muted/30 px-3 py-2 text-xs font-mono break-all tech-content" dir="ltr">
-                    {markdown}
-                  </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="w-full gap-2"
-                    onClick={() => copy(markdown, 'md')}
-                  >
-                    {copied === 'md' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                    {isRTL ? (copied === 'md' ? 'تم النسخ' : 'نسخ Markdown') : (copied === 'md' ? 'Copied' : 'Copy markdown')}
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Usage tips */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">
-                  {isRTL ? 'أين يمكنك استخدام الشارة؟' : 'Where to use this badge'}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm">
-                  {(isRTL
-                    ? [
-                        'فوتر موقع ورشتك الإلكتروني',
-                        'صفحة "من نحن" وصفحة "تواصل معنا"',
-                        'توقيع البريد الإلكتروني (استخدم الشكل المضغوط)',
-                        'بطاقات Google Business Profile و LinkedIn',
-                        'عروض الأسعار وملفات PDF التعريفية',
-                      ]
-                    : [
-                        'Your workshop website footer',
-                        'About and Contact pages',
-                        'Email signature (use the Compact style)',
-                        'Google Business Profile and LinkedIn',
-                        'Quotation PDFs and company profiles',
-                      ]
-                  ).map((t, i) => (
-                    <li key={i} className="flex items-start gap-2">
-                      <Check className="w-4 h-4 text-success shrink-0 mt-0.5" />
-                      <span>{t}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
           </>
         )}
       </div>
