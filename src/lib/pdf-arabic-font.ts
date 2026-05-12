@@ -2,7 +2,10 @@
 // Caches the font in memory after first load
 
 let cachedFont: string | null = null;
-let fontLoadFailed = false;
+
+const ARABIC_FONT_FILE = 'ArabicFont.ttf';
+const ARABIC_FONT_NAME = 'ArabicFont';
+const ARABIC_FONT_STYLES = ['normal', 'bold', 'italic', 'bolditalic'] as const;
 
 // PDF-AR1: jsPDF requires uncompressed TrueType (TTF) bytes. Previously we
 // fetched .woff (compressed Web Open Font Format) and registered it as a
@@ -24,7 +27,7 @@ const FONT_URLS = [
 // signature. This guards against accidental WOFF/HTML/error pages being
 // registered as fonts (which is exactly what produced the original
 // mojibake bug).
-const isTrueTypeSignature = (bytes: Uint8Array): boolean => {
+export const isTrueTypeSignature = (bytes: Uint8Array): boolean => {
   if (bytes.length < 4) return false;
   const b0 = bytes[0], b1 = bytes[1], b2 = bytes[2], b3 = bytes[3];
   // 0x00010000 = TrueType, 'OTTO' = OpenType-CFF, 'true'/'typ1' = legacy TTF
@@ -35,12 +38,31 @@ const isTrueTypeSignature = (bytes: Uint8Array): boolean => {
   return false;
 };
 
-export const registerArabicFont = async (doc: any): Promise<boolean> => {
-  if (fontLoadFailed) return false;
+const shouldDebugArabicPdf = (): boolean => {
+  if (!import.meta.env.DEV) return false;
+  try {
+    return window.localStorage.getItem('qitaat_pdf_arabic_debug') === '1';
+  } catch {
+    return false;
+  }
+};
+
+const registerArabicFontBytes = (doc: { addFileToVFS: (file: string, data: string) => void; addFont: (file: string, name: string, style: string) => void }, base64: string) => {
+  doc.addFileToVFS(ARABIC_FONT_FILE, base64);
+  for (const style of ARABIC_FONT_STYLES) doc.addFont(ARABIC_FONT_FILE, ARABIC_FONT_NAME, style);
+};
+
+const debugArabicFont = (details: Record<string, unknown>) => {
+  if (!shouldDebugArabicPdf()) return;
+  // Development-only, opt-in via localStorage flag; never logs in production.
+  console.debug('[PDF-AR1] Arabic font verification', details);
+};
+
+export const registerArabicFont = async (doc: { addFileToVFS: (file: string, data: string) => void; addFont: (file: string, name: string, style: string) => void; getFontList?: () => Record<string, string[]> }): Promise<boolean> => {
   if (cachedFont) {
     try {
-      doc.addFileToVFS('ArabicFont.ttf', cachedFont);
-      doc.addFont('ArabicFont.ttf', 'ArabicFont', 'normal');
+      registerArabicFontBytes(doc, cachedFont);
+      debugArabicFont({ source: 'memory-cache', registeredFont: ARABIC_FONT_NAME, styles: ARABIC_FONT_STYLES, fontList: doc.getFontList?.()[ARABIC_FONT_NAME] });
       return true;
     } catch {
       return false;
@@ -51,33 +73,36 @@ export const registerArabicFont = async (doc: any): Promise<boolean> => {
     try {
       const response = await fetch(url);
       if (!response.ok) continue;
+      const contentType = response.headers.get('content-type') ?? 'unknown';
       const buffer = await response.arrayBuffer();
       const bytes = new Uint8Array(buffer);
+      const magicBytes = Array.from(bytes.slice(0, 4)).map((b) => b.toString(16).padStart(2, '0')).join(' ');
       // Reject anything that isn't a real TTF/OTF — prevents the
       // historical WOFF-as-TTF mojibake regression.
-      if (!isTrueTypeSignature(bytes)) continue;
+      const validSignature = isTrueTypeSignature(bytes);
+      debugArabicFont({ url, contentType, magicBytes, validSignature });
+      if (!validSignature) continue;
       let binary = '';
       for (let i = 0; i < bytes.length; i++) {
         binary += String.fromCharCode(bytes[i]);
       }
       const base64 = btoa(binary);
-      doc.addFileToVFS('ArabicFont.ttf', base64);
-      doc.addFont('ArabicFont.ttf', 'ArabicFont', 'normal');
+      registerArabicFontBytes(doc, base64);
       cachedFont = base64;
+      debugArabicFont({ url, registeredFont: ARABIC_FONT_NAME, styles: ARABIC_FONT_STYLES, fontList: doc.getFontList?.()[ARABIC_FONT_NAME] });
       return true;
     } catch {
       continue;
     }
   }
 
-  fontLoadFailed = true;
   return false;
 };
 
-export const setupArabicDoc = async (doc: any, isRTL: boolean) => {
+export const setupArabicDoc = async (doc: { setFont: (fontName: string, fontStyle?: string) => void; addFileToVFS: (file: string, data: string) => void; addFont: (file: string, name: string, style: string) => void; getFontList?: () => Record<string, string[]> }, isRTL: boolean) => {
   const loaded = await registerArabicFont(doc);
   if (loaded && isRTL) {
-    doc.setFont('ArabicFont');
+    doc.setFont(ARABIC_FONT_NAME, 'normal');
   }
   return loaded;
 };
