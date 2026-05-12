@@ -14,7 +14,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Building2, MapPin, Search as SearchIcon, Star, ArrowLeft, ArrowRight } from 'lucide-react';
+import {
+  Building2, MapPin, Search as SearchIcon, Star, ArrowLeft, ArrowRight,
+  MessageSquare, CalendarCheck, Phone, Trophy, Crown, SlidersHorizontal,
+} from 'lucide-react';
 import { VerifiedBadge } from '@/components/common/VerifiedBadge';
 import { SECTOR_KEYWORDS, type SectorSlug, getSectorMeta } from '@/lib/sector-keywords';
 import { getCityBySlug, SA_CITIES } from '@/lib/sa-cities';
@@ -39,8 +42,16 @@ type BizRow = {
   is_verified: boolean | null;
   city_id: string | null;
   category_id: string;
+  short_description_ar: string | null;
+  short_description_en: string | null;
+  membership_tier: string | null;
+  mobile: string | null;
+  phone: string | null;
   cities: { id: string; name_ar: string; name_en: string | null } | null;
 };
+
+type SortKey = 'top' | 'reviews';
+type RatingFilter = 'all' | '4' | '4.5';
 
 const SectorCity: React.FC = () => {
   const { sector: sectorParam, city: cityParam } = useParams<{ sector: string; city: string }>();
@@ -52,6 +63,8 @@ const SectorCity: React.FC = () => {
 
   const [query, setQuery] = useState('');
   const [verifiedOnly, setVerifiedOnly] = useState(false);
+  const [minRating, setMinRating] = useState<RatingFilter>('all');
+  const [sortBy, setSortBy] = useState<SortKey>('top');
 
   // Resolve city UUID from name_en (cheap one-shot query, cached forever).
   const { data: cityRow } = useQuery({
@@ -89,7 +102,7 @@ const SectorCity: React.FC = () => {
       const { data } = await supabase
         .from('businesses')
         .select(
-          'id, username, name_ar, name_en, logo_url, rating_avg, rating_count, is_verified, city_id, category_id, cities(id, name_ar, name_en)',
+          'id, username, name_ar, name_en, logo_url, rating_avg, rating_count, is_verified, city_id, category_id, short_description_ar, short_description_en, membership_tier, mobile, phone, cities(id, name_ar, name_en)',
         )
         .in('category_id', categoryIds)
         .eq('city_id', cityRow!.id)
@@ -102,15 +115,32 @@ const SectorCity: React.FC = () => {
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return businesses.filter((b) => {
+    const minR = minRating === 'all' ? 0 : minRating === '4' ? 4 : 4.5;
+    const list = businesses.filter((b) => {
       if (verifiedOnly && !b.is_verified) return false;
+      if (Number(b.rating_avg ?? 0) < minR) return false;
       if (q) {
         const hay = `${b.name_ar} ${b.name_en ?? ''} ${b.username}`.toLowerCase();
         if (!hay.includes(q)) return false;
       }
       return true;
     });
-  }, [businesses, query, verifiedOnly]);
+    if (sortBy === 'reviews') {
+      list.sort((a, b) => (b.rating_count ?? 0) - (a.rating_count ?? 0));
+    } else {
+      list.sort((a, b) => {
+        const score = (x: BizRow) =>
+          Number(x.rating_avg ?? 0) * Math.log10((x.rating_count ?? 0) + 2) +
+          (x.is_verified ? 0.4 : 0) +
+          (x.membership_tier === 'platinum' ? 0.3 : x.membership_tier === 'gold' ? 0.2 : 0);
+        return score(b) - score(a);
+      });
+    }
+    return list;
+  }, [businesses, query, verifiedOnly, minRating, sortBy]);
+
+  const top10 = useMemo(() => filtered.slice(0, 10), [filtered]);
+  const rest = useMemo(() => filtered.slice(10), [filtered]);
 
   const meta = sector ? getSectorMeta(sector.slug, isRTL) : null;
   const cityName = city ? (isRTL ? city.nameAr : city.nameEn) : '';
