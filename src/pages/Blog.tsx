@@ -133,8 +133,8 @@ const Blog = () => {
   // SEO meta + JSON-LD (Breadcrumb + CollectionPage + ItemList of latest articles + WebSite SearchAction)
   usePageMeta({
     title: language === 'ar'
-      ? 'مدونة قِطاعات - مقالات وأدلة في صناعة الألمنيوم والزجاج والحديد والخشب'
-      : 'Qitaat Blog - Aluminum, Glass, Iron & Wood Industry Articles',
+      ? 'مدونة قِطاعات — مقالات الألمنيوم والزجاج والحديد'
+      : 'Qitaat Blog — Aluminum, Glass & Steel Articles',
     description: language === 'ar'
       ? `${posts.length}+ مقال احترافي في صناعة الألمنيوم والزجاج والحديد والخشب. أدلة شاملة، نصائح خبراء، وأخبار قطاعات السوق السعودي والخليجي.`
       : `${posts.length}+ professional articles on aluminum, glass, iron and wood industries. Comprehensive guides, expert tips and sector news for the Saudi & Gulf market.`,
