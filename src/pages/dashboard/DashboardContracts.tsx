@@ -1846,6 +1846,7 @@ const DashboardContracts = () => {
               })()}
             </CardHeader>
             <CardContent className="space-y-4">
+              <div ref={stepRefs.client} className="space-y-4 scroll-mt-24">
               {/* CT4C.5 — Accepted invitations awaiting contract completion */}
               {!editingId && inviteMode === 'idle' && acceptedInvitations.length > 0 && (
                 <div className="p-4 rounded-xl border-2 border-emerald-500/40 bg-emerald-500/5 space-y-3">
@@ -2043,8 +2044,10 @@ const DashboardContracts = () => {
                   </div>
                 </div>
               )}
+              </div>
 
               {/* CT4B — Step 2: Work / service type (auto-suggests template) */}
+              <div ref={stepRefs.work} className="scroll-mt-24">
               {!editingId && (
                 <div className="p-4 rounded-xl border border-border/40 bg-muted/20 space-y-2">
                   <div className="flex items-center gap-1.5">
