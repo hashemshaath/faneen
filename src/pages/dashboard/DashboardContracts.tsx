@@ -577,6 +577,60 @@ const DashboardContracts = () => {
     enabled: !!user,
   });
 
+  /* CT4 — Published template versions only (for contract creation selector). */
+  const { data: publishedVersions = [] } = useQuery<PublishedTemplateOption[]>({
+    queryKey: ['contract-template-versions', 'published'],
+    queryFn: async () => {
+      const { data: versions, error } = await supabase
+        .from('contract_template_versions')
+        .select('id, version_number, status, template_id, contract_templates!inner(id, slug, category, name_ar, name_en, service_category_id, is_active)')
+        .eq('status', 'published')
+        .order('version_number', { ascending: false });
+      if (error) throw error;
+      const versionIds = (versions ?? []).map((v: any) => v.id);
+      const { data: rules } = versionIds.length
+        ? await supabase.from('contract_template_pricing_rules').select('version_id, method').in('version_id', versionIds)
+        : { data: [] as { version_id: string; method: string }[] };
+      const { data: fields } = versionIds.length
+        ? await supabase.from('contract_template_required_fields').select('version_id').in('version_id', versionIds)
+        : { data: [] as { version_id: string }[] };
+      const rulesByVer = new Map<string, string[]>();
+      (rules ?? []).forEach((r: any) => {
+        const arr = rulesByVer.get(r.version_id) ?? [];
+        arr.push(r.method);
+        rulesByVer.set(r.version_id, arr);
+      });
+      const fieldsByVer = new Map<string, number>();
+      (fields ?? []).forEach((f: any) => fieldsByVer.set(f.version_id, (fieldsByVer.get(f.version_id) ?? 0) + 1));
+      return (versions ?? [])
+        .filter((v: any) => v.contract_templates?.is_active !== false)
+        .map((v: any): PublishedTemplateOption => ({
+          template_id: v.template_id,
+          version_id: v.id,
+          version_number: v.version_number,
+          status: v.status,
+          slug: v.contract_templates?.slug ?? null,
+          category: v.contract_templates?.category ?? 'general',
+          name_ar: v.contract_templates?.name_ar ?? '',
+          name_en: v.contract_templates?.name_en ?? null,
+          service_category_id: v.contract_templates?.service_category_id ?? null,
+          pricing_methods: rulesByVer.get(v.id) ?? [],
+          required_field_count: fieldsByVer.get(v.id) ?? 0,
+        }));
+    },
+    enabled: !!user,
+  });
+
+  /* CT4 — Default to General template when none selected. */
+  const generalVersion = useMemo(
+    () => publishedVersions.find(v => v.slug === 'general' || v.category === 'general') ?? publishedVersions[0] ?? null,
+    [publishedVersions],
+  );
+  const effectiveVersion = useMemo(
+    () => publishedVersions.find(v => v.version_id === selectedVersionId) ?? generalVersion,
+    [publishedVersions, selectedVersionId, generalVersion],
+  );
+
   const { data: businessId } = useQuery({
     queryKey: ['my-business-id-contracts', user?.id],
     queryFn: async () => {
