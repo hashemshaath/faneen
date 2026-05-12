@@ -299,24 +299,59 @@ const SectorCity: React.FC = () => {
 
           {/* Filters */}
           <Card className="mb-6">
-            <CardContent className="p-4 flex flex-col md:flex-row gap-3 md:items-center">
-              <div className="relative flex-1">
-                <SearchIcon className={`absolute top-1/2 -translate-y-1/2 ${isRTL ? 'right-3' : 'left-3'} h-4 w-4 text-muted-foreground`} />
-                <Input
-                  dir="auto"
-                  className={isRTL ? 'pr-9' : 'pl-9'}
-                  placeholder={isRTL ? `ابحث عن ورشة ${meta.name} ${cityIn}...` : `Search a ${meta.name} workshop ${cityIn}...`}
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                />
+            <CardContent className="p-4 space-y-3">
+              <div className="flex flex-col md:flex-row gap-3 md:items-center">
+                <div className="relative flex-1">
+                  <SearchIcon className={`absolute top-1/2 -translate-y-1/2 ${isRTL ? 'right-3' : 'left-3'} h-4 w-4 text-muted-foreground`} />
+                  <Input
+                    dir="auto"
+                    className={isRTL ? 'pr-9' : 'pl-9'}
+                    placeholder={isRTL ? `ابحث عن ورشة ${meta.name} ${cityIn}...` : `Search a ${meta.name} workshop ${cityIn}...`}
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                  />
+                </div>
+                <Button
+                  variant={verifiedOnly ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setVerifiedOnly((v) => !v)}
+                  className="gap-1.5"
+                >
+                  <VerifiedBadge size="xs" />
+                  {isRTL ? 'موثوق فقط' : 'Verified only'}
+                </Button>
               </div>
-              <Button
-                variant={verifiedOnly ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setVerifiedOnly((v) => !v)}
-              >
-                {isRTL ? 'موثوق فقط' : 'Verified only'}
-              </Button>
+              <div className="flex flex-wrap items-center gap-2 text-xs">
+                <span className="inline-flex items-center gap-1 text-muted-foreground">
+                  <SlidersHorizontal className="h-3.5 w-3.5" />
+                  {isRTL ? 'التقييم:' : 'Rating:'}
+                </span>
+                {(['all', '4', '4.5'] as RatingFilter[]).map((r) => (
+                  <Button
+                    key={r}
+                    variant={minRating === r ? 'default' : 'outline'}
+                    size="sm"
+                    className="h-7 px-2.5"
+                    onClick={() => setMinRating(r)}
+                  >
+                    {r === 'all' ? (isRTL ? 'الكل' : 'All') : `${r}+`}
+                    {r !== 'all' && <Star className="h-3 w-3 ms-1 text-amber-500" />}
+                  </Button>
+                ))}
+                <span className="mx-1 h-4 w-px bg-border" />
+                <span className="text-muted-foreground">{isRTL ? 'الترتيب:' : 'Sort:'}</span>
+                <Button variant={sortBy === 'top' ? 'default' : 'outline'} size="sm" className="h-7 px-2.5" onClick={() => setSortBy('top')}>
+                  {isRTL ? 'أفضل جودة' : 'Top quality'}
+                </Button>
+                <Button variant={sortBy === 'reviews' ? 'default' : 'outline'} size="sm" className="h-7 px-2.5" onClick={() => setSortBy('reviews')}>
+                  {isRTL ? 'الأكثر تقييماً' : 'Most reviewed'}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {isRTL
+                  ? `${filtered.length} مزود متاح ${cityIn} حسب الفلاتر الحالية`
+                  : `${filtered.length} providers available ${cityIn} with current filters`}
+              </p>
             </CardContent>
           </Card>
 
