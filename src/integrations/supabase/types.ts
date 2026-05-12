@@ -7554,6 +7554,37 @@ export type Database = {
           ticket_number: string
         }[]
       }
+      list_contract_pdf_exports: {
+        Args: {
+          _contract_id: string
+          _contract_version?: number
+          _limit?: number
+          _offset?: number
+          _search?: string
+          _source?: string
+          _template_version_number?: number
+        }
+        Returns: {
+          amendment_count: number
+          boq_group_count: number
+          contract_number: string
+          contract_status: string
+          contract_version: number
+          document_hash_prefix: string
+          export_locale: string
+          export_ref: string
+          exported_at: string
+          exporter_display_name: string
+          is_self: boolean
+          line_item_count: number
+          official_version_number: number
+          source: string
+          template_name_ar: string
+          template_name_en: string
+          template_version_number: number
+          total_count: number
+        }[]
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string
