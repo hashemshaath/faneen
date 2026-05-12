@@ -22,6 +22,7 @@ import { mapContractLockError } from '@/lib/contract-errors';
 import { dispatchAmendmentEvent } from '@/lib/amendment-notify';
 import { recordContractPdfExport } from '@/lib/contract-pdf-history';
 import { ContractPdfExportHistory } from '@/components/contract/ContractPdfExportHistory';
+import { ContractPdfPreviewOverlay } from '@/components/contract/ContractPdfPreviewOverlay';
 import { calculateVatBreakdown } from '@/lib/contract-financials';
 import { PaymentScheduleGenerator } from '@/components/contract/PaymentScheduleGenerator';
 import { ContractFinancialCoverage } from '@/components/contract/ContractFinancialCoverage';
@@ -186,6 +187,12 @@ const ContractDetail = () => {
   const { user, isAdmin } = useAuth();
   const queryClient = useQueryClient();
   const [isExportingPDF, setIsExportingPDF] = useState(false);
+  // PDF-UX1: inline fullscreen preview state.
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewFileName, setPreviewFileName] = useState<string>('contract.pdf');
+  const [previewError, setPreviewError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const [showMaintForm, setShowMaintForm] = useState(false);
@@ -905,13 +912,11 @@ const ContractDetail = () => {
     };
   }, [installmentPayments]);
 
-  const handleExportPDF = async () => {
-    if (!contract) return;
-    if (isExportingPDF) return;
-    setIsExportingPDF(true);
-    try {
-    const { exportContractPDF } = await import('@/lib/contract-pdf-export');
-    await exportContractPDF({
+  // PDF-UX1: extracted payload builder — reused by both Download and Preview
+  // so the two flows render the exact same document with no duplication.
+  const buildPdfPayload = () => {
+    if (!contract) return null;
+    return {
       contractNumber: contract.contract_number,
       title,
       description: desc || undefined,
@@ -1031,14 +1036,83 @@ const ContractDetail = () => {
         };
       }),
       isRTL,
-    });
+    };
+  };
+
+  const handleExportPDF = async () => {
+    if (!contract || isExportingPDF) return;
+    const data = buildPdfPayload();
+    if (!data) return;
+    setIsExportingPDF(true);
+    try {
+      const { exportContractPDF } = await import('@/lib/contract-pdf-export');
+      await exportContractPDF(data);
       // Fire-and-forget export history log (PDF-QA2). Server validates auth.
       void recordContractPdfExport(contract.id, 'contract_detail', language)
         .then(() => queryClient.invalidateQueries({ queryKey: ['contract-pdf-exports', contract.id] }));
+    } catch {
+      toast({
+        title: isRTL ? 'فشل التصدير' : 'Export failed',
+        description: isRTL ? 'تعذر إنشاء ملف PDF. يرجى المحاولة مرة أخرى.' : 'Could not generate the PDF. Please try again.',
+        variant: 'destructive',
+      });
     } finally {
       setIsExportingPDF(false);
     }
   };
+
+  // PDF-UX1: client-side preview via Blob URL. Object URL is revoked on
+  // close/refresh/unmount. Preview is intentionally NOT logged in the
+  // export history — only confirmed downloads are.
+  const generatePreview = async () => {
+    const data = buildPdfPayload();
+    if (!data || previewLoading) return;
+    setPreviewError(null);
+    setPreviewLoading(true);
+    // Revoke any previous URL before regenerating.
+    if (previewUrl) {
+      try { URL.revokeObjectURL(previewUrl); } catch { /* noop */ }
+    }
+    try {
+      const { previewContractPDF } = await import('@/lib/contract-pdf-export');
+      const { url, fileName } = await previewContractPDF(data);
+      setPreviewUrl(url);
+      setPreviewFileName(fileName);
+    } catch {
+      setPreviewUrl(null);
+      setPreviewError(isRTL
+        ? 'تعذر إنشاء ملف PDF. يرجى المحاولة مرة أخرى.'
+        : 'Could not generate the PDF. Please try again.');
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
+  const handlePreviewPDF = async () => {
+    if (!contract) return;
+    setPreviewOpen(true);
+    if (!previewUrl) await generatePreview();
+  };
+
+  const handleClosePreview = () => {
+    setPreviewOpen(false);
+    if (previewUrl) {
+      try { URL.revokeObjectURL(previewUrl); } catch { /* noop */ }
+      setPreviewUrl(null);
+    }
+    setPreviewError(null);
+  };
+
+  // Revoke any lingering Object URL on unmount.
+  React.useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        try { URL.revokeObjectURL(previewUrl); } catch { /* noop */ }
+      }
+    };
+    // We intentionally only revoke the URL captured at unmount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleExportMeasurementsPDF = async () => {
     if (!contract || !measurements || measurements.length === 0) return;
@@ -1314,8 +1388,11 @@ const ContractDetail = () => {
                   <CheckCircle2 className="w-3.5 h-3.5" />{isRTL ? 'قبول العقد' : 'Accept'}
                 </Button>
               )}
+              <Button variant="heroOutline" size="sm" disabled={previewLoading} className="text-xs border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 gap-1" onClick={handlePreviewPDF}>
+                <Eye className="w-3.5 h-3.5" />{isRTL ? 'معاينة PDF' : 'Preview PDF'}
+              </Button>
               <Button variant="heroOutline" size="sm" disabled={isExportingPDF} className="text-xs border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 gap-1" onClick={handleExportPDF}>
-                <Download className="w-3.5 h-3.5" />{isExportingPDF ? '…' : 'PDF'}
+                <Download className="w-3.5 h-3.5" />{isExportingPDF ? '…' : (isRTL ? 'تحميل PDF' : 'Download PDF')}
               </Button>
               <Button variant="heroOutline" size="sm" className="text-xs border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 gap-1" onClick={() => window.print()}>
                 <Printer className="w-3.5 h-3.5" />{isRTL ? 'طباعة' : 'Print'}
@@ -2783,6 +2860,18 @@ const ContractDetail = () => {
       </div>
 
       <Footer />
+      {previewOpen && (
+        <ContractPdfPreviewOverlay
+          isRTL={isRTL}
+          url={previewUrl}
+          fileName={previewFileName}
+          loading={previewLoading}
+          error={previewError}
+          onClose={handleClosePreview}
+          onDownload={handleExportPDF}
+          onRefresh={generatePreview}
+        />
+      )}
     </div>
   );
 };
