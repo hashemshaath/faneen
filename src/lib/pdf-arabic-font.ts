@@ -1,27 +1,22 @@
 // Arabic font loader for jsPDF
 // Caches the font in memory after first load
 
+// PDF-AR1 (v3): Bundle the Arabic TTF locally instead of fetching from a CDN
+// at runtime. Earlier builds depended on jsdelivr; when that fetch failed
+// (CORS, offline, slow network, ad-blocker) the export silently fell back
+// to Helvetica, which can't encode Arabic Unicode and produced
+// `þòþäþ³` mojibake in the PDF text layer. Bundling guarantees the font
+// is always present and same-origin.
+import notoNaskhRegularUrl from '@/assets/fonts/NotoNaskhArabic-Regular.ttf?url';
+import notoNaskhBoldUrl from '@/assets/fonts/NotoNaskhArabic-Bold.ttf?url';
+
 let cachedFont: string | null = null;
+let cachedFontBold: string | null = null;
 
 const ARABIC_FONT_FILE = 'ArabicFont.ttf';
+const ARABIC_FONT_FILE_BOLD = 'ArabicFont-Bold.ttf';
 const ARABIC_FONT_NAME = 'ArabicFont';
 const ARABIC_FONT_STYLES = ['normal', 'bold', 'italic', 'bolditalic'] as const;
-
-// PDF-AR1: jsPDF requires uncompressed TrueType (TTF) bytes. Previously we
-// fetched .woff (compressed Web Open Font Format) and registered it as a
-// .ttf — jsPDF then read the compressed table data as raw TrueType, which
-// produced a broken cmap and rendered Arabic text as `þòþäþ³` mojibake when
-// copied or searched from the resulting PDF. Switching to genuine TTF
-// payloads restores a valid cmap and ToUnicode mapping, so Arabic becomes
-// both visually correct AND copyable / searchable.
-const FONT_URLS = [
-  // Noto Naskh Arabic — official notofonts repo, hinted static TTF.
-  'https://cdn.jsdelivr.net/gh/notofonts/notofonts.github.io/fonts/NotoNaskhArabic/hinted/ttf/NotoNaskhArabic-Regular.ttf',
-  // Noto Sans Arabic — secondary static TTF on the same CDN.
-  'https://cdn.jsdelivr.net/gh/notofonts/notofonts.github.io/fonts/NotoSansArabic/hinted/ttf/NotoSansArabic-Regular.ttf',
-  // Tertiary: npm-hosted Noto Naskh Arabic TTF (different CDN path).
-  'https://cdn.jsdelivr.net/npm/@expo-google-fonts/noto-naskh-arabic/NotoNaskhArabic_400Regular.ttf',
-];
 
 // Validate the first bytes of the response are a real TrueType / OpenType
 // signature. This guards against accidental WOFF/HTML/error pages being
@@ -47,9 +42,22 @@ const shouldDebugArabicPdf = (): boolean => {
   }
 };
 
-const registerArabicFontBytes = (doc: { addFileToVFS: (file: string, data: string) => void; addFont: (file: string, name: string, style: string) => void }, base64: string) => {
-  doc.addFileToVFS(ARABIC_FONT_FILE, base64);
-  for (const style of ARABIC_FONT_STYLES) doc.addFont(ARABIC_FONT_FILE, ARABIC_FONT_NAME, style);
+const registerArabicFontBytes = (
+  doc: { addFileToVFS: (file: string, data: string) => void; addFont: (file: string, name: string, style: string) => void },
+  regularBase64: string,
+  boldBase64: string | null,
+) => {
+  doc.addFileToVFS(ARABIC_FONT_FILE, regularBase64);
+  doc.addFont(ARABIC_FONT_FILE, ARABIC_FONT_NAME, 'normal');
+  doc.addFont(ARABIC_FONT_FILE, ARABIC_FONT_NAME, 'italic');
+  if (boldBase64) {
+    doc.addFileToVFS(ARABIC_FONT_FILE_BOLD, boldBase64);
+    doc.addFont(ARABIC_FONT_FILE_BOLD, ARABIC_FONT_NAME, 'bold');
+    doc.addFont(ARABIC_FONT_FILE_BOLD, ARABIC_FONT_NAME, 'bolditalic');
+  } else {
+    doc.addFont(ARABIC_FONT_FILE, ARABIC_FONT_NAME, 'bold');
+    doc.addFont(ARABIC_FONT_FILE, ARABIC_FONT_NAME, 'bolditalic');
+  }
 };
 
 const debugArabicFont = (details: Record<string, unknown>) => {
@@ -58,45 +66,52 @@ const debugArabicFont = (details: Record<string, unknown>) => {
   console.debug('[PDF-AR1] Arabic font verification', details);
 };
 
+const fetchAsBase64 = async (url: string): Promise<string | null> => {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) return null;
+    const buffer = await response.arrayBuffer();
+    const bytes = new Uint8Array(buffer);
+    if (!isTrueTypeSignature(bytes)) {
+      debugArabicFont({ url, reason: 'invalid-signature', magic: Array.from(bytes.slice(0, 4)) });
+      return null;
+    }
+    let binary = '';
+    const chunk = 0x8000;
+    for (let i = 0; i < bytes.length; i += chunk) {
+      binary += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + chunk)) as unknown as number[]);
+    }
+    return btoa(binary);
+  } catch (err) {
+    debugArabicFont({ url, error: err instanceof Error ? err.message : String(err) });
+    return null;
+  }
+};
+
 export const registerArabicFont = async (doc: { addFileToVFS: (file: string, data: string) => void; addFont: (file: string, name: string, style: string) => void; getFontList?: () => Record<string, string[]> }): Promise<boolean> => {
   if (cachedFont) {
     try {
-      registerArabicFontBytes(doc, cachedFont);
-      debugArabicFont({ source: 'memory-cache', registeredFont: ARABIC_FONT_NAME, styles: ARABIC_FONT_STYLES, fontList: doc.getFontList?.()[ARABIC_FONT_NAME] });
+      registerArabicFontBytes(doc, cachedFont, cachedFontBold);
+      debugArabicFont({ source: 'memory-cache', registeredFont: ARABIC_FONT_NAME, hasBold: !!cachedFontBold });
       return true;
     } catch {
       return false;
     }
   }
 
-  for (const url of FONT_URLS) {
-    try {
-      const response = await fetch(url);
-      if (!response.ok) continue;
-      const contentType = response.headers.get('content-type') ?? 'unknown';
-      const buffer = await response.arrayBuffer();
-      const bytes = new Uint8Array(buffer);
-      const magicBytes = Array.from(bytes.slice(0, 4)).map((b) => b.toString(16).padStart(2, '0')).join(' ');
-      // Reject anything that isn't a real TTF/OTF — prevents the
-      // historical WOFF-as-TTF mojibake regression.
-      const validSignature = isTrueTypeSignature(bytes);
-      debugArabicFont({ url, contentType, magicBytes, validSignature });
-      if (!validSignature) continue;
-      let binary = '';
-      for (let i = 0; i < bytes.length; i++) {
-        binary += String.fromCharCode(bytes[i]);
-      }
-      const base64 = btoa(binary);
-      registerArabicFontBytes(doc, base64);
-      cachedFont = base64;
-      debugArabicFont({ url, registeredFont: ARABIC_FONT_NAME, styles: ARABIC_FONT_STYLES, fontList: doc.getFontList?.()[ARABIC_FONT_NAME] });
-      return true;
-    } catch {
-      continue;
-    }
+  // Bundled, same-origin URLs produced by Vite. No CORS, no network races.
+  const regular = await fetchAsBase64(notoNaskhRegularUrl);
+  if (!regular) return false;
+  const bold = await fetchAsBase64(notoNaskhBoldUrl);
+  cachedFont = regular;
+  cachedFontBold = bold;
+  try {
+    registerArabicFontBytes(doc, regular, bold);
+    debugArabicFont({ source: 'bundled', registered: ARABIC_FONT_NAME, hasBold: !!bold });
+    return true;
+  } catch {
+    return false;
   }
-
-  return false;
 };
 
 export const setupArabicDoc = async (doc: { setFont: (fontName: string, fontStyle?: string) => void; addFileToVFS: (file: string, data: string) => void; addFont: (file: string, name: string, style: string) => void; getFontList?: () => Record<string, string[]> }, isRTL: boolean) => {
