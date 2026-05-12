@@ -3,7 +3,7 @@
  * search, filters, and safe exporter display.
  *
  * Privacy guard:
- *   - Never displays raw exporter UUID, email, phone, IP/UA hashes.
+ *   - Never displays raw exporter UUID, email, contact info, IP/UA hashes.
  *   - Uses the SECURITY DEFINER RPC `list_contract_pdf_exports` which
  *     resolves a safe display name (full_name || ref_id) server-side.
  *   - Falls back to a localized generic label when no safe name exists.
