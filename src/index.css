@@ -201,14 +201,16 @@
     --hdr-h-compact: 3.25rem;
     --bottom-nav-h: 3.5rem;
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Sidebar tokens — hue-aligned with the app surfaces so the sidebar
+       reads as part of the same product (was a generic neutral grey). */
+    --sidebar-background: 220 20% 98%;          /* near-white, slightly cool */
+    --sidebar-foreground: 218 30% 22%;          /* matches body foreground */
+    --sidebar-primary: 159 76% 34%;             /* brand primary */
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 17% 93%;              /* hover surface — visible */
+    --sidebar-accent-foreground: 218 30% 14%;
+    --sidebar-border: 220 23% 91%;              /* matches --border */
+    --sidebar-ring: 159 76% 34%;
 
     /* ============================================================
        Brand Identity v1.0 — Hex aliases (May 2026)
@@ -296,14 +298,17 @@
     --gradient-brand: linear-gradient(135deg, hsl(158 60% 48%), hsl(225 65% 60%));
     --shadow-gold: 0 4px 20px -4px hsl(158 60% 48% / 0.45);
 
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Dark-mode sidebar — slight elevation off the app background
+       (`220 30% 8%`) for a clear surface boundary, with stronger
+       hover/active separation than the previous tokens. */
+    --sidebar-background: 220 30% 10%;
+    --sidebar-foreground: 42 20% 88%;
+    --sidebar-primary: 158 60% 48%;
+    --sidebar-primary-foreground: 220 35% 8%;
+    --sidebar-accent: 220 25% 18%;
+    --sidebar-accent-foreground: 42 20% 95%;
+    --sidebar-border: 220 25% 16%;
+    --sidebar-ring: 158 60% 48%;
 
     /* Dark-mode elevation needs more contrast */
     --elev-1: 0 1px 2px hsl(0 0% 0% / 0.4);
