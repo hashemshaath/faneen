@@ -207,6 +207,7 @@ const adminBaseGroups: MenuGroup[] = [
       { label: { ar: 'توثيق API', en: 'API Docs' }, url: '/admin/api-docs', icon: Book },
       { label: { ar: 'صفحة هبوط المزودين', en: 'Provider Landing' }, url: '/admin/provider-landing', icon: Gauge },
       { label: { ar: 'مركز الذكاء', en: 'AI Center' }, url: '/admin/ai-center', icon: Brain },
+      { label: { ar: 'قوالب العقود', en: 'Contract Templates' }, url: '/admin/contract-templates', icon: FileText },
     ],
   },
   {
