@@ -21,6 +21,11 @@ const MESSAGES: Record<ContractLockErrorCode, { ar: string; en: string }> = {
 export function mapContractLockError(err: unknown, isRTL: boolean): MappedContractError {
   const raw = err instanceof Error ? err.message : typeof err === 'string' ? err : '';
   const upper = raw.toUpperCase();
+  // Legacy alias: the older `contracts_financial_lock` trigger raises
+  // `contract_locked_use_amendment` for total/date/terms changes on active+ rows.
+  if (upper.includes('CONTRACT_LOCKED_USE_AMENDMENT')) {
+    return { code: 'CONTRACT_LOCKED', message: isRTL ? MESSAGES.CONTRACT_LOCKED.ar : MESSAGES.CONTRACT_LOCKED.en };
+  }
   for (const code of Object.keys(MESSAGES) as ContractLockErrorCode[]) {
     if (upper.includes(code)) {
       return { code, message: isRTL ? MESSAGES[code].ar : MESSAGES[code].en };
