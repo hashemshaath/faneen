@@ -424,6 +424,10 @@ const DashboardContracts = () => {
   const [selectedClient, setSelectedClient] = useState<SelectedClient | null>(null);
   const [selectedWorkType, setSelectedWorkType] = useState<WorkTypeKey>('general');
   const [workTypeTouched, setWorkTypeTouched] = useState(false);
+  /* CT4C.3 — Client invitation flow state. */
+  const [inviteMode, setInviteMode] = useState<'idle' | 'composing' | 'awaiting'>('idle');
+  const [inviteForm, setInviteForm] = useState<{ email: string; name: string; phone: string }>({ email: '', name: '', phone: '' });
+  const [pendingInvite, setPendingInvite] = useState<PendingInvite | null>(null);
   const [approveConfirm, setApproveConfirm] = useState<any | null>(null);
   const [sendConfirm, setSendConfirm] = useState<any | null>(null);
   const [isExporting, setIsExporting] = useState(false);
