@@ -1530,12 +1530,51 @@ const DashboardContracts = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Client Email */}
+              {/* CT4B — Step 1: Client (search picker with email fallback) */}
               {!editingId && (
-                <div className="p-4 rounded-xl border-2 border-dashed border-accent/30 bg-accent/5 space-y-2">
-                  <Label className="text-xs font-semibold flex items-center gap-1.5"><Mail className="w-3.5 h-3.5 text-accent" />{isRTL ? 'بريد العميل' : 'Client Email'} <span className="text-destructive">*</span></Label>
-                  <Input type="email" value={form.client_email} onChange={e => setForm({ ...form, client_email: e.target.value })} placeholder="client@email.com" dir="ltr" className="h-10" />
-                  <p className="text-[9px] text-muted-foreground">{isRTL ? 'أدخل البريد الإلكتروني المسجل للعميل' : 'Enter the registered email of the client'}</p>
+                <ClientPicker
+                  isRTL={isRTL}
+                  selected={selectedClient}
+                  onSelect={setSelectedClient}
+                  fallbackEmail={form.client_email}
+                  onFallbackEmail={(v) => setForm(f => ({ ...f, client_email: v }))}
+                />
+              )}
+
+              {/* CT4B — Step 2: Work / service type (auto-suggests template) */}
+              {!editingId && (
+                <div className="p-4 rounded-xl border border-border/40 bg-muted/20 space-y-2">
+                  <div className="flex items-center gap-1.5">
+                    <Briefcase className="w-3.5 h-3.5 text-primary" />
+                    <Label className="text-xs font-semibold">{isRTL ? 'نوع العمل / الخدمة' : 'Work / Service Type'} <span className="text-destructive">*</span></Label>
+                  </div>
+                  <Select
+                    value={selectedWorkType}
+                    onValueChange={(v) => { setSelectedWorkType(v as WorkTypeKey); setWorkTypeTouched(true); setSelectedVersionId(null); setSelectedPricingMethod(null); }}
+                  >
+                    <SelectTrigger className="h-10 text-xs"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {WORK_TYPES.map(w => (
+                        <SelectItem key={w.key} value={w.key} className="text-xs">{isRTL ? w.ar : w.en}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-[9px] text-muted-foreground">
+                    {isRTL ? 'سيتم استخدام قالب عقد مناسب لنوع العمل المحدد.' : 'A contract template matching the selected work type will be used.'}
+                  </p>
+                  {workTypeTouched && (() => {
+                    const w = getWorkType(selectedWorkType);
+                    if (!w || w.defaultBoqGroups.length === 0) return null;
+                    return (
+                      <div className="flex flex-wrap gap-1 pt-1">
+                        <span className="text-[9px] text-muted-foreground me-1">{isRTL ? 'مجموعات BOQ المقترحة:' : 'Suggested BOQ groups:'}</span>
+                        {w.defaultBoqGroups.map(g => {
+                          const meta = BOQ_GROUPS.find(b => b.key === g);
+                          return <Badge key={g} variant="outline" className="text-[9px]">{meta ? (isRTL ? meta.ar : meta.en) : g}</Badge>;
+                        })}
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
 
