@@ -14,18 +14,18 @@ windows, and decorations.
 - Kitchen manufacturing (تصنيع المطابخ): custom kitchens
 - Decoration (ديكورات): interior, gypsum, painting
 
-## Key URLs
-- Homepage: https://qitaat.com/
-- Search: https://qitaat.com/search
-- Categories: https://qitaat.com/categories
-- Blog: https://qitaat.com/blog
-- Projects: https://qitaat.com/projects
-- Offers: https://qitaat.com/offers
-- Membership: https://qitaat.com/membership
-- About: https://qitaat.com/about
-- Contact: https://qitaat.com/contact
-- Privacy: https://qitaat.com/privacy
-- Terms: https://qitaat.com/terms
+## Pages
+- [Homepage](https://qitaat.com/): Industrial directory for aluminum, iron, glass, wood and decorations across Saudi Arabia and the Gulf.
+- [Search](https://qitaat.com/search): Find verified workshops and manufacturers by service, city, and rating.
+- [Categories](https://qitaat.com/categories): Browse all industrial categories and sub-sectors.
+- [Blog](https://qitaat.com/blog): Articles, guides and expert tips for aluminum, glass, steel and wood.
+- [Projects](https://qitaat.com/projects): Real provider portfolios and completed installations.
+- [Offers](https://qitaat.com/offers): Active promotions and discounts from verified providers.
+- [Membership](https://qitaat.com/membership): Provider plans, features and pricing tiers.
+- [About](https://qitaat.com/about): What Qitaat does, our mission and vision.
+- [Contact](https://qitaat.com/contact): Reach the Qitaat team for support and partnerships.
+- [Privacy](https://qitaat.com/privacy): Privacy policy and data handling.
+- [Terms](https://qitaat.com/terms): Terms of service and platform rules.
 
 ## Data
 Business listings include: name (Arabic/English), description, services,
