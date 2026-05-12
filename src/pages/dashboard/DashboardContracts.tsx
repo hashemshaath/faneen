@@ -19,6 +19,7 @@ import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { mapContractLockError } from '@/lib/contract-errors';
+import { dispatchAmendmentEvent } from '@/lib/amendment-notify';
 import {
   FileText, Eye, Plus, CheckCircle2, Clock, XCircle, AlertTriangle,
   Shield, DollarSign, Calendar, Users, ListChecks, StickyNote,
@@ -626,19 +627,21 @@ const DashboardContracts = () => {
 
   const addAmendmentMutation = useMutation({
     mutationFn: async ({ contractId }: { contractId: string }) => {
-      const { error } = await supabase.from('contract_amendments').insert({
+      const { data: inserted, error } = await supabase.from('contract_amendments').insert({
         contract_id: contractId, requested_by: user!.id,
         title_ar: amendmentForm.title_ar, description_ar: amendmentForm.description_ar || null,
         amendment_type: amendmentForm.amendment_type,
         new_amount: amendmentForm.new_amount ? Number(amendmentForm.new_amount) : null,
-      });
+      }).select('id').single();
       if (error) throw error;
+      return inserted?.id as string | undefined;
     },
-    onSuccess: () => {
+    onSuccess: (newAmendmentId) => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-contract-amendments'] });
       setShowAddAmendment(null);
       setAmendmentForm({ title_ar: '', description_ar: '', amendment_type: 'scope_change', new_amount: '' });
       toast.success(isRTL ? 'تم إرسال طلب التعديل' : 'Amendment request sent');
+      if (newAmendmentId) dispatchAmendmentEvent(newAmendmentId, 'created');
     },
     onError: (err: Error) => toast.error(err.message),
   });
@@ -647,11 +650,13 @@ const DashboardContracts = () => {
     mutationFn: async ({ amendmentId }: { amendmentId: string; contract: ContractWithRole }) => {
       const { error } = await supabase.rpc('approve_contract_amendment', { _amendment_id: amendmentId });
       if (error) throw error;
+      return amendmentId;
     },
-    onSuccess: () => {
+    onSuccess: (amId) => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-contract-amendments'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-contracts'] });
       toast.success(isRTL ? 'تمت الموافقة على التعديل' : 'Amendment approved');
+      if (amId) dispatchAmendmentEvent(amId, 'approved');
     },
     onError: (err: unknown) => toast.error(err instanceof Error ? err.message : 'Error'),
   });
