@@ -364,6 +364,15 @@ const SectorLanding: React.FC = () => {
         </section>
       )}
 
+      {/* Top technicians strip — featured verified providers */}
+      <SectorTopTechnicians sectorName={meta.name} technicians={topTechnicians} />
+
+      {/* Buyer guides — HowTo content per sector */}
+      <SectorGuides sectorName={meta.name} guides={guides} />
+
+      {/* Project examples — real completed work in this sector */}
+      <SectorProjectExamples sectorName={meta.name} categoryIds={categoryIds} />
+
       {/* Results grid */}
       <main className="container py-8 px-4">
         <div className="flex items-center justify-between mb-4">
