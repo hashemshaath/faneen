@@ -480,6 +480,102 @@ export const exportContractPDF = async (data: ContractExportData) => {
     y = (doc as any).lastAutoTable.finalY + 12;
   }
 
+  // ── CT6: BOQ Line Items grouped by boq_group_key ──
+  if (data.lineItems && data.lineItems.length > 0) {
+    sectionTitle(data.isRTL ? 'بنود الأعمال (BOQ)' : 'Line Items (BOQ)');
+
+    const itemsForGrouping = data.lineItems.map((li, idx) => ({
+      id: String(idx),
+      boq_group_key: li.boqGroupKey ?? null,
+      pricing_method: li.pricingMethod ?? 'unit',
+      total_cost: li.totalCost,
+      _src: li,
+    }));
+    const groups = groupLineItemsByBoqGroup(itemsForGrouping);
+    const grandTotal = data.lineItems.reduce((s, li) => s + Number(li.totalCost || 0), 0);
+
+    // Mixed-pricing badge line
+    if (hasMixedPricing(itemsForGrouping)) {
+      const used = listPricingMethodsUsed(itemsForGrouping)
+        .map((m) => labelForMethod(m, data.isRTL))
+        .join(' / ');
+      doc.setFontSize(8);
+      doc.setTextColor(mutedR, mutedG, mutedB);
+      const txt = (data.isRTL ? 'تسعير مختلط: ' : 'Mixed pricing: ') + used;
+      doc.text(txt, data.isRTL ? w - 15 : 15, y, { align: data.isRTL ? 'right' : 'left' });
+      y += 6;
+    }
+
+    for (const g of groups) {
+      if (y > h - 40) { doc.addPage(); y = 15; }
+      // Group title bar
+      doc.setFillColor(...SURFACE2_RGB);
+      doc.rect(15, y - 2, w - 30, 7, 'F');
+      doc.setFontSize(9);
+      doc.setTextColor(darkR, darkG, darkB);
+      doc.text(
+        data.isRTL ? g.label_ar : g.label_en,
+        data.isRTL ? w - 18 : 18,
+        y + 3,
+        { align: data.isRTL ? 'right' : 'left' },
+      );
+      y += 7;
+
+      autoTable(doc, {
+        startY: y,
+        head: [[
+          '#',
+          data.isRTL ? 'البند' : 'Item',
+          data.isRTL ? 'طريقة التسعير' : 'Method',
+          data.isRTL ? 'الوحدة' : 'Unit',
+          data.isRTL ? 'الأبعاد/الوزن' : 'Dims/Weight',
+          data.isRTL ? 'الكمية' : 'Qty',
+          data.isRTL ? 'سعر/وحدة' : 'Unit price',
+          data.isRTL ? 'الإجمالي' : 'Total',
+        ]],
+        body: g.items.map((row, i) => {
+          const li = row._src;
+          const name = data.isRTL ? (li.nameAr || li.nameEn || '-') : (li.nameEn || li.nameAr || '-');
+          const method = li.pricingMethod || 'unit';
+          const uom = li.unitOfMeasure || UOM_FALLBACK[method] || '-';
+          return [
+            String(i + 1),
+            String(name).slice(0, 60),
+            labelForMethod(method, data.isRTL),
+            uom,
+            summarizeFormulaInputs(li.formulaInputs, data.isRTL),
+            String(li.quantity),
+            fmtNum(Number(li.unitPrice)),
+            fmtNum(Number(li.totalCost)),
+          ];
+        }),
+        foot: [[
+          '', data.isRTL ? 'مجموع المجموعة' : 'Group subtotal',
+          '', '', '', '', '', `${fmtNum(g.subtotal)} ${data.currency}`,
+        ]],
+        theme: 'grid',
+        styles: { fontSize: 7, cellPadding: 2.2, ...rtlStyles },
+        headStyles: { fillColor: HEADER_RGB, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7 },
+        alternateRowStyles: { fillColor: SURFACE2_RGB },
+        footStyles: { fillColor: HIGHLIGHT_RGB, fontStyle: 'bold', fontSize: 7 },
+        margin: { left: 10, right: 10 },
+      });
+      y = (doc as any).lastAutoTable.finalY + 6;
+    }
+
+    // Grand total
+    if (y > h - 18) { doc.addPage(); y = 15; }
+    doc.setFillColor(...HIGHLIGHT_RGB);
+    doc.rect(15, y, w - 30, 9, 'F');
+    doc.setFontSize(10);
+    doc.setTextColor(darkR, darkG, darkB);
+    const gtLabel = data.isRTL ? 'الإجمالي العام للبنود' : 'BOQ Grand Total';
+    const gtValue = `${fmtNum(grandTotal)} ${data.currency}`;
+    doc.text(gtLabel, data.isRTL ? w - 18 : 18, y + 6, { align: data.isRTL ? 'right' : 'left' });
+    doc.text(gtValue, data.isRTL ? 18 : w - 18, y + 6, { align: data.isRTL ? 'left' : 'right' });
+    y += 14;
+  }
+
   // ── Terms ──
   if (data.terms) {
     sectionTitle(data.isRTL ? 'الشروط والالتزامات' : 'Terms & Conditions');
