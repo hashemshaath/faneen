@@ -4,13 +4,23 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
-import { CheckCircle2, FileText, Info, Clock, XCircle, Ban, PlayCircle, PenLine, AlertTriangle } from 'lucide-react';
+import { CheckCircle2, FileText, Info, Clock, XCircle, Ban, PlayCircle, PenLine, AlertTriangle, ShieldCheck } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
 import { AmendmentFinancialPreview } from './AmendmentFinancialPreview';
 import { previewAmendmentFinancialImpact, type AmendmentPreviewPayment } from '@/lib/contract-financials';
 
 type Amendment = Database['public']['Tables']['contract_amendments']['Row'];
 type AuditRow = Database['public']['Tables']['contract_amendment_audit']['Row'];
+type ApprovalEvidence = {
+  id: string | null;
+  amendment_id: string | null;
+  contract_id: string | null;
+  approver_role: string | null;
+  approval_method: string | null;
+  approved_at: string | null;
+  amendment_hash: string | null;
+  contract_hash_at_approval: string | null;
+};
 
 interface Props {
   amendments: Amendment[];
@@ -108,6 +118,42 @@ export const AmendmentHistoryPanel = ({
     enabled: ids.length > 0,
   });
 
+  // C6.3B — safe approval evidence (no sensitive fields)
+  const { data: evidenceRows = [] } = useQuery({
+    queryKey: ['amendment-evidence', ids.join(',')],
+    queryFn: async (): Promise<ApprovalEvidence[]> => {
+      if (ids.length === 0) return [];
+      const { data, error } = await supabase
+        .from('contract_amendment_approvals_safe')
+        .select('id, amendment_id, contract_id, approver_role, approval_method, approved_at, amendment_hash, contract_hash_at_approval')
+        .in('amendment_id', ids)
+        .order('approved_at', { ascending: true });
+      if (error) return [];
+      return (data ?? []) as ApprovalEvidence[];
+    },
+    enabled: ids.length > 0,
+  });
+
+  const evidenceByAmendment = new Map<string, ApprovalEvidence[]>();
+  for (const r of evidenceRows) {
+    if (!r.amendment_id) continue;
+    const arr = evidenceByAmendment.get(r.amendment_id) ?? [];
+    arr.push(r);
+    evidenceByAmendment.set(r.amendment_id, arr);
+  }
+
+  const ROLE_LABEL: Record<string, { ar: string; en: string }> = {
+    client:         { ar: 'موافقة العميل',     en: 'Client' },
+    provider:       { ar: 'موافقة المزود',     en: 'Provider' },
+    admin_override: { ar: 'تجاوز إداري',       en: 'Admin override' },
+  };
+  const METHOD_LABEL: Record<string, { ar: string; en: string }> = {
+    in_app:         { ar: 'داخل المنصة',       en: 'In-app' },
+    email_link:     { ar: 'رابط بريدي',         en: 'Email link' },
+    admin_override: { ar: 'تجاوز إداري',       en: 'Admin override' },
+  };
+  const shortHash = (h: string | null | undefined) => (h ? h.slice(0, 12) : '—');
+
   const auditByAmendment = new Map<string, AuditRow[]>();
   for (const r of auditRows) {
     const arr = auditByAmendment.get(r.amendment_id) ?? [];
@@ -143,6 +189,9 @@ export const AmendmentHistoryPanel = ({
         const s = STATUS_LABEL[a.status] ?? STATUS_LABEL.pending;
         const t = TYPE_LABEL[a.amendment_type] ?? { ar: a.amendment_type, en: a.amendment_type };
         const audit = auditByAmendment.get(a.id) ?? [];
+        const evidence = evidenceByAmendment.get(a.id) ?? [];
+        const showLegacyEvidenceNote =
+          evidence.length === 0 && (a.status === 'approved' || a.status === 'applied');
         const isRequester = currentUserId != null && a.requested_by === currentUserId;
         // A party can approve only their own side, and never their own request.
         const canApprove =
@@ -267,6 +316,51 @@ export const AmendmentHistoryPanel = ({
                     );
                   })}
                 </ol>
+              </div>
+            )}
+
+            {/* C6.3B — Approval evidence */}
+            {evidence.length > 0 && (
+              <div className="border-t border-border/40 pt-3">
+                <div className="text-[10px] font-medium text-muted-foreground mb-2 flex items-center gap-1.5">
+                  <ShieldCheck className="w-3 h-3" />
+                  {isRTL ? 'إثبات الموافقة' : 'Approval evidence'}
+                </div>
+                <ul className="space-y-2">
+                  {evidence.map(ev => {
+                    const role = ev.approver_role ? (ROLE_LABEL[ev.approver_role] ?? { ar: ev.approver_role, en: ev.approver_role }) : null;
+                    const method = ev.approval_method ? (METHOD_LABEL[ev.approval_method] ?? { ar: ev.approval_method, en: ev.approval_method }) : null;
+                    return (
+                      <li key={ev.id ?? `${ev.amendment_id}-${ev.approver_role}`} className="rounded-lg bg-muted/30 px-2.5 py-2 text-[11px] space-y-1">
+                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                          <span className="font-medium">{role ? (isRTL ? role.ar : role.en) : '—'}</span>
+                          <span className="text-muted-foreground tech-content">{fmt(ev.approved_at, isRTL)}</span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5 text-[10px]">
+                          <div>
+                            <span className="text-muted-foreground">{isRTL ? 'طريقة الموافقة: ' : 'Method: '}</span>
+                            <span>{method ? (isRTL ? method.ar : method.en) : '—'}</span>
+                          </div>
+                          <div className="min-w-0">
+                            <span className="text-muted-foreground">{isRTL ? 'بصمة الملحق: ' : 'Amendment hash: '}</span>
+                            <span className="tech-content font-mono">{shortHash(ev.amendment_hash)}</span>
+                          </div>
+                          <div className="min-w-0">
+                            <span className="text-muted-foreground">{isRTL ? 'بصمة العقد وقت الموافقة: ' : 'Contract hash: '}</span>
+                            <span className="tech-content font-mono">{shortHash(ev.contract_hash_at_approval)}</span>
+                          </div>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
+            {showLegacyEvidenceNote && (
+              <div className="text-[10px] text-muted-foreground italic">
+                {isRTL
+                  ? 'لم يتم تسجيل إثبات موافقة مفصل لهذا الملحق.'
+                  : 'No detailed approval evidence was recorded for this amendment.'}
               </div>
             )}
 
