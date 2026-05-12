@@ -905,13 +905,11 @@ const ContractDetail = () => {
     };
   }, [installmentPayments]);
 
-  const handleExportPDF = async () => {
-    if (!contract) return;
-    if (isExportingPDF) return;
-    setIsExportingPDF(true);
-    try {
-    const { exportContractPDF } = await import('@/lib/contract-pdf-export');
-    await exportContractPDF({
+  // PDF-UX1: extracted payload builder — reused by both Download and Preview
+  // so the two flows render the exact same document with no duplication.
+  const buildPdfPayload = () => {
+    if (!contract) return null;
+    return {
       contractNumber: contract.contract_number,
       title,
       description: desc || undefined,
@@ -1031,10 +1029,26 @@ const ContractDetail = () => {
         };
       }),
       isRTL,
-    });
+    };
+  };
+
+  const handleExportPDF = async () => {
+    if (!contract || isExportingPDF) return;
+    const data = buildPdfPayload();
+    if (!data) return;
+    setIsExportingPDF(true);
+    try {
+      const { exportContractPDF } = await import('@/lib/contract-pdf-export');
+      await exportContractPDF(data);
       // Fire-and-forget export history log (PDF-QA2). Server validates auth.
       void recordContractPdfExport(contract.id, 'contract_detail', language)
         .then(() => queryClient.invalidateQueries({ queryKey: ['contract-pdf-exports', contract.id] }));
+    } catch {
+      toast({
+        title: isRTL ? 'فشل التصدير' : 'Export failed',
+        description: isRTL ? 'تعذر إنشاء ملف PDF. يرجى المحاولة مرة أخرى.' : 'Could not generate the PDF. Please try again.',
+        variant: 'destructive',
+      });
     } finally {
       setIsExportingPDF(false);
     }
