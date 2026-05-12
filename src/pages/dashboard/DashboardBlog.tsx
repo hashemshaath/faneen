@@ -49,7 +49,17 @@ const defaultForm = {
   meta_title_ar: '', meta_title_en: '', meta_description_ar: '', meta_description_en: '',
   focus_keyword: '', keywords: '', canonical_url: '', og_image_url: '',
   scheduled_at: '',
+  guide_topic: '' as '' | 'installation' | 'material-selection' | 'maintenance' | 'specs' | 'safety',
+  faq: [] as Array<{ q: string; a: string }>,
 };
+
+const guideTopics: { value: string; ar: string; en: string }[] = [
+  { value: 'installation', ar: 'التركيب', en: 'Installation' },
+  { value: 'material-selection', ar: 'اختيار المواد', en: 'Material Selection' },
+  { value: 'maintenance', ar: 'الصيانة', en: 'Maintenance' },
+  { value: 'specs', ar: 'المواصفات', en: 'Specs' },
+  { value: 'safety', ar: 'السلامة', en: 'Safety' },
+];
 
 /* helpers */
 function countInText(text: string, keyword: string): number {
@@ -318,6 +328,10 @@ const DashboardBlog = () => {
         focus_keyword: form.focus_keyword || null, keywords: keywordsArr,
         canonical_url: form.canonical_url || null, og_image_url: form.og_image_url || form.cover_image_url || null,
         seo_score: seoAnalysis?.score || localScore, reading_time_minutes: readingTime,
+        guide_topic: form.category === 'guides' && form.guide_topic ? form.guide_topic : null,
+        faq: form.category === 'guides'
+          ? (form.faq || []).filter(it => it.q.trim() && it.a.trim()).map(it => ({ q: it.q.trim(), a: it.a.trim() }))
+          : [],
       };
       if (editId) {
         const { error } = await supabase.from('blog_posts').update(payload).eq('id', editId);
@@ -357,6 +371,8 @@ const DashboardBlog = () => {
       focus_keyword: p.focus_keyword || '', keywords: (p.keywords || []).join(', '),
       canonical_url: p.canonical_url || '', og_image_url: p.og_image_url || '',
       scheduled_at: p.scheduled_at || '',
+      guide_topic: p.guide_topic || '',
+      faq: Array.isArray(p.faq) ? p.faq : [],
     });
     setEditId(p.id);
     setSeoAnalysis(null);
