@@ -96,6 +96,8 @@ const Onboarding = lazyRetry(() => import("./pages/Onboarding"));
 const Categories = lazyRetry(() => import("./pages/Categories"));
 const SectorLanding = lazyRetry(() => import("./pages/SectorLanding"));
 const SectorsIndex = lazyRetry(() => import("./pages/SectorLanding").then(m => ({ default: m.SectorsIndex })));
+const Services = lazyRetry(() => import("./pages/Services"));
+const ServiceDetail = lazyRetry(() => import("./pages/ServiceDetail"));
 const About = lazyRetry(() => import("./pages/About"));
 const Contact = lazyRetry(() => import("./pages/Contact"));
 const Privacy = lazyRetry(() => import("./pages/Privacy"));
@@ -157,6 +159,8 @@ const AppRoutes = () => (
           <Route path="/categories/:slug" element={<Categories />} />
           <Route path="/sectors" element={<SectorsIndex />} />
           <Route path="/sectors/:slug" element={<SectorLanding />} />
+          <Route path="/services" element={<Services />} />
+          <Route path="/services/:slug" element={<ServiceDetail />} />
           <Route path="/compare" element={<Compare />} />
           <Route path="/compare-profiles" element={<CompareProfiles />} />
           <Route path="/membership" element={<Membership />} />
