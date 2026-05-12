@@ -433,6 +433,7 @@ const DashboardBadge: React.FC = () => {
                 <TabsTrigger value="analytics" className="gap-1.5"><BarChart3 className="w-3.5 h-3.5" />{isRTL ? 'التحليلات' : 'Analytics'}</TabsTrigger>
                 <TabsTrigger value="share" className="gap-1.5"><Share2 className="w-3.5 h-3.5" />{isRTL ? 'المشاركة' : 'Share'}</TabsTrigger>
                 <TabsTrigger value="playbook" className="gap-1.5"><Target className="w-3.5 h-3.5" />{isRTL ? 'الدليل' : 'Playbook'}</TabsTrigger>
+                <TabsTrigger value="diag" className="gap-1.5"><Stethoscope className="w-3.5 h-3.5" />{isRTL ? 'التشخيص' : 'Diagnostics'}</TabsTrigger>
               </TabsList>
 
               {/* GENERATOR */}
