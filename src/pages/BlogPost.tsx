@@ -797,6 +797,32 @@ const BlogPost = () => {
               <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(renderedHTML) }} />
             </article>
 
+            {/* ── FAQ (guides) ── */}
+            {faqItems.length > 0 && (
+              <section className="mb-8 sm:mb-10 border-t border-border/50 pt-6 sm:pt-8" aria-labelledby="faq-heading">
+                <h3 id="faq-heading" className="font-heading font-bold text-base sm:text-xl mb-4 sm:mb-5 flex items-center gap-2">
+                  <span aria-hidden>❓</span>
+                  {isRTL ? 'الأسئلة الشائعة' : 'Frequently Asked Questions'}
+                </h3>
+                <div className="space-y-2.5">
+                  {faqItems.map((it, idx) => (
+                    <details
+                      key={idx}
+                      className="group rounded-xl border border-border bg-card p-4 open:border-primary/30 open:shadow-sm transition-colors"
+                    >
+                      <summary className="cursor-pointer list-none font-heading font-semibold text-sm sm:text-base flex items-start justify-between gap-3">
+                        <span>{it.q}</span>
+                        <ChevronDown className="ic-sm shrink-0 mt-0.5 transition-transform group-open:rotate-180" />
+                      </summary>
+                      <p className="mt-3 text-sm text-muted-foreground leading-relaxed whitespace-pre-line" dir="auto">
+                        {it.a}
+                      </p>
+                    </details>
+                  ))}
+                </div>
+              </section>
+            )}
+
             {/* Tags footer */}
             {post.tags?.length > 0 && (
               <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap py-4 sm:py-6 border-t border-border/50 mb-6 sm:mb-8">
