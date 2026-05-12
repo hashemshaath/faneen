@@ -62,6 +62,7 @@ const CompareProfiles = lazyRetry(() => import("./pages/CompareProfiles"));
 const Projects = lazyRetry(() => import("./pages/Projects"));
 const ProjectDetail = lazyRetry(() => import("./pages/ProjectDetail"));
 const Blog = lazyRetry(() => import("./pages/Blog"));
+const Guides = lazyRetry(() => import("./pages/Guides"));
 const BlogPost = lazyRetry(() => import("./pages/BlogPost"));
 const ProfileSystems = lazyRetry(() => import("./pages/ProfileSystems"));
 const ProfileSystemDetail = lazyRetry(() => import("./pages/ProfileSystemDetail"));
@@ -148,6 +149,7 @@ const AppRoutes = () => (
           <Route path="/projects" element={<Projects />} />
           <Route path="/projects/:id" element={<ProjectDetail />} />
           <Route path="/blog" element={<Blog />} />
+          <Route path="/guides" element={<Guides />} />
           <Route path="/blog/:slug" element={<BlogPost />} />
           <Route path="/profile-systems" element={<ProfileSystems />} />
           <Route path="/profile-systems/:slug" element={<ProfileSystemDetail />} />
