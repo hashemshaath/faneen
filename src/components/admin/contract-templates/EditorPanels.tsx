@@ -10,14 +10,11 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Plus, Trash2, ChevronUp, ChevronDown, Save, AlertTriangle, Lock } from 'lucide-react';
+import { Plus, Trash2, ChevronUp, ChevronDown, AlertTriangle, Lock } from 'lucide-react';
 import type {
   CTSection, CTClause, CTPricingRule, CTRequiredField,
   CTAttachment, CTMeasurementMethod,
 } from './types';
-
-type Bi = { ar: string; en: string };
-const t = (isRTL: boolean, l: Bi) => (isRTL ? l.ar : l.en);
 
 const ReadOnlyNotice: React.FC<{ isRTL: boolean }> = ({ isRTL }) => (
   <div className="flex items-center gap-2 rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-sm text-amber-800 mb-3">
