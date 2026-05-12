@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
-import { ShieldCheck, Copy, Check, ExternalLink, AlertCircle, Code2 } from 'lucide-react';
+import { ShieldCheck, Copy, Check, ExternalLink, AlertCircle, Code2, BarChart3, MousePointerClick, Globe } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNoIndex } from '@/hooks/useNoIndex';
 
@@ -89,6 +89,42 @@ const DashboardBadge: React.FC = () => {
       return data as BusinessRow | null;
     },
   });
+
+  // Click analytics — every visit landing on the profile with `?ref=badge`
+  // is recorded in `badge_clicks`. Owners see only their own rows (RLS).
+  const { data: clicks = [] } = useQuery({
+    queryKey: ['badge-clicks', business?.id],
+    enabled: !!business?.id,
+    refetchInterval: 60_000,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('badge_clicks')
+        .select('id, referrer, utm_source, utm_campaign, created_at')
+        .eq('business_id', business!.id)
+        .order('created_at', { ascending: false })
+        .limit(500);
+      return data ?? [];
+    },
+  });
+
+  const clickStats = useMemo(() => {
+    const now = Date.now();
+    const day = 24 * 60 * 60 * 1000;
+    const last7 = clicks.filter((c) => now - new Date(c.created_at).getTime() <= 7 * day).length;
+    const last30 = clicks.filter((c) => now - new Date(c.created_at).getTime() <= 30 * day).length;
+    const referrerMap = new Map<string, number>();
+    for (const c of clicks) {
+      let host = '—';
+      if (c.referrer) {
+        try { host = new URL(c.referrer).hostname.replace(/^www\./, ''); } catch { /* keep dash */ }
+      }
+      referrerMap.set(host, (referrerMap.get(host) ?? 0) + 1);
+    }
+    const topReferrers = [...referrerMap.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5);
+    return { total: clicks.length, last7, last30, topReferrers };
+  }, [clicks]);
 
   const displayName = useMemo(() => {
     if (!business) return '';
