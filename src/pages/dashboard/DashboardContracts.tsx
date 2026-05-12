@@ -613,7 +613,7 @@ const DashboardContracts = () => {
       if (contractTemplateVersionIds.length === 0) return [];
       const { data } = await supabase
         .from('contract_template_pricing_rules')
-        .select('version_id, method')
+        .select('version_id, method, vat_handling')
         .in('version_id', contractTemplateVersionIds);
       return data ?? [];
     },
@@ -627,6 +627,21 @@ const DashboardContracts = () => {
       const list = map.get(r.version_id) ?? [];
       list.push(r.method);
       map.set(r.version_id, list);
+    }
+    return map;
+  }, [contractPricingRules]);
+
+  /**
+   * CT5G.2 — Map of template_version_id → (pricing_method → vat_handling).
+   * Used to derive per-line VAT breakdown for display only. Defaults to
+   * 'inherit' when no rule is configured for a given (version, method).
+   */
+  const vatHandlingByVersionMethod = useMemo(() => {
+    const map = new Map<string, Map<string, string>>();
+    for (const r of contractPricingRules as Array<{ version_id: string; method: string; vat_handling?: string | null }>) {
+      const inner = map.get(r.version_id) ?? new Map<string, string>();
+      inner.set(r.method, (r.vat_handling || 'inherit'));
+      map.set(r.version_id, inner);
     }
     return map;
   }, [contractPricingRules]);
