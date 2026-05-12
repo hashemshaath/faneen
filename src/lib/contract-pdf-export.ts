@@ -58,6 +58,25 @@ export interface ContractExportData {
   vatInclusive?: boolean;
   businessName?: string;
   businessLogo?: string;
+  /**
+   * Amendments appendix — already filtered by RLS in the caller. No raw audit
+   * metadata, no internal notes, no PII, no signed URLs.
+   */
+  amendments?: {
+    number: number;          // display index (e.g. 1,2,3)
+    createdAt?: string | null;
+    type: string;            // amount_change | date_change | scope_change | ...
+    status: string;          // pending | approved | rejected | cancelled | applied
+    title: string;
+    reason?: string | null;
+    oldTotal?: number | null;
+    newAmount?: number | null;
+    amountDelta?: number | null;
+    newEndDate?: string | null;
+    clientApprovedAt?: string | null;
+    providerApprovedAt?: string | null;
+    appliedAt?: string | null;
+  }[];
   isRTL: boolean;
 }
 
