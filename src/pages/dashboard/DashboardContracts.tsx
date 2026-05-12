@@ -445,6 +445,7 @@ const DashboardContracts = () => {
     weight_kg: '',
     weight_ton: '',
     amount: '',
+    boq_group_key: 'other' as BoqGroupKey,
   });
   const [maintenanceImages, setMaintenanceImages] = useState<File[]>([]);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
