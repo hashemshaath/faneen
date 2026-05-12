@@ -222,7 +222,11 @@ const AdminContractTemplates: React.FC = () => {
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Failed'),
   });
 
-  const readOnly = !!selectedVersion && (selectedVersion.status === 'published' || selectedVersion.status === 'archived' || selectedVersion.status === 'superseded');
+  // CT7B: editable only in draft or changes_requested. All review/approval/
+  // publication/archival statuses are read-only — UI mirrors the DB child-row
+  // guard trigger (TEMPLATE_VERSION_LOCKED).
+  const EDITABLE_STATUSES = new Set(['draft', 'changes_requested']);
+  const readOnly = !!selectedVersion && !EDITABLE_STATUSES.has(selectedVersion.status);
 
   return (
     <DashboardLayout>
