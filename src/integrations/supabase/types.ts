@@ -2273,6 +2273,62 @@ export type Database = {
           },
         ]
       }
+      contract_pdf_analysis_log: {
+        Row: {
+          build_version: string | null
+          byte_length: number | null
+          contract_id: string
+          created_at: string
+          created_by: string | null
+          file_name: string | null
+          id: string
+          mojibake_count: number
+          mojibake_detected: boolean
+          report: string | null
+          sample: string | null
+          source: string
+          status: string
+        }
+        Insert: {
+          build_version?: string | null
+          byte_length?: number | null
+          contract_id: string
+          created_at?: string
+          created_by?: string | null
+          file_name?: string | null
+          id?: string
+          mojibake_count?: number
+          mojibake_detected?: boolean
+          report?: string | null
+          sample?: string | null
+          source?: string
+          status: string
+        }
+        Update: {
+          build_version?: string | null
+          byte_length?: number | null
+          contract_id?: string
+          created_at?: string
+          created_by?: string | null
+          file_name?: string | null
+          id?: string
+          mojibake_count?: number
+          mojibake_detected?: boolean
+          report?: string | null
+          sample?: string | null
+          source?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_pdf_analysis_log_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contract_pdf_exports: {
         Row: {
           amendment_count: number
