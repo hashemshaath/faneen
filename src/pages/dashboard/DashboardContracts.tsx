@@ -672,7 +672,9 @@ const DashboardContracts = () => {
     queryKey: ['contract-template-versions', 'published'],
     queryFn: async () => {
       const { data: versions, error } = await supabase
-        .from('contract_template_versions')
+        // CT7B: provider-facing read — must use safe public view, not the
+        // base table (which is now admin-only at the RLS layer).
+        .from('contract_template_versions_public')
         .select('id, version_number, status, template_id, contract_templates!inner(id, slug, category, name_ar, name_en, service_category_id, is_active)')
         .eq('status', 'published')
         .order('version_number', { ascending: false });
