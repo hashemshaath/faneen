@@ -200,7 +200,7 @@ const DashboardBlog = () => {
   const generateSlug = (title: string) =>
     title.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').trim() || `post-${Date.now()}`;
 
-  const setField = useCallback((key: string, value: string) => {
+  const setField = useCallback((key: string, value: unknown) => {
     setForm(f => ({ ...f, [key]: value }));
   }, []);
 
