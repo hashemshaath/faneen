@@ -1772,7 +1772,7 @@ const DashboardContracts = () => {
                       <h3 className="text-xs font-semibold flex items-center gap-1.5"><TrendingUp className="w-3.5 h-3.5 text-accent" />{isRTL ? 'نسبة التحصيل' : 'Collection Rate'}</h3>
                       <span className="text-lg font-bold text-accent">{Math.round((stats.totalPaid / stats.totalAmount) * 100)}%</span>
                     </div>
-                    <Progress value={(stats.totalPaid / stats.totalAmount) * 100} className="h-2.5 mb-2 [&>div]:bg-gradient-to-r [&>div]:from-accent [&>div]:to-success" />
+                    <Progress value={(stats.totalPaid / stats.totalAmount) * 100} className="h-2.5 mb-2 [&>div]:bg-gradient-to-r [&>div]:from-accent [&>div]:to-success" aria-label={isRTL ? `نسبة التحصيل ${Math.round((stats.totalPaid / stats.totalAmount) * 100)}٪` : `Collection rate ${Math.round((stats.totalPaid / stats.totalAmount) * 100)}%`} />
                     <div className="flex items-center justify-between text-[10px] text-muted-foreground">
                       <span>{isRTL ? 'المحصّل' : 'Collected'}: <strong className="text-foreground">{stats.totalPaid.toLocaleString()}</strong> {isRTL ? 'ر.س' : 'SAR'}</span>
                       <span>{isRTL ? 'المتبقي' : 'Remaining'}: <strong className="text-foreground">{(stats.totalAmount - stats.totalPaid).toLocaleString()}</strong> {isRTL ? 'ر.س' : 'SAR'}</span>
@@ -2701,8 +2701,8 @@ const DashboardContracts = () => {
                                               </Badge>
                                             </div>
                                             {p.status !== 'paid' && isProvider && (
-                                              <Button variant="ghost" size="icon" className="h-8 w-8 text-success hover:bg-success dark:hover:bg-success/20" onClick={() => markPaidMutation.mutate({ paymentId: p.id })}>
-                                                <Banknote className="w-4 h-4" />
+                                              <Button variant="ghost" size="icon" className="h-8 w-8 text-success hover:bg-success/10 dark:hover:bg-success/20 focus-visible:ring-2 focus-visible:ring-success/40" onClick={() => markPaidMutation.mutate({ paymentId: p.id })} aria-label={isRTL ? 'تأكيد السداد' : 'Mark as paid'} title={isRTL ? 'تأكيد السداد' : 'Mark as paid'}>
+                                                <Banknote className="w-4 h-4" aria-hidden="true" />
                                               </Button>
                                             )}
                                           </div>
@@ -2715,7 +2715,7 @@ const DashboardContracts = () => {
                                         <span className="text-[10px] text-muted-foreground">{isRTL ? 'الإجمالي المدفوع' : 'Total Paid'}</span>
                                         <span className="text-xs font-bold text-success">{payments.filter((p)=>p.status==='paid').reduce((s:number, p)=>s+Number(p.amount),0).toLocaleString()} / {Number(c.total_amount).toLocaleString()} {c.currency_code}</span>
                                       </div>
-                                      <Progress value={Number(c.total_amount) > 0 ? (payments.filter((p)=>p.status==='paid').reduce((s:number, p)=>s+Number(p.amount),0) / Number(c.total_amount)) * 100 : 0} className="h-1.5 [&>div]:bg-success" />
+                                      <Progress value={Number(c.total_amount) > 0 ? (payments.filter((p)=>p.status==='paid').reduce((s:number, p)=>s+Number(p.amount),0) / Number(c.total_amount)) * 100 : 0} className="h-1.5 [&>div]:bg-success" aria-label={isRTL ? 'نسبة المدفوع من إجمالي العقد' : 'Paid out of contract total'} />
                                     </div>
                                   </div>
                                 ) : <p className="text-center py-8 text-muted-foreground text-xs">{isRTL ? 'لا توجد دفعات' : 'No payments yet'}</p>}
@@ -3037,8 +3037,8 @@ const DashboardContracts = () => {
                                                       })()}
                                                     </div>
                                                     {!locked && isProvider && (
-                                                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/10" onClick={() => deleteLineItemMutation.mutate({ id: li.id, contractId: c.id })}>
-                                                        <X className="w-3 h-3" />
+                                                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/10 focus-visible:ring-2 focus-visible:ring-destructive/40" onClick={() => deleteLineItemMutation.mutate({ id: li.id, contractId: c.id })} aria-label={isRTL ? 'حذف البند' : 'Delete line item'} title={isRTL ? 'حذف البند' : 'Delete line item'}>
+                                                        <X className="w-3 h-3" aria-hidden="true" />
                                                       </Button>
                                                     )}
                                                   </div>
