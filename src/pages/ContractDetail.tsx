@@ -24,6 +24,8 @@ import { dispatchAmendmentEvent } from '@/lib/amendment-notify';
 import { recordContractPdfExport } from '@/lib/contract-pdf-history';
 import { ContractPdfExportHistory } from '@/components/contract/ContractPdfExportHistory';
 import { ContractPdfPreviewOverlay } from '@/components/contract/ContractPdfPreviewOverlay';
+import { ContractPdfAnalysisLog } from '@/components/contract/ContractPdfAnalysisLog';
+import { PdfAnalysisReport } from '@/components/contract/PdfAnalysisReport';
 import { calculateVatBreakdown } from '@/lib/contract-financials';
 import { PaymentScheduleGenerator } from '@/components/contract/PaymentScheduleGenerator';
 import { ContractFinancialCoverage } from '@/components/contract/ContractFinancialCoverage';
@@ -1139,54 +1141,113 @@ const ContractDetail = () => {
     setIsAnalyzingPdf(true);
     setPdfBackendReport(null);
     try {
-      const [{ buildContractPdfForAnalysis }, { getArabicFontDiagnostics, setBackendVerification }] = await Promise.all([
+      const [{ buildContractPdfForAnalysis }, fontMod] = await Promise.all([
         import('@/lib/contract-pdf-export'),
         import('@/lib/pdf-arabic-font'),
       ]);
+      const {
+        getArabicFontDiagnostics,
+        setBackendVerification,
+        computePdfSignature,
+        getCachedAnalysis,
+        setCachedAnalysis,
+      } = fontMod;
       const { bytes, blob, fileName } = await buildContractPdfForAnalysis(data);
 
-      // Trigger local download so the QA reviewer keeps the same artifact
-      // that was sent to the analyzer.
+      // PDF-AR4: trigger the local download in parallel with the
+      // verification round-trip so the user gets the file immediately.
       const dlUrl = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = dlUrl; a.download = fileName; document.body.appendChild(a); a.click();
       a.remove();
       setTimeout(() => { try { URL.revokeObjectURL(dlUrl); } catch { /* noop */ } }, 1000);
 
-      // Encode bytes → base64 in chunks (avoid call-stack overflow).
-      let binary = '';
-      const chunk = 0x8000;
-      for (let i = 0; i < bytes.length; i += chunk) {
-        binary += String.fromCharCode(...bytes.subarray(i, Math.min(i + chunk, bytes.length)));
+      // PDF-AR4: cache identical exports per build version. Repeated clicks
+      // on the same artifact reuse the prior PASS without a network call.
+      const signature = computePdfSignature(bytes);
+      const cached = getCachedAnalysis(signature);
+
+      let backendStatus: 'PASS' | 'FAIL';
+      let backendReport: string;
+      let mojibakeDetected = false;
+      let mojibakeCount = 0;
+      let sample = '';
+      let verifiedAt = new Date().toISOString();
+      let source: 'backend' | 'cache' = 'backend';
+
+      if (cached) {
+        backendStatus = cached.status;
+        backendReport = cached.report ?? `status: ${cached.status}\ncached: true\nsignature: ${signature}`;
+        mojibakeDetected = cached.mojibakeDetected;
+        mojibakeCount = cached.mojibakeCount;
+        sample = cached.sample;
+        verifiedAt = cached.verifiedAt;
+        source = 'cache';
+      } else {
+        // Encode bytes → base64 in chunks (avoid call-stack overflow).
+        let binary = '';
+        const chunk = 0x8000;
+        for (let i = 0; i < bytes.length; i += chunk) {
+          binary += String.fromCharCode(...bytes.subarray(i, Math.min(i + chunk, bytes.length)));
+        }
+        const pdfBase64 = btoa(binary);
+        const { data: backend, error } = await supabase.functions.invoke('verify-pdf-arabic', {
+          body: { pdfBase64, fileName },
+        });
+        if (error) throw error;
+        backendStatus = backend?.status === 'PASS' ? 'PASS' : 'FAIL';
+        mojibakeDetected = !!backend?.mojibakeDetected;
+        mojibakeCount = Number(backend?.mojibakeCount ?? 0);
+        sample = String(backend?.sample ?? '');
+        verifiedAt = String(backend?.verifiedAt ?? verifiedAt);
+        backendReport = typeof backend?.report === 'string' ? backend.report : JSON.stringify(backend, null, 2);
+        setCachedAnalysis(signature, {
+          status: backendStatus, mojibakeDetected, mojibakeCount, sample, verifiedAt, source: 'backend', report: backendReport,
+        });
       }
-      const pdfBase64 = btoa(binary);
 
-      const { data: backend, error } = await supabase.functions.invoke('verify-pdf-arabic', {
-        body: { pdfBase64, fileName },
-      });
-      if (error) throw error;
-
-      const status = backend?.status === 'PASS' ? 'PASS' : 'FAIL';
       setBackendVerification({
-        status,
-        mojibakeDetected: !!backend?.mojibakeDetected,
-        mojibakeCount: Number(backend?.mojibakeCount ?? 0),
-        sample: String(backend?.sample ?? ''),
-        verifiedAt: String(backend?.verifiedAt ?? new Date().toISOString()),
-        source: 'backend',
-        report: typeof backend?.report === 'string' ? backend.report : undefined,
+        status: backendStatus, mojibakeDetected, mojibakeCount, sample, verifiedAt,
+        source: source === 'cache' ? 'client' : 'backend',
+        report: backendReport,
       });
-      setPdfBackendReport(typeof backend?.report === 'string' ? backend.report : JSON.stringify(backend, null, 2));
+      setPdfBackendReport(backendReport);
       setPdfDiagnostics(getArabicFontDiagnostics());
 
+      // Persist run for the per-contract analysis log tab. Failures here
+      // are non-fatal (e.g. anonymous QA on staging) — we still surface
+      // the result inline.
+      try {
+        if (user?.id) {
+          await supabase.from('contract_pdf_analysis_log').insert({
+            contract_id: contract.id,
+            status: backendStatus,
+            mojibake_detected: mojibakeDetected,
+            mojibake_count: mojibakeCount,
+            byte_length: bytes.length,
+            file_name: fileName,
+            build_version: getArabicFontDiagnostics().buildVersion,
+            source,
+            sample: sample.slice(0, 240),
+            report: backendReport.slice(0, 8000),
+            created_by: user.id,
+          });
+          queryClient.invalidateQueries({ queryKey: ['contract_pdf_analysis_log', contract.id] });
+        }
+      } catch {
+        /* non-fatal */
+      }
+
       toast({
-        title: status === 'PASS'
+        title: backendStatus === 'PASS'
           ? (isRTL ? 'تحليل الـ PDF: ناجح' : 'PDF analysis: PASS')
           : (isRTL ? 'تحليل الـ PDF: فشل' : 'PDF analysis: FAIL'),
-        description: status === 'PASS'
-          ? (isRTL ? 'لم يُكتشف نص مشوّش، تم تضمين الخط العربي بشكل صحيح.' : 'No mojibake detected; Arabic font embedded correctly.')
+        description: backendStatus === 'PASS'
+          ? (isRTL
+              ? `لم يُكتشف نص مشوّش${source === 'cache' ? ' (نتيجة مخزنة لهذا الإصدار)' : ''}.`
+              : `No mojibake detected${source === 'cache' ? ' (cached result for this build)' : ''}.`)
           : (isRTL ? 'تم اكتشاف نص مشوّش (mojibake) في طبقة النص.' : 'Mojibake detected in the text layer.'),
-        variant: status === 'PASS' ? 'default' : 'destructive',
+        variant: backendStatus === 'PASS' ? 'default' : 'destructive',
       });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
@@ -1562,9 +1623,9 @@ const ContractDetail = () => {
               )}
             </div>
             {pdfBackendReport && (
-              <pre className="mt-3 max-h-56 overflow-auto rounded-md bg-muted/40 p-2 text-[11px] leading-snug text-foreground whitespace-pre-wrap break-all" dir="ltr">
-{pdfBackendReport}
-              </pre>
+              <div className="mt-3">
+                <PdfAnalysisReport report={pdfBackendReport} isRTL={isRTL} />
+              </div>
             )}
           </div>
         )}
@@ -2187,6 +2248,7 @@ const ContractDetail = () => {
               { value: 'attachments', icon: Paperclip, label: isRTL ? 'المرفقات' : 'Attachments', count: attachments?.length || 0 },
               { value: 'amendments', icon: FileText, label: isRTL ? 'الملاحق' : 'Amendments', count: amendments?.length || 0 },
               { value: 'exports', icon: Download, label: isRTL ? 'سجل التصدير' : 'Export History', count: 0 },
+              { value: 'pdf-analysis', icon: ShieldCheck, label: isRTL ? 'تحليل التصدير' : 'Analysis Log', count: 0 },
             ].map(tab => (
               <TabsTrigger key={tab.value} value={tab.value} className="font-body rounded-lg data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-3 sm:px-4 py-2 gap-1.5 text-xs sm:text-sm">
                 <tab.icon className="w-3.5 h-3.5" />{tab.label} ({tab.count})
@@ -3014,6 +3076,11 @@ const ContractDetail = () => {
           {/* ── PDF Export History (PDF-QA2) ── */}
           <TabsContent value="exports">
             <ContractPdfExportHistory contractId={contract.id} isRTL={isRTL} />
+          </TabsContent>
+
+          {/* ── PDF Analysis Log (PDF-AR4) ── */}
+          <TabsContent value="pdf-analysis">
+            <ContractPdfAnalysisLog contractId={contract.id} isRTL={isRTL} />
           </TabsContent>
         </Tabs>
       </div>
