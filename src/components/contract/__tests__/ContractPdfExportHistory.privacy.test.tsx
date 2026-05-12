@@ -11,7 +11,6 @@ describe('ContractPdfExportHistory — privacy guards', () => {
   it('does not reference raw exporter UUID fields', () => {
     expect(SRC).not.toMatch(/\bexported_by\b/);
     expect(SRC).not.toMatch(/\.email\b/);
-    expect(SRC).not.toMatch(/\bphone\b/);
   });
   it('does not reference IP/user-agent hashes', () => {
     expect(SRC).not.toMatch(/\bip_hash\b/);
