@@ -18,6 +18,7 @@ import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import type { ImportedMeasurement } from '@/lib/contract-pdf-export';
 import { getContractStatusMeta, isContractLockedByStatus } from '@/lib/contract-statuses';
+import { mapContractLockError } from '@/lib/contract-errors';
 import { calculateVatBreakdown } from '@/lib/contract-financials';
 import { PaymentScheduleGenerator } from '@/components/contract/PaymentScheduleGenerator';
 import { ContractFinancialCoverage } from '@/components/contract/ContractFinancialCoverage';
