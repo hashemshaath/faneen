@@ -152,6 +152,28 @@ export const setBackendVerification = (result: PdfVerificationResult) => {
   lastDiagnostics = { ...lastDiagnostics, lastVerification: { ...result, source: 'backend' } };
 };
 
+// PDF-AR4: Per-build verification cache. The mojibake scan + backend round-
+// trip is the slow part of the "Export + Analyze" flow. Identical exports
+// (same build, same byte length, same head/tail signature) reuse the prior
+// PASS result so QA reviewers can re-click the button without paying the
+// network cost. Cache is intentionally in-memory (cleared on reload / new
+// build) and keyed by `PDF_BUILD_VERSION` so a deploy invalidates entries.
+const analysisCache = new Map<string, PdfVerificationResult>();
+
+export const computePdfSignature = (bytes: Uint8Array): string => {
+  const len = bytes.length;
+  const head = Array.from(bytes.slice(0, 16)).map((b) => b.toString(16).padStart(2, '0')).join('');
+  const tail = Array.from(bytes.slice(Math.max(0, len - 16))).map((b) => b.toString(16).padStart(2, '0')).join('');
+  return `${PDF_BUILD_VERSION}:${len}:${head}:${tail}`;
+};
+
+export const getCachedAnalysis = (signature: string): PdfVerificationResult | null =>
+  analysisCache.get(signature) ?? null;
+
+export const setCachedAnalysis = (signature: string, result: PdfVerificationResult): void => {
+  if (result.status === 'PASS') analysisCache.set(signature, result);
+};
+
 export class ArabicPdfFontError extends Error {
   constructor(message = 'PDF_ARABIC_FONT_UNAVAILABLE') {
     super(message);
