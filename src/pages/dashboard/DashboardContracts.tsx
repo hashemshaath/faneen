@@ -2201,8 +2201,10 @@ const DashboardContracts = () => {
                   <Input type="date" value={form.end_date} onChange={e => setForm({ ...form, end_date: e.target.value })} dir="ltr" className="h-10" />
                 </div>
               </div>
+              </div>
 
-              {/* VAT Settings */}
+              {/* VAT Settings — Pricing/VAT step */}
+              <div ref={stepRefs.pricing} className="space-y-4 scroll-mt-24">
               <div className="p-4 rounded-xl bg-muted/30 border border-border/40 space-y-3">
                 <h4 className="text-xs font-semibold flex items-center gap-1.5"><Percent className="w-3.5 h-3.5 text-primary" />{isRTL ? 'ضريبة القيمة المضافة' : 'Value Added Tax (VAT)'}</h4>
                 <div className="flex items-center gap-4 flex-wrap">
@@ -2245,8 +2247,10 @@ const DashboardContracts = () => {
                   <Textarea value={form.terms_en} onChange={e => setForm({ ...form, terms_en: e.target.value })} rows={6} dir="ltr" className="text-xs" />
                 </div>
               </div>
+              </div>
 
               {/* CT4B — Review summary + status guidance before submit. */}
+              <div ref={stepRefs.review} className="space-y-4 scroll-mt-24">
               {!editingId && (() => {
                 const guide = getStatusGuidance('draft');
                 const w = getWorkType(selectedWorkType);
@@ -2284,10 +2288,52 @@ const DashboardContracts = () => {
                 );
               })()}
 
-              <Button variant="hero" className="w-full gap-2 h-11 shadow-lg" disabled={!form.title_ar || !form.total_amount || (!editingId && !selectedClient && !form.client_email) || createContractMutation.isPending} onClick={() => createContractMutation.mutate()}>
-                {createContractMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : editingId ? <CheckCircle2 className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-                {editingId ? (isRTL ? 'تحديث العقد' : 'Update Contract') : (isRTL ? 'إنشاء العقد' : 'Create Contract')}
-              </Button>
+              {/* Provider Contract UX 2 — Part A: Back / Next + Save Draft inline. */}
+              {(() => {
+                const idx = stepOrder.indexOf(activeStep);
+                const prev = idx > 0 ? stepOrder[idx - 1] : null;
+                const next = idx < stepOrder.length - 1 ? stepOrder[idx + 1] : null;
+                const saveDisabled = !form.title_ar || !form.total_amount || (!editingId && !selectedClient && !form.client_email) || createContractMutation.isPending;
+                return (
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
+                    <Button type="button" variant="outline" size="sm" className="h-9 text-xs" disabled={!prev} onClick={() => prev && goToStep(prev)}>
+                      {isRTL ? '→ السابق' : '← Back'}
+                    </Button>
+                    <Button type="button" variant="outline" size="sm" className="h-9 text-xs" disabled={!next} onClick={() => next && goToStep(next)}>
+                      {isRTL ? 'التالي ←' : 'Next →'}
+                    </Button>
+                    <div className="flex-1" />
+                    <Button variant="hero" className="gap-2 h-10 shadow-lg" disabled={saveDisabled} onClick={() => createContractMutation.mutate()}>
+                      {createContractMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : editingId ? <CheckCircle2 className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                      {editingId ? (isRTL ? 'تحديث العقد' : 'Update Contract') : (isRTL ? 'حفظ المسودة' : 'Save Draft')}
+                    </Button>
+                  </div>
+                );
+              })()}
+              </div>
+
+              {/* Provider Contract UX 2 — Part D: sticky mobile action bar. */}
+              <div className="lg:hidden sticky bottom-0 -mx-4 sm:-mx-6 px-4 sm:px-6 py-2.5 bg-background/95 backdrop-blur border-t border-border/40 flex items-center gap-2 z-20">
+                <div className="flex-1 min-w-0">
+                  <div className="text-[9px] text-muted-foreground leading-none">{isRTL ? 'الإجمالي' : 'Total'}</div>
+                  <div className="text-xs font-bold tech-content truncate">
+                    {form.total_amount ? `${Number(form.total_amount).toLocaleString()} ${form.currency_code}` : '—'}
+                    <span className="ms-1 text-[9px] text-muted-foreground font-normal">
+                      {form.vat_inclusive ? (isRTL ? `شاملة ${form.vat_rate}%` : `incl. ${form.vat_rate}%`) : (isRTL ? `+${form.vat_rate}%` : `+${form.vat_rate}%`)}
+                    </span>
+                  </div>
+                </div>
+                <Button
+                  variant="hero"
+                  size="sm"
+                  className="h-10 text-xs gap-1.5"
+                  disabled={!form.title_ar || !form.total_amount || (!editingId && !selectedClient && !form.client_email) || createContractMutation.isPending}
+                  onClick={() => createContractMutation.mutate()}
+                >
+                  {createContractMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                  {editingId ? (isRTL ? 'تحديث' : 'Update') : (isRTL ? 'حفظ المسودة' : 'Save Draft')}
+                </Button>
+              </div>
             </CardContent>
           </Card>
         )}
