@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
+import { useBadgeClickTracking } from "@/hooks/useBadgeClickTracking";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { getLocalizedValue, useDirection } from "@/lib/direction";
@@ -62,6 +63,10 @@ const BusinessProfile = () => {
   const { data: branches = [] } = useBranches(business?.id);
   const { data: reviews = [] } = useReviews(business?.id);
   const { data: activeOffersCount = 0 } = useActivePromotionsCount(business?.id);
+
+  // Record a click event when this page was opened from an embedded
+  // "Verified on Qitaat" badge (?ref=badge) — visible in DashboardBadge.
+  useBadgeClickTracking(business?.id, business?.username);
 
   const businessName = business ? getLocalizedValue(language, business.name_ar, business.name_en) : '';
   const businessDesc = business ? (getLocalizedValue(language, business.description_ar, business.description_en) || getLocalizedValue(language, business.short_description_ar, business.short_description_en) || '') : '';

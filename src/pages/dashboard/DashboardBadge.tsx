@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
-import { ShieldCheck, Copy, Check, ExternalLink, AlertCircle, Code2 } from 'lucide-react';
+import { ShieldCheck, Copy, Check, ExternalLink, AlertCircle, Code2, BarChart3, MousePointerClick, Globe } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNoIndex } from '@/hooks/useNoIndex';
 
@@ -89,6 +89,42 @@ const DashboardBadge: React.FC = () => {
       return data as BusinessRow | null;
     },
   });
+
+  // Click analytics — every visit landing on the profile with `?ref=badge`
+  // is recorded in `badge_clicks`. Owners see only their own rows (RLS).
+  const { data: clicks = [] } = useQuery({
+    queryKey: ['badge-clicks', business?.id],
+    enabled: !!business?.id,
+    refetchInterval: 60_000,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('badge_clicks')
+        .select('id, referrer, utm_source, utm_campaign, created_at')
+        .eq('business_id', business!.id)
+        .order('created_at', { ascending: false })
+        .limit(500);
+      return data ?? [];
+    },
+  });
+
+  const clickStats = useMemo(() => {
+    const now = Date.now();
+    const day = 24 * 60 * 60 * 1000;
+    const last7 = clicks.filter((c) => now - new Date(c.created_at).getTime() <= 7 * day).length;
+    const last30 = clicks.filter((c) => now - new Date(c.created_at).getTime() <= 30 * day).length;
+    const referrerMap = new Map<string, number>();
+    for (const c of clicks) {
+      let host = '—';
+      if (c.referrer) {
+        try { host = new URL(c.referrer).hostname.replace(/^www\./, ''); } catch { /* keep dash */ }
+      }
+      referrerMap.set(host, (referrerMap.get(host) ?? 0) + 1);
+    }
+    const topReferrers = [...referrerMap.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5);
+    return { total: clicks.length, last7, last30, topReferrers };
+  }, [clicks]);
 
   const displayName = useMemo(() => {
     if (!business) return '';
@@ -216,6 +252,64 @@ const DashboardBadge: React.FC = () => {
                     dangerouslySetInnerHTML={{ __html: html }}
                   />
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Click analytics — `?ref=badge` events recorded on the public profile */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4" />
+                  {isRTL ? 'تحليلات نقرات الشارة' : 'Badge click analytics'}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-3 gap-3">
+                  {[
+                    { label: isRTL ? 'إجمالي النقرات' : 'Total clicks', value: clickStats.total },
+                    { label: isRTL ? 'آخر 7 أيام' : 'Last 7 days', value: clickStats.last7 },
+                    { label: isRTL ? 'آخر 30 يومًا' : 'Last 30 days', value: clickStats.last30 },
+                  ].map((s) => (
+                    <div key={s.label} className="rounded-xl border bg-card p-3">
+                      <div className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
+                        <MousePointerClick className="w-3 h-3" />
+                        {s.label}
+                      </div>
+                      <div className="mt-1 text-2xl font-heading font-bold tech-content">{s.value}</div>
+                    </div>
+                  ))}
+                </div>
+
+                <div>
+                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                    <Globe className="w-3.5 h-3.5" />
+                    {isRTL ? 'أهم المواقع المُحيلة' : 'Top referrers'}
+                  </h3>
+                  {clickStats.topReferrers.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">
+                      {isRTL
+                        ? 'لا توجد نقرات بعد. الصق كود الشارة على موقعك ثم عُد لاحقًا.'
+                        : 'No clicks yet. Embed the badge on your site, then check back later.'}
+                    </p>
+                  ) : (
+                    <ul className="divide-y rounded-xl border bg-card">
+                      {clickStats.topReferrers.map(([host, count]) => (
+                        <li key={host} className="flex items-center justify-between px-3 py-2 text-sm">
+                          <span className="font-mono text-xs tech-content truncate" dir="ltr">{host}</span>
+                          <Badge variant="secondary" className="tech-content">{count}</Badge>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                {clicks.length > 0 && (
+                  <p className="text-[11px] text-muted-foreground">
+                    {isRTL
+                      ? `آخر نقرة: ${new Date(clicks[0].created_at).toLocaleString('ar-SA')}`
+                      : `Last click: ${new Date(clicks[0].created_at).toLocaleString()}`}
+                  </p>
+                )}
               </CardContent>
             </Card>
 
