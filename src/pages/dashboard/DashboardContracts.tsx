@@ -469,6 +469,27 @@ const DashboardContracts = () => {
   const [maintenanceImages, setMaintenanceImages] = useState<File[]>([]);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const maintenanceImageRef = React.useRef<HTMLInputElement>(null);
+
+  /* Provider Contract UX 2 — Part A: navigable stepper section refs. */
+  type StepKey = 'client' | 'work' | 'template' | 'details' | 'pricing' | 'review';
+  const stepRefs = {
+    client: React.useRef<HTMLDivElement>(null),
+    work: React.useRef<HTMLDivElement>(null),
+    template: React.useRef<HTMLDivElement>(null),
+    details: React.useRef<HTMLDivElement>(null),
+    pricing: React.useRef<HTMLDivElement>(null),
+    review: React.useRef<HTMLDivElement>(null),
+  } as const;
+  const stepOrder: StepKey[] = ['client', 'work', 'template', 'details', 'pricing', 'review'];
+  const [activeStep, setActiveStep] = useState<StepKey>('client');
+  const goToStep = useCallback((key: StepKey) => {
+    setActiveStep(key);
+    const el = stepRefs[key]?.current;
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, []);
+
   const [uploadingContractId, setUploadingContractId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'cards' | 'compact'>('cards');
 
