@@ -633,6 +633,85 @@ const SectorCity: React.FC = () => {
               ))}
             </div>
           </section>
+
+          {/* Auto internal links to related service pages — city-aware bilingual anchors */}
+          {(() => {
+            const allSectorServices = SERVICES_CATALOG.filter((s) => s.sector === sector.slug);
+            if (allSectorServices.length === 0) return null;
+            const anchorVariantsAr = (svc: string): string[] => [
+              `سعر ${svc} ${cityIn}`,
+              `أفضل ورش ${svc} ${cityIn}`,
+              `تركيب ${svc} ${cityIn}`,
+              `عروض أسعار ${svc} ${cityIn}`,
+              `${svc} ${cityIn}`,
+            ];
+            const anchorVariantsEn = (svc: string): string[] => [
+              `${svc} prices ${cityIn}`,
+              `Best ${svc} workshops ${cityIn}`,
+              `${svc} installation ${cityIn}`,
+              `${svc} quotes ${cityIn}`,
+              `${svc} ${cityIn}`,
+            ];
+            const anchorFor = (idx: number, svc: string): string => {
+              const variants = isRTL ? anchorVariantsAr(svc) : anchorVariantsEn(svc);
+              return variants[idx % variants.length];
+            };
+            return (
+              <section className="mt-12" aria-labelledby="related-services-heading">
+                <h2 id="related-services-heading" className="text-xl font-bold mb-3">
+                  {isRTL
+                    ? `روابط مفيدة: خدمات ${meta.name} ${cityIn}`
+                    : `Related: ${meta.name} services ${cityIn}`}
+                </h2>
+                <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                  {isRTL ? (
+                    <>
+                      تصفّح أبرز خدمات {meta.name} المتاحة {cityIn} من خلال صفحات تفصيلية
+                      تشمل الأسعار والمواصفات والضمان: {allSectorServices.slice(0, 5).map((s, i) => (
+                        <React.Fragment key={s.slug}>
+                          <Link
+                            to={`/services/${s.slug}?city=${city.slug}`}
+                            className="text-primary hover:underline"
+                          >
+                            {anchorFor(i, s.name_ar)}
+                          </Link>
+                          {i < Math.min(4, allSectorServices.length - 1) ? '، ' : '.'}
+                        </React.Fragment>
+                      ))}
+                    </>
+                  ) : (
+                    <>
+                      Explore the main {meta.name} services available {cityIn} via detailed
+                      pages with pricing, specs and warranties: {allSectorServices.slice(0, 5).map((s, i) => (
+                        <React.Fragment key={s.slug}>
+                          <Link
+                            to={`/services/${s.slug}?city=${city.slug}`}
+                            className="text-primary hover:underline"
+                          >
+                            {anchorFor(i, s.name_en)}
+                          </Link>
+                          {i < Math.min(4, allSectorServices.length - 1) ? ', ' : '.'}
+                        </React.Fragment>
+                      ))}
+                    </>
+                  )}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {allSectorServices.map((s, i) => (
+                    <Link
+                      key={s.slug}
+                      to={`/services/${s.slug}?city=${city.slug}`}
+                      className="inline-flex items-center gap-1 rounded-xl border border-border bg-card px-3 py-2 text-xs hover-lift hover:border-primary/40"
+                      title={isRTL ? s.name_ar : (s.name_en || s.name_ar)}
+                    >
+                      <span>{anchorFor(i, isRTL ? s.name_ar : (s.name_en || s.name_ar))}</span>
+                      <Arrow className="h-3 w-3 opacity-60" />
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            );
+          })()}
         </section>
       </main>
       <Footer />
