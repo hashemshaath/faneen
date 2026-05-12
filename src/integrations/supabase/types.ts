@@ -6514,6 +6514,15 @@ export type Database = {
         }
       }
       bump_migration_epoch: { Args: { _reason?: string }; Returns: number }
+      calculate_contract_line_item_total: {
+        Args: {
+          _formula_inputs: Json
+          _pricing_method: string
+          _quantity: number
+          _unit_price: number
+        }
+        Returns: Json
+      }
       cancel_contract: {
         Args: { _contract_id: string; _reason?: string }
         Returns: {
@@ -7246,6 +7255,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      validate_contract_line_item_price: {
+        Args: { _payload: Json }
+        Returns: Json
       }
       verify_contract_public: {
         Args: { _contract_number: string; _hash: string }
