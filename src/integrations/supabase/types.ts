@@ -5765,6 +5765,52 @@ export type Database = {
     }
     Functions: {
       _membership_free_defaults: { Args: never; Returns: Json }
+      accept_contract: {
+        Args: { _contract_id: string }
+        Returns: {
+          business_id: string | null
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          client_accepted_at: string | null
+          client_id: string
+          completed_at: string | null
+          contract_number: string
+          contract_version: number
+          created_at: string
+          currency_code: string
+          description_ar: string | null
+          description_en: string | null
+          document_hash: string | null
+          end_date: string | null
+          id: string
+          is_demo: boolean
+          last_pdf_generated_at: string | null
+          last_pdf_snapshot_id: string | null
+          locked_at: string | null
+          official_version_number: number
+          provider_accepted_at: string | null
+          provider_id: string
+          start_date: string | null
+          status: Database["public"]["Enums"]["contract_status"]
+          supervisor_email: string | null
+          supervisor_name: string | null
+          supervisor_phone: string | null
+          terms_ar: string | null
+          terms_en: string | null
+          title_ar: string
+          title_en: string | null
+          total_amount: number
+          updated_at: string
+          vat_inclusive: boolean
+          vat_rate: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "contracts"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       admin_convert_lead_to_contract: {
         Args: { _lead_id: string }
         Returns: string
@@ -5920,6 +5966,52 @@ export type Database = {
         }
       }
       bump_migration_epoch: { Args: { _reason?: string }; Returns: number }
+      cancel_contract: {
+        Args: { _contract_id: string; _reason?: string }
+        Returns: {
+          business_id: string | null
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          client_accepted_at: string | null
+          client_id: string
+          completed_at: string | null
+          contract_number: string
+          contract_version: number
+          created_at: string
+          currency_code: string
+          description_ar: string | null
+          description_en: string | null
+          document_hash: string | null
+          end_date: string | null
+          id: string
+          is_demo: boolean
+          last_pdf_generated_at: string | null
+          last_pdf_snapshot_id: string | null
+          locked_at: string | null
+          official_version_number: number
+          provider_accepted_at: string | null
+          provider_id: string
+          start_date: string | null
+          status: Database["public"]["Enums"]["contract_status"]
+          supervisor_email: string | null
+          supervisor_name: string | null
+          supervisor_phone: string | null
+          terms_ar: string | null
+          terms_en: string | null
+          title_ar: string
+          title_en: string | null
+          total_amount: number
+          updated_at: string
+          vat_inclusive: boolean
+          vat_rate: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "contracts"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       cancel_contract_amendment: {
         Args: { _amendment_id: string }
         Returns: {
@@ -5987,9 +6079,63 @@ export type Database = {
       cleanup_expired_otps: { Args: never; Returns: undefined }
       cleanup_old_audit_data: { Args: never; Returns: undefined }
       cleanup_old_migration_telemetry: { Args: never; Returns: undefined }
+      complete_contract: {
+        Args: { _contract_id: string }
+        Returns: {
+          business_id: string | null
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          client_accepted_at: string | null
+          client_id: string
+          completed_at: string | null
+          contract_number: string
+          contract_version: number
+          created_at: string
+          currency_code: string
+          description_ar: string | null
+          description_en: string | null
+          document_hash: string | null
+          end_date: string | null
+          id: string
+          is_demo: boolean
+          last_pdf_generated_at: string | null
+          last_pdf_snapshot_id: string | null
+          locked_at: string | null
+          official_version_number: number
+          provider_accepted_at: string | null
+          provider_id: string
+          start_date: string | null
+          status: Database["public"]["Enums"]["contract_status"]
+          supervisor_email: string | null
+          supervisor_name: string | null
+          supervisor_phone: string | null
+          terms_ar: string | null
+          terms_en: string | null
+          title_ar: string
+          title_en: string | null
+          total_amount: number
+          updated_at: string
+          vat_inclusive: boolean
+          vat_rate: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "contracts"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       compute_business_onboarding_completion: {
         Args: { _business_id: string }
         Returns: number
+      }
+      contract_caller_can_act: {
+        Args: { _contract_id: string }
+        Returns: {
+          is_admin: boolean
+          is_client: boolean
+          is_provider: boolean
+        }[]
       }
       contract_canonical_snapshot: {
         Args: { _contract_id: string }
@@ -6368,6 +6514,7 @@ export type Database = {
           read_ct: number
         }[]
       }
+      recalc_contract_total: { Args: { _contract_id: string }; Returns: number }
       record_email_click: { Args: { _message_id: string }; Returns: undefined }
       record_email_link_click: {
         Args: { _message_id: string; _target_url: string }
@@ -6414,6 +6561,52 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "contract_amendments"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      send_contract_for_approval: {
+        Args: { _contract_id: string }
+        Returns: {
+          business_id: string | null
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          client_accepted_at: string | null
+          client_id: string
+          completed_at: string | null
+          contract_number: string
+          contract_version: number
+          created_at: string
+          currency_code: string
+          description_ar: string | null
+          description_en: string | null
+          document_hash: string | null
+          end_date: string | null
+          id: string
+          is_demo: boolean
+          last_pdf_generated_at: string | null
+          last_pdf_snapshot_id: string | null
+          locked_at: string | null
+          official_version_number: number
+          provider_accepted_at: string | null
+          provider_id: string
+          start_date: string | null
+          status: Database["public"]["Enums"]["contract_status"]
+          supervisor_email: string | null
+          supervisor_name: string | null
+          supervisor_phone: string | null
+          terms_ar: string | null
+          terms_en: string | null
+          title_ar: string
+          title_en: string | null
+          total_amount: number
+          updated_at: string
+          vat_inclusive: boolean
+          vat_rate: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "contracts"
           isOneToOne: true
           isSetofReturn: false
         }

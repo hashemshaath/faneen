@@ -591,14 +591,8 @@ const DashboardContracts = () => {
       });
       if (error) throw error;
       // Update contract total from measurements + line items
-      const { data: fresh } = await supabase.from('contract_measurements').select('total_cost').eq('contract_id', contractId);
-      const { data: freshLi } = await supabase.from('contract_line_items').select('total_cost').eq('contract_id', contractId);
-      if (fresh) {
-        const msTotal = fresh.reduce((s, m) => s + Number(m.total_cost || 0), 0);
-        const liTotal = (freshLi ?? []).reduce((s, l) => s + Number(l.total_cost || 0), 0);
-        const grandTotal = msTotal + liTotal;
-        if (grandTotal > 0) await supabase.from('contracts').update({ total_amount: grandTotal }).eq('id', contractId);
-      }
+      // C6.4a — recompute via RPC.
+      await supabase.rpc('recalc_contract_total', { _contract_id: contractId });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-contract-measurements'] });
@@ -753,13 +747,8 @@ const DashboardContracts = () => {
         item_type: lineItemForm.item_type, sort_order: existing.length + 1,
       });
       if (error) throw error;
-      // Recalculate contract total: measurements + line items
-      const { data: freshMs } = await supabase.from('contract_measurements').select('total_cost').eq('contract_id', contractId);
-      const { data: freshLi } = await supabase.from('contract_line_items').select('total_cost').eq('contract_id', contractId);
-      const msTotal = (freshMs ?? []).reduce((s, m) => s + Number(m.total_cost || 0), 0);
-      const liTotal = (freshLi ?? []).reduce((s, l) => s + Number(l.total_cost || 0), 0);
-      const grandTotal = msTotal + liTotal;
-      if (grandTotal > 0) await supabase.from('contracts').update({ total_amount: grandTotal }).eq('id', contractId);
+      // C6.4a — recompute via RPC.
+      await supabase.rpc('recalc_contract_total', { _contract_id: contractId });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-contract-line-items'] });
@@ -776,10 +765,8 @@ const DashboardContracts = () => {
     mutationFn: async ({ id, contractId }: { id: string; contractId: string }) => {
       const { error } = await supabase.from('contract_line_items').delete().eq('id', id);
       if (error) throw error;
-      const { data: freshMs } = await supabase.from('contract_measurements').select('total_cost').eq('contract_id', contractId);
-      const { data: freshLi } = await supabase.from('contract_line_items').select('total_cost').eq('contract_id', contractId);
-      const total = (freshMs ?? []).reduce((s, m) => s + Number(m.total_cost || 0), 0) + (freshLi ?? []).reduce((s, l) => s + Number(l.total_cost || 0), 0);
-      if (total > 0) await supabase.from('contracts').update({ total_amount: total }).eq('id', contractId);
+      // C6.4a — recompute via RPC.
+      await supabase.rpc('recalc_contract_total', { _contract_id: contractId });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-contract-line-items'] });
@@ -906,13 +893,8 @@ const DashboardContracts = () => {
 
   const approveMutation = useMutation({
     mutationFn: async (contract: ContractWithRole) => {
-      const isClient = user?.id === contract.client_id;
-      const updateField = isClient ? 'client_accepted_at' : 'provider_accepted_at';
-      const update: any = { [updateField]: new Date().toISOString() };
-      const otherAccepted = isClient ? contract.provider_accepted_at : contract.client_accepted_at;
-      if (otherAccepted) update.status = 'active';
-      else if (contract.status === 'draft') update.status = 'pending_approval';
-      const { error } = await supabase.from('contracts').update(update).eq('id', contract.id);
+      // C6.4a — go through SECURITY DEFINER RPC.
+      const { error } = await supabase.rpc('accept_contract', { _contract_id: contract.id });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -924,7 +906,8 @@ const DashboardContracts = () => {
 
   const sendForApprovalMutation = useMutation({
     mutationFn: async (contract: ContractWithRole) => {
-      const { error } = await supabase.from('contracts').update({ status: 'pending_approval' }).eq('id', contract.id);
+      // C6.4a — go through SECURITY DEFINER RPC.
+      const { error } = await supabase.rpc('send_contract_for_approval', { _contract_id: contract.id });
       if (error) throw error;
       await supabase.from('notifications').insert({
         user_id: contract.client_id,

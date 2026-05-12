@@ -348,13 +348,10 @@ const ContractDetail = () => {
   });
   const acceptMutation = useMutation({
     mutationFn: async () => {
-      const isClientUser = user?.id === contract?.client_id;
-      const updateField = isClientUser ? 'client_accepted_at' : 'provider_accepted_at';
-      const update: any = { [updateField]: new Date().toISOString() };
-      const otherAccepted = isClientUser ? contract?.provider_accepted_at : contract?.client_accepted_at;
-      if (otherAccepted) update.status = 'active';
-      else if (contract?.status === 'draft') update.status = 'pending_approval';
-      await supabase.from('contracts').update(update).eq('id', id!);
+      // C6.4a — go through SECURITY DEFINER RPC instead of direct table update.
+      const { data: updated, error } = await supabase.rpc('accept_contract', { _contract_id: id! });
+      if (error) throw error;
+      const update = (updated ?? {}) as { status?: string };
 
       // When both parties have accepted → contract becomes active = signed.
       // Send a bilingual signature confirmation to both client and provider.
@@ -493,12 +490,8 @@ const ContractDetail = () => {
 
   const recalcContractTotal = async (): Promise<void> => {
     if (!id) return;
-    const { data: fresh } = await supabase
-      .from('contract_measurements')
-      .select('total_cost')
-      .eq('contract_id', id);
-    const newTotal = (fresh || []).reduce((s, m) => s + (Number(m.total_cost) || 0), 0);
-    await supabase.from('contracts').update({ total_amount: newTotal }).eq('id', id);
+    // C6.4a — recompute via SECURITY DEFINER RPC (sums measurements + line items).
+    await supabase.rpc('recalc_contract_total', { _contract_id: id });
     await queryClient.invalidateQueries({ queryKey: ['contract', id] });
   };
 
