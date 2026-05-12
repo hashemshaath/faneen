@@ -141,36 +141,36 @@ export const ProviderMembershipCard: React.FC<Props> = ({ userId, businessId, ti
               <Icon className="w-4 h-4" />
             </div>
             <div>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
+              <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium">
                 {isRTL ? 'باقتك الحالية' : 'Your current plan'}
               </p>
-              <h3 className={cn('font-heading font-bold text-base leading-tight', colors.text)}>
+              <h3 className={cn('font-heading font-bold text-lg leading-tight mt-0.5', colors.text)}>
                 {tierLabel(planTier, isRTL)}
               </h3>
-              <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+              <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                 {subscription && (
-                  <Badge variant="outline" className="text-[8px] h-4 px-1.5 gap-0.5">
-                    <Calendar className="w-2 h-2" />
+                  <Badge variant="outline" className="text-[11px] h-5 px-1.5 gap-1 border-border/60">
+                    <Calendar className="w-3 h-3" aria-hidden="true" />
                     {subscription.billing_cycle === 'yearly' ? (isRTL ? 'سنوي' : 'Yearly') : (isRTL ? 'شهري' : 'Monthly')}
                   </Badge>
                 )}
                 {daysLeft !== null && (
                   <Badge
                     className={cn(
-                      'text-[8px] h-4 px-1.5 gap-0.5',
-                      expiringSoon ? 'bg-warning/15 text-warning' : 'bg-success/15 text-success',
+                      'text-[11px] h-5 px-1.5 gap-1 border',
+                      expiringSoon ? 'bg-warning/10 text-warning border-warning/30' : 'bg-success/10 text-success border-success/30',
                     )}
                   >
-                    {expiringSoon && <AlertTriangle className="w-2 h-2" />}
+                    {expiringSoon && <AlertTriangle className="w-3 h-3" aria-hidden="true" />}
                     {isRTL ? `${daysLeft} يوم متبقي` : `${daysLeft}d left`}
                   </Badge>
                 )}
               </div>
             </div>
           </div>
-          <Link to="/membership" className="shrink-0">
-            <Button size="sm" variant={isFreePlan ? 'default' : 'outline'} className="h-8 text-xs gap-1.5">
-              {isFreePlan ? <Send className="w-3 h-3" /> : <ArrowUpRight className="w-3 h-3" />}
+          <Link to="/membership" className="shrink-0" aria-label={isFreePlan ? (isRTL ? 'طلب الترقية' : 'Request upgrade') : (isRTL ? 'إدارة الاشتراك' : 'Manage subscription')}>
+            <Button size="sm" variant={isFreePlan ? 'default' : 'outline'} className="h-9 text-xs gap-1.5 px-3">
+              {isFreePlan ? <Send className="w-3.5 h-3.5" aria-hidden="true" /> : <ArrowUpRight className="w-3.5 h-3.5" aria-hidden="true" />}
               {isFreePlan
                 ? (isRTL ? 'طلب الترقية' : 'Request upgrade')
                 : (isRTL ? 'إدارة الاشتراك' : 'Manage subscription')}
@@ -178,15 +178,15 @@ export const ProviderMembershipCard: React.FC<Props> = ({ userId, businessId, ti
           </Link>
         </div>
 
-        <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-info/30 bg-info/5 px-2.5 py-0.5 text-[10px] text-info">
-          <Info className="w-2.5 h-2.5" />
+        <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-info/30 bg-info/5 px-2.5 py-1 text-[11px] text-info">
+          <Info className="w-3 h-3" aria-hidden="true" />
           {isRTL
             ? 'نسخة تجريبية — يتم تفعيل الترقيات يدوياً حالياً'
             : 'Beta — upgrades are manually activated for now'}
         </div>
 
         {isFreePlan && (
-          <p className="text-[11px] text-muted-foreground mb-3 leading-relaxed">
+          <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
             {isRTL
               ? 'أنت حالياً على الباقة المجانية. يمكنك الترقية للاستفادة من مزايا إضافية.'
               : 'You are on the free plan. Upgrade to unlock more benefits.'}
@@ -207,20 +207,27 @@ export const ProviderMembershipCard: React.FC<Props> = ({ userId, businessId, ti
               <div
                 key={item.label}
                 className={cn(
-                  'flex flex-col gap-1 px-2.5 py-2 rounded-xl bg-background/60 border',
-                  overLimit ? 'border-destructive/40' : nearCap ? 'border-warning/40' : 'border-border/20',
+                  'flex flex-col gap-1.5 px-2.5 py-2.5 rounded-xl bg-background/80 border',
+                  overLimit ? 'border-destructive/40 bg-destructive/5' : nearCap ? 'border-warning/40 bg-warning/5' : 'border-border/60',
                 )}
+                aria-label={`${item.label}: ${typeof used === 'number' ? `${used} / ${limitText}` : limitText}${overLimit ? (isRTL ? ' — تجاوز الحد' : ' — over limit') : nearCap ? (isRTL ? ' — قارب على الحد' : ' — near limit') : ''}`}
               >
                 <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-lg bg-muted/40 flex items-center justify-center shrink-0">
-                    <item.icon className="w-3 h-3 text-muted-foreground" />
+                  <div className={cn(
+                    'w-7 h-7 rounded-lg flex items-center justify-center shrink-0',
+                    overLimit ? 'bg-destructive/10' : nearCap ? 'bg-warning/10' : 'bg-muted/50',
+                  )}>
+                    <item.icon className={cn(
+                      'w-3.5 h-3.5',
+                      overLimit ? 'text-destructive' : nearCap ? 'text-warning' : 'text-muted-foreground',
+                    )} aria-hidden="true" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-[8px] text-muted-foreground truncate">{item.label}</p>
+                    <p className="text-[11px] text-muted-foreground truncate leading-tight">{item.label}</p>
                     <p
                       className={cn(
-                        'text-[11px] font-bold leading-tight tech-content',
-                        overLimit ? 'text-destructive' : nearCap ? 'text-warning' : colors.text,
+                        'text-xs font-bold leading-tight tech-content mt-0.5',
+                        overLimit ? 'text-destructive' : nearCap ? 'text-warning' : 'text-foreground',
                       )}
                     >
                       {typeof used === 'number'
@@ -233,10 +240,11 @@ export const ProviderMembershipCard: React.FC<Props> = ({ userId, businessId, ti
                   <Progress
                     value={pct}
                     className={cn(
-                      'h-1',
+                      'h-1.5',
                       overLimit && '[&>div]:bg-destructive',
                       !overLimit && nearCap && '[&>div]:bg-warning',
                     )}
+                    aria-label={isRTL ? `استخدام ${pct}٪` : `Usage ${pct}%`}
                   />
                 )}
               </div>
@@ -244,23 +252,23 @@ export const ProviderMembershipCard: React.FC<Props> = ({ userId, businessId, ti
           })}
         </div>
 
-        <p className="mt-2 text-[10px] text-muted-foreground/80 flex items-center gap-1">
-          <Info className="w-2.5 h-2.5" />
+        <p className="mt-3 text-[11px] text-muted-foreground flex items-center gap-1.5">
+          <Info className="w-3 h-3 shrink-0" aria-hidden="true" />
           {isRTL
             ? 'هذه مؤشرات استخدام فقط. لا يتم فرض الحدود تلقائيًا بعد.'
             : 'Usage indicators only. Limits are not enforced automatically yet.'}
         </p>
         {hasMultipleBusinesses && (
-          <p className="mt-1 text-[10px] text-muted-foreground/80 flex items-center gap-1">
-            <Building2 className="w-2.5 h-2.5" />
+          <p className="mt-1 text-[11px] text-muted-foreground flex items-center gap-1.5">
+            <Building2 className="w-3 h-3 shrink-0" aria-hidden="true" />
             {isRTL
               ? 'يتم عرض الاستخدام حسب المنشأة الحالية.'
               : 'Usage is shown for the currently selected business.'}
           </p>
         )}
         {hasUsage && (usageRows ?? []).some((r) => r.over_limit) && (
-          <p className="mt-1 text-[10px] text-destructive flex items-center gap-1">
-            <AlertTriangle className="w-2.5 h-2.5" />
+          <p className="mt-2 text-[11px] text-destructive flex items-center gap-1.5 font-medium">
+            <AlertTriangle className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
             {isRTL
               ? 'تجاوزت الحد في بعض المؤشرات. يمكنك الترقية للحصول على حدود أعلى.'
               : 'You have exceeded limits on some metrics. Upgrade for higher limits.'}
