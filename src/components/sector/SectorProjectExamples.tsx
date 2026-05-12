@@ -91,6 +91,9 @@ export const SectorProjectExamples: React.FC<Props> = ({ sectorName, sectorSlug,
                       src={p.cover_image_url}
                       alt={title}
                       loading="lazy"
+                      decoding="async"
+                      width={640}
+                      height={440}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                   ) : (

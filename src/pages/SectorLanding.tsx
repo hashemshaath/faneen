@@ -467,7 +467,7 @@ const SectorLanding: React.FC = () => {
         {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {Array.from({ length: 8 }).map((_, i) => (
-              <Skeleton key={i} className="h-32 rounded-xl" />
+              <Skeleton key={i} className="h-[88px] rounded-xl" />
             ))}
           </div>
         ) : pageItems.length === 0 ? (
@@ -488,7 +488,15 @@ const SectorLanding: React.FC = () => {
                   <CardContent className="p-4 flex items-center gap-3">
                     <div className="w-14 h-14 rounded-xl bg-muted flex items-center justify-center overflow-hidden shrink-0">
                       {b.logo_url ? (
-                        <img src={b.logo_url} alt={b.name_ar} className="w-full h-full object-cover" loading="lazy" />
+                        <img
+                          src={b.logo_url}
+                          alt={b.name_ar}
+                          width={56}
+                          height={56}
+                          loading="lazy"
+                          decoding="async"
+                          className="w-full h-full object-cover"
+                        />
                       ) : (
                         <Building2 className="w-6 h-6 text-muted-foreground/40" />
                       )}

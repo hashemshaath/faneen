@@ -46,7 +46,15 @@ export const SectorTopTechnicians: React.FC<Props> = ({ sectorName, technicians,
               <CardContent className="p-3 flex flex-col items-center text-center gap-2">
                 <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center overflow-hidden ring-2 ring-gold/30">
                   {b.logo_url ? (
-                    <img src={b.logo_url} alt={b.name_ar} className="w-full h-full object-cover" loading="lazy" />
+                    <img
+                      src={b.logo_url}
+                      alt={b.name_ar}
+                      className="w-full h-full object-cover"
+                      width={64}
+                      height={64}
+                      decoding="async"
+                      fetchPriority="high"
+                    />
                   ) : (
                     <Building2 className="w-7 h-7 text-muted-foreground/40" />
                   )}
