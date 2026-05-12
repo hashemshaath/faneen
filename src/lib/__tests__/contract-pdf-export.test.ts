@@ -55,6 +55,12 @@ const FORBIDDEN_TOKENS = [
   'audit_log',
   '/storage/v1/object/sign',     // Supabase signed URL path
   'X-Amz-Signature',             // S3 signed URL marker
+  // PDF-QA2: export-history fields must never appear in the PDF body.
+  'contract_pdf_exports',
+  'exported_by',
+  'ip_hash',
+  'user_agent_hash',
+  'document_hash_prefix',
 ] as const;
 
 // Raw UUID pattern. We allow none in the rendered output.
