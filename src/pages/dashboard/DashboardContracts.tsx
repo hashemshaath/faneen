@@ -846,7 +846,10 @@ const DashboardContracts = () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-contract-line-items'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-contracts'] });
       setShowAddLineItem(null);
-      setLineItemForm({ name_ar: '', description_ar: '', quantity: '1', unit_price: '', item_type: 'service' });
+      setLineItemForm({
+        name_ar: '', description_ar: '', quantity: '1', unit_price: '', item_type: 'service',
+        pricing_method: 'unit', length_mm: '', width_mm: '', height_mm: '', weight_kg: '', weight_ton: '', amount: '',
+      });
       toast.success(isRTL ? 'تمت إضافة البند وتحديث قيمة العقد' : 'Item added & total updated');
     },
     onError: (err: unknown) => toast.error(mapContractLockError(err, isRTL).message),
