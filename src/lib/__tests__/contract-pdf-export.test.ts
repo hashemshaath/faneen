@@ -15,7 +15,18 @@
  *     and on the absence of forbidden tokens.
  *   - QR rendering (`qrcode` npm) works in node and produces a data URL.
  */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+
+// Mock the Arabic font loader: in jsdom the CDN fetch + jsPDF font wiring
+// is unreliable and unrelated to what we are testing. Force fallback to
+// the default helvetica font so RTL fixtures still build.
+vi.mock('@/lib/pdf-arabic-font', () => ({
+  registerArabicFont: async () => false,
+  setupArabicDoc: async () => false,
+  getArabicTableStyles: () => ({}),
+  printContractSection: () => {},
+}));
+
 import { buildContractPDF } from '@/lib/contract-pdf-export';
 import {
   ALL_FIXTURES,
@@ -51,8 +62,11 @@ const UUID_RX = /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\
 
 const buildText = async (data: Parameters<typeof buildContractPDF>[0]): Promise<string> => {
   const doc = await buildContractPDF(data);
-  // jsPDF returns a string of all rendered text operators.
-  return (doc as unknown as { output: (t: string) => string }).output('text');
+  // jsPDF default `output()` returns the raw PDF document as a string.
+  // With default (uncompressed) settings, text drawn via `doc.text(...)`
+  // appears literally inside content streams as `(text) Tj` operators,
+  // which is sufficient for substring assertions.
+  return (doc as unknown as { output: () => string }).output();
 };
 
 describe('PDF-QA1 — buildContractPDF: smoke + regression', () => {
