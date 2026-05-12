@@ -1025,7 +1025,7 @@ const DashboardContracts = () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-contracts'] });
       const n = res?.inserted ?? 0;
       if (n === 0) {
-        toast.info(isRTL ? 'البنود المقترحة موجودة مسبقاً' : 'Suggested items already added');
+        toast.info(isRTL ? 'تمت إضافة البنود المقترحة' : 'Suggested BOQ items already added');
       } else {
         toast.success(isRTL ? `أُضيفت ${n} بنود مقترحة` : `Added ${n} suggested items`);
       }
