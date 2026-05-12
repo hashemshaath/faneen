@@ -1885,44 +1885,59 @@ export type Database = {
       }
       contract_line_items: {
         Row: {
+          boq_group_key: string | null
           contract_id: string
           created_at: string
           description_ar: string | null
+          formula_inputs: Json
           id: string
+          is_optional: boolean
           item_type: string
           name_ar: string
           name_en: string | null
+          pricing_method: string | null
           quantity: number
           sort_order: number
           total_cost: number | null
+          unit_of_measure: string | null
           unit_price: number
           updated_at: string
         }
         Insert: {
+          boq_group_key?: string | null
           contract_id: string
           created_at?: string
           description_ar?: string | null
+          formula_inputs?: Json
           id?: string
+          is_optional?: boolean
           item_type?: string
           name_ar: string
           name_en?: string | null
+          pricing_method?: string | null
           quantity?: number
           sort_order?: number
           total_cost?: number | null
+          unit_of_measure?: string | null
           unit_price?: number
           updated_at?: string
         }
         Update: {
+          boq_group_key?: string | null
           contract_id?: string
           created_at?: string
           description_ar?: string | null
+          formula_inputs?: Json
           id?: string
+          is_optional?: boolean
           item_type?: string
           name_ar?: string
           name_en?: string | null
+          pricing_method?: string | null
           quantity?: number
           sort_order?: number
           total_cost?: number | null
+          unit_of_measure?: string | null
           unit_price?: number
           updated_at?: string
         }
@@ -1934,7 +1949,50 @@ export type Database = {
             referencedRelation: "contracts"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "contract_line_items_pricing_method_fkey"
+            columns: ["pricing_method"]
+            isOneToOne: false
+            referencedRelation: "contract_measurement_methods"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      contract_measurement_methods: {
+        Row: {
+          created_at: string
+          decimals: number
+          description_ar: string | null
+          description_en: string | null
+          id: string
+          is_active: boolean
+          label_ar: string
+          label_en: string
+          symbol: string | null
+        }
+        Insert: {
+          created_at?: string
+          decimals?: number
+          description_ar?: string | null
+          description_en?: string | null
+          id: string
+          is_active?: boolean
+          label_ar: string
+          label_en: string
+          symbol?: string | null
+        }
+        Update: {
+          created_at?: string
+          decimals?: number
+          description_ar?: string | null
+          description_en?: string | null
+          id?: string
+          is_active?: boolean
+          label_ar?: string
+          label_en?: string
+          symbol?: string | null
+        }
+        Relationships: []
       }
       contract_measurements: {
         Row: {
@@ -2104,10 +2162,390 @@ export type Database = {
           },
         ]
       }
+      contract_template_attachments: {
+        Row: {
+          created_at: string
+          file_url: string | null
+          id: string
+          is_mandatory: boolean
+          kind: string
+          precedence_order: number
+          title_ar: string
+          title_en: string | null
+          updated_at: string
+          version_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          is_mandatory?: boolean
+          kind: string
+          precedence_order?: number
+          title_ar: string
+          title_en?: string | null
+          updated_at?: string
+          version_id: string
+        }
+        Update: {
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          is_mandatory?: boolean
+          kind?: string
+          precedence_order?: number
+          title_ar?: string
+          title_en?: string | null
+          updated_at?: string
+          version_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_template_attachments_version_id_fkey"
+            columns: ["version_id"]
+            isOneToOne: false
+            referencedRelation: "contract_template_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contract_template_clauses: {
+        Row: {
+          body_ar: string
+          body_en: string | null
+          created_at: string
+          id: string
+          is_editable_by_client: boolean
+          is_editable_by_provider: boolean
+          is_mandatory: boolean
+          legal_reference: string | null
+          section_id: string
+          sort_order: number
+          tags: Json
+          updated_at: string
+        }
+        Insert: {
+          body_ar: string
+          body_en?: string | null
+          created_at?: string
+          id?: string
+          is_editable_by_client?: boolean
+          is_editable_by_provider?: boolean
+          is_mandatory?: boolean
+          legal_reference?: string | null
+          section_id: string
+          sort_order?: number
+          tags?: Json
+          updated_at?: string
+        }
+        Update: {
+          body_ar?: string
+          body_en?: string | null
+          created_at?: string
+          id?: string
+          is_editable_by_client?: boolean
+          is_editable_by_provider?: boolean
+          is_mandatory?: boolean
+          legal_reference?: string | null
+          section_id?: string
+          sort_order?: number
+          tags?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_template_clauses_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "contract_template_sections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contract_template_pricing_rules: {
+        Row: {
+          created_at: string
+          display_in_pdf: Json
+          formula: string | null
+          id: string
+          is_default: boolean
+          method: string
+          required_fields: Json
+          rounding: Json
+          updated_at: string
+          vat_handling: string
+          version_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_in_pdf?: Json
+          formula?: string | null
+          id?: string
+          is_default?: boolean
+          method: string
+          required_fields?: Json
+          rounding?: Json
+          updated_at?: string
+          vat_handling?: string
+          version_id: string
+        }
+        Update: {
+          created_at?: string
+          display_in_pdf?: Json
+          formula?: string | null
+          id?: string
+          is_default?: boolean
+          method?: string
+          required_fields?: Json
+          rounding?: Json
+          updated_at?: string
+          vat_handling?: string
+          version_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_template_pricing_rules_method_fkey"
+            columns: ["method"]
+            isOneToOne: false
+            referencedRelation: "contract_measurement_methods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_template_pricing_rules_version_id_fkey"
+            columns: ["version_id"]
+            isOneToOne: false
+            referencedRelation: "contract_template_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contract_template_required_fields: {
+        Row: {
+          applies_to: string
+          created_at: string
+          enum_values: Json
+          field_key: string
+          field_type: string
+          help_ar: string | null
+          help_en: string | null
+          id: string
+          is_required: boolean
+          label_ar: string
+          label_en: string | null
+          sort_order: number
+          updated_at: string
+          validation: Json
+          version_id: string
+        }
+        Insert: {
+          applies_to?: string
+          created_at?: string
+          enum_values?: Json
+          field_key: string
+          field_type: string
+          help_ar?: string | null
+          help_en?: string | null
+          id?: string
+          is_required?: boolean
+          label_ar: string
+          label_en?: string | null
+          sort_order?: number
+          updated_at?: string
+          validation?: Json
+          version_id: string
+        }
+        Update: {
+          applies_to?: string
+          created_at?: string
+          enum_values?: Json
+          field_key?: string
+          field_type?: string
+          help_ar?: string | null
+          help_en?: string | null
+          id?: string
+          is_required?: boolean
+          label_ar?: string
+          label_en?: string | null
+          sort_order?: number
+          updated_at?: string
+          validation?: Json
+          version_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_template_required_fields_version_id_fkey"
+            columns: ["version_id"]
+            isOneToOne: false
+            referencedRelation: "contract_template_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contract_template_sections: {
+        Row: {
+          created_at: string
+          id: string
+          is_required: boolean
+          section_key: string
+          sort_order: number
+          title_ar: string
+          title_en: string | null
+          updated_at: string
+          version_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_required?: boolean
+          section_key: string
+          sort_order?: number
+          title_ar: string
+          title_en?: string | null
+          updated_at?: string
+          version_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_required?: boolean
+          section_key?: string
+          sort_order?: number
+          title_ar?: string
+          title_en?: string | null
+          updated_at?: string
+          version_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_template_sections_version_id_fkey"
+            columns: ["version_id"]
+            isOneToOne: false
+            referencedRelation: "contract_template_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contract_template_snapshots: {
+        Row: {
+          contract_id: string
+          created_by: string | null
+          frozen_at: string
+          frozen_payload: Json
+          id: string
+          version_id: string | null
+        }
+        Insert: {
+          contract_id: string
+          created_by?: string | null
+          frozen_at?: string
+          frozen_payload: Json
+          id?: string
+          version_id?: string | null
+        }
+        Update: {
+          contract_id?: string
+          created_by?: string | null
+          frozen_at?: string
+          frozen_payload?: Json
+          id?: string
+          version_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_template_snapshots_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: true
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_template_snapshots_version_id_fkey"
+            columns: ["version_id"]
+            isOneToOne: false
+            referencedRelation: "contract_template_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contract_template_versions: {
+        Row: {
+          archived_at: string | null
+          body_hash: string | null
+          created_at: string
+          effective_from: string | null
+          id: string
+          language_precedence: string
+          legal_review_notes: string | null
+          legal_reviewer_id: string | null
+          published_at: string | null
+          published_by: string | null
+          risk_level: string | null
+          status: string
+          superseded_by: string | null
+          template_id: string
+          updated_at: string
+          version_number: number
+        }
+        Insert: {
+          archived_at?: string | null
+          body_hash?: string | null
+          created_at?: string
+          effective_from?: string | null
+          id?: string
+          language_precedence?: string
+          legal_review_notes?: string | null
+          legal_reviewer_id?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          risk_level?: string | null
+          status?: string
+          superseded_by?: string | null
+          template_id: string
+          updated_at?: string
+          version_number: number
+        }
+        Update: {
+          archived_at?: string | null
+          body_hash?: string | null
+          created_at?: string
+          effective_from?: string | null
+          id?: string
+          language_precedence?: string
+          legal_review_notes?: string | null
+          legal_reviewer_id?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          risk_level?: string | null
+          status?: string
+          superseded_by?: string | null
+          template_id?: string
+          updated_at?: string
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_template_versions_superseded_by_fkey"
+            columns: ["superseded_by"]
+            isOneToOne: false
+            referencedRelation: "contract_template_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_template_versions_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "contract_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contract_templates: {
         Row: {
+          archived_at: string | null
           category: string
           created_at: string
+          current_version_id: string | null
+          default_locale: string
           description_ar: string | null
           description_en: string | null
           id: string
@@ -2122,6 +2560,8 @@ export type Database = {
           penalties_en: string | null
           scope_of_work_ar: string | null
           scope_of_work_en: string | null
+          service_category_id: string | null
+          slug: string | null
           sort_order: number
           terms_ar: string
           terms_en: string | null
@@ -2130,8 +2570,11 @@ export type Database = {
           warranty_terms_en: string | null
         }
         Insert: {
+          archived_at?: string | null
           category?: string
           created_at?: string
+          current_version_id?: string | null
+          default_locale?: string
           description_ar?: string | null
           description_en?: string | null
           id?: string
@@ -2146,6 +2589,8 @@ export type Database = {
           penalties_en?: string | null
           scope_of_work_ar?: string | null
           scope_of_work_en?: string | null
+          service_category_id?: string | null
+          slug?: string | null
           sort_order?: number
           terms_ar: string
           terms_en?: string | null
@@ -2154,8 +2599,11 @@ export type Database = {
           warranty_terms_en?: string | null
         }
         Update: {
+          archived_at?: string | null
           category?: string
           created_at?: string
+          current_version_id?: string | null
+          default_locale?: string
           description_ar?: string | null
           description_en?: string | null
           id?: string
@@ -2170,6 +2618,8 @@ export type Database = {
           penalties_en?: string | null
           scope_of_work_ar?: string | null
           scope_of_work_en?: string | null
+          service_category_id?: string | null
+          slug?: string | null
           sort_order?: number
           terms_ar?: string
           terms_en?: string | null
@@ -2177,7 +2627,22 @@ export type Database = {
           warranty_terms_ar?: string | null
           warranty_terms_en?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "contract_templates_current_version_fk"
+            columns: ["current_version_id"]
+            isOneToOne: false
+            referencedRelation: "contract_template_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_templates_service_category_id_fkey"
+            columns: ["service_category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       contract_versions: {
         Row: {
@@ -2268,13 +2733,17 @@ export type Database = {
           last_pdf_snapshot_id: string | null
           locked_at: string | null
           official_version_number: number
+          pricing_method: string | null
           provider_accepted_at: string | null
           provider_id: string
+          service_category_id: string | null
           start_date: string | null
           status: Database["public"]["Enums"]["contract_status"]
           supervisor_email: string | null
           supervisor_name: string | null
           supervisor_phone: string | null
+          template_snapshot_id: string | null
+          template_version_id: string | null
           terms_ar: string | null
           terms_en: string | null
           title_ar: string
@@ -2305,13 +2774,17 @@ export type Database = {
           last_pdf_snapshot_id?: string | null
           locked_at?: string | null
           official_version_number?: number
+          pricing_method?: string | null
           provider_accepted_at?: string | null
           provider_id: string
+          service_category_id?: string | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["contract_status"]
           supervisor_email?: string | null
           supervisor_name?: string | null
           supervisor_phone?: string | null
+          template_snapshot_id?: string | null
+          template_version_id?: string | null
           terms_ar?: string | null
           terms_en?: string | null
           title_ar: string
@@ -2342,13 +2815,17 @@ export type Database = {
           last_pdf_snapshot_id?: string | null
           locked_at?: string | null
           official_version_number?: number
+          pricing_method?: string | null
           provider_accepted_at?: string | null
           provider_id?: string
+          service_category_id?: string | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["contract_status"]
           supervisor_email?: string | null
           supervisor_name?: string | null
           supervisor_phone?: string | null
+          template_snapshot_id?: string | null
+          template_version_id?: string | null
           terms_ar?: string | null
           terms_en?: string | null
           title_ar?: string
@@ -2378,6 +2855,34 @@ export type Database = {
             columns: ["last_pdf_snapshot_id"]
             isOneToOne: false
             referencedRelation: "contract_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_pricing_method_fkey"
+            columns: ["pricing_method"]
+            isOneToOne: false
+            referencedRelation: "contract_measurement_methods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_service_category_id_fkey"
+            columns: ["service_category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_template_snapshot_id_fkey"
+            columns: ["template_snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "contract_template_snapshots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_template_version_id_fkey"
+            columns: ["template_version_id"]
+            isOneToOne: false
+            referencedRelation: "contract_template_versions"
             referencedColumns: ["id"]
           },
         ]
@@ -5823,13 +6328,17 @@ export type Database = {
           last_pdf_snapshot_id: string | null
           locked_at: string | null
           official_version_number: number
+          pricing_method: string | null
           provider_accepted_at: string | null
           provider_id: string
+          service_category_id: string | null
           start_date: string | null
           status: Database["public"]["Enums"]["contract_status"]
           supervisor_email: string | null
           supervisor_name: string | null
           supervisor_phone: string | null
+          template_snapshot_id: string | null
+          template_version_id: string | null
           terms_ar: string | null
           terms_en: string | null
           title_ar: string
@@ -6024,13 +6533,17 @@ export type Database = {
           last_pdf_snapshot_id: string | null
           locked_at: string | null
           official_version_number: number
+          pricing_method: string | null
           provider_accepted_at: string | null
           provider_id: string
+          service_category_id: string | null
           start_date: string | null
           status: Database["public"]["Enums"]["contract_status"]
           supervisor_email: string | null
           supervisor_name: string | null
           supervisor_phone: string | null
+          template_snapshot_id: string | null
+          template_version_id: string | null
           terms_ar: string | null
           terms_en: string | null
           title_ar: string
@@ -6137,13 +6650,17 @@ export type Database = {
           last_pdf_snapshot_id: string | null
           locked_at: string | null
           official_version_number: number
+          pricing_method: string | null
           provider_accepted_at: string | null
           provider_id: string
+          service_category_id: string | null
           start_date: string | null
           status: Database["public"]["Enums"]["contract_status"]
           supervisor_email: string | null
           supervisor_name: string | null
           supervisor_phone: string | null
+          template_snapshot_id: string | null
+          template_version_id: string | null
           terms_ar: string | null
           terms_en: string | null
           title_ar: string
@@ -6623,13 +7140,17 @@ export type Database = {
           last_pdf_snapshot_id: string | null
           locked_at: string | null
           official_version_number: number
+          pricing_method: string | null
           provider_accepted_at: string | null
           provider_id: string
+          service_category_id: string | null
           start_date: string | null
           status: Database["public"]["Enums"]["contract_status"]
           supervisor_email: string | null
           supervisor_name: string | null
           supervisor_phone: string | null
+          template_snapshot_id: string | null
+          template_version_id: string | null
           terms_ar: string | null
           terms_en: string | null
           title_ar: string
