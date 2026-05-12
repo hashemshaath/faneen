@@ -1,4 +1,14 @@
-import { ArabicPdfFontError, setupArabicDoc, getArabicTableStyles, normalizeArabicPdfTextLayer, printContractSection, verifyArabicFontReady } from './pdf-arabic-font';
+import { ArabicPdfFontError, setupArabicDoc, getArabicTableStyles, normalizeArabicPdfTextLayer, printContractSection, verifyArabicFontReady, verifyPdfBytesForMojibake } from './pdf-arabic-font';
+
+// PDF-AR3: Single helper to extract bytes from a built jsPDF doc and run the
+// auto-verification scan. Returning the bytes lets callers also upload the
+// PDF to the backend analyzer without rebuilding it.
+const extractDocBytes = (doc: unknown): Uint8Array =>
+  new Uint8Array((doc as { output: (kind: 'arraybuffer') => ArrayBuffer }).output('arraybuffer'));
+
+const runClientVerification = (doc: unknown) => {
+  try { verifyPdfBytesForMojibake(extractDocBytes(doc)); } catch { /* non-fatal */ }
+};
 import { BRAND_DOCUMENTS } from '@/config/brandTheme';
 import { hexToRgbTuple } from '@/lib/theme/brandThemeUtils';
 import { calculateVatBreakdown, calculateContractCoverage } from '@/lib/contract-financials';
@@ -967,6 +977,7 @@ export const buildContractPDF = async (data: ContractExportData) => {
  */
 export const exportContractPDF = async (data: ContractExportData) => {
   const doc = await buildContractPDF(data);
+  runClientVerification(doc);
   doc.save(`contract-${data.contractNumber}.pdf`);
   return doc;
 };
@@ -984,6 +995,7 @@ export const previewContractPDF = async (
   data: ContractExportData,
 ): Promise<{ url: string; blob: Blob; fileName: string }> => {
   const doc = await buildContractPDF(data);
+  runClientVerification(doc);
   const blob = (doc as unknown as { output: (kind: 'blob') => Blob }).output('blob');
   const url = URL.createObjectURL(blob);
   return { url, blob, fileName: `contract-${data.contractNumber}.pdf` };
@@ -1060,8 +1072,20 @@ export const buildArabicFontTestPDF = async () => {
 
 export const exportArabicFontTestPDF = async () => {
   const doc = await buildArabicFontTestPDF();
+  runClientVerification(doc);
   doc.save(`qitaat-arabic-font-test-${Date.now()}.pdf`);
   return doc;
+};
+
+// PDF-AR3: Build a contract PDF and return raw bytes + blob for analysis.
+// Used by the "Export + Analyze" button to upload to the backend verifier
+// after triggering the local download.
+export const buildContractPdfForAnalysis = async (data: ContractExportData): Promise<{ bytes: Uint8Array; blob: Blob; fileName: string }> => {
+  const doc = await buildContractPDF(data);
+  runClientVerification(doc);
+  const bytes = extractDocBytes(doc);
+  const blob = (doc as unknown as { output: (kind: 'blob') => Blob }).output('blob');
+  return { bytes, blob, fileName: `contract-${data.contractNumber}.pdf` };
 };
 
 // ── Export Measurements as PDF ──
