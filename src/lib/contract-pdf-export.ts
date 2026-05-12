@@ -72,6 +72,26 @@ const ensureArabicPdfFont = (doc: { getFontList?: () => Record<string, string[]>
   }
 };
 
+const arabicFontStyle = (isRTL: boolean, fontLoaded: boolean) =>
+  isRTL && fontLoaded ? { font: 'ArabicFont' } : {};
+
+const tableHeadStyles = (isRTL: boolean, fontLoaded: boolean, fontSize = 7) => ({
+  fillColor: HEADER_RGB,
+  textColor: [255, 255, 255] as [number, number, number],
+  fontStyle: 'bold' as const,
+  fontSize,
+  halign: isRTL ? 'right' as const : 'left' as const,
+  ...arabicFontStyle(isRTL, fontLoaded),
+});
+
+const tableFootStyles = (isRTL: boolean, fontLoaded: boolean, fontSize = 7) => ({
+  fillColor: HIGHLIGHT_RGB,
+  fontStyle: 'bold' as const,
+  fontSize,
+  halign: isRTL ? 'right' as const : 'left' as const,
+  ...arabicFontStyle(isRTL, fontLoaded),
+});
+
 export interface ContractExportData {
   contractNumber: string;
   title: string;
