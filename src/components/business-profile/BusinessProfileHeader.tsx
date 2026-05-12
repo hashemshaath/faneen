@@ -20,7 +20,8 @@ import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { getLocalizedValue, useDirection } from "@/lib/direction";
 import { tierConfig } from "./business-profile.data";
-import { VerifiedBadge } from "@/components/common/VerifiedBadge";
+import { VerificationStatusBadge } from "@/components/common/VerificationStatusBadge";
+import { useAuth } from "@/contexts/AuthContext";
 import { BrandLogo } from "@/components/common/BrandLogo";
 
 export const Stars = ({ rating, size = "w-4 h-4" }: { rating: number; size?: string }) => (
@@ -102,6 +103,8 @@ export const BusinessProfileHeader = ({
   activeOffersCount = 0,
   topServices = [],
 }: BusinessProfileHeaderProps) => {
+  const { user } = useAuth();
+  const isOwner = !!user?.id && user.id === business?.user_id;
   const { t, language, isRTL } = useLanguage();
   const name = getLocalizedValue(language, business.name_ar, business.name_en);
   const shortDesc = getLocalizedValue(
@@ -182,7 +185,11 @@ export const BusinessProfileHeader = ({
                     <h1 className="font-heading text-base font-bold text-foreground leading-tight sm:text-3xl line-clamp-2">
                       {name}
                     </h1>
-                    {business.is_verified && <VerifiedBadge size="sm" />}
+                    <VerificationStatusBadge
+                      isVerified={business.is_verified}
+                      size="sm"
+                      ownerView={isOwner}
+                    />
                     {activeOffersCount > 0 && (
                       <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-destructive/10 text-destructive dark:text-destructive text-[10px] sm:text-[11px] font-body font-semibold border border-destructive/20">
                         <TicketPercent className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
