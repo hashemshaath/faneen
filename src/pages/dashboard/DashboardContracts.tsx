@@ -2865,6 +2865,34 @@ const DashboardContracts = () => {
                                     </div>
                                   </div>
                                 )}
+
+                                {/* CT5G.2 — Derived per-line/per-group VAT breakdown (display only). */}
+                                {lineItems.length > 0 && (
+                                  <div className="p-3 rounded-xl bg-muted/30 border border-border/30 space-y-1.5">
+                                    <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                                      <span className="font-semibold">{isRTL ? 'تفصيل ضريبة البنود (تقديري للعرض فقط)' : 'Line VAT Breakdown (display only)'}</span>
+                                    </div>
+                                    {hasAnyLineVat ? (
+                                      <>
+                                        <div className="flex items-center justify-between text-[11px]">
+                                          <span className="text-muted-foreground">{isRTL ? 'إجمالي الصافي' : 'Total Net'}</span>
+                                          <span className="font-mono">{lineVatTotals.net.toLocaleString()} {c.currency_code}</span>
+                                        </div>
+                                        <div className="flex items-center justify-between text-[11px]">
+                                          <span className="text-muted-foreground">{isRTL ? 'إجمالي الضريبة' : 'Total VAT'}</span>
+                                          <span className="font-mono">{lineVatTotals.vat.toLocaleString()} {c.currency_code}</span>
+                                        </div>
+                                        <Separator className="my-1" />
+                                        <div className="flex items-center justify-between text-[11px] font-semibold">
+                                          <span>{isRTL ? 'الإجمالي شامل الضريبة' : 'Total Gross'}</span>
+                                          <span className="font-mono">{lineVatTotals.gross.toLocaleString()} {c.currency_code}</span>
+                                        </div>
+                                      </>
+                                    ) : (
+                                      <p className="text-[10px] text-muted-foreground">{isRTL ? 'لا توجد ضريبة على البنود' : 'No VAT applied to line items'}</p>
+                                    )}
+                                  </div>
+                                )}
                               </TabsContent>
 
                               {/* ═══ Warranty Tab ═══ */}
