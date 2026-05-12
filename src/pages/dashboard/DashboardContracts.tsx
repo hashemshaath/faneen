@@ -1919,7 +1919,7 @@ const DashboardContracts = () => {
                                 : 'border-border/40 bg-muted/30 text-muted-foreground'
                           }`}
                         >
-                          <span className={`w-4 h-4 rounded-full inline-flex items-center justify-center text-[9px] font-bold ${s.done ? 'bg-emerald-500 text-white' : activeStep === s.key ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
+                          <span className={`w-4 h-4 rounded-full inline-flex items-center justify-center text-[9px] font-bold ${s.done ? 'bg-success text-success-foreground' : activeStep === s.key ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
                             {s.done ? '✓' : i + 1}
                           </span>
                           {isRTL ? s.ar : s.en}
@@ -2617,7 +2617,7 @@ const DashboardContracts = () => {
                                         const isInProgress = (m.status as string) === 'in_progress';
                                         return (
                                           <div key={m.id} className="relative ps-10">
-                                            <div className={`absolute top-2 start-1 w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold z-10 transition-all ${isCompleted ? 'bg-success text-white shadow-lg shadow-success/30' : isInProgress ? 'bg-accent text-accent-foreground ring-2 ring-accent/30 shadow-md' : 'bg-card text-muted-foreground border-2 border-border'}`}>
+                                            <div className={`absolute top-2 start-1 w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold z-10 transition-all ${isCompleted ? 'bg-success text-success-foreground shadow-lg shadow-success/30' : isInProgress ? 'bg-accent text-accent-foreground ring-2 ring-accent/30 shadow-md' : 'bg-card text-muted-foreground border-2 border-border'}`}>
                                               {isCompleted ? <CheckCircle2 className="w-3.5 h-3.5" /> : idx + 1}
                                             </div>
                                             <div className={`p-3 rounded-xl border transition-all ${isCompleted ? 'border-success/50 bg-success/30 dark:border-success/20 dark:bg-success/10' : isInProgress ? 'border-accent/30 bg-accent/5' : 'border-border/40 bg-card hover:border-border'}`}>
@@ -2683,7 +2683,7 @@ const DashboardContracts = () => {
                                       <div key={p.id} className={`p-3 rounded-xl border transition-all ${p.status === 'paid' ? 'border-success/50 bg-success/20 dark:border-success/20 dark:bg-success/10' : p.status === 'overdue' ? 'border-destructive/50 bg-destructive/20 dark:border-destructive/20' : 'border-border/40 bg-card'}`}>
                                         <div className="flex items-center justify-between gap-3">
                                           <div className="flex items-center gap-3">
-                                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-[10px] font-bold ${p.status === 'paid' ? 'bg-success text-white' : p.status === 'overdue' ? 'bg-destructive text-white' : 'bg-muted text-muted-foreground'}`}>
+                                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-[10px] font-bold ${p.status === 'paid' ? 'bg-success text-success-foreground' : p.status === 'overdue' ? 'bg-destructive text-destructive-foreground' : 'bg-muted text-muted-foreground'}`}>
                                               {p.status === 'paid' ? <CheckCircle2 className="w-4 h-4" /> : p.installment_number}
                                             </div>
                                             <div>
@@ -3338,7 +3338,7 @@ const DashboardContracts = () => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{isRTL ? 'إلغاء' : 'Cancel'}</AlertDialogCancel>
-            <AlertDialogAction className="bg-success text-white hover:bg-success" onClick={() => approveConfirm && approveMutation.mutate(approveConfirm)}>
+            <AlertDialogAction className="bg-success text-success-foreground hover:bg-success/90" onClick={() => approveConfirm && approveMutation.mutate(approveConfirm)}>
               <CircleCheck className="w-4 h-4 me-2" />{isRTL ? 'موافقة' : 'Approve'}
             </AlertDialogAction>
           </AlertDialogFooter>
