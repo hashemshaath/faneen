@@ -419,6 +419,10 @@ const DashboardContracts = () => {
   /* CT4 — Selected published template version + pricing method for new contracts. */
   const [selectedVersionId, setSelectedVersionId] = useState<string | null>(null);
   const [selectedPricingMethod, setSelectedPricingMethod] = useState<string | null>(null);
+  /* CT4B — Client picker + work type selection. */
+  const [selectedClient, setSelectedClient] = useState<SelectedClient | null>(null);
+  const [selectedWorkType, setSelectedWorkType] = useState<WorkTypeKey>('general');
+  const [workTypeTouched, setWorkTypeTouched] = useState(false);
   const [approveConfirm, setApproveConfirm] = useState<any | null>(null);
   const [sendConfirm, setSendConfirm] = useState<any | null>(null);
   const [isExporting, setIsExporting] = useState(false);
