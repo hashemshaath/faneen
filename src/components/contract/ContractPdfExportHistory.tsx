@@ -254,8 +254,16 @@ export const ContractPdfExportHistory: React.FC<Props> = ({ contractId, isRTL })
         {/* Pagination */}
         {Number(total) > PAGE_SIZE && (
           <div className="flex items-center justify-between pt-1">
-            <span className="text-[10px] text-muted-foreground" dir="ltr">
-              {page + 1} / {totalPages}
+            <span className="text-[10px] text-muted-foreground">
+              {(() => {
+                const from = page * PAGE_SIZE + 1;
+                const to = Math.min((page + 1) * PAGE_SIZE, Number(total));
+                return isRTL
+                  ? `عرض ${from} إلى ${to} من ${Number(total)}`
+                  : `Showing ${from}–${to} of ${Number(total)}`;
+              })()}
+              <span className="mx-2 opacity-50">·</span>
+              <span dir="ltr">{page + 1} / {totalPages}</span>
             </span>
             <div className="flex items-center gap-1">
               <Button
