@@ -37,7 +37,46 @@ export interface CTVersion {
   body_hash: string | null;
   created_at: string;
   updated_at: string;
+  legal_reviewer_id?: string | null;
+  legal_reviewed_at?: string | null;
+  review_requested_at?: string | null;
+  changes_requested_at?: string | null;
+  review_decision_by?: string | null;
+  review_decision_at?: string | null;
+  review_status_note?: string | null;
 }
+
+export interface CTReviewEvent {
+  id: string;
+  template_version_id: string;
+  action:
+    | 'submitted_for_review'
+    | 'changes_requested'
+    | 'approved_by_legal'
+    | 'published'
+    | 'archived'
+    | 'superseded'
+    | 'reverted_to_draft';
+  actor_id: string | null;
+  from_status: string | null;
+  to_status: string | null;
+  note: string | null;
+  risk_level: string | null;
+  created_at: string;
+}
+
+export const REVIEW_ACTION_META: Record<
+  CTReviewEvent['action'],
+  { ar: string; en: string; cls: string }
+> = {
+  submitted_for_review: { ar: 'إرسال للمراجعة', en: 'Submitted for review', cls: 'bg-amber-100 text-amber-800' },
+  changes_requested:    { ar: 'طلب تعديلات',    en: 'Changes requested',    cls: 'bg-orange-100 text-orange-800' },
+  approved_by_legal:    { ar: 'اعتماد قانوني',  en: 'Approved by legal',    cls: 'bg-blue-100 text-blue-800' },
+  published:            { ar: 'تم النشر',       en: 'Published',            cls: 'bg-emerald-100 text-emerald-800' },
+  archived:             { ar: 'أرشفة',          en: 'Archived',             cls: 'bg-slate-100 text-slate-600' },
+  superseded:           { ar: 'تم الاستبدال',   en: 'Superseded',           cls: 'bg-slate-100 text-slate-600' },
+  reverted_to_draft:    { ar: 'إعادة للمسودة',  en: 'Reverted to draft',    cls: 'bg-slate-200 text-slate-700' },
+};
 
 export interface CTSection {
   id: string;
