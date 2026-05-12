@@ -13,7 +13,7 @@ const MESSAGES: Record<ContractLockErrorCode, { ar: string; en: string }> = {
     en: 'This contract is locked after activation. Use the amendment workflow to make any official change.',
   },
   CONTRACT_STATUS_LOCKED: {
-    ar: 'لا يمكن تغيير حالة العقد مباشرة. استخدم إجراءات الإكمال أو الإلغاء.',
+    ar: 'لا يمكن تغيير حالة العقد مباشرة. استخدم إجراءات الإكمال أو الإلغاء أو النزاع.',
     en: 'Status changes must go through the complete or cancel actions.',
   },
 };
