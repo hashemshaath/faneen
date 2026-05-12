@@ -6100,6 +6100,33 @@ export type Database = {
           },
         ]
       }
+      sector_page_events: {
+        Row: {
+          city_slug: string | null
+          id: number
+          occurred_at: string
+          path: string | null
+          referrer_host: string | null
+          sector_slug: string
+        }
+        Insert: {
+          city_slug?: string | null
+          id?: number
+          occurred_at?: string
+          path?: string | null
+          referrer_host?: string | null
+          sector_slug: string
+        }
+        Update: {
+          city_slug?: string | null
+          id?: number
+          occurred_at?: string
+          path?: string | null
+          referrer_host?: string | null
+          sector_slug?: string
+        }
+        Relationships: []
+      }
       sector_seo_snapshots: {
         Row: {
           captured_by: string | null
@@ -7759,6 +7786,45 @@ export type Database = {
           template_name_en: string
           template_version_number: number
           total_count: number
+        }[]
+      }
+      log_sector_pageview: {
+        Args: {
+          p_city?: string
+          p_path?: string
+          p_referrer?: string
+          p_sector: string
+        }
+        Returns: undefined
+      }
+      market_sector_city_stats: {
+        Args: { p_days?: number }
+        Returns: {
+          backlink_visits: number
+          city_slug: string
+          growth_pct: number
+          sector_slug: string
+          unique_referrers: number
+          visits_current: number
+          visits_previous: number
+        }[]
+      }
+      market_top_referrers: {
+        Args: { p_days?: number; p_limit?: number; p_sector?: string }
+        Returns: {
+          first_seen: string
+          last_seen: string
+          referrer_host: string
+          sector_slug: string
+          visits: number
+        }[]
+      }
+      market_visits_timeseries: {
+        Args: { p_city?: string; p_days?: number; p_sector?: string }
+        Returns: {
+          day: string
+          sector_slug: string
+          visits: number
         }[]
       }
       move_to_dlq: {
