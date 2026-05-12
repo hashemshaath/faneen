@@ -2485,6 +2485,50 @@ export type Database = {
           },
         ]
       }
+      contract_template_review_events: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          from_status: string | null
+          id: string
+          note: string | null
+          risk_level: string | null
+          template_version_id: string
+          to_status: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          from_status?: string | null
+          id?: string
+          note?: string | null
+          risk_level?: string | null
+          template_version_id: string
+          to_status?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          from_status?: string | null
+          id?: string
+          note?: string | null
+          risk_level?: string | null
+          template_version_id?: string
+          to_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_template_review_events_template_version_id_fkey"
+            columns: ["template_version_id"]
+            isOneToOne: false
+            referencedRelation: "contract_template_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contract_template_sections: {
         Row: {
           created_at: string
@@ -2575,14 +2619,20 @@ export type Database = {
         Row: {
           archived_at: string | null
           body_hash: string | null
+          changes_requested_at: string | null
           created_at: string
           effective_from: string | null
           id: string
           language_precedence: string
           legal_review_notes: string | null
+          legal_reviewed_at: string | null
           legal_reviewer_id: string | null
           published_at: string | null
           published_by: string | null
+          review_decision_at: string | null
+          review_decision_by: string | null
+          review_requested_at: string | null
+          review_status_note: string | null
           risk_level: string | null
           status: string
           superseded_by: string | null
@@ -2593,14 +2643,20 @@ export type Database = {
         Insert: {
           archived_at?: string | null
           body_hash?: string | null
+          changes_requested_at?: string | null
           created_at?: string
           effective_from?: string | null
           id?: string
           language_precedence?: string
           legal_review_notes?: string | null
+          legal_reviewed_at?: string | null
           legal_reviewer_id?: string | null
           published_at?: string | null
           published_by?: string | null
+          review_decision_at?: string | null
+          review_decision_by?: string | null
+          review_requested_at?: string | null
+          review_status_note?: string | null
           risk_level?: string | null
           status?: string
           superseded_by?: string | null
@@ -2611,14 +2667,20 @@ export type Database = {
         Update: {
           archived_at?: string | null
           body_hash?: string | null
+          changes_requested_at?: string | null
           created_at?: string
           effective_from?: string | null
           id?: string
           language_precedence?: string
           legal_review_notes?: string | null
+          legal_reviewed_at?: string | null
           legal_reviewer_id?: string | null
           published_at?: string | null
           published_by?: string | null
+          review_decision_at?: string | null
+          review_decision_by?: string | null
+          review_requested_at?: string | null
+          review_status_note?: string | null
           risk_level?: string | null
           status?: string
           superseded_by?: string | null
@@ -6457,6 +6519,7 @@ export type Database = {
         Args: { _version_id: string }
         Returns: Json
       }
+      _ct_assert_admin: { Args: never; Returns: undefined }
       _membership_free_defaults: { Args: never; Returns: Json }
       accept_client_invitation: { Args: { _token: string }; Returns: Json }
       accept_contract: {
@@ -7393,6 +7456,39 @@ export type Database = {
           _user_id: string
         }
         Returns: string
+      }
+      template_version_archive: {
+        Args: { p_note?: string; p_version_id: string }
+        Returns: undefined
+      }
+      template_version_legal_approve: {
+        Args: {
+          p_language_precedence: string
+          p_note?: string
+          p_risk_level: string
+          p_version_id: string
+        }
+        Returns: undefined
+      }
+      template_version_publish: {
+        Args: {
+          p_effective_from?: string
+          p_note?: string
+          p_version_id: string
+        }
+        Returns: undefined
+      }
+      template_version_request_changes: {
+        Args: { p_note?: string; p_version_id: string }
+        Returns: undefined
+      }
+      template_version_revert_to_draft: {
+        Args: { p_note?: string; p_version_id: string }
+        Returns: undefined
+      }
+      template_version_submit_for_review: {
+        Args: { p_note?: string; p_version_id: string }
+        Returns: undefined
       }
       track_content_interaction: {
         Args: {
