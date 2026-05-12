@@ -38,6 +38,12 @@ const TEMPLATE_CATEGORY: Record<string, string> = {
   'contract-signed': 'email_contracts',
   'contract-status-update': 'email_contracts',
   'payment-reminder': 'email_contracts',
+  'contract-amendment-created': 'email_contracts',
+  'contract-amendment-pending-approval': 'email_contracts',
+  'contract-amendment-approved': 'email_contracts',
+  'contract-amendment-applied': 'email_contracts',
+  'contract-amendment-rejected': 'email_contracts',
+  'contract-amendment-cancelled': 'email_contracts',
   'contact-confirmation': 'email_messages',
   'contact-admin-notification': 'email_system',
 }
