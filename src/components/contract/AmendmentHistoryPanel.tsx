@@ -167,7 +167,11 @@ export const AmendmentHistoryPanel = ({
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-[10px] font-mono text-muted-foreground tech-content">#{amendments.length - idx}</span>
+                  <span className="text-[10px] font-mono text-muted-foreground tech-content">
+                    {a.amendment_number != null
+                      ? (isRTL ? `ملحق رقم ${a.amendment_number}` : `Amendment #${a.amendment_number}`)
+                      : `#${amendments.length - idx}`}
+                  </span>
                   <h4 className="font-heading font-bold text-sm truncate">{isRTL ? a.title_ar : (a.title_en || a.title_ar)}</h4>
                 </div>
                 <p className="text-[10px] text-muted-foreground mt-0.5">{fmt(a.created_at, isRTL)}</p>
@@ -184,9 +188,9 @@ export const AmendmentHistoryPanel = ({
                 {isRTL ? (a.description_ar || a.description_en) : (a.description_en || a.description_ar)}
               </p>
             )}
-            {a.reason && (
+            {(a.public_reason || a.reason) && (
               <p className="text-[11px] text-muted-foreground italic">
-                <span className="font-medium">{isRTL ? 'السبب: ' : 'Reason: '}</span>{a.reason}
+                <span className="font-medium">{isRTL ? 'السبب: ' : 'Reason: '}</span>{a.public_reason || a.reason}
               </p>
             )}
 

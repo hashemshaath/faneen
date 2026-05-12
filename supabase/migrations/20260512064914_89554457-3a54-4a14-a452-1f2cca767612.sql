@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.contract_amendments_before_insert() FROM PUBLIC, anon, authenticated;
