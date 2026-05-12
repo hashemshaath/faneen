@@ -20,10 +20,12 @@ interface Tech {
 interface Props {
   sectorName: string;
   technicians: Tech[];
+  /** Optional selected-city label — when set, the heading switches to the city-scoped variant. */
+  cityName?: string | null;
 }
 
 /** Highlights top 4 verified, highest-rated providers as the "featured technicians" strip. */
-export const SectorTopTechnicians: React.FC<Props> = ({ sectorName, technicians }) => {
+export const SectorTopTechnicians: React.FC<Props> = ({ sectorName, technicians, cityName }) => {
   const { isRTL, language } = useLanguage();
   if (!technicians.length) return null;
 
@@ -32,7 +34,9 @@ export const SectorTopTechnicians: React.FC<Props> = ({ sectorName, technicians 
       <div className="flex items-center gap-2 mb-4">
         <Award className="w-5 h-5 text-gold" />
         <h2 id="sector-tech-heading" className="font-heading text-lg sm:text-xl font-bold">
-          {isRTL ? `أفضل فنيي ${sectorName}` : `Top ${sectorName} technicians`}
+          {cityName
+            ? (isRTL ? `أفضل فنيي ${sectorName} في ${cityName}` : `Top ${sectorName} technicians in ${cityName}`)
+            : (isRTL ? `أفضل فنيي ${sectorName}` : `Top ${sectorName} technicians`)}
         </h2>
       </div>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
