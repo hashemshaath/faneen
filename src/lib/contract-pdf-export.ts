@@ -78,6 +78,16 @@ export interface ContractExportData {
     appliedAt?: string | null;
   }[];
   isRTL: boolean;
+  /**
+   * C6.6: optional public verification hash (contract.document_hash). When
+   * provided, a QR code + short verification block is rendered above the
+   * signature panel. The QR encodes a public, no-PII verify URL backed by
+   * the `verify_contract_public` RPC. When omitted (e.g., draft exports),
+   * the verification block is skipped entirely.
+   */
+  documentHash?: string | null;
+  /** Origin used for the verification URL (defaults to https://qitaat.com). */
+  verifyOrigin?: string;
 }
 
 export const exportContractPDF = async (data: ContractExportData) => {
@@ -519,6 +529,57 @@ export const exportContractPDF = async (data: ContractExportData) => {
   // ── Signatures ──
   if (y > h - 45) { doc.addPage(); y = 15; }
   y += 5;
+
+  // ── C6.6: Public Verification Block (QR + short hash) ──
+  // Public-safe: encodes only contract_number + document_hash. The RPC behind
+  // the URL returns no PII, no totals, no party names — only status, dates,
+  // currency, hash prefix, and applied amendment count.
+  if (data.documentHash && data.documentHash.length >= 8) {
+    try {
+      const origin = (data.verifyOrigin || 'https://qitaat.com').replace(/\/+$/, '');
+      const verifyUrl = `${origin}/v/c/${encodeURIComponent(data.contractNumber)}?h=${encodeURIComponent(data.documentHash)}`;
+      const QR = await import('qrcode');
+      const qrDataUrl = await QR.toDataURL(verifyUrl, {
+        errorCorrectionLevel: 'M',
+        margin: 1,
+        width: 256,
+        color: { dark: '#131722', light: '#FFFFFF' },
+      });
+      if (y > h - 75) { doc.addPage(); y = 15; }
+      const blockH = 28;
+      doc.setFillColor(...SURFACE2_RGB);
+      doc.rect(15, y, w - 30, blockH, 'F');
+      doc.setDrawColor(borderR, borderG, borderB);
+      doc.setLineWidth(0.2);
+      doc.rect(15, y, w - 30, blockH, 'S');
+      // QR on the leading edge (RTL: right side)
+      const qrSize = 24;
+      const qrX = data.isRTL ? w - 15 - qrSize - 2 : 17;
+      doc.addImage(qrDataUrl, 'PNG', qrX, y + 2, qrSize, qrSize);
+      // Text on the opposite side
+      const textX = data.isRTL ? 17 : 15 + qrSize + 6;
+      const textAlign: 'left' | 'right' = data.isRTL ? 'right' : 'left';
+      const textAnchor = data.isRTL ? w - 15 - qrSize - 6 : textX;
+      doc.setTextColor(textR, textG, textB);
+      doc.setFontSize(9);
+      doc.text(data.isRTL ? 'تحقق من العقد الرسمي' : 'Verify Official Contract', textAnchor, y + 6, { align: textAlign });
+      doc.setFontSize(7);
+      doc.setTextColor(mutedR, mutedG, mutedB);
+      const hashLine = (data.isRTL ? 'بصمة المستند: ' : 'Document hash: ') + data.documentHash.slice(0, 16) + '…';
+      doc.text(hashLine, textAnchor, y + 12, { align: textAlign });
+      const urlShort = verifyUrl.length > 60 ? verifyUrl.slice(0, 57) + '…' : verifyUrl;
+      doc.text(urlShort, textAnchor, y + 18, { align: textAlign });
+      doc.text(
+        data.isRTL ? 'امسح الرمز للتحقق العام بدون بيانات شخصية' : 'Scan the code for public, PII-free verification',
+        textAnchor, y + 24, { align: textAlign },
+      );
+      y += blockH + 5;
+    } catch {
+      // QR rendering must never block PDF export. Skip silently on failure.
+    }
+  }
+
+  if (y > h - 45) { doc.addPage(); y = 15; }
   doc.setFillColor(...SURFACE2_RGB);
   doc.rect(15, y, w - 30, 35, 'F');
   doc.setDrawColor(accentR, accentG, accentB);

@@ -101,6 +101,7 @@ const Privacy = lazyRetry(() => import("./pages/Privacy"));
 const Terms = lazyRetry(() => import("./pages/Terms"));
 const Forbidden = lazyRetry(() => import("./pages/Forbidden"));
 const Unsubscribe = lazyRetry(() => import("./pages/Unsubscribe"));
+const VerifyContract = lazyRetry(() => import("./pages/VerifyContract"));
 const Diagnostics = lazyRetry(() => import("./pages/Diagnostics"));
 const ForProviders = lazyRetry(() => import("./pages/ForProviders"));
 const DashboardCommunicationPreferences = lazyRetry(() => import("./pages/dashboard/DashboardCommunicationPreferences"));
@@ -160,6 +161,7 @@ const AppRoutes = () => (
           <Route path="/terms" element={<Terms />} />
           <Route path="/forbidden" element={<Forbidden />} />
           <Route path="/unsubscribe" element={<Unsubscribe />} />
+          <Route path="/v/c/:number" element={<VerifyContract />} />
           <Route path="/diagnostics" element={<Diagnostics />} />
           <Route path="/for-providers" element={<ForProviders />} />
           <Route path="/join-as-provider" element={<ForProviders />} />

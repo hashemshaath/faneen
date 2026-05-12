@@ -1011,6 +1011,7 @@ const DashboardContracts = () => {
           dueDate: m.due_date ? formatDate(m.due_date) : undefined,
           status: m.status,
         })),
+        documentHash: c.document_hash || undefined,
         isRTL,
       };
       const { exportContractPDF } = await import('@/lib/contract-pdf-export');

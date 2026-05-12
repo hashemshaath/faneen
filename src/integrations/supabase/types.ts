@@ -6706,6 +6706,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      verify_contract_public: {
+        Args: { _contract_number: string; _hash: string }
+        Returns: Json
+      }
     }
     Enums: {
       account_type: "individual" | "business" | "company"
