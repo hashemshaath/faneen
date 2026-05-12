@@ -43,6 +43,7 @@ import type { ContractExportData } from '@/lib/contract-pdf-export';
 import type { Database } from '@/integrations/supabase/types';
 import { getContractStatusMeta, isContractLockedByStatus } from '@/lib/contract-statuses';
 import { calculateVatBreakdown, calculateLineItemsTotal, calculateMeasurementsTotal } from '@/lib/contract-financials';
+import { calculateLineTotal, formatPricingMethodLabel, formatUnitOfMeasure, SUPPORTED_PRICING_METHODS, type PricingMethod } from '@/lib/contract-pricing';
 
 type ContractRow = Database['public']['Tables']['contracts']['Row'];
 type MilestoneRow = Database['public']['Tables']['contract_milestones']['Row'];
