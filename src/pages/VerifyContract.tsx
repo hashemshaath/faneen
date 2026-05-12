@@ -71,7 +71,7 @@ const VerifyContract = () => {
 
   const { loading, data, error } = state;
   const isValid = data?.valid === true;
-  const reason = data && !data.valid ? data.reason : null;
+  const reason = data && data.valid === false ? data.reason : null;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center px-4 py-10" dir={isRTL ? 'rtl' : 'ltr'}>
