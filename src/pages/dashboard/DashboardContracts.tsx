@@ -602,7 +602,7 @@ const DashboardContracts = () => {
       setMeasurementForm({ name_ar: '', piece_number: '', floor_label: 'ground_floor', location_ar: '', length_mm: '', width_mm: '', quantity: '1', unit_price: '' });
       toast.success(isRTL ? 'تمت إضافة المقاس وتحديث قيمة العقد' : 'Measurement added & contract updated');
     },
-    onError: (err: Error) => toast.error(err.message),
+    onError: (err: unknown) => toast.error(mapContractLockError(err, isRTL).message),
   });
 
   const addMilestoneMutation = useMutation({
@@ -758,7 +758,7 @@ const DashboardContracts = () => {
       setLineItemForm({ name_ar: '', description_ar: '', quantity: '1', unit_price: '', item_type: 'service' });
       toast.success(isRTL ? 'تمت إضافة البند وتحديث قيمة العقد' : 'Item added & total updated');
     },
-    onError: (err: Error) => toast.error(err.message),
+    onError: (err: unknown) => toast.error(mapContractLockError(err, isRTL).message),
   });
 
   /* ── Delete Line Item ── */
