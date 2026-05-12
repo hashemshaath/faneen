@@ -529,7 +529,7 @@ const ContractDetail = () => {
       toast({ title: isRTL ? (editingMeasurement ? 'تم تحديث المقاس' : 'تم إضافة المقاس') : (editingMeasurement ? 'Measurement updated' : 'Measurement added') });
       await recalcContractTotal();
     },
-    onError: (err: Error) => toast({ title: err.message, variant: 'destructive' }),
+    onError: (err: unknown) => toast({ title: mapContractLockError(err, isRTL).message, variant: 'destructive' }),
   });
 
   const deleteMeasurementMutation = useMutation({
@@ -543,7 +543,7 @@ const ContractDetail = () => {
       toast({ title: isRTL ? 'تم حذف المقاس' : 'Measurement deleted' });
       await recalcContractTotal();
     },
-    onError: (err: Error) => toast({ title: err.message, variant: 'destructive' }),
+    onError: (err: unknown) => toast({ title: mapContractLockError(err, isRTL).message, variant: 'destructive' }),
   });
 
   const startEditMeasurement = (m: {
