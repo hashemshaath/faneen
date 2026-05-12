@@ -1685,7 +1685,7 @@ const ContractDetail = () => {
                 );
               })}
             </div>
-            <Progress value={progressPct} className="h-1.5 mt-3" />
+            <Progress value={progressPct} className="h-1.5 mt-3" aria-label={isRTL ? `تقدم المراحل ${progressPct}٪` : `Milestones progress ${progressPct}%`} />
           </div>
         )}
 
@@ -1753,7 +1753,7 @@ const ContractDetail = () => {
                       <span className="text-[10px] text-muted-foreground font-body">{isRTL ? 'التقدم الزمني' : 'Progress'}</span>
                       <span className="text-[10px] font-heading font-semibold text-accent">{pct}%</span>
                     </div>
-                    <Progress value={pct} className="h-1.5" />
+                    <Progress value={pct} className="h-1.5" aria-label={isRTL ? `التقدم الزمني ${pct}٪` : `Time progress ${pct}%`} />
                   </div>
                 );
               })()}
@@ -1802,7 +1802,7 @@ const ContractDetail = () => {
                     <span className="text-[10px] text-muted-foreground font-body">{isRTL ? 'نسبة السداد' : 'Payment Progress'}</span>
                     <span className="text-[10px] font-heading font-semibold text-accent">{Math.round((paymentsTotals.paid / grandTotalWithVat) * 100)}%</span>
                   </div>
-                  <Progress value={(paymentsTotals.paid / grandTotalWithVat) * 100} className="h-1.5" />
+                  <Progress value={(paymentsTotals.paid / grandTotalWithVat) * 100} className="h-1.5" aria-label={isRTL ? `نسبة السداد ${Math.round((paymentsTotals.paid / grandTotalWithVat) * 100)}٪` : `Payment progress ${Math.round((paymentsTotals.paid / grandTotalWithVat) * 100)}%`} />
                 </div>
               )}
             </div>
@@ -1881,7 +1881,7 @@ const ContractDetail = () => {
                             {pay.payment_method && <div className="flex items-center gap-1"><CreditCard className="w-3 h-3" />{pay.payment_method === 'bank_transfer' ? (isRTL ? 'تحويل بنكي' : 'Bank Transfer') : pay.payment_method}</div>}
                           </div>
                           {pay.notes && <p className="mt-2 text-[10px] text-muted-foreground/80 font-body border-t border-border pt-2">{pay.notes}</p>}
-                          <Progress value={isPaid ? 100 : 0} className="h-1 mt-2" />
+                          <Progress value={isPaid ? 100 : 0} className="h-1 mt-2" aria-label={isPaid ? (isRTL ? 'مسدد' : 'Paid') : (isRTL ? 'غير مسدد' : 'Unpaid')} />
                           {/* C3B: milestone link — editable for provider, read-only for others */}
                           {(() => {
                             const linked = pay.milestone_id ? milestones?.find(m => m.id === pay.milestone_id) : null;
@@ -2729,7 +2729,7 @@ const ContractDetail = () => {
                         </div>
                         <div>
                           <div className="flex items-center justify-between mb-1"><span className="text-[10px] text-muted-foreground font-body">{isRTL ? 'المستهلك' : 'Used'}</span><span className="text-[10px] font-heading font-semibold">{wProg}%</span></div>
-                          <Progress value={wProg} className="h-2" />
+                          <Progress value={wProg} className="h-2" aria-label={isRTL ? `المستهلك من الضمان ${wProg}٪` : `Warranty used ${wProg}%`} />
                         </div>
                         {wCoverage && (
                           <div className="rounded-lg border border-border p-3">
