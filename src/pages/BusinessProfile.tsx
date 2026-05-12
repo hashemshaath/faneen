@@ -63,6 +63,10 @@ const BusinessProfile = () => {
   const { data: reviews = [] } = useReviews(business?.id);
   const { data: activeOffersCount = 0 } = useActivePromotionsCount(business?.id);
 
+  // Record a click event when this page was opened from an embedded
+  // "Verified on Qitaat" badge (?ref=badge) — visible in DashboardBadge.
+  useBadgeClickTracking(business?.id, business?.username);
+
   const businessName = business ? getLocalizedValue(language, business.name_ar, business.name_en) : '';
   const businessDesc = business ? (getLocalizedValue(language, business.description_ar, business.description_en) || getLocalizedValue(language, business.short_description_ar, business.short_description_en) || '') : '';
   const categoryName = business?.categories ? getLocalizedValue(language, business.categories.name_ar, business.categories.name_en) : '';
