@@ -922,6 +922,31 @@ const ContractDetail = () => {
       vatInclusive,
       businessName: bizName || undefined,
       documentHash: contract.document_hash || undefined,
+      template: templateMeta ? {
+        nameAr: (templateMeta as any).contract_templates?.name_ar ?? null,
+        nameEn: (templateMeta as any).contract_templates?.name_en ?? null,
+        versionNumber: (templateMeta as any).version_number ?? null,
+        category: (templateMeta as any).contract_templates?.category ?? null,
+        pricingMethod: contractAny?.pricing_method ?? null,
+        languagePrecedence: (templateMeta as any).language_precedence ?? null,
+      } : null,
+      templateSnapshot: templateSnapshot
+        ? {
+            sections: ((templateSnapshot as any).sections ?? []) as any,
+            attachments: ((templateSnapshot as any).attachments ?? []) as any,
+          }
+        : null,
+      lineItems: (lineItems || []).map((li: any) => ({
+        nameAr: li.name_ar ?? null,
+        nameEn: li.name_en ?? null,
+        pricingMethod: li.pricing_method ?? null,
+        unitOfMeasure: li.unit_of_measure ?? null,
+        boqGroupKey: li.boq_group_key ?? null,
+        quantity: Number(li.quantity || 0),
+        unitPrice: Number(li.unit_price || 0),
+        totalCost: Number(li.total_cost || 0),
+        formulaInputs: li.formula_inputs ?? null,
+      })),
       milestones: (milestones || []).map(m => ({
         id: m.id,
         title: language === 'ar' ? m.title_ar : (m.title_en || m.title_ar),
