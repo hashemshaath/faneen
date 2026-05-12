@@ -12,12 +12,12 @@ let fontLoadFailed = false;
 // payloads restores a valid cmap and ToUnicode mapping, so Arabic becomes
 // both visually correct AND copyable / searchable.
 const FONT_URLS = [
-  // Noto Naskh Arabic — Google Fonts canonical, widely used for documents.
-  'https://cdn.jsdelivr.net/gh/google/fonts/ofl/notonaskharabic/NotoNaskhArabic%5Bwght%5D.ttf',
-  // Noto Sans Arabic static — reliable static TTF backup.
+  // Noto Naskh Arabic — official notofonts repo, hinted static TTF.
+  'https://cdn.jsdelivr.net/gh/notofonts/notofonts.github.io/fonts/NotoNaskhArabic/hinted/ttf/NotoNaskhArabic-Regular.ttf',
+  // Noto Sans Arabic — secondary static TTF on the same CDN.
   'https://cdn.jsdelivr.net/gh/notofonts/notofonts.github.io/fonts/NotoSansArabic/hinted/ttf/NotoSansArabic-Regular.ttf',
-  // Amiri — third fallback (classical Naskh, also TTF).
-  'https://cdn.jsdelivr.net/gh/aliftype/amiri/fonts/ttf/Amiri-Regular.ttf',
+  // Tertiary: npm-hosted Noto Naskh Arabic TTF (different CDN path).
+  'https://cdn.jsdelivr.net/npm/@expo-google-fonts/noto-naskh-arabic/NotoNaskhArabic_400Regular.ttf',
 ];
 
 // Validate the first bytes of the response are a real TrueType / OpenType
