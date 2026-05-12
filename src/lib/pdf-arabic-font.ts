@@ -108,9 +108,23 @@ export const setupArabicDoc = async (doc: { setFont: (fontName: string, fontStyl
 };
 
 export const getArabicTableStyles = (isRTL: boolean, fontLoaded: boolean) => ({
-  ...(isRTL && fontLoaded ? { font: 'ArabicFont' } : {}),
+  ...(isRTL && fontLoaded ? { font: ARABIC_FONT_NAME } : {}),
   halign: isRTL ? 'right' as const : 'left' as const,
 });
+
+export const normalizeArabicPdfTextLayer = (doc: { internal?: { getFont?: (fontName?: string, fontStyle?: string) => { metadata?: { toUnicode?: Record<string, number> } } | undefined } }) => {
+  for (const style of ARABIC_FONT_STYLES) {
+    const map = doc.internal?.getFont?.(ARABIC_FONT_NAME, style)?.metadata?.toUnicode;
+    if (!map) continue;
+    for (const key of Object.keys(map)) {
+      const value = map[key];
+      if (!Number.isFinite(value)) continue;
+      const normalized = String.fromCodePoint(value).normalize('NFKC');
+      const first = normalized.codePointAt(0);
+      if (first && normalized.length === 1) map[key] = first;
+    }
+  }
+};
 
 // ── Print helper: renders content in a print-friendly popup ──
 export const printContractSection = (title: string, contentHtml: string, isRTL: boolean) => {
