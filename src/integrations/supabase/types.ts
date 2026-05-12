@@ -6796,6 +6796,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      complete_contract_from_invitation: {
+        Args: { _invite_id: string }
+        Returns: string
+      }
       compute_business_onboarding_completion: {
         Args: { _business_id: string }
         Returns: number
