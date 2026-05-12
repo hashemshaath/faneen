@@ -1050,13 +1050,18 @@ const ContractDetail = () => {
     try {
       const { exportContractPDF } = await import('@/lib/contract-pdf-export');
       await exportContractPDF(data);
+      const { getArabicFontDiagnostics } = await import('@/lib/pdf-arabic-font');
+      setPdfDiagnostics(getArabicFontDiagnostics());
       // Fire-and-forget export history log (PDF-QA2). Server validates auth.
       void recordContractPdfExport(contract.id, 'contract_detail', language)
         .then(() => queryClient.invalidateQueries({ queryKey: ['contract-pdf-exports', contract.id] }));
-    } catch {
+    } catch (err: unknown) {
+      const isArabicFontError = err instanceof Error && err.name === 'ArabicPdfFontError';
       toast({
         title: isRTL ? 'فشل التصدير' : 'Export failed',
-        description: isRTL ? 'تعذر إنشاء ملف PDF. يرجى المحاولة مرة أخرى.' : 'Could not generate the PDF. Please try again.',
+        description: isArabicFontError
+          ? (isRTL ? 'تعذر تضمين الخط العربي. قد لا يعمل البحث أو النسخ داخل ملف PDF بشكل صحيح.' : 'Arabic font could not be embedded. Copy/search may not work correctly.')
+          : (isRTL ? 'تعذر إنشاء ملف PDF. يرجى المحاولة مرة أخرى.' : 'Could not generate the PDF. Please try again.'),
         variant: 'destructive',
       });
     } finally {
@@ -1079,13 +1084,16 @@ const ContractDetail = () => {
     try {
       const { previewContractPDF } = await import('@/lib/contract-pdf-export');
       const { url, fileName } = await previewContractPDF(data);
+      const { getArabicFontDiagnostics } = await import('@/lib/pdf-arabic-font');
       setPreviewUrl(url);
       setPreviewFileName(fileName);
-    } catch {
+      setPdfDiagnostics(getArabicFontDiagnostics());
+    } catch (err: unknown) {
+      const isArabicFontError = err instanceof Error && err.name === 'ArabicPdfFontError';
       setPreviewUrl(null);
-      setPreviewError(isRTL
-        ? 'تعذر إنشاء ملف PDF. يرجى المحاولة مرة أخرى.'
-        : 'Could not generate the PDF. Please try again.');
+      setPreviewError(isArabicFontError
+        ? (isRTL ? 'تعذر تضمين الخط العربي. قد لا يعمل البحث أو النسخ داخل ملف PDF بشكل صحيح.' : 'Arabic font could not be embedded. Copy/search may not work correctly.')
+        : (isRTL ? 'تعذر إنشاء ملف PDF. يرجى المحاولة مرة أخرى.' : 'Could not generate the PDF. Please try again.'));
     } finally {
       setPreviewLoading(false);
     }
