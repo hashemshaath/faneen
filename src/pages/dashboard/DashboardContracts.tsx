@@ -958,13 +958,24 @@ const DashboardContracts = () => {
         const { error } = await supabase.from('contracts').update(payload).eq('id', editingId);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from('contracts').insert(payload);
+        // CT4 — Always create new contracts via the SECURITY DEFINER RPC so the
+        // template snapshot is frozen atomically. Falls back to General v1.
+        const versionId = effectiveVersion?.version_id ?? null;
+        if (!versionId) {
+          throw new Error(isRTL ? 'لا يوجد قالب عقد منشور' : 'No published contract template available');
+        }
+        const { error } = await supabase.rpc('create_contract_from_template', {
+          _payload: payload,
+          _template_version_id: versionId,
+          _pricing_method: selectedPricingMethod,
+        });
         if (error) throw error;
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-contracts'] });
       setViewSection('list'); setForm(emptyForm); setEditingId(null);
+      setSelectedVersionId(null); setSelectedPricingMethod(null); setSelectedTemplate(null);
       toast.success(editingId ? (isRTL ? 'تم تحديث العقد' : 'Contract updated') : (isRTL ? 'تم إنشاء العقد' : 'Contract created'));
     },
     onError: (err: Error) => toast.error(err.message),
