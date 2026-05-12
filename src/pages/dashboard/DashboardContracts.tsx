@@ -55,6 +55,8 @@ import {
 import { ClientPicker, type SelectedClient } from '@/components/contracts/ClientPicker';
 import { WORK_TYPES, getWorkType, pickTemplateForWorkType, type WorkTypeKey } from '@/lib/contract-work-types';
 import { getStatusGuidance } from '@/lib/contract-status-guidance';
+import { serializeDraftPayload, maskEmail as maskInviteEmail, type PendingInvite } from '@/lib/contract-invitations';
+import type { Json } from '@/integrations/supabase/types';
 
 type ContractRow = Database['public']['Tables']['contracts']['Row'];
 type MilestoneRow = Database['public']['Tables']['contract_milestones']['Row'];
@@ -423,6 +425,10 @@ const DashboardContracts = () => {
   const [selectedClient, setSelectedClient] = useState<SelectedClient | null>(null);
   const [selectedWorkType, setSelectedWorkType] = useState<WorkTypeKey>('general');
   const [workTypeTouched, setWorkTypeTouched] = useState(false);
+  /* CT4C.3 — Client invitation flow state. */
+  const [inviteMode, setInviteMode] = useState<'idle' | 'composing' | 'awaiting'>('idle');
+  const [inviteForm, setInviteForm] = useState<{ email: string; name: string; phone: string }>({ email: '', name: '', phone: '' });
+  const [pendingInvite, setPendingInvite] = useState<PendingInvite | null>(null);
   const [approveConfirm, setApproveConfirm] = useState<any | null>(null);
   const [sendConfirm, setSendConfirm] = useState<any | null>(null);
   const [isExporting, setIsExporting] = useState(false);
@@ -1094,6 +1100,107 @@ const DashboardContracts = () => {
     onError: (err: Error) => toast.error(err.message),
   });
 
+  /* CT4C.3 — Client invitation mutations. */
+  const sendInviteMutation = useMutation({
+    mutationFn: async () => {
+      const email = inviteForm.email.trim().toLowerCase();
+      if (!email) throw new Error(isRTL ? 'البريد الإلكتروني مطلوب' : 'Email is required');
+      const draft = serializeDraftPayload({
+        form,
+        templateVersionId: effectiveVersion?.version_id ?? null,
+        workType: selectedWorkType || null,
+        pricingMethod: selectedPricingMethod,
+      });
+      const { data, error } = await supabase.rpc('create_client_invitation', {
+        _email: email,
+        _name: inviteForm.name.trim() || null,
+        _phone: inviteForm.phone.trim() || null,
+        _business_id: businessId || null,
+        _draft_payload: Object.keys(draft).length > 0 ? (JSON.parse(JSON.stringify(draft)) as Json) : null,
+        _template_version_id: effectiveVersion?.version_id ?? null,
+        _work_type: selectedWorkType || null,
+      });
+      if (error) throw error;
+      const result = data as {
+        already_registered: boolean;
+        user_id?: string | null;
+        invite_id?: string | null;
+        ref_id?: string | null;
+        token?: string | null;
+        expires_at?: string | null;
+      };
+      if (result.already_registered) {
+        return { alreadyRegistered: true as const };
+      }
+      // Dispatch invite email via dedicated edge function. Token is sent
+      // server-side once — never persisted in client state.
+      const { error: notifyErr } = await supabase.functions.invoke('notify-client-invitation', {
+        body: { invite_id: result.invite_id, token: result.token, kind: 'created' },
+      });
+      if (notifyErr) throw notifyErr;
+      return {
+        alreadyRegistered: false as const,
+        invite: {
+          id: result.invite_id!,
+          ref_id: result.ref_id!,
+          email_lower: email,
+          expires_at: result.expires_at!,
+          reminder_count: 0,
+        } as PendingInvite,
+      };
+    },
+    onSuccess: (res) => {
+      if (res.alreadyRegistered) {
+        toast.info(isRTL ? 'هذا البريد مسجل بالفعل. يرجى البحث عنه واختياره.' : 'This email is already registered. Please search for the client and select them.');
+        setInviteMode('idle');
+        return;
+      }
+      setPendingInvite(res.invite);
+      setInviteMode('awaiting');
+      toast.success(isRTL ? 'تم إرسال الدعوة بنجاح' : 'Invitation sent successfully');
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
+  const resendInviteMutation = useMutation({
+    mutationFn: async () => {
+      if (!pendingInvite) throw new Error('No pending invite');
+      const { data, error } = await supabase.rpc('resend_client_invitation', { _id: pendingInvite.id });
+      if (error) throw error;
+      const result = data as { invite_id: string; ref_id: string; token: string; reminder_count: number; expires_at: string };
+      const { error: notifyErr } = await supabase.functions.invoke('notify-client-invitation', {
+        body: { invite_id: result.invite_id, token: result.token, kind: 'reminder' },
+      });
+      if (notifyErr) throw notifyErr;
+      return result;
+    },
+    onSuccess: (res) => {
+      setPendingInvite(p => p ? { ...p, reminder_count: res.reminder_count, expires_at: res.expires_at } : p);
+      toast.success(isRTL ? 'تم إرسال التذكير' : 'Reminder sent');
+    },
+    onError: (err: Error) => {
+      const msg = String(err.message || '');
+      if (msg.includes('cooldown')) toast.error(isRTL ? 'يرجى الانتظار قبل إعادة الإرسال (60 ثانية)' : 'Please wait before resending (60s cooldown)');
+      else if (msg.includes('reminder_limit')) toast.error(isRTL ? 'تم الوصول للحد الأقصى من التذكيرات' : 'Reminder limit reached');
+      else toast.error(msg);
+    },
+  });
+
+  const cancelInviteMutation = useMutation({
+    mutationFn: async () => {
+      if (!pendingInvite) throw new Error('No pending invite');
+      const { error } = await supabase.rpc('cancel_client_invitation', { _id: pendingInvite.id });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success(isRTL ? 'تم إلغاء الدعوة' : 'Invitation cancelled');
+      setPendingInvite(null);
+      setInviteMode('idle');
+      setInviteForm({ email: '', name: '', phone: '' });
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
   const approveMutation = useMutation({
     mutationFn: async (contract: ContractWithRole) => {
       // C6.4a — go through SECURITY DEFINER RPC.
@@ -1320,6 +1427,7 @@ const DashboardContracts = () => {
     setViewSection('list'); setForm(emptyForm); setEditingId(null); setSelectedTemplate(null); setTemplatePreview(null);
     setSelectedClient(null); setSelectedWorkType('general'); setWorkTypeTouched(false);
     setSelectedVersionId(null); setSelectedPricingMethod(null);
+    setInviteMode('idle'); setInviteForm({ email: '', name: '', phone: '' }); setPendingInvite(null);
   }, []);
 
   const handleShareContract = useCallback(async (c: ContractWithRole) => {
@@ -1531,14 +1639,100 @@ const DashboardContracts = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               {/* CT4B — Step 1: Client (search picker with email fallback) */}
-              {!editingId && (
+              {!editingId && inviteMode === 'idle' && (
                 <ClientPicker
                   isRTL={isRTL}
                   selected={selectedClient}
                   onSelect={setSelectedClient}
                   fallbackEmail={form.client_email}
                   onFallbackEmail={(v) => setForm(f => ({ ...f, client_email: v }))}
+                  onRequestInvite={(prefill) => {
+                    setInviteForm({ email: prefill.includes('@') ? prefill : '', name: '', phone: '' });
+                    setInviteMode('composing');
+                  }}
                 />
+              )}
+
+              {/* CT4C.3 — Compose invitation */}
+              {!editingId && inviteMode === 'composing' && (
+                <div className="p-4 rounded-xl border-2 border-info/40 bg-info/5 space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <Label className="text-xs font-semibold flex items-center gap-1.5">
+                      <Send className="w-3.5 h-3.5 text-info" />
+                      {isRTL ? 'إرسال دعوة لعميل جديد' : 'Invite a new client'}
+                    </Label>
+                    <Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-[10px]" onClick={() => { setInviteMode('idle'); setInviteForm({ email: '', name: '', phone: '' }); }}>
+                      <X className="w-3 h-3 me-1" />
+                      {isRTL ? 'إلغاء' : 'Cancel'}
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <div className="space-y-1 sm:col-span-1">
+                      <Label className="text-[10px]">{isRTL ? 'البريد الإلكتروني' : 'Email'} <span className="text-destructive">*</span></Label>
+                      <Input dir="ltr" type="email" className="h-9 text-xs" value={inviteForm.email} onChange={(e) => setInviteForm(f => ({ ...f, email: e.target.value }))} placeholder="client@email.com" />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-[10px]">{isRTL ? 'الاسم (اختياري)' : 'Name (optional)'}</Label>
+                      <Input className="h-9 text-xs" value={inviteForm.name} onChange={(e) => setInviteForm(f => ({ ...f, name: e.target.value }))} />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-[10px]">{isRTL ? 'الجوال (اختياري)' : 'Phone (optional)'}</Label>
+                      <Input dir="ltr" className="h-9 text-xs" value={inviteForm.phone} onChange={(e) => setInviteForm(f => ({ ...f, phone: e.target.value }))} />
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground leading-relaxed">
+                    {isRTL
+                      ? 'سيتم إرسال رابط آمن للعميل لإنشاء حسابه أو تسجيل الدخول. لن يتم إنشاء العقد إلا بعد قبول الدعوة.'
+                      : 'A secure link will be emailed to the client to create their account or sign in. The contract is not created until the invitation is accepted.'}
+                  </p>
+                  <Button type="button" variant="hero" size="sm" className="h-9 gap-1.5 text-xs" disabled={!inviteForm.email.trim() || sendInviteMutation.isPending} onClick={() => sendInviteMutation.mutate()}>
+                    {sendInviteMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                    {isRTL ? 'إرسال الدعوة' : 'Send invitation'}
+                  </Button>
+                </div>
+              )}
+
+              {/* CT4C.3 — Awaiting acceptance */}
+              {!editingId && inviteMode === 'awaiting' && pendingInvite && (
+                <div className="p-4 rounded-xl border-2 border-warning/40 bg-warning/5 space-y-3">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-warning" />
+                      <span className="text-xs font-semibold">{isRTL ? 'بانتظار قبول الدعوة' : 'Awaiting invitation acceptance'}</span>
+                      <Badge variant="secondary" className="text-[9px]">{pendingInvite.ref_id}</Badge>
+                    </div>
+                    <Badge variant="outline" className="text-[9px]">{isRTL ? 'قيد الانتظار' : 'Pending'}</Badge>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-[11px]">
+                    <div>
+                      <div className="text-muted-foreground text-[9px]">{isRTL ? 'البريد' : 'Email'}</div>
+                      <div dir="ltr" className="font-mono">{maskInviteEmail(pendingInvite.email_lower)}</div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground text-[9px]">{isRTL ? 'صالحة حتى' : 'Valid until'}</div>
+                      <div dir="ltr">{new Date(pendingInvite.expires_at).toISOString().slice(0, 10)}</div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground text-[9px]">{isRTL ? 'التذكيرات' : 'Reminders'}</div>
+                      <div>{pendingInvite.reminder_count} / 2</div>
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground leading-relaxed">
+                    {isRTL
+                      ? 'بعد قبول العميل للدعوة، يمكنك إنشاء العقد أو سيتم ربط المسودة حسب الخطوة التالية.'
+                      : 'After the client accepts the invitation, you can create the contract or the draft will be linked in the next step.'}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <Button type="button" variant="outline" size="sm" className="h-8 gap-1.5 text-[11px]" disabled={resendInviteMutation.isPending || pendingInvite.reminder_count >= 2} onClick={() => resendInviteMutation.mutate()}>
+                      {resendInviteMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+                      {isRTL ? 'إعادة إرسال' : 'Resend'}
+                    </Button>
+                    <Button type="button" variant="ghost" size="sm" className="h-8 gap-1.5 text-[11px] text-destructive" disabled={cancelInviteMutation.isPending} onClick={() => cancelInviteMutation.mutate()}>
+                      {cancelInviteMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <XCircle className="w-3 h-3" />}
+                      {isRTL ? 'إلغاء الدعوة' : 'Cancel invitation'}
+                    </Button>
+                  </div>
+                </div>
               )}
 
               {/* CT4B — Step 2: Work / service type (auto-suggests template) */}
