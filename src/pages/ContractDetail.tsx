@@ -1423,6 +1423,11 @@ const ContractDetail = () => {
               <Button variant="heroOutline" size="sm" disabled={isExportingPDF} className="text-xs border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 gap-1" onClick={handleExportPDF}>
                 <Download className="w-3.5 h-3.5" />{isExportingPDF ? '…' : (isRTL ? 'تحميل PDF' : 'Download PDF')}
               </Button>
+              {pdfDebugEnabled && (
+                <Button variant="heroOutline" size="sm" className="text-xs border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 gap-1" onClick={handleArabicFontTestPDF}>
+                  <BookOpen className="w-3.5 h-3.5" />{isRTL ? 'اختبار الخط العربي في PDF' : 'Test Arabic PDF Font'}
+                </Button>
+              )}
               <Button variant="heroOutline" size="sm" className="text-xs border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 gap-1" onClick={() => window.print()}>
                 <Printer className="w-3.5 h-3.5" />{isRTL ? 'طباعة' : 'Print'}
               </Button>
@@ -1438,6 +1443,25 @@ const ContractDetail = () => {
       </div>
 
       <div className="container py-5 sm:py-8 px-4 sm:px-6 max-w-5xl mx-auto">
+        {pdfDebugEnabled && pdfDiagnostics && (
+          <div className="rounded-xl border border-border bg-card p-3 sm:p-4 mb-5 sm:mb-6 text-xs">
+            <div className="flex items-center gap-2 font-semibold mb-3">
+              <ShieldCheck className="w-4 h-4 text-success" />
+              {isRTL ? 'تشخيص الخط العربي للـ PDF' : 'Arabic PDF font diagnostics'}
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2 text-muted-foreground">
+              <span>font: {pdfDiagnostics.registeredFontName}</span>
+              <span>source: {pdfDiagnostics.fontSource}</span>
+              <span>content-type: {pdfDiagnostics.contentType}</span>
+              <span>magic: {pdfDiagnostics.magicBytes}</span>
+              <span>TTF/OTF: {String(pdfDiagnostics.isTrueType)}</span>
+              <span>fallback: {String(pdfDiagnostics.fallbackFontUsed)}</span>
+              <span>normalization: {String(pdfDiagnostics.normalizationRan)}</span>
+              <span>loaded: {pdfDiagnostics.loadedAt ?? '-'}</span>
+              <span>generated: {pdfDiagnostics.lastGeneratedPdfAt ?? '-'}</span>
+            </div>
+          </div>
+        )}
         {/* ─── Quick Stats ─── */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5 sm:mb-6">
           <StatCard icon={StatusIcon} label={isRTL ? 'الحالة' : 'Status'} value={isRTL ? cfg.label_ar : cfg.label_en} />
