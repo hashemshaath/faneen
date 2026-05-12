@@ -214,14 +214,12 @@ export const buildContractPDF = async (data: ContractExportData) => {
 
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   const fontLoaded = await setupArabicDoc(doc, data.isRTL);
-  if (data.isRTL && !fontLoaded && import.meta.env.DEV) {
-    console.warn('PDF_ARABIC_FONT_UNAVAILABLE: Arabic contract PDF generated without a verified TTF/OTF font.');
-  }
+  ensureArabicPdfFont(doc, data.isRTL);
   const rtlStyles = getArabicTableStyles(data.isRTL, fontLoaded);
 
   const w = doc.internal.pageSize.getWidth();
   const h = doc.internal.pageSize.getHeight();
-  let y = 15;
+  let y = 16;
 
   const [accentR, accentG, accentB] = ACCENT_RGB;
   const [darkR,   darkG,   darkB]   = HEADER_RGB;
