@@ -28,6 +28,7 @@ import {
   ShieldCheck,
   Palette,
   Inbox,
+  Settings2,
 } from 'lucide-react';
 
 interface MenuItem {
@@ -92,7 +93,7 @@ const providerGroups: MenuGroup[] = [
     items: [
       { label: { ar: 'العضوية', en: 'Membership' }, url: '/membership', icon: Crown },
       { label: { ar: 'الإشعارات', en: 'Notifications' }, url: '/dashboard/notifications', icon: Bell },
-      { label: { ar: 'تفضيلات التواصل', en: 'Communication' }, url: '/dashboard/communication-preferences', icon: Bell },
+      { label: { ar: 'تفضيلات التواصل', en: 'Communication' }, url: '/dashboard/communication-preferences', icon: Settings2 },
       { label: { ar: 'الإعدادات', en: 'Settings' }, url: '/dashboard/settings', icon: Settings },
     ],
   },
@@ -133,7 +134,7 @@ const userGroups: MenuGroup[] = [
     icon: Settings,
     items: [
       { label: { ar: 'الإشعارات', en: 'Notifications' }, url: '/dashboard/notifications', icon: Bell },
-      { label: { ar: 'تفضيلات التواصل', en: 'Communication' }, url: '/dashboard/communication-preferences', icon: Bell },
+      { label: { ar: 'تفضيلات التواصل', en: 'Communication' }, url: '/dashboard/communication-preferences', icon: Settings2 },
       { label: { ar: 'الإعدادات', en: 'Settings' }, url: '/dashboard/settings', icon: Settings },
     ],
   },
@@ -216,7 +217,7 @@ const adminBaseGroups: MenuGroup[] = [
     icon: Settings,
     items: [
       { label: { ar: 'الإشعارات', en: 'Notifications' }, url: '/dashboard/notifications', icon: Bell },
-      { label: { ar: 'تفضيلات التواصل', en: 'Communication' }, url: '/dashboard/communication-preferences', icon: Bell },
+      { label: { ar: 'تفضيلات التواصل', en: 'Communication' }, url: '/dashboard/communication-preferences', icon: Settings2 },
       { label: { ar: 'الإعدادات', en: 'Settings' }, url: '/dashboard/settings', icon: Settings },
     ],
   },
@@ -232,22 +233,27 @@ const RenderMenu: React.FC<{
   closeMobile: () => void;
 }> = ({ items, collapsed, isRTL, closeMobile }) => (
   <SidebarMenu>
-    {items.map((item) => (
-      <SidebarMenuItem key={item.url + item.label.en}>
-        <SidebarMenuButton asChild>
-          <NavLink
-            to={item.url}
-            end={item.end}
-            className="hover:bg-sidebar-accent/60 rounded-lg transition-colors"
-            activeClassName="bg-accent/15 text-accent font-medium dark:bg-accent/20"
-            onClick={closeMobile}
-          >
-            <item.icon className="h-4 w-4 shrink-0" />
-            {!collapsed && <span className="ms-2 truncate">{isRTL ? item.label.ar : item.label.en}</span>}
-          </NavLink>
-        </SidebarMenuButton>
-      </SidebarMenuItem>
-    ))}
+    {items.map((item) => {
+      const label = isRTL ? item.label.ar : item.label.en;
+      return (
+        <SidebarMenuItem key={item.url + item.label.en}>
+          <SidebarMenuButton asChild tooltip={collapsed ? label : undefined}>
+            <NavLink
+              to={item.url}
+              end={item.end}
+              title={collapsed ? label : undefined}
+              aria-label={label}
+              className="relative rounded-lg transition-colors text-sidebar-foreground/85 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+              activeClassName="!bg-primary/12 !text-primary font-semibold dark:!bg-primary/18 dark:!text-primary-foreground before:absolute before:inset-y-1 before:start-0 before:w-[3px] before:rounded-full before:bg-primary"
+              onClick={closeMobile}
+            >
+              <item.icon className="h-4 w-4 shrink-0" />
+              {!collapsed && <span className="ms-2 truncate">{label}</span>}
+            </NavLink>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      );
+    })}
   </SidebarMenu>
 );
 
@@ -334,21 +340,37 @@ export const DashboardSidebar: React.FC = () => {
       <SidebarFooter className="border-t border-sidebar-border p-3 space-y-1">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <NavLink to="/" className="hover:bg-sidebar-accent/60 rounded-lg" activeClassName="" onClick={closeMobile}>
+            <SidebarMenuButton asChild tooltip={collapsed ? (isRTL ? 'الرئيسية' : 'Home') : undefined}>
+              <NavLink
+                to="/"
+                aria-label={isRTL ? 'الرئيسية' : 'Home'}
+                className="rounded-lg text-sidebar-foreground/85 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                activeClassName=""
+                onClick={closeMobile}
+              >
                 <Home className="h-4 w-4 shrink-0" />
                 {!collapsed && <span className="ms-2">{isRTL ? 'الرئيسية' : 'Home'}</span>}
               </NavLink>
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton onClick={() => setLanguage(language === 'ar' ? 'en' : 'ar')} className="hover:bg-sidebar-accent/60 rounded-lg">
+            <SidebarMenuButton
+              onClick={() => setLanguage(language === 'ar' ? 'en' : 'ar')}
+              tooltip={collapsed ? (language === 'ar' ? 'English' : 'العربية') : undefined}
+              aria-label={language === 'ar' ? 'Switch to English' : 'تبديل إلى العربية'}
+              className="rounded-lg text-sidebar-foreground/85 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            >
               <Globe className="h-4 w-4 shrink-0" />
               {!collapsed && <span className="ms-2">{language === 'ar' ? 'EN' : 'عربي'}</span>}
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton onClick={handleLogout} className="text-destructive hover:text-destructive hover:bg-destructive/10 dark:hover:bg-destructive/20 rounded-lg">
+            <SidebarMenuButton
+              onClick={handleLogout}
+              tooltip={collapsed ? (isRTL ? 'تسجيل الخروج' : 'Logout') : undefined}
+              aria-label={isRTL ? 'تسجيل الخروج' : 'Logout'}
+              className="text-destructive hover:text-destructive hover:bg-destructive/10 dark:hover:bg-destructive/20 rounded-lg"
+            >
               <LogOut className="h-4 w-4 shrink-0" />
               {!collapsed && <span className="ms-2">{isRTL ? 'تسجيل الخروج' : 'Logout'}</span>}
             </SidebarMenuButton>
