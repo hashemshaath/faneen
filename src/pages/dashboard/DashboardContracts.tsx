@@ -2057,35 +2057,68 @@ const DashboardContracts = () => {
                                 {/* Line Items List */}
                                 {lineItems.length > 0 && (
                                   <div className="space-y-2">
-                                    <h5 className="text-[10px] font-semibold text-muted-foreground flex items-center gap-1"><ClipboardList className="w-3 h-3" />{isRTL ? 'بنود إضافية' : 'Additional Items'}</h5>
-                                    {lineItems.map((li) => {
+                                    {(() => {
                                       const typeLabels: Record<string, string> = { service: isRTL ? 'خدمة' : 'Service', material: isRTL ? 'مادة' : 'Material', installation: isRTL ? 'تركيب' : 'Install', other: isRTL ? 'أخرى' : 'Other' };
+                                      const groups = groupLineItemsByBoqGroup(lineItems);
+                                      const mixed = hasMixedPricing(lineItems);
+                                      const methodsUsed = listPricingMethodsUsed(lineItems);
                                       return (
-                                        <div key={li.id} className="p-3 rounded-xl bg-card border border-border/30 flex items-center justify-between gap-3 hover:border-primary/20 transition-colors">
-                                          <div className="flex items-center gap-3 min-w-0">
-                                            <Badge variant="secondary" className="text-[8px] shrink-0">{typeLabels[li.item_type] || li.item_type}</Badge>
-                                            <div className="min-w-0">
-                                              <p className="text-xs font-medium truncate">{li.name_ar}</p>
-                                              {li.description_ar && <p className="text-[9px] text-muted-foreground truncate">{li.description_ar}</p>}
-                                            </div>
-                                          </div>
-                                          <div className="flex items-center gap-2">
-                                            <div className="text-end shrink-0">
-                                              <p className="text-[10px] text-muted-foreground">
-                                                {li.pricing_method && li.pricing_method !== 'unit' ? `${formatPricingMethodLabel(li.pricing_method, isRTL ? 'ar' : 'en')} • ` : ''}
-                                                {li.quantity} × {Number(li.unit_price).toLocaleString()}
-                                              </p>
-                                              <p className="text-xs font-bold">{Number(li.total_cost || 0).toLocaleString()} {c.currency_code}</p>
-                                            </div>
-                                            {!locked && isProvider && (
-                                              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/10" onClick={() => deleteLineItemMutation.mutate({ id: li.id, contractId: c.id })}>
-                                                <X className="w-3 h-3" />
-                                              </Button>
+                                        <>
+                                          <div className="flex items-center justify-between flex-wrap gap-2">
+                                            <h5 className="text-[10px] font-semibold text-muted-foreground flex items-center gap-1">
+                                              <ClipboardList className="w-3 h-3" />{isRTL ? 'بنود إضافية' : 'Additional Items'}
+                                            </h5>
+                                            {mixed && (
+                                              <div className="flex items-center gap-1.5 flex-wrap">
+                                                <Badge variant="outline" className="text-[9px] border-accent/40 text-accent">
+                                                  {isRTL ? 'تسعير مختلط' : 'Mixed pricing'}
+                                                </Badge>
+                                                <span className="text-[9px] text-muted-foreground">
+                                                  {methodsUsed.map(m => formatPricingMethodLabel(m, isRTL ? 'ar' : 'en')).join(' • ')}
+                                                </span>
+                                              </div>
                                             )}
                                           </div>
-                                        </div>
+                                          {groups.map((g) => (
+                                            <div key={g.key} className="space-y-1.5">
+                                              <div className="flex items-center justify-between px-2">
+                                                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
+                                                  {isRTL ? g.label_ar : g.label_en}
+                                                </span>
+                                                <span className="text-[10px] font-bold text-accent">
+                                                  {g.subtotal.toLocaleString()} {c.currency_code}
+                                                </span>
+                                              </div>
+                                              {g.items.map((li) => (
+                                                <div key={li.id} className="p-3 rounded-xl bg-card border border-border/30 flex items-center justify-between gap-3 hover:border-primary/20 transition-colors">
+                                                  <div className="flex items-center gap-3 min-w-0">
+                                                    <Badge variant="secondary" className="text-[8px] shrink-0">{typeLabels[li.item_type] || li.item_type}</Badge>
+                                                    <div className="min-w-0">
+                                                      <p className="text-xs font-medium truncate">{li.name_ar}</p>
+                                                      {li.description_ar && <p className="text-[9px] text-muted-foreground truncate">{li.description_ar}</p>}
+                                                    </div>
+                                                  </div>
+                                                  <div className="flex items-center gap-2">
+                                                    <div className="text-end shrink-0">
+                                                      <p className="text-[10px] text-muted-foreground">
+                                                        {li.pricing_method && li.pricing_method !== 'unit' ? `${formatPricingMethodLabel(li.pricing_method, isRTL ? 'ar' : 'en')} • ` : ''}
+                                                        {li.quantity} × {Number(li.unit_price).toLocaleString()}
+                                                      </p>
+                                                      <p className="text-xs font-bold">{Number(li.total_cost || 0).toLocaleString()} {c.currency_code}</p>
+                                                    </div>
+                                                    {!locked && isProvider && (
+                                                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/10" onClick={() => deleteLineItemMutation.mutate({ id: li.id, contractId: c.id })}>
+                                                        <X className="w-3 h-3" />
+                                                      </Button>
+                                                    )}
+                                                  </div>
+                                                </div>
+                                              ))}
+                                            </div>
+                                          ))}
+                                        </>
                                       );
-                                    })}
+                                    })()}
                                   </div>
                                 )}
 
