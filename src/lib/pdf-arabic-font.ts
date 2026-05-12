@@ -151,7 +151,7 @@ export const registerArabicFont = async (doc: { addFileToVFS: (file: string, dat
         registeredStyles: [...ARABIC_FONT_STYLES],
         fallbackFontUsed: false,
       };
-      debugArabicFont(lastDiagnostics);
+      debugArabicFont({ ...lastDiagnostics });
       return true;
     } catch (err) {
       lastDiagnostics = { ...lastDiagnostics, fontSource: 'failed', fallbackFontUsed: true, error: err instanceof Error ? err.message : String(err) };
