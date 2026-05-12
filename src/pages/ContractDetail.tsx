@@ -340,6 +340,37 @@ const ContractDetail = () => {
     enabled: !!id && !!user,
   });
 
+  // CT6 — Line items (BOQ) for PDF.
+  const { data: lineItems } = useQuery({
+    queryKey: ['contract-line-items', id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('contract_line_items')
+        .select('id, name_ar, name_en, pricing_method, unit_of_measure, boq_group_key, quantity, unit_price, total_cost, formula_inputs, sort_order')
+        .eq('contract_id', id!)
+        .order('sort_order');
+      return data ?? [];
+    },
+    enabled: !!id && !!user,
+  });
+
+  // CT6 — Frozen template snapshot for PDF clauses + precedence.
+  const { data: templateSnapshot } = useQuery({
+    queryKey: ['contract-template-snapshot', id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('contract_template_snapshots')
+        .select('frozen_payload')
+        .eq('contract_id', id!)
+        .maybeSingle();
+      return (data?.frozen_payload ?? null) as null | {
+        sections?: unknown;
+        attachments?: unknown;
+      };
+    },
+    enabled: !!id && !!user,
+  });
+
   const { data: amendments } = useQuery({
     queryKey: ['contract-amendments', id],
     queryFn: async () => {
