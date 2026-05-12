@@ -203,6 +203,7 @@ export type Database = {
           created_at: string
           id: string
           referrer: string | null
+          session_token: string | null
           user_agent: string | null
           username: string
           utm_campaign: string | null
@@ -214,6 +215,7 @@ export type Database = {
           created_at?: string
           id?: string
           referrer?: string | null
+          session_token?: string | null
           user_agent?: string | null
           username: string
           utm_campaign?: string | null
@@ -225,6 +227,7 @@ export type Database = {
           created_at?: string
           id?: string
           referrer?: string | null
+          session_token?: string | null
           user_agent?: string | null
           username?: string
           utm_campaign?: string | null
@@ -241,6 +244,48 @@ export type Database = {
           },
           {
             foreignKeyName: "badge_clicks_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      badge_conversions: {
+        Row: {
+          business_id: string
+          created_at: string
+          event_type: string
+          id: string
+          session_token: string
+          source_page: string | null
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          event_type: string
+          id?: string
+          session_token: string
+          source_page?: string | null
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          event_type?: string
+          id?: string
+          session_token?: string
+          source_page?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "badge_conversions_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "badge_conversions_business_id_fkey"
             columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "businesses_public"
