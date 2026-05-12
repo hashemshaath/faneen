@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { mapContractLockError } from '@/lib/contract-errors';
 import {
   FileText, Eye, Plus, CheckCircle2, Clock, XCircle, AlertTriangle,
   Shield, DollarSign, Calendar, Users, ListChecks, StickyNote,
