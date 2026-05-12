@@ -2273,6 +2273,106 @@ export type Database = {
           },
         ]
       }
+      contract_pdf_exports: {
+        Row: {
+          amendment_count: number
+          boq_group_count: number
+          contract_id: string
+          contract_number: string | null
+          contract_status: string | null
+          contract_version: number | null
+          created_at: string
+          document_hash: string | null
+          document_hash_prefix: string | null
+          export_locale: string | null
+          exported_at: string
+          exported_by: string
+          has_amendments: boolean
+          id: string
+          ip_hash: string | null
+          line_item_count: number
+          official_version_number: number | null
+          source: string
+          template_name_ar: string | null
+          template_name_en: string | null
+          template_version_id: string | null
+          template_version_number: number | null
+          user_agent_hash: string | null
+        }
+        Insert: {
+          amendment_count?: number
+          boq_group_count?: number
+          contract_id: string
+          contract_number?: string | null
+          contract_status?: string | null
+          contract_version?: number | null
+          created_at?: string
+          document_hash?: string | null
+          document_hash_prefix?: string | null
+          export_locale?: string | null
+          exported_at?: string
+          exported_by: string
+          has_amendments?: boolean
+          id?: string
+          ip_hash?: string | null
+          line_item_count?: number
+          official_version_number?: number | null
+          source?: string
+          template_name_ar?: string | null
+          template_name_en?: string | null
+          template_version_id?: string | null
+          template_version_number?: number | null
+          user_agent_hash?: string | null
+        }
+        Update: {
+          amendment_count?: number
+          boq_group_count?: number
+          contract_id?: string
+          contract_number?: string | null
+          contract_status?: string | null
+          contract_version?: number | null
+          created_at?: string
+          document_hash?: string | null
+          document_hash_prefix?: string | null
+          export_locale?: string | null
+          exported_at?: string
+          exported_by?: string
+          has_amendments?: boolean
+          id?: string
+          ip_hash?: string | null
+          line_item_count?: number
+          official_version_number?: number | null
+          source?: string
+          template_name_ar?: string | null
+          template_name_en?: string | null
+          template_version_id?: string | null
+          template_version_number?: number | null
+          user_agent_hash?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_pdf_exports_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_pdf_exports_template_version_id_fkey"
+            columns: ["template_version_id"]
+            isOneToOne: false
+            referencedRelation: "contract_template_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_pdf_exports_template_version_id_fkey"
+            columns: ["template_version_id"]
+            isOneToOne: false
+            referencedRelation: "contract_template_versions_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contract_template_attachments: {
         Row: {
           created_at: string
@@ -7472,6 +7572,19 @@ export type Database = {
         }[]
       }
       recalc_contract_total: { Args: { _contract_id: string }; Returns: number }
+      record_contract_pdf_export: {
+        Args: {
+          _contract_id: string
+          _export_locale?: string
+          _source?: string
+        }
+        Returns: {
+          contract_number: string
+          document_hash_prefix: string
+          export_id: string
+          exported_at: string
+        }[]
+      }
       record_email_click: { Args: { _message_id: string }; Returns: undefined }
       record_email_link_click: {
         Args: { _message_id: string; _target_url: string }
