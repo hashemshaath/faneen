@@ -434,7 +434,11 @@ const SectorLanding: React.FC = () => {
       )}
 
       {/* Top technicians strip — featured verified providers */}
-      <SectorTopTechnicians sectorName={meta.name} technicians={topTechnicians} />
+      <SectorTopTechnicians
+        sectorName={meta.name}
+        technicians={topTechnicians}
+        cityName={selectedCityName}
+      />
 
       {/* Buyer guides — HowTo content per sector */}
       <SectorGuides
@@ -442,6 +446,8 @@ const SectorLanding: React.FC = () => {
         sectorSlug={sector.slug}
         guides={guides}
         featuredProvider={topTechnicians[0] ?? null}
+        cityName={selectedCityName}
+        citySlug={selectedCitySlug}
       />
 
       {/* Project examples — real completed work in this sector */}
@@ -449,6 +455,8 @@ const SectorLanding: React.FC = () => {
         sectorName={meta.name}
         sectorSlug={sector.slug}
         categoryIds={categoryIds}
+        cityId={cityId === 'all' ? null : cityId}
+        cityName={selectedCityName}
       />
 
       {/* Results grid */}
