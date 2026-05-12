@@ -6,10 +6,10 @@
  * BOQ details, or contract terms.
  */
 import React, { useMemo, useState } from 'react';
-import { Helmet } from 'react-helmet-async';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useLanguage } from '@/contexts/LanguageContext';
+import { useLanguage } from '@/i18n/LanguageContext';
+import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -137,8 +137,7 @@ const AdminPdfExportAudit: React.FC = () => {
   const title = isRTL ? 'سجل تصدير العقود' : 'PDF Export Audit';
 
   return (
-    <>
-      <Helmet><title>{title} — Qitaat Admin</title></Helmet>
+    <DashboardLayout>
       <main className="container mx-auto p-4 md:p-6 space-y-5">
         <header className="flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-2">
@@ -346,7 +345,7 @@ const AdminPdfExportAudit: React.FC = () => {
             : 'Read-only audit. No raw user IDs, emails, or file links are exposed.'}
         </p>
       </main>
-    </>
+    </DashboardLayout>
   );
 };
 
