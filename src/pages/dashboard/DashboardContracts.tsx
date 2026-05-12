@@ -1165,7 +1165,10 @@ const DashboardContracts = () => {
       setSelectedClient(null); setSelectedWorkType('general'); setWorkTypeTouched(false);
       toast.success(editingId ? (isRTL ? 'تم تحديث العقد' : 'Contract updated') : (isRTL ? 'تم إنشاء العقد' : 'Contract created'));
     },
-    onError: (err: Error) => toast.error(err.message),
+    onError: (err: Error) => {
+      const mapped = mapContractCreateError(err, isRTL);
+      toast.error(mapped.message);
+    },
   });
 
   /* CT4C.3 — Client invitation mutations. */
