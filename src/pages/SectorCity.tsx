@@ -14,7 +14,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Building2, MapPin, Search as SearchIcon, Star, ArrowLeft, ArrowRight } from 'lucide-react';
+import {
+  Building2, MapPin, Search as SearchIcon, Star, ArrowLeft, ArrowRight,
+  MessageSquare, CalendarCheck, Phone, Trophy, Crown, SlidersHorizontal,
+} from 'lucide-react';
 import { VerifiedBadge } from '@/components/common/VerifiedBadge';
 import { SECTOR_KEYWORDS, type SectorSlug, getSectorMeta } from '@/lib/sector-keywords';
 import { getCityBySlug, SA_CITIES } from '@/lib/sa-cities';
@@ -39,8 +42,16 @@ type BizRow = {
   is_verified: boolean | null;
   city_id: string | null;
   category_id: string;
+  short_description_ar: string | null;
+  short_description_en: string | null;
+  membership_tier: string | null;
+  mobile: string | null;
+  phone: string | null;
   cities: { id: string; name_ar: string; name_en: string | null } | null;
 };
+
+type SortKey = 'top' | 'reviews';
+type RatingFilter = 'all' | '4' | '4.5';
 
 const SectorCity: React.FC = () => {
   const { sector: sectorParam, city: cityParam } = useParams<{ sector: string; city: string }>();
@@ -52,6 +63,8 @@ const SectorCity: React.FC = () => {
 
   const [query, setQuery] = useState('');
   const [verifiedOnly, setVerifiedOnly] = useState(false);
+  const [minRating, setMinRating] = useState<RatingFilter>('all');
+  const [sortBy, setSortBy] = useState<SortKey>('top');
 
   // Resolve city UUID from name_en (cheap one-shot query, cached forever).
   const { data: cityRow } = useQuery({
@@ -89,7 +102,7 @@ const SectorCity: React.FC = () => {
       const { data } = await supabase
         .from('businesses')
         .select(
-          'id, username, name_ar, name_en, logo_url, rating_avg, rating_count, is_verified, city_id, category_id, cities(id, name_ar, name_en)',
+          'id, username, name_ar, name_en, logo_url, rating_avg, rating_count, is_verified, city_id, category_id, short_description_ar, short_description_en, membership_tier, mobile, phone, cities(id, name_ar, name_en)',
         )
         .in('category_id', categoryIds)
         .eq('city_id', cityRow!.id)
@@ -102,15 +115,32 @@ const SectorCity: React.FC = () => {
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return businesses.filter((b) => {
+    const minR = minRating === 'all' ? 0 : minRating === '4' ? 4 : 4.5;
+    const list = businesses.filter((b) => {
       if (verifiedOnly && !b.is_verified) return false;
+      if (Number(b.rating_avg ?? 0) < minR) return false;
       if (q) {
         const hay = `${b.name_ar} ${b.name_en ?? ''} ${b.username}`.toLowerCase();
         if (!hay.includes(q)) return false;
       }
       return true;
     });
-  }, [businesses, query, verifiedOnly]);
+    if (sortBy === 'reviews') {
+      list.sort((a, b) => (b.rating_count ?? 0) - (a.rating_count ?? 0));
+    } else {
+      list.sort((a, b) => {
+        const score = (x: BizRow) =>
+          Number(x.rating_avg ?? 0) * Math.log10((x.rating_count ?? 0) + 2) +
+          (x.is_verified ? 0.4 : 0) +
+          (x.membership_tier === 'platinum' ? 0.3 : x.membership_tier === 'gold' ? 0.2 : 0);
+        return score(b) - score(a);
+      });
+    }
+    return list;
+  }, [businesses, query, verifiedOnly, minRating, sortBy]);
+
+  const top10 = useMemo(() => filtered.slice(0, 10), [filtered]);
+  const rest = useMemo(() => filtered.slice(10), [filtered]);
 
   const meta = sector ? getSectorMeta(sector.slug, isRTL) : null;
   const cityName = city ? (isRTL ? city.nameAr : city.nameEn) : '';
@@ -214,6 +244,13 @@ const SectorCity: React.FC = () => {
   const Arrow = isRTL ? ArrowLeft : ArrowRight;
   const sectorServices = SERVICES_CATALOG.filter((s) => s.sector === sector.slug).slice(0, 4);
 
+  const tierLabel = (tier: string | null): string | null => {
+    if (tier === 'platinum') return isRTL ? 'بلاتيني' : 'Platinum';
+    if (tier === 'gold') return isRTL ? 'ذهبي' : 'Gold';
+    if (tier === 'silver') return isRTL ? 'فضي' : 'Silver';
+    return null;
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
@@ -235,33 +272,86 @@ const SectorCity: React.FC = () => {
                 <MapPin className="h-3 w-3" />{cityName}
               </Badge>
               <Badge variant="outline">{meta.name}</Badge>
+              <Badge variant="outline" className="gap-1 border-amber-500/40 text-amber-700 dark:text-amber-400">
+                <Trophy className="h-3 w-3" />
+                {isRTL ? `أفضل 10 ${cityIn}` : `Top 10 ${cityIn}`}
+              </Badge>
             </div>
             <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3">
               {isRTL ? `${meta.name} ${cityIn}` : `${meta.name} ${cityIn}`}
             </h1>
             <p className="text-muted-foreground max-w-3xl">{description}</p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Button asChild size="sm">
+                <Link to={`/contact?topic=${sector.slug}&city=${city.slug}`}>
+                  <MessageSquare className="h-4 w-4 me-1.5" />
+                  {isRTL ? 'اطلب عروض أسعار من 3 ورش' : 'Request quotes from 3 workshops'}
+                </Link>
+              </Button>
+              <Button asChild size="sm" variant="outline">
+                <Link to={`/services?sector=${sector.slug}`}>
+                  {isRTL ? 'تصفّح الأسعار التقديرية' : 'Browse estimated prices'}
+                  <Arrow className="h-4 w-4 ms-1" />
+                </Link>
+              </Button>
+            </div>
           </header>
 
           {/* Filters */}
           <Card className="mb-6">
-            <CardContent className="p-4 flex flex-col md:flex-row gap-3 md:items-center">
-              <div className="relative flex-1">
-                <SearchIcon className={`absolute top-1/2 -translate-y-1/2 ${isRTL ? 'right-3' : 'left-3'} h-4 w-4 text-muted-foreground`} />
-                <Input
-                  dir="auto"
-                  className={isRTL ? 'pr-9' : 'pl-9'}
-                  placeholder={isRTL ? `ابحث عن ورشة ${meta.name} ${cityIn}...` : `Search a ${meta.name} workshop ${cityIn}...`}
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                />
+            <CardContent className="p-4 space-y-3">
+              <div className="flex flex-col md:flex-row gap-3 md:items-center">
+                <div className="relative flex-1">
+                  <SearchIcon className={`absolute top-1/2 -translate-y-1/2 ${isRTL ? 'right-3' : 'left-3'} h-4 w-4 text-muted-foreground`} />
+                  <Input
+                    dir="auto"
+                    className={isRTL ? 'pr-9' : 'pl-9'}
+                    placeholder={isRTL ? `ابحث عن ورشة ${meta.name} ${cityIn}...` : `Search a ${meta.name} workshop ${cityIn}...`}
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                  />
+                </div>
+                <Button
+                  variant={verifiedOnly ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setVerifiedOnly((v) => !v)}
+                  className="gap-1.5"
+                >
+                  <VerifiedBadge size="xs" />
+                  {isRTL ? 'موثوق فقط' : 'Verified only'}
+                </Button>
               </div>
-              <Button
-                variant={verifiedOnly ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setVerifiedOnly((v) => !v)}
-              >
-                {isRTL ? 'موثوق فقط' : 'Verified only'}
-              </Button>
+              <div className="flex flex-wrap items-center gap-2 text-xs">
+                <span className="inline-flex items-center gap-1 text-muted-foreground">
+                  <SlidersHorizontal className="h-3.5 w-3.5" />
+                  {isRTL ? 'التقييم:' : 'Rating:'}
+                </span>
+                {(['all', '4', '4.5'] as RatingFilter[]).map((r) => (
+                  <Button
+                    key={r}
+                    variant={minRating === r ? 'default' : 'outline'}
+                    size="sm"
+                    className="h-7 px-2.5"
+                    onClick={() => setMinRating(r)}
+                  >
+                    {r === 'all' ? (isRTL ? 'الكل' : 'All') : `${r}+`}
+                    {r !== 'all' && <Star className="h-3 w-3 ms-1 text-amber-500" />}
+                  </Button>
+                ))}
+                <span className="mx-1 h-4 w-px bg-border" />
+                <span className="text-muted-foreground">{isRTL ? 'الترتيب:' : 'Sort:'}</span>
+                <Button variant={sortBy === 'top' ? 'default' : 'outline'} size="sm" className="h-7 px-2.5" onClick={() => setSortBy('top')}>
+                  {isRTL ? 'أفضل جودة' : 'Top quality'}
+                </Button>
+                <Button variant={sortBy === 'reviews' ? 'default' : 'outline'} size="sm" className="h-7 px-2.5" onClick={() => setSortBy('reviews')}>
+                  {isRTL ? 'الأكثر تقييماً' : 'Most reviewed'}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {isRTL
+                  ? `${filtered.length} مزود متاح ${cityIn} حسب الفلاتر الحالية`
+                  : `${filtered.length} providers available ${cityIn} with current filters`}
+              </p>
             </CardContent>
           </Card>
 
@@ -286,42 +376,130 @@ const SectorCity: React.FC = () => {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filtered.map((b) => (
-                <Card key={b.id} className="hover-lift">
-                  <CardContent className="p-4">
-                    <Link to={`/${b.username}`} className="flex items-start gap-3">
-                      <div className="h-12 w-12 rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0">
-                        {b.logo_url ? (
-                          <img src={b.logo_url} alt={b.name_ar} className="h-full w-full object-cover" loading="lazy" />
-                        ) : (
-                          <Building2 className="h-5 w-5 text-muted-foreground" />
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5">
-                          <h3 className="font-semibold truncate">
-                            {language === 'ar' ? b.name_ar : (b.name_en || b.name_ar)}
-                          </h3>
-                          {b.is_verified && <VerifiedBadge size="xs" />}
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-0.5 inline-flex items-center gap-1">
-                          <MapPin className="h-3 w-3" />
-                          {language === 'ar' ? (b.cities?.name_ar || cityName) : (b.cities?.name_en || cityName)}
-                        </p>
-                        {Number(b.rating_avg ?? 0) > 0 && (
-                          <p className="text-xs mt-1 inline-flex items-center gap-1">
-                            <Star className="h-3 w-3 text-amber-500" />
-                            <span className="tech-content">{Number(b.rating_avg).toFixed(1)}</span>
-                            <span className="text-muted-foreground tech-content">({b.rating_count ?? 0})</span>
-                          </p>
-                        )}
-                      </div>
-                    </Link>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            <>
+              <h2 className="text-xl md:text-2xl font-bold mb-4 inline-flex items-center gap-2">
+                <Trophy className="h-5 w-5 text-amber-500" />
+                {isRTL ? `أفضل ${top10.length} مزودي ${meta.name} ${cityIn}` : `Top ${top10.length} ${meta.name} providers ${cityIn}`}
+              </h2>
+              <ol className="space-y-3 mb-6">
+                {top10.map((b, i) => {
+                  const tier = tierLabel(b.membership_tier);
+                  const dispName = language === 'ar' ? b.name_ar : (b.name_en || b.name_ar);
+                  const desc = language === 'ar' ? b.short_description_ar : (b.short_description_en || b.short_description_ar);
+                  const callPhone = b.mobile || b.phone;
+                  const rankCls = i === 0
+                    ? 'bg-amber-500/15 text-amber-600 ring-2 ring-amber-500/30'
+                    : i === 1 ? 'bg-zinc-300/30 text-zinc-700 dark:text-zinc-300 ring-2 ring-zinc-400/30'
+                    : i === 2 ? 'bg-orange-700/15 text-orange-700 dark:text-orange-400 ring-2 ring-orange-700/30'
+                    : 'bg-muted text-muted-foreground';
+                  return (
+                    <li key={b.id}>
+                      <Card className="hover-lift overflow-hidden">
+                        <CardContent className="p-4 md:p-5 flex flex-col md:flex-row gap-4 md:items-center">
+                          <div className="flex items-center gap-3 md:gap-4 flex-1 min-w-0">
+                            <div className={`shrink-0 h-10 w-10 rounded-full grid place-items-center font-bold text-sm tech-content ${rankCls}`}>#{i + 1}</div>
+                            <Link to={`/${b.username}`} className="h-14 w-14 md:h-16 md:w-16 rounded-xl bg-muted flex items-center justify-center overflow-hidden shrink-0">
+                              {b.logo_url ? (
+                                <img src={b.logo_url} alt={dispName} width={64} height={64} loading={i < 4 ? 'eager' : 'lazy'} decoding="async" className="h-full w-full object-cover" />
+                              ) : (
+                                <Building2 className="h-6 w-6 text-muted-foreground" />
+                              )}
+                            </Link>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <h3 className="font-semibold text-base md:text-lg truncate">
+                                  <Link to={`/${b.username}`} className="hover:underline">{dispName}</Link>
+                                </h3>
+                                {b.is_verified && <VerifiedBadge size="xs" />}
+                                {tier && (
+                                  <Badge variant="outline" className="gap-1 h-5 text-[10px] border-amber-500/40 text-amber-700 dark:text-amber-400">
+                                    <Crown className="h-3 w-3" />{tier}
+                                  </Badge>
+                                )}
+                              </div>
+                              {desc && <p className="text-xs md:text-sm text-muted-foreground mt-1 line-clamp-2">{desc}</p>}
+                              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-xs">
+                                {Number(b.rating_avg ?? 0) > 0 && (
+                                  <span className="inline-flex items-center gap-1">
+                                    <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
+                                    <span className="tech-content font-medium">{Number(b.rating_avg).toFixed(1)}</span>
+                                    <span className="text-muted-foreground tech-content">({b.rating_count ?? 0})</span>
+                                  </span>
+                                )}
+                                <span className="inline-flex items-center gap-1 text-muted-foreground">
+                                  <MapPin className="h-3.5 w-3.5" />
+                                  {language === 'ar' ? (b.cities?.name_ar || cityName) : (b.cities?.name_en || cityName)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex flex-col sm:flex-row md:flex-col gap-2 md:w-auto w-full md:min-w-[180px]">
+                            <Button asChild size="sm" className="w-full">
+                              <Link to={`/${b.username}?ref=top10&action=quote`}>
+                                <MessageSquare className="h-4 w-4 me-1.5" />
+                                {isRTL ? 'اطلب سعراً' : 'Get quote'}
+                              </Link>
+                            </Button>
+                            <Button asChild size="sm" variant="outline" className="w-full">
+                              <Link to={`/${b.username}?ref=top10&action=book`}>
+                                <CalendarCheck className="h-4 w-4 me-1.5" />
+                                {isRTL ? 'احجز' : 'Book'}
+                              </Link>
+                            </Button>
+                            {callPhone && (
+                              <Button asChild size="sm" variant="ghost" className="w-full">
+                                <a href={`tel:${callPhone}`}>
+                                  <Phone className="h-4 w-4 me-1.5" />
+                                  {isRTL ? 'اتصل' : 'Call'}
+                                </a>
+                              </Button>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </li>
+                  );
+                })}
+              </ol>
+              {rest.length > 0 && (
+                <details className="mb-4 group">
+                  <summary className="cursor-pointer text-sm font-medium text-primary hover:underline list-none inline-flex items-center gap-1">
+                    <span>{isRTL ? `عرض ${rest.length} مزوداً إضافياً ${cityIn}` : `Show ${rest.length} more providers ${cityIn}`}</span>
+                    <span className="group-open:rotate-180 transition">▾</span>
+                  </summary>
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-4">
+                    {rest.map((b) => (
+                      <Card key={b.id} className="hover-lift">
+                        <CardContent className="p-3">
+                          <Link to={`/${b.username}`} className="flex items-start gap-3">
+                            <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0">
+                              {b.logo_url ? (
+                                <img src={b.logo_url} alt={b.name_ar} width={40} height={40} className="h-full w-full object-cover" loading="lazy" decoding="async" />
+                              ) : (
+                                <Building2 className="h-4 w-4 text-muted-foreground" />
+                              )}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-1.5">
+                                <h3 className="font-medium text-sm truncate">{language === 'ar' ? b.name_ar : (b.name_en || b.name_ar)}</h3>
+                                {b.is_verified && <VerifiedBadge size="xs" />}
+                              </div>
+                              {Number(b.rating_avg ?? 0) > 0 && (
+                                <p className="text-xs mt-0.5 inline-flex items-center gap-1">
+                                  <Star className="h-3 w-3 text-amber-500" />
+                                  <span className="tech-content">{Number(b.rating_avg).toFixed(1)}</span>
+                                  <span className="text-muted-foreground tech-content">({b.rating_count ?? 0})</span>
+                                </p>
+                              )}
+                            </div>
+                          </Link>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </details>
+              )}
+            </>
           )}
 
           {/* Services in this sector */}
