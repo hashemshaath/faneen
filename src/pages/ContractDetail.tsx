@@ -391,7 +391,8 @@ const ContractDetail = () => {
     queryKey: ['contract-template-meta', templateVersionId],
     queryFn: async () => {
       const { data } = await supabase
-        .from('contract_template_versions')
+        // CT7B: non-admin reads must NOT touch base table — use the safe public view.
+        .from('contract_template_versions_public')
         .select('id, version_number, language_precedence, contract_templates!inner(name_ar, name_en, category, slug)')
         .eq('id', templateVersionId!)
         .maybeSingle();

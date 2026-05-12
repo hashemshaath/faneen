@@ -1331,6 +1331,13 @@ export type Database = {
             referencedRelation: "contract_template_versions"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "client_invitations_template_version_id_fkey"
+            columns: ["template_version_id"]
+            isOneToOne: false
+            referencedRelation: "contract_template_versions_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       contact_inbox_settings: {
@@ -2311,6 +2318,13 @@ export type Database = {
             referencedRelation: "contract_template_versions"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "contract_template_attachments_version_id_fkey"
+            columns: ["version_id"]
+            isOneToOne: false
+            referencedRelation: "contract_template_versions_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       contract_template_clauses: {
@@ -2421,6 +2435,13 @@ export type Database = {
             referencedRelation: "contract_template_versions"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "contract_template_pricing_rules_version_id_fkey"
+            columns: ["version_id"]
+            isOneToOne: false
+            referencedRelation: "contract_template_versions_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       contract_template_required_fields: {
@@ -2483,6 +2504,13 @@ export type Database = {
             referencedRelation: "contract_template_versions"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "contract_template_required_fields_version_id_fkey"
+            columns: ["version_id"]
+            isOneToOne: false
+            referencedRelation: "contract_template_versions_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       contract_template_review_events: {
@@ -2525,6 +2553,13 @@ export type Database = {
             columns: ["template_version_id"]
             isOneToOne: false
             referencedRelation: "contract_template_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_template_review_events_template_version_id_fkey"
+            columns: ["template_version_id"]
+            isOneToOne: false
+            referencedRelation: "contract_template_versions_public"
             referencedColumns: ["id"]
           },
         ]
@@ -2571,6 +2606,13 @@ export type Database = {
             referencedRelation: "contract_template_versions"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "contract_template_sections_version_id_fkey"
+            columns: ["version_id"]
+            isOneToOne: false
+            referencedRelation: "contract_template_versions_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       contract_template_snapshots: {
@@ -2611,6 +2653,13 @@ export type Database = {
             columns: ["version_id"]
             isOneToOne: false
             referencedRelation: "contract_template_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_template_snapshots_version_id_fkey"
+            columns: ["version_id"]
+            isOneToOne: false
+            referencedRelation: "contract_template_versions_public"
             referencedColumns: ["id"]
           },
         ]
@@ -2694,6 +2743,13 @@ export type Database = {
             columns: ["superseded_by"]
             isOneToOne: false
             referencedRelation: "contract_template_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_template_versions_superseded_by_fkey"
+            columns: ["superseded_by"]
+            isOneToOne: false
+            referencedRelation: "contract_template_versions_public"
             referencedColumns: ["id"]
           },
           {
@@ -2799,6 +2855,13 @@ export type Database = {
             columns: ["current_version_id"]
             isOneToOne: false
             referencedRelation: "contract_template_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_templates_current_version_fk"
+            columns: ["current_version_id"]
+            isOneToOne: false
+            referencedRelation: "contract_template_versions_public"
             referencedColumns: ["id"]
           },
           {
@@ -3049,6 +3112,13 @@ export type Database = {
             columns: ["template_version_id"]
             isOneToOne: false
             referencedRelation: "contract_template_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_template_version_id_fkey"
+            columns: ["template_version_id"]
+            isOneToOne: false
+            referencedRelation: "contract_template_versions_public"
             referencedColumns: ["id"]
           },
         ]
@@ -6440,6 +6510,76 @@ export type Database = {
           },
         ]
       }
+      contract_template_versions_public: {
+        Row: {
+          archived_at: string | null
+          body_hash: string | null
+          created_at: string | null
+          effective_from: string | null
+          id: string | null
+          language_precedence: string | null
+          published_at: string | null
+          published_by: string | null
+          status: string | null
+          superseded_by: string | null
+          template_id: string | null
+          updated_at: string | null
+          version_number: number | null
+        }
+        Insert: {
+          archived_at?: string | null
+          body_hash?: string | null
+          created_at?: string | null
+          effective_from?: string | null
+          id?: string | null
+          language_precedence?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          status?: string | null
+          superseded_by?: string | null
+          template_id?: string | null
+          updated_at?: string | null
+          version_number?: number | null
+        }
+        Update: {
+          archived_at?: string | null
+          body_hash?: string | null
+          created_at?: string | null
+          effective_from?: string | null
+          id?: string | null
+          language_precedence?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          status?: string | null
+          superseded_by?: string | null
+          template_id?: string | null
+          updated_at?: string | null
+          version_number?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_template_versions_superseded_by_fkey"
+            columns: ["superseded_by"]
+            isOneToOne: false
+            referencedRelation: "contract_template_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_template_versions_superseded_by_fkey"
+            columns: ["superseded_by"]
+            isOneToOne: false
+            referencedRelation: "contract_template_versions_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_template_versions_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "contract_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reviews_public: {
         Row: {
           business_id: string | null
@@ -6520,6 +6660,19 @@ export type Database = {
         Returns: Json
       }
       _ct_assert_admin: { Args: never; Returns: undefined }
+      _ct_assert_version_editable: {
+        Args: { p_version_id: string }
+        Returns: undefined
+      }
+      _ct_notify_review_event: {
+        Args: {
+          p_action: string
+          p_actor: string
+          p_to_status: string
+          p_version_id: string
+        }
+        Returns: undefined
+      }
       _membership_free_defaults: { Args: never; Returns: Json }
       accept_client_invitation: { Args: { _token: string }; Returns: Json }
       accept_contract: {

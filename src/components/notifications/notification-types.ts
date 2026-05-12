@@ -1,6 +1,7 @@
 import {
   Bell, FileText, CreditCard, Megaphone, Settings2, MessageSquare, Wrench,
   AlertTriangle, CheckCircle2, Star, Shield, Clock, Send, PenLine, Eye,
+  Gavel, Archive, Undo2, RotateCcw, Rocket,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -22,6 +23,13 @@ export type NotificationType =
   | 'quote_received'
   | 'contract_draft_created_for_client'
   | 'contract_draft_created_for_provider'
+  // CT7B — Legal review workflow (admin-only recipients)
+  | 'template_review_submitted'
+  | 'template_review_changes_requested'
+  | 'template_review_reverted'
+  | 'template_review_approved'
+  | 'template_review_published'
+  | 'template_review_archived'
   // Legacy generic types (backward-compatible)
   | 'contract'
   | 'installment'
@@ -59,6 +67,13 @@ export const notificationTypeMeta: Record<string, NotificationTypeMeta> = {
   quote_received:      { icon: FileText,      colorClass: 'bg-accent/10 text-accent',                            label: { ar: 'عرض سعر', en: 'Quote Received' }, urgency: 'important' },
   contract_draft_created_for_client:   { icon: FileText, colorClass: 'bg-info/10 text-info dark:text-info', label: { ar: 'مسودة عقد لطلبك', en: 'Contract Draft Created' }, urgency: 'important' },
   contract_draft_created_for_provider: { icon: FileText, colorClass: 'bg-info/10 text-info dark:text-info', label: { ar: 'مسودة عقد جديدة', en: 'New Contract Draft' }, urgency: 'important' },
+  // CT7B — Legal review workflow
+  template_review_submitted:         { icon: Gavel,   colorClass: 'bg-info/10 text-info dark:text-info',           label: { ar: 'قالب قيد المراجعة',  en: 'Template In Review' },     urgency: 'important' },
+  template_review_changes_requested: { icon: Undo2,   colorClass: 'bg-warning/10 text-warning dark:text-warning',  label: { ar: 'تعديلات مطلوبة',     en: 'Changes Requested' },      urgency: 'important' },
+  template_review_reverted:          { icon: RotateCcw, colorClass: 'bg-muted text-muted-foreground',              label: { ar: 'إعادة إلى المسودة',  en: 'Reverted to Draft' },      urgency: 'info'      },
+  template_review_approved:          { icon: Shield,  colorClass: 'bg-success/10 text-success dark:text-success',  label: { ar: 'اعتماد قانوني',      en: 'Legally Approved' },       urgency: 'important' },
+  template_review_published:         { icon: Rocket,  colorClass: 'bg-success/10 text-success dark:text-success',  label: { ar: 'نشر القالب',         en: 'Template Published' },     urgency: 'important' },
+  template_review_archived:          { icon: Archive, colorClass: 'bg-muted text-muted-foreground',                label: { ar: 'أرشفة القالب',       en: 'Template Archived' },      urgency: 'info'      },
   // Legacy generic types
   contract:    { icon: FileText,      colorClass: 'bg-info/10 text-info dark:text-info',     label: { ar: 'العقود', en: 'Contracts' }, urgency: 'important' },
   installment: { icon: CreditCard,    colorClass: 'bg-success/10 text-success dark:text-success', label: { ar: 'الأقساط', en: 'Installments' }, urgency: 'important' },
