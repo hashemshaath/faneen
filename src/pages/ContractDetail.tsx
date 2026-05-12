@@ -1623,9 +1623,9 @@ const ContractDetail = () => {
               )}
             </div>
             {pdfBackendReport && (
-              <pre className="mt-3 max-h-56 overflow-auto rounded-md bg-muted/40 p-2 text-[11px] leading-snug text-foreground whitespace-pre-wrap break-all" dir="ltr">
-{pdfBackendReport}
-              </pre>
+              <div className="mt-3">
+                <PdfAnalysisReport report={pdfBackendReport} isRTL={isRTL} />
+              </div>
             )}
           </div>
         )}
@@ -2248,6 +2248,7 @@ const ContractDetail = () => {
               { value: 'attachments', icon: Paperclip, label: isRTL ? 'المرفقات' : 'Attachments', count: attachments?.length || 0 },
               { value: 'amendments', icon: FileText, label: isRTL ? 'الملاحق' : 'Amendments', count: amendments?.length || 0 },
               { value: 'exports', icon: Download, label: isRTL ? 'سجل التصدير' : 'Export History', count: 0 },
+              { value: 'pdf-analysis', icon: ShieldCheck, label: isRTL ? 'تحليل التصدير' : 'Analysis Log', count: 0 },
             ].map(tab => (
               <TabsTrigger key={tab.value} value={tab.value} className="font-body rounded-lg data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-3 sm:px-4 py-2 gap-1.5 text-xs sm:text-sm">
                 <tab.icon className="w-3.5 h-3.5" />{tab.label} ({tab.count})
@@ -3075,6 +3076,11 @@ const ContractDetail = () => {
           {/* ── PDF Export History (PDF-QA2) ── */}
           <TabsContent value="exports">
             <ContractPdfExportHistory contractId={contract.id} isRTL={isRTL} />
+          </TabsContent>
+
+          {/* ── PDF Analysis Log (PDF-AR4) ── */}
+          <TabsContent value="pdf-analysis">
+            <ContractPdfAnalysisLog contractId={contract.id} isRTL={isRTL} />
           </TabsContent>
         </Tabs>
       </div>
