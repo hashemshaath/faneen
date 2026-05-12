@@ -1201,6 +1201,79 @@ const DashboardContracts = () => {
     onError: (err: Error) => toast.error(err.message),
   });
 
+  /* CT4C.5 — Accepted invitations awaiting contract completion. */
+  type AcceptedInvitationRow = {
+    id: string;
+    ref_id: string;
+    email_lower: string;
+    recipient_name: string | null;
+    work_type: string | null;
+    template_version_id: string | null;
+    accepted_at: string | null;
+    status: string;
+    bound_contract_id: string | null;
+  };
+  const { data: acceptedInvitations = [], refetch: refetchAcceptedInvites } = useQuery({
+    queryKey: ['accepted-invitations', user?.id],
+    enabled: !!user?.id,
+    refetchInterval: 30000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('client_invitations')
+        .select('id,ref_id,email_lower,recipient_name,work_type,template_version_id,accepted_at,status,bound_contract_id')
+        .eq('status', 'accepted')
+        .is('bound_contract_id', null)
+        .order('accepted_at', { ascending: false })
+        .limit(20);
+      if (error) throw error;
+      return (data || []) as AcceptedInvitationRow[];
+    },
+  });
+
+  /* Poll the awaiting pendingInvite so the provider sees acceptance live. */
+  const { data: pendingInviteStatus } = useQuery({
+    queryKey: ['pending-invite-status', pendingInvite?.id],
+    enabled: !!pendingInvite?.id,
+    refetchInterval: 15000,
+    queryFn: async () => {
+      if (!pendingInvite?.id) return null;
+      const { data, error } = await supabase
+        .from('client_invitations')
+        .select('id,status,accepted_at,bound_contract_id')
+        .eq('id', pendingInvite.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+  const pendingInviteAccepted = pendingInviteStatus?.status === 'accepted' && !pendingInviteStatus?.bound_contract_id;
+
+  const completeFromInviteMutation = useMutation({
+    mutationFn: async (inviteId: string) => {
+      const { data, error } = await supabase.rpc('complete_contract_from_invitation', { _invite_id: inviteId });
+      if (error) throw error;
+      return data as string;
+    },
+    onSuccess: (contractId) => {
+      toast.success(isRTL ? 'تم إنشاء العقد من الدعوة' : 'Contract created from invitation');
+      queryClient.invalidateQueries({ queryKey: ['accepted-invitations', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['provider-contracts'] });
+      // Reset invite state if this was the active awaiting invite
+      setPendingInvite(null);
+      setInviteMode('idle');
+      setInviteForm({ email: '', name: '', phone: '' });
+      navigate(`/contracts/${contractId}`);
+    },
+    onError: (err: Error) => {
+      const msg = String(err.message || '');
+      if (msg.includes('forbidden')) toast.error(isRTL ? 'غير مصرح' : 'Not authorized');
+      else if (msg.includes('invitation_not_accepted')) toast.error(isRTL ? 'الدعوة غير مقبولة بعد' : 'Invitation not yet accepted');
+      else if (msg.includes('draft_payload_missing')) toast.error(isRTL ? 'لا توجد مسودة محفوظة لهذه الدعوة' : 'No saved draft for this invitation');
+      else if (msg.includes('business_ownership_invalid')) toast.error(isRTL ? 'الصلاحية على المنشأة غير صالحة' : 'Business ownership invalid');
+      else toast.error(msg);
+    },
+  });
+
   const approveMutation = useMutation({
     mutationFn: async (contract: ContractWithRole) => {
       // C6.4a — go through SECURITY DEFINER RPC.
