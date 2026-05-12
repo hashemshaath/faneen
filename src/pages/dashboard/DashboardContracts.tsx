@@ -1099,6 +1099,107 @@ const DashboardContracts = () => {
     onError: (err: Error) => toast.error(err.message),
   });
 
+  /* CT4C.3 — Client invitation mutations. */
+  const sendInviteMutation = useMutation({
+    mutationFn: async () => {
+      const email = inviteForm.email.trim().toLowerCase();
+      if (!email) throw new Error(isRTL ? 'البريد الإلكتروني مطلوب' : 'Email is required');
+      const draft = serializeDraftPayload({
+        form,
+        templateVersionId: effectiveVersion?.version_id ?? null,
+        workType: selectedWorkType || null,
+        pricingMethod: selectedPricingMethod,
+      });
+      const { data, error } = await supabase.rpc('create_client_invitation', {
+        _email: email,
+        _name: inviteForm.name.trim() || null,
+        _phone: inviteForm.phone.trim() || null,
+        _business_id: businessId || null,
+        _draft_payload: Object.keys(draft).length > 0 ? draft : null,
+        _template_version_id: effectiveVersion?.version_id ?? null,
+        _work_type: selectedWorkType || null,
+      });
+      if (error) throw error;
+      const result = data as {
+        already_registered: boolean;
+        user_id?: string | null;
+        invite_id?: string | null;
+        ref_id?: string | null;
+        token?: string | null;
+        expires_at?: string | null;
+      };
+      if (result.already_registered) {
+        return { alreadyRegistered: true as const };
+      }
+      // Dispatch invite email via dedicated edge function. Token is sent
+      // server-side once — never persisted in client state.
+      const { error: notifyErr } = await supabase.functions.invoke('notify-client-invitation', {
+        body: { invite_id: result.invite_id, token: result.token, kind: 'created' },
+      });
+      if (notifyErr) throw notifyErr;
+      return {
+        alreadyRegistered: false as const,
+        invite: {
+          id: result.invite_id!,
+          ref_id: result.ref_id!,
+          email_lower: email,
+          expires_at: result.expires_at!,
+          reminder_count: 0,
+        } as PendingInvite,
+      };
+    },
+    onSuccess: (res) => {
+      if (res.alreadyRegistered) {
+        toast.info(isRTL ? 'هذا البريد مسجل بالفعل. يرجى البحث عنه واختياره.' : 'This email is already registered. Please search for the client and select them.');
+        setInviteMode('idle');
+        return;
+      }
+      setPendingInvite(res.invite);
+      setInviteMode('awaiting');
+      toast.success(isRTL ? 'تم إرسال الدعوة بنجاح' : 'Invitation sent successfully');
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
+  const resendInviteMutation = useMutation({
+    mutationFn: async () => {
+      if (!pendingInvite) throw new Error('No pending invite');
+      const { data, error } = await supabase.rpc('resend_client_invitation', { _id: pendingInvite.id });
+      if (error) throw error;
+      const result = data as { invite_id: string; ref_id: string; token: string; reminder_count: number; expires_at: string };
+      const { error: notifyErr } = await supabase.functions.invoke('notify-client-invitation', {
+        body: { invite_id: result.invite_id, token: result.token, kind: 'reminder' },
+      });
+      if (notifyErr) throw notifyErr;
+      return result;
+    },
+    onSuccess: (res) => {
+      setPendingInvite(p => p ? { ...p, reminder_count: res.reminder_count, expires_at: res.expires_at } : p);
+      toast.success(isRTL ? 'تم إرسال التذكير' : 'Reminder sent');
+    },
+    onError: (err: Error) => {
+      const msg = String(err.message || '');
+      if (msg.includes('cooldown')) toast.error(isRTL ? 'يرجى الانتظار قبل إعادة الإرسال (60 ثانية)' : 'Please wait before resending (60s cooldown)');
+      else if (msg.includes('reminder_limit')) toast.error(isRTL ? 'تم الوصول للحد الأقصى من التذكيرات' : 'Reminder limit reached');
+      else toast.error(msg);
+    },
+  });
+
+  const cancelInviteMutation = useMutation({
+    mutationFn: async () => {
+      if (!pendingInvite) throw new Error('No pending invite');
+      const { error } = await supabase.rpc('cancel_client_invitation', { _id: pendingInvite.id });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success(isRTL ? 'تم إلغاء الدعوة' : 'Invitation cancelled');
+      setPendingInvite(null);
+      setInviteMode('idle');
+      setInviteForm({ email: '', name: '', phone: '' });
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
   const approveMutation = useMutation({
     mutationFn: async (contract: ContractWithRole) => {
       // C6.4a — go through SECURITY DEFINER RPC.
