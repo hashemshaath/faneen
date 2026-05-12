@@ -1950,6 +1950,7 @@ const ContractDetail = () => {
               { value: 'notes', icon: StickyNote, label: isRTL ? 'الملاحظات' : 'Notes', count: notes?.length || 0 },
               { value: 'attachments', icon: Paperclip, label: isRTL ? 'المرفقات' : 'Attachments', count: attachments?.length || 0 },
               { value: 'amendments', icon: FileText, label: isRTL ? 'الملاحق' : 'Amendments', count: amendments?.length || 0 },
+              { value: 'exports', icon: Download, label: isRTL ? 'سجل التصدير' : 'Export History', count: 0 },
             ].map(tab => (
               <TabsTrigger key={tab.value} value={tab.value} className="font-body rounded-lg data-[state=active]:bg-accent data-[state=active]:text-accent-foreground px-3 sm:px-4 py-2 gap-1.5 text-xs sm:text-sm">
                 <tab.icon className="w-3.5 h-3.5" />{tab.label} ({tab.count})
