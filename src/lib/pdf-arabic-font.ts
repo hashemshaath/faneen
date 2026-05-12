@@ -112,9 +112,16 @@ export const getArabicTableStyles = (isRTL: boolean, fontLoaded: boolean) => ({
   halign: isRTL ? 'right' as const : 'left' as const,
 });
 
-export const normalizeArabicPdfTextLayer = (doc: { internal?: { getFont?: (fontName?: string, fontStyle?: string) => { metadata?: { toUnicode?: Record<string, number> } } | undefined } }) => {
+type JsPdfFontLookup = {
+  internal?: {
+    getFont?: (fontName?: string, fontStyle?: string) => { metadata?: { toUnicode?: Record<string, number> } } | undefined;
+  };
+};
+
+export const normalizeArabicPdfTextLayer = (doc: unknown) => {
+  const pdf = doc as JsPdfFontLookup;
   for (const style of ARABIC_FONT_STYLES) {
-    const map = doc.internal?.getFont?.(ARABIC_FONT_NAME, style)?.metadata?.toUnicode;
+    const map = pdf.internal?.getFont?.(ARABIC_FONT_NAME, style)?.metadata?.toUnicode;
     if (!map) continue;
     for (const key of Object.keys(map)) {
       const value = map[key];
