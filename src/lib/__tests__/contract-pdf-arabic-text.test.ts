@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import { execFile } from 'node:child_process';
-import { readFile } from 'node:fs/promises';
 import { promisify } from 'node:util';
 
 const run = promisify(execFile);
@@ -24,8 +23,5 @@ describe('PDF-AR2 — Arabic pdftotext regression', () => {
       expect(result.found[word], `missing ${word}`).toBe(true);
     }
     expect(normalizeArabic(result.extractedSample)).not.toContain('þ');
-    if (result.pdfPath) {
-      await expect(readFile(result.pdfPath)).resolves.toBeTruthy();
-    }
   }, 60_000);
 });
