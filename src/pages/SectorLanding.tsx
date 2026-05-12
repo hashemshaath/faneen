@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { Link, useParams, Navigate } from 'react-router-dom';
+import React, { useCallback, useMemo } from 'react';
+import { Link, useParams, Navigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -12,7 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Building2, MapPin, Search as SearchIcon, Star, ShieldCheck, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Building2, MapPin, Search as SearchIcon, Star, ShieldCheck, ArrowLeft, ArrowRight, X } from 'lucide-react';
 import { VerifiedBadge } from '@/components/common/VerifiedBadge';
 import { SECTOR_KEYWORDS, ALL_SECTORS, type SectorSlug, getSectorMeta } from '@/lib/sector-keywords';
 import { getSectorGuides } from '@/lib/sector-guides';
@@ -62,11 +62,46 @@ const SectorLanding: React.FC = () => {
 
   useSectorPageviewTracking(sector?.slug ?? null, null);
 
-  const [query, setQuery] = useState('');
-  const [cityId, setCityId] = useState<string>('all');
-  const [verifiedOnly, setVerifiedOnly] = useState(false);
-  const [minRating, setMinRating] = useState(0);
-  const [page, setPage] = useState(1);
+  // ── URL-driven state ────────────────────────────────────────────────────
+  // Filters live in the query string so users can share/bookmark a filtered
+  // view, the browser back/forward buttons "just work", and switching cities
+  // updates the page in-place (no full reload).
+  const [searchParams, setSearchParams] = useSearchParams();
+  const query = searchParams.get('q') ?? '';
+  const cityId = searchParams.get('city') ?? 'all';
+  const verifiedOnly = searchParams.get('verified') === '1';
+  const minRating = Number(searchParams.get('rating') ?? '0') || 0;
+  const page = Math.max(1, Number(searchParams.get('page') ?? '1') || 1);
+
+  const updateParams = useCallback(
+    (patch: Record<string, string | number | boolean | null | undefined>) => {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          for (const [k, v] of Object.entries(patch)) {
+            if (v === null || v === undefined || v === '' || v === false || v === 'all' || v === 0 || v === '0') {
+              next.delete(k);
+            } else {
+              next.set(k, String(v));
+            }
+          }
+          // Any filter change resets pagination unless `page` was explicitly set.
+          if (!('page' in patch)) next.delete('page');
+          return next;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
+
+  const setQuery = (v: string) => updateParams({ q: v });
+  const setCityId = (v: string) => updateParams({ city: v });
+  const setVerifiedOnly = (v: boolean) => updateParams({ verified: v });
+  const setMinRating = (v: number) => updateParams({ rating: v });
+  const setPage = (v: number) => updateParams({ page: v > 1 ? v : null });
+  const clearAllFilters = () =>
+    setSearchParams(new URLSearchParams(), { replace: true });
 
   // Resolve the category ids for this sector (one or more rows in `categories`).
   const categorySlugs = sector ? SECTOR_TO_CATEGORY_SLUGS[sector.slug] : [];
@@ -374,14 +409,14 @@ const SectorLanding: React.FC = () => {
             <Input
               dir="auto"
               value={query}
-              onChange={(e) => { setQuery(e.target.value); setPage(1); }}
+              onChange={(e) => setQuery(e.target.value)}
               placeholder={isRTL ? `ابحث داخل ${meta.name}…` : `Search within ${meta.name}…`}
               className="h-11 ps-9 rounded-xl"
             />
           </div>
           <select
             value={cityId}
-            onChange={(e) => { setCityId(e.target.value); setPage(1); }}
+            onChange={(e) => setCityId(e.target.value)}
             className="h-11 rounded-xl border bg-background px-3 text-sm min-w-[160px]"
             aria-label={isRTL ? 'المدينة' : 'City'}
           >
@@ -394,7 +429,7 @@ const SectorLanding: React.FC = () => {
           </select>
           <select
             value={String(minRating)}
-            onChange={(e) => { setMinRating(Number(e.target.value)); setPage(1); }}
+            onChange={(e) => setMinRating(Number(e.target.value))}
             className="h-11 rounded-xl border bg-background px-3 text-sm"
             aria-label={isRTL ? 'التقييم' : 'Rating'}
           >
@@ -407,12 +442,77 @@ const SectorLanding: React.FC = () => {
             type="button"
             variant={verifiedOnly ? 'default' : 'outline'}
             className="h-11 rounded-xl gap-2"
-            onClick={() => { setVerifiedOnly((v) => !v); setPage(1); }}
+            onClick={() => setVerifiedOnly(!verifiedOnly)}
           >
             <ShieldCheck className="w-4 h-4" />
             {isRTL ? 'موثّق فقط' : 'Verified only'}
           </Button>
         </div>
+
+        {/* Quick city filter — pill row, updates URL in-place (no reload) */}
+        {topCities.length > 0 && (
+          <div className="container px-4 pb-4">
+            <div className="flex items-center gap-2 mb-2">
+              <MapPin className="w-3.5 h-3.5 text-muted-foreground" />
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                {isRTL ? 'فلترة سريعة بالمدينة' : 'Quick city filter'}
+              </span>
+              {(cityId !== 'all' || query || verifiedOnly || minRating > 0) && (
+                <button
+                  type="button"
+                  onClick={clearAllFilters}
+                  className="ms-auto inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <X className="w-3 h-3" />
+                  {isRTL ? 'مسح الفلاتر' : 'Clear filters'}
+                </button>
+              )}
+            </div>
+            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+              <button
+                type="button"
+                onClick={() => setCityId('all')}
+                className={`shrink-0 h-9 px-3 rounded-full border text-xs font-medium transition-all ${
+                  cityId === 'all'
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'bg-background hover:bg-muted border-border'
+                }`}
+              >
+                {isRTL ? `كل المدن (${businesses.length})` : `All cities (${businesses.length})`}
+              </button>
+              {topCities.map((c) => {
+                const active = cityId === c.id;
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setCityId(c.id)}
+                    className={`shrink-0 h-9 px-3 rounded-full border text-xs font-medium inline-flex items-center gap-1.5 transition-all ${
+                      active
+                        ? 'bg-primary text-primary-foreground border-primary'
+                        : 'bg-background hover:bg-muted border-border'
+                    }`}
+                    aria-pressed={active}
+                  >
+                    <MapPin className="w-3 h-3" />
+                    {language === 'ar' ? c.name_ar : (c.name_en || c.name_ar)}
+                    <span className={active ? 'text-primary-foreground/80' : 'text-muted-foreground'}>
+                      ({c.count})
+                    </span>
+                    {active && <X className="w-3 h-3 ms-0.5" onClick={(e) => { e.stopPropagation(); setCityId('all'); }} />}
+                  </button>
+                );
+              })}
+            </div>
+            {selectedCityName && (
+              <p className="text-xs text-muted-foreground mt-2">
+                {isRTL
+                  ? `تعرض الآن مزودي ${meta.name} في ${selectedCityName} فقط.`
+                  : `Showing ${meta.name} providers in ${selectedCityName} only.`}
+              </p>
+            )}
+          </div>
+        )}
       </section>
 
       {/* City chips → deep link to /search for indexable combos */}
@@ -557,7 +657,7 @@ const SectorLanding: React.FC = () => {
             <Button
               variant="outline" size="sm"
               disabled={page === 1}
-              onClick={() => { setPage((p) => Math.max(1, p - 1)); window.scrollTo({ top: 200, behavior: 'smooth' }); }}
+              onClick={() => { setPage(Math.max(1, page - 1)); window.scrollTo({ top: 200, behavior: 'smooth' }); }}
             >
               {isRTL ? 'السابق' : 'Previous'}
             </Button>
@@ -565,7 +665,7 @@ const SectorLanding: React.FC = () => {
             <Button
               variant="outline" size="sm"
               disabled={page === totalPages}
-              onClick={() => { setPage((p) => Math.min(totalPages, p + 1)); window.scrollTo({ top: 200, behavior: 'smooth' }); }}
+              onClick={() => { setPage(Math.min(totalPages, page + 1)); window.scrollTo({ top: 200, behavior: 'smooth' }); }}
             >
               {isRTL ? 'التالي' : 'Next'}
             </Button>
