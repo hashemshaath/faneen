@@ -185,6 +185,7 @@ const ContractDetail = () => {
   const { t, language, isRTL } = useLanguage();
   const { user, isAdmin } = useAuth();
   const queryClient = useQueryClient();
+  const [isExportingPDF, setIsExportingPDF] = useState(false);
   const navigate = useNavigate();
 
   const [showMaintForm, setShowMaintForm] = useState(false);
