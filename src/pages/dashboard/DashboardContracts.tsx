@@ -52,6 +52,9 @@ import {
   getSuggestedPricingMethod,
   type BoqGroupKey,
 } from '@/lib/contract-boq';
+import { ClientPicker, type SelectedClient } from '@/components/contracts/ClientPicker';
+import { WORK_TYPES, getWorkType, pickTemplateForWorkType, type WorkTypeKey } from '@/lib/contract-work-types';
+import { getStatusGuidance } from '@/lib/contract-status-guidance';
 
 type ContractRow = Database['public']['Tables']['contracts']['Row'];
 type MilestoneRow = Database['public']['Tables']['contract_milestones']['Row'];
