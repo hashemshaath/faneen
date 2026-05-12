@@ -53,6 +53,7 @@ export const FooterLinks = () => {
           { label: isRTL ? 'المشاريع' : 'Projects', to: '/projects' },
           { label: isRTL ? 'المدونة' : 'Blog', to: '/blog' },
           { label: isRTL ? 'الأدلة الفنية' : 'Technical Guides', to: '/guides' },
+          { label: isRTL ? 'الأسعار والمقارنة' : 'Prices & Compare', to: '/services' },
           { label: isRTL ? 'العروض' : 'Offers', to: '/offers' },
           { label: t('footer.contracts'), to: '/contracts' },
           { label: isRTL ? 'العضويات' : 'Membership', to: '/membership' },
