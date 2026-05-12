@@ -1,0 +1,37 @@
+# PDF-AR4: Block merges that regress Arabic PDF rendering.
+# Builds a contract-style PDF (scripts/verify-pdf-arabic.mjs), runs
+# pdftotext, and fails the job if mojibake (þ runs) is detected or any
+# required Arabic field word (العقد، الضريبة، الضمان، الشروط، الله، أحد)
+# is missing from the extracted text layer.
+name: PDF Arabic Verification
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  verify-pdf-arabic:
+    name: Verify Arabic PDF text layer
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install poppler-utils (provides pdftotext)
+        run: sudo apt-get update && sudo apt-get install -y poppler-utils
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run Arabic PDF verification (mojibake gate)
+        run: npm run verify:pdf-arabic
