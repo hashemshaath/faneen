@@ -5689,6 +5689,41 @@ export type Database = {
           },
         ]
       }
+      contract_amendment_audit_safe: {
+        Row: {
+          action: string | null
+          amendment_id: string | null
+          created_at: string | null
+          id: string | null
+          new_status: string | null
+          old_status: string | null
+        }
+        Insert: {
+          action?: string | null
+          amendment_id?: string | null
+          created_at?: string | null
+          id?: string | null
+          new_status?: string | null
+          old_status?: string | null
+        }
+        Update: {
+          action?: string | null
+          amendment_id?: string | null
+          created_at?: string | null
+          id?: string | null
+          new_status?: string | null
+          old_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_amendment_audit_amendment_id_fkey"
+            columns: ["amendment_id"]
+            isOneToOne: false
+            referencedRelation: "contract_amendments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reviews_public: {
         Row: {
           business_id: string | null
