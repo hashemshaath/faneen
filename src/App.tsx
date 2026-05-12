@@ -101,6 +101,7 @@ const Privacy = lazyRetry(() => import("./pages/Privacy"));
 const Terms = lazyRetry(() => import("./pages/Terms"));
 const Forbidden = lazyRetry(() => import("./pages/Forbidden"));
 const Unsubscribe = lazyRetry(() => import("./pages/Unsubscribe"));
+const VerifyContract = lazyRetry(() => import("./pages/VerifyContract"));
 const Diagnostics = lazyRetry(() => import("./pages/Diagnostics"));
 const ForProviders = lazyRetry(() => import("./pages/ForProviders"));
 const DashboardCommunicationPreferences = lazyRetry(() => import("./pages/dashboard/DashboardCommunicationPreferences"));
