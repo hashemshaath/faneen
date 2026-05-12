@@ -348,6 +348,27 @@ const ContractDetail = () => {
     },
     enabled: !!id && !!user,
   });
+
+  /* CT4 — Fetch template metadata for display (only if contract has a template). */
+  const contractAny = contract as unknown as {
+    template_version_id?: string | null;
+    pricing_method?: string | null;
+    service_category_id?: string | null;
+  } | null | undefined;
+  const templateVersionId = contractAny?.template_version_id ?? null;
+  const { data: templateMeta } = useQuery({
+    queryKey: ['contract-template-meta', templateVersionId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('contract_template_versions')
+        .select('id, version_number, language_precedence, contract_templates!inner(name_ar, name_en, category, slug)')
+        .eq('id', templateVersionId!)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!templateVersionId,
+  });
+
   const acceptMutation = useMutation({
     mutationFn: async () => {
       // C6.4a — go through SECURITY DEFINER RPC instead of direct table update.
