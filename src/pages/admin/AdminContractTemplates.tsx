@@ -17,8 +17,9 @@ import {
   SectionsClausesPanel, PricingRulesPanel, RequiredFieldsPanel,
   AttachmentsPanel, PreviewPanel,
 } from '@/components/admin/contract-templates/EditorPanels';
+import { LegalReviewPanel } from '@/components/admin/contract-templates/LegalReviewPanel';
 import {
-  CTTemplate, CTVersion, CTVersionStatus, CTMeasurementMethod,
+  CTTemplate, CTVersion, CTMeasurementMethod,
   VERSION_STATUS_META,
 } from '@/components/admin/contract-templates/types';
 
@@ -204,34 +205,6 @@ const AdminContractTemplates: React.FC = () => {
       qc.invalidateQueries({ queryKey: ['ct-versions', selectedTemplateId] });
       setSelectedVersionId(newId);
       toast.success(isRTL ? 'تم إنشاء مسودة جديدة' : 'Draft version created');
-    },
-    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Failed'),
-  });
-
-  const setVersionStatus = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: CTVersionStatus }) => {
-      const patch: {
-        status: CTVersionStatus;
-        published_at?: string;
-        published_by?: string | null;
-        archived_at?: string;
-      } = { status };
-      if (status === 'published') {
-        patch.published_at = new Date().toISOString();
-        patch.published_by = user?.id || null;
-      }
-      if (status === 'archived') patch.archived_at = new Date().toISOString();
-      const { error } = await supabase.from('contract_template_versions').update(patch).eq('id', id);
-      if (error) throw error;
-      if (status === 'published' && selectedTemplate) {
-        await supabase.from('contract_templates')
-          .update({ current_version_id: id }).eq('id', selectedTemplate.id);
-      }
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['ct-versions', selectedTemplateId] });
-      qc.invalidateQueries({ queryKey: ['ct-templates'] });
-      toast.success(isRTL ? 'تم التحديث' : 'Updated');
     },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Failed'),
   });
