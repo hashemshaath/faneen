@@ -347,6 +347,29 @@ const BlogPost = () => {
     };
   }, [post, language, author]));
 
+  // FAQ structured data — only when the post carries Q/A pairs (typically guides).
+  const faqItems = useMemo(() => {
+    const raw = (post as { faq?: unknown } | null)?.faq;
+    if (!Array.isArray(raw)) return [];
+    return raw
+      .filter((it): it is { q: string; a: string } => !!it && typeof (it as { q?: unknown }).q === 'string' && typeof (it as { a?: unknown }).a === 'string')
+      .map((it) => ({ q: it.q.trim(), a: it.a.trim() }))
+      .filter((it) => it.q && it.a);
+  }, [post]);
+
+  useMultiJsonLd(useMemo(() => {
+    if (faqItems.length === 0) return null;
+    return [{
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: faqItems.map((it) => ({
+        '@type': 'Question',
+        name: it.q,
+        acceptedAnswer: { '@type': 'Answer', text: it.a },
+      })),
+    }];
+  }, [faqItems]));
+
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
   const title = post ? (language === 'ar' ? post.title_ar : (post.title_en || post.title_ar)) : '';
   const content = post ? (language === 'ar' ? (post.content_ar || '') : (post.content_en || post.content_ar || '')) : '';
