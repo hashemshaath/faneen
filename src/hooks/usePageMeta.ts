@@ -120,20 +120,41 @@ export function useJsonLd(data: Record<string, any> | null) {
 export function useMultiJsonLd(dataArray: Record<string, any>[] | null) {
   useEffect(() => {
     if (!dataArray || dataArray.length === 0) return;
-    const containerId = 'json-ld-multi';
-    // Remove old
-    document.querySelectorAll(`script[data-multi-ld]`).forEach(el => el.remove());
-    
-    dataArray.forEach((data, i) => {
-      const script = document.createElement('script');
-      script.type = 'application/ld+json';
-      script.setAttribute('data-multi-ld', String(i));
-      script.textContent = JSON.stringify(data);
-      document.head.appendChild(script);
-    });
+    // Defer writing JSON-LD blocks until the browser is idle so they
+    // never compete with the LCP paint (search engines still see them
+    // on first JS execution; social crawlers don't read JSON-LD anyway).
+    const writeBlocks = () => {
+      document.querySelectorAll('script[data-multi-ld]').forEach((el) => el.remove());
+      const frag = document.createDocumentFragment();
+      dataArray.forEach((data, i) => {
+        const script = document.createElement('script');
+        script.type = 'application/ld+json';
+        script.setAttribute('data-multi-ld', String(i));
+        script.textContent = JSON.stringify(data);
+        frag.appendChild(script);
+      });
+      document.head.appendChild(frag);
+    };
+
+    const ric = (window as unknown as {
+      requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+      cancelIdleCallback?: (id: number) => void;
+    }).requestIdleCallback;
+    let idleId: number | null = null;
+    let timeoutId: number | null = null;
+    if (typeof ric === 'function') {
+      idleId = ric(writeBlocks, { timeout: 1500 });
+    } else {
+      timeoutId = window.setTimeout(writeBlocks, 0);
+    }
 
     return () => {
-      document.querySelectorAll(`script[data-multi-ld]`).forEach(el => el.remove());
+      if (idleId !== null) {
+        const cic = (window as unknown as { cancelIdleCallback?: (id: number) => void }).cancelIdleCallback;
+        cic?.(idleId);
+      }
+      if (timeoutId !== null) window.clearTimeout(timeoutId);
+      document.querySelectorAll('script[data-multi-ld]').forEach((el) => el.remove());
     };
   }, [dataArray]);
 }
