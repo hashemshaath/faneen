@@ -263,6 +263,37 @@ export const exportContractPDF = async (data: ContractExportData) => {
   });
   y = (doc as any).lastAutoTable.finalY + 12;
 
+  // ── CT6: Template metadata (compact) ──
+  if (data.template) {
+    const t = data.template;
+    const tName = data.isRTL ? (t.nameAr || t.nameEn) : (t.nameEn || t.nameAr);
+    if (tName || t.versionNumber || t.category || t.pricingMethod || t.languagePrecedence) {
+      sectionTitle(data.isRTL ? 'قالب العقد' : 'Contract Template');
+      const rows: string[][] = [];
+      rows.push([data.isRTL ? 'القالب' : 'Template', tName || (data.isRTL ? 'عام / إرث' : 'General / Legacy')]);
+      if (t.versionNumber) rows.push([data.isRTL ? 'الإصدار' : 'Version', `v${t.versionNumber}`]);
+      if (t.category)      rows.push([data.isRTL ? 'الفئة' : 'Category', String(t.category)]);
+      if (t.pricingMethod) rows.push([data.isRTL ? 'طريقة التسعير' : 'Pricing method', labelForMethod(t.pricingMethod, data.isRTL)]);
+      if (t.languagePrecedence) rows.push([data.isRTL ? 'لغة الأسبقية' : 'Language precedence', t.languagePrecedence.toUpperCase()]);
+      autoTable(doc, {
+        startY: y, body: rows, theme: 'plain',
+        styles: { fontSize: 9, cellPadding: 3.5, ...rtlStyles, lineColor: BORDER_RGB, lineWidth: 0.2 },
+        columnStyles: { 0: { fontStyle: 'bold', cellWidth: 55, textColor: MUTED_RGB } },
+        margin: { left: 15, right: 15 },
+        alternateRowStyles: { fillColor: SURFACE2_RGB },
+      });
+      y = (doc as any).lastAutoTable.finalY + 12;
+    }
+  } else {
+    // Legacy contract — single-line note (no section header to avoid noise).
+    sectionTitle(data.isRTL ? 'قالب العقد' : 'Contract Template');
+    doc.setFontSize(8);
+    doc.setTextColor(mutedR, mutedG, mutedB);
+    const note = data.isRTL ? 'القالب: عام / إرث' : 'Template: General / Legacy';
+    doc.text(note, data.isRTL ? w - 15 : 15, y, { align: data.isRTL ? 'right' : 'left' });
+    y += 10;
+  }
+
   // ── Financial ──
   sectionTitle(data.isRTL ? 'البيانات المالية' : 'Financial Summary');
   const _financial = calculateVatBreakdown({ amount: data.totalAmount, vatRate: data.vatRate ?? 15, vatInclusive: data.vatInclusive ?? false });
