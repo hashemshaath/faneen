@@ -81,6 +81,16 @@ export const AmendmentHistoryPanel = ({
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState('');
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [confirmingApplyId, setConfirmingApplyId] = useState<string | null>(null);
+
+  const BLOCK_REASON: Record<string, { ar: string; en: string }> = {
+    overpaid_refund_required: {
+      ar: 'لا يمكن تطبيق التعديل لأن المبلغ الجديد أقل من إجمالي الدفعات المدفوعة.',
+      en: 'Cannot apply: new total is below the total already paid.',
+    },
+    invalid_new_amount: { ar: 'قيمة العقد الجديدة غير صالحة.', en: 'New contract amount is invalid.' },
+    missing_new_amount: { ar: 'قيمة العقد الجديدة غير محددة.', en: 'New contract amount is missing.' },
+  };
 
   const ids = amendments.map(a => a.id);
 
