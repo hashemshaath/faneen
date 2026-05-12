@@ -27,9 +27,9 @@ import { promisify } from 'node:util';
 // the default helvetica font so RTL fixtures still build.
 vi.mock('@/lib/pdf-arabic-font', () => ({
   ArabicPdfFontError: class ArabicPdfFontError extends Error {},
-  registerArabicFont: async () => false,
-  setupArabicDoc: async () => false,
-  verifyArabicFontReady: () => false,
+  registerArabicFont: async () => true,
+  setupArabicDoc: async () => true,
+  verifyArabicFontReady: () => true,
   getArabicTableStyles: () => ({}),
   normalizeArabicPdfTextLayer: () => {},
   printContractSection: () => {},
