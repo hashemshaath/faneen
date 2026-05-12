@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
-import { ShieldCheck, Copy, Check, ExternalLink, AlertCircle, Code2, BarChart3, MousePointerClick, Globe } from 'lucide-react';
+import { ShieldCheck, Copy, Check, ExternalLink, AlertCircle, Code2, BarChart3, MousePointerClick, Globe, Eye, Percent } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNoIndex } from '@/hooks/useNoIndex';
 
@@ -114,6 +114,22 @@ const DashboardBadge: React.FC = () => {
     },
   });
 
+  // Impressions — every badge render fires the `badge-pixel` edge function.
+  const { data: impressions = [] } = useQuery({
+    queryKey: ['badge-impressions', business?.id],
+    enabled: !!business?.id,
+    refetchInterval: 60_000,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('badge_impressions')
+        .select('id, variant, referrer_host, created_at')
+        .eq('business_id', business!.id)
+        .order('created_at', { ascending: false })
+        .limit(2000);
+      return data ?? [];
+    },
+  });
+
   const clickStats = useMemo(() => {
     const now = Date.now();
     const day = 24 * 60 * 60 * 1000;
@@ -132,6 +148,24 @@ const DashboardBadge: React.FC = () => {
       .slice(0, 5);
     return { total: clicks.length, last7, last30, topReferrers };
   }, [clicks]);
+
+  const impressionStats = useMemo(() => {
+    const now = Date.now();
+    const day = 24 * 60 * 60 * 1000;
+    const last7 = impressions.filter((i) => now - new Date(i.created_at).getTime() <= 7 * day).length;
+    const last30 = impressions.filter((i) => now - new Date(i.created_at).getTime() <= 30 * day).length;
+    return { total: impressions.length, last7, last30 };
+  }, [impressions]);
+
+  // Click-Through Rate — clicks ÷ impressions. Guard against zero divisions.
+  const ctr = useMemo(() => {
+    const r = (c: number, i: number) => (i > 0 ? (c / i) * 100 : 0);
+    return {
+      total: r(clickStats.total, impressionStats.total),
+      last7: r(clickStats.last7, impressionStats.last7),
+      last30: r(clickStats.last30, impressionStats.last30),
+    };
+  }, [clickStats, impressionStats]);
 
   const displayName = useMemo(() => {
     if (!business) return '';
