@@ -30,7 +30,10 @@ const isTrueTypeSignature = (bytes: Uint8Array): boolean => {
   // 0x00010000 = TrueType, 'OTTO' = OpenType-CFF, 'true'/'typ1' = legacy TTF
   if (b0 === 0x00 && b1 === 0x01 && b2 === 0x00 && b3 === 0x00) return true;
   if (b0 === 0x4F && b1 === 0x54 && b2 === 0x54 && b3 === 0x4F) return true; // OTTO
-  if (b0 === 0x74 && b1 === 0x72 && b2 === 0x75 && b3 === 0x65
+  if (b0 === 0x74 && b1 === 0x72 && b2 === 0x75 && b3 === 0x65) return true; // 'true'
+  if (b0 === 0x74 && b1 === 0x79 && b2 === 0x70 && b3 === 0x31) return true; // 'typ1'
+  return false;
+};
 
 export const registerArabicFont = async (doc: any): Promise<boolean> => {
   if (fontLoadFailed) return false;
@@ -50,6 +53,9 @@ export const registerArabicFont = async (doc: any): Promise<boolean> => {
       if (!response.ok) continue;
       const buffer = await response.arrayBuffer();
       const bytes = new Uint8Array(buffer);
+      // Reject anything that isn't a real TTF/OTF — prevents the
+      // historical WOFF-as-TTF mojibake regression.
+      if (!isTrueTypeSignature(bytes)) continue;
       let binary = '';
       for (let i = 0; i < bytes.length; i++) {
         binary += String.fromCharCode(bytes[i]);
