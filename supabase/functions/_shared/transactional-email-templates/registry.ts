@@ -43,6 +43,9 @@ import { template as contractAmendmentApproved } from './contract-amendment-appr
 import { template as contractAmendmentApplied } from './contract-amendment-applied.tsx'
 import { template as contractAmendmentRejected } from './contract-amendment-rejected.tsx'
 import { template as contractAmendmentCancelled } from './contract-amendment-cancelled.tsx'
+import { template as clientContractInvite } from './client-contract-invite.tsx'
+import { template as clientInviteReminder } from './client-invite-reminder.tsx'
+import { template as clientInviteAccepted } from './client-invite-accepted.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'booking-confirmation': bookingConfirmation,
@@ -79,4 +82,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'contract-amendment-applied': contractAmendmentApplied,
   'contract-amendment-rejected': contractAmendmentRejected,
   'contract-amendment-cancelled': contractAmendmentCancelled,
+  'client-contract-invite': clientContractInvite,
+  'client-invite-reminder': clientInviteReminder,
+  'client-invite-accepted': clientInviteAccepted,
 }
