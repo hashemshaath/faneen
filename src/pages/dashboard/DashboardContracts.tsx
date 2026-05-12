@@ -2082,6 +2082,8 @@ const DashboardContracts = () => {
                                       <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => setShowAddLineItem(null)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
                                     </div>
                                   </div>
+                                    );
+                                  })()
                                 )}
 
                                 {/* Measurements List */}
