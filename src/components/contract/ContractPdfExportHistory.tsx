@@ -198,6 +198,13 @@ export const ContractPdfExportHistory: React.FC<Props> = ({ contractId, isRTL })
           </p>
         )}
 
+        {/* Retention notice */}
+        <p className="text-[10px] text-muted-foreground/80 italic">
+          {isRTL
+            ? 'يتم الاحتفاظ بسجل التصدير لأغراض التدقيق وفق سياسة المنصة.'
+            : 'Export history is retained for audit purposes according to platform policy.'}
+        </p>
+
         {/* List */}
         <ol className="space-y-1.5">
           {rows.map((r) => {
