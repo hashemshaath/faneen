@@ -2083,8 +2083,10 @@ const DashboardContracts = () => {
                   })()}
                 </div>
               )}
+              </div>
 
               {/* CT4 — Template selector (new contracts only) */}
+              <div ref={stepRefs.template} className="scroll-mt-24">
               {!editingId && publishedVersions.length > 0 && (
                 <div className="p-4 rounded-xl border border-border/40 bg-muted/20 space-y-3">
                   <div className="flex items-center gap-1.5">
@@ -2134,8 +2136,10 @@ const DashboardContracts = () => {
                   )}
                 </div>
               )}
+              </div>
 
-              {/* Titles */}
+              {/* Titles + descriptions + dates + supervisor + terms = Details step */}
+              <div ref={stepRefs.details} className="space-y-4 scroll-mt-24">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between flex-wrap gap-1">
