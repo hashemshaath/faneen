@@ -15,6 +15,10 @@ import { Badge } from '@/components/ui/badge';
 import { Building2, MapPin, Search as SearchIcon, Star, ShieldCheck, ArrowLeft, ArrowRight } from 'lucide-react';
 import { VerifiedBadge } from '@/components/common/VerifiedBadge';
 import { SECTOR_KEYWORDS, ALL_SECTORS, type SectorSlug, getSectorMeta } from '@/lib/sector-keywords';
+import { getSectorGuides } from '@/lib/sector-guides';
+import { SectorGuides } from '@/components/sector/SectorGuides';
+import { SectorTopTechnicians } from '@/components/sector/SectorTopTechnicians';
+import { SectorProjectExamples } from '@/components/sector/SectorProjectExamples';
 
 /**
  * Maps a sector slug → list of category slugs that should be included
@@ -217,6 +221,22 @@ const SectorLanding: React.FC = () => {
       ])!;
       const blocks: Record<string, unknown>[] = [breadcrumb, collection, faq];
       if (itemList) blocks.splice(2, 0, itemList);
+      // HowTo JSON-LD per buyer-guide (search engines pick up rich results).
+      const guides = getSectorGuides(sector.slug);
+      for (const g of guides) {
+        blocks.push({
+          '@context': 'https://schema.org',
+          '@type': 'HowTo',
+          name: isRTL ? g.title_ar : g.title_en,
+          description: isRTL ? g.excerpt_ar : g.excerpt_en,
+          inLanguage: isRTL ? 'ar' : 'en',
+          step: (isRTL ? g.steps_ar : g.steps_en).map((s, i) => ({
+            '@type': 'HowToStep',
+            position: i + 1,
+            name: s,
+          })),
+        });
+      }
       return blocks;
     }, [sector, meta, isRTL, language, filtered]),
   );
@@ -229,6 +249,15 @@ const SectorLanding: React.FC = () => {
   if (!sector || !meta) return null;
 
   const Arrow = isRTL ? ArrowLeft : ArrowRight;
+  const guides = getSectorGuides(sector.slug);
+  const topTechnicians = useMemo(
+    () =>
+      [...businesses]
+        .filter((b) => b.is_verified && Number(b.rating_avg ?? 0) >= 4)
+        .sort((a, b) => Number(b.rating_avg ?? 0) - Number(a.rating_avg ?? 0))
+        .slice(0, 4),
+    [businesses],
+  );
   const relatedSectors = sector.relatedSlugs
     .map((s) => {
       const m = getSectorMeta(s, isRTL);
@@ -334,6 +363,15 @@ const SectorLanding: React.FC = () => {
           </div>
         </section>
       )}
+
+      {/* Top technicians strip — featured verified providers */}
+      <SectorTopTechnicians sectorName={meta.name} technicians={topTechnicians} />
+
+      {/* Buyer guides — HowTo content per sector */}
+      <SectorGuides sectorName={meta.name} guides={guides} />
+
+      {/* Project examples — real completed work in this sector */}
+      <SectorProjectExamples sectorName={meta.name} categoryIds={categoryIds} />
 
       {/* Results grid */}
       <main className="container py-8 px-4">
