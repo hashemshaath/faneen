@@ -18,6 +18,7 @@ import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import type { ImportedMeasurement } from '@/lib/contract-pdf-export';
 import { getContractStatusMeta, isContractLockedByStatus } from '@/lib/contract-statuses';
+import { mapContractLockError } from '@/lib/contract-errors';
 import { calculateVatBreakdown } from '@/lib/contract-financials';
 import { PaymentScheduleGenerator } from '@/components/contract/PaymentScheduleGenerator';
 import { ContractFinancialCoverage } from '@/components/contract/ContractFinancialCoverage';
@@ -394,6 +395,7 @@ const ContractDetail = () => {
       queryClient.invalidateQueries({ queryKey: ['contract', id] });
       toast({ title: isRTL ? 'تم قبول العقد بنجاح' : 'Contract accepted successfully' });
     },
+    onError: (err: unknown) => toast({ title: mapContractLockError(err, isRTL).message, variant: 'destructive' }),
   });
 
   const submitMaintenance = useMutation({
@@ -527,7 +529,7 @@ const ContractDetail = () => {
       toast({ title: isRTL ? (editingMeasurement ? 'تم تحديث المقاس' : 'تم إضافة المقاس') : (editingMeasurement ? 'Measurement updated' : 'Measurement added') });
       await recalcContractTotal();
     },
-    onError: (err: Error) => toast({ title: err.message, variant: 'destructive' }),
+    onError: (err: unknown) => toast({ title: mapContractLockError(err, isRTL).message, variant: 'destructive' }),
   });
 
   const deleteMeasurementMutation = useMutation({
@@ -541,7 +543,7 @@ const ContractDetail = () => {
       toast({ title: isRTL ? 'تم حذف المقاس' : 'Measurement deleted' });
       await recalcContractTotal();
     },
-    onError: (err: Error) => toast({ title: err.message, variant: 'destructive' }),
+    onError: (err: unknown) => toast({ title: mapContractLockError(err, isRTL).message, variant: 'destructive' }),
   });
 
   const startEditMeasurement = (m: {
