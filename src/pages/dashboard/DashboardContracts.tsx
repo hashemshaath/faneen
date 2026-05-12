@@ -51,6 +51,21 @@ type TemplateRow = Database['public']['Tables']['contract_templates']['Row'];
 type AmendmentRow = Database['public']['Tables']['contract_amendments']['Row'];
 type ContractWithRole = ContractRow & { _role: string };
 
+/* CT4 — published template version row used in the contract creation flow. */
+interface PublishedTemplateOption {
+  template_id: string;
+  version_id: string;
+  version_number: number;
+  status: string;
+  slug: string | null;
+  category: string;
+  name_ar: string;
+  name_en: string | null;
+  service_category_id: string | null;
+  pricing_methods: string[];
+  required_field_count: number;
+}
+
 import { FieldAiActions } from '@/components/blog/FieldAiActions';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useNoIndex } from "@/hooks/useNoIndex";
