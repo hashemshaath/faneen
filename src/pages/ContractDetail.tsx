@@ -1271,6 +1271,26 @@ const ContractDetail = () => {
           <StatCard icon={CreditCard} label={isRTL ? 'المسدد' : 'Paid'} value={`${paymentsTotals.paid.toLocaleString()}`} sub={`${paymentsTotals.paidCount}/${paymentsTotals.totalCount} ${isRTL ? 'دفعات' : 'payments'}`} />
         </div>
 
+        {/* CT4 — Template metadata (display only) */}
+        {templateMeta && (
+          <div className="rounded-xl border border-border bg-card p-3 sm:p-4 mb-5 sm:mb-6 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs">
+            <div className="flex items-center gap-1.5 font-semibold">
+              <FileText className="w-3.5 h-3.5 text-accent" />
+              {isRTL ? 'القالب الرسمي' : 'Official Template'}
+            </div>
+            <span className="text-muted-foreground">
+              {isRTL ? (templateMeta as any).contract_templates?.name_ar : ((templateMeta as any).contract_templates?.name_en || (templateMeta as any).contract_templates?.name_ar)}
+            </span>
+            <Badge variant="secondary" className="text-[10px]">v{(templateMeta as any).version_number}</Badge>
+            {(templateMeta as any).contract_templates?.category && (
+              <Badge variant="outline" className="text-[10px]">{(templateMeta as any).contract_templates.category}</Badge>
+            )}
+            {contractAny?.pricing_method && (
+              <Badge variant="outline" className="text-[10px] gap-1"><Hash className="w-2.5 h-2.5" />{contractAny.pricing_method}</Badge>
+            )}
+          </div>
+        )}
+
         {/* ─── Milestone Pipeline ─── */}
         {milestones && milestones.length > 0 && (
           <div className="rounded-xl border border-border bg-card p-4 sm:p-5 mb-5 sm:mb-6">
