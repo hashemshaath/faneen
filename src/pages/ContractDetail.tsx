@@ -2627,7 +2627,7 @@ const ContractDetail = () => {
               rejecting={rejectAmendmentMutation.isPending}
               onCancel={(amId) => cancelAmendmentMutation.mutate(amId)}
               cancelling={cancelAmendmentMutation.isPending}
-              onApply={(amId) => applyAmendmentMutation.mutate(amId)}
+              onApply={(amId, scheduleAdjustedHint) => applyAmendmentMutation.mutate({ amId, scheduleAdjustedHint })}
               applying={applyAmendmentMutation.isPending}
               contract={contract}
               installmentPayments={installmentPayments ?? []}
