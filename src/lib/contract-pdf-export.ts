@@ -481,7 +481,7 @@ export const exportContractPDF = async (data: ContractExportData) => {
       headStyles: { fillColor: HEADER_RGB, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7 },
       alternateRowStyles: { fillColor: SURFACE2_RGB },
       margin: { left: 10, right: 10 },
-      didParseCell: (hookData: { section: string; column: { index: number }; row: { index: number }; cell: { styles: { fontStyle?: string; fillColor?: [number, number, number]; textColor?: [number, number, number] } } }) => {
+      didParseCell: (hookData: any) => {
         if (hookData.section !== 'body') return;
         const a = data.amendments![hookData.row.index];
         if (!a) return;
