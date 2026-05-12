@@ -11,7 +11,8 @@ export type LineItemPricingErrorCode =
   | 'negative_value'
   | 'value_too_large'
   | 'invalid_number'
-  | 'invalid_total';
+  | 'invalid_total'
+  | 'method_not_allowed_by_template';
 
 export interface MappedContractError {
   code: ContractLockErrorCode | 'INVALID_LINE_ITEM_PRICING' | 'GENERIC';
@@ -54,6 +55,10 @@ const PRICING_MESSAGES: Record<LineItemPricingErrorCode, { ar: string; en: strin
   invalid_total: {
     ar: 'تعذر احتساب تكلفة البند. يرجى مراجعة البيانات.',
     en: 'Could not calculate the line item cost. Please review the inputs.',
+  },
+  method_not_allowed_by_template: {
+    ar: 'طريقة التسعير المختارة غير مسموحة في قالب العقد الحالي.',
+    en: 'The selected pricing method is not allowed by the current contract template.',
   },
 };
 
