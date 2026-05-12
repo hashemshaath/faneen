@@ -4,11 +4,33 @@
 let cachedFont: string | null = null;
 let fontLoadFailed = false;
 
-// Multiple CDN sources for reliability
+// PDF-AR1: jsPDF requires uncompressed TrueType (TTF) bytes. Previously we
+// fetched .woff (compressed Web Open Font Format) and registered it as a
+// .ttf — jsPDF then read the compressed table data as raw TrueType, which
+// produced a broken cmap and rendered Arabic text as `þòþäþ³` mojibake when
+// copied or searched from the resulting PDF. Switching to genuine TTF
+// payloads restores a valid cmap and ToUnicode mapping, so Arabic becomes
+// both visually correct AND copyable / searchable.
 const FONT_URLS = [
-  'https://cdn.jsdelivr.net/npm/@fontsource/noto-naskh-arabic@5.0.18/files/noto-naskh-arabic-arabic-400-normal.woff',
-  'https://cdn.jsdelivr.net/npm/@fontsource/amiri@5.0.18/files/amiri-arabic-400-normal.woff',
+  // Noto Naskh Arabic — Google Fonts canonical, widely used for documents.
+  'https://cdn.jsdelivr.net/gh/google/fonts/ofl/notonaskharabic/NotoNaskhArabic%5Bwght%5D.ttf',
+  // Noto Sans Arabic static — reliable static TTF backup.
+  'https://cdn.jsdelivr.net/gh/notofonts/notofonts.github.io/fonts/NotoSansArabic/hinted/ttf/NotoSansArabic-Regular.ttf',
+  // Amiri — third fallback (classical Naskh, also TTF).
+  'https://cdn.jsdelivr.net/gh/aliftype/amiri/fonts/ttf/Amiri-Regular.ttf',
 ];
+
+// Validate the first bytes of the response are a real TrueType / OpenType
+// signature. This guards against accidental WOFF/HTML/error pages being
+// registered as fonts (which is exactly what produced the original
+// mojibake bug).
+const isTrueTypeSignature = (bytes: Uint8Array): boolean => {
+  if (bytes.length < 4) return false;
+  const b0 = bytes[0], b1 = bytes[1], b2 = bytes[2], b3 = bytes[3];
+  // 0x00010000 = TrueType, 'OTTO' = OpenType-CFF, 'true'/'typ1' = legacy TTF
+  if (b0 === 0x00 && b1 === 0x01 && b2 === 0x00 && b3 === 0x00) return true;
+  if (b0 === 0x4F && b1 === 0x54 && b2 === 0x54 && b3 === 0x4F) return true; // OTTO
+  if (b0 === 0x74 && b1 === 0x72 && b2 === 0x75 && b3 === 0x65
 
 export const registerArabicFont = async (doc: any): Promise<boolean> => {
   if (fontLoadFailed) return false;
