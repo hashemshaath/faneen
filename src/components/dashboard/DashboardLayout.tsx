@@ -151,7 +151,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
                     <h2 className="font-heading font-bold text-sm sm:text-lg text-foreground truncate">{pageTitle}</h2>
                   )}
                 </div>
-                <p className="text-[10px] sm:text-xs text-muted-foreground/70 truncate hidden sm:block">{todayStr}</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground truncate hidden sm:block">{todayStr}</p>
               </div>
 
               <div className="flex items-center gap-2 sm:gap-2.5">
@@ -172,11 +172,11 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
                         <span className="text-xs font-semibold text-foreground truncate max-w-[120px] leading-tight">
                           {profile?.full_name || (isRTL ? 'مستخدم' : 'User')}
                         </span>
-                        <span className="text-[10px] text-muted-foreground/70 leading-tight">
+                        <span className="text-[10px] text-muted-foreground leading-tight">
                           {isRTL ? accountLabel?.ar : accountLabel?.en}
                         </span>
                       </div>
-                      <ChevronDown className="w-3.5 h-3.5 text-muted-foreground/50 hidden sm:block" />
+                      <ChevronDown className="w-3.5 h-3.5 text-muted-foreground hidden sm:block" />
                     </button>
                   </DropdownMenuTrigger>
 
