@@ -6,12 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Bell, Mail, Smartphone, MessageCircle, Wrench, FileText,
-  CalendarCheck, Megaphone, Inbox, Building2, Loader2, Save,
+  CalendarCheck, Megaphone, Inbox, Building2, Loader2, Save, ShieldAlert, RotateCcw,
 } from "lucide-react";
 import { useNoIndex } from "@/hooks/useNoIndex";
 
@@ -65,7 +66,9 @@ const DashboardCommunicationPreferences: React.FC = () => {
   const qc = useQueryClient();
 
   const [prefs, setPrefs] = useState<Prefs>(DEFAULTS);
+  const [savedPrefs, setSavedPrefs] = useState<Prefs>(DEFAULTS);
   const [bizPrefs, setBizPrefs] = useState<BizPrefs | null>(null);
+  const [savedBizPrefs, setSavedBizPrefs] = useState<BizPrefs | null>(null);
   const [bizId, setBizId] = useState<string | null>(null);
   const [bizName, setBizName] = useState<string>("");
 
@@ -82,7 +85,9 @@ const DashboardCommunicationPreferences: React.FC = () => {
       if (error) throw error;
       if (data) {
         const { id: _id, user_id: _u, created_at: _c, updated_at: _up, ...rest } = data as Record<string, unknown>;
-        setPrefs({ ...DEFAULTS, ...(rest as Partial<Prefs>) });
+        const merged = { ...DEFAULTS, ...(rest as Partial<Prefs>) };
+        setPrefs(merged);
+        setSavedPrefs(merged);
       }
       return data;
     },
@@ -109,9 +114,12 @@ const DashboardCommunicationPreferences: React.FC = () => {
           .maybeSingle();
         if (bp) {
           const { id: _id, business_id: _b, created_at: _c, updated_at: _u, ...rest } = bp as Record<string, unknown>;
-          setBizPrefs({ ...BIZ_DEFAULTS, ...(rest as Partial<BizPrefs>) });
+          const merged = { ...BIZ_DEFAULTS, ...(rest as Partial<BizPrefs>) };
+          setBizPrefs(merged);
+          setSavedBizPrefs(merged);
         } else {
           setBizPrefs(BIZ_DEFAULTS);
+          setSavedBizPrefs(BIZ_DEFAULTS);
         }
       }
       return biz;
@@ -121,13 +129,17 @@ const DashboardCommunicationPreferences: React.FC = () => {
   const saveUser = useMutation({
     mutationFn: async () => {
       if (!user?.id) throw new Error("not authenticated");
+      // Force essential system alerts ON for safety
+      const payload = { ...prefs, email_system: true, inapp_system: true };
       const { error } = await supabase
         .from("notification_preferences")
-        .upsert({ user_id: user.id, ...prefs }, { onConflict: "user_id" });
+        .upsert({ user_id: user.id, ...payload }, { onConflict: "user_id" });
       if (error) throw error;
+      return payload;
     },
-    onSuccess: () => {
+    onSuccess: (payload) => {
       toast.success(isRTL ? "تم حفظ تفضيلاتك" : "Preferences saved");
+      setSavedPrefs(payload as Prefs);
       qc.invalidateQueries({ queryKey: ["notification-prefs"] });
     },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Error"),
@@ -140,9 +152,11 @@ const DashboardCommunicationPreferences: React.FC = () => {
         .from("business_notification_preferences")
         .upsert({ business_id: bizId, ...bizPrefs }, { onConflict: "business_id" });
       if (error) throw error;
+      return bizPrefs;
     },
-    onSuccess: () => {
+    onSuccess: (payload) => {
       toast.success(isRTL ? "تم حفظ تفضيلات الجهة" : "Business preferences saved");
+      if (payload) setSavedBizPrefs(payload);
     },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Error"),
   });
@@ -150,13 +164,24 @@ const DashboardCommunicationPreferences: React.FC = () => {
   const setP = (k: keyof Prefs, v: boolean) => setPrefs((p) => ({ ...p, [k]: v }));
   const setB = (k: keyof BizPrefs, v: boolean) => setBizPrefs((b) => (b ? { ...b, [k]: v } : b));
 
+  const userDirty = useMemo(
+    () => (Object.keys(prefs) as Array<keyof Prefs>).some((k) => prefs[k] !== savedPrefs[k]),
+    [prefs, savedPrefs]
+  );
+  const bizDirty = useMemo(() => {
+    if (!bizPrefs || !savedBizPrefs) return false;
+    return (Object.keys(bizPrefs) as Array<keyof BizPrefs>).some((k) => bizPrefs[k] !== savedBizPrefs[k]);
+  }, [bizPrefs, savedBizPrefs]);
+
+  const resetUser = () => setPrefs(savedPrefs);
+  const resetBiz = () => setBizPrefs(savedBizPrefs);
+
   const userCategories = useMemo(() => ([
     { key: "messages",            icon: MessageCircle,  ar: "الرسائل",                 en: "Messages" },
     { key: "maintenance_updates", icon: Wrench,         ar: "تحديثات الصيانة",         en: "Maintenance updates" },
     { key: "contracts",           icon: FileText,       ar: "العقود",                  en: "Contracts" },
     { key: "bookings",            icon: CalendarCheck,  ar: "الحجوزات",                en: "Bookings" },
     { key: "leads",               icon: Inbox,          ar: "طلبات العملاء (Leads)",   en: "Lead requests" },
-    { key: "system",              icon: Bell,           ar: "إشعارات النظام",          en: "System" },
     { key: "marketing",           icon: Megaphone,      ar: "العروض والتسويق",         en: "Marketing & offers" },
   ] as const), []);
 
@@ -175,6 +200,15 @@ const DashboardCommunicationPreferences: React.FC = () => {
           </p>
         </div>
 
+        {isLoading && (
+          <div className="space-y-3" aria-busy="true" aria-live="polite">
+            <Skeleton className="h-32 w-full rounded-xl" />
+            <Skeleton className="h-64 w-full rounded-xl" />
+          </div>
+        )}
+
+        {!isLoading && (
+        <>
         {/* Master channel switches */}
         <Card>
           <CardHeader>
@@ -183,7 +217,15 @@ const DashboardCommunicationPreferences: React.FC = () => {
           <CardContent className="space-y-3">
             <ChannelRow icon={Mail} title={isRTL ? "البريد الإلكتروني" : "Email"} desc={isRTL ? "إشعارات إلى بريدك المسجّل." : "Notifications to your registered email."} value={prefs.email_enabled} onChange={(v) => setP("email_enabled", v)} />
             <ChannelRow icon={Bell} title={isRTL ? "الإشعارات داخل التطبيق" : "In-app notifications"} desc={isRTL ? "تظهر داخل لوحة الإشعارات." : "Shown in the in-app notifications panel."} value={prefs.in_app_enabled} onChange={(v) => setP("in_app_enabled", v)} />
-            <ChannelRow icon={Smartphone} title={isRTL ? "الرسائل النصية SMS" : "SMS"} desc={isRTL ? "تنبيهات قصيرة على رقمك (قد تُطبَّق رسوم)." : "Short alerts to your phone (carrier rates may apply)."} value={prefs.sms_enabled} onChange={(v) => setP("sms_enabled", v)} />
+            <ChannelRow
+              icon={Smartphone}
+              title={isRTL ? "الرسائل النصية SMS" : "SMS"}
+              desc={isRTL ? "قريباً — لم يتم تفعيل قناة SMS بعد." : "Coming soon — SMS channel is not enabled yet."}
+              value={false}
+              onChange={() => { /* disabled */ }}
+              disabled
+              badge={isRTL ? "قريباً" : "Soon"}
+            />
           </CardContent>
         </Card>
 
@@ -207,12 +249,13 @@ const DashboardCommunicationPreferences: React.FC = () => {
                     const emailKey = `email_${key}` as keyof Prefs;
                     const inappKey = `inapp_${key}` as keyof Prefs;
                     const hasInapp = key !== "marketing";
+                    const label = isRTL ? ar : en;
                     return (
                       <tr key={key} className="border-b border-border/60">
                         <td className="py-3 px-2">
                           <div className="flex items-center gap-2">
-                            <Icon className="h-4 w-4 text-muted-foreground" />
-                            <span>{isRTL ? ar : en}</span>
+                            <Icon className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                            <span>{label}</span>
                           </div>
                         </td>
                         <td className="py-3 px-2 text-center">
@@ -220,6 +263,7 @@ const DashboardCommunicationPreferences: React.FC = () => {
                             checked={!!prefs[emailKey] && prefs.email_enabled}
                             disabled={!prefs.email_enabled}
                             onCheckedChange={(v) => setP(emailKey, v)}
+                            aria-label={`${label} — ${isRTL ? "بريد" : "Email"}`}
                           />
                         </td>
                         <td className="py-3 px-2 text-center">
@@ -228,6 +272,7 @@ const DashboardCommunicationPreferences: React.FC = () => {
                               checked={!!prefs[inappKey] && prefs.in_app_enabled}
                               disabled={!prefs.in_app_enabled}
                               onCheckedChange={(v) => setP(inappKey, v)}
+                              aria-label={`${label} — ${isRTL ? "داخل التطبيق" : "In-app"}`}
                             />
                           ) : (
                             <span className="text-muted-foreground text-xs">—</span>
@@ -236,12 +281,50 @@ const DashboardCommunicationPreferences: React.FC = () => {
                       </tr>
                     );
                   })}
+                  {/* Essential system row — locked on */}
+                  <tr className="border-b border-border/60 bg-muted/30">
+                    <td className="py-3 px-2">
+                      <div className="flex items-center gap-2">
+                        <ShieldAlert className="h-4 w-4 text-primary" aria-hidden="true" />
+                        <div className="flex flex-col">
+                          <span>{isRTL ? "إشعارات النظام والأمان" : "System & security alerts"}</span>
+                          <span className="text-[11px] text-muted-foreground">
+                            {isRTL ? "تنبيهات أساسية لا يمكن تعطيلها" : "Essential — cannot be disabled"}
+                          </span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-3 px-2 text-center">
+                      <Switch checked disabled aria-label={isRTL ? "إشعارات النظام — بريد (مفعّلة دائمًا)" : "System — Email (always on)"} />
+                    </td>
+                    <td className="py-3 px-2 text-center">
+                      <Switch checked disabled aria-label={isRTL ? "إشعارات النظام — داخل التطبيق (مفعّلة دائمًا)" : "System — In-app (always on)"} />
+                    </td>
+                  </tr>
                 </tbody>
               </table>
             </div>
 
-            <div className="flex justify-end mt-4">
-              <Button onClick={() => saveUser.mutate()} disabled={saveUser.isPending || isLoading} className="h-11 rounded-xl">
+            <div className="flex flex-wrap items-center justify-end gap-2 mt-4">
+              {userDirty && (
+                <span className="me-auto text-xs text-amber-600 dark:text-amber-400" role="status">
+                  {isRTL ? "لديك تغييرات غير محفوظة" : "You have unsaved changes"}
+                </span>
+              )}
+              <Button
+                variant="outline"
+                onClick={resetUser}
+                disabled={!userDirty || saveUser.isPending}
+                className="h-11 rounded-xl"
+              >
+                <RotateCcw className="h-4 w-4 me-2" aria-hidden="true" />
+                {isRTL ? "تراجع" : "Reset"}
+              </Button>
+              <Button
+                onClick={() => saveUser.mutate()}
+                disabled={saveUser.isPending || isLoading || !userDirty}
+                className="h-11 rounded-xl"
+              >
                 {saveUser.isPending ? <Loader2 className="h-4 w-4 animate-spin me-2" /> : <Save className="h-4 w-4 me-2" />}
                 {isRTL ? "حفظ التفضيلات" : "Save preferences"}
               </Button>
@@ -276,24 +359,41 @@ const DashboardCommunicationPreferences: React.FC = () => {
               ] as const).map(({ k, ar, en, icon: Icon }) => (
                 <div key={k} className="flex items-center justify-between gap-3 rounded-xl border border-border p-3">
                   <div className="flex items-center gap-3">
-                    <Icon className="h-4 w-4 text-muted-foreground" />
+                    <Icon className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                     <span className="text-sm">{isRTL ? ar : en}</span>
                   </div>
                   <Switch
                     checked={!!bizPrefs[k] && bizPrefs.email_enabled}
                     disabled={!bizPrefs.email_enabled}
                     onCheckedChange={(v) => setB(k, v)}
+                    aria-label={`${isRTL ? ar : en} — ${isRTL ? "بريد الجهة" : "Business email"}`}
                   />
                 </div>
               ))}
-              <div className="flex justify-end pt-2">
-                <Button onClick={() => saveBiz.mutate()} disabled={saveBiz.isPending} className="h-11 rounded-xl">
+              <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
+                {bizDirty && (
+                  <span className="me-auto text-xs text-amber-600 dark:text-amber-400" role="status">
+                    {isRTL ? "تغييرات غير محفوظة" : "Unsaved changes"}
+                  </span>
+                )}
+                <Button
+                  variant="outline"
+                  onClick={resetBiz}
+                  disabled={!bizDirty || saveBiz.isPending}
+                  className="h-11 rounded-xl"
+                >
+                  <RotateCcw className="h-4 w-4 me-2" aria-hidden="true" />
+                  {isRTL ? "تراجع" : "Reset"}
+                </Button>
+                <Button onClick={() => saveBiz.mutate()} disabled={saveBiz.isPending || !bizDirty} className="h-11 rounded-xl">
                   {saveBiz.isPending ? <Loader2 className="h-4 w-4 animate-spin me-2" /> : <Save className="h-4 w-4 me-2" />}
                   {isRTL ? "حفظ تفضيلات الجهة" : "Save business preferences"}
                 </Button>
               </div>
             </CardContent>
           </Card>
+        )}
+        </>
         )}
       </div>
     </DashboardLayout>
@@ -306,16 +406,21 @@ const ChannelRow: React.FC<{
   desc: string;
   value: boolean;
   onChange: (v: boolean) => void;
-}> = ({ icon: Icon, title, desc, value, onChange }) => (
+  disabled?: boolean;
+  badge?: string;
+}> = ({ icon: Icon, title, desc, value, onChange, disabled, badge }) => (
   <div className="flex items-start justify-between gap-3 rounded-xl border border-border p-3">
     <div className="flex items-start gap-3">
-      <Icon className="h-5 w-5 text-primary mt-0.5" />
+      <Icon className="h-5 w-5 text-primary mt-0.5" aria-hidden="true" />
       <div>
-        <p className="text-sm font-medium">{title}</p>
+        <p className="text-sm font-medium flex items-center gap-2">
+          {title}
+          {badge && <Badge variant="secondary" className="text-[10px] py-0 px-1.5">{badge}</Badge>}
+        </p>
         <p className="text-xs text-muted-foreground mt-0.5">{desc}</p>
       </div>
     </div>
-    <Switch checked={value} onCheckedChange={onChange} />
+    <Switch checked={value} onCheckedChange={onChange} disabled={disabled} aria-label={title} />
   </div>
 );
 
