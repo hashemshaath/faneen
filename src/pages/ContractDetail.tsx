@@ -395,6 +395,7 @@ const ContractDetail = () => {
       queryClient.invalidateQueries({ queryKey: ['contract', id] });
       toast({ title: isRTL ? 'تم قبول العقد بنجاح' : 'Contract accepted successfully' });
     },
+    onError: (err: unknown) => toast({ title: mapContractLockError(err, isRTL).message, variant: 'destructive' }),
   });
 
   const submitMaintenance = useMutation({
