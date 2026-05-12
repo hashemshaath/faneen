@@ -200,7 +200,22 @@ const SectorLanding: React.FC = () => {
   useMultiJsonLd(
     useMemo(() => {
       if (!sector || !meta) return null;
-      const breadcrumb = buildBreadcrumbList([
+      const pageUrl = selectedCitySlug
+        ? `https://qitaat.com/sectors/${sector.slug}/${selectedCitySlug}`
+        : `https://qitaat.com/sectors/${sector.slug}`;
+      const cityBlock = selectedCityName
+        ? {
+            '@type': 'City',
+            name: selectedCityName,
+            address: {
+              '@type': 'PostalAddress',
+              addressLocality: selectedCityName,
+              addressCountry: 'SA',
+            },
+          }
+        : null;
+      const breadcrumb = {
+        ...buildBreadcrumbList([
         { name: isRTL ? 'القطاعات' : 'Sectors', url: '/sectors' },
         { name: meta.name, url: `/sectors/${sector.slug}` },
         ...(selectedCityName
@@ -208,19 +223,20 @@ const SectorLanding: React.FC = () => {
               ? `/sectors/${sector.slug}/${selectedCitySlug}`
               : `/sectors/${sector.slug}` }]
           : []),
-      ])!;
+        ])!,
+        '@id': `${pageUrl}#breadcrumbs`,
+      };
       const collection = {
         '@context': 'https://schema.org',
         '@type': 'CollectionPage',
+        '@id': `${pageUrl}#collection`,
         name: selectedCityName ? `${meta.name} — ${selectedCityName}` : meta.name,
         description: selectedCityName
           ? (isRTL
               ? `${meta.name} في ${selectedCityName}. ${meta.description}`
               : `${meta.name} in ${selectedCityName}. ${meta.description}`)
           : meta.description,
-        url: selectedCitySlug
-          ? `https://qitaat.com/sectors/${sector.slug}/${selectedCitySlug}`
-          : `https://qitaat.com/sectors/${sector.slug}`,
+        url: pageUrl,
         inLanguage: isRTL ? 'ar' : 'en',
         keywords: meta.keywords,
         ...(selectedCityName
@@ -241,11 +257,13 @@ const SectorLanding: React.FC = () => {
         ? {
             '@context': 'https://schema.org',
             '@type': 'ItemList',
+            '@id': `${pageUrl}#providers`,
             name: selectedCityName
               ? (isRTL
                   ? `أفضل مزودي ${meta.name} في ${selectedCityName}`
                   : `Top ${meta.name} providers in ${selectedCityName}`)
               : (isRTL ? `أفضل مزودي ${meta.name}` : `Top ${meta.name} providers`),
+            ...(cityBlock ? { about: cityBlock, areaServed: cityBlock } : {}),
             numberOfItems: Math.min(filtered.length, 10),
             itemListElement: filtered.slice(0, 10).map((b, i) => ({
               '@type': 'ListItem',
@@ -267,7 +285,11 @@ const SectorLanding: React.FC = () => {
           : q.replace(/in Saudi Arabia/g, `in ${selectedCityName}`);
         return { q: qWithCity, a };
       });
-      const faq = buildFaqPage(faqQa)!;
+      const faq = {
+        ...buildFaqPage(faqQa)!,
+        '@id': `${pageUrl}#faq`,
+        ...(cityBlock ? { about: cityBlock } : {}),
+      };
       const blocks: Record<string, unknown>[] = [breadcrumb, collection, faq];
       if (itemList) blocks.splice(2, 0, itemList);
       // HowTo JSON-LD per buyer-guide (search engines pick up rich results).
@@ -276,11 +298,13 @@ const SectorLanding: React.FC = () => {
         blocks.push({
           '@context': 'https://schema.org',
           '@type': 'HowTo',
+          '@id': `${pageUrl}#howto-${g.slug}`,
           name: selectedCityName
             ? (isRTL ? `${g.title_ar} — ${selectedCityName}` : `${g.title_en} — ${selectedCityName}`)
             : (isRTL ? g.title_ar : g.title_en),
           description: isRTL ? g.excerpt_ar : g.excerpt_en,
           inLanguage: isRTL ? 'ar' : 'en',
+          ...(cityBlock ? { about: cityBlock, areaServed: cityBlock } : {}),
           step: (isRTL ? g.steps_ar : g.steps_en).map((s, i) => ({
             '@type': 'HowToStep',
             position: i + 1,
