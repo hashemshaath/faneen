@@ -20,7 +20,8 @@ import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { getLocalizedValue, useDirection } from "@/lib/direction";
 import { tierConfig } from "./business-profile.data";
-import { VerifiedBadge } from "@/components/common/VerifiedBadge";
+import { VerificationStatusBadge } from "@/components/common/VerificationStatusBadge";
+import { useAuth } from "@/contexts/AuthContext";
 import { BrandLogo } from "@/components/common/BrandLogo";
 
 export const Stars = ({ rating, size = "w-4 h-4" }: { rating: number; size?: string }) => (
