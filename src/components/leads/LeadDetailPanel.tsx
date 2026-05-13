@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Mail, Phone, Wallet, FileText, Calendar, Building2, MessageSquare, UserX, ReceiptText, Send, Loader2 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Mail, Phone, Wallet, FileText, Calendar, Building2, MessageSquare, UserX, ReceiptText, Send, Loader2, FilePlus2, ExternalLink, Info } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -33,6 +33,8 @@ export interface LeadRow {
   quote_currency?: string | null;
   quote_note?: string | null;
   quote_valid_until?: string | null;
+  converted_contract_id?: string | null;
+  is_demo?: boolean | null;
 }
 
 interface Props {
@@ -45,9 +47,14 @@ interface Props {
 
 export const LeadDetailPanel: React.FC<Props> = ({ lead, pending, onAction, onOpenConversation, onSendQuote }) => {
   const { isRTL } = useLanguage();
+  const navigate = useNavigate();
   const canHaveConversation = lead.user_id !== null && (lead.status === 'accepted' || lead.status === 'needs_info');
   const isGuest = lead.user_id === null;
   const canQuote = (lead.status === 'accepted' || lead.status === 'needs_info') && !!onSendQuote;
+  const contractEligibleStatuses = ['new', 'viewed', 'accepted', 'quoted', 'needs_info'];
+  const canCreateContract = contractEligibleStatuses.includes(lead.status);
+  const alreadyConverted = !!lead.converted_contract_id;
+  const isDemo = !!lead.is_demo;
   const [showQuote, setShowQuote] = useState(false);
   const [amount, setAmount] = useState('');
   const [validUntil, setValidUntil] = useState('');
@@ -89,6 +96,54 @@ export const LeadDetailPanel: React.FC<Props> = ({ lead, pending, onAction, onOp
       )}
 
       <p className="text-sm leading-7 whitespace-pre-wrap text-foreground/90">{lead.message}</p>
+
+      {/* 5B.3 — Create Contract from Lead */}
+      {(canCreateContract || alreadyConverted) && (
+        <div className="rounded-xl border border-border bg-background p-3 sm:p-4 space-y-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {alreadyConverted ? (
+              <>
+                <Button
+                  variant="outline"
+                  className="min-h-[44px]"
+                  onClick={() => navigate(`/dashboard/contracts?contract=${lead.converted_contract_id}`)}
+                >
+                  <ExternalLink />
+                  <span>{isRTL ? 'فتح العقد الحالي' : 'Open existing contract'}</span>
+                </Button>
+                <span className="text-xs text-muted-foreground">
+                  {isRTL ? 'تم إنشاء عقد لهذا الطلب' : 'A contract has been created for this lead'}
+                </span>
+              </>
+            ) : (
+              <Button
+                variant="default"
+                className="min-h-[44px]"
+                disabled={pending || isDemo}
+                onClick={() => navigate(`/dashboard/contracts?lead=${encodeURIComponent(lead.id)}`)}
+                aria-label={isRTL ? 'إنشاء عقد من الطلب' : 'Create Contract from Lead'}
+              >
+                <FilePlus2 />
+                <span>{isRTL ? 'إنشاء عقد من الطلب' : 'Create Contract from Lead'}</span>
+              </Button>
+            )}
+          </div>
+          {!alreadyConverted && (
+            <p className="flex items-start gap-1.5 text-[12px] text-muted-foreground leading-5">
+              <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+              <span>
+                {isDemo
+                  ? (isRTL
+                      ? 'هذا طلب تجريبي ولا يمكن تحويله إلى عقد.'
+                      : 'This is a demo lead and cannot be converted into a contract.')
+                  : (isRTL
+                      ? 'سيتم تعبئة بعض الحقول من الطلب، ويمكنك مراجعتها قبل حفظ المسودة.'
+                      : 'Some fields will be suggested from the lead. You can review them before saving the draft.')}
+              </span>
+            </p>
+          )}
+        </div>
+      )}
 
       {canHaveConversation && (
         <div className="flex flex-wrap gap-2 pt-1">
