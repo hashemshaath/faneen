@@ -66,6 +66,12 @@ import { ContractPageHeader } from '@/components/contracts/dashboard/ContractPag
 import { ContractStatsSummary } from '@/components/contracts/dashboard/ContractStatsSummary';
 import { ContractCard } from '@/components/contracts/dashboard/ContractCard';
 import { getContractHealth } from '@/components/contracts/dashboard/contract-helpers';
+import { ContractCreateStepper } from '@/components/contracts/dashboard/create/ContractCreateStepper';
+import { ContractReviewSummary } from '@/components/contracts/dashboard/create/ContractReviewSummary';
+import {
+  ContractCreateActionsBar,
+  ContractCreateMobileActionBar,
+} from '@/components/contracts/dashboard/create/ContractCreateActionsBar';
 import { WORK_TYPES, getWorkType, pickTemplateForWorkType, type WorkTypeKey } from '@/lib/contract-work-types';
 import { getStatusGuidance } from '@/lib/contract-status-guidance';
 import { serializeDraftPayload, maskEmail as maskInviteEmail, type PendingInvite } from '@/lib/contract-invitations';
