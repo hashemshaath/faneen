@@ -1338,6 +1338,7 @@ const DashboardContracts = () => {
         'CLONE_CONTRACT:NOT_FOUND': { ar: 'العقد المصدر غير موجود', en: 'Source contract not found' },
         'CLONE_CONTRACT:FORBIDDEN': { ar: 'لا تملك صلاحية نسخ هذا العقد', en: 'You are not allowed to clone this contract' },
         'CLONE_CONTRACT:TEMPLATE_MISSING': { ar: 'قالب العقد غير متوفر', en: 'Contract template missing' },
+        'CLONE_CONTRACT:TEMPLATE_UNAVAILABLE': { ar: 'قالب العقد لم يعد منشوراً. لا يمكن النسخ بأمان.', en: 'The contract template is no longer published. Cannot clone safely.' },
         'CLONE_CONTRACT:SNAPSHOT_FAILED': { ar: 'تعذّر إنشاء نسخة القالب', en: 'Failed to snapshot template' },
         'CLONE_CONTRACT:LINE_ITEM_COPY_FAILED': { ar: 'تعذّر نسخ بنود العقد', en: 'Failed to copy line items' },
         'CLONE_CONTRACT:UNAUTHENTICATED': { ar: 'يجب تسجيل الدخول', en: 'You must be signed in' },
