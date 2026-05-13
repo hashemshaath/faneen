@@ -16,7 +16,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { mapContractLockError, mapContractCreateError } from '@/lib/contract-errors';
 import { dispatchAmendmentEvent } from '@/lib/amendment-notify';
 import {
@@ -153,6 +153,7 @@ const DashboardContracts = () => {
   const { isRTL, language } = useLanguage();
   const { user, profile } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const [isPending, startTransition] = useTransition();
 
@@ -228,6 +229,25 @@ const DashboardContracts = () => {
   /* Phase 5C.3 — Execution site selection (held locally for new drafts;
      persisted via set_contract_execution_site for existing drafts). */
   const [selectedSiteId, setSelectedSiteId] = useState<string | null>(null);
+  /* Phase 5B.4 — Lead → Contract prefill banner state. */
+  type LeadPrefill = {
+    lead_id: string;
+    lead_ref_id: string | null;
+    business_id: string | null;
+    suggested_title: string | null;
+    suggested_description: string | null;
+    suggested_work_type: string | null;
+    suggested_template_version_id: string | null;
+    suggested_currency_code: string | null;
+    customer_name: string | null;
+    customer_email: string | null;
+    client_profile_match: { user_id: string; display_name: string | null; verified: boolean } | null;
+    existing_contract_id: string | null;
+  };
+  const [leadPrefill, setLeadPrefill] = useState<LeadPrefill | null>(null);
+  const [leadPrefillDismissed, setLeadPrefillDismissed] = useState(false);
+  const [leadClientConfirmed, setLeadClientConfirmed] = useState(false);
+  const appliedLeadIdsRef = React.useRef<Set<string>>(new Set());
   const goToStep = useCallback((key: StepKey) => {
     setActiveStep(key);
     const el = stepRefs[key]?.current;
@@ -517,6 +537,115 @@ const DashboardContracts = () => {
 
   /* ── Helper: isLocked ── */
   const isContractLocked = (c: ContractRow) => isContractLockedByStatus(c.status);
+
+  /* Phase 5B.4 — Consume ?lead= query param: call prepare_contract_prefill_from_lead
+   * and apply *safe* prefill fields to the create form. We never auto-create a
+   * contract, client, or execution site, never change lead status, and never
+   * prefill amount/dates/terms/supervisor/items/payments/attachments. */
+  React.useEffect(() => {
+    const leadId = searchParams.get('lead');
+    if (!leadId) return;
+    if (!user) return;
+    if (appliedLeadIdsRef.current.has(leadId)) return;
+    appliedLeadIdsRef.current.add(leadId);
+
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase.rpc('prepare_contract_prefill_from_lead', { _lead_id: leadId });
+      // Strip ?lead= regardless of outcome to prevent re-apply on refresh.
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete('lead');
+        return next;
+      }, { replace: true });
+
+      if (cancelled) return;
+
+      if (error) {
+        const raw = String(error.message || '');
+        const code = raw.includes('LEAD_PREFILL:UNAUTHENTICATED') ? 'UNAUTHENTICATED'
+          : raw.includes('LEAD_PREFILL:NOT_FOUND') ? 'NOT_FOUND'
+          : raw.includes('LEAD_PREFILL:DEMO_LEAD') ? 'DEMO_LEAD'
+          : raw.includes('LEAD_PREFILL:FORBIDDEN') ? 'FORBIDDEN'
+          : 'GENERIC';
+        const msg = isRTL
+          ? ({
+              UNAUTHENTICATED: 'يرجى تسجيل الدخول أولًا.',
+              NOT_FOUND: 'الطلب غير موجود.',
+              DEMO_LEAD: 'لا يمكن تحويل طلب تجريبي إلى عقد.',
+              FORBIDDEN: 'لا تملك صلاحية الوصول إلى هذا الطلب.',
+              GENERIC: 'تعذر تحضير بيانات الطلب.',
+            } as const)[code]
+          : ({
+              UNAUTHENTICATED: 'Please sign in first.',
+              NOT_FOUND: 'Lead not found.',
+              DEMO_LEAD: 'Demo leads cannot be converted to contracts.',
+              FORBIDDEN: 'You do not have access to this lead.',
+              GENERIC: 'Could not prepare lead data.',
+            } as const)[code];
+        toast.error(msg);
+        return;
+      }
+
+      const p = data as LeadPrefill;
+      if (!p) return;
+      setLeadPrefill(p);
+      setLeadPrefillDismissed(false);
+      setLeadClientConfirmed(false);
+
+      // If a contract already exists for this lead, do NOT apply prefill.
+      if (p.existing_contract_id) {
+        setViewSection('create');
+        return;
+      }
+
+      // Open the create flow.
+      setEditingId(null);
+      setSelectedTemplate(null);
+      setTemplatePreview(null);
+      setViewSection('create');
+
+      // Safe form prefill (title/description/currency only).
+      setForm((f) => ({
+        ...f,
+        title_ar: p.suggested_title ?? f.title_ar,
+        title_en: p.suggested_title ?? f.title_en,
+        description_ar: p.suggested_description ?? f.description_ar,
+        currency_code: p.suggested_currency_code || f.currency_code,
+        // Surface the customer email in the fallback field; provider must still
+        // confirm or invite explicitly (no auto-select, no auto-invite).
+        client_email: !p.client_profile_match && p.customer_email ? p.customer_email : f.client_email,
+      }));
+
+      // Work type / template suggestion.
+      const wt = (p.suggested_work_type ?? 'general') as WorkTypeKey;
+      setSelectedWorkType(wt);
+      setWorkTypeTouched(true);
+      if (p.suggested_template_version_id) {
+        // Validated against publishedVersions when they load; effect below
+        // keeps default fallback if the suggested version is unavailable.
+        setSelectedVersionId(p.suggested_template_version_id);
+        setSelectedPricingMethod(null);
+      }
+    })();
+
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, user?.id]);
+
+  /* Phase 5B.4 — If a suggested template version is no longer published, clear it
+   * (auto-suggest effect will then pick a fallback). */
+  React.useEffect(() => {
+    if (!selectedVersionId) return;
+    if (publishedVersions.length === 0) return;
+    const ok = publishedVersions.some(v => v.version_id === selectedVersionId);
+    if (!ok) {
+      setSelectedVersionId(null);
+      if (leadPrefill?.suggested_template_version_id === selectedVersionId) {
+        toast.message(isRTL ? 'القالب المقترح غير متاح، تم استخدام القالب الافتراضي.' : 'Suggested template unavailable; using default.');
+      }
+    }
+  }, [publishedVersions, selectedVersionId, leadPrefill, isRTL]);
 
   /* ── Mutations ── */
   const addNoteMutation = useMutation({
@@ -1424,6 +1553,7 @@ const DashboardContracts = () => {
     setSelectedVersionId(null); setSelectedPricingMethod(null);
     setInviteMode('idle'); setInviteForm({ email: '', name: '', phone: '' }); setPendingInvite(null);
     setSelectedSiteId(null);
+    setLeadPrefill(null); setLeadPrefillDismissed(false); setLeadClientConfirmed(false);
   }, []);
 
   const handleShareContract = useCallback(async (c: ContractWithRole) => {
@@ -1567,6 +1697,91 @@ const DashboardContracts = () => {
               })()}
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Phase 5B.4 — Lead prefill banner (dismissible). */}
+              {!editingId && leadPrefill && !leadPrefillDismissed && (
+                <div className={`p-3 rounded-xl border ${leadPrefill.existing_contract_id ? 'border-warning/40 bg-warning/5' : 'border-info/40 bg-info/5'} flex items-start gap-3`}>
+                  <Sparkles className="w-4 h-4 text-info shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0 space-y-1">
+                    {leadPrefill.existing_contract_id ? (
+                      <>
+                        <p className="text-xs font-semibold">
+                          {isRTL ? 'تم إنشاء عقد سابق لهذا الطلب.' : 'A contract already exists for this lead.'}
+                        </p>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-7 text-[11px] mt-1"
+                          onClick={() => navigate(`/contracts/${leadPrefill.existing_contract_id}`)}
+                        >
+                          <ExternalLink className="w-3 h-3 me-1" />
+                          {isRTL ? 'فتح العقد الحالي' : 'Open existing contract'}
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-xs font-semibold">
+                          {isRTL
+                            ? `تم تعبئة بعض الحقول من طلب الخدمة #${leadPrefill.lead_ref_id ?? ''}. راجع البيانات قبل حفظ المسودة.`
+                            : `Some fields were suggested from lead #${leadPrefill.lead_ref_id ?? ''}. Review them before saving the draft.`}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">
+                          {isRTL ? 'لم يتم إنشاء عقد بعد.' : 'No contract has been created yet.'}
+                        </p>
+                      </>
+                    )}
+                  </div>
+                  <Button type="button" variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => setLeadPrefillDismissed(true)} aria-label={isRTL ? 'إخفاء' : 'Dismiss'}>
+                    <X className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+              )}
+
+              {/* Phase 5B.4 — Suggested registered client (requires confirmation). */}
+              {!editingId && leadPrefill && !leadPrefill.existing_contract_id && leadPrefill.client_profile_match && !leadClientConfirmed && !selectedClient && (
+                <div className="p-3 rounded-xl border border-success/40 bg-success/5 flex items-start gap-3">
+                  <Users className="w-4 h-4 text-success shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <p className="text-xs font-semibold">
+                      {isRTL ? 'تم العثور على عميل مسجل بهذا البريد.' : 'A registered client matches this email.'}
+                    </p>
+                    {leadPrefill.client_profile_match.display_name && (
+                      <p className="text-[11px] text-muted-foreground truncate">{leadPrefill.client_profile_match.display_name}</p>
+                    )}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-[11px] mt-1"
+                      onClick={() => {
+                        const m = leadPrefill.client_profile_match!;
+                        setSelectedClient({
+                          user_id: m.user_id,
+                          full_name: m.display_name,
+                          email_masked: null,
+                          phone_masked: null,
+                          ref_id: null,
+                          source: 'lead',
+                        });
+                        setLeadClientConfirmed(true);
+                      }}
+                    >
+                      <CircleCheck className="w-3 h-3 me-1" />
+                      {isRTL ? 'استخدام هذا العميل' : 'Use this client'}
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Phase 5B.4 — Helper for unknown email (no auto-invite). */}
+              {!editingId && leadPrefill && !leadPrefill.existing_contract_id && !leadPrefill.client_profile_match && leadPrefill.customer_email && (
+                <div className="p-2.5 rounded-lg border border-border/40 bg-muted/20 text-[11px] text-muted-foreground">
+                  {isRTL
+                    ? 'يمكنك إرسال دعوة للعميل باستخدام البريد الموجود في الطلب.'
+                    : 'You can invite the client using the email from this lead.'}
+                </div>
+              )}
+
               <div ref={stepRefs.client} className="space-y-4 scroll-mt-24">
               {/* CT4C.5 — Accepted invitations awaiting contract completion */}
               {!editingId && inviteMode === 'idle' && (
@@ -1655,6 +1870,16 @@ const DashboardContracts = () => {
 
               {/* Phase 5C.3 — Execution site step */}
               <div ref={stepRefs.site} className="scroll-mt-24">
+                {!editingId && leadPrefill && !leadPrefill.existing_contract_id && (leadPrefill.suggested_description || leadPrefill.suggested_title) && (
+                  <div className="mb-2 p-2.5 rounded-lg border border-warning/40 bg-warning/5 text-[11px] text-foreground/80 flex items-start gap-2">
+                    <MapPin className="w-3.5 h-3.5 text-warning shrink-0 mt-0.5" />
+                    <span>
+                      {isRTL
+                        ? 'قد يحتوي وصف الطلب على معلومات موقع. يرجى مراجعتها وإضافة موقع التنفيذ يدويًا.'
+                        : 'The lead description may contain location info. Review it and add the execution site manually.'}
+                    </span>
+                  </div>
+                )}
                 <ExecutionSiteSection
                   isRTL={isRTL}
                   businessId={businessId ?? null}
