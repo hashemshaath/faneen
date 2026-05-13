@@ -8181,6 +8181,17 @@ export type Database = {
         Args: { _lead_id: string }
         Returns: Json
       }
+      quick_resolve_contract_client: {
+        Args: { _email?: string; _phone?: string }
+        Returns: {
+          email_masked: string
+          full_name: string
+          matched_on: string
+          matched_user_id: string
+          phone_masked: string
+          ref_id: string
+        }[]
+      }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
