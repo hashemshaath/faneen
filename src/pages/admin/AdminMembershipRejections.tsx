@@ -21,7 +21,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { ShieldAlert, Search, ExternalLink, User2, Building2, RefreshCw } from 'lucide-react';
-import { Download, X } from 'lucide-react';
+import { Download, X, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ar as arLocale, enUS } from 'date-fns/locale';
@@ -51,6 +51,31 @@ const REASON_LABEL: Record<string, { ar: string; en: string; tone: 'destructive'
 const PAGE_SIZE = 50;
 const EXPORT_LIMIT = 10_000;
 const UUID_RX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+type SortColumn = 'created_at' | 'reason_code' | 'requested_tier' | 'attempted_business_ref_id';
+type SortDir = 'asc' | 'desc';
+
+/** Sortable column header button. */
+const SortBtn: React.FC<{
+  col: SortColumn;
+  sortBy: SortColumn;
+  sortDir: SortDir;
+  onClick: (c: SortColumn) => void;
+  children: React.ReactNode;
+}> = ({ col, sortBy, sortDir, onClick, children }) => {
+  const active = sortBy === col;
+  const Icon = !active ? ArrowUpDown : sortDir === 'asc' ? ArrowUp : ArrowDown;
+  return (
+    <button
+      type="button"
+      onClick={() => onClick(col)}
+      className={`inline-flex items-center gap-1 hover:text-foreground transition-colors ${active ? 'text-foreground font-medium' : 'text-muted-foreground'}`}
+    >
+      {children}
+      <Icon className="h-3.5 w-3.5" />
+    </button>
+  );
+};
 
 /** Apply current filters to a Supabase filter builder. Shared by table query + export. */
 // Supabase chainable builder typing is intentionally loose here.
@@ -99,6 +124,18 @@ const AdminMembershipRejections: React.FC = () => {
     reason: 'all', refId: '', businessId: '', userId: '', dateFrom: '', dateTo: '',
   });
   const [exporting, setExporting] = useState(false);
+  const [sortBy, setSortBy] = useState<SortColumn>('created_at');
+  const [sortDir, setSortDir] = useState<SortDir>('desc');
+
+  const toggleSort = (col: SortColumn) => {
+    if (sortBy === col) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortBy(col);
+      setSortDir(col === 'created_at' ? 'desc' : 'asc');
+    }
+    setPage(0);
+  };
 
   const applyAll = () => {
     setFilters({
@@ -121,12 +158,12 @@ const AdminMembershipRejections: React.FC = () => {
   };
 
   const { data, isLoading, isFetching, refetch } = useQuery({
-    queryKey: ['admin-membership-rejections', page, filters],
+    queryKey: ['admin-membership-rejections', page, filters, sortBy, sortDir],
     queryFn: async () => {
       let q = supabase
         .from('membership_upgrade_rejections')
         .select('*', { count: 'exact' })
-        .order('created_at', { ascending: false })
+        .order(sortBy, { ascending: sortDir === 'asc', nullsFirst: false })
         .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
       q = applyFilters(q, filters);
       const { data: rows, count, error } = await q;
@@ -152,7 +189,7 @@ const AdminMembershipRejections: React.FC = () => {
       let q = supabase
         .from('membership_upgrade_rejections')
         .select('*')
-        .order('created_at', { ascending: false })
+        .order(sortBy, { ascending: sortDir === 'asc', nullsFirst: false })
         .limit(EXPORT_LIMIT);
       q = applyFilters(q, filters);
       const { data: all, error } = await q;
@@ -319,10 +356,26 @@ const AdminMembershipRejections: React.FC = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>{isRTL ? 'التاريخ' : 'Date'}</TableHead>
-                    <TableHead>{isRTL ? 'السبب' : 'Reason'}</TableHead>
-                    <TableHead>{isRTL ? 'الباقة' : 'Tier'}</TableHead>
-                    <TableHead>{isRTL ? 'المنشأة (المحاولة)' : 'Business (attempt)'}</TableHead>
+                    <TableHead>
+                      <SortBtn col="created_at" sortBy={sortBy} sortDir={sortDir} onClick={toggleSort}>
+                        {isRTL ? 'التاريخ' : 'Date'}
+                      </SortBtn>
+                    </TableHead>
+                    <TableHead>
+                      <SortBtn col="reason_code" sortBy={sortBy} sortDir={sortDir} onClick={toggleSort}>
+                        {isRTL ? 'السبب' : 'Reason'}
+                      </SortBtn>
+                    </TableHead>
+                    <TableHead>
+                      <SortBtn col="requested_tier" sortBy={sortBy} sortDir={sortDir} onClick={toggleSort}>
+                        {isRTL ? 'الباقة' : 'Tier'}
+                      </SortBtn>
+                    </TableHead>
+                    <TableHead>
+                      <SortBtn col="attempted_business_ref_id" sortBy={sortBy} sortDir={sortDir} onClick={toggleSort}>
+                        {isRTL ? 'المنشأة (المحاولة)' : 'Business (attempt)'}
+                      </SortBtn>
+                    </TableHead>
                     <TableHead>{isRTL ? 'المنشأة (الفعلية)' : 'Business (actual)'}</TableHead>
                     <TableHead>{isRTL ? 'المستخدم' : 'User'}</TableHead>
                     <TableHead className="text-end">{isRTL ? 'إجراء' : 'Action'}</TableHead>
