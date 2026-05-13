@@ -25,6 +25,12 @@ export interface BadgeBuildOptions {
   accent?: BadgeAccent;
   isRTL: boolean;
   showSubLabel?: boolean;
+  /** Optional custom hex color (e.g. "#a855f7") — overrides accent palette solid color. */
+  customAccent?: string;
+  /** Optional logo embedded as data URL (PNG/SVG). Replaces the default shield seal. */
+  logoDataUrl?: string;
+  /** CSS font-family stack used for the workshop name. Falls back to system stack. */
+  fontFamily?: string;
 }
 
 const ACCENTS: Record<BadgeAccent, { solid: string; soft: string; ring: string; text: string }> = {
@@ -33,6 +39,27 @@ const ACCENTS: Record<BadgeAccent, { solid: string; soft: string; ring: string; 
   blue:    { solid: '#2563eb', soft: '#eff6ff', ring: '#dbeafe', text: '#1e3a8a' },
   slate:   { solid: '#475569', soft: '#f1f5f9', ring: '#e2e8f0', text: '#0f172a' },
 };
+
+const DEFAULT_FONT = "-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif";
+
+/** Lighten/darken a hex color by mixing with white (positive amount) or black (negative amount). */
+function mixHex(hex: string, amount: number): string {
+  const m = /^#?([a-f\d]{6})$/i.exec(hex.trim());
+  if (!m) return hex;
+  const n = parseInt(m[1], 16);
+  const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  const target = amount >= 0 ? 255 : 0;
+  const a = Math.abs(amount);
+  const mix = (c: number) => Math.round(c + (target - c) * a);
+  return `#${[mix(r), mix(g), mix(b)].map(c => c.toString(16).padStart(2, '0')).join('')}`;
+}
+
+function resolveAccent(opts: BadgeBuildOptions) {
+  const base = ACCENTS[opts.accent ?? 'emerald'];
+  if (!opts.customAccent) return base;
+  const solid = opts.customAccent;
+  return { solid, soft: mixHex(solid, 0.88), ring: mixHex(solid, 0.7), text: mixHex(solid, -0.35) };
+}
 
 const SIZES: Record<BadgeSize, { padX: number; padY: number; iconBox: number; icon: number; label: number; sub: number; gap: number; radius: number }> = {
   sm: { padX: 10, padY: 7,  iconBox: 26, icon: 14, label: 12, sub: 10, gap: 8,  radius: 10 },
@@ -59,7 +86,8 @@ const SHIELD_PATH =
 export function buildBadgeSvg(opts: BadgeBuildOptions): string {
   const variant = opts.variant;
   const size = SIZES[opts.size ?? 'md'];
-  const accent = ACCENTS[opts.accent ?? 'emerald'];
+  const accent = resolveAccent(opts);
+  const fontFamily = opts.fontFamily || DEFAULT_FONT;
   const label = opts.isRTL ? 'موثّق على قِطاعات' : 'Verified on Qitaat';
   const sub = opts.isRTL ? `قِطاعات · ${opts.displayName}` : `Qitaat · ${opts.displayName}`;
   const showSub = opts.showSubLabel !== false && variant !== 'compact' && variant !== 'minimal';
@@ -70,12 +98,16 @@ export function buildBadgeSvg(opts: BadgeBuildOptions): string {
   const w = 320;
   const h = showSub ? 70 : 50;
   const bgFill = isGradient
-    ? `<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#10b981"/><stop offset="1" stop-color="#1f8a4c"/></linearGradient></defs><rect width="${w}" height="${h}" rx="${size.radius}" fill="url(#bg)"/>`
+    ? `<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${accent.solid}"/><stop offset="1" stop-color="${mixHex(accent.solid, -0.25)}"/></linearGradient></defs><rect width="${w}" height="${h}" rx="${size.radius}" fill="url(#bg)"/>`
     : `<rect width="${w}" height="${h}" rx="${size.radius}" fill="${isDark ? '#0f172a' : '#ffffff'}" stroke="${isDark ? '#1e293b' : '#e2e8f0'}"/>`;
-  const seal = `<g transform="translate(${size.padX},${(h - size.iconBox) / 2})"><circle cx="${size.iconBox / 2}" cy="${size.iconBox / 2}" r="${size.iconBox / 2}" fill="${isGradient ? '#ffffff33' : accent.solid}"/><g transform="translate(${(size.iconBox - size.icon) / 2},${(size.iconBox - size.icon) / 2})" stroke="#ffffff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">${SHIELD_PATH.replace(/24/g, String(size.icon))}</g></g>`;
+  const sealCircle = `<circle cx="${size.iconBox / 2}" cy="${size.iconBox / 2}" r="${size.iconBox / 2}" fill="${isGradient ? '#ffffff33' : accent.solid}"/>`;
+  const sealInner = opts.logoDataUrl
+    ? `<defs><clipPath id="logoClip"><circle cx="${size.iconBox / 2}" cy="${size.iconBox / 2}" r="${size.iconBox / 2 - 1}"/></clipPath></defs><image href="${escapeAttr(opts.logoDataUrl)}" x="1" y="1" width="${size.iconBox - 2}" height="${size.iconBox - 2}" clip-path="url(#logoClip)" preserveAspectRatio="xMidYMid slice"/>`
+    : `<g transform="translate(${(size.iconBox - size.icon) / 2},${(size.iconBox - size.icon) / 2})" stroke="#ffffff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">${SHIELD_PATH.replace(/24/g, String(size.icon))}</g>`;
+  const seal = `<g transform="translate(${size.padX},${(h - size.iconBox) / 2})">${sealCircle}${sealInner}</g>`;
   const textX = size.padX + size.iconBox + size.gap;
   const textY = showSub ? h / 2 - 4 : h / 2 + size.label / 3;
-  const text = `<text x="${textX}" y="${textY}" fill="${isGradient ? '#ffffff' : fg}" font-family="-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="${size.label}" font-weight="700">${label}</text>${showSub ? `<text x="${textX}" y="${h / 2 + size.sub + 4}" fill="${isGradient ? '#ffffffcc' : subFg}" font-family="-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="${size.sub}" font-weight="500">${escapeAttr(sub)}</text>` : ''}`;
+  const text = `<text x="${textX}" y="${textY}" fill="${isGradient ? '#ffffff' : fg}" font-family="${escapeAttr(fontFamily)}" font-size="${size.label}" font-weight="700">${label}</text>${showSub ? `<text x="${textX}" y="${h / 2 + size.sub + 4}" fill="${isGradient ? '#ffffffcc' : subFg}" font-family="${escapeAttr(fontFamily)}" font-size="${size.sub}" font-weight="500">${escapeAttr(sub)}</text>` : ''}`;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img" aria-label="${escapeAttr(label)}">${bgFill}${seal}${text}</svg>`;
 }
 
@@ -83,7 +115,8 @@ export function buildBadgeSvg(opts: BadgeBuildOptions): string {
 export function buildBadgeHtml(opts: BadgeBuildOptions): string {
   const { username, displayName, variant, isRTL } = opts;
   const size = SIZES[opts.size ?? 'md'];
-  const accent = ACCENTS[opts.accent ?? 'emerald'];
+  const accent = resolveAccent(opts);
+  const fontFamily = opts.fontFamily || DEFAULT_FONT;
   const href = buildProfileLink(username);
   const label = isRTL ? 'موثّق على قِطاعات' : 'Verified on Qitaat';
   const sub = isRTL ? `قِطاعات · ${displayName}` : `Qitaat · ${displayName}`;
@@ -93,7 +126,7 @@ export function buildBadgeHtml(opts: BadgeBuildOptions): string {
   const showSub = opts.showSubLabel !== false;
 
   if (variant === 'compact') {
-    return `<a href="${href}" target="_blank" rel="noopener" title="${safeName} — ${label}" style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border:1px solid ${accent.ring};border-radius:9999px;background:${accent.soft};color:${accent.text};font:600 12px/1 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;text-decoration:none;position:relative;">
+    return `<a href="${href}" target="_blank" rel="noopener" title="${safeName} — ${label}" style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border:1px solid ${accent.ring};border-radius:9999px;background:${accent.soft};color:${accent.text};font:600 12px/1 ${fontFamily};text-decoration:none;position:relative;">
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${SHIELD_PATH}</svg>
   <span>${label}</span>
   ${pixel}
@@ -101,7 +134,7 @@ export function buildBadgeHtml(opts: BadgeBuildOptions): string {
   }
 
   if (variant === 'minimal') {
-    return `<a href="${href}" target="_blank" rel="noopener" title="${safeName} — ${label}" style="display:inline-flex;align-items:center;gap:6px;color:${accent.solid};font:600 13px/1.2 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;text-decoration:none;position:relative;">
+    return `<a href="${href}" target="_blank" rel="noopener" title="${safeName} — ${label}" style="display:inline-flex;align-items:center;gap:6px;color:${accent.solid};font:600 13px/1.2 ${fontFamily};text-decoration:none;position:relative;">
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${SHIELD_PATH}</svg>
   <span>${label}</span>
   ${pixel}
@@ -111,17 +144,20 @@ export function buildBadgeHtml(opts: BadgeBuildOptions): string {
   const isDark = variant === 'dark';
   const isGradient = variant === 'gradient';
   const bg = isGradient
-    ? `linear-gradient(135deg, ${accent.solid}, #1f8a4c)`
+    ? `linear-gradient(135deg, ${accent.solid}, ${mixHex(accent.solid, -0.25)})`
     : isDark ? '#0f172a' : '#ffffff';
   const border = isGradient ? 'transparent' : isDark ? '#1e293b' : '#e2e8f0';
   const fg = isGradient ? '#ffffff' : isDark ? '#f8fafc' : '#0f172a';
   const subFg = isGradient ? 'rgba(255,255,255,.85)' : isDark ? '#94a3b8' : '#64748b';
   const sealBg = isGradient ? 'rgba(255,255,255,.18)' : accent.solid;
   const sealFg = '#ffffff';
+  const sealInnerHtml = opts.logoDataUrl
+    ? `<img src="${escapeAttr(opts.logoDataUrl)}" alt="" width="${size.iconBox - 2}" height="${size.iconBox - 2}" style="width:${size.iconBox - 2}px;height:${size.iconBox - 2}px;border-radius:9999px;object-fit:cover;display:block;" />`
+    : `<svg width="${size.icon}" height="${size.icon}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${SHIELD_PATH}</svg>`;
 
-  return `<a href="${href}" target="_blank" rel="noopener" title="${safeName} — ${label}" dir="${dir}" style="display:inline-flex;align-items:center;gap:${size.gap}px;padding:${size.padY}px ${size.padX}px;border:1px solid ${border};border-radius:${size.radius}px;background:${bg};color:${fg};font:600 ${size.label}px/1.2 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;text-decoration:none;box-shadow:0 1px 2px rgba(0,0,0,.04);position:relative;">
-  <span style="display:inline-flex;align-items:center;justify-content:center;width:${size.iconBox}px;height:${size.iconBox}px;border-radius:9999px;background:${sealBg};color:${sealFg};flex:none;">
-    <svg width="${size.icon}" height="${size.icon}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${SHIELD_PATH}</svg>
+  return `<a href="${href}" target="_blank" rel="noopener" title="${safeName} — ${label}" dir="${dir}" style="display:inline-flex;align-items:center;gap:${size.gap}px;padding:${size.padY}px ${size.padX}px;border:1px solid ${border};border-radius:${size.radius}px;background:${bg};color:${fg};font:600 ${size.label}px/1.2 ${fontFamily};text-decoration:none;box-shadow:0 1px 2px rgba(0,0,0,.04);position:relative;">
+  <span style="display:inline-flex;align-items:center;justify-content:center;width:${size.iconBox}px;height:${size.iconBox}px;border-radius:9999px;background:${sealBg};color:${sealFg};flex:none;overflow:hidden;">
+    ${sealInnerHtml}
   </span>
   <span style="display:inline-flex;flex-direction:column;gap:2px;line-height:1.15;">
     <span style="font-size:${size.label}px;font-weight:700;">${label}</span>
@@ -169,4 +205,34 @@ export function buildBadgeIframe(opts: BadgeBuildOptions): string {
 export function buildEmailSignature(opts: BadgeBuildOptions): string {
   const compact = buildBadgeHtml({ ...opts, variant: 'compact' });
   return `<table cellpadding="0" cellspacing="0" border="0"><tr><td style="padding-top:8px;">${compact}</td></tr></table>`;
+}
+
+/**
+ * Rasterize an SVG markup string to a PNG Blob via a canvas at the chosen scale.
+ * Returns null if the browser cannot decode the SVG (e.g. tainted by external image).
+ */
+export function svgToPngBlob(svgMarkup: string, scale = 3): Promise<Blob | null> {
+  return new Promise((resolve) => {
+    const widthMatch = /width="(\d+)"/.exec(svgMarkup);
+    const heightMatch = /height="(\d+)"/.exec(svgMarkup);
+    const w = widthMatch ? Number(widthMatch[1]) : 320;
+    const h = heightMatch ? Number(heightMatch[1]) : 70;
+    const blob = new Blob([svgMarkup], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(w * scale);
+      canvas.height = Math.round(h * scale);
+      const ctx = canvas.getContext('2d');
+      if (!ctx) { URL.revokeObjectURL(url); resolve(null); return; }
+      ctx.scale(scale, scale);
+      ctx.drawImage(img, 0, 0);
+      URL.revokeObjectURL(url);
+      canvas.toBlob((b) => resolve(b), 'image/png');
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
+    img.src = url;
+  });
 }
