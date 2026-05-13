@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import {
   BarChart3, FileText, CheckCircle2, Clock, XCircle, AlertTriangle,
@@ -118,6 +119,7 @@ const DashboardContractAnalytics: React.FC = () => {
   const { language, isRTL } = useLanguage();
   const { user } = useAuth();
   const [period, setPeriod] = useState<Period>('30d');
+  const [businessId, setBusinessId] = useState<string>('all');
   const locale = language === 'ar' ? 'ar-SA' : 'en-US';
 
   usePageMeta({
@@ -129,14 +131,43 @@ const DashboardContractAnalytics: React.FC = () => {
   });
   useNoIndex();
 
+  // Allowed businesses (owner or manager) — same pattern as DashboardLeads
+  const { data: managedBusinesses } = useQuery({
+    queryKey: ['my-managed-businesses', user?.id],
+    enabled: !!user?.id,
+    staleTime: 5 * 60_000,
+    queryFn: async () => {
+      const [owned, staff] = await Promise.all([
+        supabase.from('businesses').select('id, name_ar, name_en').eq('user_id', user!.id),
+        supabase
+          .from('business_staff')
+          .select('business_id, role, businesses:business_id(id, name_ar, name_en)')
+          .eq('user_id', user!.id)
+          .eq('is_active', true)
+          .in('role', ['owner', 'manager']),
+      ]);
+      const map = new Map<string, { id: string; name_ar: string | null; name_en: string | null }>();
+      (owned.data ?? []).forEach((b) => map.set(b.id, b));
+      (staff.data ?? []).forEach((s) => {
+        const b = (s as unknown as { businesses?: { id: string; name_ar: string | null; name_en: string | null } }).businesses;
+        if (b) map.set(b.id, b);
+      });
+      return Array.from(map.values());
+    },
+  });
+
+  const businessOptions = managedBusinesses ?? [];
+  const showSelector = businessOptions.length > 1;
+  const effectiveBusinessId = businessId === 'all' ? null : businessId;
+
   const { data, isLoading, isError, error, refetch, isFetching } = useQuery<AnalyticsPayload>({
-    queryKey: ['contract-analytics', user?.id ?? null, period],
+    queryKey: ['contract-analytics', user?.id ?? null, effectiveBusinessId, period],
     enabled: !!user?.id,
     staleTime: 60_000,
     queryFn: async () => {
       const { data: rpcData, error: rpcError } = await supabase.rpc(
         'get_contract_analytics_dashboard',
-        { _business_id: undefined, _period: period, _scope: 'provider' },
+        { _business_id: effectiveBusinessId ?? undefined, _period: period, _scope: 'provider' },
       );
       if (rpcError) throw rpcError;
       return rpcData as unknown as AnalyticsPayload;
@@ -145,6 +176,13 @@ const DashboardContractAnalytics: React.FC = () => {
   });
 
   const t = (ar: string, en: string) => (language === 'ar' ? ar : en);
+
+  const bizName = (b: { name_ar: string | null; name_en: string | null }) =>
+    (isRTL ? b.name_ar || b.name_en : b.name_en || b.name_ar) ?? '';
+  const selectedScopeLabel =
+    effectiveBusinessId === null
+      ? t('كل المنشآت', 'All businesses')
+      : bizName(businessOptions.find((b) => b.id === effectiveBusinessId) ?? { name_ar: null, name_en: null });
 
   const errMessage =
     error instanceof Error ? error.message : '';
@@ -168,6 +206,24 @@ const DashboardContractAnalytics: React.FC = () => {
             </p>
           </div>
           <div className="flex items-center gap-2 flex-wrap" role="group" aria-label={t('الفترة', 'Period')}>
+            {showSelector && (
+              <Select value={businessId} onValueChange={setBusinessId}>
+                <SelectTrigger
+                  className="h-9 w-[200px]"
+                  aria-label={t('اختر المنشأة', 'Select business')}
+                >
+                  <SelectValue placeholder={t('كل المنشآت', 'All businesses')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('كل المنشآت', 'All businesses')}</SelectItem>
+                  {businessOptions.map((b) => (
+                    <SelectItem key={b.id} value={b.id}>
+                      {bizName(b) || b.id}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
             {PERIODS.map((p) => (
               <button
                 key={p.key}
@@ -195,6 +251,11 @@ const DashboardContractAnalytics: React.FC = () => {
               <RefreshCcw className={cn('h-4 w-4', isFetching && 'animate-spin')} />
             </Button>
           </div>
+        </div>
+
+        {/* Selected scope */}
+        <div className="text-xs text-muted-foreground -mt-2">
+          {t('النطاق:', 'Scope:')} <span className="font-medium text-foreground">{selectedScopeLabel}</span>
         </div>
 
         {/* Loading */}
