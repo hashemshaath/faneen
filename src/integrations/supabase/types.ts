@@ -8124,6 +8124,10 @@ export type Database = {
         Args: { _subscription_id: string }
         Returns: undefined
       }
+      cancel_subscription_at_period_end: {
+        Args: { _subscription_id: string }
+        Returns: undefined
+      }
       categorize_email_link: { Args: { _url: string }; Returns: string }
       check_email_deliverability: { Args: never; Returns: undefined }
       check_password_reset_rate_limit: {
@@ -8920,6 +8924,10 @@ export type Database = {
         }
       }
       resend_client_invitation: { Args: { _id: string }; Returns: Json }
+      resume_subscription_renewal: {
+        Args: { _subscription_id: string }
+        Returns: undefined
+      }
       revoke_access_key: {
         Args: { _key_id: string; _reason?: string }
         Returns: boolean
