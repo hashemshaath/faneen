@@ -72,6 +72,11 @@ import {
   ContractCreateActionsBar,
   ContractCreateMobileActionBar,
 } from '@/components/contracts/dashboard/create/ContractCreateActionsBar';
+import {
+  AcceptedInvitationsPanel,
+  PendingInvitePanel,
+  type AcceptedInvitationRow,
+} from '@/components/contracts/dashboard/create/AcceptedInvitationsPanel';
 import { WORK_TYPES, getWorkType, pickTemplateForWorkType, type WorkTypeKey } from '@/lib/contract-work-types';
 import { getStatusGuidance } from '@/lib/contract-status-guidance';
 import { serializeDraftPayload, maskEmail as maskInviteEmail, type PendingInvite } from '@/lib/contract-invitations';
