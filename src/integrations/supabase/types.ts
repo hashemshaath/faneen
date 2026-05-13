@@ -6086,6 +6086,13 @@ export type Database = {
             referencedRelation: "private_sectors"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "private_sector_audit_log_sector_id_fkey"
+            columns: ["sector_id"]
+            isOneToOne: false
+            referencedRelation: "private_sectors_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       private_sector_distributors: {
@@ -6162,6 +6169,13 @@ export type Database = {
             referencedRelation: "private_sectors"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "private_sector_distributors_sector_id_fkey"
+            columns: ["sector_id"]
+            isOneToOne: false
+            referencedRelation: "private_sectors_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       private_sector_specializations: {
@@ -6212,12 +6226,21 @@ export type Database = {
             referencedRelation: "private_sectors"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "private_sector_specializations_sector_id_fkey"
+            columns: ["sector_id"]
+            isOneToOne: false
+            referencedRelation: "private_sectors_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       private_sectors: {
         Row: {
           brand_type: Database["public"]["Enums"]["private_sector_brand_type"]
           business_id: string
+          category_id: string | null
+          city_id: string | null
           contact_email: string | null
           contact_phone: string | null
           country_id: string | null
@@ -6237,6 +6260,11 @@ export type Database = {
           rejection_reason: string | null
           reviewed_at: string | null
           reviewed_by: string | null
+          seo_description_ar: string | null
+          seo_description_en: string | null
+          seo_keywords: string[]
+          seo_title_ar: string | null
+          seo_title_en: string | null
           short_description_ar: string | null
           short_description_en: string | null
           slug: string
@@ -6249,6 +6277,8 @@ export type Database = {
         Insert: {
           brand_type?: Database["public"]["Enums"]["private_sector_brand_type"]
           business_id: string
+          category_id?: string | null
+          city_id?: string | null
           contact_email?: string | null
           contact_phone?: string | null
           country_id?: string | null
@@ -6268,6 +6298,11 @@ export type Database = {
           rejection_reason?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          seo_description_ar?: string | null
+          seo_description_en?: string | null
+          seo_keywords?: string[]
+          seo_title_ar?: string | null
+          seo_title_en?: string | null
           short_description_ar?: string | null
           short_description_en?: string | null
           slug: string
@@ -6280,6 +6315,8 @@ export type Database = {
         Update: {
           brand_type?: Database["public"]["Enums"]["private_sector_brand_type"]
           business_id?: string
+          category_id?: string | null
+          city_id?: string | null
           contact_email?: string | null
           contact_phone?: string | null
           country_id?: string | null
@@ -6299,6 +6336,11 @@ export type Database = {
           rejection_reason?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          seo_description_ar?: string | null
+          seo_description_en?: string | null
+          seo_keywords?: string[]
+          seo_title_ar?: string | null
+          seo_title_en?: string | null
           short_description_ar?: string | null
           short_description_en?: string | null
           slug?: string
@@ -6321,6 +6363,20 @@ export type Database = {
             columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "private_sectors_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "private_sectors_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
             referencedColumns: ["id"]
           },
         ]
@@ -8185,6 +8241,80 @@ export type Database = {
           },
         ]
       }
+      private_sectors_public: {
+        Row: {
+          brand_type:
+            | Database["public"]["Enums"]["private_sector_brand_type"]
+            | null
+          business_id: string | null
+          business_name_ar: string | null
+          business_name_en: string | null
+          business_username: string | null
+          category_id: string | null
+          category_name_ar: string | null
+          category_name_en: string | null
+          category_slug: string | null
+          city_id: string | null
+          city_name_ar: string | null
+          city_name_en: string | null
+          contact_email: string | null
+          contact_phone: string | null
+          country_id: string | null
+          cover_url: string | null
+          created_at: string | null
+          description_ar: string | null
+          description_en: string | null
+          established_year: number | null
+          id: string | null
+          is_featured: boolean | null
+          logo_url: string | null
+          name_ar: string | null
+          name_en: string | null
+          parent_sector: string | null
+          ref_id: string | null
+          seo_description_ar: string | null
+          seo_description_en: string | null
+          seo_keywords: string[] | null
+          seo_title_ar: string | null
+          seo_title_en: string | null
+          short_description_ar: string | null
+          short_description_en: string | null
+          slug: string | null
+          sort_order: number | null
+          updated_at: string | null
+          website: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "private_sectors_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "private_sectors_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "private_sectors_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "private_sectors_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reviews_public: {
         Row: {
           business_id: string | null
@@ -9530,6 +9660,8 @@ export type Database = {
         Returns: {
           brand_type: Database["public"]["Enums"]["private_sector_brand_type"]
           business_id: string
+          category_id: string | null
+          city_id: string | null
           contact_email: string | null
           contact_phone: string | null
           country_id: string | null
@@ -9549,6 +9681,11 @@ export type Database = {
           rejection_reason: string | null
           reviewed_at: string | null
           reviewed_by: string | null
+          seo_description_ar: string | null
+          seo_description_en: string | null
+          seo_keywords: string[]
+          seo_title_ar: string | null
+          seo_title_en: string | null
           short_description_ar: string | null
           short_description_en: string | null
           slug: string
@@ -9686,6 +9823,10 @@ export type Database = {
         Args: { _muted: boolean }
         Returns: undefined
       }
+      set_private_sector_reason: {
+        Args: { _reason: string }
+        Returns: undefined
+      }
       submit_business_for_review: {
         Args: { _business_id: string }
         Returns: Database["public"]["Enums"]["business_approval_status"]
@@ -9695,6 +9836,8 @@ export type Database = {
         Returns: {
           brand_type: Database["public"]["Enums"]["private_sector_brand_type"]
           business_id: string
+          category_id: string | null
+          city_id: string | null
           contact_email: string | null
           contact_phone: string | null
           country_id: string | null
@@ -9714,6 +9857,11 @@ export type Database = {
           rejection_reason: string | null
           reviewed_at: string | null
           reviewed_by: string | null
+          seo_description_ar: string | null
+          seo_description_en: string | null
+          seo_keywords: string[]
+          seo_title_ar: string | null
+          seo_title_en: string | null
           short_description_ar: string | null
           short_description_en: string | null
           slug: string
