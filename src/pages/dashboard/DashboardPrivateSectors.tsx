@@ -32,15 +32,35 @@ const DashboardPrivateSectors: React.FC = () => {
   const [editing, setEditing] = useState<Partial<PrivateSector> | null>(null);
   const [auditFor, setAuditFor] = useState<string | null>(null);
 
-  // Resolve current user's business
-  const { data: business } = useQuery({
-    queryKey: ['my-business', user?.id],
+  // Resolve current user's business (owner OR staff). User may have multiple businesses.
+  const { data: businesses = [], isLoading: loadingBusiness } = useQuery({
+    queryKey: ['my-businesses-for-sectors', user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data } = await supabase.from('businesses').select('id, name_ar, name_en').eq('user_id', user!.id).maybeSingle();
-      return data;
+      const owned = await supabase
+        .from('businesses')
+        .select('id, name_ar, name_en')
+        .eq('user_id', user!.id)
+        .order('created_at', { ascending: true });
+      const ownedRows = owned.data ?? [];
+      const staff = await supabase
+        .from('business_staff')
+        .select('business_id, businesses:business_id(id, name_ar, name_en)')
+        .eq('user_id', user!.id)
+        .eq('is_active', true);
+      const staffRows = (staff.data ?? [])
+        .map((r: { businesses: { id: string; name_ar: string; name_en: string | null } | null }) => r.businesses)
+        .filter((b): b is { id: string; name_ar: string; name_en: string | null } => !!b);
+      const map = new Map<string, { id: string; name_ar: string; name_en: string | null }>();
+      [...ownedRows, ...staffRows].forEach((b) => map.set(b.id, b));
+      return Array.from(map.values());
     },
   });
+  const [activeBusinessId, setActiveBusinessId] = useState<string | null>(null);
+  const business = useMemo(
+    () => businesses.find((b) => b.id === activeBusinessId) ?? businesses[0] ?? null,
+    [businesses, activeBusinessId],
+  );
 
   const { data: sectors = [], isLoading } = useQuery({
     queryKey: ['my-private-sectors', business?.id],
@@ -84,11 +104,24 @@ const DashboardPrivateSectors: React.FC = () => {
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
   });
 
+  if (loadingBusiness) {
+    return (
+      <DashboardLayout>
+        <Card><CardContent className="py-10 text-center text-muted-foreground">
+          {isRTL ? 'جاري التحميل…' : 'Loading…'}
+        </CardContent></Card>
+      </DashboardLayout>
+    );
+  }
+
   if (!business) {
     return (
       <DashboardLayout>
         <Card><CardContent className="py-10 text-center text-muted-foreground">
-          {isRTL ? 'يجب إنشاء بيانات المنشأة أولاً.' : 'Please create your business profile first.'}
+          <div className="space-y-3">
+            <p>{isRTL ? 'لا توجد منشأة مرتبطة بحسابك بعد.' : 'No business linked to your account yet.'}</p>
+            <Button asChild variant="outline"><a href="/dashboard/business/edit">{isRTL ? 'إنشاء منشأة جديدة' : 'Create a business'}</a></Button>
+          </div>
         </CardContent></Card>
       </DashboardLayout>
     );
