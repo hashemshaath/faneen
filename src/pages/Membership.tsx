@@ -348,6 +348,7 @@ const Membership = () => {
           const isReview = status === 'submitted' || status === 'under_review';
           const needsChanges = status === 'needs_changes' || status === 'rejected';
           const isDraft = !isComplete && !isReview && !needsChanges;
+          const isAutoCreatedDraft = isDraft && completion === 0;
 
           const tone = isComplete
             ? 'border-success/30 bg-success/5 text-success'
@@ -366,7 +367,39 @@ const Membership = () => {
                 : (isRTL ? 'مسودة — أكمل بياناتك' : 'Draft — complete your profile');
 
           return (
-            <div className={`max-w-3xl mx-auto mb-6 rounded-xl border ${tone.split(' ').slice(0, 2).join(' ')} px-4 py-3 flex items-center gap-3`}>
+            <>
+              {isAutoCreatedDraft && (
+                <div className="max-w-3xl mx-auto mb-3 rounded-xl border border-info/30 bg-info/5 px-4 py-3 flex items-start gap-3">
+                  <Info className="w-5 h-5 text-info shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-foreground leading-relaxed">
+                      {isRTL
+                        ? 'تم إنشاء منشأتك تلقائياً كمسودة برقم تسلسلي خاص. أكمل بياناتها لتفعيل اعتمادها وعرضها في الدليل.'
+                        : 'Your business was auto-created as a draft with its own reference ID. Complete its details to activate approval and listing.'}
+                    </p>
+                    {biz.ref_id && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        <span className="me-1">{isRTL ? 'الرقم التسلسلي:' : 'Reference ID:'}</span>
+                        <span className="tech-content font-mono font-semibold text-foreground">{biz.ref_id}</span>
+                      </p>
+                    )}
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      <Link to="/dashboard/business-administration">
+                        <Button size="sm" className="h-8 text-xs gap-1.5">
+                          <Building2 className="w-3.5 h-3.5" />
+                          {isRTL ? 'إدارة المنشأة' : 'Manage business'}
+                        </Button>
+                      </Link>
+                      <Link to="/onboarding">
+                        <Button size="sm" variant="outline" className="h-8 text-xs">
+                          {isRTL ? 'استئناف الإعداد' : 'Resume setup'}
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              )}
+              <div className={`max-w-3xl mx-auto mb-6 rounded-xl border ${tone.split(' ').slice(0, 2).join(' ')} px-4 py-3 flex items-center gap-3`}>
               <Building2 className={`w-5 h-5 shrink-0 ${tone.split(' ')[2]}`} />
               <div className="flex-1 min-w-0 text-sm">
                 <div className="flex flex-wrap items-center gap-2">
@@ -399,7 +432,8 @@ const Membership = () => {
                   </Button>
                 </Link>
               )}
-            </div>
+              </div>
+            </>
           );
         })()}
 
