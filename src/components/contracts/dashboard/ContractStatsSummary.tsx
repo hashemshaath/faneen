@@ -85,20 +85,21 @@ export function ContractStatsSummary({ stats, isRTL }: Props) {
     <div className="space-y-4">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {kpis.map((s, i) => (
-          <Card key={i} className="overflow-hidden border-border/40">
+          <Card key={i} className="relative overflow-hidden border-border/40 hover-lift transition-all">
+            <span className={`absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r ${s.color.replace('from-', 'from-').replace('/10', '/60').replace('/5', '/30')}`} aria-hidden="true" />
             <CardContent className={`p-4 bg-gradient-to-br ${s.color}`}>
               <div className="flex items-start justify-between mb-3">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${s.iconColor}`}>
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${s.iconColor} shadow-sm`}>
                   <s.icon className="w-5 h-5" aria-hidden="true" />
                 </div>
                 {s.trend && (
-                  <Badge variant="outline" className={`text-[8px] gap-0.5 ${s.trendUp ? 'text-success border-success' : 'text-destructive border-destructive'}`}>
+                  <Badge variant="outline" className={`text-[8px] gap-0.5 ${s.trendUp ? 'text-success border-success/40 bg-success/5' : 'text-destructive border-destructive/40 bg-destructive/5'}`}>
                     {s.trendUp ? <ArrowUpRight className="w-2.5 h-2.5" aria-hidden="true" /> : <ArrowDownRight className="w-2.5 h-2.5" aria-hidden="true" />}
                     {s.trend}
                   </Badge>
                 )}
               </div>
-              <p className="text-xl font-bold mb-0.5">
+              <p className="text-xl font-bold mb-0.5 tech-content tracking-tight">
                 {s.value}
                 {s.sub && <span className="text-[10px] text-muted-foreground ms-1 font-normal">{s.sub}</span>}
               </p>
