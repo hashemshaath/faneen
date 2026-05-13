@@ -64,6 +64,8 @@ import { ContractFilters } from '@/components/contracts/dashboard/ContractFilter
 import { ContractEmptyState } from '@/components/contracts/dashboard/ContractEmptyState';
 import { ContractPageHeader } from '@/components/contracts/dashboard/ContractPageHeader';
 import { ContractStatsSummary } from '@/components/contracts/dashboard/ContractStatsSummary';
+import { ContractCard } from '@/components/contracts/dashboard/ContractCard';
+import { getContractHealth } from '@/components/contracts/dashboard/contract-helpers';
 import { WORK_TYPES, getWorkType, pickTemplateForWorkType, type WorkTypeKey } from '@/lib/contract-work-types';
 import { getStatusGuidance } from '@/lib/contract-status-guidance';
 import { serializeDraftPayload, maskEmail as maskInviteEmail, type PendingInvite } from '@/lib/contract-invitations';
@@ -108,16 +110,6 @@ const templateCategoryConfig: Record<string, { ar: string; en: string; icon: Rea
   upvc: { ar: 'UPVC أبواب وشبابيك', en: 'UPVC Doors & Windows', icon: Wrench, color: 'text-success bg-success/10' },
   glass_securit: { ar: 'زجاج وسيكوريت', en: 'Glass & Securit', icon: GlassWater, color: 'text-info bg-info/10' },
 };
-
-/* ── Status Config (centralized in @/lib/contract-statuses) ── */
-// `color` is mapped from the central `badge` field for back-compat with this
-// file's existing JSX; `ring`/`gradient` come straight from the central source.
-const statusConfig = (Object.fromEntries(
-  ['draft', 'pending_approval', 'active', 'completed', 'cancelled', 'disputed'].map((k) => {
-    const m = getContractStatusMeta(k);
-    return [k, { icon: m.icon, color: m.badge, label_ar: m.label_ar, label_en: m.label_en, ring: m.ring, gradient: m.gradient }];
-  }),
-) as Record<string, { icon: React.ElementType; color: string; label_ar: string; label_en: string; ring: string; gradient: string }>);
 
 interface ContractForm {
   title_ar: string; title_en: string; description_ar: string; description_en: string;
