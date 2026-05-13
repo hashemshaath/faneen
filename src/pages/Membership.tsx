@@ -390,7 +390,7 @@ const Membership = () => {
                       </p>
                     )}
                     <div className="flex flex-wrap gap-2 mt-2">
-                      <Link to="/dashboard/business-administration">
+                      <Link to="/dashboard/business-completion">
                         <Button size="sm" className="h-8 text-xs gap-1.5">
                           <Building2 className="w-3.5 h-3.5" />
                           {isRTL ? 'إدارة المنشأة' : 'Manage business'}
