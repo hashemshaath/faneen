@@ -1606,6 +1606,64 @@ const ContractDetail = () => {
       </div>
 
       <div className="container py-5 sm:py-8 px-4 sm:px-6 max-w-5xl mx-auto">
+        {/* ─── Phase 5E.1 — Status Guidance (read-only) ─── */}
+        {(() => {
+          const guidance = getStatusGuidance(contract.status);
+          const status = contract.status ?? 'draft';
+          const tone =
+            status === 'active' || status === 'completed'
+              ? { box: 'border-success/30 bg-success/5', icon: 'text-success' }
+              : status === 'pending_approval' || status === 'disputed'
+              ? { box: 'border-warning/30 bg-warning/5', icon: 'text-warning' }
+              : status === 'cancelled'
+              ? { box: 'border-destructive/30 bg-destructive/5', icon: 'text-destructive' }
+              : { box: 'border-info/30 bg-info/5', icon: 'text-info' };
+          const StatusIcon = cfg.icon;
+          const meaning = isRTL ? guidance.meaning_ar : guidance.meaning_en;
+          const nextActions = isRTL ? guidance.next_actions_ar : guidance.next_actions_en;
+          const lockNotice = guidance.locked
+            ? (isRTL ? guidance.lock_notice_ar : guidance.lock_notice_en)
+            : null;
+          return (
+            <div
+              className={`rounded-xl border ${tone.box} p-3 sm:p-4 mb-5 sm:mb-6`}
+              role="note"
+              aria-label={isRTL ? 'إرشاد حالة العقد' : 'Contract status guidance'}
+            >
+              <div className="flex items-start gap-3">
+                <div className={`shrink-0 mt-0.5 ${tone.icon}`}>
+                  <StatusIcon className="w-5 h-5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-foreground">
+                    {isRTL ? cfg.label_ar : cfg.label_en}
+                  </p>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1 leading-relaxed">
+                    {meaning}
+                  </p>
+                  {nextActions.length > 0 && (
+                    <ul className="mt-2 flex flex-wrap gap-1.5">
+                      {nextActions.map((a, i) => (
+                        <li
+                          key={i}
+                          className="inline-flex items-center text-[11px] rounded-md border border-border bg-card px-2 py-0.5 text-muted-foreground"
+                        >
+                          {a}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {lockNotice && (
+                    <p className="text-[11px] text-warning mt-2 flex items-center gap-1">
+                      <Shield className="w-3 h-3" />
+                      {lockNotice}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
         {pdfDebugEnabled && pdfDiagnostics && (
           <div className="rounded-xl border border-border bg-card p-3 sm:p-4 mb-5 sm:mb-6 text-xs">
             <div className="flex items-center gap-2 font-semibold mb-3">
