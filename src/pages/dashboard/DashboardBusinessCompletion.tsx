@@ -155,6 +155,16 @@ const DashboardBusinessCompletion: React.FC = () => {
   const status: ApprovalStatus = (business?.approval_status as ApprovalStatus) ?? 'draft';
   const meta = statusMeta[status];
 
+  // First incomplete checklist item — drives the "Resume setup" CTA so the
+  // user lands directly on the missing field instead of restarting the wizard.
+  const firstIncomplete = useMemo(() => items.find((i) => !i.done) ?? null, [items]);
+  const resumeTarget = firstIncomplete
+    ? `${firstIncomplete.to}?focus=${firstIncomplete.key}#${firstIncomplete.key}`
+    : '/onboarding';
+  const resumeLabel = firstIncomplete
+    ? (isRTL ? firstIncomplete.label_ar : firstIncomplete.label_en)
+    : null;
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -253,9 +263,21 @@ const DashboardBusinessCompletion: React.FC = () => {
                         : (isRTL ? 'بياناتك مكتملة — أرسل المنشأة للمراجعة الآن.' : 'Everything is filled in — submit your business for review now.')}
               </p>
               <div className="flex flex-wrap gap-2">
-                <Button size="sm" className="h-8 text-xs gap-1.5" onClick={() => navigate('/onboarding')}>
+                <Button
+                  size="sm"
+                  className="h-8 text-xs gap-1.5"
+                  onClick={() => navigate(resumeTarget)}
+                  aria-label={resumeLabel
+                    ? (isRTL ? `استئناف الإعداد عند: ${resumeLabel}` : `Resume setup at: ${resumeLabel}`)
+                    : (isRTL ? 'استئناف الإعداد' : 'Resume setup')}
+                >
                   <ArrowRight className={`w-3.5 h-3.5 ${isRTL ? 'rotate-180' : ''}`} />
-                  {isRTL ? 'متابعة الإعداد' : 'Resume setup'}
+                  {isRTL ? 'استئناف الإعداد' : 'Resume setup'}
+                  {resumeLabel && (
+                    <span className="opacity-80">
+                      {isRTL ? `– ${resumeLabel}` : `– ${resumeLabel}`}
+                    </span>
+                  )}
                 </Button>
                 {status === 'draft' && completed === totalSteps && (
                   <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5" onClick={() => navigate('/onboarding?step=summary')}>
