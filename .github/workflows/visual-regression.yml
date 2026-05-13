@@ -7,6 +7,10 @@ on:
     branches: [main]
   workflow_dispatch:
 
+concurrency:
+  group: visual-regression-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   visual:
     name: Playwright visual tests
@@ -18,6 +22,10 @@ jobs:
     env:
       CI: "true"
       PLAYWRIGHT_BASE_URL: http://localhost:8080
+      NODE_OPTIONS: "--max-old-space-size=4096"
+      # Browsers ship pre-installed in this image at /ms-playwright; pin so
+      # `playwright install` becomes a no-op instead of re-downloading.
+      PLAYWRIGHT_BROWSERS_PATH: /ms-playwright
     steps:
       - uses: actions/checkout@v4
 
@@ -37,26 +45,38 @@ jobs:
           echo "OK: package-lock.json is in sync."
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --no-audit --no-fund --prefer-offline
 
-      - name: Install Chromium (with system deps)
-        run: npx playwright install --with-deps chromium
+      - name: Ensure Chromium is available
+        run: |
+          # The Playwright container already ships Chromium + system deps.
+          # Skip --with-deps (apt is unneeded and slow inside the image).
+          # Only download if the binary is somehow missing.
+          if ls "$PLAYWRIGHT_BROWSERS_PATH"/chromium-*/chrome-linux/chrome >/dev/null 2>&1; then
+            echo "Chromium already present in $PLAYWRIGHT_BROWSERS_PATH"
+          else
+            npx playwright install chromium
+          fi
 
       - name: Build app
         run: npm run build
 
       - name: Start preview server
         run: |
-          npx vite preview --host 0.0.0.0 --port 8080 --strictPort &
+          npx vite preview --host 0.0.0.0 --port 8080 --strictPort \
+            > /tmp/preview.log 2>&1 &
           echo $! > /tmp/preview.pid
 
       - name: Wait for server
         run: |
-          for i in $(seq 1 60); do
+          for i in $(seq 1 120); do
             curl -sf http://localhost:8080 >/dev/null && exit 0
             sleep 1
           done
-          echo "Server did not become ready"; exit 1
+          echo "::error::Preview server did not become ready in 120s"
+          echo "--- preview.log ---"
+          cat /tmp/preview.log || true
+          exit 1
 
       - name: Check for visual baselines
         id: baselines
