@@ -1904,6 +1904,11 @@ const DashboardContracts = () => {
                   onSelect={setSelectedClient}
                   fallbackEmail={form.client_email}
                   onFallbackEmail={(v) => setForm(f => ({ ...f, client_email: v }))}
+                  guest={guestClient}
+                  onSelectGuest={setGuestClient}
+                  prefillName={leadPrefill?.customer_name ?? null}
+                  prefillEmail={leadPrefill?.customer_email ?? null}
+                  prefillPhone={(leadPrefill as { customer_phone?: string | null } | null)?.customer_phone ?? null}
                   onRequestInvite={(prefill) => {
                     setInviteForm({ email: prefill.includes('@') ? prefill : '', name: '', phone: '' });
                     setInviteMode('composing');
