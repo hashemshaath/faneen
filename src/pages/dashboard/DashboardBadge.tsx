@@ -391,6 +391,33 @@ const DashboardBadge: React.FC = () => {
     URL.revokeObjectURL(url);
   };
 
+  const downloadPng = async () => {
+    const blob = await svgToPngBlob(svgStandalone, 3);
+    if (!blob) {
+      toast.error(isRTL ? 'تعذّر إنشاء PNG (قد يكون الشعار من نطاق خارجي)' : 'PNG export failed (logo may be cross-origin)');
+      return;
+    }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `qitaat-badge-${variant}-${size}.png`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success(isRTL ? 'تم تنزيل PNG' : 'PNG downloaded');
+  };
+
+  const handleLogoFile = (file: File | null) => {
+    if (!file) return;
+    if (file.size > 200 * 1024) {
+      toast.error(isRTL ? 'الحد الأقصى 200KB' : 'Max 200KB');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => setLogoDataUrl(typeof reader.result === 'string' ? reader.result : '');
+    reader.onerror = () => toast.error(isRTL ? 'تعذّر قراءة الملف' : 'Could not read file');
+    reader.readAsDataURL(file);
+  };
+
   const snippetMap: Record<SnippetKind, string> = {
     html, md: markdown, jsx, iframe, email: emailSig, link: profileLink, svg: svgStandalone,
   };
