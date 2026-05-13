@@ -19,6 +19,7 @@ import { MembershipKeysManager } from '@/components/membership/MembershipKeysMan
 import { track } from '@/lib/analytics-events';
 import { Button } from '@/components/ui/button';
 import { ensureDraftBusiness } from '@/lib/ensure-business';
+import { logUpgradeRejection } from '@/lib/membership-rejection-logger';
 
 const tierOrder = ['free', 'basic', 'premium', 'enterprise'];
 
@@ -283,30 +284,17 @@ const Membership = () => {
       toast.error(e.message);
       // Audit: log every blocked upgrade attempt where business_id / ref_id
       // mismatched (or other validation failures from the DB trigger).
-      const msg = e.message || '';
-      const reason = /business_ref_id .* does not match/i.test(msg)
-        ? 'ref_id_mismatch'
-        : /does not belong/i.test(msg)
-          ? 'business_user_mismatch'
-          : /Business not found/i.test(msg)
-            ? 'business_not_found'
-            : /business_ref_id is required/i.test(msg)
-              ? 'missing_ref_id'
-              : null;
-      if (!reason) return;
       const bizRefId = (myBusiness as { ref_id?: string | null } | null | undefined)?.ref_id ?? null;
-      void supabase.rpc('log_upgrade_rejection', {
-        _attempted_business_id: myBusiness?.id ?? null,
-        _attempted_business_ref_id: bizRefId,
-        _requested_tier: plan?.tier ?? null,
-        _billing_cycle: billingCycle,
-        _reason_code: reason,
-        _error_message: msg.slice(0, 500),
-        _user_agent: typeof navigator !== 'undefined' ? navigator.userAgent.slice(0, 300) : null,
-      }).then(({ error }) => {
-        if (error) {
+      void logUpgradeRejection(supabase, {
+        errorMessage: e.message || '',
+        attemptedBusinessId: myBusiness?.id ?? null,
+        attemptedBusinessRefId: bizRefId,
+        requestedTier: plan?.tier ?? null,
+        billingCycle,
+      }).then((res) => {
+        if (res.error) {
           // eslint-disable-next-line no-console
-          console.warn('[Membership] failed to log upgrade rejection', error);
+          console.warn('[Membership] failed to log upgrade rejection', res.error);
         }
       });
     },
