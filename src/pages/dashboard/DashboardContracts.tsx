@@ -1592,6 +1592,29 @@ const DashboardContracts = () => {
               {/* CT4B — Review summary + status guidance before submit. */}
               <div ref={stepRefs.review} className="space-y-4 scroll-mt-24">
               {!editingId && (() => {
+                const result = calculateContractCompleteness({
+                  hasClient: !!(selectedClient || form.client_email),
+                  hasWorkType: !!selectedWorkType && workTypeTouched,
+                  hasTemplate: !!effectiveVersion,
+                  titleAr: form.title_ar,
+                  titleEn: form.title_en,
+                  startDate: form.start_date,
+                  endDate: form.end_date,
+                  vatRate: form.vat_rate,
+                  totalAmount: form.total_amount,
+                  termsAr: form.terms_ar,
+                  termsEn: form.terms_en,
+                  hasTemplateSnapshot: !!effectiveVersion,
+                });
+                return (
+                  <ContractCompletenessCard
+                    isRTL={isRTL}
+                    result={result}
+                    onGoToStep={goToStep}
+                  />
+                );
+              })()}
+              {!editingId && (() => {
                 const guide = getStatusGuidance('draft');
                 const w = getWorkType(selectedWorkType);
                 const missing: string[] = [];
