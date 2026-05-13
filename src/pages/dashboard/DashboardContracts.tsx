@@ -1710,6 +1710,7 @@ const DashboardContracts = () => {
                 const completeness = !editingId
                   ? calculateContractCompleteness({
                       hasClient: !!(selectedClient || form.client_email),
+                      hasExecutionSite: !!selectedSiteId,
                       hasWorkType: !!selectedWorkType && workTypeTouched,
                       hasTemplate: !!effectiveVersion,
                       titleAr: form.title_ar,
@@ -1802,6 +1803,7 @@ const DashboardContracts = () => {
                 onSave={() => createContractMutation.mutate()}
                 completenessScore={!editingId ? calculateContractCompleteness({
                   hasClient: !!(selectedClient || form.client_email),
+                  hasExecutionSite: !!selectedSiteId,
                   hasWorkType: !!selectedWorkType && workTypeTouched,
                   hasTemplate: !!effectiveVersion,
                   titleAr: form.title_ar, titleEn: form.title_en,
