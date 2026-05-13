@@ -397,13 +397,31 @@ const DashboardBadge: React.FC = () => {
           <Skeleton className="h-72 rounded-2xl" />
         ) : !business ? (
           <Card>
-            <CardContent className="p-8 text-center">
-              <AlertCircle className="w-10 h-10 text-warning mx-auto mb-3" />
-              <p className="text-sm text-muted-foreground">
-                {isRTL
-                  ? 'لم نعثر على ورشة مرتبطة بحسابك. أنشئ ملف الورشة أولاً ثم عُد إلى هذه الصفحة.'
-                  : 'No workshop linked to your account yet. Create your workshop profile first.'}
-              </p>
+            <CardContent className="p-8 text-center space-y-4">
+              <AlertCircle className="w-10 h-10 text-warning mx-auto" />
+              <div className="space-y-1">
+                <h2 className="text-base font-semibold">
+                  {isRTL ? 'لا توجد منشأة مرتبطة بحسابك بعد' : 'No business linked to your account yet'}
+                </h2>
+                <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                  {isRTL
+                    ? 'أنشئ ملف منشأتك لتفعيل شارة التوثيق، أو اطلب من صاحب المنشأة إضافتك كموظف ثم اختر المنشأة من المُبدّل أعلى الصفحة.'
+                    : 'Create your business profile to enable the verified badge, or ask the owner to invite you as staff — then pick the business from the switcher above.'}
+                </p>
+              </div>
+              <div className="flex items-center justify-center gap-2 flex-wrap">
+                <Button asChild size="sm" className="rounded-xl">
+                  <a href="/dashboard/business">
+                    {isRTL ? 'إنشاء ملف المنشأة' : 'Create business profile'}
+                    <ArrowRight className="w-3.5 h-3.5 ms-1.5 rtl:rotate-180" />
+                  </a>
+                </Button>
+                <Button asChild size="sm" variant="outline" className="rounded-xl">
+                  <a href="/dashboard/diagnostics">
+                    {isRTL ? 'تشخيص حسابي' : 'Account diagnostics'}
+                  </a>
+                </Button>
+              </div>
             </CardContent>
           </Card>
         ) : (
