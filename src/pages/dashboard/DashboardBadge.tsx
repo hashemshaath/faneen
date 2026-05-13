@@ -779,7 +779,7 @@ const DashboardBadge: React.FC = () => {
                           {isRTL ? 'لا تنشر الشارة قبل توثيق ورشتك من فريق قِطاعات لتفادي تضليل العملاء.' : 'Do not publish the badge before your workshop is verified by the Qitaat team.'}
                         </p>
                       </div>
-                      <Button size="sm" variant="outline" asChild><a href="/dashboard/verification">{isRTL ? 'ابدأ التوثيق' : 'Start verification'}</a></Button>
+                      <Button size="sm" variant="outline" asChild><a href="/dashboard/settings">{isRTL ? 'ابدأ التوثيق' : 'Start verification'}</a></Button>
                     </CardContent>
                   </Card>
                 )}
