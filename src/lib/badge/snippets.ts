@@ -206,3 +206,33 @@ export function buildEmailSignature(opts: BadgeBuildOptions): string {
   const compact = buildBadgeHtml({ ...opts, variant: 'compact' });
   return `<table cellpadding="0" cellspacing="0" border="0"><tr><td style="padding-top:8px;">${compact}</td></tr></table>`;
 }
+
+/**
+ * Rasterize an SVG markup string to a PNG Blob via a canvas at the chosen scale.
+ * Returns null if the browser cannot decode the SVG (e.g. tainted by external image).
+ */
+export function svgToPngBlob(svgMarkup: string, scale = 3): Promise<Blob | null> {
+  return new Promise((resolve) => {
+    const widthMatch = /width="(\d+)"/.exec(svgMarkup);
+    const heightMatch = /height="(\d+)"/.exec(svgMarkup);
+    const w = widthMatch ? Number(widthMatch[1]) : 320;
+    const h = heightMatch ? Number(heightMatch[1]) : 70;
+    const blob = new Blob([svgMarkup], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(w * scale);
+      canvas.height = Math.round(h * scale);
+      const ctx = canvas.getContext('2d');
+      if (!ctx) { URL.revokeObjectURL(url); resolve(null); return; }
+      ctx.scale(scale, scale);
+      ctx.drawImage(img, 0, 0);
+      URL.revokeObjectURL(url);
+      canvas.toBlob((b) => resolve(b), 'image/png');
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
+    img.src = url;
+  });
+}
