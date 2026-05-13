@@ -6041,6 +6041,290 @@ export type Database = {
           },
         ]
       }
+      private_sector_audit_log: {
+        Row: {
+          action: string
+          actor_user_id: string | null
+          after_data: Json | null
+          before_data: Json | null
+          created_at: string
+          entity_id: string | null
+          entity_type: string
+          id: string
+          notes: string | null
+          sector_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_user_id?: string | null
+          after_data?: Json | null
+          before_data?: Json | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          notes?: string | null
+          sector_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string | null
+          after_data?: Json | null
+          before_data?: Json | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          notes?: string | null
+          sector_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "private_sector_audit_log_sector_id_fkey"
+            columns: ["sector_id"]
+            isOneToOne: false
+            referencedRelation: "private_sectors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      private_sector_distributors: {
+        Row: {
+          business_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          ref_id: string
+          requested_by: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          role: Database["public"]["Enums"]["private_sector_distributor_role"]
+          sector_id: string
+          since_date: string | null
+          status: Database["public"]["Enums"]["private_sector_link_status"]
+          territory_ar: string | null
+          territory_en: string | null
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          ref_id?: string
+          requested_by?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          role?: Database["public"]["Enums"]["private_sector_distributor_role"]
+          sector_id: string
+          since_date?: string | null
+          status?: Database["public"]["Enums"]["private_sector_link_status"]
+          territory_ar?: string | null
+          territory_en?: string | null
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          ref_id?: string
+          requested_by?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          role?: Database["public"]["Enums"]["private_sector_distributor_role"]
+          sector_id?: string
+          since_date?: string | null
+          status?: Database["public"]["Enums"]["private_sector_link_status"]
+          territory_ar?: string | null
+          territory_en?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "private_sector_distributors_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "private_sector_distributors_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "private_sector_distributors_sector_id_fkey"
+            columns: ["sector_id"]
+            isOneToOne: false
+            referencedRelation: "private_sectors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      private_sector_specializations: {
+        Row: {
+          created_at: string
+          description_ar: string | null
+          description_en: string | null
+          id: string
+          is_active: boolean
+          name_ar: string
+          name_en: string | null
+          ref_id: string
+          sector_id: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          id?: string
+          is_active?: boolean
+          name_ar: string
+          name_en?: string | null
+          ref_id?: string
+          sector_id: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          id?: string
+          is_active?: boolean
+          name_ar?: string
+          name_en?: string | null
+          ref_id?: string
+          sector_id?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "private_sector_specializations_sector_id_fkey"
+            columns: ["sector_id"]
+            isOneToOne: false
+            referencedRelation: "private_sectors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      private_sectors: {
+        Row: {
+          brand_type: Database["public"]["Enums"]["private_sector_brand_type"]
+          business_id: string
+          contact_email: string | null
+          contact_phone: string | null
+          country_id: string | null
+          cover_url: string | null
+          created_at: string
+          description_ar: string | null
+          description_en: string | null
+          established_year: number | null
+          id: string
+          is_featured: boolean
+          logo_url: string | null
+          metadata: Json
+          name_ar: string
+          name_en: string | null
+          parent_sector: string
+          ref_id: string
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          short_description_ar: string | null
+          short_description_en: string | null
+          slug: string
+          sort_order: number
+          status: Database["public"]["Enums"]["private_sector_status"]
+          submitted_at: string | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          brand_type?: Database["public"]["Enums"]["private_sector_brand_type"]
+          business_id: string
+          contact_email?: string | null
+          contact_phone?: string | null
+          country_id?: string | null
+          cover_url?: string | null
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          established_year?: number | null
+          id?: string
+          is_featured?: boolean
+          logo_url?: string | null
+          metadata?: Json
+          name_ar: string
+          name_en?: string | null
+          parent_sector: string
+          ref_id?: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          short_description_ar?: string | null
+          short_description_en?: string | null
+          slug: string
+          sort_order?: number
+          status?: Database["public"]["Enums"]["private_sector_status"]
+          submitted_at?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          brand_type?: Database["public"]["Enums"]["private_sector_brand_type"]
+          business_id?: string
+          contact_email?: string | null
+          contact_phone?: string | null
+          country_id?: string | null
+          cover_url?: string | null
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          established_year?: number | null
+          id?: string
+          is_featured?: boolean
+          logo_url?: string | null
+          metadata?: Json
+          name_ar?: string
+          name_en?: string | null
+          parent_sector?: string
+          ref_id?: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          short_description_ar?: string | null
+          short_description_en?: string | null
+          slug?: string
+          sort_order?: number
+          status?: Database["public"]["Enums"]["private_sector_status"]
+          submitted_at?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "private_sectors_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "private_sectors_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profile_images: {
         Row: {
           caption_ar: string | null
@@ -9087,6 +9371,10 @@ export type Database = {
         Args: { _lead_id: string }
         Returns: Json
       }
+      private_sector_make_slug: {
+        Args: { _name: string; _ref: string }
+        Returns: string
+      }
       process_expired_memberships: {
         Args: never
         Returns: {
@@ -9233,6 +9521,79 @@ export type Database = {
         Args: { _subscription_id: string }
         Returns: undefined
       }
+      review_private_sector: {
+        Args: {
+          _decision: Database["public"]["Enums"]["private_sector_status"]
+          _id: string
+          _reason?: string
+        }
+        Returns: {
+          brand_type: Database["public"]["Enums"]["private_sector_brand_type"]
+          business_id: string
+          contact_email: string | null
+          contact_phone: string | null
+          country_id: string | null
+          cover_url: string | null
+          created_at: string
+          description_ar: string | null
+          description_en: string | null
+          established_year: number | null
+          id: string
+          is_featured: boolean
+          logo_url: string | null
+          metadata: Json
+          name_ar: string
+          name_en: string | null
+          parent_sector: string
+          ref_id: string
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          short_description_ar: string | null
+          short_description_en: string | null
+          slug: string
+          sort_order: number
+          status: Database["public"]["Enums"]["private_sector_status"]
+          submitted_at: string | null
+          updated_at: string
+          website: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "private_sectors"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      review_private_sector_distributor: {
+        Args: {
+          _decision: Database["public"]["Enums"]["private_sector_link_status"]
+          _id: string
+        }
+        Returns: {
+          business_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          ref_id: string
+          requested_by: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          role: Database["public"]["Enums"]["private_sector_distributor_role"]
+          sector_id: string
+          since_date: string | null
+          status: Database["public"]["Enums"]["private_sector_link_status"]
+          territory_ar: string | null
+          territory_en: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "private_sector_distributors"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       revoke_access_key: {
         Args: { _key_id: string; _reason?: string }
         Returns: boolean
@@ -9328,6 +9689,46 @@ export type Database = {
       submit_business_for_review: {
         Args: { _business_id: string }
         Returns: Database["public"]["Enums"]["business_approval_status"]
+      }
+      submit_private_sector: {
+        Args: { _id: string }
+        Returns: {
+          brand_type: Database["public"]["Enums"]["private_sector_brand_type"]
+          business_id: string
+          contact_email: string | null
+          contact_phone: string | null
+          country_id: string | null
+          cover_url: string | null
+          created_at: string
+          description_ar: string | null
+          description_en: string | null
+          established_year: number | null
+          id: string
+          is_featured: boolean
+          logo_url: string | null
+          metadata: Json
+          name_ar: string
+          name_en: string | null
+          parent_sector: string
+          ref_id: string
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          short_description_ar: string | null
+          short_description_en: string | null
+          slug: string
+          sort_order: number
+          status: Database["public"]["Enums"]["private_sector_status"]
+          submitted_at: string | null
+          updated_at: string
+          website: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "private_sectors"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       subscribe_to_plan: {
         Args: {
@@ -9426,6 +9827,10 @@ export type Database = {
         }
         Returns: Json
       }
+      user_can_manage_business: {
+        Args: { _business_id: string }
+        Returns: boolean
+      }
       validate_contract_line_item_price: {
         Args: { _payload: Json }
         Returns: Json
@@ -9490,6 +9895,29 @@ export type Database = {
         | "rejected"
       membership_tier: "free" | "basic" | "premium" | "enterprise"
       milestone_status: "pending" | "active" | "completed" | "disputed"
+      private_sector_brand_type:
+        | "own_brand"
+        | "exclusive_agency"
+        | "authorized_dealer"
+        | "distributor"
+        | "manufacturer"
+      private_sector_distributor_role:
+        | "authorized_dealer"
+        | "distributor"
+        | "reseller"
+        | "agent"
+        | "showroom"
+      private_sector_link_status:
+        | "pending"
+        | "approved"
+        | "rejected"
+        | "revoked"
+      private_sector_status:
+        | "draft"
+        | "pending"
+        | "approved"
+        | "rejected"
+        | "suspended"
       promotion_type: "ad" | "offer" | "video"
       username_status: "pending" | "approved" | "rejected"
       warranty_status: "active" | "expired" | "claimed" | "void"
@@ -9681,6 +10109,33 @@ export const Constants = {
       ],
       membership_tier: ["free", "basic", "premium", "enterprise"],
       milestone_status: ["pending", "active", "completed", "disputed"],
+      private_sector_brand_type: [
+        "own_brand",
+        "exclusive_agency",
+        "authorized_dealer",
+        "distributor",
+        "manufacturer",
+      ],
+      private_sector_distributor_role: [
+        "authorized_dealer",
+        "distributor",
+        "reseller",
+        "agent",
+        "showroom",
+      ],
+      private_sector_link_status: [
+        "pending",
+        "approved",
+        "rejected",
+        "revoked",
+      ],
+      private_sector_status: [
+        "draft",
+        "pending",
+        "approved",
+        "rejected",
+        "suspended",
+      ],
       promotion_type: ["ad", "offer", "video"],
       username_status: ["pending", "approved", "rejected"],
       warranty_status: ["active", "expired", "claimed", "void"],
