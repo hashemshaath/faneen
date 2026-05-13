@@ -5048,6 +5048,48 @@ export type Database = {
         }
         Relationships: []
       }
+      membership_upgrade_rejections: {
+        Row: {
+          actual_business_ref_id: string | null
+          attempted_business_id: string | null
+          attempted_business_ref_id: string | null
+          billing_cycle: string | null
+          created_at: string
+          error_message: string | null
+          id: string
+          reason_code: string
+          requested_tier: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          actual_business_ref_id?: string | null
+          attempted_business_id?: string | null
+          attempted_business_ref_id?: string | null
+          billing_cycle?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          reason_code: string
+          requested_tier?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          actual_business_ref_id?: string | null
+          attempted_business_id?: string | null
+          attempted_business_ref_id?: string | null
+          billing_cycle?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          reason_code?: string
+          requested_tier?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       membership_upgrade_requests: {
         Row: {
           admin_note: string | null
@@ -8679,6 +8721,18 @@ export type Database = {
           p_sector: string
         }
         Returns: undefined
+      }
+      log_upgrade_rejection: {
+        Args: {
+          _attempted_business_id: string
+          _attempted_business_ref_id: string
+          _billing_cycle: string
+          _error_message: string
+          _reason_code: string
+          _requested_tier: string
+          _user_agent: string
+        }
+        Returns: string
       }
       market_sector_city_stats: {
         Args: { p_days?: number }
