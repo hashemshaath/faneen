@@ -916,7 +916,18 @@ const DashboardPromotions = () => {
             </div>
             <h3 className="text-base font-semibold mb-1.5">{rtl ? 'لا توجد عروض بعد' : 'No promotions yet'}</h3>
             <p className="text-sm text-muted-foreground max-w-xs mb-6">{rtl ? 'أنشئ أول عرض لجذب العملاء وزيادة المبيعات' : 'Create your first promotion to attract customers'}</p>
-            <Button variant="hero" size="sm" className="rounded-xl" onClick={() => setShowForm(true)}><Plus className="w-4 h-4 me-1" />{rtl ? 'أضف أول عرض' : 'Add First Promotion'}</Button>
+            <div className="flex gap-2 flex-wrap justify-center">
+              <Button variant="hero" size="sm" className="rounded-xl" onClick={() => setShowForm(true)}>
+                <Plus className="w-4 h-4 me-1" />{rtl ? 'أضف أول عرض' : 'Add First Promotion'}
+              </Button>
+              <Button variant="outline" size="sm" className="rounded-xl" onClick={() => setShowCatalog(true)}>
+                <Sparkles className="w-4 h-4 me-1" />{rtl ? 'تصفّح القوالب' : 'Browse templates'}
+              </Button>
+              <Button variant="outline" size="sm" className="rounded-xl" onClick={() => seedDemoMut.mutate()} disabled={seedDemoMut.isPending}>
+                {seedDemoMut.isPending ? <Loader2 className="w-4 h-4 me-1 animate-spin" /> : <Wand2 className="w-4 h-4 me-1" />}
+                {rtl ? 'تجربة بعروض جاهزة' : 'Try demo promos'}
+              </Button>
+            </div>
           </div>
         ) : filteredPromotions.length === 0 ? (
           <div className="flex flex-col items-center py-10 text-muted-foreground">
