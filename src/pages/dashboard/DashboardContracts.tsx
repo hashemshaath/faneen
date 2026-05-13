@@ -1313,23 +1313,40 @@ const DashboardContracts = () => {
   }, [profiles, allMilestones, isRTL, formatDate]);
 
   const handleDuplicate = useCallback(async (c: ContractWithRole) => {
+    const confirmMsg = isRTL
+      ? 'سيتم إنشاء مسودة جديدة من بيانات هذا العقد بدون نسخ الموافقات أو السجل الرسمي. هل تريد المتابعة؟'
+      : 'A new draft will be created from this contract\'s data, without copying approvals or the official record. Continue?';
+    if (!window.confirm(confirmMsg)) return;
     try {
-      const { error } = await supabase.from('contracts').insert({
-        provider_id: c.provider_id, client_id: c.client_id, business_id: c.business_id,
-        title_ar: `${c.title_ar} (نسخة)`, title_en: c.title_en ? `${c.title_en} (Copy)` : null,
-        description_ar: c.description_ar, description_en: c.description_en,
-        total_amount: c.total_amount, currency_code: c.currency_code,
-        terms_ar: c.terms_ar, terms_en: c.terms_en,
-        supervisor_name: c.supervisor_name, supervisor_phone: c.supervisor_phone, supervisor_email: c.supervisor_email,
-        status: 'draft',
+      const { data, error } = await supabase.rpc('clone_contract_as_draft', {
+        _source_contract_id: c.id,
+        _include_line_items: true,
+        _include_terms: true,
+        _include_supervisor: true,
       });
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ['dashboard-contracts'] });
-      toast.success(isRTL ? 'تم نسخ العقد' : 'Contract duplicated');
-    } catch {
-      toast.error(isRTL ? 'فشل النسخ' : 'Duplication failed');
+      queryClient.invalidateQueries({ queryKey: ['provider-contracts'] });
+      toast.success(isRTL ? 'تم إنشاء مسودة جديدة' : 'New draft created');
+      const result = (data ?? {}) as { contract_id?: string };
+      if (result.contract_id) {
+        navigate(`/contracts/${result.contract_id}`);
+      }
+    } catch (err: unknown) {
+      const raw = err instanceof Error ? err.message : '';
+      const map: Record<string, { ar: string; en: string }> = {
+        'CLONE_CONTRACT:NOT_FOUND': { ar: 'العقد المصدر غير موجود', en: 'Source contract not found' },
+        'CLONE_CONTRACT:FORBIDDEN': { ar: 'لا تملك صلاحية نسخ هذا العقد', en: 'You are not allowed to clone this contract' },
+        'CLONE_CONTRACT:TEMPLATE_MISSING': { ar: 'قالب العقد غير متوفر', en: 'Contract template missing' },
+        'CLONE_CONTRACT:SNAPSHOT_FAILED': { ar: 'تعذّر إنشاء نسخة القالب', en: 'Failed to snapshot template' },
+        'CLONE_CONTRACT:LINE_ITEM_COPY_FAILED': { ar: 'تعذّر نسخ بنود العقد', en: 'Failed to copy line items' },
+        'CLONE_CONTRACT:UNAUTHENTICATED': { ar: 'يجب تسجيل الدخول', en: 'You must be signed in' },
+      };
+      const key = Object.keys(map).find(k => raw.includes(k));
+      const msg = key ? (isRTL ? map[key].ar : map[key].en) : (isRTL ? 'فشل النسخ' : 'Duplication failed');
+      toast.error(msg);
     }
-  }, [queryClient, isRTL]);
+  }, [queryClient, isRTL, navigate]);
 
   const applyTemplate = useCallback((tmpl: TemplateRow) => {
     setForm(f => ({
