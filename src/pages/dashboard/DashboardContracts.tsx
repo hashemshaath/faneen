@@ -1032,17 +1032,6 @@ const DashboardContracts = () => {
   });
 
   /* CT4C.5 — Accepted invitations awaiting contract completion. */
-  type AcceptedInvitationRow = {
-    id: string;
-    ref_id: string;
-    email_lower: string;
-    recipient_name: string | null;
-    work_type: string | null;
-    template_version_id: string | null;
-    accepted_at: string | null;
-    status: string;
-    bound_contract_id: string | null;
-  };
   const { data: acceptedInvitations = [], refetch: refetchAcceptedInvites } = useQuery({
     queryKey: ['accepted-invitations', user?.id],
     enabled: !!user?.id,
