@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Check, Sparkles, ArrowUp, Loader2, Zap, Send } from 'lucide-react';
+import { Check, Sparkles, Loader2, Zap, Send, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { tierIcons, tierGradients } from '@/lib/membership-tiers';
 
@@ -25,57 +25,90 @@ export const PlanCard = React.memo(({
   const price = billingCycle === 'monthly' ? plan.price_monthly : plan.price_yearly;
   const features = Array.isArray(plan.features) ? plan.features : [];
   const isPremium = plan.tier === 'premium';
+  const monthlyEq = billingCycle === 'yearly' && plan.price_yearly > 0 ? Math.round(plan.price_yearly / 12) : null;
+  const savingPct = (plan.price_monthly > 0 && plan.price_yearly > 0)
+    ? Math.round((1 - plan.price_yearly / (plan.price_monthly * 12)) * 100)
+    : 0;
 
   return (
     <div className={cn(
-      'relative rounded-2xl border p-5 flex flex-col transition-all duration-300 hover:shadow-lg group',
-      isPremium ? 'border-accent bg-accent/5 dark:bg-accent/10 shadow-md md:scale-[1.03]' : 'border-border bg-card',
-      isCurrentPlan && 'ring-2 ring-accent/30'
+      'relative rounded-2xl border p-5 sm:p-6 flex flex-col transition-all duration-300 hover-lift group overflow-hidden',
+      isPremium
+        ? 'border-accent/40 bg-gradient-to-b from-accent/5 to-card shadow-[0_10px_40px_-15px_hsl(var(--accent)/0.4)] md:scale-[1.04] md:-my-1'
+        : 'border-border/60 bg-card hover:border-accent/30 hover:shadow-lg',
+      isCurrentPlan && 'ring-2 ring-accent/40 ring-offset-2 ring-offset-background'
     )}>
+      {/* Premium glow background */}
       {isPremium && (
-        <div className="absolute -top-3 inset-x-0 flex justify-center">
-          <Badge className="bg-accent text-accent-foreground shadow-lg gap-1">
+        <div aria-hidden className="absolute inset-0 -z-10 opacity-60">
+          <div className="absolute -top-20 start-1/2 -translate-x-1/2 w-40 h-40 rounded-full bg-accent/20 blur-3xl" />
+        </div>
+      )}
+
+      {isPremium && (
+        <div className="absolute -top-3.5 inset-x-0 flex justify-center pointer-events-none">
+          <Badge className="bg-gradient-to-r from-accent to-accent/80 text-accent-foreground shadow-lg gap-1 px-3 py-1 text-[11px] font-bold uppercase tracking-wide">
             <Sparkles className="w-3 h-3" />{isRTL ? 'الأكثر طلباً' : 'Most Popular'}
           </Badge>
         </div>
       )}
       {isCurrentPlan && (
-        <div className="absolute -top-3 end-4">
-          <Badge className="bg-success text-white shadow-lg gap-1">
+        <div className="absolute -top-3 end-4 z-10">
+          <Badge className="bg-success text-white shadow-lg gap-1 px-2.5">
             <Check className="w-3 h-3" />{isRTL ? 'خطتك' : 'Your Plan'}
           </Badge>
         </div>
       )}
 
-      <div className={cn('w-11 h-11 rounded-xl bg-gradient-to-br flex items-center justify-center mb-4', gradient)}>
-        <Icon className="w-5 h-5 text-white" />
+      <div className={cn('w-12 h-12 rounded-2xl bg-gradient-to-br flex items-center justify-center mb-4 shadow-md ring-1 ring-white/10 transition-transform group-hover:scale-110 group-hover:rotate-3', gradient)}>
+        <Icon className="w-6 h-6 text-white drop-shadow" />
       </div>
 
-      <h3 className="font-heading font-bold text-lg mb-1">
+      <h3 className="font-heading font-bold text-xl mb-1.5 text-foreground">
         {language === 'ar' ? plan.name_ar : plan.name_en}
       </h3>
-      <p className="text-[10px] text-muted-foreground mb-4 line-clamp-2">
+      <p className="text-xs text-muted-foreground mb-5 line-clamp-2 leading-relaxed min-h-[2.4em]">
         {language === 'ar' ? plan.description_ar : plan.description_en}
       </p>
 
-      <div className="mb-5">
-        <span className="font-heading font-bold text-2xl sm:text-3xl text-foreground">
-          {price === 0 ? (isRTL ? 'مجاناً' : 'Free') : price}
-        </span>
-        {price > 0 && (
-          <span className="text-xs text-muted-foreground ms-1">
-            {isRTL ? 'ر.س' : 'SAR'}/{billingCycle === 'monthly' ? (isRTL ? 'شهر' : 'mo') : (isRTL ? 'سنة' : 'yr')}
+      <div className="mb-5 pb-5 border-b border-border/40">
+        <div className="flex items-baseline gap-1.5 flex-wrap">
+          <span className="font-heading font-bold text-3xl sm:text-4xl text-foreground tracking-tight">
+            {price === 0 ? (isRTL ? 'مجاناً' : 'Free') : (
+              <span className="tech-content">{price.toLocaleString(isRTL ? 'ar-SA' : 'en-US')}</span>
+            )}
           </span>
+          {price > 0 && (
+            <span className="text-xs text-muted-foreground">
+              {isRTL ? 'ر.س' : 'SAR'} / {billingCycle === 'monthly' ? (isRTL ? 'شهر' : 'mo') : (isRTL ? 'سنة' : 'yr')}
+            </span>
+          )}
+        </div>
+        {monthlyEq && billingCycle === 'yearly' && (
+          <p className="text-[11px] text-muted-foreground mt-1.5 inline-flex items-center gap-1.5">
+            <span className="tech-content">≈ {monthlyEq.toLocaleString(isRTL ? 'ar-SA' : 'en-US')} {isRTL ? 'ر.س/شهر' : 'SAR/mo'}</span>
+            {savingPct > 0 && (
+              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-success/10 text-success font-semibold">
+                <TrendingUp className="w-2.5 h-2.5" />−{savingPct}%
+              </span>
+            )}
+          </p>
+        )}
+        {price === 0 && (
+          <p className="text-[11px] text-muted-foreground mt-1.5">{isRTL ? 'بدون بطاقة ائتمان' : 'No credit card required'}</p>
         )}
       </div>
 
-      <ul className="space-y-2 mb-6 flex-1">
+      <ul className="space-y-2.5 mb-6 flex-1">
         {features.map((feat: string, i: number) => (
-          <li key={i} className="flex items-start gap-2 text-xs">
-            <div className="w-4 h-4 rounded-full bg-accent/10 flex items-center justify-center shrink-0 mt-0.5">
-              <Check className="w-2.5 h-2.5 text-accent" />
+          <li key={i} className="flex items-start gap-2 text-xs sm:text-[13px]">
+            <div className={cn(
+              'w-4 h-4 rounded-full flex items-center justify-center shrink-0 mt-0.5',
+              isPremium ? 'bg-accent/20' : 'bg-success/10'
+            )}>
+              <Check className={cn('w-2.5 h-2.5', isPremium ? 'text-accent' : 'text-success')} strokeWidth={3} />
             </div>
-            <span className="text-foreground/80">{feat}</span>
+            <span className="text-foreground/85 leading-relaxed">{feat}</span>
           </li>
         ))}
       </ul>
@@ -83,22 +116,29 @@ export const PlanCard = React.memo(({
       <Button
         onClick={() => onSubscribe(plan)}
         variant={isPremium ? 'hero' : isCurrentPlan ? 'outline' : 'default'}
-        className={cn('w-full gap-1.5 transition-all', isUpgrade && !isCurrentPlan && 'bg-accent text-accent-foreground hover:bg-accent/90')}
+        size="lg"
+        className={cn('w-full gap-1.5 transition-all font-semibold', isUpgrade && !isCurrentPlan && !isPremium && 'bg-accent text-accent-foreground hover:bg-accent/90')}
         disabled={!!isCurrentPlan || isSubscribing || isDowngrade}
         title={isDowngrade ? (isRTL ? 'لا يمكن طلب باقة أقل من باقتك الحالية' : 'Cannot request a plan lower than your current one') : undefined}
       >
         {isSubscribing ? (
-          <><Loader2 className="w-3.5 h-3.5 animate-spin" />{isRTL ? 'جارٍ التفعيل...' : 'Activating...'}</>
+          <><Loader2 className="w-4 h-4 animate-spin" />{isRTL ? 'جارٍ التفعيل...' : 'Activating...'}</>
         ) : isCurrentPlan ? (
-          <><Check className="w-3.5 h-3.5" />{isRTL ? 'خطتك الحالية' : 'Current Plan'}</>
+          <><Check className="w-4 h-4" />{isRTL ? 'خطتك الحالية' : 'Current Plan'}</>
         ) : isUpgrade ? (
-          <><Send className="w-3.5 h-3.5" />{isRTL ? 'طلب الترقية' : 'Request Upgrade'}</>
+          <><Send className="w-4 h-4" />{isRTL ? 'طلب الترقية الآن' : 'Request Upgrade'}</>
         ) : isDowngrade ? (
           <>{isRTL ? 'غير متاح (باقة أقل)' : 'Unavailable (lower plan)'}</>
         ) : (
-          <><Send className="w-3.5 h-3.5" />{isRTL ? 'طلب الاشتراك' : 'Request Subscription'}</>
+          <><Send className="w-4 h-4" />{isRTL ? 'ابدأ الآن' : 'Get Started'}</>
         )}
       </Button>
+
+      {!isCurrentPlan && !isDowngrade && price > 0 && (
+        <p className="text-[10px] text-center text-muted-foreground mt-2.5">
+          {isRTL ? '✓ بدون التزام · إلغاء في أي وقت' : '✓ No commitment · Cancel anytime'}
+        </p>
+      )}
     </div>
   );
 });
