@@ -7756,6 +7756,10 @@ export type Database = {
         Returns: Json
       }
       get_contact_sla_weekly: { Args: never; Returns: Json }
+      get_contract_analytics_dashboard: {
+        Args: { _business_id?: string; _period?: string; _scope?: string }
+        Returns: Json
+      }
       get_contract_counterpart_profile: {
         Args: { _target_user_id: string; _viewer_id: string }
         Returns: {
