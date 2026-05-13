@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Key, UserPlus, Copy, Trash2, Loader2, ShieldCheck, Plus, Check } from 'lucide-react';
 import { toast } from 'sonner';
+import { MembershipKeyUsageLog } from './MembershipKeyUsageLog';
 
 interface Props { isRTL: boolean; businessId: string }
 
@@ -22,7 +23,7 @@ type AccessKey = {
 
 export const MembershipKeysManager: React.FC<Props> = ({ isRTL, businessId }) => {
   const qc = useQueryClient();
-  const [tab, setTab] = useState<'invite' | 'access'>('invite');
+  const [tab, setTab] = useState<'invite' | 'access' | 'usage'>('invite');
   const [showInviteForm, setShowInviteForm] = useState(false);
   const [showAccessForm, setShowAccessForm] = useState(false);
   const [inviteRole, setInviteRole] = useState<'viewer' | 'editor' | 'manager'>('viewer');
@@ -143,7 +144,7 @@ export const MembershipKeysManager: React.FC<Props> = ({ isRTL, businessId }) =>
         </div>
 
         <div className="flex gap-1 mb-4 border-b border-border">
-          {(['invite', 'access'] as const).map((t) => (
+          {(['invite', 'access', 'usage'] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -153,7 +154,9 @@ export const MembershipKeysManager: React.FC<Props> = ({ isRTL, businessId }) =>
             >
               {t === 'invite'
                 ? (isRTL ? `روابط الدعوة (${inviteKeys.length})` : `Invite Links (${inviteKeys.length})`)
-                : (isRTL ? `مفاتيح API (${accessKeys.length})` : `API Keys (${accessKeys.length})`)}
+                : t === 'access'
+                ? (isRTL ? `مفاتيح API (${accessKeys.length})` : `API Keys (${accessKeys.length})`)
+                : (isRTL ? 'سجل الاستخدام' : 'Usage Log')}
             </button>
           ))}
         </div>
