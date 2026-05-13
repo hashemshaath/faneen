@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Clock, AlertTriangle, Loader2, Ban, Zap, Undo2, Check } from 'lucide-react';
+import { Clock, AlertTriangle, Loader2, Ban, Zap, Undo2, Check, RotateCcw, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { tierIcons, tierGradients } from '@/lib/membership-tiers';
 
@@ -13,14 +13,18 @@ interface CurrentSubscriptionCardProps {
   mySubscription: any;
   daysRemaining: number | null;
   cancelMutation: { mutate: () => void; isPending: boolean };
+  resumeMutation?: { mutate: () => void; isPending: boolean };
 }
 
 export const CurrentSubscriptionCard = ({
-  isRTL, currentTier, mySubscription, daysRemaining, cancelMutation,
+  isRTL, currentTier, mySubscription, daysRemaining, cancelMutation, resumeMutation,
 }: CurrentSubscriptionCardProps) => {
   const Icon = tierIcons[currentTier] || Zap;
   const gradient = tierGradients[currentTier] || tierGradients.free;
   const [confirming, setConfirming] = useState(false);
+  const autoRenew = (mySubscription as { auto_renew?: boolean })?.auto_renew !== false;
+  const expiresAt = (mySubscription as { expires_at?: string | null })?.expires_at ?? null;
+  const expiresLabel = expiresAt ? new Date(expiresAt).toLocaleDateString() : '';
 
   return (
     <Card className="max-w-2xl mx-auto mb-8 border-accent/20 bg-accent/5">
@@ -61,23 +65,35 @@ export const CurrentSubscriptionCard = ({
 
             {!confirming ? (
               <div className="flex gap-2 mt-3">
-                <Button
-                  variant="outline" size="sm"
-                  className="text-[10px] h-7 gap-1 text-destructive border-destructive/20 hover:bg-destructive/10"
-                  onClick={() => setConfirming(true)}
-                  disabled={cancelMutation.isPending}
-                >
-                  <Ban className="w-3 h-3" />
-                  {isRTL ? 'إلغاء الاشتراك' : 'Cancel subscription'}
-                </Button>
+                {autoRenew ? (
+                  <Button
+                    variant="outline" size="sm"
+                    className="text-[10px] h-7 gap-1 text-destructive border-destructive/20 hover:bg-destructive/10"
+                    onClick={() => setConfirming(true)}
+                    disabled={cancelMutation.isPending}
+                  >
+                    <Ban className="w-3 h-3" />
+                    {isRTL ? 'إلغاء التجديد التلقائي' : 'Cancel auto-renewal'}
+                  </Button>
+                ) : resumeMutation ? (
+                  <Button
+                    variant="outline" size="sm"
+                    className="text-[10px] h-7 gap-1 text-success border-success/30 hover:bg-success/10"
+                    onClick={() => resumeMutation.mutate()}
+                    disabled={resumeMutation.isPending}
+                  >
+                    {resumeMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <RotateCcw className="w-3 h-3" />}
+                    {isRTL ? 'استئناف التجديد' : 'Resume renewal'}
+                  </Button>
+                ) : null}
               </div>
             ) : (
               <div className="mt-3 rounded-lg border border-destructive/30 bg-destructive/5 p-2.5">
                 <p className="text-[11px] text-foreground/80 leading-relaxed mb-2 flex items-start gap-1.5">
                   <AlertTriangle className="w-3 h-3 text-destructive shrink-0 mt-0.5" />
                   {isRTL
-                    ? 'سيؤدي إلغاء الاشتراك إلى العودة للباقة المجانية.'
-                    : 'Cancelling will return you to the Free plan.'}
+                    ? `سيتم إيقاف التجديد التلقائي. تحتفظ بكامل مميزات الباقة حتى ${expiresLabel || 'انتهاء الفترة الحالية'}، ثم تعود تلقائياً للباقة المجانية.`
+                    : `Auto-renewal will be turned off. You keep all plan benefits until ${expiresLabel || 'the end of the current period'}, then automatically return to the Free plan.`}
                 </p>
                 <div className="flex gap-2">
                   <Button
@@ -87,7 +103,7 @@ export const CurrentSubscriptionCard = ({
                     disabled={cancelMutation.isPending}
                   >
                     {cancelMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
-                    {isRTL ? 'تأكيد الإلغاء' : 'Confirm cancel'}
+                    {isRTL ? 'تأكيد إيقاف التجديد' : 'Confirm cancel renewal'}
                   </Button>
                   <Button
                     size="sm" variant="outline"
@@ -99,6 +115,16 @@ export const CurrentSubscriptionCard = ({
                     {isRTL ? 'تراجع' : 'Go back'}
                   </Button>
                 </div>
+              </div>
+            )}
+            {!autoRenew && (
+              <div className="mt-2 rounded-lg border border-warning/30 bg-warning/5 p-2 flex items-start gap-1.5">
+                <Info className="w-3 h-3 text-warning shrink-0 mt-0.5" />
+                <p className="text-[10px] text-foreground/80 leading-relaxed">
+                  {isRTL
+                    ? `التجديد التلقائي موقوف. ستحتفظ بمميزات الباقة حتى ${expiresLabel || 'انتهاء الفترة'} ثم تنتقل للباقة المجانية.`
+                    : `Auto-renewal is off. You keep your plan benefits until ${expiresLabel || 'period end'}, then move to Free.`}
+                </p>
               </div>
             )}
           </div>
