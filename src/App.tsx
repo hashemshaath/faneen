@@ -93,6 +93,7 @@ const Membership = lazyRetry(() => import("./pages/Membership"));
 const DashboardOperations = lazyRetry(() => import("./pages/dashboard/DashboardOperations"));
 const DashboardAiCenter = lazyRetry(() => import("./pages/dashboard/DashboardAiCenter"));
 const DashboardLeads = lazyRetry(() => import("./pages/dashboard/DashboardLeads"));
+const DashboardClients = lazyRetry(() => import("./pages/dashboard/DashboardClients"));
 const DashboardBadge = lazyRetry(() => import("./pages/dashboard/DashboardBadge"));
 const DashboardMyRequests = lazyRetry(() => import("./pages/dashboard/DashboardMyRequests"));
 const NotFound = lazyRetry(() => import("./pages/NotFound"));
