@@ -5,6 +5,10 @@
 -- Usage:
 --   psql -f scripts/test-membership-renewal.sql
 --
+-- NOTE: Steps 2 & 3 require an UPDATE-capable role (e.g. local postgres or
+-- supabase service_role). The Lovable sandbox `psql` only has SELECT+INSERT,
+-- so it can verify Step 1 only. Run locally for the full suite.
+--
 -- Verifies:
 --   1. Active plan that expired → moved to past_due with 3-day grace window
 --   2. past_due whose grace_period_until < now() → expired + downgraded to free
