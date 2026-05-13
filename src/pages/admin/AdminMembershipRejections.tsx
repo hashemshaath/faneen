@@ -55,6 +55,28 @@ const UUID_RX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 type SortColumn = 'created_at' | 'reason_code' | 'requested_tier' | 'attempted_business_ref_id';
 type SortDir = 'asc' | 'desc';
 
+/** Sortable column header button. */
+const SortBtn: React.FC<{
+  col: SortColumn;
+  sortBy: SortColumn;
+  sortDir: SortDir;
+  onClick: (c: SortColumn) => void;
+  children: React.ReactNode;
+}> = ({ col, sortBy, sortDir, onClick, children }) => {
+  const active = sortBy === col;
+  const Icon = !active ? ArrowUpDown : sortDir === 'asc' ? ArrowUp : ArrowDown;
+  return (
+    <button
+      type="button"
+      onClick={() => onClick(col)}
+      className={`inline-flex items-center gap-1 hover:text-foreground transition-colors ${active ? 'text-foreground font-medium' : 'text-muted-foreground'}`}
+    >
+      {children}
+      <Icon className="h-3.5 w-3.5" />
+    </button>
+  );
+};
+
 /** Apply current filters to a Supabase filter builder. Shared by table query + export. */
 // Supabase chainable builder typing is intentionally loose here.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
