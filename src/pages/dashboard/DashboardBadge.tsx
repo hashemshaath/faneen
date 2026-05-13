@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNoIndex } from '@/hooks/useNoIndex';
+import { useActiveBusiness } from '@/hooks/useActiveBusiness';
 import {
   Area, AreaChart, ResponsiveContainer, Tooltip as RTooltip, XAxis, YAxis, CartesianGrid,
 } from 'recharts';
@@ -92,18 +93,49 @@ const DashboardBadge: React.FC = () => {
   const [copied, setCopied] = useState<string | null>(null);
   const [qrSvg, setQrSvg] = useState<string>('');
 
-  const { data: business, isLoading } = useQuery({
-    queryKey: ['badge-generator-business', user?.id],
+  // Resolve every business this user can act on:
+  //   1. businesses they OWN (businesses.user_id = me)
+  //   2. businesses where they are active staff (business_staff.user_id = me)
+  // Then pick the one chosen via the active-business switcher; otherwise the first.
+  const { data: businesses = [], isLoading } = useQuery({
+    queryKey: ['badge-generator-businesses', user?.id],
     enabled: !!user?.id,
     queryFn: async () => {
-      const { data } = await supabase
+      // Owned
+      const ownedReq = supabase
         .from('businesses')
         .select('id, username, name_ar, name_en, is_verified')
+        .eq('user_id', user!.id);
+      // Staff-linked → fetch business ids first, then their rows
+      const staffReq = supabase
+        .from('business_staff')
+        .select('business_id')
         .eq('user_id', user!.id)
-        .maybeSingle();
-      return data as BusinessRow | null;
+        .eq('is_active', true);
+
+      const [{ data: owned }, { data: staffRows }] = await Promise.all([ownedReq, staffReq]);
+      const staffIds = (staffRows ?? []).map((r) => r.business_id);
+      let staffBusinesses: BusinessRow[] = [];
+      if (staffIds.length > 0) {
+        const { data } = await supabase
+          .from('businesses')
+          .select('id, username, name_ar, name_en, is_verified')
+          .in('id', staffIds);
+        staffBusinesses = (data ?? []) as BusinessRow[];
+      }
+      const merged = [...((owned ?? []) as BusinessRow[]), ...staffBusinesses];
+      // Dedupe by id
+      const seen = new Set<string>();
+      return merged.filter((b) => (seen.has(b.id) ? false : (seen.add(b.id), true)));
     },
   });
+
+  const availableIds = useMemo(() => businesses.map((b) => b.id), [businesses]);
+  const { activeBusinessId } = useActiveBusiness(availableIds);
+  const business = useMemo<BusinessRow | null>(() => {
+    if (businesses.length === 0) return null;
+    return businesses.find((b) => b.id === activeBusinessId) ?? businesses[0];
+  }, [businesses, activeBusinessId]);
 
   const { data: clicks = [], isLoading: clicksLoading, isError: clicksError, dataUpdatedAt: clicksUpdatedAt, refetch: refetchClicks } = useQuery({
     queryKey: ['badge-clicks', business?.id],
@@ -365,13 +397,31 @@ const DashboardBadge: React.FC = () => {
           <Skeleton className="h-72 rounded-2xl" />
         ) : !business ? (
           <Card>
-            <CardContent className="p-8 text-center">
-              <AlertCircle className="w-10 h-10 text-warning mx-auto mb-3" />
-              <p className="text-sm text-muted-foreground">
-                {isRTL
-                  ? 'لم نعثر على ورشة مرتبطة بحسابك. أنشئ ملف الورشة أولاً ثم عُد إلى هذه الصفحة.'
-                  : 'No workshop linked to your account yet. Create your workshop profile first.'}
-              </p>
+            <CardContent className="p-8 text-center space-y-4">
+              <AlertCircle className="w-10 h-10 text-warning mx-auto" />
+              <div className="space-y-1">
+                <h2 className="text-base font-semibold">
+                  {isRTL ? 'لا توجد منشأة مرتبطة بحسابك بعد' : 'No business linked to your account yet'}
+                </h2>
+                <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                  {isRTL
+                    ? 'أنشئ ملف منشأتك لتفعيل شارة التوثيق، أو اطلب من صاحب المنشأة إضافتك كموظف ثم اختر المنشأة من المُبدّل أعلى الصفحة.'
+                    : 'Create your business profile to enable the verified badge, or ask the owner to invite you as staff — then pick the business from the switcher above.'}
+                </p>
+              </div>
+              <div className="flex items-center justify-center gap-2 flex-wrap">
+                <Button asChild size="sm" className="rounded-xl">
+                  <a href="/dashboard/business">
+                    {isRTL ? 'إنشاء ملف المنشأة' : 'Create business profile'}
+                    <ArrowRight className="w-3.5 h-3.5 ms-1.5 rtl:rotate-180" />
+                  </a>
+                </Button>
+                <Button asChild size="sm" variant="outline" className="rounded-xl">
+                  <a href="/dashboard/diagnostics">
+                    {isRTL ? 'تشخيص حسابي' : 'Account diagnostics'}
+                  </a>
+                </Button>
+              </div>
             </CardContent>
           </Card>
         ) : (
