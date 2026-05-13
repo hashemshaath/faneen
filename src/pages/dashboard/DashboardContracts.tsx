@@ -1697,6 +1697,91 @@ const DashboardContracts = () => {
               })()}
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Phase 5B.4 — Lead prefill banner (dismissible). */}
+              {!editingId && leadPrefill && !leadPrefillDismissed && (
+                <div className={`p-3 rounded-xl border ${leadPrefill.existing_contract_id ? 'border-warning/40 bg-warning/5' : 'border-info/40 bg-info/5'} flex items-start gap-3`}>
+                  <Sparkles className="w-4 h-4 text-info shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0 space-y-1">
+                    {leadPrefill.existing_contract_id ? (
+                      <>
+                        <p className="text-xs font-semibold">
+                          {isRTL ? 'تم إنشاء عقد سابق لهذا الطلب.' : 'A contract already exists for this lead.'}
+                        </p>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-7 text-[11px] mt-1"
+                          onClick={() => navigate(`/contracts/${leadPrefill.existing_contract_id}`)}
+                        >
+                          <ExternalLink className="w-3 h-3 me-1" />
+                          {isRTL ? 'فتح العقد الحالي' : 'Open existing contract'}
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-xs font-semibold">
+                          {isRTL
+                            ? `تم تعبئة بعض الحقول من طلب الخدمة #${leadPrefill.lead_ref_id ?? ''}. راجع البيانات قبل حفظ المسودة.`
+                            : `Some fields were suggested from lead #${leadPrefill.lead_ref_id ?? ''}. Review them before saving the draft.`}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">
+                          {isRTL ? 'لم يتم إنشاء عقد بعد.' : 'No contract has been created yet.'}
+                        </p>
+                      </>
+                    )}
+                  </div>
+                  <Button type="button" variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => setLeadPrefillDismissed(true)} aria-label={isRTL ? 'إخفاء' : 'Dismiss'}>
+                    <X className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+              )}
+
+              {/* Phase 5B.4 — Suggested registered client (requires confirmation). */}
+              {!editingId && leadPrefill && !leadPrefill.existing_contract_id && leadPrefill.client_profile_match && !leadClientConfirmed && !selectedClient && (
+                <div className="p-3 rounded-xl border border-success/40 bg-success/5 flex items-start gap-3">
+                  <Users className="w-4 h-4 text-success shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <p className="text-xs font-semibold">
+                      {isRTL ? 'تم العثور على عميل مسجل بهذا البريد.' : 'A registered client matches this email.'}
+                    </p>
+                    {leadPrefill.client_profile_match.display_name && (
+                      <p className="text-[11px] text-muted-foreground truncate">{leadPrefill.client_profile_match.display_name}</p>
+                    )}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-[11px] mt-1"
+                      onClick={() => {
+                        const m = leadPrefill.client_profile_match!;
+                        setSelectedClient({
+                          user_id: m.user_id,
+                          full_name: m.display_name,
+                          email_masked: null,
+                          phone_masked: null,
+                          ref_id: null,
+                          source: 'lead',
+                        });
+                        setLeadClientConfirmed(true);
+                      }}
+                    >
+                      <CircleCheck className="w-3 h-3 me-1" />
+                      {isRTL ? 'استخدام هذا العميل' : 'Use this client'}
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Phase 5B.4 — Helper for unknown email (no auto-invite). */}
+              {!editingId && leadPrefill && !leadPrefill.existing_contract_id && !leadPrefill.client_profile_match && leadPrefill.customer_email && (
+                <div className="p-2.5 rounded-lg border border-border/40 bg-muted/20 text-[11px] text-muted-foreground">
+                  {isRTL
+                    ? 'يمكنك إرسال دعوة للعميل باستخدام البريد الموجود في الطلب.'
+                    : 'You can invite the client using the email from this lead.'}
+                </div>
+              )}
+
               <div ref={stepRefs.client} className="space-y-4 scroll-mt-24">
               {/* CT4C.5 — Accepted invitations awaiting contract completion */}
               {!editingId && inviteMode === 'idle' && (
