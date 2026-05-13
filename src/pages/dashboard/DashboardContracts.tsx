@@ -59,6 +59,7 @@ import { ClientPicker, type SelectedClient } from '@/components/contracts/Client
 import { LineItemFormSection } from '@/components/contracts/dashboard/create/LineItemFormSection';
 import { SuggestedBOQPanel } from '@/components/contracts/dashboard/create/SuggestedBOQPanel';
 import { ContractFinancialSummary, ContractLineVatBreakdown } from '@/components/contracts/dashboard/ContractBoqVatSummary';
+import { ContractApprovalTimeline } from '@/components/contracts/dashboard/ContractApprovalTimeline';
 import { WorkTypeSection } from '@/components/contracts/dashboard/create/WorkTypeSection';
 import { TemplateSelectionSection } from '@/components/contracts/dashboard/create/TemplateSelectionSection';
 import { ContractDetailsSection } from '@/components/contracts/dashboard/create/ContractDetailsSection';
@@ -1816,6 +1817,9 @@ const DashboardContracts = () => {
                                 <p className="text-[11px] text-warning dark:text-warning">{isRTL ? 'العقد معتمد — التعديل يتطلب ملحق عقد رسمي وموافقة الطرفين' : 'Contract approved — changes require a formal amendment with both parties\' approval'}</p>
                               </div>
                             )}
+
+                            {/* Approval Timeline (read-only, derived) */}
+                            <ContractApprovalTimeline contract={c} isRTL={isRTL} className="mb-4" />
 
                             <Tabs defaultValue="milestones">
                               <TabsList className="w-full justify-start bg-muted/40 rounded-xl p-1 h-auto flex-wrap gap-0.5 mb-4">
