@@ -291,6 +291,10 @@ export const MembershipKeysManager: React.FC<Props> = ({ isRTL, businessId }) =>
             )}
           </div>
         )}
+
+        {tab === 'usage' && (
+          <MembershipKeyUsageLog isRTL={isRTL} businessId={businessId} />
+        )}
       </CardContent>
     </Card>
   );
