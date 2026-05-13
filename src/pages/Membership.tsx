@@ -56,7 +56,7 @@ const Membership = () => {
       // 1. Owner: pick the most recently created business they own
       const owned = await supabase
         .from('businesses')
-        .select('id, ref_id, membership_tier, name_ar, name_en')
+        .select('id, ref_id, membership_tier, name_ar, name_en, approval_status, onboarding_completion')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(1);
@@ -65,12 +65,12 @@ const Membership = () => {
       // 2. Staff fallback: business they manage (owner/manager role)
       const staff = await supabase
         .from('business_staff')
-        .select('business_id, role, businesses:business_id(id, ref_id, membership_tier, name_ar, name_en)')
+        .select('business_id, role, businesses:business_id(id, ref_id, membership_tier, name_ar, name_en, approval_status, onboarding_completion)')
         .eq('user_id', user.id)
         .eq('is_active', true)
         .in('role', ['owner', 'manager'])
         .limit(1);
-      const row = staff.data?.[0] as { businesses?: { id: string; ref_id: string | null; membership_tier: string; name_ar: string | null; name_en: string | null } } | undefined;
+      const row = staff.data?.[0] as { businesses?: { id: string; ref_id: string | null; membership_tier: string; name_ar: string | null; name_en: string | null; approval_status: string | null; onboarding_completion: number | null } } | undefined;
       if (row?.businesses) return row.businesses;
 
       // 3. Self-heal: business/company accounts must always have an entity.
@@ -92,7 +92,7 @@ const Membership = () => {
             approval_status: 'draft',
             username_status: 'pending',
           })
-          .select('id, ref_id, membership_tier, name_ar, name_en')
+          .select('id, ref_id, membership_tier, name_ar, name_en, approval_status, onboarding_completion')
           .maybeSingle();
         if (created.data) return created.data;
       }
