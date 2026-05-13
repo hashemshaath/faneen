@@ -1,68 +1,108 @@
-# Pro upgrade — `/dashboard/badge`
+## الهدف
 
-Turn the current single-scroll page into a focused, tabbed workspace with a hero header, deeper customization, real charts, and shareable export tools — without any popups (inline only, per project UX rule).
+تحسين اختيار العميل عند إنشاء العقد بحيث:
+1. يبحث المزوّد بسرعة في عملائه (طلباته/عقوده السابقة).
+2. يبحث في كامل المنصة فقط بمعرّف دقيق (بريد كامل / جوال كامل / `USR-xxxx`).
+3. إن لم يوجد العميل → نموذج إضافة سريعة (اسم + جوال + بريد) ينشئ عقداً بدون حساب.
+4. إن طابقت بيانات الإضافة السريعة حساباً موجوداً → ربط فوري + إشعار داخلي عند إرسال العقد للمعاينة (بدون دعوة تسجيل).
+5. عند تحويل طلب صيانة/Lead → عقد: تعبئة بيانات العميل تلقائياً مع إمكانية التغيير.
 
-## 1. New layout
+---
 
-- **Hero header** (glassmorphism, brand green): workshop name, verification pill, live counters (impressions today / clicks today / CTR), and a quick-copy "profile link" chip with QR icon.
-- **Tabs** (sticky, semantic tokens):
-  1. `Generator` — variant + customization + live preview + HTML/MD/JSX/iframe snippets
-  2. `Analytics` — KPI grid + 30-day sparkline charts + top referrers + funnel + recent activity
-  3. `Share & Distribute` — QR code, social share (WhatsApp / X / LinkedIn), email signature template, downloadable SVG
-  4. `Playbook` — usage tips + checklist + goal tracker
+## نظرة معمارية
 
-## 2. Generator tab — pro customization
+### تغييرات قاعدة البيانات
 
-- Style picker: `Light`, `Dark`, `Compact`, **new** `Gradient`, **new** `Minimal`.
-- Size picker: `sm / md / lg` (affects padding + icon size in generated SVG).
-- Toggles: show sub-label, force LTR/RTL independent of UI language, accent color (preset swatches: emerald default, brand green, blue, slate).
-- Live preview rendered on **two canvases** (light bg + dark bg) so users see real-world contrast.
-- Snippet tabs inside the card: `HTML`, `Markdown`, `JSX/React`, `iframe`, `SVG download`.
-- All snippets carry `?ref=badge` and the existing UTM params for attribution continuity.
+**`contracts`**: إضافة أعمدة الضيف وجعل `client_id` اختياريّاً.
+- `client_id uuid NULL` (إزالة NOT NULL)
+- `guest_client_name text NULL`
+- `guest_client_email text NULL` (مع citext lower index)
+- `guest_client_phone text NULL`
+- CHECK: يجب توفر `client_id` أو (`guest_client_email` أو `guest_client_phone`).
 
-## 3. Analytics tab — real charts
+**Trigger `contracts_resolve_guest_on_signup`**: عند إنشاء/تحديث ملف بنفس البريد/الجوال، يحوّل العقود المرتبطة بالضيف إلى `client_id` تلقائياً وينشئ إشعاراً للعميل.
 
-- 4 KPI cards: Impressions / Clicks / CTR / Bookings (with delta vs previous period).
-- **30-day Recharts area chart** for impressions vs clicks (already have data, just bucket by day).
-- Top referrers list (existing) + **new** Top source pages from `conversions.source_page`.
-- Funnel block (existing, polished with brand tokens).
-- Recent activity feed: last 15 events merged from clicks + conversions, with relative time.
-- CSV export button for clicks and conversions (client-side blob, no backend).
+**RPC جديد `quick_resolve_or_create_contract_client(_email, _phone, _name)`**:
+- يبحث عن `profiles` بمطابقة دقيقة على البريد/الجوال (lower-trim).
+- يعيد: `{ matched_user_id, ref_id, full_name, email_masked, phone_masked }` أو `{ matched_user_id: null, normalized_email, normalized_phone }`.
+- SECURITY DEFINER، لا يُرجع PII كاملة.
 
-## 4. Share & Distribute tab
+**تعديل `search_contract_clients`**: عند الباحث غير admin، إضافة فرع ثاني للبحث بالمعرّف الدقيق فقط (بريد كامل / جوال ≥7 أرقام / `USR-` prefix) في كامل المنصة، مع علامة `source='exact_match'` لعرض شارة مختلفة في الواجهة.
 
-- QR code (using `qrcode` if already installed, else inline SVG) of the profile link — printable for flyers / business cards.
-- Social share buttons (WhatsApp, X, LinkedIn, Email) with prefilled text.
-- Email signature HTML block (compact variant + tagline) with one-click copy.
-- Direct SVG download of the badge for print materials.
+**تعديل RPC إنشاء العقد** (داخل `create_contract_from_template` ومنطق insert المباشر إن وُجد): قبول إما `_client_id` أو حقول الضيف الثلاثة، مع نفس التحقق.
 
-## 5. Playbook tab
+**RLS**: السماح للعميل المرتبط (بعد الربط) بقراءة عقده. سياسة قراءة الضيف: لا قراءة من جهة العميل قبل الربط (فقط رابط دعوة موقّع إن أراد المزوّد لاحقاً).
 
-- Existing tips list, expanded with category icons.
-- **Goal tracker**: monthly impressions/clicks targets with progress bars (saved to `localStorage` under `qitaat_badge_goals_<bizId>`).
-- Verification CTA when `is_verified=false`, linking to verification flow.
+### تغييرات الواجهة (`ClientPicker`)
 
-## Technical notes
+إعادة هيكلة كاملة بثلاث طبقات داخل نفس البطاقة (بدون أي popup):
 
-- New tabs use shadcn `Tabs` component; sticky inside `max-w-6xl` container (widen from `max-w-5xl`).
-- Charts via Recharts (already in project) — no new deps. Reuse `useQuery` data; bucket per day in `useMemo`.
-- QR via inline SVG generator (no dep) or `qrcode` if present.
-- Strict zero `any`. Errors caught as `unknown` + `instanceof Error`.
-- All colors via semantic tokens + brand variants from `mem://brand/identity-v1`.
-- VerifiedBadge uses unified `<VerifiedBadge>` component (`mem://style/verified-badge-standard`).
-- No dialogs/modals — every flow stays inline (project UX rule).
-- RTL/LTR via existing `useLanguage` + `<Bi>` primitives where applicable.
-- `useNoIndex` retained.
+1. **طبقة البحث** (افتراضية)
+   - حقل بحث واحد ذكي يكتشف نوع المعرّف:
+     - يحتوي `@` → بريد دقيق.
+     - يبدأ بأرقام/`+` و≥7 خانات → جوال دقيق.
+     - يبدأ بـ `USR-` → ref_id.
+     - غير ذلك → بحث اسم في عملاء المزود فقط.
+   - النتائج مقسّمة بصرياً: «عملاؤك» (شارة خضراء) / «نتيجة دقيقة من المنصة» (شارة زرقاء).
 
-## Files
+2. **طبقة لا توجد نتائج** → زر «إضافة سريعة» (يبدّل للطبقة 3 مع تعبئة الحقل المُدخل).
 
-- Edit: `src/pages/dashboard/DashboardBadge.tsx` (refactor into tabs, hero, charts).
-- New helper: `src/lib/badge/snippets.ts` (extract `buildBadgeHtml` + add `buildJsx`, `buildIframe`, `buildEmailSignature`).
-- New helper: `src/lib/badge/qr.ts` (tiny SVG QR generator wrapper).
-- New helper: `src/lib/badge/csv.ts` (clicks/conversions CSV export).
+3. **طبقة الإضافة السريعة** (inline form):
+   - حقول: الاسم، الجوال، البريد (واحد على الأقل من الجوال/البريد إلزامي).
+   - عند التركيز/الكتابة → استدعاء `quick_resolve_or_create_contract_client` (debounced).
+   - إن طابق حساب موجود → بطاقة معلوماتية: «هذا العميل مسجل بالفعل (USR-xxx) — سيُربط العقد به وسيستلم إشعاراً عند الإرسال للمعاينة، بدون دعوة تسجيل». زر «تأكيد الربط».
+   - إن لم يطابق → زر «حفظ كعميل ضيف» — يُخزّن البيانات في حالة النموذج للاستخدام عند إنشاء العقد.
 
-## Out of scope
+### تغييرات `DashboardContracts.tsx`
 
-- Backend/RLS changes (already correct).
-- Migration of attribution logic (unchanged).
-- New tracking events.
+- استبدال `form.client_email` بكائن `clientDraft: { mode: 'selected'|'guest'|'matched', user_id?, name?, email?, phone? }`.
+- في `createContractMutation`: تمرير الحقول المناسبة للـ RPC.
+- إزالة منطق `inviteMode`/`pendingInvite` من المسار الافتراضي (يبقى متاحاً كزر ثانوي «إرسال دعوة تسجيل بدلاً من ذلك» للمزوّدين الذين يريدونها صراحة).
+- عند تحويل lead/maintenance request: تعبئة `clientDraft` تلقائياً من بيانات الطلب، مع زر «تغيير العميل» يعيد المُختار إلى `null`.
+- عند نجاح إنشاء عقد ضيف بحساب مطابق → toast: «تم ربط العقد بالحساب USR-xxx، وسيُشعَر العميل عند إرسال العقد للمعاينة».
+- عند نجاح إنشاء عقد ضيف بدون حساب → toast: «تم حفظ العقد. سيُربط تلقائياً عند تسجيل العميل بنفس البريد/الجوال».
+
+### الإشعارات
+
+- عند تحويل `status` العقد إلى `pending_client_review` (أو ما يعادله): trigger يُنشئ `notifications` record للعميل المرتبط. (لا يلزم إذا كان موجوداً مسبقاً — فقط نتأكد منه.)
+- لا إشعار للضيف غير المرتبط (لا يوجد user_id).
+
+---
+
+## الملفات المتأثرة
+
+**Migrations جديدة**:
+- إضافة أعمدة الضيف + CHECK + Trigger الربط التلقائي.
+- تعديل `search_contract_clients` (دالة جديدة CREATE OR REPLACE).
+- إضافة `quick_resolve_or_create_contract_client`.
+- تعديل `create_contract_from_template` لقبول حقول الضيف.
+
+**كود**:
+- `src/components/contracts/ClientPicker.tsx` — إعادة كتابة واسعة (مع الحفاظ على الـ props للتوافق).
+- `src/pages/dashboard/DashboardContracts.tsx` — تعديل state وmutations والتعبئة من lead.
+- `src/components/contracts/dashboard/create/contract-form-types.ts` — حقول الضيف.
+
+---
+
+## خارج النطاق
+- لا تغيير في PDF/Analytics/Admin pages في هذا الـ phase (تتعامل مع `client_id` فقط حالياً — العقود الضيفة تظهر بالاسم الكامل من `guest_client_name` لاحقاً).
+- لا حذف لتدفق الدعوة الحالي (يبقى متاحاً كاختيار ثانوي).
+
+---
+
+## مخاطر ونقاط انتباه
+
+- جعل `client_id` nullable يتطلب مراجعة كل الاستعلامات التي تفترض وجوده (PDF, dashboards). سأضيف fallback لاسم الضيف في PDF builder وContractCard في نفس المرحلة.
+- البحث الدقيق بالبريد/الجوال في كامل المنصة قد يُعتبر تسرّب وجود حساب — نخفف بإرجاع البيانات مقنّعة فقط ولا نكشف أي شيء آخر سوى وجود تطابق.
+- Trigger الربط التلقائي يجب أن يحترم حالات الجوال المنسّقة (E.164).
+
+---
+
+## معايير القبول
+
+1. مزود يبحث «أحمد» يرى فقط عملاءه السابقين.
+2. مزود يدخل بريد كامل لمستخدم لم يتعامل معه → نتيجة واحدة بشارة «من المنصة».
+3. إدخال بيانات لا تطابق أحداً → عقد ضيف بنجاح.
+4. إدخال بيانات تطابق حساباً → ربط فوري وإشعار عند الإرسال للمعاينة، بدون إيميل دعوة.
+5. تحويل طلب صيانة → بيانات العميل معبّأة وقابلة للتغيير.
+6. `bunx tsc --noEmit` يمر.
