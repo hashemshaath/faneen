@@ -80,6 +80,8 @@ import { ContractCompletenessCard } from '@/components/contracts/dashboard/creat
 import { calculateContractCompleteness } from '@/lib/contract-completeness';
 import { ContractDraftSaveStatus, type DraftSaveState } from '@/components/contracts/dashboard/create/ContractDraftSaveStatus';
 import { FirstContractGuidanceCard } from '@/components/contracts/dashboard/create/FirstContractGuidanceCard';
+import { AutosaveStatus } from '@/components/contracts/dashboard/create/AutosaveStatus';
+import { useContractDraftAutosave } from '@/hooks/useContractDraftAutosave';
 import {
   ContractCreateActionsBar,
   ContractCreateMobileActionBar,
@@ -1129,6 +1131,37 @@ const DashboardContracts = () => {
   });
 
   /* ── Helpers ── */
+  /* Phase 4E.3 — Autosave for existing draft contracts only. */
+  const editingContract = useMemo(
+    () => (editingId ? contracts.find((c) => c.id === editingId) ?? null : null),
+    [editingId, contracts]
+  );
+  const editingHasLineItems = useMemo(
+    () => (editingId ? allLineItems.some((li) => li.contract_id === editingId) : false),
+    [editingId, allLineItems]
+  );
+  const editingHasMeasurements = useMemo(
+    () => (editingId ? allMeasurements.some((m) => m.contract_id === editingId) : false),
+    [editingId, allMeasurements]
+  );
+  const autosave = useContractDraftAutosave({
+    contractId: editingId,
+    enabled:
+      !!editingId &&
+      viewSection === 'create' &&
+      inviteMode === 'idle' &&
+      editingContract?.status === 'draft',
+    form,
+    initialUpdatedAt: editingContract?.updated_at ?? null,
+    hasLineItems: editingHasLineItems,
+    hasMeasurements: editingHasMeasurements,
+    isManualSavePending: createContractMutation.isPending,
+    isSendForApprovalPending: sendForApprovalMutation.isPending,
+    onAutosaved: () => {
+      // Light cache refresh so list shows latest updated_at without disrupting form.
+      queryClient.invalidateQueries({ queryKey: ['provider-contracts'] });
+    },
+  });
   const stats = useMemo(() => {
     const src = roleFilter === 'provider' ? providerContracts : roleFilter === 'client' ? clientContracts : contracts;
     const totalAmount = src.reduce((s: number, c) => s + Number(c.total_amount), 0);
@@ -1634,6 +1667,13 @@ const DashboardContracts = () => {
                       state={saveState}
                       score={completeness?.score}
                     />
+                    {editingId && (
+                      <AutosaveStatus
+                        isRTL={isRTL}
+                        state={autosave.state}
+                        lastSavedAt={autosave.lastSavedAt}
+                      />
+                    )}
                   </>
                 );
               })()}
