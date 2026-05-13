@@ -1,0 +1,1 @@
+ALTER VIEW public.private_sectors_public SET (security_invoker = true);
