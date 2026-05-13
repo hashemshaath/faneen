@@ -59,6 +59,10 @@ import {
 import { ClientPicker, type SelectedClient } from '@/components/contracts/ClientPicker';
 import { LineItemFormSection } from '@/components/contracts/dashboard/create/LineItemFormSection';
 import { SuggestedBOQPanel } from '@/components/contracts/dashboard/create/SuggestedBOQPanel';
+import { WorkTypeSection } from '@/components/contracts/dashboard/create/WorkTypeSection';
+import { TemplateSelectionSection } from '@/components/contracts/dashboard/create/TemplateSelectionSection';
+import { ContractDetailsSection } from '@/components/contracts/dashboard/create/ContractDetailsSection';
+import type { ContractForm } from '@/components/contracts/dashboard/create/contract-form-types';
 import { ContractRoleTabs } from '@/components/contracts/dashboard/ContractRoleTabs';
 import { ContractFilters } from '@/components/contracts/dashboard/ContractFilters';
 import { ContractEmptyState } from '@/components/contracts/dashboard/ContractEmptyState';
@@ -121,15 +125,6 @@ const templateCategoryConfig: Record<string, { ar: string; en: string; icon: Rea
   upvc: { ar: 'UPVC أبواب وشبابيك', en: 'UPVC Doors & Windows', icon: Wrench, color: 'text-success bg-success/10' },
   glass_securit: { ar: 'زجاج وسيكوريت', en: 'Glass & Securit', icon: GlassWater, color: 'text-info bg-info/10' },
 };
-
-interface ContractForm {
-  title_ar: string; title_en: string; description_ar: string; description_en: string;
-  total_amount: string; currency_code: string; start_date: string; end_date: string;
-  terms_ar: string; terms_en: string;
-  supervisor_name: string; supervisor_phone: string; supervisor_email: string;
-  client_email: string;
-  vat_inclusive: boolean; vat_rate: string;
-}
 
 const emptyForm: ContractForm = {
   title_ar: '', title_en: '', description_ar: '', description_en: '',
