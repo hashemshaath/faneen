@@ -18,6 +18,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { BrandLogo } from '@/components/common/BrandLogo';
+import { ActiveBusinessSwitcher } from './ActiveBusinessSwitcher';
 
 const breadcrumbMap: Record<string, { ar: string; en: string }> = {
   '/dashboard': { ar: 'لوحة التحكم', en: 'Dashboard' },
@@ -155,6 +156,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
               </div>
 
               <div className="flex items-center gap-2 sm:gap-2.5">
+                <ActiveBusinessSwitcher />
                 <ThemeToggle />
                 <NotificationBell />
 
