@@ -519,6 +519,29 @@ const DashboardPromotions = () => {
             </div>
           </div>
           <div className="flex gap-2 flex-wrap">
+            {businessUsername && (
+              <Button variant="outline" size="sm" className="h-9 text-xs rounded-xl" asChild>
+                <a href={`/${businessUsername}#promotions`} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="w-3.5 h-3.5 me-1.5" />{rtl ? 'الصفحة العامة' : 'Public page'}
+                </a>
+              </Button>
+            )}
+            {businessUsername && (
+              <Button variant="outline" size="sm" className="h-9 text-xs rounded-xl" onClick={() => copyPublicLink()}>
+                <Link2 className="w-3.5 h-3.5 me-1.5" />{rtl ? 'نسخ رابط' : 'Copy link'}
+              </Button>
+            )}
+            <Button variant="outline" size="sm" className="h-9 text-xs rounded-xl" onClick={() => setShowCatalog(s => !s)}>
+              <Sparkles className="w-3.5 h-3.5 me-1.5" />
+              {rtl ? 'قوالب جاهزة' : 'Templates'}
+              {showCatalog ? <ChevronUp className="w-3 h-3 ms-1" /> : <ChevronDown className="w-3 h-3 ms-1" />}
+            </Button>
+            {promotions.length === 0 && (
+              <Button variant="outline" size="sm" className="h-9 text-xs rounded-xl" onClick={() => seedDemoMut.mutate()} disabled={seedDemoMut.isPending}>
+                {seedDemoMut.isPending ? <Loader2 className="w-3.5 h-3.5 me-1.5 animate-spin" /> : <Wand2 className="w-3.5 h-3.5 me-1.5" />}
+                {rtl ? 'تجربة بعروض جاهزة' : 'Try demo promos'}
+              </Button>
+            )}
             {promotions.length > 0 && (
               <Button variant="outline" size="sm" className="h-9 text-xs rounded-xl" onClick={exportCSV}>
                 <Download className="w-3.5 h-3.5 me-1.5" />{rtl ? 'تصدير' : 'Export'}
@@ -531,6 +554,91 @@ const DashboardPromotions = () => {
         </div>
 
         <MembershipUsageWarning userId={user?.id} businessId={businessId} metric="promotions" />
+
+        {/* Demo data alert */}
+        {stats.demos > 0 && (
+          <div className="flex items-center gap-3 p-3 rounded-2xl border border-warning/30 bg-warning/5">
+            <Wand2 className="w-4 h-4 text-warning shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-[12px] font-medium">{rtl ? `لديك ${stats.demos} عرض تجريبي` : `You have ${stats.demos} demo promotion(s)`}</p>
+              <p className="text-[10px] text-muted-foreground">{rtl ? 'احذفها قبل النشر للعملاء واستبدلها بعروضك الحقيقية.' : 'Remove before going live and replace with your real offers.'}</p>
+            </div>
+            <Button variant="outline" size="sm" className="h-7 text-[11px] rounded-lg text-destructive hover:text-destructive" onClick={() => clearDemoMut.mutate()} disabled={clearDemoMut.isPending}>
+              {clearDemoMut.isPending ? <Loader2 className="w-3 h-3 animate-spin me-1" /> : <Trash className="w-3 h-3 me-1" />}
+              {rtl ? 'حذف التجريبي' : 'Clear demo'}
+            </Button>
+          </div>
+        )}
+
+        {/* ═══ Templates Catalog ═══ */}
+        {showCatalog && (
+          <Card className="rounded-2xl border-primary/20 overflow-hidden animate-in fade-in-0 slide-in-from-top-2 duration-200">
+            <div className="h-1 bg-gradient-to-r from-primary/60 via-primary/30 to-transparent" />
+            <CardHeader className="pb-3 pt-4">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-primary" />
+                  {rtl ? 'قوالب عروض جاهزة لقطاع الصناعات' : 'Industrial promotion templates'}
+                </CardTitle>
+                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => setShowCatalog(false)}><X className="w-4 h-4" /></Button>
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-1">{rtl ? 'اختر قطاعك ثم أضف العرض مباشرة أو افتحه في النموذج للتعديل قبل الحفظ.' : 'Pick your sector then add directly or open in the form to tweak before saving.'}</p>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {/* Sector tabs */}
+              <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+                {promotionCatalog.map((s) => (
+                  <button key={s.id} onClick={() => setActiveSector(s.id)}
+                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-medium whitespace-nowrap border transition-all ${activeSector === s.id ? 'border-primary bg-primary/5 text-primary' : 'border-border/30 bg-card text-muted-foreground hover:bg-muted/40'}`}>
+                    <span className="text-sm leading-none">{s.icon}</span>
+                    {rtl ? s.name_ar : s.name_en}
+                    <span className="text-[9px] px-1.5 py-px rounded-full bg-muted">{s.templates.length}</span>
+                  </button>
+                ))}
+              </div>
+              {/* Templates grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2.5">
+                {promotionCatalog.find((s) => s.id === activeSector)?.templates.map((tpl) => {
+                  const cfg = typeConfig[tpl.type];
+                  const TIcon = cfg.icon;
+                  return (
+                    <div key={tpl.id} className="rounded-xl border border-border/40 bg-card/50 p-3 hover:border-primary/30 hover:shadow-sm transition-all group">
+                      <div className="flex items-start justify-between gap-2">
+                        <Badge className={`text-[9px] border-0 px-1.5 py-0.5 ${cfg.color}`}>
+                          <TIcon className="w-2.5 h-2.5 me-0.5" />{rtl ? cfg.ar : cfg.en}
+                        </Badge>
+                        {tpl.discount_percentage && (
+                          <Badge className="bg-destructive text-destructive-foreground text-[9px] px-1.5 py-0.5">-{tpl.discount_percentage}%</Badge>
+                        )}
+                      </div>
+                      <h4 className="text-xs font-semibold mt-2 line-clamp-2 min-h-[32px]">{rtl ? tpl.title_ar : tpl.title_en}</h4>
+                      <p className="text-[10px] text-muted-foreground line-clamp-2 mt-1 leading-relaxed min-h-[28px]">{rtl ? tpl.description_ar : tpl.description_en}</p>
+                      {tpl.original_price && (
+                        <div className="flex items-center gap-1.5 mt-2">
+                          <span className="line-through text-muted-foreground text-[10px]">{tpl.original_price.toLocaleString()}</span>
+                          {tpl.discount_percentage && (
+                            <span className="text-xs font-bold text-primary">
+                              {Math.round(tpl.original_price * (1 - tpl.discount_percentage / 100)).toLocaleString()}
+                              <span className="text-[9px] font-normal text-muted-foreground ms-1">{tpl.currency_code || 'SAR'}</span>
+                            </span>
+                          )}
+                        </div>
+                      )}
+                      <div className="flex items-center gap-1.5 mt-2.5 pt-2 border-t border-border/30">
+                        <Button size="sm" variant="hero" className="h-7 text-[10px] rounded-lg flex-1" onClick={() => insertTemplateMut.mutate(tpl)} disabled={insertTemplateMut.isPending || !businessId}>
+                          <PackagePlus className="w-3 h-3 me-1" />{rtl ? 'إضافة' : 'Add'}
+                        </Button>
+                        <Button size="sm" variant="outline" className="h-7 text-[10px] rounded-lg" onClick={() => useTemplateInForm(tpl)}>
+                          <Pencil className="w-3 h-3 me-1" />{rtl ? 'تعديل' : 'Edit'}
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* ═══ Stats ═══ */}
         {promotions.length > 0 && (
