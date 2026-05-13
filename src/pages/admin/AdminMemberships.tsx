@@ -27,6 +27,7 @@ import {
 import { TIERS, tierIcons, tierColors, statusConfig } from '@/lib/membership-tiers';
 import { LIMIT_FIELDS, LIMIT_CATEGORIES, parseLimits, limitsToJson, getExtraLimitKeys } from '@/lib/membership-limits';
 import { AdminUpgradeRequestsPanel } from '@/components/membership/AdminUpgradeRequestsPanel';
+import { AdminPromoCodesPanel } from '@/components/membership/AdminPromoCodesPanel';
 
 import { useNoIndex } from "@/hooks/useNoIndex";
 type Tab = 'overview' | 'plans' | 'subscriptions' | 'requests' | 'businesses' | 'usage';
@@ -1110,7 +1111,10 @@ const AdminMemberships = () => {
 
           {/* ═══════ UPGRADE REQUESTS ═══════ */}
           {activeTab === 'requests' && (
-            <AdminUpgradeRequestsPanel isRTL={isRTL} />
+            <div className="space-y-6">
+              <AdminUpgradeRequestsPanel isRTL={isRTL} />
+              <AdminPromoCodesPanel isRTL={isRTL} />
+            </div>
           )}
 
           {/* ═══════ BUSINESSES ═══════ */}
