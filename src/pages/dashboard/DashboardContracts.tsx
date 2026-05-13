@@ -1596,27 +1596,44 @@ const DashboardContracts = () => {
 
               {/* CT4B — Review summary + status guidance before submit. */}
               <div ref={stepRefs.review} className="space-y-4 scroll-mt-24">
-              {!editingId && (() => {
-                const result = calculateContractCompleteness({
-                  hasClient: !!(selectedClient || form.client_email),
-                  hasWorkType: !!selectedWorkType && workTypeTouched,
-                  hasTemplate: !!effectiveVersion,
-                  titleAr: form.title_ar,
-                  titleEn: form.title_en,
-                  startDate: form.start_date,
-                  endDate: form.end_date,
-                  vatRate: form.vat_rate,
-                  totalAmount: form.total_amount,
-                  termsAr: form.terms_ar,
-                  termsEn: form.terms_en,
-                  hasTemplateSnapshot: !!effectiveVersion,
-                });
+              {(() => {
+                const completeness = !editingId
+                  ? calculateContractCompleteness({
+                      hasClient: !!(selectedClient || form.client_email),
+                      hasWorkType: !!selectedWorkType && workTypeTouched,
+                      hasTemplate: !!effectiveVersion,
+                      titleAr: form.title_ar,
+                      titleEn: form.title_en,
+                      startDate: form.start_date,
+                      endDate: form.end_date,
+                      vatRate: form.vat_rate,
+                      totalAmount: form.total_amount,
+                      termsAr: form.terms_ar,
+                      termsEn: form.terms_en,
+                      hasTemplateSnapshot: !!effectiveVersion,
+                    })
+                  : null;
+                const mStatus = createContractMutation.status;
+                const saveState: DraftSaveState =
+                  mStatus === 'pending' ? 'saving'
+                  : mStatus === 'error' ? 'error'
+                  : mStatus === 'success' ? 'saved'
+                  : 'not_saved';
                 return (
-                  <ContractCompletenessCard
-                    isRTL={isRTL}
-                    result={result}
-                    onGoToStep={goToStep}
-                  />
+                  <>
+                    {completeness && (
+                      <ContractCompletenessCard
+                        isRTL={isRTL}
+                        result={completeness}
+                        onGoToStep={goToStep}
+                      />
+                    )}
+                    <ContractDraftSaveStatus
+                      isRTL={isRTL}
+                      state={saveState}
+                      score={completeness?.score}
+                    />
+                  </>
                 );
               })()}
               {!editingId && (() => {
@@ -1645,6 +1662,16 @@ const DashboardContracts = () => {
                   />
                 );
               })()}
+              {!editingId && (
+                <div className="text-[10px] text-muted-foreground space-y-1 px-1">
+                  <p>{isRTL
+                    ? 'بعد الإرسال للموافقة، لا يزال العقد غير مفعّل حتى يوافق الطرفان.'
+                    : 'After sending for approval, the contract remains inactive until both parties approve.'}</p>
+                  <p>{isRTL
+                    ? 'بعد تفعيل العقد، التعديلات الرسمية تتم عبر ملحق.'
+                    : 'Once active, formal changes must be made through an amendment.'}</p>
+                </div>
+              )}
 
               {/* Provider Contract UX 2 — Part A: Back / Next + Save Draft inline. */}
               <ContractCreateActionsBar
@@ -1656,6 +1683,16 @@ const DashboardContracts = () => {
                 saveDisabled={!form.title_ar || !form.total_amount || (!editingId && !selectedClient && !form.client_email) || createContractMutation.isPending}
                 onStepNav={goToStep}
                 onSave={() => createContractMutation.mutate()}
+                completenessScore={!editingId ? calculateContractCompleteness({
+                  hasClient: !!(selectedClient || form.client_email),
+                  hasWorkType: !!selectedWorkType && workTypeTouched,
+                  hasTemplate: !!effectiveVersion,
+                  titleAr: form.title_ar, titleEn: form.title_en,
+                  startDate: form.start_date, endDate: form.end_date,
+                  vatRate: form.vat_rate, totalAmount: form.total_amount,
+                  termsAr: form.terms_ar, termsEn: form.terms_en,
+                  hasTemplateSnapshot: !!effectiveVersion,
+                }).score : undefined}
               />
               </div>
 
