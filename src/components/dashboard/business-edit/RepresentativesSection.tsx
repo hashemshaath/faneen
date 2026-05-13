@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
-  ShieldCheck, UserPlus, Users, Loader2, Trash2, Power, Hash, Search,
+  ShieldCheck, UserPlus, Users, Loader2, Trash2, Power, Hash, Search, ChevronDown, ChevronUp, Settings2,
 } from 'lucide-react';
 
 import { supabase } from '@/integrations/supabase/client';
@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/select';
 
 import { STAFF_ROLE_META, type StaffMember, type StaffRole } from './types';
+import { PermissionsMatrix } from './PermissionsMatrix';
 
 interface Props {
   businessId: string;
@@ -36,6 +37,7 @@ export const RepresentativesSection: React.FC<Props> = ({ businessId, ownerUserI
   const [newRole, setNewRole] = useState<StaffRole>('viewer');
   const [adding, setAdding] = useState(false);
   const [busyRowId, setBusyRowId] = useState<string | null>(null);
+  const [expandedRow, setExpandedRow] = useState<string | null>(null);
 
   // ---------- Load staff + profiles ----------
   const { data: staff = [], isLoading } = useQuery({
@@ -220,7 +222,8 @@ export const RepresentativesSection: React.FC<Props> = ({ businessId, ownerUserI
               const lockedRole = row.role === 'owner' || (!canManage);
               const isOnlyOwner = row.role === 'owner' && owners.length === 1;
               return (
-                <li key={row.id} className="flex flex-col sm:flex-row sm:items-center gap-3 p-3">
+                <li key={row.id} className="p-3">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                   <div className="flex items-center gap-3 min-w-0 flex-1">
                     <div className="shrink-0 w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold">
                       {(row.profile?.full_name ?? row.profile?.email ?? '?').slice(0, 1).toUpperCase()}
@@ -284,8 +287,28 @@ export const RepresentativesSection: React.FC<Props> = ({ businessId, ownerUserI
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        title={isRTL ? 'الصلاحيات التفصيلية' : 'Detailed permissions'}
+                        onClick={() => setExpandedRow((cur) => (cur === row.id ? null : row.id))}
+                      >
+                        {expandedRow === row.id ? <ChevronUp className="w-3.5 h-3.5" /> : <Settings2 className="w-3.5 h-3.5" />}
+                      </Button>
                     </div>
                   )}
+                </div>
+                {expandedRow === row.id && (
+                  <div className="mt-3">
+                    <PermissionsMatrix
+                      staffId={row.id}
+                      staffRole={row.role}
+                      isRTL={isRTL}
+                      canManage={canManage}
+                    />
+                  </div>
+                )}
                 </li>
               );
             })}
