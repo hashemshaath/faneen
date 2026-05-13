@@ -109,12 +109,12 @@ const messages: Record<ValidationCode, { ar: string; en: string }> = {
     en: 'Add the Arabic translation to improve local visibility',
   },
   COORDS_MISSING: {
-    ar: 'يجب تحديد موقع المنشأة على الخريطة',
-    en: 'You must select your business location on the map',
+    ar: 'موقع المنشأة لم يُحدّد بعد. الخطوات: 1) افتح قسم «الموقع» 2) اضغط على الخريطة لتثبيت الدبوس أو استخدم «موقعي الحالي» 3) (اختياري) اضغط «تعبئة العنوان» لتعبئة المنطقة والحي تلقائيًا.',
+    en: 'Business location is not set. Steps: 1) Open the Location section 2) Click the map to drop a pin or use “My location” 3) (Optional) click “Auto-fill address” to populate region & district.',
   },
   COORDS_INVALID: {
-    ar: 'الإحداثيات خارج النطاق المسموح (-90/90, -180/180)',
-    en: 'Coordinates are outside the valid range (-90/90, -180/180)',
+    ar: 'الإحداثيات غير صحيحة. تأكد أن خط العرض بين -90 و 90 وخط الطول بين -180 و 180. الحل الأسرع: أعد اختيار النقطة من الخريطة لتُعبَّأ الحقول تلقائيًا.',
+    en: 'Coordinates are invalid. Latitude must be between -90 and 90, longitude between -180 and 180. Quickest fix: pick the point again on the map to refill the fields automatically.',
   },
 };
 

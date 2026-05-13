@@ -41,15 +41,71 @@ interface NominatimResponse {
   address?: NominatimAddress;
 }
 
-const fetchReverse = async (lat: number, lng: number, lang: 'ar' | 'en'): Promise<NominatimResponse | null> => {
-  try {
-    const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&accept-language=${lang}&zoom=18`;
-    const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
-    if (!res.ok) return null;
-    return (await res.json()) as NominatimResponse;
-  } catch {
-    return null;
+// ---------------------------------------------------------------------------
+// Nominatim client: in-memory LRU cache + global rate limit (max 1 req/sec
+// per the OSM usage policy) + transparent retry on 429/5xx.
+// ---------------------------------------------------------------------------
+const MIN_INTERVAL_MS = 1100;
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24h
+const CACHE_MAX = 200;
+
+type CacheEntry<T> = { value: T; expires: number };
+const reverseCache = new Map<string, CacheEntry<NominatimResponse | null>>();
+const forwardCache = new Map<string, CacheEntry<{ lat: number; lng: number } | null>>();
+let lastRequestAt = 0;
+let chain: Promise<unknown> = Promise.resolve();
+
+const cacheGet = <T,>(map: Map<string, CacheEntry<T>>, key: string): T | undefined => {
+  const hit = map.get(key);
+  if (!hit) return undefined;
+  if (hit.expires < Date.now()) { map.delete(key); return undefined; }
+  return hit.value;
+};
+const cacheSet = <T,>(map: Map<string, CacheEntry<T>>, key: string, value: T) => {
+  if (map.size >= CACHE_MAX) {
+    const first = map.keys().next().value;
+    if (first !== undefined) map.delete(first);
   }
+  map.set(key, { value, expires: Date.now() + CACHE_TTL_MS });
+};
+
+const throttle = async <T,>(fn: () => Promise<T>): Promise<T> => {
+  const run = chain.then(async () => {
+    const wait = Math.max(0, MIN_INTERVAL_MS - (Date.now() - lastRequestAt));
+    if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+    try { return await fn(); } finally { lastRequestAt = Date.now(); }
+  });
+  chain = run.catch(() => undefined);
+  return run as Promise<T>;
+};
+
+export class NominatimError extends Error {
+  constructor(public code: 'rate_limited' | 'network' | 'server', message: string) {
+    super(message);
+  }
+}
+
+const fetchJson = async (url: string, attempt = 0): Promise<unknown> => {
+  const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+  if (res.status === 429 || res.status >= 500) {
+    if (attempt < 1) {
+      await new Promise((r) => setTimeout(r, 1500));
+      return fetchJson(url, attempt + 1);
+    }
+    throw new NominatimError(res.status === 429 ? 'rate_limited' : 'server', `HTTP ${res.status}`);
+  }
+  if (!res.ok) throw new NominatimError('server', `HTTP ${res.status}`);
+  return res.json();
+};
+
+const fetchReverse = async (lat: number, lng: number, lang: 'ar' | 'en'): Promise<NominatimResponse | null> => {
+  const key = `${lang}:${lat.toFixed(5)},${lng.toFixed(5)}`;
+  const cached = cacheGet(reverseCache, key);
+  if (cached !== undefined) return cached;
+  const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&accept-language=${lang}&zoom=18`;
+  const data = (await throttle(() => fetchJson(url))) as NominatimResponse | null;
+  cacheSet(reverseCache, key, data ?? null);
+  return data ?? null;
 };
 
 export const reverseGeocode = async (lat: number, lng: number): Promise<ReverseGeocodeResult> => {
@@ -68,16 +124,14 @@ export const reverseGeocode = async (lat: number, lng: number): Promise<ReverseG
 };
 
 const forwardSearch = async (q: string): Promise<{ lat: number; lng: number } | null> => {
-  try {
-    const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&q=${encodeURIComponent(q)}&limit=1&accept-language=ar,en`;
-    const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
-    if (!res.ok) return null;
-    const data = (await res.json()) as Array<{ lat: string; lon: string }>;
-    if (!data.length) return null;
-    return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
-  } catch {
-    return null;
-  }
+  const key = q.trim().toLowerCase();
+  const cached = cacheGet(forwardCache, key);
+  if (cached !== undefined) return cached;
+  const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&q=${encodeURIComponent(q)}&limit=1&accept-language=ar,en`;
+  const data = (await throttle(() => fetchJson(url))) as Array<{ lat: string; lon: string }>;
+  const result = data.length ? { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) } : null;
+  cacheSet(forwardCache, key, result);
+  return result;
 };
 
 interface Props {
@@ -176,26 +230,46 @@ export const LocationPicker: React.FC<Props> = ({ isRTL, latitude, longitude, on
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
     setBusy(true);
-    const result = await forwardSearch(searchQuery.trim());
-    setBusy(false);
-    if (!result) {
-      toast.error(isRTL ? 'لم يتم العثور على عنوان مطابق' : 'No matching address found');
-      return;
+    try {
+      const result = await forwardSearch(searchQuery.trim());
+      if (!result) {
+        toast.error(isRTL ? 'لم يتم العثور على عنوان مطابق' : 'No matching address found');
+        return;
+      }
+      onChange(+result.lat.toFixed(7), +result.lng.toFixed(7));
+    } catch (err) {
+      const code = err instanceof NominatimError ? err.code : 'network';
+      toast.error(
+        code === 'rate_limited'
+          ? isRTL ? 'تم تجاوز عدد الطلبات المسموح به مؤقتًا، حاول بعد قليل.' : 'Rate limit reached, please try again in a moment.'
+          : isRTL ? 'تعذّر الاتصال بخدمة الخرائط، أعد المحاولة لاحقًا.' : 'Could not reach the map service, please retry shortly.',
+      );
+    } finally {
+      setBusy(false);
     }
-    onChange(+result.lat.toFixed(7), +result.lng.toFixed(7));
   };
 
   const handleAutofill = async () => {
     if (latitude == null || longitude == null || !onAutofill) return;
     setBusy(true);
-    const data = await reverseGeocode(latitude, longitude);
-    setBusy(false);
-    if (!data.address_ar && !data.address_en) {
-      toast.error(isRTL ? 'تعذّر جلب العنوان من الإحداثيات' : 'Reverse geocoding failed');
-      return;
+    try {
+      const data = await reverseGeocode(latitude, longitude);
+      if (!data.address_ar && !data.address_en) {
+        toast.error(isRTL ? 'تعذّر جلب العنوان من الإحداثيات' : 'Reverse geocoding failed');
+        return;
+      }
+      onAutofill(data);
+      toast.success(isRTL ? 'تم تعبئة العنوان تلقائيًا' : 'Address auto-filled from coordinates');
+    } catch (err) {
+      const code = err instanceof NominatimError ? err.code : 'network';
+      toast.error(
+        code === 'rate_limited'
+          ? isRTL ? 'تم تجاوز حد الطلبات على خدمة الخرائط، انتظر قليلاً ثم أعد المحاولة.' : 'Map service rate limit reached. Please wait a moment and retry.'
+          : isRTL ? 'تعذّر جلب العنوان حاليًا، أعد المحاولة بعد قليل.' : 'Could not fetch the address right now. Please retry shortly.',
+      );
+    } finally {
+      setBusy(false);
     }
-    onAutofill(data);
-    toast.success(isRTL ? 'تم تعبئة العنوان تلقائيًا' : 'Address auto-filled from coordinates');
   };
 
   const hasCoords = latitude != null && longitude != null;

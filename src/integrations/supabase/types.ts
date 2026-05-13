@@ -1228,6 +1228,7 @@ export type Database = {
           expires_at: string
           id: string
           invited_by: string
+          permissions: Json | null
           role: string
           status: string
           token: string
@@ -1241,6 +1242,7 @@ export type Database = {
           expires_at?: string
           id?: string
           invited_by: string
+          permissions?: Json | null
           role?: string
           status?: string
           token: string
@@ -1254,6 +1256,7 @@ export type Database = {
           expires_at?: string
           id?: string
           invited_by?: string
+          permissions?: Json | null
           role?: string
           status?: string
           token?: string
