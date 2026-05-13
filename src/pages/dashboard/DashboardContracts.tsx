@@ -1605,6 +1605,11 @@ const DashboardContracts = () => {
           onOpenTemplates={() => setViewSection('templates')}
           onCreate={() => { closeForm(); setViewSection('create'); }}
           onBack={closeForm}
+          showAnalytics={providerContracts.length > 0}
+          onRefresh={() => {
+            queryClient.invalidateQueries({ queryKey: ['dashboard-contracts'] });
+          }}
+          isRefreshing={isLoading}
         />
 
         {viewSection === 'list' && <ContractStatsSummary stats={stats} isRTL={isRTL} />}
