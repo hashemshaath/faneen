@@ -2,7 +2,7 @@
  * Inline (no-popup) editor for a single private sector.
  * Used by both provider and admin pages.
  */
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,23 +12,49 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useLanguage } from '@/i18n/LanguageContext';
 import { ONBOARDING_SECTORS } from '@/data/onboarding-sectors';
 import { PS_BRAND_TYPE_META, PrivateSector, PrivateSectorBrandType } from './types';
-import { Save, X } from 'lucide-react';
+import { Save, X, Search as SearchIcon, Globe2, MapPin, Tag } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 
 interface Props {
   initial?: Partial<PrivateSector>;
   onCancel: () => void;
-  onSubmit: (values: Partial<PrivateSector>) => Promise<void> | void;
+  onSubmit: (values: Partial<PrivateSector>, reason?: string) => Promise<void> | void;
   busy?: boolean;
+  /** Show the post-approval guard hint and reason input (used when sector is approved). */
+  requiresReason?: boolean;
 }
 
-export const PrivateSectorForm: React.FC<Props> = ({ initial, onCancel, onSubmit, busy }) => {
+export const PrivateSectorForm: React.FC<Props> = ({ initial, onCancel, onSubmit, busy, requiresReason }) => {
   const { isRTL } = useLanguage();
   const [form, setForm] = useState<Partial<PrivateSector>>({
     name_ar: '', name_en: '', parent_sector: 'aluminum',
     brand_type: 'own_brand', short_description_ar: '', short_description_en: '',
     description_ar: '', description_en: '', logo_url: '', cover_url: '',
     website: '', contact_email: '', contact_phone: '', established_year: null,
+    city_id: null, category_id: null,
+    seo_title_ar: '', seo_title_en: '', seo_description_ar: '', seo_description_en: '',
+    seo_keywords: [],
     ...initial,
+  });
+  const [reason, setReason] = useState('');
+  const [keywordInput, setKeywordInput] = useState((initial?.seo_keywords ?? []).join(', '));
+
+  useEffect(() => { setKeywordInput((form.seo_keywords ?? []).join(', ')); /* on initial load */ /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
+
+  const { data: cities = [] } = useQuery({
+    queryKey: ['cities-active'],
+    queryFn: async () => {
+      const { data } = await supabase.from('cities').select('id, name_ar, name_en').eq('is_active', true).order('name_ar');
+      return data ?? [];
+    },
+  });
+  const { data: categories = [] } = useQuery({
+    queryKey: ['categories-active'],
+    queryFn: async () => {
+      const { data } = await supabase.from('categories').select('id, name_ar, name_en, slug').eq('is_active', true).order('sort_order');
+      return data ?? [];
+    },
   });
 
   const set = <K extends keyof PrivateSector>(k: K, v: PrivateSector[K] | null | undefined) =>
@@ -37,8 +63,11 @@ export const PrivateSectorForm: React.FC<Props> = ({ initial, onCancel, onSubmit
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name_ar?.trim()) return;
-    void onSubmit(form);
+    const keywords = keywordInput.split(',').map((k) => k.trim()).filter(Boolean);
+    void onSubmit({ ...form, seo_keywords: keywords as never }, reason.trim() || undefined);
   };
+
+  const slugPreview = useMemo(() => (initial?.slug ?? ''), [initial]);
 
   return (
     <Card className="border-primary/20">
@@ -117,8 +146,69 @@ export const PrivateSectorForm: React.FC<Props> = ({ initial, onCancel, onSubmit
             <Input dir="ltr" value={form.cover_url ?? ''} onChange={(e) => set('cover_url', e.target.value)} />
           </div>
 
+          <div>
+            <Label className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" />{isRTL ? 'المدينة' : 'City'}</Label>
+            <Select value={form.city_id ?? '__none__'} onValueChange={(v) => set('city_id', v === '__none__' ? null : v)}>
+              <SelectTrigger><SelectValue placeholder={isRTL ? 'اختر مدينة' : 'Select city'} /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">{isRTL ? 'بدون' : 'None'}</SelectItem>
+                {cities.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>{isRTL ? c.name_ar : (c.name_en || c.name_ar)}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label className="flex items-center gap-1.5"><Tag className="h-3.5 w-3.5" />{isRTL ? 'الفئة' : 'Category'}</Label>
+            <Select value={form.category_id ?? '__none__'} onValueChange={(v) => set('category_id', v === '__none__' ? null : v)}>
+              <SelectTrigger><SelectValue placeholder={isRTL ? 'اختر فئة' : 'Select category'} /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">{isRTL ? 'بدون' : 'None'}</SelectItem>
+                {categories.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>{isRTL ? c.name_ar : (c.name_en || c.name_ar)}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="md:col-span-2 mt-2">
+            <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground mb-2">
+              <SearchIcon className="h-4 w-4" /> {isRTL ? 'إعدادات SEO' : 'SEO settings'}
+              {slugPreview && <span className="ms-auto text-xs tech-content text-muted-foreground/70 inline-flex items-center gap-1"><Globe2 className="h-3 w-3" />/brands/{slugPreview}</span>}
+            </div>
+          </div>
+          <div>
+            <Label>{isRTL ? 'عنوان SEO (عربي)' : 'SEO title (AR)'}</Label>
+            <Input dir="auto" maxLength={70} value={form.seo_title_ar ?? ''} onChange={(e) => set('seo_title_ar', e.target.value)} />
+          </div>
+          <div>
+            <Label>{isRTL ? 'عنوان SEO (إنجليزي)' : 'SEO title (EN)'}</Label>
+            <Input dir="ltr" maxLength={70} value={form.seo_title_en ?? ''} onChange={(e) => set('seo_title_en', e.target.value)} />
+          </div>
+          <div className="md:col-span-2">
+            <Label>{isRTL ? 'وصف SEO (عربي)' : 'SEO description (AR)'}</Label>
+            <Textarea dir="auto" rows={2} maxLength={170} value={form.seo_description_ar ?? ''} onChange={(e) => set('seo_description_ar', e.target.value)} />
+          </div>
+          <div className="md:col-span-2">
+            <Label>{isRTL ? 'وصف SEO (إنجليزي)' : 'SEO description (EN)'}</Label>
+            <Textarea dir="ltr" rows={2} maxLength={170} value={form.seo_description_en ?? ''} onChange={(e) => set('seo_description_en', e.target.value)} />
+          </div>
+          <div className="md:col-span-2">
+            <Label>{isRTL ? 'كلمات مفتاحية (مفصولة بفواصل)' : 'Keywords (comma-separated)'}</Label>
+            <Input dir="auto" value={keywordInput} onChange={(e) => setKeywordInput(e.target.value)}
+                   placeholder={isRTL ? 'ألمنيوم, واجهات, الرياض' : 'aluminum, facades, riyadh'} />
+          </div>
+
+          {requiresReason && (
+            <div className="md:col-span-2 rounded-lg border border-warning/40 bg-warning/10 p-3">
+              <Label className="text-warning">{isRTL ? 'سبب التعديل (إلزامي بعد الاعتماد)' : 'Change reason (required after approval)'}</Label>
+              <Textarea dir="auto" rows={2} value={reason} onChange={(e) => setReason(e.target.value)}
+                        placeholder={isRTL ? 'أي تعديل جوهري سيُعيد القطاع لقيد المراجعة.' : 'Material edits send the sector back to review.'} />
+            </div>
+          )}
+
           <div className="md:col-span-2 flex items-center gap-2 pt-2">
-            <Button type="submit" size="app" disabled={busy}>
+            <Button type="submit" size="app" disabled={busy || (requiresReason && !reason.trim())}>
               <Save className="h-4 w-4" /> {isRTL ? 'حفظ' : 'Save'}
             </Button>
             <Button type="button" variant="outline" size="app" onClick={onCancel}>

@@ -35,6 +35,8 @@ export interface PrivateSector {
   cover_url: string | null;
   website: string | null;
   country_id: string | null;
+  city_id: string | null;
+  category_id: string | null;
   contact_email: string | null;
   contact_phone: string | null;
   established_year: number | null;
@@ -45,6 +47,11 @@ export interface PrivateSector {
   reviewed_at: string | null;
   is_featured: boolean;
   sort_order: number;
+  seo_title_ar: string | null;
+  seo_title_en: string | null;
+  seo_description_ar: string | null;
+  seo_description_en: string | null;
+  seo_keywords: string[];
   created_at: string;
   updated_at: string;
 }
@@ -84,6 +91,17 @@ export interface PrivateSectorAuditEntry {
   actor_user_id: string | null;
   notes: string | null;
   created_at: string;
+}
+
+export interface PrivateSectorPublic extends PrivateSector {
+  city_name_ar: string | null;
+  city_name_en: string | null;
+  category_name_ar: string | null;
+  category_name_en: string | null;
+  category_slug: string | null;
+  business_name_ar: string | null;
+  business_name_en: string | null;
+  business_username: string | null;
 }
 
 export const PS_STATUS_META: Record<PrivateSectorStatus, { ar: string; en: string; tone: string }> = {

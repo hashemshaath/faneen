@@ -10,15 +10,16 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Layers, Plus, Pencil, Trash2, Send, Search, FileClock, Building2, CheckCircle2, Clock, ShieldCheck, Sparkles } from 'lucide-react';
+import { Layers, Plus, Pencil, Trash2, Send, Search, FileClock, Building2, CheckCircle2, Clock, ShieldCheck, Sparkles, Users } from 'lucide-react';
 import {
   listSectorsForBusiness, createSector, updateSector, deleteSector,
-  submitSector, listAuditForSector,
+  submitSector, listAuditForSector, setSectorReason,
 } from '@/features/private-sectors/service';
 import {
   PS_STATUS_META, PS_BRAND_TYPE_META, PrivateSector,
 } from '@/features/private-sectors/types';
 import { PrivateSectorForm } from '@/features/private-sectors/PrivateSectorForm';
+import { SectorDistributorsPanel } from '@/features/private-sectors/SectorDistributorsPanel';
 import { ONBOARDING_SECTORS } from '@/data/onboarding-sectors';
 import { PrivateSectorTemplatesShowcase } from '@/features/private-sectors/PrivateSectorTemplatesShowcase';
 import type { PrivateSectorTemplate } from '@/features/private-sectors/templates';
@@ -31,6 +32,7 @@ const DashboardPrivateSectors: React.FC = () => {
   const [search, setSearch] = useState('');
   const [editing, setEditing] = useState<Partial<PrivateSector> | null>(null);
   const [auditFor, setAuditFor] = useState<string | null>(null);
+  const [distributorsFor, setDistributorsFor] = useState<string | null>(null);
 
   // Resolve current user's business (owner OR staff). User may have multiple businesses.
   const { data: businesses = [], isLoading: loadingBusiness } = useQuery({
@@ -84,7 +86,8 @@ const DashboardPrivateSectors: React.FC = () => {
   const refresh = () => qc.invalidateQueries({ queryKey: ['my-private-sectors', business?.id] });
 
   const saveMut = useMutation({
-    mutationFn: async (values: Partial<PrivateSector>) => {
+    mutationFn: async ({ values, reason }: { values: Partial<PrivateSector>; reason?: string }) => {
+      if (reason) await setSectorReason(reason);
       if (editing?.id) return updateSector(editing.id, values);
       return createSector({ ...values, business_id: business!.id, name_ar: values.name_ar!, parent_sector: values.parent_sector ?? 'aluminum' });
     },
@@ -218,7 +221,8 @@ const DashboardPrivateSectors: React.FC = () => {
             initial={editing}
             busy={saveMut.isPending}
             onCancel={() => setEditing(null)}
-            onSubmit={async (v) => { await saveMut.mutateAsync(v); }}
+            requiresReason={editing?.status === 'approved'}
+            onSubmit={async (v, reason) => { await saveMut.mutateAsync({ values: v, reason }); }}
           />
         )}
 
@@ -294,6 +298,9 @@ const DashboardPrivateSectors: React.FC = () => {
                       <Button size="sm" variant="ghost" onClick={() => setAuditFor(auditFor === s.id ? null : s.id)}>
                         <FileClock className="h-4 w-4" /> {isRTL ? 'السجل' : 'Audit'}
                       </Button>
+                      <Button size="sm" variant="ghost" onClick={() => setDistributorsFor(distributorsFor === s.id ? null : s.id)}>
+                        <Users className="h-4 w-4" /> {isRTL ? 'الموزعون' : 'Distributors'}
+                      </Button>
                       <Button size="sm" variant="ghost" className="text-destructive" onClick={() => delMut.mutate(s.id)}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -305,9 +312,15 @@ const DashboardPrivateSectors: React.FC = () => {
                         ) : audit.map((a) => (
                           <div key={a.id} className="flex items-center gap-2 text-xs">
                             <Badge variant="outline" className="text-[10px]">{a.action}</Badge>
+                            {a.notes && <span className="text-muted-foreground italic">"{a.notes}"</span>}
                             <span className="text-muted-foreground tech-content">{new Date(a.created_at).toLocaleString()}</span>
                           </div>
                         ))}
+                      </div>
+                    )}
+                    {distributorsFor === s.id && (
+                      <div className="w-full mt-3">
+                        <SectorDistributorsPanel sectorId={s.id} canManage={true} />
                       </div>
                     )}
                   </CardContent>
