@@ -1074,11 +1074,39 @@ const DashboardContracts = () => {
             : `Draft saved but execution site link failed. You can add it later. (${msg})`);
         }
       }
+      // Phase 5B.5 — link lead to the freshly created contract (manual save only).
+      if (result?.contractId && result.isNew && leadPrefill?.lead_id && !leadPrefill.existing_contract_id) {
+        try {
+          const { data: linkData, error: linkErr } = await supabase.rpc('link_lead_to_contract', {
+            _lead_id: leadPrefill.lead_id,
+            _contract_id: result.contractId,
+          });
+          if (linkErr) throw linkErr;
+          void linkData;
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : String(e);
+          const already = msg.match(/LEAD_LINK:ALREADY_CONVERTED:([0-9a-f-]+)/i);
+          if (already?.[1]) {
+            toast.warning(isRTL
+              ? 'هذا الطلب مرتبط بعقد آخر بالفعل. سيتم فتح العقد الموجود.'
+              : 'This lead is already linked to another contract. Opening the existing contract.');
+            navigate(`/contracts/${already[1]}`);
+          } else {
+            toast.warning(isRTL
+              ? 'تم حفظ المسودة، لكن تعذر ربطها بطلب الخدمة. يمكنك فتح الطلب لاحقًا.'
+              : 'Draft saved but could not be linked to the service request. You can open the request later.');
+          }
+        }
+      }
       queryClient.invalidateQueries({ queryKey: ['dashboard-contracts'] });
+      queryClient.invalidateQueries({ queryKey: ['lead_requests'] });
       setViewSection('list'); setForm(emptyForm); setEditingId(null);
       setSelectedVersionId(null); setSelectedPricingMethod(null); setSelectedTemplate(null);
       setSelectedClient(null); setSelectedWorkType('general'); setWorkTypeTouched(false);
       setSelectedSiteId(null);
+      setLeadPrefill(null);
+      setLeadPrefillDismissed(false);
+      setLeadClientConfirmed(false);
       toast.success(editingId ? (isRTL ? 'تم تحديث العقد' : 'Contract updated') : (isRTL ? 'تم إنشاء العقد' : 'Contract created'));
     },
     onError: (err: Error) => {
