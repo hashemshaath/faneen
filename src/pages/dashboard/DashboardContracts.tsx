@@ -911,6 +911,7 @@ const DashboardContracts = () => {
       if (editingId) {
         const { error } = await supabase.from('contracts').update(payload).eq('id', editingId);
         if (error) throw error;
+        return { contractId: editingId, isNew: false };
       } else {
         // CT4 — Always create new contracts via the SECURITY DEFINER RPC so the
         // template snapshot is frozen atomically. Falls back to General v1.
@@ -918,19 +919,37 @@ const DashboardContracts = () => {
         if (!versionId) {
           throw new Error(isRTL ? 'لا يوجد قالب عقد منشور' : 'No published contract template available');
         }
-        const { error } = await supabase.rpc('create_contract_from_template', {
+        const { data, error } = await supabase.rpc('create_contract_from_template', {
           _payload: payload,
           _template_version_id: versionId,
           _pricing_method: selectedPricingMethod,
         });
         if (error) throw error;
+        const newId = (data ?? null) as string | null;
+        return { contractId: newId, isNew: true };
       }
     },
-    onSuccess: () => {
+    onSuccess: async (result) => {
+      // Phase 5C.3 — chain execution-site linking after the row exists.
+      if (result?.contractId && selectedSiteId) {
+        try {
+          const { error } = await supabase.rpc('set_contract_execution_site', {
+            _contract_id: result.contractId,
+            _site_id: selectedSiteId,
+          });
+          if (error) throw error;
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : String(e);
+          toast.warning(isRTL
+            ? `تم حفظ المسودة، لكن تعذر ربط موقع التنفيذ. يمكنك إضافته لاحقًا. (${msg})`
+            : `Draft saved but execution site link failed. You can add it later. (${msg})`);
+        }
+      }
       queryClient.invalidateQueries({ queryKey: ['dashboard-contracts'] });
       setViewSection('list'); setForm(emptyForm); setEditingId(null);
       setSelectedVersionId(null); setSelectedPricingMethod(null); setSelectedTemplate(null);
       setSelectedClient(null); setSelectedWorkType('general'); setWorkTypeTouched(false);
+      setSelectedSiteId(null);
       toast.success(editingId ? (isRTL ? 'تم تحديث العقد' : 'Contract updated') : (isRTL ? 'تم إنشاء العقد' : 'Contract created'));
     },
     onError: (err: Error) => {
