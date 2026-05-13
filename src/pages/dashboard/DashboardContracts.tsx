@@ -1467,67 +1467,14 @@ const DashboardContracts = () => {
             <CardContent className="space-y-4">
               <div ref={stepRefs.client} className="space-y-4 scroll-mt-24">
               {/* CT4C.5 — Accepted invitations awaiting contract completion */}
-              {!editingId && inviteMode === 'idle' && acceptedInvitations.length > 0 && (
-                <div className="p-4 rounded-xl border-2 border-emerald-500/40 bg-emerald-500/5 space-y-3">
-                  <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <div className="flex items-center gap-2">
-                      <CircleCheck className="w-4 h-4 text-emerald-600" />
-                      <span className="text-xs font-semibold">
-                        {isRTL ? 'دعوات مقبولة بانتظار إصدار العقد' : 'Accepted invitations awaiting contract'}
-                      </span>
-                      <Badge variant="secondary" className="text-[9px]">{acceptedInvitations.length}</Badge>
-                    </div>
-                    <Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-[10px]" onClick={() => refetchAcceptedInvites()}>
-                      <RefreshCw className="w-3 h-3 me-1" />
-                      {isRTL ? 'تحديث' : 'Refresh'}
-                    </Button>
-                  </div>
-                  <div className="space-y-2">
-                    {acceptedInvitations.map((inv) => {
-                      const wt = inv.work_type ? getWorkType(inv.work_type as WorkTypeKey) : null;
-                      return (
-                        <div key={inv.id} className="p-3 rounded-lg border border-emerald-500/20 bg-background flex flex-wrap items-center justify-between gap-3">
-                          <div className="space-y-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <Badge variant="outline" className="text-[9px] tech-content">{inv.ref_id}</Badge>
-                              {wt && <Badge variant="secondary" className="text-[9px]">{isRTL ? wt.ar : wt.en}</Badge>}
-                              {inv.template_version_id && (
-                                <Badge variant="secondary" className="text-[9px] gap-0.5">
-                                  <Sparkles className="w-2.5 h-2.5" />{isRTL ? 'قالب جاهز' : 'Template ready'}
-                                </Badge>
-                              )}
-                            </div>
-                            <div className="text-[11px] text-muted-foreground flex items-center gap-2 flex-wrap">
-                              <span dir="ltr" className="font-mono">{maskInviteEmail(inv.email_lower)}</span>
-                              {inv.recipient_name && <span>· {inv.recipient_name}</span>}
-                              {inv.accepted_at && (
-                                <span dir="ltr">· {new Date(inv.accepted_at).toISOString().slice(0, 10)}</span>
-                              )}
-                            </div>
-                          </div>
-                          <Button
-                            type="button"
-                            variant="hero"
-                            size="sm"
-                            className="h-8 gap-1.5 text-[11px]"
-                            disabled={!inv.template_version_id || completeFromInviteMutation.isPending}
-                            onClick={() => completeFromInviteMutation.mutate(inv.id)}
-                          >
-                            {completeFromInviteMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <FileCheck className="w-3 h-3" />}
-                            {isRTL ? 'إكمال إصدار العقد' : 'Complete contract'}
-                          </Button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                  {acceptedInvitations.some(i => !i.template_version_id) && (
-                    <p className="text-[10px] text-muted-foreground leading-relaxed">
-                      {isRTL
-                        ? 'بعض الدعوات لا تحتوي على قالب محفوظ — يلزم إنشاء العقد يدويًا.'
-                        : 'Some invitations have no saved template — these require manual contract creation.'}
-                    </p>
-                  )}
-                </div>
+              {!editingId && inviteMode === 'idle' && (
+                <AcceptedInvitationsPanel
+                  isRTL={isRTL}
+                  invitations={acceptedInvitations}
+                  isCompleting={completeFromInviteMutation.isPending}
+                  onRefresh={() => refetchAcceptedInvites()}
+                  onCompleteFromInvite={(id) => completeFromInviteMutation.mutate(id)}
+                />
               )}
 
               {/* CT4B — Step 1: Client (search picker with email fallback) */}
