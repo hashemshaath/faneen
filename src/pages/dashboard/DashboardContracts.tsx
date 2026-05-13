@@ -59,6 +59,9 @@ import {
 } from '@/lib/contract-boq';
 import { ClientPicker, type SelectedClient } from '@/components/contracts/ClientPicker';
 import { DimensionHelper } from '@/components/contracts/DimensionHelper';
+import { ContractRoleTabs } from '@/components/contracts/dashboard/ContractRoleTabs';
+import { ContractFilters } from '@/components/contracts/dashboard/ContractFilters';
+import { ContractEmptyState } from '@/components/contracts/dashboard/ContractEmptyState';
 import { WORK_TYPES, getWorkType, pickTemplateForWorkType, type WorkTypeKey } from '@/lib/contract-work-types';
 import { getStatusGuidance } from '@/lib/contract-status-guidance';
 import { serializeDraftPayload, maskEmail as maskInviteEmail, type PendingInvite } from '@/lib/contract-invitations';
@@ -2427,96 +2430,38 @@ const DashboardContracts = () => {
         {/* ═══ Contracts List ═══ */}
         {viewSection === 'list' && (
           <>
-            {/* Role Tabs */}
-            <div className="flex items-center gap-1 p-1 bg-muted/40 rounded-xl border border-border/30 w-fit">
-              {[
-                { key: 'all' as const, label: isRTL ? 'الكل' : 'All', count: stats.total, icon: LayoutGrid },
-                { key: 'provider' as const, label: isRTL ? 'كمزود خدمة' : 'As Provider', count: stats.asProvider, icon: Briefcase },
-                { key: 'client' as const, label: isRTL ? 'كعميل' : 'As Client', count: stats.asClient, icon: User },
-              ].map(tab => (
-                <button key={tab.key} onClick={() => startTransition(() => setRoleFilter(tab.key))}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all ${roleFilter === tab.key ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
-                  <tab.icon className="w-3.5 h-3.5" />
-                  {tab.label}
-                  <Badge variant="secondary" className="text-[8px] px-1.5 py-0 h-4">{tab.count}</Badge>
-                </button>
-              ))}
-            </div>
-
-            {/* Filters & Sort */}
-            <div className="flex flex-col sm:flex-row gap-2.5 sm:items-center justify-between">
-              <div className="flex flex-wrap gap-1.5">
-                {[
-                  { key: 'all', label: isRTL ? 'الكل' : 'All', count: stats.total },
-                  { key: 'active', label: isRTL ? 'نشط' : 'Active', count: stats.active },
-                  { key: 'pending_approval', label: isRTL ? 'بانتظار' : 'Pending', count: stats.pendingApproval },
-                  { key: 'completed', label: isRTL ? 'مكتمل' : 'Done', count: stats.completed },
-                  { key: 'draft', label: isRTL ? 'مسودة' : 'Draft', count: stats.draft },
-                ].map(f => (
-                  <Button key={f.key} variant={statusFilter === f.key ? 'default' : 'outline'} size="sm" className="text-[10px] gap-1 h-8 px-3 rounded-lg" onClick={() => startTransition(() => setStatusFilter(f.key))}>
-                    {f.label}
-                    <Badge variant={statusFilter === f.key ? 'outline' : 'secondary'} className="text-[8px] px-1 py-0 h-4 ms-0.5">{f.count}</Badge>
-                  </Button>
-                ))}
-              </div>
-              <div className="flex items-center gap-2">
-                <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
-                  <SelectTrigger className="h-8 text-[10px] w-28 px-2.5 rounded-lg"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="date" className="text-xs">{isRTL ? 'التاريخ' : 'Date'}</SelectItem>
-                    <SelectItem value="amount" className="text-xs">{isRTL ? 'المبلغ' : 'Amount'}</SelectItem>
-                    <SelectItem value="status" className="text-xs">{isRTL ? 'الحالة' : 'Status'}</SelectItem>
-                    <SelectItem value="health" className="text-xs">{isRTL ? 'الصحة' : 'Health'}</SelectItem>
-                  </SelectContent>
-                </Select>
-                <div className="relative sm:max-w-xs w-full">
-                  <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                  <Input placeholder={isRTL ? 'بحث بالعنوان، الرقم...' : 'Search title, number...'} value={searchQuery} onChange={e => startTransition(() => setSearchQuery(e.target.value))} className="ps-9 h-8 text-xs rounded-lg" />
-                </div>
-              </div>
-            </div>
+            <ContractRoleTabs
+              value={roleFilter}
+              onChange={(v) => startTransition(() => setRoleFilter(v))}
+              counts={{ all: stats.total, provider: stats.asProvider, client: stats.asClient }}
+              isRTL={isRTL}
+            />
+            <ContractFilters
+              statusFilter={statusFilter}
+              onStatusChange={(v) => startTransition(() => setStatusFilter(v))}
+              sortBy={sortBy}
+              onSortChange={(v) => setSortBy(v)}
+              searchQuery={searchQuery}
+              onSearchChange={(v) => startTransition(() => setSearchQuery(v))}
+              counts={{
+                total: stats.total,
+                active: stats.active,
+                pendingApproval: stats.pendingApproval,
+                completed: stats.completed,
+                draft: stats.draft,
+              }}
+              isRTL={isRTL}
+            />
 
             {isLoading ? (
               <div className="grid grid-cols-1 gap-4">{[1, 2, 3].map(i => <Skeleton key={i} className="h-48 rounded-xl" />)}</div>
             ) : filtered.length === 0 ? (
-              (() => {
-                const hasAny = contracts.length > 0;
-                const filtersActive = hasAny && (statusFilter !== 'all' || roleFilter !== 'all' || !!searchQuery.trim());
-                return (
-                  <Card className="border-dashed border-2 bg-gradient-to-br from-muted/20 to-transparent" role="status" aria-live="polite">
-                    <CardContent className="flex flex-col items-center py-16 text-center">
-                      <div className="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center mb-4 shadow-inner">
-                        <FileText className="w-8 h-8 text-accent" aria-hidden="true" />
-                      </div>
-                      <h3 className="text-lg font-heading font-bold mb-2">
-                        {filtersActive
-                          ? (isRTL ? 'لا توجد نتائج مطابقة' : 'No matching results')
-                          : (isRTL ? 'لا توجد عقود' : 'No contracts yet')}
-                      </h3>
-                      <p className="text-sm text-muted-foreground mb-6 max-w-sm">
-                        {filtersActive
-                          ? (isRTL ? 'جرّب تعديل البحث أو إعادة ضبط عوامل التصفية' : 'Try adjusting your search or clearing the filters')
-                          : (isRTL ? 'ابدأ بإنشاء أول عقد احترافي لإدارة أعمالك' : 'Start by creating your first professional contract')}
-                      </p>
-                      {filtersActive ? (
-                        <Button
-                          variant="outline"
-                          size="lg"
-                          className="gap-2"
-                          onClick={() => { setStatusFilter('all'); setRoleFilter('all'); setSearchQuery(''); }}
-                          aria-label={isRTL ? 'إعادة ضبط عوامل التصفية' : 'Reset filters'}
-                        >
-                          {isRTL ? 'إعادة ضبط عوامل التصفية' : 'Reset filters'}
-                        </Button>
-                      ) : (
-                        <Button variant="hero" size="lg" className="gap-2 shadow-lg" onClick={() => setViewSection('create')}>
-                          <Plus className="w-5 h-5" aria-hidden="true" />{isRTL ? 'إنشاء عقد جديد' : 'Create New Contract'}
-                        </Button>
-                      )}
-                    </CardContent>
-                  </Card>
-                );
-              })()
+              <ContractEmptyState
+                filtersActive={contracts.length > 0 && (statusFilter !== 'all' || roleFilter !== 'all' || !!searchQuery.trim())}
+                isRTL={isRTL}
+                onCreate={() => setViewSection('create')}
+                onResetFilters={() => { setStatusFilter('all'); setRoleFilter('all'); setSearchQuery(''); }}
+              />
             ) : (
               <div className="space-y-4">
                 {filtered.map((c) => {
