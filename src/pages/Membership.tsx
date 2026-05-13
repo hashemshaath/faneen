@@ -474,9 +474,6 @@ const Membership = () => {
 
         {user && <PromoCodeRedeem isRTL={isRTL} businessId={myBusiness?.id ?? null} />}
 
-        {pendingDowngrade && (
-          null
-        )}
         {pendingUpgrade && myBusiness && (() => {
           const biz = myBusiness as { id: string; ref_id?: string | null; name_ar?: string | null; name_en?: string | null };
           const bizName = (isRTL ? biz.name_ar : biz.name_en) || biz.name_ar || biz.name_en || (isRTL ? 'منشأتك' : 'Your business');
