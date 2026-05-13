@@ -75,6 +75,8 @@ import { ContractCard } from '@/components/contracts/dashboard/ContractCard';
 import { getContractHealth } from '@/components/contracts/dashboard/contract-helpers';
 import { ContractCreateStepper } from '@/components/contracts/dashboard/create/ContractCreateStepper';
 import { ContractReviewSummary } from '@/components/contracts/dashboard/create/ContractReviewSummary';
+import { ContractCompletenessCard } from '@/components/contracts/dashboard/create/ContractCompletenessCard';
+import { calculateContractCompleteness } from '@/lib/contract-completeness';
 import {
   ContractCreateActionsBar,
   ContractCreateMobileActionBar,
@@ -1589,6 +1591,29 @@ const DashboardContracts = () => {
 
               {/* CT4B — Review summary + status guidance before submit. */}
               <div ref={stepRefs.review} className="space-y-4 scroll-mt-24">
+              {!editingId && (() => {
+                const result = calculateContractCompleteness({
+                  hasClient: !!(selectedClient || form.client_email),
+                  hasWorkType: !!selectedWorkType && workTypeTouched,
+                  hasTemplate: !!effectiveVersion,
+                  titleAr: form.title_ar,
+                  titleEn: form.title_en,
+                  startDate: form.start_date,
+                  endDate: form.end_date,
+                  vatRate: form.vat_rate,
+                  totalAmount: form.total_amount,
+                  termsAr: form.terms_ar,
+                  termsEn: form.terms_en,
+                  hasTemplateSnapshot: !!effectiveVersion,
+                });
+                return (
+                  <ContractCompletenessCard
+                    isRTL={isRTL}
+                    result={result}
+                    onGoToStep={goToStep}
+                  />
+                );
+              })()}
               {!editingId && (() => {
                 const guide = getStatusGuidance('draft');
                 const w = getWorkType(selectedWorkType);
