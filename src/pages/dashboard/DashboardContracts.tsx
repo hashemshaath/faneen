@@ -62,6 +62,9 @@ import { SuggestedBOQPanel } from '@/components/contracts/dashboard/create/Sugge
 import { WorkTypeSection } from '@/components/contracts/dashboard/create/WorkTypeSection';
 import { TemplateSelectionSection } from '@/components/contracts/dashboard/create/TemplateSelectionSection';
 import { ContractDetailsSection } from '@/components/contracts/dashboard/create/ContractDetailsSection';
+import { VatSettingsSection } from '@/components/contracts/dashboard/create/VatSettingsSection';
+import { SupervisorSection } from '@/components/contracts/dashboard/create/SupervisorSection';
+import { ContractTermsSection } from '@/components/contracts/dashboard/create/ContractTermsSection';
 import type { ContractForm } from '@/components/contracts/dashboard/create/contract-form-types';
 import { ContractRoleTabs } from '@/components/contracts/dashboard/ContractRoleTabs';
 import { ContractFilters } from '@/components/contracts/dashboard/ContractFilters';
@@ -1580,48 +1583,9 @@ const DashboardContracts = () => {
 
               {/* VAT Settings — Pricing/VAT step */}
               <div ref={stepRefs.pricing} className="space-y-4 scroll-mt-24">
-              <div className="p-4 rounded-xl bg-muted/30 border border-border/40 space-y-3">
-                <h4 className="text-xs font-semibold flex items-center gap-1.5"><Percent className="w-3.5 h-3.5 text-primary" />{isRTL ? 'ضريبة القيمة المضافة' : 'Value Added Tax (VAT)'}</h4>
-                <div className="flex items-center gap-4 flex-wrap">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={form.vat_inclusive} onChange={e => setForm(f => ({ ...f, vat_inclusive: e.target.checked }))} className="w-4 h-4 rounded border-border accent-accent" />
-                    <span className="text-xs">{isRTL ? 'الأسعار شاملة الضريبة' : 'Prices include VAT'}</span>
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <Label className="text-xs text-muted-foreground">{isRTL ? 'نسبة الضريبة' : 'VAT Rate'}</Label>
-                    <Input type="number" value={form.vat_rate} onChange={e => setForm(f => ({ ...f, vat_rate: e.target.value }))} dir="ltr" className="h-8 w-20 text-xs" />
-                    <span className="text-xs text-muted-foreground">%</span>
-                  </div>
-                </div>
-                <p className="text-[9px] text-muted-foreground">{form.vat_inclusive ? (isRTL ? 'جميع الأسعار والمبالغ في العقد شاملة ضريبة القيمة المضافة' : 'All prices and amounts include VAT') : (isRTL ? 'ستُضاف ضريبة القيمة المضافة على المجموع النهائي' : 'VAT will be added to the final total')}</p>
-              </div>
-              {/* Supervisor */}
-              <div className="p-4 rounded-xl bg-muted/30 border border-border/40 space-y-3">
-                <h4 className="text-xs font-semibold flex items-center gap-1.5"><User className="w-3.5 h-3.5 text-primary" />{isRTL ? 'مشرف المشروع' : 'Project Supervisor'}</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <Input placeholder={isRTL ? 'الاسم' : 'Name'} value={form.supervisor_name} onChange={e => setForm({ ...form, supervisor_name: e.target.value })} className="h-10 text-xs" />
-                  <Input placeholder={isRTL ? 'الجوال' : 'Phone'} value={form.supervisor_phone} onChange={e => setForm({ ...form, supervisor_phone: e.target.value })} dir="ltr" className="h-10 text-xs" />
-                  <Input placeholder={isRTL ? 'البريد' : 'Email'} value={form.supervisor_email} onChange={e => setForm({ ...form, supervisor_email: e.target.value })} dir="ltr" className="h-10 text-xs" />
-                </div>
-              </div>
-
-              {/* Terms */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between flex-wrap gap-1">
-                    <Label className="text-xs">{isRTL ? 'الشروط والأحكام (عربي)' : 'Terms (Arabic)'}</Label>
-                    <FieldAiActions value={form.terms_ar} lang="ar" onImproved={v => setForm(f => ({ ...f, terms_ar: v }))} fieldType="content" />
-                  </div>
-                  <Textarea value={form.terms_ar} onChange={e => setForm({ ...form, terms_ar: e.target.value })} rows={6} className="text-xs" />
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between flex-wrap gap-1">
-                    <Label className="text-xs">{isRTL ? 'الشروط والأحكام (إنجليزي)' : 'Terms (English)'}</Label>
-                    <FieldAiActions value={form.terms_en} lang="en" onTranslated={v => setForm(f => ({ ...f, terms_en: v }))} onImproved={v => setForm(f => ({ ...f, terms_en: v }))} fieldType="content" />
-                  </div>
-                  <Textarea value={form.terms_en} onChange={e => setForm({ ...form, terms_en: e.target.value })} rows={6} dir="ltr" className="text-xs" />
-                </div>
-              </div>
+              <VatSettingsSection isRTL={isRTL} form={form} setForm={setForm} />
+              <SupervisorSection isRTL={isRTL} form={form} setForm={setForm} />
+              <ContractTermsSection isRTL={isRTL} form={form} setForm={setForm} />
               </div>
 
               {/* CT4B — Review summary + status guidance before submit. */}
