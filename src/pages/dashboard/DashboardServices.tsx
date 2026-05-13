@@ -471,6 +471,13 @@ const DashboardServices = () => {
             </div>
           </div>
           <div className="flex gap-2 flex-wrap">
+            {publicUrl && (
+              <Button asChild variant="outline" size="sm" className="h-9 text-xs rounded-xl">
+                <a href={`${publicUrl}#services`} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="w-3.5 h-3.5 me-1.5" />{rtl ? 'الصفحة العامة' : 'Public page'}
+                </a>
+              </Button>
+            )}
             {services.length > 0 && (
               <Button variant="outline" size="sm" className="h-9 text-xs rounded-xl" onClick={exportCSV}>
                 <Download className="w-3.5 h-3.5 me-1.5" />{rtl ? 'تصدير' : 'Export'}
