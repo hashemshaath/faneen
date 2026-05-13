@@ -67,9 +67,17 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     if (shouldDeny && !loggedRef.current) {
       loggedRef.current = true;
       const role = requireSuperAdmin ? 'super_admin' : requireAdmin ? 'admin' : 'provider';
+      // eslint-disable-next-line no-console
+      console.warn('[ProtectedRoute] ACCESS DENIED → showing Forbidden', {
+        path: location.pathname,
+        required: role,
+        userId: user?.id,
+        roles,
+        isAdmin, isSuperAdmin, isProvider,
+      });
       logUnauthorizedAccess(user?.id, location.pathname, role);
     }
-  }, [shouldDeny, user?.id, location.pathname, requireSuperAdmin, requireAdmin]);
+  }, [shouldDeny, user?.id, location.pathname, requireSuperAdmin, requireAdmin, roles, isAdmin, isSuperAdmin, isProvider]);
 
   // Show loading spinner while auth state is being resolved
   if (!fullyLoaded) {
@@ -84,6 +92,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   // Redirect unauthenticated users
   if (requireAuth && !user) {
+    // eslint-disable-next-line no-console
+    console.info('[ProtectedRoute] not authenticated → /auth', { from: location.pathname });
     return <Navigate to="/auth" state={{ from: location.pathname }} replace />;
   }
 
