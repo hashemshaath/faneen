@@ -45,11 +45,12 @@ type ViewMode = 'list' | 'grid';
 
 /* ─── Sortable Service Card ─── */
 const SortableServiceCard = React.memo(({
-  s, rtl, viewMode, isSelected, onEdit, onToggle, onDuplicate, onDelete, onSelect,
+  s, rtl, viewMode, isSelected, onEdit, onToggle, onDuplicate, onDelete, onSelect, onShare, canShare,
 }: {
   s: Tables<'business_services'>; rtl: boolean; viewMode: ViewMode; isSelected: boolean;
   onEdit: (s: Tables<'business_services'>) => void; onToggle: (s: Tables<'business_services'>) => void;
   onDuplicate: (s: Tables<'business_services'>) => void; onDelete: (id: string) => void; onSelect: (id: string) => void;
+  onShare: (id: string) => void; canShare: boolean;
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: s.id });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1, zIndex: isDragging ? 50 : undefined };
@@ -79,6 +80,7 @@ const SortableServiceCard = React.memo(({
               </div>
               <div className="flex items-center gap-1">
                 {isNew && <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-accent text-accent-foreground">{rtl ? 'جديد' : 'NEW'}</span>}
+                {s.is_demo && <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-warning/15 text-warning">{rtl ? 'تجريبي' : 'DEMO'}</span>}
                 {isIncomplete && (
                   <TooltipProvider><Tooltip><TooltipTrigger><AlertCircle className="w-3.5 h-3.5 text-destructive/50" /></TooltipTrigger>
                   <TooltipContent><p className="text-xs">{rtl ? 'بيانات ناقصة' : 'Incomplete'}</p></TooltipContent></Tooltip></TooltipProvider>
@@ -123,6 +125,9 @@ const SortableServiceCard = React.memo(({
                 {s.is_active ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
               </Button>
               <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl bg-muted/80 hover:bg-muted" onClick={() => onDuplicate(s)}><Copy className="w-3.5 h-3.5" /></Button>
+              {canShare && (
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl bg-muted/80 hover:bg-muted" onClick={() => onShare(s.id)} title={rtl ? 'نسخ رابط الخدمة' : 'Copy link'}><Link2 className="w-3.5 h-3.5" /></Button>
+              )}
               <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl bg-destructive/10 hover:bg-destructive/20 text-destructive" onClick={() => onDelete(s.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
             </div>
           </div>
@@ -148,6 +153,7 @@ const SortableServiceCard = React.memo(({
           <div className="flex items-center gap-1.5 flex-wrap">
             <h3 className="font-semibold text-sm truncate">{name}</h3>
             {isNew && <span className="text-[8px] font-bold px-1 py-px rounded bg-accent text-accent-foreground">{rtl ? 'جديد' : 'NEW'}</span>}
+            {s.is_demo && <span className="text-[8px] font-bold px-1 py-px rounded bg-warning/15 text-warning">{rtl ? 'تجريبي' : 'DEMO'}</span>}
             {isIncomplete && (
               <TooltipProvider><Tooltip><TooltipTrigger><AlertCircle className="w-3 h-3 text-destructive/50" /></TooltipTrigger>
               <TooltipContent><p className="text-xs">{rtl ? 'بيانات ناقصة' : 'Incomplete'}</p></TooltipContent></Tooltip></TooltipProvider>
@@ -178,6 +184,9 @@ const SortableServiceCard = React.memo(({
           </Button>
           <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => onEdit(s)}><Pencil className="w-3.5 h-3.5" /></Button>
           <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => onDuplicate(s)}><Copy className="w-3.5 h-3.5" /></Button>
+          {canShare && (
+            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => onShare(s.id)} title={rtl ? 'نسخ رابط الخدمة' : 'Copy link'}><Link2 className="w-3.5 h-3.5" /></Button>
+          )}
           <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-destructive/60 hover:text-destructive hover:bg-destructive/10" onClick={() => onDelete(s.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
         </div>
       </div>
