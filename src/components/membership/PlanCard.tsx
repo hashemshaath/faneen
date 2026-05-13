@@ -84,7 +84,8 @@ export const PlanCard = React.memo(({
         onClick={() => onSubscribe(plan)}
         variant={isPremium ? 'hero' : isCurrentPlan ? 'outline' : 'default'}
         className={cn('w-full gap-1.5 transition-all', isUpgrade && !isCurrentPlan && 'bg-accent text-accent-foreground hover:bg-accent/90')}
-        disabled={!!isCurrentPlan || isSubscribing}
+        disabled={!!isCurrentPlan || isSubscribing || isDowngrade}
+        title={isDowngrade ? (isRTL ? 'لا يمكن طلب باقة أقل من باقتك الحالية' : 'Cannot request a plan lower than your current one') : undefined}
       >
         {isSubscribing ? (
           <><Loader2 className="w-3.5 h-3.5 animate-spin" />{isRTL ? 'جارٍ التفعيل...' : 'Activating...'}</>
@@ -93,7 +94,7 @@ export const PlanCard = React.memo(({
         ) : isUpgrade ? (
           <><Send className="w-3.5 h-3.5" />{isRTL ? 'طلب الترقية' : 'Request Upgrade'}</>
         ) : isDowngrade ? (
-          <>{isRTL ? 'خفض الباقة' : 'Downgrade'}</>
+          <>{isRTL ? 'غير متاح (باقة أقل)' : 'Unavailable (lower plan)'}</>
         ) : (
           <><Send className="w-3.5 h-3.5" />{isRTL ? 'طلب الاشتراك' : 'Request Subscription'}</>
         )}
