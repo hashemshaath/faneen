@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type {
   PrivateSector, PrivateSectorSpecialization, PrivateSectorDistributor,
   PrivateSectorAuditEntry, PrivateSectorStatus, PrivateSectorLinkStatus,
+  PrivateSectorPublic,
 } from './types';
 
 const TABLE = 'private_sectors';
@@ -39,9 +40,17 @@ export async function createSector(input: Partial<PrivateSector> & { business_id
 }
 
 export async function updateSector(id: string, patch: Partial<PrivateSector>): Promise<PrivateSector> {
+  // Make sure any reason set via setSectorReason() lands on the same RPC connection.
   const { data, error } = await supabase.from(TABLE).update(patch as never).eq('id', id).select().single();
   if (error) throw error;
   return data as PrivateSector;
+}
+
+/** Attach a human reason to the next sector mutation in the same session/request. */
+export async function setSectorReason(reason: string): Promise<void> {
+  if (!reason || !reason.trim()) return;
+  const { error } = await supabase.rpc('set_private_sector_reason', { _reason: reason.trim() });
+  if (error) throw error;
 }
 
 export async function deleteSector(id: string): Promise<void> {
@@ -121,4 +130,35 @@ export async function listGlobalAudit(limit = 100): Promise<PrivateSectorAuditEn
     .from(AUDIT_TABLE).select('*').order('created_at', { ascending: false }).limit(limit);
   if (error) throw error;
   return (data ?? []) as PrivateSectorAuditEntry[];
+}
+
+/* Public catalog */
+export interface PublicSectorFilter {
+  parent_sector?: string;
+  city_id?: string;
+  category_id?: string;
+  search?: string;
+  limit?: number;
+}
+
+export async function listPublicSectors(filter: PublicSectorFilter = {}): Promise<PrivateSectorPublic[]> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let q: any = supabase.from('private_sectors_public').select('*').order('is_featured', { ascending: false }).order('sort_order').order('created_at', { ascending: false });
+  if (filter.parent_sector) q = q.eq('parent_sector', filter.parent_sector);
+  if (filter.city_id) q = q.eq('city_id', filter.city_id);
+  if (filter.category_id) q = q.eq('category_id', filter.category_id);
+  if (filter.search?.trim()) {
+    const s = filter.search.trim();
+    q = q.or(`name_ar.ilike.%${s}%,name_en.ilike.%${s}%,slug.ilike.%${s}%`);
+  }
+  q = q.limit(filter.limit ?? 200);
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data ?? []) as PrivateSectorPublic[];
+}
+
+export async function getPublicSectorBySlug(slug: string): Promise<PrivateSectorPublic | null> {
+  const { data, error } = await supabase.from('private_sectors_public').select('*').eq('slug', slug).maybeSingle();
+  if (error) throw error;
+  return (data as PrivateSectorPublic | null) ?? null;
 }
