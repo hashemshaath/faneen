@@ -8213,6 +8213,14 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      update_contract_draft_autosave: {
+        Args: {
+          _contract_id: string
+          _expected_updated_at?: string
+          _patch: Json
+        }
+        Returns: Json
+      }
       validate_contract_line_item_price: {
         Args: { _payload: Json }
         Returns: Json
