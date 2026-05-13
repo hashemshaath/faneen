@@ -96,6 +96,9 @@ const DashboardBadge: React.FC = () => {
   const [variant, setVariant] = useState<BadgeVariant>('light');
   const [size, setSize] = useState<BadgeSize>('md');
   const [accent, setAccent] = useState<BadgeAccent>('emerald');
+  const [customAccent, setCustomAccent] = useState<string>('');
+  const [logoDataUrl, setLogoDataUrl] = useState<string>('');
+  const [fontId, setFontId] = useState<string>('system');
   const [showSubLabel, setShowSubLabel] = useState(true);
   const [forceLang, setForceLang] = useState<'auto' | 'ar' | 'en'>('auto');
   const [snippetKind, setSnippetKind] = useState<SnippetKind>('html');
@@ -206,7 +209,10 @@ const DashboardBadge: React.FC = () => {
     accent,
     isRTL: badgeIsRTL,
     showSubLabel,
-  } : null, [business?.username, displayName, variant, size, accent, badgeIsRTL, showSubLabel]);
+    customAccent: /^#?[0-9a-f]{6}$/i.test(customAccent.trim()) ? (customAccent.startsWith('#') ? customAccent : `#${customAccent}`) : undefined,
+    logoDataUrl: logoDataUrl || undefined,
+    fontFamily: FONT_PRESETS.find(f => f.id === fontId)?.css,
+  } : null, [business?.username, displayName, variant, size, accent, badgeIsRTL, showSubLabel, customAccent, logoDataUrl, fontId]);
 
   const html = useMemo(() => buildOpts ? buildBadgeHtml(buildOpts) : '', [buildOpts]);
   const markdown = useMemo(() => buildOpts ? buildBadgeMarkdown(buildOpts) : '', [buildOpts]);
