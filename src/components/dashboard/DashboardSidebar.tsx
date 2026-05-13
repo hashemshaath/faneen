@@ -61,6 +61,7 @@ const providerGroups: MenuGroup[] = [
     groupLabel: { ar: 'إدارة الأعمال', en: 'Business' },
     icon: Wrench,
     items: [
+      { label: { ar: 'بيانات المنشأة', en: 'Business Profile' }, url: '/dashboard/business-edit', icon: Building2 },
       { label: { ar: 'الخدمات', en: 'Services' }, url: '/dashboard/services', icon: Wrench },
       { label: { ar: 'معرض الأعمال', en: 'Portfolio' }, url: '/dashboard/portfolio', icon: Image },
       { label: { ar: 'المشاريع', en: 'Projects' }, url: '/dashboard/projects', icon: FolderOpen },
