@@ -1367,6 +1367,8 @@ const DashboardContracts = () => {
 
   const openEditContract = useCallback((c: ContractWithRole) => {
     setEditingId(c.id);
+    // Phase 5C.3 — sync the local site selection from the contract row.
+    setSelectedSiteId((c as unknown as { execution_site_id?: string | null }).execution_site_id ?? null);
     setForm({
       title_ar: c.title_ar, title_en: c.title_en || '', description_ar: c.description_ar || '',
       description_en: c.description_en || '', total_amount: c.total_amount?.toString() || '',
@@ -1384,6 +1386,7 @@ const DashboardContracts = () => {
     setSelectedClient(null); setSelectedWorkType('general'); setWorkTypeTouched(false);
     setSelectedVersionId(null); setSelectedPricingMethod(null);
     setInviteMode('idle'); setInviteForm({ email: '', name: '', phone: '' }); setPendingInvite(null);
+    setSelectedSiteId(null);
   }, []);
 
   const handleShareContract = useCallback(async (c: ContractWithRole) => {
