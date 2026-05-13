@@ -32,6 +32,8 @@ export const PromoCodeRedeem: React.FC<Props> = ({ isRTL, businessId }) => {
     onError: (e: Error) => {
       const map: Record<string, { ar: string; en: string }> = {
         invalid_code: { ar: 'كود غير صالح', en: 'Invalid code' },
+        inactive: { ar: 'الكود غير مفعّل', en: 'Code inactive' },
+        not_started: { ar: 'لم يبدأ سريان الكود بعد', en: 'Code not started yet' },
         expired: { ar: 'انتهت صلاحية الكود', en: 'Code expired' },
         fully_redeemed: { ar: 'تم استهلاك الكود بالكامل', en: 'Code fully redeemed' },
         already_redeemed: { ar: 'استخدمت هذا الكود من قبل', en: 'Already redeemed' },
