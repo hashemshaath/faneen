@@ -12,6 +12,22 @@ export type RejectionReason =
   | 'missing_ref_id';
 
 /**
+ * Bilingual labels for each rejection reason — surfaced directly to the
+ * end user in the failure toast and in the admin audit table.
+ */
+export const REJECTION_REASON_LABELS: Record<RejectionReason, { ar: string; en: string }> = {
+  ref_id_mismatch:        { ar: 'عدم تطابق المعرّف المرجعي للمنشأة', en: 'Business reference (ref_id) mismatch' },
+  business_user_mismatch: { ar: 'المنشأة غير مرتبطة بحسابك',         en: 'Business does not belong to your account' },
+  business_not_found:     { ar: 'تعذّر العثور على المنشأة',            en: 'Business not found' },
+  missing_ref_id:         { ar: 'المعرّف المرجعي للمنشأة مفقود',      en: 'Missing business ref_id' },
+};
+
+export function rejectionReasonLabel(reason: RejectionReason, isRTL: boolean): string {
+  const l = REJECTION_REASON_LABELS[reason];
+  return isRTL ? l.ar : l.en;
+}
+
+/**
  * Classify a Postgres/RLS error message coming back from the
  * `membership_upgrade_requests` insert into a stable reason code.
  * Returns `null` when the message is not a known rejection (caller skips logging).
@@ -38,6 +54,8 @@ export interface LogUpgradeRejectionInput {
 export interface LogUpgradeRejectionResult {
   reason: RejectionReason | null;
   logged: boolean;
+  /** UUID of the inserted `membership_upgrade_rejections` row, when logged. */
+  auditId?: string | null;
   error?: unknown;
 }
 
@@ -61,7 +79,7 @@ export async function logUpgradeRejection(
 
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (client.rpc as any)('log_upgrade_rejection', {
+    const { data, error } = await (client.rpc as any)('log_upgrade_rejection', {
       _attempted_business_id: input.attemptedBusinessId,
       _attempted_business_ref_id: input.attemptedBusinessRefId,
       _requested_tier: input.requestedTier,
@@ -71,7 +89,7 @@ export async function logUpgradeRejection(
       _user_agent: ua,
     });
     if (error) return { reason, logged: false, error };
-    return { reason, logged: true };
+    return { reason, logged: true, auditId: (data as string | null) ?? null };
   } catch (error) {
     return { reason, logged: false, error };
   }

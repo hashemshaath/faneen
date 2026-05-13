@@ -19,7 +19,7 @@ import { MembershipKeysManager } from '@/components/membership/MembershipKeysMan
 import { track } from '@/lib/analytics-events';
 import { Button } from '@/components/ui/button';
 import { ensureDraftBusiness } from '@/lib/ensure-business';
-import { logUpgradeRejection } from '@/lib/membership-rejection-logger';
+import { logUpgradeRejection, rejectionReasonLabel, classifyRejectionReason } from '@/lib/membership-rejection-logger';
 
 const tierOrder = ['free', 'basic', 'premium', 'enterprise'];
 
@@ -281,10 +281,27 @@ const Membership = () => {
     },
     onError: (e: Error, plan: { id: string; tier: string }) => {
       setSubscribingPlanId(null);
-      toast.error(e.message);
       // Audit: log every blocked upgrade attempt where business_id / ref_id
       // mismatched (or other validation failures from the DB trigger).
       const bizRefId = (myBusiness as { ref_id?: string | null } | null | undefined)?.ref_id ?? null;
+      const earlyReason = classifyRejectionReason(e.message || '');
+      // For unknown/unrelated errors fall back to plain toast.
+      if (!earlyReason) {
+        toast.error(e.message);
+        return;
+      }
+      const reasonText = rejectionReasonLabel(earlyReason, isRTL);
+      // Show the localized reason immediately; enrich with audit id once the RPC returns.
+      const toastId = toast.error(reasonText, {
+        description: isRTL
+          ? `${e.message}${bizRefId ? `\nالمنشأة: ${bizRefId}` : ''}`
+          : `${e.message}${bizRefId ? `\nBusiness: ${bizRefId}` : ''}`,
+        duration: 12_000,
+        action: {
+          label: isRTL ? 'تفاصيل الطلب' : 'Request details',
+          onClick: () => navigate('/membership#upgrade-requests'),
+        },
+      });
       void logUpgradeRejection(supabase, {
         errorMessage: e.message || '',
         attemptedBusinessId: myBusiness?.id ?? null,
@@ -295,6 +312,23 @@ const Membership = () => {
         if (res.error) {
           // eslint-disable-next-line no-console
           console.warn('[Membership] failed to log upgrade rejection', res.error);
+          return;
+        }
+        if (res.logged && res.auditId) {
+          // Re-issue the same toast with the audit ID so the user can quote it
+          // when contacting support, and admins can deep-link to the record.
+          const shortId = res.auditId.slice(0, 8);
+          toast.error(reasonText, {
+            id: toastId,
+            description: isRTL
+              ? `${e.message}\nرقم السجل: ${shortId}…${bizRefId ? `  ·  المنشأة: ${bizRefId}` : ''}`
+              : `${e.message}\nLog ID: ${shortId}…${bizRefId ? `  ·  Business: ${bizRefId}` : ''}`,
+            duration: 14_000,
+            action: {
+              label: isRTL ? 'تفاصيل الطلب' : 'Request details',
+              onClick: () => navigate(`/membership?rejection=${res.auditId}#upgrade-requests`),
+            },
+          });
         }
       });
     },
