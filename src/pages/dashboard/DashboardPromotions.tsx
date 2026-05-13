@@ -69,10 +69,11 @@ const addDays = (days: number): string => {
 };
 
 /* ── Sortable Promo Card ── */
-const SortablePromoCard = React.memo(({ promo: p, rtl, viewMode, isSelected, onEdit, onDelete, onToggle, onDuplicate, onPreview, onSelect }: {
+const SortablePromoCard = React.memo(({ promo: p, rtl, viewMode, isSelected, onEdit, onDelete, onToggle, onDuplicate, onPreview, onSelect, onCopyLink }: {
   promo: any; rtl: boolean; viewMode: ViewMode; isSelected: boolean;
   onEdit: (p) => void; onDelete: (id: string) => void; onToggle: (p) => void;
   onDuplicate: (p) => void; onPreview: (url: string) => void; onSelect: (id: string) => void;
+  onCopyLink?: (id: string) => void;
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: p.id });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1, zIndex: isDragging ? 50 : undefined };
@@ -103,6 +104,7 @@ const SortablePromoCard = React.memo(({ promo: p, rtl, viewMode, isSelected, onE
               {isExpired && <Badge variant="destructive" className="text-[9px] shadow-sm px-1.5 py-0.5">{rtl ? 'منتهي' : 'Expired'}</Badge>}
               {isEndingSoon && !isExpired && <Badge className="text-[9px] bg-warning text-white shadow-sm px-1.5 py-0.5">{rtl ? `${daysLeft} أيام` : `${daysLeft}d left`}</Badge>}
               {!p.is_active && !isExpired && <Badge variant="outline" className="text-[9px] bg-background/80 backdrop-blur-sm px-1.5 py-0.5">{rtl ? 'غير نشط' : 'Inactive'}</Badge>}
+              {p.is_demo && <Badge className="text-[9px] bg-warning/90 text-white shadow-sm px-1.5 py-0.5">DEMO</Badge>}
             </div>
             {/* Select + Grip */}
             <div className="absolute top-2 end-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -122,6 +124,7 @@ const SortablePromoCard = React.memo(({ promo: p, rtl, viewMode, isSelected, onE
                 {p.is_active ? <PowerOff className="w-3 h-3" /> : <Power className="w-3 h-3" />}
               </Button>
               <Button size="sm" variant="secondary" className="h-7 text-[10px] px-2 shadow-lg" onClick={() => onDuplicate(p)}><Copy className="w-3 h-3" /></Button>
+              {onCopyLink && <Button size="sm" variant="secondary" className="h-7 text-[10px] px-2 shadow-lg" onClick={() => onCopyLink(p.id)} title={rtl ? 'نسخ رابط عام' : 'Copy public link'}><Link2 className="w-3 h-3" /></Button>}
               <Button size="sm" variant="destructive" className="h-7 text-[10px] px-2 shadow-lg" onClick={() => onDelete(p.id)}><Trash2 className="w-3 h-3" /></Button>
             </div>
           </div>
@@ -170,6 +173,7 @@ const SortablePromoCard = React.memo(({ promo: p, rtl, viewMode, isSelected, onE
             {isExpired && <Badge variant="destructive" className="text-[8px] px-1 py-0 h-3.5">{rtl ? 'منتهي' : 'Expired'}</Badge>}
             {isEndingSoon && !isExpired && <Badge className="text-[8px] bg-warning text-white px-1 py-0 h-3.5">{rtl ? `${daysLeft} أيام` : `${daysLeft}d`}</Badge>}
             {!p.is_active && !isExpired && <Badge variant="outline" className="text-[8px] px-1 py-0 h-3.5">{rtl ? 'غير نشط' : 'Off'}</Badge>}
+            {p.is_demo && <Badge className="text-[8px] bg-warning/90 text-white px-1 py-0 h-3.5">DEMO</Badge>}
           </div>
           <div className="flex items-center gap-2 mt-0.5 flex-wrap">
             {p.promotion_type === 'offer' && p.offer_price && (
@@ -185,6 +189,7 @@ const SortablePromoCard = React.memo(({ promo: p, rtl, viewMode, isSelected, onE
           </Button>
           <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => onEdit(p)}><Pencil className="w-3.5 h-3.5" /></Button>
           <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => onDuplicate(p)}><Copy className="w-3.5 h-3.5" /></Button>
+          {onCopyLink && <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => onCopyLink(p.id)} title={rtl ? 'نسخ رابط عام' : 'Copy public link'}><Link2 className="w-3.5 h-3.5" /></Button>}
           <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-destructive/60 hover:text-destructive hover:bg-destructive/10" onClick={() => onDelete(p.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
         </div>
       </div>
@@ -930,7 +935,8 @@ const DashboardPromotions = () => {
                     onToggle={pr => toggleMut.mutate(pr)}
                     onDuplicate={pr => duplicateMut.mutate(pr)}
                     onPreview={url => setPreviewUrl(url)}
-                    onSelect={toggleSelect} />
+                    onSelect={toggleSelect}
+                    onCopyLink={businessUsername ? copyPublicLink : undefined} />
                 ))}
               </div>
             </SortableContext>
