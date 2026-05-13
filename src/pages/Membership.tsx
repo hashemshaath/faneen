@@ -129,6 +129,12 @@ const Membership = () => {
   const requestUpgradeMutation = useMutation({
     mutationFn: async (plan: { id: string; tier: string }) => {
       if (!user || !myBusiness) throw new Error(isRTL ? 'يجب تسجيل الدخول وإنشاء نشاط تجاري أولاً' : 'Login and create a business first');
+      const bizRefId = (myBusiness as { ref_id?: string | null }).ref_id ?? null;
+      if (!bizRefId) {
+        throw new Error(isRTL
+          ? 'تعذّر التحقق من رقم المنشأة. يرجى تحديث الصفحة وإعادة المحاولة.'
+          : 'Could not verify business reference. Please refresh and try again.');
+      }
       // Prevent duplicate pending requests for same business+tier
       const { data: existing } = await supabase
         .from('membership_upgrade_requests')
@@ -142,13 +148,12 @@ const Membership = () => {
       const { data: inserted, error } = await supabase.from('membership_upgrade_requests').insert({
         user_id: user.id,
         business_id: myBusiness.id,
+        business_ref_id: bizRefId,
         current_tier: currentTier,
         requested_tier: plan.tier,
         requested_plan_id: plan.id,
         billing_cycle: billingCycle,
-        note: (myBusiness as { ref_id?: string | null }).ref_id
-          ? `Bound to business ${(myBusiness as { ref_id?: string | null }).ref_id}`
-          : null,
+        note: `Bound to business ${bizRefId}`,
       }).select('id').maybeSingle();
       if (error) throw error;
       return { duplicate: false, requestId: inserted?.id as string | undefined, tier: plan.tier };

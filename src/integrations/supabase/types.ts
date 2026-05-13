@@ -4999,6 +4999,7 @@ export type Database = {
           admin_note: string | null
           billing_cycle: string
           business_id: string
+          business_ref_id: string | null
           created_at: string
           current_tier: string | null
           id: string
@@ -5016,6 +5017,7 @@ export type Database = {
           admin_note?: string | null
           billing_cycle?: string
           business_id: string
+          business_ref_id?: string | null
           created_at?: string
           current_tier?: string | null
           id?: string
@@ -5033,6 +5035,7 @@ export type Database = {
           admin_note?: string | null
           billing_cycle?: string
           business_id?: string
+          business_ref_id?: string | null
           created_at?: string
           current_tier?: string | null
           id?: string
