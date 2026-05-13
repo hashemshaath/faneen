@@ -62,6 +62,8 @@ import { DimensionHelper } from '@/components/contracts/DimensionHelper';
 import { ContractRoleTabs } from '@/components/contracts/dashboard/ContractRoleTabs';
 import { ContractFilters } from '@/components/contracts/dashboard/ContractFilters';
 import { ContractEmptyState } from '@/components/contracts/dashboard/ContractEmptyState';
+import { ContractPageHeader } from '@/components/contracts/dashboard/ContractPageHeader';
+import { ContractStatsSummary } from '@/components/contracts/dashboard/ContractStatsSummary';
 import { WORK_TYPES, getWorkType, pickTemplateForWorkType, type WorkTypeKey } from '@/lib/contract-work-types';
 import { getStatusGuidance } from '@/lib/contract-status-guidance';
 import { serializeDraftPayload, maskEmail as maskInviteEmail, type PendingInvite } from '@/lib/contract-invitations';
@@ -1705,105 +1707,16 @@ const DashboardContracts = () => {
   return (
     <DashboardLayout>
       <div className="space-y-5">
-        {/* ── Header ── */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div>
-            <h1 className="font-heading font-bold text-xl sm:text-2xl flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent to-accent/80 flex items-center justify-center shadow-lg shadow-accent/20">
-                <FileText className="w-5 h-5 text-accent-foreground" />
-              </div>
-              {isRTL ? 'إدارة العقود' : 'Contract Management'}
-            </h1>
-            <p className="text-xs text-muted-foreground mt-1 ms-11.5">{isRTL ? 'إنشاء ومتابعة وتصدير العقود الاحترافية' : 'Create, track, and export professional contracts'}</p>
-          </div>
-          {viewSection === 'list' && (
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" className="gap-1.5 text-xs h-9" onClick={() => setViewSection('templates')}>
-                <BookOpen className="w-3.5 h-3.5" />
-                {isRTL ? 'القوالب' : 'Templates'}
-                {templates.length > 0 && <Badge variant="secondary" className="text-[8px] px-1 py-0 h-4">{templates.length}</Badge>}
-              </Button>
-              <Button variant="hero" size="sm" className="gap-1.5 text-xs h-9 shadow-lg" onClick={() => { closeForm(); setViewSection('create'); }}>
-                <Plus className="w-4 h-4" />
-                {isRTL ? 'عقد جديد' : 'New Contract'}
-              </Button>
-            </div>
-          )}
-          {viewSection !== 'list' && (
-            <Button variant="outline" size="sm" className="gap-1.5 text-xs h-9" onClick={closeForm}>
-              <X className="w-3.5 h-3.5" />{isRTL ? 'رجوع' : 'Back'}
-            </Button>
-          )}
-        </div>
+        <ContractPageHeader
+          isRTL={isRTL}
+          showListActions={viewSection === 'list'}
+          templatesCount={templates.length}
+          onOpenTemplates={() => setViewSection('templates')}
+          onCreate={() => { closeForm(); setViewSection('create'); }}
+          onBack={closeForm}
+        />
 
-        {/* ── Dashboard Stats ── */}
-        {viewSection === 'list' && (
-          <div className="space-y-4">
-            {/* Primary Financial KPIs */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              {[
-                { icon: FileText, label: isRTL ? 'إجمالي العقود' : 'Total Contracts', value: stats.total.toString(), color: 'from-primary/10 to-primary/5', iconColor: 'text-primary bg-primary/15', trend: stats.active > 0 ? `${stats.active} ${isRTL ? 'نشط' : 'active'}` : undefined, trendUp: true },
-                { icon: DollarSign, label: isRTL ? 'القيمة الإجمالية' : 'Total Value', value: stats.totalAmount.toLocaleString(), color: 'from-accent/10 to-accent/5', iconColor: 'text-accent bg-accent/15', sub: 'SAR' },
-                { icon: Banknote, label: isRTL ? 'المحصّل' : 'Collected', value: stats.totalPaid.toLocaleString(), color: 'from-success/10 to-success/5', iconColor: 'text-success bg-success/15', sub: 'SAR', trend: stats.totalAmount > 0 ? `${Math.round((stats.totalPaid / stats.totalAmount) * 100)}%` : undefined, trendUp: true },
-                { icon: AlertTriangle, label: isRTL ? 'متأخرات' : 'Overdue', value: stats.overdueAmount.toLocaleString(), color: stats.overdueCount > 0 ? 'from-destructive/10 to-destructive/5' : 'from-success/5 to-success/3', iconColor: stats.overdueCount > 0 ? 'text-destructive bg-destructive/15' : 'text-success bg-success/15', sub: 'SAR', trend: stats.overdueCount > 0 ? `${stats.overdueCount} ${isRTL ? 'دفعة' : 'payments'}` : undefined, trendUp: false },
-              ].map((s, i) => (
-                <Card key={i} className={`overflow-hidden border-border/40`}>
-                  <CardContent className={`p-4 bg-gradient-to-br ${s.color}`}>
-                    <div className="flex items-start justify-between mb-3">
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${s.iconColor}`}><s.icon className="w-5 h-5" /></div>
-                      {s.trend && (
-                        <Badge variant="outline" className={`text-[8px] gap-0.5 ${s.trendUp ? 'text-success border-success' : 'text-destructive border-destructive'}`}>
-                          {s.trendUp ? <ArrowUpRight className="w-2.5 h-2.5" /> : <ArrowDownRight className="w-2.5 h-2.5" />}
-                          {s.trend}
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-xl font-bold mb-0.5">{s.value}{s.sub && <span className="text-[10px] text-muted-foreground ms-1 font-normal">{s.sub}</span>}</p>
-                    <p className="text-[10px] text-muted-foreground">{s.label}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            {/* Collection Progress & Activity Bar */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-              {/* Collection */}
-              {stats.totalAmount > 0 && (
-                <Card className="lg:col-span-2 border-border/40">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-xs font-semibold flex items-center gap-1.5"><TrendingUp className="w-3.5 h-3.5 text-accent" />{isRTL ? 'نسبة التحصيل' : 'Collection Rate'}</h3>
-                      <span className="text-lg font-bold text-accent">{Math.round((stats.totalPaid / stats.totalAmount) * 100)}%</span>
-                    </div>
-                    <Progress value={(stats.totalPaid / stats.totalAmount) * 100} className="h-2.5 mb-2 [&>div]:bg-gradient-to-r [&>div]:from-accent [&>div]:to-success" aria-label={isRTL ? `نسبة التحصيل ${Math.round((stats.totalPaid / stats.totalAmount) * 100)}٪` : `Collection rate ${Math.round((stats.totalPaid / stats.totalAmount) * 100)}%`} />
-                    <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-                      <span>{isRTL ? 'المحصّل' : 'Collected'}: <strong className="text-foreground">{stats.totalPaid.toLocaleString()}</strong> {isRTL ? 'ر.س' : 'SAR'}</span>
-                      <span>{isRTL ? 'المتبقي' : 'Remaining'}: <strong className="text-foreground">{(stats.totalAmount - stats.totalPaid).toLocaleString()}</strong> {isRTL ? 'ر.س' : 'SAR'}</span>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-              {/* Quick Stats */}
-              <Card className="border-border/40">
-                <CardContent className="p-4 space-y-2.5">
-                  <h3 className="text-xs font-semibold flex items-center gap-1.5 mb-1"><Activity className="w-3.5 h-3.5 text-primary" />{isRTL ? 'إحصائيات سريعة' : 'Quick Stats'}</h3>
-                  {[
-                    { icon: CheckCircle2, label: isRTL ? 'مكتملة' : 'Completed', value: stats.completed, color: 'text-info' },
-                    { icon: Clock, label: isRTL ? 'بانتظار الموافقة' : 'Pending', value: stats.pendingApproval, color: 'text-warning' },
-                    { icon: ListChecks, label: isRTL ? 'المراحل' : 'Milestones', value: `${stats.completedMilestones}/${stats.totalMilestones}`, color: 'text-secondary' },
-                    { icon: Ruler, label: isRTL ? 'المقاسات' : 'Measurements', value: stats.totalMeasurements, color: 'text-info' },
-                    { icon: WrenchIcon, label: isRTL ? 'طلبات الصيانة' : 'Maintenance', value: stats.totalMaintenance, color: 'text-urgent' },
-                  ].map((s, i) => (
-                    <div key={i} className="flex items-center justify-between text-[11px]">
-                      <span className="flex items-center gap-1.5 text-muted-foreground"><s.icon className={`w-3.5 h-3.5 ${s.color}`} />{s.label}</span>
-                      <span className="font-bold">{s.value}</span>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        )}
+        {viewSection === 'list' && <ContractStatsSummary stats={stats} isRTL={isRTL} />}
 
         {/* ═══ Templates Browser ═══ */}
         {viewSection === 'templates' && (
