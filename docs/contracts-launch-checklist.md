@@ -4,6 +4,57 @@ Run through this list before announcing the contract system to
 providers. Items marked **(automated)** are covered by CI; items marked
 **(manual)** require human verification in a staging environment.
 
+## Pre-launch smoke command
+
+One-shot gating script that bundles the type check, the full vitest
+suite, the contract-specific PDF/analytics tests, and a static privacy
+grep over the contract PDF + analytics + history surfaces.
+
+```bash
+npm run test:contracts-prelaunch
+# or
+bash scripts/contracts-prelaunch-smoke.sh
+```
+
+What it checks:
+
+1. `bunx tsc --noEmit` — repo type-clean.
+2. `bunx vitest run` — full test suite.
+3. Contract PDF export tests
+   (`src/lib/__tests__/contract-pdf-export.test.ts`).
+4. Contract PDF Arabic text layer
+   (`src/lib/__tests__/contract-pdf-arabic-text.test.ts`).
+5. Contract PDF performance benchmark
+   (`src/lib/__tests__/contract-pdf-perf.bench.test.ts`).
+6. PDF export history privacy
+   (`src/components/contract/__tests__/ContractPdfExportHistory.privacy.test.tsx`).
+7. Static privacy grep over the contract PDF builder, the export-history
+   helper, and the provider/admin analytics pages — fails on
+   `internal_notes`, `signed_url`, `file_url`, `storage_path`,
+   `exported_by`, `ip_hash`, `user_agent_hash`, `client_email`,
+   `client_phone`, `supervisor_phone`, `supervisor_email`. Analytics
+   pages additionally fail on `map_url` and `address_line1`, and emit a
+   reminder when `document_hash` is referenced (only the 16-char prefix
+   is allowed).
+8. Prints a manual reminder to verify SECURITY DEFINER + EXECUTE grants
+   for the contract RPCs in Supabase.
+
+Expected output: a green `Summary — All automated checks passed.` line
+and exit code `0`. The script is read-only and does NOT touch the
+database, run migrations, or modify any product code.
+
+If it fails:
+
+- Note the step name printed in red. The script keeps running after a
+  failure so you see the full picture in one pass.
+- Re-run the failing step in isolation (the exact command is printed
+  under each step heading).
+- For privacy grep failures, remove the forbidden token from the
+  offending file or move the value behind a server-side aggregation —
+  do **not** weaken the deny-list.
+- Do **not** ship until the script exits `0` and the manual grant
+  reminder has been verified against staging + production.
+
 ## Pre-launch technical checks
 
 - [ ] `bunx tsc --noEmit` clean (automated in CI).
