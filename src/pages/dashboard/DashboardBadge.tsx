@@ -691,6 +691,9 @@ const DashboardBadge: React.FC = () => {
                       <Button size="sm" variant="outline" className="gap-2" onClick={downloadSvg}>
                         <Download className="w-3.5 h-3.5" />{isRTL ? 'تنزيل SVG' : 'Download SVG'}
                       </Button>
+                      <Button size="sm" variant="outline" className="gap-2" onClick={downloadPng}>
+                        <Download className="w-3.5 h-3.5" />{isRTL ? 'تنزيل PNG' : 'Download PNG'}
+                      </Button>
                       <p className="text-xs text-muted-foreground self-center">
                         {isRTL ? 'بدون CSS أو JS خارجي. كل الأكواد تتضمن تتبع تلقائي.' : 'No external CSS/JS. All snippets include attribution tracking.'}
                       </p>
