@@ -212,6 +212,8 @@ const DashboardPromotions = () => {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showCatalog, setShowCatalog] = useState(false);
+  const [activeSector, setActiveSector] = useState<string>(promotionCatalog[0].id);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -219,15 +221,21 @@ const DashboardPromotions = () => {
   );
 
   /* ─── Data ─── */
-  const { data: businessId } = useQuery({
-    queryKey: ['my-business-id', user?.id],
+  const { data: businessInfo } = useQuery({
+    queryKey: ['my-business-info', user?.id],
     queryFn: async () => {
-      const { data } = await supabase.from('businesses').select('id').eq('user_id', user!.id).maybeSingle();
-      return data?.id ?? null;
+      const { data } = await supabase
+        .from('businesses')
+        .select('id, username, name_ar, name_en')
+        .eq('user_id', user!.id)
+        .maybeSingle();
+      return data ?? null;
     },
     enabled: !!user,
     staleTime: 10 * 60 * 1000,
   });
+  const businessId = businessInfo?.id ?? null;
+  const businessUsername = businessInfo?.username ?? null;
 
   const { data: promotions = [], isLoading } = useQuery({
     queryKey: ['my-promotions', businessId],
@@ -248,7 +256,8 @@ const DashboardPromotions = () => {
     const totalViews = promotions.reduce((s: number, p) => s + (p.views_count || 0), 0);
     const complete = promotions.filter((p) => p.title_ar && p.description_ar && p.image_url).length;
     const completeness = total > 0 ? Math.round((complete / total) * 100) : 0;
-    return { total, active, expired, inactive, totalViews, completeness };
+    const demos = promotions.filter((p) => p.is_demo).length;
+    return { total, active, expired, inactive, totalViews, completeness, demos };
   }, [promotions]);
 
   const filteredPromotions = useMemo(() => {
