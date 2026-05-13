@@ -1549,158 +1549,33 @@ const DashboardContracts = () => {
               {/* CT4B — Step 2: Work / service type (auto-suggests template) */}
               <div ref={stepRefs.work} className="scroll-mt-24">
               {!editingId && (
-                <div className="p-4 rounded-xl border border-border/40 bg-muted/20 space-y-2">
-                  <div className="flex items-center gap-1.5">
-                    <Briefcase className="w-3.5 h-3.5 text-primary" />
-                    <Label className="text-xs font-semibold">{isRTL ? 'نوع العمل / الخدمة' : 'Work / Service Type'} <span className="text-destructive">*</span></Label>
-                  </div>
-                  <Select
-                    value={selectedWorkType}
-                    onValueChange={(v) => { setSelectedWorkType(v as WorkTypeKey); setWorkTypeTouched(true); setSelectedVersionId(null); setSelectedPricingMethod(null); }}
-                  >
-                    <SelectTrigger className="h-10 text-xs"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {WORK_TYPES.map(w => (
-                        <SelectItem key={w.key} value={w.key} className="text-xs">{isRTL ? w.ar : w.en}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-[9px] text-muted-foreground">
-                    {isRTL ? 'سيتم استخدام قالب عقد مناسب لنوع العمل المحدد.' : 'A contract template matching the selected work type will be used.'}
-                  </p>
-                  {workTypeTouched && (() => {
-                    const w = getWorkType(selectedWorkType);
-                    if (!w || w.defaultBoqGroups.length === 0) return null;
-                    return (
-                      <div className="flex flex-wrap gap-1 pt-1">
-                        <span className="text-[9px] text-muted-foreground me-1">{isRTL ? 'مجموعات BOQ المقترحة:' : 'Suggested BOQ groups:'}</span>
-                        {w.defaultBoqGroups.map(g => {
-                          const meta = BOQ_GROUPS.find(b => b.key === g);
-                          return <Badge key={g} variant="outline" className="text-[9px]">{meta ? (isRTL ? meta.ar : meta.en) : g}</Badge>;
-                        })}
-                      </div>
-                    );
-                  })()}
-                </div>
+                <WorkTypeSection
+                  isRTL={isRTL}
+                  value={selectedWorkType}
+                  touched={workTypeTouched}
+                  onSelect={(v) => { setSelectedWorkType(v); setWorkTypeTouched(true); setSelectedVersionId(null); setSelectedPricingMethod(null); }}
+                />
               )}
               </div>
 
               {/* CT4 — Template selector (new contracts only) */}
               <div ref={stepRefs.template} className="scroll-mt-24">
-              {!editingId && publishedVersions.length > 0 && (
-                <div className="p-4 rounded-xl border border-border/40 bg-muted/20 space-y-3">
-                  <div className="flex items-center gap-1.5">
-                    <BookOpen className="w-3.5 h-3.5 text-primary" />
-                    <Label className="text-xs font-semibold">{isRTL ? 'قالب العقد الرسمي' : 'Official Contract Template'}</Label>
-                    {effectiveVersion && (
-                      <Badge variant="secondary" className="text-[9px] gap-0.5">v{effectiveVersion.version_number}</Badge>
-                    )}
-                  </div>
-                  <Select
-                    value={effectiveVersion?.version_id ?? ''}
-                    onValueChange={(v) => { setSelectedVersionId(v); setSelectedPricingMethod(null); }}
-                  >
-                    <SelectTrigger className="h-10 text-xs"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {publishedVersions.map(v => {
-                        const cfg = templateCategoryConfig[v.category];
-                        const label = isRTL ? v.name_ar : (v.name_en || v.name_ar);
-                        const catLabel = cfg ? cfg[isRTL ? 'ar' : 'en'] : v.category;
-                        return (
-                          <SelectItem key={v.version_id} value={v.version_id} className="text-xs">
-                            {label} · {catLabel} · v{v.version_number}
-                          </SelectItem>
-                        );
-                      })}
-                    </SelectContent>
-                  </Select>
-                  {effectiveVersion && effectiveVersion.pricing_methods.length > 0 && (
-                    <div className="space-y-1.5">
-                      <Label className="text-[10px] text-muted-foreground">{isRTL ? 'طريقة التسعير' : 'Pricing Method'}</Label>
-                      <Select value={selectedPricingMethod ?? ''} onValueChange={(v) => setSelectedPricingMethod(v || null)}>
-                        <SelectTrigger className="h-9 text-xs"><SelectValue placeholder={isRTL ? 'اختياري' : 'Optional'} /></SelectTrigger>
-                        <SelectContent>
-                          {effectiveVersion.pricing_methods.map(m => (
-                            <SelectItem key={m} value={m} className="text-xs">{m}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-                  {effectiveVersion && effectiveVersion.required_field_count > 0 && (
-                    <p className="text-[10px] text-warning bg-warning/10 border border-warning/20 rounded-lg p-2">
-                      {isRTL
-                        ? `هذا القالب يحتوي على ${effectiveVersion.required_field_count} حقل مطلوب سيتم دعمها بالكامل في CT5.`
-                        : `This template has ${effectiveVersion.required_field_count} required fields — full support arrives in CT5.`}
-                    </p>
-                  )}
-                </div>
+              {!editingId && (
+                <TemplateSelectionSection
+                  isRTL={isRTL}
+                  publishedVersions={publishedVersions}
+                  effectiveVersion={effectiveVersion}
+                  selectedPricingMethod={selectedPricingMethod}
+                  templateCategoryConfig={templateCategoryConfig}
+                  onSelectVersion={(v) => { setSelectedVersionId(v); setSelectedPricingMethod(null); }}
+                  onSelectPricingMethod={(m) => setSelectedPricingMethod(m)}
+                />
               )}
               </div>
 
               {/* Titles + descriptions + dates + supervisor + terms = Details step */}
               <div ref={stepRefs.details} className="space-y-4 scroll-mt-24">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between flex-wrap gap-1">
-                    <Label className="text-xs">{isRTL ? 'عنوان العقد (عربي)' : 'Title (Arabic)'} <span className="text-destructive">*</span></Label>
-                    <FieldAiActions value={form.title_ar} lang="ar" onImproved={v => setForm(f => ({ ...f, title_ar: v }))} fieldType="title" />
-                  </div>
-                  <Input value={form.title_ar} onChange={e => setForm({ ...form, title_ar: e.target.value })} className="h-10" />
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between flex-wrap gap-1">
-                    <Label className="text-xs">{isRTL ? 'عنوان العقد (إنجليزي)' : 'Title (English)'}</Label>
-                    <FieldAiActions value={form.title_en} lang="en" onTranslated={v => setForm(f => ({ ...f, title_en: v }))} onImproved={v => setForm(f => ({ ...f, title_en: v }))} fieldType="title" />
-                  </div>
-                  <Input value={form.title_en} onChange={e => setForm({ ...form, title_en: e.target.value })} dir="ltr" className="h-10" />
-                </div>
-              </div>
-
-              {/* Descriptions */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between flex-wrap gap-1">
-                    <Label className="text-xs">{isRTL ? 'الوصف (عربي)' : 'Description (Arabic)'}</Label>
-                    <FieldAiActions value={form.description_ar} lang="ar" onImproved={v => setForm(f => ({ ...f, description_ar: v }))} fieldType="description" />
-                  </div>
-                  <Textarea value={form.description_ar} onChange={e => setForm({ ...form, description_ar: e.target.value })} rows={3} className="text-xs" />
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between flex-wrap gap-1">
-                    <Label className="text-xs">{isRTL ? 'الوصف (إنجليزي)' : 'Description (English)'}</Label>
-                    <FieldAiActions value={form.description_en} lang="en" onTranslated={v => setForm(f => ({ ...f, description_en: v }))} onImproved={v => setForm(f => ({ ...f, description_en: v }))} fieldType="description" />
-                  </div>
-                  <Textarea value={form.description_en} onChange={e => setForm({ ...form, description_en: e.target.value })} rows={3} dir="ltr" className="text-xs" />
-                </div>
-              </div>
-
-              {/* Financial & Dates */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div className="space-y-1.5">
-                  <Label className="text-xs">{isRTL ? 'المبلغ' : 'Amount'} <span className="text-destructive">*</span></Label>
-                  <Input type="number" value={form.total_amount} onChange={e => setForm({ ...form, total_amount: e.target.value })} dir="ltr" className="h-10" />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs">{isRTL ? 'العملة' : 'Currency'}</Label>
-                  <Select value={form.currency_code} onValueChange={v => setForm({ ...form, currency_code: v })}>
-                    <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="SAR">SAR</SelectItem>
-                      <SelectItem value="USD">USD</SelectItem>
-                      <SelectItem value="EUR">EUR</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs">{isRTL ? 'تاريخ البدء' : 'Start Date'}</Label>
-                  <Input type="date" value={form.start_date} onChange={e => setForm({ ...form, start_date: e.target.value })} dir="ltr" className="h-10" />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs">{isRTL ? 'تاريخ الانتهاء' : 'End Date'}</Label>
-                  <Input type="date" value={form.end_date} onChange={e => setForm({ ...form, end_date: e.target.value })} dir="ltr" className="h-10" />
-                </div>
-              </div>
+              <ContractDetailsSection isRTL={isRTL} form={form} setForm={setForm} />
               </div>
 
               {/* VAT Settings — Pricing/VAT step */}
