@@ -78,6 +78,7 @@ import { ContractCreateStepper } from '@/components/contracts/dashboard/create/C
 import { ContractReviewSummary } from '@/components/contracts/dashboard/create/ContractReviewSummary';
 import { ContractCompletenessCard } from '@/components/contracts/dashboard/create/ContractCompletenessCard';
 import { calculateContractCompleteness } from '@/lib/contract-completeness';
+import { ExecutionSiteSection, type ExecutionAddressSnapshot } from '@/components/contracts/dashboard/create/ExecutionSiteSection';
 import { ContractDraftSaveStatus, type DraftSaveState } from '@/components/contracts/dashboard/create/ContractDraftSaveStatus';
 import { FirstContractGuidanceCard } from '@/components/contracts/dashboard/create/FirstContractGuidanceCard';
 import { AutosaveStatus } from '@/components/contracts/dashboard/create/AutosaveStatus';
@@ -212,17 +213,21 @@ const DashboardContracts = () => {
   const maintenanceImageRef = React.useRef<HTMLInputElement>(null);
 
   /* Provider Contract UX 2 — Part A: navigable stepper section refs. */
-  type StepKey = 'client' | 'work' | 'template' | 'details' | 'pricing' | 'review';
+  type StepKey = 'client' | 'site' | 'work' | 'template' | 'details' | 'pricing' | 'review';
   const stepRefs = {
     client: React.useRef<HTMLDivElement>(null),
+    site: React.useRef<HTMLDivElement>(null),
     work: React.useRef<HTMLDivElement>(null),
     template: React.useRef<HTMLDivElement>(null),
     details: React.useRef<HTMLDivElement>(null),
     pricing: React.useRef<HTMLDivElement>(null),
     review: React.useRef<HTMLDivElement>(null),
   } as const;
-  const stepOrder: StepKey[] = ['client', 'work', 'template', 'details', 'pricing', 'review'];
+  const stepOrder: StepKey[] = ['client', 'site', 'work', 'template', 'details', 'pricing', 'review'];
   const [activeStep, setActiveStep] = useState<StepKey>('client');
+  /* Phase 5C.3 — Execution site selection (held locally for new drafts;
+     persisted via set_contract_execution_site for existing drafts). */
+  const [selectedSiteId, setSelectedSiteId] = useState<string | null>(null);
   const goToStep = useCallback((key: StepKey) => {
     setActiveStep(key);
     const el = stepRefs[key]?.current;
@@ -906,6 +911,7 @@ const DashboardContracts = () => {
       if (editingId) {
         const { error } = await supabase.from('contracts').update(payload).eq('id', editingId);
         if (error) throw error;
+        return { contractId: editingId, isNew: false };
       } else {
         // CT4 — Always create new contracts via the SECURITY DEFINER RPC so the
         // template snapshot is frozen atomically. Falls back to General v1.
@@ -913,19 +919,37 @@ const DashboardContracts = () => {
         if (!versionId) {
           throw new Error(isRTL ? 'لا يوجد قالب عقد منشور' : 'No published contract template available');
         }
-        const { error } = await supabase.rpc('create_contract_from_template', {
+        const { data, error } = await supabase.rpc('create_contract_from_template', {
           _payload: payload,
           _template_version_id: versionId,
           _pricing_method: selectedPricingMethod,
         });
         if (error) throw error;
+        const newId = (data ?? null) as string | null;
+        return { contractId: newId, isNew: true };
       }
     },
-    onSuccess: () => {
+    onSuccess: async (result) => {
+      // Phase 5C.3 — chain execution-site linking after the row exists.
+      if (result?.contractId && selectedSiteId) {
+        try {
+          const { error } = await supabase.rpc('set_contract_execution_site', {
+            _contract_id: result.contractId,
+            _site_id: selectedSiteId,
+          });
+          if (error) throw error;
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : String(e);
+          toast.warning(isRTL
+            ? `تم حفظ المسودة، لكن تعذر ربط موقع التنفيذ. يمكنك إضافته لاحقًا. (${msg})`
+            : `Draft saved but execution site link failed. You can add it later. (${msg})`);
+        }
+      }
       queryClient.invalidateQueries({ queryKey: ['dashboard-contracts'] });
       setViewSection('list'); setForm(emptyForm); setEditingId(null);
       setSelectedVersionId(null); setSelectedPricingMethod(null); setSelectedTemplate(null);
       setSelectedClient(null); setSelectedWorkType('general'); setWorkTypeTouched(false);
+      setSelectedSiteId(null);
       toast.success(editingId ? (isRTL ? 'تم تحديث العقد' : 'Contract updated') : (isRTL ? 'تم إنشاء العقد' : 'Contract created'));
     },
     onError: (err: Error) => {
@@ -1362,6 +1386,8 @@ const DashboardContracts = () => {
 
   const openEditContract = useCallback((c: ContractWithRole) => {
     setEditingId(c.id);
+    // Phase 5C.3 — sync the local site selection from the contract row.
+    setSelectedSiteId((c as unknown as { execution_site_id?: string | null }).execution_site_id ?? null);
     setForm({
       title_ar: c.title_ar, title_en: c.title_en || '', description_ar: c.description_ar || '',
       description_en: c.description_en || '', total_amount: c.total_amount?.toString() || '',
@@ -1379,6 +1405,7 @@ const DashboardContracts = () => {
     setSelectedClient(null); setSelectedWorkType('general'); setWorkTypeTouched(false);
     setSelectedVersionId(null); setSelectedPricingMethod(null);
     setInviteMode('idle'); setInviteForm({ email: '', name: '', phone: '' }); setPendingInvite(null);
+    setSelectedSiteId(null);
   }, []);
 
   const handleShareContract = useCallback(async (c: ContractWithRole) => {
@@ -1504,6 +1531,7 @@ const DashboardContracts = () => {
               {!editingId && (() => {
                 const steps = [
                   { key: 'client',   ar: 'العميل',       en: 'Client',   done: !!(selectedClient || form.client_email || pendingInvite) },
+                  { key: 'site',     ar: 'موقع التنفيذ', en: 'Site',     done: !!selectedSiteId },
                   { key: 'work',     ar: 'نوع العمل',    en: 'Work type', done: !!selectedWorkType && workTypeTouched },
                   { key: 'template', ar: 'القالب',       en: 'Template',  done: !!effectiveVersion },
                   { key: 'details',  ar: 'التفاصيل',     en: 'Details',   done: !!form.title_ar && !!form.total_amount && Number(form.total_amount) > 0 },
@@ -1607,6 +1635,36 @@ const DashboardContracts = () => {
               )}
               </div>
 
+              {/* Phase 5C.3 — Execution site step */}
+              <div ref={stepRefs.site} className="scroll-mt-24">
+                <ExecutionSiteSection
+                  isRTL={isRTL}
+                  businessId={businessId ?? null}
+                  clientUserId={
+                    selectedClient?.user_id
+                    ?? (editingContract as unknown as { client_id?: string | null } | null)?.client_id
+                    ?? null
+                  }
+                  selectedSiteId={selectedSiteId}
+                  snapshot={
+                    (editingContract as unknown as { execution_address_snapshot?: ExecutionAddressSnapshot | null } | null)
+                      ?.execution_address_snapshot ?? null
+                  }
+                  locked={!!editingContract && isContractLocked(editingContract)}
+                  hasContract={!!editingId}
+                  onSelect={(siteId) => setSelectedSiteId(siteId)}
+                  onPersistSelect={async (siteId) => {
+                    if (!editingId) return;
+                    const { error } = await supabase.rpc('set_contract_execution_site', {
+                      _contract_id: editingId,
+                      _site_id: siteId ?? undefined,
+                    });
+                    if (error) throw error;
+                    queryClient.invalidateQueries({ queryKey: ['dashboard-contracts'] });
+                  }}
+                />
+              </div>
+
               {/* CT4B — Step 2: Work / service type (auto-suggests template) */}
               <div ref={stepRefs.work} className="scroll-mt-24">
               {!editingId && (
@@ -1652,6 +1710,7 @@ const DashboardContracts = () => {
                 const completeness = !editingId
                   ? calculateContractCompleteness({
                       hasClient: !!(selectedClient || form.client_email),
+                      hasExecutionSite: !!selectedSiteId,
                       hasWorkType: !!selectedWorkType && workTypeTouched,
                       hasTemplate: !!effectiveVersion,
                       titleAr: form.title_ar,
@@ -1744,6 +1803,7 @@ const DashboardContracts = () => {
                 onSave={() => createContractMutation.mutate()}
                 completenessScore={!editingId ? calculateContractCompleteness({
                   hasClient: !!(selectedClient || form.client_email),
+                  hasExecutionSite: !!selectedSiteId,
                   hasWorkType: !!selectedWorkType && workTypeTouched,
                   hasTemplate: !!effectiveVersion,
                   titleAr: form.title_ar, titleEn: form.title_en,

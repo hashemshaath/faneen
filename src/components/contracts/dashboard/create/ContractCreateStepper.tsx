@@ -1,6 +1,6 @@
 import React from 'react';
 
-export type CreateStepKey = 'client' | 'work' | 'template' | 'details' | 'pricing' | 'review';
+export type CreateStepKey = 'client' | 'site' | 'work' | 'template' | 'details' | 'pricing' | 'review';
 
 export interface CreateStepDescriptor {
   key: CreateStepKey;
