@@ -4422,6 +4422,67 @@ export type Database = {
           },
         ]
       }
+      membership_access_key_usage_log: {
+        Row: {
+          access_key_id: string
+          business_id: string | null
+          created_at: string
+          endpoint: string | null
+          id: string
+          ip: string | null
+          method: string | null
+          status_code: number | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          access_key_id: string
+          business_id?: string | null
+          created_at?: string
+          endpoint?: string | null
+          id?: string
+          ip?: string | null
+          method?: string | null
+          status_code?: number | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          access_key_id?: string
+          business_id?: string | null
+          created_at?: string
+          endpoint?: string | null
+          id?: string
+          ip?: string | null
+          method?: string | null
+          status_code?: number | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "membership_access_key_usage_log_access_key_id_fkey"
+            columns: ["access_key_id"]
+            isOneToOne: false
+            referencedRelation: "membership_access_keys"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "membership_access_key_usage_log_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "membership_access_key_usage_log_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       membership_access_keys: {
         Row: {
           business_id: string | null
@@ -4666,6 +4727,71 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      membership_promo_code_attempts: {
+        Row: {
+          applied_subscription_id: string | null
+          business_id: string | null
+          code: string
+          created_at: string
+          id: string
+          promo_code_id: string | null
+          rejection_reason: string | null
+          success: boolean
+          user_id: string | null
+        }
+        Insert: {
+          applied_subscription_id?: string | null
+          business_id?: string | null
+          code: string
+          created_at?: string
+          id?: string
+          promo_code_id?: string | null
+          rejection_reason?: string | null
+          success: boolean
+          user_id?: string | null
+        }
+        Update: {
+          applied_subscription_id?: string | null
+          business_id?: string | null
+          code?: string
+          created_at?: string
+          id?: string
+          promo_code_id?: string | null
+          rejection_reason?: string | null
+          success?: boolean
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "membership_promo_code_attempts_applied_subscription_id_fkey"
+            columns: ["applied_subscription_id"]
+            isOneToOne: false
+            referencedRelation: "membership_subscriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "membership_promo_code_attempts_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "membership_promo_code_attempts_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "membership_promo_code_attempts_promo_code_id_fkey"
+            columns: ["promo_code_id"]
+            isOneToOne: false
+            referencedRelation: "membership_promo_codes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       membership_promo_codes: {
         Row: {
@@ -8236,6 +8362,15 @@ export type Database = {
           window_until: string
         }[]
       }
+      get_promo_code_status: {
+        Args: { _code_id: string }
+        Returns: {
+          max_redemptions: number
+          remaining: number
+          status: string
+          used_count: number
+        }[]
+      }
       get_public_bnpl_for_business: {
         Args: { _business_id: string }
         Returns: {
@@ -8591,6 +8726,17 @@ export type Database = {
         }[]
       }
       recalc_contract_total: { Args: { _contract_id: string }; Returns: number }
+      record_access_key_usage: {
+        Args: {
+          _endpoint?: string
+          _ip?: string
+          _key_prefix: string
+          _method?: string
+          _status_code?: number
+          _user_agent?: string
+        }
+        Returns: string
+      }
       record_contract_pdf_export: {
         Args: {
           _contract_id: string
