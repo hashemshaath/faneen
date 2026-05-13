@@ -10,7 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Layers, Plus, Pencil, Trash2, Send, Search, FileClock, Building2, CheckCircle2, Clock, ShieldCheck, Sparkles, Users } from 'lucide-react';
+import { Layers, Plus, Pencil, Trash2, Send, Search, FileClock, Building2, CheckCircle2, Clock, ShieldCheck, Sparkles, Users, AlertCircle, Mail, UserCheck, HelpCircle } from 'lucide-react';
 import {
   listSectorsForBusiness, createSector, updateSector, deleteSector,
   submitSector, listAuditForSector, setSectorReason,
@@ -120,12 +120,97 @@ const DashboardPrivateSectors: React.FC = () => {
   if (!business) {
     return (
       <DashboardLayout>
-        <Card><CardContent className="py-10 text-center text-muted-foreground">
-          <div className="space-y-3">
-            <p>{isRTL ? 'لا توجد منشأة مرتبطة بحسابك بعد.' : 'No business linked to your account yet.'}</p>
-            <Button asChild variant="outline"><a href="/dashboard/business/edit">{isRTL ? 'إنشاء منشأة جديدة' : 'Create a business'}</a></Button>
-          </div>
-        </CardContent></Card>
+        <Card className="border-amber-200/60 bg-amber-50/30 dark:bg-amber-950/10">
+          <CardHeader>
+            <div className="flex items-start gap-3">
+              <div className="rounded-xl bg-amber-100 dark:bg-amber-900/40 p-2">
+                <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+              </div>
+              <div className="flex-1">
+                <CardTitle className="text-base">
+                  {isRTL ? 'لا توجد منشأة مرتبطة بحسابك' : 'No business linked to your account'}
+                </CardTitle>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {isRTL
+                    ? 'لا يمكن إدارة القطاعات الخاصة قبل ربط حسابك بمنشأة. تحقّق من الأسباب التالية:'
+                    : 'You need a linked business before managing private sectors. Check the common reasons below:'}
+                </p>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-3 md:grid-cols-3">
+              <div className="rounded-lg border bg-background p-4 space-y-2">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <Building2 className="h-4 w-4 text-primary" />
+                  {isRTL ? 'لم يتم إنشاء المنشأة بعد' : 'Business not created yet'}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {isRTL
+                    ? 'إذا كنت أنت المالك، أنشئ منشأتك من صفحة بيانات المنشأة لتفعيل كل ميزات لوحة التحكم.'
+                    : 'If you are the owner, create your business from the business profile page to unlock dashboard features.'}
+                </p>
+              </div>
+              <div className="rounded-lg border bg-background p-4 space-y-2">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <Mail className="h-4 w-4 text-primary" />
+                  {isRTL ? 'دعوة بانتظار القبول' : 'Pending invitation'}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {isRTL
+                    ? 'تحقّق من بريدك (وصندوق الرسائل غير المرغوب فيها) لاستلام رابط قبول الدعوة كمفوّض/موظف.'
+                    : 'Check your email (and spam folder) for the staff invitation acceptance link.'}
+                </p>
+              </div>
+              <div className="rounded-lg border bg-background p-4 space-y-2">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <UserCheck className="h-4 w-4 text-primary" />
+                  {isRTL ? 'بانتظار اعتماد المالك' : 'Awaiting owner approval'}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {isRTL
+                    ? 'إن قبلت دعوة سابقة، قد يحتاج المالك لاعتماد صلاحياتك. تواصل معه لتفعيل وصولك.'
+                    : 'If you accepted an invite, the owner may still need to approve your access. Contact them to activate it.'}
+                </p>
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-dashed p-4 space-y-2">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                {isRTL ? 'خطوات الحل السريعة' : 'Quick resolution steps'}
+              </div>
+              <ol className="list-decimal ms-5 text-xs text-muted-foreground space-y-1">
+                <li>{isRTL ? 'تأكّد من تفعيل بريدك الإلكتروني وتسجيل الدخول بالحساب الصحيح.' : 'Make sure your email is verified and you signed in with the correct account.'}</li>
+                <li>{isRTL ? 'إن كنت موظفًا/مفوّضًا: تواصل مع مالك المنشأة وتأكد أنه أرسل لك دعوة على نفس البريد.' : 'If you are staff: contact the business owner and confirm they sent the invite to this exact email.'}</li>
+                <li>{isRTL ? 'إن كنت المالك: أنشئ منشأتك الآن من زر "إنشاء منشأة جديدة" بالأسفل.' : 'If you are the owner: create your business now using the button below.'}</li>
+                <li>{isRTL ? 'بعد ربط الحساب، أعد تحميل الصفحة لتظهر القطاعات الخاصة.' : 'After your account is linked, refresh this page to access private sectors.'}</li>
+              </ol>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              <Button asChild>
+                <a href="/dashboard/business/edit">
+                  <Plus className="h-4 w-4 me-1" />
+                  {isRTL ? 'إنشاء منشأة جديدة' : 'Create a business'}
+                </a>
+              </Button>
+              <Button asChild variant="outline">
+                <a href="/dashboard/settings">
+                  {isRTL ? 'تفعيل/مراجعة الحساب' : 'Verify account'}
+                </a>
+              </Button>
+              <Button asChild variant="ghost">
+                <a href="/contact">
+                  {isRTL ? 'تواصل مع الدعم' : 'Contact support'}
+                </a>
+              </Button>
+              <Button variant="ghost" onClick={() => window.location.reload()}>
+                {isRTL ? 'إعادة المحاولة' : 'Retry'}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </DashboardLayout>
     );
   }
