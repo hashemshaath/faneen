@@ -55,7 +55,7 @@ import {
   dedupeStarterRows,
   type BoqGroupKey,
 } from '@/lib/contract-boq';
-import { ClientPicker, type SelectedClient } from '@/components/contracts/ClientPicker';
+import { ClientPicker, type SelectedClient, type GuestClient } from '@/components/contracts/ClientPicker';
 import { LineItemFormSection } from '@/components/contracts/dashboard/create/LineItemFormSection';
 import { SuggestedBOQPanel } from '@/components/contracts/dashboard/create/SuggestedBOQPanel';
 import { ContractFinancialSummary, ContractLineVatBreakdown } from '@/components/contracts/dashboard/ContractBoqVatSummary';
@@ -174,6 +174,7 @@ const DashboardContracts = () => {
   const [selectedPricingMethod, setSelectedPricingMethod] = useState<string | null>(null);
   /* CT4B — Client picker + work type selection. */
   const [selectedClient, setSelectedClient] = useState<SelectedClient | null>(null);
+  const [guestClient, setGuestClient] = useState<GuestClient | null>(null);
   const [selectedWorkType, setSelectedWorkType] = useState<WorkTypeKey>('general');
   const [workTypeTouched, setWorkTypeTouched] = useState(false);
   /* CT4C.3 — Client invitation flow state. */
@@ -1019,17 +1020,19 @@ const DashboardContracts = () => {
     mutationFn: async () => {
       // CT4B — Prefer the picker-selected client; fall back to manual email lookup.
       let clientUserId: string | null = selectedClient?.user_id ?? null;
-      if (!clientUserId && !editingId) {
+      if (!clientUserId && !editingId && !guestClient) {
         const email = form.client_email.trim();
         if (!email) throw new Error(isRTL ? 'يرجى اختيار العميل أولاً' : 'Please select a client first');
         const { data: cp, error: cpe } = await supabase.from('profiles').select('user_id').eq('email', email).maybeSingle();
         if (cpe) throw cpe;
-        if (!cp) throw new Error(isRTL ? 'لم يتم العثور على العميل بهذا البريد الإلكتروني' : 'Client not found with this email');
-        clientUserId = cp.user_id;
+        if (cp) clientUserId = cp.user_id;
       }
 
       const payload: any = {
-        provider_id: user!.id, client_id: clientUserId!, business_id: businessId || null,
+        provider_id: user!.id, client_id: clientUserId, business_id: businessId || null,
+        guest_client_name:  !clientUserId ? (guestClient?.name  ?? null) : null,
+        guest_client_email: !clientUserId ? (guestClient?.email ?? form.client_email.trim() ?? null) : null,
+        guest_client_phone: !clientUserId ? (guestClient?.phone ?? null) : null,
         title_ar: form.title_ar, title_en: form.title_en || null,
         description_ar: form.description_ar || null, description_en: form.description_en || null,
         total_amount: Number(form.total_amount), currency_code: form.currency_code,
