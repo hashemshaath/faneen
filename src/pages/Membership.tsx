@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { usePageMeta } from '@/hooks/usePageMeta';
+import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -29,8 +29,17 @@ const tierOrder = ['free', 'basic', 'premium', 'enterprise'];
 const Membership = () => {
   const { language, isRTL } = useLanguage();
   usePageMeta({
-    title: language === 'ar' ? 'باقات العضوية - اشترك واحصل على مميزات حصرية | قِطاعات' : 'Membership Plans - Subscribe for Exclusive Benefits | Qitaat',
-    description: language === 'ar' ? 'اختر باقة العضوية المناسبة لعملك واحصل على مميزات حصرية لتطوير أعمالك.' : 'Choose the right membership plan for your business and get exclusive benefits.',
+    title: language === 'ar'
+      ? 'باقات العضوية الاحترافية — اشترك واحصل على مميزات حصرية | قِطاعات'
+      : 'Professional Membership Plans — Grow Your Business | Qitaat',
+    description: language === 'ar'
+      ? 'اختر باقة قِطاعات المناسبة لمنشأتك الصناعية: ظهور أفضل، شارة موثّقة، تحليلات متقدمة، أدوات ذكاء اصطناعي، ودعم مخصص. ابدأ مجاناً وقم بالترقية في أي وقت.'
+      : 'Choose the right Qitaat plan for your industrial business: better visibility, verified badge, advanced analytics, AI tools, and dedicated support. Start free and upgrade anytime.',
+    keywords: language === 'ar'
+      ? 'باقات العضوية, اشتراك قطاعات, دليل صناعي, ترقية المنشأة, شارة موثقة, تحليلات أعمال, السعودية'
+      : 'membership plans, qitaat subscription, industrial directory, business upgrade, verified badge, business analytics, Saudi Arabia',
+    ogType: 'website',
+    canonical: 'https://qitaat.com/membership',
   });
   const { user, profile } = useAuth();
   const navigate = useNavigate();
@@ -75,6 +84,84 @@ const Membership = () => {
       return data ?? [];
     },
   });
+
+  // Build structured data: BreadcrumbList + FAQPage + Service offers per plan
+  const jsonLdBlocks = useMemo(() => {
+    const baseUrl = 'https://qitaat.com';
+    const pageUrl = `${baseUrl}/membership`;
+
+    const breadcrumb = {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: language === 'ar' ? 'الرئيسية' : 'Home', item: `${baseUrl}/` },
+        { '@type': 'ListItem', position: 2, name: language === 'ar' ? 'باقات العضوية' : 'Membership Plans', item: pageUrl },
+      ],
+    };
+
+    const faqPage = {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: (language === 'ar' ? [
+        { q: 'هل يمكنني تغيير باقتي لاحقاً؟', a: 'نعم، يمكنك ترقية باقتك في أي وقت. عند خفض الباقة تحتفظ بمميزاتك الحالية حتى انتهاء الفترة المدفوعة، ثم يتم الانتقال للباقة الأقل تلقائياً.' },
+        { q: 'هل التجربة مجانية حقاً؟', a: 'الباقة المجانية مجانية بالكامل وبدون أي بطاقة ائتمان.' },
+        { q: 'كيف يتم الدفع؟', a: 'حالياً النسخة تجريبية، ويتم تفعيل الترقيات يدوياً دون أي رسوم. سيتم إضافة الدفع الإلكتروني قريباً.' },
+        { q: 'هل تشمل الأسعار ضريبة القيمة المضافة؟', a: 'نعم، جميع الأسعار شاملة لضريبة القيمة المضافة 15%.' },
+        { q: 'هل يمكنني الحصول على فاتورة ضريبية؟', a: 'نعم، يتم إصدار فاتورة ضريبية إلكترونية معتمدة ويمكن تنزيلها من لوحة التحكم.' },
+        { q: 'ماذا يحدث إذا ألغيت الاشتراك؟', a: 'تحتفظ بكامل مميزات باقتك حتى انتهاء فترة الاشتراك المدفوعة، ثم تنتقل تلقائياً للباقة المختارة أو المجانية.' },
+      ] : [
+        { q: 'Can I change my plan later?', a: 'Yes — upgrade anytime. When downgrading, you keep your benefits until the paid period ends, then move to the lower plan automatically.' },
+        { q: 'Is the free tier really free?', a: 'The Free plan is fully free with no credit card required.' },
+        { q: 'How does payment work?', a: 'We are in beta — upgrades are activated manually with no charge. Online payment is coming soon.' },
+        { q: 'Do prices include VAT?', a: 'Yes — all displayed prices include 15% VAT per Saudi regulations.' },
+        { q: 'Can I get a tax invoice?', a: 'Yes — a certified e-invoice is issued and can be downloaded from your dashboard.' },
+        { q: 'What happens if I cancel?', a: 'You keep all benefits until the end of the paid period, then automatically move to your chosen plan or Free.' },
+      ]).map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    };
+
+    const offerCatalog = {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: language === 'ar' ? 'باقات عضوية قِطاعات' : 'Qitaat Membership Plans',
+      description: language === 'ar'
+        ? 'باقات اشتراك للمنشآت الصناعية في قطاعات الألمنيوم والزجاج والأخشاب والحديد على منصة قِطاعات.'
+        : 'Subscription plans for industrial businesses (Aluminum, Glass, Wood, Steel) on the Qitaat platform.',
+      brand: { '@type': 'Brand', name: 'Qitaat' },
+      url: pageUrl,
+      offers: {
+        '@type': 'AggregateOffer',
+        priceCurrency: 'SAR',
+        lowPrice: 0,
+        highPrice: Math.max(0, ...plans.map((p) => Number((p as { price_yearly?: number }).price_yearly ?? 0))),
+        offerCount: plans.length,
+        offers: plans.map((p) => {
+          const plan = p as { id: string; tier: string; name_ar?: string; name_en?: string; description_ar?: string; description_en?: string; price_monthly?: number; price_yearly?: number };
+          return {
+            '@type': 'Offer',
+            sku: `qitaat-membership-${plan.tier}`,
+            name: language === 'ar' ? plan.name_ar : plan.name_en,
+            description: language === 'ar' ? plan.description_ar : plan.description_en,
+            price: Number(plan.price_monthly ?? 0),
+            priceCurrency: 'SAR',
+            availability: 'https://schema.org/InStock',
+            url: pageUrl,
+            priceSpecification: [
+              { '@type': 'UnitPriceSpecification', price: Number(plan.price_monthly ?? 0), priceCurrency: 'SAR', unitCode: 'MON', referenceQuantity: { '@type': 'QuantitativeValue', value: 1, unitCode: 'MON' } },
+              { '@type': 'UnitPriceSpecification', price: Number(plan.price_yearly ?? 0), priceCurrency: 'SAR', unitCode: 'ANN', referenceQuantity: { '@type': 'QuantitativeValue', value: 1, unitCode: 'ANN' } },
+            ],
+          };
+        }),
+      },
+    };
+
+    return [breadcrumb, faqPage, offerCatalog];
+  }, [plans, language]);
+
+  useMultiJsonLd(jsonLdBlocks);
 
   const { data: myBusiness } = useQuery({
     queryKey: ['my-business-membership', user?.id, profile?.account_type],
