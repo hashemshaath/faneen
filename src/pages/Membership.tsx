@@ -6,7 +6,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
-import { Shield, Info, AlertTriangle, Check, Undo2, Building2, Send, Clock } from 'lucide-react';
+import { Shield, Info, AlertTriangle, Check, Undo2, Building2, Send, Clock, ChevronDown, ChevronUp, MessageSquareWarning } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { MembershipHeader } from '@/components/membership/MembershipHeader';
@@ -35,6 +35,7 @@ const Membership = () => {
   const [subscribingPlanId, setSubscribingPlanId] = useState<string | null>(null);
   const [pendingDowngrade, setPendingDowngrade] = useState<{ id: string; tier: string } | null>(null);
   const [pendingUpgrade, setPendingUpgrade] = useState<{ id: string; tier: string } | null>(null);
+  const [showReviewNotes, setShowReviewNotes] = useState(false);
 
   // Privacy-safe: tier of current user (or 'anonymous') — no PII.
   React.useEffect(() => {
@@ -57,7 +58,7 @@ const Membership = () => {
       // 1. Owner: pick the most recently created business they own
       const owned = await supabase
         .from('businesses')
-        .select('id, ref_id, membership_tier, name_ar, name_en, approval_status, onboarding_completion')
+        .select('id, ref_id, membership_tier, name_ar, name_en, approval_status, onboarding_completion, approval_notes')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(1);
@@ -66,7 +67,7 @@ const Membership = () => {
       // 2. Staff fallback: business they manage (owner/manager role)
       const staff = await supabase
         .from('business_staff')
-        .select('business_id, role, businesses:business_id(id, ref_id, membership_tier, name_ar, name_en, approval_status, onboarding_completion)')
+        .select('business_id, role, businesses:business_id(id, ref_id, membership_tier, name_ar, name_en, approval_status, onboarding_completion, approval_notes)')
         .eq('user_id', user.id)
         .eq('is_active', true)
         .in('role', ['owner', 'manager'])
@@ -347,6 +348,7 @@ const Membership = () => {
             name_en?: string | null;
             approval_status?: string | null;
             onboarding_completion?: number | null;
+            approval_notes?: string | null;
           };
           const status = biz.approval_status ?? 'draft';
           const completion = biz.onboarding_completion ?? 0;
@@ -431,14 +433,54 @@ const Membership = () => {
                         : (isRTL ? 'الترقية مرتبطة بهذه المنشأة. أكمل بياناتها لرفع جاهزيتها.' : 'Upgrade is bound to this business. Complete its profile to boost readiness.')}
                 </p>
               </div>
-              {!isComplete && (
-                <Link to="/onboarding" className="shrink-0">
-                  <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5">
-                    {isRTL ? 'إكمال البيانات' : 'Complete profile'}
+              <div className="shrink-0 flex flex-wrap items-center gap-2">
+                {needsChanges && biz.approval_notes && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 text-xs gap-1.5"
+                    aria-expanded={showReviewNotes}
+                    aria-controls="review-notes-panel"
+                    onClick={() => setShowReviewNotes((v) => !v)}
+                  >
+                    <MessageSquareWarning className="w-3.5 h-3.5" />
+                    {showReviewNotes
+                      ? (isRTL ? 'إخفاء الملاحظات' : 'Hide notes')
+                      : (isRTL ? 'عرض ملاحظات المراجعة' : 'Show review notes')}
+                    {showReviewNotes
+                      ? <ChevronUp className="w-3.5 h-3.5" />
+                      : <ChevronDown className="w-3.5 h-3.5" />}
                   </Button>
-                </Link>
-              )}
+                )}
+                {!isComplete && (
+                  <Link to="/onboarding">
+                    <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5">
+                      {isRTL ? 'إكمال البيانات' : 'Complete profile'}
+                    </Button>
+                  </Link>
+                )}
               </div>
+              </div>
+              {needsChanges && biz.approval_notes && showReviewNotes && (
+                <div
+                  id="review-notes-panel"
+                  className="max-w-3xl mx-auto -mt-4 mb-6 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3"
+                  role="region"
+                  aria-label={isRTL ? 'ملاحظات المراجعة' : 'Review notes'}
+                >
+                  <div className="flex items-start gap-2">
+                    <MessageSquareWarning className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-foreground mb-1">
+                        {isRTL ? 'ملاحظات فريق المراجعة' : 'Reviewer notes'}
+                      </p>
+                      <p className="text-xs text-foreground/85 leading-relaxed whitespace-pre-wrap" dir="auto">
+                        {biz.approval_notes}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </>
           );
         })()}
