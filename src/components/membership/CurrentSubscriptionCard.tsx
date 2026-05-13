@@ -3,28 +3,41 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Clock, AlertTriangle, Loader2, Ban, Zap, Undo2, Check, RotateCcw, Info } from 'lucide-react';
+import { Clock, AlertTriangle, Loader2, Ban, Zap, Undo2, Check, RotateCcw, CalendarClock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { tierIcons, tierGradients } from '@/lib/membership-tiers';
+
+const TIER_ORDER = ['free', 'basic', 'premium', 'enterprise'] as const;
+
+export interface DowngradePlanOption { id: string; tier: string; name_ar: string; name_en: string }
 
 interface CurrentSubscriptionCardProps {
   isRTL: boolean;
   currentTier: string;
   mySubscription: any;
   daysRemaining: number | null;
-  cancelMutation: { mutate: () => void; isPending: boolean };
+  cancelMutation: { mutate: (planId: string | null) => void; isPending: boolean };
   resumeMutation?: { mutate: () => void; isPending: boolean };
+  downgradeOptions?: DowngradePlanOption[];
 }
 
 export const CurrentSubscriptionCard = ({
-  isRTL, currentTier, mySubscription, daysRemaining, cancelMutation, resumeMutation,
+  isRTL, currentTier, mySubscription, daysRemaining, cancelMutation, resumeMutation, downgradeOptions = [],
 }: CurrentSubscriptionCardProps) => {
   const Icon = tierIcons[currentTier] || Zap;
   const gradient = tierGradients[currentTier] || tierGradients.free;
   const [confirming, setConfirming] = useState(false);
+  const [targetPlanId, setTargetPlanId] = useState<string>('free');
   const autoRenew = (mySubscription as { auto_renew?: boolean })?.auto_renew !== false;
   const expiresAt = (mySubscription as { expires_at?: string | null })?.expires_at ?? null;
   const expiresLabel = expiresAt ? new Date(expiresAt).toLocaleDateString() : '';
+  const downgradePlanId = (mySubscription as { downgrade_to_plan_id?: string | null })?.downgrade_to_plan_id ?? null;
+  const downgradeTier = (mySubscription as { downgrade_to_tier?: string | null })?.downgrade_to_tier ?? null;
+  const downgradePlanName = downgradePlanId ? downgradeOptions.find((p) => p.id === downgradePlanId) : null;
+  const currentIdx = TIER_ORDER.indexOf(currentTier as typeof TIER_ORDER[number]);
+  const lowerPlans = downgradeOptions.filter(
+    (p) => p.tier !== 'free' && TIER_ORDER.indexOf(p.tier as typeof TIER_ORDER[number]) >= 0 && TIER_ORDER.indexOf(p.tier as typeof TIER_ORDER[number]) < currentIdx,
+  );
 
   return (
     <Card className="max-w-2xl mx-auto mb-8 border-accent/20 bg-accent/5">
@@ -92,14 +105,32 @@ export const CurrentSubscriptionCard = ({
                 <p className="text-[11px] text-foreground/80 leading-relaxed mb-2 flex items-start gap-1.5">
                   <AlertTriangle className="w-3 h-3 text-destructive shrink-0 mt-0.5" />
                   {isRTL
-                    ? `سيتم إيقاف التجديد التلقائي. تحتفظ بكامل مميزات الباقة حتى ${expiresLabel || 'انتهاء الفترة الحالية'}، ثم تعود تلقائياً للباقة المجانية.`
-                    : `Auto-renewal will be turned off. You keep all plan benefits until ${expiresLabel || 'the end of the current period'}, then automatically return to the Free plan.`}
+                    ? `سيتم إيقاف التجديد التلقائي. تحتفظ بكامل مميزات الباقة حتى ${expiresLabel || 'انتهاء الفترة الحالية'}، ثم تنتقل للباقة المختارة أدناه.`
+                    : `Auto-renewal will be turned off. You keep all plan benefits until ${expiresLabel || 'the end of the current period'}, then move to the plan selected below.`}
                 </p>
+                <div className="mb-2">
+                  <label className="block text-[10px] font-medium text-foreground/80 mb-1">
+                    {isRTL ? 'الباقة بعد انتهاء الفترة' : 'Plan after period ends'}
+                  </label>
+                  <select
+                    className="w-full h-8 rounded-lg border border-border bg-background px-2 text-[11px]"
+                    value={targetPlanId}
+                    onChange={(e) => setTargetPlanId(e.target.value)}
+                    disabled={cancelMutation.isPending}
+                  >
+                    <option value="free">{isRTL ? 'الباقة المجانية' : 'Free plan'}</option>
+                    {lowerPlans.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {isRTL ? p.name_ar : p.name_en} ({p.tier})
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 <div className="flex gap-2">
                   <Button
                     size="sm" variant="destructive"
                     className="text-[10px] h-7 gap-1"
-                    onClick={() => { cancelMutation.mutate(); setConfirming(false); }}
+                    onClick={() => { cancelMutation.mutate(targetPlanId === 'free' ? null : targetPlanId); setConfirming(false); }}
                     disabled={cancelMutation.isPending}
                   >
                     {cancelMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
@@ -118,13 +149,25 @@ export const CurrentSubscriptionCard = ({
               </div>
             )}
             {!autoRenew && (
-              <div className="mt-2 rounded-lg border border-warning/30 bg-warning/5 p-2 flex items-start gap-1.5">
-                <Info className="w-3 h-3 text-warning shrink-0 mt-0.5" />
-                <p className="text-[10px] text-foreground/80 leading-relaxed">
-                  {isRTL
-                    ? `التجديد التلقائي موقوف. ستحتفظ بمميزات الباقة حتى ${expiresLabel || 'انتهاء الفترة'} ثم تنتقل للباقة المجانية.`
-                    : `Auto-renewal is off. You keep your plan benefits until ${expiresLabel || 'period end'}, then move to Free.`}
-                </p>
+              <div className="mt-2 rounded-lg border border-warning/40 bg-warning/10 p-2.5">
+                <div className="flex items-start gap-1.5">
+                  <CalendarClock className="w-3.5 h-3.5 text-warning shrink-0 mt-0.5" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[11px] font-semibold text-foreground leading-tight">
+                      {isRTL ? 'التجديد التلقائي موقوف' : 'Auto-renewal is off'}
+                    </p>
+                    <p className="text-[10px] text-foreground/80 leading-relaxed mt-0.5">
+                      {isRTL ? 'الانتقال في:' : 'Switching on:'}{' '}
+                      <span className="tech-content font-mono font-semibold text-foreground">{expiresLabel || '—'}</span>
+                      {' → '}
+                      <span className="font-semibold text-foreground">
+                        {downgradePlanName
+                          ? (isRTL ? downgradePlanName.name_ar : downgradePlanName.name_en)
+                          : (isRTL ? `الباقة ${downgradeTier || 'المجانية'}` : `${downgradeTier || 'free'} plan`)}
+                      </span>
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
           </div>
