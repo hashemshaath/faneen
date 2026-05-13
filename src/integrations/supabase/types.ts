@@ -4994,6 +4994,60 @@ export type Database = {
           },
         ]
       }
+      membership_upgrade_audit: {
+        Row: {
+          action: string
+          actor_id: string | null
+          billing_cycle: string | null
+          business_id: string
+          business_ref_id: string | null
+          changed_fields: string[]
+          created_at: string
+          current_tier: string | null
+          id: string
+          new_status: string | null
+          old_status: string | null
+          request_id: string
+          requested_tier: string | null
+          snapshot: Json | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          billing_cycle?: string | null
+          business_id: string
+          business_ref_id?: string | null
+          changed_fields?: string[]
+          created_at?: string
+          current_tier?: string | null
+          id?: string
+          new_status?: string | null
+          old_status?: string | null
+          request_id: string
+          requested_tier?: string | null
+          snapshot?: Json | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          billing_cycle?: string | null
+          business_id?: string
+          business_ref_id?: string | null
+          changed_fields?: string[]
+          created_at?: string
+          current_tier?: string | null
+          id?: string
+          new_status?: string | null
+          old_status?: string | null
+          request_id?: string
+          requested_tier?: string | null
+          snapshot?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       membership_upgrade_requests: {
         Row: {
           admin_note: string | null
