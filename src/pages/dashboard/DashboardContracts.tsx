@@ -77,6 +77,8 @@ import { ContractCreateStepper } from '@/components/contracts/dashboard/create/C
 import { ContractReviewSummary } from '@/components/contracts/dashboard/create/ContractReviewSummary';
 import { ContractCompletenessCard } from '@/components/contracts/dashboard/create/ContractCompletenessCard';
 import { calculateContractCompleteness } from '@/lib/contract-completeness';
+import { ContractDraftSaveStatus, type DraftSaveState } from '@/components/contracts/dashboard/create/ContractDraftSaveStatus';
+import { FirstContractGuidanceCard } from '@/components/contracts/dashboard/create/FirstContractGuidanceCard';
 import {
   ContractCreateActionsBar,
   ContractCreateMobileActionBar,
