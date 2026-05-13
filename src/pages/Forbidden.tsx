@@ -1,5 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
-import { ShieldX, ArrowRight, ArrowLeft, Home, LogIn, RotateCw } from "lucide-react";
+import { ShieldX, ArrowRight, ArrowLeft, Home, LogIn, RotateCw, Copy, Check } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -28,6 +30,31 @@ const Forbidden = () => {
   const reLogin = async () => {
     try { await signOut(); } catch { /* noop */ }
     window.location.href = `/auth?from=${encodeURIComponent(ctx.path)}`;
+  };
+
+  const [copied, setCopied] = useState(false);
+  const copyDetails = async () => {
+    const payload = {
+      path: ctx.path,
+      requiredRole: ctx.requiredRole,
+      roles: ctx.roles,
+      isAdmin: ctx.isAdmin,
+      isProvider: ctx.isProvider,
+      isSuperAdmin: ctx.isSuperAdmin,
+      accountType: ctx.accountType,
+      user_id: ctx.userId,
+      timestamp: new Date().toISOString(),
+      userAgent: navigator.userAgent,
+    };
+    const json = JSON.stringify(payload, null, 2);
+    try {
+      await navigator.clipboard.writeText(json);
+      setCopied(true);
+      toast.success(isRTL ? 'تم نسخ التفاصيل' : 'Details copied');
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error(isRTL ? 'تعذّر النسخ' : 'Copy failed');
+    }
   };
 
   usePageMeta({ title: isRTL ? 'غير مصرح' : 'Access Denied', noindex: true });
@@ -90,6 +117,14 @@ const Forbidden = () => {
               <dd className="tech-content font-mono text-[10px] break-all">{ctx.userId}</dd>
             </>)}
           </dl>
+          <div className="pt-2">
+            <Button size="sm" variant="outline" className="gap-2 w-full sm:w-auto" onClick={copyDetails}>
+              {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+              {copied
+                ? (isRTL ? 'تم النسخ' : 'Copied')
+                : (isRTL ? 'نسخ التفاصيل للدعم (JSON)' : 'Copy details for support (JSON)')}
+            </Button>
+          </div>
         </div>
 
         {/* Actions */}
