@@ -430,6 +430,7 @@ const Membership = () => {
           const needsChanges = status === 'needs_changes' || status === 'rejected';
           const isDraft = !isComplete && !isReview && !needsChanges;
           const isAutoCreatedDraft = isDraft && completion === 0;
+          const draftDismissed = !!biz.ref_id && dismissedDraftRefs.includes(biz.ref_id);
 
           const tone = isComplete
             ? 'border-success/30 bg-success/5 text-success'
@@ -449,7 +450,7 @@ const Membership = () => {
 
           return (
             <>
-              {isAutoCreatedDraft && (
+              {isAutoCreatedDraft && !draftDismissed && (
                 <div className="max-w-3xl mx-auto mb-3 rounded-xl border border-info/30 bg-info/5 px-4 py-3 flex items-start gap-3">
                   <Info className="w-5 h-5 text-info shrink-0 mt-0.5" />
                   <div className="flex-1 min-w-0">
@@ -478,6 +479,16 @@ const Membership = () => {
                       </Link>
                     </div>
                   </div>
+                  {biz.ref_id && (
+                    <button
+                      type="button"
+                      onClick={() => dismissDraftBanner(biz.ref_id!)}
+                      className="shrink-0 -m-1 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
+                      aria-label={isRTL ? 'إخفاء التنبيه' : 'Dismiss notice'}
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               )}
               <div className={`max-w-3xl mx-auto mb-6 rounded-xl border ${tone.split(' ').slice(0, 2).join(' ')} px-4 py-3 flex items-center gap-3`}>
