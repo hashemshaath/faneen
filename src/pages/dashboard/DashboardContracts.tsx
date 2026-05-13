@@ -16,7 +16,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { mapContractLockError, mapContractCreateError } from '@/lib/contract-errors';
 import { dispatchAmendmentEvent } from '@/lib/amendment-notify';
 import {
@@ -153,6 +153,7 @@ const DashboardContracts = () => {
   const { isRTL, language } = useLanguage();
   const { user, profile } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const [isPending, startTransition] = useTransition();
 
@@ -228,6 +229,25 @@ const DashboardContracts = () => {
   /* Phase 5C.3 — Execution site selection (held locally for new drafts;
      persisted via set_contract_execution_site for existing drafts). */
   const [selectedSiteId, setSelectedSiteId] = useState<string | null>(null);
+  /* Phase 5B.4 — Lead → Contract prefill banner state. */
+  type LeadPrefill = {
+    lead_id: string;
+    lead_ref_id: string | null;
+    business_id: string | null;
+    suggested_title: string | null;
+    suggested_description: string | null;
+    suggested_work_type: string | null;
+    suggested_template_version_id: string | null;
+    suggested_currency_code: string | null;
+    customer_name: string | null;
+    customer_email: string | null;
+    client_profile_match: { user_id: string; display_name: string | null; verified: boolean } | null;
+    existing_contract_id: string | null;
+  };
+  const [leadPrefill, setLeadPrefill] = useState<LeadPrefill | null>(null);
+  const [leadPrefillDismissed, setLeadPrefillDismissed] = useState(false);
+  const [leadClientConfirmed, setLeadClientConfirmed] = useState(false);
+  const appliedLeadIdsRef = React.useRef<Set<string>>(new Set());
   const goToStep = useCallback((key: StepKey) => {
     setActiveStep(key);
     const el = stepRefs[key]?.current;
