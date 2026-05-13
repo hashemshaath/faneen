@@ -354,24 +354,26 @@ const Membership = () => {
     mutationFn: async () => {
       if (!mySubscription) throw new Error('No active subscription');
       const subId = mySubscription.id as string;
-      const { error } = await supabase.rpc('cancel_subscription' , { _subscription_id: subId });
+      const { error } = await supabase.rpc('cancel_subscription_at_period_end' , { _subscription_id: subId });
       if (error) throw error;
       return { subId };
     },
     onSuccess: async (res) => {
       queryClient.invalidateQueries({ queryKey: ['my-subscription'] });
       queryClient.invalidateQueries({ queryKey: ['my-business-membership'] });
-      toast.success(isRTL ? 'تم إلغاء الاشتراك' : 'Subscription cancelled');
+      toast.success(isRTL
+        ? 'تم إيقاف التجديد التلقائي. تحتفظ بمميزات باقتك حتى انتهاء الفترة الحالية.'
+        : 'Auto-renewal cancelled. You keep your plan benefits until the current period ends.');
       const subId = res?.subId;
       if (!user || !subId) return;
       const businessName = myBusiness?.name_ar || myBusiness?.name_en || undefined;
       try {
         await supabase.from('notifications').insert({
           user_id: user.id,
-          title_ar: 'تم إلغاء الاشتراك',
-          title_en: 'Subscription cancelled',
-          body_ar: 'تم إلغاء الاشتراك والعودة إلى الباقة المجانية. يمكنك طلب الترقية في أي وقت.',
-          body_en: 'Subscription cancelled and your account is on the Free plan. You can request an upgrade anytime.',
+          title_ar: 'تم إيقاف التجديد التلقائي',
+          title_en: 'Auto-renewal cancelled',
+          body_ar: 'تم إيقاف التجديد التلقائي. ستحتفظ بمميزات باقتك حتى انتهاء الفترة الحالية ثم تنتقل تلقائياً للباقة المجانية. يمكنك استئناف التجديد في أي وقت.',
+          body_en: 'Auto-renewal is cancelled. You keep your plan benefits until the current period ends, then automatically move to Free. You can resume renewal anytime.',
           notification_type: 'system',
           reference_type: 'membership_subscription_cancelled',
           reference_id: subId,
@@ -396,6 +398,20 @@ const Membership = () => {
           console.warn('[Membership] cancel email failed', err);
         }
       }
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const resumeRenewalMutation = useMutation({
+    mutationFn: async () => {
+      if (!mySubscription) throw new Error('No subscription');
+      const subId = mySubscription.id as string;
+      const { error } = await supabase.rpc('resume_subscription_renewal', { _subscription_id: subId });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-subscription'] });
+      toast.success(isRTL ? 'تم استئناف التجديد التلقائي' : 'Auto-renewal resumed');
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -750,6 +766,7 @@ const Membership = () => {
             mySubscription={mySubscription}
             daysRemaining={daysRemaining}
             cancelMutation={cancelMutation}
+            resumeMutation={resumeRenewalMutation}
           />
         )}
 
