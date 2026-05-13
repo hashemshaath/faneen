@@ -24,6 +24,7 @@ import { ONBOARDING_SECTORS } from '@/data/onboarding-sectors';
 import { PrivateSectorTemplatesShowcase } from '@/features/private-sectors/PrivateSectorTemplatesShowcase';
 import type { PrivateSectorTemplate } from '@/features/private-sectors/templates';
 import { MyInvitationsStatus } from '@/components/dashboard/MyInvitationsStatus';
+import { useActiveBusiness } from '@/hooks/useActiveBusiness';
 
 const DashboardPrivateSectors: React.FC = () => {
   useNoIndex();
@@ -71,7 +72,8 @@ const DashboardPrivateSectors: React.FC = () => {
       return Array.from(map.values());
     },
   });
-  const [activeBusinessId, setActiveBusinessId] = useState<string | null>(null);
+  const businessIds = useMemo(() => businesses.map((b) => b.id), [businesses]);
+  const { activeBusinessId } = useActiveBusiness(businessIds);
   const business = useMemo(
     () => businesses.find((b) => b.id === activeBusinessId) ?? businesses[0] ?? null,
     [businesses, activeBusinessId],
