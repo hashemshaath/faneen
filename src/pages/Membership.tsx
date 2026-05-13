@@ -6,7 +6,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
-import { Shield, Info, AlertTriangle, Check, Undo2, Building2, Send, Clock, ChevronDown, ChevronUp, MessageSquareWarning } from 'lucide-react';
+import { Shield, Info, AlertTriangle, Check, Undo2, Building2, Send, Clock, ChevronDown, ChevronUp, MessageSquareWarning, X } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { MembershipHeader } from '@/components/membership/MembershipHeader';
@@ -36,6 +36,26 @@ const Membership = () => {
   const [pendingDowngrade, setPendingDowngrade] = useState<{ id: string; tier: string } | null>(null);
   const [pendingUpgrade, setPendingUpgrade] = useState<{ id: string; tier: string } | null>(null);
   const [showReviewNotes, setShowReviewNotes] = useState(false);
+
+  // Per-ref_id dismissal of the auto-created draft banner. Persisted in
+  // localStorage so a brand-new draft (different ref_id) shows the banner
+  // again, while previously-acknowledged drafts stay hidden.
+  const DRAFT_BANNER_KEY = 'qitaat_draft_banner_dismissed_v1';
+  const [dismissedDraftRefs, setDismissedDraftRefs] = React.useState<string[]>(() => {
+    try {
+      const raw = localStorage.getItem(DRAFT_BANNER_KEY);
+      const parsed = raw ? (JSON.parse(raw) as unknown) : [];
+      return Array.isArray(parsed) ? parsed.filter((v): v is string => typeof v === 'string') : [];
+    } catch { return []; }
+  });
+  const dismissDraftBanner = (refId: string) => {
+    setDismissedDraftRefs((prev) => {
+      if (prev.includes(refId)) return prev;
+      const next = [...prev, refId].slice(-50); // cap to last 50 refs
+      try { localStorage.setItem(DRAFT_BANNER_KEY, JSON.stringify(next)); } catch { /* ignore */ }
+      return next;
+    });
+  };
 
   // Privacy-safe: tier of current user (or 'anonymous') — no PII.
   React.useEffect(() => {
@@ -410,6 +430,7 @@ const Membership = () => {
           const needsChanges = status === 'needs_changes' || status === 'rejected';
           const isDraft = !isComplete && !isReview && !needsChanges;
           const isAutoCreatedDraft = isDraft && completion === 0;
+          const draftDismissed = !!biz.ref_id && dismissedDraftRefs.includes(biz.ref_id);
 
           const tone = isComplete
             ? 'border-success/30 bg-success/5 text-success'
@@ -429,7 +450,7 @@ const Membership = () => {
 
           return (
             <>
-              {isAutoCreatedDraft && (
+              {isAutoCreatedDraft && !draftDismissed && (
                 <div className="max-w-3xl mx-auto mb-3 rounded-xl border border-info/30 bg-info/5 px-4 py-3 flex items-start gap-3">
                   <Info className="w-5 h-5 text-info shrink-0 mt-0.5" />
                   <div className="flex-1 min-w-0">
@@ -458,6 +479,16 @@ const Membership = () => {
                       </Link>
                     </div>
                   </div>
+                  {biz.ref_id && (
+                    <button
+                      type="button"
+                      onClick={() => dismissDraftBanner(biz.ref_id!)}
+                      className="shrink-0 -m-1 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
+                      aria-label={isRTL ? 'إخفاء التنبيه' : 'Dismiss notice'}
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               )}
               <div className={`max-w-3xl mx-auto mb-6 rounded-xl border ${tone.split(' ').slice(0, 2).join(' ')} px-4 py-3 flex items-center gap-3`}>
