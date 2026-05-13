@@ -11,15 +11,16 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { ShieldCheck, Search, CheckCircle2, XCircle, Pause, RotateCcw, Pencil, FileClock, Layers, Trash2 } from 'lucide-react';
+import { ShieldCheck, Search, CheckCircle2, XCircle, Pause, RotateCcw, Pencil, FileClock, Layers, Trash2, Users } from 'lucide-react';
 import {
   listAllSectors, reviewSector, listGlobalAudit, listAuditForSector,
-  updateSector, deleteSector,
+  updateSector, deleteSector, setSectorReason,
 } from '@/features/private-sectors/service';
 import {
   PS_STATUS_META, PS_BRAND_TYPE_META, PrivateSector, PrivateSectorStatus,
 } from '@/features/private-sectors/types';
 import { PrivateSectorForm } from '@/features/private-sectors/PrivateSectorForm';
+import { SectorDistributorsPanel } from '@/features/private-sectors/SectorDistributorsPanel';
 import { ONBOARDING_SECTORS } from '@/data/onboarding-sectors';
 
 const STATUS_TABS: Array<{ key: PrivateSectorStatus | 'all'; ar: string; en: string }> = [
@@ -39,6 +40,7 @@ const AdminPrivateSectors: React.FC = () => {
   const [search, setSearch] = useState('');
   const [editing, setEditing] = useState<Partial<PrivateSector> | null>(null);
   const [auditFor, setAuditFor] = useState<string | null>(null);
+  const [distributorsFor, setDistributorsFor] = useState<string | null>(null);
   const [reasonOf, setReasonOf] = useState<string | null>(null);
   const [reason, setReason] = useState('');
 
@@ -84,7 +86,10 @@ const AdminPrivateSectors: React.FC = () => {
   });
 
   const saveMut = useMutation({
-    mutationFn: async (values: Partial<PrivateSector>) => updateSector(editing!.id!, values),
+    mutationFn: async ({ values, reason }: { values: Partial<PrivateSector>; reason?: string }) => {
+      if (reason) await setSectorReason(reason);
+      return updateSector(editing!.id!, values);
+    },
     onSuccess: () => { refresh(); setEditing(null); toast.success(isRTL ? 'تم الحفظ' : 'Saved'); },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Error'),
   });
@@ -125,7 +130,7 @@ const AdminPrivateSectors: React.FC = () => {
             initial={editing}
             busy={saveMut.isPending}
             onCancel={() => setEditing(null)}
-            onSubmit={async (v) => { await saveMut.mutateAsync(v); }}
+            onSubmit={async (v, reason) => { await saveMut.mutateAsync({ values: v, reason }); }}
           />
         )}
 
@@ -211,6 +216,9 @@ const AdminPrivateSectors: React.FC = () => {
                           <Button size="sm" variant="ghost" onClick={() => setAuditFor(auditFor === s.id ? null : s.id)}>
                             <FileClock className="h-4 w-4" /> {isRTL ? 'السجل' : 'Audit'}
                           </Button>
+                          <Button size="sm" variant="ghost" onClick={() => setDistributorsFor(distributorsFor === s.id ? null : s.id)}>
+                            <Users className="h-4 w-4" /> {isRTL ? 'الموزعون' : 'Distributors'}
+                          </Button>
                           <Button size="sm" variant="ghost" className="text-destructive" onClick={() => delMut.mutate(s.id)}>
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -240,9 +248,15 @@ const AdminPrivateSectors: React.FC = () => {
                               <div key={a.id} className="flex items-center gap-2 text-xs">
                                 <Badge variant="outline" className="text-[10px]">{a.action}</Badge>
                                 <span className="text-muted-foreground">{a.entity_type}</span>
+                                {a.notes && <span className="text-muted-foreground italic truncate">"{a.notes}"</span>}
                                 <span className="text-muted-foreground tech-content ms-auto">{new Date(a.created_at).toLocaleString()}</span>
                               </div>
                             ))}
+                          </div>
+                        )}
+                        {distributorsFor === s.id && (
+                          <div className="border-t pt-3">
+                            <SectorDistributorsPanel sectorId={s.id} canManage={true} />
                           </div>
                         )}
                       </CardContent>
