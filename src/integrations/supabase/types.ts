@@ -3425,6 +3425,8 @@ export type Database = {
           description_en: string | null
           document_hash: string | null
           end_date: string | null
+          execution_address_snapshot: Json | null
+          execution_site_id: string | null
           id: string
           is_demo: boolean
           last_pdf_generated_at: string | null
@@ -3435,6 +3437,7 @@ export type Database = {
           provider_accepted_at: string | null
           provider_id: string
           service_category_id: string | null
+          source_lead_id: string | null
           start_date: string | null
           status: Database["public"]["Enums"]["contract_status"]
           supervisor_email: string | null
@@ -3466,6 +3469,8 @@ export type Database = {
           description_en?: string | null
           document_hash?: string | null
           end_date?: string | null
+          execution_address_snapshot?: Json | null
+          execution_site_id?: string | null
           id?: string
           is_demo?: boolean
           last_pdf_generated_at?: string | null
@@ -3476,6 +3481,7 @@ export type Database = {
           provider_accepted_at?: string | null
           provider_id: string
           service_category_id?: string | null
+          source_lead_id?: string | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["contract_status"]
           supervisor_email?: string | null
@@ -3507,6 +3513,8 @@ export type Database = {
           description_en?: string | null
           document_hash?: string | null
           end_date?: string | null
+          execution_address_snapshot?: Json | null
+          execution_site_id?: string | null
           id?: string
           is_demo?: boolean
           last_pdf_generated_at?: string | null
@@ -3517,6 +3525,7 @@ export type Database = {
           provider_accepted_at?: string | null
           provider_id?: string
           service_category_id?: string | null
+          source_lead_id?: string | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["contract_status"]
           supervisor_email?: string | null
@@ -3549,6 +3558,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "contracts_execution_site_id_fkey"
+            columns: ["execution_site_id"]
+            isOneToOne: false
+            referencedRelation: "client_sites"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "contracts_last_pdf_snapshot_id_fkey"
             columns: ["last_pdf_snapshot_id"]
             isOneToOne: false
@@ -3567,6 +3583,13 @@ export type Database = {
             columns: ["service_category_id"]
             isOneToOne: false
             referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_source_lead_id_fkey"
+            columns: ["source_lead_id"]
+            isOneToOne: false
+            referencedRelation: "lead_requests"
             referencedColumns: ["id"]
           },
           {
@@ -7189,6 +7212,8 @@ export type Database = {
           description_en: string | null
           document_hash: string | null
           end_date: string | null
+          execution_address_snapshot: Json | null
+          execution_site_id: string | null
           id: string
           is_demo: boolean
           last_pdf_generated_at: string | null
@@ -7199,6 +7224,7 @@ export type Database = {
           provider_accepted_at: string | null
           provider_id: string
           service_category_id: string | null
+          source_lead_id: string | null
           start_date: string | null
           status: Database["public"]["Enums"]["contract_status"]
           supervisor_email: string | null
@@ -7419,6 +7445,10 @@ export type Database = {
       }
       archive_client_site: { Args: { _site_id: string }; Returns: Json }
       archive_expired_contract_pdf_exports: { Args: never; Returns: number }
+      build_execution_address_snapshot: {
+        Args: { _site_id: string }
+        Returns: Json
+      }
       bump_migration_epoch: { Args: { _reason?: string }; Returns: number }
       calculate_contract_line_item_total: {
         Args: {
@@ -7447,6 +7477,8 @@ export type Database = {
           description_en: string | null
           document_hash: string | null
           end_date: string | null
+          execution_address_snapshot: Json | null
+          execution_site_id: string | null
           id: string
           is_demo: boolean
           last_pdf_generated_at: string | null
@@ -7457,6 +7489,7 @@ export type Database = {
           provider_accepted_at: string | null
           provider_id: string
           service_category_id: string | null
+          source_lead_id: string | null
           start_date: string | null
           status: Database["public"]["Enums"]["contract_status"]
           supervisor_email: string | null
@@ -7573,6 +7606,8 @@ export type Database = {
           description_en: string | null
           document_hash: string | null
           end_date: string | null
+          execution_address_snapshot: Json | null
+          execution_site_id: string | null
           id: string
           is_demo: boolean
           last_pdf_generated_at: string | null
@@ -7583,6 +7618,7 @@ export type Database = {
           provider_accepted_at: string | null
           provider_id: string
           service_category_id: string | null
+          source_lead_id: string | null
           start_date: string | null
           status: Database["public"]["Enums"]["contract_status"]
           supervisor_email: string | null
@@ -8209,6 +8245,8 @@ export type Database = {
           description_en: string | null
           document_hash: string | null
           end_date: string | null
+          execution_address_snapshot: Json | null
+          execution_site_id: string | null
           id: string
           is_demo: boolean
           last_pdf_generated_at: string | null
@@ -8219,6 +8257,7 @@ export type Database = {
           provider_accepted_at: string | null
           provider_id: string
           service_category_id: string | null
+          source_lead_id: string | null
           start_date: string | null
           status: Database["public"]["Enums"]["contract_status"]
           supervisor_email: string | null
@@ -8241,6 +8280,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      set_contract_execution_site: {
+        Args: { _contract_id: string; _site_id: string }
+        Returns: Json
       }
       set_contract_template: {
         Args: {
