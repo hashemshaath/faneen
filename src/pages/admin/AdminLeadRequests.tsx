@@ -413,7 +413,7 @@ const AdminLeadRequests: React.FC = () => {
                           <span className="inline-flex items-center gap-1.5 text-muted-foreground sm:col-span-2">
                             <Calendar className="h-3.5 w-3.5" />
                             <span className="tech-content">
-                              {new Date(r.quoted_at).toLocaleString(isRTL ? 'ar-SA' : 'en-US')}
+                              {new Date(r.quoted_at).toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')}
                             </span>
                           </span>
                         )}

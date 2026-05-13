@@ -206,7 +206,7 @@ const DashboardMyRequests: React.FC = () => {
                         {lead.subject || (biz?.name ?? (isRTL ? 'طلب خدمة' : 'Service request'))}
                       </div>
                       <div className="text-xs text-muted-foreground mt-0.5 truncate">
-                        {biz?.name ?? '—'} · {new Date(lead.created_at).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')}
+                        {biz?.name ?? '—'} · {new Date(lead.created_at).toLocaleDateString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')}
                       </div>
                     </div>
                     {open ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
@@ -362,7 +362,7 @@ const TimelineItem: React.FC<{
       <span className={done ? 'text-foreground' : 'text-muted-foreground'}>{label}</span>
       {at && (
         <span className="text-xs text-muted-foreground tech-content">
-          · {new Date(at).toLocaleString(isRTL ? 'ar-SA' : 'en-US')}
+          · {new Date(at).toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')}
         </span>
       )}
     </li>

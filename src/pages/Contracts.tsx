@@ -30,7 +30,7 @@ const STATUS_FILTERS: readonly (ContractStatus | 'all')[] = ['all', ...CONTRACT_
 const ContractCard: React.FC<{ contract: Contract; role: 'client' | 'provider' }> = React.memo(({ contract, role }) => {
   const { t, language, isRTL } = useLanguage();
   const title = language === 'ar' ? contract.title_ar : (contract.title_en || contract.title_ar);
-  const date = new Date(contract.created_at).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  const date = new Date(contract.created_at).toLocaleDateString(language === 'ar' ? 'ar-SA-u-nu-latn' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   const cfg = getContractStatusMeta(contract.status);
   const StatusIcon = cfg.icon;
   const NextIcon = isRTL ? ChevronLeft : ChevronRight;

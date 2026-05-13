@@ -32,7 +32,7 @@ const PAGE_SIZE = 20;
 const formatDate = (dateStr: string, lang: string): string => {
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return lang === 'ar' ? 'غير محدد' : 'N/A';
-  return d.toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en', {
+  return d.toLocaleDateString(lang === 'ar' ? 'ar-SA-u-nu-latn' : 'en', {
     year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
   });
 };

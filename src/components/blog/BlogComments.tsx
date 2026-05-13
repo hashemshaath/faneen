@@ -127,7 +127,7 @@ export const BlogComments = ({ postId }: BlogCommentsProps) => {
             <div className="flex items-center gap-2 flex-wrap">
               <span className="font-semibold text-sm">{name}</span>
               <span className="text-xs text-muted-foreground">
-                {new Date(comment.created_at).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US', {
+                {new Date(comment.created_at).toLocaleDateString(language === 'ar' ? 'ar-SA-u-nu-latn' : 'en-US', {
                   year: 'numeric', month: 'short', day: 'numeric',
                 })}
               </span>

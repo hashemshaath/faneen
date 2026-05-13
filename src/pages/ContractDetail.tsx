@@ -63,7 +63,7 @@ const SourceLeadSummaryCard: React.FC<{
   const fmtDate = (iso: string | null) => {
     if (!iso) return null;
     try {
-      return new Date(iso).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', {
+      return new Date(iso).toLocaleDateString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US', {
         year: 'numeric', month: 'short', day: 'numeric',
       });
     } catch { return null; }
@@ -885,7 +885,7 @@ const ContractDetail = () => {
   const isProvider = user?.id === contract?.provider_id;
   const isContractLocked = contract ? isContractLockedByStatus(contract.status) : false;
   const canAccept = contract && ((isClient && !contract.client_accepted_at) || (isProvider && !contract.provider_accepted_at));
-  const formatDate = (d: string | null) => d ? new Date(d).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '-';
+  const formatDate = (d: string | null) => d ? new Date(d).toLocaleDateString(language === 'ar' ? 'ar-SA-u-nu-latn' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '-';
 
   const completedMilestones = milestones?.filter(m => m.status === 'completed').length || 0;
   const totalMilestones = milestones?.length || 0;
@@ -1102,7 +1102,7 @@ const ContractDetail = () => {
           dueDate: p.due_date || undefined,
           status: p.status,
           milestoneTitle: linkedMs ? (language === 'ar' ? linkedMs.title_ar : (linkedMs.title_en || linkedMs.title_ar)) : undefined,
-          paidAt: p.paid_at ? new Date(p.paid_at).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US') : undefined,
+          paidAt: p.paid_at ? new Date(p.paid_at).toLocaleDateString(language === 'ar' ? 'ar-SA-u-nu-latn' : 'en-US') : undefined,
         };
       }),
       measurements: (measurements || []).map(m => ({

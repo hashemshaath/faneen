@@ -1403,7 +1403,7 @@ const DashboardContracts = () => {
 
   const formatDate = useCallback((d: string | null) => {
     if (!d) return '-';
-    return new Date(d).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    return new Date(d).toLocaleDateString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   }, [isRTL]);
 
   /* ── Phase 8 — Filtered CSV export (no PII; aggregate fields only). ── */

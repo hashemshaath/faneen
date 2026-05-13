@@ -43,7 +43,7 @@ export const ArticlePreview: React.FC<Props> = ({
       {/* Meta */}
       <div className="flex flex-wrap items-center gap-3 mb-4 text-xs text-muted-foreground">
         <Badge variant="secondary" className="text-micro">{category}</Badge>
-        <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{new Date().toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US')}</span>
+        <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{new Date().toLocaleDateString(lang === 'ar' ? 'ar-SA-u-nu-latn' : 'en-US')}</span>
         <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{readingTime} {isRTL ? 'دقائق قراءة' : 'min read'}</span>
         {focusKeyword && (
           <span className="flex items-center gap-1"><Tag className="w-3 h-3" />{focusKeyword}</span>

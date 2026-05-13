@@ -70,7 +70,7 @@ export const ContractPdfAnalysisLog: React.FC<{ contractId: string; isRTL: boole
                 {row.status}
               </span>
               <span className="text-xs text-muted-foreground tech-content">
-                {new Date(row.created_at).toLocaleString(isRTL ? 'ar-SA' : 'en-US')}
+                {new Date(row.created_at).toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')}
               </span>
               <span className="text-[10px] text-muted-foreground hidden sm:inline tech-content">
                 {isRTL ? 'مشوش' : 'mojibake'}: {row.mojibake_count}

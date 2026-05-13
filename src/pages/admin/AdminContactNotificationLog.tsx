@@ -240,7 +240,7 @@ export default function AdminContactNotificationLog() {
                           )}
                         </div>
                         <div className="text-xs text-muted-foreground tech-content whitespace-nowrap">
-                          {new Date(r.created_at).toLocaleString(isRTL ? 'ar-SA' : 'en-US')}
+                          {new Date(r.created_at).toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')}
                         </div>
                         <Button variant="ghost" size="sm" onClick={() => toggle(r.id)}>
                           {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -251,7 +251,7 @@ export default function AdminContactNotificationLog() {
                           {r.next_retry_at && (
                             <div className="bg-warning text-warning p-2 rounded-lg">
                               <b>{isRTL ? 'إعادة المحاولة في' : 'Next retry'}:</b>{' '}
-                              <span className="tech-content">{new Date(r.next_retry_at).toLocaleString(isRTL ? 'ar-SA' : 'en-US')}</span>
+                              <span className="tech-content">{new Date(r.next_retry_at).toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')}</span>
                             </div>
                           )}
                           {r.response_body && (

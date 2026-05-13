@@ -192,7 +192,7 @@ export const SitemapSubmissionsCard = () => {
                     </div>
                     <div className="text-end shrink-0">
                       <p className="text-[11px] text-muted-foreground tabular-nums">
-                        {new Date(sub.created_at).toLocaleString(isRTL ? 'ar-SA' : 'en-US', {
+                        {new Date(sub.created_at).toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US', {
                           month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
                         })}
                       </p>

@@ -121,7 +121,7 @@ export const exportContactsPDF = async (
   doc.setFontSize(9);
   doc.setTextColor(...MUTED_RGB);
   doc.text(
-    `qitaat.com — ${new Date().toLocaleString(isRTL ? 'ar-SA' : 'en-US')} — ${
+    `qitaat.com — ${new Date().toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')} — ${
       isRTL ? `${rows.length} من ${meta.totalCount}` : `${rows.length} of ${meta.totalCount}`
     }`,
     pageWidth / 2, 20, { align: 'center' },

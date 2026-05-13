@@ -338,7 +338,7 @@ export default function AdminDashboardView({ isRTL }: { isRTL: boolean }) {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-[10px] font-medium truncate">{item.action} — {item.entity_type}</p>
-                    <p className="text-[9px] text-muted-foreground">{new Date(item.created_at).toLocaleDateString(isRTL ? 'ar-SA' : 'en', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                    <p className="text-[9px] text-muted-foreground">{new Date(item.created_at).toLocaleDateString(isRTL ? 'ar-SA-u-nu-latn' : 'en', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
                   </div>
                 </div>
               ))}

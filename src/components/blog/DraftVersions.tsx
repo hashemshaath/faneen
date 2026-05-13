@@ -27,11 +27,11 @@ export const DraftVersions: React.FC<Props> = ({
 }) => {
   const formatTime = (dateStr: string) => {
     const d = new Date(dateStr);
-    return d.toLocaleTimeString(isRTL ? 'ar-SA' : 'en-US', { hour: '2-digit', minute: '2-digit' });
+    return d.toLocaleTimeString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US', { hour: '2-digit', minute: '2-digit' });
   };
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr);
-    return d.toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', { month: 'short', day: 'numeric' });
+    return d.toLocaleDateString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US', { month: 'short', day: 'numeric' });
   };
 
   return (
@@ -42,7 +42,7 @@ export const DraftVersions: React.FC<Props> = ({
           {isSaving ? (
             <><Save className="w-3 h-3 animate-pulse" /> {isRTL ? 'جاري الحفظ...' : 'Saving...'}</>
           ) : lastSaved ? (
-            <><Clock className="w-3 h-3" /> {isRTL ? 'آخر حفظ:' : 'Last saved:'} {lastSaved.toLocaleTimeString(isRTL ? 'ar-SA' : 'en-US', { hour: '2-digit', minute: '2-digit' })}</>
+            <><Clock className="w-3 h-3" /> {isRTL ? 'آخر حفظ:' : 'Last saved:'} {lastSaved.toLocaleTimeString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US', { hour: '2-digit', minute: '2-digit' })}</>
           ) : (
             <>{isRTL ? 'لم يتم الحفظ بعد' : 'Not saved yet'}</>
           )}

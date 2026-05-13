@@ -301,7 +301,7 @@ const AdminSectorSeo: React.FC = () => {
                           <div className="flex items-center justify-between gap-2">
                             <div className="flex items-center gap-2 flex-wrap">
                               <Badge variant="outline" className="font-mono text-xs">
-                                {new Date(snap.created_at).toLocaleString(isRTL ? 'ar-SA' : 'en-US')}
+                                {new Date(snap.created_at).toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')}
                               </Badge>
                               {snap.note && <Badge variant="secondary" className="text-xs">{snap.note}</Badge>}
                             </div>

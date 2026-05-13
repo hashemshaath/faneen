@@ -69,7 +69,7 @@ function formatRelative(iso: string, isRTL: boolean): string {
   if (hrs < 24) return isRTL ? `منذ ${hrs} س` : `${hrs}h ago`;
   const days = Math.round(hrs / 24);
   if (days < 7) return isRTL ? `منذ ${days} ي` : `${days}d ago`;
-  return new Date(iso).toLocaleDateString(isRTL ? 'ar-SA' : 'en', { month: 'short', day: 'numeric' });
+  return new Date(iso).toLocaleDateString(isRTL ? 'ar-SA-u-nu-latn' : 'en', { month: 'short', day: 'numeric' });
 }
 
 /**

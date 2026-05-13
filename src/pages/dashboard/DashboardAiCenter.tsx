@@ -1198,7 +1198,7 @@ const DashboardAiCenter: React.FC = () => {
                       <p className="whitespace-pre-wrap leading-relaxed" dir="auto">{msg.content}</p>
                       <div className={`flex items-center gap-2 mt-1.5 ${msg.role === 'user' ? 'justify-end' : 'justify-between'}`}>
                         <span className={`text-[9px] ${msg.role === 'user' ? 'text-primary-foreground/50' : 'text-muted-foreground/50'}`}>
-                          {msg.timestamp.toLocaleTimeString(isRTL ? 'ar-SA' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
+                          {msg.timestamp.toLocaleTimeString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
                         </span>
                         {msg.role === 'assistant' && (
                           <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -1453,7 +1453,7 @@ const DashboardAiCenter: React.FC = () => {
                                 <Copy className="w-2.5 h-2.5" />
                               </Button>
                               <span className="text-[9px] text-muted-foreground/60">
-                                {h.timestamp.toLocaleTimeString(isRTL ? 'ar-SA' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
+                                {h.timestamp.toLocaleTimeString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
                               </span>
                             </div>
                           </div>

@@ -289,7 +289,7 @@ export const LeadDetailPanel: React.FC<Props> = ({ lead, pending, onAction, onOp
             {lead.quoted_at && (
               <div className="flex items-center gap-2 text-muted-foreground sm:col-span-2 text-xs">
                 <Calendar className="h-3.5 w-3.5" />
-                <span className="tech-content">{new Date(lead.quoted_at).toLocaleString(isRTL ? 'ar-SA' : 'en-US')}</span>
+                <span className="tech-content">{new Date(lead.quoted_at).toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')}</span>
               </div>
             )}
             {lead.quote_note && (
@@ -309,7 +309,7 @@ export const LeadDetailPanel: React.FC<Props> = ({ lead, pending, onAction, onOp
         </div>
         <div className="flex items-center gap-2 text-muted-foreground">
           <Calendar className="h-4 w-4" />
-          <span>{new Date(lead.created_at).toLocaleString(isRTL ? 'ar-SA' : 'en-US')}</span>
+          <span>{new Date(lead.created_at).toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')}</span>
         </div>
         {lead.email && (
           <div className="flex items-center gap-2"><Mail className="h-4 w-4 text-muted-foreground" />

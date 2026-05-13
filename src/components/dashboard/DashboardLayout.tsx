@@ -68,7 +68,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
   const pageTitle = currentPage ? (isRTL ? currentPage.ar : currentPage.en) : '';
 
   const todayStr = useMemo(() => {
-    return new Date().toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US', {
+    return new Date().toLocaleDateString(language === 'ar' ? 'ar-SA-u-nu-latn' : 'en-US', {
       weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
     });
   }, [language]);

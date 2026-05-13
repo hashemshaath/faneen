@@ -38,7 +38,7 @@ const statusStyles: Record<ApprovalStep['status'], { ring: string; text: string;
 function formatTs(ts?: string | null, isRTL?: boolean): string | null {
   if (!ts) return null;
   try {
-    return new Date(ts).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', {
+    return new Date(ts).toLocaleDateString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US', {
       year: 'numeric', month: 'short', day: 'numeric',
     });
   } catch {

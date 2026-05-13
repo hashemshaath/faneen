@@ -73,7 +73,7 @@ const ReviewCard = React.memo(({
   review: ReviewWithRelations; isRTL: boolean; language: string; viewMode: ViewMode;
   onToggleExpand: (id: string) => void; isExpanded: boolean;
 }) => {
-  const dateStr = new Date(review.created_at).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', {
+  const dateStr = new Date(review.created_at).toLocaleDateString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US', {
     year: 'numeric', month: 'short', day: 'numeric',
   });
   const timeAgo = getTimeAgo(review.created_at, isRTL);

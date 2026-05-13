@@ -626,7 +626,7 @@ const BlogPost = () => {
 
             {/* Meta info bar */}
             <div className="flex items-center gap-3 sm:gap-4 text-xs sm:text-sm text-muted-foreground mb-5 sm:mb-6 flex-wrap">
-              <span className="flex items-center gap-1.5"><Calendar className="ic-xs sm:w-4 sm:h-4 text-accent" />{new Date(post.published_at || post.created_at).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
+              <span className="flex items-center gap-1.5"><Calendar className="ic-xs sm:w-4 sm:h-4 text-accent" />{new Date(post.published_at || post.created_at).toLocaleDateString(language === 'ar' ? 'ar-SA-u-nu-latn' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
               <span className="flex items-center gap-1.5"><Eye className="ic-xs sm:w-4 sm:h-4 text-accent" />{post.views_count}</span>
               <span className="flex items-center gap-1.5"><Clock className="ic-xs sm:w-4 sm:h-4 text-accent" />{readTime} {isRTL ? 'د' : 'min'}</span>
             </div>
@@ -862,7 +862,7 @@ const BlogPost = () => {
                             </h4>
                             <span className="text-[10px] sm:text-[11px] text-muted-foreground flex items-center gap-1 mt-auto">
                               <Calendar className="ic-2xs" />
-                              {new Date(rp.published_at || rp.created_at).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US')}
+                              {new Date(rp.published_at || rp.created_at).toLocaleDateString(language === 'ar' ? 'ar-SA-u-nu-latn' : 'en-US')}
                             </span>
                           </div>
                         </CardContent>
@@ -923,7 +923,7 @@ const BlogPost = () => {
                           </div>
                           <div className="flex-1 min-w-0">
                             <h4 className="text-xs font-medium line-clamp-2 group-hover:text-accent transition-colors">{language === 'ar' ? lp.title_ar : (lp.title_en || lp.title_ar)}</h4>
-                            <span className="text-[10px] text-muted-foreground">{new Date(lp.published_at || lp.created_at).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US')}</span>
+                            <span className="text-[10px] text-muted-foreground">{new Date(lp.published_at || lp.created_at).toLocaleDateString(language === 'ar' ? 'ar-SA-u-nu-latn' : 'en-US')}</span>
                           </div>
                         </Link>
                       ))}

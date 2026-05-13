@@ -118,7 +118,7 @@ const SortableCard = React.memo(({
             <div className="flex items-center gap-2 mt-0.5 flex-wrap">
               {cat && cat.value !== 'general' && <span className="text-[10px] text-muted-foreground">{cat.icon} {rtl ? cat.ar : cat.en}</span>}
               {item.project_location && <span className="text-[10px] text-muted-foreground flex items-center gap-0.5"><MapPin className="w-2.5 h-2.5" />{item.project_location}</span>}
-              {item.completion_date && <span className="text-[10px] text-muted-foreground flex items-center gap-0.5"><Calendar className="w-2.5 h-2.5" />{new Date(item.completion_date).toLocaleDateString(rtl ? 'ar-SA' : 'en-US', { year: 'numeric', month: 'short' })}</span>}
+              {item.completion_date && <span className="text-[10px] text-muted-foreground flex items-center gap-0.5"><Calendar className="w-2.5 h-2.5" />{new Date(item.completion_date).toLocaleDateString(rtl ? 'ar-SA-u-nu-latn' : 'en-US', { year: 'numeric', month: 'short' })}</span>}
             </div>
           </div>
           <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -185,7 +185,7 @@ const SortableCard = React.memo(({
           {desc && <p className="text-[10px] text-muted-foreground truncate mt-0.5">{desc}</p>}
           <div className="flex items-center gap-2 mt-1 flex-wrap">
             {item.project_location && <span className="text-[9px] text-muted-foreground flex items-center gap-0.5"><MapPin className="w-2.5 h-2.5" />{item.project_location}</span>}
-            {item.completion_date && <span className="text-[9px] text-muted-foreground flex items-center gap-0.5"><Calendar className="w-2.5 h-2.5" />{new Date(item.completion_date).toLocaleDateString(rtl ? 'ar-SA' : 'en-US', { year: 'numeric', month: 'short' })}</span>}
+            {item.completion_date && <span className="text-[9px] text-muted-foreground flex items-center gap-0.5"><Calendar className="w-2.5 h-2.5" />{new Date(item.completion_date).toLocaleDateString(rtl ? 'ar-SA-u-nu-latn' : 'en-US', { year: 'numeric', month: 'short' })}</span>}
           </div>
         </div>
       </div>

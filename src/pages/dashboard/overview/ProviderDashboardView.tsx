@@ -301,7 +301,7 @@ export default function ProviderDashboardView({
                       {Array.from({ length: 5 }).map((_, i) => (
                         <Star key={i} className={cn('w-2.5 h-2.5', i < review.rating ? 'text-accent fill-accent' : 'text-muted-foreground/20')} aria-hidden="true" />
                       ))}
-                      <span className="text-[9px] text-muted-foreground ms-auto">{new Date(review.created_at).toLocaleDateString(isRTL ? 'ar-SA' : 'en', { month: 'short', day: 'numeric' })}</span>
+                      <span className="text-[9px] text-muted-foreground ms-auto">{new Date(review.created_at).toLocaleDateString(isRTL ? 'ar-SA-u-nu-latn' : 'en', { month: 'short', day: 'numeric' })}</span>
                     </div>
                     {review.content && <p className="text-[10px] text-muted-foreground line-clamp-2">{review.content}</p>}
                   </div>

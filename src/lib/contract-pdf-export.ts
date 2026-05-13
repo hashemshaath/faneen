@@ -366,7 +366,7 @@ export const buildContractPDF = async (data: ContractExportData) => {
         if (!Number.isNaN(captured.getTime())) {
           push(
             data.isRTL ? 'تاريخ التثبيت' : 'Captured at',
-            captured.toLocaleDateString(data.isRTL ? 'ar-SA' : 'en-US'),
+            captured.toLocaleDateString(data.isRTL ? 'ar-SA-u-nu-latn' : 'en-US'),
           );
         }
       }
@@ -423,7 +423,7 @@ export const buildContractPDF = async (data: ContractExportData) => {
   const subtotal = _financial.subtotal;
   const grandTotal = _financial.total;
 
-  const fmtNum = (n: number) => n.toLocaleString(data.isRTL ? 'ar-SA' : 'en-US', { minimumFractionDigits: 2 });
+  const fmtNum = (n: number) => n.toLocaleString(data.isRTL ? 'ar-SA-u-nu-latn' : 'en-US', { minimumFractionDigits: 2 });
 
   const finData: string[][] = [
     [data.isRTL ? 'المبلغ قبل الضريبة' : 'Subtotal (excl. VAT)', `${fmtNum(subtotal)} ${data.currency}`],
@@ -456,7 +456,7 @@ export const buildContractPDF = async (data: ContractExportData) => {
       head: [['#', data.isRTL ? 'المرحلة' : 'Milestone', data.isRTL ? 'المبلغ' : 'Amount', data.isRTL ? 'التاريخ' : 'Due Date', data.isRTL ? 'الحالة' : 'Status']],
       body: data.milestones.map((m, i) => [
         String(i + 1), m.title,
-        `${m.amount.toLocaleString(data.isRTL ? 'ar-SA' : 'en-US')} ${data.currency}`,
+        `${m.amount.toLocaleString(data.isRTL ? 'ar-SA-u-nu-latn' : 'en-US')} ${data.currency}`,
         m.dueDate || '-', m.status,
       ]),
       theme: 'grid',
@@ -582,13 +582,13 @@ export const buildContractPDF = async (data: ContractExportData) => {
       body: data.measurements.map(m => [
         m.pieceNumber, m.name, m.location || '-', m.floor || '-',
         `${m.lengthMm}×${m.widthMm}`, m.areaSqm.toFixed(3),
-        m.unitPrice.toLocaleString(data.isRTL ? 'ar-SA' : 'en-US'),
-        String(m.quantity), m.totalCost.toLocaleString(data.isRTL ? 'ar-SA' : 'en-US'),
+        m.unitPrice.toLocaleString(data.isRTL ? 'ar-SA-u-nu-latn' : 'en-US'),
+        String(m.quantity), m.totalCost.toLocaleString(data.isRTL ? 'ar-SA-u-nu-latn' : 'en-US'),
       ]),
       foot: [
-        ['', data.isRTL ? 'المجموع' : 'Subtotal', '', '', '', totalArea.toFixed(3), '', String(data.measurements.length), totalCost.toLocaleString(data.isRTL ? 'ar-SA' : 'en-US')],
-        ['', data.isRTL ? `ضريبة ${vatRate}%` : `VAT ${vatRate}%`, '', '', '', '', '', '', mVat.toLocaleString(data.isRTL ? 'ar-SA' : 'en-US', { maximumFractionDigits: 2 })],
-        ['', data.isRTL ? 'الإجمالي شامل الضريبة' : 'Grand Total', '', '', '', '', '', '', mGrand.toLocaleString(data.isRTL ? 'ar-SA' : 'en-US', { maximumFractionDigits: 2 })],
+        ['', data.isRTL ? 'المجموع' : 'Subtotal', '', '', '', totalArea.toFixed(3), '', String(data.measurements.length), totalCost.toLocaleString(data.isRTL ? 'ar-SA-u-nu-latn' : 'en-US')],
+        ['', data.isRTL ? `ضريبة ${vatRate}%` : `VAT ${vatRate}%`, '', '', '', '', '', '', mVat.toLocaleString(data.isRTL ? 'ar-SA-u-nu-latn' : 'en-US', { maximumFractionDigits: 2 })],
+        ['', data.isRTL ? 'الإجمالي شامل الضريبة' : 'Grand Total', '', '', '', '', '', '', mGrand.toLocaleString(data.isRTL ? 'ar-SA-u-nu-latn' : 'en-US', { maximumFractionDigits: 2 })],
       ],
       theme: 'grid',
       styles: { fontSize: 7, cellPadding: 2.5, ...rtlStyles },
@@ -837,7 +837,7 @@ export const buildContractPDF = async (data: ContractExportData) => {
           (a.linkedTo || (data.isRTL ? 'عام' : 'General')).slice(0, 60),
           (a.description || '-').slice(0, 80),
           a.uploadedAt
-            ? new Date(a.uploadedAt).toLocaleDateString(data.isRTL ? 'ar-SA' : 'en-US')
+            ? new Date(a.uploadedAt).toLocaleDateString(data.isRTL ? 'ar-SA-u-nu-latn' : 'en-US')
             : '-',
         ]),
         theme: 'grid',
@@ -871,7 +871,7 @@ export const buildContractPDF = async (data: ContractExportData) => {
       other:              { ar: 'أخرى',             en: 'Other' },
     };
     const fmtDate = (d?: string | null): string =>
-      d ? new Date(d).toLocaleDateString(data.isRTL ? 'ar-SA' : 'en-US') : '-';
+      d ? new Date(d).toLocaleDateString(data.isRTL ? 'ar-SA-u-nu-latn' : 'en-US') : '-';
     const fmtMoney = (n?: number | null): string =>
       n == null || !Number.isFinite(n) ? '-' : `${fmtNum(Number(n))} ${data.currency}`;
     const fmtDelta = (n?: number | null): string => {
@@ -1030,7 +1030,7 @@ export const buildContractPDF = async (data: ContractExportData) => {
     doc.setTextColor(mutedR, mutedG, mutedB);
     doc.text(`${data.isRTL ? 'صفحة' : 'Page'} ${i}/${pageCount}`, w / 2, h - 5, { align: 'center' });
     doc.text(data.contractNumber, 15, h - 5);
-    doc.text(new Date().toLocaleDateString(data.isRTL ? 'ar-SA' : 'en-US'), w - 15, h - 5, { align: 'right' });
+    doc.text(new Date().toLocaleDateString(data.isRTL ? 'ar-SA-u-nu-latn' : 'en-US'), w - 15, h - 5, { align: 'right' });
   }
 
   if (fontLoaded) normalizeArabicPdfTextLayer(doc);
@@ -1189,7 +1189,7 @@ export const exportMeasurementsPDF = async (opts: {
   const _mvb = calculateVatBreakdown({ amount: totalCost, vatRate: opts.vatRate, vatInclusive: opts.vatInclusive });
   const vat = _mvb.vatAmount;
   const grand = _mvb.total;
-  const locale = opts.isRTL ? 'ar-SA' : 'en-US';
+  const locale = opts.isRTL ? 'ar-SA-u-nu-latn' : 'en-US';
 
   autoTable(doc, {
     startY: 25,
@@ -1233,7 +1233,7 @@ export const printMeasurements = (opts: {
   measurements: { pieceNumber: string; name: string; location: string; floor: string; lengthMm: number; widthMm: number; areaSqm: number; unitPrice: number; quantity: number; totalCost: number; status: string }[];
   isRTL: boolean;
 }) => {
-  const locale = opts.isRTL ? 'ar-SA' : 'en-US';
+  const locale = opts.isRTL ? 'ar-SA-u-nu-latn' : 'en-US';
   const totalArea = opts.measurements.reduce((s, m) => s + m.areaSqm, 0);
   const totalCost = opts.measurements.reduce((s, m) => s + m.totalCost, 0);
   const _mvc = calculateVatBreakdown({ amount: totalCost, vatRate: opts.vatRate, vatInclusive: opts.vatInclusive });
