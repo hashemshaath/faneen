@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNoIndex } from '@/hooks/useNoIndex';
+import { useActiveBusiness } from '@/hooks/useActiveBusiness';
 import {
   Area, AreaChart, ResponsiveContainer, Tooltip as RTooltip, XAxis, YAxis, CartesianGrid,
 } from 'recharts';
@@ -92,18 +93,49 @@ const DashboardBadge: React.FC = () => {
   const [copied, setCopied] = useState<string | null>(null);
   const [qrSvg, setQrSvg] = useState<string>('');
 
-  const { data: business, isLoading } = useQuery({
-    queryKey: ['badge-generator-business', user?.id],
+  // Resolve every business this user can act on:
+  //   1. businesses they OWN (businesses.user_id = me)
+  //   2. businesses where they are active staff (business_staff.user_id = me)
+  // Then pick the one chosen via the active-business switcher; otherwise the first.
+  const { data: businesses = [], isLoading } = useQuery({
+    queryKey: ['badge-generator-businesses', user?.id],
     enabled: !!user?.id,
     queryFn: async () => {
-      const { data } = await supabase
+      // Owned
+      const ownedReq = supabase
         .from('businesses')
         .select('id, username, name_ar, name_en, is_verified')
+        .eq('user_id', user!.id);
+      // Staff-linked → fetch business ids first, then their rows
+      const staffReq = supabase
+        .from('business_staff')
+        .select('business_id')
         .eq('user_id', user!.id)
-        .maybeSingle();
-      return data as BusinessRow | null;
+        .eq('is_active', true);
+
+      const [{ data: owned }, { data: staffRows }] = await Promise.all([ownedReq, staffReq]);
+      const staffIds = (staffRows ?? []).map((r) => r.business_id);
+      let staffBusinesses: BusinessRow[] = [];
+      if (staffIds.length > 0) {
+        const { data } = await supabase
+          .from('businesses')
+          .select('id, username, name_ar, name_en, is_verified')
+          .in('id', staffIds);
+        staffBusinesses = (data ?? []) as BusinessRow[];
+      }
+      const merged = [...((owned ?? []) as BusinessRow[]), ...staffBusinesses];
+      // Dedupe by id
+      const seen = new Set<string>();
+      return merged.filter((b) => (seen.has(b.id) ? false : (seen.add(b.id), true)));
     },
   });
+
+  const availableIds = useMemo(() => businesses.map((b) => b.id), [businesses]);
+  const { activeBusinessId } = useActiveBusiness(availableIds);
+  const business = useMemo<BusinessRow | null>(() => {
+    if (businesses.length === 0) return null;
+    return businesses.find((b) => b.id === activeBusinessId) ?? businesses[0];
+  }, [businesses, activeBusinessId]);
 
   const { data: clicks = [], isLoading: clicksLoading, isError: clicksError, dataUpdatedAt: clicksUpdatedAt, refetch: refetchClicks } = useQuery({
     queryKey: ['badge-clicks', business?.id],
