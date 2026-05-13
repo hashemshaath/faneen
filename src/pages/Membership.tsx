@@ -53,8 +53,25 @@ const Membership = () => {
     queryKey: ['my-business-membership', user?.id],
     queryFn: async () => {
       if (!user) return null;
-      const { data } = await supabase.from('businesses').select('id, membership_tier, name_ar, name_en').eq('user_id', user.id).maybeSingle();
-      return data;
+      // 1. Owner: pick the most recently created business they own
+      const owned = await supabase
+        .from('businesses')
+        .select('id, membership_tier, name_ar, name_en')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1);
+      if (owned.data && owned.data.length > 0) return owned.data[0];
+
+      // 2. Staff fallback: business they manage (owner/manager role)
+      const staff = await supabase
+        .from('business_staff')
+        .select('business_id, role, businesses:business_id(id, membership_tier, name_ar, name_en)')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .in('role', ['owner', 'manager'])
+        .limit(1);
+      const row = staff.data?.[0] as { businesses?: { id: string; membership_tier: string; name_ar: string | null; name_en: string | null } } | undefined;
+      return row?.businesses ?? null;
     },
     enabled: !!user,
   });
