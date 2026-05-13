@@ -1108,7 +1108,7 @@ const DashboardContracts = () => {
       queryClient.invalidateQueries({ queryKey: ['lead_requests'] });
       setViewSection('list'); setForm(emptyForm); setEditingId(null);
       setSelectedVersionId(null); setSelectedPricingMethod(null); setSelectedTemplate(null);
-      setSelectedClient(null); setSelectedWorkType('general'); setWorkTypeTouched(false);
+      setSelectedClient(null); setGuestClient(null); setSelectedWorkType('general'); setWorkTypeTouched(false);
       setSelectedSiteId(null);
       setLeadPrefill(null);
       setLeadPrefillDismissed(false);
@@ -1646,7 +1646,7 @@ const DashboardContracts = () => {
 
   const closeForm = useCallback(() => {
     setViewSection('list'); setForm(emptyForm); setEditingId(null); setSelectedTemplate(null); setTemplatePreview(null);
-    setSelectedClient(null); setSelectedWorkType('general'); setWorkTypeTouched(false);
+    setSelectedClient(null); setGuestClient(null); setSelectedWorkType('general'); setWorkTypeTouched(false);
     setSelectedVersionId(null); setSelectedPricingMethod(null);
     setInviteMode('idle'); setInviteForm({ email: '', name: '', phone: '' }); setPendingInvite(null);
     setSelectedSiteId(null);
@@ -1780,7 +1780,7 @@ const DashboardContracts = () => {
               )}
               {!editingId && (() => {
                 const steps = [
-                  { key: 'client',   ar: 'العميل',       en: 'Client',   done: !!(selectedClient || form.client_email || pendingInvite) },
+                  { key: 'client',   ar: 'العميل',       en: 'Client',   done: !!(selectedClient || guestClient || form.client_email || pendingInvite) },
                   { key: 'site',     ar: 'موقع التنفيذ', en: 'Site',     done: !!selectedSiteId },
                   { key: 'work',     ar: 'نوع العمل',    en: 'Work type', done: !!selectedWorkType && workTypeTouched },
                   { key: 'template', ar: 'القالب',       en: 'Template',  done: !!effectiveVersion },
@@ -2059,7 +2059,7 @@ const DashboardContracts = () => {
               {(() => {
                 const completeness = !editingId
                   ? calculateContractCompleteness({
-                      hasClient: !!(selectedClient || form.client_email),
+                      hasClient: !!(selectedClient || guestClient || form.client_email),
                       hasExecutionSite: !!selectedSiteId,
                       hasWorkType: !!selectedWorkType && workTypeTouched,
                       hasTemplate: !!effectiveVersion,
@@ -2108,7 +2108,7 @@ const DashboardContracts = () => {
                 const guide = getStatusGuidance('draft');
                 const w = getWorkType(selectedWorkType);
                 const missing: string[] = [];
-                if (!selectedClient && !form.client_email) missing.push(isRTL ? 'العميل' : 'Client');
+                if (!selectedClient && !guestClient && !form.client_email) missing.push(isRTL ? 'العميل' : 'Client');
                 if (!form.title_ar) missing.push(isRTL ? 'عنوان العقد' : 'Title');
                 if (!form.total_amount || Number(form.total_amount) <= 0) missing.push(isRTL ? 'المبلغ' : 'Amount');
                 if (!effectiveVersion) missing.push(isRTL ? 'قالب عقد منشور' : 'Published template');
@@ -2119,7 +2119,7 @@ const DashboardContracts = () => {
                   <ContractReviewSummary
                     isRTL={isRTL}
                     guide={guide}
-                    clientLabel={selectedClient?.full_name || form.client_email || '—'}
+                    clientLabel={selectedClient?.full_name || guestClient?.name || guestClient?.email || form.client_email || '—'}
                     workTypeLabel={w ? (isRTL ? w.ar : w.en) : '—'}
                     templateLabel={templateLabel}
                     pricingMethodLabel={selectedPricingMethod || (isRTL ? 'افتراضي' : 'Default')}
@@ -2148,11 +2148,11 @@ const DashboardContracts = () => {
                 activeStep={activeStep}
                 stepOrder={stepOrder}
                 isSaving={createContractMutation.isPending}
-                saveDisabled={!form.title_ar || !form.total_amount || (!editingId && !selectedClient && !form.client_email) || createContractMutation.isPending}
+                saveDisabled={!form.title_ar || !form.total_amount || (!editingId && !selectedClient && !guestClient && !form.client_email) || createContractMutation.isPending}
                 onStepNav={goToStep}
                 onSave={() => createContractMutation.mutate()}
                 completenessScore={!editingId ? calculateContractCompleteness({
-                  hasClient: !!(selectedClient || form.client_email),
+                  hasClient: !!(selectedClient || guestClient || form.client_email),
                   hasExecutionSite: !!selectedSiteId,
                   hasWorkType: !!selectedWorkType && workTypeTouched,
                   hasTemplate: !!effectiveVersion,
@@ -2174,7 +2174,7 @@ const DashboardContracts = () => {
                 vatRate={form.vat_rate}
                 vatInclusive={form.vat_inclusive}
                 isSaving={createContractMutation.isPending}
-                saveDisabled={!form.title_ar || !form.total_amount || (!editingId && !selectedClient && !form.client_email) || createContractMutation.isPending}
+                saveDisabled={!form.title_ar || !form.total_amount || (!editingId && !selectedClient && !guestClient && !form.client_email) || createContractMutation.isPending}
                 onSave={() => createContractMutation.mutate()}
               />
             </CardContent>
