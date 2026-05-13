@@ -70,6 +70,15 @@ const FORBIDDEN_TOKENS = [
   'ip_hash',
   'user_agent_hash',
   'document_hash_prefix',
+  // Phase 5C.4 — execution site internal/audit fields must never appear.
+  'created_by',
+  'archived_at',
+  'is_demo',
+  'is_default',
+  'client_user_id',
+  'updated_at',
+  'site_id',
+  'city_id',
 ] as const;
 
 // Raw UUID pattern. We allow none in the rendered output.
@@ -181,6 +190,17 @@ describe('PDF-QA1 — QR / public verification URL', () => {
     expect(urlLine).not.toContain(String(contractWithQrFixture.totalAmount));
     // No signed URL markers
     expect(urlLine).not.toMatch(/signature=|X-Amz-Signature|token=/i);
+  });
+});
+
+describe('Phase 5C.4 — Execution Site PDF block', () => {
+  it('renders safe execution site label/address from snapshot fixture', async () => {
+    const text = await buildText(longArabicContractFixture);
+    const snap = longArabicContractFixture.executionAddressSnapshot!;
+    // Latin-safe assertions (Arabic glyphs are not always recoverable from
+    // jsPDF text streams under jsdom). Phone + map URL are LTR/tech content.
+    expect(text).toContain(snap.contact_phone!);
+    expect(text).toContain(snap.map_url!);
   });
 });
 

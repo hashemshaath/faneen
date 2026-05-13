@@ -227,6 +227,26 @@ export interface ContractExportData {
   documentHash?: string | null;
   /** Origin used for the verification URL (defaults to https://qitaat.com). */
   verifyOrigin?: string;
+  /**
+   * Phase 5C.4 — Execution site (frozen address snapshot). Caller MUST pass
+   * only the safe whitelisted fields below. Never include site_id, city_id,
+   * created_by, archived_at, is_default, is_demo, client_user_id,
+   * created_at, updated_at, storage paths, or signed URLs.
+   */
+  executionAddressSnapshot?: {
+    label?: string | null;
+    contact_name?: string | null;
+    contact_phone?: string | null;
+    city_name?: string | null;
+    district?: string | null;
+    address_line1?: string | null;
+    address_line2?: string | null;
+    map_url?: string | null;
+    latitude?: number | null;
+    longitude?: number | null;
+    access_notes?: string | null;
+    captured_at?: string | null;
+  } | null;
 }
 
 /**
@@ -315,6 +335,53 @@ export const buildContractPDF = async (data: ContractExportData) => {
     alternateRowStyles: { fillColor: SURFACE2_RGB },
   });
   y = lastTableY(doc, y) + 12;
+
+  // ── Phase 5C.4: Execution Site (rendered from frozen snapshot only) ──
+  {
+    const snap = data.executionAddressSnapshot;
+    if (snap) {
+      sectionTitle(data.isRTL ? 'موقع التنفيذ' : 'Execution Site');
+      const rows: string[][] = [];
+      const push = (label: string, value: string | null | undefined) => {
+        const v = (value ?? '').toString().trim();
+        if (v) rows.push([label, v]);
+      };
+      const addrParts = [snap.address_line1, snap.address_line2].filter(Boolean).join(' — ');
+      const cityDistrict = [snap.city_name, snap.district].filter(Boolean).join(' / ');
+      push(data.isRTL ? 'اسم الموقع' : 'Site label', snap.label);
+      push(data.isRTL ? 'العنوان' : 'Address', addrParts);
+      push(data.isRTL ? 'المدينة / الحي' : 'City / District', cityDistrict);
+      push(data.isRTL ? 'مسؤول الموقع' : 'Contact person', snap.contact_name);
+      push(data.isRTL ? 'هاتف التواصل' : 'Contact phone', snap.contact_phone);
+      push(data.isRTL ? 'رابط الخريطة' : 'Map link', snap.map_url);
+      if (snap.latitude != null && snap.longitude != null) {
+        push(
+          data.isRTL ? 'الإحداثيات' : 'Coordinates',
+          `${Number(snap.latitude).toFixed(5)}, ${Number(snap.longitude).toFixed(5)}`,
+        );
+      }
+      push(data.isRTL ? 'ملاحظات الوصول' : 'Access notes', snap.access_notes);
+      if (snap.captured_at) {
+        const captured = new Date(snap.captured_at);
+        if (!Number.isNaN(captured.getTime())) {
+          push(
+            data.isRTL ? 'تاريخ التثبيت' : 'Captured at',
+            captured.toLocaleDateString(data.isRTL ? 'ar-SA' : 'en-US'),
+          );
+        }
+      }
+      if (rows.length > 0) {
+        autoTable(doc, {
+          startY: y, body: rows, theme: 'plain',
+          styles: { fontSize: 9, cellPadding: 3.5, ...rtlStyles, lineColor: BORDER_RGB, lineWidth: 0.2 },
+          columnStyles: { 0: { fontStyle: 'bold', cellWidth: 55, textColor: MUTED_RGB } },
+          margin: PDF_TABLE_MARGIN,
+          alternateRowStyles: { fillColor: SURFACE2_RGB },
+        });
+        y = lastTableY(doc, y) + 12;
+      }
+    }
+  }
 
   // ── CT6: Template metadata (compact) ──
   if (data.template) {

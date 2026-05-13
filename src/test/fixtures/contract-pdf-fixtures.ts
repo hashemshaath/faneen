@@ -122,6 +122,20 @@ export const longArabicContractFixture: ContractExportData = {
   ...templatedContractFixture,
   contractNumber: 'CT-AR-0004',
   isRTL: true,
+  executionAddressSnapshot: {
+    label: 'موقع تركيب المطبخ',
+    contact_name: 'أبو محمد',
+    contact_phone: '+966500000000',
+    city_name: 'جدة',
+    district: 'السلامة',
+    address_line1: 'شارع الأمير سلطان، مبنى 12',
+    address_line2: 'الدور الأرضي',
+    map_url: 'https://maps.google.com/?q=21.5433,39.1728',
+    latitude: 21.5433,
+    longitude: 39.1728,
+    access_notes: 'الدخول من البوابة الجانبية بعد الساعة 9 صباحاً.',
+    captured_at: '2026-02-01T08:00:00Z',
+  },
   templateSnapshot: {
     sections: [
       {
