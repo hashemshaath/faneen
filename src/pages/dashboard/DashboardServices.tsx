@@ -21,7 +21,7 @@ import {
   Star, Globe, MapPin, Sparkles, Copy, GripVertical,
   ArrowUpDown, LayoutGrid, List, Eye, EyeOff, Loader2,
   AlertCircle, Clock, Zap, Download, BarChart3,
-  Layers, ShoppingBag,
+  Layers, ShoppingBag, ExternalLink, Link2, FlaskConical,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { FieldAiActions } from '@/components/blog/FieldAiActions';
@@ -209,6 +209,7 @@ const DashboardServices = () => {
   const [catalogSearch, setCatalogSearch] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showCatalog, setShowCatalog] = useState(false);
+  const [catalogPicked, setCatalogPicked] = useState<Set<string>>(new Set());
 
   const emptyForm = useMemo(() => ({ name_ar: '', name_en: '', description_ar: '', description_en: '', price_from: '', price_to: '', is_active: true, currency_code: 'SAR' }), []);
   const [form, setForm] = useState(emptyForm);
@@ -223,13 +224,14 @@ const DashboardServices = () => {
     queryKey: ['my-business', user?.id],
     queryFn: async () => {
       if (!user) return null;
-      const { data } = await supabase.from('businesses').select('id, category_id').eq('user_id', user.id).maybeSingle();
+      const { data } = await supabase.from('businesses').select('id, category_id, username').eq('user_id', user.id).maybeSingle();
       return data;
     },
     enabled: !!user,
     staleTime: 10 * 60 * 1000,
   });
   const businessId = business?.id;
+  const publicUrl = business?.username ? `/${business.username}` : null;
 
   const { data: services = [], isLoading } = useQuery({
     queryKey: ['dashboard-services', businessId],
@@ -249,7 +251,8 @@ const DashboardServices = () => {
     const noPrice = services.filter(s => !s.price_from && !s.price_to).length;
     const complete = services.filter(s => s.name_ar && s.description_ar && (s.price_from || s.price_to)).length;
     const completeness = total > 0 ? Math.round((complete / total) * 100) : 0;
-    return { total, active, inactive: total - active, noPrice, completeness };
+    const demo = services.filter(s => s.is_demo).length;
+    return { total, active, inactive: total - active, noPrice, completeness, demo };
   }, [services]);
 
   const filteredServices = useMemo(() => {
@@ -326,6 +329,66 @@ const DashboardServices = () => {
     mutationFn: async () => { await Promise.all(Array.from(selectedIds).map(id => supabase.from('business_services').delete().eq('id', id))); },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['dashboard-services'] }); setSelectedIds(new Set()); toast.success(rtl ? 'تم الحذف' : 'Deleted'); },
   });
+
+  /* ─── Bulk catalog import + demo seed/clear ─── */
+  const bulkInsertMut = useMutation({
+    mutationFn: async (items: { name_ar: string; name_en: string; description_ar: string; description_en: string; is_demo?: boolean }[]) => {
+      if (!businessId) throw new Error('No business');
+      const baseOrder = services.length;
+      const rows = items.map((it, i) => ({
+        business_id: businessId,
+        name_ar: it.name_ar, name_en: it.name_en,
+        description_ar: it.description_ar, description_en: it.description_en,
+        currency_code: 'SAR', is_active: true, sort_order: baseOrder + i,
+        is_demo: !!it.is_demo,
+      }));
+      const { error } = await supabase.from('business_services').insert(rows);
+      if (error) throw error;
+      return rows.length;
+    },
+    onSuccess: (n) => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard-services'] });
+      setCatalogPicked(new Set());
+      toast.success(rtl ? `تمت إضافة ${n} خدمة` : `Added ${n} services`);
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
+  const clearDemoMut = useMutation({
+    mutationFn: async () => {
+      if (!businessId) throw new Error('No business');
+      const { error } = await supabase.from('business_services').delete().eq('business_id', businessId).eq('is_demo', true);
+      if (error) throw error;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['dashboard-services'] }); toast.success(rtl ? 'تم حذف الخدمات التجريبية' : 'Demo services removed'); },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
+  const seedDemo = useCallback(() => {
+    // Curated cross-sector demo set: first 2 from each of first 4 groups
+    const picks = serviceCatalog.slice(0, 4).flatMap(g => g.services.slice(0, 2)).slice(0, 8)
+      .map(it => ({ ...it, is_demo: true }));
+    bulkInsertMut.mutate(picks);
+  }, [bulkInsertMut]);
+
+  const toggleCatalogPick = useCallback((key: string) => setCatalogPicked(prev => {
+    const n = new Set(prev); if (n.has(key)) n.delete(key); else n.add(key); return n;
+  }), []);
+
+  const addPickedFromGroup = useCallback((group: typeof serviceCatalog[number]) => {
+    const picks = group.services
+      .map((s, i) => ({ s, key: `${group.id}:${i}` }))
+      .filter(({ s, key }) => catalogPicked.has(key) && !isServiceAdded(s.name_ar))
+      .map(({ s }) => s);
+    if (picks.length === 0) return;
+    bulkInsertMut.mutate(picks);
+  }, [catalogPicked, isServiceAdded, bulkInsertMut]);
+
+  const copyServiceLink = useCallback((id: string) => {
+    if (!publicUrl) { toast.error(rtl ? 'حدد اسم مستخدم أولاً' : 'Set a username first'); return; }
+    const link = `${window.location.origin}${publicUrl}#service-${id}`;
+    navigator.clipboard.writeText(link).then(() => toast.success(rtl ? 'تم نسخ الرابط' : 'Link copied'));
+  }, [publicUrl, rtl]);
 
   /* ─── Callbacks ─── */
   const closeForm = useCallback(() => { setShowForm(false); setEditing(null); setForm(emptyForm); }, [emptyForm]);
