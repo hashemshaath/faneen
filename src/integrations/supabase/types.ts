@@ -8389,6 +8389,17 @@ export type Database = {
         Returns: number
       }
       expire_client_invitations: { Args: never; Returns: Json }
+      find_user_by_ref_id: {
+        Args: { _ref_id: string }
+        Returns: {
+          avatar_url: string
+          email: string
+          full_name: string
+          phone: string
+          ref_id: string
+          user_id: string
+        }[]
+      }
       generate_invite_key: {
         Args: {
           _business_id: string
@@ -8418,6 +8429,22 @@ export type Database = {
           _period?: string
         }
         Returns: Json
+      }
+      get_business_staff_with_profiles: {
+        Args: { _business_id: string }
+        Returns: {
+          avatar_url: string
+          business_id: string
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          is_active: boolean
+          phone: string
+          ref_id: string
+          role: Database["public"]["Enums"]["business_staff_role"]
+          user_id: string
+        }[]
       }
       get_contact_inbox_settings: {
         Args: never
