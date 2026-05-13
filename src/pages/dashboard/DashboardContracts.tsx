@@ -73,6 +73,8 @@ import { ContractEmptyState } from '@/components/contracts/dashboard/ContractEmp
 import { ContractPageHeader } from '@/components/contracts/dashboard/ContractPageHeader';
 import { ContractStatsSummary } from '@/components/contracts/dashboard/ContractStatsSummary';
 import { ContractCard } from '@/components/contracts/dashboard/ContractCard';
+import { ContractCompactRow } from '@/components/contracts/dashboard/ContractCompactRow';
+import { ContractActiveFilters } from '@/components/contracts/dashboard/ContractActiveFilters';
 import { getContractHealth } from '@/components/contracts/dashboard/contract-helpers';
 import { ContractCreateStepper } from '@/components/contracts/dashboard/create/ContractCreateStepper';
 import { ContractReviewSummary } from '@/components/contracts/dashboard/create/ContractReviewSummary';
@@ -258,6 +260,7 @@ const DashboardContracts = () => {
 
   const [uploadingContractId, setUploadingContractId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'cards' | 'compact'>('cards');
+  const searchInputRef = React.useRef<HTMLInputElement>(null);
 
   /* ── Data Queries ── */
   const { data: providerContracts = [], isLoading: loadingProvider } = useQuery({
@@ -1400,6 +1403,69 @@ const DashboardContracts = () => {
     return new Date(d).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   }, [isRTL]);
 
+  /* ── Phase 8 — Filtered CSV export (no PII; aggregate fields only). ── */
+  const handleExportCsv = useCallback(() => {
+    if (filtered.length === 0) {
+      toast.info(isRTL ? 'لا توجد عقود للتصدير' : 'No contracts to export');
+      return;
+    }
+    const headers = isRTL
+      ? ['الرقم', 'العنوان', 'الحالة', 'الدور', 'المبلغ', 'العملة', 'تاريخ الإنشاء', 'تاريخ البدء', 'تاريخ الانتهاء']
+      : ['Number', 'Title', 'Status', 'Role', 'Amount', 'Currency', 'Created', 'Start', 'End'];
+    const escape = (v: unknown) => {
+      const s = v == null ? '' : String(v);
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const rows = filtered.map((c) => [
+      c.contract_number,
+      isRTL ? c.title_ar : (c.title_en || c.title_ar),
+      c.status,
+      c._role,
+      Number(c.total_amount),
+      c.currency_code,
+      c.created_at?.slice(0, 10) ?? '',
+      c.start_date ?? '',
+      c.end_date ?? '',
+    ].map(escape).join(','));
+    // UTF-8 BOM for Excel Arabic compatibility.
+    const csv = '\uFEFF' + [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `contracts-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success(isRTL ? `تم تصدير ${filtered.length} عقد` : `Exported ${filtered.length} contracts`);
+  }, [filtered, isRTL]);
+
+  /* ── Phase 8 — Keyboard shortcuts: "/" focus search, "n" new contract, "Esc" close form. ── */
+  React.useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const isEditable = target && (
+        target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' ||
+        target.tagName === 'SELECT' || target.isContentEditable
+      );
+      if (e.key === 'Escape' && viewSection !== 'list') {
+        setViewSection('list');
+        return;
+      }
+      if (isEditable) return;
+      if (e.key === '/' && viewSection === 'list') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      } else if ((e.key === 'n' || e.key === 'N') && viewSection === 'list' && !e.metaKey && !e.ctrlKey) {
+        e.preventDefault();
+        setViewSection('create');
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [viewSection]);
+
   const handleExportPDF = useCallback(async (c: ContractWithRole) => {
     setIsExporting(true);
     try {
@@ -2132,6 +2198,22 @@ const DashboardContracts = () => {
                   draft: stats.draft,
                 }}
                 isRTL={isRTL}
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
+                onExport={handleExportCsv}
+                searchInputRef={searchInputRef}
+              />
+              <ContractActiveFilters
+                isRTL={isRTL}
+                resultCount={filtered.length}
+                totalCount={contracts.length}
+                statusFilter={statusFilter}
+                roleFilter={roleFilter}
+                searchQuery={searchQuery}
+                onClearStatus={() => setStatusFilter('all')}
+                onClearRole={() => setRoleFilter('all')}
+                onClearSearch={() => setSearchQuery('')}
+                onClearAll={() => { setStatusFilter('all'); setRoleFilter('all'); setSearchQuery(''); }}
               />
             </div>
 
@@ -2144,6 +2226,18 @@ const DashboardContracts = () => {
                 onCreate={() => setViewSection('create')}
                 onResetFilters={() => { setStatusFilter('all'); setRoleFilter('all'); setSearchQuery(''); }}
               />
+            ) : viewMode === 'compact' ? (
+              <div className="space-y-1.5">
+                {filtered.map((c) => (
+                  <ContractCompactRow
+                    key={c.id + c._role}
+                    c={c}
+                    isRTL={isRTL}
+                    onOpen={(contract) => setExpandedId(expandedId === contract.id ? null : contract.id)}
+                    onNavigate={navigate}
+                  />
+                ))}
+              </div>
             ) : (
               <div className="space-y-4">
                 {filtered.map((c) => {
