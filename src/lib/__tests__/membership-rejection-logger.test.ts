@@ -49,7 +49,7 @@ describe('logUpgradeRejection — RPC payload', () => {
   let client: { rpc: typeof rpc };
 
   beforeEach(() => {
-    rpc = vi.fn().mockResolvedValue({ data: 'audit-id-1', error: null });
+    rpc = vi.fn().mockResolvedValue({ data: 'aud-1111-2222-3333', error: null });
     client = { rpc };
   });
 
@@ -63,7 +63,7 @@ describe('logUpgradeRejection — RPC payload', () => {
       userAgent: 'vitest/jsdom',
     });
 
-    expect(res).toEqual({ reason: 'ref_id_mismatch', logged: true });
+    expect(res).toEqual({ reason: 'ref_id_mismatch', logged: true, auditId: 'aud-1111-2222-3333' });
     expect(rpc).toHaveBeenCalledTimes(1);
     expect(rpc).toHaveBeenCalledWith('log_upgrade_rejection', {
       _attempted_business_id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
@@ -86,7 +86,7 @@ describe('logUpgradeRejection — RPC payload', () => {
       userAgent: 'vitest/jsdom',
     });
 
-    expect(res).toEqual({ reason: 'business_user_mismatch', logged: true });
+    expect(res).toEqual({ reason: 'business_user_mismatch', logged: true, auditId: 'aud-1111-2222-3333' });
     expect(rpc).toHaveBeenCalledWith(
       'log_upgrade_rejection',
       expect.objectContaining({
