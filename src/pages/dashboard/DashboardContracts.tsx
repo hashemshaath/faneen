@@ -15,7 +15,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { mapContractLockError, mapContractCreateError } from '@/lib/contract-errors';
@@ -33,7 +32,7 @@ import {
   Ruler, ClipboardList, ShieldCheck, WrenchIcon, Upload,
   Zap, Target, PieChart, ArrowUpRight, ArrowDownRight,
   Star, Filter, LayoutGrid, List, MoreHorizontal,
-  Percent, RefreshCw, Edit3, ExternalLink, CircleCheck,
+  RefreshCw, Edit3, ExternalLink, CircleCheck,
 } from 'lucide-react';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
