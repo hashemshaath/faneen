@@ -30,9 +30,10 @@ if (!SUPABASE_URL) {
   try {
     const envFile = fs.readFileSync(path.join(ROOT, ".env"), "utf-8");
     const m = envFile.match(/VITE_SUPABASE_URL=(.+)/);
-    if (m) SUPABASE_URL = m[1].trim();
+    if (m) SUPABASE_URL = m[1].trim().replace(/^["']|["']$/g, "");
   } catch {}
 }
+SUPABASE_URL = SUPABASE_URL.replace(/^["']|["']$/g, "").replace(/\/+$/, "");
 const SITEMAP_BASE = flag("sitemap-url", SUPABASE_URL ? `${SUPABASE_URL}/functions/v1/sitemap` : "");
 const TIMEOUT_MS = parseInt(flag("timeout", "15000"), 10);
 
