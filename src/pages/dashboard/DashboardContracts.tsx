@@ -1553,6 +1553,7 @@ const DashboardContracts = () => {
     setSelectedVersionId(null); setSelectedPricingMethod(null);
     setInviteMode('idle'); setInviteForm({ email: '', name: '', phone: '' }); setPendingInvite(null);
     setSelectedSiteId(null);
+    setLeadPrefill(null); setLeadPrefillDismissed(false); setLeadClientConfirmed(false);
   }, []);
 
   const handleShareContract = useCallback(async (c: ContractWithRole) => {
