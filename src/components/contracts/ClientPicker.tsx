@@ -222,6 +222,27 @@ export function ClientPicker({
             />
             {loading && <Loader2 className="w-4 h-4 animate-spin absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground" />}
           </div>
+          {/* Status line: clear feedback after typing */}
+          {query.trim().length >= 2 && !loading && (
+            <div className="flex items-center justify-between gap-2 text-[10px]">
+              {results.length > 0 ? (
+                <span className="inline-flex items-center gap-1 text-success">
+                  <CircleCheck className="w-3 h-3" />
+                  {isRTL
+                    ? `تم العثور على ${results.length} نتيجة${grouped.platform.length > 0 ? ' (تطابق دقيق من المنصة)' : ''}`
+                    : `Found ${results.length} result${results.length === 1 ? '' : 's'}${grouped.platform.length > 0 ? ' (exact platform match)' : ''}`}
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 text-muted-foreground">
+                  <X className="w-3 h-3" />
+                  {isRTL ? 'لا يوجد عميل بهذا المعرّف' : 'No client matches this identifier'}
+                </span>
+              )}
+              <span className="text-muted-foreground">
+                {isRTL ? 'تُخفى بعض البيانات حسب خصوصية العميل' : 'Some data is masked per client privacy'}
+              </span>
+            </div>
+          )}
           {open && (grouped.own.length > 0 || grouped.platform.length > 0) && (
             <div className="border border-border/40 rounded-lg overflow-hidden bg-card max-h-72 overflow-y-auto">
               {grouped.own.length > 0 && (
@@ -243,9 +264,13 @@ export function ClientPicker({
             </div>
           )}
           {open && !loading && query.trim().length >= 2 && results.length === 0 && (
-            <div className="space-y-2">
-              <p className="text-[10px] text-muted-foreground">{isRTL ? 'لا توجد نتائج. أضف العميل بسرعة.' : 'No matches. Add the client quickly.'}</p>
-              <Button type="button" variant="outline" size="sm" className="h-8 gap-1.5 text-[11px]"
+            <div className="p-2.5 rounded-lg border border-dashed border-accent/40 bg-accent/5 flex items-center justify-between gap-2">
+              <p className="text-[10px] text-muted-foreground leading-relaxed">
+                {isRTL
+                  ? 'لم يُعثر على عميل مطابق. يمكنك إضافته بسرعة الآن — وسيُربط تلقائياً عند تسجيله.'
+                  : 'No matching client. Add them quickly now — auto-links when they sign up.'}
+              </p>
+              <Button type="button" variant="hero" size="sm" className="h-8 gap-1.5 text-[11px] shrink-0"
                 onClick={() => {
                   const q = query.trim();
                   setMode('quick');
