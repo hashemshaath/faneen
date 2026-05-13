@@ -18,7 +18,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ImageUpload } from '@/components/ui/image-upload';
@@ -466,11 +465,8 @@ const DashboardBusinessEdit: React.FC = () => {
 export default DashboardBusinessEdit;
 
 /**
- * Note: form structure split into reusable units:
- *   - components/dashboard/business-edit/types.ts
- *   - components/dashboard/business-edit/BilingualField.tsx (AR↔EN inputs + AI translate)
- *   - components/dashboard/business-edit/RepresentativesSection.tsx (staff & permissions)
+ * Form is split into reusable units under components/dashboard/business-edit/:
+ *   - types.ts                    Shared BusinessRow + StaffMember types
+ *   - BilingualField.tsx          AR↔EN inputs with one-click AI translation
+ *   - RepresentativesSection.tsx  Staff roster + role/permission editor
  */
-
-// Unused import marker to keep `Textarea` available for future inline forms
-void Textarea;
