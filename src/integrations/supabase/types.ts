@@ -7764,6 +7764,10 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_contract_source_lead_summary: {
+        Args: { _contract_id: string }
+        Returns: Json
+      }
       get_current_migration_rerun: {
         Args: never
         Returns: {
