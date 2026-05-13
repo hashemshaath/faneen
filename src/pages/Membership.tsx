@@ -6,7 +6,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
-import { Shield, Info, AlertTriangle, Check, Undo2, Building2, Send, Clock, ChevronDown, ChevronUp, MessageSquareWarning } from 'lucide-react';
+import { Shield, Info, AlertTriangle, Check, Undo2, Building2, Send, Clock, ChevronDown, ChevronUp, MessageSquareWarning, X } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { MembershipHeader } from '@/components/membership/MembershipHeader';
@@ -36,6 +36,26 @@ const Membership = () => {
   const [pendingDowngrade, setPendingDowngrade] = useState<{ id: string; tier: string } | null>(null);
   const [pendingUpgrade, setPendingUpgrade] = useState<{ id: string; tier: string } | null>(null);
   const [showReviewNotes, setShowReviewNotes] = useState(false);
+
+  // Per-ref_id dismissal of the auto-created draft banner. Persisted in
+  // localStorage so a brand-new draft (different ref_id) shows the banner
+  // again, while previously-acknowledged drafts stay hidden.
+  const DRAFT_BANNER_KEY = 'qitaat_draft_banner_dismissed_v1';
+  const [dismissedDraftRefs, setDismissedDraftRefs] = React.useState<string[]>(() => {
+    try {
+      const raw = localStorage.getItem(DRAFT_BANNER_KEY);
+      const parsed = raw ? (JSON.parse(raw) as unknown) : [];
+      return Array.isArray(parsed) ? parsed.filter((v): v is string => typeof v === 'string') : [];
+    } catch { return []; }
+  });
+  const dismissDraftBanner = (refId: string) => {
+    setDismissedDraftRefs((prev) => {
+      if (prev.includes(refId)) return prev;
+      const next = [...prev, refId].slice(-50); // cap to last 50 refs
+      try { localStorage.setItem(DRAFT_BANNER_KEY, JSON.stringify(next)); } catch { /* ignore */ }
+      return next;
+    });
+  };
 
   // Privacy-safe: tier of current user (or 'anonymous') — no PII.
   React.useEffect(() => {
