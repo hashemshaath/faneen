@@ -17,6 +17,7 @@ import { BrandLogo } from "@/components/common/BrandLogo";
 import { ThemeApplier } from "@/components/ThemeApplier";
 const Index = lazyRetry(() => import("./pages/Index"));
 const ConsentBanner = lazy(() => import("./components/consent/ConsentBanner"));
+const BuildVersionWatcher = lazy(() => import("./components/BuildVersionWatcher"));
 
 function lazyRetry<T extends ComponentType<any>>(
   factory: () => Promise<{ default: T }>,
@@ -120,6 +121,7 @@ const VerifyContract = lazyRetry(() => import("./pages/VerifyContract"));
 const InviteAccept = lazyRetry(() => import("./pages/InviteAccept"));
 const StaffInviteAccept = lazyRetry(() => import("./pages/StaffInviteAccept"));
 const Diagnostics = lazyRetry(() => import("./pages/Diagnostics"));
+const DashboardAccountDiagnostics = lazyRetry(() => import("./pages/dashboard/DashboardAccountDiagnostics"));
 const ForProviders = lazyRetry(() => import("./pages/ForProviders"));
 const DashboardCommunicationPreferences = lazyRetry(() => import("./pages/dashboard/DashboardCommunicationPreferences"));
 const DashboardBusinessCompletion = lazyRetry(() => import("./pages/dashboard/DashboardBusinessCompletion"));
@@ -206,6 +208,7 @@ const AppRoutes = () => (
           <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
 
           <Route path="/dashboard" element={<ProtectedRoute><DashboardOverview /></ProtectedRoute>} />
+          <Route path="/dashboard/diagnostics" element={<ProtectedRoute><DashboardAccountDiagnostics /></ProtectedRoute>} />
           <Route path="/dashboard/contracts" element={<ProtectedRoute><DashboardContracts /></ProtectedRoute>} />
           <Route path="/dashboard/messages" element={<ProtectedRoute><DashboardMessages /></ProtectedRoute>} />
           <Route path="/dashboard/bookmarks" element={<ProtectedRoute><DashboardBookmarks /></ProtectedRoute>} />
@@ -278,6 +281,9 @@ const AppRoutes = () => (
       </Suspense>
       <Suspense fallback={null}>
         <ConsentBanner />
+      </Suspense>
+      <Suspense fallback={null}>
+        <BuildVersionWatcher />
       </Suspense>
     </AppDirectionShell>
   </BrowserRouter>
