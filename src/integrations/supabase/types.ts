@@ -1169,8 +1169,13 @@ export type Database = {
       }
       businesses: {
         Row: {
+          account_manager_email: string | null
+          account_manager_name: string | null
+          account_manager_phone: string | null
+          account_manager_position: string | null
           additional_number: string | null
           address: string | null
+          address_en: string | null
           approval_notes: string | null
           approval_status: Database["public"]["Enums"]["business_approval_status"]
           building_number: string | null
@@ -1185,6 +1190,7 @@ export type Database = {
           description_ar: string | null
           description_en: string | null
           district: string | null
+          district_en: string | null
           email: string | null
           id: string
           is_active: boolean
@@ -1204,12 +1210,14 @@ export type Database = {
           rating_count: number
           ref_id: string
           region: string | null
+          region_en: string | null
           reviewed_at: string | null
           reviewed_by: string | null
           sectors: string[]
           short_description_ar: string | null
           short_description_en: string | null
           street_name: string | null
+          street_name_en: string | null
           sub_services: string[]
           submitted_at: string | null
           unified_number: string | null
@@ -1217,11 +1225,17 @@ export type Database = {
           user_id: string
           username: string
           username_status: Database["public"]["Enums"]["username_status"]
+          vat_number: string | null
           website: string | null
         }
         Insert: {
+          account_manager_email?: string | null
+          account_manager_name?: string | null
+          account_manager_phone?: string | null
+          account_manager_position?: string | null
           additional_number?: string | null
           address?: string | null
+          address_en?: string | null
           approval_notes?: string | null
           approval_status?: Database["public"]["Enums"]["business_approval_status"]
           building_number?: string | null
@@ -1236,6 +1250,7 @@ export type Database = {
           description_ar?: string | null
           description_en?: string | null
           district?: string | null
+          district_en?: string | null
           email?: string | null
           id?: string
           is_active?: boolean
@@ -1255,12 +1270,14 @@ export type Database = {
           rating_count?: number
           ref_id?: string
           region?: string | null
+          region_en?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           sectors?: string[]
           short_description_ar?: string | null
           short_description_en?: string | null
           street_name?: string | null
+          street_name_en?: string | null
           sub_services?: string[]
           submitted_at?: string | null
           unified_number?: string | null
@@ -1268,11 +1285,17 @@ export type Database = {
           user_id: string
           username: string
           username_status?: Database["public"]["Enums"]["username_status"]
+          vat_number?: string | null
           website?: string | null
         }
         Update: {
+          account_manager_email?: string | null
+          account_manager_name?: string | null
+          account_manager_phone?: string | null
+          account_manager_position?: string | null
           additional_number?: string | null
           address?: string | null
+          address_en?: string | null
           approval_notes?: string | null
           approval_status?: Database["public"]["Enums"]["business_approval_status"]
           building_number?: string | null
@@ -1287,6 +1310,7 @@ export type Database = {
           description_ar?: string | null
           description_en?: string | null
           district?: string | null
+          district_en?: string | null
           email?: string | null
           id?: string
           is_active?: boolean
@@ -1306,12 +1330,14 @@ export type Database = {
           rating_count?: number
           ref_id?: string
           region?: string | null
+          region_en?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           sectors?: string[]
           short_description_ar?: string | null
           short_description_en?: string | null
           street_name?: string | null
+          street_name_en?: string | null
           sub_services?: string[]
           submitted_at?: string | null
           unified_number?: string | null
@@ -1319,6 +1345,7 @@ export type Database = {
           user_id?: string
           username?: string
           username_status?: Database["public"]["Enums"]["username_status"]
+          vat_number?: string | null
           website?: string | null
         }
         Relationships: [
