@@ -75,6 +75,8 @@ import { ContractCard } from '@/components/contracts/dashboard/ContractCard';
 import { getContractHealth } from '@/components/contracts/dashboard/contract-helpers';
 import { ContractCreateStepper } from '@/components/contracts/dashboard/create/ContractCreateStepper';
 import { ContractReviewSummary } from '@/components/contracts/dashboard/create/ContractReviewSummary';
+import { ContractCompletenessCard } from '@/components/contracts/dashboard/create/ContractCompletenessCard';
+import { calculateContractCompleteness } from '@/lib/contract-completeness';
 import {
   ContractCreateActionsBar,
   ContractCreateMobileActionBar,
