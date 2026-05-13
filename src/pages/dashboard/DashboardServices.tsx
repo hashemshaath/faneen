@@ -531,6 +531,21 @@ const DashboardServices = () => {
           </div>
         )}
 
+        {/* Demo cleanup */}
+        {stats.demo > 0 && (
+          <div className="flex items-center gap-3 p-3 rounded-2xl bg-warning/5 border border-warning/30">
+            <FlaskConical className="w-4 h-4 text-warning shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-[12px] font-medium">{rtl ? `لديك ${stats.demo} خدمة تجريبية` : `${stats.demo} demo services`}</p>
+              <p className="text-[11px] text-muted-foreground">{rtl ? 'احذفها قبل النشر للزوار' : 'Remove before going public to visitors'}</p>
+            </div>
+            <Button variant="outline" size="sm" className="h-7 text-[10px] rounded-lg" onClick={() => clearDemoMut.mutate()} disabled={clearDemoMut.isPending}>
+              {clearDemoMut.isPending ? <Loader2 className="w-3 h-3 animate-spin me-1" /> : <Trash2 className="w-3 h-3 me-1" />}
+              {rtl ? 'حذف التجريبية' : 'Clear demo'}
+            </Button>
+          </div>
+        )}
+
         {/* ═══ Inline Add/Edit Form ═══ */}
         {showForm && (
           <div ref={formRef}>
@@ -718,6 +733,9 @@ const DashboardServices = () => {
               <div className="flex gap-2">
                 <Button variant="hero" size="sm" className="rounded-xl" onClick={() => setShowForm(true)}><Plus className="w-4 h-4 me-1" />{rtl ? 'إضافة خدمة' : 'Add Service'}</Button>
                 <Button variant="outline" size="sm" className="rounded-xl" onClick={() => setShowCatalog(true)}><Sparkles className="w-4 h-4 me-1" />{rtl ? 'تصفح الكتالوج' : 'Browse Catalog'}</Button>
+                <Button variant="ghost" size="sm" className="rounded-xl" onClick={seedDemo} disabled={bulkInsertMut.isPending}>
+                  <FlaskConical className="w-4 h-4 me-1" />{rtl ? 'أمثلة تجريبية' : 'Demo examples'}
+                </Button>
               </div>
             </div>
           ) : filteredServices.length === 0 ? (
