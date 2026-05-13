@@ -7974,6 +7974,10 @@ export type Database = {
         Returns: boolean
       }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      link_lead_to_contract: {
+        Args: { _contract_id: string; _lead_id: string }
+        Returns: Json
+      }
       list_admin_assignees: {
         Args: never
         Returns: {
