@@ -2198,6 +2198,22 @@ const DashboardContracts = () => {
                   draft: stats.draft,
                 }}
                 isRTL={isRTL}
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
+                onExport={handleExportCsv}
+                searchInputRef={searchInputRef}
+              />
+              <ContractActiveFilters
+                isRTL={isRTL}
+                resultCount={filtered.length}
+                totalCount={contracts.length}
+                statusFilter={statusFilter}
+                roleFilter={roleFilter}
+                searchQuery={searchQuery}
+                onClearStatus={() => setStatusFilter('all')}
+                onClearRole={() => setRoleFilter('all')}
+                onClearSearch={() => setSearchQuery('')}
+                onClearAll={() => { setStatusFilter('all'); setRoleFilter('all'); setSearchQuery(''); }}
               />
             </div>
 
@@ -2210,6 +2226,18 @@ const DashboardContracts = () => {
                 onCreate={() => setViewSection('create')}
                 onResetFilters={() => { setStatusFilter('all'); setRoleFilter('all'); setSearchQuery(''); }}
               />
+            ) : viewMode === 'compact' ? (
+              <div className="space-y-1.5">
+                {filtered.map((c) => (
+                  <ContractCompactRow
+                    key={c.id + c._role}
+                    c={c}
+                    isRTL={isRTL}
+                    onOpen={(contract) => setExpandedId(expandedId === contract.id ? null : contract.id)}
+                    onNavigate={navigate}
+                  />
+                ))}
+              </div>
             ) : (
               <div className="space-y-4">
                 {filtered.map((c) => {
