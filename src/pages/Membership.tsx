@@ -19,6 +19,7 @@ import { MembershipKeysManager } from '@/components/membership/MembershipKeysMan
 import { track } from '@/lib/analytics-events';
 import { Button } from '@/components/ui/button';
 import { ensureDraftBusiness } from '@/lib/ensure-business';
+import { logUpgradeRejection } from '@/lib/membership-rejection-logger';
 
 const tierOrder = ['free', 'basic', 'premium', 'enterprise'];
 
