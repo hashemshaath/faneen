@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -9,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BUILD_ID, BUILD_TIME } from '@/lib/buildVersion';
-import { Activity, RefreshCw, ShieldCheck, Wrench, User as UserIcon, Clock, Hash, Download, Copy, Check } from 'lucide-react';
+import { Activity, RefreshCw, ShieldCheck, Wrench, User as UserIcon, Clock, Hash, Download, Copy, Check, ShieldAlert } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Session } from '@supabase/supabase-js';
 
@@ -33,6 +34,17 @@ const DashboardAccountDiagnostics: React.FC = () => {
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState({ permissions: true, session: true, build: true });
   const [refreshing, setRefreshing] = useState(false);
+  const [searchParams] = useSearchParams();
+
+  // Inbound denial context forwarded from /forbidden
+  const denial = {
+    from: searchParams.get('from'),
+    requiredRole: searchParams.get('requiredRole'),
+    roles: (searchParams.get('roles') || '').split(',').map(r => r.trim()).filter(Boolean),
+    userId: searchParams.get('user_id'),
+    accountType: searchParams.get('accountType'),
+  };
+  const hasDenial = !!(denial.from || denial.requiredRole || denial.userId);
 
   const refresh = useCallback(async () => {
     setRefreshing(true);
@@ -110,6 +122,36 @@ const DashboardAccountDiagnostics: React.FC = () => {
   return (
     <DashboardLayout>
       <div className="space-y-5">
+        {hasDenial && (
+          <Card className="rounded-2xl border-destructive/30 bg-destructive/5">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm flex items-center gap-2 text-destructive">
+                <ShieldAlert className="w-4 h-4" />
+                {rtl ? 'سياق الرفض القادم من صفحة الحماية' : 'Denial context (from Forbidden page)'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <dl>
+                {denial.from && <Row k={rtl ? 'المسار' : 'Path'} v={denial.from} mono />}
+                {denial.requiredRole && (
+                  <Row k={rtl ? 'الدور المطلوب' : 'Required role'} v={
+                    <Badge variant="outline" className="text-[10px] border-destructive/40 text-destructive">{denial.requiredRole}</Badge>
+                  } />
+                )}
+                {denial.roles.length > 0 && (
+                  <Row k={rtl ? 'الأدوار وقت الرفض' : 'Roles at denial'} v={
+                    <div className="flex flex-wrap gap-1">
+                      {denial.roles.map(r => <Badge key={r} variant="outline" className="text-[10px]">{r}</Badge>)}
+                    </div>
+                  } />
+                )}
+                {denial.accountType && <Row k="account_type" v={<span className="font-mono">{denial.accountType}</span>} />}
+                {denial.userId && <Row k="user_id" v={denial.userId} mono />}
+              </dl>
+            </CardContent>
+          </Card>
+        )}
+
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-2xl bg-primary/10 flex items-center justify-center">
