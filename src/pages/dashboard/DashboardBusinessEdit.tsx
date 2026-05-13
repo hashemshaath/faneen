@@ -27,6 +27,7 @@ import type { SectorId } from '@/data/onboarding-sectors';
 import type { BusinessRow } from '@/components/dashboard/business-edit/types';
 import { BilingualField } from '@/components/dashboard/business-edit/BilingualField';
 import { RepresentativesSection } from '@/components/dashboard/business-edit/RepresentativesSection';
+import { AuditLogPanel } from '@/components/dashboard/business-edit/AuditLogPanel';
 
 interface RefRow { id: string; name_ar: string; name_en: string }
 interface CityRow extends RefRow { country_id: string }
@@ -431,6 +432,9 @@ const DashboardBusinessEdit: React.FC = () => {
 
         {/* Representatives */}
         <RepresentativesSection businessId={form.id} ownerUserId={form.user_id} isRTL={isRTL} />
+
+        {/* Audit log */}
+        <AuditLogPanel businessId={form.id} isRTL={isRTL} />
 
         {/* System metadata */}
         <Card className="bg-muted/30">
