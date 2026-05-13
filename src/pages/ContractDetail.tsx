@@ -49,7 +49,7 @@ import {
   PenTool, StickyNote, Trash2, FileImage, ShieldCheck, ShieldX,
   Package, CircleDot, Timer, BadgeCheck, ReceiptText,
   ChevronDown, ChevronUp, Info, Percent, CreditCard,
-  Ruler, Grid3X3, Layers, ArrowRight, MessageSquare,
+  Ruler, Grid3X3, Layers, ArrowRight, MessageSquare, Inbox,
   Upload, Search, Filter, MoreVertical, ExternalLink,
   Star, Share2, Flag, RefreshCw, ArrowUpDown,
 } from 'lucide-react';
