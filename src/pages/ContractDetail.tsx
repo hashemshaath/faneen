@@ -1467,7 +1467,7 @@ const ContractDetail = () => {
             {isBiz && biz && <Link to={`/${biz.username}`} className="text-[10px] text-accent font-body truncate block hover:underline">{bizName}</Link>}
             {profile?.ref_id && <p className="text-[10px] text-muted-foreground font-body" dir="ltr">#{profile.ref_id}</p>}
           </div>
-          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={openMessages} title={isRTL ? 'إرسال رسالة' : 'Send message'}>
+          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={openMessages} title={isRTL ? 'إرسال رسالة' : 'Send message'} aria-label={isRTL ? 'إرسال رسالة' : 'Send message'}>
             <MessageSquare className="w-4 h-4 text-muted-foreground" />
           </Button>
         </div>
@@ -2609,10 +2609,10 @@ const ContractDetail = () => {
                               {!isContractLocked && (
                                 <td className="p-2.5">
                                   <div className="flex items-center gap-1">
-                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => startEditMeasurement(m)} title={isRTL ? 'تعديل' : 'Edit'}>
+                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => startEditMeasurement(m)} title={isRTL ? 'تعديل' : 'Edit'} aria-label={isRTL ? 'تعديل القياس' : 'Edit measurement'}>
                                       <PenTool className="w-3 h-3 text-muted-foreground" />
                                     </Button>
-                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteMeasurementMutation.mutate(m.id)} title={isRTL ? 'حذف' : 'Delete'}>
+                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteMeasurementMutation.mutate(m.id)} title={isRTL ? 'حذف' : 'Delete'} aria-label={isRTL ? 'حذف القياس' : 'Delete measurement'}>
                                       <Trash2 className="w-3 h-3 text-destructive" />
                                     </Button>
                                   </div>
