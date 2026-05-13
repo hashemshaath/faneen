@@ -52,28 +52,27 @@ const PAGE_SIZE = 50;
 const EXPORT_LIMIT = 10_000;
 const UUID_RX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-/** Apply current filters to a Supabase builder. Shared by table query + export. */
-function applyFilters<T extends ReturnType<typeof supabase.from>>(
-  q: T,
-  f: { reason: string; refId: string; businessId: string; userId: string; dateFrom: string; dateTo: string },
-): T {
-  if (f.reason !== 'all') q = q.eq('reason_code', f.reason) as T;
+/** Apply current filters to a Supabase filter builder. Shared by table query + export. */
+// Supabase chainable builder typing is intentionally loose here.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function applyFilters(q: any, f: { reason: string; refId: string; businessId: string; userId: string; dateFrom: string; dateTo: string }): any {
+  let qq = q;
+  if (f.reason !== 'all') qq = qq.eq('reason_code', f.reason);
   if (f.refId.trim()) {
     const s = f.refId.trim();
-    q = q.or(`attempted_business_ref_id.ilike.%${s}%,actual_business_ref_id.ilike.%${s}%`) as T;
+    qq = qq.or(`attempted_business_ref_id.ilike.%${s}%,actual_business_ref_id.ilike.%${s}%`);
   }
   if (f.businessId.trim() && UUID_RX.test(f.businessId.trim()))
-    q = q.eq('attempted_business_id', f.businessId.trim()) as T;
+    qq = qq.eq('attempted_business_id', f.businessId.trim());
   if (f.userId.trim() && UUID_RX.test(f.userId.trim()))
-    q = q.eq('user_id', f.userId.trim()) as T;
-  if (f.dateFrom) q = q.gte('created_at', new Date(f.dateFrom).toISOString()) as T;
+    qq = qq.eq('user_id', f.userId.trim());
+  if (f.dateFrom) qq = qq.gte('created_at', new Date(f.dateFrom).toISOString());
   if (f.dateTo) {
-    // include the whole "to" day
     const end = new Date(f.dateTo);
     end.setHours(23, 59, 59, 999);
-    q = q.lte('created_at', end.toISOString()) as T;
+    qq = qq.lte('created_at', end.toISOString());
   }
-  return q;
+  return qq;
 }
 
 /** Tiny CSV-safe escaper. */
