@@ -23,7 +23,7 @@ import { dispatchAmendmentEvent } from '@/lib/amendment-notify';
 import {
   FileText, Eye, Plus, CheckCircle2, Clock, XCircle, AlertTriangle,
   Shield, DollarSign, Calendar, Users, ListChecks, StickyNote,
-  Send, Phone, Mail, User, ChevronDown, ChevronUp, Activity,
+  Send, Phone, Mail, ChevronDown, ChevronUp, Activity,
   BookOpen, X, Layers, Hammer, Wrench, Home, Factory,
   Flame, TreePine, GlassWater, Grid3X3, PanelTop,
   Download, Search, Loader2, Copy, Sparkles, ArrowRight,
@@ -111,7 +111,6 @@ interface PublishedTemplateOption {
   required_field_count: number;
 }
 
-import { FieldAiActions } from '@/components/blog/FieldAiActions';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useNoIndex } from "@/hooks/useNoIndex";
 
