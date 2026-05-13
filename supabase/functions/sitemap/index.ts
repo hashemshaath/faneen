@@ -15,7 +15,7 @@ const BASE = "https://qitaat.com";
 // don't leak the internal Supabase Functions host in robots/sitemap output.
 const FUNC = `${BASE}/functions/v1/sitemap`;
 
-const TYPES = ["static", "businesses", "blog", "categories", "cities", "profiles", "projects", "sectors", "services"] as const;
+const TYPES = ["static", "businesses", "blog", "categories", "cities", "profiles", "projects", "sectors", "services", "brands"] as const;
 type SitemapType = (typeof TYPES)[number];
 
 function esc(s: string) {
@@ -85,6 +85,7 @@ Deno.serve(async (req) => {
         { loc: "/projects", priority: "0.8", changefreq: "daily" },
         { loc: "/blog", priority: "0.8", changefreq: "daily" },
         { loc: "/profile-systems", priority: "0.7", changefreq: "weekly" },
+        { loc: "/brands", priority: "0.85", changefreq: "daily" },
         { loc: "/compare", priority: "0.6", changefreq: "weekly" },
         { loc: "/compare-profiles", priority: "0.6", changefreq: "weekly" },
         { loc: "/membership", priority: "0.6", changefreq: "monthly" },
@@ -166,6 +167,22 @@ Deno.serve(async (req) => {
       if (data) {
         for (const p of data) {
           entries.push(entry(`${BASE}/projects/${p.id}`, { lastmod: toDate(p.updated_at), changefreq: "monthly", priority: "0.6" }));
+        }
+      }
+    } else if (type === "brands") {
+      const { data, error } = await supabase
+        .from("private_sectors_public")
+        .select("slug, updated_at")
+        .order("is_featured", { ascending: false })
+        .limit(10000);
+      if (error) console.error("brands sitemap error:", error.message);
+      if (data) {
+        for (const b of data) {
+          entries.push(entry(`${BASE}/brands/${encodeURIComponent(b.slug)}`, {
+            lastmod: toDate(b.updated_at),
+            changefreq: "weekly",
+            priority: "0.7",
+          }));
         }
       }
     }
