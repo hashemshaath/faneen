@@ -829,18 +829,45 @@ const DashboardServices = () => {
                           <div className="p-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                             {group.services.map((item, idx) => {
                               const added = isServiceAdded(item.name_ar);
+                              const pickKey = `${group.id}:${idx}`;
+                              const picked = catalogPicked.has(pickKey);
                               return (
-                                <button key={idx} disabled={added} onClick={() => quickAddFromCatalog(item)}
-                                  className={`p-3 rounded-xl border text-start transition-all group/item ${added ? 'bg-primary/5 border-primary/15 cursor-default' : 'border-border/30 hover:border-primary/30 hover:bg-primary/5 hover:shadow-sm cursor-pointer active:scale-[0.98]'}`}>
+                                <div key={idx}
+                                  className={`p-3 rounded-xl border text-start transition-all group/item ${added ? 'bg-primary/5 border-primary/15' : picked ? 'border-primary/40 bg-primary/5 shadow-sm' : 'border-border/30 hover:border-primary/30 hover:bg-primary/5'}`}>
                                   <div className="flex items-center gap-2">
-                                    {added ? <CheckCircle2 className="w-4 h-4 text-primary shrink-0" /> : <Plus className="w-4 h-4 text-primary/60 group-hover/item:text-primary shrink-0 transition-colors" />}
-                                    <span className="font-medium text-xs truncate">{rtl ? item.name_ar : item.name_en}</span>
+                                    <button
+                                      disabled={added}
+                                      onClick={() => toggleCatalogPick(pickKey)}
+                                      aria-label="select"
+                                      className={`w-[16px] h-[16px] rounded border-[1.5px] transition-all flex items-center justify-center shrink-0 ${added ? 'bg-primary/20 border-primary/30 cursor-default' : picked ? 'bg-primary border-primary' : 'border-muted-foreground/30 hover:border-primary/60'}`}>
+                                      {(added || picked) && <CheckCircle2 className="w-2.5 h-2.5 text-primary-foreground" />}
+                                    </button>
+                                    <button disabled={added} onClick={() => quickAddFromCatalog(item)} className="flex items-center gap-1.5 min-w-0 flex-1 text-start disabled:cursor-default">
+                                      {!added && <Plus className="w-3.5 h-3.5 text-primary/60 group-hover/item:text-primary shrink-0 transition-colors" />}
+                                      <span className="font-medium text-xs truncate">{rtl ? item.name_ar : item.name_en}</span>
+                                    </button>
                                   </div>
                                   <p className="text-[10px] text-muted-foreground mt-1 line-clamp-2 ps-6 leading-relaxed">{rtl ? item.description_ar : item.description_en}</p>
-                                </button>
+                                </div>
                               );
                             })}
                           </div>
+                          {(() => {
+                            const groupPickedCount = group.services.reduce((acc, _s, i) => acc + (catalogPicked.has(`${group.id}:${i}`) ? 1 : 0), 0);
+                            if (groupPickedCount === 0) return null;
+                            return (
+                              <div className="px-3 pb-3 flex items-center gap-2">
+                                <Badge variant="outline" className="text-[10px] border-primary/30 text-primary">{groupPickedCount} {rtl ? 'محددة' : 'selected'}</Badge>
+                                <Button size="sm" variant="hero" className="h-7 text-[10px] rounded-lg" onClick={() => addPickedFromGroup(group)} disabled={bulkInsertMut.isPending}>
+                                  {bulkInsertMut.isPending ? <Loader2 className="w-3 h-3 animate-spin me-1" /> : <Plus className="w-3 h-3 me-1" />}
+                                  {rtl ? `أضف ${groupPickedCount}` : `Add ${groupPickedCount}`}
+                                </Button>
+                                <button className="text-[10px] text-muted-foreground hover:text-foreground ms-auto" onClick={() => {
+                                  setCatalogPicked(prev => { const n = new Set(prev); group.services.forEach((_s, i) => n.delete(`${group.id}:${i}`)); return n; });
+                                }}>{rtl ? 'إلغاء التحديد' : 'Clear'}</button>
+                              </div>
+                            );
+                          })()}
                           {group.brands && group.brands.length > 0 && (
                             <div className="border-t border-border/30 p-3">
                               <button className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors mb-2"
