@@ -73,6 +73,7 @@ const providerGroups: MenuGroup[] = [
     icon: FileText,
     items: [
       { label: { ar: 'العقود', en: 'Contracts' }, url: '/dashboard/contracts', icon: FileText },
+      { label: { ar: 'تحليلات العقود', en: 'Contract Analytics' }, url: '/dashboard/contract-analytics', icon: BarChart3 },
       { label: { ar: 'الضمانات', en: 'Warranties' }, url: '/dashboard/warranties', icon: Shield },
       { label: { ar: 'الأقساط', en: 'Installments' }, url: '/dashboard/installments', icon: CreditCard },
     ],
