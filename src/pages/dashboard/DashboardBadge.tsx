@@ -67,6 +67,15 @@ const SIZES: { id: BadgeSize; ar: string; en: string }[] = [
   { id: 'lg', ar: 'كبير',  en: 'Large' },
 ];
 
+const FONT_PRESETS: { id: string; ar: string; en: string; css: string }[] = [
+  { id: 'system',     ar: 'النظام (افتراضي)', en: 'System (default)',     css: "-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif" },
+  { id: 'plex',       ar: 'IBM Plex عربي',    en: 'IBM Plex Sans Arabic', css: "'IBM Plex Sans Arabic',-apple-system,sans-serif" },
+  { id: 'inter',      ar: 'Inter',             en: 'Inter',                css: "Inter,-apple-system,Segoe UI,sans-serif" },
+  { id: 'tajawal',    ar: 'Tajawal',           en: 'Tajawal',              css: "Tajawal,-apple-system,Segoe UI,sans-serif" },
+  { id: 'cairo',      ar: 'Cairo',             en: 'Cairo',                css: "Cairo,-apple-system,Segoe UI,sans-serif" },
+  { id: 'georgia',    ar: 'Georgia (كلاسيكي)', en: 'Georgia (classic)',    css: "Georgia,'Times New Roman',serif" },
+];
+
 function relativeTime(iso: string, isRTL: boolean): string {
   const diff = (Date.now() - new Date(iso).getTime()) / 1000;
   const fmt = (n: number, ar: string, en: string) =>
