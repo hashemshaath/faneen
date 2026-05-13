@@ -59,6 +59,7 @@ import { ClientPicker, type SelectedClient } from '@/components/contracts/Client
 import { LineItemFormSection } from '@/components/contracts/dashboard/create/LineItemFormSection';
 import { SuggestedBOQPanel } from '@/components/contracts/dashboard/create/SuggestedBOQPanel';
 import { ContractFinancialSummary, ContractLineVatBreakdown } from '@/components/contracts/dashboard/ContractBoqVatSummary';
+import { ContractApprovalTimeline } from '@/components/contracts/dashboard/ContractApprovalTimeline';
 import { WorkTypeSection } from '@/components/contracts/dashboard/create/WorkTypeSection';
 import { TemplateSelectionSection } from '@/components/contracts/dashboard/create/TemplateSelectionSection';
 import { ContractDetailsSection } from '@/components/contracts/dashboard/create/ContractDetailsSection';
