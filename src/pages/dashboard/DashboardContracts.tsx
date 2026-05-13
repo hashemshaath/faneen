@@ -538,6 +538,115 @@ const DashboardContracts = () => {
   /* ── Helper: isLocked ── */
   const isContractLocked = (c: ContractRow) => isContractLockedByStatus(c.status);
 
+  /* Phase 5B.4 — Consume ?lead= query param: call prepare_contract_prefill_from_lead
+   * and apply *safe* prefill fields to the create form. We never auto-create a
+   * contract, client, or execution site, never change lead status, and never
+   * prefill amount/dates/terms/supervisor/items/payments/attachments. */
+  React.useEffect(() => {
+    const leadId = searchParams.get('lead');
+    if (!leadId) return;
+    if (!user) return;
+    if (appliedLeadIdsRef.current.has(leadId)) return;
+    appliedLeadIdsRef.current.add(leadId);
+
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase.rpc('prepare_contract_prefill_from_lead', { _lead_id: leadId });
+      // Strip ?lead= regardless of outcome to prevent re-apply on refresh.
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete('lead');
+        return next;
+      }, { replace: true });
+
+      if (cancelled) return;
+
+      if (error) {
+        const raw = String(error.message || '');
+        const code = raw.includes('LEAD_PREFILL:UNAUTHENTICATED') ? 'UNAUTHENTICATED'
+          : raw.includes('LEAD_PREFILL:NOT_FOUND') ? 'NOT_FOUND'
+          : raw.includes('LEAD_PREFILL:DEMO_LEAD') ? 'DEMO_LEAD'
+          : raw.includes('LEAD_PREFILL:FORBIDDEN') ? 'FORBIDDEN'
+          : 'GENERIC';
+        const msg = isRTL
+          ? ({
+              UNAUTHENTICATED: 'يرجى تسجيل الدخول أولًا.',
+              NOT_FOUND: 'الطلب غير موجود.',
+              DEMO_LEAD: 'لا يمكن تحويل طلب تجريبي إلى عقد.',
+              FORBIDDEN: 'لا تملك صلاحية الوصول إلى هذا الطلب.',
+              GENERIC: 'تعذر تحضير بيانات الطلب.',
+            } as const)[code]
+          : ({
+              UNAUTHENTICATED: 'Please sign in first.',
+              NOT_FOUND: 'Lead not found.',
+              DEMO_LEAD: 'Demo leads cannot be converted to contracts.',
+              FORBIDDEN: 'You do not have access to this lead.',
+              GENERIC: 'Could not prepare lead data.',
+            } as const)[code];
+        toast.error(msg);
+        return;
+      }
+
+      const p = data as LeadPrefill;
+      if (!p) return;
+      setLeadPrefill(p);
+      setLeadPrefillDismissed(false);
+      setLeadClientConfirmed(false);
+
+      // If a contract already exists for this lead, do NOT apply prefill.
+      if (p.existing_contract_id) {
+        setViewSection('create');
+        return;
+      }
+
+      // Open the create flow.
+      setEditingId(null);
+      setSelectedTemplate(null);
+      setTemplatePreview(null);
+      setViewSection('create');
+
+      // Safe form prefill (title/description/currency only).
+      setForm((f) => ({
+        ...f,
+        title_ar: p.suggested_title ?? f.title_ar,
+        title_en: p.suggested_title ?? f.title_en,
+        description_ar: p.suggested_description ?? f.description_ar,
+        currency_code: p.suggested_currency_code || f.currency_code,
+        // Surface the customer email in the fallback field; provider must still
+        // confirm or invite explicitly (no auto-select, no auto-invite).
+        client_email: !p.client_profile_match && p.customer_email ? p.customer_email : f.client_email,
+      }));
+
+      // Work type / template suggestion.
+      const wt = (p.suggested_work_type ?? 'general') as WorkTypeKey;
+      setSelectedWorkType(wt);
+      setWorkTypeTouched(true);
+      if (p.suggested_template_version_id) {
+        // Validated against publishedVersions when they load; effect below
+        // keeps default fallback if the suggested version is unavailable.
+        setSelectedVersionId(p.suggested_template_version_id);
+        setSelectedPricingMethod(null);
+      }
+    })();
+
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, user?.id]);
+
+  /* Phase 5B.4 — If a suggested template version is no longer published, clear it
+   * (auto-suggest effect will then pick a fallback). */
+  React.useEffect(() => {
+    if (!selectedVersionId) return;
+    if (publishedVersions.length === 0) return;
+    const ok = publishedVersions.some(v => v.version_id === selectedVersionId);
+    if (!ok) {
+      setSelectedVersionId(null);
+      if (leadPrefill?.suggested_template_version_id === selectedVersionId) {
+        toast.message(isRTL ? 'القالب المقترح غير متاح، تم استخدام القالب الافتراضي.' : 'Suggested template unavailable; using default.');
+      }
+    }
+  }, [publishedVersions, selectedVersionId, leadPrefill, isRTL]);
+
   /* ── Mutations ── */
   const addNoteMutation = useMutation({
     mutationFn: async ({ contractId, content, noteType }: { contractId: string; content: string; noteType?: string }) => {
