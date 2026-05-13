@@ -52,13 +52,13 @@ import {
   groupLineItemsByBoqGroup,
   hasMixedPricing,
   listPricingMethodsUsed,
-  getSuggestedPricingMethod,
   getWorkTypeBoqPresets,
   dedupeStarterRows,
   type BoqGroupKey,
 } from '@/lib/contract-boq';
 import { ClientPicker, type SelectedClient } from '@/components/contracts/ClientPicker';
-import { DimensionHelper } from '@/components/contracts/DimensionHelper';
+import { LineItemFormSection } from '@/components/contracts/dashboard/create/LineItemFormSection';
+import { SuggestedBOQPanel } from '@/components/contracts/dashboard/create/SuggestedBOQPanel';
 import { ContractRoleTabs } from '@/components/contracts/dashboard/ContractRoleTabs';
 import { ContractFilters } from '@/components/contracts/dashboard/ContractFilters';
 import { ContractEmptyState } from '@/components/contracts/dashboard/ContractEmptyState';
@@ -2127,15 +2127,11 @@ const DashboardContracts = () => {
                                           const cv = (c as { template_version_id?: string | null }).template_version_id ?? null;
                                           const cat = cv ? (publishedVersions.find(v => v.version_id === cv)?.category ?? 'general') : 'general';
                                           return (
-                                            <Button
-                                              variant="outline" size="sm" className="h-8 text-xs gap-1.5"
-                                              disabled={addStarterBoqMutation.isPending}
-                                              onClick={() => addStarterBoqMutation.mutate({ contractId: c.id, category: cat })}
-                                              title={isRTL ? 'إضافة مجموعة بنود مقترحة حسب نوع العمل' : 'Add suggested BOQ groups for this work type'}
-                                            >
-                                              {addStarterBoqMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ClipboardList className="w-3.5 h-3.5" />}
-                                              {isRTL ? 'مجموعة بنود مقترحة' : 'Suggested BOQ'}
-                                            </Button>
+                                            <SuggestedBOQPanel
+                                              isRTL={isRTL}
+                                              isPending={addStarterBoqMutation.isPending}
+                                              onAdd={() => addStarterBoqMutation.mutate({ contractId: c.id, category: cat })}
+                                            />
                                           );
                                         })()}
                                       </div>
@@ -2158,136 +2154,17 @@ const DashboardContracts = () => {
                                       queueMicrotask(() => setLineItemForm(f => ({ ...f, pricing_method: methodOptions[0] })));
                                     }
                                     return (
-                                  <div className="p-4 rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 space-y-3">
-                                    <h4 className="text-xs font-semibold">{isRTL ? 'إضافة بند إضافي (خدمة/مادة)' : 'Add Line Item (Service/Material)'}</h4>
-                                    {hasAllowList && (
-                                      <p className="text-[10px] text-muted-foreground">
-                                        {isRTL ? 'طرق التسعير المتاحة حسب قالب العقد.' : 'Pricing methods available per contract template.'}
-                                      </p>
-                                    )}
-                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                                      <Input placeholder={isRTL ? 'اسم البند' : 'Item Name'} value={lineItemForm.name_ar} onChange={e => setLineItemForm(f => ({ ...f, name_ar: e.target.value }))} className="h-9 text-xs" />
-                                      <Select value={lineItemForm.item_type} onValueChange={v => setLineItemForm(f => ({ ...f, item_type: v }))}>
-                                        <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value="service">{isRTL ? 'خدمة' : 'Service'}</SelectItem>
-                                          <SelectItem value="material">{isRTL ? 'مادة' : 'Material'}</SelectItem>
-                                          <SelectItem value="installation">{isRTL ? 'تركيب' : 'Installation'}</SelectItem>
-                                          <SelectItem value="other">{isRTL ? 'أخرى' : 'Other'}</SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                      <Select value={lineItemForm.pricing_method} onValueChange={v => setLineItemForm(f => ({ ...f, pricing_method: v as PricingMethod }))}>
-                                        <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
-                                        <SelectContent>
-                                          {methodOptions.map(m => (
-                                            <SelectItem key={m} value={m}>{formatPricingMethodLabel(m, isRTL ? 'ar' : 'en')}</SelectItem>
-                                          ))}
-                                        </SelectContent>
-                                      </Select>
-                                      {lineItemForm.pricing_method !== 'lump_sum' && (
-                                        <Input type="number" min="0" placeholder={isRTL ? 'الكمية' : 'Qty'} value={lineItemForm.quantity} onChange={e => setLineItemForm(f => ({ ...f, quantity: e.target.value }))} dir="ltr" className="h-9 text-xs" />
-                                      )}
-                                    </div>
-                                    {/* BOQ group selector — auto-suggests pricing method when group has one. */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                                      <Select
-                                        value={lineItemForm.boq_group_key}
-                                        onValueChange={(v) => setLineItemForm(f => {
-                                          const suggested = getSuggestedPricingMethod(v) as PricingMethod | undefined;
-                                          // Only auto-apply when user has not customized pricing or is still on default 'unit'.
-                                          const next: typeof f = { ...f, boq_group_key: v as BoqGroupKey };
-                                          if (suggested && SUPPORTED_PRICING_METHODS.includes(suggested) && f.pricing_method === 'unit') {
-                                            next.pricing_method = suggested;
-                                          }
-                                          return next;
-                                        })}
-                                      >
-                                        <SelectTrigger className="h-9 text-xs"><SelectValue placeholder={isRTL ? 'مجموعة البند' : 'BOQ Group'} /></SelectTrigger>
-                                        <SelectContent>
-                                          {BOQ_GROUPS.map(g => (
-                                            <SelectItem key={g.key} value={g.key}>{isRTL ? g.ar : g.en}</SelectItem>
-                                          ))}
-                                        </SelectContent>
-                                      </Select>
-                                    </div>
-                                    {/* Conditional dimension/weight inputs per method */}
-                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                                      {(lineItemForm.pricing_method === 'linear_meter' || lineItemForm.pricing_method === 'square_meter' || lineItemForm.pricing_method === 'cubic_meter') && (
-                                        <Input type="number" min="0" placeholder={isRTL ? 'الطول (مم)' : 'Length (mm)'} value={lineItemForm.length_mm} onChange={e => setLineItemForm(f => ({ ...f, length_mm: e.target.value }))} dir="ltr" className="h-9 text-xs" />
-                                      )}
-                                      {(lineItemForm.pricing_method === 'square_meter' || lineItemForm.pricing_method === 'cubic_meter') && (
-                                        <Input type="number" min="0" placeholder={isRTL ? 'العرض (مم)' : 'Width (mm)'} value={lineItemForm.width_mm} onChange={e => setLineItemForm(f => ({ ...f, width_mm: e.target.value }))} dir="ltr" className="h-9 text-xs" />
-                                      )}
-                                      {lineItemForm.pricing_method === 'cubic_meter' && (
-                                        <Input type="number" min="0" placeholder={isRTL ? 'الارتفاع (مم)' : 'Height (mm)'} value={lineItemForm.height_mm} onChange={e => setLineItemForm(f => ({ ...f, height_mm: e.target.value }))} dir="ltr" className="h-9 text-xs" />
-                                      )}
-                                      {lineItemForm.pricing_method === 'kilogram' && (
-                                        <Input type="number" min="0" placeholder={isRTL ? 'الوزن (كجم)' : 'Weight (kg)'} value={lineItemForm.weight_kg} onChange={e => setLineItemForm(f => ({ ...f, weight_kg: e.target.value }))} dir="ltr" className="h-9 text-xs" />
-                                      )}
-                                      {lineItemForm.pricing_method === 'ton' && (
-                                        <Input type="number" min="0" placeholder={isRTL ? 'الوزن (طن)' : 'Weight (t)'} value={lineItemForm.weight_ton} onChange={e => setLineItemForm(f => ({ ...f, weight_ton: e.target.value }))} dir="ltr" className="h-9 text-xs" />
-                                      )}
-                                      {lineItemForm.pricing_method === 'lump_sum' ? (
-                                        <Input type="number" min="0" placeholder={isRTL ? 'المبلغ المقطوع' : 'Lump Sum Amount'} value={lineItemForm.amount} onChange={e => setLineItemForm(f => ({ ...f, amount: e.target.value }))} dir="ltr" className="h-9 text-xs" />
-                                      ) : (
-                                        <Input type="number" min="0" placeholder={isRTL ? `سعر / ${formatUnitOfMeasure(lineItemForm.pricing_method)}` : `Price / ${formatUnitOfMeasure(lineItemForm.pricing_method)}`} value={lineItemForm.unit_price} onChange={e => setLineItemForm(f => ({ ...f, unit_price: e.target.value }))} dir="ltr" className="h-9 text-xs" />
-                                      )}
-                                    </div>
-                                    <DimensionHelper
-                                      isRTL={isRTL}
-                                      method={lineItemForm.pricing_method}
-                                      lengthMm={lineItemForm.length_mm}
-                                      widthMm={lineItemForm.width_mm}
-                                      heightMm={lineItemForm.height_mm}
-                                      weightKg={lineItemForm.weight_kg}
-                                      weightTon={lineItemForm.weight_ton}
-                                      amount={lineItemForm.amount}
-                                    />
-                                    <Input placeholder={isRTL ? 'وصف البند (اختياري)' : 'Description (optional)'} value={lineItemForm.description_ar} onChange={e => setLineItemForm(f => ({ ...f, description_ar: e.target.value }))} className="h-9 text-xs" />
-                                    {(() => {
-                                      const fi: Record<string, number> = {};
-                                      const set = (k: string, v: string) => { if (v !== '' && Number.isFinite(Number(v))) fi[k] = Number(v); };
-                                      set('length_mm', lineItemForm.length_mm); set('width_mm', lineItemForm.width_mm); set('height_mm', lineItemForm.height_mm);
-                                      set('weight_kg', lineItemForm.weight_kg); set('weight_ton', lineItemForm.weight_ton); set('amount', lineItemForm.amount);
-                                      const calc = calculateLineTotal({
-                                        pricing_method: lineItemForm.pricing_method,
-                                        quantity: lineItemForm.quantity || 1,
-                                        unit_price: lineItemForm.unit_price || 0,
-                                        formula_inputs: fi,
-                                      });
-                                      if (calc.ok && calc.total > 0) {
-                                        return <p className="text-[11px] text-muted-foreground">{isRTL ? 'التكلفة:' : 'Cost:'} <strong className="text-accent">{calc.total.toLocaleString()} {c.currency_code}</strong></p>;
-                                      }
-                                      if (!calc.ok && calc.errorCode === 'negative_value') {
-                                        return <p className="text-[11px] text-destructive">{isRTL ? 'لا يمكن إدخال قيم سالبة' : 'Negative values not allowed'}</p>;
-                                      }
-                                      if (!calc.ok && calc.errorCode === 'value_too_large') {
-                                        return <p className="text-[11px] text-destructive">{isRTL ? 'القيم كبيرة جداً' : 'Values are too large'}</p>;
-                                      }
-                                      return null;
-                                    })()}
-                                    <div className="flex gap-2">
-                                      {(() => {
-                                        const fi: Record<string, number> = {};
-                                        const set = (k: string, v: string) => { if (v !== '' && Number.isFinite(Number(v))) fi[k] = Number(v); };
-                                        set('length_mm', lineItemForm.length_mm); set('width_mm', lineItemForm.width_mm); set('height_mm', lineItemForm.height_mm);
-                                        set('weight_kg', lineItemForm.weight_kg); set('weight_ton', lineItemForm.weight_ton); set('amount', lineItemForm.amount);
-                                        const calc = calculateLineTotal({
-                                          pricing_method: lineItemForm.pricing_method,
-                                          quantity: lineItemForm.quantity || 1,
-                                          unit_price: lineItemForm.unit_price || 0,
-                                          formula_inputs: fi,
-                                        });
-                                        const disabled = !lineItemForm.name_ar || !calc.ok || calc.total <= 0 || addLineItemMutation.isPending;
-                                        return (
-                                          <Button size="sm" className="h-8 text-xs gap-1" disabled={disabled} onClick={() => addLineItemMutation.mutate({ contractId: c.id })}>
-                                            {addLineItemMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}{isRTL ? 'إضافة' : 'Add'}
-                                          </Button>
-                                        );
-                                      })()}
-                                      <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => setShowAddLineItem(null)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
-                                    </div>
-                                  </div>
+                                  <LineItemFormSection
+                                    isRTL={isRTL}
+                                    currency={c.currency_code}
+                                    form={lineItemForm}
+                                    setForm={setLineItemForm}
+                                    methodOptions={methodOptions}
+                                    hasAllowList={hasAllowList}
+                                    isPending={addLineItemMutation.isPending}
+                                    onAdd={() => addLineItemMutation.mutate({ contractId: c.id })}
+                                    onCancel={() => setShowAddLineItem(null)}
+                                  />
                                     );
                                   })()
                                 )}
