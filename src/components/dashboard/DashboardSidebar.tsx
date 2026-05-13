@@ -168,6 +168,7 @@ const adminBaseGroups: MenuGroup[] = [
       { label: { ar: 'تحليلات المزودين', en: 'Provider Analytics' }, url: '/admin/provider-analytics', icon: TrendingUp },
       { label: { ar: 'العضويات', en: 'Memberships' }, url: '/admin/memberships', icon: Crown },
       { label: { ar: 'تدقيق رفض الترقيات', en: 'Upgrade Rejections' }, url: '/admin/membership-rejections', icon: ShieldAlert },
+      { label: { ar: 'سجل أحداث الاشتراكات', en: 'Subscription Events' }, url: '/admin/membership-events', icon: ShieldAlert },
       { label: { ar: 'تحليلات العقود', en: 'Contract Analytics' }, url: '/admin/contracts/analytics', icon: BarChart3 },
     ],
   },
