@@ -37,15 +37,20 @@ git commit -m "chore(visual): seed Playwright baselines"
 **Via the Playwright Docker image (recommended for parity with CI):**
 
 ```bash
+# Run tests against existing baselines:
 docker run --rm -it --ipc=host -v "$PWD":/work -w /work \
-  mcr.microsoft.com/playwright:v1.57.0-jammy bash -lc '
-    npm ci &&
-    npm run build &&
-    (npx vite preview --host 0.0.0.0 --port 8080 --strictPort &) &&
-    until curl -sf http://localhost:8080 >/dev/null; do sleep 1; done &&
-    npm run test:visual:update
-  '
+  mcr.microsoft.com/playwright:v1.57.0-jammy \
+  bash scripts/run-visual-tests.sh
+
+# Or re-seed baselines (writes to e2e/__screenshots__/):
+docker run --rm -it --ipc=host -v "$PWD":/work -w /work \
+  mcr.microsoft.com/playwright:v1.57.0-jammy \
+  bash scripts/run-visual-tests.sh --update
 ```
+
+`scripts/run-visual-tests.sh` mirrors the CI workflow exactly: lockfile
+sync check → `npm ci` → reuse pre-installed Chromium → build → preview
+server (120 s readiness wait) → `test:visual` (or `test:visual:update`).
 
 Commit the contents of `e2e/__screenshots__/` to lock the baseline. Future
 PRs whose layout drifts beyond `maxDiffPixelRatio: 0.02` will fail the
