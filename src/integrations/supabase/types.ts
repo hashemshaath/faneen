@@ -4903,6 +4903,63 @@ export type Database = {
           },
         ]
       }
+      membership_subscription_events: {
+        Row: {
+          action: string
+          actor_user_id: string | null
+          business_id: string | null
+          created_at: string
+          from_tier: string | null
+          id: string
+          metadata: Json
+          subscription_id: string
+          to_plan_id: string | null
+          to_tier: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          actor_user_id?: string | null
+          business_id?: string | null
+          created_at?: string
+          from_tier?: string | null
+          id?: string
+          metadata?: Json
+          subscription_id: string
+          to_plan_id?: string | null
+          to_tier?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string | null
+          business_id?: string | null
+          created_at?: string
+          from_tier?: string | null
+          id?: string
+          metadata?: Json
+          subscription_id?: string
+          to_plan_id?: string | null
+          to_tier?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "membership_subscription_events_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "membership_subscriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "membership_subscription_events_to_plan_id_fkey"
+            columns: ["to_plan_id"]
+            isOneToOne: false
+            referencedRelation: "membership_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       membership_subscriptions: {
         Row: {
           auto_renew: boolean
@@ -4910,6 +4967,8 @@ export type Database = {
           business_id: string | null
           cancelled_at: string | null
           created_at: string
+          downgrade_to_plan_id: string | null
+          downgrade_to_tier: string | null
           expires_at: string | null
           external_subscription_id: string | null
           grace_period_until: string | null
@@ -4932,6 +4991,8 @@ export type Database = {
           business_id?: string | null
           cancelled_at?: string | null
           created_at?: string
+          downgrade_to_plan_id?: string | null
+          downgrade_to_tier?: string | null
           expires_at?: string | null
           external_subscription_id?: string | null
           grace_period_until?: string | null
@@ -4954,6 +5015,8 @@ export type Database = {
           business_id?: string | null
           cancelled_at?: string | null
           created_at?: string
+          downgrade_to_plan_id?: string | null
+          downgrade_to_tier?: string | null
           expires_at?: string | null
           external_subscription_id?: string | null
           grace_period_until?: string | null
@@ -4983,6 +5046,13 @@ export type Database = {
             columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "membership_subscriptions_downgrade_to_plan_id_fkey"
+            columns: ["downgrade_to_plan_id"]
+            isOneToOne: false
+            referencedRelation: "membership_plans"
             referencedColumns: ["id"]
           },
           {
@@ -8124,10 +8194,12 @@ export type Database = {
         Args: { _subscription_id: string }
         Returns: undefined
       }
-      cancel_subscription_at_period_end: {
-        Args: { _subscription_id: string }
-        Returns: undefined
-      }
+      cancel_subscription_at_period_end:
+        | { Args: { _subscription_id: string }; Returns: undefined }
+        | {
+            Args: { _downgrade_to_plan_id?: string; _subscription_id: string }
+            Returns: undefined
+          }
       categorize_email_link: { Args: { _url: string }; Returns: string }
       check_email_deliverability: { Args: never; Returns: undefined }
       check_password_reset_rate_limit: {
