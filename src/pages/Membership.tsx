@@ -42,59 +42,7 @@ const Membership = () => {
     track.membershipPlanView({});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // Realtime + polling: refresh membership view when approval_status changes.
-  const businessId = (myBusiness as { id?: string } | null | undefined)?.id ?? null;
   const previousStatusRef = React.useRef<string | null>(null);
-  React.useEffect(() => {
-    const current = (myBusiness as { approval_status?: string | null } | null | undefined)?.approval_status ?? null;
-    const prev = previousStatusRef.current;
-    if (prev && current && prev !== current) {
-      const labelsAr: Record<string, string> = {
-        draft: 'مسودة',
-        submitted: 'تم الإرسال للمراجعة',
-        under_review: 'قيد المراجعة',
-        needs_changes: 'يحتاج إلى تعديلات',
-        rejected: 'مرفوض',
-        approved: 'تمت الموافقة',
-      };
-      const labelsEn: Record<string, string> = {
-        draft: 'Draft',
-        submitted: 'Submitted for review',
-        under_review: 'Under review',
-        needs_changes: 'Needs changes',
-        rejected: 'Rejected',
-        approved: 'Approved',
-      };
-      const label = (isRTL ? labelsAr : labelsEn)[current] ?? current;
-      const title = isRTL ? 'تحديث حالة اعتماد المنشأة' : 'Business approval status updated';
-      if (current === 'approved') toast.success(`${title}: ${label}`);
-      else if (current === 'rejected' || current === 'needs_changes') toast.warning(`${title}: ${label}`);
-      else toast.info(`${title}: ${label}`);
-    }
-    previousStatusRef.current = current;
-  }, [myBusiness, isRTL]);
-
-  React.useEffect(() => {
-    if (!businessId) return;
-    const channel = supabase
-      .channel(`membership-business-${businessId}`)
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'businesses', filter: `id=eq.${businessId}` },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ['my-business-membership'] });
-        },
-      )
-      .subscribe();
-    const interval = window.setInterval(() => {
-      queryClient.invalidateQueries({ queryKey: ['my-business-membership'] });
-    }, 60_000);
-    return () => {
-      supabase.removeChannel(channel);
-      window.clearInterval(interval);
-    };
-  }, [businessId, queryClient]);
 
   const { data: plans = [] } = useQuery({
     queryKey: ['membership-plans'],
