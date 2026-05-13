@@ -2479,18 +2479,44 @@ const DashboardContracts = () => {
             {isLoading ? (
               <div className="grid grid-cols-1 gap-4">{[1, 2, 3].map(i => <Skeleton key={i} className="h-48 rounded-xl" />)}</div>
             ) : filtered.length === 0 ? (
-              <Card className="border-dashed border-2 bg-gradient-to-br from-muted/20 to-transparent">
-                <CardContent className="flex flex-col items-center py-16 text-center">
-                  <div className="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center mb-4 shadow-inner">
-                    <FileText className="w-8 h-8 text-accent" />
-                  </div>
-                  <h3 className="text-lg font-heading font-bold mb-2">{isRTL ? 'لا توجد عقود' : 'No contracts yet'}</h3>
-                  <p className="text-sm text-muted-foreground mb-6 max-w-sm">{isRTL ? 'ابدأ بإنشاء أول عقد احترافي لإدارة أعمالك' : 'Start by creating your first professional contract'}</p>
-                  <Button variant="hero" size="lg" className="gap-2 shadow-lg" onClick={() => setViewSection('create')}>
-                    <Plus className="w-5 h-5" />{isRTL ? 'إنشاء عقد جديد' : 'Create New Contract'}
-                  </Button>
-                </CardContent>
-              </Card>
+              (() => {
+                const hasAny = contracts.length > 0;
+                const filtersActive = hasAny && (statusFilter !== 'all' || roleFilter !== 'all' || !!searchQuery.trim());
+                return (
+                  <Card className="border-dashed border-2 bg-gradient-to-br from-muted/20 to-transparent" role="status" aria-live="polite">
+                    <CardContent className="flex flex-col items-center py-16 text-center">
+                      <div className="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center mb-4 shadow-inner">
+                        <FileText className="w-8 h-8 text-accent" aria-hidden="true" />
+                      </div>
+                      <h3 className="text-lg font-heading font-bold mb-2">
+                        {filtersActive
+                          ? (isRTL ? 'لا توجد نتائج مطابقة' : 'No matching results')
+                          : (isRTL ? 'لا توجد عقود' : 'No contracts yet')}
+                      </h3>
+                      <p className="text-sm text-muted-foreground mb-6 max-w-sm">
+                        {filtersActive
+                          ? (isRTL ? 'جرّب تعديل البحث أو إعادة ضبط عوامل التصفية' : 'Try adjusting your search or clearing the filters')
+                          : (isRTL ? 'ابدأ بإنشاء أول عقد احترافي لإدارة أعمالك' : 'Start by creating your first professional contract')}
+                      </p>
+                      {filtersActive ? (
+                        <Button
+                          variant="outline"
+                          size="lg"
+                          className="gap-2"
+                          onClick={() => { setStatusFilter('all'); setRoleFilter('all'); setSearchQuery(''); }}
+                          aria-label={isRTL ? 'إعادة ضبط عوامل التصفية' : 'Reset filters'}
+                        >
+                          {isRTL ? 'إعادة ضبط عوامل التصفية' : 'Reset filters'}
+                        </Button>
+                      ) : (
+                        <Button variant="hero" size="lg" className="gap-2 shadow-lg" onClick={() => setViewSection('create')}>
+                          <Plus className="w-5 h-5" aria-hidden="true" />{isRTL ? 'إنشاء عقد جديد' : 'Create New Contract'}
+                        </Button>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })()
             ) : (
               <div className="space-y-4">
                 {filtered.map((c) => {
