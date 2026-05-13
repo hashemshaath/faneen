@@ -34,6 +34,7 @@ const Membership = () => {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [subscribingPlanId, setSubscribingPlanId] = useState<string | null>(null);
   const [pendingDowngrade, setPendingDowngrade] = useState<{ id: string; tier: string } | null>(null);
+  const [pendingUpgrade, setPendingUpgrade] = useState<{ id: string; tier: string } | null>(null);
 
   // Privacy-safe: tier of current user (or 'anonymous') — no PII.
   React.useEffect(() => {
@@ -293,9 +294,15 @@ const Membership = () => {
       // Already on free, nothing to do.
       return;
     }
-    // Paid upgrade — manual request flow (no immediate activation in beta).
-    setSubscribingPlanId(plan.id);
-    requestUpgradeMutation.mutate(plan);
+    // Paid upgrade — show inline confirmation showing the bound business
+    // (ref_id + name) before sending the manual request to admins.
+    setPendingUpgrade({ id: plan.id, tier: plan.tier });
+    if (typeof window !== 'undefined') {
+      // Scroll the confirmation card into view on mobile/long pages.
+      requestAnimationFrame(() => {
+        document.getElementById('upgrade-confirm-card')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+    }
   };
 
   const confirmDowngrade = () => {
@@ -303,6 +310,13 @@ const Membership = () => {
     setSubscribingPlanId(pendingDowngrade.id);
     subscribeMutation.mutate(pendingDowngrade.id);
     setPendingDowngrade(null);
+  };
+
+  const confirmUpgrade = () => {
+    if (!pendingUpgrade) return;
+    setSubscribingPlanId(pendingUpgrade.id);
+    requestUpgradeMutation.mutate(pendingUpgrade);
+    setPendingUpgrade(null);
   };
 
   const daysRemaining = useMemo(() => {
