@@ -433,14 +433,54 @@ const Membership = () => {
                         : (isRTL ? 'الترقية مرتبطة بهذه المنشأة. أكمل بياناتها لرفع جاهزيتها.' : 'Upgrade is bound to this business. Complete its profile to boost readiness.')}
                 </p>
               </div>
-              {!isComplete && (
-                <Link to="/onboarding" className="shrink-0">
-                  <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5">
-                    {isRTL ? 'إكمال البيانات' : 'Complete profile'}
+              <div className="shrink-0 flex flex-wrap items-center gap-2">
+                {needsChanges && biz.approval_notes && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 text-xs gap-1.5"
+                    aria-expanded={showReviewNotes}
+                    aria-controls="review-notes-panel"
+                    onClick={() => setShowReviewNotes((v) => !v)}
+                  >
+                    <MessageSquareWarning className="w-3.5 h-3.5" />
+                    {showReviewNotes
+                      ? (isRTL ? 'إخفاء الملاحظات' : 'Hide notes')
+                      : (isRTL ? 'عرض ملاحظات المراجعة' : 'Show review notes')}
+                    {showReviewNotes
+                      ? <ChevronUp className="w-3.5 h-3.5" />
+                      : <ChevronDown className="w-3.5 h-3.5" />}
                   </Button>
-                </Link>
-              )}
+                )}
+                {!isComplete && (
+                  <Link to="/onboarding">
+                    <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5">
+                      {isRTL ? 'إكمال البيانات' : 'Complete profile'}
+                    </Button>
+                  </Link>
+                )}
               </div>
+              </div>
+              {needsChanges && biz.approval_notes && showReviewNotes && (
+                <div
+                  id="review-notes-panel"
+                  className="max-w-3xl mx-auto -mt-4 mb-6 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3"
+                  role="region"
+                  aria-label={isRTL ? 'ملاحظات المراجعة' : 'Review notes'}
+                >
+                  <div className="flex items-start gap-2">
+                    <MessageSquareWarning className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-foreground mb-1">
+                        {isRTL ? 'ملاحظات فريق المراجعة' : 'Reviewer notes'}
+                      </p>
+                      <p className="text-xs text-foreground/85 leading-relaxed whitespace-pre-wrap" dir="auto">
+                        {biz.approval_notes}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </>
           );
         })()}
