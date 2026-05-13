@@ -197,38 +197,7 @@ const Membership = () => {
       setSubscribingPlanId(null);
       toast.success(isRTL ? 'تم تفعيل الاشتراك بنجاح! 🎉' : 'Subscription activated! 🎉');
     },
-    onError: (e: Error, plan) => {
-      setSubscribingPlanId(null);
-      toast.error(e.message);
-      // Log mismatch / validation rejections to the audit table for review.
-      const msg = e.message || '';
-      const isMismatch = /business_ref_id|business does not belong|Business not found|business_ref_id is required/i.test(msg);
-      const reason = /business_ref_id .* does not match/i.test(msg)
-        ? 'ref_id_mismatch'
-        : /does not belong/i.test(msg)
-          ? 'business_user_mismatch'
-          : /Business not found/i.test(msg)
-            ? 'business_not_found'
-            : /business_ref_id is required/i.test(msg)
-              ? 'missing_ref_id'
-              : null;
-      if (!isMismatch || !reason) return;
-      const bizRefId = (myBusiness as { ref_id?: string | null } | null | undefined)?.ref_id ?? null;
-      void supabase.rpc('log_upgrade_rejection', {
-        _attempted_business_id: myBusiness?.id ?? null,
-        _attempted_business_ref_id: bizRefId,
-        _requested_tier: plan?.tier ?? null,
-        _billing_cycle: billingCycle,
-        _reason_code: reason,
-        _error_message: msg.slice(0, 500),
-        _user_agent: typeof navigator !== 'undefined' ? navigator.userAgent.slice(0, 300) : null,
-      }).then(({ error }) => {
-        if (error) {
-          // eslint-disable-next-line no-console
-          console.warn('[Membership] failed to log upgrade rejection', error);
-        }
-      });
-    },
+    onError: (e: Error) => { setSubscribingPlanId(null); toast.error(e.message); },
   });
 
   // Manual upgrade request flow (paid plans). Replaces self-serve activation in beta.
