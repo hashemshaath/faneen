@@ -21,6 +21,8 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { ShieldAlert, Search, ExternalLink, User2, Building2, RefreshCw } from 'lucide-react';
+import { Download, X } from 'lucide-react';
+import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ar as arLocale, enUS } from 'date-fns/locale';
 
@@ -47,6 +49,39 @@ const REASON_LABEL: Record<string, { ar: string; en: string; tone: 'destructive'
 };
 
 const PAGE_SIZE = 50;
+const EXPORT_LIMIT = 10_000;
+const UUID_RX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Apply current filters to a Supabase builder. Shared by table query + export. */
+function applyFilters<T extends ReturnType<typeof supabase.from>>(
+  q: T,
+  f: { reason: string; refId: string; businessId: string; userId: string; dateFrom: string; dateTo: string },
+): T {
+  if (f.reason !== 'all') q = q.eq('reason_code', f.reason) as T;
+  if (f.refId.trim()) {
+    const s = f.refId.trim();
+    q = q.or(`attempted_business_ref_id.ilike.%${s}%,actual_business_ref_id.ilike.%${s}%`) as T;
+  }
+  if (f.businessId.trim() && UUID_RX.test(f.businessId.trim()))
+    q = q.eq('attempted_business_id', f.businessId.trim()) as T;
+  if (f.userId.trim() && UUID_RX.test(f.userId.trim()))
+    q = q.eq('user_id', f.userId.trim()) as T;
+  if (f.dateFrom) q = q.gte('created_at', new Date(f.dateFrom).toISOString()) as T;
+  if (f.dateTo) {
+    // include the whole "to" day
+    const end = new Date(f.dateTo);
+    end.setHours(23, 59, 59, 999);
+    q = q.lte('created_at', end.toISOString()) as T;
+  }
+  return q;
+}
+
+/** Tiny CSV-safe escaper. */
+function csvEscape(v: unknown): string {
+  if (v === null || v === undefined) return '';
+  const s = String(v);
+  return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
 
 const AdminMembershipRejections: React.FC = () => {
   useNoIndex();
@@ -55,24 +90,46 @@ const AdminMembershipRejections: React.FC = () => {
 
   const [page, setPage] = useState(0);
   const [reason, setReason] = useState<string>('all');
-  const [searchInput, setSearchInput] = useState('');
-  const [search, setSearch] = useState('');
+  // Inputs (typed) vs applied (used in queryKey) — apply on click/Enter.
+  const [refIdInput, setRefIdInput] = useState('');
+  const [businessIdInput, setBusinessIdInput] = useState('');
+  const [userIdInput, setUserIdInput] = useState('');
+  const [dateFromInput, setDateFromInput] = useState('');
+  const [dateToInput, setDateToInput] = useState('');
+  const [filters, setFilters] = useState({
+    reason: 'all', refId: '', businessId: '', userId: '', dateFrom: '', dateTo: '',
+  });
+  const [exporting, setExporting] = useState(false);
+
+  const applyAll = () => {
+    setFilters({
+      reason,
+      refId: refIdInput,
+      businessId: businessIdInput,
+      userId: userIdInput,
+      dateFrom: dateFromInput,
+      dateTo: dateToInput,
+    });
+    setPage(0);
+  };
+
+  const clearAll = () => {
+    setReason('all');
+    setRefIdInput(''); setBusinessIdInput(''); setUserIdInput('');
+    setDateFromInput(''); setDateToInput('');
+    setFilters({ reason: 'all', refId: '', businessId: '', userId: '', dateFrom: '', dateTo: '' });
+    setPage(0);
+  };
 
   const { data, isLoading, isFetching, refetch } = useQuery({
-    queryKey: ['admin-membership-rejections', page, reason, search],
+    queryKey: ['admin-membership-rejections', page, filters],
     queryFn: async () => {
       let q = supabase
         .from('membership_upgrade_rejections')
         .select('*', { count: 'exact' })
         .order('created_at', { ascending: false })
         .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
-      if (reason !== 'all') q = q.eq('reason_code', reason);
-      if (search.trim()) {
-        const s = search.trim();
-        q = q.or(
-          `attempted_business_ref_id.ilike.%${s}%,actual_business_ref_id.ilike.%${s}%,user_id.eq.${/^[0-9a-f-]{36}$/i.test(s) ? s : '00000000-0000-0000-0000-000000000000'}`,
-        );
-      }
+      q = applyFilters(q, filters);
       const { data: rows, count, error } = await q;
       if (error) throw error;
       return { rows: (rows ?? []) as Row[], count: count ?? 0 };
@@ -90,6 +147,52 @@ const AdminMembershipRejections: React.FC = () => {
     return by;
   }, [rows]);
 
+  const exportCsv = async () => {
+    setExporting(true);
+    try {
+      let q = supabase
+        .from('membership_upgrade_rejections')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(EXPORT_LIMIT);
+      q = applyFilters(q, filters);
+      const { data: all, error } = await q;
+      if (error) throw error;
+      const list = (all ?? []) as Row[];
+      const headers = [
+        'id', 'created_at', 'reason_code', 'requested_tier', 'billing_cycle',
+        'attempted_business_id', 'attempted_business_ref_id', 'actual_business_ref_id',
+        'user_id', 'error_message', 'user_agent',
+      ] as const;
+      const lines = [headers.join(',')];
+      list.forEach((r) => {
+        lines.push(headers.map((h) => csvEscape((r as unknown as Record<string, unknown>)[h])).join(','));
+      });
+      // UTF-8 BOM so Excel renders Arabic correctly.
+      const blob = new Blob(['\ufeff' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `membership-rejections-${format(new Date(), 'yyyyMMdd-HHmm')}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success(
+        isRTL ? `تم تصدير ${list.length} سجل.` : `Exported ${list.length} records.`,
+      );
+      if (list.length === EXPORT_LIMIT) {
+        toast.warning(isRTL
+          ? `وصلنا للحد الأقصى (${EXPORT_LIMIT}). ضيّق نطاق التواريخ للحصول على نتائج كاملة.`
+          : `Reached export cap (${EXPORT_LIMIT}). Narrow the date range for a complete export.`);
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Export failed');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -106,28 +209,54 @@ const AdminMembershipRejections: React.FC = () => {
                 : 'All upgrade attempts blocked by ref_id, ownership or validation checks.'}
             </p>
           </div>
-          <Button variant="outline" onClick={() => refetch()} disabled={isFetching} className="gap-2">
-            <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
-            {isRTL ? 'تحديث' : 'Refresh'}
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={() => refetch()} disabled={isFetching} className="gap-2">
+              <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
+              {isRTL ? 'تحديث' : 'Refresh'}
+            </Button>
+            <Button onClick={exportCsv} disabled={exporting || total === 0} className="gap-2">
+              <Download className={`h-4 w-4 ${exporting ? 'animate-pulse' : ''}`} />
+              {isRTL ? 'تصدير CSV' : 'Export CSV'}
+            </Button>
+          </div>
         </div>
 
         {/* Filters */}
         <Card>
-          <CardContent className="flex flex-col gap-3 p-4 md:flex-row md:items-center">
-            <div className="relative flex-1">
+          <CardContent className="grid gap-3 p-4 md:grid-cols-2 lg:grid-cols-3">
+            {/* ref_id */}
+            <div className="relative">
               <Search className="absolute top-1/2 -translate-y-1/2 start-3 h-4 w-4 text-muted-foreground" />
               <Input
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') { setSearch(searchInput); setPage(0); } }}
-                placeholder={isRTL ? 'بحث بالـ ref_id أو معرّف المستخدم (UUID)…' : 'Search by ref_id or user UUID…'}
+                value={refIdInput}
+                onChange={(e) => setRefIdInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') applyAll(); }}
+                placeholder={isRTL ? 'ref_id (مثال BIZ-1000123)' : 'ref_id (e.g. BIZ-1000123)'}
                 className="ps-9 tech-content"
                 dir="auto"
               />
             </div>
-            <Select value={reason} onValueChange={(v) => { setReason(v); setPage(0); }}>
-              <SelectTrigger className="md:w-[240px]">
+            {/* business_id (UUID) */}
+            <Input
+              value={businessIdInput}
+              onChange={(e) => setBusinessIdInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') applyAll(); }}
+              placeholder={isRTL ? 'business_id (UUID)' : 'business_id (UUID)'}
+              className="tech-content"
+              dir="ltr"
+            />
+            {/* user_id (UUID) */}
+            <Input
+              value={userIdInput}
+              onChange={(e) => setUserIdInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') applyAll(); }}
+              placeholder={isRTL ? 'user_id (UUID)' : 'user_id (UUID)'}
+              className="tech-content"
+              dir="ltr"
+            />
+            {/* reason */}
+            <Select value={reason} onValueChange={setReason}>
+              <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -137,9 +266,27 @@ const AdminMembershipRejections: React.FC = () => {
                 ))}
               </SelectContent>
             </Select>
-            <Button onClick={() => { setSearch(searchInput); setPage(0); }} className="md:w-auto">
-              {isRTL ? 'بحث' : 'Search'}
-            </Button>
+            {/* date from */}
+            <div className="flex items-center gap-2">
+              <label className="w-12 text-xs text-muted-foreground">{isRTL ? 'من' : 'From'}</label>
+              <Input type="date" value={dateFromInput} onChange={(e) => setDateFromInput(e.target.value)} className="tech-content" />
+            </div>
+            {/* date to */}
+            <div className="flex items-center gap-2">
+              <label className="w-12 text-xs text-muted-foreground">{isRTL ? 'إلى' : 'To'}</label>
+              <Input type="date" value={dateToInput} onChange={(e) => setDateToInput(e.target.value)} className="tech-content" />
+            </div>
+            {/* actions */}
+            <div className="flex flex-wrap items-center gap-2 md:col-span-2 lg:col-span-3">
+              <Button onClick={applyAll}>{isRTL ? 'تطبيق الفلاتر' : 'Apply filters'}</Button>
+              <Button variant="ghost" onClick={clearAll} className="gap-1">
+                <X className="h-4 w-4" />
+                {isRTL ? 'مسح' : 'Clear'}
+              </Button>
+              <span className="ms-auto text-sm text-muted-foreground tech-content">
+                {isRTL ? `الإجمالي: ${total}` : `Total: ${total}`}
+              </span>
+            </div>
           </CardContent>
         </Card>
 
