@@ -726,7 +726,8 @@ const DashboardServices = () => {
                   {filteredServices.map(s => (
                     <SortableServiceCard key={s.id} s={s} rtl={rtl} viewMode={viewMode} isSelected={selectedIds.has(s.id)}
                       onEdit={openEdit} onToggle={srv => toggleMut.mutate(srv)} onDuplicate={duplicateService}
-                      onDelete={id => setDeleteConfirm(id)} onSelect={toggleSelect} />
+                      onDelete={id => setDeleteConfirm(id)} onSelect={toggleSelect}
+                      onShare={copyServiceLink} canShare={!!publicUrl} />
                   ))}
                 </div>
               </SortableContext>
