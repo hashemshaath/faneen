@@ -376,13 +376,14 @@ const DashboardServices = () => {
   }), []);
 
   const addPickedFromGroup = useCallback((group: typeof serviceCatalog[number]) => {
+    const existing = new Set(services.map(s => s.name_ar));
     const picks = group.services
       .map((s, i) => ({ s, key: `${group.id}:${i}` }))
-      .filter(({ s, key }) => catalogPicked.has(key) && !isServiceAdded(s.name_ar))
+      .filter(({ s, key }) => catalogPicked.has(key) && !existing.has(s.name_ar))
       .map(({ s }) => s);
     if (picks.length === 0) return;
     bulkInsertMut.mutate(picks);
-  }, [catalogPicked, isServiceAdded, bulkInsertMut]);
+  }, [catalogPicked, services, bulkInsertMut]);
 
   const copyServiceLink = useCallback((id: string) => {
     if (!publicUrl) { toast.error(rtl ? 'حدد اسم مستخدم أولاً' : 'Set a username first'); return; }
