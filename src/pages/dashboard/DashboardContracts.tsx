@@ -1635,6 +1635,36 @@ const DashboardContracts = () => {
               )}
               </div>
 
+              {/* Phase 5C.3 — Execution site step */}
+              <div ref={stepRefs.site} className="scroll-mt-24">
+                <ExecutionSiteSection
+                  isRTL={isRTL}
+                  businessId={businessId ?? null}
+                  clientUserId={
+                    selectedClient?.user_id
+                    ?? (editingContract as unknown as { client_id?: string | null } | null)?.client_id
+                    ?? null
+                  }
+                  selectedSiteId={selectedSiteId}
+                  snapshot={
+                    (editingContract as unknown as { execution_address_snapshot?: ExecutionAddressSnapshot | null } | null)
+                      ?.execution_address_snapshot ?? null
+                  }
+                  locked={!!editingContract && isContractLocked(editingContract)}
+                  hasContract={!!editingId}
+                  onSelect={(siteId) => setSelectedSiteId(siteId)}
+                  onPersistSelect={async (siteId) => {
+                    if (!editingId) return;
+                    const { error } = await supabase.rpc('set_contract_execution_site', {
+                      _contract_id: editingId,
+                      _site_id: siteId ?? undefined,
+                    });
+                    if (error) throw error;
+                    queryClient.invalidateQueries({ queryKey: ['dashboard-contracts'] });
+                  }}
+                />
+              </div>
+
               {/* CT4B — Step 2: Work / service type (auto-suggests template) */}
               <div ref={stepRefs.work} className="scroll-mt-24">
               {!editingId && (
