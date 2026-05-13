@@ -94,14 +94,15 @@ const DashboardBusinessDraft: React.FC = () => {
     if (!business) return;
     setSaving(true);
     try {
-      const payload: Record<string, string | null> = {};
-      for (const k of FIELDS) {
-        const v = (form[k] ?? '') as string;
-        payload[k] = v.trim().length > 0 ? v.trim() : null;
-      }
+      const payload = FIELDS.reduce<Record<string, string | null>>((acc, k) => {
+        const v = ((form[k] ?? '') as string).trim();
+        acc[k] = v.length > 0 ? v : null;
+        return acc;
+      }, {});
       const { error } = await supabase
         .from('businesses')
-        .update(payload)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .update(payload as any)
         .eq('id', business.id);
       if (error) throw error;
       toast.success(isRTL ? 'تم حفظ بيانات المنشأة' : 'Business details saved');
