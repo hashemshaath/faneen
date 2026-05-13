@@ -42,21 +42,29 @@ export const RepresentativesSection: React.FC<Props> = ({ businessId, ownerUserI
     queryKey: ['business-staff', businessId],
     enabled: !!businessId,
     queryFn: async (): Promise<StaffMember[]> => {
-      const { data: rows, error } = await supabase
-        .from('business_staff')
-        .select('id, business_id, user_id, role, is_active, created_at')
-        .eq('business_id', businessId)
-        .order('created_at', { ascending: true });
+      // Single round-trip via SECURITY DEFINER RPC: enforces owner/manager/admin
+      // access and returns the minimal profile fields we need.
+      const { data, error } = await supabase
+        .rpc('get_business_staff_with_profiles', { _business_id: businessId });
       if (error) throw error;
-      const list = (rows ?? []) as StaffMember[];
-      const ids = Array.from(new Set(list.map((s) => s.user_id)));
-      if (ids.length === 0) return list;
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('user_id, full_name, email, phone, avatar_url, ref_id')
-        .in('user_id', ids);
-      const byId = new Map((profiles ?? []).map((p) => [p.user_id, p]));
-      return list.map((s) => ({ ...s, profile: byId.get(s.user_id) ?? null }));
+      return ((data ?? []) as Array<StaffMember & {
+        full_name: string | null; email: string | null; phone: string | null;
+        avatar_url: string | null; ref_id: string | null;
+      }>).map((row) => ({
+        id: row.id,
+        business_id: row.business_id,
+        user_id: row.user_id,
+        role: row.role,
+        is_active: row.is_active,
+        created_at: row.created_at,
+        profile: {
+          full_name: row.full_name,
+          email: row.email,
+          phone: row.phone,
+          avatar_url: row.avatar_url,
+          ref_id: row.ref_id,
+        },
+      }));
     },
   });
 
@@ -71,12 +79,10 @@ export const RepresentativesSection: React.FC<Props> = ({ businessId, ownerUserI
     }
     setAdding(true);
     try {
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('user_id, full_name, email, ref_id')
-        .eq('ref_id', ref)
-        .maybeSingle();
+      const { data: matches, error: profileError } = await supabase
+        .rpc('find_user_by_ref_id', { _ref_id: ref });
       if (profileError) throw profileError;
+      const profile = (matches ?? [])[0];
       if (!profile) {
         toast.error(isRTL ? 'لا يوجد مستخدم بهذا الرقم المرجعي' : 'No user found for this reference ID');
         return;
