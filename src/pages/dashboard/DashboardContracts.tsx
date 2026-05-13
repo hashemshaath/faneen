@@ -1531,6 +1531,7 @@ const DashboardContracts = () => {
               {!editingId && (() => {
                 const steps = [
                   { key: 'client',   ar: 'العميل',       en: 'Client',   done: !!(selectedClient || form.client_email || pendingInvite) },
+                  { key: 'site',     ar: 'موقع التنفيذ', en: 'Site',     done: !!selectedSiteId },
                   { key: 'work',     ar: 'نوع العمل',    en: 'Work type', done: !!selectedWorkType && workTypeTouched },
                   { key: 'template', ar: 'القالب',       en: 'Template',  done: !!effectiveVersion },
                   { key: 'details',  ar: 'التفاصيل',     en: 'Details',   done: !!form.title_ar && !!form.total_amount && Number(form.total_amount) > 0 },
