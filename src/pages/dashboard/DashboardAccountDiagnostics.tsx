@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BUILD_ID, BUILD_TIME } from '@/lib/buildVersion';
-import { Activity, RefreshCw, ShieldCheck, Wrench, User as UserIcon, Clock, Hash, Download, Copy, Check, ShieldAlert } from 'lucide-react';
+import { Activity, RefreshCw, ShieldCheck, Wrench, User as UserIcon, Clock, Hash, Download, Copy, Check, ShieldAlert, X, Database } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Session } from '@supabase/supabase-js';
 
@@ -25,6 +25,41 @@ const Bool = ({ v }: { v: boolean }) => (
   <span className={`px-2 py-0.5 rounded-md text-[11px] font-semibold ${v ? 'bg-success/15 text-success' : 'bg-muted text-muted-foreground'}`}>{String(v)}</span>
 );
 
+type CheckProbe = {
+  rolesRows: string[];
+  rolesError: string | null;
+  ownsBusiness: boolean;
+  businessId: string | null;
+  businessError: string | null;
+  staffActive: boolean;
+  staffId: string | null;
+  staffError: string | null;
+};
+
+const CheckRow = ({
+  label, ok, source, reason, rtl,
+}: { label: string; ok: boolean; source: string; reason: string; rtl: boolean }) => (
+  <div className="rounded-xl border border-border/40 bg-card/40 p-3 space-y-1.5">
+    <div className="flex items-center justify-between gap-2">
+      <div className="flex items-center gap-2">
+        <span className={`w-5 h-5 rounded-md flex items-center justify-center ${ok ? 'bg-success/15 text-success' : 'bg-muted text-muted-foreground'}`}>
+          {ok ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
+        </span>
+        <span className="text-xs font-semibold font-mono">{label}</span>
+      </div>
+      <Badge variant="outline" className={`text-[10px] ${ok ? 'border-success/40 text-success' : 'border-border text-muted-foreground'}`}>
+        {ok ? (rtl ? 'مسموح' : 'granted') : (rtl ? 'مرفوض' : 'denied')}
+      </Badge>
+    </div>
+    <div className="grid grid-cols-[70px_1fr] gap-x-2 gap-y-1 text-[11px]">
+      <span className="text-muted-foreground">{rtl ? 'المصدر' : 'source'}</span>
+      <span className="font-mono inline-flex items-center gap-1 break-all"><Database className="w-3 h-3 text-muted-foreground shrink-0" />{source}</span>
+      <span className="text-muted-foreground">{rtl ? 'السبب' : 'reason'}</span>
+      <span className="text-foreground/80">{reason}</span>
+    </div>
+  </div>
+);
+
 const DashboardAccountDiagnostics: React.FC = () => {
   useNoIndex();
   const { isRTL: rtl } = useLanguage();
@@ -34,6 +69,7 @@ const DashboardAccountDiagnostics: React.FC = () => {
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState({ permissions: true, session: true, build: true });
   const [refreshing, setRefreshing] = useState(false);
+  const [probe, setProbe] = useState<CheckProbe | null>(null);
   const [searchParams] = useSearchParams();
 
   // Inbound denial context forwarded from /forbidden
@@ -49,8 +85,32 @@ const DashboardAccountDiagnostics: React.FC = () => {
   const refresh = useCallback(async () => {
     setRefreshing(true);
     setLoading({ permissions: true, session: true, build: true });
-    // Stage 1: permissions (already in memory from AuthContext)
-    await new Promise(r => setTimeout(r, 250));
+    // Stage 1: permissions — run live source-of-truth probes
+    if (user?.id) {
+      const [rolesRes, bizRes, staffRes] = await Promise.allSettled([
+        supabase.from('user_roles').select('role').eq('user_id', user.id),
+        supabase.from('businesses').select('id').eq('user_id', user.id).limit(1).maybeSingle(),
+        supabase.from('business_staff').select('id').eq('user_id', user.id).eq('is_active', true).limit(1).maybeSingle(),
+      ]);
+      const rolesData = rolesRes.status === 'fulfilled' ? rolesRes.value.data : null;
+      const rolesErr = rolesRes.status === 'fulfilled' ? rolesRes.value.error?.message ?? null : (rolesRes.reason instanceof Error ? rolesRes.reason.message : 'failed');
+      const bizData = bizRes.status === 'fulfilled' ? bizRes.value.data : null;
+      const bizErr = bizRes.status === 'fulfilled' ? bizRes.value.error?.message ?? null : (bizRes.reason instanceof Error ? bizRes.reason.message : 'failed');
+      const staffData = staffRes.status === 'fulfilled' ? staffRes.value.data : null;
+      const staffErr = staffRes.status === 'fulfilled' ? staffRes.value.error?.message ?? null : (staffRes.reason instanceof Error ? staffRes.reason.message : 'failed');
+      setProbe({
+        rolesRows: (rolesData ?? []).map(r => r.role as string),
+        rolesError: rolesErr,
+        ownsBusiness: !!bizData?.id,
+        businessId: bizData?.id ?? null,
+        businessError: bizErr,
+        staffActive: !!staffData?.id,
+        staffId: staffData?.id ?? null,
+        staffError: staffErr,
+      });
+    } else {
+      setProbe(null);
+    }
     setLoading(s => ({ ...s, permissions: false }));
     // Stage 2: session (network)
     const { data } = await supabase.auth.getSession();
@@ -61,7 +121,7 @@ const DashboardAccountDiagnostics: React.FC = () => {
     setLoading(s => ({ ...s, build: false }));
     setRefreshedAt(new Date());
     setRefreshing(false);
-  }, []);
+  }, [user?.id]);
 
   // Auto-trigger refresh on mount
   useEffect(() => { refresh(); }, [refresh]);
@@ -204,6 +264,69 @@ const DashboardAccountDiagnostics: React.FC = () => {
                 } />
                 <Row k="is_onboarded" v={<Bool v={!!profile?.is_onboarded} />} />
               </dl>
+              )}
+              {!loading.permissions && (
+                <div className="mt-4 space-y-2">
+                  <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
+                    {rtl ? 'تفصيل الفحوص' : 'Check breakdown'}
+                  </p>
+                  {(() => {
+                    const accountType = profile?.account_type ?? null;
+                    const providerByAccountType = ['business', 'company', 'provider'].includes(accountType ?? '');
+                    const checks = [
+                      {
+                        label: 'isSuperAdmin',
+                        ok: isSuperAdmin,
+                        source: 'public.user_roles',
+                        reason: probe?.rolesError
+                          ? (rtl ? `خطأ: ${probe.rolesError}` : `error: ${probe.rolesError}`)
+                          : isSuperAdmin
+                            ? (rtl ? "صف بدور 'super_admin' موجود" : "row with role='super_admin' present")
+                            : (rtl ? "لا يوجد صف بدور 'super_admin'" : "no row with role='super_admin'"),
+                      },
+                      {
+                        label: 'isAdmin',
+                        ok: isAdmin,
+                        source: 'public.user_roles',
+                        reason: isSuperAdmin
+                          ? (rtl ? 'موروث من super_admin' : 'inherited from super_admin')
+                          : isAdmin
+                            ? (rtl ? "صف بدور 'admin' موجود" : "row with role='admin' present")
+                            : (rtl ? 'لا يوجد دور admin/super_admin' : 'no admin/super_admin role'),
+                      },
+                      {
+                        label: 'isProvider',
+                        ok: isProvider,
+                        source: 'businesses ∪ business_staff ∪ profiles.account_type',
+                        reason: (() => {
+                          const parts: string[] = [];
+                          if (probe?.ownsBusiness) parts.push(rtl ? `يملك منشأة (${probe.businessId?.slice(0,8)}…)` : `owns business (${probe.businessId?.slice(0,8)}…)`);
+                          if (probe?.staffActive) parts.push(rtl ? 'موظف نشط في business_staff' : 'active row in business_staff');
+                          if (providerByAccountType) parts.push(`account_type='${accountType}'`);
+                          if (parts.length === 0) return rtl ? 'لا منشأة مملوكة، لا عضوية فريق نشطة، account_type ليس مزوّدًا' : 'no owned business, no active staff row, account_type is not provider-like';
+                          return parts.join(' · ');
+                        })(),
+                      },
+                      {
+                        label: 'account_type',
+                        ok: !!accountType,
+                        source: 'public.profiles.account_type',
+                        reason: accountType
+                          ? (rtl ? `القيمة الحالية: ${accountType}` : `current value: ${accountType}`)
+                          : (rtl ? 'لم يُحدَّد account_type' : 'account_type not set'),
+                      },
+                      {
+                        label: 'is_onboarded',
+                        ok: !!profile?.is_onboarded,
+                        source: 'public.profiles.is_onboarded',
+                        reason: profile?.is_onboarded
+                          ? (rtl ? 'أكمل المستخدم التهيئة' : 'onboarding completed')
+                          : (rtl ? 'لم يكتمل معالج التهيئة' : 'onboarding wizard not completed'),
+                      },
+                    ];
+                    return checks.map(c => <CheckRow key={c.label} {...c} rtl={rtl} />);
+                  })()}
+                </div>
               )}
             </CardContent>
           </Card>
