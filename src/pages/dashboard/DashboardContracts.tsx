@@ -32,7 +32,7 @@ import {
   CircleDot, Banknote, FileCheck, Share2,
   Ruler, ClipboardList, ShieldCheck, WrenchIcon, Upload,
   Zap, Target, PieChart, ArrowUpRight, ArrowDownRight,
-  Briefcase, Star, Filter, LayoutGrid, List, MoreHorizontal,
+  Star, Filter, LayoutGrid, List, MoreHorizontal,
   Percent, RefreshCw, Edit3, ExternalLink, CircleCheck,
 } from 'lucide-react';
 import {
@@ -81,7 +81,7 @@ import {
   PendingInvitePanel,
   type AcceptedInvitationRow,
 } from '@/components/contracts/dashboard/create/AcceptedInvitationsPanel';
-import { WORK_TYPES, getWorkType, pickTemplateForWorkType, type WorkTypeKey } from '@/lib/contract-work-types';
+import { getWorkType, pickTemplateForWorkType, type WorkTypeKey } from '@/lib/contract-work-types';
 import { getStatusGuidance } from '@/lib/contract-status-guidance';
 import { serializeDraftPayload, maskEmail as maskInviteEmail, type PendingInvite } from '@/lib/contract-invitations';
 import type { Json } from '@/integrations/supabase/types';
