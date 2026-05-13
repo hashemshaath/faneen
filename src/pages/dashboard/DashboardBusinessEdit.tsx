@@ -28,6 +28,8 @@ import type { BusinessRow } from '@/components/dashboard/business-edit/types';
 import { BilingualField } from '@/components/dashboard/business-edit/BilingualField';
 import { RepresentativesSection } from '@/components/dashboard/business-edit/RepresentativesSection';
 import { AuditLogPanel } from '@/components/dashboard/business-edit/AuditLogPanel';
+import { validateBusinessForm, issuesByKey, errorCount } from '@/components/dashboard/business-edit/validation';
+import { ValidationBanner, FieldError } from '@/components/dashboard/business-edit/ValidationBanner';
 
 interface RefRow { id: string; name_ar: string; name_en: string }
 interface CityRow extends RefRow { country_id: string }
@@ -58,6 +60,11 @@ const DashboardBusinessEdit: React.FC = () => {
   const [form, setForm] = useState<BusinessRow | null>(null);
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
+
+  const validationIssues = useMemo(() => (form ? validateBusinessForm(form) : []), [form]);
+  const issueMap = useMemo(() => issuesByKey(validationIssues), [validationIssues]);
+  const errors = errorCount(validationIssues);
+  const hasErrors = errors > 0;
 
   const { data: business, isLoading, error } = useQuery({
     queryKey: ['business-edit', user?.id],
@@ -103,6 +110,10 @@ const DashboardBusinessEdit: React.FC = () => {
 
   const handleSave = async () => {
     if (!form || !user) return;
+    if (hasErrors) {
+      toast.error(t(isRTL, 'يرجى تصحيح الحقول قبل الحفظ', 'Please fix the highlighted fields before saving'));
+      return;
+    }
     setSaving(true);
     try {
       const trim = (v: string | null) => (v?.trim() || null);
@@ -221,11 +232,13 @@ const DashboardBusinessEdit: React.FC = () => {
               )}
             </div>
           </div>
-          <Button onClick={handleSave} disabled={saving || !dirty} className="gap-1.5 self-start sm:self-auto">
+          <Button onClick={handleSave} disabled={saving || !dirty || hasErrors} className="gap-1.5 self-start sm:self-auto">
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             {t(isRTL, 'حفظ التغييرات', 'Save changes')}
           </Button>
         </header>
+
+        <ValidationBanner issues={validationIssues} isRTL={isRTL} />
 
         {/* Identity */}
         <Card>
@@ -291,15 +304,20 @@ const DashboardBusinessEdit: React.FC = () => {
           <CardContent>
             <div className={grid2}>
               <div><Label className={fieldLabel}>{t(isRTL, 'الهاتف الثابت', 'Landline phone')}</Label>
-                <Input dir="ltr" className="mt-1 tech-content" value={form.phone ?? ''} onChange={(e) => update('phone', e.target.value)} placeholder="+966 11 000 0000" /></div>
+                <Input dir="ltr" className="mt-1 tech-content" value={form.phone ?? ''} onChange={(e) => update('phone', e.target.value)} placeholder="+966 11 000 0000" />
+                <FieldError issue={issueMap.phone} isRTL={isRTL} /></div>
               <div><Label className={fieldLabel}>{t(isRTL, 'الجوال', 'Mobile')}</Label>
-                <Input dir="ltr" className="mt-1 tech-content" value={form.mobile ?? ''} onChange={(e) => update('mobile', e.target.value)} placeholder="+966 5x xxx xxxx" /></div>
+                <Input dir="ltr" className="mt-1 tech-content" value={form.mobile ?? ''} onChange={(e) => update('mobile', e.target.value)} placeholder="+966 5x xxx xxxx" />
+                <FieldError issue={issueMap.mobile} isRTL={isRTL} /></div>
               <div><Label className={fieldLabel}>{t(isRTL, 'هاتف خدمة العملاء', 'Customer service phone')}</Label>
-                <Input dir="ltr" className="mt-1 tech-content" value={form.customer_service_phone ?? ''} onChange={(e) => update('customer_service_phone', e.target.value)} /></div>
+                <Input dir="ltr" className="mt-1 tech-content" value={form.customer_service_phone ?? ''} onChange={(e) => update('customer_service_phone', e.target.value)} />
+                <FieldError issue={issueMap.customer_service_phone} isRTL={isRTL} /></div>
               <div><Label className={fieldLabel}><Mail className="w-3 h-3 inline me-1" />{t(isRTL, 'البريد الإلكتروني', 'Email')}</Label>
-                <Input type="email" dir="ltr" className="mt-1" value={form.email ?? ''} onChange={(e) => update('email', e.target.value)} /></div>
+                <Input type="email" dir="ltr" className="mt-1" value={form.email ?? ''} onChange={(e) => update('email', e.target.value)} />
+                <FieldError issue={issueMap.email} isRTL={isRTL} /></div>
               <div><Label className={fieldLabel}><Globe className="w-3 h-3 inline me-1" />{t(isRTL, 'الموقع الإلكتروني', 'Website')}</Label>
-                <Input type="url" dir="ltr" className="mt-1" value={form.website ?? ''} onChange={(e) => update('website', e.target.value)} placeholder="https://" /></div>
+                <Input type="url" dir="ltr" className="mt-1" value={form.website ?? ''} onChange={(e) => update('website', e.target.value)} placeholder="https://" />
+                <FieldError issue={issueMap.website} isRTL={isRTL} /></div>
               <div><Label className={fieldLabel}><User className="w-3 h-3 inline me-1" />{t(isRTL, 'الشخص المسؤول للتواصل', 'Public contact person')}</Label>
                 <Input dir="auto" className="mt-1" value={form.contact_person ?? ''} onChange={(e) => update('contact_person', e.target.value)} /></div>
             </div>
@@ -319,9 +337,11 @@ const DashboardBusinessEdit: React.FC = () => {
               <div><Label className={fieldLabel}>{t(isRTL, 'المسمى الوظيفي', 'Job title')}</Label>
                 <Input dir="auto" className="mt-1" value={form.account_manager_position ?? ''} onChange={(e) => update('account_manager_position', e.target.value)} placeholder={t(isRTL, 'مثال: مدير مبيعات', 'e.g. Sales Manager')} /></div>
               <div><Label className={fieldLabel}>{t(isRTL, 'الجوال', 'Mobile')}</Label>
-                <Input dir="ltr" className="mt-1 tech-content" value={form.account_manager_phone ?? ''} onChange={(e) => update('account_manager_phone', e.target.value)} placeholder="+966 5x xxx xxxx" /></div>
+                <Input dir="ltr" className="mt-1 tech-content" value={form.account_manager_phone ?? ''} onChange={(e) => update('account_manager_phone', e.target.value)} placeholder="+966 5x xxx xxxx" />
+                <FieldError issue={issueMap.account_manager_phone} isRTL={isRTL} /></div>
               <div><Label className={fieldLabel}>{t(isRTL, 'البريد الإلكتروني', 'Email')}</Label>
-                <Input type="email" dir="ltr" className="mt-1" value={form.account_manager_email ?? ''} onChange={(e) => update('account_manager_email', e.target.value)} /></div>
+                <Input type="email" dir="ltr" className="mt-1" value={form.account_manager_email ?? ''} onChange={(e) => update('account_manager_email', e.target.value)} />
+                <FieldError issue={issueMap.account_manager_email} isRTL={isRTL} /></div>
             </div>
           </CardContent>
         </Card>
@@ -421,11 +441,14 @@ const DashboardBusinessEdit: React.FC = () => {
           <CardContent>
             <div className="grid gap-4 sm:grid-cols-3">
               <div><Label className={fieldLabel}>{t(isRTL, 'رقم السجل التجاري', 'Commercial Registration (CR)')}</Label>
-                <Input dir="ltr" className="mt-1 tech-content" value={form.national_id ?? ''} onChange={(e) => update('national_id', e.target.value)} placeholder="1010xxxxxx" /></div>
+                <Input dir="ltr" className="mt-1 tech-content" value={form.national_id ?? ''} onChange={(e) => update('national_id', e.target.value)} placeholder="1010xxxxxx" maxLength={10} />
+                <FieldError issue={issueMap.national_id} isRTL={isRTL} /></div>
               <div><Label className={fieldLabel}>{t(isRTL, 'الرقم الموحّد للمنشأة', 'Unified national number')}</Label>
-                <Input dir="ltr" className="mt-1 tech-content" value={form.unified_number ?? ''} onChange={(e) => update('unified_number', e.target.value)} placeholder="7000xxxxxx" /></div>
+                <Input dir="ltr" className="mt-1 tech-content" value={form.unified_number ?? ''} onChange={(e) => update('unified_number', e.target.value)} placeholder="7000xxxxxx" maxLength={10} />
+                <FieldError issue={issueMap.unified_number} isRTL={isRTL} /></div>
               <div><Label className={fieldLabel}><Receipt className="w-3 h-3 inline me-1" />{t(isRTL, 'الرقم الضريبي (VAT)', 'VAT number')}</Label>
-                <Input dir="ltr" className="mt-1 tech-content" value={form.vat_number ?? ''} onChange={(e) => update('vat_number', e.target.value)} placeholder="3xxxxxxxxxxxxx3" maxLength={15} /></div>
+                <Input dir="ltr" className="mt-1 tech-content" value={form.vat_number ?? ''} onChange={(e) => update('vat_number', e.target.value)} placeholder="3xxxxxxxxxxxxx3" maxLength={15} />
+                <FieldError issue={issueMap.vat_number} isRTL={isRTL} /></div>
             </div>
           </CardContent>
         </Card>
@@ -456,7 +479,7 @@ const DashboardBusinessEdit: React.FC = () => {
               ? (<><AlertTriangle className="w-3.5 h-3.5 text-warning" />{t(isRTL, 'لديك تغييرات غير محفوظة', 'You have unsaved changes')}</>)
               : (<><ImageIcon className="w-3.5 h-3.5" />{t(isRTL, 'لا توجد تغييرات معلّقة', 'No pending changes')}</>)}
           </div>
-          <Button onClick={handleSave} disabled={saving || !dirty} className="gap-1.5">
+          <Button onClick={handleSave} disabled={saving || !dirty || hasErrors} className="gap-1.5">
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             {t(isRTL, 'حفظ التغييرات', 'Save changes')}
           </Button>
