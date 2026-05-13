@@ -705,6 +705,57 @@ export type Database = {
           },
         ]
       }
+      business_audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          business_id: string | null
+          changes: Json | null
+          created_at: string
+          entity_id: string | null
+          entity_type: string
+          id: string
+          metadata: Json | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          business_id?: string | null
+          changes?: Json | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          metadata?: Json | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          business_id?: string | null
+          changes?: Json | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          metadata?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_audit_log_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_audit_log_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_availability: {
         Row: {
           business_id: string
@@ -1163,6 +1214,50 @@ export type Database = {
             columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_staff_permissions: {
+        Row: {
+          business_staff_id: string
+          can_create: boolean
+          can_delete: boolean
+          can_edit: boolean
+          can_view: boolean
+          created_at: string
+          id: string
+          module: Database["public"]["Enums"]["business_module"]
+          updated_at: string
+        }
+        Insert: {
+          business_staff_id: string
+          can_create?: boolean
+          can_delete?: boolean
+          can_edit?: boolean
+          can_view?: boolean
+          created_at?: string
+          id?: string
+          module: Database["public"]["Enums"]["business_module"]
+          updated_at?: string
+        }
+        Update: {
+          business_staff_id?: string
+          can_create?: boolean
+          can_delete?: boolean
+          can_edit?: boolean
+          can_view?: boolean
+          created_at?: string
+          id?: string
+          module?: Database["public"]["Enums"]["business_module"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_staff_permissions_business_staff_id_fkey"
+            columns: ["business_staff_id"]
+            isOneToOne: false
+            referencedRelation: "business_staff"
             referencedColumns: ["id"]
           },
         ]
@@ -8689,6 +8784,15 @@ export type Database = {
         }[]
       }
       has_admin_access: { Args: { _user_id: string }; Returns: boolean }
+      has_business_permission: {
+        Args: {
+          _action: string
+          _business_id: string
+          _module: Database["public"]["Enums"]["business_module"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       has_business_role: {
         Args: {
           _business_id: string
@@ -8722,6 +8826,7 @@ export type Database = {
         Returns: boolean
       }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      jsonb_diff: { Args: { _new: Json; _old: Json }; Returns: Json }
       link_lead_to_contract: {
         Args: { _contract_id: string; _lead_id: string }
         Returns: Json
@@ -9273,6 +9378,21 @@ export type Database = {
         | "rejected"
         | "needs_changes"
         | "published"
+      business_module:
+        | "business_profile"
+        | "branches"
+        | "staff"
+        | "contracts"
+        | "projects"
+        | "services"
+        | "offers"
+        | "leads"
+        | "messages"
+        | "reviews"
+        | "warranties"
+        | "billing"
+        | "analytics"
+        | "settings"
       business_staff_role: "owner" | "manager" | "editor" | "viewer"
       client_invite_status:
         | "pending"
@@ -9444,6 +9564,22 @@ export const Constants = {
         "rejected",
         "needs_changes",
         "published",
+      ],
+      business_module: [
+        "business_profile",
+        "branches",
+        "staff",
+        "contracts",
+        "projects",
+        "services",
+        "offers",
+        "leads",
+        "messages",
+        "reviews",
+        "warranties",
+        "billing",
+        "analytics",
+        "settings",
       ],
       business_staff_role: ["owner", "manager", "editor", "viewer"],
       client_invite_status: [
