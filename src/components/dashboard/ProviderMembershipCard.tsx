@@ -50,7 +50,7 @@ export const ProviderMembershipCard: React.FC<Props> = ({ userId, businessId, ti
     queryFn: async () => {
       const { data } = await supabase
         .from('membership_subscriptions')
-        .select('id, status, billing_cycle, starts_at, expires_at, plan:membership_plans(id, tier, name_ar, name_en, limits)')
+        .select('id, status, billing_cycle, starts_at, expires_at, plan:membership_plans!plan_id(id, tier, name_ar, name_en, limits)')
         .eq('user_id', userId)
         .eq('status', 'active')
         .order('created_at', { ascending: false })

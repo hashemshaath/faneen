@@ -169,7 +169,7 @@ const Membership = () => {
       if (!user) return null;
       const { data } = await supabase
         .from('membership_subscriptions')
-        .select('*, plan:membership_plans(name_ar, name_en, tier)')
+        .select('*, plan:membership_plans!plan_id(name_ar, name_en, tier)')
         .eq('user_id', user.id)
         .in('status', ['active', 'past_due'])
         .order('created_at', { ascending: false })
