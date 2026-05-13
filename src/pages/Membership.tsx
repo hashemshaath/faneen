@@ -16,6 +16,9 @@ import { FeatureComparisonTable } from '@/components/membership/FeatureCompariso
 import { PromoCodeRedeem } from '@/components/membership/PromoCodeRedeem';
 import { RenewalStatusBanner } from '@/components/membership/RenewalStatusBanner';
 import { MembershipKeysManager } from '@/components/membership/MembershipKeysManager';
+import { MembershipBenefits } from '@/components/membership/MembershipBenefits';
+import { MembershipFAQ } from '@/components/membership/MembershipFAQ';
+import { MembershipTrustStrip } from '@/components/membership/MembershipTrustStrip';
 import { track } from '@/lib/analytics-events';
 import { Button } from '@/components/ui/button';
 import { ensureDraftBusiness } from '@/lib/ensure-business';
@@ -805,11 +808,25 @@ const Membership = () => {
 
         <FeatureComparisonTable isRTL={isRTL} />
 
+        <MembershipBenefits isRTL={isRTL} />
+
+        <MembershipTrustStrip isRTL={isRTL} />
+
+        <MembershipFAQ isRTL={isRTL} />
+
         {user && myBusiness?.id && (
           <MembershipKeysManager isRTL={isRTL} businessId={myBusiness.id} />
         )}
 
-        <div className="text-center mt-10">
+        <div className="max-w-3xl mx-auto mt-16 sm:mt-20 text-center rounded-2xl border border-accent/20 bg-gradient-to-br from-accent/5 via-card to-primary/5 p-8 sm:p-10">
+          <h3 className="font-heading font-bold text-xl sm:text-2xl text-foreground mb-2">
+            {isRTL ? 'جاهز للارتقاء بأعمالك؟' : 'Ready to grow your business?'}
+          </h3>
+          <p className="text-sm text-muted-foreground mb-5 max-w-md mx-auto">
+            {isRTL
+              ? 'انضم لمئات المنشآت التي تثق بقطاعات لتنمية أعمالها في القطاع الصناعي.'
+              : 'Join hundreds of businesses that trust Qitaat to grow in the industrial sector.'}
+          </p>
           <p className="text-xs text-muted-foreground flex items-center justify-center gap-1.5">
             <Shield className="w-3.5 h-3.5" />
             {isRTL ? 'جميع الخطط تشمل حماية كاملة للبيانات والخصوصية' : 'All plans include full data protection and privacy'}
