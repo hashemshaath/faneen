@@ -93,3 +93,43 @@ export const STAFF_ROLE_META: Record<StaffRole, { ar: string; en: string; tone: 
   viewer:  { ar: 'مشاهد',    en: 'Viewer',  tone: 'border-muted-foreground/30 bg-muted text-muted-foreground',
              desc_ar: 'وصول للقراءة فقط للوحات والتقارير.',               desc_en: 'Read-only access to dashboards and reports.' },
 };
+
+/** Business modules that representatives can be granted permissions on. */
+export type BusinessModule =
+  | 'business_profile' | 'branches' | 'staff' | 'contracts' | 'projects'
+  | 'services' | 'offers' | 'leads' | 'messages' | 'reviews'
+  | 'warranties' | 'billing' | 'analytics' | 'settings';
+
+export interface ModulePermission {
+  id?: string;
+  business_staff_id: string;
+  module: BusinessModule;
+  can_view: boolean;
+  can_create: boolean;
+  can_edit: boolean;
+  can_delete: boolean;
+}
+
+export const BUSINESS_MODULES: { key: BusinessModule; ar: string; en: string }[] = [
+  { key: 'business_profile', ar: 'بيانات المنشأة', en: 'Business profile' },
+  { key: 'branches',         ar: 'الفروع',          en: 'Branches' },
+  { key: 'staff',            ar: 'المفوّضون',       en: 'Representatives' },
+  { key: 'contracts',        ar: 'العقود',          en: 'Contracts' },
+  { key: 'projects',         ar: 'المشاريع',        en: 'Projects' },
+  { key: 'services',         ar: 'الخدمات',         en: 'Services' },
+  { key: 'offers',           ar: 'العروض',          en: 'Offers' },
+  { key: 'leads',            ar: 'طلبات العملاء',   en: 'Leads' },
+  { key: 'messages',         ar: 'الرسائل',         en: 'Messages' },
+  { key: 'reviews',          ar: 'التقييمات',       en: 'Reviews' },
+  { key: 'warranties',       ar: 'الضمانات',        en: 'Warranties' },
+  { key: 'billing',          ar: 'الفوترة',         en: 'Billing' },
+  { key: 'analytics',        ar: 'التحليلات',       en: 'Analytics' },
+  { key: 'settings',         ar: 'الإعدادات',       en: 'Settings' },
+];
+
+export const PERMISSION_ACTIONS: { key: 'can_view' | 'can_create' | 'can_edit' | 'can_delete'; ar: string; en: string }[] = [
+  { key: 'can_view',   ar: 'عرض',   en: 'View' },
+  { key: 'can_create', ar: 'إنشاء', en: 'Create' },
+  { key: 'can_edit',   ar: 'تعديل', en: 'Edit' },
+  { key: 'can_delete', ar: 'حذف',   en: 'Delete' },
+];
