@@ -33,7 +33,6 @@ const Membership = () => {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [subscribingPlanId, setSubscribingPlanId] = useState<string | null>(null);
   const [pendingDowngrade, setPendingDowngrade] = useState<{ id: string; tier: string } | null>(null);
-  const [noBusinessNotice, setNoBusinessNotice] = useState(false);
 
   // Privacy-safe: tier of current user (or 'anonymous') — no PII.
   React.useEffect(() => {
