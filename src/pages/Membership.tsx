@@ -27,7 +27,7 @@ const Membership = () => {
     title: language === 'ar' ? 'باقات العضوية - اشترك واحصل على مميزات حصرية | قِطاعات' : 'Membership Plans - Subscribe for Exclusive Benefits | Qitaat',
     description: language === 'ar' ? 'اختر باقة العضوية المناسبة لعملك واحصل على مميزات حصرية لتطوير أعمالك.' : 'Choose the right membership plan for your business and get exclusive benefits.',
   });
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
@@ -50,7 +50,7 @@ const Membership = () => {
   });
 
   const { data: myBusiness } = useQuery({
-    queryKey: ['my-business-membership', user?.id],
+    queryKey: ['my-business-membership', user?.id, profile?.account_type],
     queryFn: async () => {
       if (!user) return null;
       // 1. Owner: pick the most recently created business they own
@@ -71,7 +71,32 @@ const Membership = () => {
         .in('role', ['owner', 'manager'])
         .limit(1);
       const row = staff.data?.[0] as { businesses?: { id: string; membership_tier: string; name_ar: string | null; name_en: string | null } } | undefined;
-      return row?.businesses ?? null;
+      if (row?.businesses) return row.businesses;
+
+      // 3. Self-heal: business/company accounts must always have an entity.
+      // Auto-create a draft business so the manager is linked to the entity
+      // (entity-first model) and plan selection never blocks with "no business".
+      const acct = profile?.account_type;
+      if (acct === 'business' || acct === 'company') {
+        const placeholderUsername =
+          'biz-' + user.id.replace(/-/g, '').slice(0, 12);
+        const placeholderName =
+          (profile?.full_name && profile.full_name.trim()) ||
+          (isRTL ? 'منشأة' : 'Business');
+        const created = await supabase
+          .from('businesses')
+          .insert({
+            user_id: user.id,
+            name_ar: placeholderName,
+            username: placeholderUsername,
+            approval_status: 'draft',
+            username_status: 'pending',
+          })
+          .select('id, membership_tier, name_ar, name_en')
+          .maybeSingle();
+        if (created.data) return created.data;
+      }
+      return null;
     },
     enabled: !!user,
   });
