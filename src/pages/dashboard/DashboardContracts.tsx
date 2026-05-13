@@ -52,13 +52,11 @@ import {
   groupLineItemsByBoqGroup,
   hasMixedPricing,
   listPricingMethodsUsed,
-  getSuggestedPricingMethod,
   getWorkTypeBoqPresets,
   dedupeStarterRows,
   type BoqGroupKey,
 } from '@/lib/contract-boq';
 import { ClientPicker, type SelectedClient } from '@/components/contracts/ClientPicker';
-import { DimensionHelper } from '@/components/contracts/DimensionHelper';
 import { LineItemFormSection } from '@/components/contracts/dashboard/create/LineItemFormSection';
 import { SuggestedBOQPanel } from '@/components/contracts/dashboard/create/SuggestedBOQPanel';
 import { ContractRoleTabs } from '@/components/contracts/dashboard/ContractRoleTabs';
