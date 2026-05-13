@@ -117,7 +117,7 @@ const DashboardPrivateSectors: React.FC = () => {
             initial={editing}
             busy={saveMut.isPending}
             onCancel={() => setEditing(null)}
-            onSubmit={(v) => saveMut.mutateAsync(v)}
+            onSubmit={async (v) => { await saveMut.mutateAsync(v); }}
           />
         )}
 
