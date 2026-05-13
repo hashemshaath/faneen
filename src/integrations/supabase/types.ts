@@ -7719,6 +7719,14 @@ export type Database = {
         Args: { _business_id?: string; _user_id: string }
         Returns: Json
       }
+      get_admin_contract_analytics_dashboard: {
+        Args: {
+          _business_id?: string
+          _include_demo?: boolean
+          _period?: string
+        }
+        Returns: Json
+      }
       get_contact_inbox_settings: {
         Args: never
         Returns: {
