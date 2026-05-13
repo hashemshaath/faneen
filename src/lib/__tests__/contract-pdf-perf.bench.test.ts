@@ -14,8 +14,11 @@ import { describe, it, expect, vi } from 'vitest';
 // Same Arabic-font mock as PDF-QA1 — CDN fetch is unreliable in jsdom and
 // would dominate the benchmark with network noise unrelated to render speed.
 vi.mock('@/lib/pdf-arabic-font', () => ({
+  ArabicPdfFontError: class ArabicPdfFontError extends Error {},
   registerArabicFont: async () => false,
   setupArabicDoc:     async () => false,
+  verifyArabicFontReady: () => true,
+  normalizeArabicPdfTextLayer: () => {},
   getArabicTableStyles: () => ({}),
   printContractSection: () => {},
 }));
