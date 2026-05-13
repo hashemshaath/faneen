@@ -67,7 +67,7 @@ const providerGroups: MenuGroup[] = [
       { label: { ar: 'المشاريع', en: 'Projects' }, url: '/dashboard/projects', icon: FolderOpen },
       { label: { ar: 'العروض', en: 'Promotions' }, url: '/dashboard/promotions', icon: Megaphone },
       { label: { ar: 'القطاعات الخاصة', en: 'Private Sectors' }, url: '/dashboard/private-sectors', icon: Layers },
-      { label: { ar: 'شارة موثّق', en: 'Verified Badge' }, url: '/dashboard/badge', icon: ShieldCheck },
+      { label: { ar: 'شارة التوثيق', en: 'Verification Badge' }, url: '/dashboard/badge', icon: ShieldCheck },
     ],
   },
   {

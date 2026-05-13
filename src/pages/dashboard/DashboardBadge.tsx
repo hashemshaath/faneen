@@ -437,7 +437,7 @@ const DashboardBadge: React.FC = () => {
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <h1 className="text-xl sm:text-2xl font-heading font-bold truncate">
-                        {isRTL ? 'مولّد شارة الورشة الموثّقة' : 'Verified Workshop Badge'}
+                        {isRTL ? 'شارة التوثيق' : 'Verification Badge'}
                       </h1>
                       {business.is_verified
                         ? <VerifiedBadge size="sm" />
