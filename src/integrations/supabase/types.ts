@@ -1547,6 +1547,100 @@ export type Database = {
           },
         ]
       }
+      client_sites: {
+        Row: {
+          access_notes: string | null
+          address_line1: string
+          address_line2: string | null
+          archived_at: string | null
+          business_id: string
+          city_id: string | null
+          city_name: string | null
+          client_user_id: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string
+          created_by: string
+          district: string | null
+          id: string
+          is_default: boolean
+          is_demo: boolean
+          label: string
+          latitude: number | null
+          longitude: number | null
+          map_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          access_notes?: string | null
+          address_line1: string
+          address_line2?: string | null
+          archived_at?: string | null
+          business_id: string
+          city_id?: string | null
+          city_name?: string | null
+          client_user_id?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          created_by?: string
+          district?: string | null
+          id?: string
+          is_default?: boolean
+          is_demo?: boolean
+          label: string
+          latitude?: number | null
+          longitude?: number | null
+          map_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          access_notes?: string | null
+          address_line1?: string
+          address_line2?: string | null
+          archived_at?: string | null
+          business_id?: string
+          city_id?: string | null
+          city_name?: string | null
+          client_user_id?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          created_by?: string
+          district?: string | null
+          id?: string
+          is_default?: boolean
+          is_demo?: boolean
+          label?: string
+          latitude?: number | null
+          longitude?: number | null
+          map_url?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_sites_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_sites_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_sites_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contact_inbox_settings: {
         Row: {
           alert_on_max_retries: boolean
@@ -7061,6 +7155,7 @@ export type Database = {
         Args: { _version_id: string }
         Returns: Json
       }
+      _can_manage_client_site: { Args: { _site_id: string }; Returns: boolean }
       _ct_assert_admin: { Args: never; Returns: undefined }
       _ct_assert_version_editable: {
         Args: { p_version_id: string }
@@ -7322,6 +7417,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      archive_client_site: { Args: { _site_id: string }; Returns: Json }
       archive_expired_contract_pdf_exports: { Args: never; Returns: number }
       bump_migration_epoch: { Args: { _reason?: string }; Returns: number }
       calculate_contract_line_item_total: {
@@ -7543,6 +7639,7 @@ export type Database = {
         }
         Returns: Json
       }
+      create_client_site: { Args: { _payload: Json }; Returns: Json }
       create_contract_from_template: {
         Args: {
           _payload: Json
@@ -7848,6 +7945,26 @@ export type Database = {
           full_name: string
           role: string
           user_id: string
+        }[]
+      }
+      list_client_sites_for_contract: {
+        Args: { _business_id: string; _client_user_id?: string }
+        Returns: {
+          access_notes: string
+          address_line1: string
+          address_line2: string
+          city_id: string
+          city_name: string
+          client_user_id: string
+          contact_name: string
+          contact_phone: string
+          district: string
+          id: string
+          is_default: boolean
+          label: string
+          latitude: number
+          longitude: number
+          map_url: string
         }[]
       }
       list_contact_audit_events: {
@@ -8194,6 +8311,10 @@ export type Database = {
         Returns: string
       }
       unsubscribe_newsletter: { Args: { p_email: string }; Returns: boolean }
+      update_client_site: {
+        Args: { _patch: Json; _site_id: string }
+        Returns: Json
+      }
       update_contact_inbox_settings: {
         Args: { _patch: Json }
         Returns: {
