@@ -1403,6 +1403,69 @@ const DashboardContracts = () => {
     return new Date(d).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   }, [isRTL]);
 
+  /* ── Phase 8 — Filtered CSV export (no PII; aggregate fields only). ── */
+  const handleExportCsv = useCallback(() => {
+    if (filtered.length === 0) {
+      toast.info(isRTL ? 'لا توجد عقود للتصدير' : 'No contracts to export');
+      return;
+    }
+    const headers = isRTL
+      ? ['الرقم', 'العنوان', 'الحالة', 'الدور', 'المبلغ', 'العملة', 'تاريخ الإنشاء', 'تاريخ البدء', 'تاريخ الانتهاء']
+      : ['Number', 'Title', 'Status', 'Role', 'Amount', 'Currency', 'Created', 'Start', 'End'];
+    const escape = (v: unknown) => {
+      const s = v == null ? '' : String(v);
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const rows = filtered.map((c) => [
+      c.contract_number,
+      isRTL ? c.title_ar : (c.title_en || c.title_ar),
+      c.status,
+      c._role,
+      Number(c.total_amount),
+      c.currency_code,
+      c.created_at?.slice(0, 10) ?? '',
+      c.start_date ?? '',
+      c.end_date ?? '',
+    ].map(escape).join(','));
+    // UTF-8 BOM for Excel Arabic compatibility.
+    const csv = '\uFEFF' + [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `contracts-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success(isRTL ? `تم تصدير ${filtered.length} عقد` : `Exported ${filtered.length} contracts`);
+  }, [filtered, isRTL]);
+
+  /* ── Phase 8 — Keyboard shortcuts: "/" focus search, "n" new contract, "Esc" close form. ── */
+  React.useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const isEditable = target && (
+        target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' ||
+        target.tagName === 'SELECT' || target.isContentEditable
+      );
+      if (e.key === 'Escape' && viewSection !== 'list') {
+        setViewSection('list');
+        return;
+      }
+      if (isEditable) return;
+      if (e.key === '/' && viewSection === 'list') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      } else if ((e.key === 'n' || e.key === 'N') && viewSection === 'list' && !e.metaKey && !e.ctrlKey) {
+        e.preventDefault();
+        setViewSection('create');
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [viewSection]);
+
   const handleExportPDF = useCallback(async (c: ContractWithRole) => {
     setIsExporting(true);
     try {
