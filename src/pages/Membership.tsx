@@ -160,6 +160,9 @@ const Membership = () => {
         requested_tier: plan.tier,
         requested_plan_id: plan.id,
         billing_cycle: billingCycle,
+        note: (myBusiness as { ref_id?: string | null }).ref_id
+          ? `Bound to business ${(myBusiness as { ref_id?: string | null }).ref_id}`
+          : null,
       }).select('id').maybeSingle();
       if (error) throw error;
       return { duplicate: false, requestId: inserted?.id as string | undefined, tier: plan.tier };
