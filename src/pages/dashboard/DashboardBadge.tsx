@@ -20,7 +20,7 @@ import {
   MousePointerClick, Globe, Eye, Percent, MessageSquare, CalendarClock,
   Phone, ArrowRight, QrCode, Download, Share2, Mail, Sparkles, Target,
   TrendingUp, TrendingDown, Activity, FileText, Palette, Stethoscope,
-  CircleDot, Database, RefreshCw,
+  CircleDot, Database, RefreshCw, Upload, X, Type as TypeIcon,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNoIndex } from '@/hooks/useNoIndex';
