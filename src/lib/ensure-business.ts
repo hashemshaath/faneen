@@ -52,10 +52,23 @@ export function ensureDraftBusiness(
   if (existing) return existing;
 
   const promise = (async (): Promise<EnsuredBusiness | null> => {
+    const SELECT_COLS =
+      'id, ref_id, membership_tier, name_ar, name_en, approval_status, onboarding_completion';
+
+    // 1) If a business already exists for this user (any status), reuse it.
+    const { data: existingRow } = await supabase
+      .from('businesses')
+      .select(SELECT_COLS)
+      .eq('user_id', userId)
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    if (existingRow) return existingRow as EnsuredBusiness;
+
     const placeholderUsername = 'biz-' + userId.replace(/-/g, '').slice(0, 12);
     const placeholderName =
       (fullName && fullName.trim()) || (isRTL ? 'منشأة' : 'Business');
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('businesses')
       .insert({
         user_id: userId,
@@ -64,9 +77,22 @@ export function ensureDraftBusiness(
         approval_status: 'draft',
         username_status: 'pending',
       })
-      .select('id, ref_id, membership_tier, name_ar, name_en, approval_status, onboarding_completion')
+      .select(SELECT_COLS)
       .maybeSingle();
-    return (data as EnsuredBusiness | null) ?? null;
+    if (data) return data as EnsuredBusiness;
+
+    // 2) Concurrent insert lost the race against the unique index — fetch the winner.
+    if (error) {
+      const { data: raced } = await supabase
+        .from('businesses')
+        .select(SELECT_COLS)
+        .eq('user_id', userId)
+        .order('created_at', { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      if (raced) return raced as EnsuredBusiness;
+    }
+    return null;
   })()
     .catch(() => null)
     .finally(() => {
