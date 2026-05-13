@@ -9161,6 +9161,23 @@ export type Database = {
           window_until: string
         }[]
       }
+      get_my_staff_invitations: {
+        Args: never
+        Returns: {
+          accepted_at: string
+          business_id: string
+          business_name_ar: string
+          business_name_en: string
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          is_expired: boolean
+          role: string
+          status: string
+          token: string
+        }[]
+      }
       get_promo_code_status: {
         Args: { _code_id: string }
         Returns: {
