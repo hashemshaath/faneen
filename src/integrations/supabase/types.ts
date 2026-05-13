@@ -1218,6 +1218,63 @@ export type Database = {
           },
         ]
       }
+      business_staff_invitations: {
+        Row: {
+          accepted_at: string | null
+          accepted_by: string | null
+          business_id: string
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string
+          role: string
+          status: string
+          token: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          business_id: string
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          invited_by: string
+          role?: string
+          status?: string
+          token: string
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          business_id?: string
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string
+          role?: string
+          status?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_staff_invitations_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_staff_invitations_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_staff_permissions: {
         Row: {
           business_staff_id: string
@@ -8000,6 +8057,7 @@ export type Database = {
           role: Database["public"]["Enums"]["business_staff_role"]
         }[]
       }
+      accept_staff_invitation: { Args: { _token: string }; Returns: Json }
       admin_contract_pdf_exports_summary: {
         Args: never
         Returns: {
@@ -8770,6 +8828,19 @@ export type Database = {
           avatar_url: string
           full_name: string
           user_id: string
+        }[]
+      }
+      get_staff_invitation_preview: {
+        Args: { _token: string }
+        Returns: {
+          business_id: string
+          business_name_ar: string
+          business_name_en: string
+          email: string
+          expires_at: string
+          id: string
+          role: string
+          status: string
         }[]
       }
       get_web_vitals_summary: {

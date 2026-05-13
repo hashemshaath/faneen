@@ -18,15 +18,20 @@ import {
 
 import { STAFF_ROLE_META, type StaffMember, type StaffRole } from './types';
 import { PermissionsMatrix } from './PermissionsMatrix';
+import { InvitationsPanel } from './InvitationsPanel';
 
 interface Props {
   businessId: string;
   ownerUserId: string;
   isRTL: boolean;
+  businessNameAr?: string | null;
+  businessNameEn?: string | null;
 }
 
 /** Authorized representatives (مفوضون) editor. Owner / admin only. */
-export const RepresentativesSection: React.FC<Props> = ({ businessId, ownerUserId, isRTL }) => {
+export const RepresentativesSection: React.FC<Props> = ({
+  businessId, ownerUserId, isRTL, businessNameAr = null, businessNameEn = null,
+}) => {
   const { user, isAdmin } = useAuth();
   const qc = useQueryClient();
 
@@ -165,6 +170,15 @@ export const RepresentativesSection: React.FC<Props> = ({ businessId, ownerUserI
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Email invitations */}
+        <InvitationsPanel
+          businessId={businessId}
+          businessNameAr={businessNameAr}
+          businessNameEn={businessNameEn}
+          isRTL={isRTL}
+          canManage={canManage}
+        />
+
         {/* Add new */}
         {canManage && (
           <div className="rounded-xl border border-dashed border-border bg-muted/20 p-3">

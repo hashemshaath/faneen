@@ -114,6 +114,7 @@ const Forbidden = lazyRetry(() => import("./pages/Forbidden"));
 const Unsubscribe = lazyRetry(() => import("./pages/Unsubscribe"));
 const VerifyContract = lazyRetry(() => import("./pages/VerifyContract"));
 const InviteAccept = lazyRetry(() => import("./pages/InviteAccept"));
+const StaffInviteAccept = lazyRetry(() => import("./pages/StaffInviteAccept"));
 const Diagnostics = lazyRetry(() => import("./pages/Diagnostics"));
 const ForProviders = lazyRetry(() => import("./pages/ForProviders"));
 const DashboardCommunicationPreferences = lazyRetry(() => import("./pages/dashboard/DashboardCommunicationPreferences"));
@@ -189,6 +190,7 @@ const AppRoutes = () => (
           <Route path="/unsubscribe" element={<Unsubscribe />} />
           <Route path="/v/c/:number" element={<VerifyContract />} />
           <Route path="/invite/:token" element={<InviteAccept />} />
+          <Route path="/staff-invite/:token" element={<StaffInviteAccept />} />
           <Route path="/diagnostics" element={<Diagnostics />} />
           <Route path="/for-providers" element={<ForProviders />} />
           <Route path="/join-as-provider" element={<ForProviders />} />
