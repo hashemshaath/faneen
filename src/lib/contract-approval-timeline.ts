@@ -154,3 +154,139 @@ export function getContractStatusGuidanceLine(
   const entry = map[status] ?? map.draft;
   return isRTL ? entry.ar : entry.en;
 }
+
+/* ── Last / Next Action Summary (display only) ───────────────────────────── */
+
+export type NextActionTone = 'muted' | 'info' | 'success' | 'warning' | 'destructive';
+
+export interface NextActionSummary {
+  tone: NextActionTone;
+  labelAr: string;
+  labelEn: string;
+  descriptionAr: string;
+  descriptionEn: string;
+  timestamp?: string | null;
+  actionHintAr?: string;
+  actionHintEn?: string;
+}
+
+export interface NextActionInput {
+  status: string;
+  client_accepted_at?: string | null;
+  provider_accepted_at?: string | null;
+  updated_at?: string | null;
+  locked_at?: string | null;
+  completed_at?: string | null;
+  cancelled_at?: string | null;
+  disputed_at?: string | null;
+}
+
+/**
+ * Pure helper that derives a short "what's the current next action?" summary
+ * from existing contract fields. Display only — no mutation, no DB calls.
+ */
+export function getContractNextActionSummary(
+  c: NextActionInput,
+  _isRTL: boolean = false,
+): NextActionSummary {
+  const status = c.status;
+
+  if (status === 'pending_approval') {
+    const p = !!c.provider_accepted_at;
+    const cl = !!c.client_accepted_at;
+    if (p && !cl) {
+      return {
+        tone: 'warning',
+        labelAr: 'بانتظار موافقة العميل',
+        labelEn: 'Waiting for client approval',
+        descriptionAr: 'وافق المزود، ولم يوافق العميل بعد.',
+        descriptionEn: 'Provider approved; client has not approved yet.',
+        timestamp: c.provider_accepted_at ?? c.updated_at ?? null,
+        actionHintAr: 'تواصل مع العميل لإكمال الموافقة.',
+        actionHintEn: 'Follow up with the client to complete approval.',
+      };
+    }
+    if (cl && !p) {
+      return {
+        tone: 'warning',
+        labelAr: 'بانتظار موافقة المزود',
+        labelEn: 'Waiting for provider approval',
+        descriptionAr: 'وافق العميل، ولم يوافق المزود بعد.',
+        descriptionEn: 'Client approved; provider has not approved yet.',
+        timestamp: c.client_accepted_at ?? c.updated_at ?? null,
+        actionHintAr: 'راجع البنود واعتمد العقد.',
+        actionHintEn: 'Review the terms and approve the contract.',
+      };
+    }
+    return {
+      tone: 'info',
+      labelAr: 'بانتظار موافقة الأطراف',
+      labelEn: 'Waiting for parties to approve',
+      descriptionAr: 'لم يتم استلام موافقة أي طرف بعد.',
+      descriptionEn: 'No party has approved yet.',
+      timestamp: c.updated_at ?? null,
+      actionHintAr: 'ذكّر الأطراف بمراجعة العقد.',
+      actionHintEn: 'Remind both parties to review the contract.',
+    };
+  }
+
+  if (status === 'active') {
+    return {
+      tone: 'success',
+      labelAr: 'العقد مفعل',
+      labelEn: 'Contract is active',
+      descriptionAr: 'العقد مقفل ضد التعديل المباشر.',
+      descriptionEn: 'Contract is locked against direct edits.',
+      timestamp: c.locked_at ?? c.updated_at ?? null,
+      actionHintAr: 'أي تعديل رسمي يتم عبر ملحق.',
+      actionHintEn: 'Formal changes go through an amendment.',
+    };
+  }
+
+  if (status === 'completed') {
+    return {
+      tone: 'success',
+      labelAr: 'العقد مكتمل',
+      labelEn: 'Contract completed',
+      descriptionAr: 'تم تنفيذ العقد بالكامل.',
+      descriptionEn: 'Contract has been fully executed.',
+      timestamp: c.completed_at ?? c.updated_at ?? null,
+    };
+  }
+
+  if (status === 'cancelled') {
+    return {
+      tone: 'muted',
+      labelAr: 'العقد ملغى',
+      labelEn: 'Contract cancelled',
+      descriptionAr: 'تم إلغاء العقد.',
+      descriptionEn: 'Contract was cancelled.',
+      timestamp: c.cancelled_at ?? c.updated_at ?? null,
+    };
+  }
+
+  if (status === 'disputed') {
+    return {
+      tone: 'destructive',
+      labelAr: 'العقد محل نزاع',
+      labelEn: 'Contract disputed',
+      descriptionAr: 'هناك نزاع مفتوح على هذا العقد.',
+      descriptionEn: 'There is an open dispute on this contract.',
+      timestamp: c.disputed_at ?? c.updated_at ?? null,
+      actionHintAr: 'تواصل مع الطرف الآخر لحل النزاع.',
+      actionHintEn: 'Coordinate with the other party to resolve the dispute.',
+    };
+  }
+
+  // draft (default)
+  return {
+    tone: 'info',
+    labelAr: 'مسودة',
+    labelEn: 'Draft',
+    descriptionAr: 'العقد لا يزال مسودة قابلة للتعديل.',
+    descriptionEn: 'Contract is still an editable draft.',
+    timestamp: c.updated_at ?? null,
+    actionHintAr: 'راجع البيانات ثم أرسل العقد للموافقة.',
+    actionHintEn: 'Review the details then send the contract for approval.',
+  };
+}

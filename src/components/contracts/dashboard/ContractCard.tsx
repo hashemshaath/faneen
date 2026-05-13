@@ -13,6 +13,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import type { Database } from '@/integrations/supabase/types';
 import { getContractStatusMeta } from '@/lib/contract-statuses';
 import { getContractHealth, getDaysRemaining } from './contract-helpers';
+import { getContractNextActionSummary, type NextActionTone } from '@/lib/contract-approval-timeline';
+import { Clock } from 'lucide-react';
 
 type ContractRow = Database['public']['Tables']['contracts']['Row'];
 type MilestoneRow = Database['public']['Tables']['contract_milestones']['Row'];
@@ -95,6 +97,21 @@ export const ContractCard = React.memo(({
   const paymentPercent = Number(c.total_amount) > 0 ? Math.round((totalPaid / Number(c.total_amount)) * 100) : 0;
   const locked = ['active', 'completed', 'cancelled'].includes(c.status);
   const measurementTotal = measurements.reduce((s: number, m) => s + Number(m.total_cost || 0), 0);
+  const nextAction = getContractNextActionSummary(c, isRTL);
+  const toneClass: Record<NextActionTone, string> = {
+    muted: 'bg-muted/40 text-muted-foreground border-border/60',
+    info: 'bg-info/5 dark:bg-info/10 text-info border-info/30',
+    success: 'bg-success/5 dark:bg-success/10 text-success border-success/30',
+    warning: 'bg-warning/5 dark:bg-warning/10 text-warning border-warning/40',
+    destructive: 'bg-destructive/5 dark:bg-destructive/10 text-destructive border-destructive/30',
+  };
+  const nextLabel = isRTL ? nextAction.labelAr : nextAction.labelEn;
+  const nextHint = isRTL ? nextAction.actionHintAr : nextAction.actionHintEn;
+  const nextTimestamp = nextAction.timestamp
+    ? new Date(nextAction.timestamp).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', {
+        year: 'numeric', month: 'short', day: 'numeric',
+      })
+    : null;
 
   return (
     <Card className={`overflow-hidden transition-all duration-300 hover:shadow-md group border-border/70 ${isExpanded ? 'ring-2 ring-accent/30 shadow-lg' : 'hover:border-accent/40'}`}>
@@ -240,6 +257,29 @@ export const ContractCard = React.memo(({
                 </Button>
               </div>
             </TooltipProvider>
+          </div>
+
+          {/* Last / Next Action Summary */}
+          <div
+            className={`flex items-start gap-2 rounded-lg border px-2.5 py-1.5 mb-3 text-[11px] ${toneClass[nextAction.tone]}`}
+            role="status"
+            aria-label={isRTL ? `الإجراء التالي: ${nextLabel}` : `Next action: ${nextLabel}`}
+          >
+            <Clock className="w-3.5 h-3.5 mt-0.5 shrink-0 opacity-80" aria-hidden="true" />
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="font-semibold leading-tight">{nextLabel}</span>
+                {nextHint && (
+                  <>
+                    <span className="opacity-50" aria-hidden="true">·</span>
+                    <span className="opacity-90 leading-tight break-words">{nextHint}</span>
+                  </>
+                )}
+              </div>
+              {nextTimestamp && (
+                <span className="block opacity-70 mt-0.5 tech-content text-[10px]">{nextTimestamp}</span>
+              )}
+            </div>
           </div>
 
           {/* Financial KPIs Grid */}
