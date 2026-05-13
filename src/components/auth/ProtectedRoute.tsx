@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { BrandLogo } from '@/components/common/BrandLogo';
+import { setForbiddenContext } from '@/lib/forbiddenContext';
 
 const Forbidden = lazy(() => import('@/pages/Forbidden'));
 
@@ -75,9 +76,18 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         roles,
         isAdmin, isSuperAdmin, isProvider,
       });
+      setForbiddenContext({
+        path: location.pathname,
+        requiredRole: role,
+        userId: user?.id ?? null,
+        roles,
+        isAdmin, isProvider, isSuperAdmin,
+        accountType: profile?.account_type ?? null,
+        at: new Date().toISOString(),
+      });
       logUnauthorizedAccess(user?.id, location.pathname, role);
     }
-  }, [shouldDeny, user?.id, location.pathname, requireSuperAdmin, requireAdmin, roles, isAdmin, isSuperAdmin, isProvider]);
+  }, [shouldDeny, user?.id, location.pathname, requireSuperAdmin, requireAdmin, roles, isAdmin, isSuperAdmin, isProvider, profile?.account_type]);
 
   // Show loading spinner while auth state is being resolved
   if (!fullyLoaded) {
