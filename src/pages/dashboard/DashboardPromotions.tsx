@@ -20,7 +20,7 @@ import {
   Search, CheckCircle2, Percent, LayoutGrid, List,
   GripVertical, Power, PowerOff, DollarSign, Layers, Copy,
   Maximize2, Loader2, Download, EyeOff, AlertCircle, Zap, BarChart3,
-  Clock, TrendingUp,
+  Clock, TrendingUp, Sparkles, ExternalLink, Link2, ChevronDown, ChevronUp, Wand2, Trash, PackagePlus,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ImageUpload } from '@/components/ui/image-upload';
@@ -34,6 +34,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { useNoIndex } from "@/hooks/useNoIndex";
 import { MembershipUsageWarning } from '@/components/membership/MembershipUsageWarning';
+import { promotionCatalog, promotionDemoSeed, type PromotionTemplate } from '@/components/dashboard/promotions-catalog';
 
 type PromotionType = 'ad' | 'offer' | 'video';
 type FilterMode = 'all' | 'active' | 'expired' | 'inactive';
@@ -61,11 +62,18 @@ const typeConfig: Record<string, { ar: string; en: string; icon: React.ElementTy
   video: { ar: 'فيديو', en: 'Video', icon: Video, color: 'text-secondary bg-secondary/10' },
 };
 
+const addDays = (days: number): string => {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return d.toISOString().split('T')[0];
+};
+
 /* ── Sortable Promo Card ── */
-const SortablePromoCard = React.memo(({ promo: p, rtl, viewMode, isSelected, onEdit, onDelete, onToggle, onDuplicate, onPreview, onSelect }: {
+const SortablePromoCard = React.memo(({ promo: p, rtl, viewMode, isSelected, onEdit, onDelete, onToggle, onDuplicate, onPreview, onSelect, onCopyLink }: {
   promo: any; rtl: boolean; viewMode: ViewMode; isSelected: boolean;
   onEdit: (p) => void; onDelete: (id: string) => void; onToggle: (p) => void;
   onDuplicate: (p) => void; onPreview: (url: string) => void; onSelect: (id: string) => void;
+  onCopyLink?: (id: string) => void;
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: p.id });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1, zIndex: isDragging ? 50 : undefined };
@@ -96,6 +104,7 @@ const SortablePromoCard = React.memo(({ promo: p, rtl, viewMode, isSelected, onE
               {isExpired && <Badge variant="destructive" className="text-[9px] shadow-sm px-1.5 py-0.5">{rtl ? 'منتهي' : 'Expired'}</Badge>}
               {isEndingSoon && !isExpired && <Badge className="text-[9px] bg-warning text-white shadow-sm px-1.5 py-0.5">{rtl ? `${daysLeft} أيام` : `${daysLeft}d left`}</Badge>}
               {!p.is_active && !isExpired && <Badge variant="outline" className="text-[9px] bg-background/80 backdrop-blur-sm px-1.5 py-0.5">{rtl ? 'غير نشط' : 'Inactive'}</Badge>}
+              {p.is_demo && <Badge className="text-[9px] bg-warning/90 text-white shadow-sm px-1.5 py-0.5">DEMO</Badge>}
             </div>
             {/* Select + Grip */}
             <div className="absolute top-2 end-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -115,6 +124,7 @@ const SortablePromoCard = React.memo(({ promo: p, rtl, viewMode, isSelected, onE
                 {p.is_active ? <PowerOff className="w-3 h-3" /> : <Power className="w-3 h-3" />}
               </Button>
               <Button size="sm" variant="secondary" className="h-7 text-[10px] px-2 shadow-lg" onClick={() => onDuplicate(p)}><Copy className="w-3 h-3" /></Button>
+              {onCopyLink && <Button size="sm" variant="secondary" className="h-7 text-[10px] px-2 shadow-lg" onClick={() => onCopyLink(p.id)} title={rtl ? 'نسخ رابط عام' : 'Copy public link'}><Link2 className="w-3 h-3" /></Button>}
               <Button size="sm" variant="destructive" className="h-7 text-[10px] px-2 shadow-lg" onClick={() => onDelete(p.id)}><Trash2 className="w-3 h-3" /></Button>
             </div>
           </div>
@@ -163,6 +173,7 @@ const SortablePromoCard = React.memo(({ promo: p, rtl, viewMode, isSelected, onE
             {isExpired && <Badge variant="destructive" className="text-[8px] px-1 py-0 h-3.5">{rtl ? 'منتهي' : 'Expired'}</Badge>}
             {isEndingSoon && !isExpired && <Badge className="text-[8px] bg-warning text-white px-1 py-0 h-3.5">{rtl ? `${daysLeft} أيام` : `${daysLeft}d`}</Badge>}
             {!p.is_active && !isExpired && <Badge variant="outline" className="text-[8px] px-1 py-0 h-3.5">{rtl ? 'غير نشط' : 'Off'}</Badge>}
+            {p.is_demo && <Badge className="text-[8px] bg-warning/90 text-white px-1 py-0 h-3.5">DEMO</Badge>}
           </div>
           <div className="flex items-center gap-2 mt-0.5 flex-wrap">
             {p.promotion_type === 'offer' && p.offer_price && (
@@ -178,6 +189,7 @@ const SortablePromoCard = React.memo(({ promo: p, rtl, viewMode, isSelected, onE
           </Button>
           <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => onEdit(p)}><Pencil className="w-3.5 h-3.5" /></Button>
           <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => onDuplicate(p)}><Copy className="w-3.5 h-3.5" /></Button>
+          {onCopyLink && <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => onCopyLink(p.id)} title={rtl ? 'نسخ رابط عام' : 'Copy public link'}><Link2 className="w-3.5 h-3.5" /></Button>}
           <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-destructive/60 hover:text-destructive hover:bg-destructive/10" onClick={() => onDelete(p.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
         </div>
       </div>
@@ -205,6 +217,8 @@ const DashboardPromotions = () => {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showCatalog, setShowCatalog] = useState(false);
+  const [activeSector, setActiveSector] = useState<string>(promotionCatalog[0].id);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -212,15 +226,21 @@ const DashboardPromotions = () => {
   );
 
   /* ─── Data ─── */
-  const { data: businessId } = useQuery({
-    queryKey: ['my-business-id', user?.id],
+  const { data: businessInfo } = useQuery({
+    queryKey: ['my-business-info', user?.id],
     queryFn: async () => {
-      const { data } = await supabase.from('businesses').select('id').eq('user_id', user!.id).maybeSingle();
-      return data?.id ?? null;
+      const { data } = await supabase
+        .from('businesses')
+        .select('id, username, name_ar, name_en')
+        .eq('user_id', user!.id)
+        .maybeSingle();
+      return data ?? null;
     },
     enabled: !!user,
     staleTime: 10 * 60 * 1000,
   });
+  const businessId = businessInfo?.id ?? null;
+  const businessUsername = businessInfo?.username ?? null;
 
   const { data: promotions = [], isLoading } = useQuery({
     queryKey: ['my-promotions', businessId],
@@ -241,7 +261,8 @@ const DashboardPromotions = () => {
     const totalViews = promotions.reduce((s: number, p) => s + (p.views_count || 0), 0);
     const complete = promotions.filter((p) => p.title_ar && p.description_ar && p.image_url).length;
     const completeness = total > 0 ? Math.round((complete / total) * 100) : 0;
-    return { total, active, expired, inactive, totalViews, completeness };
+    const demos = promotions.filter((p) => p.is_demo).length;
+    return { total, active, expired, inactive, totalViews, completeness, demos };
   }, [promotions]);
 
   const filteredPromotions = useMemo(() => {
@@ -320,6 +341,98 @@ const DashboardPromotions = () => {
     mutationFn: async (activate: boolean) => { await Promise.all(Array.from(selectedIds).map(id => supabase.from('promotions').update({ is_active: activate }).eq('id', id))); },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['my-promotions'] }); setSelectedIds(new Set()); toast.success(rtl ? 'تم التحديث' : 'Updated'); },
   });
+
+  /* ─── Templates / Demo ─── */
+  const templateToPayload = useCallback((tpl: PromotionTemplate, opts: { isDemo?: boolean; sortOffset?: number } = {}) => ({
+    business_id: businessId!,
+    title_ar: tpl.title_ar,
+    title_en: tpl.title_en || null,
+    description_ar: tpl.description_ar || null,
+    description_en: tpl.description_en || null,
+    promotion_type: tpl.type,
+    discount_percentage: tpl.discount_percentage ?? null,
+    discount_amount: tpl.discount_percentage && tpl.original_price
+      ? Math.round(tpl.original_price * (tpl.discount_percentage / 100))
+      : null,
+    original_price: tpl.original_price ?? null,
+    offer_price: tpl.discount_percentage && tpl.original_price
+      ? Math.round(tpl.original_price * (1 - tpl.discount_percentage / 100))
+      : null,
+    currency_code: tpl.currency_code || 'SAR',
+    image_url: null,
+    video_url: null,
+    start_date: new Date().toISOString().split('T')[0],
+    end_date: addDays(tpl.duration_days ?? 30),
+    is_active: true,
+    sort_order: promotions.length + (opts.sortOffset ?? 0),
+    is_demo: !!opts.isDemo,
+  }), [businessId, promotions.length]);
+
+  const insertTemplateMut = useMutation({
+    mutationFn: async (tpl: PromotionTemplate) => {
+      if (!businessId) throw new Error('No business');
+      const { error } = await supabase.from('promotions').insert(templateToPayload(tpl) as never);
+      if (error) throw error;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['my-promotions'] }); toast.success(rtl ? 'تمت إضافة العرض' : 'Promotion added'); },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
+  const useTemplateInForm = useCallback((tpl: PromotionTemplate) => {
+    setEditingId(null);
+    setForm({
+      title_ar: tpl.title_ar,
+      title_en: tpl.title_en || '',
+      description_ar: tpl.description_ar || '',
+      description_en: tpl.description_en || '',
+      promotion_type: tpl.type,
+      discount_percentage: tpl.discount_percentage?.toString() ?? '',
+      discount_amount: tpl.discount_percentage && tpl.original_price
+        ? Math.round(tpl.original_price * (tpl.discount_percentage / 100)).toString() : '',
+      original_price: tpl.original_price?.toString() ?? '',
+      offer_price: tpl.discount_percentage && tpl.original_price
+        ? Math.round(tpl.original_price * (1 - tpl.discount_percentage / 100)).toString() : '',
+      image_url: '',
+      video_url: '',
+      start_date: new Date().toISOString().split('T')[0],
+      end_date: addDays(tpl.duration_days ?? 30),
+      is_active: true,
+      currency_code: tpl.currency_code || 'SAR',
+    });
+    setShowForm(true);
+    setShowCatalog(false);
+    requestAnimationFrame(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  }, []);
+
+  const seedDemoMut = useMutation({
+    mutationFn: async () => {
+      if (!businessId) throw new Error('No business');
+      const payloads = promotionDemoSeed.map((tpl, i) => templateToPayload(tpl, { isDemo: true, sortOffset: i }));
+      const { error } = await supabase.from('promotions').insert(payloads as never);
+      if (error) throw error;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['my-promotions'] }); toast.success(rtl ? 'تم إنشاء عروض تجريبية' : 'Demo promotions created'); },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
+  const clearDemoMut = useMutation({
+    mutationFn: async () => {
+      if (!businessId) throw new Error('No business');
+      const { error } = await supabase.from('promotions').delete().eq('business_id', businessId).eq('is_demo', true);
+      if (error) throw error;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['my-promotions'] }); toast.success(rtl ? 'تم حذف العروض التجريبية' : 'Demo promotions removed'); },
+  });
+
+  const copyPublicLink = useCallback((id?: string) => {
+    if (!businessUsername) {
+      toast.error(rtl ? 'لا يوجد اسم منشأة عام' : 'No public username yet');
+      return;
+    }
+    const url = `${window.location.origin}/${businessUsername}#promotions${id ? `-${id.slice(0, 8)}` : ''}`;
+    navigator.clipboard.writeText(url);
+    toast.success(rtl ? 'تم نسخ الرابط' : 'Link copied');
+  }, [businessUsername, rtl]);
 
   /* ─── Callbacks ─── */
   const closeForm = useCallback(() => { setShowForm(false); setEditingId(null); setForm(emptyForm); }, []);
@@ -411,6 +524,29 @@ const DashboardPromotions = () => {
             </div>
           </div>
           <div className="flex gap-2 flex-wrap">
+            {businessUsername && (
+              <Button variant="outline" size="sm" className="h-9 text-xs rounded-xl" asChild>
+                <a href={`/${businessUsername}#promotions`} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="w-3.5 h-3.5 me-1.5" />{rtl ? 'الصفحة العامة' : 'Public page'}
+                </a>
+              </Button>
+            )}
+            {businessUsername && (
+              <Button variant="outline" size="sm" className="h-9 text-xs rounded-xl" onClick={() => copyPublicLink()}>
+                <Link2 className="w-3.5 h-3.5 me-1.5" />{rtl ? 'نسخ رابط' : 'Copy link'}
+              </Button>
+            )}
+            <Button variant="outline" size="sm" className="h-9 text-xs rounded-xl" onClick={() => setShowCatalog(s => !s)}>
+              <Sparkles className="w-3.5 h-3.5 me-1.5" />
+              {rtl ? 'قوالب جاهزة' : 'Templates'}
+              {showCatalog ? <ChevronUp className="w-3 h-3 ms-1" /> : <ChevronDown className="w-3 h-3 ms-1" />}
+            </Button>
+            {promotions.length === 0 && (
+              <Button variant="outline" size="sm" className="h-9 text-xs rounded-xl" onClick={() => seedDemoMut.mutate()} disabled={seedDemoMut.isPending}>
+                {seedDemoMut.isPending ? <Loader2 className="w-3.5 h-3.5 me-1.5 animate-spin" /> : <Wand2 className="w-3.5 h-3.5 me-1.5" />}
+                {rtl ? 'تجربة بعروض جاهزة' : 'Try demo promos'}
+              </Button>
+            )}
             {promotions.length > 0 && (
               <Button variant="outline" size="sm" className="h-9 text-xs rounded-xl" onClick={exportCSV}>
                 <Download className="w-3.5 h-3.5 me-1.5" />{rtl ? 'تصدير' : 'Export'}
@@ -423,6 +559,91 @@ const DashboardPromotions = () => {
         </div>
 
         <MembershipUsageWarning userId={user?.id} businessId={businessId} metric="promotions" />
+
+        {/* Demo data alert */}
+        {stats.demos > 0 && (
+          <div className="flex items-center gap-3 p-3 rounded-2xl border border-warning/30 bg-warning/5">
+            <Wand2 className="w-4 h-4 text-warning shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-[12px] font-medium">{rtl ? `لديك ${stats.demos} عرض تجريبي` : `You have ${stats.demos} demo promotion(s)`}</p>
+              <p className="text-[10px] text-muted-foreground">{rtl ? 'احذفها قبل النشر للعملاء واستبدلها بعروضك الحقيقية.' : 'Remove before going live and replace with your real offers.'}</p>
+            </div>
+            <Button variant="outline" size="sm" className="h-7 text-[11px] rounded-lg text-destructive hover:text-destructive" onClick={() => clearDemoMut.mutate()} disabled={clearDemoMut.isPending}>
+              {clearDemoMut.isPending ? <Loader2 className="w-3 h-3 animate-spin me-1" /> : <Trash className="w-3 h-3 me-1" />}
+              {rtl ? 'حذف التجريبي' : 'Clear demo'}
+            </Button>
+          </div>
+        )}
+
+        {/* ═══ Templates Catalog ═══ */}
+        {showCatalog && (
+          <Card className="rounded-2xl border-primary/20 overflow-hidden animate-in fade-in-0 slide-in-from-top-2 duration-200">
+            <div className="h-1 bg-gradient-to-r from-primary/60 via-primary/30 to-transparent" />
+            <CardHeader className="pb-3 pt-4">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-primary" />
+                  {rtl ? 'قوالب عروض جاهزة لقطاع الصناعات' : 'Industrial promotion templates'}
+                </CardTitle>
+                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => setShowCatalog(false)}><X className="w-4 h-4" /></Button>
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-1">{rtl ? 'اختر قطاعك ثم أضف العرض مباشرة أو افتحه في النموذج للتعديل قبل الحفظ.' : 'Pick your sector then add directly or open in the form to tweak before saving.'}</p>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {/* Sector tabs */}
+              <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+                {promotionCatalog.map((s) => (
+                  <button key={s.id} onClick={() => setActiveSector(s.id)}
+                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-medium whitespace-nowrap border transition-all ${activeSector === s.id ? 'border-primary bg-primary/5 text-primary' : 'border-border/30 bg-card text-muted-foreground hover:bg-muted/40'}`}>
+                    <span className="text-sm leading-none">{s.icon}</span>
+                    {rtl ? s.name_ar : s.name_en}
+                    <span className="text-[9px] px-1.5 py-px rounded-full bg-muted">{s.templates.length}</span>
+                  </button>
+                ))}
+              </div>
+              {/* Templates grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2.5">
+                {promotionCatalog.find((s) => s.id === activeSector)?.templates.map((tpl) => {
+                  const cfg = typeConfig[tpl.type];
+                  const TIcon = cfg.icon;
+                  return (
+                    <div key={tpl.id} className="rounded-xl border border-border/40 bg-card/50 p-3 hover:border-primary/30 hover:shadow-sm transition-all group">
+                      <div className="flex items-start justify-between gap-2">
+                        <Badge className={`text-[9px] border-0 px-1.5 py-0.5 ${cfg.color}`}>
+                          <TIcon className="w-2.5 h-2.5 me-0.5" />{rtl ? cfg.ar : cfg.en}
+                        </Badge>
+                        {tpl.discount_percentage && (
+                          <Badge className="bg-destructive text-destructive-foreground text-[9px] px-1.5 py-0.5">-{tpl.discount_percentage}%</Badge>
+                        )}
+                      </div>
+                      <h4 className="text-xs font-semibold mt-2 line-clamp-2 min-h-[32px]">{rtl ? tpl.title_ar : tpl.title_en}</h4>
+                      <p className="text-[10px] text-muted-foreground line-clamp-2 mt-1 leading-relaxed min-h-[28px]">{rtl ? tpl.description_ar : tpl.description_en}</p>
+                      {tpl.original_price && (
+                        <div className="flex items-center gap-1.5 mt-2">
+                          <span className="line-through text-muted-foreground text-[10px]">{tpl.original_price.toLocaleString()}</span>
+                          {tpl.discount_percentage && (
+                            <span className="text-xs font-bold text-primary">
+                              {Math.round(tpl.original_price * (1 - tpl.discount_percentage / 100)).toLocaleString()}
+                              <span className="text-[9px] font-normal text-muted-foreground ms-1">{tpl.currency_code || 'SAR'}</span>
+                            </span>
+                          )}
+                        </div>
+                      )}
+                      <div className="flex items-center gap-1.5 mt-2.5 pt-2 border-t border-border/30">
+                        <Button size="sm" variant="hero" className="h-7 text-[10px] rounded-lg flex-1" onClick={() => insertTemplateMut.mutate(tpl)} disabled={insertTemplateMut.isPending || !businessId}>
+                          <PackagePlus className="w-3 h-3 me-1" />{rtl ? 'إضافة' : 'Add'}
+                        </Button>
+                        <Button size="sm" variant="outline" className="h-7 text-[10px] rounded-lg" onClick={() => useTemplateInForm(tpl)}>
+                          <Pencil className="w-3 h-3 me-1" />{rtl ? 'تعديل' : 'Edit'}
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* ═══ Stats ═══ */}
         {promotions.length > 0 && (
@@ -695,7 +916,18 @@ const DashboardPromotions = () => {
             </div>
             <h3 className="text-base font-semibold mb-1.5">{rtl ? 'لا توجد عروض بعد' : 'No promotions yet'}</h3>
             <p className="text-sm text-muted-foreground max-w-xs mb-6">{rtl ? 'أنشئ أول عرض لجذب العملاء وزيادة المبيعات' : 'Create your first promotion to attract customers'}</p>
-            <Button variant="hero" size="sm" className="rounded-xl" onClick={() => setShowForm(true)}><Plus className="w-4 h-4 me-1" />{rtl ? 'أضف أول عرض' : 'Add First Promotion'}</Button>
+            <div className="flex gap-2 flex-wrap justify-center">
+              <Button variant="hero" size="sm" className="rounded-xl" onClick={() => setShowForm(true)}>
+                <Plus className="w-4 h-4 me-1" />{rtl ? 'أضف أول عرض' : 'Add First Promotion'}
+              </Button>
+              <Button variant="outline" size="sm" className="rounded-xl" onClick={() => setShowCatalog(true)}>
+                <Sparkles className="w-4 h-4 me-1" />{rtl ? 'تصفّح القوالب' : 'Browse templates'}
+              </Button>
+              <Button variant="outline" size="sm" className="rounded-xl" onClick={() => seedDemoMut.mutate()} disabled={seedDemoMut.isPending}>
+                {seedDemoMut.isPending ? <Loader2 className="w-4 h-4 me-1 animate-spin" /> : <Wand2 className="w-4 h-4 me-1" />}
+                {rtl ? 'تجربة بعروض جاهزة' : 'Try demo promos'}
+              </Button>
+            </div>
           </div>
         ) : filteredPromotions.length === 0 ? (
           <div className="flex flex-col items-center py-10 text-muted-foreground">
@@ -714,7 +946,8 @@ const DashboardPromotions = () => {
                     onToggle={pr => toggleMut.mutate(pr)}
                     onDuplicate={pr => duplicateMut.mutate(pr)}
                     onPreview={url => setPreviewUrl(url)}
-                    onSelect={toggleSelect} />
+                    onSelect={toggleSelect}
+                    onCopyLink={businessUsername ? copyPublicLink : undefined} />
                 ))}
               </div>
             </SortableContext>
