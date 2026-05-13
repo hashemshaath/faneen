@@ -10,7 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Layers, Plus, Pencil, Trash2, Send, Search, FileClock, Building2, CheckCircle2, Clock, ShieldCheck, Sparkles, Users, AlertCircle, Mail, UserCheck, HelpCircle } from 'lucide-react';
+import { Layers, Plus, Pencil, Trash2, Send, Search, FileClock, Building2, CheckCircle2, Clock, ShieldCheck, Sparkles, Users, AlertCircle, Mail, UserCheck, HelpCircle, RefreshCw, WifiOff, Loader2 } from 'lucide-react';
 import {
   listSectorsForBusiness, createSector, updateSector, deleteSector,
   submitSector, listAuditForSector, setSectorReason,
@@ -36,21 +36,33 @@ const DashboardPrivateSectors: React.FC = () => {
   const [distributorsFor, setDistributorsFor] = useState<string | null>(null);
 
   // Resolve current user's business (owner OR staff). User may have multiple businesses.
-  const { data: businesses = [], isLoading: loadingBusiness } = useQuery({
+  const {
+    data: businesses = [],
+    isLoading: loadingBusiness,
+    isError: businessError,
+    error: businessErrObj,
+    isFetching: businessFetching,
+    failureCount: businessFailureCount,
+    refetch: refetchBusinesses,
+  } = useQuery({
     queryKey: ['my-businesses-for-sectors', user?.id],
     enabled: !!user,
+    retry: 2,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 4000),
     queryFn: async () => {
       const owned = await supabase
         .from('businesses')
         .select('id, name_ar, name_en')
         .eq('user_id', user!.id)
         .order('created_at', { ascending: true });
+      if (owned.error) throw owned.error;
       const ownedRows = owned.data ?? [];
       const staff = await supabase
         .from('business_staff')
         .select('business_id, businesses:business_id(id, name_ar, name_en)')
         .eq('user_id', user!.id)
         .eq('is_active', true);
+      if (staff.error) throw staff.error;
       const staffRows = (staff.data ?? [])
         .map((r: { businesses: { id: string; name_ar: string; name_en: string | null } | null }) => r.businesses)
         .filter((b): b is { id: string; name_ar: string; name_en: string | null } => !!b);
@@ -111,9 +123,59 @@ const DashboardPrivateSectors: React.FC = () => {
   if (loadingBusiness) {
     return (
       <DashboardLayout>
-        <Card><CardContent className="py-10 text-center text-muted-foreground">
-          {isRTL ? 'جاري التحميل…' : 'Loading…'}
-        </CardContent></Card>
+        <Card>
+          <CardContent className="py-10 text-center text-muted-foreground">
+            <Loader2 className="h-5 w-5 animate-spin mx-auto mb-2" />
+            {isRTL ? 'جاري تحميل بيانات المنشأة…' : 'Loading business data…'}
+          </CardContent>
+        </Card>
+      </DashboardLayout>
+    );
+  }
+
+  if (businessError) {
+    const msg = businessErrObj instanceof Error ? businessErrObj.message : String(businessErrObj);
+    return (
+      <DashboardLayout>
+        <Card className="border-destructive/30 bg-destructive/5">
+          <CardHeader>
+            <div className="flex items-start gap-3">
+              <div className="rounded-xl bg-destructive/10 p-2">
+                <WifiOff className="h-5 w-5 text-destructive" />
+              </div>
+              <div className="flex-1">
+                <CardTitle className="text-base">
+                  {isRTL ? 'تعذّر تحميل بيانات المنشأة' : 'Could not load business data'}
+                </CardTitle>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {isRTL
+                    ? 'حدث خطأ مؤقت أثناء الاتصال بالخادم. تحقّق من اتصالك بالإنترنت ثم أعد المحاولة.'
+                    : 'A temporary error occurred while contacting the server. Check your connection and try again.'}
+                </p>
+                {businessFailureCount > 0 && (
+                  <p className="text-[11px] text-muted-foreground mt-1">
+                    {isRTL
+                      ? `عدد المحاولات التلقائية: ${businessFailureCount}`
+                      : `Automatic retry attempts: ${businessFailureCount}`}
+                  </p>
+                )}
+                <p className="text-[11px] text-destructive/80 mt-2 tech-content break-all">{msg}</p>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-2">
+            <Button onClick={() => refetchBusinesses()} disabled={businessFetching} className="gap-1.5">
+              {businessFetching
+                ? <Loader2 className="h-4 w-4 animate-spin" />
+                : <RefreshCw className="h-4 w-4" />}
+              {isRTL ? 'إعادة المحاولة' : 'Retry'}
+            </Button>
+            <Button variant="outline" onClick={() => window.location.reload()} className="gap-1.5">
+              <RefreshCw className="h-4 w-4" />
+              {isRTL ? 'إعادة تحميل الصفحة' : 'Reload page'}
+            </Button>
+          </CardContent>
+        </Card>
       </DashboardLayout>
     );
   }
