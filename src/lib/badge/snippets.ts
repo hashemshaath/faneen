@@ -86,7 +86,8 @@ const SHIELD_PATH =
 export function buildBadgeSvg(opts: BadgeBuildOptions): string {
   const variant = opts.variant;
   const size = SIZES[opts.size ?? 'md'];
-  const accent = ACCENTS[opts.accent ?? 'emerald'];
+  const accent = resolveAccent(opts);
+  const fontFamily = opts.fontFamily || DEFAULT_FONT;
   const label = opts.isRTL ? 'موثّق على قِطاعات' : 'Verified on Qitaat';
   const sub = opts.isRTL ? `قِطاعات · ${opts.displayName}` : `Qitaat · ${opts.displayName}`;
   const showSub = opts.showSubLabel !== false && variant !== 'compact' && variant !== 'minimal';
@@ -97,12 +98,16 @@ export function buildBadgeSvg(opts: BadgeBuildOptions): string {
   const w = 320;
   const h = showSub ? 70 : 50;
   const bgFill = isGradient
-    ? `<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#10b981"/><stop offset="1" stop-color="#1f8a4c"/></linearGradient></defs><rect width="${w}" height="${h}" rx="${size.radius}" fill="url(#bg)"/>`
+    ? `<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${accent.solid}"/><stop offset="1" stop-color="${mixHex(accent.solid, -0.25)}"/></linearGradient></defs><rect width="${w}" height="${h}" rx="${size.radius}" fill="url(#bg)"/>`
     : `<rect width="${w}" height="${h}" rx="${size.radius}" fill="${isDark ? '#0f172a' : '#ffffff'}" stroke="${isDark ? '#1e293b' : '#e2e8f0'}"/>`;
-  const seal = `<g transform="translate(${size.padX},${(h - size.iconBox) / 2})"><circle cx="${size.iconBox / 2}" cy="${size.iconBox / 2}" r="${size.iconBox / 2}" fill="${isGradient ? '#ffffff33' : accent.solid}"/><g transform="translate(${(size.iconBox - size.icon) / 2},${(size.iconBox - size.icon) / 2})" stroke="#ffffff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">${SHIELD_PATH.replace(/24/g, String(size.icon))}</g></g>`;
+  const sealCircle = `<circle cx="${size.iconBox / 2}" cy="${size.iconBox / 2}" r="${size.iconBox / 2}" fill="${isGradient ? '#ffffff33' : accent.solid}"/>`;
+  const sealInner = opts.logoDataUrl
+    ? `<defs><clipPath id="logoClip"><circle cx="${size.iconBox / 2}" cy="${size.iconBox / 2}" r="${size.iconBox / 2 - 1}"/></clipPath></defs><image href="${escapeAttr(opts.logoDataUrl)}" x="1" y="1" width="${size.iconBox - 2}" height="${size.iconBox - 2}" clip-path="url(#logoClip)" preserveAspectRatio="xMidYMid slice"/>`
+    : `<g transform="translate(${(size.iconBox - size.icon) / 2},${(size.iconBox - size.icon) / 2})" stroke="#ffffff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">${SHIELD_PATH.replace(/24/g, String(size.icon))}</g>`;
+  const seal = `<g transform="translate(${size.padX},${(h - size.iconBox) / 2})">${sealCircle}${sealInner}</g>`;
   const textX = size.padX + size.iconBox + size.gap;
   const textY = showSub ? h / 2 - 4 : h / 2 + size.label / 3;
-  const text = `<text x="${textX}" y="${textY}" fill="${isGradient ? '#ffffff' : fg}" font-family="-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="${size.label}" font-weight="700">${label}</text>${showSub ? `<text x="${textX}" y="${h / 2 + size.sub + 4}" fill="${isGradient ? '#ffffffcc' : subFg}" font-family="-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="${size.sub}" font-weight="500">${escapeAttr(sub)}</text>` : ''}`;
+  const text = `<text x="${textX}" y="${textY}" fill="${isGradient ? '#ffffff' : fg}" font-family="${escapeAttr(fontFamily)}" font-size="${size.label}" font-weight="700">${label}</text>${showSub ? `<text x="${textX}" y="${h / 2 + size.sub + 4}" fill="${isGradient ? '#ffffffcc' : subFg}" font-family="${escapeAttr(fontFamily)}" font-size="${size.sub}" font-weight="500">${escapeAttr(sub)}</text>` : ''}`;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img" aria-label="${escapeAttr(label)}">${bgFill}${seal}${text}</svg>`;
 }
 
