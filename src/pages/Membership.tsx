@@ -56,7 +56,7 @@ const Membership = () => {
       // 1. Owner: pick the most recently created business they own
       const owned = await supabase
         .from('businesses')
-        .select('id, membership_tier, name_ar, name_en')
+        .select('id, ref_id, membership_tier, name_ar, name_en')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(1);
@@ -65,12 +65,12 @@ const Membership = () => {
       // 2. Staff fallback: business they manage (owner/manager role)
       const staff = await supabase
         .from('business_staff')
-        .select('business_id, role, businesses:business_id(id, membership_tier, name_ar, name_en)')
+        .select('business_id, role, businesses:business_id(id, ref_id, membership_tier, name_ar, name_en)')
         .eq('user_id', user.id)
         .eq('is_active', true)
         .in('role', ['owner', 'manager'])
         .limit(1);
-      const row = staff.data?.[0] as { businesses?: { id: string; membership_tier: string; name_ar: string | null; name_en: string | null } } | undefined;
+      const row = staff.data?.[0] as { businesses?: { id: string; ref_id: string | null; membership_tier: string; name_ar: string | null; name_en: string | null } } | undefined;
       if (row?.businesses) return row.businesses;
 
       // 3. Self-heal: business/company accounts must always have an entity.
@@ -92,7 +92,7 @@ const Membership = () => {
             approval_status: 'draft',
             username_status: 'pending',
           })
-          .select('id, membership_tier, name_ar, name_en')
+          .select('id, ref_id, membership_tier, name_ar, name_en')
           .maybeSingle();
         if (created.data) return created.data;
       }
@@ -160,6 +160,9 @@ const Membership = () => {
         requested_tier: plan.tier,
         requested_plan_id: plan.id,
         billing_cycle: billingCycle,
+        note: (myBusiness as { ref_id?: string | null }).ref_id
+          ? `Bound to business ${(myBusiness as { ref_id?: string | null }).ref_id}`
+          : null,
       }).select('id').maybeSingle();
       if (error) throw error;
       return { duplicate: false, requestId: inserted?.id as string | undefined, tier: plan.tier };
@@ -331,6 +334,23 @@ const Membership = () => {
               : 'Beta — upgrades are manually activated for now with no charge. Online payment will be added later.'}
           </p>
         </div>
+
+        {user && myBusiness && (myBusiness as { ref_id?: string | null }).ref_id && (
+          <div className="max-w-3xl mx-auto mb-6 rounded-xl border border-accent/30 bg-accent/5 px-4 py-3 flex items-center gap-3">
+            <Building2 className="w-5 h-5 text-accent shrink-0" />
+            <div className="flex-1 min-w-0 text-sm">
+              <span className="text-muted-foreground">
+                {isRTL ? 'سيتم تطبيق الترقية على المنشأة:' : 'Upgrade will apply to:'}
+              </span>{' '}
+              <span className="font-semibold text-foreground">
+                {myBusiness.name_ar || myBusiness.name_en || (isRTL ? 'منشأتك' : 'Your business')}
+              </span>{' '}
+              <span className="tech-content text-xs font-mono px-2 py-0.5 rounded bg-accent/10 text-accent ms-1">
+                {(myBusiness as { ref_id?: string | null }).ref_id}
+              </span>
+            </div>
+          </div>
+        )}
 
         {user && noBusinessNotice && !myBusiness && (
           <div className="max-w-3xl mx-auto mb-6 rounded-xl border border-warning/30 bg-warning/5 px-4 py-3 flex items-start gap-3">
