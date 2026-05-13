@@ -166,6 +166,7 @@ const adminBaseGroups: MenuGroup[] = [
       { label: { ar: 'المنشآت', en: 'Businesses' }, url: '/admin/businesses', icon: Building2 },
       { label: { ar: 'تحليلات المزودين', en: 'Provider Analytics' }, url: '/admin/provider-analytics', icon: TrendingUp },
       { label: { ar: 'العضويات', en: 'Memberships' }, url: '/admin/memberships', icon: Crown },
+      { label: { ar: 'تحليلات العقود', en: 'Contract Analytics' }, url: '/admin/contracts/analytics', icon: BarChart3 },
     ],
   },
   {

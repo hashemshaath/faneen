@@ -87,6 +87,7 @@ const AdminSitemapStatus = lazyRetry(() => import("./pages/admin/AdminSitemapSta
 const AdminAccessManagement = lazyRetry(() => import("./pages/admin/AdminAccessManagement"));
 const AdminProviderReview = lazyRetry(() => import("./pages/admin/AdminProviderReview"));
 const AdminProviderAnalytics = lazyRetry(() => import("./pages/admin/AdminProviderAnalytics"));
+const AdminContractAnalytics = lazyRetry(() => import("./pages/admin/AdminContractAnalytics"));
 const Notifications = lazyRetry(() => import("./pages/Notifications"));
 const Membership = lazyRetry(() => import("./pages/Membership"));
 const DashboardOperations = lazyRetry(() => import("./pages/dashboard/DashboardOperations"));
@@ -247,6 +248,7 @@ const AppRoutes = () => (
           <Route path="/admin/branding" element={<ProtectedRoute requireAdmin><AdminBranding /></ProtectedRoute>} />
           <Route path="/admin/contract-templates" element={<ProtectedRoute requireAdmin><AdminContractTemplates /></ProtectedRoute>} />
           <Route path="/admin/pdf-exports" element={<ProtectedRoute requireAdmin><AdminPdfExportAudit /></ProtectedRoute>} />
+          <Route path="/admin/contracts/analytics" element={<ProtectedRoute requireAdmin><AdminContractAnalytics /></ProtectedRoute>} />
 
           <Route path="/:username" element={<BusinessProfile />} />
           <Route path="*" element={<NotFound />} />
