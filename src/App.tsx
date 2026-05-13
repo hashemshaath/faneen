@@ -93,6 +93,7 @@ const Membership = lazyRetry(() => import("./pages/Membership"));
 const DashboardOperations = lazyRetry(() => import("./pages/dashboard/DashboardOperations"));
 const DashboardAiCenter = lazyRetry(() => import("./pages/dashboard/DashboardAiCenter"));
 const DashboardLeads = lazyRetry(() => import("./pages/dashboard/DashboardLeads"));
+const DashboardClients = lazyRetry(() => import("./pages/dashboard/DashboardClients"));
 const DashboardBadge = lazyRetry(() => import("./pages/dashboard/DashboardBadge"));
 const DashboardMyRequests = lazyRetry(() => import("./pages/dashboard/DashboardMyRequests"));
 const NotFound = lazyRetry(() => import("./pages/NotFound"));
@@ -211,6 +212,7 @@ const AppRoutes = () => (
           <Route path="/dashboard/analytics" element={<ProtectedRoute requireProvider><DashboardAnalytics /></ProtectedRoute>} />
           <Route path="/dashboard/contract-analytics" element={<ProtectedRoute requireProvider><DashboardContractAnalytics /></ProtectedRoute>} />
           <Route path="/dashboard/leads" element={<ProtectedRoute requireProvider><DashboardLeads /></ProtectedRoute>} />
+          <Route path="/dashboard/clients" element={<ProtectedRoute requireProvider><DashboardClients /></ProtectedRoute>} />
           <Route path="/dashboard/badge" element={<ProtectedRoute requireProvider><DashboardBadge /></ProtectedRoute>} />
           <Route path="/dashboard/my-requests" element={<ProtectedRoute><DashboardMyRequests /></ProtectedRoute>} />
           <Route path="/admin/ai-center" element={<ProtectedRoute requireAdmin><DashboardAiCenter /></ProtectedRoute>} />

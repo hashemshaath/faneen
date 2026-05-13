@@ -8181,6 +8181,30 @@ export type Database = {
         Args: { _lead_id: string }
         Returns: Json
       }
+      provider_clients_list: {
+        Args: {
+          _filter?: string
+          _limit?: number
+          _offset?: number
+          _q?: string
+        }
+        Returns: {
+          active_contracts: number
+          client_key: string
+          currency: string
+          email_masked: string
+          full_name: string
+          has_account: boolean
+          is_guest: boolean
+          last_interaction: string
+          phone_masked: string
+          ref_id: string
+          total_contracts: number
+          total_leads: number
+          total_value: number
+          user_id: string
+        }[]
+      }
       quick_resolve_contract_client: {
         Args: { _email?: string; _phone?: string }
         Returns: {
