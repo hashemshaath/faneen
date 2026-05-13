@@ -18,6 +18,7 @@
     "test:visual:update": "playwright test e2e/visual.spec.ts --update-snapshots",
     "test:pdf-perf": "vitest run src/lib/__tests__/contract-pdf-perf.bench.test.ts --reporter=verbose",
     "test:pdf-arabic-text": "vitest run src/lib/__tests__/contract-pdf-arabic-text.test.ts --reporter=verbose",
+    "test:contracts-prelaunch": "bash scripts/contracts-prelaunch-smoke.sh",
     "verify:pdf-arabic": "node scripts/verify-pdf-arabic.mjs"
   },
   "dependencies": {
