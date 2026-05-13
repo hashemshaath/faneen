@@ -46,8 +46,35 @@ export function ContractFilters({
   ];
 
   return (
-    <div className="flex flex-col sm:flex-row gap-2.5 sm:items-center justify-between">
-      <div className="flex flex-wrap gap-1.5" role="group" aria-label={isRTL ? 'تصفية حسب الحالة' : 'Filter by status'}>
+    <div className="flex flex-col gap-2.5">
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1 min-w-0">
+          <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />
+          <Input
+            placeholder={isRTL ? 'بحث بالعنوان، الرقم...' : 'Search title, number...'}
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="ps-9 h-9 text-xs rounded-lg bg-background/60 focus-visible:bg-background"
+            aria-label={isRTL ? 'بحث في العقود' : 'Search contracts'}
+          />
+        </div>
+        <Select value={sortBy} onValueChange={(v) => onSortChange(v as ContractSortKey)}>
+          <SelectTrigger className="h-9 text-[11px] w-32 px-2.5 rounded-lg shrink-0" aria-label={isRTL ? 'الترتيب' : 'Sort by'}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="date" className="text-xs">{isRTL ? 'الأحدث' : 'Date'}</SelectItem>
+            <SelectItem value="amount" className="text-xs">{isRTL ? 'المبلغ' : 'Amount'}</SelectItem>
+            <SelectItem value="status" className="text-xs">{isRTL ? 'الحالة' : 'Status'}</SelectItem>
+            <SelectItem value="health" className="text-xs">{isRTL ? 'الصحة' : 'Health'}</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div
+        className="flex flex-nowrap sm:flex-wrap gap-1.5 overflow-x-auto no-scrollbar -mx-1 px-1 pb-0.5"
+        role="group"
+        aria-label={isRTL ? 'تصفية حسب الحالة' : 'Filter by status'}
+      >
         {filters.map((f) => {
           const active = statusFilter === f.key;
           return (
@@ -55,7 +82,7 @@ export function ContractFilters({
               key={f.key}
               variant={active ? 'default' : 'outline'}
               size="sm"
-              className="text-[10px] gap-1 h-8 px-3 rounded-lg"
+              className={`text-[11px] gap-1 h-8 px-3 rounded-full shrink-0 transition-all ${active ? 'shadow-sm shadow-accent/20' : 'hover:border-accent/40'}`}
               aria-pressed={active}
               onClick={() => onStatusChange(f.key)}
             >
@@ -64,29 +91,6 @@ export function ContractFilters({
             </Button>
           );
         })}
-      </div>
-      <div className="flex items-center gap-2">
-        <Select value={sortBy} onValueChange={(v) => onSortChange(v as ContractSortKey)}>
-          <SelectTrigger className="h-8 text-[10px] w-28 px-2.5 rounded-lg" aria-label={isRTL ? 'الترتيب' : 'Sort by'}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="date" className="text-xs">{isRTL ? 'التاريخ' : 'Date'}</SelectItem>
-            <SelectItem value="amount" className="text-xs">{isRTL ? 'المبلغ' : 'Amount'}</SelectItem>
-            <SelectItem value="status" className="text-xs">{isRTL ? 'الحالة' : 'Status'}</SelectItem>
-            <SelectItem value="health" className="text-xs">{isRTL ? 'الصحة' : 'Health'}</SelectItem>
-          </SelectContent>
-        </Select>
-        <div className="relative sm:max-w-xs w-full">
-          <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />
-          <Input
-            placeholder={isRTL ? 'بحث بالعنوان، الرقم...' : 'Search title, number...'}
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="ps-9 h-8 text-xs rounded-lg"
-            aria-label={isRTL ? 'بحث في العقود' : 'Search contracts'}
-          />
-        </div>
       </div>
     </div>
   );
