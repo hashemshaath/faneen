@@ -106,7 +106,7 @@ export const LeadDetailPanel: React.FC<Props> = ({ lead, pending, onAction, onOp
                 <Button
                   variant="outline"
                   className="min-h-[44px]"
-                  onClick={() => navigate(`/dashboard/contracts?contract=${lead.converted_contract_id}`)}
+                  onClick={() => navigate(`/contracts/${lead.converted_contract_id}`)}
                 >
                   <ExternalLink />
                   <span>{isRTL ? 'فتح العقد الحالي' : 'Open existing contract'}</span>
