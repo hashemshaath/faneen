@@ -6,7 +6,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
-import { Shield, Info, AlertTriangle, Check, Undo2, Building2, Send, Clock } from 'lucide-react';
+import { Shield, Info, AlertTriangle, Check, Undo2, Building2, Send, Clock, ChevronDown, ChevronUp, MessageSquareWarning } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { MembershipHeader } from '@/components/membership/MembershipHeader';
@@ -35,6 +35,7 @@ const Membership = () => {
   const [subscribingPlanId, setSubscribingPlanId] = useState<string | null>(null);
   const [pendingDowngrade, setPendingDowngrade] = useState<{ id: string; tier: string } | null>(null);
   const [pendingUpgrade, setPendingUpgrade] = useState<{ id: string; tier: string } | null>(null);
+  const [showReviewNotes, setShowReviewNotes] = useState(false);
 
   // Privacy-safe: tier of current user (or 'anonymous') — no PII.
   React.useEffect(() => {
@@ -347,6 +348,7 @@ const Membership = () => {
             name_en?: string | null;
             approval_status?: string | null;
             onboarding_completion?: number | null;
+            approval_notes?: string | null;
           };
           const status = biz.approval_status ?? 'draft';
           const completion = biz.onboarding_completion ?? 0;
