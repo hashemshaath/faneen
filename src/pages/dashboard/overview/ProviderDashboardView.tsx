@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -22,7 +22,7 @@ import { ProviderMembershipCard } from '@/components/dashboard/ProviderMembershi
 import { ProviderCompletionSummary } from '@/components/dashboard/ProviderCompletionSummary';
 import { ProviderEngagementPreviews } from '@/components/dashboard/ProviderEngagementPreviews';
 import {
-  CHART_COLORS, ChartTooltipStyle, getStatusLabel, getStatusColor, getMonths,
+  ChartTooltipStyle, getStatusLabel, getStatusColor, getMonths,
   StatCard, QuickAction, OverdueAlerts, TodaySummary,
   RefreshButton, getTimeGreeting,
 } from '@/components/dashboard/overview/shared';
@@ -131,8 +131,6 @@ export default function ProviderDashboardView({
   const animatedRevenue = useCountUp(stats?.totalRevenue ?? 0, isVisible, 1500);
   const animatedContracts = useCountUp(stats?.contracts ?? 0, isVisible, 1200);
   const completionRate = stats?.contracts ? Math.round((stats.completedContracts / stats.contracts) * 100) : 0;
-
-  void CHART_COLORS; void getStatusLabel;
 
   const handleRefresh = () => {
     qc.invalidateQueries({ queryKey: ['provider-overview-stats'] });
