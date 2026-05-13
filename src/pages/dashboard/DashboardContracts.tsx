@@ -2110,28 +2110,30 @@ const DashboardContracts = () => {
         {/* ═══ Contracts List ═══ */}
         {viewSection === 'list' && (
           <>
-            <ContractRoleTabs
-              value={roleFilter}
-              onChange={(v) => startTransition(() => setRoleFilter(v))}
-              counts={{ all: stats.total, provider: stats.asProvider, client: stats.asClient }}
-              isRTL={isRTL}
-            />
-            <ContractFilters
-              statusFilter={statusFilter}
-              onStatusChange={(v) => startTransition(() => setStatusFilter(v))}
-              sortBy={sortBy}
-              onSortChange={(v) => setSortBy(v)}
-              searchQuery={searchQuery}
-              onSearchChange={(v) => startTransition(() => setSearchQuery(v))}
-              counts={{
-                total: stats.total,
-                active: stats.active,
-                pendingApproval: stats.pendingApproval,
-                completed: stats.completed,
-                draft: stats.draft,
-              }}
-              isRTL={isRTL}
-            />
+            <div className="sticky top-2 z-20 rounded-2xl border border-border/50 bg-card/80 backdrop-blur-md shadow-[var(--elev-1)] p-3 space-y-3">
+              <ContractRoleTabs
+                value={roleFilter}
+                onChange={(v) => startTransition(() => setRoleFilter(v))}
+                counts={{ all: stats.total, provider: stats.asProvider, client: stats.asClient }}
+                isRTL={isRTL}
+              />
+              <ContractFilters
+                statusFilter={statusFilter}
+                onStatusChange={(v) => startTransition(() => setStatusFilter(v))}
+                sortBy={sortBy}
+                onSortChange={(v) => setSortBy(v)}
+                searchQuery={searchQuery}
+                onSearchChange={(v) => startTransition(() => setSearchQuery(v))}
+                counts={{
+                  total: stats.total,
+                  active: stats.active,
+                  pendingApproval: stats.pendingApproval,
+                  completed: stats.completed,
+                  draft: stats.draft,
+                }}
+                isRTL={isRTL}
+              />
+            </div>
 
             {isLoading ? (
               <div className="grid grid-cols-1 gap-4">{[1, 2, 3].map(i => <Skeleton key={i} className="h-48 rounded-xl" />)}</div>
