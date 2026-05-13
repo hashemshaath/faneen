@@ -21,7 +21,7 @@ import {
   Star, Globe, MapPin, Sparkles, Copy, GripVertical,
   ArrowUpDown, LayoutGrid, List, Eye, EyeOff, Loader2,
   AlertCircle, Clock, Zap, Download, BarChart3,
-  Layers, ShoppingBag,
+  Layers, ShoppingBag, ExternalLink, Link2, FlaskConical,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { FieldAiActions } from '@/components/blog/FieldAiActions';
@@ -45,11 +45,12 @@ type ViewMode = 'list' | 'grid';
 
 /* ─── Sortable Service Card ─── */
 const SortableServiceCard = React.memo(({
-  s, rtl, viewMode, isSelected, onEdit, onToggle, onDuplicate, onDelete, onSelect,
+  s, rtl, viewMode, isSelected, onEdit, onToggle, onDuplicate, onDelete, onSelect, onShare, canShare,
 }: {
   s: Tables<'business_services'>; rtl: boolean; viewMode: ViewMode; isSelected: boolean;
   onEdit: (s: Tables<'business_services'>) => void; onToggle: (s: Tables<'business_services'>) => void;
   onDuplicate: (s: Tables<'business_services'>) => void; onDelete: (id: string) => void; onSelect: (id: string) => void;
+  onShare: (id: string) => void; canShare: boolean;
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: s.id });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1, zIndex: isDragging ? 50 : undefined };
@@ -79,6 +80,7 @@ const SortableServiceCard = React.memo(({
               </div>
               <div className="flex items-center gap-1">
                 {isNew && <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-accent text-accent-foreground">{rtl ? 'جديد' : 'NEW'}</span>}
+                {s.is_demo && <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-warning/15 text-warning">{rtl ? 'تجريبي' : 'DEMO'}</span>}
                 {isIncomplete && (
                   <TooltipProvider><Tooltip><TooltipTrigger><AlertCircle className="w-3.5 h-3.5 text-destructive/50" /></TooltipTrigger>
                   <TooltipContent><p className="text-xs">{rtl ? 'بيانات ناقصة' : 'Incomplete'}</p></TooltipContent></Tooltip></TooltipProvider>
@@ -123,6 +125,9 @@ const SortableServiceCard = React.memo(({
                 {s.is_active ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
               </Button>
               <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl bg-muted/80 hover:bg-muted" onClick={() => onDuplicate(s)}><Copy className="w-3.5 h-3.5" /></Button>
+              {canShare && (
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl bg-muted/80 hover:bg-muted" onClick={() => onShare(s.id)} title={rtl ? 'نسخ رابط الخدمة' : 'Copy link'}><Link2 className="w-3.5 h-3.5" /></Button>
+              )}
               <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl bg-destructive/10 hover:bg-destructive/20 text-destructive" onClick={() => onDelete(s.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
             </div>
           </div>
@@ -148,6 +153,7 @@ const SortableServiceCard = React.memo(({
           <div className="flex items-center gap-1.5 flex-wrap">
             <h3 className="font-semibold text-sm truncate">{name}</h3>
             {isNew && <span className="text-[8px] font-bold px-1 py-px rounded bg-accent text-accent-foreground">{rtl ? 'جديد' : 'NEW'}</span>}
+            {s.is_demo && <span className="text-[8px] font-bold px-1 py-px rounded bg-warning/15 text-warning">{rtl ? 'تجريبي' : 'DEMO'}</span>}
             {isIncomplete && (
               <TooltipProvider><Tooltip><TooltipTrigger><AlertCircle className="w-3 h-3 text-destructive/50" /></TooltipTrigger>
               <TooltipContent><p className="text-xs">{rtl ? 'بيانات ناقصة' : 'Incomplete'}</p></TooltipContent></Tooltip></TooltipProvider>
@@ -178,6 +184,9 @@ const SortableServiceCard = React.memo(({
           </Button>
           <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => onEdit(s)}><Pencil className="w-3.5 h-3.5" /></Button>
           <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => onDuplicate(s)}><Copy className="w-3.5 h-3.5" /></Button>
+          {canShare && (
+            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => onShare(s.id)} title={rtl ? 'نسخ رابط الخدمة' : 'Copy link'}><Link2 className="w-3.5 h-3.5" /></Button>
+          )}
           <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-destructive/60 hover:text-destructive hover:bg-destructive/10" onClick={() => onDelete(s.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
         </div>
       </div>
@@ -209,6 +218,7 @@ const DashboardServices = () => {
   const [catalogSearch, setCatalogSearch] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showCatalog, setShowCatalog] = useState(false);
+  const [catalogPicked, setCatalogPicked] = useState<Set<string>>(new Set());
 
   const emptyForm = useMemo(() => ({ name_ar: '', name_en: '', description_ar: '', description_en: '', price_from: '', price_to: '', is_active: true, currency_code: 'SAR' }), []);
   const [form, setForm] = useState(emptyForm);
@@ -223,13 +233,14 @@ const DashboardServices = () => {
     queryKey: ['my-business', user?.id],
     queryFn: async () => {
       if (!user) return null;
-      const { data } = await supabase.from('businesses').select('id, category_id').eq('user_id', user.id).maybeSingle();
+      const { data } = await supabase.from('businesses').select('id, category_id, username').eq('user_id', user.id).maybeSingle();
       return data;
     },
     enabled: !!user,
     staleTime: 10 * 60 * 1000,
   });
   const businessId = business?.id;
+  const publicUrl = business?.username ? `/${business.username}` : null;
 
   const { data: services = [], isLoading } = useQuery({
     queryKey: ['dashboard-services', businessId],
@@ -249,7 +260,8 @@ const DashboardServices = () => {
     const noPrice = services.filter(s => !s.price_from && !s.price_to).length;
     const complete = services.filter(s => s.name_ar && s.description_ar && (s.price_from || s.price_to)).length;
     const completeness = total > 0 ? Math.round((complete / total) * 100) : 0;
-    return { total, active, inactive: total - active, noPrice, completeness };
+    const demo = services.filter(s => s.is_demo).length;
+    return { total, active, inactive: total - active, noPrice, completeness, demo };
   }, [services]);
 
   const filteredServices = useMemo(() => {
@@ -327,6 +339,67 @@ const DashboardServices = () => {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['dashboard-services'] }); setSelectedIds(new Set()); toast.success(rtl ? 'تم الحذف' : 'Deleted'); },
   });
 
+  /* ─── Bulk catalog import + demo seed/clear ─── */
+  const bulkInsertMut = useMutation({
+    mutationFn: async (items: { name_ar: string; name_en: string; description_ar: string; description_en: string; is_demo?: boolean }[]) => {
+      if (!businessId) throw new Error('No business');
+      const baseOrder = services.length;
+      const rows = items.map((it, i) => ({
+        business_id: businessId,
+        name_ar: it.name_ar, name_en: it.name_en,
+        description_ar: it.description_ar, description_en: it.description_en,
+        currency_code: 'SAR', is_active: true, sort_order: baseOrder + i,
+        is_demo: !!it.is_demo,
+      }));
+      const { error } = await supabase.from('business_services').insert(rows);
+      if (error) throw error;
+      return rows.length;
+    },
+    onSuccess: (n) => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard-services'] });
+      setCatalogPicked(new Set());
+      toast.success(rtl ? `تمت إضافة ${n} خدمة` : `Added ${n} services`);
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
+  const clearDemoMut = useMutation({
+    mutationFn: async () => {
+      if (!businessId) throw new Error('No business');
+      const { error } = await supabase.from('business_services').delete().eq('business_id', businessId).eq('is_demo', true);
+      if (error) throw error;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['dashboard-services'] }); toast.success(rtl ? 'تم حذف الخدمات التجريبية' : 'Demo services removed'); },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
+  const seedDemo = useCallback(() => {
+    // Curated cross-sector demo set: first 2 from each of first 4 groups
+    const picks = serviceCatalog.slice(0, 4).flatMap(g => g.services.slice(0, 2)).slice(0, 8)
+      .map(it => ({ ...it, is_demo: true }));
+    bulkInsertMut.mutate(picks);
+  }, [bulkInsertMut]);
+
+  const toggleCatalogPick = useCallback((key: string) => setCatalogPicked(prev => {
+    const n = new Set(prev); if (n.has(key)) n.delete(key); else n.add(key); return n;
+  }), []);
+
+  const addPickedFromGroup = useCallback((group: typeof serviceCatalog[number]) => {
+    const existing = new Set(services.map(s => s.name_ar));
+    const picks = group.services
+      .map((s, i) => ({ s, key: `${group.id}:${i}` }))
+      .filter(({ s, key }) => catalogPicked.has(key) && !existing.has(s.name_ar))
+      .map(({ s }) => s);
+    if (picks.length === 0) return;
+    bulkInsertMut.mutate(picks);
+  }, [catalogPicked, services, bulkInsertMut]);
+
+  const copyServiceLink = useCallback((id: string) => {
+    if (!publicUrl) { toast.error(rtl ? 'حدد اسم مستخدم أولاً' : 'Set a username first'); return; }
+    const link = `${window.location.origin}${publicUrl}#service-${id}`;
+    navigator.clipboard.writeText(link).then(() => toast.success(rtl ? 'تم نسخ الرابط' : 'Link copied'));
+  }, [publicUrl, rtl]);
+
   /* ─── Callbacks ─── */
   const closeForm = useCallback(() => { setShowForm(false); setEditing(null); setForm(emptyForm); }, [emptyForm]);
   const scrollToForm = useCallback(() => { requestAnimationFrame(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })); }, []);
@@ -398,6 +471,13 @@ const DashboardServices = () => {
             </div>
           </div>
           <div className="flex gap-2 flex-wrap">
+            {publicUrl && (
+              <Button asChild variant="outline" size="sm" className="h-9 text-xs rounded-xl">
+                <a href={`${publicUrl}#services`} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="w-3.5 h-3.5 me-1.5" />{rtl ? 'الصفحة العامة' : 'Public page'}
+                </a>
+              </Button>
+            )}
             {services.length > 0 && (
               <Button variant="outline" size="sm" className="h-9 text-xs rounded-xl" onClick={exportCSV}>
                 <Download className="w-3.5 h-3.5 me-1.5" />{rtl ? 'تصدير' : 'Export'}
@@ -447,6 +527,21 @@ const DashboardServices = () => {
             </div>
             <Button variant="ghost" size="sm" className="h-7 text-[10px] shrink-0 rounded-lg" onClick={() => setFilterMode('no-price')}>
               {rtl ? 'أكمل البيانات ←' : 'Complete →'}
+            </Button>
+          </div>
+        )}
+
+        {/* Demo cleanup */}
+        {stats.demo > 0 && (
+          <div className="flex items-center gap-3 p-3 rounded-2xl bg-warning/5 border border-warning/30">
+            <FlaskConical className="w-4 h-4 text-warning shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-[12px] font-medium">{rtl ? `لديك ${stats.demo} خدمة تجريبية` : `${stats.demo} demo services`}</p>
+              <p className="text-[11px] text-muted-foreground">{rtl ? 'احذفها قبل النشر للزوار' : 'Remove before going public to visitors'}</p>
+            </div>
+            <Button variant="outline" size="sm" className="h-7 text-[10px] rounded-lg" onClick={() => clearDemoMut.mutate()} disabled={clearDemoMut.isPending}>
+              {clearDemoMut.isPending ? <Loader2 className="w-3 h-3 animate-spin me-1" /> : <Trash2 className="w-3 h-3 me-1" />}
+              {rtl ? 'حذف التجريبية' : 'Clear demo'}
             </Button>
           </div>
         )}
@@ -638,6 +733,9 @@ const DashboardServices = () => {
               <div className="flex gap-2">
                 <Button variant="hero" size="sm" className="rounded-xl" onClick={() => setShowForm(true)}><Plus className="w-4 h-4 me-1" />{rtl ? 'إضافة خدمة' : 'Add Service'}</Button>
                 <Button variant="outline" size="sm" className="rounded-xl" onClick={() => setShowCatalog(true)}><Sparkles className="w-4 h-4 me-1" />{rtl ? 'تصفح الكتالوج' : 'Browse Catalog'}</Button>
+                <Button variant="ghost" size="sm" className="rounded-xl" onClick={seedDemo} disabled={bulkInsertMut.isPending}>
+                  <FlaskConical className="w-4 h-4 me-1" />{rtl ? 'أمثلة تجريبية' : 'Demo examples'}
+                </Button>
               </div>
             </div>
           ) : filteredServices.length === 0 ? (
@@ -653,7 +751,8 @@ const DashboardServices = () => {
                   {filteredServices.map(s => (
                     <SortableServiceCard key={s.id} s={s} rtl={rtl} viewMode={viewMode} isSelected={selectedIds.has(s.id)}
                       onEdit={openEdit} onToggle={srv => toggleMut.mutate(srv)} onDuplicate={duplicateService}
-                      onDelete={id => setDeleteConfirm(id)} onSelect={toggleSelect} />
+                      onDelete={id => setDeleteConfirm(id)} onSelect={toggleSelect}
+                      onShare={copyServiceLink} canShare={!!publicUrl} />
                   ))}
                 </div>
               </SortableContext>
@@ -730,18 +829,45 @@ const DashboardServices = () => {
                           <div className="p-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                             {group.services.map((item, idx) => {
                               const added = isServiceAdded(item.name_ar);
+                              const pickKey = `${group.id}:${idx}`;
+                              const picked = catalogPicked.has(pickKey);
                               return (
-                                <button key={idx} disabled={added} onClick={() => quickAddFromCatalog(item)}
-                                  className={`p-3 rounded-xl border text-start transition-all group/item ${added ? 'bg-primary/5 border-primary/15 cursor-default' : 'border-border/30 hover:border-primary/30 hover:bg-primary/5 hover:shadow-sm cursor-pointer active:scale-[0.98]'}`}>
+                                <div key={idx}
+                                  className={`p-3 rounded-xl border text-start transition-all group/item ${added ? 'bg-primary/5 border-primary/15' : picked ? 'border-primary/40 bg-primary/5 shadow-sm' : 'border-border/30 hover:border-primary/30 hover:bg-primary/5'}`}>
                                   <div className="flex items-center gap-2">
-                                    {added ? <CheckCircle2 className="w-4 h-4 text-primary shrink-0" /> : <Plus className="w-4 h-4 text-primary/60 group-hover/item:text-primary shrink-0 transition-colors" />}
-                                    <span className="font-medium text-xs truncate">{rtl ? item.name_ar : item.name_en}</span>
+                                    <button
+                                      disabled={added}
+                                      onClick={() => toggleCatalogPick(pickKey)}
+                                      aria-label="select"
+                                      className={`w-[16px] h-[16px] rounded border-[1.5px] transition-all flex items-center justify-center shrink-0 ${added ? 'bg-primary/20 border-primary/30 cursor-default' : picked ? 'bg-primary border-primary' : 'border-muted-foreground/30 hover:border-primary/60'}`}>
+                                      {(added || picked) && <CheckCircle2 className="w-2.5 h-2.5 text-primary-foreground" />}
+                                    </button>
+                                    <button disabled={added} onClick={() => quickAddFromCatalog(item)} className="flex items-center gap-1.5 min-w-0 flex-1 text-start disabled:cursor-default">
+                                      {!added && <Plus className="w-3.5 h-3.5 text-primary/60 group-hover/item:text-primary shrink-0 transition-colors" />}
+                                      <span className="font-medium text-xs truncate">{rtl ? item.name_ar : item.name_en}</span>
+                                    </button>
                                   </div>
                                   <p className="text-[10px] text-muted-foreground mt-1 line-clamp-2 ps-6 leading-relaxed">{rtl ? item.description_ar : item.description_en}</p>
-                                </button>
+                                </div>
                               );
                             })}
                           </div>
+                          {(() => {
+                            const groupPickedCount = group.services.reduce((acc, _s, i) => acc + (catalogPicked.has(`${group.id}:${i}`) ? 1 : 0), 0);
+                            if (groupPickedCount === 0) return null;
+                            return (
+                              <div className="px-3 pb-3 flex items-center gap-2">
+                                <Badge variant="outline" className="text-[10px] border-primary/30 text-primary">{groupPickedCount} {rtl ? 'محددة' : 'selected'}</Badge>
+                                <Button size="sm" variant="hero" className="h-7 text-[10px] rounded-lg" onClick={() => addPickedFromGroup(group)} disabled={bulkInsertMut.isPending}>
+                                  {bulkInsertMut.isPending ? <Loader2 className="w-3 h-3 animate-spin me-1" /> : <Plus className="w-3 h-3 me-1" />}
+                                  {rtl ? `أضف ${groupPickedCount}` : `Add ${groupPickedCount}`}
+                                </Button>
+                                <button className="text-[10px] text-muted-foreground hover:text-foreground ms-auto" onClick={() => {
+                                  setCatalogPicked(prev => { const n = new Set(prev); group.services.forEach((_s, i) => n.delete(`${group.id}:${i}`)); return n; });
+                                }}>{rtl ? 'إلغاء التحديد' : 'Clear'}</button>
+                              </div>
+                            );
+                          })()}
                           {group.brands && group.brands.length > 0 && (
                             <div className="border-t border-border/30 p-3">
                               <button className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors mb-2"
