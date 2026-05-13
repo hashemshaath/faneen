@@ -24,4 +24,7 @@
   <sitemap>
     <loc>https://qitaat.com/functions/v1/sitemap?type=sectors</loc>
   </sitemap>
+  <sitemap>
+    <loc>https://qitaat.com/functions/v1/sitemap?type=services</loc>
+  </sitemap>
 </sitemapindex>
