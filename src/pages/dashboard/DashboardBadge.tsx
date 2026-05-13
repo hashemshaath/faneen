@@ -423,6 +423,101 @@ const DashboardBadge: React.FC = () => {
   };
   const currentSnippet = snippetMap[snippetKind];
 
+  // Open a self-contained embed preview window with the rendered badge,
+  // the HTML embed snippet, and the QR code — each instantly copyable.
+  const openEmbedPreview = () => {
+    if (!business || !html) {
+      toast.error(isRTL ? 'الشارة غير جاهزة بعد' : 'Badge is not ready yet');
+      return;
+    }
+    const title = isRTL ? `معاينة شارة التوثيق · @${business.username}` : `Verification badge preview · @${business.username}`;
+    const tHeading = isRTL ? 'شارة التوثيق — معاينة التضمين' : 'Verification Badge — Embed preview';
+    const tBadge = isRTL ? 'الشارة المرسومة' : 'Rendered badge';
+    const tEmbed = isRTL ? 'كود HTML للتضمين' : 'HTML embed code';
+    const tQr = isRTL ? 'رمز QR (SVG)' : 'QR code (SVG)';
+    const tCopy = isRTL ? 'نسخ' : 'Copy';
+    const tCopied = isRTL ? 'تم النسخ ✓' : 'Copied ✓';
+    const tOpen = isRTL ? 'فتح صفحة المنشأة' : 'Open business page';
+    const tHint = isRTL
+      ? 'الصق الكود في موقعك أو وقّع به بريدك. بدون CSS أو JS خارجي.'
+      : 'Paste the code on your site or email signature. No external CSS/JS.';
+    const escAttr = (s: string) => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const escText = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const doc = `<!doctype html><html lang="${isRTL ? 'ar' : 'en'}" dir="${isRTL ? 'rtl' : 'ltr'}"><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="robots" content="noindex,nofollow"/>
+<title>${escText(title)}</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#0f172a;--muted:#64748b;--border:#e2e8f0;--brand:#1f8a4c;--brand-ink:#fff;--code:#0b1220;--code-ink:#e2e8f0}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,'IBM Plex Sans Arabic',Segoe UI,Roboto,sans-serif}
+.wrap{max-width:920px;margin:0 auto;padding:24px}
+h1{font-size:18px;margin:0 0 4px;font-weight:700}
+p.lead{margin:0 0 20px;color:var(--muted);font-size:13px}
+.grid{display:grid;gap:16px}
+@media(min-width:760px){.grid-2{grid-template-columns:1fr 1fr}}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px}
+.card h2{font-size:13px;font-weight:600;margin:0 0 10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.preview{display:flex;align-items:center;justify-content:center;min-height:120px;background:#fff;border:1px dashed var(--border);border-radius:10px;padding:18px}
+.preview.dark{background:#0f172a}
+textarea{width:100%;min-height:140px;font:12px/1.55 ui-monospace,Menlo,Consolas,monospace;background:var(--code);color:var(--code-ink);border:0;border-radius:10px;padding:12px;resize:vertical;direction:ltr;text-align:left}
+.qr{display:flex;align-items:center;justify-content:center;background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px;min-height:240px}
+.qr svg{max-width:220px;height:auto}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+button,.btn{appearance:none;border:1px solid var(--border);background:#fff;color:var(--ink);padding:8px 14px;border-radius:9px;font-size:12.5px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;text-decoration:none}
+button.primary,.btn.primary{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+button:hover{background:#f1f5f9}button.primary:hover{filter:brightness(.95)}
+.ok{color:#059669}
+.foot{margin-top:18px;font-size:11.5px;color:var(--muted);text-align:center}
+</style></head><body><div class="wrap">
+<header style="margin-bottom:16px">
+  <h1>${escText(tHeading)}</h1>
+  <p class="lead">${escText(tHint)}</p>
+  <a class="btn" href="${escAttr(profileLink)}" target="_blank" rel="noopener">${escText(tOpen)} ↗</a>
+</header>
+<div class="grid grid-2">
+  <section class="card">
+    <h2>${escText(tBadge)}</h2>
+    <div class="preview">${html}</div>
+    <div class="preview dark" style="margin-top:10px">${html}</div>
+  </section>
+  <section class="card">
+    <h2>${escText(tQr)} <button data-copy="qr" class="btn" type="button">${escText(tCopy)}</button></h2>
+    <div class="qr" id="qrBox">${qrSvg || ''}</div>
+  </section>
+</div>
+<section class="card" style="margin-top:16px">
+  <h2>${escText(tEmbed)} <button data-copy="html" class="btn primary" type="button">${escText(tCopy)}</button></h2>
+  <textarea id="snip" readonly>${escText(html)}</textarea>
+</section>
+<p class="foot">Qitaat · قِطاعات</p>
+</div>
+<script>
+(function(){
+  function flash(btn,label){var o=btn.textContent;btn.textContent=label;btn.classList.add('ok');setTimeout(function(){btn.textContent=o;btn.classList.remove('ok')},1600)}
+  function copyText(t){if(navigator.clipboard&&navigator.clipboard.writeText){return navigator.clipboard.writeText(t)}return new Promise(function(res,rej){var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');res()}catch(e){rej(e)}finally{document.body.removeChild(ta)}})}
+  document.querySelectorAll('[data-copy]').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var k=btn.getAttribute('data-copy');var txt='';
+      if(k==='html'){txt=document.getElementById('snip').value}
+      else if(k==='qr'){var s=document.querySelector('#qrBox svg');txt=s?s.outerHTML:''}
+      if(!txt)return;copyText(txt).then(function(){flash(btn,${JSON.stringify(tCopied)})})
+    })
+  });
+  var ta=document.getElementById('snip');if(ta){ta.addEventListener('focus',function(){ta.select()})}
+})();
+</script></body></html>`;
+    const blob = new Blob([doc], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const win = window.open(url, '_blank', 'noopener');
+    if (!win) {
+      toast.error(isRTL ? 'منع المتصفح فتح النافذة' : 'Browser blocked the preview window');
+      URL.revokeObjectURL(url);
+      return;
+    }
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    toast.success(isRTL ? 'تم فتح معاينة كود التضمين' : 'Embed preview opened');
+  };
+
   // Today's stats for hero
   const today = useMemo(() => {
     const start = new Date(); start.setHours(0, 0, 0, 0);
@@ -670,10 +765,16 @@ const DashboardBadge: React.FC = () => {
                 <Card>
                   <CardHeader className="flex-row items-center justify-between gap-2">
                     <CardTitle className="text-base flex items-center gap-2"><Code2 className="w-4 h-4" />{isRTL ? 'كود الإلصاق' : 'Embed code'}</CardTitle>
-                    <Button size="sm" onClick={() => copy(currentSnippet, snippetKind)} className="gap-2">
-                      {copied === snippetKind ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                      {isRTL ? (copied === snippetKind ? 'تم النسخ' : 'نسخ') : (copied === snippetKind ? 'Copied' : 'Copy')}
-                    </Button>
+                    <div className="flex flex-wrap gap-2">
+                      <Button size="sm" variant="outline" onClick={openEmbedPreview} className="gap-2">
+                        <ExternalLink className="w-4 h-4" />
+                        {isRTL ? 'معاينة الكود' : 'Preview embed'}
+                      </Button>
+                      <Button size="sm" onClick={() => copy(currentSnippet, snippetKind)} className="gap-2">
+                        {copied === snippetKind ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                        {isRTL ? (copied === snippetKind ? 'تم النسخ' : 'نسخ') : (copied === snippetKind ? 'Copied' : 'Copy')}
+                      </Button>
+                    </div>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="flex flex-wrap gap-1.5">
