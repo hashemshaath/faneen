@@ -116,6 +116,7 @@ const Diagnostics = lazyRetry(() => import("./pages/Diagnostics"));
 const ForProviders = lazyRetry(() => import("./pages/ForProviders"));
 const DashboardCommunicationPreferences = lazyRetry(() => import("./pages/dashboard/DashboardCommunicationPreferences"));
 const DashboardBusinessCompletion = lazyRetry(() => import("./pages/dashboard/DashboardBusinessCompletion"));
+const DashboardBusinessDraft = lazyRetry(() => import("./pages/dashboard/DashboardBusinessDraft"));
 const AdminProviderLanding = lazyRetry(() => import("./pages/admin/AdminProviderLanding"));
 const AdminAnalyticsSettings = lazyRetry(() => import("./pages/admin/AdminAnalyticsSettings"));
 const AdminBranding = lazyRetry(() => import("./pages/admin/AdminBranding"));
@@ -201,6 +202,7 @@ const AppRoutes = () => (
           <Route path="/dashboard/bookings" element={<ProtectedRoute><DashboardBookings /></ProtectedRoute>} />
           <Route path="/dashboard/settings" element={<ProtectedRoute><DashboardSettings /></ProtectedRoute>} />
           <Route path="/dashboard/business-completion" element={<ProtectedRoute><DashboardBusinessCompletion /></ProtectedRoute>} />
+          <Route path="/dashboard/business-draft" element={<ProtectedRoute><DashboardBusinessDraft /></ProtectedRoute>} />
           <Route path="/dashboard/communication-preferences" element={<ProtectedRoute><DashboardCommunicationPreferences /></ProtectedRoute>} />
 
           <Route path="/dashboard/services" element={<ProtectedRoute requireProvider><DashboardServices /></ProtectedRoute>} />
