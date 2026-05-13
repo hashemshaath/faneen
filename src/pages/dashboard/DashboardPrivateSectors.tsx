@@ -47,7 +47,7 @@ const DashboardPrivateSectors: React.FC = () => {
         .from('business_staff')
         .select('business_id, businesses:business_id(id, name_ar, name_en)')
         .eq('user_id', user!.id)
-        .eq('status', 'active');
+        .eq('is_active', true);
       const staffRows = (staff.data ?? [])
         .map((r: { businesses: { id: string; name_ar: string; name_en: string | null } | null }) => r.businesses)
         .filter((b): b is { id: string; name_ar: string; name_en: string | null } => !!b);
