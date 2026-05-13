@@ -10,7 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Layers, Plus, Pencil, Trash2, Send, Search, FileClock, Building2 } from 'lucide-react';
+import { Layers, Plus, Pencil, Trash2, Send, Search, FileClock, Building2, CheckCircle2, Clock, ShieldCheck, Sparkles } from 'lucide-react';
 import {
   listSectorsForBusiness, createSector, updateSector, deleteSector,
   submitSector, listAuditForSector,
@@ -20,6 +20,8 @@ import {
 } from '@/features/private-sectors/types';
 import { PrivateSectorForm } from '@/features/private-sectors/PrivateSectorForm';
 import { ONBOARDING_SECTORS } from '@/data/onboarding-sectors';
+import { PrivateSectorTemplatesShowcase } from '@/features/private-sectors/PrivateSectorTemplatesShowcase';
+import type { PrivateSectorTemplate } from '@/features/private-sectors/templates';
 
 const DashboardPrivateSectors: React.FC = () => {
   useNoIndex();
@@ -92,25 +94,91 @@ const DashboardPrivateSectors: React.FC = () => {
     );
   }
 
+  const stats = {
+    total: sectors.length,
+    approved: sectors.filter((s) => s.status === 'approved').length,
+    pending: sectors.filter((s) => s.status === 'pending').length,
+    drafts: sectors.filter((s) => s.status === 'draft' || s.status === 'rejected').length,
+  };
+
+  const useTemplate = (tpl: PrivateSectorTemplate) => {
+    setEditing({
+      name_ar: tpl.name_ar,
+      name_en: tpl.name_en,
+      parent_sector: tpl.parent_sector,
+      brand_type: tpl.brand_type,
+      short_description_ar: tpl.short_description_ar,
+      short_description_en: tpl.short_description_en,
+      description_ar: tpl.description_ar,
+      description_en: tpl.description_en,
+      established_year: tpl.established_year,
+    });
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-primary/10 p-2 text-primary"><Layers className="h-5 w-5" /></div>
-            <div>
-              <h1 className="text-xl font-bold">{isRTL ? 'القطاعات الخاصة' : 'Private Sectors'}</h1>
-              <p className="text-sm text-muted-foreground">
-                {isRTL ? 'علاماتك التجارية والوكالات وتخصصاتها — تخضع لموافقة الإدارة قبل النشر.' : 'Your brands, agencies and specializations — require admin approval before publishing.'}
+        {/* Hero header */}
+        <section className="relative overflow-hidden rounded-3xl border border-border/60 bg-gradient-to-br from-primary/10 via-primary/5 to-background p-6 md:p-8">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -top-20 end-[-60px] h-72 w-72 rounded-full bg-primary/15 blur-3xl"
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -bottom-24 start-[-60px] h-72 w-72 rounded-full bg-secondary/15 blur-3xl"
+          />
+          <div className="relative flex flex-wrap items-start gap-5">
+            <div className="rounded-2xl bg-primary/15 text-primary p-3 shadow-sm">
+              <Layers className="h-6 w-6" />
+            </div>
+            <div className="flex-1 min-w-[240px]">
+              <div className="flex items-center gap-2 mb-1">
+                <Badge variant="outline" className="border-primary/30 text-primary bg-primary/5">
+                  <Sparkles className="h-3 w-3 me-1" />
+                  {isRTL ? 'مايكرو سيرفيس' : 'Microservice'}
+                </Badge>
+                <Badge variant="outline" className="border-success/30 text-success bg-success/5">
+                  <ShieldCheck className="h-3 w-3 me-1" />
+                  {isRTL ? 'موافقة الإدارة' : 'Admin reviewed'}
+                </Badge>
+              </div>
+              <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
+                {isRTL ? 'القطاعات الخاصة بالمزود' : 'Provider Private Sectors'}
+              </h1>
+              <p className="mt-1.5 text-sm md:text-base text-muted-foreground max-w-2xl leading-relaxed">
+                {isRTL
+                  ? 'سجّل علاماتك التجارية ووكالاتك الحصرية وقطاعاتك المتخصصة (مثل سرايا الألمنيوم، رويال للمطابخ، كريستال للزجاج). كل قطاع جديد يخضع لمراجعة الإدارة قبل ظهوره للعملاء.'
+                  : 'Register your brands, exclusive agencies and specialized sectors (e.g. Saraya Aluminum, Royal Kitchens, Crystal Glass). Every new entry is reviewed by the platform before going live.'}
               </p>
             </div>
+            {!editing && (
+              <Button size="appLg" onClick={() => setEditing({})}>
+                <Plus className="h-4 w-4" />
+                {isRTL ? 'قطاع خاص جديد' : 'New private sector'}
+              </Button>
+            )}
           </div>
-          {!editing && (
-            <Button size="app" onClick={() => setEditing({})}>
-              <Plus className="h-4 w-4" /> {isRTL ? 'قطاع خاص جديد' : 'New private sector'}
-            </Button>
-          )}
-        </div>
+
+          {/* KPIs */}
+          <div className="relative mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">
+            {[
+              { icon: Layers,        label_ar: 'إجمالي القطاعات', label_en: 'Total sectors', value: stats.total,    tone: 'text-primary'  },
+              { icon: CheckCircle2,  label_ar: 'معتمدة',           label_en: 'Approved',      value: stats.approved, tone: 'text-success'  },
+              { icon: Clock,         label_ar: 'قيد المراجعة',     label_en: 'Pending',       value: stats.pending,  tone: 'text-warning'  },
+              { icon: Pencil,        label_ar: 'مسودات/مرفوض',     label_en: 'Drafts',        value: stats.drafts,   tone: 'text-muted-foreground' },
+            ].map((k) => (
+              <div key={k.label_en} className="rounded-2xl border border-border/60 bg-background/70 backdrop-blur-sm p-3 flex items-center gap-3">
+                <div className={`rounded-xl bg-muted p-2 ${k.tone}`}><k.icon className="h-4 w-4" /></div>
+                <div className="min-w-0">
+                  <div className="text-[11px] text-muted-foreground truncate">{isRTL ? k.label_ar : k.label_en}</div>
+                  <div className="text-xl font-bold tech-content">{k.value}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
 
         {editing && (
           <PrivateSectorForm
@@ -121,6 +189,20 @@ const DashboardPrivateSectors: React.FC = () => {
           />
         )}
 
+        {/* Templates showcase — only when not actively editing */}
+        {!editing && (
+          <PrivateSectorTemplatesShowcase onUseTemplate={useTemplate} />
+        )}
+
+        {/* My sectors */}
+        <section aria-labelledby="ps-mine-heading" className="space-y-3">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <h2 id="ps-mine-heading" className="text-base font-bold flex items-center gap-2">
+              <Building2 className="h-4 w-4 text-primary" />
+              {isRTL ? 'قطاعاتي الخاصة' : 'My private sectors'}
+            </h2>
+          </div>
+
         <div className="relative max-w-md">
           <Search className="absolute top-1/2 -translate-y-1/2 start-3 h-4 w-4 text-muted-foreground" />
           <Input className="ps-10" placeholder={isRTL ? 'بحث بالاسم أو المعرف…' : 'Search by name or ref id…'}
@@ -130,10 +212,12 @@ const DashboardPrivateSectors: React.FC = () => {
         {isLoading ? (
           <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">{isRTL ? 'جاري التحميل…' : 'Loading…'}</CardContent></Card>
         ) : filtered.length === 0 ? (
-          <Card><CardContent className="py-12 text-center">
+          <Card className="border-dashed"><CardContent className="py-10 text-center">
             <Layers className="h-10 w-10 mx-auto mb-3 text-muted-foreground" />
             <div className="font-semibold">{isRTL ? 'لا توجد قطاعات خاصة بعد' : 'No private sectors yet'}</div>
-            <p className="text-sm text-muted-foreground mt-1">{isRTL ? 'أضف أول قطاع خاص بعلامتك التجارية.' : 'Add your first private sector.'}</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              {isRTL ? 'ابدأ من نموذج جاهز أعلاه أو أنشئ قطاعاً جديداً يدوياً.' : 'Start from a curated template above or create one from scratch.'}
+            </p>
           </CardContent></Card>
         ) : (
           <div className="grid gap-3">
@@ -199,6 +283,7 @@ const DashboardPrivateSectors: React.FC = () => {
             })}
           </div>
         )}
+        </section>
       </div>
     </DashboardLayout>
   );
