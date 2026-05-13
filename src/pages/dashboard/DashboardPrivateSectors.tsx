@@ -23,6 +23,7 @@ import { SectorDistributorsPanel } from '@/features/private-sectors/SectorDistri
 import { ONBOARDING_SECTORS } from '@/data/onboarding-sectors';
 import { PrivateSectorTemplatesShowcase } from '@/features/private-sectors/PrivateSectorTemplatesShowcase';
 import type { PrivateSectorTemplate } from '@/features/private-sectors/templates';
+import { MyInvitationsStatus } from '@/components/dashboard/MyInvitationsStatus';
 
 const DashboardPrivateSectors: React.FC = () => {
   useNoIndex();
@@ -120,7 +121,9 @@ const DashboardPrivateSectors: React.FC = () => {
   if (!business) {
     return (
       <DashboardLayout>
-        <Card className="border-amber-200/60 bg-amber-50/30 dark:bg-amber-950/10">
+        <div className="space-y-4">
+          <MyInvitationsStatus />
+          <Card className="border-amber-200/60 bg-amber-50/30 dark:bg-amber-950/10">
           <CardHeader>
             <div className="flex items-start gap-3">
               <div className="rounded-xl bg-amber-100 dark:bg-amber-900/40 p-2">
@@ -210,7 +213,8 @@ const DashboardPrivateSectors: React.FC = () => {
               </Button>
             </div>
           </CardContent>
-        </Card>
+          </Card>
+        </div>
       </DashboardLayout>
     );
   }
@@ -240,6 +244,7 @@ const DashboardPrivateSectors: React.FC = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        <MyInvitationsStatus />
         {/* Hero header */}
         <section className="relative overflow-hidden rounded-3xl border border-border/60 bg-gradient-to-br from-primary/10 via-primary/5 to-background p-6 md:p-8">
           <div
