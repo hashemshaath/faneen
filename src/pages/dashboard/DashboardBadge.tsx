@@ -561,10 +561,71 @@ const DashboardBadge: React.FC = () => {
                         <Label className="text-xs uppercase tracking-wide text-muted-foreground mb-2 block">{isRTL ? 'اللون' : 'Accent'}</Label>
                         <div className="flex flex-wrap gap-2">
                           {ACCENT_SWATCHES.map((a) => (
-                            <button key={a.id} type="button" onClick={() => setAccent(a.id)} aria-pressed={accent === a.id} title={isRTL ? a.ar : a.en}
+                            <button key={a.id} type="button" onClick={() => { setAccent(a.id); setCustomAccent(''); }} aria-pressed={accent === a.id && !customAccent} title={isRTL ? a.ar : a.en}
                               className={`relative h-9 w-9 rounded-full border-2 transition-all hover-lift ${accent === a.id ? 'border-foreground scale-110' : 'border-transparent'}`}
                               style={{ background: a.hex }}>
-                              {accent === a.id && <Check className="absolute inset-0 m-auto w-4 h-4 text-white" />}
+                              {accent === a.id && !customAccent && <Check className="absolute inset-0 m-auto w-4 h-4 text-white" />}
+                            </button>
+                          ))}
+                          <div className="flex items-center gap-2 ms-2">
+                            <input
+                              type="color"
+                              value={customAccent || ACCENT_SWATCHES.find(a => a.id === accent)?.hex || '#10b981'}
+                              onChange={(e) => setCustomAccent(e.target.value)}
+                              className="h-9 w-9 rounded-full border-2 border-border cursor-pointer p-0 bg-transparent"
+                              aria-label={isRTL ? 'لون مخصص' : 'Custom color'}
+                            />
+                            <Input
+                              value={customAccent}
+                              onChange={(e) => setCustomAccent(e.target.value)}
+                              placeholder="#a855f7"
+                              className="h-9 w-28 font-mono text-xs tech-content"
+                              dir="ltr"
+                            />
+                            {customAccent && (
+                              <Button type="button" size="sm" variant="ghost" className="h-9 w-9 p-0" onClick={() => setCustomAccent('')} aria-label={isRTL ? 'إزالة اللون المخصص' : 'Clear custom color'}>
+                                <X className="w-3.5 h-3.5" />
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground mt-1.5">{isRTL ? 'اختر من اللوحة أو ألصق Hex مخصص (#RRGGBB).' : 'Pick a swatch or paste a custom hex (#RRGGBB).'}</p>
+                      </div>
+
+                      <div>
+                        <Label className="text-xs uppercase tracking-wide text-muted-foreground mb-2 block flex items-center gap-1.5">
+                          <Upload className="w-3 h-3" />{isRTL ? 'شعار الورشة' : 'Workshop logo'}
+                        </Label>
+                        <div className="flex items-center gap-3">
+                          <label className="inline-flex items-center gap-2 px-3 h-9 rounded-md border border-dashed cursor-pointer hover:bg-muted text-xs">
+                            <Upload className="w-3.5 h-3.5" />
+                            {isRTL ? 'رفع شعار (PNG/SVG)' : 'Upload logo (PNG/SVG)'}
+                            <input type="file" accept="image/png,image/svg+xml,image/jpeg" className="hidden" onChange={(e) => handleLogoFile(e.target.files?.[0] ?? null)} />
+                          </label>
+                          {logoDataUrl && (
+                            <>
+                              <span className="inline-flex h-9 w-9 rounded-full overflow-hidden border bg-card">
+                                <img src={logoDataUrl} alt="logo preview" className="h-full w-full object-cover" />
+                              </span>
+                              <Button type="button" size="sm" variant="ghost" className="h-9 w-9 p-0" onClick={() => setLogoDataUrl('')} aria-label={isRTL ? 'إزالة الشعار' : 'Remove logo'}>
+                                <X className="w-3.5 h-3.5" />
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-muted-foreground mt-1.5">{isRTL ? 'يُستبدل أيقونة الدرع. الحد الأقصى 200KB، يُقصّ دائريًا.' : 'Replaces the shield icon. Max 200KB, cropped to a circle.'}</p>
+                      </div>
+
+                      <div>
+                        <Label className="text-xs uppercase tracking-wide text-muted-foreground mb-2 block flex items-center gap-1.5">
+                          <TypeIcon className="w-3 h-3" />{isRTL ? 'خط الاسم' : 'Name font'}
+                        </Label>
+                        <div className="flex flex-wrap gap-1.5">
+                          {FONT_PRESETS.map((f) => (
+                            <button key={f.id} type="button" onClick={() => setFontId(f.id)} aria-pressed={fontId === f.id}
+                              className={`px-3 py-1.5 text-xs rounded-md border transition-colors ${fontId === f.id ? 'bg-primary text-primary-foreground border-primary' : 'bg-card hover:bg-muted border-border'}`}
+                              style={{ fontFamily: f.css }}>
+                              {isRTL ? f.ar : f.en}
                             </button>
                           ))}
                         </div>
