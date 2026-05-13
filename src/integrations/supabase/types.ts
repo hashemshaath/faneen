@@ -7451,6 +7451,15 @@ export type Database = {
       cleanup_expired_otps: { Args: never; Returns: undefined }
       cleanup_old_audit_data: { Args: never; Returns: undefined }
       cleanup_old_migration_telemetry: { Args: never; Returns: undefined }
+      clone_contract_as_draft: {
+        Args: {
+          _include_line_items?: boolean
+          _include_supervisor?: boolean
+          _include_terms?: boolean
+          _source_contract_id: string
+        }
+        Returns: Json
+      }
       complete_contract: {
         Args: { _contract_id: string }
         Returns: {
