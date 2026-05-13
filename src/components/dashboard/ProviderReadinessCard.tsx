@@ -95,7 +95,11 @@ export function ProviderReadinessCard() {
             </span>
             <span className="tech-content font-bold text-foreground">{completion}%</span>
           </div>
-          <Progress value={completion} className="h-2" />
+          <Progress
+            value={completion}
+            className="h-2"
+            aria-label={language === 'ar' ? `نسبة الإكمال ${completion}٪` : `Completion ${completion}%`}
+          />
         </div>
 
         {/* Public URL preview */}
