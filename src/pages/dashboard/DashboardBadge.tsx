@@ -30,7 +30,7 @@ import {
 } from 'recharts';
 import {
   buildBadgeHtml, buildBadgeMarkdown, buildBadgeJsx, buildBadgeIframe,
-  buildEmailSignature, buildBadgeSvg, buildProfileLink,
+  buildEmailSignature, buildBadgeSvg, buildProfileLink, svgToPngBlob,
   type BadgeVariant, type BadgeSize, type BadgeAccent,
 } from '@/lib/badge/snippets';
 import { exportRowsToCsv } from '@/lib/badge/csv';
