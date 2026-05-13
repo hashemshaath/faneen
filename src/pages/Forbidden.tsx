@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { ShieldX, ArrowRight, ArrowLeft, Home, LogIn, RotateCw, Copy, Check, Activity } from "lucide-react";
+import { ShieldX, ArrowRight, ArrowLeft, Home, LogIn, RotateCw, Copy, Check, Activity, LifeBuoy } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -32,21 +32,36 @@ const Forbidden = () => {
     window.location.href = `/auth?from=${encodeURIComponent(ctx.path)}`;
   };
 
+  const buildPayload = () => ({
+    path: ctx.path,
+    requiredRole: ctx.requiredRole,
+    roles: ctx.roles,
+    isAdmin: ctx.isAdmin,
+    isProvider: ctx.isProvider,
+    isSuperAdmin: ctx.isSuperAdmin,
+    accountType: ctx.accountType,
+    user_id: ctx.userId,
+    timestamp: new Date().toISOString(),
+    userAgent: navigator.userAgent,
+  });
+
+  const contactSupportHref = (() => {
+    const payload = buildPayload();
+    const subject = isRTL
+      ? `طلب دعم: رفض الوصول إلى ${ctx.path}`
+      : `Support: Access denied at ${ctx.path}`;
+    const intro = isRTL
+      ? 'مرحبًا فريق الدعم،\n\nتم رفض وصولي إلى الصفحة التالية. تفاصيل الرفض (JSON) أدناه:\n\n'
+      : 'Hello support team,\n\nMy access to the following page was denied. Denial details (JSON) below:\n\n';
+    const message = `${intro}\n\u0060\u0060\u0060json\n${JSON.stringify(payload, null, 2)}\n\u0060\u0060\u0060\n`;
+    const params = new URLSearchParams({ subject, message });
+    if (user?.email) params.set('email', user.email);
+    return `/contact?${params.toString()}`;
+  })();
+
   const [copied, setCopied] = useState(false);
   const copyDetails = async () => {
-    const payload = {
-      path: ctx.path,
-      requiredRole: ctx.requiredRole,
-      roles: ctx.roles,
-      isAdmin: ctx.isAdmin,
-      isProvider: ctx.isProvider,
-      isSuperAdmin: ctx.isSuperAdmin,
-      accountType: ctx.accountType,
-      user_id: ctx.userId,
-      timestamp: new Date().toISOString(),
-      userAgent: navigator.userAgent,
-    };
-    const json = JSON.stringify(payload, null, 2);
+    const json = JSON.stringify(buildPayload(), null, 2);
     try {
       await navigator.clipboard.writeText(json);
       setCopied(true);
@@ -117,13 +132,19 @@ const Forbidden = () => {
               <dd className="tech-content font-mono text-[10px] break-all">{ctx.userId}</dd>
             </>)}
           </dl>
-          <div className="pt-2">
+          <div className="pt-2 flex flex-wrap gap-2">
             <Button size="sm" variant="outline" className="gap-2 w-full sm:w-auto" onClick={copyDetails}>
               {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
               {copied
                 ? (isRTL ? 'تم النسخ' : 'Copied')
                 : (isRTL ? 'نسخ التفاصيل للدعم (JSON)' : 'Copy details for support (JSON)')}
             </Button>
+            <Link to={contactSupportHref} className="w-full sm:w-auto">
+              <Button size="sm" variant="default" className="gap-2 w-full sm:w-auto">
+                <LifeBuoy className="w-3.5 h-3.5" />
+                {isRTL ? 'تواصل مع الدعم مع التفاصيل' : 'Contact support with details'}
+              </Button>
+            </Link>
           </div>
         </div>
 
