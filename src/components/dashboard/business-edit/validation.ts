@@ -67,7 +67,8 @@ export type ValidationKey =
   | 'description_ar_en'
   | 'short_description_ar_en'
   | 'region_ar_en'
-  | 'address_ar_en';
+  | 'address_ar_en'
+  | 'coordinates';
 
 export type ValidationCode =
   | 'REQUIRED'
@@ -78,7 +79,9 @@ export type ValidationCode =
   | 'PHONE_FORMAT'
   | 'EMAIL_FORMAT'
   | 'URL_FORMAT'
-  | 'BILINGUAL_MISSING';
+  | 'BILINGUAL_MISSING'
+  | 'COORDS_MISSING'
+  | 'COORDS_INVALID';
 
 export interface ValidationIssue {
   key: ValidationKey;
@@ -104,6 +107,14 @@ const messages: Record<ValidationCode, { ar: string; en: string }> = {
   BILINGUAL_MISSING: {
     ar: 'أضف الترجمة الإنجليزية لتحسين الظهور دوليًا',
     en: 'Add the Arabic translation to improve local visibility',
+  },
+  COORDS_MISSING: {
+    ar: 'يجب تحديد موقع المنشأة على الخريطة',
+    en: 'You must select your business location on the map',
+  },
+  COORDS_INVALID: {
+    ar: 'الإحداثيات خارج النطاق المسموح (-90/90, -180/180)',
+    en: 'Coordinates are outside the valid range (-90/90, -180/180)',
   },
 };
 
@@ -131,6 +142,8 @@ interface ValidatableForm {
   region_en?: string | null;
   address?: string | null;
   address_en?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 const checkField = (
@@ -184,6 +197,16 @@ export function validateBusinessForm(form: ValidatableForm): ValidationIssue[] {
   checkBilingual(form.description_ar, form.description_en, 'description_ar_en', issues);
   checkBilingual(form.region, form.region_en, 'region_ar_en', issues);
   checkBilingual(form.address, form.address_en, 'address_ar_en', issues);
+
+  // Coordinates: required + range validation
+  if (form.latitude == null || form.longitude == null) {
+    issues.push({ key: 'coordinates', code: 'COORDS_MISSING', severity: 'error' });
+  } else if (
+    form.latitude < -90 || form.latitude > 90 ||
+    form.longitude < -180 || form.longitude > 180
+  ) {
+    issues.push({ key: 'coordinates', code: 'COORDS_INVALID', severity: 'error' });
+  }
 
   return issues;
 }
