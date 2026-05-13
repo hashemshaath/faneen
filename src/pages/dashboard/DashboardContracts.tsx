@@ -72,6 +72,11 @@ import {
   ContractCreateActionsBar,
   ContractCreateMobileActionBar,
 } from '@/components/contracts/dashboard/create/ContractCreateActionsBar';
+import {
+  AcceptedInvitationsPanel,
+  PendingInvitePanel,
+  type AcceptedInvitationRow,
+} from '@/components/contracts/dashboard/create/AcceptedInvitationsPanel';
 import { WORK_TYPES, getWorkType, pickTemplateForWorkType, type WorkTypeKey } from '@/lib/contract-work-types';
 import { getStatusGuidance } from '@/lib/contract-status-guidance';
 import { serializeDraftPayload, maskEmail as maskInviteEmail, type PendingInvite } from '@/lib/contract-invitations';
@@ -1027,17 +1032,6 @@ const DashboardContracts = () => {
   });
 
   /* CT4C.5 — Accepted invitations awaiting contract completion. */
-  type AcceptedInvitationRow = {
-    id: string;
-    ref_id: string;
-    email_lower: string;
-    recipient_name: string | null;
-    work_type: string | null;
-    template_version_id: string | null;
-    accepted_at: string | null;
-    status: string;
-    bound_contract_id: string | null;
-  };
   const { data: acceptedInvitations = [], refetch: refetchAcceptedInvites } = useQuery({
     queryKey: ['accepted-invitations', user?.id],
     enabled: !!user?.id,
@@ -1473,67 +1467,14 @@ const DashboardContracts = () => {
             <CardContent className="space-y-4">
               <div ref={stepRefs.client} className="space-y-4 scroll-mt-24">
               {/* CT4C.5 — Accepted invitations awaiting contract completion */}
-              {!editingId && inviteMode === 'idle' && acceptedInvitations.length > 0 && (
-                <div className="p-4 rounded-xl border-2 border-emerald-500/40 bg-emerald-500/5 space-y-3">
-                  <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <div className="flex items-center gap-2">
-                      <CircleCheck className="w-4 h-4 text-emerald-600" />
-                      <span className="text-xs font-semibold">
-                        {isRTL ? 'دعوات مقبولة بانتظار إصدار العقد' : 'Accepted invitations awaiting contract'}
-                      </span>
-                      <Badge variant="secondary" className="text-[9px]">{acceptedInvitations.length}</Badge>
-                    </div>
-                    <Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-[10px]" onClick={() => refetchAcceptedInvites()}>
-                      <RefreshCw className="w-3 h-3 me-1" />
-                      {isRTL ? 'تحديث' : 'Refresh'}
-                    </Button>
-                  </div>
-                  <div className="space-y-2">
-                    {acceptedInvitations.map((inv) => {
-                      const wt = inv.work_type ? getWorkType(inv.work_type as WorkTypeKey) : null;
-                      return (
-                        <div key={inv.id} className="p-3 rounded-lg border border-emerald-500/20 bg-background flex flex-wrap items-center justify-between gap-3">
-                          <div className="space-y-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <Badge variant="outline" className="text-[9px] tech-content">{inv.ref_id}</Badge>
-                              {wt && <Badge variant="secondary" className="text-[9px]">{isRTL ? wt.ar : wt.en}</Badge>}
-                              {inv.template_version_id && (
-                                <Badge variant="secondary" className="text-[9px] gap-0.5">
-                                  <Sparkles className="w-2.5 h-2.5" />{isRTL ? 'قالب جاهز' : 'Template ready'}
-                                </Badge>
-                              )}
-                            </div>
-                            <div className="text-[11px] text-muted-foreground flex items-center gap-2 flex-wrap">
-                              <span dir="ltr" className="font-mono">{maskInviteEmail(inv.email_lower)}</span>
-                              {inv.recipient_name && <span>· {inv.recipient_name}</span>}
-                              {inv.accepted_at && (
-                                <span dir="ltr">· {new Date(inv.accepted_at).toISOString().slice(0, 10)}</span>
-                              )}
-                            </div>
-                          </div>
-                          <Button
-                            type="button"
-                            variant="hero"
-                            size="sm"
-                            className="h-8 gap-1.5 text-[11px]"
-                            disabled={!inv.template_version_id || completeFromInviteMutation.isPending}
-                            onClick={() => completeFromInviteMutation.mutate(inv.id)}
-                          >
-                            {completeFromInviteMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <FileCheck className="w-3 h-3" />}
-                            {isRTL ? 'إكمال إصدار العقد' : 'Complete contract'}
-                          </Button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                  {acceptedInvitations.some(i => !i.template_version_id) && (
-                    <p className="text-[10px] text-muted-foreground leading-relaxed">
-                      {isRTL
-                        ? 'بعض الدعوات لا تحتوي على قالب محفوظ — يلزم إنشاء العقد يدويًا.'
-                        : 'Some invitations have no saved template — these require manual contract creation.'}
-                    </p>
-                  )}
-                </div>
+              {!editingId && inviteMode === 'idle' && (
+                <AcceptedInvitationsPanel
+                  isRTL={isRTL}
+                  invitations={acceptedInvitations}
+                  isCompleting={completeFromInviteMutation.isPending}
+                  onRefresh={() => refetchAcceptedInvites()}
+                  onCompleteFromInvite={(id) => completeFromInviteMutation.mutate(id)}
+                />
               )}
 
               {/* CT4B — Step 1: Client (search picker with email fallback) */}
@@ -1592,82 +1533,21 @@ const DashboardContracts = () => {
 
               {/* CT4C.3 — Awaiting acceptance */}
               {!editingId && inviteMode === 'awaiting' && pendingInvite && (
-                <div className="p-4 rounded-xl border-2 border-warning/40 bg-warning/5 space-y-3">
-                  <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <div className="flex items-center gap-2">
-                      {pendingInviteAccepted ? <CircleCheck className="w-4 h-4 text-emerald-600" /> : <Clock className="w-4 h-4 text-warning" />}
-                      <span className="text-xs font-semibold">
-                        {pendingInviteAccepted
-                          ? (isRTL ? 'تم قبول الدعوة — جاهزة لإصدار العقد' : 'Invitation accepted — ready to issue contract')
-                          : (isRTL ? 'بانتظار قبول الدعوة' : 'Awaiting invitation acceptance')}
-                      </span>
-                      <Badge variant="secondary" className="text-[9px]">{pendingInvite.ref_id}</Badge>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <Badge variant="outline" className="text-[9px]">
-                        {pendingInviteAccepted ? (isRTL ? 'مقبولة' : 'Accepted') : (isRTL ? 'قيد الانتظار' : 'Pending')}
-                      </Badge>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 px-1.5 text-[10px]"
-                        onClick={() => { queryClient.invalidateQueries({ queryKey: ['pending-invite-status', pendingInvite.id] }); refetchAcceptedInvites(); }}
-                      >
-                        <RefreshCw className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-[11px]">
-                    <div>
-                      <div className="text-muted-foreground text-[9px]">{isRTL ? 'البريد' : 'Email'}</div>
-                      <div dir="ltr" className="font-mono">{maskInviteEmail(pendingInvite.email_lower)}</div>
-                    </div>
-                    <div>
-                      <div className="text-muted-foreground text-[9px]">{isRTL ? 'صالحة حتى' : 'Valid until'}</div>
-                      <div dir="ltr">{new Date(pendingInvite.expires_at).toISOString().slice(0, 10)}</div>
-                    </div>
-                    <div>
-                      <div className="text-muted-foreground text-[9px]">{isRTL ? 'التذكيرات' : 'Reminders'}</div>
-                      <div>{pendingInvite.reminder_count} / 2</div>
-                    </div>
-                  </div>
-                  <p className="text-[10px] text-muted-foreground leading-relaxed">
-                    {pendingInviteAccepted
-                      ? (isRTL
-                        ? 'قبل العميل الدعوة. يمكنك الآن إكمال إصدار العقد.'
-                        : 'The client accepted the invitation. You can now finalise the contract.')
-                      : (isRTL
-                        ? 'بعد قبول العميل للدعوة، يمكنك إنشاء العقد أو سيتم ربط المسودة حسب الخطوة التالية.'
-                        : 'After the client accepts the invitation, you can create the contract or the draft will be linked in the next step.')}
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {pendingInviteAccepted ? (
-                      <Button
-                        type="button"
-                        variant="hero"
-                        size="sm"
-                        className="h-8 gap-1.5 text-[11px]"
-                        disabled={completeFromInviteMutation.isPending}
-                        onClick={() => completeFromInviteMutation.mutate(pendingInvite.id)}
-                      >
-                        {completeFromInviteMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <FileCheck className="w-3 h-3" />}
-                        {isRTL ? 'إكمال إصدار العقد' : 'Complete contract'}
-                      </Button>
-                    ) : (
-                      <>
-                        <Button type="button" variant="outline" size="sm" className="h-8 gap-1.5 text-[11px]" disabled={resendInviteMutation.isPending || pendingInvite.reminder_count >= 2} onClick={() => resendInviteMutation.mutate()}>
-                          {resendInviteMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
-                          {isRTL ? 'إعادة إرسال' : 'Resend'}
-                        </Button>
-                        <Button type="button" variant="ghost" size="sm" className="h-8 gap-1.5 text-[11px] text-destructive" disabled={cancelInviteMutation.isPending} onClick={() => cancelInviteMutation.mutate()}>
-                          {cancelInviteMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <XCircle className="w-3 h-3" />}
-                          {isRTL ? 'إلغاء الدعوة' : 'Cancel invitation'}
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                </div>
+                <PendingInvitePanel
+                  isRTL={isRTL}
+                  pendingInvite={pendingInvite}
+                  pendingInviteAccepted={pendingInviteAccepted}
+                  isCompleting={completeFromInviteMutation.isPending}
+                  isResending={resendInviteMutation.isPending}
+                  isCancelling={cancelInviteMutation.isPending}
+                  onRefresh={() => {
+                    queryClient.invalidateQueries({ queryKey: ['pending-invite-status', pendingInvite.id] });
+                    refetchAcceptedInvites();
+                  }}
+                  onCompleteFromInvite={(id) => completeFromInviteMutation.mutate(id)}
+                  onResend={() => resendInviteMutation.mutate()}
+                  onCancel={() => cancelInviteMutation.mutate()}
+                />
               )}
               </div>
 
