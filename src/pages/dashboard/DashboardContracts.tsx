@@ -59,6 +59,7 @@ import {
 import { ClientPicker, type SelectedClient } from '@/components/contracts/ClientPicker';
 import { LineItemFormSection } from '@/components/contracts/dashboard/create/LineItemFormSection';
 import { SuggestedBOQPanel } from '@/components/contracts/dashboard/create/SuggestedBOQPanel';
+import { ContractFinancialSummary, ContractLineVatBreakdown } from '@/components/contracts/dashboard/ContractBoqVatSummary';
 import { WorkTypeSection } from '@/components/contracts/dashboard/create/WorkTypeSection';
 import { TemplateSelectionSection } from '@/components/contracts/dashboard/create/TemplateSelectionSection';
 import { ContractDetailsSection } from '@/components/contracts/dashboard/create/ContractDetailsSection';
@@ -2122,60 +2123,29 @@ const DashboardContracts = () => {
 
                                 {/* Financial Summary with VAT */}
                                 {(measurements.length > 0 || lineItems.length > 0) && (
-                                  <div className="p-4 rounded-xl bg-gradient-to-br from-accent/5 to-accent/10 border border-accent/20 space-y-2">
-                                    <div className="flex items-center justify-between text-[11px]">
-                                      <span className="text-muted-foreground">{isRTL ? 'المقاسات' : 'Measurements'} ({measurements.length})</span>
-                                      <span className="font-semibold">{measurementTotal.toLocaleString()} {c.currency_code}</span>
-                                    </div>
-                                    {lineItems.length > 0 && (
-                                      <div className="flex items-center justify-between text-[11px]">
-                                        <span className="text-muted-foreground">{isRTL ? 'بنود إضافية' : 'Line Items'} ({lineItems.length})</span>
-                                        <span className="font-semibold">{lineItemTotal.toLocaleString()} {c.currency_code}</span>
-                                      </div>
-                                    )}
-                                    <Separator className="my-1" />
-                                    <div className="flex items-center justify-between text-[11px]">
-                                      <span className="text-muted-foreground">{isRTL ? 'المجموع الفرعي' : 'Subtotal'}</span>
-                                      <span className="font-bold">{subtotal.toLocaleString()} {c.currency_code}</span>
-                                    </div>
-                                    <div className="flex items-center justify-between text-[11px]">
-                                      <span className="text-muted-foreground flex items-center gap-1"><Percent className="w-3 h-3" />{isRTL ? `ضريبة القيمة المضافة (${vatRate}%)` : `VAT (${vatRate}%)`} {c.vat_inclusive ? (isRTL ? '(شاملة)' : '(incl.)') : ''}</span>
-                                      <span className="font-semibold">{vatAmount.toFixed(2)} {c.currency_code}</span>
-                                    </div>
-                                    <Separator className="my-1" />
-                                    <div className="flex items-center justify-between text-sm font-bold text-accent">
-                                      <span>{isRTL ? 'الإجمالي النهائي' : 'Grand Total'}</span>
-                                      <span>{grandTotal.toLocaleString()} {c.currency_code}</span>
-                                    </div>
-                                  </div>
+                                  <ContractFinancialSummary
+                                    isRTL={isRTL}
+                                    currency={c.currency_code}
+                                    measurementsCount={measurements.length}
+                                    measurementTotal={measurementTotal}
+                                    lineItemsCount={lineItems.length}
+                                    lineItemTotal={lineItemTotal}
+                                    subtotal={subtotal}
+                                    vatRate={vatRate}
+                                    vatInclusive={c.vat_inclusive}
+                                    vatAmount={vatAmount}
+                                    grandTotal={grandTotal}
+                                  />
                                 )}
 
                                 {/* CT5G.2 — Derived per-line/per-group VAT breakdown (display only). */}
                                 {lineItems.length > 0 && (
-                                  <div className="p-3 rounded-xl bg-muted/30 border border-border/30 space-y-1.5">
-                                    <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-                                      <span className="font-semibold">{isRTL ? 'تفصيل ضريبة البنود (تقديري للعرض فقط)' : 'Line VAT Breakdown (display only)'}</span>
-                                    </div>
-                                    {hasAnyLineVat ? (
-                                      <>
-                                        <div className="flex items-center justify-between text-[11px]">
-                                          <span className="text-muted-foreground">{isRTL ? 'إجمالي الصافي' : 'Total Net'}</span>
-                                          <span className="font-mono">{lineVatTotals.net.toLocaleString()} {c.currency_code}</span>
-                                        </div>
-                                        <div className="flex items-center justify-between text-[11px]">
-                                          <span className="text-muted-foreground">{isRTL ? 'إجمالي الضريبة' : 'Total VAT'}</span>
-                                          <span className="font-mono">{lineVatTotals.vat.toLocaleString()} {c.currency_code}</span>
-                                        </div>
-                                        <Separator className="my-1" />
-                                        <div className="flex items-center justify-between text-[11px] font-semibold">
-                                          <span>{isRTL ? 'الإجمالي شامل الضريبة' : 'Total Gross'}</span>
-                                          <span className="font-mono">{lineVatTotals.gross.toLocaleString()} {c.currency_code}</span>
-                                        </div>
-                                      </>
-                                    ) : (
-                                      <p className="text-[10px] text-muted-foreground">{isRTL ? 'لا توجد ضريبة على البنود' : 'No VAT applied to line items'}</p>
-                                    )}
-                                  </div>
+                                  <ContractLineVatBreakdown
+                                    isRTL={isRTL}
+                                    currency={c.currency_code}
+                                    hasAnyLineVat={hasAnyLineVat}
+                                    lineVatTotals={lineVatTotals}
+                                  />
                                 )}
                               </TabsContent>
 
