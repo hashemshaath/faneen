@@ -244,6 +244,7 @@ const DashboardPrivateSectors: React.FC = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        <MyInvitationsStatus />
         {/* Hero header */}
         <section className="relative overflow-hidden rounded-3xl border border-border/60 bg-gradient-to-br from-primary/10 via-primary/5 to-background p-6 md:p-8">
           <div
