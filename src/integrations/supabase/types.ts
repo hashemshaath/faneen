@@ -8177,9 +8177,17 @@ export type Database = {
         }
         Returns: number
       }
+      notify_expiring_memberships: { Args: never; Returns: number }
       prepare_contract_prefill_from_lead: {
         Args: { _lead_id: string }
         Returns: Json
+      }
+      process_expired_memberships: {
+        Args: never
+        Returns: {
+          notified_count: number
+          processed_count: number
+        }[]
       }
       provider_clients_list: {
         Args: {
