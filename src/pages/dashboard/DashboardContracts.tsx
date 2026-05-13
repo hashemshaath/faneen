@@ -260,6 +260,7 @@ const DashboardContracts = () => {
 
   const [uploadingContractId, setUploadingContractId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'cards' | 'compact'>('cards');
+  const searchInputRef = React.useRef<HTMLInputElement>(null);
 
   /* ── Data Queries ── */
   const { data: providerContracts = [], isLoading: loadingProvider } = useQuery({
