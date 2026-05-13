@@ -8,7 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { BUILD_ID, BUILD_TIME } from '@/lib/buildVersion';
-import { Activity, RefreshCw, ShieldCheck, Wrench, User as UserIcon, Clock, Hash } from 'lucide-react';
+import { Activity, RefreshCw, ShieldCheck, Wrench, User as UserIcon, Clock, Hash, Download, Copy, Check } from 'lucide-react';
+import { toast } from 'sonner';
 import type { Session } from '@supabase/supabase-js';
 
 const Row = ({ k, v, mono = false }: { k: string; v: React.ReactNode; mono?: boolean }) => (
@@ -28,6 +29,7 @@ const DashboardAccountDiagnostics: React.FC = () => {
   const { user, profile, roles, isAdmin, isProvider, isSuperAdmin } = useAuth();
   const [session, setSession] = useState<Session | null>(null);
   const [refreshedAt, setRefreshedAt] = useState<Date>(new Date());
+  const [copied, setCopied] = useState(false);
 
   const refresh = useCallback(async () => {
     const { data } = await supabase.auth.getSession();
@@ -36,6 +38,59 @@ const DashboardAccountDiagnostics: React.FC = () => {
   }, []);
 
   useEffect(() => { refresh(); }, [refresh]);
+
+  const buildReport = useCallback(() => ({
+    generated_at: new Date().toISOString(),
+    refreshed_at: refreshedAt.toISOString(),
+    build: {
+      id: BUILD_ID,
+      time: BUILD_TIME,
+      origin: typeof window !== 'undefined' ? window.location.origin : null,
+      user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+    },
+    permissions: {
+      account_type: profile?.account_type ?? null,
+      isAdmin,
+      isProvider,
+      isSuperAdmin,
+      roles,
+      is_onboarded: !!profile?.is_onboarded,
+    },
+    session: {
+      user_id: user?.id ?? null,
+      email: user?.email ?? null,
+      last_sign_in_at: user?.last_sign_in_at ?? null,
+      expires_at: session?.expires_at ? new Date(session.expires_at * 1000).toISOString() : null,
+      provider: user?.app_metadata?.provider ?? null,
+    },
+  }), [refreshedAt, profile, isAdmin, isProvider, isSuperAdmin, roles, user, session]);
+
+  const exportJson = () => {
+    const report = buildReport();
+    const json = JSON.stringify(report, null, 2);
+    const blob = new Blob([json], { type: 'application/json;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const ts = new Date().toISOString().replace(/[:.]/g, '-');
+    a.href = url;
+    a.download = `qitaat-diagnostics-${ts}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success(rtl ? 'تم تصدير ملف التشخيص' : 'Diagnostics file exported');
+  };
+
+  const copyJson = async () => {
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(buildReport(), null, 2));
+      setCopied(true);
+      toast.success(rtl ? 'تم النسخ' : 'Copied');
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error(rtl ? 'تعذّر النسخ' : 'Copy failed');
+    }
+  };
 
   return (
     <DashboardLayout>
@@ -50,9 +105,18 @@ const DashboardAccountDiagnostics: React.FC = () => {
               <p className="text-xs text-muted-foreground">{rtl ? 'حالة الصلاحيات والجلسة وإصدار البناء' : 'Roles, session, and build identity'}</p>
             </div>
           </div>
-          <Button variant="outline" size="sm" className="rounded-xl" onClick={refresh}>
-            <RefreshCw className="w-3.5 h-3.5 me-1.5" />{rtl ? 'تحديث' : 'Refresh'}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" className="rounded-xl" onClick={copyJson}>
+              {copied ? <Check className="w-3.5 h-3.5 me-1.5" /> : <Copy className="w-3.5 h-3.5 me-1.5" />}
+              {copied ? (rtl ? 'تم النسخ' : 'Copied') : (rtl ? 'نسخ JSON' : 'Copy JSON')}
+            </Button>
+            <Button variant="outline" size="sm" className="rounded-xl" onClick={exportJson}>
+              <Download className="w-3.5 h-3.5 me-1.5" />{rtl ? 'تصدير' : 'Export'}
+            </Button>
+            <Button variant="outline" size="sm" className="rounded-xl" onClick={refresh}>
+              <RefreshCw className="w-3.5 h-3.5 me-1.5" />{rtl ? 'تحديث' : 'Refresh'}
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
