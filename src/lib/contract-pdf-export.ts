@@ -227,6 +227,26 @@ export interface ContractExportData {
   documentHash?: string | null;
   /** Origin used for the verification URL (defaults to https://qitaat.com). */
   verifyOrigin?: string;
+  /**
+   * Phase 5C.4 — Execution site (frozen address snapshot). Caller MUST pass
+   * only the safe whitelisted fields below. Never include site_id, city_id,
+   * created_by, archived_at, is_default, is_demo, client_user_id,
+   * created_at, updated_at, storage paths, or signed URLs.
+   */
+  executionAddressSnapshot?: {
+    label?: string | null;
+    contact_name?: string | null;
+    contact_phone?: string | null;
+    city_name?: string | null;
+    district?: string | null;
+    address_line1?: string | null;
+    address_line2?: string | null;
+    map_url?: string | null;
+    latitude?: number | null;
+    longitude?: number | null;
+    access_notes?: string | null;
+    captured_at?: string | null;
+  } | null;
 }
 
 /**
