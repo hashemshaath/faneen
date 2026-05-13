@@ -4422,6 +4422,197 @@ export type Database = {
           },
         ]
       }
+      membership_access_keys: {
+        Row: {
+          business_id: string | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          key_hash: string
+          key_prefix: string
+          last_used_at: string | null
+          name: string
+          revoke_reason: string | null
+          revoked_at: string | null
+          scopes: Json
+          subscription_id: string | null
+          tier_at_creation: Database["public"]["Enums"]["membership_tier"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          business_id?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          key_hash: string
+          key_prefix: string
+          last_used_at?: string | null
+          name: string
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          scopes?: Json
+          subscription_id?: string | null
+          tier_at_creation?: Database["public"]["Enums"]["membership_tier"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          business_id?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          key_hash?: string
+          key_prefix?: string
+          last_used_at?: string | null
+          name?: string
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          scopes?: Json
+          subscription_id?: string | null
+          tier_at_creation?: Database["public"]["Enums"]["membership_tier"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "membership_access_keys_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "membership_access_keys_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "membership_access_keys_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "membership_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      membership_invite_keys: {
+        Row: {
+          business_id: string
+          code: string
+          created_at: string
+          created_by: string
+          expires_at: string | null
+          id: string
+          max_uses: number
+          notes: string | null
+          revoke_reason: string | null
+          revoked_at: string | null
+          role: Database["public"]["Enums"]["business_staff_role"]
+          status: string
+          subscription_id: string | null
+          updated_at: string
+          used_count: number
+        }
+        Insert: {
+          business_id: string
+          code: string
+          created_at?: string
+          created_by: string
+          expires_at?: string | null
+          id?: string
+          max_uses?: number
+          notes?: string | null
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          role?: Database["public"]["Enums"]["business_staff_role"]
+          status?: string
+          subscription_id?: string | null
+          updated_at?: string
+          used_count?: number
+        }
+        Update: {
+          business_id?: string
+          code?: string
+          created_at?: string
+          created_by?: string
+          expires_at?: string | null
+          id?: string
+          max_uses?: number
+          notes?: string | null
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          role?: Database["public"]["Enums"]["business_staff_role"]
+          status?: string
+          subscription_id?: string | null
+          updated_at?: string
+          used_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "membership_invite_keys_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "membership_invite_keys_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "membership_invite_keys_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "membership_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      membership_invite_redemptions: {
+        Row: {
+          business_staff_id: string | null
+          created_at: string
+          id: string
+          invite_key_id: string
+          redeemed_by_user_id: string
+        }
+        Insert: {
+          business_staff_id?: string | null
+          created_at?: string
+          id?: string
+          invite_key_id: string
+          redeemed_by_user_id: string
+        }
+        Update: {
+          business_staff_id?: string | null
+          created_at?: string
+          id?: string
+          invite_key_id?: string
+          redeemed_by_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "membership_invite_redemptions_business_staff_id_fkey"
+            columns: ["business_staff_id"]
+            isOneToOne: false
+            referencedRelation: "business_staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "membership_invite_redemptions_invite_key_id_fkey"
+            columns: ["invite_key_id"]
+            isOneToOne: false
+            referencedRelation: "membership_invite_keys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       membership_plans: {
         Row: {
           created_at: string
@@ -4476,53 +4667,178 @@ export type Database = {
         }
         Relationships: []
       }
+      membership_promo_codes: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string | null
+          discount_percent: number | null
+          duration_days: number | null
+          id: string
+          is_active: boolean
+          max_redemptions: number
+          notes: string | null
+          target_tier: Database["public"]["Enums"]["membership_tier"] | null
+          type: string
+          updated_at: string
+          used_count: number
+          valid_from: string
+          valid_until: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by?: string | null
+          discount_percent?: number | null
+          duration_days?: number | null
+          id?: string
+          is_active?: boolean
+          max_redemptions?: number
+          notes?: string | null
+          target_tier?: Database["public"]["Enums"]["membership_tier"] | null
+          type: string
+          updated_at?: string
+          used_count?: number
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          discount_percent?: number | null
+          duration_days?: number | null
+          id?: string
+          is_active?: boolean
+          max_redemptions?: number
+          notes?: string | null
+          target_tier?: Database["public"]["Enums"]["membership_tier"] | null
+          type?: string
+          updated_at?: string
+          used_count?: number
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Relationships: []
+      }
+      membership_promo_redemptions: {
+        Row: {
+          applied_subscription_id: string | null
+          business_id: string | null
+          created_at: string
+          id: string
+          promo_code_id: string
+          user_id: string
+        }
+        Insert: {
+          applied_subscription_id?: string | null
+          business_id?: string | null
+          created_at?: string
+          id?: string
+          promo_code_id: string
+          user_id: string
+        }
+        Update: {
+          applied_subscription_id?: string | null
+          business_id?: string | null
+          created_at?: string
+          id?: string
+          promo_code_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "membership_promo_redemptions_applied_subscription_id_fkey"
+            columns: ["applied_subscription_id"]
+            isOneToOne: false
+            referencedRelation: "membership_subscriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "membership_promo_redemptions_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "membership_promo_redemptions_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "membership_promo_redemptions_promo_code_id_fkey"
+            columns: ["promo_code_id"]
+            isOneToOne: false
+            referencedRelation: "membership_promo_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       membership_subscriptions: {
         Row: {
+          auto_renew: boolean
           billing_cycle: string
           business_id: string | null
           cancelled_at: string | null
           created_at: string
           expires_at: string | null
           external_subscription_id: string | null
+          grace_period_until: string | null
           id: string
           is_demo: boolean
+          last_renewal_attempt_at: string | null
+          payment_failure_reason: string | null
           payment_method: string | null
           plan_id: string
           ref_id: string
+          renewal_failure_count: number
           starts_at: string
           status: string
           updated_at: string
           user_id: string
         }
         Insert: {
+          auto_renew?: boolean
           billing_cycle?: string
           business_id?: string | null
           cancelled_at?: string | null
           created_at?: string
           expires_at?: string | null
           external_subscription_id?: string | null
+          grace_period_until?: string | null
           id?: string
           is_demo?: boolean
+          last_renewal_attempt_at?: string | null
+          payment_failure_reason?: string | null
           payment_method?: string | null
           plan_id: string
           ref_id?: string
+          renewal_failure_count?: number
           starts_at?: string
           status?: string
           updated_at?: string
           user_id: string
         }
         Update: {
+          auto_renew?: boolean
           billing_cycle?: string
           business_id?: string | null
           cancelled_at?: string | null
           created_at?: string
           expires_at?: string | null
           external_subscription_id?: string | null
+          grace_period_until?: string | null
           id?: string
           is_demo?: boolean
+          last_renewal_attempt_at?: string | null
+          payment_failure_reason?: string | null
           payment_method?: string | null
           plan_id?: string
           ref_id?: string
+          renewal_failure_count?: number
           starts_at?: string
           status?: string
           updated_at?: string
@@ -7260,6 +7576,13 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      accept_invite_key: {
+        Args: { _code: string }
+        Returns: {
+          business_id: string
+          role: Database["public"]["Enums"]["business_staff_role"]
+        }[]
+      }
       admin_contract_pdf_exports_summary: {
         Args: never
         Returns: {
@@ -7681,6 +8004,15 @@ export type Database = {
         Returns: Json
       }
       contract_snapshot_hash: { Args: { _snapshot: Json }; Returns: string }
+      create_access_key: {
+        Args: { _business_id?: string; _name: string; _scopes?: Json }
+        Returns: {
+          expires_at: string
+          id: string
+          key_prefix: string
+          raw_key: string
+        }[]
+      }
       create_client_invitation: {
         Args: {
           _business_id?: string
@@ -7729,6 +8061,20 @@ export type Database = {
         Returns: number
       }
       expire_client_invitations: { Args: never; Returns: Json }
+      generate_invite_key: {
+        Args: {
+          _business_id: string
+          _max_uses?: number
+          _notes?: string
+          _role?: Database["public"]["Enums"]["business_staff_role"]
+          _valid_days?: number
+        }
+        Returns: {
+          code: string
+          expires_at: string
+          id: string
+        }[]
+      }
       generate_ref_id: {
         Args: { _prefix: string; _seq_name: string }
         Returns: string
@@ -7987,6 +8333,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      has_membership_feature: {
+        Args: { _business_id?: string; _feature_key: string; _user_id: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -8189,6 +8539,14 @@ export type Database = {
           processed_count: number
         }[]
       }
+      process_renewal_failures: {
+        Args: never
+        Returns: {
+          downgraded: number
+          grace_started: number
+          notified: number
+        }[]
+      }
       provider_clients_list: {
         Args: {
           _filter?: string
@@ -8252,6 +8610,14 @@ export type Database = {
         Returns: undefined
       }
       record_email_open: { Args: { _message_id: string }; Returns: undefined }
+      redeem_promo_code: {
+        Args: { _business_id?: string; _code: string }
+        Returns: {
+          message: string
+          subscription_id: string
+          success: boolean
+        }[]
+      }
       reject_contract_amendment: {
         Args: { _amendment_id: string; _reason: string }
         Returns: {
@@ -8297,6 +8663,14 @@ export type Database = {
         }
       }
       resend_client_invitation: { Args: { _id: string }; Returns: Json }
+      revoke_access_key: {
+        Args: { _key_id: string; _reason?: string }
+        Returns: boolean
+      }
+      revoke_invite_key: {
+        Args: { _key_id: string; _reason?: string }
+        Returns: boolean
+      }
       search_contract_clients: {
         Args: { _q: string }
         Returns: {
