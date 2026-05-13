@@ -30,6 +30,7 @@ import { RepresentativesSection } from '@/components/dashboard/business-edit/Rep
 import { AuditLogPanel } from '@/components/dashboard/business-edit/AuditLogPanel';
 import { validateBusinessForm, issuesByKey, errorCount } from '@/components/dashboard/business-edit/validation';
 import { ValidationBanner, FieldError } from '@/components/dashboard/business-edit/ValidationBanner';
+import { LocationPicker, type ReverseGeocodeResult } from '@/components/dashboard/business-edit/LocationPicker';
 
 interface RefRow { id: string; name_ar: string; name_en: string }
 interface CityRow extends RefRow { country_id: string }
@@ -105,6 +106,27 @@ const DashboardBusinessEdit: React.FC = () => {
 
   const update = <K extends keyof BusinessRow>(key: K, value: BusinessRow[K]) => {
     setForm((prev) => (prev ? { ...prev, [key]: value } : prev));
+    setDirty(true);
+  };
+
+  const handleMapPick = (lat: number, lng: number) => {
+    setForm((prev) => (prev ? { ...prev, latitude: lat, longitude: lng } : prev));
+    setDirty(true);
+  };
+
+  const handleAutofillAddress = (data: ReverseGeocodeResult) => {
+    setForm((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        region: data.region_ar || prev.region,
+        region_en: data.region_en || prev.region_en,
+        district: data.district_ar || prev.district,
+        district_en: data.district_en || prev.district_en,
+        address: data.address_ar || prev.address,
+        address_en: data.address_en || prev.address_en,
+      };
+    });
     setDirty(true);
   };
 
@@ -407,12 +429,25 @@ const DashboardBusinessEdit: React.FC = () => {
                 <Input dir="ltr" type="number" step="0.00000001" className="mt-1 tech-content" value={form.longitude ?? ''} onChange={(e) => update('longitude', e.target.value === '' ? null : Number(e.target.value))} /></div>
             </div>
 
-            {form.latitude != null && form.longitude != null && (
-              <a href={`https://www.google.com/maps?q=${form.latitude},${form.longitude}`} target="_blank" rel="noreferrer"
-                className="text-xs text-primary hover:underline inline-flex items-center gap-1">
-                <MapPin className="w-3 h-3" />{t(isRTL, 'فتح الموقع على خرائط Google', 'Open location on Google Maps')}<ExternalLink className="w-3 h-3" />
-              </a>
-            )}
+            <div className="rounded-xl border border-border bg-muted/20 p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className={fieldLabel}>
+                  <MapPin className="w-3 h-3 inline me-1" />
+                  {t(isRTL, 'حدد الموقع على الخريطة *', 'Pick location on the map *')}
+                </Label>
+                {issueMap.coordinates && (
+                  <span className="text-xs text-destructive">{t(isRTL, 'مطلوب', 'Required')}</span>
+                )}
+              </div>
+              <LocationPicker
+                isRTL={isRTL}
+                latitude={form.latitude ?? null}
+                longitude={form.longitude ?? null}
+                onChange={handleMapPick}
+                onAutofill={handleAutofillAddress}
+              />
+              <FieldError issue={issueMap.coordinates} isRTL={isRTL} />
+            </div>
           </CardContent>
         </Card>
 
