@@ -1667,6 +1667,13 @@ const DashboardContracts = () => {
                       state={saveState}
                       score={completeness?.score}
                     />
+                    {editingId && (
+                      <AutosaveStatus
+                        isRTL={isRTL}
+                        state={autosave.state}
+                        lastSavedAt={autosave.lastSavedAt}
+                      />
+                    )}
                   </>
                 );
               })()}
