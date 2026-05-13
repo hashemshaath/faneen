@@ -12,6 +12,8 @@ interface ContractCreateActionsBarProps {
   saveDisabled: boolean;
   onStepNav: (key: CreateStepKey) => void;
   onSave: () => void;
+  /** Optional 0-100 completeness score for inline helper text. */
+  completenessScore?: number;
 }
 
 /**
@@ -27,12 +29,16 @@ export const ContractCreateActionsBar: React.FC<ContractCreateActionsBarProps> =
   saveDisabled,
   onStepNav,
   onSave,
+  completenessScore,
 }) => {
   const idx = stepOrder.indexOf(activeStep);
   const prev = idx > 0 ? stepOrder[idx - 1] : null;
   const next = idx < stepOrder.length - 1 ? stepOrder[idx + 1] : null;
+  const showLowHelper =
+    !editingId && typeof completenessScore === 'number' && completenessScore < 80;
 
   return (
+    <div className="space-y-1.5">
     <div className="flex flex-wrap items-center gap-2 pt-1">
       <Button
         type="button"
@@ -68,8 +74,16 @@ export const ContractCreateActionsBar: React.FC<ContractCreateActionsBarProps> =
         ) : (
           <Plus className="w-4 h-4" aria-hidden="true" />
         )}
-        {editingId ? (isRTL ? 'تحديث العقد' : 'Update Contract') : (isRTL ? 'حفظ المسودة' : 'Save Draft')}
+        {editingId ? (isRTL ? 'تحديث المسودة' : 'Update Draft') : (isRTL ? 'حفظ المسودة' : 'Save Draft')}
       </Button>
+    </div>
+      {showLowHelper && (
+        <p className="text-[10px] text-muted-foreground text-end">
+          {isRTL
+            ? 'يمكنك حفظ المسودة الآن وإكمال البيانات لاحقًا.'
+            : 'You can save the draft now and complete the details later.'}
+        </p>
+      )}
     </div>
   );
 };
