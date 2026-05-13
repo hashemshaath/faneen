@@ -28,6 +28,108 @@ import { ContractPdfPreviewOverlay } from '@/components/contract/ContractPdfPrev
 import { ContractPdfAnalysisLog } from '@/components/contract/ContractPdfAnalysisLog';
 import { PdfAnalysisReport } from '@/components/contract/PdfAnalysisReport';
 import { calculateVatBreakdown } from '@/lib/contract-financials';
+
+// ─── Phase 5E.2 — Safe source-lead summary card ───
+type SourceLeadSummary = {
+  lead_id: string;
+  lead_ref_id: string | null;
+  subject: string | null;
+  status: string | null;
+  source: string | null;
+  contact_preference: string | null;
+  created_at: string | null;
+  converted_at: string | null;
+};
+
+const SourceLeadSummaryCard: React.FC<{
+  contractId: string;
+  isRTL: boolean;
+  canOpenLead: boolean;
+}> = ({ contractId, isRTL, canOpenLead }) => {
+  const { data, isLoading } = useQuery({
+    queryKey: ['contract-source-lead-summary', contractId],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_contract_source_lead_summary', {
+        _contract_id: contractId,
+      });
+      if (error) return null;
+      return (data as unknown as SourceLeadSummary | null) ?? null;
+    },
+    staleTime: 60_000,
+  });
+
+  if (isLoading || !data) return null;
+
+  const fmtDate = (iso: string | null) => {
+    if (!iso) return null;
+    try {
+      return new Date(iso).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', {
+        year: 'numeric', month: 'short', day: 'numeric',
+      });
+    } catch { return null; }
+  };
+
+  const createdAt = fmtDate(data.created_at);
+  const convertedAt = fmtDate(data.converted_at);
+
+  return (
+    <div
+      className="rounded-xl border border-info/30 bg-info/5 p-3 sm:p-4 mb-5 sm:mb-6"
+      role="note"
+      aria-label={isRTL ? 'مصدر العقد' : 'Contract source'}
+    >
+      <div className="flex items-start gap-3">
+        <div className="shrink-0 mt-0.5 text-info">
+          <Inbox className="w-5 h-5" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-sm font-semibold text-foreground">
+              {isRTL ? 'مصدر العقد: طلب خدمة' : 'Contract source: Service request'}
+            </p>
+            {data.lead_ref_id && (
+              <span className="tech-content inline-flex items-center text-[11px] font-mono rounded-md border border-border bg-card px-2 py-0.5 text-muted-foreground">
+                {data.lead_ref_id}
+              </span>
+            )}
+          </div>
+          {data.subject && (
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1 leading-relaxed line-clamp-2">
+              {data.subject}
+            </p>
+          )}
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {data.status && (
+              <span className="inline-flex items-center text-[11px] rounded-md border border-border bg-card px-2 py-0.5 text-muted-foreground">
+                {isRTL ? 'الحالة: ' : 'Status: '}{data.status}
+              </span>
+            )}
+            {createdAt && (
+              <span className="inline-flex items-center text-[11px] rounded-md border border-border bg-card px-2 py-0.5 text-muted-foreground">
+                {isRTL ? 'أُنشئ: ' : 'Created: '}{createdAt}
+              </span>
+            )}
+            {convertedAt && (
+              <span className="inline-flex items-center text-[11px] rounded-md border border-border bg-card px-2 py-0.5 text-muted-foreground">
+                {isRTL ? 'حُوِّل: ' : 'Converted: '}{convertedAt}
+              </span>
+            )}
+          </div>
+          {canOpenLead && (
+            <div className="mt-3">
+              <Button asChild variant="outline" size="sm" className="h-8 text-xs gap-1">
+                <Link to="/dashboard/leads" aria-label={isRTL ? 'فتح الطلب' : 'Open lead'}>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  {isRTL ? 'فتح الطلب' : 'Open lead'}
+                </Link>
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
 import { PaymentScheduleGenerator } from '@/components/contract/PaymentScheduleGenerator';
 import { ContractFinancialCoverage } from '@/components/contract/ContractFinancialCoverage';
 import { SignedAttachmentImage } from '@/components/contract/SignedAttachment';
