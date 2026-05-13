@@ -80,6 +80,8 @@ import { ContractCompletenessCard } from '@/components/contracts/dashboard/creat
 import { calculateContractCompleteness } from '@/lib/contract-completeness';
 import { ContractDraftSaveStatus, type DraftSaveState } from '@/components/contracts/dashboard/create/ContractDraftSaveStatus';
 import { FirstContractGuidanceCard } from '@/components/contracts/dashboard/create/FirstContractGuidanceCard';
+import { AutosaveStatus } from '@/components/contracts/dashboard/create/AutosaveStatus';
+import { useContractDraftAutosave } from '@/hooks/useContractDraftAutosave';
 import {
   ContractCreateActionsBar,
   ContractCreateMobileActionBar,
