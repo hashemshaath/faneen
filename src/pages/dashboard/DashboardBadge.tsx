@@ -765,10 +765,16 @@ button:hover{background:#f1f5f9}button.primary:hover{filter:brightness(.95)}
                 <Card>
                   <CardHeader className="flex-row items-center justify-between gap-2">
                     <CardTitle className="text-base flex items-center gap-2"><Code2 className="w-4 h-4" />{isRTL ? 'كود الإلصاق' : 'Embed code'}</CardTitle>
-                    <Button size="sm" onClick={() => copy(currentSnippet, snippetKind)} className="gap-2">
-                      {copied === snippetKind ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                      {isRTL ? (copied === snippetKind ? 'تم النسخ' : 'نسخ') : (copied === snippetKind ? 'Copied' : 'Copy')}
-                    </Button>
+                    <div className="flex flex-wrap gap-2">
+                      <Button size="sm" variant="outline" onClick={openEmbedPreview} className="gap-2">
+                        <ExternalLink className="w-4 h-4" />
+                        {isRTL ? 'معاينة الكود' : 'Preview embed'}
+                      </Button>
+                      <Button size="sm" onClick={() => copy(currentSnippet, snippetKind)} className="gap-2">
+                        {copied === snippetKind ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                        {isRTL ? (copied === snippetKind ? 'تم النسخ' : 'نسخ') : (copied === snippetKind ? 'Copied' : 'Copy')}
+                      </Button>
+                    </div>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="flex flex-wrap gap-1.5">
