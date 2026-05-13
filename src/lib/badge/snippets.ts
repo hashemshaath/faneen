@@ -25,6 +25,12 @@ export interface BadgeBuildOptions {
   accent?: BadgeAccent;
   isRTL: boolean;
   showSubLabel?: boolean;
+  /** Optional custom hex color (e.g. "#a855f7") — overrides accent palette solid color. */
+  customAccent?: string;
+  /** Optional logo embedded as data URL (PNG/SVG). Replaces the default shield seal. */
+  logoDataUrl?: string;
+  /** CSS font-family stack used for the workshop name. Falls back to system stack. */
+  fontFamily?: string;
 }
 
 const ACCENTS: Record<BadgeAccent, { solid: string; soft: string; ring: string; text: string }> = {
@@ -33,6 +39,27 @@ const ACCENTS: Record<BadgeAccent, { solid: string; soft: string; ring: string; 
   blue:    { solid: '#2563eb', soft: '#eff6ff', ring: '#dbeafe', text: '#1e3a8a' },
   slate:   { solid: '#475569', soft: '#f1f5f9', ring: '#e2e8f0', text: '#0f172a' },
 };
+
+const DEFAULT_FONT = "-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif";
+
+/** Lighten/darken a hex color by mixing with white (positive amount) or black (negative amount). */
+function mixHex(hex: string, amount: number): string {
+  const m = /^#?([a-f\d]{6})$/i.exec(hex.trim());
+  if (!m) return hex;
+  const n = parseInt(m[1], 16);
+  const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  const target = amount >= 0 ? 255 : 0;
+  const a = Math.abs(amount);
+  const mix = (c: number) => Math.round(c + (target - c) * a);
+  return `#${[mix(r), mix(g), mix(b)].map(c => c.toString(16).padStart(2, '0')).join('')}`;
+}
+
+function resolveAccent(opts: BadgeBuildOptions) {
+  const base = ACCENTS[opts.accent ?? 'emerald'];
+  if (!opts.customAccent) return base;
+  const solid = opts.customAccent;
+  return { solid, soft: mixHex(solid, 0.88), ring: mixHex(solid, 0.7), text: mixHex(solid, -0.35) };
+}
 
 const SIZES: Record<BadgeSize, { padX: number; padY: number; iconBox: number; icon: number; label: number; sub: number; gap: number; radius: number }> = {
   sm: { padX: 10, padY: 7,  iconBox: 26, icon: 14, label: 12, sub: 10, gap: 8,  radius: 10 },
