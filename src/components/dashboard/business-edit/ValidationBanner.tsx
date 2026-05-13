@@ -25,6 +25,7 @@ const fieldLabel = (isRTL: boolean): Record<string, string> => ({
   short_description_ar_en: isRTL ? 'النبذة المختصرة' : 'Short description',
   region_ar_en: isRTL ? 'المنطقة' : 'Region',
   address_ar_en: isRTL ? 'العنوان التفصيلي' : 'Full address',
+  coordinates: isRTL ? 'موقع المنشأة على الخريطة' : 'Map location',
 });
 
 export const ValidationBanner: React.FC<{ issues: ValidationIssue[]; isRTL: boolean }> = ({
