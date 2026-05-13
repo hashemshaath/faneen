@@ -1065,7 +1065,7 @@ const ProfileSystemDetail = () => {
                             <div className="flex items-center justify-between mb-0.5 sm:mb-1">
                               <p className="font-heading font-bold text-xs sm:text-sm truncate">{((r as any).profiles)?.full_name || (isRTL ? 'مستخدم' : 'User')}</p>
                               <span className="text-[10px] sm:text-[11px] text-muted-foreground flex items-center gap-0.5 shrink-0 ms-2">
-                                <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3" />{new Date(r.created_at).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')}
+                                <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3" />{new Date(r.created_at).toLocaleDateString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')}
                               </span>
                             </div>
                             <StarRating rating={r.rating} />

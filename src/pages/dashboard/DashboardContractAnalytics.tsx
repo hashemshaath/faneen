@@ -120,7 +120,7 @@ const DashboardContractAnalytics: React.FC = () => {
   const { user } = useAuth();
   const [period, setPeriod] = useState<Period>('30d');
   const [businessId, setBusinessId] = useState<string>('all');
-  const locale = language === 'ar' ? 'ar-SA' : 'en-US';
+  const locale = language === 'ar' ? 'ar-SA-u-nu-latn' : 'en-US';
 
   usePageMeta({
     title: language === 'ar' ? 'تحليلات العقود' : 'Contract Analytics',

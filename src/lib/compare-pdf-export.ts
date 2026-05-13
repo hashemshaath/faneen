@@ -45,7 +45,7 @@ export const exportComparePDF = async (data: ExportData) => {
 
   doc.setFontSize(10);
   doc.setTextColor(...MUTED_RGB);
-  doc.text(`qitaat.com — ${new Date().toLocaleDateString(data.isRTL ? 'ar-SA' : 'en-US')}`, pageWidth / 2, 27, { align: 'center' });
+  doc.text(`qitaat.com — ${new Date().toLocaleDateString(data.isRTL ? 'ar-SA-u-nu-latn' : 'en-US')}`, pageWidth / 2, 27, { align: 'center' });
 
   // Overview Table
   const overviewHeaders = [

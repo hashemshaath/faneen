@@ -74,7 +74,7 @@ function relativeTime(iso: string, isRTL: boolean): string {
   if (diff < 3600) return fmt(diff / 60, 'دقيقة', 'min');
   if (diff < 86400) return fmt(diff / 3600, 'ساعة', 'h');
   if (diff < 604800) return fmt(diff / 86400, 'يوم', 'd');
-  return new Date(iso).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US');
+  return new Date(iso).toLocaleDateString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US');
 }
 
 const DashboardBadge: React.FC = () => {

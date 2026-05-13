@@ -23,7 +23,7 @@ const formatDate = (dateStr: string | null | undefined, lang: string): string =>
   if (!dateStr) return lang === 'ar' ? 'غير محدد' : 'N/A';
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return lang === 'ar' ? 'غير محدد' : 'N/A';
-  return d.toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  return d.toLocaleDateString(lang === 'ar' ? 'ar-SA-u-nu-latn' : 'en', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 };
 
 const statusConfig: Record<string, { icon: React.ElementType; color: string; labelAr: string; labelEn: string }> = {

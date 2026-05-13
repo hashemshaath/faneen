@@ -127,7 +127,7 @@ export const LatestBlogSection = () => {
                       {post.published_at && (
                         <span className="text-[10px] sm:text-xs text-muted-foreground flex items-center gap-1.5">
                           <Calendar className="w-3.5 h-3.5" />
-                          {new Date(post.published_at).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US')}
+                          {new Date(post.published_at).toLocaleDateString(language === 'ar' ? 'ar-SA-u-nu-latn' : 'en-US')}
                         </span>
                       )}
                       <div className="flex items-center gap-2.5">

@@ -431,7 +431,7 @@ const Offers = () => {
                           <span className="flex items-center gap-1.5 min-w-0">
                             <Calendar className="ic-2xs" />
                             <span className="tech-content truncate">
-                              {new Date(p.start_date).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')}
+                              {new Date(p.start_date).toLocaleDateString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')}
                             </span>
                             {p.end_date && (
                               <>
@@ -439,7 +439,7 @@ const Offers = () => {
                                   ? <ArrowLeft className="w-3 h-3 opacity-60" />
                                   : <ArrowRight className="w-3 h-3 opacity-60" />}
                                 <span className="tech-content truncate">
-                                  {new Date(p.end_date).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')}
+                                  {new Date(p.end_date).toLocaleDateString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')}
                                 </span>
                               </>
                             )}

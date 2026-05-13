@@ -129,8 +129,8 @@ const SortablePromoCard = React.memo(({ promo: p, rtl, viewMode, isSelected, onE
               </div>
             )}
             <div className="flex items-center gap-2 text-[9px] text-muted-foreground mt-1.5">
-              <span className="flex items-center gap-0.5"><Calendar className="w-2.5 h-2.5" />{new Date(p.start_date).toLocaleDateString(rtl ? 'ar-SA' : 'en-US', { month: 'short', day: 'numeric' })}</span>
-              {p.end_date && <span>→ {new Date(p.end_date).toLocaleDateString(rtl ? 'ar-SA' : 'en-US', { month: 'short', day: 'numeric' })}</span>}
+              <span className="flex items-center gap-0.5"><Calendar className="w-2.5 h-2.5" />{new Date(p.start_date).toLocaleDateString(rtl ? 'ar-SA-u-nu-latn' : 'en-US', { month: 'short', day: 'numeric' })}</span>
+              {p.end_date && <span>→ {new Date(p.end_date).toLocaleDateString(rtl ? 'ar-SA-u-nu-latn' : 'en-US', { month: 'short', day: 'numeric' })}</span>}
               <span className="flex items-center gap-0.5 ms-auto"><Eye className="w-2.5 h-2.5" />{p.views_count || 0}</span>
             </div>
           </div>
@@ -168,7 +168,7 @@ const SortablePromoCard = React.memo(({ promo: p, rtl, viewMode, isSelected, onE
             {p.promotion_type === 'offer' && p.offer_price && (
               <span className="text-[10px] font-bold text-primary">{Number(p.offer_price).toLocaleString()} {p.currency_code}</span>
             )}
-            <span className="text-[9px] text-muted-foreground flex items-center gap-0.5"><Calendar className="w-2.5 h-2.5" />{new Date(p.start_date).toLocaleDateString(rtl ? 'ar-SA' : 'en-US', { month: 'short', day: 'numeric' })}</span>
+            <span className="text-[9px] text-muted-foreground flex items-center gap-0.5"><Calendar className="w-2.5 h-2.5" />{new Date(p.start_date).toLocaleDateString(rtl ? 'ar-SA-u-nu-latn' : 'en-US', { month: 'short', day: 'numeric' })}</span>
             <span className="text-[9px] text-muted-foreground flex items-center gap-0.5"><Eye className="w-2.5 h-2.5" />{p.views_count || 0}</span>
           </div>
         </div>

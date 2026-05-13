@@ -323,7 +323,7 @@ const DashboardLeads: React.FC = () => {
                       </div>
                       <div className="font-medium truncate">{lead.subject || lead.name}</div>
                       <div className="text-xs text-muted-foreground mt-0.5 truncate">
-                        {businessNameMap.get(lead.business_id) ?? ''} · {new Date(lead.created_at).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')}
+                        {businessNameMap.get(lead.business_id) ?? ''} · {new Date(lead.created_at).toLocaleDateString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')}
                       </div>
                     </div>
                     {open ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}

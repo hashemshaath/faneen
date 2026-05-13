@@ -53,7 +53,7 @@ const statusLabels: Record<string, { ar: string; en: string }> = {
 };
 
 const fmtDate = (d: string | null, lang: string) =>
-  d ? new Date(d).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '-';
+  d ? new Date(d).toLocaleDateString(lang === 'ar' ? 'ar-SA-u-nu-latn' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '-';
 
 const fmtNum = (n: number) => Number(n).toLocaleString();
 

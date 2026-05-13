@@ -219,7 +219,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }
   };
 
   const formatTime = (date: Date) => {
-    return date.toLocaleTimeString(isRTL ? 'ar-SA' : 'en-US', {
+    return date.toLocaleTimeString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US', {
       hour: '2-digit',
       minute: '2-digit',
       second: '2-digit',

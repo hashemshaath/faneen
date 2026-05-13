@@ -157,7 +157,7 @@ const SortableServiceCard = React.memo(({
             {desc && <p className="text-[11px] text-muted-foreground truncate max-w-[220px]">{desc}</p>}
             <span className="text-[10px] text-muted-foreground/50 flex items-center gap-0.5 shrink-0">
               <Clock className="w-2.5 h-2.5" />
-              {new Date(s.created_at).toLocaleDateString(rtl ? 'ar-SA' : 'en-US', { month: 'short', day: 'numeric' })}
+              {new Date(s.created_at).toLocaleDateString(rtl ? 'ar-SA-u-nu-latn' : 'en-US', { month: 'short', day: 'numeric' })}
             </span>
           </div>
         </div>

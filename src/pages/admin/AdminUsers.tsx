@@ -93,7 +93,7 @@ const formatDate = (dateStr: string | null | undefined, lang: string): string =>
   if (!dateStr) return lang === 'ar' ? 'غير محدد' : 'N/A';
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return lang === 'ar' ? 'غير محدد' : 'N/A';
-  return d.toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en', { year: 'numeric', month: 'short', day: 'numeric' });
+  return d.toLocaleDateString(lang === 'ar' ? 'ar-SA-u-nu-latn' : 'en', { year: 'numeric', month: 'short', day: 'numeric' });
 };
 
 const formatRelative = (dateStr: string | null | undefined, isRTL: boolean): string => {

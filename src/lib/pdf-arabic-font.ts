@@ -365,7 +365,7 @@ export const printContractSection = (title: string, contentHtml: string, isRTL: 
 </head>
 <body>
   ${contentHtml}
-  <div class="footer">qitaat.com — ${new Date().toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')}</div>
+  <div class="footer">qitaat.com — ${new Date().toLocaleDateString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')}</div>
   <script>window.onload = () => { window.print(); }</script>
 </body>
 </html>`);

@@ -94,7 +94,7 @@ const AdminContractAnalytics: React.FC = () => {
   const { language, isRTL } = useLanguage();
   const [period, setPeriod] = useState<Period>('30d');
   const [includeDemo, setIncludeDemo] = useState(false);
-  const locale = language === 'ar' ? 'ar-SA' : 'en-US';
+  const locale = language === 'ar' ? 'ar-SA-u-nu-latn' : 'en-US';
   const t = (ar: string, en: string) => (language === 'ar' ? ar : en);
 
   usePageMeta({

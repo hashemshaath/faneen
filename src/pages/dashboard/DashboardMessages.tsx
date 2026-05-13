@@ -313,7 +313,7 @@ const MessageBubble = React.memo(({ msg, isMine, language, isRTL, onReply, onCop
           {/* Time & status */}
           <div className={`flex items-center gap-1 px-3 pb-1.5 ${isMine ? 'justify-end' : ''}`}>
             <span className={`text-[9px] ${isMine ? 'text-primary-foreground/50' : 'text-muted-foreground/70'}`}>
-              {new Date(msg.created_at).toLocaleTimeString(language === 'ar' ? 'ar-SA' : 'en', { hour: '2-digit', minute: '2-digit' })}
+              {new Date(msg.created_at).toLocaleTimeString(language === 'ar' ? 'ar-SA-u-nu-latn' : 'en', { hour: '2-digit', minute: '2-digit' })}
             </span>
             {isMine && (
               msg.is_read
@@ -906,11 +906,11 @@ const DashboardMessages = () => {
     if (!messages.length || !selectedConv) return;
     const name = selectedConv.other_profile?.full_name || 'User';
     const lines = messages.map((m) => {
-      const time = new Date(m.created_at).toLocaleString(language === 'ar' ? 'ar-SA' : 'en');
+      const time = new Date(m.created_at).toLocaleString(language === 'ar' ? 'ar-SA-u-nu-latn' : 'en');
       const sender = m.sender_id === user?.id ? (isRTL ? 'أنا' : 'Me') : name;
       return `[${time}] ${sender}: ${m.content || (m.attachment_url ? '📎 مرفق' : '')}`;
     });
-    const header = `${isRTL ? 'سجل المحادثة مع' : 'Chat history with'} ${name}\n${isRTL ? 'تاريخ التصدير' : 'Exported on'}: ${new Date().toLocaleString(language === 'ar' ? 'ar-SA' : 'en')}\n${'─'.repeat(50)}\n\n`;
+    const header = `${isRTL ? 'سجل المحادثة مع' : 'Chat history with'} ${name}\n${isRTL ? 'تاريخ التصدير' : 'Exported on'}: ${new Date().toLocaleString(language === 'ar' ? 'ar-SA-u-nu-latn' : 'en')}\n${'─'.repeat(50)}\n\n`;
     const content = header + lines.join('\n');
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
@@ -1503,7 +1503,7 @@ const DashboardMessages = () => {
                             <Timer className="w-3 h-3 text-warning shrink-0" />
                             <p className="text-[10px] text-foreground truncate flex-1">{sm.text}</p>
                             <span className="text-[9px] text-warning font-medium shrink-0">
-                              {new Date(sm.time).toLocaleString(language === 'ar' ? 'ar-SA' : 'en', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                              {new Date(sm.time).toLocaleString(language === 'ar' ? 'ar-SA-u-nu-latn' : 'en', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                             </span>
                             <button onClick={() => cancelScheduledMessage(sm.id)} className="p-0.5 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors shrink-0">
                               <X className="w-3 h-3" />

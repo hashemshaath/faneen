@@ -85,7 +85,7 @@ const TYPE_LABEL: Record<string, { ar: string; en: string }> = {
 };
 
 const fmt = (d: string | null | undefined, isRTL: boolean) =>
-  d ? new Date(d).toLocaleString(isRTL ? 'ar-SA' : 'en-US', { dateStyle: 'medium', timeStyle: 'short' }) : '—';
+  d ? new Date(d).toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US', { dateStyle: 'medium', timeStyle: 'short' }) : '—';
 
 export const AmendmentHistoryPanel = ({
   amendments, currencyCode, isRTL, isClient, isProvider, isContractLocked,

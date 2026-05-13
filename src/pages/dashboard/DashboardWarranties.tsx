@@ -135,7 +135,7 @@ const DashboardWarranties = () => {
     setShowForm(true);
   };
 
-  const formatDate = (d: string) => new Date(d).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  const formatDate = (d: string) => new Date(d).toLocaleDateString(language === 'ar' ? 'ar-SA-u-nu-latn' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 
   return (
     <DashboardLayout>

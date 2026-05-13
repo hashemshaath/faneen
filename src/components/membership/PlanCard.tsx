@@ -75,7 +75,7 @@ export const PlanCard = React.memo(({
         <div className="flex items-baseline gap-1.5 flex-wrap">
           <span className="font-heading font-bold text-3xl sm:text-4xl text-foreground tracking-tight">
             {price === 0 ? (isRTL ? 'مجاناً' : 'Free') : (
-              <span className="tech-content">{price.toLocaleString(isRTL ? 'ar-SA' : 'en-US')}</span>
+              <span className="tech-content">{price.toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')}</span>
             )}
           </span>
           {price > 0 && (
@@ -86,7 +86,7 @@ export const PlanCard = React.memo(({
         </div>
         {monthlyEq && billingCycle === 'yearly' && (
           <p className="text-[11px] text-muted-foreground mt-1.5 inline-flex items-center gap-1.5">
-            <span className="tech-content">≈ {monthlyEq.toLocaleString(isRTL ? 'ar-SA' : 'en-US')} {isRTL ? 'ر.س/شهر' : 'SAR/mo'}</span>
+            <span className="tech-content">≈ {monthlyEq.toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')} {isRTL ? 'ر.س/شهر' : 'SAR/mo'}</span>
             {savingPct > 0 && (
               <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-success/10 text-success font-semibold">
                 <TrendingUp className="w-2.5 h-2.5" />−{savingPct}%

@@ -147,11 +147,11 @@ const DashboardClients: React.FC = () => {
   );
 
   const fmtMoney = (v: number, cur: string) =>
-    new Intl.NumberFormat(isRTL ? 'ar-SA' : 'en-US', { maximumFractionDigits: 0 }).format(v) + ' ' + (cur || 'SAR');
+    new Intl.NumberFormat(isRTL ? 'ar-SA-u-nu-latn' : 'en-US', { maximumFractionDigits: 0 }).format(v) + ' ' + (cur || 'SAR');
 
   const fmtDate = (iso: string | null) => {
     if (!iso) return '—';
-    return new Date(iso).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', { dateStyle: 'medium' });
+    return new Date(iso).toLocaleDateString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US', { dateStyle: 'medium' });
   };
 
   const exportCsv = () => {

@@ -560,7 +560,7 @@ const Blog = () => {
                             {language === 'ar' ? (featuredPost.excerpt_ar || featuredPost.content_ar) : (featuredPost.excerpt_en || featuredPost.content_en || featuredPost.excerpt_ar || featuredPost.content_ar)}
                           </p>
                           <div className="flex items-center gap-3 sm:gap-4 text-[11px] sm:text-xs text-white/60 flex-wrap">
-                            <span className="flex items-center gap-1"><Calendar className="ic-2xs sm:w-3.5 sm:h-3.5" />{new Date(featuredPost.published_at || featuredPost.created_at).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US')}</span>
+                            <span className="flex items-center gap-1"><Calendar className="ic-2xs sm:w-3.5 sm:h-3.5" />{new Date(featuredPost.published_at || featuredPost.created_at).toLocaleDateString(language === 'ar' ? 'ar-SA-u-nu-latn' : 'en-US')}</span>
                             <span className="flex items-center gap-1"><Eye className="ic-2xs sm:w-3.5 sm:h-3.5" />{featuredPost.views_count}</span>
                             <span className="flex items-center gap-1"><MessageCircle className="ic-2xs sm:w-3.5 sm:h-3.5" />{commentCounts[featuredPost.id] || 0}</span>
                             <span className="flex items-center gap-1"><Clock className="ic-2xs sm:w-3.5 sm:h-3.5" />{estimateReadTime(featuredPost.content_ar)} {isRTL ? 'د' : 'min'}</span>
@@ -612,7 +612,7 @@ const Blog = () => {
                             <div className="flex items-center gap-2.5 text-[10px] text-muted-foreground mt-1">
                               <span className="flex items-center gap-0.5">
                                 <Calendar className="w-2.5 h-2.5" />
-                                {new Date(post.published_at || post.created_at).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US', { month: 'short', day: 'numeric' })}
+                                {new Date(post.published_at || post.created_at).toLocaleDateString(language === 'ar' ? 'ar-SA-u-nu-latn' : 'en-US', { month: 'short', day: 'numeric' })}
                               </span>
                               <span className="flex items-center gap-0.5"><MessageCircle className="w-2.5 h-2.5" />{commentCounts[post.id] || 0}</span>
                               <span className="flex items-center gap-0.5"><Heart className="w-2.5 h-2.5" />{bookmarkCounts[post.id] || 0}</span>
@@ -671,7 +671,7 @@ const Blog = () => {
                               <div className="flex items-center justify-between pt-2.5 border-t border-border/30 dark:border-border/20 text-[11px] sm:text-xs text-muted-foreground">
                                 <span className="flex items-center gap-1.5">
                                   <Calendar className="ic-2xs" />
-                                  {new Date(post.published_at || post.created_at).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US', { month: 'short', day: 'numeric' })}
+                                  {new Date(post.published_at || post.created_at).toLocaleDateString(language === 'ar' ? 'ar-SA-u-nu-latn' : 'en-US', { month: 'short', day: 'numeric' })}
                                 </span>
                                 <div className="flex items-center gap-2.5">
                                   <span className="flex items-center gap-1" title={isRTL ? 'تعليقات' : 'Comments'}><MessageCircle className="ic-2xs" />{commentCounts[post.id] || 0}</span>

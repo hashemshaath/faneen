@@ -21,7 +21,7 @@ export const ContractCompactRow = React.memo(({ c, isRTL, onOpen, onNavigate }: 
   const StatusIcon = meta.icon;
   const NextIcon = isRTL ? ChevronLeft : ChevronRight;
   const title = isRTL ? c.title_ar : (c.title_en || c.title_ar);
-  const date = new Date(c.created_at).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', {
+  const date = new Date(c.created_at).toLocaleDateString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US', {
     year: 'numeric', month: 'short', day: 'numeric',
   });
 

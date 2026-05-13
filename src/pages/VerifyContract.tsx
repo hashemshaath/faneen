@@ -45,7 +45,7 @@ const VerifyContract = () => {
   }, [number, hash]);
 
   const fmtDate = (d: string | null | undefined) =>
-    d ? new Date(d).toLocaleDateString(isRTL ? 'ar-SA' : 'en-GB') : '—';
+    d ? new Date(d).toLocaleDateString(isRTL ? 'ar-SA-u-nu-latn' : 'en-GB') : '—';
 
   const t = useMemo(() => isRTL ? {
     title: 'التحقق من العقد الرسمي', sub: 'تحقق عام آمن من صحة العقد',

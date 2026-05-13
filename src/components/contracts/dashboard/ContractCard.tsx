@@ -108,7 +108,7 @@ export const ContractCard = React.memo(({
   const nextLabel = isRTL ? nextAction.labelAr : nextAction.labelEn;
   const nextHint = isRTL ? nextAction.actionHintAr : nextAction.actionHintEn;
   const nextTimestamp = nextAction.timestamp
-    ? new Date(nextAction.timestamp).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', {
+    ? new Date(nextAction.timestamp).toLocaleDateString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US', {
         year: 'numeric', month: 'short', day: 'numeric',
       })
     : null;

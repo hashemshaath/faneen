@@ -361,7 +361,7 @@ const AdminSiteAudit = () => {
               {seoLatest && (
                 <span className="text-[10px] text-muted-foreground font-normal ms-auto">
                   {isRTL ? 'آخر فحص: ' : 'Last run: '}
-                  {new Date(seoLatest.created_at).toLocaleString(isRTL ? 'ar-SA' : 'en-US')}
+                  {new Date(seoLatest.created_at).toLocaleString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')}
                 </span>
               )}
             </CardTitle>
