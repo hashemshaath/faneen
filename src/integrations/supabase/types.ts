@@ -3415,7 +3415,7 @@ export type Database = {
           cancellation_reason: string | null
           cancelled_at: string | null
           client_accepted_at: string | null
-          client_id: string
+          client_id: string | null
           completed_at: string | null
           contract_number: string
           contract_version: number
@@ -3427,6 +3427,9 @@ export type Database = {
           end_date: string | null
           execution_address_snapshot: Json | null
           execution_site_id: string | null
+          guest_client_email: string | null
+          guest_client_name: string | null
+          guest_client_phone: string | null
           id: string
           is_demo: boolean
           last_pdf_generated_at: string | null
@@ -3459,7 +3462,7 @@ export type Database = {
           cancellation_reason?: string | null
           cancelled_at?: string | null
           client_accepted_at?: string | null
-          client_id: string
+          client_id?: string | null
           completed_at?: string | null
           contract_number?: string
           contract_version?: number
@@ -3471,6 +3474,9 @@ export type Database = {
           end_date?: string | null
           execution_address_snapshot?: Json | null
           execution_site_id?: string | null
+          guest_client_email?: string | null
+          guest_client_name?: string | null
+          guest_client_phone?: string | null
           id?: string
           is_demo?: boolean
           last_pdf_generated_at?: string | null
@@ -3503,7 +3509,7 @@ export type Database = {
           cancellation_reason?: string | null
           cancelled_at?: string | null
           client_accepted_at?: string | null
-          client_id?: string
+          client_id?: string | null
           completed_at?: string | null
           contract_number?: string
           contract_version?: number
@@ -3515,6 +3521,9 @@ export type Database = {
           end_date?: string | null
           execution_address_snapshot?: Json | null
           execution_site_id?: string | null
+          guest_client_email?: string | null
+          guest_client_name?: string | null
+          guest_client_phone?: string | null
           id?: string
           is_demo?: boolean
           last_pdf_generated_at?: string | null
@@ -7202,7 +7211,7 @@ export type Database = {
           cancellation_reason: string | null
           cancelled_at: string | null
           client_accepted_at: string | null
-          client_id: string
+          client_id: string | null
           completed_at: string | null
           contract_number: string
           contract_version: number
@@ -7214,6 +7223,9 @@ export type Database = {
           end_date: string | null
           execution_address_snapshot: Json | null
           execution_site_id: string | null
+          guest_client_email: string | null
+          guest_client_name: string | null
+          guest_client_phone: string | null
           id: string
           is_demo: boolean
           last_pdf_generated_at: string | null
@@ -7467,7 +7479,7 @@ export type Database = {
           cancellation_reason: string | null
           cancelled_at: string | null
           client_accepted_at: string | null
-          client_id: string
+          client_id: string | null
           completed_at: string | null
           contract_number: string
           contract_version: number
@@ -7479,6 +7491,9 @@ export type Database = {
           end_date: string | null
           execution_address_snapshot: Json | null
           execution_site_id: string | null
+          guest_client_email: string | null
+          guest_client_name: string | null
+          guest_client_phone: string | null
           id: string
           is_demo: boolean
           last_pdf_generated_at: string | null
@@ -7596,7 +7611,7 @@ export type Database = {
           cancellation_reason: string | null
           cancelled_at: string | null
           client_accepted_at: string | null
-          client_id: string
+          client_id: string | null
           completed_at: string | null
           contract_number: string
           contract_version: number
@@ -7608,6 +7623,9 @@ export type Database = {
           end_date: string | null
           execution_address_snapshot: Json | null
           execution_site_id: string | null
+          guest_client_email: string | null
+          guest_client_name: string | null
+          guest_client_phone: string | null
           id: string
           is_demo: boolean
           last_pdf_generated_at: string | null
@@ -8255,7 +8273,7 @@ export type Database = {
           cancellation_reason: string | null
           cancelled_at: string | null
           client_accepted_at: string | null
-          client_id: string
+          client_id: string | null
           completed_at: string | null
           contract_number: string
           contract_version: number
@@ -8267,6 +8285,9 @@ export type Database = {
           end_date: string | null
           execution_address_snapshot: Json | null
           execution_site_id: string | null
+          guest_client_email: string | null
+          guest_client_name: string | null
+          guest_client_phone: string | null
           id: string
           is_demo: boolean
           last_pdf_generated_at: string | null
