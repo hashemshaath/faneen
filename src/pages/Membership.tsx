@@ -335,44 +335,74 @@ const Membership = () => {
           </p>
         </div>
 
-        {user && myBusiness && (myBusiness as { ref_id?: string | null }).ref_id && (
-          <div className="max-w-3xl mx-auto mb-6 rounded-xl border border-accent/30 bg-accent/5 px-4 py-3 flex items-center gap-3">
-            <Building2 className="w-5 h-5 text-accent shrink-0" />
-            <div className="flex-1 min-w-0 text-sm">
-              <span className="text-muted-foreground">
-                {isRTL ? 'سيتم تطبيق الترقية على المنشأة:' : 'Upgrade will apply to:'}
-              </span>{' '}
-              <span className="font-semibold text-foreground">
-                {myBusiness.name_ar || myBusiness.name_en || (isRTL ? 'منشأتك' : 'Your business')}
-              </span>{' '}
-              <span className="tech-content text-xs font-mono px-2 py-0.5 rounded bg-accent/10 text-accent ms-1">
-                {(myBusiness as { ref_id?: string | null }).ref_id}
-              </span>
-            </div>
-          </div>
-        )}
+        {user && myBusiness && (() => {
+          const biz = myBusiness as {
+            ref_id?: string | null;
+            name_ar?: string | null;
+            name_en?: string | null;
+            approval_status?: string | null;
+            onboarding_completion?: number | null;
+          };
+          const status = biz.approval_status ?? 'draft';
+          const completion = biz.onboarding_completion ?? 0;
+          const isComplete = status === 'approved' && completion >= 80;
+          const isReview = status === 'submitted' || status === 'under_review';
+          const needsChanges = status === 'needs_changes' || status === 'rejected';
+          const isDraft = !isComplete && !isReview && !needsChanges;
 
-        {user && noBusinessNotice && !myBusiness && (
-          <div className="max-w-3xl mx-auto mb-6 rounded-xl border border-warning/30 bg-warning/5 px-4 py-3 flex items-start gap-3">
-            <Building2 className="w-5 h-5 text-warning shrink-0 mt-0.5" />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm text-foreground leading-relaxed mb-2">
-                {isRTL ? 'للاشتراك في باقة، أضف منشأتك أولاً.' : 'To subscribe to a plan, add your business first.'}
-              </p>
-              <div className="flex gap-2">
-                <Link to="/onboarding">
-                  <Button size="sm" className="h-8 text-xs gap-1.5">
-                    <Building2 className="w-3.5 h-3.5" />
-                    {isRTL ? 'إضافة منشأة' : 'Add business'}
+          const tone = isComplete
+            ? 'border-success/30 bg-success/5 text-success'
+            : isReview
+              ? 'border-info/30 bg-info/5 text-info'
+              : needsChanges
+                ? 'border-destructive/30 bg-destructive/5 text-destructive'
+                : 'border-warning/30 bg-warning/5 text-warning';
+
+          const label = isComplete
+            ? (isRTL ? 'مكتملة ومعتمدة' : 'Complete & approved')
+            : isReview
+              ? (isRTL ? 'تحت المراجعة' : 'Under review')
+              : needsChanges
+                ? (isRTL ? 'تحتاج تعديلات' : 'Needs changes')
+                : (isRTL ? 'مسودة — أكمل بياناتك' : 'Draft — complete your profile');
+
+          return (
+            <div className={`max-w-3xl mx-auto mb-6 rounded-xl border ${tone.split(' ').slice(0, 2).join(' ')} px-4 py-3 flex items-center gap-3`}>
+              <Building2 className={`w-5 h-5 shrink-0 ${tone.split(' ')[2]}`} />
+              <div className="flex-1 min-w-0 text-sm">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-semibold text-foreground">
+                    {biz.name_ar || biz.name_en || (isRTL ? 'منشأتك' : 'Your business')}
+                  </span>
+                  {biz.ref_id && (
+                    <span className="tech-content text-xs font-mono px-2 py-0.5 rounded bg-accent/10 text-accent">
+                      {biz.ref_id}
+                    </span>
+                  )}
+                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${tone.split(' ').slice(0, 2).join(' ')} ${tone.split(' ')[2]}`}>
+                    {label}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {isComplete
+                    ? (isRTL ? 'سيتم تطبيق الترقية على هذه المنشأة مباشرة.' : 'Upgrade will apply to this business directly.')
+                    : isReview
+                      ? (isRTL ? 'يمكنك الاشتراك الآن، وسيكتمل الاعتماد خلال المراجعة.' : 'You can subscribe now; approval will finalize during review.')
+                      : needsChanges
+                        ? (isRTL ? 'الرجاء معالجة الملاحظات لاكتمال اعتماد المنشأة.' : 'Please address the notes to finalize your business.')
+                        : (isRTL ? 'الترقية مرتبطة بهذه المنشأة. أكمل بياناتها لرفع جاهزيتها.' : 'Upgrade is bound to this business. Complete its profile to boost readiness.')}
+                </p>
+              </div>
+              {!isComplete && (
+                <Link to="/onboarding" className="shrink-0">
+                  <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5">
+                    {isRTL ? 'إكمال البيانات' : 'Complete profile'}
                   </Button>
                 </Link>
-                <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => setNoBusinessNotice(false)}>
-                  {isRTL ? 'إخفاء' : 'Dismiss'}
-                </Button>
-              </div>
+              )}
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {pendingRequests.length > 0 && (
           <div className="max-w-3xl mx-auto mb-6 rounded-xl border border-info/30 bg-info/5 px-4 py-3 flex items-start gap-2 text-xs text-foreground/80">
