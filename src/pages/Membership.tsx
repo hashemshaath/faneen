@@ -335,6 +335,23 @@ const Membership = () => {
           </p>
         </div>
 
+        {user && myBusiness && (myBusiness as { ref_id?: string | null }).ref_id && (
+          <div className="max-w-3xl mx-auto mb-6 rounded-xl border border-accent/30 bg-accent/5 px-4 py-3 flex items-center gap-3">
+            <Building2 className="w-5 h-5 text-accent shrink-0" />
+            <div className="flex-1 min-w-0 text-sm">
+              <span className="text-muted-foreground">
+                {isRTL ? 'سيتم تطبيق الترقية على المنشأة:' : 'Upgrade will apply to:'}
+              </span>{' '}
+              <span className="font-semibold text-foreground">
+                {myBusiness.name_ar || myBusiness.name_en || (isRTL ? 'منشأتك' : 'Your business')}
+              </span>{' '}
+              <span className="tech-content text-xs font-mono px-2 py-0.5 rounded bg-accent/10 text-accent ms-1">
+                {(myBusiness as { ref_id?: string | null }).ref_id}
+              </span>
+            </div>
+          </div>
+        )}
+
         {user && noBusinessNotice && !myBusiness && (
           <div className="max-w-3xl mx-auto mb-6 rounded-xl border border-warning/30 bg-warning/5 px-4 py-3 flex items-start gap-3">
             <Building2 className="w-5 h-5 text-warning shrink-0 mt-0.5" />
