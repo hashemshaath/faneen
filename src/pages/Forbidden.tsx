@@ -59,6 +59,17 @@ const Forbidden = () => {
     return `/contact?${params.toString()}`;
   })();
 
+  const diagnosticsHref = (() => {
+    const params = new URLSearchParams({
+      from: ctx.path,
+      requiredRole: ctx.requiredRole,
+      roles: ctx.roles.join(','),
+    });
+    if (ctx.userId) params.set('user_id', ctx.userId);
+    if (ctx.accountType) params.set('accountType', ctx.accountType);
+    return `/dashboard/diagnostics?${params.toString()}`;
+  })();
+
   const [copied, setCopied] = useState(false);
   const copyDetails = async () => {
     const json = JSON.stringify(buildPayload(), null, 2);
@@ -164,7 +175,7 @@ const Forbidden = () => {
                   <Arrow className="w-4 h-4" />
                 </Button>
               </Link>
-              <Link to="/dashboard/diagnostics">
+              <Link to={diagnosticsHref}>
                 <Button variant="outline" className="gap-2">
                   <Activity className="w-4 h-4" />
                   {isRTL ? 'تشخيص حسابي' : 'Account diagnostics'}
