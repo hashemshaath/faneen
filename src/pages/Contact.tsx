@@ -1,4 +1,5 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { buildBreadcrumbList, ogImageFor } from '@/lib/seo/structured-data';
@@ -23,6 +24,23 @@ const Contact = () => {
   const [sent, setSent] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
   const startedRef = useRef(false);
+  const [searchParams] = useSearchParams();
+
+  // Prefill form from query string (?subject=...&message=...&name=...&email=...)
+  useEffect(() => {
+    const subject = searchParams.get('subject') ?? '';
+    const message = searchParams.get('message') ?? '';
+    const name = searchParams.get('name') ?? '';
+    const email = searchParams.get('email') ?? '';
+    if (subject || message || name || email) {
+      setForm(f => ({
+        name: name || f.name,
+        email: email || f.email,
+        subject: subject || f.subject,
+        message: message || f.message,
+      }));
+    }
+  }, [searchParams]);
 
   // Fires once when the user begins filling the contact form. We never send
   // the field values themselves — only the intent.
