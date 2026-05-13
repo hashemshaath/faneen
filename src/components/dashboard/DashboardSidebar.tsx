@@ -83,6 +83,7 @@ const providerGroups: MenuGroup[] = [
     icon: MessageSquare,
     items: [
       { label: { ar: 'طلبات الخدمة', en: 'Service Requests' }, url: '/dashboard/leads', icon: Inbox },
+      { label: { ar: 'العملاء', en: 'Clients' }, url: '/dashboard/clients', icon: Users },
       { label: { ar: 'الرسائل', en: 'Messages' }, url: '/dashboard/messages', icon: MessageSquare },
       { label: { ar: 'حجز المواعيد', en: 'Bookings' }, url: '/dashboard/bookings', icon: CalendarClock },
       { label: { ar: 'التقييمات', en: 'Reviews' }, url: '/dashboard/reviews', icon: Star },
