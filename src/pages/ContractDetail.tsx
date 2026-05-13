@@ -1664,6 +1664,14 @@ const ContractDetail = () => {
             </div>
           );
         })()}
+        {/* ─── Phase 5E.2 — Source Lead context (read-only, safe summary only) ─── */}
+        {contract.source_lead_id && (
+          <SourceLeadSummaryCard
+            contractId={contract.id}
+            isRTL={isRTL}
+            canOpenLead={user?.id === contract.provider_id}
+          />
+        )}
         {pdfDebugEnabled && pdfDiagnostics && (
           <div className="rounded-xl border border-border bg-card p-3 sm:p-4 mb-5 sm:mb-6 text-xs">
             <div className="flex items-center gap-2 font-semibold mb-3">
