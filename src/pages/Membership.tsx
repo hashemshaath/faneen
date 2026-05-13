@@ -57,7 +57,7 @@ const Membership = () => {
       // 1. Owner: pick the most recently created business they own
       const owned = await supabase
         .from('businesses')
-        .select('id, ref_id, membership_tier, name_ar, name_en, approval_status, onboarding_completion')
+        .select('id, ref_id, membership_tier, name_ar, name_en, approval_status, onboarding_completion, approval_notes')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(1);
@@ -66,7 +66,7 @@ const Membership = () => {
       // 2. Staff fallback: business they manage (owner/manager role)
       const staff = await supabase
         .from('business_staff')
-        .select('business_id, role, businesses:business_id(id, ref_id, membership_tier, name_ar, name_en, approval_status, onboarding_completion)')
+        .select('business_id, role, businesses:business_id(id, ref_id, membership_tier, name_ar, name_en, approval_status, onboarding_completion, approval_notes)')
         .eq('user_id', user.id)
         .eq('is_active', true)
         .in('role', ['owner', 'manager'])
