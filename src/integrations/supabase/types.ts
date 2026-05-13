@@ -7986,6 +7986,10 @@ export type Database = {
         }
         Returns: number
       }
+      prepare_contract_prefill_from_lead: {
+        Args: { _lead_id: string }
+        Returns: Json
+      }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
