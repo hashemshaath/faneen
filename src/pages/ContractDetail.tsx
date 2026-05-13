@@ -1751,6 +1751,52 @@ const ContractDetail = () => {
           </div>
         )}
 
+        {/* ─── Execution Site (Phase 5E) — read-only, safe snapshot fields only ─── */}
+        {(() => {
+          const snap = (contract as unknown as { execution_address_snapshot?: Record<string, unknown> | null }).execution_address_snapshot;
+          if (!snap || typeof snap !== 'object') return null;
+          const s = snap as Record<string, string | number | null | undefined>;
+          const label = (s.label as string) || null;
+          const contactName = (s.contact_name as string) || null;
+          const contactPhone = (s.contact_phone as string) || null;
+          const city = (s.city_name as string) || null;
+          const district = (s.district as string) || null;
+          const line1 = (s.address_line1 as string) || null;
+          const line2 = (s.address_line2 as string) || null;
+          const mapUrl = (s.map_url as string) || null;
+          const accessNotes = (s.access_notes as string) || null;
+          const fullAddress = [line1, line2, district, city].filter(Boolean).join('، ');
+          if (!fullAddress && !label && !contactName && !contactPhone && !mapUrl) return null;
+          return (
+            <div className="rounded-xl border border-border bg-card p-4 sm:p-5 mb-5 sm:mb-6">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center"><MapPin className="w-4 h-4 text-accent" /></div>
+                <span className="font-heading font-bold text-sm">{isRTL ? 'موقع التنفيذ' : 'Execution Site'}</span>
+                {label && <Badge variant="secondary" className="text-[10px] ms-auto">{label}</Badge>}
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {fullAddress && (
+                  <InfoRow icon={MapPin} label={isRTL ? 'العنوان' : 'Address'} value={fullAddress} />
+                )}
+                {contactName && (
+                  <InfoRow icon={User} label={isRTL ? 'مسؤول الموقع' : 'Site Contact'} value={contactName} />
+                )}
+                {contactPhone && (
+                  <InfoRow icon={Phone} label={isRTL ? 'جوال الموقع' : 'Site Mobile'} value={contactPhone} dir="ltr" href={`tel:${contactPhone}`} />
+                )}
+                {mapUrl && (
+                  <InfoRow icon={Globe} label={isRTL ? 'رابط الخريطة' : 'Map Link'} value={isRTL ? 'فتح في الخريطة' : 'Open in Map'} dir="ltr" href={mapUrl} />
+                )}
+                {accessNotes && (
+                  <div className="sm:col-span-2 text-[11px] text-muted-foreground leading-5 whitespace-pre-wrap">
+                    <span className="font-semibold text-foreground/80">{isRTL ? 'ملاحظات الوصول: ' : 'Access notes: '}</span>{accessNotes}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })()}
+
         {/* ─── Timeline & Financial ─── */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 mb-5 sm:mb-6">
           <div className="rounded-xl border border-border bg-card p-4 sm:p-5">
