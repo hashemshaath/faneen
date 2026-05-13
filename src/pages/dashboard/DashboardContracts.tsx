@@ -78,6 +78,7 @@ import { ContractCreateStepper } from '@/components/contracts/dashboard/create/C
 import { ContractReviewSummary } from '@/components/contracts/dashboard/create/ContractReviewSummary';
 import { ContractCompletenessCard } from '@/components/contracts/dashboard/create/ContractCompletenessCard';
 import { calculateContractCompleteness } from '@/lib/contract-completeness';
+import { ExecutionSiteSection, type ExecutionAddressSnapshot } from '@/components/contracts/dashboard/create/ExecutionSiteSection';
 import { ContractDraftSaveStatus, type DraftSaveState } from '@/components/contracts/dashboard/create/ContractDraftSaveStatus';
 import { FirstContractGuidanceCard } from '@/components/contracts/dashboard/create/FirstContractGuidanceCard';
 import { AutosaveStatus } from '@/components/contracts/dashboard/create/AutosaveStatus';
@@ -212,17 +213,21 @@ const DashboardContracts = () => {
   const maintenanceImageRef = React.useRef<HTMLInputElement>(null);
 
   /* Provider Contract UX 2 — Part A: navigable stepper section refs. */
-  type StepKey = 'client' | 'work' | 'template' | 'details' | 'pricing' | 'review';
+  type StepKey = 'client' | 'site' | 'work' | 'template' | 'details' | 'pricing' | 'review';
   const stepRefs = {
     client: React.useRef<HTMLDivElement>(null),
+    site: React.useRef<HTMLDivElement>(null),
     work: React.useRef<HTMLDivElement>(null),
     template: React.useRef<HTMLDivElement>(null),
     details: React.useRef<HTMLDivElement>(null),
     pricing: React.useRef<HTMLDivElement>(null),
     review: React.useRef<HTMLDivElement>(null),
   } as const;
-  const stepOrder: StepKey[] = ['client', 'work', 'template', 'details', 'pricing', 'review'];
+  const stepOrder: StepKey[] = ['client', 'site', 'work', 'template', 'details', 'pricing', 'review'];
   const [activeStep, setActiveStep] = useState<StepKey>('client');
+  /* Phase 5C.3 — Execution site selection (held locally for new drafts;
+     persisted via set_contract_execution_site for existing drafts). */
+  const [selectedSiteId, setSelectedSiteId] = useState<string | null>(null);
   const goToStep = useCallback((key: StepKey) => {
     setActiveStep(key);
     const el = stepRefs[key]?.current;
