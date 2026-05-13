@@ -336,11 +336,6 @@ export const buildContractPDF = async (data: ContractExportData) => {
   });
   y = lastTableY(doc, y) + 12;
 
-  // ── CT6: Template metadata (compact) ──
-  if (data.template) {
-    /* execution-site block inserted above */
-  }
-
   // ── Phase 5C.4: Execution Site (rendered from frozen snapshot only) ──
   {
     const snap = data.executionAddressSnapshot;
