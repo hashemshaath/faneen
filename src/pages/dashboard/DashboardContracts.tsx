@@ -1446,6 +1446,9 @@ const DashboardContracts = () => {
                 {editingId ? (isRTL ? 'تعديل العقد' : 'Edit Contract') : (isRTL ? 'إنشاء عقد جديد' : 'Create New Contract')}
                 {selectedTemplate && <Badge variant="secondary" className="text-[9px] gap-0.5"><Sparkles className="w-2.5 h-2.5" />{isRTL ? 'من قالب' : 'From template'}</Badge>}
               </CardTitle>
+              {!editingId && contracts.length === 0 && (
+                <div className="pt-2"><FirstContractGuidanceCard isRTL={isRTL} /></div>
+              )}
               {!editingId && (() => {
                 const steps = [
                   { key: 'client',   ar: 'العميل',       en: 'Client',   done: !!(selectedClient || form.client_email || pendingInvite) },
