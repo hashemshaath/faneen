@@ -1817,6 +1817,9 @@ const DashboardContracts = () => {
                               </div>
                             )}
 
+                            {/* Approval Timeline (read-only, derived) */}
+                            <ContractApprovalTimeline contract={c} isRTL={isRTL} className="mb-4" />
+
                             <Tabs defaultValue="milestones">
                               <TabsList className="w-full justify-start bg-muted/40 rounded-xl p-1 h-auto flex-wrap gap-0.5 mb-4">
                                 {[
