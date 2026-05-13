@@ -481,7 +481,7 @@ const AdminMemberships = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('membership_subscriptions')
-        .select('*, plan:membership_plans(name_ar, name_en, tier)')
+        .select('*, plan:membership_plans!plan_id(name_ar, name_en, tier)')
         .order('created_at', { ascending: false })
         .limit(500);
       if (error) throw error;

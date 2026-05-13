@@ -169,7 +169,7 @@ const Membership = () => {
       if (!user) return null;
       const { data } = await supabase
         .from('membership_subscriptions')
-        .select('*, plan:membership_plans(name_ar, name_en, tier)')
+        .select('*, plan:membership_plans!plan_id(name_ar, name_en, tier)')
         .eq('user_id', user.id)
         .in('status', ['active', 'past_due'])
         .order('created_at', { ascending: false })
@@ -351,10 +351,13 @@ const Membership = () => {
   });
 
   const cancelMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (downgradeToPlanId: string | null) => {
       if (!mySubscription) throw new Error('No active subscription');
       const subId = mySubscription.id as string;
-      const { error } = await supabase.rpc('cancel_subscription_at_period_end' , { _subscription_id: subId });
+      const { error } = await supabase.rpc('cancel_subscription_at_period_end', {
+        _subscription_id: subId,
+        _downgrade_to_plan_id: downgradeToPlanId,
+      });
       if (error) throw error;
       return { subId };
     },
@@ -767,6 +770,12 @@ const Membership = () => {
             daysRemaining={daysRemaining}
             cancelMutation={cancelMutation}
             resumeMutation={resumeRenewalMutation}
+            downgradeOptions={plans.map((p) => ({
+              id: p.id as string,
+              tier: p.tier as string,
+              name_ar: (p.name_ar as string) ?? '',
+              name_en: (p.name_en as string) ?? '',
+            }))}
           />
         )}
 

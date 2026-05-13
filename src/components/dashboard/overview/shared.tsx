@@ -276,7 +276,7 @@ export const MembershipWidget = React.memo(function MembershipWidget({
     queryFn: async () => {
       const { data } = await supabase
         .from('membership_subscriptions')
-        .select('expires_at, billing_cycle, plan:membership_plans(name_ar, name_en, tier)')
+        .select('expires_at, billing_cycle, plan:membership_plans!plan_id(name_ar, name_en, tier)')
         .eq('user_id', userId)
         .eq('status', 'active')
         .order('created_at', { ascending: false })
