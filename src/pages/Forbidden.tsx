@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { ShieldX, ArrowRight, ArrowLeft, Home, LogIn, RotateCw, Copy, Check } from "lucide-react";
+import { ShieldX, ArrowRight, ArrowLeft, Home, LogIn, RotateCw, Copy, Check, Activity } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -141,6 +141,12 @@ const Forbidden = () => {
                 <Button variant="outline" className="gap-2">
                   {isRTL ? "لوحة التحكم" : "Dashboard"}
                   <Arrow className="w-4 h-4" />
+                </Button>
+              </Link>
+              <Link to="/dashboard/diagnostics">
+                <Button variant="outline" className="gap-2">
+                  <Activity className="w-4 h-4" />
+                  {isRTL ? 'تشخيص حسابي' : 'Account diagnostics'}
                 </Button>
               </Link>
               <Button variant="outline" className="gap-2" onClick={reLogin}>
