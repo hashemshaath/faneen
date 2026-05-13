@@ -287,7 +287,7 @@ const Membership = () => {
     track.membershipPlanClick({ membership_tier: plan.tier });
     if (!user) { navigate('/auth'); return; }
     if (!myBusiness) {
-      setNoBusinessNotice(true);
+      toast.info(isRTL ? 'جاري تحضير منشأتك...' : 'Preparing your business...');
       return;
     }
     const planTierIndex = tierOrder.indexOf(plan.tier);
