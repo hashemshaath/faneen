@@ -337,6 +337,98 @@ const DashboardPromotions = () => {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['my-promotions'] }); setSelectedIds(new Set()); toast.success(rtl ? 'تم التحديث' : 'Updated'); },
   });
 
+  /* ─── Templates / Demo ─── */
+  const templateToPayload = useCallback((tpl: PromotionTemplate, opts: { isDemo?: boolean; sortOffset?: number } = {}) => ({
+    business_id: businessId!,
+    title_ar: tpl.title_ar,
+    title_en: tpl.title_en || null,
+    description_ar: tpl.description_ar || null,
+    description_en: tpl.description_en || null,
+    promotion_type: tpl.type,
+    discount_percentage: tpl.discount_percentage ?? null,
+    discount_amount: tpl.discount_percentage && tpl.original_price
+      ? Math.round(tpl.original_price * (tpl.discount_percentage / 100))
+      : null,
+    original_price: tpl.original_price ?? null,
+    offer_price: tpl.discount_percentage && tpl.original_price
+      ? Math.round(tpl.original_price * (1 - tpl.discount_percentage / 100))
+      : null,
+    currency_code: tpl.currency_code || 'SAR',
+    image_url: null,
+    video_url: null,
+    start_date: new Date().toISOString().split('T')[0],
+    end_date: addDays(tpl.duration_days ?? 30),
+    is_active: true,
+    sort_order: promotions.length + (opts.sortOffset ?? 0),
+    is_demo: !!opts.isDemo,
+  }), [businessId, promotions.length]);
+
+  const insertTemplateMut = useMutation({
+    mutationFn: async (tpl: PromotionTemplate) => {
+      if (!businessId) throw new Error('No business');
+      const { error } = await supabase.from('promotions').insert(templateToPayload(tpl) as never);
+      if (error) throw error;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['my-promotions'] }); toast.success(rtl ? 'تمت إضافة العرض' : 'Promotion added'); },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
+  const useTemplateInForm = useCallback((tpl: PromotionTemplate) => {
+    setEditingId(null);
+    setForm({
+      title_ar: tpl.title_ar,
+      title_en: tpl.title_en || '',
+      description_ar: tpl.description_ar || '',
+      description_en: tpl.description_en || '',
+      promotion_type: tpl.type,
+      discount_percentage: tpl.discount_percentage?.toString() ?? '',
+      discount_amount: tpl.discount_percentage && tpl.original_price
+        ? Math.round(tpl.original_price * (tpl.discount_percentage / 100)).toString() : '',
+      original_price: tpl.original_price?.toString() ?? '',
+      offer_price: tpl.discount_percentage && tpl.original_price
+        ? Math.round(tpl.original_price * (1 - tpl.discount_percentage / 100)).toString() : '',
+      image_url: '',
+      video_url: '',
+      start_date: new Date().toISOString().split('T')[0],
+      end_date: addDays(tpl.duration_days ?? 30),
+      is_active: true,
+      currency_code: tpl.currency_code || 'SAR',
+    });
+    setShowForm(true);
+    setShowCatalog(false);
+    requestAnimationFrame(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  }, []);
+
+  const seedDemoMut = useMutation({
+    mutationFn: async () => {
+      if (!businessId) throw new Error('No business');
+      const payloads = promotionDemoSeed.map((tpl, i) => templateToPayload(tpl, { isDemo: true, sortOffset: i }));
+      const { error } = await supabase.from('promotions').insert(payloads as never);
+      if (error) throw error;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['my-promotions'] }); toast.success(rtl ? 'تم إنشاء عروض تجريبية' : 'Demo promotions created'); },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
+  const clearDemoMut = useMutation({
+    mutationFn: async () => {
+      if (!businessId) throw new Error('No business');
+      const { error } = await supabase.from('promotions').delete().eq('business_id', businessId).eq('is_demo', true);
+      if (error) throw error;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['my-promotions'] }); toast.success(rtl ? 'تم حذف العروض التجريبية' : 'Demo promotions removed'); },
+  });
+
+  const copyPublicLink = useCallback((id?: string) => {
+    if (!businessUsername) {
+      toast.error(rtl ? 'لا يوجد اسم منشأة عام' : 'No public username yet');
+      return;
+    }
+    const url = `${window.location.origin}/${businessUsername}#promotions${id ? `-${id.slice(0, 8)}` : ''}`;
+    navigator.clipboard.writeText(url);
+    toast.success(rtl ? 'تم نسخ الرابط' : 'Link copied');
+  }, [businessUsername, rtl]);
+
   /* ─── Callbacks ─── */
   const closeForm = useCallback(() => { setShowForm(false); setEditingId(null); setForm(emptyForm); }, []);
   const scrollToForm = useCallback(() => { requestAnimationFrame(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })); }, []);
