@@ -13,6 +13,9 @@ import { MembershipHeader } from '@/components/membership/MembershipHeader';
 import { CurrentSubscriptionCard } from '@/components/membership/CurrentSubscriptionCard';
 import { PlanCard } from '@/components/membership/PlanCard';
 import { FeatureComparisonTable } from '@/components/membership/FeatureComparisonTable';
+import { PromoCodeRedeem } from '@/components/membership/PromoCodeRedeem';
+import { RenewalStatusBanner } from '@/components/membership/RenewalStatusBanner';
+import { MembershipKeysManager } from '@/components/membership/MembershipKeysManager';
 import { track } from '@/lib/analytics-events';
 import { Button } from '@/components/ui/button';
 
@@ -64,7 +67,7 @@ const Membership = () => {
         .from('membership_subscriptions')
         .select('*, plan:membership_plans(name_ar, name_en, tier)')
         .eq('user_id', user.id)
-        .eq('status', 'active')
+        .in('status', ['active', 'past_due'])
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -320,6 +323,26 @@ const Membership = () => {
           </div>
         )}
 
+        {user && mySubscription && (
+          <RenewalStatusBanner
+            isRTL={isRTL}
+            status={(mySubscription as { status?: string }).status ?? ''}
+            graceUntil={(mySubscription as { grace_period_until?: string | null }).grace_period_until ?? null}
+            expiresAt={(mySubscription as { expires_at?: string | null }).expires_at ?? null}
+            onRenew={() => {
+              const planId = (mySubscription as { plan_id?: string }).plan_id;
+              const tier = (mySubscription as { plan?: { tier?: string } }).plan?.tier;
+              if (planId && tier) {
+                setSubscribingPlanId(planId);
+                requestUpgradeMutation.mutate({ id: planId, tier });
+              }
+            }}
+            isRenewing={requestUpgradeMutation.isPending}
+          />
+        )}
+
+        {user && <PromoCodeRedeem isRTL={isRTL} businessId={myBusiness?.id ?? null} />}
+
         {pendingDowngrade && (
           <div className="max-w-3xl mx-auto mb-6 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3">
             <p className="text-sm text-foreground leading-relaxed mb-3 flex items-start gap-2">
@@ -380,6 +403,10 @@ const Membership = () => {
         </div>
 
         <FeatureComparisonTable isRTL={isRTL} />
+
+        {user && myBusiness?.id && (
+          <MembershipKeysManager isRTL={isRTL} businessId={myBusiness.id} />
+        )}
 
         <div className="text-center mt-10">
           <p className="text-xs text-muted-foreground flex items-center justify-center gap-1.5">
