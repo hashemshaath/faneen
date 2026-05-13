@@ -20,7 +20,7 @@ import {
   Search, CheckCircle2, Percent, LayoutGrid, List,
   GripVertical, Power, PowerOff, DollarSign, Layers, Copy,
   Maximize2, Loader2, Download, EyeOff, AlertCircle, Zap, BarChart3,
-  Clock, TrendingUp,
+  Clock, TrendingUp, Sparkles, ExternalLink, Link2, ChevronDown, ChevronUp, Wand2, Trash, PackagePlus,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ImageUpload } from '@/components/ui/image-upload';
@@ -34,6 +34,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { useNoIndex } from "@/hooks/useNoIndex";
 import { MembershipUsageWarning } from '@/components/membership/MembershipUsageWarning';
+import { promotionCatalog, promotionDemoSeed, type PromotionTemplate } from '@/components/dashboard/promotions-catalog';
 
 type PromotionType = 'ad' | 'offer' | 'video';
 type FilterMode = 'all' | 'active' | 'expired' | 'inactive';
@@ -59,6 +60,12 @@ const typeConfig: Record<string, { ar: string; en: string; icon: React.ElementTy
   ad: { ar: 'إعلان', en: 'Ad', icon: Megaphone, color: 'text-info bg-info/10' },
   offer: { ar: 'عرض خاص', en: 'Offer', icon: Tag, color: 'text-primary bg-primary/10' },
   video: { ar: 'فيديو', en: 'Video', icon: Video, color: 'text-secondary bg-secondary/10' },
+};
+
+const addDays = (days: number): string => {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return d.toISOString().split('T')[0];
 };
 
 /* ── Sortable Promo Card ── */
