@@ -1298,6 +1298,24 @@ const DashboardContracts = () => {
           status: m.status,
         })),
         documentHash: c.document_hash || undefined,
+        executionAddressSnapshot: (() => {
+          const raw = (c as unknown as { execution_address_snapshot?: Record<string, unknown> | null }).execution_address_snapshot;
+          if (!raw || typeof raw !== 'object') return null;
+          return {
+            label: (raw.label as string | null) ?? null,
+            contact_name: (raw.contact_name as string | null) ?? null,
+            contact_phone: (raw.contact_phone as string | null) ?? null,
+            city_name: (raw.city_name as string | null) ?? null,
+            district: (raw.district as string | null) ?? null,
+            address_line1: (raw.address_line1 as string | null) ?? null,
+            address_line2: (raw.address_line2 as string | null) ?? null,
+            map_url: (raw.map_url as string | null) ?? null,
+            latitude: raw.latitude != null ? Number(raw.latitude) : null,
+            longitude: raw.longitude != null ? Number(raw.longitude) : null,
+            access_notes: (raw.access_notes as string | null) ?? null,
+            captured_at: (raw.captured_at as string | null) ?? null,
+          };
+        })(),
         template: tplMeta ? {
           nameAr: tplMeta.contract_templates?.name_ar ?? null,
           nameEn: tplMeta.contract_templates?.name_en ?? null,
