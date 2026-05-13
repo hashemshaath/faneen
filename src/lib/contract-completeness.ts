@@ -7,6 +7,7 @@
 
 export type CompletenessStep =
   | 'client'
+  | 'site'
   | 'work'
   | 'template'
   | 'details'
@@ -24,6 +25,7 @@ export interface CompletenessMissing {
 
 export interface CompletenessInput {
   hasClient: boolean;
+  hasExecutionSite?: boolean;
   hasWorkType: boolean;
   hasTemplate: boolean;
   titleAr?: string;
@@ -72,6 +74,11 @@ export function calculateContractCompleteness(
       key: 'client', weight: 18, step: 'client',
       labelAr: 'اختيار العميل', labelEn: 'Select client',
       passed: (i) => i.hasClient,
+    },
+    {
+      key: 'execution_site', weight: 8, step: 'site',
+      labelAr: 'موقع التنفيذ (موصى به)', labelEn: 'Execution site (recommended)',
+      passed: (i) => !!i.hasExecutionSite,
     },
     {
       key: 'work_type', weight: 8, step: 'work',
