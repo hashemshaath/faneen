@@ -489,7 +489,13 @@ const DashboardBusinessEdit: React.FC = () => {
         </Card>
 
         {/* Representatives */}
-        <RepresentativesSection businessId={form.id} ownerUserId={form.user_id} isRTL={isRTL} />
+        <RepresentativesSection
+          businessId={form.id}
+          ownerUserId={form.user_id}
+          isRTL={isRTL}
+          businessNameAr={form.name_ar}
+          businessNameEn={form.name_en}
+        />
 
         {/* Audit log */}
         <AuditLogPanel businessId={form.id} isRTL={isRTL} />
