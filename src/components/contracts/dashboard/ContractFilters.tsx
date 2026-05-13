@@ -1,4 +1,4 @@
-import { Search } from 'lucide-react';
+import { Search, LayoutGrid, List, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -7,6 +7,7 @@ import {
 } from '@/components/ui/select';
 
 export type ContractSortKey = 'date' | 'amount' | 'status' | 'health';
+export type ContractViewMode = 'cards' | 'compact';
 
 interface StatusCounts {
   total: number;
@@ -25,6 +26,10 @@ interface ContractFiltersProps {
   onSearchChange: (value: string) => void;
   counts: StatusCounts;
   isRTL: boolean;
+  viewMode?: ContractViewMode;
+  onViewModeChange?: (value: ContractViewMode) => void;
+  onExport?: () => void;
+  searchInputRef?: React.Ref<HTMLInputElement>;
 }
 
 /**
@@ -36,6 +41,7 @@ export function ContractFilters({
   sortBy, onSortChange,
   searchQuery, onSearchChange,
   counts, isRTL,
+  viewMode, onViewModeChange, onExport, searchInputRef,
 }: ContractFiltersProps) {
   const filters = [
     { key: 'all', label: isRTL ? 'الكل' : 'All', count: counts.total },
@@ -51,12 +57,18 @@ export function ContractFilters({
         <div className="relative flex-1 min-w-0">
           <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />
           <Input
+            ref={searchInputRef}
             placeholder={isRTL ? 'بحث بالعنوان، الرقم...' : 'Search title, number...'}
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             className="ps-9 h-9 text-xs rounded-lg bg-background/60 focus-visible:bg-background"
             aria-label={isRTL ? 'بحث في العقود' : 'Search contracts'}
           />
+          {!searchQuery && (
+            <kbd className="hidden sm:inline-flex absolute end-2 top-1/2 -translate-y-1/2 items-center gap-0.5 px-1.5 h-5 text-[9px] text-muted-foreground bg-muted/60 border border-border/40 rounded">
+              /
+            </kbd>
+          )}
         </div>
         <Select value={sortBy} onValueChange={(v) => onSortChange(v as ContractSortKey)}>
           <SelectTrigger className="h-9 text-[11px] w-32 px-2.5 rounded-lg shrink-0" aria-label={isRTL ? 'الترتيب' : 'Sort by'}>
@@ -69,6 +81,40 @@ export function ContractFilters({
             <SelectItem value="health" className="text-xs">{isRTL ? 'الصحة' : 'Health'}</SelectItem>
           </SelectContent>
         </Select>
+        {onViewModeChange && (
+          <div className="hidden sm:inline-flex items-center gap-0.5 p-0.5 rounded-lg border border-border/50 bg-muted/40 shrink-0">
+            <button
+              type="button"
+              onClick={() => onViewModeChange('cards')}
+              aria-pressed={viewMode === 'cards'}
+              aria-label={isRTL ? 'عرض البطاقات' : 'Cards view'}
+              className={`p-1.5 rounded-md transition-all ${viewMode === 'cards' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+            >
+              <LayoutGrid className="w-3.5 h-3.5" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              onClick={() => onViewModeChange('compact')}
+              aria-pressed={viewMode === 'compact'}
+              aria-label={isRTL ? 'عرض مضغوط' : 'Compact view'}
+              className={`p-1.5 rounded-md transition-all ${viewMode === 'compact' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+            >
+              <List className="w-3.5 h-3.5" aria-hidden="true" />
+            </button>
+          </div>
+        )}
+        {onExport && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 px-2.5 gap-1 text-[11px] rounded-lg shrink-0 hidden md:inline-flex"
+            onClick={onExport}
+            aria-label={isRTL ? 'تصدير CSV' : 'Export CSV'}
+          >
+            <Download className="w-3.5 h-3.5" aria-hidden="true" />
+            <span>CSV</span>
+          </Button>
+        )}
       </div>
       <div
         className="flex flex-nowrap sm:flex-wrap gap-1.5 overflow-x-auto no-scrollbar -mx-1 px-1 pb-0.5"
