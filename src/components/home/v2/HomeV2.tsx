@@ -36,17 +36,17 @@ const ROUTES = {
   categories: '/categories',
 };
 
-const Section: React.FC<React.PropsWithChildren<{ id?: string; className?: string }>> = ({
-  id, className = '', children,
+const Section: React.FC<React.PropsWithChildren<{ id?: string; className?: string; ariaLabelledBy?: string }>> = ({
+  id, className = '', ariaLabelledBy, children,
 }) => (
-  <section id={id} className={`py-14 sm:py-20 ${className}`}>
+  <section id={id} aria-labelledby={ariaLabelledBy} className={`py-14 sm:py-20 ${className}`}>
     <div className="container-app">{children}</div>
   </section>
 );
 
-const SectionHead: React.FC<{ title: string; sub?: string }> = ({ title, sub }) => (
+const SectionHead: React.FC<{ title: string; sub?: string; headingId?: string }> = ({ title, sub, headingId }) => (
   <div className="max-w-2xl mx-auto text-center mb-10 sm:mb-14">
-    <h2 className="font-heading font-bold text-2xl sm:text-3xl md:text-4xl text-foreground tracking-tight leading-tight">
+    <h2 id={headingId} className="font-heading font-bold text-2xl sm:text-3xl md:text-4xl text-foreground tracking-tight leading-tight scroll-mt-24">
       {title}
     </h2>
     {sub && <p className="font-body text-sm sm:text-base text-muted-foreground mt-3 leading-relaxed">{sub}</p>}
@@ -64,7 +64,8 @@ const SectionCover: React.FC<{
   tone?: 'primary' | 'secondary' | 'accent';
   align?: 'center' | 'start';
   icon?: React.ComponentType<{ className?: string }>;
-}> = ({ eyebrow, title, sub, tone = 'primary', align = 'center', icon: Icon }) => {
+  headingId?: string;
+}> = ({ eyebrow, title, sub, tone = 'primary', align = 'center', icon: Icon, headingId }) => {
   const toneRing =
     tone === 'secondary' ? 'bg-secondary/10 text-secondary ring-secondary/20' :
     tone === 'accent'    ? 'bg-accent/10 text-accent ring-accent/20' :
@@ -84,7 +85,7 @@ const SectionCover: React.FC<{
         </span>
         <span className={`hidden sm:block h-px w-10 bg-gradient-to-r ${toneBar}`} aria-hidden="true" />
       </div>
-      <h2 className="font-heading font-black text-3xl sm:text-4xl md:text-[2.75rem] text-foreground tracking-tight leading-[1.15]">
+      <h2 id={headingId} className="font-heading font-black text-3xl sm:text-4xl md:text-[2.75rem] text-foreground tracking-tight leading-[1.15] scroll-mt-24">
         {title}
       </h2>
       {sub && (
