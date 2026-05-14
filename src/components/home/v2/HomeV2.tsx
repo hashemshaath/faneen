@@ -28,6 +28,17 @@ import sectorWood from '@/assets/home/sector-wood.jpg';
 import sectorGlass from '@/assets/home/sector-glass.jpg';
 import sectorStainless from '@/assets/home/sector-stainless.jpg';
 import sectorFabrication from '@/assets/home/sector-fabrication.jpg';
+import solSearch from '@/assets/home/sol-search.jpg';
+import solCity from '@/assets/home/sol-city.jpg';
+import solRequest from '@/assets/home/sol-request.jpg';
+import solCompare from '@/assets/home/sol-compare.jpg';
+import probScattered from '@/assets/home/prob-scattered.jpg';
+import probUnclear from '@/assets/home/prob-unclear.jpg';
+import probCompare from '@/assets/home/prob-compare.jpg';
+import whoIndividuals from '@/assets/home/who-individuals.jpg';
+import whoContractors from '@/assets/home/who-contractors.jpg';
+import whoEngineers from '@/assets/home/who-engineers.jpg';
+import whoProviders from '@/assets/home/who-providers.jpg';
 
 const ROUTES = {
   quote: '/search?intent=quote',
