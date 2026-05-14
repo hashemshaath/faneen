@@ -352,7 +352,7 @@ export const HeroV2 = () => {
 
       <div
         id="hero-carousel"
-        className="relative w-full overflow-hidden bg-card"
+        className="relative w-full overflow-hidden bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-inset"
         style={{ minHeight: 'clamp(560px, 88vh, 880px)' }}
         tabIndex={0}
         role="region"
