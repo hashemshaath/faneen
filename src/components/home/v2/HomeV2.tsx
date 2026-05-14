@@ -381,13 +381,19 @@ export const HeroV2 = () => {
                 />
               ) : null,
             )}
-            {/* Single combined gradient overlay (lighter — was 2 layers) */}
+            {/*
+              Multi-layer overlay tuned for legibility on every screen size:
+              1) Stronger bottom-up gradient for the search bar / subtitle area.
+              2) Radial vignette behind the centered content to lift the H1.
+              3) RTL/LTR side gradient to balance the composition.
+              Mobile gets a denser base via the higher start value.
+            */}
             <div
               className="absolute inset-0"
               style={{
                 background: isRTL
-                  ? 'linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.45) 45%, rgba(0,0,0,0.15) 100%), linear-gradient(to left, rgba(0,0,0,0.45), transparent 60%)'
-                  : 'linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.45) 45%, rgba(0,0,0,0.15) 100%), linear-gradient(to right, rgba(0,0,0,0.45), transparent 60%)',
+                  ? 'radial-gradient(ellipse 70% 55% at 50% 45%, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.25) 55%, rgba(0,0,0,0) 100%), linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.55) 40%, rgba(0,0,0,0.20) 100%), linear-gradient(to left, rgba(0,0,0,0.55), transparent 60%)'
+                  : 'radial-gradient(ellipse 70% 55% at 50% 45%, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.25) 55%, rgba(0,0,0,0) 100%), linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.55) 40%, rgba(0,0,0,0.20) 100%), linear-gradient(to right, rgba(0,0,0,0.55), transparent 60%)',
               }}
             />
           </div>
@@ -421,10 +427,16 @@ export const HeroV2 = () => {
           {/* Centered content */}
           <div className="relative z-10 flex flex-col items-center justify-center text-center px-5 sm:px-8 py-20 sm:py-28 min-h-[inherit]">
             <div key={`txt-${active}`} className="animate-fade-in max-w-3xl">
-              <h1 className="font-heading font-black text-[2.1rem] sm:text-5xl md:text-6xl lg:text-7xl text-white leading-[1.08] tracking-tight drop-shadow-[0_3px_18px_rgba(0,0,0,0.5)]">
+              <h1
+                className="font-heading font-black text-[2.1rem] sm:text-5xl md:text-6xl lg:text-7xl text-white leading-[1.08] tracking-tight"
+                style={{ textShadow: '0 2px 6px rgba(0,0,0,0.55), 0 8px 28px rgba(0,0,0,0.45)' }}
+              >
                 {bi(slide.titleAr, slide.titleEn)}
               </h1>
-              <p className="font-body text-base sm:text-lg md:text-xl text-white/85 mt-5 sm:mt-6 leading-relaxed max-w-2xl mx-auto">
+              <p
+                className="font-body text-base sm:text-lg md:text-xl text-white/95 mt-5 sm:mt-6 leading-relaxed max-w-2xl mx-auto"
+                style={{ textShadow: '0 1px 4px rgba(0,0,0,0.6), 0 4px 14px rgba(0,0,0,0.45)' }}
+              >
                 {bi(slide.subAr, slide.subEn)}
               </p>
             </div>
