@@ -645,7 +645,6 @@ export const HeroV2 = () => {
                     )
                   : ''}
               </div>
-              )}
             </div>
 
             {/* CTAs */}
