@@ -266,8 +266,11 @@ export const filterAndSort = (
     });
   }
 
-  // Category filter
-  if (filters.categoryId !== 'all') results = results.filter(b => b.category_id === filters.categoryId);
+  // Category filter — accept either UUID id or slug (home page links pass slug)
+  if (filters.categoryId !== 'all') {
+    const v = filters.categoryId;
+    results = results.filter(b => b.category_id === v || (b as any).categories?.slug === v);
+  }
   // City filter
   if (filters.cityId !== 'all') results = results.filter(b => b.city_id === filters.cityId);
   // Rating filter
