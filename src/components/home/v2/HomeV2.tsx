@@ -413,7 +413,7 @@ export const HeroV2 = () => {
           <div className="absolute top-0 inset-x-0 p-5 sm:p-7 flex items-center justify-between z-10">
             <span
               key={`tag-${active}`}
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/12 backdrop-blur-md border border-white/20 text-[11px] sm:text-xs font-semibold text-white animate-fade-in"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/12 backdrop-blur-md border border-white/20 text-[11px] sm:text-xs font-semibold text-white animate-fade-in motion-reduce:animate-none"
             >
               <Sparkles className="w-3.5 h-3.5 text-amber-300" />
               {bi(slide.tagAr, slide.tagEn)}
@@ -437,7 +437,7 @@ export const HeroV2 = () => {
 
           {/* Centered content */}
           <div className="relative z-10 flex flex-col items-center justify-center text-center px-5 sm:px-8 py-20 sm:py-28 min-h-[inherit]">
-            <div key={`txt-${active}`} className="animate-fade-in max-w-3xl">
+            <div key={`txt-${active}`} className="animate-fade-in motion-reduce:animate-none max-w-3xl">
               <h1
                 className="font-heading font-black text-[2.1rem] sm:text-5xl md:text-6xl lg:text-7xl text-white leading-[1.08] tracking-tight"
                 style={{ textShadow: '0 2px 6px rgba(0,0,0,0.55), 0 8px 28px rgba(0,0,0,0.45)' }}
@@ -515,7 +515,7 @@ export const HeroV2 = () => {
                 <div
                   id="hero-ac-list"
                   role="listbox"
-                  className="absolute top-full inset-x-0 mt-2 bg-card/98 backdrop-blur-xl border border-border/60 rounded-2xl shadow-2xl overflow-hidden z-20 text-start animate-fade-in"
+                  className="absolute top-full inset-x-0 mt-2 bg-card/98 backdrop-blur-xl border border-border/60 rounded-2xl shadow-2xl overflow-hidden z-20 text-start animate-fade-in motion-reduce:animate-none"
                 >
                   {!query.trim() && (
                     <div className="px-4 pt-3 pb-1.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
