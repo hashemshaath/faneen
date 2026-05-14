@@ -9,9 +9,13 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useBi } from '@/components/common/Bilingual';
 import {
   ArrowLeft, ArrowRight, Search, FileText, Building2, Users, HardHat, Compass,
-  Layers, Hammer, Sparkles, Plus, Minus, ShieldCheck, Image as ImageIcon,
+  Layers, Hammer, Plus, Minus, ShieldCheck, Image as ImageIcon,
   CheckCircle2, Activity, MapPin, Send, Scale, Boxes, DoorClosed, Square, Wrench,
 } from 'lucide-react';
+import heroFacade from '@/assets/home/hero-facade.jpg';
+import imgClients from '@/assets/home/audience-clients.jpg';
+import imgContractors from '@/assets/home/audience-contractors.jpg';
+import imgProviders from '@/assets/home/audience-providers.jpg';
 
 const ROUTES = {
   quote: '/search?intent=quote',
