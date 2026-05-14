@@ -4,21 +4,18 @@ import { MemoryRouter } from 'react-router-dom';
 import { axe } from 'jest-axe';
 import { HeroV2 } from '../HomeV2';
 import { LanguageProvider } from '@/i18n/LanguageContext';
-import { HelmetProvider } from 'react-helmet-async';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const renderHero = () => {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
-    <HelmetProvider>
-      <QueryClientProvider client={qc}>
+    <QueryClientProvider client={qc}>
         <LanguageProvider>
           <MemoryRouter>
             <HeroV2 />
           </MemoryRouter>
         </LanguageProvider>
-      </QueryClientProvider>
-    </HelmetProvider>,
+    </QueryClientProvider>,
   );
 };
 
