@@ -180,6 +180,10 @@ export const HeroV2 = () => {
   const [paused, setPaused] = useState(false);
   const [query, setQuery] = useState('');
   const reducedRef = useRef(false);
+  // Reactive state mirrors the media query so render-time decisions
+  // (Ken-Burns animation, cross-fade duration) update if the user
+  // toggles the OS setting while the page is open.
+  const [reducedMotion, setReducedMotion] = useState(false);
 
   // Lazy-mount slides: only render <img> for slides we've actually shown.
   // Slide 0 is always mounted (LCP); others mount on-demand to save bandwidth.
@@ -204,9 +208,15 @@ export const HeroV2 = () => {
   ];
 
   useEffect(() => {
-    reducedRef.current =
-      typeof window !== 'undefined' &&
-      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const apply = () => {
+      reducedRef.current = mq.matches;
+      setReducedMotion(mq.matches);
+    };
+    apply();
+    mq.addEventListener?.('change', apply);
+    return () => mq.removeEventListener?.('change', apply);
   }, []);
 
   // Preload the LCP hero image at the document level (highest priority).
@@ -370,12 +380,12 @@ export const HeroV2 = () => {
                   fetchPriority={i === 0 ? 'high' : 'low'}
                   loading={i === 0 ? 'eager' : 'lazy'}
                   decoding="async"
-                  className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-[1100ms] ease-out ${
-                    i === active ? 'opacity-100' : 'opacity-0'
-                  }`}
+                  className={`absolute inset-0 w-full h-full object-cover ease-out ${
+                    reducedMotion ? '' : 'transition-opacity duration-[1100ms]'
+                  } ${i === active ? 'opacity-100' : 'opacity-0'}`}
                   style={{
                     animation:
-                      i === active && !reducedRef.current
+                      i === active && !reducedMotion
                         ? 'qitaat-hero-kenburns 9s ease-out forwards'
                         : 'none',
                   }}
