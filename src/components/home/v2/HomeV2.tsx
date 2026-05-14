@@ -260,18 +260,57 @@ export const HeroV2 = () => {
     [navigate],
   );
 
+  // Keyboard navigation on the carousel: arrow keys, space (play/pause), Home/End
+  const onCarouselKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      // Don't hijack typing inside the search input
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      const fwd = isRTL ? 'ArrowLeft' : 'ArrowRight';
+      const back = isRTL ? 'ArrowRight' : 'ArrowLeft';
+      if (e.key === fwd) { e.preventDefault(); goNext(); }
+      else if (e.key === back) { e.preventDefault(); goPrev(); }
+      else if (e.key === 'Home') { e.preventDefault(); setActive(0); }
+      else if (e.key === 'End') { e.preventDefault(); setActive(SLIDES.length - 1); }
+      else if (e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); setPaused((p) => !p); }
+    },
+    [isRTL, goNext, goPrev, SLIDES.length],
+  );
+
   return (
     <section
       className="relative"
       aria-roledescription="carousel"
       aria-label={bi('عرض شرائح قطاعات', 'Qitaat hero slideshow')}
     >
+      {/* Skip link for keyboard users — jumps past the carousel to the chips */}
+      <a
+        href="#hero-sector-chips"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:start-3 focus:z-30 focus:px-3 focus:py-2 focus:rounded-md focus:bg-primary focus:text-primary-foreground focus:shadow-lg"
+      >
+        {bi('تخطّي عرض الشرائح', 'Skip slideshow')}
+      </a>
+
       <div
         className="relative w-full overflow-hidden bg-card"
         style={{ minHeight: 'clamp(560px, 88vh, 880px)' }}
+        tabIndex={0}
+        role="region"
+        aria-roledescription="carousel"
+        aria-label={bi('شرائح القطاعات — استخدم الأسهم للتنقل والمسافة للإيقاف', 'Sector slides — use arrow keys to navigate, space to pause')}
+        onKeyDown={onCarouselKeyDown}
+        onFocus={() => setPaused(true)}
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
       >
+          {/* Live region announcing the current slide for screen readers */}
+          <div className="sr-only" aria-live="polite" aria-atomic="true">
+            {bi(
+              `الشريحة ${active + 1} من ${SLIDES.length}: ${slide.titleAr}`,
+              `Slide ${active + 1} of ${SLIDES.length}: ${slide.titleEn}`,
+            )}
+          </div>
+
           {/* Image stack with Ken-Burns */}
           <div aria-hidden="true" className="absolute inset-0">
             {SLIDES.map((s, i) => (
@@ -319,7 +358,8 @@ export const HeroV2 = () => {
               type="button"
               onClick={() => setPaused((p) => !p)}
               aria-label={paused ? bi('تشغيل', 'Play') : bi('إيقاف', 'Pause')}
-              className="w-9 h-9 rounded-full bg-white/12 backdrop-blur-md border border-white/20 flex items-center justify-center hover:bg-white/20 transition-colors text-white"
+              aria-pressed={paused}
+              className="w-11 h-11 rounded-full bg-white/12 backdrop-blur-md border border-white/20 flex items-center justify-center hover:bg-white/20 transition-colors text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black/30"
             >
               {paused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
             </button>
@@ -379,15 +419,16 @@ export const HeroV2 = () => {
                     dir="auto"
                     autoComplete="off"
                     placeholder={bi('ابحث: ألمنيوم، حديد، نجارة، زجاج…', 'Search: aluminum, iron, carpentry, glass…')}
-                    className="flex-1 bg-transparent border-0 outline-none text-foreground placeholder:text-muted-foreground text-sm sm:text-base h-full"
+                    className="flex-1 bg-transparent border-0 outline-none text-foreground placeholder:text-muted-foreground text-sm sm:text-base h-full focus-visible:outline-none"
                     aria-label={bi('ابحث', 'Search')}
                     aria-autocomplete="list"
                     aria-expanded={acOpen}
                     aria-controls="hero-ac-list"
+                    aria-activedescendant={acIndex >= 0 ? `hero-ac-opt-${acIndex}` : undefined}
                   />
                   <button
                     type="submit"
-                    className="h-11 sm:h-12 px-5 sm:px-6 rounded-full bg-primary text-primary-foreground font-semibold text-sm sm:text-base hover:bg-primary/90 transition-colors shrink-0"
+                    className="h-11 sm:h-12 px-5 sm:px-6 rounded-full bg-primary text-primary-foreground font-semibold text-sm sm:text-base hover:bg-primary/90 transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                   >
                     {bi('ابحث', 'Search')}
                   </button>
@@ -410,7 +451,7 @@ export const HeroV2 = () => {
                       const Icon = it.kind === 'history' ? Clock : TrendingUp;
                       const isActive = i === acIndex;
                       return (
-                        <li key={`${it.kind}-${it.label}-${i}`}>
+                        <li key={`${it.kind}-${it.label}-${i}`} id={`hero-ac-opt-${i}`}>
                           <button
                             type="button"
                             role="option"
@@ -478,7 +519,7 @@ export const HeroV2 = () => {
                     onClick={() => setActive(i)}
                     aria-label={bi(`الانتقال إلى ${s.tagAr}`, `Go to ${s.tagEn}`)}
                     aria-current={i === active}
-                    className={`relative w-20 h-14 rounded-lg overflow-hidden border-2 transition-all duration-300 ${
+                    className={`relative w-20 h-14 rounded-lg overflow-hidden border-2 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black/40 ${
                       i === active
                         ? 'border-white scale-105 shadow-xl'
                         : 'border-white/30 opacity-60 hover:opacity-100 hover:border-white/60'
@@ -499,10 +540,15 @@ export const HeroV2 = () => {
                     onClick={() => setActive(i)}
                     aria-label={bi(`الانتقال إلى الشريحة ${i + 1}`, `Go to slide ${i + 1}`)}
                     aria-current={i === active}
-                    className={`h-1.5 rounded-full transition-all duration-300 ${
-                      i === active ? 'w-8 bg-white' : 'w-2 bg-white/40'
-                    }`}
-                  />
+                    className={`min-h-11 min-w-11 flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white rounded-full`}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className={`block h-1.5 rounded-full transition-all duration-300 ${
+                        i === active ? 'w-8 bg-white' : 'w-2 bg-white/50'
+                      }`}
+                    />
+                  </button>
                 ))}
               </div>
 
@@ -512,7 +558,8 @@ export const HeroV2 = () => {
                   type="button"
                   onClick={goPrev}
                   aria-label={bi('الشريحة السابقة', 'Previous slide')}
-                  className="w-11 h-11 rounded-full bg-white/12 backdrop-blur-md border border-white/25 flex items-center justify-center text-white hover:bg-white/25 transition-colors"
+                  aria-controls="hero-live-region"
+                  className="w-11 h-11 rounded-full bg-white/12 backdrop-blur-md border border-white/25 flex items-center justify-center text-white hover:bg-white/25 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black/30"
                 >
                   <PrevIcon className="w-4 h-4" />
                 </button>
@@ -520,7 +567,8 @@ export const HeroV2 = () => {
                   type="button"
                   onClick={goNext}
                   aria-label={bi('الشريحة التالية', 'Next slide')}
-                  className="w-11 h-11 rounded-full bg-white/12 backdrop-blur-md border border-white/25 flex items-center justify-center text-white hover:bg-white/25 transition-colors"
+                  aria-controls="hero-live-region"
+                  className="w-11 h-11 rounded-full bg-white/12 backdrop-blur-md border border-white/25 flex items-center justify-center text-white hover:bg-white/25 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black/30"
                 >
                   <NextIcon className="w-4 h-4" />
                 </button>
@@ -541,13 +589,14 @@ export const HeroV2 = () => {
         </div>
 
       {/* Sector chips below the hero (full-width container with side padding) */}
-      <div className="container-app mt-8 sm:mt-10">
+      <div id="hero-sector-chips" className="container-app mt-8 sm:mt-10 scroll-mt-20">
         <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
           {HERO_CHIPS.map(({ ar, en, slug, icon: Icon }) => (
             <Link
               key={slug}
               to={`/search?category=${slug}`}
-              className="inline-flex items-center gap-2 px-4 h-10 rounded-full border border-border/70 bg-card hover:bg-secondary/5 hover:border-secondary/40 transition-colors text-sm font-medium text-foreground hover-lift"
+              className="inline-flex items-center gap-2 px-4 min-h-11 rounded-full border border-border/70 bg-card hover:bg-secondary/5 hover:border-secondary/40 transition-colors text-sm font-medium text-foreground hover-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary focus-visible:ring-offset-2"
+              aria-label={bi(`تصفح قطاع ${ar}`, `Browse ${en} sector`)}
             >
               <Icon className="w-4 h-4 text-secondary" />
               {bi(ar, en)}
