@@ -150,84 +150,115 @@ export const HeroV2 = () => {
       aria-roledescription="carousel"
       aria-label={bi('عرض شرائح قطاعات', 'Qitaat hero slideshow')}
     >
-      {/* Cross-fading background images */}
+      {/* Soft ambient background (no longer the slideshow) */}
       <div aria-hidden="true" className="absolute inset-0 -z-10">
-        {SLIDES.map((s, i) => (
-          <img
-            key={i}
-            src={s.img}
-            alt=""
-            width={1920}
-            height={1080}
-            fetchPriority={i === 0 ? 'high' : 'low'}
-            loading={i === 0 ? 'eager' : 'lazy'}
-            decoding="async"
-            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-[1200ms] ease-out ${
-              i === active ? 'opacity-[0.22]' : 'opacity-0'
-            }`}
-          />
-        ))}
-        <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/90 to-background" />
-        <div className="absolute inset-0 bg-gradient-to-tr from-secondary/[0.06] via-transparent to-primary/[0.05]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-card/40 via-background to-background" />
+        <div className="absolute inset-0 bg-gradient-to-tr from-secondary/[0.05] via-transparent to-primary/[0.05]" />
       </div>
 
-      <div className="container-app text-center relative">
-        {/* Slide-specific content (key forces fade-in re-mount) */}
-        <div key={active} className="animate-fade-in">
-          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-card border border-border/70 text-xs font-semibold text-secondary mb-6">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            {bi(slide.badgeAr, slide.badgeEn)}
-          </span>
-          <h1 className="font-heading font-black text-[2rem] sm:text-5xl md:text-6xl text-foreground leading-[1.12] tracking-tight max-w-3xl mx-auto">
-            {bi(slide.titleAr, slide.titleEn)}
-          </h1>
-          <p className="font-body text-base sm:text-lg text-muted-foreground mt-5 sm:mt-6 max-w-xl mx-auto leading-relaxed">
-            {bi(slide.subAr, slide.subEn)}
-          </p>
-        </div>
+      <div className="container-app relative">
+        <div className="grid lg:grid-cols-12 gap-10 lg:gap-12 items-center">
+          {/* Text column */}
+          <div className="lg:col-span-6 text-center lg:text-start">
+            <div key={`txt-${active}`} className="animate-fade-in">
+              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-card border border-border/70 text-xs font-semibold text-secondary mb-5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                {bi(slide.badgeAr, slide.badgeEn)}
+              </span>
+              <h1 className="font-heading font-black text-[2rem] sm:text-5xl md:text-6xl text-foreground leading-[1.12] tracking-tight">
+                {bi(slide.titleAr, slide.titleEn)}
+              </h1>
+              <p className="font-body text-base sm:text-lg text-muted-foreground mt-5 leading-relaxed max-w-xl mx-auto lg:mx-0">
+                {bi(slide.subAr, slide.subEn)}
+              </p>
+            </div>
 
-        <div className="mt-7 sm:mt-9 flex flex-col sm:flex-row items-center justify-center gap-3">
-          <PrimaryCTA to={ROUTES.quote} label={bi('اطلب عرض سعر', 'Request a quote')} />
-          <SecondaryCTA to={ROUTES.signupProvider} label={bi('أضف منشأتك', 'Add your business')} />
-        </div>
-        <p className="text-xs sm:text-sm text-muted-foreground mt-4">
-          {bi('ابدأ بطلب واضح، وقارن بين الخيارات قبل أن تختار.', 'Start with a clear request, then compare options before you choose.')}
-        </p>
+            <div className="mt-7 flex flex-col sm:flex-row items-center lg:justify-start justify-center gap-3">
+              <PrimaryCTA to={ROUTES.quote} label={bi('اطلب عرض سعر', 'Request a quote')} />
+              <SecondaryCTA to={ROUTES.signupProvider} label={bi('أضف منشأتك', 'Add your business')} />
+            </div>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-4">
+              {bi('ابدأ بطلب واضح، وقارن بين الخيارات قبل أن تختار.', 'Start with a clear request, then compare options before you choose.')}
+            </p>
 
-        {/* Slider controls: dots + arrows */}
-        <div className="mt-8 flex items-center justify-center gap-4">
-          <button
-            type="button"
-            onClick={goPrev}
-            aria-label={bi('الشريحة السابقة', 'Previous slide')}
-            className="w-9 h-9 rounded-full border border-border/70 bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-secondary/5 hover:border-secondary/40 transition-colors"
-          >
-            <PrevIcon className="w-4 h-4 text-foreground" />
-          </button>
-          <div className="flex items-center gap-2">
-            {SLIDES.map((_, i) => (
+            {/* Slider controls */}
+            <div className="mt-7 flex items-center lg:justify-start justify-center gap-4">
               <button
-                key={i}
                 type="button"
-                onClick={() => setActive(i)}
-                aria-label={bi(`الانتقال إلى الشريحة ${i + 1}`, `Go to slide ${i + 1}`)}
-                aria-current={i === active}
-                className={`h-1.5 rounded-full transition-all duration-300 ${
-                  i === active ? 'w-8 bg-secondary' : 'w-2 bg-border hover:bg-muted-foreground/40'
-                }`}
-              />
-            ))}
+                onClick={goPrev}
+                aria-label={bi('الشريحة السابقة', 'Previous slide')}
+                className="w-10 h-10 rounded-full border border-border/70 bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-secondary/5 hover:border-secondary/40 transition-colors"
+              >
+                <PrevIcon className="w-4 h-4 text-foreground" />
+              </button>
+              <div className="flex items-center gap-2">
+                {SLIDES.map((_, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => setActive(i)}
+                    aria-label={bi(`الانتقال إلى الشريحة ${i + 1}`, `Go to slide ${i + 1}`)}
+                    aria-current={i === active}
+                    className={`h-1.5 rounded-full transition-all duration-300 ${
+                      i === active ? 'w-8 bg-secondary' : 'w-2 bg-border hover:bg-muted-foreground/40'
+                    }`}
+                  />
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={goNext}
+                aria-label={bi('الشريحة التالية', 'Next slide')}
+                className="w-10 h-10 rounded-full border border-border/70 bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-secondary/5 hover:border-secondary/40 transition-colors"
+              >
+                <NextIcon className="w-4 h-4 text-foreground" />
+              </button>
+            </div>
           </div>
-          <button
-            type="button"
-            onClick={goNext}
-            aria-label={bi('الشريحة التالية', 'Next slide')}
-            className="w-9 h-9 rounded-full border border-border/70 bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-secondary/5 hover:border-secondary/40 transition-colors"
-          >
-            <NextIcon className="w-4 h-4 text-foreground" />
-          </button>
+
+          {/* Image card column */}
+          <div className="lg:col-span-6">
+            <div className="relative aspect-[4/3] sm:aspect-[16/10] lg:aspect-[5/4] w-full rounded-2xl overflow-hidden border border-border/60 shadow-2xl bg-card">
+              {SLIDES.map((s, i) => (
+                <img
+                  key={i}
+                  src={s.img}
+                  alt={bi(s.titleAr, s.titleEn)}
+                  width={1920}
+                  height={1080}
+                  fetchPriority={i === 0 ? 'high' : 'low'}
+                  loading={i === 0 ? 'eager' : 'lazy'}
+                  decoding="async"
+                  className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-[900ms] ease-out ${
+                    i === active ? 'opacity-100' : 'opacity-0'
+                  }`}
+                />
+              ))}
+              {/* gradient + caption overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent pointer-events-none" />
+              <div key={`cap-${active}`} className="absolute bottom-0 inset-x-0 p-5 sm:p-6 animate-fade-in">
+                <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-white/15 backdrop-blur-md border border-white/20 text-[11px] font-semibold text-white">
+                  {bi(slide.badgeAr, slide.badgeEn)}
+                </span>
+                <p className="text-white font-heading font-bold text-lg sm:text-xl mt-2 leading-snug drop-shadow">
+                  {bi(slide.titleAr, slide.titleEn)}
+                </p>
+              </div>
+              {/* Progress bar */}
+              <div className="absolute top-0 inset-x-0 h-1 bg-white/15">
+                <div
+                  key={`bar-${active}-${paused}`}
+                  className="h-full bg-secondary"
+                  style={{
+                    animation: paused || reducedRef.current ? 'none' : 'qitaat-hero-progress 6s linear forwards',
+                  }}
+                />
+              </div>
+            </div>
+          </div>
         </div>
 
+        {/* Sector chips */}
         <div className="mt-10 sm:mt-12 flex flex-wrap items-center justify-center gap-2 sm:gap-3 max-w-3xl mx-auto">
           {HERO_CHIPS.map(({ ar, en, slug, icon: Icon }) => (
             <Link
@@ -241,6 +272,8 @@ export const HeroV2 = () => {
           ))}
         </div>
       </div>
+
+      <style>{`@keyframes qitaat-hero-progress { from { width: 0% } to { width: 100% } }`}</style>
     </section>
   );
 };
