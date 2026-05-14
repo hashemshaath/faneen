@@ -481,15 +481,56 @@ export const HeroV2 = () => {
                       setPaused(true);
                     }}
                     onKeyDown={(e) => {
-                      if (!acOpen || acItems.length === 0) return;
-                      if (e.key === 'ArrowDown') {
+                      // ArrowDown opens the panel even when closed (WAI-ARIA combobox pattern)
+                      if (e.key === 'ArrowDown' && !acOpen) {
+                        if (acItems.length === 0) return;
                         e.preventDefault();
-                        setAcIndex((i) => (i + 1) % acItems.length);
-                      } else if (e.key === 'ArrowUp') {
-                        e.preventDefault();
-                        setAcIndex((i) => (i - 1 + acItems.length) % acItems.length);
-                      } else if (e.key === 'Escape') {
-                        setAcOpen(false);
+                        setAcOpen(true);
+                        setAcIndex(0);
+                        return;
+                      }
+                      if (!acOpen || acItems.length === 0) {
+                        if (e.key === 'Escape') {
+                          // Allow Escape to clear input on second press
+                          if (query) { e.preventDefault(); setQuery(''); }
+                        }
+                        return;
+                      }
+                      switch (e.key) {
+                        case 'ArrowDown': {
+                          e.preventDefault();
+                          setAcIndex((i) => (i + 1) % acItems.length);
+                          break;
+                        }
+                        case 'ArrowUp': {
+                          e.preventDefault();
+                          setAcIndex((i) => (i <= 0 ? acItems.length - 1 : i - 1));
+                          break;
+                        }
+                        case 'Home': {
+                          e.preventDefault();
+                          setAcIndex(0);
+                          break;
+                        }
+                        case 'End': {
+                          e.preventDefault();
+                          setAcIndex(acItems.length - 1);
+                          break;
+                        }
+                        case 'Escape': {
+                          e.preventDefault();
+                          setAcOpen(false);
+                          setAcIndex(-1);
+                          break;
+                        }
+                        case 'Tab': {
+                          // Close panel on tab-out so focus moves cleanly
+                          setAcOpen(false);
+                          setAcIndex(-1);
+                          break;
+                        }
+                        default:
+                          break;
                       }
                     }}
                     dir="auto"
