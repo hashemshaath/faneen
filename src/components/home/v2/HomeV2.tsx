@@ -203,8 +203,7 @@ export const HeroV2 = () => {
     link.rel = 'preload';
     link.as = 'image';
     link.href = heroSlide1;
-    // @ts-expect-error fetchpriority is a valid HTML attribute
-    link.fetchPriority = 'high';
+    link.setAttribute('fetchpriority', 'high');
     document.head.appendChild(link);
     return () => { document.head.removeChild(link); };
   }, []);
