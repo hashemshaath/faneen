@@ -252,6 +252,13 @@ export const HeroV2 = () => {
     return () => document.removeEventListener('mousedown', onDoc);
   }, []);
 
+  // Keep the active autocomplete option in view as the user navigates with arrow keys
+  useEffect(() => {
+    if (!acOpen || acIndex < 0) return;
+    const el = document.getElementById(`hero-ac-opt-${acIndex}`);
+    el?.scrollIntoView({ block: 'nearest' });
+  }, [acIndex, acOpen]);
+
   useEffect(() => {
     if (paused || reducedRef.current) return;
     const id = window.setInterval(() => {
