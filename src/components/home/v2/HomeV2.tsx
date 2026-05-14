@@ -591,11 +591,13 @@ export const HeroV2 = () => {
                       const Icon = it.kind === 'history' ? Clock : TrendingUp;
                       const isActive = i === acIndex;
                       return (
-                        <li key={`${it.kind}-${it.label}-${i}`} id={`hero-ac-opt-${i}`}>
+                        <li key={`${it.kind}-${it.label}-${i}`} role="presentation">
                           <button
                             type="button"
+                            id={`hero-ac-opt-${i}`}
                             role="option"
                             aria-selected={isActive}
+                            tabIndex={-1}
                             onMouseEnter={() => setAcIndex(i)}
                             onMouseDown={(e) => {
                               e.preventDefault();
@@ -624,6 +626,25 @@ export const HeroV2 = () => {
                   </ul>
                 </div>
               )}
+
+              {/*
+                Combobox status live region — announces result count to screen readers
+                without conflicting with #hero-live-region (which is paused while the
+                user has focus inside the search container).
+              */}
+              <div
+                id="hero-ac-status"
+                role="status"
+                aria-atomic="true"
+                className="sr-only"
+              >
+                {acOpen
+                  ? bi(
+                      `${acItems.length} ${acItems.length === 1 ? 'اقتراح' : 'اقتراحات'} متاحة`,
+                      `${acItems.length} suggestion${acItems.length === 1 ? '' : 's'} available`,
+                    )
+                  : ''}
+              </div>
             </div>
 
             {/* CTAs */}
