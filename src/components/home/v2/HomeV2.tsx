@@ -11,8 +11,9 @@ import {
   ArrowLeft, ArrowRight, Search, FileText, Building2, Users, HardHat, Compass,
   Layers, Hammer, Plus, Minus, ShieldCheck, Image as ImageIcon,
   CheckCircle2, Activity, MapPin, Send, Scale, Boxes, DoorClosed, Square, Wrench,
-  Play, Pause, Sparkles,
+  Play, Pause, Sparkles, TrendingUp, Clock,
 } from 'lucide-react';
+import { getSearchHistory, addToSearchHistory } from '@/services/search/useSearch';
 import heroSlide1 from '@/assets/home/hero-slide-1.jpg';
 import heroSlide2 from '@/assets/home/hero-slide-2.jpg';
 import heroSlide3 from '@/assets/home/hero-slide-3.jpg';
@@ -161,10 +162,39 @@ export const HeroV2 = () => {
   const [query, setQuery] = useState('');
   const reducedRef = useRef(false);
 
+  // Autocomplete state
+  const [acOpen, setAcOpen] = useState(false);
+  const [acIndex, setAcIndex] = useState(-1);
+  const [history, setHistory] = useState<string[]>([]);
+  const acContainerRef = useRef<HTMLDivElement>(null);
+
+  // Top trending searches (manually curated based on industry priors)
+  const TRENDING: { ar: string; en: string; cat?: string }[] = [
+    { ar: 'مصانع ألمنيوم في الرياض', en: 'Aluminum factories in Riyadh', cat: 'aluminum' },
+    { ar: 'تركيب نوافذ ألمنيوم',    en: 'Aluminum window installation',  cat: 'aluminum' },
+    { ar: 'بوابات حديدية',           en: 'Iron gates',                    cat: 'iron' },
+    { ar: 'مطابخ خشبية',             en: 'Wooden kitchens',               cat: 'wood' },
+    { ar: 'واجهات زجاجية',           en: 'Glass facades',                 cat: 'glass' },
+    { ar: 'درابزين ستانلس ستيل',     en: 'Stainless steel railings',      cat: 'stainless' },
+    { ar: 'أبواب خشبية داخلية',      en: 'Interior wooden doors',         cat: 'wood' },
+    { ar: 'مظلات ألمنيوم',           en: 'Aluminum canopies',             cat: 'aluminum' },
+  ];
+
   useEffect(() => {
     reducedRef.current =
       typeof window !== 'undefined' &&
       window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  }, []);
+
+  // Click-outside to close autocomplete
+  useEffect(() => {
+    const onDoc = (e: MouseEvent) => {
+      if (acContainerRef.current && !acContainerRef.current.contains(e.target as Node)) {
+        setAcOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
   }, []);
 
   useEffect(() => {
@@ -187,6 +217,48 @@ export const HeroV2 = () => {
   const PrevIcon = isRTL ? ArrowRight : ArrowLeft;
   const NextIcon = isRTL ? ArrowLeft : ArrowRight;
   const slide = SLIDES[active];
+
+  // Build filtered suggestions
+  const acItems = (() => {
+    const q = query.trim().toLowerCase();
+    type Item = { kind: 'history' | 'trending'; label: string; cat?: string };
+    const items: Item[] = [];
+
+    if (!q) {
+      history.slice(0, 3).forEach((h) => items.push({ kind: 'history', label: h }));
+      TRENDING.slice(0, 6).forEach((t) =>
+        items.push({ kind: 'trending', label: bi(t.ar, t.en), cat: t.cat }),
+      );
+    } else {
+      TRENDING.forEach((t) => {
+        const ar = t.ar.toLowerCase();
+        const en = t.en.toLowerCase();
+        if (ar.includes(q) || en.includes(q)) {
+          items.push({ kind: 'trending', label: bi(t.ar, t.en), cat: t.cat });
+        }
+      });
+      history.forEach((h) => {
+        if (h.toLowerCase().includes(q) && !items.find((i) => i.label === h)) {
+          items.unshift({ kind: 'history', label: h });
+        }
+      });
+    }
+    return items.slice(0, 8);
+  })();
+
+  const submitSearch = useCallback(
+    (q: string, cat?: string) => {
+      const trimmed = q.trim();
+      if (trimmed) addToSearchHistory(trimmed);
+      const params = new URLSearchParams();
+      if (trimmed) params.set('q', trimmed);
+      if (cat) params.set('category', cat);
+      const qs = params.toString();
+      navigate(qs ? `/search?${qs}` : '/search');
+      setAcOpen(false);
+    },
+    [navigate],
+  );
 
   return (
     <section
@@ -265,34 +337,110 @@ export const HeroV2 = () => {
             </div>
 
             {/* Search bar */}
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                const q = query.trim();
-                navigate(q ? `/search?q=${encodeURIComponent(q)}` : '/search');
-              }}
-              className="mt-7 sm:mt-8 w-full max-w-xl"
-              role="search"
-            >
-              <div className="flex items-center gap-2 h-14 sm:h-[60px] rounded-full bg-white/95 backdrop-blur-md border border-white/40 shadow-2xl ps-5 pe-2">
-                <Search className="w-5 h-5 text-muted-foreground shrink-0" />
-                <input
-                  type="search"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  dir="auto"
-                  placeholder={bi('ابحث: ألمنيوم، حديد، نجارة، زجاج…', 'Search: aluminum, iron, carpentry, glass…')}
-                  className="flex-1 bg-transparent border-0 outline-none text-foreground placeholder:text-muted-foreground text-sm sm:text-base h-full"
-                  aria-label={bi('ابحث', 'Search')}
-                />
-                <button
-                  type="submit"
-                  className="h-11 sm:h-12 px-5 sm:px-6 rounded-full bg-primary text-primary-foreground font-semibold text-sm sm:text-base hover:bg-primary/90 transition-colors shrink-0"
+            <div ref={acContainerRef} className="mt-7 sm:mt-8 w-full max-w-xl relative">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (acIndex >= 0 && acItems[acIndex]) {
+                    submitSearch(acItems[acIndex].label, acItems[acIndex].cat);
+                  } else {
+                    submitSearch(query);
+                  }
+                }}
+                role="search"
+              >
+                <div className="flex items-center gap-2 h-14 sm:h-[60px] rounded-full bg-white/95 backdrop-blur-md border border-white/40 shadow-2xl ps-5 pe-2">
+                  <Search className="w-5 h-5 text-muted-foreground shrink-0" />
+                  <input
+                    type="search"
+                    value={query}
+                    onChange={(e) => {
+                      setQuery(e.target.value);
+                      setAcOpen(true);
+                      setAcIndex(-1);
+                    }}
+                    onFocus={() => {
+                      setHistory(getSearchHistory());
+                      setAcOpen(true);
+                      setPaused(true);
+                    }}
+                    onKeyDown={(e) => {
+                      if (!acOpen || acItems.length === 0) return;
+                      if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        setAcIndex((i) => (i + 1) % acItems.length);
+                      } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        setAcIndex((i) => (i - 1 + acItems.length) % acItems.length);
+                      } else if (e.key === 'Escape') {
+                        setAcOpen(false);
+                      }
+                    }}
+                    dir="auto"
+                    autoComplete="off"
+                    placeholder={bi('ابحث: ألمنيوم، حديد، نجارة، زجاج…', 'Search: aluminum, iron, carpentry, glass…')}
+                    className="flex-1 bg-transparent border-0 outline-none text-foreground placeholder:text-muted-foreground text-sm sm:text-base h-full"
+                    aria-label={bi('ابحث', 'Search')}
+                    aria-autocomplete="list"
+                    aria-expanded={acOpen}
+                    aria-controls="hero-ac-list"
+                  />
+                  <button
+                    type="submit"
+                    className="h-11 sm:h-12 px-5 sm:px-6 rounded-full bg-primary text-primary-foreground font-semibold text-sm sm:text-base hover:bg-primary/90 transition-colors shrink-0"
+                  >
+                    {bi('ابحث', 'Search')}
+                  </button>
+                </div>
+              </form>
+
+              {acOpen && acItems.length > 0 && (
+                <div
+                  id="hero-ac-list"
+                  role="listbox"
+                  className="absolute top-full inset-x-0 mt-2 bg-card/98 backdrop-blur-xl border border-border/60 rounded-2xl shadow-2xl overflow-hidden z-20 text-start animate-fade-in"
                 >
-                  {bi('ابحث', 'Search')}
-                </button>
-              </div>
-            </form>
+                  {!query.trim() && (
+                    <div className="px-4 pt-3 pb-1.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      {bi('الأكثر بحثاً', 'Most searched')}
+                    </div>
+                  )}
+                  <ul className="py-1 max-h-[340px] overflow-y-auto">
+                    {acItems.map((it, i) => {
+                      const Icon = it.kind === 'history' ? Clock : TrendingUp;
+                      const isActive = i === acIndex;
+                      return (
+                        <li key={`${it.kind}-${it.label}-${i}`}>
+                          <button
+                            type="button"
+                            role="option"
+                            aria-selected={isActive}
+                            onMouseEnter={() => setAcIndex(i)}
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              submitSearch(it.label, it.cat);
+                            }}
+                            className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground transition-colors ${
+                              isActive ? 'bg-secondary/10' : 'hover:bg-muted/60'
+                            }`}
+                          >
+                            <Icon
+                              className={`w-4 h-4 shrink-0 ${
+                                it.kind === 'history' ? 'text-muted-foreground' : 'text-secondary'
+                              }`}
+                            />
+                            <span className="flex-1 truncate" dir="auto">{it.label}</span>
+                            <ArrowLeft
+                              className={`w-3.5 h-3.5 text-muted-foreground/60 ${isRTL ? '' : 'rotate-180'}`}
+                            />
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              )}
+            </div>
 
             {/* CTAs */}
             <div className="mt-5 flex flex-col sm:flex-row items-center justify-center gap-3">
