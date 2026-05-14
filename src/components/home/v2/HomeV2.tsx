@@ -21,6 +21,12 @@ import heroSlide4 from '@/assets/home/hero-slide-4.jpg';
 import imgClients from '@/assets/home/audience-clients.jpg';
 import imgContractors from '@/assets/home/audience-contractors.jpg';
 import imgProviders from '@/assets/home/audience-providers.jpg';
+import sectorAluminum from '@/assets/home/sector-aluminum.jpg';
+import sectorIron from '@/assets/home/sector-iron.jpg';
+import sectorWood from '@/assets/home/sector-wood.jpg';
+import sectorGlass from '@/assets/home/sector-glass.jpg';
+import sectorStainless from '@/assets/home/sector-stainless.jpg';
+import sectorFabrication from '@/assets/home/sector-fabrication.jpg';
 
 const ROUTES = {
   quote: '/search?intent=quote',
