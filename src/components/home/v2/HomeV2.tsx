@@ -340,11 +340,7 @@ export const HeroV2 = () => {
   );
 
   return (
-    <section
-      className="relative"
-      aria-roledescription="carousel"
-      aria-label={bi('عرض شرائح قطاعات', 'Qitaat hero slideshow')}
-    >
+    <section className="relative">
       {/* Skip link for keyboard users — jumps past the carousel to the chips */}
       <a
         href="#hero-sector-chips"
@@ -366,8 +362,10 @@ export const HeroV2 = () => {
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
       >
-          {/* Live region announcing the current slide for screen readers */}
-          <div id="hero-live-region" className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+          {/* Live region announcing the current slide for screen readers.
+              Uses role="status" (implicit polite) without redundant aria-live to avoid
+              double-announcements in NVDA/VoiceOver. */}
+          <div id="hero-live-region" className="sr-only" role="status" aria-atomic="true">
             {bi(
               `الشريحة ${active + 1} من ${SLIDES.length}: ${slide.titleAr}`,
               `Slide ${active + 1} of ${SLIDES.length}: ${slide.titleEn}`,
