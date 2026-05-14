@@ -585,6 +585,7 @@ export const HeroV2 = () => {
                     onClick={() => setActive(i)}
                     aria-label={bi(`الانتقال إلى ${s.tagAr}`, `Go to ${s.tagEn}`)}
                     aria-current={i === active}
+                    aria-controls="hero-carousel"
                     className={`relative w-20 h-14 rounded-lg overflow-hidden border-2 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black/40 ${
                       i === active
                         ? 'border-white scale-105 shadow-xl'
@@ -606,6 +607,7 @@ export const HeroV2 = () => {
                     onClick={() => setActive(i)}
                     aria-label={bi(`الانتقال إلى الشريحة ${i + 1}`, `Go to slide ${i + 1}`)}
                     aria-current={i === active}
+                    aria-controls="hero-carousel"
                     className={`min-h-11 min-w-11 flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white rounded-full`}
                   >
                     <span
@@ -624,7 +626,7 @@ export const HeroV2 = () => {
                   type="button"
                   onClick={goPrev}
                   aria-label={bi('الشريحة السابقة', 'Previous slide')}
-                  aria-controls="hero-live-region"
+                  aria-controls="hero-carousel"
                   className="w-11 h-11 rounded-full bg-white/12 backdrop-blur-md border border-white/25 flex items-center justify-center text-white hover:bg-white/25 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black/30"
                 >
                   <PrevIcon className="w-4 h-4" />
@@ -633,7 +635,7 @@ export const HeroV2 = () => {
                   type="button"
                   onClick={goNext}
                   aria-label={bi('الشريحة التالية', 'Next slide')}
-                  aria-controls="hero-live-region"
+                  aria-controls="hero-carousel"
                   className="w-11 h-11 rounded-full bg-white/12 backdrop-blur-md border border-white/25 flex items-center justify-center text-white hover:bg-white/25 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black/30"
                 >
                   <NextIcon className="w-4 h-4" />
