@@ -2,7 +2,7 @@
  * Qitaat Home v2 — restructured per the marketing brief (Apple/IKEA tone:
  * short sentences, one idea per section, no hype, no superlatives).
  */
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -11,6 +11,7 @@ import {
   ArrowLeft, ArrowRight, Search, FileText, Building2, Users, HardHat, Compass,
   Layers, Hammer, Plus, Minus, ShieldCheck, Image as ImageIcon,
   CheckCircle2, Activity, MapPin, Send, Scale, Boxes, DoorClosed, Square, Wrench,
+  Play, Pause, Sparkles,
 } from 'lucide-react';
 import heroFacade from '@/assets/home/hero-facade.jpg';
 import heroSlide2 from '@/assets/home/hero-slide-2.jpg';
@@ -75,11 +76,12 @@ const HERO_CHIPS = [
 export const HeroV2 = () => {
   const bi = useBi();
   const { isRTL } = useLanguage();
+  const navigate = useNavigate();
 
   const SLIDES = [
     {
       img: heroFacade,
-      badgeAr: 'منصة سعودية للصناعات الخفيفة', badgeEn: 'A Saudi platform for light industries',
+      tagAr: 'الصناعات الخفيفة', tagEn: 'Light industries',
       titleAr: 'مزودو خدمات الصناعات الخفيفة في مكان واحد',
       titleEn: 'Light-industry service providers in one place',
       subAr: 'ألمنيوم، حديد، خشب، زجاج، وستانلس ستيل. ابحث، قارن، واطلب عرض سعر بخطوات قليلة.',
@@ -87,7 +89,7 @@ export const HeroV2 = () => {
     },
     {
       img: heroSlide2,
-      badgeAr: 'واجهات ألمنيوم وزجاج', badgeEn: 'Aluminum & glass facades',
+      tagAr: 'ألمنيوم وزجاج', tagEn: 'Aluminum & glass',
       titleAr: 'واجهات احترافية تلائم مشروعك',
       titleEn: 'Professional facades that fit your project',
       subAr: 'تواصل مع ورش متخصصة في الكيرتن وول والواجهات التجارية.',
@@ -95,7 +97,7 @@ export const HeroV2 = () => {
     },
     {
       img: heroSlide3,
-      badgeAr: 'حديد وستانلس ستيل', badgeEn: 'Iron & stainless steel',
+      tagAr: 'حديد وستانلس', tagEn: 'Iron & stainless',
       titleAr: 'تصنيع معدني بدقة وموثوقية',
       titleEn: 'Metal fabrication, done with precision',
       subAr: 'مصانع وورش تنفّذ أعمال الحديد والستانلس بمواصفات واضحة.',
@@ -103,7 +105,7 @@ export const HeroV2 = () => {
     },
     {
       img: heroSlide4,
-      badgeAr: 'نجارة وأعمال خشب', badgeEn: 'Carpentry & wood',
+      tagAr: 'نجارة وخشب', tagEn: 'Carpentry & wood',
       titleAr: 'مطابخ ودواليب بمقاسات منزلك',
       titleEn: 'Kitchens and built-ins, made to measure',
       subAr: 'احصل على عرض سعر من نجارين موثوقين بقربك.',
@@ -113,6 +115,7 @@ export const HeroV2 = () => {
 
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [query, setQuery] = useState('');
   const reducedRef = useRef(false);
 
   useEffect(() => {
@@ -144,54 +147,161 @@ export const HeroV2 = () => {
 
   return (
     <section
-      className="relative pt-20 pb-14 sm:pt-28 sm:pb-24 overflow-hidden"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
+      className="relative pt-6 sm:pt-8 pb-10 sm:pb-14"
       aria-roledescription="carousel"
       aria-label={bi('عرض شرائح قطاعات', 'Qitaat hero slideshow')}
     >
-      {/* Soft ambient background (no longer the slideshow) */}
-      <div aria-hidden="true" className="absolute inset-0 -z-10">
-        <div className="absolute inset-0 bg-gradient-to-b from-card/40 via-background to-background" />
-        <div className="absolute inset-0 bg-gradient-to-tr from-secondary/[0.05] via-transparent to-primary/[0.05]" />
-      </div>
+      <div className="container-app">
+        <div
+          className="relative w-full overflow-hidden rounded-3xl border border-border/60 shadow-2xl bg-card"
+          style={{ minHeight: 'clamp(520px, 78vh, 760px)' }}
+          onMouseEnter={() => setPaused(true)}
+          onMouseLeave={() => setPaused(false)}
+        >
+          {/* Image stack with Ken-Burns */}
+          <div aria-hidden="true" className="absolute inset-0">
+            {SLIDES.map((s, i) => (
+              <img
+                key={i}
+                src={s.img}
+                alt=""
+                width={1920}
+                height={1080}
+                fetchPriority={i === 0 ? 'high' : 'low'}
+                loading={i === 0 ? 'eager' : 'lazy'}
+                decoding="async"
+                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-[1100ms] ease-out ${
+                  i === active ? 'opacity-100' : 'opacity-0'
+                }`}
+                style={{
+                  animation:
+                    i === active && !reducedRef.current
+                      ? 'qitaat-hero-kenburns 9s ease-out forwards'
+                      : 'none',
+                }}
+              />
+            ))}
+            {/* Cinematic gradient overlays */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/55 to-black/30" />
+            <div className={`absolute inset-0 bg-gradient-to-${isRTL ? 'l' : 'r'} from-black/60 via-black/20 to-transparent`} />
+          </div>
 
-      <div className="container-app relative">
-        <div className="grid lg:grid-cols-12 gap-10 lg:gap-12 items-center">
-          {/* Text column */}
-          <div className="lg:col-span-6 text-center lg:text-start">
-            <div key={`txt-${active}`} className="animate-fade-in">
-              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-card border border-border/70 text-xs font-semibold text-secondary mb-5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                {bi(slide.badgeAr, slide.badgeEn)}
+          {/* Top bar — tag + autoplay toggle */}
+          <div className="absolute top-0 inset-x-0 p-5 sm:p-7 flex items-center justify-between z-10">
+            <span
+              key={`tag-${active}`}
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/12 backdrop-blur-md border border-white/20 text-[11px] sm:text-xs font-semibold text-white animate-fade-in"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+              {bi(slide.tagAr, slide.tagEn)}
+              <span className="opacity-50">·</span>
+              <span className="opacity-90">
+                {String(active + 1).padStart(2, '0')}
+                <span className="opacity-50"> / </span>
+                {String(SLIDES.length).padStart(2, '0')}
               </span>
-              <h1 className="font-heading font-black text-[2rem] sm:text-5xl md:text-6xl text-foreground leading-[1.12] tracking-tight">
+            </span>
+            <button
+              type="button"
+              onClick={() => setPaused((p) => !p)}
+              aria-label={paused ? bi('تشغيل', 'Play') : bi('إيقاف', 'Pause')}
+              className="w-9 h-9 rounded-full bg-white/12 backdrop-blur-md border border-white/20 flex items-center justify-center hover:bg-white/20 transition-colors text-white"
+            >
+              {paused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
+            </button>
+          </div>
+
+          {/* Centered content */}
+          <div className="relative z-10 flex flex-col items-center justify-center text-center px-5 sm:px-8 py-20 sm:py-28 min-h-[inherit]">
+            <div key={`txt-${active}`} className="animate-fade-in max-w-3xl">
+              <h1 className="font-heading font-black text-[2.1rem] sm:text-5xl md:text-6xl lg:text-7xl text-white leading-[1.08] tracking-tight drop-shadow-[0_3px_18px_rgba(0,0,0,0.5)]">
                 {bi(slide.titleAr, slide.titleEn)}
               </h1>
-              <p className="font-body text-base sm:text-lg text-muted-foreground mt-5 leading-relaxed max-w-xl mx-auto lg:mx-0">
+              <p className="font-body text-base sm:text-lg md:text-xl text-white/85 mt-5 sm:mt-6 leading-relaxed max-w-2xl mx-auto">
                 {bi(slide.subAr, slide.subEn)}
               </p>
             </div>
 
-            <div className="mt-7 flex flex-col sm:flex-row items-center lg:justify-start justify-center gap-3">
-              <PrimaryCTA to={ROUTES.quote} label={bi('اطلب عرض سعر', 'Request a quote')} />
-              <SecondaryCTA to={ROUTES.signupProvider} label={bi('أضف منشأتك', 'Add your business')} />
-            </div>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-4">
-              {bi('ابدأ بطلب واضح، وقارن بين الخيارات قبل أن تختار.', 'Start with a clear request, then compare options before you choose.')}
-            </p>
+            {/* Search bar */}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const q = query.trim();
+                navigate(q ? `/search?q=${encodeURIComponent(q)}` : '/search');
+              }}
+              className="mt-7 sm:mt-8 w-full max-w-xl"
+              role="search"
+            >
+              <div className="flex items-center gap-2 h-14 sm:h-[60px] rounded-full bg-white/95 backdrop-blur-md border border-white/40 shadow-2xl ps-5 pe-2">
+                <Search className="w-5 h-5 text-muted-foreground shrink-0" />
+                <input
+                  type="search"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  dir="auto"
+                  placeholder={bi('ابحث: ألمنيوم، حديد، نجارة، زجاج…', 'Search: aluminum, iron, carpentry, glass…')}
+                  className="flex-1 bg-transparent border-0 outline-none text-foreground placeholder:text-muted-foreground text-sm sm:text-base h-full"
+                  aria-label={bi('ابحث', 'Search')}
+                />
+                <button
+                  type="submit"
+                  className="h-11 sm:h-12 px-5 sm:px-6 rounded-full bg-primary text-primary-foreground font-semibold text-sm sm:text-base hover:bg-primary/90 transition-colors shrink-0"
+                >
+                  {bi('ابحث', 'Search')}
+                </button>
+              </div>
+            </form>
 
-            {/* Slider controls */}
-            <div className="mt-7 flex items-center lg:justify-start justify-center gap-4">
-              <button
-                type="button"
-                onClick={goPrev}
-                aria-label={bi('الشريحة السابقة', 'Previous slide')}
-                className="w-10 h-10 rounded-full border border-border/70 bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-secondary/5 hover:border-secondary/40 transition-colors"
-              >
-                <PrevIcon className="w-4 h-4 text-foreground" />
-              </button>
-              <div className="flex items-center gap-2">
+            {/* CTAs */}
+            <div className="mt-5 flex flex-col sm:flex-row items-center justify-center gap-3">
+              <PrimaryCTA to={ROUTES.quote} label={bi('اطلب عرض سعر', 'Request a quote')} />
+              <Link to={ROUTES.signupProvider}>
+                <Button
+                  variant="outline"
+                  size="appLg"
+                  className="bg-white/10 backdrop-blur-md border-white/30 text-white hover:bg-white/20 hover:text-white"
+                >
+                  {bi('أضف منشأتك', 'Add your business')}
+                </Button>
+              </Link>
+            </div>
+
+            {/* Trust strip */}
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[12px] sm:text-xs text-white/70">
+              <span className="inline-flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 text-emerald-300" /> {bi('مزودون موثّقون', 'Verified providers')}</span>
+              <span className="opacity-40">·</span>
+              <span className="inline-flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-sky-300" /> {bi('تغطية المملكة', 'Saudi-wide coverage')}</span>
+              <span className="opacity-40">·</span>
+              <span className="inline-flex items-center gap-1.5"><Activity className="w-3.5 h-3.5 text-amber-300" /> {bi('بدون عمولة على العميل', 'No fees for customers')}</span>
+            </div>
+          </div>
+
+          {/* Bottom controls — thumbnails + arrows */}
+          <div className="absolute bottom-0 inset-x-0 z-10 px-4 sm:px-6 pb-4 sm:pb-5">
+            <div className="flex items-end justify-between gap-3">
+              {/* Thumbnails (md+) */}
+              <div className="hidden md:flex items-center gap-2">
+                {SLIDES.map((s, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => setActive(i)}
+                    aria-label={bi(`الانتقال إلى ${s.tagAr}`, `Go to ${s.tagEn}`)}
+                    aria-current={i === active}
+                    className={`relative w-20 h-14 rounded-lg overflow-hidden border-2 transition-all duration-300 ${
+                      i === active
+                        ? 'border-white scale-105 shadow-xl'
+                        : 'border-white/30 opacity-60 hover:opacity-100 hover:border-white/60'
+                    }`}
+                  >
+                    <img src={s.img} alt="" className="absolute inset-0 w-full h-full object-cover" loading="lazy" decoding="async" />
+                    {i === active && <div className="absolute inset-0 ring-2 ring-secondary/70 rounded-md pointer-events-none" />}
+                  </button>
+                ))}
+              </div>
+
+              {/* Mobile dots */}
+              <div className="flex md:hidden items-center gap-2">
                 {SLIDES.map((_, i) => (
                   <button
                     key={i}
@@ -200,71 +310,53 @@ export const HeroV2 = () => {
                     aria-label={bi(`الانتقال إلى الشريحة ${i + 1}`, `Go to slide ${i + 1}`)}
                     aria-current={i === active}
                     className={`h-1.5 rounded-full transition-all duration-300 ${
-                      i === active ? 'w-8 bg-secondary' : 'w-2 bg-border hover:bg-muted-foreground/40'
+                      i === active ? 'w-8 bg-white' : 'w-2 bg-white/40'
                     }`}
                   />
                 ))}
               </div>
-              <button
-                type="button"
-                onClick={goNext}
-                aria-label={bi('الشريحة التالية', 'Next slide')}
-                className="w-10 h-10 rounded-full border border-border/70 bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-secondary/5 hover:border-secondary/40 transition-colors"
-              >
-                <NextIcon className="w-4 h-4 text-foreground" />
-              </button>
-            </div>
-          </div>
 
-          {/* Image card column */}
-          <div className="lg:col-span-6">
-            <div className="relative aspect-[4/3] sm:aspect-[16/10] lg:aspect-[5/4] w-full rounded-2xl overflow-hidden border border-border/60 shadow-2xl bg-card">
-              {SLIDES.map((s, i) => (
-                <img
-                  key={i}
-                  src={s.img}
-                  alt={bi(s.titleAr, s.titleEn)}
-                  width={1920}
-                  height={1080}
-                  fetchPriority={i === 0 ? 'high' : 'low'}
-                  loading={i === 0 ? 'eager' : 'lazy'}
-                  decoding="async"
-                  className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-[900ms] ease-out ${
-                    i === active ? 'opacity-100' : 'opacity-0'
-                  }`}
-                />
-              ))}
-              {/* gradient + caption overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent pointer-events-none" />
-              <div key={`cap-${active}`} className="absolute bottom-0 inset-x-0 p-5 sm:p-6 animate-fade-in">
-                <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-white/15 backdrop-blur-md border border-white/20 text-[11px] font-semibold text-white">
-                  {bi(slide.badgeAr, slide.badgeEn)}
-                </span>
-                <p className="text-white font-heading font-bold text-lg sm:text-xl mt-2 leading-snug drop-shadow">
-                  {bi(slide.titleAr, slide.titleEn)}
-                </p>
+              {/* Arrows */}
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={goPrev}
+                  aria-label={bi('الشريحة السابقة', 'Previous slide')}
+                  className="w-11 h-11 rounded-full bg-white/12 backdrop-blur-md border border-white/25 flex items-center justify-center text-white hover:bg-white/25 transition-colors"
+                >
+                  <PrevIcon className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={goNext}
+                  aria-label={bi('الشريحة التالية', 'Next slide')}
+                  className="w-11 h-11 rounded-full bg-white/12 backdrop-blur-md border border-white/25 flex items-center justify-center text-white hover:bg-white/25 transition-colors"
+                >
+                  <NextIcon className="w-4 h-4" />
+                </button>
               </div>
-              {/* Progress bar */}
-              <div className="absolute top-0 inset-x-0 h-1 bg-white/15">
-                <div
-                  key={`bar-${active}-${paused}`}
-                  className="h-full bg-secondary"
-                  style={{
-                    animation: paused || reducedRef.current ? 'none' : 'qitaat-hero-progress 6s linear forwards',
-                  }}
-                />
-              </div>
+            </div>
+
+            {/* Progress bar */}
+            <div className="mt-3 h-[3px] w-full bg-white/15 rounded-full overflow-hidden">
+              <div
+                key={`bar-${active}-${paused}`}
+                className="h-full bg-secondary"
+                style={{
+                  animation: paused || reducedRef.current ? 'none' : 'qitaat-hero-progress 6s linear forwards',
+                }}
+              />
             </div>
           </div>
         </div>
 
-        {/* Sector chips */}
-        <div className="mt-10 sm:mt-12 flex flex-wrap items-center justify-center gap-2 sm:gap-3 max-w-3xl mx-auto">
+        {/* Sector chips below the hero card */}
+        <div className="mt-6 sm:mt-8 flex flex-wrap items-center justify-center gap-2 sm:gap-3">
           {HERO_CHIPS.map(({ ar, en, slug, icon: Icon }) => (
             <Link
               key={slug}
               to={`/search?category=${slug}`}
-              className="inline-flex items-center gap-2 px-4 h-10 rounded-full border border-border/70 bg-card/80 backdrop-blur-sm hover:bg-secondary/5 hover:border-secondary/40 transition-colors text-sm font-medium text-foreground hover-lift"
+              className="inline-flex items-center gap-2 px-4 h-10 rounded-full border border-border/70 bg-card hover:bg-secondary/5 hover:border-secondary/40 transition-colors text-sm font-medium text-foreground hover-lift"
             >
               <Icon className="w-4 h-4 text-secondary" />
               {bi(ar, en)}
@@ -273,7 +365,13 @@ export const HeroV2 = () => {
         </div>
       </div>
 
-      <style>{`@keyframes qitaat-hero-progress { from { width: 0% } to { width: 100% } }`}</style>
+      <style>{`
+        @keyframes qitaat-hero-progress { from { width: 0% } to { width: 100% } }
+        @keyframes qitaat-hero-kenburns {
+          from { transform: scale(1.05) translate3d(0,0,0); }
+          to   { transform: scale(1.14) translate3d(-1%, -1%, 0); }
+        }
+      `}</style>
     </section>
   );
 };
