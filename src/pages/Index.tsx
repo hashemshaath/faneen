@@ -69,6 +69,45 @@ const Index = () => {
     },
     {
       '@context': 'https://schema.org',
+      '@type': 'ItemList',
+      name: 'قطاعات الصناعات الخفيفة',
+      description: 'القطاعات الرئيسية المتاحة على منصة قِطاعات: ألمنيوم، حديد، خشب، زجاج، ستانلس ستيل، تصنيع وتركيب.',
+      itemListOrder: 'https://schema.org/ItemListOrderAscending',
+      numberOfItems: 6,
+      itemListElement: [
+        { slug: 'aluminum',    name: 'ألمنيوم',          desc: 'ورش ومصانع الألمنيوم: واجهات، نوافذ، أبواب، كيرتن وول.' },
+        { slug: 'iron',        name: 'حديد',             desc: 'أعمال الحديد والتصنيع المعدني: درابزين، أبواب، هياكل.' },
+        { slug: 'wood',        name: 'خشب',              desc: 'النجارة والمطابخ والدواليب بمقاسات مخصّصة.' },
+        { slug: 'glass',       name: 'زجاج',             desc: 'تركيبات الزجاج، السكوريت، والواجهات الزجاجية.' },
+        { slug: 'stainless',   name: 'ستانلس ستيل',      desc: 'تصنيع وتركيب الستانلس ستيل للمشاريع التجارية والصناعية.' },
+        { slug: 'fabrication', name: 'تصنيع وتركيب',     desc: 'خدمات التصنيع والتركيب الشاملة للمقاولين والمكاتب الهندسية.' },
+      ].map((s, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        name: s.name,
+        url: `https://qitaat.com/search?category=${s.slug}`,
+        item: {
+          '@type': 'Service',
+          name: s.name,
+          description: s.desc,
+          serviceType: s.name,
+          areaServed: { '@type': 'Country', name: 'Saudi Arabia' },
+          provider: { '@type': 'Organization', name: 'قِطاعات Qitaat', url: 'https://qitaat.com' },
+          url: `https://qitaat.com/search?category=${s.slug}`,
+        },
+      })),
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'الرئيسية', item: 'https://qitaat.com/' },
+        { '@type': 'ListItem', position: 2, name: 'القطاعات', item: 'https://qitaat.com/categories' },
+        { '@type': 'ListItem', position: 3, name: 'البحث', item: 'https://qitaat.com/search' },
+      ],
+    },
+    {
+      '@context': 'https://schema.org',
       '@type': 'FAQPage',
       mainEntity: FAQ_ITEMS_BI.map((it) => ({
         '@type': 'Question',
