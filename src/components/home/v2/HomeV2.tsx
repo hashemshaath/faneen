@@ -459,7 +459,20 @@ export const HeroV2 = () => {
             </div>
 
             {/* Search bar */}
-            <div ref={acContainerRef} className="mt-7 sm:mt-8 w-full max-w-xl relative">
+            <div
+              ref={acContainerRef}
+              className="mt-7 sm:mt-8 w-full max-w-xl relative"
+              onBlur={(e) => {
+                // Close the autocomplete when focus leaves the entire combobox
+                // (Tab / Shift+Tab to outside). Use relatedTarget so internal
+                // focus moves between input ↔ options keep the panel open.
+                const next = e.relatedTarget as Node | null;
+                if (!next || !acContainerRef.current?.contains(next)) {
+                  setAcOpen(false);
+                  setAcIndex(-1);
+                }
+              }}
+            >
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
