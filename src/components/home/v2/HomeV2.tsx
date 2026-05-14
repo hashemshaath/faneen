@@ -45,6 +45,49 @@ const SectionHead: React.FC<{ title: string; sub?: string }> = ({ title, sub }) 
   </div>
 );
 
+/**
+ * Premium section header — eyebrow chip, gradient accent line, large title, supportive subtitle.
+ * Use to give important sections a polished, branded cover.
+ */
+const SectionCover: React.FC<{
+  eyebrow: string;
+  title: string;
+  sub?: string;
+  tone?: 'primary' | 'secondary' | 'accent';
+  align?: 'center' | 'start';
+  icon?: React.ComponentType<{ className?: string }>;
+}> = ({ eyebrow, title, sub, tone = 'primary', align = 'center', icon: Icon }) => {
+  const toneRing =
+    tone === 'secondary' ? 'bg-secondary/10 text-secondary ring-secondary/20' :
+    tone === 'accent'    ? 'bg-accent/10 text-accent ring-accent/20' :
+                           'bg-primary/10 text-primary ring-primary/20';
+  const toneBar =
+    tone === 'secondary' ? 'from-secondary/0 via-secondary to-secondary/0' :
+    tone === 'accent'    ? 'from-accent/0 via-accent to-accent/0' :
+                           'from-primary/0 via-primary to-primary/0';
+  const isCenter = align === 'center';
+  return (
+    <div className={`max-w-3xl ${isCenter ? 'mx-auto text-center' : ''} mb-10 sm:mb-14`}>
+      <div className={`flex items-center gap-3 mb-5 ${isCenter ? 'justify-center' : ''}`}>
+        <span className={`hidden sm:block h-px w-10 bg-gradient-to-r ${toneBar}`} aria-hidden="true" />
+        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] sm:text-xs font-semibold uppercase tracking-wider ring-1 ${toneRing}`}>
+          {Icon && <Icon className="w-3.5 h-3.5" />}
+          {eyebrow}
+        </span>
+        <span className={`hidden sm:block h-px w-10 bg-gradient-to-r ${toneBar}`} aria-hidden="true" />
+      </div>
+      <h2 className="font-heading font-black text-3xl sm:text-4xl md:text-[2.75rem] text-foreground tracking-tight leading-[1.15]">
+        {title}
+      </h2>
+      {sub && (
+        <p className={`font-body text-sm sm:text-base md:text-lg text-muted-foreground mt-4 leading-relaxed ${isCenter ? 'max-w-2xl mx-auto' : ''}`}>
+          {sub}
+        </p>
+      )}
+    </div>
+  );
+};
+
 const PrimaryCTA: React.FC<{ to: string; label: string }> = ({ to, label }) => {
   const { isRTL } = useLanguage();
   const Arrow = isRTL ? ArrowLeft : ArrowRight;
@@ -460,8 +503,11 @@ export const SolutionSection = () => {
       bodyAr: 'راجع الخيارات وتواصل مع المزود الأنسب.', bodyEn: 'Review options and contact the best fit.' },
   ];
   return (
-    <Section className="bg-card/40">
-      <SectionHead
+    <Section className="bg-gradient-to-b from-card/60 via-background to-background">
+      <SectionCover
+        tone="primary"
+        icon={Sparkles}
+        eyebrow={bi('كيف نساعدك', 'How we help')}
         title={bi('قطاعات تجعل البداية أوضح', 'Qitaat makes the start clearer')}
         sub={bi(
           'منصة واحدة تساعدك على البحث عن مزودي الخدمة، فهم خياراتك، وطلب عروض سعر بطريقة منظمة.',
@@ -469,17 +515,24 @@ export const SolutionSection = () => {
         )}
       />
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-        {items.map(({ icon: Icon, titleAr, titleEn, bodyAr, bodyEn }) => (
-          <div key={titleEn} className="rounded-xl border border-border/60 bg-background p-5 hover-lift">
-            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-3">
+        {items.map(({ icon: Icon, titleAr, titleEn, bodyAr, bodyEn }, idx) => (
+          <div
+            key={titleEn}
+            className="group relative rounded-2xl border border-border/60 bg-card p-6 hover-lift overflow-hidden"
+          >
+            <span className="absolute top-4 end-4 text-[11px] font-semibold text-muted-foreground/60 tech-content">
+              {String(idx + 1).padStart(2, '0')}
+            </span>
+            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 ring-1 ring-primary/15 group-hover:bg-primary/15 transition-colors">
               <Icon className="w-5 h-5 text-primary" />
             </div>
-            <h3 className="font-heading font-semibold text-base text-foreground mb-1.5">{bi(titleAr, titleEn)}</h3>
+            <h3 className="font-heading font-bold text-lg text-foreground mb-2 leading-snug">{bi(titleAr, titleEn)}</h3>
             <p className="text-sm text-muted-foreground leading-relaxed">{bi(bodyAr, bodyEn)}</p>
+            <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-transparent via-primary/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
           </div>
         ))}
       </div>
-      <div className="text-center mt-10">
+      <div className="text-center mt-12">
         <PrimaryCTA to={ROUTES.quote} label={bi('ابدأ طلبك الآن', 'Start your request')} />
       </div>
     </Section>
@@ -535,19 +588,32 @@ export const WhoIsItForSection = () => {
   ];
   return (
     <Section className="bg-card/40">
-      <SectionHead title={bi('مصممة لمن يبحث… ولمن يقدم الخدمة', 'Built for buyers — and for providers')} />
+      <SectionCover
+        tone="secondary"
+        icon={Users}
+        eyebrow={bi('لمن قطاعات', 'Who it’s for')}
+        title={bi('مصممة لمن يبحث… ولمن يقدم الخدمة', 'Built for buyers — and for providers')}
+        sub={bi(
+          'سواء تبحث عن خدمة لمشروعك أو تقدمها، تجد ما يناسبك بطريقة منظمة.',
+          'Whether you are looking for a service or providing it, find what fits — in an organized way.',
+        )}
+      />
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
         {items.map(({ icon: Icon, titleAr, titleEn, bodyAr, bodyEn }) => (
-          <div key={titleEn} className="rounded-xl border border-border/60 bg-background p-5 hover-lift">
-            <div className="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center mb-3">
+          <div
+            key={titleEn}
+            className="group relative rounded-2xl border border-border/60 bg-background p-6 hover-lift overflow-hidden"
+          >
+            <div className="absolute -top-10 -end-10 w-28 h-28 rounded-full bg-secondary/5 group-hover:bg-secondary/10 transition-colors pointer-events-none" />
+            <div className="relative w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center mb-4 ring-1 ring-secondary/15">
               <Icon className="w-5 h-5 text-secondary" />
             </div>
-            <h3 className="font-heading font-semibold text-base text-foreground mb-1.5">{bi(titleAr, titleEn)}</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed">{bi(bodyAr, bodyEn)}</p>
+            <h3 className="relative font-heading font-bold text-lg text-foreground mb-2 leading-snug">{bi(titleAr, titleEn)}</h3>
+            <p className="relative text-sm text-muted-foreground leading-relaxed">{bi(bodyAr, bodyEn)}</p>
           </div>
         ))}
       </div>
-      <div className="text-center mt-10">
+      <div className="text-center mt-12">
         <SecondaryCTA to="/about" label={bi('اختر المسار المناسب لك', 'Choose your path')} />
       </div>
     </Section>
@@ -578,7 +644,10 @@ export const MainSectorsSection = () => {
   ];
   return (
     <Section>
-      <SectionHead
+      <SectionCover
+        tone="primary"
+        icon={Layers}
+        eyebrow={bi('القطاعات الرئيسية', 'Main sectors')}
         title={bi('قطاعات تغطي احتياجات المشاريع اليومية', 'Sectors that cover everyday project needs')}
         sub={bi(
           'من الأعمال الصغيرة إلى المشاريع التجارية، ابدأ من القطاع المناسب.',
@@ -590,20 +659,23 @@ export const MainSectorsSection = () => {
           <Link
             key={s.slug}
             to={`/search?category=${s.slug}`}
-            className="group relative overflow-hidden rounded-xl border border-border/60 bg-card p-6 hover-lift block"
+            className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card p-6 sm:p-7 hover-lift block"
           >
             <div className={`absolute inset-0 bg-gradient-to-br ${s.accent} opacity-60 group-hover:opacity-100 transition-opacity pointer-events-none`} />
-            <div className="relative flex items-center gap-3 mb-3">
-              <div className="w-11 h-11 rounded-xl bg-background border border-border/60 flex items-center justify-center shadow-sm">
+            <div className="relative flex items-center justify-between mb-4">
+              <div className="w-12 h-12 rounded-xl bg-background border border-border/60 flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
                 <s.icon className="w-5 h-5 text-foreground" />
               </div>
-              <span className={`w-2 h-2 rounded-full ${s.dot}`} aria-hidden="true" />
+              <span className={`inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/80`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} aria-hidden="true" />
+                {bi('قطاع', 'Sector')}
+              </span>
             </div>
-            <h3 className="font-heading font-semibold text-lg text-foreground mb-2 group-hover:text-primary transition-colors">
+            <h3 className="relative font-heading font-bold text-xl text-foreground mb-2 group-hover:text-primary transition-colors leading-snug">
               {bi(s.titleAr, s.titleEn)}
             </h3>
             <p className="relative text-sm text-muted-foreground leading-relaxed">{bi(s.bodyAr, s.bodyEn)}</p>
-            <div className="relative mt-4 inline-flex items-center gap-1 text-xs font-semibold text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="relative mt-5 pt-4 border-t border-border/40 inline-flex items-center gap-1.5 text-xs font-semibold text-primary translate-x-0 group-hover:translate-x-1 rtl:group-hover:-translate-x-1 transition-transform w-full">
               {bi('استعرض المزودين', 'Browse providers')}
               <ArrowLeft className="w-3 h-3 rtl:block ltr:hidden" />
               <ArrowRight className="w-3 h-3 ltr:block rtl:hidden" />
@@ -611,7 +683,7 @@ export const MainSectorsSection = () => {
           </Link>
         ))}
       </div>
-      <div className="text-center mt-10">
+      <div className="text-center mt-12">
         <SecondaryCTA to={ROUTES.categories} label={bi('استكشف كل القطاعات', 'Explore all sectors')} />
       </div>
     </Section>
@@ -838,28 +910,56 @@ export const FAQSection = () => {
 export const FinalCTASection = () => {
   const bi = useBi();
   return (
-    <section className="py-16 sm:py-24 bg-secondary text-white">
-      <div className="container-app text-center">
-        <h2 className="font-heading font-bold text-3xl sm:text-4xl md:text-5xl mb-5 leading-tight">
-          {bi('ابدأ من المكان الصحيح', 'Start in the right place')}
-        </h2>
-        <p className="font-body text-base sm:text-lg text-white/80 max-w-2xl mx-auto mb-8 leading-relaxed">
-          {bi(
-            'سواء كنت تبحث عن مزود خدمة، أو تريد إضافة منشأتك، قطاعات تساعدك على الوصول، الظهور، والمقارنة بطريقة أوضح.',
-            'Whether you are looking for a provider or adding your business, Qitaat helps you reach, appear and compare more clearly.',
-          )}
-        </p>
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-          <Link to={ROUTES.quote}>
-            <Button size="appLg" className="bg-white text-secondary hover:bg-white/90 gap-2 font-semibold">
-              {bi('اطلب عرض سعر', 'Request a quote')}
-            </Button>
-          </Link>
-          <Link to={ROUTES.signupProvider}>
-            <Button size="appLg" className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-secondary gap-2">
-              {bi('أضف منشأتك', 'Add your business')}
-            </Button>
-          </Link>
+    <section className="py-14 sm:py-20">
+      <div className="container-app">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-secondary via-secondary to-primary text-white shadow-2xl">
+          {/* decorative pattern */}
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 opacity-[0.12]"
+            style={{
+              backgroundImage:
+                'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.6) 1px, transparent 0)',
+              backgroundSize: '24px 24px',
+            }}
+          />
+          <div aria-hidden="true" className="absolute -top-24 -end-24 w-72 h-72 rounded-full bg-white/10 blur-3xl" />
+          <div aria-hidden="true" className="absolute -bottom-24 -start-24 w-72 h-72 rounded-full bg-primary/30 blur-3xl" />
+
+          <div className="relative px-6 sm:px-12 py-14 sm:py-20 text-center">
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md border border-white/25 text-[11px] sm:text-xs font-semibold uppercase tracking-wider mb-6">
+              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+              {bi('ابدأ الآن', 'Get started')}
+            </span>
+            <h2 className="font-heading font-black text-3xl sm:text-4xl md:text-5xl lg:text-6xl mb-5 leading-[1.1] tracking-tight">
+              {bi('ابدأ من المكان الصحيح', 'Start in the right place')}
+            </h2>
+            <p className="font-body text-base sm:text-lg md:text-xl text-white/85 max-w-2xl mx-auto mb-9 leading-relaxed">
+              {bi(
+                'سواء كنت تبحث عن مزود خدمة، أو تريد إضافة منشأتك، قطاعات تساعدك على الوصول، الظهور، والمقارنة بطريقة أوضح.',
+                'Whether you are looking for a provider or adding your business, Qitaat helps you reach, appear and compare more clearly.',
+              )}
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <Link to={ROUTES.quote}>
+                <Button size="appLg" className="bg-white text-secondary hover:bg-white/90 gap-2 font-semibold shadow-xl">
+                  {bi('اطلب عرض سعر', 'Request a quote')}
+                </Button>
+              </Link>
+              <Link to={ROUTES.signupProvider}>
+                <Button size="appLg" variant="outline" className="bg-white/10 backdrop-blur-md border-white/30 text-white hover:bg-white hover:text-secondary gap-2">
+                  {bi('أضف منشأتك', 'Add your business')}
+                </Button>
+              </Link>
+            </div>
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[12px] sm:text-xs text-white/70">
+              <span className="inline-flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 text-emerald-300" /> {bi('مزودون موثّقون', 'Verified providers')}</span>
+              <span className="opacity-40">·</span>
+              <span className="inline-flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-sky-300" /> {bi('تغطية المملكة', 'Saudi-wide coverage')}</span>
+              <span className="opacity-40">·</span>
+              <span className="inline-flex items-center gap-1.5"><Activity className="w-3.5 h-3.5 text-amber-300" /> {bi('بدون عمولة على العميل', 'No fees for customers')}</span>
+            </div>
+          </div>
         </div>
       </div>
     </section>
