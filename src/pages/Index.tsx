@@ -1,50 +1,31 @@
-import { lazy, Suspense, ComponentType, useMemo, memo } from "react";
+import { lazy, Suspense, useMemo } from "react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { HeroSection } from "@/components/home/HeroSection";
-import { StatsSection } from "@/components/home/StatsSection";
 import { ScrollToTop } from "@/components/ScrollToTop";
-import { usePageMeta, useJsonLd } from "@/hooks/usePageMeta";
+import { usePageMeta, useMultiJsonLd } from "@/hooks/usePageMeta";
 import { LazyOnView } from "@/components/LazyOnView";
+import {
+  HeroV2,
+  SectorChipsBar,
+  ProblemSection,
+  SolutionSection,
+  HowItWorksV2,
+  WhoIsItForSection,
+  MainSectorsSection,
+  ForClientsSection,
+  ForContractorsSection,
+  ForProvidersSection,
+  TrustSection,
+  FAQSection,
+  FinalCTASection,
+  FAQ_ITEMS_BI,
+} from "@/components/home/v2/HomeV2";
 
-// Retry wrapper for lazy imports to handle stale chunk errors after deploys
-function lazyRetry<T extends ComponentType<any>>(
-  factory: () => Promise<{ default: T }>,
-): React.LazyExoticComponent<T> {
-  return lazy(() =>
-    factory().catch(() => {
-      // Force reload once to get fresh assets
-      const key = 'lazy-retry-reloaded';
-      if (!sessionStorage.getItem(key)) {
-        sessionStorage.setItem(key, '1');
-        window.location.reload();
-      }
-      return factory();
-    })
-  );
-}
-
-const CategoriesSection = lazyRetry(() => import("@/components/home/CategoriesSection").then(m => ({ default: m.CategoriesSection })));
-const HowItWorksSection = lazyRetry(() => import("@/components/home/HowItWorksSection").then(m => ({ default: m.HowItWorksSection })));
-const TopProvidersSection = lazyRetry(() => import("@/components/home/TopProvidersSection").then(m => ({ default: m.TopProvidersSection })));
-const LatestProjectsSection = lazyRetry(() => import("@/components/home/LatestProjectsSection").then(m => ({ default: m.LatestProjectsSection })));
-const LatestOffersSection = lazyRetry(() => import("@/components/home/LatestOffersSection").then(m => ({ default: m.LatestOffersSection })));
-const FeaturesSection = lazyRetry(() => import("@/components/home/FeaturesSection").then(m => ({ default: m.FeaturesSection })));
-const WhyQitaatSection = lazyRetry(() => import("@/components/home/WhyQitaatSection").then(m => ({ default: m.WhyQitaatSection })));
-const LatestBlogSection = lazyRetry(() => import("@/components/home/LatestBlogSection").then(m => ({ default: m.LatestBlogSection })));
-const MembershipSection = lazyRetry(() => import("@/components/home/MembershipSection").then(m => ({ default: m.MembershipSection })));
-const CTASection = lazyRetry(() => import("@/components/home/CTASection").then(m => ({ default: m.CTASection })));
-
-/**
- * Reserves a fixed vertical block while a lazy section loads, so layout
- * doesn't jump (CLS). Height matches a typical section so content beneath
- * doesn't shift when the real section mounts.
- */
-const SectionFallback = ({ minH = 480 }: { minH?: number }) => (
+const SectionFallback = ({ minH = 360 }: { minH?: number }) => (
   <div
     aria-hidden="true"
     className="py-16 px-4 container"
-    style={{ minHeight: minH, contain: 'layout paint' }}
+    style={{ minHeight: minH, contain: "layout paint" }}
   >
     <div className="h-8 w-48 bg-muted/60 animate-pulse rounded-lg mx-auto" />
   </div>
@@ -52,114 +33,96 @@ const SectionFallback = ({ minH = 480 }: { minH?: number }) => (
 
 const Index = () => {
   usePageMeta({
-    title: 'قِطاعات — دليل ورش الألمنيوم والحديد والزجاج',
-    description: 'دليل شامل لأفضل ورش ومصانع الألمنيوم والحديد والزجاج والمطابخ في السعودية والخليج. ابحث وقارن بين مزودي الخدمات بسهولة.',
-    keywords: 'ألمنيوم, حديد, زجاج, مطابخ, أبواب, شبابيك, ديكورات, ورش, صناعات خفيفة, دليل أعمال, قِطاعات',
+    title: 'قطاعات | مزودو خدمات الألمنيوم والحديد والخشب والزجاج في السعودية',
+    description:
+      'ابحث عن مزودي خدمات الصناعات الخفيفة في السعودية، واطلب عروض أسعار في الألمنيوم، الحديد، الخشب، الزجاج، والستانلس ستيل بطريقة أوضح وأكثر تنظيمًا.',
+    keywords:
+      'مزودو خدمات الصناعات الخفيفة, ورش ألمنيوم, أعمال حديد, أعمال خشب, أعمال زجاج, ستانلس ستيل, طلب عرض سعر, مزودي خدمة في السعودية, ورش ومصانع, مقاولين ومكاتب هندسية',
     canonical: 'https://qitaat.com/',
     ogType: 'website',
-    ogTitle: 'قِطاعات Qitaat — دليل الصناعات الخفيفة',
-    ogDescription: 'دليل شامل لأفضل ورش ومصانع الألمنيوم والحديد والزجاج والديكورات في الخليج',
+    ogTitle: 'قطاعات — مزودو خدمات الصناعات الخفيفة في مكان واحد',
+    ogDescription:
+      'منصة تساعدك على الوصول إلى مزودي خدمات الألمنيوم والحديد والخشب والزجاج والستانلس ستيل، وطلب عروض الأسعار بطريقة منظمة.',
   });
 
-  useJsonLd(useMemo(() => ({
-    '@context': 'https://schema.org',
-    '@type': 'WebSite',
-    name: 'قِطاعات Qitaat',
-    url: 'https://qitaat.com',
-    description: 'دليل شامل لأعمال الألمنيوم والحديد والزجاج والخشب والمطابخ والديكورات',
-    inLanguage: 'ar',
-    potentialAction: {
-      '@type': 'SearchAction',
-      target: {
-        '@type': 'EntryPoint',
-        urlTemplate: 'https://qitaat.com/search?q={search_term_string}',
-      },
-      'query-input': 'required name=search_term_string',
-    },
-    publisher: {
-      '@type': 'Organization',
+  // WebSite + Organization + FAQPage JSON-LD (all rendered as separate <script> tags)
+  useMultiJsonLd(useMemo(() => ([
+    {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
       name: 'قِطاعات Qitaat',
       url: 'https://qitaat.com',
-      logo: {
-        '@type': 'ImageObject',
-        url: 'https://qitaat.com/logo.png',
+      description:
+        'منصة تساعد على الوصول إلى مزودي خدمات الصناعات الخفيفة (ألمنيوم، حديد، خشب، زجاج، ستانلس ستيل) وطلب عروض الأسعار بطريقة منظمة.',
+      inLanguage: 'ar',
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: { '@type': 'EntryPoint', urlTemplate: 'https://qitaat.com/search?q={search_term_string}' },
+        'query-input': 'required name=search_term_string',
       },
-      sameAs: [
-        'https://x.com/qitaat',
-        'https://www.instagram.com/qitaat',
-        'https://www.linkedin.com/company/qitaat',
-        'https://www.youtube.com/@qitaat',
-      ],
-      contactPoint: {
-        '@type': 'ContactPoint',
-        contactType: 'customer service',
-        url: 'https://qitaat.com/contact',
-        availableLanguage: ['ar', 'en'],
+      publisher: {
+        '@type': 'Organization',
+        name: 'قِطاعات Qitaat',
+        url: 'https://qitaat.com',
+        logo: { '@type': 'ImageObject', url: 'https://qitaat.com/logo.png' },
       },
     },
-  }), []));
+    {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: FAQ_ITEMS_BI.map((it) => ({
+        '@type': 'Question',
+        name: it.qAr,
+        acceptedAnswer: { '@type': 'Answer', text: it.aAr },
+      })),
+    },
+  ]), []));
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-background">
       <Navbar />
-      <HeroSection />
-      <StatsSection />
-      {/*
-        Below-the-fold sections are mounted only as they approach the
-        viewport. This keeps their lazy chunks out of the home page's
-        critical request graph and slashes initial JS execution / TBT.
-        Each section keeps a reserved minHeight so layout doesn't shift.
-      */}
-      <LazyOnView minHeight={360} className="cv-auto">
-        <Suspense fallback={<SectionFallback minH={360} />}>
-          <WhyQitaatSection variant="home" />
-        </Suspense>
-      </LazyOnView>
-      <LazyOnView minHeight={520}>
-        <Suspense fallback={<SectionFallback />}>
-          <CategoriesSection />
-        </Suspense>
-      </LazyOnView>
-      <LazyOnView minHeight={480} className="cv-auto">
-        <Suspense fallback={<SectionFallback />}>
-          <HowItWorksSection />
-        </Suspense>
-      </LazyOnView>
-      <LazyOnView minHeight={520} className="cv-auto">
-        <Suspense fallback={<SectionFallback />}>
-          <TopProvidersSection />
-        </Suspense>
-      </LazyOnView>
-      <LazyOnView minHeight={520} className="cv-auto">
-        <Suspense fallback={<SectionFallback />}>
-          <LatestProjectsSection />
-        </Suspense>
-      </LazyOnView>
-      <LazyOnView minHeight={520} className="cv-auto">
-        <Suspense fallback={<SectionFallback />}>
-          <LatestOffersSection />
-        </Suspense>
-      </LazyOnView>
-      <LazyOnView minHeight={480} className="cv-auto">
-        <Suspense fallback={<SectionFallback />}>
-          <FeaturesSection />
-        </Suspense>
-      </LazyOnView>
-      <LazyOnView minHeight={480} className="cv-auto">
-        <Suspense fallback={<SectionFallback />}>
-          <LatestBlogSection />
-        </Suspense>
-      </LazyOnView>
-      <LazyOnView minHeight={520} className="cv-auto">
-        <Suspense fallback={<SectionFallback />}>
-          <MembershipSection />
-        </Suspense>
-      </LazyOnView>
-      <LazyOnView minHeight={360} className="cv-auto">
-        <Suspense fallback={<SectionFallback />}>
-          <CTASection />
-        </Suspense>
-      </LazyOnView>
+      <main>
+        {/* 1. Hero — above the fold, eager */}
+        <HeroV2 />
+
+        {/* 2. Quick sectors — keeps users moving immediately */}
+        <SectorChipsBar />
+
+        {/* 3-13. Below-the-fold sections, mounted as they approach view */}
+        <LazyOnView minHeight={420} className="cv-auto">
+          <Suspense fallback={<SectionFallback />}><ProblemSection /></Suspense>
+        </LazyOnView>
+        <LazyOnView minHeight={460} className="cv-auto">
+          <Suspense fallback={<SectionFallback />}><SolutionSection /></Suspense>
+        </LazyOnView>
+        <LazyOnView minHeight={460} className="cv-auto">
+          <Suspense fallback={<SectionFallback />}><HowItWorksV2 /></Suspense>
+        </LazyOnView>
+        <LazyOnView minHeight={420} className="cv-auto">
+          <Suspense fallback={<SectionFallback />}><WhoIsItForSection /></Suspense>
+        </LazyOnView>
+        <LazyOnView minHeight={520} className="cv-auto">
+          <Suspense fallback={<SectionFallback />}><MainSectorsSection /></Suspense>
+        </LazyOnView>
+        <LazyOnView minHeight={420} className="cv-auto">
+          <Suspense fallback={<SectionFallback />}><ForClientsSection /></Suspense>
+        </LazyOnView>
+        <LazyOnView minHeight={420} className="cv-auto">
+          <Suspense fallback={<SectionFallback />}><ForContractorsSection /></Suspense>
+        </LazyOnView>
+        <LazyOnView minHeight={420} className="cv-auto">
+          <Suspense fallback={<SectionFallback />}><ForProvidersSection /></Suspense>
+        </LazyOnView>
+        <LazyOnView minHeight={460} className="cv-auto">
+          <Suspense fallback={<SectionFallback />}><TrustSection /></Suspense>
+        </LazyOnView>
+        <LazyOnView minHeight={460} className="cv-auto">
+          <Suspense fallback={<SectionFallback />}><FAQSection /></Suspense>
+        </LazyOnView>
+        <LazyOnView minHeight={360} className="cv-auto">
+          <Suspense fallback={<SectionFallback />}><FinalCTASection /></Suspense>
+        </LazyOnView>
+      </main>
       <Footer />
       <ScrollToTop />
     </div>
