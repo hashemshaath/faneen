@@ -709,8 +709,9 @@ export const ProblemSection = () => {
       bodyEn: 'Quotes arrive in different formats, slowing your decision.' },
   ];
   return (
-    <Section>
+    <Section id="problem" ariaLabelledBy="problem-heading">
       <SectionHead
+        headingId="problem-heading"
         title={bi('اختيار المزوّد المناسب يبدأ من هنا', 'Choosing the right provider starts here')}
         sub={bi(
           'عادةً يبدأ البحث بسؤال المعارف، أو تصفح خرائط جوجل، أو مراسلات واتساب متفرقة. النتيجة غالبًا: وقت أطول، معلومات أقل، ومقارنة أصعب.',
@@ -742,8 +743,9 @@ export const SolutionSection = () => {
       bodyAr: 'راجع الخيارات وتواصل مع المزود الأنسب.', bodyEn: 'Review options and contact the best fit.' },
   ];
   return (
-    <Section className="bg-gradient-to-b from-card/60 via-background to-background">
+    <Section id="solution" ariaLabelledBy="solution-heading" className="bg-gradient-to-b from-card/60 via-background to-background">
       <SectionCover
+        headingId="solution-heading"
         tone="primary"
         icon={Sparkles}
         eyebrow={bi('كيف نساعدك', 'How we help')}
@@ -789,8 +791,8 @@ export const HowItWorksV2 = () => {
       bodyAr: 'راجع الردود وتواصل مع المزود المناسب.', bodyEn: 'Review responses and contact the right provider.' },
   ];
   return (
-    <Section>
-      <SectionHead title={bi('3 خطوات تكفي لتبدأ', 'Three steps to get started')} />
+    <Section id="how-it-works" ariaLabelledBy="how-heading">
+      <SectionHead headingId="how-heading" title={bi('3 خطوات تكفي لتبدأ', 'Three steps to get started')} />
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
         {steps.map((s) => (
           <div key={s.n} className="relative rounded-2xl border border-border/60 bg-card p-6 sm:p-8 hover-lift">
@@ -826,8 +828,9 @@ export const WhoIsItForSection = () => {
       bodyEn: 'For workshops, factories and showrooms seeking clearer visibility.' },
   ];
   return (
-    <Section className="bg-card/40">
+    <Section id="who" ariaLabelledBy="who-heading" className="bg-card/40">
       <SectionCover
+        headingId="who-heading"
         tone="secondary"
         icon={Users}
         eyebrow={bi('لمن قطاعات', 'Who it’s for')}
@@ -940,8 +943,9 @@ export const MainSectorsSection = () => {
       bodyAr: 'ورش ومصانع وفرق تنفيذ حسب احتياج المشروع.', bodyEn: 'Workshops, factories and install crews per project.' },
   ];
   return (
-    <Section>
+    <Section id="sectors" ariaLabelledBy="sectors-heading">
       <SectionCover
+        headingId="sectors-heading"
         tone="primary"
         icon={Layers}
         eyebrow={bi('القطاعات الرئيسية', 'Main sectors')}
@@ -1094,8 +1098,9 @@ export const TrustSection = () => {
       bodyAr: 'المزود يتابع حسابه وطلباته.', bodyEn: 'The provider keeps their account and requests up to date.' },
   ];
   return (
-    <Section className="bg-card/40">
+    <Section id="trust" ariaLabelledBy="trust-heading" className="bg-card/40">
       <SectionHead
+        headingId="trust-heading"
         title={bi('معلومات أوضح. قرار أسهل.', 'Clearer info. Easier decisions.')}
         sub={bi(
           'نساعد على عرض بيانات مزودي الخدمة بطريقة منظمة، حتى يعرف العميل نوع النشاط، الخدمات، المدينة، نطاق العمل، وصور الأعمال قبل التواصل.',
@@ -1146,8 +1151,8 @@ export const FAQSection = () => {
   const bi = useBi();
   const [open, setOpen] = useState<number | null>(0);
   return (
-    <Section>
-      <SectionHead title={bi('أسئلة قد تساعدك قبل أن تبدأ', 'Questions that might help before you start')} />
+    <Section id="faq" ariaLabelledBy="faq-heading">
+      <SectionHead headingId="faq-heading" title={bi('أسئلة قد تساعدك قبل أن تبدأ', 'Questions that might help before you start')} />
       <div className="max-w-2xl mx-auto space-y-3">
         {FAQ_ITEMS_BI.map((item, i) => {
           const isOpen = open === i;
