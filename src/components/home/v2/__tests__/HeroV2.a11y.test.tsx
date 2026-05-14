@@ -53,7 +53,7 @@ describe('HeroV2 — accessibility', () => {
 
   it('wires the search input as a WAI-ARIA combobox', () => {
     renderHero();
-    const input = screen.getByRole('searchbox');
+    const input = screen.getByRole('combobox');
     expect(input).toHaveAttribute('aria-autocomplete', 'list');
     expect(input).toHaveAttribute('aria-expanded');
     expect(input).toHaveAttribute('aria-controls', 'hero-ac-list');
