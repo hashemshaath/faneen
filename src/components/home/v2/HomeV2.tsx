@@ -28,6 +28,17 @@ import sectorWood from '@/assets/home/sector-wood.jpg';
 import sectorGlass from '@/assets/home/sector-glass.jpg';
 import sectorStainless from '@/assets/home/sector-stainless.jpg';
 import sectorFabrication from '@/assets/home/sector-fabrication.jpg';
+import solSearch from '@/assets/home/sol-search.jpg';
+import solCity from '@/assets/home/sol-city.jpg';
+import solRequest from '@/assets/home/sol-request.jpg';
+import solCompare from '@/assets/home/sol-compare.jpg';
+import probScattered from '@/assets/home/prob-scattered.jpg';
+import probUnclear from '@/assets/home/prob-unclear.jpg';
+import probCompare from '@/assets/home/prob-compare.jpg';
+import whoIndividuals from '@/assets/home/who-individuals.jpg';
+import whoContractors from '@/assets/home/who-contractors.jpg';
+import whoEngineers from '@/assets/home/who-engineers.jpg';
+import whoProviders from '@/assets/home/who-providers.jpg';
 
 const ROUTES = {
   quote: '/search?intent=quote',
@@ -698,13 +709,13 @@ export const SectorChipsBar = () => {
 export const ProblemSection = () => {
   const bi = useBi();
   const cards = [
-    { titleAr: 'بحث متفرق', titleEn: 'Scattered search',
+    { image: probScattered, titleAr: 'بحث متفرق', titleEn: 'Scattered search',
       bodyAr: 'تتنقل بين حسابات، أرقام، وتوصيات غير مكتملة.',
       bodyEn: 'You jump between accounts, numbers and incomplete tips.' },
-    { titleAr: 'معلومات غير واضحة', titleEn: 'Unclear information',
+    { image: probUnclear, titleAr: 'معلومات غير واضحة', titleEn: 'Unclear information',
       bodyAr: 'لا تعرف دائمًا نوع الخدمة، المدينة، أو الأعمال السابقة.',
       bodyEn: 'You rarely see the service type, city or past work upfront.' },
-    { titleAr: 'مقارنة صعبة', titleEn: 'Hard to compare',
+    { image: probCompare, titleAr: 'مقارنة صعبة', titleEn: 'Hard to compare',
       bodyAr: 'العروض والردود تأتي بطرق مختلفة، فتأخذ وقتًا أطول لاتخاذ القرار.',
       bodyEn: 'Quotes arrive in different formats, slowing your decision.' },
   ];
@@ -720,9 +731,23 @@ export const ProblemSection = () => {
       />
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
         {cards.map((c) => (
-          <div key={c.titleEn} className="rounded-xl border border-border/60 bg-card p-6 hover-lift">
-            <h3 className="font-heading font-semibold text-lg text-foreground mb-2">{bi(c.titleAr, c.titleEn)}</h3>
-            <p className="font-body text-sm text-muted-foreground leading-relaxed">{bi(c.bodyAr, c.bodyEn)}</p>
+          <div key={c.titleEn} className="group rounded-xl border border-border/60 bg-card overflow-hidden hover-lift">
+            <div className="relative aspect-[16/10] overflow-hidden bg-muted">
+              <img
+                src={c.image}
+                alt={bi(c.titleAr, c.titleEn)}
+                width={1024}
+                height={640}
+                loading="lazy"
+                decoding="async"
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.05]"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-transparent pointer-events-none" />
+            </div>
+            <div className="p-5 sm:p-6">
+              <h3 className="font-heading font-semibold text-lg text-foreground mb-2">{bi(c.titleAr, c.titleEn)}</h3>
+              <p className="font-body text-sm text-muted-foreground leading-relaxed">{bi(c.bodyAr, c.bodyEn)}</p>
+            </div>
           </div>
         ))}
       </div>
@@ -733,13 +758,13 @@ export const ProblemSection = () => {
 export const SolutionSection = () => {
   const bi = useBi();
   const items = [
-    { icon: Search, titleAr: 'ابحث حسب القطاع', titleEn: 'Search by sector',
+    { image: solSearch, icon: Search, titleAr: 'ابحث حسب القطاع', titleEn: 'Search by sector',
       bodyAr: 'ألمنيوم، حديد، خشب، زجاج، ستانلس، وغيرها.', bodyEn: 'Aluminum, iron, wood, glass, stainless and more.' },
-    { icon: MapPin, titleAr: 'اختر المدينة', titleEn: 'Choose your city',
+    { image: solCity, icon: MapPin, titleAr: 'اختر المدينة', titleEn: 'Choose your city',
       bodyAr: 'ابدأ من المزودين الأقرب أو الأنسب لموقع مشروعك.', bodyEn: 'Start with providers nearest or best suited to your project.' },
-    { icon: Send, titleAr: 'أرسل طلبًا واضحًا', titleEn: 'Send a clear request',
+    { image: solRequest, icon: Send, titleAr: 'أرسل طلبًا واضحًا', titleEn: 'Send a clear request',
       bodyAr: 'أضف التفاصيل والصور والمقاسات إن وجدت.', bodyEn: 'Add details, images and measurements if you have them.' },
-    { icon: Scale, titleAr: 'قارن قبل القرار', titleEn: 'Compare before deciding',
+    { image: solCompare, icon: Scale, titleAr: 'قارن قبل القرار', titleEn: 'Compare before deciding',
       bodyAr: 'راجع الخيارات وتواصل مع المزود الأنسب.', bodyEn: 'Review options and contact the best fit.' },
   ];
   return (
@@ -756,19 +781,33 @@ export const SolutionSection = () => {
         )}
       />
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-        {items.map(({ icon: Icon, titleAr, titleEn, bodyAr, bodyEn }, idx) => (
+        {items.map(({ image, icon: Icon, titleAr, titleEn, bodyAr, bodyEn }, idx) => (
           <div
             key={titleEn}
-            className="group relative rounded-2xl border border-border/60 bg-card p-6 hover-lift overflow-hidden"
+            className="group relative rounded-2xl border border-border/60 bg-card hover-lift overflow-hidden"
           >
-            <span className="absolute top-4 end-4 text-[11px] font-semibold text-muted-foreground/60 tech-content">
-              {String(idx + 1).padStart(2, '0')}
-            </span>
-            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 ring-1 ring-primary/15 group-hover:bg-primary/15 transition-colors">
-              <Icon className="w-5 h-5 text-primary" />
+            <div className="relative aspect-[16/10] overflow-hidden bg-muted">
+              <img
+                src={image}
+                alt={bi(titleAr, titleEn)}
+                width={1024}
+                height={640}
+                loading="lazy"
+                decoding="async"
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.05]"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-transparent pointer-events-none" />
+              <span className="absolute top-3 end-3 text-[11px] font-semibold text-white/85 tech-content bg-black/30 backdrop-blur-md rounded-full px-2 py-0.5">
+                {String(idx + 1).padStart(2, '0')}
+              </span>
+              <div className="absolute bottom-3 start-3 w-10 h-10 rounded-xl bg-white/95 border border-white/40 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+                <Icon className="w-5 h-5 text-primary" />
+              </div>
             </div>
-            <h3 className="font-heading font-bold text-lg text-foreground mb-2 leading-snug">{bi(titleAr, titleEn)}</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed">{bi(bodyAr, bodyEn)}</p>
+            <div className="p-5 sm:p-6">
+              <h3 className="font-heading font-bold text-lg text-foreground mb-2 leading-snug">{bi(titleAr, titleEn)}</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">{bi(bodyAr, bodyEn)}</p>
+            </div>
             <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-transparent via-primary/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
           </div>
         ))}
@@ -814,16 +853,16 @@ export const HowItWorksV2 = () => {
 export const WhoIsItForSection = () => {
   const bi = useBi();
   const items = [
-    { icon: Users, titleAr: 'الأفراد', titleEn: 'Individuals',
+    { image: whoIndividuals, icon: Users, titleAr: 'الأفراد', titleEn: 'Individuals',
       bodyAr: 'لمن يحتاج تنفيذ أعمال ألمنيوم، زجاج، حديد، خشب أو ستانلس.',
       bodyEn: 'For anyone needing aluminum, glass, iron, wood or stainless work.' },
-    { icon: HardHat, titleAr: 'المقاولون', titleEn: 'Contractors',
+    { image: whoContractors, icon: HardHat, titleAr: 'المقاولون', titleEn: 'Contractors',
       bodyAr: 'لمن يبحث عن ورش، مصانع، ومزودي تنفيذ لمشاريعه.',
       bodyEn: 'For those sourcing workshops, factories and execution partners.' },
-    { icon: Compass, titleAr: 'المكاتب الهندسية', titleEn: 'Engineering offices',
+    { image: whoEngineers, icon: Compass, titleAr: 'المكاتب الهندسية', titleEn: 'Engineering offices',
       bodyAr: 'لمن يريد ربط التصميم بمزودي تنفيذ مناسبين.',
       bodyEn: 'To connect designs with the right execution partners.' },
-    { icon: Building2, titleAr: 'مزودو الخدمة', titleEn: 'Service providers',
+    { image: whoProviders, icon: Building2, titleAr: 'مزودو الخدمة', titleEn: 'Service providers',
       bodyAr: 'للورش والمصانع والمعارض التي تريد ظهورًا أوضح وفرصًا أكثر.',
       bodyEn: 'For workshops, factories and showrooms seeking clearer visibility.' },
   ];
@@ -841,17 +880,30 @@ export const WhoIsItForSection = () => {
         )}
       />
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-        {items.map(({ icon: Icon, titleAr, titleEn, bodyAr, bodyEn }) => (
+        {items.map(({ image, icon: Icon, titleAr, titleEn, bodyAr, bodyEn }) => (
           <div
             key={titleEn}
-            className="group relative rounded-2xl border border-border/60 bg-background p-6 hover-lift overflow-hidden"
+            className="group relative rounded-2xl border border-border/60 bg-background hover-lift overflow-hidden"
           >
-            <div className="absolute -top-10 -end-10 w-28 h-28 rounded-full bg-secondary/5 group-hover:bg-secondary/10 transition-colors pointer-events-none" />
-            <div className="relative w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center mb-4 ring-1 ring-secondary/15">
-              <Icon className="w-5 h-5 text-secondary" />
+            <div className="relative aspect-[16/10] overflow-hidden bg-muted">
+              <img
+                src={image}
+                alt={bi(titleAr, titleEn)}
+                width={1024}
+                height={640}
+                loading="lazy"
+                decoding="async"
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.05]"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent pointer-events-none" />
+              <div className="absolute bottom-3 start-3 w-10 h-10 rounded-xl bg-white/95 border border-white/40 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+                <Icon className="w-5 h-5 text-secondary" />
+              </div>
             </div>
-            <h3 className="relative font-heading font-bold text-lg text-foreground mb-2 leading-snug">{bi(titleAr, titleEn)}</h3>
-            <p className="relative text-sm text-muted-foreground leading-relaxed">{bi(bodyAr, bodyEn)}</p>
+            <div className="p-5 sm:p-6">
+              <h3 className="font-heading font-bold text-lg text-foreground mb-2 leading-snug">{bi(titleAr, titleEn)}</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">{bi(bodyAr, bodyEn)}</p>
+            </div>
           </div>
         ))}
       </div>
