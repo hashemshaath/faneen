@@ -893,11 +893,15 @@ export const MainSectorsSection = () => {
         )}
       />
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-5">
-        {sectors.map((s) => (
+        {sectors.map((s, idx) => {
+          const { ref, isVisible } = useScrollAnimation<HTMLAnchorElement>(0.15);
+          return (
           <Link
+            ref={ref}
             key={s.slug}
             to={`/search?category=${s.slug}`}
-            className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card hover-lift block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            style={{ transitionDelay: isVisible ? `${Math.min(idx * 70, 280)}ms` : '0ms' }}
+            className={`group relative overflow-hidden rounded-2xl border border-border/60 bg-card hover-lift block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 will-change-transform transform-gpu transition-[opacity,transform] duration-500 ease-out motion-reduce:transition-none motion-reduce:opacity-100 motion-reduce:translate-y-0 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
           >
             {/* Cover image */}
             <div className="relative aspect-[4/3] sm:aspect-[16/10] overflow-hidden bg-muted">
@@ -937,7 +941,8 @@ export const MainSectorsSection = () => {
               </div>
             </div>
           </Link>
-        ))}
+          );
+        })}
       </div>
       <div className="text-center mt-12">
         <SecondaryCTA to={ROUTES.categories} label={bi('استكشف كل القطاعات', 'Explore all sectors')} />
