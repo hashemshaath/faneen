@@ -3,7 +3,7 @@
  * short sentences, one idea per section, no hype, no superlatives).
  */
 import { Link, useNavigate } from 'react-router-dom';
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, type ComponentType } from 'react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useBi } from '@/components/common/Bilingual';
@@ -860,7 +860,7 @@ export const WhoIsItForSection = () => {
 
 type SectorItem = {
   slug: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: ComponentType<{ className?: string }>;
   image: string;
   accent: string;
   dot: string;
