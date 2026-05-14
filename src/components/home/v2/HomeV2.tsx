@@ -194,6 +194,7 @@ export const HeroV2 = () => {
   const [acIndex, setAcIndex] = useState(-1);
   const [history, setHistory] = useState<string[]>([]);
   const acContainerRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Top trending searches (manually curated based on industry priors)
   const TRENDING: { ar: string; en: string; cat?: string }[] = [
@@ -474,6 +475,7 @@ export const HeroV2 = () => {
                   <Search className="w-5 h-5 text-muted-foreground shrink-0" />
                   <input
                     type="search"
+                    ref={searchInputRef}
                     value={query}
                     onChange={(e) => {
                       setQuery(e.target.value);
@@ -526,6 +528,8 @@ export const HeroV2 = () => {
                           e.preventDefault();
                           setAcOpen(false);
                           setAcIndex(-1);
+                          // Keep focus on the input so the user can keep typing
+                          searchInputRef.current?.focus();
                           break;
                         }
                         case 'Tab': {
@@ -582,6 +586,9 @@ export const HeroV2 = () => {
                             onMouseDown={(e) => {
                               e.preventDefault();
                               submitSearch(it.label, it.cat);
+                              // Restore focus to the search input after selection
+                              // (navigation usually unmounts, but this guards same-route cases)
+                              searchInputRef.current?.focus();
                             }}
                             className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground transition-colors ${
                               isActive ? 'bg-secondary/10' : 'hover:bg-muted/60'
