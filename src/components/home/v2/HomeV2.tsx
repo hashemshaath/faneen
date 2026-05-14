@@ -547,6 +547,7 @@ export const HeroV2 = () => {
                     placeholder={bi('ابحث: ألمنيوم، حديد، نجارة، زجاج…', 'Search: aluminum, iron, carpentry, glass…')}
                     className="flex-1 bg-transparent border-0 outline-none text-foreground placeholder:text-muted-foreground text-sm sm:text-base h-full focus-visible:outline-none"
                     aria-label={bi('ابحث', 'Search')}
+                    role="combobox"
                     aria-autocomplete="list"
                     aria-expanded={acOpen}
                     aria-controls="hero-ac-list"
