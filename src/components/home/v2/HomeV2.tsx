@@ -9,9 +9,13 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useBi } from '@/components/common/Bilingual';
 import {
   ArrowLeft, ArrowRight, Search, FileText, Building2, Users, HardHat, Compass,
-  Layers, Hammer, Sparkles, Plus, Minus, ShieldCheck, Image as ImageIcon,
+  Layers, Hammer, Plus, Minus, ShieldCheck, Image as ImageIcon,
   CheckCircle2, Activity, MapPin, Send, Scale, Boxes, DoorClosed, Square, Wrench,
 } from 'lucide-react';
+import heroFacade from '@/assets/home/hero-facade.jpg';
+import imgClients from '@/assets/home/audience-clients.jpg';
+import imgContractors from '@/assets/home/audience-contractors.jpg';
+import imgProviders from '@/assets/home/audience-providers.jpg';
 
 const ROUTES = {
   quote: '/search?intent=quote',
@@ -68,15 +72,34 @@ const HERO_CHIPS = [
 export const HeroV2 = () => {
   const bi = useBi();
   return (
-    <section className="relative pt-20 pb-14 sm:pt-28 sm:pb-20 bg-gradient-to-b from-secondary/[0.04] to-background">
-      <div className="container-app text-center">
-        <h1 className="font-heading font-black text-3xl sm:text-5xl md:text-6xl text-foreground leading-[1.15] tracking-tight max-w-3xl mx-auto">
+    <section className="relative pt-20 pb-14 sm:pt-28 sm:pb-24 overflow-hidden">
+      {/* Background image — subtle, anchored bottom-right, fades to background */}
+      <div aria-hidden="true" className="absolute inset-0 -z-10">
+        <img
+          src={heroFacade}
+          alt=""
+          width={1920}
+          height={1080}
+          fetchPriority="high"
+          decoding="async"
+          className="absolute inset-0 w-full h-full object-cover opacity-[0.18]"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/90 to-background" />
+        <div className="absolute inset-0 bg-gradient-to-tr from-secondary/[0.06] via-transparent to-primary/[0.05]" />
+      </div>
+
+      <div className="container-app text-center relative">
+        <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-card border border-border/70 text-xs font-semibold text-secondary mb-6">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+          {bi('منصة سعودية للصناعات الخفيفة', 'A Saudi platform for light industries')}
+        </span>
+        <h1 className="font-heading font-black text-[2rem] sm:text-5xl md:text-6xl text-foreground leading-[1.12] tracking-tight max-w-3xl mx-auto">
           {bi('مزودو خدمات الصناعات الخفيفة في مكان واحد', 'Light-industry service providers in one place')}
         </h1>
-        <p className="font-body text-base sm:text-lg text-muted-foreground mt-5 sm:mt-6 max-w-2xl mx-auto leading-relaxed">
+        <p className="font-body text-base sm:text-lg text-muted-foreground mt-5 sm:mt-6 max-w-xl mx-auto leading-relaxed">
           {bi(
-            'ابحث عن مزودي خدمات الألمنيوم، الحديد، الخشب، الزجاج، والستانلس ستيل، واطلب عرض سعر بطريقة أوضح وأسهل.',
-            'Find providers in aluminum, iron, wood, glass and stainless steel — and request a quote in a clearer, easier way.',
+            'ألمنيوم، حديد، خشب، زجاج، وستانلس ستيل. ابحث، قارن، واطلب عرض سعر بخطوات قليلة.',
+            'Aluminum, iron, wood, glass and stainless steel. Search, compare, and request a quote in a few steps.',
           )}
         </p>
         <div className="mt-7 sm:mt-9 flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -92,7 +115,7 @@ export const HeroV2 = () => {
             <Link
               key={slug}
               to={`/search?category=${slug}`}
-              className="inline-flex items-center gap-2 px-4 h-10 rounded-full border border-border/70 bg-card hover:bg-secondary/5 hover:border-secondary/40 transition-colors text-sm font-medium text-foreground hover-lift"
+              className="inline-flex items-center gap-2 px-4 h-10 rounded-full border border-border/70 bg-card/80 backdrop-blur-sm hover:bg-secondary/5 hover:border-secondary/40 transition-colors text-sm font-medium text-foreground hover-lift"
             >
               <Icon className="w-4 h-4 text-secondary" />
               {bi(ar, en)}
@@ -285,17 +308,23 @@ export const WhoIsItForSection = () => {
 export const MainSectorsSection = () => {
   const bi = useBi();
   const sectors = [
-    { slug: 'aluminum', titleAr: 'ألمنيوم', titleEn: 'Aluminum',
+    { slug: 'aluminum', icon: Square, accent: 'from-sky-500/15 to-sky-500/0', dot: 'bg-sky-500',
+      titleAr: 'ألمنيوم', titleEn: 'Aluminum',
       bodyAr: 'أبواب، شبابيك، واجهات، مطابخ، وقواطع.', bodyEn: 'Doors, windows, facades, kitchens and partitions.' },
-    { slug: 'iron', titleAr: 'حديد', titleEn: 'Iron',
+    { slug: 'iron', icon: Wrench, accent: 'from-slate-500/15 to-slate-500/0', dot: 'bg-slate-500',
+      titleAr: 'حديد', titleEn: 'Iron',
       bodyAr: 'أبواب، سلالم، هياكل، شبك، وأعمال معدنية.', bodyEn: 'Doors, stairs, frames, mesh and metalwork.' },
-    { slug: 'wood', titleAr: 'خشب', titleEn: 'Wood',
+    { slug: 'wood', icon: DoorClosed, accent: 'from-amber-600/15 to-amber-600/0', dot: 'bg-amber-600',
+      titleAr: 'خشب', titleEn: 'Wood',
       bodyAr: 'أبواب، أثاث، ديكور، تفصيل، وتجهيزات داخلية.', bodyEn: 'Doors, furniture, décor, custom work and interiors.' },
-    { slug: 'glass', titleAr: 'زجاج', titleEn: 'Glass',
+    { slug: 'glass', icon: Layers, accent: 'from-cyan-500/15 to-cyan-500/0', dot: 'bg-cyan-500',
+      titleAr: 'زجاج', titleEn: 'Glass',
       bodyAr: 'واجهات، سيكوريت، قواطع، أبواب زجاجية، وتركيب.', bodyEn: 'Facades, tempered glass, partitions, doors and install.' },
-    { slug: 'stainless', titleAr: 'ستانلس ستيل', titleEn: 'Stainless steel',
+    { slug: 'stainless', icon: Boxes, accent: 'from-zinc-500/15 to-zinc-500/0', dot: 'bg-zinc-500',
+      titleAr: 'ستانلس ستيل', titleEn: 'Stainless steel',
       bodyAr: 'مطاعم، مطابخ، درابزين، تجهيزات، وأعمال خاصة.', bodyEn: 'Restaurants, kitchens, railings, fittings and custom work.' },
-    { slug: 'fabrication', titleAr: 'التصنيع والتركيب', titleEn: 'Fabrication & install',
+    { slug: 'fabrication', icon: Hammer, accent: 'from-emerald-600/15 to-emerald-600/0', dot: 'bg-emerald-600',
+      titleAr: 'التصنيع والتركيب', titleEn: 'Fabrication & install',
       bodyAr: 'ورش ومصانع وفرق تنفيذ حسب احتياج المشروع.', bodyEn: 'Workshops, factories and install crews per project.' },
   ];
   return (
@@ -312,12 +341,24 @@ export const MainSectorsSection = () => {
           <Link
             key={s.slug}
             to={`/search?category=${s.slug}`}
-            className="group rounded-xl border border-border/60 bg-card p-6 hover-lift block"
+            className="group relative overflow-hidden rounded-xl border border-border/60 bg-card p-6 hover-lift block"
           >
+            <div className={`absolute inset-0 bg-gradient-to-br ${s.accent} opacity-60 group-hover:opacity-100 transition-opacity pointer-events-none`} />
+            <div className="relative flex items-center gap-3 mb-3">
+              <div className="w-11 h-11 rounded-xl bg-background border border-border/60 flex items-center justify-center shadow-sm">
+                <s.icon className="w-5 h-5 text-foreground" />
+              </div>
+              <span className={`w-2 h-2 rounded-full ${s.dot}`} aria-hidden="true" />
+            </div>
             <h3 className="font-heading font-semibold text-lg text-foreground mb-2 group-hover:text-primary transition-colors">
               {bi(s.titleAr, s.titleEn)}
             </h3>
-            <p className="text-sm text-muted-foreground leading-relaxed">{bi(s.bodyAr, s.bodyEn)}</p>
+            <p className="relative text-sm text-muted-foreground leading-relaxed">{bi(s.bodyAr, s.bodyEn)}</p>
+            <div className="relative mt-4 inline-flex items-center gap-1 text-xs font-semibold text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+              {bi('استعرض المزودين', 'Browse providers')}
+              <ArrowLeft className="w-3 h-3 rtl:block ltr:hidden" />
+              <ArrowRight className="w-3 h-3 ltr:block rtl:hidden" />
+            </div>
           </Link>
         ))}
       </div>
@@ -332,7 +373,8 @@ const AudienceBlock: React.FC<{
   badge: string; title: string; body: string; bullets: string[];
   cta: { to: string; label: string }; small?: string; reverse?: boolean;
   tone?: 'primary' | 'secondary' | 'accent';
-}> = ({ badge, title, body, bullets, cta, small, reverse, tone = 'primary' }) => {
+  image: string; imageAlt: string;
+}> = ({ badge, title, body, bullets, cta, small, reverse, tone = 'primary', image, imageAlt }) => {
   const toneClass =
     tone === 'secondary' ? 'bg-secondary/10 text-secondary' :
     tone === 'accent' ? 'bg-accent/10 text-accent' : 'bg-primary/10 text-primary';
@@ -354,10 +396,17 @@ const AudienceBlock: React.FC<{
           <PrimaryCTA to={cta.to} label={cta.label} />
           {small && <p className="text-xs text-muted-foreground mt-3">{small}</p>}
         </div>
-        <div className="rounded-2xl border border-border/60 bg-card p-8 sm:p-10 min-h-[240px] flex items-center justify-center">
-          <div className={`w-20 h-20 rounded-2xl ${toneClass} flex items-center justify-center`}>
-            <Sparkles className="w-10 h-10" />
-          </div>
+        <div className="relative rounded-2xl overflow-hidden border border-border/60 bg-card aspect-[4/3] shadow-[var(--elev-1)]">
+          <img
+            src={image}
+            alt={imageAlt}
+            width={1280}
+            height={960}
+            loading="lazy"
+            decoding="async"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-foreground/10 via-transparent to-transparent" />
         </div>
       </div>
     </Section>
@@ -368,6 +417,8 @@ export const ForClientsSection = () => {
   const bi = useBi();
   return (
     <AudienceBlock
+      image={imgClients}
+      imageAlt={bi('منزل عصري بأبواب زجاجية ألمنيوم وخزائن خشبية', 'Modern home with aluminum glass doors and wooden cabinetry')}
       badge={bi('للعملاء', 'For clients')}
       title={bi('لديك مشروع وتحتاج مزود خدمة؟', 'Have a project and need a provider?')}
       body={bi(
@@ -391,6 +442,8 @@ export const ForContractorsSection = () => {
   return (
     <AudienceBlock
       reverse
+      image={imgContractors}
+      imageAlt={bi('مخططات وعينات مقاطع ألمنيوم وخوذة على طاولة عمل', 'Plans, aluminum profile samples and a hard hat on a workbench')}
       badge={bi('للمقاولين والمكاتب الهندسية', 'For contractors & firms')}
       title={bi('وسّع شبكة مزوديك', 'Expand your provider network')}
       body={bi(
@@ -413,6 +466,8 @@ export const ForProvidersSection = () => {
   const bi = useBi();
   return (
     <AudienceBlock
+      image={imgProviders}
+      imageAlt={bi('ورشة تصنيع ألمنيوم وحديد منظمة بإضاءة طبيعية', 'Organized aluminum and steel fabrication workshop with natural light')}
       badge={bi('لمزودي الخدمة', 'For service providers')}
       title={bi('اجعل منشأتك أسهل في الوصول', 'Make your business easier to find')}
       body={bi(
