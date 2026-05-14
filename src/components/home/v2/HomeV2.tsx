@@ -392,8 +392,11 @@ export const HeroV2 = () => {
           </div>
         </div>
 
-        {/* Sector chips below the hero card */}
-        <div className="mt-6 sm:mt-8 flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+      </div>
+
+      {/* Sector chips below the hero (full-width container with side padding) */}
+      <div className="container-app mt-8 sm:mt-10">
+        <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
           {HERO_CHIPS.map(({ ar, en, slug, icon: Icon }) => (
             <Link
               key={slug}
