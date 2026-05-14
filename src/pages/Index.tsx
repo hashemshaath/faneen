@@ -2,7 +2,7 @@ import { lazy, Suspense, useMemo } from "react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { ScrollToTop } from "@/components/ScrollToTop";
-import { usePageMeta, useJsonLd } from "@/hooks/usePageMeta";
+import { usePageMeta, useMultiJsonLd } from "@/hooks/usePageMeta";
 import { LazyOnView } from "@/components/LazyOnView";
 import {
   HeroV2,
@@ -45,38 +45,38 @@ const Index = () => {
       'منصة تساعدك على الوصول إلى مزودي خدمات الألمنيوم والحديد والخشب والزجاج والستانلس ستيل، وطلب عروض الأسعار بطريقة منظمة.',
   });
 
-  // WebSite + Organization JSON-LD
-  useJsonLd(useMemo(() => ({
-    '@context': 'https://schema.org',
-    '@type': 'WebSite',
-    name: 'قِطاعات Qitaat',
-    url: 'https://qitaat.com',
-    description:
-      'منصة تساعد على الوصول إلى مزودي خدمات الصناعات الخفيفة (ألمنيوم، حديد، خشب، زجاج، ستانلس ستيل) وطلب عروض الأسعار بطريقة منظمة.',
-    inLanguage: 'ar',
-    potentialAction: {
-      '@type': 'SearchAction',
-      target: { '@type': 'EntryPoint', urlTemplate: 'https://qitaat.com/search?q={search_term_string}' },
-      'query-input': 'required name=search_term_string',
-    },
-    publisher: {
-      '@type': 'Organization',
+  // WebSite + Organization + FAQPage JSON-LD (all rendered as separate <script> tags)
+  useMultiJsonLd(useMemo(() => ([
+    {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
       name: 'قِطاعات Qitaat',
       url: 'https://qitaat.com',
-      logo: { '@type': 'ImageObject', url: 'https://qitaat.com/logo.png' },
+      description:
+        'منصة تساعد على الوصول إلى مزودي خدمات الصناعات الخفيفة (ألمنيوم، حديد، خشب، زجاج، ستانلس ستيل) وطلب عروض الأسعار بطريقة منظمة.',
+      inLanguage: 'ar',
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: { '@type': 'EntryPoint', urlTemplate: 'https://qitaat.com/search?q={search_term_string}' },
+        'query-input': 'required name=search_term_string',
+      },
+      publisher: {
+        '@type': 'Organization',
+        name: 'قِطاعات Qitaat',
+        url: 'https://qitaat.com',
+        logo: { '@type': 'ImageObject', url: 'https://qitaat.com/logo.png' },
+      },
     },
-  }), []));
-
-  // FAQPage JSON-LD generated from the same items shown in the UI
-  useJsonLd(useMemo(() => ({
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: FAQ_ITEMS_BI.map((it) => ({
-      '@type': 'Question',
-      name: it.qAr,
-      acceptedAnswer: { '@type': 'Answer', text: it.aAr },
-    })),
-  }), []));
+    {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: FAQ_ITEMS_BI.map((it) => ({
+        '@type': 'Question',
+        name: it.qAr,
+        acceptedAnswer: { '@type': 'Answer', text: it.aAr },
+      })),
+    },
+  ]), []));
 
   return (
     <div className="min-h-screen bg-background">
