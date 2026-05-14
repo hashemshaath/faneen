@@ -337,6 +337,7 @@ export const HeroV2 = () => {
       </a>
 
       <div
+        id="hero-carousel"
         className="relative w-full overflow-hidden bg-card"
         style={{ minHeight: 'clamp(560px, 88vh, 880px)' }}
         tabIndex={0}
@@ -349,7 +350,7 @@ export const HeroV2 = () => {
         onMouseLeave={() => setPaused(false)}
       >
           {/* Live region announcing the current slide for screen readers */}
-          <div className="sr-only" aria-live="polite" aria-atomic="true">
+          <div id="hero-live-region" className="sr-only" role="status" aria-live="polite" aria-atomic="true">
             {bi(
               `الشريحة ${active + 1} من ${SLIDES.length}: ${slide.titleAr}`,
               `Slide ${active + 1} of ${SLIDES.length}: ${slide.titleEn}`,
