@@ -72,15 +72,34 @@ const HERO_CHIPS = [
 export const HeroV2 = () => {
   const bi = useBi();
   return (
-    <section className="relative pt-20 pb-14 sm:pt-28 sm:pb-20 bg-gradient-to-b from-secondary/[0.04] to-background">
-      <div className="container-app text-center">
-        <h1 className="font-heading font-black text-3xl sm:text-5xl md:text-6xl text-foreground leading-[1.15] tracking-tight max-w-3xl mx-auto">
+    <section className="relative pt-20 pb-14 sm:pt-28 sm:pb-24 overflow-hidden">
+      {/* Background image — subtle, anchored bottom-right, fades to background */}
+      <div aria-hidden="true" className="absolute inset-0 -z-10">
+        <img
+          src={heroFacade}
+          alt=""
+          width={1920}
+          height={1080}
+          fetchPriority="high"
+          decoding="async"
+          className="absolute inset-0 w-full h-full object-cover opacity-[0.18]"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/90 to-background" />
+        <div className="absolute inset-0 bg-gradient-to-tr from-secondary/[0.06] via-transparent to-primary/[0.05]" />
+      </div>
+
+      <div className="container-app text-center relative">
+        <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-card border border-border/70 text-xs font-semibold text-secondary mb-6">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+          {bi('منصة سعودية للصناعات الخفيفة', 'A Saudi platform for light industries')}
+        </span>
+        <h1 className="font-heading font-black text-[2rem] sm:text-5xl md:text-6xl text-foreground leading-[1.12] tracking-tight max-w-3xl mx-auto">
           {bi('مزودو خدمات الصناعات الخفيفة في مكان واحد', 'Light-industry service providers in one place')}
         </h1>
-        <p className="font-body text-base sm:text-lg text-muted-foreground mt-5 sm:mt-6 max-w-2xl mx-auto leading-relaxed">
+        <p className="font-body text-base sm:text-lg text-muted-foreground mt-5 sm:mt-6 max-w-xl mx-auto leading-relaxed">
           {bi(
-            'ابحث عن مزودي خدمات الألمنيوم، الحديد، الخشب، الزجاج، والستانلس ستيل، واطلب عرض سعر بطريقة أوضح وأسهل.',
-            'Find providers in aluminum, iron, wood, glass and stainless steel — and request a quote in a clearer, easier way.',
+            'ألمنيوم، حديد، خشب، زجاج، وستانلس ستيل. ابحث، قارن، واطلب عرض سعر بخطوات قليلة.',
+            'Aluminum, iron, wood, glass and stainless steel. Search, compare, and request a quote in a few steps.',
           )}
         </p>
         <div className="mt-7 sm:mt-9 flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -96,7 +115,7 @@ export const HeroV2 = () => {
             <Link
               key={slug}
               to={`/search?category=${slug}`}
-              className="inline-flex items-center gap-2 px-4 h-10 rounded-full border border-border/70 bg-card hover:bg-secondary/5 hover:border-secondary/40 transition-colors text-sm font-medium text-foreground hover-lift"
+              className="inline-flex items-center gap-2 px-4 h-10 rounded-full border border-border/70 bg-card/80 backdrop-blur-sm hover:bg-secondary/5 hover:border-secondary/40 transition-colors text-sm font-medium text-foreground hover-lift"
             >
               <Icon className="w-4 h-4 text-secondary" />
               {bi(ar, en)}
@@ -336,7 +355,8 @@ const AudienceBlock: React.FC<{
   badge: string; title: string; body: string; bullets: string[];
   cta: { to: string; label: string }; small?: string; reverse?: boolean;
   tone?: 'primary' | 'secondary' | 'accent';
-}> = ({ badge, title, body, bullets, cta, small, reverse, tone = 'primary' }) => {
+  image: string; imageAlt: string;
+}> = ({ badge, title, body, bullets, cta, small, reverse, tone = 'primary', image, imageAlt }) => {
   const toneClass =
     tone === 'secondary' ? 'bg-secondary/10 text-secondary' :
     tone === 'accent' ? 'bg-accent/10 text-accent' : 'bg-primary/10 text-primary';
@@ -358,10 +378,17 @@ const AudienceBlock: React.FC<{
           <PrimaryCTA to={cta.to} label={cta.label} />
           {small && <p className="text-xs text-muted-foreground mt-3">{small}</p>}
         </div>
-        <div className="rounded-2xl border border-border/60 bg-card p-8 sm:p-10 min-h-[240px] flex items-center justify-center">
-          <div className={`w-20 h-20 rounded-2xl ${toneClass} flex items-center justify-center`}>
-            <Sparkles className="w-10 h-10" />
-          </div>
+        <div className="relative rounded-2xl overflow-hidden border border-border/60 bg-card aspect-[4/3] shadow-[var(--elev-1)]">
+          <img
+            src={image}
+            alt={imageAlt}
+            width={1280}
+            height={960}
+            loading="lazy"
+            decoding="async"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-foreground/10 via-transparent to-transparent" />
         </div>
       </div>
     </Section>
@@ -372,6 +399,8 @@ export const ForClientsSection = () => {
   const bi = useBi();
   return (
     <AudienceBlock
+      image={imgClients}
+      imageAlt={bi('منزل عصري بأبواب زجاجية ألمنيوم وخزائن خشبية', 'Modern home with aluminum glass doors and wooden cabinetry')}
       badge={bi('للعملاء', 'For clients')}
       title={bi('لديك مشروع وتحتاج مزود خدمة؟', 'Have a project and need a provider?')}
       body={bi(
@@ -395,6 +424,8 @@ export const ForContractorsSection = () => {
   return (
     <AudienceBlock
       reverse
+      image={imgContractors}
+      imageAlt={bi('مخططات وعينات مقاطع ألمنيوم وخوذة على طاولة عمل', 'Plans, aluminum profile samples and a hard hat on a workbench')}
       badge={bi('للمقاولين والمكاتب الهندسية', 'For contractors & firms')}
       title={bi('وسّع شبكة مزوديك', 'Expand your provider network')}
       body={bi(
@@ -417,6 +448,8 @@ export const ForProvidersSection = () => {
   const bi = useBi();
   return (
     <AudienceBlock
+      image={imgProviders}
+      imageAlt={bi('ورشة تصنيع ألمنيوم وحديد منظمة بإضاءة طبيعية', 'Organized aluminum and steel fabrication workshop with natural light')}
       badge={bi('لمزودي الخدمة', 'For service providers')}
       title={bi('اجعل منشأتك أسهل في الوصول', 'Make your business easier to find')}
       body={bi(
