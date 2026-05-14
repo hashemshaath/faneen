@@ -21,6 +21,12 @@ import heroSlide4 from '@/assets/home/hero-slide-4.jpg';
 import imgClients from '@/assets/home/audience-clients.jpg';
 import imgContractors from '@/assets/home/audience-contractors.jpg';
 import imgProviders from '@/assets/home/audience-providers.jpg';
+import sectorAluminum from '@/assets/home/sector-aluminum.jpg';
+import sectorIron from '@/assets/home/sector-iron.jpg';
+import sectorWood from '@/assets/home/sector-wood.jpg';
+import sectorGlass from '@/assets/home/sector-glass.jpg';
+import sectorStainless from '@/assets/home/sector-stainless.jpg';
+import sectorFabrication from '@/assets/home/sector-fabrication.jpg';
 
 const ROUTES = {
   quote: '/search?intent=quote',
@@ -820,22 +826,22 @@ export const WhoIsItForSection = () => {
 export const MainSectorsSection = () => {
   const bi = useBi();
   const sectors = [
-    { slug: 'aluminum', icon: Square, accent: 'from-sky-500/15 to-sky-500/0', dot: 'bg-sky-500',
+    { slug: 'aluminum', icon: Square, image: sectorAluminum, accent: 'from-sky-500/15 to-sky-500/0', dot: 'bg-sky-500',
       titleAr: 'ألمنيوم', titleEn: 'Aluminum',
       bodyAr: 'أبواب، شبابيك، واجهات، مطابخ، وقواطع.', bodyEn: 'Doors, windows, facades, kitchens and partitions.' },
-    { slug: 'iron', icon: Wrench, accent: 'from-slate-500/15 to-slate-500/0', dot: 'bg-slate-500',
+    { slug: 'iron', icon: Wrench, image: sectorIron, accent: 'from-slate-500/15 to-slate-500/0', dot: 'bg-slate-500',
       titleAr: 'حديد', titleEn: 'Iron',
       bodyAr: 'أبواب، سلالم، هياكل، شبك، وأعمال معدنية.', bodyEn: 'Doors, stairs, frames, mesh and metalwork.' },
-    { slug: 'wood', icon: DoorClosed, accent: 'from-amber-600/15 to-amber-600/0', dot: 'bg-amber-600',
+    { slug: 'wood', icon: DoorClosed, image: sectorWood, accent: 'from-amber-600/15 to-amber-600/0', dot: 'bg-amber-600',
       titleAr: 'خشب', titleEn: 'Wood',
       bodyAr: 'أبواب، أثاث، ديكور، تفصيل، وتجهيزات داخلية.', bodyEn: 'Doors, furniture, décor, custom work and interiors.' },
-    { slug: 'glass', icon: Layers, accent: 'from-cyan-500/15 to-cyan-500/0', dot: 'bg-cyan-500',
+    { slug: 'glass', icon: Layers, image: sectorGlass, accent: 'from-cyan-500/15 to-cyan-500/0', dot: 'bg-cyan-500',
       titleAr: 'زجاج', titleEn: 'Glass',
       bodyAr: 'واجهات، سيكوريت، قواطع، أبواب زجاجية، وتركيب.', bodyEn: 'Facades, tempered glass, partitions, doors and install.' },
-    { slug: 'stainless', icon: Boxes, accent: 'from-zinc-500/15 to-zinc-500/0', dot: 'bg-zinc-500',
+    { slug: 'stainless', icon: Boxes, image: sectorStainless, accent: 'from-zinc-500/15 to-zinc-500/0', dot: 'bg-zinc-500',
       titleAr: 'ستانلس ستيل', titleEn: 'Stainless steel',
       bodyAr: 'مطاعم، مطابخ، درابزين، تجهيزات، وأعمال خاصة.', bodyEn: 'Restaurants, kitchens, railings, fittings and custom work.' },
-    { slug: 'fabrication', icon: Hammer, accent: 'from-emerald-600/15 to-emerald-600/0', dot: 'bg-emerald-600',
+    { slug: 'fabrication', icon: Hammer, image: sectorFabrication, accent: 'from-emerald-600/15 to-emerald-600/0', dot: 'bg-emerald-600',
       titleAr: 'التصنيع والتركيب', titleEn: 'Fabrication & install',
       bodyAr: 'ورش ومصانع وفرق تنفيذ حسب احتياج المشروع.', bodyEn: 'Workshops, factories and install crews per project.' },
   ];
@@ -856,26 +862,44 @@ export const MainSectorsSection = () => {
           <Link
             key={s.slug}
             to={`/search?category=${s.slug}`}
-            className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card p-6 sm:p-7 hover-lift block"
+            className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card hover-lift block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           >
-            <div className={`absolute inset-0 bg-gradient-to-br ${s.accent} opacity-60 group-hover:opacity-100 transition-opacity pointer-events-none`} />
-            <div className="relative flex items-center justify-between mb-4">
-              <div className="w-12 h-12 rounded-xl bg-background border border-border/60 flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
-                <s.icon className="w-5 h-5 text-foreground" />
-              </div>
-              <span className={`inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/80`}>
+            {/* Cover image */}
+            <div className="relative aspect-[16/10] overflow-hidden bg-muted">
+              <img
+                src={s.image}
+                alt={bi(`صورة قطاع ${s.titleAr}`, `${s.titleEn} sector cover`)}
+                width={1280}
+                height={800}
+                loading="lazy"
+                decoding="async"
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.06]"
+              />
+              {/* Tinted gradient for legibility */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/20 to-transparent pointer-events-none" />
+              <div className={`absolute inset-0 bg-gradient-to-br ${s.accent} opacity-50 group-hover:opacity-80 transition-opacity pointer-events-none`} />
+              {/* Floating sector badge + icon */}
+              <div className="absolute top-3 start-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/15 backdrop-blur-md border border-white/25 text-[10px] font-semibold uppercase tracking-wider text-white">
                 <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} aria-hidden="true" />
                 {bi('قطاع', 'Sector')}
-              </span>
+              </div>
+              <div className="absolute top-3 end-3 w-10 h-10 rounded-xl bg-white/95 border border-white/40 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+                <s.icon className="w-5 h-5 text-foreground" />
+              </div>
+              {/* Title overlaid on image */}
+              <h3 className="absolute bottom-3 start-4 end-4 font-heading font-bold text-xl sm:text-2xl text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)] leading-tight">
+                {bi(s.titleAr, s.titleEn)}
+              </h3>
             </div>
-            <h3 className="relative font-heading font-bold text-xl text-foreground mb-2 group-hover:text-primary transition-colors leading-snug">
-              {bi(s.titleAr, s.titleEn)}
-            </h3>
-            <p className="relative text-sm text-muted-foreground leading-relaxed">{bi(s.bodyAr, s.bodyEn)}</p>
-            <div className="relative mt-5 pt-4 border-t border-border/40 inline-flex items-center gap-1.5 text-xs font-semibold text-primary translate-x-0 group-hover:translate-x-1 rtl:group-hover:-translate-x-1 transition-transform w-full">
-              {bi('استعرض المزودين', 'Browse providers')}
-              <ArrowLeft className="w-3 h-3 rtl:block ltr:hidden" />
-              <ArrowRight className="w-3 h-3 ltr:block rtl:hidden" />
+
+            {/* Body */}
+            <div className="relative p-5 sm:p-6">
+              <p className="text-sm text-muted-foreground leading-relaxed">{bi(s.bodyAr, s.bodyEn)}</p>
+              <div className="mt-4 pt-4 border-t border-border/40 inline-flex items-center gap-1.5 text-xs font-semibold text-primary translate-x-0 group-hover:translate-x-1 rtl:group-hover:-translate-x-1 transition-transform w-full">
+                {bi('استعرض المزودين', 'Browse providers')}
+                <ArrowLeft className="w-3 h-3 rtl:block ltr:hidden" />
+                <ArrowRight className="w-3 h-3 ltr:block rtl:hidden" />
+              </div>
             </div>
           </Link>
         ))}
