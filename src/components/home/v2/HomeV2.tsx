@@ -168,6 +168,10 @@ export const HeroV2 = () => {
   const [query, setQuery] = useState('');
   const reducedRef = useRef(false);
 
+  // Lazy-mount slides: only render <img> for slides we've actually shown.
+  // Slide 0 is always mounted (LCP); others mount on-demand to save bandwidth.
+  const [mounted, setMounted] = useState<Set<number>>(() => new Set([0]));
+
   // Autocomplete state
   const [acOpen, setAcOpen] = useState(false);
   const [acIndex, setAcIndex] = useState(-1);
@@ -191,6 +195,28 @@ export const HeroV2 = () => {
       typeof window !== 'undefined' &&
       window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   }, []);
+
+  // Preload the LCP hero image at the document level (highest priority).
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const link = document.createElement('link');
+    link.rel = 'preload';
+    link.as = 'image';
+    link.href = heroSlide1;
+    link.setAttribute('fetchpriority', 'high');
+    document.head.appendChild(link);
+    return () => { document.head.removeChild(link); };
+  }, []);
+
+  // Mount the active slide + warm-prefetch the next one (low priority).
+  useEffect(() => {
+    setMounted((prev) => {
+      const next = new Set(prev);
+      next.add(active);
+      next.add((active + 1) % SLIDES.length);
+      return next;
+    });
+  }, [active, SLIDES.length]);
 
   // Click-outside to close autocomplete
   useEffect(() => {
@@ -319,30 +345,38 @@ export const HeroV2 = () => {
 
           {/* Image stack with Ken-Burns */}
           <div aria-hidden="true" className="absolute inset-0">
-            {SLIDES.map((s, i) => (
-              <img
-                key={i}
-                src={s.img}
-                alt=""
-                width={1920}
-                height={1080}
-                fetchPriority={i === 0 ? 'high' : 'low'}
-                loading={i === 0 ? 'eager' : 'lazy'}
-                decoding="async"
-                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-[1100ms] ease-out ${
-                  i === active ? 'opacity-100' : 'opacity-0'
-                }`}
-                style={{
-                  animation:
-                    i === active && !reducedRef.current
-                      ? 'qitaat-hero-kenburns 9s ease-out forwards'
-                      : 'none',
-                }}
-              />
-            ))}
-            {/* Cinematic gradient overlays */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/55 to-black/30" />
-            <div className={`absolute inset-0 bg-gradient-to-${isRTL ? 'l' : 'r'} from-black/60 via-black/20 to-transparent`} />
+            {SLIDES.map((s, i) =>
+              mounted.has(i) ? (
+                <img
+                  key={i}
+                  src={s.img}
+                  alt=""
+                  width={1920}
+                  height={1080}
+                  fetchPriority={i === 0 ? 'high' : 'low'}
+                  loading={i === 0 ? 'eager' : 'lazy'}
+                  decoding="async"
+                  className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-[1100ms] ease-out ${
+                    i === active ? 'opacity-100' : 'opacity-0'
+                  }`}
+                  style={{
+                    animation:
+                      i === active && !reducedRef.current
+                        ? 'qitaat-hero-kenburns 9s ease-out forwards'
+                        : 'none',
+                  }}
+                />
+              ) : null,
+            )}
+            {/* Single combined gradient overlay (lighter — was 2 layers) */}
+            <div
+              className="absolute inset-0"
+              style={{
+                background: isRTL
+                  ? 'linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.45) 45%, rgba(0,0,0,0.15) 100%), linear-gradient(to left, rgba(0,0,0,0.45), transparent 60%)'
+                  : 'linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.45) 45%, rgba(0,0,0,0.15) 100%), linear-gradient(to right, rgba(0,0,0,0.45), transparent 60%)',
+              }}
+            />
           </div>
 
           {/* Top bar — tag + autoplay toggle */}
