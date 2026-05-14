@@ -308,17 +308,23 @@ export const WhoIsItForSection = () => {
 export const MainSectorsSection = () => {
   const bi = useBi();
   const sectors = [
-    { slug: 'aluminum', titleAr: 'ألمنيوم', titleEn: 'Aluminum',
+    { slug: 'aluminum', icon: Square, accent: 'from-sky-500/15 to-sky-500/0', dot: 'bg-sky-500',
+      titleAr: 'ألمنيوم', titleEn: 'Aluminum',
       bodyAr: 'أبواب، شبابيك، واجهات، مطابخ، وقواطع.', bodyEn: 'Doors, windows, facades, kitchens and partitions.' },
-    { slug: 'iron', titleAr: 'حديد', titleEn: 'Iron',
+    { slug: 'iron', icon: Wrench, accent: 'from-slate-500/15 to-slate-500/0', dot: 'bg-slate-500',
+      titleAr: 'حديد', titleEn: 'Iron',
       bodyAr: 'أبواب، سلالم، هياكل، شبك، وأعمال معدنية.', bodyEn: 'Doors, stairs, frames, mesh and metalwork.' },
-    { slug: 'wood', titleAr: 'خشب', titleEn: 'Wood',
+    { slug: 'wood', icon: DoorClosed, accent: 'from-amber-600/15 to-amber-600/0', dot: 'bg-amber-600',
+      titleAr: 'خشب', titleEn: 'Wood',
       bodyAr: 'أبواب، أثاث، ديكور، تفصيل، وتجهيزات داخلية.', bodyEn: 'Doors, furniture, décor, custom work and interiors.' },
-    { slug: 'glass', titleAr: 'زجاج', titleEn: 'Glass',
+    { slug: 'glass', icon: Layers, accent: 'from-cyan-500/15 to-cyan-500/0', dot: 'bg-cyan-500',
+      titleAr: 'زجاج', titleEn: 'Glass',
       bodyAr: 'واجهات، سيكوريت، قواطع، أبواب زجاجية، وتركيب.', bodyEn: 'Facades, tempered glass, partitions, doors and install.' },
-    { slug: 'stainless', titleAr: 'ستانلس ستيل', titleEn: 'Stainless steel',
+    { slug: 'stainless', icon: Boxes, accent: 'from-zinc-500/15 to-zinc-500/0', dot: 'bg-zinc-500',
+      titleAr: 'ستانلس ستيل', titleEn: 'Stainless steel',
       bodyAr: 'مطاعم، مطابخ، درابزين، تجهيزات، وأعمال خاصة.', bodyEn: 'Restaurants, kitchens, railings, fittings and custom work.' },
-    { slug: 'fabrication', titleAr: 'التصنيع والتركيب', titleEn: 'Fabrication & install',
+    { slug: 'fabrication', icon: Hammer, accent: 'from-emerald-600/15 to-emerald-600/0', dot: 'bg-emerald-600',
+      titleAr: 'التصنيع والتركيب', titleEn: 'Fabrication & install',
       bodyAr: 'ورش ومصانع وفرق تنفيذ حسب احتياج المشروع.', bodyEn: 'Workshops, factories and install crews per project.' },
   ];
   return (
@@ -335,12 +341,24 @@ export const MainSectorsSection = () => {
           <Link
             key={s.slug}
             to={`/search?category=${s.slug}`}
-            className="group rounded-xl border border-border/60 bg-card p-6 hover-lift block"
+            className="group relative overflow-hidden rounded-xl border border-border/60 bg-card p-6 hover-lift block"
           >
+            <div className={`absolute inset-0 bg-gradient-to-br ${s.accent} opacity-60 group-hover:opacity-100 transition-opacity pointer-events-none`} />
+            <div className="relative flex items-center gap-3 mb-3">
+              <div className="w-11 h-11 rounded-xl bg-background border border-border/60 flex items-center justify-center shadow-sm">
+                <s.icon className="w-5 h-5 text-foreground" />
+              </div>
+              <span className={`w-2 h-2 rounded-full ${s.dot}`} aria-hidden="true" />
+            </div>
             <h3 className="font-heading font-semibold text-lg text-foreground mb-2 group-hover:text-primary transition-colors">
               {bi(s.titleAr, s.titleEn)}
             </h3>
-            <p className="text-sm text-muted-foreground leading-relaxed">{bi(s.bodyAr, s.bodyEn)}</p>
+            <p className="relative text-sm text-muted-foreground leading-relaxed">{bi(s.bodyAr, s.bodyEn)}</p>
+            <div className="relative mt-4 inline-flex items-center gap-1 text-xs font-semibold text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+              {bi('استعرض المزودين', 'Browse providers')}
+              <ArrowLeft className="w-3 h-3 rtl:block ltr:hidden" />
+              <ArrowRight className="w-3 h-3 ltr:block rtl:hidden" />
+            </div>
           </Link>
         ))}
       </div>
