@@ -148,16 +148,16 @@ export const HeroV2 = () => {
     {
       img: heroSlide3,
       tagAr: 'نجارة وخشب', tagEn: 'Carpentry & wood',
-      titleAr: 'مطابخ ودواليب بمقاسات منزلك',
-      titleEn: 'Kitchens and built-ins, made to measure',
+      titleAr: 'نجارة احترافية بتفاصيل تصنع الفرق',
+      titleEn: 'Professional carpentry with details that make the difference',
       subAr: 'احصل على عرض سعر من نجّارين موثوقين بقربك.',
       subEn: 'Get a quote from trusted carpenters near you.',
     },
     {
       img: heroSlide4,
       tagAr: 'مصانع وتوريد', tagEn: 'Factories & supply',
-      titleAr: 'طاقة إنتاجية تليق بمشاريعك',
-      titleEn: 'Production capacity built for your projects',
+      titleAr: 'مصانع جاهزة لتنفيذ مشاريعك بكفاءة',
+      titleEn: 'Factories ready to deliver your projects efficiently',
       subAr: 'مصانع متخصّصة بقدرة تنفيذ كبيرة وتسليم منضبط.',
       subEn: 'Specialized factories with high capacity and on-time delivery.',
     },
@@ -709,7 +709,7 @@ export const ProblemSection = () => {
   return (
     <Section>
       <SectionHead
-        title={bi('البحث عن مزود مناسب لا يجب أن يكون عشوائيًا', 'Finding the right provider should not be random')}
+        title={bi('اختيار المزوّد المناسب يبدأ من هنا', 'Choosing the right provider starts here')}
         sub={bi(
           'عادةً يبدأ البحث بسؤال المعارف، أو تصفح خرائط جوجل، أو مراسلات واتساب متفرقة. النتيجة غالبًا: وقت أطول، معلومات أقل، ومقارنة أصعب.',
           'Most searches start with friends, Google Maps and scattered WhatsApp chats — and end with more time spent and less to compare.',
