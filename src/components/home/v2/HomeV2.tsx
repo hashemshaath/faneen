@@ -13,7 +13,7 @@ import {
   CheckCircle2, Activity, MapPin, Send, Scale, Boxes, DoorClosed, Square, Wrench,
   Play, Pause, Sparkles,
 } from 'lucide-react';
-import heroFacade from '@/assets/home/hero-facade.jpg';
+import heroSlide1 from '@/assets/home/hero-slide-1.jpg';
 import heroSlide2 from '@/assets/home/hero-slide-2.jpg';
 import heroSlide3 from '@/assets/home/hero-slide-3.jpg';
 import heroSlide4 from '@/assets/home/hero-slide-4.jpg';
@@ -123,36 +123,36 @@ export const HeroV2 = () => {
 
   const SLIDES = [
     {
-      img: heroFacade,
+      img: heroSlide1,
       tagAr: 'الصناعات الخفيفة', tagEn: 'Light industries',
-      titleAr: 'مزودو خدمات الصناعات الخفيفة في مكان واحد',
-      titleEn: 'Light-industry service providers in one place',
-      subAr: 'ألمنيوم، حديد، خشب، زجاج، وستانلس ستيل. ابحث، قارن، واطلب عرض سعر بخطوات قليلة.',
-      subEn: 'Aluminum, iron, wood, glass and stainless steel. Search, compare, and request a quote in a few steps.',
+      titleAr: 'كل قطاعات الصناعة في منصة واحدة',
+      titleEn: 'Every industrial sector, on one platform',
+      subAr: 'ألمنيوم، حديد، خشب، زجاج، وستانلس ستيل. ابحث وقارن واطلب عرض سعر بخطوات بسيطة.',
+      subEn: 'Aluminum, iron, wood, glass and stainless steel. Search, compare and request a quote in a few simple steps.',
     },
     {
       img: heroSlide2,
-      tagAr: 'ألمنيوم وزجاج', tagEn: 'Aluminum & glass',
-      titleAr: 'واجهات احترافية تلائم مشروعك',
-      titleEn: 'Professional facades that fit your project',
-      subAr: 'تواصل مع ورش متخصصة في الكيرتن وول والواجهات التجارية.',
-      subEn: 'Connect with workshops specialized in curtain walls and commercial facades.',
+      tagAr: 'حديد وستانلس', tagEn: 'Iron & stainless',
+      titleAr: 'تصنيع معدني بدقّة وموثوقية',
+      titleEn: 'Metal fabrication, done with precision',
+      subAr: 'ورش ومصانع تنفّذ أعمال الحديد والستانلس وفق مواصفات واضحة.',
+      subEn: 'Workshops and factories delivering steel work to clear specifications.',
     },
     {
       img: heroSlide3,
-      tagAr: 'حديد وستانلس', tagEn: 'Iron & stainless',
-      titleAr: 'تصنيع معدني بدقة وموثوقية',
-      titleEn: 'Metal fabrication, done with precision',
-      subAr: 'مصانع وورش تنفّذ أعمال الحديد والستانلس بمواصفات واضحة.',
-      subEn: 'Factories and workshops delivering steel work to clear specs.',
-    },
-    {
-      img: heroSlide4,
       tagAr: 'نجارة وخشب', tagEn: 'Carpentry & wood',
       titleAr: 'مطابخ ودواليب بمقاسات منزلك',
       titleEn: 'Kitchens and built-ins, made to measure',
-      subAr: 'احصل على عرض سعر من نجارين موثوقين بقربك.',
+      subAr: 'احصل على عرض سعر من نجّارين موثوقين بقربك.',
       subEn: 'Get a quote from trusted carpenters near you.',
+    },
+    {
+      img: heroSlide4,
+      tagAr: 'مصانع وتوريد', tagEn: 'Factories & supply',
+      titleAr: 'طاقة إنتاجية تليق بمشاريعك',
+      titleEn: 'Production capacity built for your projects',
+      subAr: 'مصانع متخصّصة بقدرة تنفيذ كبيرة وتسليم منضبط.',
+      subEn: 'Specialized factories with high capacity and on-time delivery.',
     },
   ];
 
@@ -190,17 +190,16 @@ export const HeroV2 = () => {
 
   return (
     <section
-      className="relative pt-6 sm:pt-8 pb-10 sm:pb-14"
+      className="relative"
       aria-roledescription="carousel"
       aria-label={bi('عرض شرائح قطاعات', 'Qitaat hero slideshow')}
     >
-      <div className="container-app">
-        <div
-          className="relative w-full overflow-hidden rounded-3xl border border-border/60 shadow-2xl bg-card"
-          style={{ minHeight: 'clamp(520px, 78vh, 760px)' }}
-          onMouseEnter={() => setPaused(true)}
-          onMouseLeave={() => setPaused(false)}
-        >
+      <div
+        className="relative w-full overflow-hidden bg-card"
+        style={{ minHeight: 'clamp(560px, 88vh, 880px)' }}
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
+      >
           {/* Image stack with Ken-Burns */}
           <div aria-hidden="true" className="absolute inset-0">
             {SLIDES.map((s, i) => (
@@ -393,8 +392,9 @@ export const HeroV2 = () => {
           </div>
         </div>
 
-        {/* Sector chips below the hero card */}
-        <div className="mt-6 sm:mt-8 flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+      {/* Sector chips below the hero (full-width container with side padding) */}
+      <div className="container-app mt-8 sm:mt-10">
+        <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
           {HERO_CHIPS.map(({ ar, en, slug, icon: Icon }) => (
             <Link
               key={slug}
