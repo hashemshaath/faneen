@@ -443,7 +443,20 @@ export const HeroV2 = () => {
 
           {/* Centered content */}
           <div className="relative z-10 flex flex-col items-center justify-center text-center px-5 sm:px-8 py-20 sm:py-28 min-h-[inherit]">
-            <div key={`txt-${active}`} className="animate-fade-in motion-reduce:animate-none max-w-3xl">
+            {/*
+              Slide content wrapper acts as the semantic "slide" element.
+              The image stack above is aria-hidden (decorative), and #hero-live-region
+              is the *only* live announcer — so this group provides static context
+              (position + roledescription + current state) without duplicating speech.
+            */}
+            <div
+              key={`txt-${active}`}
+              role="group"
+              aria-roledescription={bi('شريحة', 'slide')}
+              aria-label={bi(`${active + 1} من ${SLIDES.length}`, `${active + 1} of ${SLIDES.length}`)}
+              aria-current="true"
+              className="animate-fade-in motion-reduce:animate-none max-w-3xl"
+            >
               <h1
                 className="font-heading font-black text-[2.1rem] sm:text-5xl md:text-6xl lg:text-7xl text-white leading-[1.08] tracking-tight"
                 style={{ textShadow: '0 2px 6px rgba(0,0,0,0.55), 0 8px 28px rgba(0,0,0,0.45)' }}
