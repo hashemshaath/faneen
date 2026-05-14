@@ -853,16 +853,16 @@ export const HowItWorksV2 = () => {
 export const WhoIsItForSection = () => {
   const bi = useBi();
   const items = [
-    { icon: Users, titleAr: 'الأفراد', titleEn: 'Individuals',
+    { image: whoIndividuals, icon: Users, titleAr: 'الأفراد', titleEn: 'Individuals',
       bodyAr: 'لمن يحتاج تنفيذ أعمال ألمنيوم، زجاج، حديد، خشب أو ستانلس.',
       bodyEn: 'For anyone needing aluminum, glass, iron, wood or stainless work.' },
-    { icon: HardHat, titleAr: 'المقاولون', titleEn: 'Contractors',
+    { image: whoContractors, icon: HardHat, titleAr: 'المقاولون', titleEn: 'Contractors',
       bodyAr: 'لمن يبحث عن ورش، مصانع، ومزودي تنفيذ لمشاريعه.',
       bodyEn: 'For those sourcing workshops, factories and execution partners.' },
-    { icon: Compass, titleAr: 'المكاتب الهندسية', titleEn: 'Engineering offices',
+    { image: whoEngineers, icon: Compass, titleAr: 'المكاتب الهندسية', titleEn: 'Engineering offices',
       bodyAr: 'لمن يريد ربط التصميم بمزودي تنفيذ مناسبين.',
       bodyEn: 'To connect designs with the right execution partners.' },
-    { icon: Building2, titleAr: 'مزودو الخدمة', titleEn: 'Service providers',
+    { image: whoProviders, icon: Building2, titleAr: 'مزودو الخدمة', titleEn: 'Service providers',
       bodyAr: 'للورش والمصانع والمعارض التي تريد ظهورًا أوضح وفرصًا أكثر.',
       bodyEn: 'For workshops, factories and showrooms seeking clearer visibility.' },
   ];
@@ -880,17 +880,30 @@ export const WhoIsItForSection = () => {
         )}
       />
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-        {items.map(({ icon: Icon, titleAr, titleEn, bodyAr, bodyEn }) => (
+        {items.map(({ image, icon: Icon, titleAr, titleEn, bodyAr, bodyEn }) => (
           <div
             key={titleEn}
-            className="group relative rounded-2xl border border-border/60 bg-background p-6 hover-lift overflow-hidden"
+            className="group relative rounded-2xl border border-border/60 bg-background hover-lift overflow-hidden"
           >
-            <div className="absolute -top-10 -end-10 w-28 h-28 rounded-full bg-secondary/5 group-hover:bg-secondary/10 transition-colors pointer-events-none" />
-            <div className="relative w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center mb-4 ring-1 ring-secondary/15">
-              <Icon className="w-5 h-5 text-secondary" />
+            <div className="relative aspect-[16/10] overflow-hidden bg-muted">
+              <img
+                src={image}
+                alt={bi(titleAr, titleEn)}
+                width={1024}
+                height={640}
+                loading="lazy"
+                decoding="async"
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.05]"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent pointer-events-none" />
+              <div className="absolute bottom-3 start-3 w-10 h-10 rounded-xl bg-white/95 border border-white/40 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+                <Icon className="w-5 h-5 text-secondary" />
+              </div>
             </div>
-            <h3 className="relative font-heading font-bold text-lg text-foreground mb-2 leading-snug">{bi(titleAr, titleEn)}</h3>
-            <p className="relative text-sm text-muted-foreground leading-relaxed">{bi(bodyAr, bodyEn)}</p>
+            <div className="p-5 sm:p-6">
+              <h3 className="font-heading font-bold text-lg text-foreground mb-2 leading-snug">{bi(titleAr, titleEn)}</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">{bi(bodyAr, bodyEn)}</p>
+            </div>
           </div>
         ))}
       </div>
