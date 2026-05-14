@@ -2,7 +2,7 @@
  * Qitaat Home v2 — restructured per the marketing brief (Apple/IKEA tone:
  * short sentences, one idea per section, no hype, no superlatives).
  */
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -11,6 +11,7 @@ import {
   ArrowLeft, ArrowRight, Search, FileText, Building2, Users, HardHat, Compass,
   Layers, Hammer, Plus, Minus, ShieldCheck, Image as ImageIcon,
   CheckCircle2, Activity, MapPin, Send, Scale, Boxes, DoorClosed, Square, Wrench,
+  Play, Pause, Sparkles,
 } from 'lucide-react';
 import heroFacade from '@/assets/home/hero-facade.jpg';
 import heroSlide2 from '@/assets/home/hero-slide-2.jpg';
