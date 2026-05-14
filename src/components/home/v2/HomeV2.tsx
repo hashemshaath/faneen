@@ -3,7 +3,7 @@
  * short sentences, one idea per section, no hype, no superlatives).
  */
 import { Link } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useBi } from '@/components/common/Bilingual';
@@ -13,6 +13,9 @@ import {
   CheckCircle2, Activity, MapPin, Send, Scale, Boxes, DoorClosed, Square, Wrench,
 } from 'lucide-react';
 import heroFacade from '@/assets/home/hero-facade.jpg';
+import heroSlide2 from '@/assets/home/hero-slide-2.jpg';
+import heroSlide3 from '@/assets/home/hero-slide-3.jpg';
+import heroSlide4 from '@/assets/home/hero-slide-4.jpg';
 import imgClients from '@/assets/home/audience-clients.jpg';
 import imgContractors from '@/assets/home/audience-contractors.jpg';
 import imgProviders from '@/assets/home/audience-providers.jpg';
@@ -71,37 +74,118 @@ const HERO_CHIPS = [
 
 export const HeroV2 = () => {
   const bi = useBi();
+  const { isRTL } = useLanguage();
+
+  const SLIDES = [
+    {
+      img: heroFacade,
+      badgeAr: 'منصة سعودية للصناعات الخفيفة', badgeEn: 'A Saudi platform for light industries',
+      titleAr: 'مزودو خدمات الصناعات الخفيفة في مكان واحد',
+      titleEn: 'Light-industry service providers in one place',
+      subAr: 'ألمنيوم، حديد، خشب، زجاج، وستانلس ستيل. ابحث، قارن، واطلب عرض سعر بخطوات قليلة.',
+      subEn: 'Aluminum, iron, wood, glass and stainless steel. Search, compare, and request a quote in a few steps.',
+    },
+    {
+      img: heroSlide2,
+      badgeAr: 'واجهات ألمنيوم وزجاج', badgeEn: 'Aluminum & glass facades',
+      titleAr: 'واجهات احترافية تلائم مشروعك',
+      titleEn: 'Professional facades that fit your project',
+      subAr: 'تواصل مع ورش متخصصة في الكيرتن وول والواجهات التجارية.',
+      subEn: 'Connect with workshops specialized in curtain walls and commercial facades.',
+    },
+    {
+      img: heroSlide3,
+      badgeAr: 'حديد وستانلس ستيل', badgeEn: 'Iron & stainless steel',
+      titleAr: 'تصنيع معدني بدقة وموثوقية',
+      titleEn: 'Metal fabrication, done with precision',
+      subAr: 'مصانع وورش تنفّذ أعمال الحديد والستانلس بمواصفات واضحة.',
+      subEn: 'Factories and workshops delivering steel work to clear specs.',
+    },
+    {
+      img: heroSlide4,
+      badgeAr: 'نجارة وأعمال خشب', badgeEn: 'Carpentry & wood',
+      titleAr: 'مطابخ ودواليب بمقاسات منزلك',
+      titleEn: 'Kitchens and built-ins, made to measure',
+      subAr: 'احصل على عرض سعر من نجارين موثوقين بقربك.',
+      subEn: 'Get a quote from trusted carpenters near you.',
+    },
+  ];
+
+  const [active, setActive] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const reducedRef = useRef(false);
+
+  useEffect(() => {
+    reducedRef.current =
+      typeof window !== 'undefined' &&
+      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  }, []);
+
+  useEffect(() => {
+    if (paused || reducedRef.current) return;
+    const id = window.setInterval(() => {
+      setActive((i) => (i + 1) % SLIDES.length);
+    }, 6000);
+    return () => window.clearInterval(id);
+  }, [paused, SLIDES.length]);
+
+  const goPrev = useCallback(
+    () => setActive((i) => (i - 1 + SLIDES.length) % SLIDES.length),
+    [SLIDES.length],
+  );
+  const goNext = useCallback(
+    () => setActive((i) => (i + 1) % SLIDES.length),
+    [SLIDES.length],
+  );
+
+  const PrevIcon = isRTL ? ArrowRight : ArrowLeft;
+  const NextIcon = isRTL ? ArrowLeft : ArrowRight;
+  const slide = SLIDES[active];
+
   return (
-    <section className="relative pt-20 pb-14 sm:pt-28 sm:pb-24 overflow-hidden">
-      {/* Background image — subtle, anchored bottom-right, fades to background */}
+    <section
+      className="relative pt-20 pb-14 sm:pt-28 sm:pb-24 overflow-hidden"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      aria-roledescription="carousel"
+      aria-label={bi('عرض شرائح قطاعات', 'Qitaat hero slideshow')}
+    >
+      {/* Cross-fading background images */}
       <div aria-hidden="true" className="absolute inset-0 -z-10">
-        <img
-          src={heroFacade}
-          alt=""
-          width={1920}
-          height={1080}
-          fetchPriority="high"
-          decoding="async"
-          className="absolute inset-0 w-full h-full object-cover opacity-[0.18]"
-        />
+        {SLIDES.map((s, i) => (
+          <img
+            key={i}
+            src={s.img}
+            alt=""
+            width={1920}
+            height={1080}
+            fetchPriority={i === 0 ? 'high' : 'low'}
+            loading={i === 0 ? 'eager' : 'lazy'}
+            decoding="async"
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-[1200ms] ease-out ${
+              i === active ? 'opacity-[0.22]' : 'opacity-0'
+            }`}
+          />
+        ))}
         <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/90 to-background" />
         <div className="absolute inset-0 bg-gradient-to-tr from-secondary/[0.06] via-transparent to-primary/[0.05]" />
       </div>
 
       <div className="container-app text-center relative">
-        <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-card border border-border/70 text-xs font-semibold text-secondary mb-6">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-          {bi('منصة سعودية للصناعات الخفيفة', 'A Saudi platform for light industries')}
-        </span>
-        <h1 className="font-heading font-black text-[2rem] sm:text-5xl md:text-6xl text-foreground leading-[1.12] tracking-tight max-w-3xl mx-auto">
-          {bi('مزودو خدمات الصناعات الخفيفة في مكان واحد', 'Light-industry service providers in one place')}
-        </h1>
-        <p className="font-body text-base sm:text-lg text-muted-foreground mt-5 sm:mt-6 max-w-xl mx-auto leading-relaxed">
-          {bi(
-            'ألمنيوم، حديد، خشب، زجاج، وستانلس ستيل. ابحث، قارن، واطلب عرض سعر بخطوات قليلة.',
-            'Aluminum, iron, wood, glass and stainless steel. Search, compare, and request a quote in a few steps.',
-          )}
-        </p>
+        {/* Slide-specific content (key forces fade-in re-mount) */}
+        <div key={active} className="animate-fade-in">
+          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-card border border-border/70 text-xs font-semibold text-secondary mb-6">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            {bi(slide.badgeAr, slide.badgeEn)}
+          </span>
+          <h1 className="font-heading font-black text-[2rem] sm:text-5xl md:text-6xl text-foreground leading-[1.12] tracking-tight max-w-3xl mx-auto">
+            {bi(slide.titleAr, slide.titleEn)}
+          </h1>
+          <p className="font-body text-base sm:text-lg text-muted-foreground mt-5 sm:mt-6 max-w-xl mx-auto leading-relaxed">
+            {bi(slide.subAr, slide.subEn)}
+          </p>
+        </div>
+
         <div className="mt-7 sm:mt-9 flex flex-col sm:flex-row items-center justify-center gap-3">
           <PrimaryCTA to={ROUTES.quote} label={bi('اطلب عرض سعر', 'Request a quote')} />
           <SecondaryCTA to={ROUTES.signupProvider} label={bi('أضف منشأتك', 'Add your business')} />
@@ -109,6 +193,40 @@ export const HeroV2 = () => {
         <p className="text-xs sm:text-sm text-muted-foreground mt-4">
           {bi('ابدأ بطلب واضح، وقارن بين الخيارات قبل أن تختار.', 'Start with a clear request, then compare options before you choose.')}
         </p>
+
+        {/* Slider controls: dots + arrows */}
+        <div className="mt-8 flex items-center justify-center gap-4">
+          <button
+            type="button"
+            onClick={goPrev}
+            aria-label={bi('الشريحة السابقة', 'Previous slide')}
+            className="w-9 h-9 rounded-full border border-border/70 bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-secondary/5 hover:border-secondary/40 transition-colors"
+          >
+            <PrevIcon className="w-4 h-4 text-foreground" />
+          </button>
+          <div className="flex items-center gap-2">
+            {SLIDES.map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => setActive(i)}
+                aria-label={bi(`الانتقال إلى الشريحة ${i + 1}`, `Go to slide ${i + 1}`)}
+                aria-current={i === active}
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  i === active ? 'w-8 bg-secondary' : 'w-2 bg-border hover:bg-muted-foreground/40'
+                }`}
+              />
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={goNext}
+            aria-label={bi('الشريحة التالية', 'Next slide')}
+            className="w-9 h-9 rounded-full border border-border/70 bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-secondary/5 hover:border-secondary/40 transition-colors"
+          >
+            <NextIcon className="w-4 h-4 text-foreground" />
+          </button>
+        </div>
 
         <div className="mt-10 sm:mt-12 flex flex-wrap items-center justify-center gap-2 sm:gap-3 max-w-3xl mx-auto">
           {HERO_CHIPS.map(({ ar, en, slug, icon: Icon }) => (
