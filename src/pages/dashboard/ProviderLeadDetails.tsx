@@ -8,14 +8,23 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, ArrowRight, MapPin, Tag, Calendar, Wallet, Loader2, ThumbsUp, ThumbsDown, Lock, AlertCircle } from 'lucide-react';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  ArrowLeft, ArrowRight, MapPin, Tag, Calendar, Wallet, Loader2, ThumbsUp, ThumbsDown,
+  Lock, AlertCircle, ShieldCheck, Phone, Copy, MessageCircle, Mail, Eye,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { pingProviderActive, useProviderActivityPing } from '@/hooks/useProviderActivityPing';
+import { trackEvent } from '@/lib/analytics';
 import {
   LEAD_STATUS_LABEL_AR, LEAD_STATUS_TONE, type LeadStatus,
   SECTOR_LABEL_AR, TIMELINE_LABEL_AR, SERVICE_LOCATION_LABEL_AR,
+  CUSTOMER_TYPE_LABEL_AR, CONTACT_METHOD_LABEL_AR, normalizePhoneForWhatsApp,
 } from '@/lib/quoteRequests';
+import { supabase as sb } from '@/integrations/supabase/client';
 
 interface LeadDetailRow {
   id: string;
@@ -27,6 +36,9 @@ interface LeadDetailRow {
   created_at: string;
   provider_id: string;
   provider_user_id: string | null;
+  contact_revealed: boolean;
+  contact_revealed_at: string | null;
+  contact_view_count: number;
   quote_request: {
     id: string;
     sector: string;
@@ -43,6 +55,14 @@ interface LeadDetailRow {
   } | null;
 }
 
+interface RevealedContact {
+  customer_name: string;
+  customer_phone: string;
+  customer_email: string | null;
+  preferred_contact_method: string;
+  customer_type: string;
+}
+
 const ProviderLeadDetails: React.FC = () => {
   useNoIndex();
   const { id } = useParams<{ id: string }>();
@@ -51,6 +71,9 @@ const ProviderLeadDetails: React.FC = () => {
   const { isRTL } = useLanguage();
   const qc = useQueryClient();
   const Back = isRTL ? ArrowRight : ArrowLeft;
+  const [contact, setContact] = React.useState<RevealedContact | null>(null);
+  const [contactOpen, setContactOpen] = React.useState(false);
+  const [loadingContact, setLoadingContact] = React.useState(false);
 
   const { data: lead, isLoading, error } = useQuery({
     queryKey: ['provider-lead', id],
@@ -60,6 +83,7 @@ const ProviderLeadDetails: React.FC = () => {
         .from('quote_request_leads')
         .select(`
           id, status, match_score, match_reasons, viewed_at, responded_at, created_at,
+          contact_revealed, contact_revealed_at, contact_view_count,
           provider_id, provider_user_id,
           quote_request:quote_requests(
             id, sector, city, district, project_description, approx_dimensions, quantity,
@@ -103,6 +127,39 @@ const ProviderLeadDetails: React.FC = () => {
     onError: () => toast.error('تعذر تحديث الفرصة'),
   });
 
+  const fetchContact = async () => {
+    if (!lead) return;
+    setLoadingContact(true);
+    trackEvent('provider_contact_viewed', { lead_id: lead.id });
+    try {
+      const { data, error } = await sb.functions.invoke('get-revealed-contact', {
+        body: { lead_id: lead.id },
+      });
+      if (error) throw error;
+      const res = data as { success: boolean; contact?: RevealedContact; message?: string };
+      if (!res?.success || !res.contact) {
+        toast.error(res?.message ?? 'تعذر جلب بيانات التواصل');
+        return;
+      }
+      setContact(res.contact);
+      setContactOpen(true);
+      qc.invalidateQueries({ queryKey: ['provider-lead', lead.id] });
+    } catch {
+      toast.error('تعذر جلب بيانات التواصل');
+    } finally {
+      setLoadingContact(false);
+    }
+  };
+
+  const copyPhone = async () => {
+    if (!contact?.customer_phone) return;
+    try {
+      await navigator.clipboard.writeText(contact.customer_phone);
+      toast.success('تم نسخ رقم الجوال');
+      trackEvent('provider_phone_copied', { lead_id: lead?.id });
+    } catch { toast.error('تعذر النسخ'); }
+  };
+
   if (isLoading) {
     return (
       <DashboardLayout>
@@ -134,6 +191,11 @@ const ProviderLeadDetails: React.FC = () => {
   const budgetText = q.has_budget
     ? (q.budget_amount ? `${Number(q.budget_amount).toLocaleString('en-US')} ر.س` : 'محدد')
     : (q.budget_note === 'after-quotes' ? 'بعد العروض' : 'غير محددة');
+
+  const waPhone = contact ? normalizePhoneForWhatsApp(contact.customer_phone) : '';
+  const waMsg = contact ? encodeURIComponent(
+    `مرحبًا ${contact.customer_name}، أنا من مزودي الخدمة في منصة قطاعات بخصوص طلب عرض السعر الخاص بـ ${SECTOR_LABEL_AR[q.sector] ?? q.sector} في ${q.city}. يسعدني معرفة المزيد من التفاصيل لتقديم عرض مناسب.`,
+  ) : '';
 
   return (
     <DashboardLayout>
@@ -182,13 +244,45 @@ const ProviderLeadDetails: React.FC = () => {
             </div>
           )}
 
-          <div className="rounded-md border border-border bg-muted/40 p-3 text-xs text-muted-foreground flex items-start gap-2">
-            <Lock className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-            بيانات التواصل تُدار عبر فريق قطاعات في هذه المرحلة.
-          </div>
+          {!lead.contact_revealed && (
+            <div className="rounded-md border border-border bg-muted/40 p-3 text-xs text-muted-foreground flex items-start gap-2">
+              <Lock className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+              بيانات التواصل تُدار عبر فريق قطاعات في هذه المرحلة.
+            </div>
+          )}
         </CardContent></Card>
 
-        {!responded ? (
+        {lead.contact_revealed ? (
+          <Card className="border-success/30 bg-success/5">
+            <CardContent className="p-5 space-y-3">
+              <div className="flex items-start gap-2">
+                <ShieldCheck className="h-5 w-5 text-success mt-0.5 shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <h2 className="font-heading font-semibold">بيانات التواصل متاحة</h2>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    يمكنك التواصل مع العميل حسب الطريقة المفضلة المذكورة. احرص على تقديم عرض واضح ومهني.
+                  </p>
+                </div>
+              </div>
+              <div className="rounded-md border border-warning/30 bg-warning/5 p-3 text-xs text-warning">
+                احرص على التواصل باحترافية وتقديم عرض واضح يتضمن نطاق العمل، السعر، ومدة التنفيذ.
+              </div>
+              <Button onClick={fetchContact} disabled={loadingContact} className="w-full min-h-[44px]">
+                {loadingContact ? <Loader2 className="h-4 w-4 animate-spin" /> : <Eye className="h-4 w-4" />}
+                عرض بيانات التواصل
+              </Button>
+            </CardContent>
+          </Card>
+        ) : status === 'interested' ? (
+          <Card>
+            <CardContent className="p-5 space-y-2">
+              <h2 className="font-heading font-semibold text-base">تم تسجيل اهتمامك</h2>
+              <p className="text-sm text-muted-foreground">
+                سيتابع فريق قطاعات هذه الفرصة، وسيتم إشعارك عند إتاحة بيانات التواصل إذا كانت مناسبة.
+              </p>
+            </CardContent>
+          </Card>
+        ) : !responded ? (
           <div className="flex flex-col sm:flex-row gap-2">
             <Button
               className="flex-1 min-h-[44px]"
@@ -208,14 +302,48 @@ const ProviderLeadDetails: React.FC = () => {
           </div>
         ) : (
           <Card><CardContent className="p-4 text-sm text-center text-muted-foreground">
-            {status === 'interested'
-              ? 'تم تسجيل اهتمامك. سيتابع فريق قطاعات الطلب معك.'
-              : status === 'not_interested'
-                ? 'تم تحديث الفرصة كغير مناسبة.'
-                : 'تمت متابعة هذه الفرصة.'}
+            {status === 'not_interested'
+              ? 'تم تحديث الفرصة كغير مناسبة.'
+              : 'تمت متابعة هذه الفرصة.'}
           </CardContent></Card>
         )}
       </div>
+
+      <Dialog open={contactOpen} onOpenChange={setContactOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ShieldCheck className="h-5 w-5 text-success" /> بيانات التواصل
+            </DialogTitle>
+          </DialogHeader>
+          {contact && (
+            <div className="space-y-3 text-sm">
+              <Info label="الاسم" value={contact.customer_name} />
+              <Info icon={<Phone className="h-4 w-4" />} label="رقم الجوال" value={
+                <span className="inline-flex items-center gap-2">
+                  <span className="tech-content">{contact.customer_phone}</span>
+                  <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={copyPhone}><Copy className="h-3 w-3" /></Button>
+                </span>
+              } />
+              {contact.customer_email && (
+                <Info icon={<Mail className="h-4 w-4" />} label="البريد" value={contact.customer_email} />
+              )}
+              <Info label="طريقة التواصل المفضلة" value={CONTACT_METHOD_LABEL_AR[contact.preferred_contact_method] ?? contact.preferred_contact_method} />
+              <Info label="نوع العميل" value={CUSTOMER_TYPE_LABEL_AR[contact.customer_type] ?? contact.customer_type} />
+              <div className="flex flex-col sm:flex-row gap-2 pt-2">
+                <Button asChild className="flex-1 min-h-[44px]" onClick={() => trackEvent('provider_whatsapp_opened', { lead_id: lead.id })}>
+                  <a href={`https://wa.me/${waPhone}?text=${waMsg}`} target="_blank" rel="noopener noreferrer">
+                    <MessageCircle className="h-4 w-4" /> فتح واتساب
+                  </a>
+                </Button>
+                <Button asChild variant="outline" className="flex-1 min-h-[44px]">
+                  <a href={`tel:${contact.customer_phone}`}><Phone className="h-4 w-4" /> اتصال</a>
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 };
