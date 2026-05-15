@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { ScrollToTop } from '@/components/ScrollToTop';
@@ -13,6 +13,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { resolveQuoteSectorFromUrl } from '@/lib/sectors-seo';
 import {
   CheckCircle2, ChevronLeft, ChevronRight, Upload, X,
   ShieldCheck, ListChecks, MapPin, Layers, Image as ImageIcon, AlertCircle,
@@ -167,6 +168,7 @@ const Quote: React.FC = () => {
   const bi = useBi();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [step, setStep] = useState(1);
   const [form, setForm] = useState<QuoteForm>(() => loadDraft());
   const [fileObjects, setFileObjects] = useState<File[]>([]);
@@ -176,6 +178,23 @@ const Quote: React.FC = () => {
   const [submittedId, setSubmittedId] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<{ done: number; total: number } | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const initialDraftHadSector = useRef<boolean>(!!loadDraft().sector);
+  const [draftNotice, setDraftNotice] = useState<boolean>(false);
+
+  // Prefill sector from ?sector= (e.g. /quote?sector=aluminum). Runs once.
+  // If a different sector was already saved as a draft, prefer the URL value
+  // and surface a small notice so the user can keep or reset their draft.
+  useEffect(() => {
+    const raw = searchParams.get('sector');
+    const next = resolveQuoteSectorFromUrl(raw);
+    if (!next) return;
+    setForm((p) => {
+      if (p.sector === next) return p;
+      if (p.sector && p.sector !== next) setDraftNotice(true);
+      return { ...p, sector: next };
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // persist draft on every change
   useEffect(() => { saveDraft(form); }, [form]);
