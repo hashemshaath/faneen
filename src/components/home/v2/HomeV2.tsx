@@ -571,6 +571,7 @@ export const HeroV2 = () => {
             */}
             <div
               key={`txt-${active}`}
+              id="hero-slide-content"
               ref={slideContentRef}
               tabIndex={-1}
               role="group"
