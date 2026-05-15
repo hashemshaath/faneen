@@ -188,6 +188,17 @@ Deno.serve(async (req) => {
   const top = scored.slice(0, limit);
 
   if (top.length === 0) {
+    await admin.from('quote_request_events').insert({
+      quote_request_id: quoteId,
+      event_type: 'quote_matching_failed',
+      actor_user_id: userId,
+      metadata: {
+        reason: 'no_matching_providers',
+        candidates_evaluated: scored.length,
+        sector: quote.sector,
+        city: quote.city,
+      },
+    });
     return jsonResponse({
       success: false, matched_count: 0,
       message: 'لم يتم العثور على مزودين مناسبين حاليًا',
