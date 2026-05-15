@@ -7477,6 +7477,76 @@ export type Database = {
           },
         ]
       }
+      quote_request_leads: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          id: string
+          match_reasons: Json
+          match_score: number
+          provider_id: string
+          provider_notes: string | null
+          provider_user_id: string | null
+          quote_request_id: string
+          responded_at: string | null
+          status: string
+          updated_at: string
+          viewed_at: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          id?: string
+          match_reasons?: Json
+          match_score?: number
+          provider_id: string
+          provider_notes?: string | null
+          provider_user_id?: string | null
+          quote_request_id: string
+          responded_at?: string | null
+          status?: string
+          updated_at?: string
+          viewed_at?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          id?: string
+          match_reasons?: Json
+          match_score?: number
+          provider_id?: string
+          provider_notes?: string | null
+          provider_user_id?: string | null
+          quote_request_id?: string
+          responded_at?: string | null
+          status?: string
+          updated_at?: string
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_request_leads_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quote_request_leads_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quote_request_leads_quote_request_id_fkey"
+            columns: ["quote_request_id"]
+            isOneToOne: false
+            referencedRelation: "quote_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quote_requests: {
         Row: {
           approx_dimensions: string | null
@@ -9440,6 +9510,10 @@ export type Database = {
       increment_promotion_views: {
         Args: { _promotion_id: string }
         Returns: undefined
+      }
+      is_business_owner: {
+        Args: { _business_id: string; _user_id: string }
+        Returns: boolean
       }
       is_business_owner_or_manager: {
         Args: { _business_id: string; _user_id: string }
