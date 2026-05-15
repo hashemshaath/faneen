@@ -7436,6 +7436,125 @@ export type Database = {
           },
         ]
       }
+      quote_request_files: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_path: string
+          file_size: number | null
+          file_type: string | null
+          id: string
+          quote_request_id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          quote_request_id: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          quote_request_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_request_files_quote_request_id_fkey"
+            columns: ["quote_request_id"]
+            isOneToOne: false
+            referencedRelation: "quote_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quote_requests: {
+        Row: {
+          approx_dimensions: string | null
+          budget_amount: number | null
+          budget_note: string | null
+          city: string
+          created_at: string
+          customer_email: string | null
+          customer_name: string
+          customer_phone: string
+          customer_type: string
+          district: string | null
+          execution_timeline: string
+          has_budget: boolean
+          id: string
+          metadata: Json
+          preferred_contact_method: string
+          project_description: string
+          quantity: string | null
+          sector: string
+          service_location_type: string
+          source: string
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          approx_dimensions?: string | null
+          budget_amount?: number | null
+          budget_note?: string | null
+          city: string
+          created_at?: string
+          customer_email?: string | null
+          customer_name: string
+          customer_phone: string
+          customer_type: string
+          district?: string | null
+          execution_timeline: string
+          has_budget?: boolean
+          id?: string
+          metadata?: Json
+          preferred_contact_method: string
+          project_description: string
+          quantity?: string | null
+          sector: string
+          service_location_type: string
+          source?: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          approx_dimensions?: string | null
+          budget_amount?: number | null
+          budget_note?: string | null
+          city?: string
+          created_at?: string
+          customer_email?: string | null
+          customer_name?: string
+          customer_phone?: string
+          customer_type?: string
+          district?: string | null
+          execution_timeline?: string
+          has_budget?: boolean
+          id?: string
+          metadata?: Json
+          preferred_contact_method?: string
+          project_description?: string
+          quantity?: string | null
+          sector?: string
+          service_location_type?: string
+          source?: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       reviews: {
         Row: {
           business_id: string
