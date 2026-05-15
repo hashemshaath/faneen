@@ -145,11 +145,19 @@ Deno.serve(async (req) => {
       }
     }
 
+    if (!smsSent) {
+      console.error("SMS delivery failed for phone", fullPhone);
+      return respond({
+        success: false,
+        error: "sms_delivery_failed",
+        message: "Could not send SMS. Please try again later.",
+      });
+    }
+
     return respond({
       success: true,
-      sms_sent: smsSent,
+      sms_sent: true,
       expires_in_seconds: OTP_LIFETIME_MS / 1000,
-      ...(smsSent ? {} : { demo_otp: otp }),
     });
   } catch (err) {
     console.error("send-login-otp error:", err);
