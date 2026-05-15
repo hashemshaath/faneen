@@ -172,6 +172,7 @@ const AppRoutes = () => (
           <Route path="/onboarding" element={<ProtectedRoute skipOnboarding><Onboarding /></ProtectedRoute>} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/search" element={<Search />} />
+          <Route path="/quote" element={<Quote />} />
           <Route path="/offers" element={<Offers />} />
           <Route path="/projects" element={<Projects />} />
           <Route path="/projects/:id" element={<ProjectDetail />} />
