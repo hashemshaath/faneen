@@ -708,6 +708,19 @@ const AdminQuoteRequestDetails: React.FC = () => {
           </div>
         </div>
 
+        {/* Events Timeline (full width) */}
+        <EventsTimelineCard
+          events={eventsQuery.data ?? []}
+          loading={eventsQuery.isLoading}
+          onRefresh={() => eventsQuery.refetch()}
+          filter={eventFilter}
+          setFilter={setEventFilter}
+          orderDesc={eventOrderDesc}
+          setOrderDesc={setEventOrderDesc}
+          rawEventId={rawEventId}
+          setRawEventId={setRawEventId}
+        />
+
         <Dialog open={!!revealLeadId} onOpenChange={(open) => { if (!open) { setRevealLeadId(null); setRevealNote(''); } }}>
           <DialogContent>
             <DialogHeader>
