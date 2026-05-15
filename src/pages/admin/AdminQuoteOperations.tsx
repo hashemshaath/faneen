@@ -11,10 +11,18 @@ import { supabase } from '@/integrations/supabase/client';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import {
   Activity, RefreshCw, AlertCircle, ArrowUpRight, Sparkles, Users, Clock, Target, Info,
+  Download, TrendingUp,
 } from 'lucide-react';
 import { QUOTE_STATUS_LABEL_AR, SECTOR_LABEL_AR, type QuoteStatus } from '@/lib/quoteRequests';
+import {
+  buildDailyQuoteOperationsSeries, rowsToCsv, downloadCsv, DAILY_OPS_CSV_HEADERS,
+} from '@/lib/quoteOperationsAggregation';
+import {
+  ResponsiveContainer, LineChart, Line, BarChart, Bar, XAxis, YAxis,
+  CartesianGrid, Tooltip as RTooltip, Legend,
+} from 'recharts';
 
-type Range = 'today' | '7d' | '30d' | 'all';
+type Range = 'today' | '7d' | '30d' | '90d' | 'all';
 
 interface QuoteRow {
   id: string; sector: string; city: string; status: string; created_at: string;
@@ -54,6 +62,7 @@ function rangeFrom(r: Range): Date | null {
   if (r === 'today') { const d = new Date(now); d.setHours(0, 0, 0, 0); return d; }
   if (r === '7d') return new Date(now.getTime() - 7 * 86400000);
   if (r === '30d') return new Date(now.getTime() - 30 * 86400000);
+  if (r === '90d') return new Date(now.getTime() - 90 * 86400000);
   return null;
 }
 
@@ -331,6 +340,75 @@ const AdminQuoteOperations: React.FC = () => {
     };
   }, [quotes, leadsQuery.data, quoteEventsQuery.data, leadEventsQuery.data]);
 
+  // Daily aggregation for charts and CSV
+  const dailySeries = useMemo(() => {
+    return buildDailyQuoteOperationsSeries({
+      quotes: quotes.map((q) => ({ id: q.id, status: q.status, created_at: q.created_at })),
+      quoteEvents: (quoteEventsQuery.data ?? []).map((e) => ({
+        quote_request_id: e.quote_request_id, event_type: e.event_type, created_at: e.created_at,
+      })),
+      leads: (leadsQuery.data ?? []).map((l) => ({
+        id: l.id, quote_request_id: l.quote_request_id, status: l.status,
+        viewed_at: l.viewed_at, contact_revealed: l.contact_revealed,
+        contact_revealed_at: l.contact_revealed_at,
+        contact_view_count: l.contact_view_count ?? 0, created_at: l.created_at,
+      })),
+      leadEvents: (leadEventsQuery.data ?? []).map((e) => ({
+        lead_id: e.lead_id, quote_request_id: e.quote_request_id,
+        event_type: e.event_type, created_at: e.created_at,
+      })),
+      maxDays: 60,
+    });
+  }, [quotes, leadsQuery.data, quoteEventsQuery.data, leadEventsQuery.data]);
+
+  const fromLabel = useMemo(() => {
+    if (dailySeries.length) return dailySeries[0].date;
+    const d = rangeFrom(range); return d ? d.toISOString().slice(0, 10) : 'all';
+  }, [dailySeries, range]);
+  const toLabel = useMemo(() => {
+    if (dailySeries.length) return dailySeries[dailySeries.length - 1].date;
+    return new Date().toISOString().slice(0, 10);
+  }, [dailySeries]);
+
+  const handleExportDaily = () => {
+    const headers = DAILY_OPS_CSV_HEADERS as unknown as string[];
+    const csv = rowsToCsv(headers, dailySeries as unknown as Array<Record<string, unknown>>);
+    downloadCsv(`qitaat-quote-operations-${fromLabel}-${toLabel}.csv`, csv);
+  };
+
+  const handleExportFollowUp = () => {
+    const today = new Date().toISOString().slice(0, 10);
+    const lastEventByQuote = new Map<string, { type: string; at: string }>();
+    [...(quoteEventsQuery.data ?? [])].forEach((e) => {
+      const cur = lastEventByQuote.get(e.quote_request_id);
+      if (!cur || new Date(e.created_at).getTime() > new Date(cur.at).getTime()) {
+        lastEventByQuote.set(e.quote_request_id, { type: e.event_type, at: e.created_at });
+      }
+    });
+    const rows = metrics.attention.map((a) => {
+      const ageHours = Math.round((Date.now() - new Date(a.quote.created_at).getTime()) / 3600000);
+      const last = lastEventByQuote.get(a.quote.id);
+      return {
+        quote_id_short: `#${a.quote.id.slice(-6)}`,
+        sector: SECTOR_LABEL_AR[a.quote.sector] ?? a.quote.sector,
+        city: a.quote.city,
+        status: QUOTE_STATUS_LABEL_AR[a.quote.status as QuoteStatus] ?? a.quote.status,
+        reason: a.reason,
+        request_age_hours: ageHours,
+        last_event_type: last?.type ?? '',
+        admin_url: `${typeof window !== 'undefined' ? window.location.origin : ''}/admin/quote-requests/${a.quote.id}`,
+      };
+    });
+    const headers = [
+      'quote_id_short', 'sector', 'city', 'status', 'reason',
+      'request_age_hours', 'last_event_type', 'admin_url',
+    ];
+    downloadCsv(`qitaat-follow-up-requests-${today}.csv`, rowsToCsv(headers, rows));
+  };
+
+  const pct = (num: number, den: number): string =>
+    den === 0 ? '—' : `${Math.round(100 * num / den)}%`;
+
   return (
     <DashboardLayout>
       <TooltipProvider delayDuration={200}>
@@ -352,6 +430,7 @@ const AdminQuoteOperations: React.FC = () => {
                   <SelectItem value="today">اليوم</SelectItem>
                   <SelectItem value="7d">آخر 7 أيام</SelectItem>
                   <SelectItem value="30d">آخر 30 يوم</SelectItem>
+                  <SelectItem value="90d">آخر 90 يوم</SelectItem>
                   <SelectItem value="all">كل الفترة</SelectItem>
                 </SelectContent>
               </Select>
@@ -371,6 +450,9 @@ const AdminQuoteOperations: React.FC = () => {
               </Select>
               <Button size="sm" variant="outline" className="h-9 text-xs" onClick={refreshAll} disabled={loading}>
                 <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} /> تحديث البيانات
+              </Button>
+              <Button size="sm" variant="outline" className="h-9 text-xs" onClick={handleExportDaily} disabled={loading || dailySeries.length === 0}>
+                <Download className="h-3.5 w-3.5" /> تصدير CSV
               </Button>
             </div>
           </div>
@@ -423,13 +505,100 @@ const AdminQuoteOperations: React.FC = () => {
                   tip="نسبة الطلبات التي وُجدت لها مزودون مطابقون." />
               </div>
 
+              {/* Rates row */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <SlaCard label="معدل المطابقة"
+                  value={pct(metrics.matching.matchedQuotes, metrics.total)}
+                  tip="نسبة الطلبات التي تم توجيهها لمزودين." />
+                <SlaCard label="معدل مشاهدة المزودين"
+                  value={pct(metrics.providers.viewedLeads, metrics.providers.totalLeads)}
+                  tip="نسبة الفرص التي شاهدها المزودون." />
+                <SlaCard label="معدل الاهتمام"
+                  value={pct(metrics.providers.interestedLeads, metrics.providers.totalLeads)}
+                  tip="نسبة الفرص التي أبدى المزود اهتمامًا بها." />
+                <SlaCard label="معدل إتاحة التواصل بعد الاهتمام"
+                  value={pct(
+                    (leadsQuery.data ?? []).filter((l) => l.contact_revealed).length,
+                    metrics.providers.interestedLeads,
+                  )}
+                  tip="نسبة الفرص المهتمة التي أُتيحت بياناتها للمزود." />
+              </div>
+
+              {/* Trends section */}
+              <Card><CardContent className="p-5 space-y-4">
+                <div>
+                  <h2 className="font-heading font-semibold text-base flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 text-primary" /> اتجاهات التشغيل
+                  </h2>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    راقب حركة الطلبات والمطابقة وتفاعل المزودين خلال الفترة المحددة.
+                  </p>
+                </div>
+                {dailySeries.length === 0 ? (
+                  <p className="text-xs text-muted-foreground text-center py-8">
+                    لا توجد بيانات كافية لعرض الرسم خلال الفترة المحددة
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <ChartCard title="حركة الطلبات اليومية">
+                      <ResponsiveContainer width="100%" height={220}>
+                        <LineChart data={dailySeries} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                          <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 3" />
+                          <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
+                          <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
+                          <RTooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', fontSize: 12 }} />
+                          <Legend wrapperStyle={{ fontSize: 11 }} />
+                          <Line type="monotone" dataKey="quotes_created" name="جديدة" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
+                          <Line type="monotone" dataKey="quotes_matched" name="موجّهة" stroke="hsl(var(--info))" strokeWidth={2} dot={false} />
+                          <Line type="monotone" dataKey="quotes_completed" name="مكتملة" stroke="hsl(var(--success))" strokeWidth={2} dot={false} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </ChartCard>
+                    <ChartCard title="تفاعل المزودين مع الفرص">
+                      <ResponsiveContainer width="100%" height={220}>
+                        <BarChart data={dailySeries} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                          <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 3" />
+                          <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
+                          <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
+                          <RTooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', fontSize: 12 }} />
+                          <Legend wrapperStyle={{ fontSize: 11 }} />
+                          <Bar dataKey="leads_created" name="منشأة" fill="hsl(var(--primary))" />
+                          <Bar dataKey="leads_viewed" name="مشاهدة" fill="hsl(var(--info))" />
+                          <Bar dataKey="leads_interested" name="اهتمام" fill="hsl(var(--success))" />
+                          <Bar dataKey="leads_not_interested" name="رفض" fill="hsl(var(--muted-foreground))" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </ChartCard>
+                    <ChartCard title="متوسطات سرعة المعالجة (دقائق)" wide>
+                      <ResponsiveContainer width="100%" height={220}>
+                        <LineChart data={dailySeries} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                          <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 3" />
+                          <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
+                          <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
+                          <RTooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', fontSize: 12 }} />
+                          <Legend wrapperStyle={{ fontSize: 11 }} />
+                          <Line type="monotone" dataKey="avg_time_to_match_minutes" name="وقت المطابقة" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} connectNulls />
+                          <Line type="monotone" dataKey="avg_time_to_first_view_minutes" name="أول مشاهدة" stroke="hsl(var(--info))" strokeWidth={2} dot={false} connectNulls />
+                          <Line type="monotone" dataKey="avg_time_to_first_interest_minutes" name="أول اهتمام" stroke="hsl(var(--success))" strokeWidth={2} dot={false} connectNulls />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </ChartCard>
+                  </div>
+                )}
+              </CardContent></Card>
+
               {/* Attention */}
               <Card><CardContent className="p-5 space-y-3">
                 <div className="flex items-center justify-between">
                   <h2 className="font-heading font-semibold text-base flex items-center gap-2">
                     <AlertCircle className="h-4 w-4 text-warning" /> طلبات تحتاج متابعة
                   </h2>
-                  <span className="text-xs text-muted-foreground tech-content">{metrics.attention.length}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground tech-content">{metrics.attention.length}</span>
+                    <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={handleExportFollowUp} disabled={metrics.attention.length === 0}>
+                      <Download className="h-3 w-3" /> تصدير قائمة المتابعة
+                    </Button>
+                  </div>
                 </div>
                 {metrics.attention.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-6">لا توجد طلبات تحتاج متابعة في هذه الفترة.</p>
@@ -596,6 +765,13 @@ const Stat: React.FC<{ label: string; value: number | string }> = ({ label, valu
   <div className="rounded-md border border-border bg-muted/30 p-2">
     <div className="text-[11px] text-muted-foreground">{label}</div>
     <div className="text-base font-bold tech-content">{value}</div>
+  </div>
+);
+
+const ChartCard: React.FC<{ title: string; wide?: boolean; children: React.ReactNode }> = ({ title, wide, children }) => (
+  <div className={`rounded-lg border border-border bg-card/50 p-3 ${wide ? 'lg:col-span-2' : ''}`}>
+    <p className="text-xs font-medium text-foreground/80 mb-2">{title}</p>
+    {children}
   </div>
 );
 

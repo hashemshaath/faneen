@@ -62,6 +62,7 @@ city, phone, images, rating, reviews.
   city, service areas, provider activity, and profile completeness.
 - Customer contact information is not exposed to providers at this stage.
 - Qitaat includes an admin quote operations dashboard for tracking quote lifecycle SLA, matching performance, and provider engagement metrics.
+- Qitaat admin operations dashboard includes trend charts and CSV exports for quote requests, matching, provider engagement, and SLA metrics without exposing customer contact data.
 
 ## Contact
 Website: https://qitaat.com
