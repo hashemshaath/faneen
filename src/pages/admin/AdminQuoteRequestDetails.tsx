@@ -195,8 +195,55 @@ const AdminQuoteRequestDetails: React.FC = () => {
       trackEvent('quote_matching_completed', { matched: res?.matched_count ?? 0 });
       refetchLeads();
       qc.invalidateQueries({ queryKey: ['admin-quote-request', id] });
+      qc.invalidateQueries({ queryKey: ['admin-quote-events', id] });
     },
     onError: () => toast.error('تعذر تشغيل عملية التوجيه'),
+  });
+
+  // Events timeline (admin only)
+  type QuoteEventRow = {
+    id: string; event_type: string; actor_user_id: string | null;
+    metadata: Record<string, unknown> | null; created_at: string;
+    source: 'quote' | 'lead'; lead_id?: string | null;
+    provider_name?: string | null;
+  };
+  const eventsQuery = useQuery({
+    queryKey: ['admin-quote-events', id],
+    enabled: !!id,
+    queryFn: async (): Promise<QuoteEventRow[]> => {
+      const [qe, le] = await Promise.all([
+        supabase.from('quote_request_events')
+          .select('id, event_type, actor_user_id, metadata, created_at')
+          .eq('quote_request_id', id!)
+          .order('created_at', { ascending: false }),
+        supabase.from('quote_request_lead_events')
+          .select('id, event_type, actor_user_id, metadata, created_at, lead_id, lead:quote_request_leads!quote_request_lead_events_lead_id_fkey(provider:businesses!quote_request_leads_provider_id_fkey(name_ar))')
+          .eq('quote_request_id', id!)
+          .order('created_at', { ascending: false }),
+      ]);
+      if (qe.error) throw qe.error;
+      if (le.error) throw le.error;
+      const rows: QuoteEventRow[] = [];
+      for (const r of (qe.data ?? [])) {
+        rows.push({
+          id: r.id, event_type: r.event_type, actor_user_id: r.actor_user_id,
+          metadata: (r.metadata as Record<string, unknown>) ?? null,
+          created_at: r.created_at, source: 'quote',
+        });
+      }
+      for (const r of (le.data ?? []) as unknown as Array<{
+        id: string; event_type: string; actor_user_id: string | null;
+        metadata: Record<string, unknown> | null; created_at: string; lead_id: string;
+        lead?: { provider?: { name_ar: string | null } | null } | null;
+      }>) {
+        rows.push({
+          id: r.id, event_type: r.event_type, actor_user_id: r.actor_user_id,
+          metadata: r.metadata ?? null, created_at: r.created_at, source: 'lead',
+          lead_id: r.lead_id, provider_name: r.lead?.provider?.name_ar ?? null,
+        });
+      }
+      return rows;
+    },
   });
 
   const saveMutation = useMutation({
