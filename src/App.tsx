@@ -38,6 +38,7 @@ const Auth = lazyRetry(() => import("./pages/Auth"));
 const ResetPassword = lazyRetry(() => import("./pages/ResetPassword"));
 const BusinessProfile = lazyRetry(() => import("./pages/BusinessProfile"));
 const Search = lazyRetry(() => import("./pages/Search"));
+const Quote = lazyRetry(() => import("./pages/Quote"));
 const Contracts = lazyRetry(() => import("./pages/Contracts"));
 const ContractDetail = lazyRetry(() => import("./pages/ContractDetail"));
 const DashboardOverview = lazyRetry(() => import("./pages/dashboard/DashboardOverview"));
@@ -171,6 +172,7 @@ const AppRoutes = () => (
           <Route path="/onboarding" element={<ProtectedRoute skipOnboarding><Onboarding /></ProtectedRoute>} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/search" element={<Search />} />
+          <Route path="/quote" element={<Quote />} />
           <Route path="/offers" element={<Offers />} />
           <Route path="/projects" element={<Projects />} />
           <Route path="/projects/:id" element={<ProjectDetail />} />
