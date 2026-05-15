@@ -24,6 +24,8 @@ import { toast } from 'sonner';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { trackEvent } from '@/lib/analytics';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Checkbox } from '@/components/ui/checkbox';
+import { PROVIDER_COMMERCIAL_CONFIG } from '@/lib/providerCommercialConfig';
 import {
   QUOTE_STATUS_LABEL_AR, QUOTE_STATUS_TONE, QUOTE_STATUSES,
   CUSTOMER_TYPE_LABEL_AR, CONTACT_METHOD_LABEL_AR, SERVICE_LOCATION_LABEL_AR,
