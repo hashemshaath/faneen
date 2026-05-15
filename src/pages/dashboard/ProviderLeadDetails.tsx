@@ -100,22 +100,44 @@ const ProviderLeadDetails: React.FC = () => {
   // Auto-mark as viewed
   useEffect(() => {
     if (lead && lead.status === 'new') {
+      const previousStatus = lead.status;
       supabase.from('quote_request_leads').update({
         status: 'viewed', viewed_at: new Date().toISOString(),
       }).eq('id', lead.id).then(({ error }) => {
-        if (!error) qc.invalidateQueries({ queryKey: ['provider-lead', lead.id] });
+        if (!error) {
+          // Audit lead_viewed (only on new -> viewed transition)
+          void supabase.from('quote_request_lead_events').insert({
+            lead_id: lead.id,
+            quote_request_id: lead.quote_request?.id ?? null,
+            event_type: 'lead_viewed',
+            actor_user_id: user?.id ?? null,
+            metadata: { previous_status: previousStatus, new_status: 'viewed' },
+          });
+          qc.invalidateQueries({ queryKey: ['provider-lead', lead.id] });
+        }
       });
     }
-  }, [lead, qc]);
+  }, [lead, qc, user?.id]);
 
   const respond = useMutation({
     mutationFn: async (status: 'interested' | 'not_interested') => {
       if (!lead) throw new Error('no lead');
+      const previousStatus = lead.status;
       const { error } = await supabase
         .from('quote_request_leads')
         .update({ status, responded_at: new Date().toISOString() })
         .eq('id', lead.id);
       if (error) throw error;
+      // Audit provider response (skip if already at same state)
+      if (previousStatus !== status) {
+        await supabase.from('quote_request_lead_events').insert({
+          lead_id: lead.id,
+          quote_request_id: lead.quote_request?.id ?? null,
+          event_type: status === 'interested' ? 'provider_interested' : 'provider_not_interested',
+          actor_user_id: user?.id ?? null,
+          metadata: { previous_status: previousStatus, new_status: status },
+        });
+      }
       return status;
     },
     onSuccess: (status) => {
