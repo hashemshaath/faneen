@@ -161,8 +161,18 @@ const AdminAbExperiments: React.FC = () => {
 
   const updateVariant = useMutation({
     mutationFn: async ({ id, patch }: { id: string; patch: Partial<Variant> }) => {
-      const safePatch: Record<string, unknown> = { ...patch };
-      if ('content' in safePatch) safePatch.content = safePatch.content as Json;
+      const safePatch: {
+        weight?: number;
+        is_active?: boolean;
+        is_control?: boolean;
+        key?: string;
+        content?: Json;
+      } = {};
+      if (patch.weight !== undefined) safePatch.weight = patch.weight;
+      if (patch.is_active !== undefined) safePatch.is_active = patch.is_active;
+      if (patch.is_control !== undefined) safePatch.is_control = patch.is_control;
+      if (patch.key !== undefined) safePatch.key = patch.key;
+      if (patch.content !== undefined) safePatch.content = patch.content as Json;
       const { error } = await supabase.from('ab_variants').update(safePatch).eq('id', id);
       if (error) throw error;
     },
