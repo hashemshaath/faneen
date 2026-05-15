@@ -7,8 +7,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Inbox, MapPin, Tag, Calendar, ChevronLeft } from 'lucide-react';
+import { Inbox, MapPin, Tag, Calendar, ChevronLeft, Sparkles } from 'lucide-react';
 import { useNoIndex } from '@/hooks/useNoIndex';
+import { useProviderActivityPing } from '@/hooks/useProviderActivityPing';
 import {
   LEAD_STATUS_LABEL_AR, LEAD_STATUS_TONE, type LeadStatus,
   SECTOR_LABEL_AR, TIMELINE_LABEL_AR,
@@ -33,6 +34,7 @@ interface LeadRow {
 const ProviderLeads: React.FC = () => {
   useNoIndex();
   const { user } = useAuth();
+  useProviderActivityPing(!!user);
 
   const { data: leads, isLoading } = useQuery({
     queryKey: ['provider-leads', user?.id],
@@ -61,6 +63,24 @@ const ProviderLeads: React.FC = () => {
           </p>
         </header>
 
+        <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          <Sparkles className="h-5 w-5 text-primary shrink-0" />
+          <div className="flex-1 min-w-0">
+            <h2 className="font-semibold text-sm">اكتمال ملفك يزيد فرصك</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              تستخدم قطاعات بيانات منشأتك ومناطق خدمتك لتوجيه الطلبات المناسبة لك. حدّث ملفك وأضف مناطق الخدمة لتحصل على فرص أكثر ملاءمة.
+            </p>
+          </div>
+          <div className="flex gap-2 shrink-0">
+            <Button asChild size="sm" variant="outline" className="min-h-[36px]">
+              <Link to="/dashboard/provider/service-areas">مناطق الخدمة</Link>
+            </Button>
+            <Button asChild size="sm" className="min-h-[36px]">
+              <Link to="/dashboard/business">تحديث الملف</Link>
+            </Button>
+          </div>
+        </div>
+
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-40" />)}
@@ -70,14 +90,13 @@ const ProviderLeads: React.FC = () => {
             <Inbox className="mx-auto h-10 w-10 text-muted-foreground" />
             <h2 className="font-heading font-semibold">لا توجد فرص حاليًا</h2>
             <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-              عند توفر طلبات مناسبة لقطاعك ومدينة خدمتك، ستظهر هنا.
+              عند توفر طلبات مناسبة لقطاعك ومناطق خدمتك، ستظهر هنا.
             </p>
-            <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-              اكتمال بيانات منشأتك يساعد على ظهورك في فرص أكثر ملاءمة.
-            </p>
-            <Button asChild variant="outline" className="min-h-[40px]">
-              <Link to="/dashboard/business">تحديث ملف المنشأة</Link>
-            </Button>
+            <div className="flex justify-center gap-2 pt-1">
+              <Button asChild variant="outline" className="min-h-[40px]">
+                <Link to="/dashboard/provider/service-areas">تحديث مناطق الخدمة</Link>
+              </Button>
+            </div>
           </CardContent></Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
