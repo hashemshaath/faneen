@@ -340,6 +340,75 @@ const AdminQuoteOperations: React.FC = () => {
     };
   }, [quotes, leadsQuery.data, quoteEventsQuery.data, leadEventsQuery.data]);
 
+  // Daily aggregation for charts and CSV
+  const dailySeries = useMemo(() => {
+    return buildDailyQuoteOperationsSeries({
+      quotes: quotes.map((q) => ({ id: q.id, status: q.status, created_at: q.created_at })),
+      quoteEvents: (quoteEventsQuery.data ?? []).map((e) => ({
+        quote_request_id: e.quote_request_id, event_type: e.event_type, created_at: e.created_at,
+      })),
+      leads: (leadsQuery.data ?? []).map((l) => ({
+        id: l.id, quote_request_id: l.quote_request_id, status: l.status,
+        viewed_at: l.viewed_at, contact_revealed: l.contact_revealed,
+        contact_revealed_at: l.contact_revealed_at,
+        contact_view_count: l.contact_view_count ?? 0, created_at: l.created_at,
+      })),
+      leadEvents: (leadEventsQuery.data ?? []).map((e) => ({
+        lead_id: e.lead_id, quote_request_id: e.quote_request_id,
+        event_type: e.event_type, created_at: e.created_at,
+      })),
+      maxDays: 60,
+    });
+  }, [quotes, leadsQuery.data, quoteEventsQuery.data, leadEventsQuery.data]);
+
+  const fromLabel = useMemo(() => {
+    if (dailySeries.length) return dailySeries[0].date;
+    const d = rangeFrom(range); return d ? d.toISOString().slice(0, 10) : 'all';
+  }, [dailySeries, range]);
+  const toLabel = useMemo(() => {
+    if (dailySeries.length) return dailySeries[dailySeries.length - 1].date;
+    return new Date().toISOString().slice(0, 10);
+  }, [dailySeries]);
+
+  const handleExportDaily = () => {
+    const headers = DAILY_OPS_CSV_HEADERS as unknown as string[];
+    const csv = rowsToCsv(headers, dailySeries as unknown as Array<Record<string, unknown>>);
+    downloadCsv(`qitaat-quote-operations-${fromLabel}-${toLabel}.csv`, csv);
+  };
+
+  const handleExportFollowUp = () => {
+    const today = new Date().toISOString().slice(0, 10);
+    const lastEventByQuote = new Map<string, { type: string; at: string }>();
+    [...(quoteEventsQuery.data ?? [])].forEach((e) => {
+      const cur = lastEventByQuote.get(e.quote_request_id);
+      if (!cur || new Date(e.created_at).getTime() > new Date(cur.at).getTime()) {
+        lastEventByQuote.set(e.quote_request_id, { type: e.event_type, at: e.created_at });
+      }
+    });
+    const rows = metrics.attention.map((a) => {
+      const ageHours = Math.round((Date.now() - new Date(a.quote.created_at).getTime()) / 3600000);
+      const last = lastEventByQuote.get(a.quote.id);
+      return {
+        quote_id_short: `#${a.quote.id.slice(-6)}`,
+        sector: SECTOR_LABEL_AR[a.quote.sector] ?? a.quote.sector,
+        city: a.quote.city,
+        status: QUOTE_STATUS_LABEL_AR[a.quote.status as QuoteStatus] ?? a.quote.status,
+        reason: a.reason,
+        request_age_hours: ageHours,
+        last_event_type: last?.type ?? '',
+        admin_url: `${typeof window !== 'undefined' ? window.location.origin : ''}/admin/quote-requests/${a.quote.id}`,
+      };
+    });
+    const headers = [
+      'quote_id_short', 'sector', 'city', 'status', 'reason',
+      'request_age_hours', 'last_event_type', 'admin_url',
+    ];
+    downloadCsv(`qitaat-follow-up-requests-${today}.csv`, rowsToCsv(headers, rows));
+  };
+
+  const pct = (num: number, den: number): string =>
+    den === 0 ? '—' : `${Math.round(100 * num / den)}%`;
+
   return (
     <DashboardLayout>
       <TooltipProvider delayDuration={200}>
