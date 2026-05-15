@@ -505,13 +505,100 @@ const AdminQuoteOperations: React.FC = () => {
                   tip="نسبة الطلبات التي وُجدت لها مزودون مطابقون." />
               </div>
 
+              {/* Rates row */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <SlaCard label="معدل المطابقة"
+                  value={pct(metrics.matching.matchedQuotes, metrics.total)}
+                  tip="نسبة الطلبات التي تم توجيهها لمزودين." />
+                <SlaCard label="معدل مشاهدة المزودين"
+                  value={pct(metrics.providers.viewedLeads, metrics.providers.totalLeads)}
+                  tip="نسبة الفرص التي شاهدها المزودون." />
+                <SlaCard label="معدل الاهتمام"
+                  value={pct(metrics.providers.interestedLeads, metrics.providers.totalLeads)}
+                  tip="نسبة الفرص التي أبدى المزود اهتمامًا بها." />
+                <SlaCard label="معدل إتاحة التواصل بعد الاهتمام"
+                  value={pct(
+                    (leadsQuery.data ?? []).filter((l) => l.contact_revealed).length,
+                    metrics.providers.interestedLeads,
+                  )}
+                  tip="نسبة الفرص المهتمة التي أُتيحت بياناتها للمزود." />
+              </div>
+
+              {/* Trends section */}
+              <Card><CardContent className="p-5 space-y-4">
+                <div>
+                  <h2 className="font-heading font-semibold text-base flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 text-primary" /> اتجاهات التشغيل
+                  </h2>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    راقب حركة الطلبات والمطابقة وتفاعل المزودين خلال الفترة المحددة.
+                  </p>
+                </div>
+                {dailySeries.length === 0 ? (
+                  <p className="text-xs text-muted-foreground text-center py-8">
+                    لا توجد بيانات كافية لعرض الرسم خلال الفترة المحددة
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <ChartCard title="حركة الطلبات اليومية">
+                      <ResponsiveContainer width="100%" height={220}>
+                        <LineChart data={dailySeries} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                          <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 3" />
+                          <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
+                          <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
+                          <RTooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', fontSize: 12 }} />
+                          <Legend wrapperStyle={{ fontSize: 11 }} />
+                          <Line type="monotone" dataKey="quotes_created" name="جديدة" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
+                          <Line type="monotone" dataKey="quotes_matched" name="موجّهة" stroke="hsl(var(--info))" strokeWidth={2} dot={false} />
+                          <Line type="monotone" dataKey="quotes_completed" name="مكتملة" stroke="hsl(var(--success))" strokeWidth={2} dot={false} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </ChartCard>
+                    <ChartCard title="تفاعل المزودين مع الفرص">
+                      <ResponsiveContainer width="100%" height={220}>
+                        <BarChart data={dailySeries} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                          <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 3" />
+                          <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
+                          <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
+                          <RTooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', fontSize: 12 }} />
+                          <Legend wrapperStyle={{ fontSize: 11 }} />
+                          <Bar dataKey="leads_created" name="منشأة" fill="hsl(var(--primary))" />
+                          <Bar dataKey="leads_viewed" name="مشاهدة" fill="hsl(var(--info))" />
+                          <Bar dataKey="leads_interested" name="اهتمام" fill="hsl(var(--success))" />
+                          <Bar dataKey="leads_not_interested" name="رفض" fill="hsl(var(--muted-foreground))" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </ChartCard>
+                    <ChartCard title="متوسطات سرعة المعالجة (دقائق)" wide>
+                      <ResponsiveContainer width="100%" height={220}>
+                        <LineChart data={dailySeries} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                          <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 3" />
+                          <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
+                          <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
+                          <RTooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', fontSize: 12 }} />
+                          <Legend wrapperStyle={{ fontSize: 11 }} />
+                          <Line type="monotone" dataKey="avg_time_to_match_minutes" name="وقت المطابقة" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} connectNulls />
+                          <Line type="monotone" dataKey="avg_time_to_first_view_minutes" name="أول مشاهدة" stroke="hsl(var(--info))" strokeWidth={2} dot={false} connectNulls />
+                          <Line type="monotone" dataKey="avg_time_to_first_interest_minutes" name="أول اهتمام" stroke="hsl(var(--success))" strokeWidth={2} dot={false} connectNulls />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </ChartCard>
+                  </div>
+                )}
+              </CardContent></Card>
+
               {/* Attention */}
               <Card><CardContent className="p-5 space-y-3">
                 <div className="flex items-center justify-between">
                   <h2 className="font-heading font-semibold text-base flex items-center gap-2">
                     <AlertCircle className="h-4 w-4 text-warning" /> طلبات تحتاج متابعة
                   </h2>
-                  <span className="text-xs text-muted-foreground tech-content">{metrics.attention.length}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground tech-content">{metrics.attention.length}</span>
+                    <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={handleExportFollowUp} disabled={metrics.attention.length === 0}>
+                      <Download className="h-3 w-3" /> تصدير قائمة المتابعة
+                    </Button>
+                  </div>
                 </div>
                 {metrics.attention.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-6">لا توجد طلبات تحتاج متابعة في هذه الفترة.</p>
