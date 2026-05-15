@@ -121,6 +121,7 @@ const SectorsIndex = lazyRetry(() => import("./pages/SectorLanding").then(m => (
 const SectorCity = lazyRetry(() => import("./pages/SectorCity"));
 const SectorsHub = lazyRetry(() => import("./pages/SectorsHub"));
 const SectorSeoLanding = lazyRetry(() => import("./pages/SectorSeoLanding"));
+const SectorBrief = lazyRetry(() => import("./pages/SectorBrief"));
 const Services = lazyRetry(() => import("./pages/Services"));
 const ServiceDetail = lazyRetry(() => import("./pages/ServiceDetail"));
 const About = lazyRetry(() => import("./pages/About"));
