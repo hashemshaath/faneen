@@ -295,6 +295,21 @@ export const HeroV2 = () => {
     [SLIDES.length],
   );
 
+  // Keyboard activation of a dot/thumbnail (Enter/Space): jump to that slide
+  // AND treat it as a keyboard-driven change so focus moves to the slide
+  // group and the live region stays muted (mirrors arrow-key behavior).
+  // Mouse clicks fall through to the regular onClick — focus stays on the
+  // dot so sighted users can keep tabbing visually.
+  const onDotKeyDown = useCallback(
+    (i: number) => (e: React.KeyboardEvent<HTMLButtonElement>) => {
+      if (e.key !== 'Enter' && e.key !== ' ' && e.key !== 'Spacebar') return;
+      e.preventDefault(); // suppress the synthetic click that would re-fire setActive
+      setKeyboardSlideChange(true);
+      setActive(i);
+    },
+    [],
+  );
+
   // Build the would-be announcement for the current slide; effect below
   // commits it to the DOM only when it stably differs from the last one.
   const pendingLiveMessage = keyboardSlideChange
@@ -833,6 +848,7 @@ export const HeroV2 = () => {
                     key={i}
                     type="button"
                     onClick={() => setActive(i)}
+                    onKeyDown={onDotKeyDown(i)}
                     aria-label={label}
                     aria-current={ariaCurrent}
                     aria-controls="hero-carousel"
@@ -863,6 +879,7 @@ export const HeroV2 = () => {
                     key={i}
                     type="button"
                     onClick={() => setActive(i)}
+                    onKeyDown={onDotKeyDown(i)}
                     aria-label={label}
                     aria-current={ariaCurrent}
                     aria-controls="hero-carousel"

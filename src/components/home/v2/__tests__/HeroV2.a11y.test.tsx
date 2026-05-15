@@ -235,4 +235,50 @@ describe('HeroV2 — accessibility', () => {
       vi.useRealTimers();
     }
   });
+
+  it('moves focus to the slide group when a dot is activated via keyboard, and keeps aria-current consistent', async () => {
+    vi.useFakeTimers();
+    try {
+      renderHero();
+      const dots = () =>
+        Array.from(
+          document.querySelectorAll<HTMLButtonElement>(
+            'button[aria-controls="hero-carousel"][aria-label]',
+          ),
+        ).filter((b) => /(\d+)\s*(من|of)\s*\d+/.test(b.getAttribute('aria-label') ?? ''));
+
+      const dot4 = dots().find((b) =>
+        /(الشريحة|slide)\s*4/i.test(b.getAttribute('aria-label') ?? ''),
+      )!;
+      expect(dot4).toBeTruthy();
+
+      // Keyboard activation (Enter) on a dot.
+      await act(async () => { dot4.focus(); });
+      await act(async () => {
+        fireEvent.keyDown(dot4, { key: 'Enter' });
+      });
+      await act(async () => { vi.advanceTimersByTime(50); });
+
+      // Focus should jump to the slide content group, not stay on the dot.
+      expect(document.activeElement?.id).toBe('hero-slide-content');
+
+      // aria-current must have shifted to slide 4 — exactly one active per group,
+      // and inactive dots must NOT carry aria-current at all.
+      const after = dots();
+      const activeDots = after.filter((b) => b.getAttribute('aria-current') === 'true');
+      expect(activeDots.length).toBeGreaterThanOrEqual(1);
+      activeDots.forEach((b) => {
+        expect(b.getAttribute('aria-label') ?? '').toMatch(/(الشريحة|slide)\s*4/i);
+      });
+      after
+        .filter((b) => b.getAttribute('aria-current') !== 'true')
+        .forEach((b) => expect(b.getAttribute('aria-current')).toBeNull());
+
+      // Live region stayed muted (focus name carried the announcement).
+      const live = document.getElementById('hero-live-region')!;
+      expect((live.textContent ?? '').trim()).toBe('');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });
