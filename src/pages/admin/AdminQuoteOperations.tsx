@@ -361,6 +361,7 @@ const AdminQuoteOperations: React.FC = () => {
                   <SelectItem value="today">اليوم</SelectItem>
                   <SelectItem value="7d">آخر 7 أيام</SelectItem>
                   <SelectItem value="30d">آخر 30 يوم</SelectItem>
+                  <SelectItem value="90d">آخر 90 يوم</SelectItem>
                   <SelectItem value="all">كل الفترة</SelectItem>
                 </SelectContent>
               </Select>
