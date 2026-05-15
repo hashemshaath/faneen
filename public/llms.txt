@@ -67,3 +67,4 @@ city, phone, images, rating, reviews.
 ## Contact
 Website: https://qitaat.com
 Email: hello@qitaat.com
+- Qitaat includes a provider membership and lead credits foundation. During launch, contact reveal can remain admin-approved and free, while the system is ready for future paid lead credits.
