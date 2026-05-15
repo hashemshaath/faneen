@@ -12,9 +12,12 @@ import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from '@/components/ui/dialog';
+import {
   ArrowLeft, ArrowRight, Loader2, Phone, Copy, MessageCircle, FileText, Download,
   AlertCircle, MapPin, Tag, Calendar, Wallet, User, Mail, Save, Lock, Send, Users,
-  CheckCircle2, XCircle, Sparkles,
+  CheckCircle2, XCircle, Sparkles, Eye, ShieldCheck,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNoIndex } from '@/hooks/useNoIndex';
@@ -69,6 +72,9 @@ interface LeadSummaryRow {
   created_at: string;
   viewed_at: string | null;
   responded_at: string | null;
+  contact_revealed: boolean;
+  contact_revealed_at: string | null;
+  contact_view_count: number;
   provider: { id: string; name_ar: string; city_id: string | null } | null;
 }
 
@@ -88,6 +94,9 @@ const AdminQuoteRequestDetails: React.FC = () => {
 
   const [adminNotes, setAdminNotes] = useState('');
   const [pendingStatus, setPendingStatus] = useState<QuoteStatus | ''>('');
+  const [revealLeadId, setRevealLeadId] = useState<string | null>(null);
+  const [revealNote, setRevealNote] = useState('');
+  const [leadFilter, setLeadFilter] = useState<'all' | 'interested' | 'pending_reveal' | 'revealed'>('all');
 
   const { data: quote, isLoading, error } = useQuery({
     queryKey: ['admin-quote-request', id],
@@ -131,12 +140,35 @@ const AdminQuoteRequestDetails: React.FC = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('quote_request_leads')
-        .select('id, status, match_score, match_reasons, created_at, viewed_at, responded_at, provider:businesses!quote_request_leads_provider_id_fkey(id, name_ar, city_id)')
+        .select('id, status, match_score, match_reasons, created_at, viewed_at, responded_at, contact_revealed, contact_revealed_at, contact_view_count, provider:businesses!quote_request_leads_provider_id_fkey(id, name_ar, city_id)')
         .eq('quote_request_id', id!)
         .order('match_score', { ascending: false });
       if (error) throw error;
       return (data ?? []) as unknown as LeadSummaryRow[];
     },
+  });
+
+  const revealMutation = useMutation({
+    mutationFn: async (vars: { lead_id: string; note: string }) => {
+      trackEvent('admin_contact_reveal_clicked', { lead_id: vars.lead_id });
+      const { data, error } = await supabase.functions.invoke('admin-reveal-lead-contact', {
+        body: { lead_id: vars.lead_id, note: vars.note || undefined },
+      });
+      if (error) throw error;
+      return data as { success: boolean; message?: string };
+    },
+    onSuccess: (res) => {
+      if (res?.success) {
+        toast.success('تمت إتاحة بيانات التواصل للمزود');
+        trackEvent('admin_contact_revealed', { lead_id: revealLeadId });
+      } else {
+        toast.error(res?.message ?? 'تعذر إتاحة بيانات التواصل');
+      }
+      setRevealLeadId(null);
+      setRevealNote('');
+      refetchLeads();
+    },
+    onError: () => toast.error('تعذر إتاحة بيانات التواصل'),
   });
 
   const matchMutation = useMutation({
@@ -455,6 +487,8 @@ const AdminQuoteRequestDetails: React.FC = () => {
                 const viewedCount = list.filter((l) => l.viewed_at).length;
                 const notInterested = list.filter((l) => l.status === 'not_interested').length;
                 const pending = list.filter((l) => !l.viewed_at).length;
+                const revealedCount = list.filter((l) => l.contact_revealed).length;
+                const totalContactViews = list.reduce((sum, l) => sum + (l.contact_view_count ?? 0), 0);
                 return (
                   <>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
@@ -462,6 +496,9 @@ const AdminQuoteRequestDetails: React.FC = () => {
                       <Stat label="شاهدوا" value={viewedCount} />
                       <Stat label="مهتمون" value={interestedCount} />
                       <Stat label="غير مناسب" value={notInterested} />
+                      <Stat label="بيانات متاحة" value={revealedCount} />
+                      <Stat label="بانتظار الإتاحة" value={Math.max(0, interestedCount - revealedCount)} />
+                      <Stat label="مرات عرض البيانات" value={totalContactViews} />
                     </div>
                     {interestedCount > 0 && quote.status !== 'contacted' && quote.status !== 'completed' && (
                       <div className="rounded-md border border-success/30 bg-success/5 p-3 text-xs text-success">
@@ -471,15 +508,45 @@ const AdminQuoteRequestDetails: React.FC = () => {
                     {pending > 0 && (
                       <div className="text-[11px] text-muted-foreground">{pending} مزود لم يفتح الفرصة بعد.</div>
                     )}
+                    <p className="text-[11px] text-muted-foreground">
+                      إتاحة بيانات التواصل تمنح المزود صلاحية الاطلاع على بيانات العميل لهذه الفرصة فقط.
+                    </p>
                   </>
                 );
               })()}
+
+              {(leads?.length ?? 0) > 0 && (
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {([
+                    ['all', 'الكل'],
+                    ['interested', 'مهتم'],
+                    ['pending_reveal', 'بانتظار الإتاحة'],
+                    ['revealed', 'بيانات متاحة'],
+                  ] as const).map(([k, label]) => (
+                    <button
+                      key={k}
+                      type="button"
+                      onClick={() => setLeadFilter(k)}
+                      className={`text-[11px] px-2 py-1 rounded-full border transition ${
+                        leadFilter === k ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted/40 text-muted-foreground border-border hover:bg-muted'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              )}
 
               {(leads?.length ?? 0) === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-4">لم يتم توجيه الطلب لأي مزود بعد.</p>
               ) : (
                 <ul className="divide-y divide-border">
-                  {(leads ?? []).map((l) => (
+                  {(leads ?? []).filter((l) => {
+                    if (leadFilter === 'interested') return l.status === 'interested';
+                    if (leadFilter === 'pending_reveal') return l.status === 'interested' && !l.contact_revealed;
+                    if (leadFilter === 'revealed') return l.contact_revealed;
+                    return true;
+                  }).map((l) => (
                     <li key={l.id} className="py-2.5 flex flex-wrap items-center gap-2">
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium truncate">{l.provider?.name_ar ?? '—'}</p>
@@ -488,11 +555,34 @@ const AdminQuoteRequestDetails: React.FC = () => {
                             <span key={i} className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{r}</span>
                           ))}
                         </div>
+                        {l.contact_revealed && (
+                          <div className="text-[11px] text-muted-foreground mt-1 flex flex-wrap items-center gap-2">
+                            <span className="inline-flex items-center gap-1 text-success">
+                              <ShieldCheck className="h-3 w-3" /> بيانات التواصل متاحة
+                            </span>
+                            {l.contact_revealed_at && (
+                              <span className="tech-content">{new Date(l.contact_revealed_at).toLocaleDateString('ar-SA-u-nu-latn')}</span>
+                            )}
+                            <span className="inline-flex items-center gap-1">
+                              <Eye className="h-3 w-3" /> <span className="tech-content">{l.contact_view_count ?? 0}</span>
+                            </span>
+                          </div>
+                        )}
                       </div>
                       <span className="text-xs text-muted-foreground tech-content">{l.match_score}</span>
                       <span className={`text-[11px] px-2 py-0.5 rounded-full border ${LEAD_STATUS_TONE[l.status as LeadStatus] ?? ''}`}>
                         {LEAD_STATUS_LABEL_AR[l.status as LeadStatus] ?? l.status}
                       </span>
+                      {l.status === 'interested' && !l.contact_revealed && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="min-h-[32px] text-xs"
+                          onClick={() => { setRevealLeadId(l.id); setRevealNote(''); }}
+                        >
+                          <ShieldCheck className="h-3.5 w-3.5" /> إتاحة بيانات التواصل
+                        </Button>
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -535,6 +625,36 @@ const AdminQuoteRequestDetails: React.FC = () => {
             </Button>
           </div>
         </div>
+
+        <Dialog open={!!revealLeadId} onOpenChange={(open) => { if (!open) { setRevealLeadId(null); setRevealNote(''); } }}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>إتاحة بيانات التواصل للمزود؟</DialogTitle>
+              <DialogDescription>
+                سيتمكن هذا المزود من الاطلاع على اسم العميل ورقم الجوال والبريد الإلكتروني إن وجد. لا يمكن التراجع عن هذا الإجراء من ناحية أن المزود قد يرى البيانات بعد الإتاحة.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-2">
+              <Label className="text-sm">ملاحظة داخلية (اختياري)</Label>
+              <Textarea
+                rows={3} dir="auto" value={revealNote} onChange={(e) => setRevealNote(e.target.value)}
+                placeholder="مثال: تم التحقق من اهتمام المزود هاتفيًا"
+              />
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => { setRevealLeadId(null); setRevealNote(''); }} disabled={revealMutation.isPending}>
+                إلغاء
+              </Button>
+              <Button
+                onClick={() => revealLeadId && revealMutation.mutate({ lead_id: revealLeadId, note: revealNote })}
+                disabled={revealMutation.isPending}
+              >
+                {revealMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
+                إتاحة البيانات
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );
