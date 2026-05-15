@@ -391,10 +391,12 @@ export const HeroV2 = () => {
               Uses role="status" (implicit polite) without redundant aria-live to avoid
               double-announcements in NVDA/VoiceOver. */}
           <div id="hero-live-region" className="sr-only" role="status" aria-atomic="true">
-            {bi(
-              `الشريحة ${active + 1} من ${SLIDES.length}: ${slide.titleAr}`,
-              `Slide ${active + 1} of ${SLIDES.length}: ${slide.titleEn}`,
-            )}
+            {keyboardSlideChange
+              ? ''
+              : bi(
+                  `الشريحة ${active + 1} من ${SLIDES.length}: ${slide.titleAr}`,
+                  `Slide ${active + 1} of ${SLIDES.length}: ${slide.titleEn}`,
+                )}
           </div>
 
           {/* Image stack with Ken-Burns */}
@@ -475,11 +477,13 @@ export const HeroV2 = () => {
             */}
             <div
               key={`txt-${active}`}
+              ref={slideContentRef}
+              tabIndex={-1}
               role="group"
               aria-roledescription={bi('شريحة', 'slide')}
               aria-label={bi(`${active + 1} من ${SLIDES.length}`, `${active + 1} of ${SLIDES.length}`)}
               aria-current="true"
-              className="animate-fade-in motion-reduce:animate-none max-w-3xl"
+              className="animate-fade-in motion-reduce:animate-none max-w-3xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black/30 rounded-lg"
             >
               <h1
                 className="font-heading font-black text-[2.1rem] sm:text-5xl md:text-6xl lg:text-7xl text-white leading-[1.08] tracking-tight"
