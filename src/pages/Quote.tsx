@@ -521,6 +521,29 @@ const Quote: React.FC = () => {
                   </div>
                 </div>
 
+                {/* Draft notice when ?sector= overrides a saved draft */}
+                {draftNotice && (
+                  <div className="mb-4 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-foreground">لديك طلب محفوظ سابقًا. يمكنك المتابعة أو بدء طلب جديد.</p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
+                          setForm({ ...emptyForm, sector: form.sector });
+                          setFileObjects([]);
+                          setStep(1);
+                          setDraftNotice(false);
+                        }}
+                        className="mt-1 text-primary font-semibold hover:underline"
+                      >
+                        ابدأ طلبًا جديدًا
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {/* Step content */}
                 {step === 1 && (
                   <div>
