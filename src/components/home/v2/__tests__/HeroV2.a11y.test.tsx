@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen, within, act, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { axe } from 'jest-axe';
 import { HeroV2 } from '../HomeV2';
@@ -74,5 +74,79 @@ describe('HeroV2 — accessibility', () => {
     const ids = Array.from(container.querySelectorAll('[id]')).map((el) => el.id);
     const dupes = ids.filter((id, i) => ids.indexOf(id) !== i);
     expect(dupes).toEqual([]);
+  });
+
+  it('uses #hero-live-region as the ONLY announcer inside the carousel', () => {
+    renderHero();
+    const carousel = document.getElementById('hero-carousel')!;
+    // Anything that would speak to AT: role=status, role=alert, or aria-live
+    const announcers = carousel.querySelectorAll(
+      '[role="status"], [role="alert"], [aria-live="polite"], [aria-live="assertive"]',
+    );
+    // Autocomplete status (#hero-ac-status) lives OUTSIDE the carousel region,
+    // so the carousel should expose exactly one announcer: #hero-live-region.
+    expect(announcers.length).toBe(1);
+    expect((announcers[0] as HTMLElement).id).toBe('hero-live-region');
+  });
+
+  it('does not re-announce the previous slide after Next then Prev navigation', async () => {
+    vi.useFakeTimers();
+    try {
+      renderHero();
+      const live = document.getElementById('hero-live-region')!;
+
+      // Initial commit (slide 1) is synchronous via lazy state initializer
+      const initial = live.textContent ?? '';
+      expect(initial).toMatch(/(الشريحة|Slide)\s*1/);
+
+      const nextBtn = screen.getByLabelText(/Next slide|الشريحة التالية/);
+      const prevBtn = screen.getByLabelText(/Previous slide|الشريحة السابقة/);
+
+      // Forward → wait past the 450ms debounce → live region speaks slide 2
+      await act(async () => { fireEvent.click(nextBtn); });
+      await act(async () => { vi.advanceTimersByTime(500); });
+      const afterNext = live.textContent ?? '';
+      expect(afterNext).toMatch(/(الشريحة|Slide)\s*2/);
+      expect(afterNext).not.toBe(initial);
+
+      // Backward → live region speaks slide 1 once, NOT slide 2 again
+      await act(async () => { fireEvent.click(prevBtn); });
+      await act(async () => { vi.advanceTimersByTime(500); });
+      const afterPrev = live.textContent ?? '';
+      expect(afterPrev).toMatch(/(الشريحة|Slide)\s*1/);
+      // Previous slide (slide 2) text must not linger in the live region
+      expect(afterPrev).not.toMatch(/(الشريحة|Slide)\s*2/);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('does not re-announce the same slide on incidental re-renders', async () => {
+    vi.useFakeTimers();
+    try {
+      const { rerender } = renderHero();
+      const live = document.getElementById('hero-live-region')!;
+      const before = live.textContent ?? '';
+      expect(before).toMatch(/(الشريحة|Slide)\s*1/);
+
+      // Force a parent re-render without changing the active slide
+      const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+      rerender(
+        <QueryClientProvider client={qc}>
+          <LanguageProvider>
+            <MemoryRouter>
+              <HeroV2 />
+            </MemoryRouter>
+          </LanguageProvider>
+        </QueryClientProvider>,
+      );
+      await act(async () => { vi.advanceTimersByTime(500); });
+
+      const after = document.getElementById('hero-live-region')!.textContent ?? '';
+      // Same text → no diff for the screen reader to re-announce.
+      expect(after).toBe(before);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
