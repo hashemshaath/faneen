@@ -11,6 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import {
   Inbox, ChevronDown, ChevronUp, Send, Eye, HelpCircle, CheckCircle2,
   XCircle, Archive, X, Wallet, FileText, MessageSquare, Loader2, ReceiptText, Calendar,
+  Paperclip, MapPin, Tag,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNoIndex } from '@/hooks/useNoIndex';
@@ -49,6 +50,43 @@ function safeTrack(event: Parameters<typeof trackEvent>[0], payload: Parameters<
 
 const CANCELLABLE = new Set(['new', 'viewed', 'needs_info']);
 
+interface QuoteRequestRow {
+  id: string;
+  sector: string;
+  city: string;
+  district: string | null;
+  project_description: string;
+  status: string;
+  preferred_contact_method: string;
+  created_at: string;
+  updated_at: string;
+}
+
+const QUOTE_STATUS_LABEL_AR: Record<string, string> = {
+  new: 'جديد',
+  under_review: 'قيد المراجعة',
+  matched: 'تم توجيهه لمزودين',
+  contacted: 'تم التواصل',
+  completed: 'مكتمل',
+  cancelled: 'ملغي',
+};
+const QUOTE_STATUS_LABEL_EN: Record<string, string> = {
+  new: 'New',
+  under_review: 'Under review',
+  matched: 'Matched',
+  contacted: 'Contacted',
+  completed: 'Completed',
+  cancelled: 'Cancelled',
+};
+const QUOTE_STATUS_TONE: Record<string, string> = {
+  new: 'bg-primary/10 text-primary border-primary/30',
+  under_review: 'bg-warning/10 text-warning border-warning/30',
+  matched: 'bg-info/10 text-info border-info/30',
+  contacted: 'bg-success/10 text-success border-success/30',
+  completed: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30',
+  cancelled: 'bg-muted text-muted-foreground border-border',
+};
+
 const DashboardMyRequests: React.FC = () => {
   useNoIndex();
   const { isRTL } = useLanguage();
@@ -69,6 +107,39 @@ const DashboardMyRequests: React.FC = () => {
         .limit(200);
       if (error) throw error;
       return (data ?? []) as MyLeadRow[];
+    },
+  });
+
+  const { data: quoteRequests, isLoading: loadingQuotes } = useQuery({
+    queryKey: ['my-quote-requests', user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('quote_requests')
+        .select('id, sector, city, district, project_description, status, preferred_contact_method, created_at, updated_at')
+        .eq('user_id', user!.id)
+        .order('created_at', { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      return (data ?? []) as QuoteRequestRow[];
+    },
+  });
+
+  const quoteIds = useMemo(() => (quoteRequests ?? []).map((q) => q.id), [quoteRequests]);
+  const { data: quoteFileCounts } = useQuery({
+    queryKey: ['my-quote-file-counts', quoteIds.join(',')],
+    enabled: quoteIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('quote_request_files')
+        .select('quote_request_id')
+        .in('quote_request_id', quoteIds);
+      if (error) throw error;
+      const counts = new Map<string, number>();
+      (data ?? []).forEach((r: { quote_request_id: string }) => {
+        counts.set(r.quote_request_id, (counts.get(r.quote_request_id) ?? 0) + 1);
+      });
+      return counts;
     },
   });
 
@@ -158,6 +229,79 @@ const DashboardMyRequests: React.FC = () => {
             {[0, 1, 2].map((i) => <Skeleton key={i} className="h-24 w-full rounded-xl" />)}
           </div>
         )}
+
+        {/* === Quote requests section === */}
+        <section className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="font-heading font-semibold text-base sm:text-lg flex items-center gap-2">
+              <ReceiptText className="h-4 w-4" />
+              {isRTL ? 'طلبات عروض الأسعار' : 'Quote requests'}
+            </h2>
+            <Button asChild size="sm" variant="outline" className="min-h-[40px]">
+              <Link to="/quote">{isRTL ? 'طلب جديد' : 'New request'}</Link>
+            </Button>
+          </div>
+
+          {loadingQuotes && (
+            <div className="space-y-3">
+              {[0, 1].map((i) => <Skeleton key={i} className="h-20 w-full rounded-xl" />)}
+            </div>
+          )}
+
+          {!loadingQuotes && (quoteRequests?.length ?? 0) === 0 && (
+            <Card>
+              <CardContent className="py-10 text-center space-y-3">
+                <ReceiptText className="mx-auto h-10 w-10 text-muted-foreground" />
+                <p className="font-medium">{isRTL ? 'لا توجد طلبات حتى الآن' : 'No quote requests yet'}</p>
+                <p className="text-sm text-muted-foreground">
+                  {isRTL
+                    ? 'ابدأ بإرسال طلب عرض سعر، وسنساعدك على تنظيم تفاصيله حسب القطاع والمدينة.'
+                    : 'Send a quote request and we will help organize the details by sector and city.'}
+                </p>
+                <Button asChild className="min-h-[44px]">
+                  <Link to="/quote">{isRTL ? 'اطلب عرض سعر' : 'Request a quote'}</Link>
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {(quoteRequests ?? []).map((q) => {
+            const fileCount = quoteFileCounts?.get(q.id) ?? 0;
+            const tone = QUOTE_STATUS_TONE[q.status] ?? 'bg-muted text-muted-foreground border-border';
+            return (
+              <Card key={q.id} className="overflow-hidden">
+                <CardContent className="p-4 sm:p-5 space-y-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-mono text-xs text-muted-foreground tech-content">#{q.id.slice(0, 8)}</span>
+                    <span className={`text-xs px-2 py-0.5 rounded-full border ${tone}`}>
+                      {isRTL ? QUOTE_STATUS_LABEL_AR[q.status] : QUOTE_STATUS_LABEL_EN[q.status]}
+                    </span>
+                    <span className="text-xs text-muted-foreground tech-content ms-auto">
+                      {new Date(q.created_at).toLocaleDateString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+                    <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                      <Tag className="h-4 w-4" /> {q.sector}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                      <MapPin className="h-4 w-4" /> {q.city}{q.district ? ` · ${q.district}` : ''}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                      <MessageSquare className="h-4 w-4" /> {q.preferred_contact_method}
+                    </span>
+                    {fileCount > 0 && (
+                      <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                        <Paperclip className="h-4 w-4" /> {fileCount}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-foreground/80 line-clamp-2">{q.project_description}</p>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </section>
 
         {!isLoading && (leads?.length ?? 0) === 0 && (
           <Card>

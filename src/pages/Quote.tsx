@@ -11,6 +11,8 @@ import { Label } from '@/components/ui/label';
 import { Bi, useBi } from '@/components/common/Bilingual';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   CheckCircle2, ChevronLeft, ChevronRight, Upload, X,
   ShieldCheck, ListChecks, MapPin, Layers, Image as ImageIcon, AlertCircle,
@@ -67,6 +69,20 @@ const SECTORS: { value: Sector; ar: string; en: string }[] = [
 ];
 
 const SAUDI_PHONE = /^(?:\+?966|0)?5\d{8}$/;
+
+const ALLOWED_FILE_TYPES = [
+  'image/jpeg','image/png','image/webp','image/gif','image/heic',
+  'application/pdf',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/msword',
+  'application/acad','image/vnd.dwg','application/dwg','application/x-dwg',
+];
+const MAX_FILE_BYTES = 10 * 1024 * 1024; // 10MB
+
+function safeFileName(name: string): string {
+  const cleaned = name.replace(/[^\w.\-]+/g, '_').replace(/_+/g, '_');
+  return cleaned.slice(-120) || 'file';
+}
 
 /* ---------------- helpers ---------------- */
 
@@ -149,12 +165,16 @@ const STEP_LABELS = [
 const Quote: React.FC = () => {
   const { isRTL } = useLanguage();
   const bi = useBi();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [form, setForm] = useState<QuoteForm>(() => loadDraft());
+  const [fileObjects, setFileObjects] = useState<File[]>([]);
   const [errors, setErrors] = useState<Partial<Record<keyof QuoteForm, string>>>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [submittedId, setSubmittedId] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<{ done: number; total: number } | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   // persist draft on every change
@@ -256,36 +276,119 @@ const Quote: React.FC = () => {
 
   const handleFiles = (filesList: FileList | null) => {
     if (!filesList) return;
-    const next = [...form.files];
-    Array.from(filesList).slice(0, 8 - next.length).forEach((f) => {
-      next.push({ name: f.name, size: f.size });
+    const nextMeta = [...form.files];
+    const nextFiles = [...fileObjects];
+    const remaining = 8 - nextMeta.length;
+    Array.from(filesList).slice(0, remaining).forEach((f) => {
+      if (f.size > MAX_FILE_BYTES) return;
+      if (ALLOWED_FILE_TYPES.length && f.type && !ALLOWED_FILE_TYPES.includes(f.type)) {
+        // allow unknown mime (some DWG/DXF have no mime), but block scripts/exe by extension
+        if (/\.(exe|bat|cmd|sh|js|html|svg)$/i.test(f.name)) return;
+      }
+      nextMeta.push({ name: f.name, size: f.size });
+      nextFiles.push(f);
     });
-    update('files', next);
+    setFileObjects(nextFiles);
+    update('files', nextMeta);
   };
   const removeFile = (idx: number) => {
     const next = form.files.filter((_, i) => i !== idx);
+    const nextFiles = fileObjects.filter((_, i) => i !== idx);
+    setFileObjects(nextFiles);
     update('files', next);
   };
 
   const submit = async () => {
     if (!validateStep(5)) return;
+    if (submitting) return;
     setSubmitting(true);
     setSubmitError(null);
+    setUploadProgress(null);
+
+    const customerTypeMap: Record<string, string> = {
+      individual: 'individual',
+      contractor: 'contractor',
+      engineering: 'engineering_office',
+      company: 'company',
+      gov: 'government',
+      other: 'other',
+    };
+    const serviceLocationMap: Record<string, string> = {
+      'on-site': 'project_site',
+      'at-provider': 'provider_location',
+      'unsure': 'not_sure',
+    };
+
+    const payload = {
+      customer_name: form.name.trim(),
+      customer_phone: form.phone.trim(),
+      customer_email: form.email.trim() || null,
+      customer_type: customerTypeMap[form.clientType as string] ?? 'other',
+      preferred_contact_method: form.contactPref,
+      sector: form.sector,
+      city: form.city.trim(),
+      district: form.district.trim() || null,
+      service_location_type: serviceLocationMap[form.serviceLocation as string] ?? 'not_sure',
+      project_description: form.description.trim(),
+      approx_dimensions: form.measurements.trim() || null,
+      quantity: form.quantity.trim() || null,
+      execution_timeline: form.timeline,
+      has_budget: form.budgetMode === 'yes',
+      budget_amount: form.budgetMode === 'yes' && form.budget ? Number(form.budget) || null : null,
+      budget_note: form.budgetMode === 'after-quotes'
+        ? 'after-quotes'
+        : form.budgetMode === 'no' ? 'no-budget' : null,
+      metadata: { locale: isRTL ? 'ar' : 'en' },
+    };
+
     try {
-      // NOTE: backend persistence intentionally deferred — saved locally for now.
-      // A migration with a `quote_requests` table + RLS can be wired in a follow-up.
-      const payload = { ...form, submittedAt: new Date().toISOString() };
-      localStorage.setItem('qitaat_quote_last_submission_v1', JSON.stringify(payload));
-      localStorage.removeItem(DRAFT_KEY);
-      await new Promise((r) => setTimeout(r, 500));
+      const { data, error } = await supabase.functions.invoke('submit-quote-request', {
+        body: payload,
+      });
+      if (error) throw new Error(error.message);
+      const result = data as { success: boolean; quote_request_id?: string; message?: string };
+      if (!result?.success || !result.quote_request_id) {
+        throw new Error(result?.message || 'submit_failed');
+      }
+      const quoteId = result.quote_request_id;
+
+      // Upload files (best-effort: the request is already saved)
+      if (fileObjects.length) {
+        setUploadProgress({ done: 0, total: fileObjects.length });
+        for (let i = 0; i < fileObjects.length; i++) {
+          const f = fileObjects[i];
+          const path = `${quoteId}/${Date.now()}-${i}-${safeFileName(f.name)}`;
+          const { error: upErr } = await supabase.storage
+            .from('quote-request-files')
+            .upload(path, f, { upsert: false, contentType: f.type || undefined });
+          if (!upErr) {
+            await supabase.from('quote_request_files').insert({
+              quote_request_id: quoteId,
+              user_id: user?.id ?? null,
+              file_name: f.name,
+              file_path: path,
+              file_size: f.size,
+              file_type: f.type || null,
+            });
+          } else {
+            console.warn('quote file upload failed', upErr);
+          }
+          setUploadProgress({ done: i + 1, total: fileObjects.length });
+        }
+      }
+
+      try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
+      setSubmittedId(quoteId);
       setSubmitted(true);
-    } catch {
-      setSubmitError(bi(
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : '';
+      setSubmitError(msg || bi(
         'تعذر إرسال الطلب حاليًا. حاول مرة أخرى، أو تواصل معنا إذا استمرت المشكلة.',
         'Could not send the request. Please try again or contact us.',
       ));
     } finally {
       setSubmitting(false);
+      setUploadProgress(null);
     }
   };
 
@@ -309,12 +412,22 @@ const Quote: React.FC = () => {
                 en="We received your request. It will be routed by sector and city so providers can respond clearly."
               />
             </p>
+            {submittedId && (
+              <p className="text-xs text-muted-foreground mb-4 tech-content">
+                <Bi ar="رقم الطلب: " en="Request ID: " />
+                <span className="font-mono">{submittedId.slice(0, 8)}</span>
+              </p>
+            )}
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Link to="/dashboard/my-requests">
-                <Button size="appLg" variant="primary" className="w-full sm:w-auto">
+              {user ? (
+                <Button size="appLg" variant="primary" className="w-full sm:w-auto" onClick={() => navigate('/dashboard/my-requests')}>
                   <Bi ar="متابعة الطلب" en="Track request" />
                 </Button>
-              </Link>
+              ) : (
+                <Button size="appLg" variant="primary" className="w-full sm:w-auto" onClick={() => navigate('/auth?mode=signup')}>
+                  <Bi ar="أنشئ حسابًا لمتابعة طلبك بسهولة" en="Create an account to track your request" />
+                </Button>
+              )}
               <Link to="/search">
                 <Button size="appLg" variant="outline" className="w-full sm:w-auto">
                   <Bi ar="استعراض مزودين" en="Browse providers" />
@@ -719,6 +832,14 @@ const Quote: React.FC = () => {
                     {submitError && (
                       <p role="alert" className="text-sm text-destructive flex items-center gap-2">
                         <AlertCircle className="w-4 h-4" /> {submitError}
+                      </p>
+                    )}
+                    {uploadProgress && (
+                      <p className="text-sm text-muted-foreground">
+                        <Bi
+                          ar={`جارٍ رفع الملفات (${uploadProgress.done}/${uploadProgress.total})...`}
+                          en={`Uploading files (${uploadProgress.done}/${uploadProgress.total})...`}
+                        />
                       </p>
                     )}
                   </div>

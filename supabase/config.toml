@@ -31,3 +31,5 @@ project_id = "hckpxwhjycmdflaneihd"
     verify_jwt = false
   [functions.email-track-click]
     verify_jwt = false
+  [functions.submit-quote-request]
+    verify_jwt = false
