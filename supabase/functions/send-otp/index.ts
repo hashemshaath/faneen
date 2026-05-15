@@ -137,12 +137,17 @@ Deno.serve(async (req) => {
       } catch { /* Twilio failed, continue */ }
     }
 
+    if (!smsSent) {
+      // Never leak OTP in API response. Log server-side only.
+      console.error("SMS delivery failed for user", user.id);
+      return new Response(
+        JSON.stringify({ success: false, error: "sms_delivery_failed", message: "Could not send SMS. Please try again later." }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     return new Response(
-      JSON.stringify({
-        success: true,
-        sms_sent: smsSent,
-        ...(smsSent ? {} : { demo_otp: otp }),
-      }),
+      JSON.stringify({ success: true, sms_sent: true }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
