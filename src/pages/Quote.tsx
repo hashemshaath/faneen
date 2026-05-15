@@ -412,12 +412,22 @@ const Quote: React.FC = () => {
                 en="We received your request. It will be routed by sector and city so providers can respond clearly."
               />
             </p>
+            {submittedId && (
+              <p className="text-xs text-muted-foreground mb-4 tech-content">
+                <Bi ar="رقم الطلب: " en="Request ID: " />
+                <span className="font-mono">{submittedId.slice(0, 8)}</span>
+              </p>
+            )}
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Link to="/dashboard/my-requests">
-                <Button size="appLg" variant="primary" className="w-full sm:w-auto">
+              {user ? (
+                <Button size="appLg" variant="primary" className="w-full sm:w-auto" onClick={() => navigate('/dashboard/my-requests')}>
                   <Bi ar="متابعة الطلب" en="Track request" />
                 </Button>
-              </Link>
+              ) : (
+                <Button size="appLg" variant="primary" className="w-full sm:w-auto" onClick={() => navigate('/auth?mode=signup')}>
+                  <Bi ar="أنشئ حسابًا لمتابعة طلبك بسهولة" en="Create an account to track your request" />
+                </Button>
+              )}
               <Link to="/search">
                 <Button size="appLg" variant="outline" className="w-full sm:w-auto">
                   <Bi ar="استعراض مزودين" en="Browse providers" />
