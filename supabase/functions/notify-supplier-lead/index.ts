@@ -7,6 +7,7 @@
 // (email + business_id). No raw IP / email / phone / name / message is
 // stored — only opaque hashes. Limit: 3 requests per identifier per hour.
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import { logSecurityEvent, hashSubject, hashIp } from "../_shared/securityAudit.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -57,6 +58,15 @@ Deno.serve(async (req) => {
     const admin = createClient(supabaseUrl, serviceKey, {
       auth: { persistSession: false },
     })
+    const ipHash = await hashIp(req);
+    const userAgent = req.headers.get("user-agent");
+    await logSecurityEvent(admin, {
+      event_type: "supplier_lead_notify",
+      event_action: "attempt",
+      ip_hash: ipHash,
+      user_agent: userAgent,
+      request_id: leadId,
+    });
 
     // Pull lead + business + owner profile email in one round-trip.
     const { data: lead, error: leadErr } = await admin
@@ -68,6 +78,14 @@ Deno.serve(async (req) => {
       .maybeSingle()
 
     if (leadErr || !lead) {
+      await logSecurityEvent(admin, {
+        event_type: "supplier_lead_notify",
+        event_action: "failed",
+        status: "warn",
+        ip_hash: ipHash,
+        request_id: leadId,
+        reason: "lead_not_found",
+      });
       return new Response(
         JSON.stringify({ ok: false, error: 'lead_not_found' }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
@@ -80,6 +98,14 @@ Deno.serve(async (req) => {
     const createdAt = lead.created_at ? new Date(lead.created_at).getTime() : 0
     if (!createdAt || Date.now() - createdAt > 5 * 60 * 1000) {
       console.warn('notify-supplier-lead: stale lead rejected')
+      await logSecurityEvent(admin, {
+        event_type: "supplier_lead_notify",
+        event_action: "failed",
+        status: "warn",
+        ip_hash: ipHash,
+        request_id: leadId,
+        reason: "stale_lead",
+      });
       return new Response(
         JSON.stringify({ ok: false, error: 'stale_lead' }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
@@ -121,6 +147,15 @@ Deno.serve(async (req) => {
     if (!allowed) {
       // Do NOT log identifier values — only emit a generic counter.
       console.warn('notify-supplier-lead: rate limit hit')
+      await logSecurityEvent(admin, {
+        event_type: "supplier_lead_notify",
+        event_action: "rate_limited",
+        status: "warn",
+        ip_hash: ipHash,
+        request_id: leadId,
+        reason: "rate_limited",
+        metadata: { business_id: lead.business_id },
+      });
       return new Response(
         JSON.stringify({
           ok: false,
@@ -140,6 +175,14 @@ Deno.serve(async (req) => {
       .maybeSingle()
 
     if (!biz) {
+      await logSecurityEvent(admin, {
+        event_type: "supplier_lead_notify",
+        event_action: "failed",
+        status: "warn",
+        ip_hash: ipHash,
+        request_id: leadId,
+        reason: "business_not_found",
+      });
       return new Response(
         JSON.stringify({ ok: false, error: 'business_not_found' }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
@@ -155,6 +198,16 @@ Deno.serve(async (req) => {
     }
 
     if (!recipientEmail) {
+      await logSecurityEvent(admin, {
+        event_type: "supplier_lead_notify",
+        event_action: "failed",
+        status: "warn",
+        user_id: biz.user_id ?? null,
+        ip_hash: ipHash,
+        request_id: leadId,
+        reason: "no_recipient",
+        metadata: { business_id: lead.business_id },
+      });
       return new Response(
         JSON.stringify({ ok: false, error: 'no_recipient' }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
@@ -186,11 +239,34 @@ Deno.serve(async (req) => {
 
     if (invokeErr) {
       console.warn('notify-supplier-lead: email send failed', invokeErr.message)
+      await logSecurityEvent(admin, {
+        event_type: "supplier_lead_notify",
+        event_action: "failed",
+        status: "error",
+        user_id: biz.user_id ?? null,
+        subject_hash: await hashSubject(recipientEmail),
+        ip_hash: ipHash,
+        request_id: leadId,
+        reason: "email_send_failed",
+        metadata: { business_id: lead.business_id },
+      });
       return new Response(
         JSON.stringify({ ok: false, error: 'email_send_failed' }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       )
     }
+
+    await logSecurityEvent(admin, {
+      event_type: "supplier_lead_notify",
+      event_action: "success",
+      user_id: biz.user_id ?? null,
+      subject_hash: await hashSubject(recipientEmail),
+      ip_hash: ipHash,
+      user_agent: userAgent,
+      request_id: leadId,
+      reason: "notification_sent",
+      metadata: { business_id: lead.business_id },
+    });
 
     // SR-2: Send customer confirmation (fail-soft — never block on errors).
     if (lead.email) {
