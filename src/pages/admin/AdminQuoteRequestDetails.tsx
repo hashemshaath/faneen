@@ -99,6 +99,9 @@ const AdminQuoteRequestDetails: React.FC = () => {
   const [revealLeadId, setRevealLeadId] = useState<string | null>(null);
   const [revealNote, setRevealNote] = useState('');
   const [leadFilter, setLeadFilter] = useState<'all' | 'interested' | 'pending_reveal' | 'revealed'>('all');
+  const [eventFilter, setEventFilter] = useState<'all' | 'quote' | 'lead' | 'matching' | 'interest' | 'contact'>('all');
+  const [eventOrderDesc, setEventOrderDesc] = useState(true);
+  const [rawEventId, setRawEventId] = useState<string | null>(null);
 
   const { data: quote, isLoading, error } = useQuery({
     queryKey: ['admin-quote-request', id],
@@ -273,6 +276,7 @@ const AdminQuoteRequestDetails: React.FC = () => {
       toast.success('تم حفظ التحديثات');
       qc.invalidateQueries({ queryKey: ['admin-quote-request', id] });
       qc.invalidateQueries({ queryKey: ['admin-quote-requests'] });
+      qc.invalidateQueries({ queryKey: ['admin-quote-events', id] });
       // Auto-route to providers when admin moves the quote into review.
       if (pendingStatus === 'under_review' && quote?.status !== 'under_review') {
         matchMutation.mutate();
