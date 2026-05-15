@@ -116,8 +116,19 @@ const QuoteRequestDetails: React.FC = () => {
     [quote],
   );
 
+  type UpdatePatch = {
+    project_description: string;
+    approx_dimensions: string | null;
+    quantity: string | null;
+    execution_timeline: string;
+    has_budget: boolean;
+    budget_amount: number | null;
+    budget_note: string | null;
+    preferred_contact_method: string;
+    customer_email: string | null;
+  };
   const updateMutation = useMutation({
-    mutationFn: async (patch: Record<string, string | number | boolean | null>) => {
+    mutationFn: async (patch: UpdatePatch) => {
       const { error } = await supabase
         .from('quote_requests')
         .update(patch)
