@@ -8261,6 +8261,81 @@ export type Database = {
         }
         Relationships: []
       }
+      showcase_submissions: {
+        Row: {
+          business_id: string
+          created_at: string
+          description_ar: string | null
+          description_en: string | null
+          id: string
+          image_url: string
+          kind: string
+          link_url: string | null
+          rejected_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          sector_slug: string | null
+          status: string
+          submitted_by: string | null
+          title_ar: string | null
+          title_en: string | null
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          id?: string
+          image_url: string
+          kind: string
+          link_url?: string | null
+          rejected_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          sector_slug?: string | null
+          status?: string
+          submitted_by?: string | null
+          title_ar?: string | null
+          title_en?: string | null
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          id?: string
+          image_url?: string
+          kind?: string
+          link_url?: string | null
+          rejected_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          sector_slug?: string | null
+          status?: string
+          submitted_by?: string | null
+          title_ar?: string | null
+          title_en?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "showcase_submissions_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "showcase_submissions_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sitemap_audit_runs: {
         Row: {
           alert_sent: boolean
