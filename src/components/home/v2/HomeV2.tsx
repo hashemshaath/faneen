@@ -551,6 +551,7 @@ export const HeroV2 = () => {
             </span>
             <button
               type="button"
+              id="hero-toggle-autoplay"
               onClick={() => setPaused((p) => !p)}
               aria-label={paused ? bi('تشغيل', 'Play') : bi('إيقاف', 'Pause')}
               aria-pressed={paused}
