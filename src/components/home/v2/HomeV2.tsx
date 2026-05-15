@@ -195,6 +195,12 @@ export const HeroV2 = () => {
   const [history, setHistory] = useState<string[]>([]);
   const acContainerRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  // Slide content group — focus target when the user changes slides via keyboard.
+  const slideContentRef = useRef<HTMLDivElement>(null);
+  // When true, the upcoming slide change was triggered by keyboard; we move
+  // focus to the slide content and SKIP the live-region announcement so the
+  // user doesn't hear the same slide twice (focus name + live region).
+  const [keyboardSlideChange, setKeyboardSlideChange] = useState(false);
 
   // Top trending searches (manually curated based on industry priors)
   const TRENDING: { ar: string; en: string; cat?: string }[] = [
@@ -277,6 +283,24 @@ export const HeroV2 = () => {
     [SLIDES.length],
   );
 
+  // After a keyboard-driven slide change, move focus to the new slide's
+  // content group. Its aria-label ("N من M") + aria-roledescription="slide"
+  // gives the screen reader equivalent context to the live region — which
+  // is intentionally muted in the same render to avoid double announcements.
+  useEffect(() => {
+    if (!keyboardSlideChange) return;
+    const el = slideContentRef.current;
+    if (el) el.focus({ preventScroll: true });
+  }, [active, keyboardSlideChange]);
+
+  // Auto-advance / click on a dot resets the flag so subsequent changes
+  // announce normally via the live region.
+  useEffect(() => {
+    if (paused || reducedRef.current) return;
+    // when autoplay ticks, ensure live-region announcements are re-enabled
+    setKeyboardSlideChange(false);
+  }, [active, paused]);
+
   const PrevIcon = isRTL ? ArrowRight : ArrowLeft;
   const NextIcon = isRTL ? ArrowLeft : ArrowRight;
   const slide = SLIDES[active];
@@ -331,10 +355,10 @@ export const HeroV2 = () => {
       if (tag === 'INPUT' || tag === 'TEXTAREA') return;
       const fwd = isRTL ? 'ArrowLeft' : 'ArrowRight';
       const back = isRTL ? 'ArrowRight' : 'ArrowLeft';
-      if (e.key === fwd) { e.preventDefault(); goNext(); }
-      else if (e.key === back) { e.preventDefault(); goPrev(); }
-      else if (e.key === 'Home') { e.preventDefault(); setActive(0); }
-      else if (e.key === 'End') { e.preventDefault(); setActive(SLIDES.length - 1); }
+      if (e.key === fwd) { e.preventDefault(); setKeyboardSlideChange(true); goNext(); }
+      else if (e.key === back) { e.preventDefault(); setKeyboardSlideChange(true); goPrev(); }
+      else if (e.key === 'Home') { e.preventDefault(); setKeyboardSlideChange(true); setActive(0); }
+      else if (e.key === 'End') { e.preventDefault(); setKeyboardSlideChange(true); setActive(SLIDES.length - 1); }
       else if (e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); setPaused((p) => !p); }
     },
     [isRTL, goNext, goPrev, SLIDES.length],
@@ -367,10 +391,12 @@ export const HeroV2 = () => {
               Uses role="status" (implicit polite) without redundant aria-live to avoid
               double-announcements in NVDA/VoiceOver. */}
           <div id="hero-live-region" className="sr-only" role="status" aria-atomic="true">
-            {bi(
-              `الشريحة ${active + 1} من ${SLIDES.length}: ${slide.titleAr}`,
-              `Slide ${active + 1} of ${SLIDES.length}: ${slide.titleEn}`,
-            )}
+            {keyboardSlideChange
+              ? ''
+              : bi(
+                  `الشريحة ${active + 1} من ${SLIDES.length}: ${slide.titleAr}`,
+                  `Slide ${active + 1} of ${SLIDES.length}: ${slide.titleEn}`,
+                )}
           </div>
 
           {/* Image stack with Ken-Burns */}
@@ -451,11 +477,13 @@ export const HeroV2 = () => {
             */}
             <div
               key={`txt-${active}`}
+              ref={slideContentRef}
+              tabIndex={-1}
               role="group"
               aria-roledescription={bi('شريحة', 'slide')}
               aria-label={bi(`${active + 1} من ${SLIDES.length}`, `${active + 1} of ${SLIDES.length}`)}
               aria-current="true"
-              className="animate-fade-in motion-reduce:animate-none max-w-3xl"
+              className="animate-fade-in motion-reduce:animate-none max-w-3xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black/30 rounded-lg"
             >
               <h1
                 className="font-heading font-black text-[2.1rem] sm:text-5xl md:text-6xl lg:text-7xl text-white leading-[1.08] tracking-tight"
