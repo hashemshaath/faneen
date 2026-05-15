@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
@@ -38,6 +38,23 @@ const TYPE_LABEL: Record<string, string> = {
   consume: 'استخدام رصيد',
   refund: 'استرجاع رصيد',
   adjustment: 'تعديل إداري',
+};
+
+const TYPE_BADGE: Record<string, string> = {
+  grant: 'bg-emerald-500/10 text-emerald-700 border-emerald-500/30',
+  consume: 'bg-amber-500/10 text-amber-700 border-amber-500/30',
+  refund: 'bg-blue-500/10 text-blue-700 border-blue-500/30',
+  adjustment: 'bg-muted text-foreground border-border',
+};
+
+const REASON_LABEL: Record<string, string> = {
+  monthly_grant: 'منح شهري',
+  admin_manual_grant: 'إضافة يدوية من الإدارة',
+  contact_reveal_consumption: 'استخدام لكشف بيانات تواصل',
+  launch_free_reveal: 'إتاحة مجانية في مرحلة الإطلاق',
+  admin_override_reveal: 'إتاحة بتجاوز إداري',
+  admin_adjustment: 'تعديل إداري',
+  admin_refund: 'استرجاع إداري',
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -87,6 +104,11 @@ const ProviderMembership: React.FC = () => {
   });
 
   const sub = subQuery.data?.[0];
+  const [filter, setFilter] = useState<'all' | 'grant' | 'consume' | 'refund' | 'adjustment'>('all');
+  const filteredTx = useMemo(() => {
+    const list = txQuery.data ?? [];
+    return filter === 'all' ? list : list.filter((t) => t.type === filter);
+  }, [txQuery.data, filter]);
   const launch = !PROVIDER_COMMERCIAL_CONFIG.requireCreditForContactReveal;
 
   return (
@@ -134,10 +156,23 @@ const ProviderMembership: React.FC = () => {
         )}
 
         <Card><CardContent className="p-5 space-y-3">
-          <h2 className="font-heading font-semibold text-base">سجل الرصيد</h2>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="font-heading font-semibold text-base">سجل الرصيد</h2>
+            <div className="flex flex-wrap gap-1">
+              {([
+                ['all', 'الكل'], ['grant', 'إضافة'], ['consume', 'استخدام'],
+                ['refund', 'استرجاع'], ['adjustment', 'تعديل'],
+              ] as const).map(([k, l]) => (
+                <button key={k} onClick={() => setFilter(k as typeof filter)}
+                  className={`text-[11px] px-2.5 py-1 rounded-full border transition ${filter === k ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted/40 border-border text-muted-foreground hover:bg-muted'}`}>
+                  {l}
+                </button>
+              ))}
+            </div>
+          </div>
           {txQuery.isLoading ? (
             <Skeleton className="h-24 w-full" />
-          ) : (txQuery.data ?? []).length === 0 ? (
+          ) : filteredTx.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-6">لا توجد حركات رصيد حتى الآن</p>
           ) : (
             <div className="overflow-x-auto -mx-2">
@@ -153,11 +188,15 @@ const ProviderMembership: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {(txQuery.data ?? []).map((t) => (
+                  {filteredTx.map((t) => (
                     <tr key={t.id} className="border-t border-border">
                       <td className="py-2 px-2 tech-content text-muted-foreground">{fmtDate(t.created_at)}</td>
-                      <td className="py-2 px-2">{TYPE_LABEL[t.type] ?? t.type}</td>
-                      <td className="py-2 px-2 text-muted-foreground">{t.reason}</td>
+                      <td className="py-2 px-2">
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full border ${TYPE_BADGE[t.type] ?? 'border-border'}`}>
+                          {TYPE_LABEL[t.type] ?? t.type}
+                        </span>
+                      </td>
+                      <td className="py-2 px-2 text-muted-foreground">{REASON_LABEL[t.reason] ?? t.reason}</td>
                       <td className={`py-2 px-2 tech-content font-medium ${t.amount > 0 ? 'text-success' : t.amount < 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
                         {t.amount > 0 ? `+${t.amount}` : t.amount}
                       </td>
