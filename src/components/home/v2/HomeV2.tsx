@@ -201,6 +201,18 @@ export const HeroV2 = () => {
   // focus to the slide content and SKIP the live-region announcement so the
   // user doesn't hear the same slide twice (focus name + live region).
   const [keyboardSlideChange, setKeyboardSlideChange] = useState(false);
+  // Throttled/debounced live-region message. Updated only after a slide has
+  // settled (~450ms) AND the message would actually change AND the page is
+  // visible. Prevents `role=status` re-announcements when:
+  //   1) the same slide re-renders (e.g. language toggle, parent re-render)
+  //   2) the user scrubs rapidly through dots (only the final slide speaks)
+  //   3) the tab is hidden (no point announcing)
+  const initialLiveMessage = bi(
+    `الشريحة 1 من ${SLIDES.length}: ${SLIDES[0].titleAr}`,
+    `Slide 1 of ${SLIDES.length}: ${SLIDES[0].titleEn}`,
+  );
+  const [liveMessage, setLiveMessage] = useState(initialLiveMessage);
+  const lastAnnouncedRef = useRef<string>(initialLiveMessage);
 
   // Top trending searches (manually curated based on industry priors)
   const TRENDING: { ar: string; en: string; cat?: string }[] = [
@@ -282,6 +294,39 @@ export const HeroV2 = () => {
     () => setActive((i) => (i + 1) % SLIDES.length),
     [SLIDES.length],
   );
+
+  // Build the would-be announcement for the current slide; effect below
+  // commits it to the DOM only when it stably differs from the last one.
+  const pendingLiveMessage = keyboardSlideChange
+    ? ''
+    : bi(
+        `الشريحة ${active + 1} من ${SLIDES.length}: ${SLIDES[active].titleAr}`,
+        `Slide ${active + 1} of ${SLIDES.length}: ${SLIDES[active].titleEn}`,
+      );
+
+  useEffect(() => {
+    // Don't announce when keyboard moved focus (focus name covers it)
+    if (keyboardSlideChange) {
+      // Clear any pending announcement so it doesn't fire after focus settles
+      setLiveMessage('');
+      lastAnnouncedRef.current = '';
+      return;
+    }
+    // No announcement when page is hidden
+    if (typeof document !== 'undefined' && document.hidden) return;
+    // Identical message? Skip — prevents re-announcement on incidental re-renders.
+    if (pendingLiveMessage === lastAnnouncedRef.current) return;
+
+    // First announcement (mount) goes through immediately so initial users
+    // hear slide 1; subsequent changes are debounced (~450ms) so rapid
+    // scrubbing only announces the final settled slide.
+    const delay = lastAnnouncedRef.current === '' ? 0 : 450;
+    const t = window.setTimeout(() => {
+      lastAnnouncedRef.current = pendingLiveMessage;
+      setLiveMessage(pendingLiveMessage);
+    }, delay);
+    return () => window.clearTimeout(t);
+  }, [pendingLiveMessage, keyboardSlideChange]);
 
   // After a keyboard-driven slide change, move focus to the new slide's
   // content group. Its aria-label ("N من M") + aria-roledescription="slide"
@@ -391,12 +436,7 @@ export const HeroV2 = () => {
               Uses role="status" (implicit polite) without redundant aria-live to avoid
               double-announcements in NVDA/VoiceOver. */}
           <div id="hero-live-region" className="sr-only" role="status" aria-atomic="true">
-            {keyboardSlideChange
-              ? ''
-              : bi(
-                  `الشريحة ${active + 1} من ${SLIDES.length}: ${slide.titleAr}`,
-                  `Slide ${active + 1} of ${SLIDES.length}: ${slide.titleEn}`,
-                )}
+            {liveMessage}
           </div>
 
           {/* Image stack with Ken-Burns */}
