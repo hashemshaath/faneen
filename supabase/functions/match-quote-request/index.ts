@@ -207,10 +207,28 @@ Deno.serve(async (req) => {
   const { data: inserted, error: insErr } = await admin
     .from('quote_request_leads')
     .upsert(rows, { onConflict: 'quote_request_id,provider_id', ignoreDuplicates: true })
-    .select('id, provider_id, provider_user_id');
+    .select('id, provider_id, provider_user_id, match_score, match_reasons');
   if (insErr) return jsonResponse({ success: false, error: insErr.message }, 500);
 
   const newLeads = inserted ?? [];
+
+  // Audit: lead_created for each NEW lead (upsert with ignoreDuplicates returns only inserted rows)
+  if (newLeads.length > 0) {
+    const leadEvents = newLeads.map((l) => ({
+      lead_id: l.id,
+      quote_request_id: quoteId,
+      event_type: 'lead_created',
+      actor_user_id: userId,
+      metadata: {
+        match_score: l.match_score,
+        match_reasons: l.match_reasons,
+        provider_id: l.provider_id,
+        provider_user_id: l.provider_user_id,
+        created_by: isSystemCall ? 'system' : 'matching',
+      },
+    }));
+    await admin.from('quote_request_lead_events').insert(leadEvents);
+  }
 
   // Update quote status to matched
   if (quote.status === 'new' || quote.status === 'under_review') {
@@ -256,6 +274,20 @@ Deno.serve(async (req) => {
   const avgScore = top.length ? Math.round(top.reduce((a, b) => a + b.score, 0) / top.length) : 0;
   const reasonCounts: Record<string, number> = {};
   for (const s of top) for (const r of s.reasons) reasonCounts[r] = (reasonCounts[r] ?? 0) + 1;
+
+  // Audit quote-level event
+  await admin.from('quote_request_events').insert({
+    quote_request_id: quoteId,
+    event_type: 'quote_matched',
+    actor_user_id: userId,
+    metadata: {
+      matched_count: newLeads.length,
+      top_score: topScore,
+      avg_score: avgScore,
+      reason_counts: reasonCounts,
+      candidates_evaluated: scored.length,
+    },
+  });
 
   return jsonResponse({
     success: true,
