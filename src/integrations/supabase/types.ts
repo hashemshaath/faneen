@@ -8977,6 +8977,17 @@ export type Database = {
         }[]
       }
       accept_staff_invitation: { Args: { _token: string }; Returns: Json }
+      admin_adjust_provider_credits: {
+        Args: {
+          p_action: string
+          p_amount: number
+          p_note?: string
+          p_quote_request_lead_id?: string
+          p_reason: string
+          p_subscription_id: string
+        }
+        Returns: Json
+      }
       admin_contract_pdf_exports_summary: {
         Args: never
         Returns: {
