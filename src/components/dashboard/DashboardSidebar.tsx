@@ -29,6 +29,7 @@ import {
   Palette,
   Inbox,
   Settings2,
+  MapPin,
 } from 'lucide-react';
 
 interface MenuItem {
