@@ -200,6 +200,9 @@ const SectorSeoLanding: React.FC = () => {
           </ol>
         </section>
 
+        {/* Real works gallery from providers */}
+        <SectorWorksGallery sectorSlug={sector.slug} limit={20} hideWhenEmpty />
+
         {/* Customer CTA */}
         <section className="rounded-2xl bg-primary/5 border border-primary/10 p-6 sm:p-8 text-center">
           <h2 className="font-heading text-2xl font-bold">جاهز ترسل تفاصيل مشروعك؟</h2>
