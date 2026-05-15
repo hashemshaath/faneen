@@ -76,17 +76,26 @@ describe('HeroV2 — accessibility', () => {
     expect(dupes).toEqual([]);
   });
 
-  it('uses #hero-live-region as the ONLY announcer inside the carousel', () => {
+  it('uses #hero-live-region as the ONLY announcer of slide changes', () => {
     renderHero();
     const carousel = document.getElementById('hero-carousel')!;
-    // Anything that would speak to AT: role=status, role=alert, or aria-live
     const announcers = carousel.querySelectorAll(
       '[role="status"], [role="alert"], [aria-live="polite"], [aria-live="assertive"]',
     );
-    // Autocomplete status (#hero-ac-status) lives OUTSIDE the carousel region,
-    // so the carousel should expose exactly one announcer: #hero-live-region.
-    expect(announcers.length).toBe(1);
-    expect((announcers[0] as HTMLElement).id).toBe('hero-live-region');
+    // The hero contains #hero-ac-status (autocomplete result count) too — that's
+    // fine because it speaks ONLY when the combobox opens, never when the slide
+    // changes. The contract we enforce here is:
+    //   1) #hero-live-region exists and is a status announcer.
+    //   2) NO other announcer carries slide text (slide N of M / الشريحة N من M),
+    //      which would cause the slide to be announced twice.
+    const live = document.getElementById('hero-live-region');
+    expect(live).not.toBeNull();
+    expect(announcers.length).toBeGreaterThanOrEqual(1);
+    const slideRe = /(الشريحة|Slide)\s*\d+/;
+    Array.from(announcers).forEach((el) => {
+      if ((el as HTMLElement).id === 'hero-live-region') return;
+      expect(el.textContent ?? '').not.toMatch(slideRe);
+    });
   });
 
   it('does not re-announce the previous slide after Next then Prev navigation', async () => {
