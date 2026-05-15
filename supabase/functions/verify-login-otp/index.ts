@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.103.0";
+import { logSecurityEvent, hashSubject, hashIp } from "../_shared/securityAudit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -49,6 +50,16 @@ Deno.serve(async (req) => {
     // Rate limit verification attempts
     const cleanPhone = String(phone).replace(/\D/g, "").replace(/^0+/, "");
     const fullPhone = `${country_code}${cleanPhone}`;
+    const subjectHash = await hashSubject(fullPhone);
+    const ipHash = await hashIp(req);
+    const userAgent = req.headers.get("user-agent");
+    await logSecurityEvent(adminClient, {
+      event_type: "login_otp_verify",
+      event_action: "attempt",
+      subject_hash: subjectHash,
+      ip_hash: ipHash,
+      user_agent: userAgent,
+    });
 
     const { data: allowed } = await adminClient.rpc("check_rate_limit", {
       _identifier: fullPhone,
@@ -59,6 +70,14 @@ Deno.serve(async (req) => {
     });
 
     if (allowed === false) {
+      await logSecurityEvent(adminClient, {
+        event_type: "login_otp_verify",
+        event_action: "rate_limited",
+        status: "warn",
+        subject_hash: subjectHash,
+        ip_hash: ipHash,
+        reason: "rate_limited",
+      });
       return respond({
         success: false,
         error: "rate_limited",
@@ -79,6 +98,14 @@ Deno.serve(async (req) => {
     }
 
     if (!profile) {
+      await logSecurityEvent(adminClient, {
+        event_type: "login_otp_verify",
+        event_action: "failed",
+        status: "warn",
+        subject_hash: subjectHash,
+        ip_hash: ipHash,
+        reason: "no_account",
+      });
       return respond({ success: false, error: "no_account", message: "No account found" });
     }
 
@@ -126,8 +153,26 @@ Deno.serve(async (req) => {
         .maybeSingle();
 
       if (latestOtp?.verified) {
+        await logSecurityEvent(adminClient, {
+          event_type: "login_otp_verify",
+          event_action: "failed",
+          status: "warn",
+          user_id: profile.user_id,
+          subject_hash: subjectHash,
+          ip_hash: ipHash,
+          reason: "otp_already_used",
+        });
         return respond({ success: false, error: "otp_already_used", message: "This OTP has already been used. Request a new code." });
       }
+      await logSecurityEvent(adminClient, {
+        event_type: "login_otp_verify",
+        event_action: "failed",
+        status: "warn",
+        user_id: profile.user_id,
+        subject_hash: subjectHash,
+        ip_hash: ipHash,
+        reason: "otp_expired",
+      });
       return respond({ success: false, error: "otp_expired", message: "OTP expired. Request a new code." });
     }
 
@@ -135,6 +180,16 @@ Deno.serve(async (req) => {
     if (otpRecord.attempts >= MAX_VERIFY_ATTEMPTS) {
       // Invalidate OTP after max attempts
       await adminClient.from("phone_otps").update({ verified: true }).eq("id", otpRecord.id);
+      await logSecurityEvent(adminClient, {
+        event_type: "login_otp_verify",
+        event_action: "failed",
+        status: "error",
+        user_id: profile.user_id,
+        subject_hash: subjectHash,
+        ip_hash: ipHash,
+        reason: "too_many_attempts",
+        metadata: { attempts: otpRecord.attempts },
+      });
       return respond({ success: false, error: "too_many_attempts", message: "Too many attempts. Request a new OTP." });
     }
 
@@ -149,6 +204,16 @@ Deno.serve(async (req) => {
         .eq("id", otpRecord.id);
 
       const remaining = MAX_VERIFY_ATTEMPTS - 1 - otpRecord.attempts;
+      await logSecurityEvent(adminClient, {
+        event_type: "login_otp_verify",
+        event_action: "failed",
+        status: "warn",
+        user_id: profile.user_id,
+        subject_hash: subjectHash,
+        ip_hash: ipHash,
+        reason: "invalid_code",
+        metadata: { attempts: otpRecord.attempts + 1 },
+      });
       return respond({
         success: false,
         error: "invalid_otp",
@@ -214,6 +279,15 @@ Deno.serve(async (req) => {
 
     if (verifyRes.ok) {
       const sessionData = await verifyRes.json();
+      await logSecurityEvent(adminClient, {
+        event_type: "login_otp_verify",
+        event_action: "success",
+        user_id: profile.user_id,
+        subject_hash: subjectHash,
+        ip_hash: ipHash,
+        user_agent: userAgent,
+        reason: "session_issued",
+      });
       return respond({
         success: true,
         verified: true,
@@ -227,6 +301,16 @@ Deno.serve(async (req) => {
 
     // Fallback: return token_hash for client-side verification
     console.warn("Server-side verify failed, falling back to token_hash");
+    await logSecurityEvent(adminClient, {
+      event_type: "login_otp_verify",
+      event_action: "success",
+      status: "warn",
+      user_id: profile.user_id,
+      subject_hash: subjectHash,
+      ip_hash: ipHash,
+      user_agent: userAgent,
+      reason: "token_hash_fallback",
+    });
     return respond({
       success: true,
       verified: true,
