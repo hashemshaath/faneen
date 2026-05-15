@@ -11,6 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import {
   Inbox, ChevronDown, ChevronUp, Send, Eye, HelpCircle, CheckCircle2,
   XCircle, Archive, X, Wallet, FileText, MessageSquare, Loader2, ReceiptText, Calendar,
+  Paperclip, MapPin, Tag,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNoIndex } from '@/hooks/useNoIndex';
@@ -48,6 +49,43 @@ function safeTrack(event: Parameters<typeof trackEvent>[0], payload: Parameters<
 }
 
 const CANCELLABLE = new Set(['new', 'viewed', 'needs_info']);
+
+interface QuoteRequestRow {
+  id: string;
+  sector: string;
+  city: string;
+  district: string | null;
+  project_description: string;
+  status: string;
+  preferred_contact_method: string;
+  created_at: string;
+  updated_at: string;
+}
+
+const QUOTE_STATUS_LABEL_AR: Record<string, string> = {
+  new: 'جديد',
+  under_review: 'قيد المراجعة',
+  matched: 'تم توجيهه لمزودين',
+  contacted: 'تم التواصل',
+  completed: 'مكتمل',
+  cancelled: 'ملغي',
+};
+const QUOTE_STATUS_LABEL_EN: Record<string, string> = {
+  new: 'New',
+  under_review: 'Under review',
+  matched: 'Matched',
+  contacted: 'Contacted',
+  completed: 'Completed',
+  cancelled: 'Cancelled',
+};
+const QUOTE_STATUS_TONE: Record<string, string> = {
+  new: 'bg-primary/10 text-primary border-primary/30',
+  under_review: 'bg-warning/10 text-warning border-warning/30',
+  matched: 'bg-info/10 text-info border-info/30',
+  contacted: 'bg-success/10 text-success border-success/30',
+  completed: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30',
+  cancelled: 'bg-muted text-muted-foreground border-border',
+};
 
 const DashboardMyRequests: React.FC = () => {
   useNoIndex();
