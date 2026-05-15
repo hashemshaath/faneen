@@ -425,6 +425,11 @@ export const HeroV2 = () => {
       else if (e.key === back) { e.preventDefault(); setKeyboardSlideChange(true); goPrev(); }
       else if (e.key === 'Home') { e.preventDefault(); setKeyboardSlideChange(true); setActive(0); }
       else if (e.key === 'End') { e.preventDefault(); setKeyboardSlideChange(true); setActive(SLIDES.length - 1); }
+      // PageDown = next slide, PageUp = previous slide. Direction-agnostic
+      // (same mapping in RTL and LTR) — matches common slider/carousel
+      // conventions and reuses the same keyboard-mute logic for #hero-live-region.
+      else if (e.key === 'PageDown') { e.preventDefault(); setKeyboardSlideChange(true); goNext(); }
+      else if (e.key === 'PageUp') { e.preventDefault(); setKeyboardSlideChange(true); goPrev(); }
       else if (e.key === ' ' || e.key === 'Spacebar' || e.key === 'Enter') {
         // Enter/Space on the carousel region (or its focused slide group)
         // toggles autoplay — matches the on-screen Pause/Play button. We
