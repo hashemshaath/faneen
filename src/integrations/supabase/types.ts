@@ -8213,6 +8213,51 @@ export type Database = {
         }
         Relationships: []
       }
+      security_audit_log: {
+        Row: {
+          created_at: string
+          event_action: string
+          event_type: string
+          id: string
+          ip_hash: string | null
+          metadata: Json
+          reason: string | null
+          request_id: string | null
+          status: string
+          subject_hash: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_action: string
+          event_type: string
+          id?: string
+          ip_hash?: string | null
+          metadata?: Json
+          reason?: string | null
+          request_id?: string | null
+          status?: string
+          subject_hash?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_action?: string
+          event_type?: string
+          id?: string
+          ip_hash?: string | null
+          metadata?: Json
+          reason?: string | null
+          request_id?: string | null
+          status?: string
+          subject_hash?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       seo_audit_runs: {
         Row: {
           created_at: string
@@ -10265,6 +10310,21 @@ export type Database = {
           p_sector: string
         }
         Returns: undefined
+      }
+      log_security_event: {
+        Args: {
+          _event_action: string
+          _event_type: string
+          _ip_hash?: string
+          _metadata?: Json
+          _reason?: string
+          _request_id?: string
+          _status?: string
+          _subject_hash?: string
+          _user_agent?: string
+          _user_id?: string
+        }
+        Returns: string
       }
       log_upgrade_rejection: {
         Args: {

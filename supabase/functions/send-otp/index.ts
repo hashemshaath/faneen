@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.103.0";
+import { logSecurityEvent, hashSubject, hashIp } from "../_shared/securityAudit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -74,6 +75,17 @@ Deno.serve(async (req) => {
 
     const fullPhone = `${country_code}${cleanPhone}`;
     const adminClient = createClient(supabaseUrl, serviceKey);
+    const subjectHash = await hashSubject(fullPhone);
+    const ipHash = await hashIp(req);
+    const userAgent = req.headers.get("user-agent");
+    await logSecurityEvent(adminClient, {
+      event_type: "otp_send",
+      event_action: "attempt",
+      user_id: user.id,
+      subject_hash: subjectHash,
+      ip_hash: ipHash,
+      user_agent: userAgent,
+    });
 
     // Rate limit
     const { data: allowed } = await adminClient.rpc("check_rate_limit", {
@@ -85,6 +97,16 @@ Deno.serve(async (req) => {
     });
 
     if (allowed === false) {
+      await logSecurityEvent(adminClient, {
+        event_type: "otp_send",
+        event_action: "rate_limited",
+        status: "warn",
+        user_id: user.id,
+        subject_hash: subjectHash,
+        ip_hash: ipHash,
+        user_agent: userAgent,
+        reason: "rate_limited",
+      });
       return new Response(
         JSON.stringify({ success: false, error: "rate_limited", message: "Too many OTP requests. Please try again later." }),
         { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -106,6 +128,15 @@ Deno.serve(async (req) => {
     });
 
     if (insertError) {
+      await logSecurityEvent(adminClient, {
+        event_type: "otp_send",
+        event_action: "failed",
+        status: "error",
+        user_id: user.id,
+        subject_hash: subjectHash,
+        ip_hash: ipHash,
+        reason: "otp_create_failed",
+      });
       return new Response(JSON.stringify({ success: false, error: "Failed to create OTP" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -140,12 +171,30 @@ Deno.serve(async (req) => {
     if (!smsSent) {
       // Never leak OTP in API response. Log server-side only.
       console.error("SMS delivery failed for user", user.id);
+      await logSecurityEvent(adminClient, {
+        event_type: "otp_send",
+        event_action: "failed",
+        status: "error",
+        user_id: user.id,
+        subject_hash: subjectHash,
+        ip_hash: ipHash,
+        reason: "sms_delivery_failed",
+      });
       return new Response(
         JSON.stringify({ success: false, error: "sms_delivery_failed", message: "Could not send SMS. Please try again later." }),
         { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
+    await logSecurityEvent(adminClient, {
+      event_type: "otp_send",
+      event_action: "success",
+      user_id: user.id,
+      subject_hash: subjectHash,
+      ip_hash: ipHash,
+      user_agent: userAgent,
+      reason: "sms_sent",
+    });
     return new Response(
       JSON.stringify({ success: true, sms_sent: true }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
