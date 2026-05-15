@@ -98,6 +98,7 @@ const AdminQuoteRequestDetails: React.FC = () => {
   const [pendingStatus, setPendingStatus] = useState<QuoteStatus | ''>('');
   const [revealLeadId, setRevealLeadId] = useState<string | null>(null);
   const [revealNote, setRevealNote] = useState('');
+  const [revealOverride, setRevealOverride] = useState(false);
   const [leadFilter, setLeadFilter] = useState<'all' | 'interested' | 'pending_reveal' | 'revealed'>('all');
   const [eventFilter, setEventFilter] = useState<'all' | 'quote' | 'lead' | 'matching' | 'interest' | 'contact'>('all');
   const [eventOrderDesc, setEventOrderDesc] = useState(true);
