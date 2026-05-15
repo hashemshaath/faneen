@@ -13,19 +13,13 @@ import { usePageMeta, useMultiJsonLd } from '@/hooks/usePageMeta';
 import { SECTORS_SEO, type SeoSectorSlug } from '@/lib/sectors-seo';
 import { SA_CITIES } from '@/lib/sa-cities';
 import { buildBreadcrumbList } from '@/lib/seo/structured-data';
+import { SectorWorksGallery, SECTOR_TO_CATEGORY_SLUGS as GALLERY_SECTOR_MAP } from '@/components/sectors/SectorWorksGallery';
 
 // Featured cities surfaced on the brief landing (top markets).
 const FEATURED_CITY_SLUGS = ['riyadh', 'jeddah', 'dammam', 'khobar', 'makkah', 'madinah'];
 
 // Map SEO sector slug -> category slugs in the directory.
-const SECTOR_TO_CATEGORY_SLUGS: Record<SeoSectorSlug, string[]> = {
-  aluminum: ['aluminum'],
-  steel: ['iron-steel'],
-  wood: ['wood-cabinets'],
-  glass: ['glass'],
-  'stainless-steel': ['iron-steel'],
-  'fabrication-installation': ['aluminum', 'iron-steel', 'wood-cabinets', 'glass'],
-};
+const SECTOR_TO_CATEGORY_SLUGS = GALLERY_SECTOR_MAP;
 
 type ProviderRow = {
   id: string;
@@ -229,6 +223,9 @@ const SectorBrief: React.FC = () => {
             ))}
           </div>
         </section>
+
+        {/* Real works gallery */}
+        <SectorWorksGallery sectorSlug={sector.slug} limit={16} />
 
         {/* Providers by city */}
         <section aria-labelledby="providers-by-city">

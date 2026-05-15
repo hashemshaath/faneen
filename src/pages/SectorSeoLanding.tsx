@@ -13,6 +13,7 @@ import {
   SECTORS_SEO, SECTORS_SEO_LIST, type SeoSectorSlug,
 } from '@/lib/sectors-seo';
 import { buildBreadcrumbList, buildFaqPage, buildService } from '@/lib/seo/structured-data';
+import { SectorWorksGallery } from '@/components/sectors/SectorWorksGallery';
 
 const STEPS = [
   { title: 'اختر القطاع', text: 'ابدأ من القطاع الأقرب لاحتياجك.' },
@@ -198,6 +199,9 @@ const SectorSeoLanding: React.FC = () => {
             ))}
           </ol>
         </section>
+
+        {/* Real works gallery from providers */}
+        <SectorWorksGallery sectorSlug={sector.slug} limit={20} hideWhenEmpty />
 
         {/* Customer CTA */}
         <section className="rounded-2xl bg-primary/5 border border-primary/10 p-6 sm:p-8 text-center">
