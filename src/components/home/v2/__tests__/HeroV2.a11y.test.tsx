@@ -196,4 +196,43 @@ describe('HeroV2 — accessibility', () => {
         expect(b.getAttribute('aria-current')).toBeNull();
       });
   });
+
+  it('mutes #hero-live-region only during keyboard nav, then re-enables for the next change', async () => {
+    vi.useFakeTimers();
+    try {
+      renderHero();
+      const carousel = document.getElementById('hero-carousel')!;
+      const live = document.getElementById('hero-live-region')!;
+
+      // Initial slide 1 is announced.
+      expect(live.textContent ?? '').toMatch(/(الشريحة|Slide)\s*1/);
+
+      // Keyboard nav: focus the carousel and press ArrowRight.
+      await act(async () => { carousel.focus(); });
+      await act(async () => {
+        fireEvent.keyDown(carousel, { key: 'ArrowRight' });
+      });
+      // After the focus effect runs, focus is on #hero-slide-content and the
+      // live region is empty (focus name carried the announcement).
+      await act(async () => { vi.advanceTimersByTime(500); });
+      expect(document.activeElement?.id).toBe('hero-slide-content');
+      expect((live.textContent ?? '').trim()).toBe('');
+
+      // The flag must have been re-enabled so the NEXT change (a dot click,
+      // not keyboard) is announced normally via the live region.
+      const dot = Array.from(
+        document.querySelectorAll<HTMLButtonElement>(
+          'button[aria-controls="hero-carousel"][aria-label]',
+        ),
+      ).find((b) =>
+        /(الشريحة|slide)\s*3/i.test(b.getAttribute('aria-label') ?? ''),
+      );
+      expect(dot).toBeTruthy();
+      await act(async () => { fireEvent.click(dot!); });
+      await act(async () => { vi.advanceTimersByTime(500); });
+      expect(live.textContent ?? '').toMatch(/(الشريحة|Slide)\s*3/);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });

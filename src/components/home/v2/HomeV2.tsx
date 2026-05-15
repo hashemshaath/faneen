@@ -305,11 +305,12 @@ export const HeroV2 = () => {
       );
 
   useEffect(() => {
-    // Don't announce when keyboard moved focus (focus name covers it)
+    // While a keyboard-driven change is in flight, the live region stays
+    // muted (the focused slide group's aria-label carries the context).
+    // The keyboard-focus effect below re-enables announcements as soon as
+    // focus has settled, so this branch is purely transient.
     if (keyboardSlideChange) {
-      // Clear any pending announcement so it doesn't fire after focus settles
       setLiveMessage('');
-      lastAnnouncedRef.current = '';
       return;
     }
     // No announcement when page is hidden
@@ -332,19 +333,24 @@ export const HeroV2 = () => {
   // content group. Its aria-label ("N من M") + aria-roledescription="slide"
   // gives the screen reader equivalent context to the live region — which
   // is intentionally muted in the same render to avoid double announcements.
+  // Once focus settles, we:
+  //   1) Mark the current slide's text as "already announced" so the live
+  //      region won't re-speak it on the very next render.
+  //   2) Flip keyboardSlideChange OFF so any SUBSEQUENT slide change (from
+  //      the same key, autoplay, or a dot click) is announced normally.
   useEffect(() => {
     if (!keyboardSlideChange) return;
     const el = slideContentRef.current;
     if (el) el.focus({ preventScroll: true });
-  }, [active, keyboardSlideChange]);
-
-  // Auto-advance / click on a dot resets the flag so subsequent changes
-  // announce normally via the live region.
-  useEffect(() => {
-    if (paused || reducedRef.current) return;
-    // when autoplay ticks, ensure live-region announcements are re-enabled
+    // Treat the focused slide as already announced — prevents the live
+    // region from re-speaking it the moment we re-enable announcements.
+    lastAnnouncedRef.current = bi(
+      `الشريحة ${active + 1} من ${SLIDES.length}: ${SLIDES[active].titleAr}`,
+      `Slide ${active + 1} of ${SLIDES.length}: ${SLIDES[active].titleEn}`,
+    );
+    // Re-enable announcements immediately after focus has moved.
     setKeyboardSlideChange(false);
-  }, [active, paused]);
+  }, [active, keyboardSlideChange, bi, SLIDES]);
 
   const PrevIcon = isRTL ? ArrowRight : ArrowLeft;
   const NextIcon = isRTL ? ArrowLeft : ArrowRight;
