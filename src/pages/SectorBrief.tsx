@@ -224,6 +224,9 @@ const SectorBrief: React.FC = () => {
           </div>
         </section>
 
+        {/* Real works gallery */}
+        <SectorWorksGallery sectorSlug={sector.slug} limit={16} />
+
         {/* Providers by city */}
         <section aria-labelledby="providers-by-city">
           <h2 id="providers-by-city" className="font-heading text-2xl font-bold mb-5">
