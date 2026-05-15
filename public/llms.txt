@@ -61,6 +61,7 @@ city, phone, images, rating, reviews.
 - Qitaat supports quote request matching to providers based on sector,
   city, service areas, provider activity, and profile completeness.
 - Customer contact information is not exposed to providers at this stage.
+- Qitaat includes an admin quote operations dashboard for tracking quote lifecycle SLA, matching performance, and provider engagement metrics.
 
 ## Contact
 Website: https://qitaat.com
