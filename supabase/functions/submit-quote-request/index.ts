@@ -8,6 +8,10 @@ const corsHeaders = {
 
 const SAUDI_PHONE = /^(?:\+?966|0)?5\d{8}$/;
 
+// Auto-trigger matching the moment a quote is submitted.
+// Keep `false` while admin review is the default operating mode.
+const AUTO_MATCH_ON_SUBMISSION = false;
+
 const ALLOWED_SECTORS = new Set([
   'aluminum','iron','wood','glass','stainless','fabrication','storefronts','project-fitout','other',
 ]);
@@ -123,6 +127,17 @@ Deno.serve(async (req) => {
   if (error || !inserted) {
     console.error('quote_requests insert error', error);
     return err('تعذر حفظ الطلب حاليًا. حاول مرة أخرى.', 500);
+  }
+
+  // Optionally trigger automatic matching right after submission.
+  if (AUTO_MATCH_ON_SUBMISSION) {
+    try {
+      await admin.functions.invoke('match-quote-request', {
+        body: { quote_request_id: inserted.id, limit: 10 },
+      });
+    } catch (e) {
+      console.warn('auto-match invoke failed (non-fatal)', e);
+    }
   }
 
   // Best-effort notifications
