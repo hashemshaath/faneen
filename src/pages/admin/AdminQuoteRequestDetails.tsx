@@ -24,6 +24,8 @@ import { toast } from 'sonner';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { trackEvent } from '@/lib/analytics';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Checkbox } from '@/components/ui/checkbox';
+import { PROVIDER_COMMERCIAL_CONFIG } from '@/lib/providerCommercialConfig';
 import {
   QUOTE_STATUS_LABEL_AR, QUOTE_STATUS_TONE, QUOTE_STATUSES,
   CUSTOMER_TYPE_LABEL_AR, CONTACT_METHOD_LABEL_AR, SERVICE_LOCATION_LABEL_AR,
@@ -98,6 +100,7 @@ const AdminQuoteRequestDetails: React.FC = () => {
   const [pendingStatus, setPendingStatus] = useState<QuoteStatus | ''>('');
   const [revealLeadId, setRevealLeadId] = useState<string | null>(null);
   const [revealNote, setRevealNote] = useState('');
+  const [revealOverride, setRevealOverride] = useState(false);
   const [leadFilter, setLeadFilter] = useState<'all' | 'interested' | 'pending_reveal' | 'revealed'>('all');
   const [eventFilter, setEventFilter] = useState<'all' | 'quote' | 'lead' | 'matching' | 'interest' | 'contact'>('all');
   const [eventOrderDesc, setEventOrderDesc] = useState(true);
@@ -154,10 +157,14 @@ const AdminQuoteRequestDetails: React.FC = () => {
   });
 
   const revealMutation = useMutation({
-    mutationFn: async (vars: { lead_id: string; note: string }) => {
+    mutationFn: async (vars: { lead_id: string; note: string; override_credit_check?: boolean }) => {
       trackEvent('admin_contact_reveal_clicked', { lead_id: vars.lead_id });
       const { data, error } = await supabase.functions.invoke('admin-reveal-lead-contact', {
-        body: { lead_id: vars.lead_id, note: vars.note || undefined },
+        body: {
+          lead_id: vars.lead_id,
+          note: vars.note || undefined,
+          override_credit_check: vars.override_credit_check || undefined,
+        },
       });
       if (error) throw error;
       return data as { success: boolean; message?: string };
@@ -171,9 +178,27 @@ const AdminQuoteRequestDetails: React.FC = () => {
       }
       setRevealLeadId(null);
       setRevealNote('');
+      setRevealOverride(false);
       refetchLeads();
     },
     onError: () => toast.error('تعذر إتاحة بيانات التواصل'),
+  });
+
+  // Active reveal lead → look up provider business + subscription for commercial info
+  const revealLeadRow = (leads ?? []).find((l) => l.id === revealLeadId) ?? null;
+  const revealProviderBizId = revealLeadRow?.provider?.id ?? null;
+  const { data: revealSub } = useQuery({
+    queryKey: ['reveal-sub', revealProviderBizId],
+    enabled: !!revealProviderBizId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('provider_subscriptions')
+        .select('lead_credits_balance, status, plan:provider_plans(name_ar, lead_credits_per_month)')
+        .eq('business_id', revealProviderBizId!)
+        .maybeSingle();
+      if (error) throw error;
+      return data as { lead_credits_balance: number; status: string; plan: { name_ar: string; lead_credits_per_month: number } | null } | null;
+    },
   });
 
   const matchMutation = useMutation({
@@ -721,7 +746,7 @@ const AdminQuoteRequestDetails: React.FC = () => {
           setRawEventId={setRawEventId}
         />
 
-        <Dialog open={!!revealLeadId} onOpenChange={(open) => { if (!open) { setRevealLeadId(null); setRevealNote(''); } }}>
+        <Dialog open={!!revealLeadId} onOpenChange={(open) => { if (!open) { setRevealLeadId(null); setRevealNote(''); setRevealOverride(false); } }}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>إتاحة بيانات التواصل للمزود؟</DialogTitle>
@@ -729,6 +754,29 @@ const AdminQuoteRequestDetails: React.FC = () => {
                 سيتمكن هذا المزود من الاطلاع على اسم العميل ورقم الجوال والبريد الإلكتروني إن وجد. لا يمكن التراجع عن هذا الإجراء من ناحية أن المزود قد يرى البيانات بعد الإتاحة.
               </DialogDescription>
             </DialogHeader>
+            <div className="rounded-md border border-border bg-muted/40 p-3 text-xs space-y-1">
+              <div className="flex justify-between gap-2">
+                <span className="text-muted-foreground">خطة المزود</span>
+                <span className="font-medium">{revealSub?.plan?.name_ar ?? '—'}</span>
+              </div>
+              <div className="flex justify-between gap-2">
+                <span className="text-muted-foreground">رصيد فرص التواصل</span>
+                <span className="tech-content font-medium">{revealSub?.lead_credits_balance ?? '—'}</span>
+              </div>
+              <div className="flex justify-between gap-2">
+                <span className="text-muted-foreground">تكلفة الإتاحة</span>
+                <span className="tech-content font-medium">
+                  {PROVIDER_COMMERCIAL_CONFIG.requireCreditForContactReveal
+                    ? `${PROVIDER_COMMERCIAL_CONFIG.defaultLeadRevealCost} رصيد`
+                    : '0 (مرحلة الإطلاق)'}
+                </span>
+              </div>
+              <p className="pt-1 text-muted-foreground">
+                {PROVIDER_COMMERCIAL_CONFIG.requireCreditForContactReveal
+                  ? `سيتم خصم ${PROVIDER_COMMERCIAL_CONFIG.defaultLeadRevealCost} رصيد من المزود عند إتاحة بيانات التواصل.`
+                  : 'مرحلة الإطلاق: لن يتم خصم رصيد عند إتاحة بيانات التواصل.'}
+              </p>
+            </div>
             <div className="space-y-2">
               <Label className="text-sm">ملاحظة داخلية (اختياري)</Label>
               <Textarea
@@ -736,12 +784,18 @@ const AdminQuoteRequestDetails: React.FC = () => {
                 placeholder="مثال: تم التحقق من اهتمام المزود هاتفيًا"
               />
             </div>
+            {PROVIDER_COMMERCIAL_CONFIG.requireCreditForContactReveal && (
+              <label className="flex items-center gap-2 text-xs">
+                <Checkbox checked={revealOverride} onCheckedChange={(v) => setRevealOverride(v === true)} />
+                <span>تجاوز شرط الرصيد</span>
+              </label>
+            )}
             <DialogFooter>
-              <Button variant="outline" onClick={() => { setRevealLeadId(null); setRevealNote(''); }} disabled={revealMutation.isPending}>
+              <Button variant="outline" onClick={() => { setRevealLeadId(null); setRevealNote(''); setRevealOverride(false); }} disabled={revealMutation.isPending}>
                 إلغاء
               </Button>
               <Button
-                onClick={() => revealLeadId && revealMutation.mutate({ lead_id: revealLeadId, note: revealNote })}
+                onClick={() => revealLeadId && revealMutation.mutate({ lead_id: revealLeadId, note: revealNote, override_credit_check: revealOverride })}
                 disabled={revealMutation.isPending}
               >
                 {revealMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
