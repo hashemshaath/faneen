@@ -184,6 +184,23 @@ const AdminQuoteRequestDetails: React.FC = () => {
     onError: () => toast.error('تعذر إتاحة بيانات التواصل'),
   });
 
+  // Active reveal lead → look up provider business + subscription for commercial info
+  const revealLeadRow = (leads ?? []).find((l) => l.id === revealLeadId) ?? null;
+  const revealProviderBizId = revealLeadRow?.provider?.id ?? null;
+  const { data: revealSub } = useQuery({
+    queryKey: ['reveal-sub', revealProviderBizId],
+    enabled: !!revealProviderBizId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('provider_subscriptions')
+        .select('lead_credits_balance, status, plan:provider_plans(name_ar, lead_credits_per_month)')
+        .eq('business_id', revealProviderBizId!)
+        .maybeSingle();
+      if (error) throw error;
+      return data as { lead_credits_balance: number; status: string; plan: { name_ar: string; lead_credits_per_month: number } | null } | null;
+    },
+  });
+
   const matchMutation = useMutation({
     mutationFn: async () => {
       trackEvent('quote_matching_started', { quote_request_id: id });
