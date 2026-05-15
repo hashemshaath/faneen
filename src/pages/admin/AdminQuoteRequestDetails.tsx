@@ -380,6 +380,38 @@ const AdminQuoteRequestDetails: React.FC = () => {
 
             {/* Provider matching */}
             <Card><CardContent className="p-5 space-y-3">
+              {/* Readiness checklist */}
+              {(() => {
+                const checks = [
+                  { ok: !!quote.sector, label: 'القطاع موجود' },
+                  { ok: !!quote.city, label: 'المدينة موجودة' },
+                  { ok: (quote.project_description ?? '').length >= 30, label: 'الوصف واضح' },
+                  { ok: (files?.length ?? 0) > 0, label: 'صور أو ملفات مرفقة' },
+                  { ok: !!quote.approx_dimensions, label: 'المقاسات مذكورة' },
+                  { ok: !!quote.district, label: 'الحي موجود' },
+                ];
+                const ready = checks.filter((c) => c.ok).length;
+                return (
+                  <div className="rounded-md border border-border bg-muted/30 p-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-semibold">جاهزية الطلب للتوجيه</h3>
+                      <span className="text-xs text-muted-foreground tech-content">{ready}/{checks.length}</span>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">كلما كانت بيانات الطلب أوضح، كانت المطابقة أفضل.</p>
+                    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-xs">
+                      {checks.map((c, i) => (
+                        <li key={i} className="flex items-center gap-1.5">
+                          {c.ok
+                            ? <CheckCircle2 className="h-3.5 w-3.5 text-success" />
+                            : <XCircle className="h-3.5 w-3.5 text-muted-foreground" />}
+                          <span className={c.ok ? '' : 'text-muted-foreground'}>{c.label}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              })()}
+
               <div className="flex items-center justify-between gap-2">
                 <h2 className="font-heading font-semibold text-base flex items-center gap-2">
                   <Users className="h-4 w-4" /> توجيه الطلب للمزودين
@@ -389,10 +421,33 @@ const AdminQuoteRequestDetails: React.FC = () => {
                   onClick={() => matchMutation.mutate()}
                   disabled={matchMutation.isPending}
                 >
-                  {matchMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                  توجيه الطلب للمزودين المناسبين
+                  {matchMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                  تشغيل المطابقة الذكية
                 </Button>
               </div>
+              {quote.status === 'new' && (
+                <div className="rounded-md border border-warning/30 bg-warning/5 p-2.5 text-xs text-warning">
+                  يفضّل مراجعة الطلب قبل توجيهه للمزودين.
+                </div>
+              )}
+              {quote.status === 'under_review' && (
+                <div className="rounded-md border border-info/30 bg-info/5 p-2.5 text-xs text-info">
+                  الطلب جاهز للتوجيه للمزودين المناسبين.
+                </div>
+              )}
+              {matchMutation.data?.success && (
+                <div className="rounded-md border border-border bg-muted/30 p-3 text-xs space-y-1">
+                  <div>أعلى درجة مطابقة: <span className="tech-content font-bold">{matchMutation.data.top_score}</span></div>
+                  <div>متوسط الدرجة: <span className="tech-content font-bold">{matchMutation.data.avg_score}</span></div>
+                  {matchMutation.data.reason_counts && (
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {Object.entries(matchMutation.data.reason_counts).slice(0, 6).map(([r, n]) => (
+                        <span key={r} className="px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{r} · {n}</span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {(() => {
                 const list = leads ?? [];
