@@ -410,7 +410,23 @@ export const HeroV2 = () => {
 
   const PrevIcon = isRTL ? ArrowRight : ArrowLeft;
   const NextIcon = isRTL ? ArrowLeft : ArrowRight;
-  const slide = SLIDES[active];
+  // A/B test: override slide 0 (LCP slide) with the assigned variant's content.
+  const heroAb = useAbVariant<{
+    titleAr?: string;
+    titleEn?: string;
+    subAr?: string;
+    subEn?: string;
+  }>('hero_headline');
+  const baseSlide = SLIDES[active];
+  const slide = active === 0 && heroAb?.content
+    ? {
+        ...baseSlide,
+        titleAr: heroAb.content.titleAr || baseSlide.titleAr,
+        titleEn: heroAb.content.titleEn || baseSlide.titleEn,
+        subAr:   heroAb.content.subAr   || baseSlide.subAr,
+        subEn:   heroAb.content.subEn   || baseSlide.subEn,
+      }
+    : baseSlide;
 
   // Build filtered suggestions
   const acItems = (() => {
