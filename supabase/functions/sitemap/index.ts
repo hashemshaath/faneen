@@ -100,7 +100,10 @@ Deno.serve(async (req) => {
         entries.push(entry(`${BASE}${p.loc}`, { lastmod: today, changefreq: p.changefreq, priority: p.priority }));
       }
     } else if (type === "sectors") {
-      const sectors = ["aluminum", "iron", "glass", "wood", "cabinets"];
+      const sectors = [
+        "aluminum", "iron", "glass", "wood", "cabinets",
+        "steel", "stainless-steel", "fabrication-installation",
+      ];
       const saCities = [
         "riyadh","jeddah","makkah","madinah","dammam","khobar","taif",
         "buraidah","tabuk","abha","khamis-mushait","hail","jazan","najran","yanbu",
