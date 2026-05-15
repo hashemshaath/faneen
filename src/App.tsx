@@ -121,6 +121,7 @@ const SectorsIndex = lazyRetry(() => import("./pages/SectorLanding").then(m => (
 const SectorCity = lazyRetry(() => import("./pages/SectorCity"));
 const SectorsHub = lazyRetry(() => import("./pages/SectorsHub"));
 const SectorSeoLanding = lazyRetry(() => import("./pages/SectorSeoLanding"));
+const SectorBrief = lazyRetry(() => import("./pages/SectorBrief"));
 const Services = lazyRetry(() => import("./pages/Services"));
 const ServiceDetail = lazyRetry(() => import("./pages/ServiceDetail"));
 const About = lazyRetry(() => import("./pages/About"));
@@ -204,6 +205,8 @@ const AppRoutes = () => (
           <Route path="/sectors/fabrication-installation" element={<SectorSeoLanding />} />
           <Route path="/sectors/:slug" element={<SectorLanding />} />
           <Route path="/sectors/:sector/:city" element={<SectorCity />} />
+          {/* Singular /sector/:slug — brief landing per sector with provider list by city */}
+          <Route path="/sector/:slug" element={<SectorBrief />} />
           <Route path="/services" element={<Services />} />
           <Route path="/services/:slug" element={<ServiceDetail />} />
           <Route path="/brands" element={<BrandsCatalog />} />
