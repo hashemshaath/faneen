@@ -14,9 +14,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import {
   ArrowLeft, ArrowRight, Loader2, Phone, Copy, MessageCircle, FileText, Download,
   AlertCircle, MapPin, Tag, Calendar, Wallet, User, Mail, Save, Lock, Send, Users,
+  CheckCircle2, XCircle, Sparkles,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNoIndex } from '@/hooks/useNoIndex';
+import { trackEvent } from '@/lib/analytics';
 import {
   QUOTE_STATUS_LABEL_AR, QUOTE_STATUS_TONE, QUOTE_STATUSES,
   CUSTOMER_TYPE_LABEL_AR, CONTACT_METHOD_LABEL_AR, SERVICE_LOCATION_LABEL_AR,
@@ -139,15 +141,21 @@ const AdminQuoteRequestDetails: React.FC = () => {
 
   const matchMutation = useMutation({
     mutationFn: async () => {
+      trackEvent('quote_matching_started', { quote_request_id: id });
       const { data, error } = await supabase.functions.invoke('match-quote-request', {
         body: { quote_request_id: id, limit: 10 },
       });
       if (error) throw error;
-      return data as { success: boolean; matched_count: number; message?: string };
+      return data as {
+        success: boolean; matched_count: number; message?: string;
+        candidates_evaluated?: number; top_score?: number; avg_score?: number;
+        reason_counts?: Record<string, number>;
+      };
     },
     onSuccess: (res) => {
       if (res?.success) toast.success(`تم توجيه الطلب إلى ${res.matched_count} مزودين`);
       else toast.message(res?.message ?? 'لم يتم العثور على مزودين مناسبين حاليًا');
+      trackEvent('quote_matching_completed', { matched: res?.matched_count ?? 0 });
       refetchLeads();
       qc.invalidateQueries({ queryKey: ['admin-quote-request', id] });
     },
@@ -202,6 +210,10 @@ const AdminQuoteRequestDetails: React.FC = () => {
       toast.success('تم حفظ التحديثات');
       qc.invalidateQueries({ queryKey: ['admin-quote-request', id] });
       qc.invalidateQueries({ queryKey: ['admin-quote-requests'] });
+      // Auto-route to providers when admin moves the quote into review.
+      if (pendingStatus === 'under_review' && quote?.status !== 'under_review') {
+        matchMutation.mutate();
+      }
     },
     onError: () => toast.error('تعذر حفظ التحديثات'),
   });
