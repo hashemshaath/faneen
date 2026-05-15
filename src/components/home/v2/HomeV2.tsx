@@ -404,10 +404,63 @@ export const HeroV2 = () => {
       else if (e.key === back) { e.preventDefault(); setKeyboardSlideChange(true); goPrev(); }
       else if (e.key === 'Home') { e.preventDefault(); setKeyboardSlideChange(true); setActive(0); }
       else if (e.key === 'End') { e.preventDefault(); setKeyboardSlideChange(true); setActive(SLIDES.length - 1); }
-      else if (e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); setPaused((p) => !p); }
+      else if (e.key === ' ' || e.key === 'Spacebar' || e.key === 'Enter') {
+        // Enter/Space on the carousel region (or its focused slide group)
+        // toggles autoplay — matches the on-screen Pause/Play button. We
+        // ignore it when the focused element is itself a button/link so we
+        // don't hijack their native activation.
+        const target = e.target as HTMLElement;
+        const role = target.getAttribute('role');
+        const isControl =
+          target.tagName === 'BUTTON' ||
+          target.tagName === 'A' ||
+          role === 'button' ||
+          role === 'link';
+        if (isControl) return;
+        e.preventDefault();
+        setPaused((p) => !p);
+      }
     },
     [isRTL, goNext, goPrev, SLIDES.length],
   );
+
+  // ---- RTL/LTR direction change: preserve keyboard focus -------------------
+  // When the user flips language, the entire shell can re-render and React
+  // may detach the focused button (different `dir`, swapped icon, reordered
+  // arrow buttons). We snapshot the focused element's id BEFORE the swap and
+  // restore focus to it (or to a graceful fallback) after the next paint.
+  const lastFocusIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    const section = document.getElementById('hero-carousel')?.parentElement;
+    if (!section) return;
+    const onFocusIn = (e: FocusEvent) => {
+      const el = e.target as HTMLElement | null;
+      if (!el || !section.contains(el)) return;
+      // Only memo elements we can re-find by id; fall back to slide group.
+      lastFocusIdRef.current = el.id || null;
+    };
+    section.addEventListener('focusin', onFocusIn);
+    return () => section.removeEventListener('focusin', onFocusIn);
+  }, []);
+
+  // Detect direction transitions and restore focus after the render flushes.
+  const prevIsRTLRef = useRef(isRTL);
+  useEffect(() => {
+    if (prevIsRTLRef.current === isRTL) return;
+    prevIsRTLRef.current = isRTL;
+    const targetId = lastFocusIdRef.current;
+    // rAF ensures the new tree is committed before we try to refocus.
+    const raf = requestAnimationFrame(() => {
+      const target = targetId ? document.getElementById(targetId) : null;
+      if (target && typeof (target as HTMLElement).focus === 'function') {
+        (target as HTMLElement).focus({ preventScroll: true });
+        return;
+      }
+      // Fallback: keep focus inside the hero rather than letting it drop to <body>.
+      slideContentRef.current?.focus({ preventScroll: true });
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [isRTL]);
 
   return (
     <section className="relative">
@@ -498,6 +551,7 @@ export const HeroV2 = () => {
             </span>
             <button
               type="button"
+              id="hero-toggle-autoplay"
               onClick={() => setPaused((p) => !p)}
               aria-label={paused ? bi('تشغيل', 'Play') : bi('إيقاف', 'Pause')}
               aria-pressed={paused}
@@ -517,6 +571,7 @@ export const HeroV2 = () => {
             */}
             <div
               key={`txt-${active}`}
+              id="hero-slide-content"
               ref={slideContentRef}
               tabIndex={-1}
               role="group"
@@ -822,6 +877,7 @@ export const HeroV2 = () => {
               <div className="flex items-center gap-2">
                 <button
                   type="button"
+                  id="hero-prev"
                   onClick={goPrev}
                   aria-label={bi('الشريحة السابقة', 'Previous slide')}
                   aria-controls="hero-carousel"
@@ -831,6 +887,7 @@ export const HeroV2 = () => {
                 </button>
                 <button
                   type="button"
+                  id="hero-next"
                   onClick={goNext}
                   aria-label={bi('الشريحة التالية', 'Next slide')}
                   aria-controls="hero-carousel"
