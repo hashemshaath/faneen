@@ -11,9 +11,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
-import { Crown, Wallet, RefreshCw, Search, ChevronRight } from 'lucide-react';
+import { Crown, Wallet, RefreshCw, Search, ChevronRight, Undo2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { trackEvent } from '@/lib/analytics';
+
+const REASON_LABEL: Record<string, string> = {
+  monthly_grant: 'منح شهري',
+  admin_manual_grant: 'إضافة يدوية',
+  contact_reveal_consumption: 'كشف بيانات تواصل',
+  launch_free_reveal: 'إتاحة مجانية - إطلاق',
+  admin_override_reveal: 'تجاوز إداري',
+  admin_adjustment: 'تعديل إداري',
+  admin_refund: 'استرجاع إداري',
+};
+const TYPE_LABEL_ADMIN: Record<string, string> = {
+  grant: 'إضافة', consume: 'استخدام', refund: 'استرجاع', adjustment: 'تعديل',
+};
 
 interface Plan { id: string; code: string; name_ar: string; lead_credits_per_month: number; }
 interface Sub {
@@ -142,18 +155,37 @@ const AdminProviderSubscriptions: React.FC = () => {
 };
 
 const ManageSub: React.FC<{ sub: Sub; plans: Plan[]; onDone: () => void; adminId: string | null }> = ({ sub, plans, onDone, adminId }) => {
+  const qc = useQueryClient();
   const [planId, setPlanId] = useState(sub.plan_id);
   const [status, setStatus] = useState(sub.status);
   const [grantAmount, setGrantAmount] = useState<string>('');
   const [grantNote, setGrantNote] = useState('');
   const [adjustTo, setAdjustTo] = useState<string>(String(sub.lead_credits_balance));
   const [adjustNote, setAdjustNote] = useState('');
+  const [refundAmount, setRefundAmount] = useState<string>('');
+  const [refundNote, setRefundNote] = useState('');
+  const [refundLeadId, setRefundLeadId] = useState('');
 
   React.useEffect(() => {
     setPlanId(sub.plan_id); setStatus(sub.status);
     setGrantAmount(''); setGrantNote('');
     setAdjustTo(String(sub.lead_credits_balance)); setAdjustNote('');
+    setRefundAmount(''); setRefundNote(''); setRefundLeadId('');
   }, [sub.id, sub.plan_id, sub.status, sub.lead_credits_balance]);
+
+  const recentTxQ = useQuery({
+    queryKey: ['admin-sub-tx', sub.business_id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('provider_lead_credit_transactions')
+        .select('id, type, amount, balance_after, reason, created_at, created_by, quote_request_lead_id')
+        .eq('business_id', sub.business_id)
+        .order('created_at', { ascending: false })
+        .limit(10);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
 
   const planStatusM = useMutation({
     mutationFn: async () => {
@@ -166,49 +198,49 @@ const ManageSub: React.FC<{ sub: Sub; plans: Plan[]; onDone: () => void; adminId
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'تعذر التحديث'),
   });
 
+  const callRpc = async (action: 'grant'|'refund'|'adjustment', amount: number, reason: string, note?: string, leadId?: string) => {
+    const { data, error } = await supabase.rpc('admin_adjust_provider_credits', {
+      p_subscription_id: sub.id,
+      p_action: action,
+      p_amount: amount,
+      p_reason: reason,
+      p_note: note ?? null,
+      p_quote_request_lead_id: leadId || null,
+    });
+    if (error) throw error;
+    return data;
+  };
+
   const grantM = useMutation({
     mutationFn: async () => {
       const amt = parseInt(grantAmount, 10);
       if (!Number.isFinite(amt) || amt <= 0) throw new Error('أدخل رقمًا أكبر من صفر');
-      const newBal = sub.lead_credits_balance + amt;
-      const { error: e1 } = await supabase.from('provider_subscriptions')
-        .update({ lead_credits_balance: newBal }).eq('id', sub.id);
-      if (e1) throw e1;
-      const { error: e2 } = await supabase.from('provider_lead_credit_transactions').insert({
-        business_id: sub.business_id,
-        provider_user_id: sub.provider_user_id,
-        type: 'grant', amount: amt, balance_after: newBal,
-        reason: 'admin_manual_grant',
-        metadata: { note: grantNote || null },
-        created_by: adminId,
-      });
-      if (e2) throw e2;
+      await callRpc('grant', amt, 'admin_manual_grant', grantNote);
       trackEvent('admin_lead_credit_granted', { sub_id: sub.id, amount: amt });
     },
-    onSuccess: () => { toast.success('تمت إضافة الرصيد'); onDone(); },
+    onSuccess: () => { toast.success('تمت إضافة الرصيد'); qc.invalidateQueries({ queryKey: ['admin-sub-tx', sub.business_id] }); onDone(); },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'تعذر إضافة الرصيد'),
+  });
+
+  const refundM = useMutation({
+    mutationFn: async () => {
+      const amt = parseInt(refundAmount, 10);
+      if (!Number.isFinite(amt) || amt <= 0) throw new Error('أدخل رقمًا أكبر من صفر');
+      if (!refundNote.trim()) throw new Error('السبب مطلوب');
+      await callRpc('refund', amt, 'admin_refund', refundNote, refundLeadId.trim());
+      trackEvent('admin_lead_credit_refunded', { sub_id: sub.id, amount: amt });
+    },
+    onSuccess: () => { toast.success('تم استرجاع الرصيد بنجاح'); qc.invalidateQueries({ queryKey: ['admin-sub-tx', sub.business_id] }); onDone(); },
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'تعذر استرجاع الرصيد حاليًا'),
   });
 
   const adjustM = useMutation({
     mutationFn: async () => {
       const target = parseInt(adjustTo, 10);
       if (!Number.isFinite(target) || target < 0) throw new Error('أدخل رقمًا صحيحًا');
-      const diff = target - sub.lead_credits_balance;
-      if (diff === 0) throw new Error('لا يوجد تغيير');
-      const { error: e1 } = await supabase.from('provider_subscriptions')
-        .update({ lead_credits_balance: target }).eq('id', sub.id);
-      if (e1) throw e1;
-      const { error: e2 } = await supabase.from('provider_lead_credit_transactions').insert({
-        business_id: sub.business_id,
-        provider_user_id: sub.provider_user_id,
-        type: 'adjustment', amount: diff, balance_after: target,
-        reason: 'admin_adjustment',
-        metadata: { note: adjustNote || null },
-        created_by: adminId,
-      });
-      if (e2) throw e2;
+      await callRpc('adjustment', target, 'admin_adjustment', adjustNote);
     },
-    onSuccess: () => { toast.success('تم التعديل'); onDone(); },
+    onSuccess: () => { toast.success('تم التعديل'); qc.invalidateQueries({ queryKey: ['admin-sub-tx', sub.business_id] }); onDone(); },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'تعذر التعديل'),
   });
 
@@ -257,6 +289,41 @@ const ManageSub: React.FC<{ sub: Sub; plans: Plan[]; onDone: () => void; adminId
         <Button size="sm" variant="outline" className="w-full h-9 text-xs" onClick={() => adjustM.mutate()} disabled={adjustM.isPending}>
           تطبيق التعديل
         </Button>
+      </div>
+
+      <div className="border-t pt-4 space-y-2">
+        <Label className="text-xs flex items-center gap-1"><Undo2 className="h-3 w-3" /> استرجاع رصيد</Label>
+        <Input type="number" min={1} value={refundAmount} onChange={(e) => setRefundAmount(e.target.value)} placeholder="عدد الفرص المسترجعة" className="h-9 text-xs tech-content" />
+        <Input value={refundLeadId} onChange={(e) => setRefundLeadId(e.target.value)} placeholder="معرف الفرصة (اختياري)" className="h-9 text-xs tech-content" />
+        <Textarea rows={2} value={refundNote} onChange={(e) => setRefundNote(e.target.value)} placeholder="السبب (مطلوب)" className="text-xs" />
+        <Button size="sm" variant="outline" className="w-full h-9 text-xs" onClick={() => refundM.mutate()} disabled={refundM.isPending || !refundAmount || !refundNote.trim()}>
+          استرجاع
+        </Button>
+      </div>
+
+      <div className="border-t pt-4 space-y-2">
+        <Label className="text-xs">آخر 10 حركات رصيد</Label>
+        {recentTxQ.isLoading ? <Skeleton className="h-20 w-full" /> : (recentTxQ.data ?? []).length === 0 ? (
+          <p className="text-[11px] text-muted-foreground py-2">لا توجد حركات.</p>
+        ) : (
+          <div className="space-y-1.5 max-h-72 overflow-y-auto">
+            {(recentTxQ.data ?? []).map((t) => (
+              <div key={t.id} className="text-[11px] border border-border rounded-md p-2 flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="px-1.5 py-0.5 rounded-full border border-border bg-muted/40">{TYPE_LABEL_ADMIN[t.type] ?? t.type}</span>
+                    <span className="text-muted-foreground truncate">{REASON_LABEL[t.reason] ?? t.reason}</span>
+                  </div>
+                  <div className="text-muted-foreground tech-content mt-0.5">{new Date(t.created_at).toLocaleString('ar-SA-u-nu-latn')}</div>
+                </div>
+                <div className="text-end shrink-0">
+                  <div className={`tech-content font-medium ${t.amount > 0 ? 'text-success' : t.amount < 0 ? 'text-destructive' : ''}`}>{t.amount > 0 ? `+${t.amount}` : t.amount}</div>
+                  <div className="text-muted-foreground tech-content">رصيد: {t.balance_after}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
