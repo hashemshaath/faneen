@@ -7,7 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Inbox, MapPin, Tag, Calendar, ChevronLeft, Sparkles } from 'lucide-react';
+import { Inbox, MapPin, Tag, Calendar, ChevronLeft, Sparkles, ShieldCheck } from 'lucide-react';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { useProviderActivityPing } from '@/hooks/useProviderActivityPing';
 import {
@@ -21,6 +21,7 @@ interface LeadRow {
   match_score: number;
   match_reasons: string[];
   created_at: string;
+  contact_revealed: boolean;
   quote_request: {
     id: string;
     sector: string;
@@ -43,7 +44,7 @@ const ProviderLeads: React.FC = () => {
       const { data, error } = await supabase
         .from('quote_request_leads')
         .select(`
-          id, status, match_score, match_reasons, created_at,
+          id, status, match_score, match_reasons, created_at, contact_revealed,
           quote_request:quote_requests(id, sector, city, district, project_description, execution_timeline)
         `)
         .order('created_at', { ascending: false })
@@ -104,13 +105,27 @@ const ProviderLeads: React.FC = () => {
               const q = lead.quote_request;
               const status = lead.status as LeadStatus;
               const tone = LEAD_STATUS_TONE[status] ?? 'bg-muted';
+              const showRevealed = lead.contact_revealed;
+              const showAwaiting = status === 'interested' && !lead.contact_revealed;
               return (
                 <Card key={lead.id} className="hover-lift">
                   <CardContent className="p-4 space-y-3">
                     <div className="flex items-center justify-between gap-2">
-                      <span className={`text-xs px-2 py-0.5 rounded-full border ${tone}`}>
-                        {LEAD_STATUS_LABEL_AR[status] ?? status}
-                      </span>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className={`text-xs px-2 py-0.5 rounded-full border ${tone}`}>
+                          {LEAD_STATUS_LABEL_AR[status] ?? status}
+                        </span>
+                        {showRevealed && (
+                          <span className="text-[11px] px-2 py-0.5 rounded-full border border-success/30 bg-success/5 text-success inline-flex items-center gap-1">
+                            <ShieldCheck className="h-3 w-3" /> بيانات التواصل متاحة
+                          </span>
+                        )}
+                        {showAwaiting && (
+                          <span className="text-[11px] px-2 py-0.5 rounded-full border border-warning/30 bg-warning/5 text-warning">
+                            بانتظار المتابعة
+                          </span>
+                        )}
+                      </div>
                       <span className="text-xs text-muted-foreground tech-content">
                         {new Date(lead.created_at).toLocaleDateString('ar-SA-u-nu-latn')}
                       </span>
