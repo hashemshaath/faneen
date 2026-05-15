@@ -7525,9 +7525,60 @@ export type Database = {
           },
         ]
       }
+      quote_request_lead_events: {
+        Row: {
+          actor_user_id: string | null
+          created_at: string
+          event_type: string
+          id: string
+          lead_id: string
+          metadata: Json
+          quote_request_id: string
+        }
+        Insert: {
+          actor_user_id?: string | null
+          created_at?: string
+          event_type: string
+          id?: string
+          lead_id: string
+          metadata?: Json
+          quote_request_id: string
+        }
+        Update: {
+          actor_user_id?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          lead_id?: string
+          metadata?: Json
+          quote_request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_request_lead_events_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "quote_request_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quote_request_lead_events_quote_request_id_fkey"
+            columns: ["quote_request_id"]
+            isOneToOne: false
+            referencedRelation: "quote_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quote_request_leads: {
         Row: {
           admin_notes: string | null
+          contact_reveal_note: string | null
+          contact_revealed: boolean
+          contact_revealed_at: string | null
+          contact_revealed_by: string | null
+          contact_view_count: number
+          contact_viewed_at: string | null
           created_at: string
           id: string
           match_reasons: Json
@@ -7543,6 +7594,12 @@ export type Database = {
         }
         Insert: {
           admin_notes?: string | null
+          contact_reveal_note?: string | null
+          contact_revealed?: boolean
+          contact_revealed_at?: string | null
+          contact_revealed_by?: string | null
+          contact_view_count?: number
+          contact_viewed_at?: string | null
           created_at?: string
           id?: string
           match_reasons?: Json
@@ -7558,6 +7615,12 @@ export type Database = {
         }
         Update: {
           admin_notes?: string | null
+          contact_reveal_note?: string | null
+          contact_revealed?: boolean
+          contact_revealed_at?: string | null
+          contact_revealed_by?: string | null
+          contact_view_count?: number
+          contact_viewed_at?: string | null
           created_at?: string
           id?: string
           match_reasons?: Json
