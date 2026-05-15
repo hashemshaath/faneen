@@ -11,10 +11,18 @@ import { supabase } from '@/integrations/supabase/client';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import {
   Activity, RefreshCw, AlertCircle, ArrowUpRight, Sparkles, Users, Clock, Target, Info,
+  Download, TrendingUp,
 } from 'lucide-react';
 import { QUOTE_STATUS_LABEL_AR, SECTOR_LABEL_AR, type QuoteStatus } from '@/lib/quoteRequests';
+import {
+  buildDailyQuoteOperationsSeries, rowsToCsv, downloadCsv, DAILY_OPS_CSV_HEADERS,
+} from '@/lib/quoteOperationsAggregation';
+import {
+  ResponsiveContainer, LineChart, Line, BarChart, Bar, XAxis, YAxis,
+  CartesianGrid, Tooltip as RTooltip, Legend,
+} from 'recharts';
 
-type Range = 'today' | '7d' | '30d' | 'all';
+type Range = 'today' | '7d' | '30d' | '90d' | 'all';
 
 interface QuoteRow {
   id: string; sector: string; city: string; status: string; created_at: string;
@@ -54,6 +62,7 @@ function rangeFrom(r: Range): Date | null {
   if (r === 'today') { const d = new Date(now); d.setHours(0, 0, 0, 0); return d; }
   if (r === '7d') return new Date(now.getTime() - 7 * 86400000);
   if (r === '30d') return new Date(now.getTime() - 30 * 86400000);
+  if (r === '90d') return new Date(now.getTime() - 90 * 86400000);
   return null;
 }
 
