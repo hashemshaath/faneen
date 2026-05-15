@@ -213,6 +213,12 @@ export const HeroV2 = () => {
   );
   const [liveMessage, setLiveMessage] = useState(initialLiveMessage);
   const lastAnnouncedRef = useRef<string>(initialLiveMessage);
+  // Timestamps of recent slide changes (`active` transitions). Used to
+  // adapt the live-region debounce: when changes come in very close
+  // together (rapid scrubbing, autoplay catching up after tab focus,
+  // bursts of arrow keys) we extend the wait so we only announce the
+  // final settled slide.
+  const slideChangeTimesRef = useRef<number[]>([]);
 
   // Top trending searches (manually curated based on industry priors)
   const TRENDING: { ar: string; en: string; cat?: string }[] = [
