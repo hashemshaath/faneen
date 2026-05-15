@@ -7484,6 +7484,173 @@ export type Database = {
           },
         ]
       }
+      provider_lead_credit_transactions: {
+        Row: {
+          amount: number
+          balance_after: number
+          business_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          metadata: Json
+          provider_user_id: string | null
+          quote_request_lead_id: string | null
+          reason: string
+          type: string
+        }
+        Insert: {
+          amount: number
+          balance_after: number
+          business_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          metadata?: Json
+          provider_user_id?: string | null
+          quote_request_lead_id?: string | null
+          reason: string
+          type: string
+        }
+        Update: {
+          amount?: number
+          balance_after?: number
+          business_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          metadata?: Json
+          provider_user_id?: string | null
+          quote_request_lead_id?: string | null
+          reason?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_lead_credit_transactions_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_lead_credit_transactions_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_lead_credit_transactions_quote_request_lead_id_fkey"
+            columns: ["quote_request_lead_id"]
+            isOneToOne: false
+            referencedRelation: "quote_request_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      provider_plans: {
+        Row: {
+          code: string
+          created_at: string
+          description_ar: string | null
+          features: Json
+          id: string
+          is_active: boolean
+          lead_credits_per_month: number
+          monthly_price: number
+          name_ar: string
+          name_en: string | null
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          description_ar?: string | null
+          features?: Json
+          id?: string
+          is_active?: boolean
+          lead_credits_per_month?: number
+          monthly_price?: number
+          name_ar: string
+          name_en?: string | null
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          description_ar?: string | null
+          features?: Json
+          id?: string
+          is_active?: boolean
+          lead_credits_per_month?: number
+          monthly_price?: number
+          name_ar?: string
+          name_en?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      provider_subscriptions: {
+        Row: {
+          business_id: string
+          created_at: string
+          current_period_end: string | null
+          current_period_start: string
+          id: string
+          lead_credits_balance: number
+          plan_id: string
+          provider_user_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string
+          id?: string
+          lead_credits_balance?: number
+          plan_id: string
+          provider_user_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string
+          id?: string
+          lead_credits_balance?: number
+          plan_id?: string
+          provider_user_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_subscriptions_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: true
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_subscriptions_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: true
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "provider_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quote_request_events: {
         Row: {
           actor_user_id: string | null
