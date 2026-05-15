@@ -91,6 +91,7 @@ const AdminContactCenter = lazyRetry(() => import("./pages/admin/AdminContactCen
 const AdminLeadRequests = lazyRetry(() => import("./pages/admin/AdminLeadRequests"));
 const AdminQuoteRequests = lazyRetry(() => import("./pages/admin/AdminQuoteRequests"));
 const AdminQuoteRequestDetails = lazyRetry(() => import("./pages/admin/AdminQuoteRequestDetails"));
+const AdminQuoteOperations = lazyRetry(() => import("./pages/admin/AdminQuoteOperations"));
 const QuoteRequestDetails = lazyRetry(() => import("./pages/dashboard/QuoteRequestDetails"));
 const AdminEmailDeliverability = lazyRetry(() => import("./pages/admin/AdminEmailDeliverability"));
 const AdminEmailCenter = lazyRetry(() => import("./pages/admin/AdminEmailCenter"));
@@ -282,6 +283,7 @@ const AppRoutes = () => (
           <Route path="/admin/lead-requests" element={<ProtectedRoute requireAdmin><AdminLeadRequests /></ProtectedRoute>} />
           <Route path="/admin/quote-requests" element={<ProtectedRoute requireAdmin><AdminQuoteRequests /></ProtectedRoute>} />
           <Route path="/admin/quote-requests/:id" element={<ProtectedRoute requireAdmin><AdminQuoteRequestDetails /></ProtectedRoute>} />
+          <Route path="/admin/quote-operations" element={<ProtectedRoute requireAdmin><AdminQuoteOperations /></ProtectedRoute>} />
           <Route path="/admin/email-deliverability" element={<ProtectedRoute requireAdmin><AdminEmailDeliverability /></ProtectedRoute>} />
           <Route path="/admin/email-center" element={<ProtectedRoute requireAdmin><AdminEmailCenter /></ProtectedRoute>} />
           <Route path="/admin/site-audit" element={<ProtectedRoute requireAdmin><AdminSiteAudit /></ProtectedRoute>} />
