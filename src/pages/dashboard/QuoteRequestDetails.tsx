@@ -117,7 +117,7 @@ const QuoteRequestDetails: React.FC = () => {
   );
 
   const updateMutation = useMutation({
-    mutationFn: async (patch: Partial<QuoteRow>) => {
+    mutationFn: async (patch: Record<string, string | number | boolean | null>) => {
       const { error } = await supabase
         .from('quote_requests')
         .update(patch)
