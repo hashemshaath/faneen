@@ -768,4 +768,11 @@ const Stat: React.FC<{ label: string; value: number | string }> = ({ label, valu
   </div>
 );
 
+const ChartCard: React.FC<{ title: string; wide?: boolean; children: React.ReactNode }> = ({ title, wide, children }) => (
+  <div className={`rounded-lg border border-border bg-card/50 p-3 ${wide ? 'lg:col-span-2' : ''}`}>
+    <p className="text-xs font-medium text-foreground/80 mb-2">{title}</p>
+    {children}
+  </div>
+);
+
 export default AdminQuoteOperations;
