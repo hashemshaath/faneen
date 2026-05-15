@@ -129,6 +129,24 @@ Deno.serve(async (req) => {
     return err('تعذر حفظ الطلب حاليًا. حاول مرة أخرى.', 500);
   }
 
+  // Audit: quote_created
+  try {
+    await admin.from('quote_request_events').insert({
+      quote_request_id: inserted.id,
+      event_type: 'quote_created',
+      actor_user_id: userId,
+      metadata: {
+        sector,
+        city,
+        customer_type: customerType,
+        source: 'website_quote_form',
+        anonymous: !userId,
+      },
+    });
+  } catch (e) {
+    console.warn('quote_created event insert failed (non-fatal)', e);
+  }
+
   // Optionally trigger automatic matching right after submission.
   if (AUTO_MATCH_ON_SUBMISSION) {
     try {
