@@ -451,6 +451,9 @@ const AdminQuoteOperations: React.FC = () => {
               <Button size="sm" variant="outline" className="h-9 text-xs" onClick={refreshAll} disabled={loading}>
                 <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} /> تحديث البيانات
               </Button>
+              <Button size="sm" variant="outline" className="h-9 text-xs" onClick={handleExportDaily} disabled={loading || dailySeries.length === 0}>
+                <Download className="h-3.5 w-3.5" /> تصدير CSV
+              </Button>
             </div>
           </div>
 
