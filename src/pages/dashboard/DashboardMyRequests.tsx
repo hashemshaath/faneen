@@ -110,6 +110,39 @@ const DashboardMyRequests: React.FC = () => {
     },
   });
 
+  const { data: quoteRequests, isLoading: loadingQuotes } = useQuery({
+    queryKey: ['my-quote-requests', user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('quote_requests')
+        .select('id, sector, city, district, project_description, status, preferred_contact_method, created_at, updated_at')
+        .eq('user_id', user!.id)
+        .order('created_at', { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      return (data ?? []) as QuoteRequestRow[];
+    },
+  });
+
+  const quoteIds = useMemo(() => (quoteRequests ?? []).map((q) => q.id), [quoteRequests]);
+  const { data: quoteFileCounts } = useQuery({
+    queryKey: ['my-quote-file-counts', quoteIds.join(',')],
+    enabled: quoteIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('quote_request_files')
+        .select('quote_request_id')
+        .in('quote_request_id', quoteIds);
+      if (error) throw error;
+      const counts = new Map<string, number>();
+      (data ?? []).forEach((r: { quote_request_id: string }) => {
+        counts.set(r.quote_request_id, (counts.get(r.quote_request_id) ?? 0) + 1);
+      });
+      return counts;
+    },
+  });
+
   const businessIds = useMemo(
     () => Array.from(new Set((leads ?? []).map((l) => l.business_id))).filter(Boolean),
     [leads],
