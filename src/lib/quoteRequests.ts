@@ -99,3 +99,29 @@ export function formatFileSize(bytes: number | null | undefined): string {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
 }
+
+// =====================
+// Quote request leads (provider matching)
+// =====================
+export const LEAD_STATUSES = ['new','viewed','interested','not_interested','contacted','expired','cancelled'] as const;
+export type LeadStatus = typeof LEAD_STATUSES[number];
+
+export const LEAD_STATUS_LABEL_AR: Record<LeadStatus, string> = {
+  new: 'جديد',
+  viewed: 'تمت المشاهدة',
+  interested: 'مهتم',
+  not_interested: 'غير مناسب',
+  contacted: 'تم التواصل',
+  expired: 'منتهي',
+  cancelled: 'ملغي',
+};
+
+export const LEAD_STATUS_TONE: Record<LeadStatus, string> = {
+  new: 'bg-primary/10 text-primary border-primary/30',
+  viewed: 'bg-info/10 text-info border-info/30',
+  interested: 'bg-success/10 text-success border-success/30',
+  not_interested: 'bg-muted text-muted-foreground border-border',
+  contacted: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30',
+  expired: 'bg-warning/10 text-warning border-warning/30',
+  cancelled: 'bg-muted text-muted-foreground border-border',
+};
