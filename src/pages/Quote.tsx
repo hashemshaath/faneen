@@ -824,6 +824,14 @@ const Quote: React.FC = () => {
                         <AlertCircle className="w-4 h-4" /> {submitError}
                       </p>
                     )}
+                    {uploadProgress && (
+                      <p className="text-sm text-muted-foreground">
+                        <Bi
+                          ar={`جارٍ رفع الملفات (${uploadProgress.done}/${uploadProgress.total})...`}
+                          en={`Uploading files (${uploadProgress.done}/${uploadProgress.total})...`}
+                        />
+                      </p>
+                    )}
                   </div>
                 )}
 
