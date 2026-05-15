@@ -155,10 +155,14 @@ const AdminQuoteRequestDetails: React.FC = () => {
   });
 
   const revealMutation = useMutation({
-    mutationFn: async (vars: { lead_id: string; note: string }) => {
+    mutationFn: async (vars: { lead_id: string; note: string; override_credit_check?: boolean }) => {
       trackEvent('admin_contact_reveal_clicked', { lead_id: vars.lead_id });
       const { data, error } = await supabase.functions.invoke('admin-reveal-lead-contact', {
-        body: { lead_id: vars.lead_id, note: vars.note || undefined },
+        body: {
+          lead_id: vars.lead_id,
+          note: vars.note || undefined,
+          override_credit_check: vars.override_credit_check || undefined,
+        },
       });
       if (error) throw error;
       return data as { success: boolean; message?: string };
@@ -172,6 +176,7 @@ const AdminQuoteRequestDetails: React.FC = () => {
       }
       setRevealLeadId(null);
       setRevealNote('');
+      setRevealOverride(false);
       refetchLeads();
     },
     onError: () => toast.error('تعذر إتاحة بيانات التواصل'),
