@@ -218,6 +218,11 @@ export const HeroV2 = () => {
   // together (rapid scrubbing, autoplay catching up after tab focus,
   // bursts of arrow keys) we extend the wait so we only announce the
   // final settled slide.
+  // Hard-capped circular buffer (FIFO). Even under pathological bursts —
+  // hundreds of synchronous `active` updates, runaway autoplay, or a
+  // scripted attack — this list NEVER grows past MAX_SLIDE_TIMES entries.
+  // The cap is enforced unconditionally before any filter, so memory stays
+  // O(MAX_SLIDE_TIMES) regardless of the filter window or change rate.
   const slideChangeTimesRef = useRef<number[]>([]);
 
   // Top trending searches (manually curated based on industry priors)
@@ -347,13 +352,22 @@ export const HeroV2 = () => {
     //     a settled slide always announces in <= ~1s.
     // Combined with `clearTimeout` on every change, this guarantees only
     // the FINAL slide of a fast burst is ever spoken aloud.
+    const MAX_SLIDE_TIMES = 5;          // hard memory cap
+    const BURST_WINDOW_MS = 1000;       // sliding window for adaptive delay
     const now = Date.now();
-    const times = slideChangeTimesRef.current.filter((t) => now - t < 1000);
-    times.push(now);
-    slideChangeTimesRef.current = times.slice(-5); // keep last 5 only
+    // 1) Append + hard-cap FIRST (FIFO), so the buffer can never grow past
+    //    MAX_SLIDE_TIMES even if filter() somehow returns the full array.
+    const buf = slideChangeTimesRef.current;
+    buf.push(now);
+    if (buf.length > MAX_SLIDE_TIMES) buf.splice(0, buf.length - MAX_SLIDE_TIMES);
+    // 2) Then drop entries older than the burst window (in place — same array).
+    while (buf.length && now - buf[0] > BURST_WINDOW_MS) buf.shift();
+    // Defensive: re-cap in the (impossible) case anything else mutated it.
+    if (buf.length > MAX_SLIDE_TIMES) buf.splice(0, buf.length - MAX_SLIDE_TIMES);
+    const recent = buf.length;
     let delay = 450;
-    if (times.length >= 3) delay = 1000;
-    else if (times.length === 2) delay = 700;
+    if (recent >= 3) delay = 1000;
+    else if (recent === 2) delay = 700;
     if (lastAnnouncedRef.current === '') delay = 0;
     const t = window.setTimeout(() => {
       lastAnnouncedRef.current = pendingLiveMessage;
