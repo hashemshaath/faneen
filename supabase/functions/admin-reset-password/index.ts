@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.95.0";
 import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
+import { logSecurityEvent, hashSubject, hashIp } from "../_shared/securityAudit.ts";
 
 const jsonResponse = (body: Record<string, unknown>) =>
   new Response(JSON.stringify(body), {
@@ -41,6 +42,8 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
+    const ipHash = await hashIp(req);
+    const userAgent = req.headers.get("user-agent");
 
     // Verify caller is super_admin
     const anonClient = createClient(
@@ -53,6 +56,14 @@ Deno.serve(async (req) => {
       authHeader.replace("Bearer ", "")
     );
     if (claimsError || !claimsData?.claims?.sub) {
+      await logSecurityEvent(supabaseAdmin, {
+        event_type: "password_reset",
+        event_action: "failed",
+        status: "warn",
+        ip_hash: ipHash,
+        user_agent: userAgent,
+        reason: "unauthorized",
+      });
       return jsonResponse({ success: false, error: "Unauthorized", code: "unauthorized" });
     }
 
@@ -67,6 +78,15 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (!roleData) {
+      await logSecurityEvent(supabaseAdmin, {
+        event_type: "password_reset",
+        event_action: "failed",
+        status: "error",
+        user_id: callerId,
+        ip_hash: ipHash,
+        user_agent: userAgent,
+        reason: "forbidden_not_super_admin",
+      });
       return jsonResponse({ success: false, error: "Forbidden: super_admin required", code: "forbidden" });
     }
 
@@ -79,10 +99,30 @@ Deno.serve(async (req) => {
     if (typeof target_user_id !== "string" || typeof action !== "string") {
       return jsonResponse({ success: false, error: "target_user_id and action required", code: "invalid_request" });
     }
+    const targetHash = await hashSubject(target_user_id);
+    await logSecurityEvent(supabaseAdmin, {
+      event_type: "password_reset",
+      event_action: "attempt",
+      user_id: callerId,
+      subject_hash: targetHash,
+      ip_hash: ipHash,
+      user_agent: userAgent,
+      metadata: { action },
+    });
 
     if (action === "change_password") {
       const validationError = getPasswordValidationError(new_password);
       if (validationError) {
+        await logSecurityEvent(supabaseAdmin, {
+          event_type: "password_reset",
+          event_action: "failed",
+          status: "warn",
+          user_id: callerId,
+          subject_hash: targetHash,
+          ip_hash: ipHash,
+          reason: "weak_password",
+          metadata: { action },
+        });
         return jsonResponse({ success: false, error: validationError, code: "weak_password" });
       }
 
@@ -92,6 +132,16 @@ Deno.serve(async (req) => {
 
       if (error) {
         const message = error.message || "Failed to update password";
+        await logSecurityEvent(supabaseAdmin, {
+          event_type: "password_reset",
+          event_action: "failed",
+          status: "error",
+          user_id: callerId,
+          subject_hash: targetHash,
+          ip_hash: ipHash,
+          reason: isWeakPasswordError(message) ? "weak_password" : "auth_update_failed",
+          metadata: { action },
+        });
         return jsonResponse({
           success: false,
           error: isWeakPasswordError(message) ? "Password is too weak or easy to guess. Choose a longer, unique password." : message,
@@ -99,6 +149,16 @@ Deno.serve(async (req) => {
         });
       }
 
+      await logSecurityEvent(supabaseAdmin, {
+        event_type: "password_reset",
+        event_action: "success",
+        user_id: callerId,
+        subject_hash: targetHash,
+        ip_hash: ipHash,
+        user_agent: userAgent,
+        reason: "password_changed",
+        metadata: { action },
+      });
       return jsonResponse({ success: true, message: "Password changed" });
     }
 
@@ -106,12 +166,44 @@ Deno.serve(async (req) => {
       // Get user email
       const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(target_user_id);
       if (userError || !userData?.user?.email) {
+        await logSecurityEvent(supabaseAdmin, {
+          event_type: "password_reset",
+          event_action: "failed",
+          status: "warn",
+          user_id: callerId,
+          subject_hash: targetHash,
+          ip_hash: ipHash,
+          reason: "email_not_found",
+          metadata: { action },
+        });
         return jsonResponse({ success: false, error: "User email not found", code: "email_not_found" });
       }
 
       const { error } = await supabaseAdmin.auth.resetPasswordForEmail(userData.user.email);
-      if (error) return jsonResponse({ success: false, error: error.message, code: "reset_link_failed" });
+      if (error) {
+        await logSecurityEvent(supabaseAdmin, {
+          event_type: "password_reset",
+          event_action: "failed",
+          status: "error",
+          user_id: callerId,
+          subject_hash: targetHash,
+          ip_hash: ipHash,
+          reason: "reset_link_failed",
+          metadata: { action },
+        });
+        return jsonResponse({ success: false, error: error.message, code: "reset_link_failed" });
+      }
 
+      await logSecurityEvent(supabaseAdmin, {
+        event_type: "password_reset",
+        event_action: "success",
+        user_id: callerId,
+        subject_hash: targetHash,
+        ip_hash: ipHash,
+        user_agent: userAgent,
+        reason: "reset_link_sent",
+        metadata: { action },
+      });
       return jsonResponse({ success: true, message: "Reset link sent" });
     }
 
