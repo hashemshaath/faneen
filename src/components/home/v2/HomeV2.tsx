@@ -868,7 +868,11 @@ export const HeroV2 = () => {
 
             {/* CTAs */}
             <div className="mt-5 flex flex-col sm:flex-row items-center justify-center gap-3">
-              <PrimaryCTA to={ROUTES.quote} label={bi('اطلب عرض سعر', 'Request a quote')} />
+              <PrimaryCTA
+                to={ROUTES.quote}
+                label={bi('اطلب عرض سعر', 'Request a quote')}
+                onClick={() => trackAbClick('hero_headline')}
+              />
               <Link to={ROUTES.signupProvider}>
                 <Button
                   variant="outline"
