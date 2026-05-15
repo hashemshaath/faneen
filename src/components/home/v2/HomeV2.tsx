@@ -757,46 +757,65 @@ export const HeroV2 = () => {
             <div className="flex items-end justify-between gap-3">
               {/* Thumbnails (md+) */}
               <div className="hidden md:flex items-center gap-2">
-                {SLIDES.map((s, i) => (
+                {SLIDES.map((s, i) => {
+                  const isActive = i === active;
+                  // Use the WAI-ARIA token form ("true") on active and OMIT on
+                  // inactive — `aria-current="false"` is technically valid but
+                  // some screen readers still announce "current" on it.
+                  const ariaCurrent = isActive ? ('true' as const) : undefined;
+                  const label = bi(
+                    `الانتقال إلى ${s.tagAr} — الشريحة ${i + 1} من ${SLIDES.length}${isActive ? '، النشطة' : ''}`,
+                    `Go to ${s.tagEn} — slide ${i + 1} of ${SLIDES.length}${isActive ? ', current' : ''}`,
+                  );
+                  return (
                   <button
                     key={i}
                     type="button"
                     onClick={() => setActive(i)}
-                    aria-label={bi(`الانتقال إلى ${s.tagAr}`, `Go to ${s.tagEn}`)}
-                    aria-current={i === active}
+                    aria-label={label}
+                    aria-current={ariaCurrent}
                     aria-controls="hero-carousel"
                     className={`relative w-20 h-14 rounded-lg overflow-hidden border-2 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black/40 ${
-                      i === active
+                      isActive
                         ? 'border-white scale-105 shadow-xl'
                         : 'border-white/30 opacity-60 hover:opacity-100 hover:border-white/60'
                     }`}
                   >
                     <img src={s.img} alt="" className="absolute inset-0 w-full h-full object-cover" loading="lazy" decoding="async" />
-                    {i === active && <div className="absolute inset-0 ring-2 ring-secondary/70 rounded-md pointer-events-none" />}
+                    {isActive && <div className="absolute inset-0 ring-2 ring-secondary/70 rounded-md pointer-events-none" />}
                   </button>
-                ))}
+                  );
+                })}
               </div>
 
               {/* Mobile dots */}
               <div className="flex md:hidden items-center gap-2">
-                {SLIDES.map((_, i) => (
+                {SLIDES.map((s, i) => {
+                  const isActive = i === active;
+                  const ariaCurrent = isActive ? ('true' as const) : undefined;
+                  const label = bi(
+                    `الانتقال إلى الشريحة ${i + 1} من ${SLIDES.length} — ${s.tagAr}${isActive ? '، النشطة' : ''}`,
+                    `Go to slide ${i + 1} of ${SLIDES.length} — ${s.tagEn}${isActive ? ', current' : ''}`,
+                  );
+                  return (
                   <button
                     key={i}
                     type="button"
                     onClick={() => setActive(i)}
-                    aria-label={bi(`الانتقال إلى الشريحة ${i + 1}`, `Go to slide ${i + 1}`)}
-                    aria-current={i === active}
+                    aria-label={label}
+                    aria-current={ariaCurrent}
                     aria-controls="hero-carousel"
                     className={`min-h-11 min-w-11 flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white rounded-full`}
                   >
                     <span
                       aria-hidden="true"
                       className={`block h-1.5 rounded-full transition-all duration-300 ${
-                        i === active ? 'w-8 bg-white' : 'w-2 bg-white/50'
+                        isActive ? 'w-8 bg-white' : 'w-2 bg-white/50'
                       }`}
                     />
                   </button>
-                ))}
+                  );
+                })}
               </div>
 
               {/* Arrows */}

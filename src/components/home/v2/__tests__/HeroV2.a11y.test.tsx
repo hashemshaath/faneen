@@ -158,4 +158,42 @@ describe('HeroV2 — accessibility', () => {
       vi.useRealTimers();
     }
   });
+
+  it('keeps exactly one nav dot marked aria-current="true" in sync with the active slide', async () => {
+    renderHero();
+    const dots = () =>
+      Array.from(
+        document.querySelectorAll<HTMLButtonElement>(
+          'button[aria-controls="hero-carousel"][aria-label]',
+        ),
+      ).filter((b) => /(\d+)\s*(من|of)\s*\d+/.test(b.getAttribute('aria-label') ?? ''));
+
+    // Initially: exactly one button per renderable group has aria-current="true"
+    // and inactive buttons must NOT carry aria-current="false" (token, not boolean).
+    let active = dots().filter((b) => b.getAttribute('aria-current') === 'true');
+    expect(active.length).toBeGreaterThanOrEqual(1);
+    dots()
+      .filter((b) => b.getAttribute('aria-current') !== 'true')
+      .forEach((b) => {
+        expect(b.getAttribute('aria-current')).toBeNull();
+      });
+
+    // Click the Next arrow — every active dot should shift to the next index
+    // synchronously (no stale aria-current on the previous slide).
+    const nextBtn = screen.getByLabelText(/Next slide|الشريحة التالية/);
+    await act(async () => { fireEvent.click(nextBtn); });
+
+    active = dots().filter((b) => b.getAttribute('aria-current') === 'true');
+    expect(active.length).toBeGreaterThanOrEqual(1);
+    // Active dots must now describe slide 2, not slide 1
+    active.forEach((b) => {
+      expect(b.getAttribute('aria-label') ?? '').toMatch(/(الشريحة|slide)\s*2/i);
+    });
+    // And no inactive dot may falsely carry aria-current
+    dots()
+      .filter((b) => b.getAttribute('aria-current') !== 'true')
+      .forEach((b) => {
+        expect(b.getAttribute('aria-current')).toBeNull();
+      });
+  });
 });
