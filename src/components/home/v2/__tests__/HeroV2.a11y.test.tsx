@@ -113,14 +113,16 @@ describe('HeroV2 — accessibility', () => {
 
       // Forward → wait past the 450ms debounce → live region speaks slide 2
       await act(async () => { fireEvent.click(nextBtn); });
-      await act(async () => { vi.advanceTimersByTime(500); });
+      await act(async () => { vi.advanceTimersByTime(1100); });
       const afterNext = live.textContent ?? '';
       expect(afterNext).toMatch(/(الشريحة|Slide)\s*2/);
       expect(afterNext).not.toBe(initial);
 
-      // Backward → live region speaks slide 1 once, NOT slide 2 again
+      // Backward → live region speaks slide 1 once, NOT slide 2 again.
+      // Wait past the adaptive debounce window (changes within 1s extend
+      // the wait — see slideChangeTimesRef in HomeV2).
       await act(async () => { fireEvent.click(prevBtn); });
-      await act(async () => { vi.advanceTimersByTime(500); });
+      await act(async () => { vi.advanceTimersByTime(1100); });
       const afterPrev = live.textContent ?? '';
       expect(afterPrev).toMatch(/(الشريحة|Slide)\s*1/);
       // Previous slide (slide 2) text must not linger in the live region
