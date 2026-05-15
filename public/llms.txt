@@ -18,6 +18,14 @@ windows, and decorations.
 - [Homepage](https://qitaat.com/): Industrial directory for aluminum, iron, glass, wood and decorations across Saudi Arabia and the Gulf.
 - [Search](https://qitaat.com/search): Find verified workshops and manufacturers by service, city, and rating.
 - [Categories](https://qitaat.com/categories): Browse all industrial categories and sub-sectors.
+- [Sectors](https://qitaat.com/sectors): Industrial sectors hub — pick aluminum, steel, wood, glass, stainless steel or fabrication & installation.
+- [Aluminum](https://qitaat.com/sectors/aluminum): Aluminum doors, windows, facades, kitchens and partitions.
+- [Steel](https://qitaat.com/sectors/steel): Steel & metalwork — doors, stairs, structures, canopies and grilles.
+- [Wood](https://qitaat.com/sectors/wood): Wood & carpentry — doors, furniture, decor and interior fit-out.
+- [Glass](https://qitaat.com/sectors/glass): Glass & tempered glass — facades, partitions, doors and storefronts.
+- [Stainless steel](https://qitaat.com/sectors/stainless-steel): Stainless steel for restaurants, kitchens, railings and custom fittings.
+- [Fabrication & installation](https://qitaat.com/sectors/fabrication-installation): Workshops, factories and on-site installation teams.
+- [Quote](https://qitaat.com/quote): Send a structured request for quote (RFQ) by sector and city.
 - [Blog](https://qitaat.com/blog): Articles, guides and expert tips for aluminum, glass, steel and wood.
 - [Projects](https://qitaat.com/projects): Real provider portfolios and completed installations.
 - [Offers](https://qitaat.com/offers): Active promotions and discounts from verified providers.
