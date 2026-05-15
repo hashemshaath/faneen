@@ -17,11 +17,13 @@ import {
 import {
   ArrowLeft, ArrowRight, Loader2, Phone, Copy, MessageCircle, FileText, Download,
   AlertCircle, MapPin, Tag, Calendar, Wallet, User, Mail, Save, Lock, Send, Users,
-  CheckCircle2, XCircle, Sparkles, Eye, ShieldCheck,
+  CheckCircle2, XCircle, Sparkles, Eye, ShieldCheck, Activity, RefreshCw, ChevronDown,
+  ChevronUp, Filter,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { trackEvent } from '@/lib/analytics';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   QUOTE_STATUS_LABEL_AR, QUOTE_STATUS_TONE, QUOTE_STATUSES,
   CUSTOMER_TYPE_LABEL_AR, CONTACT_METHOD_LABEL_AR, SERVICE_LOCATION_LABEL_AR,
@@ -214,6 +216,35 @@ const AdminQuoteRequestDetails: React.FC = () => {
         })
         .eq('id', quote.id);
       if (error) throw error;
+
+      // Audit: quote_status_changed (+ specific event for key transitions)
+      if (vars.statusChanged) {
+        const previousStatus = quote.status;
+        await supabase.from('quote_request_events').insert({
+          quote_request_id: quote.id,
+          event_type: 'quote_status_changed',
+          actor_user_id: user?.id ?? null,
+          metadata: {
+            previous_status: previousStatus,
+            new_status: vars.newStatus,
+            has_admin_notes: !!vars.notes,
+          },
+        });
+        const specific: Record<string, string> = {
+          contacted: 'quote_contacted',
+          completed: 'quote_completed',
+          cancelled: 'quote_cancelled',
+        };
+        const specificType = specific[vars.newStatus];
+        if (specificType) {
+          await supabase.from('quote_request_events').insert({
+            quote_request_id: quote.id,
+            event_type: specificType,
+            actor_user_id: user?.id ?? null,
+            metadata: { previous_status: previousStatus },
+          });
+        }
+      }
 
       // Notify owner if status actually changed
       if (vars.statusChanged && quote.user_id) {
