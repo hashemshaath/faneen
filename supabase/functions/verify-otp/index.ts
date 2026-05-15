@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.103.0";
+import { logSecurityEvent, hashSubject, hashIp } from "../_shared/securityAudit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -76,6 +77,17 @@ Deno.serve(async (req) => {
     const cleanPhone = String(phone).replace(/\D/g, "").replace(/^0+/, "");
     const fullPhone = `${country_code}${cleanPhone}`;
     const adminClient = createClient(supabaseUrl, serviceKey);
+    const subjectHash = await hashSubject(fullPhone);
+    const ipHash = await hashIp(req);
+    const userAgent = req.headers.get("user-agent");
+    await logSecurityEvent(adminClient, {
+      event_type: "otp_verify",
+      event_action: "attempt",
+      user_id: user.id,
+      subject_hash: subjectHash,
+      ip_hash: ipHash,
+      user_agent: userAgent,
+    });
 
     // Rate limit
     const { data: allowed } = await adminClient.rpc("check_rate_limit", {
@@ -87,6 +99,15 @@ Deno.serve(async (req) => {
     });
 
     if (allowed === false) {
+      await logSecurityEvent(adminClient, {
+        event_type: "otp_verify",
+        event_action: "rate_limited",
+        status: "warn",
+        user_id: user.id,
+        subject_hash: subjectHash,
+        ip_hash: ipHash,
+        reason: "rate_limited",
+      });
       return new Response(
         JSON.stringify({ success: false, error: "Too many attempts. Please try again later." }),
         { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -126,6 +147,15 @@ Deno.serve(async (req) => {
     }
 
     if (!otpRecord) {
+      await logSecurityEvent(adminClient, {
+        event_type: "otp_verify",
+        event_action: "failed",
+        status: "warn",
+        user_id: user.id,
+        subject_hash: subjectHash,
+        ip_hash: ipHash,
+        reason: "otp_expired_or_missing",
+      });
       return new Response(
         JSON.stringify({ success: false, error: "OTP expired or not found" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -135,6 +165,16 @@ Deno.serve(async (req) => {
     // Check attempts
     if (otpRecord.attempts >= MAX_VERIFY_ATTEMPTS) {
       await adminClient.from("phone_otps").update({ verified: true }).eq("id", otpRecord.id);
+      await logSecurityEvent(adminClient, {
+        event_type: "otp_verify",
+        event_action: "failed",
+        status: "error",
+        user_id: user.id,
+        subject_hash: subjectHash,
+        ip_hash: ipHash,
+        reason: "too_many_attempts",
+        metadata: { attempts: otpRecord.attempts },
+      });
       return new Response(
         JSON.stringify({ success: false, error: "Too many attempts, request a new OTP" }),
         { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -148,6 +188,16 @@ Deno.serve(async (req) => {
         .update({ attempts: otpRecord.attempts + 1 })
         .eq("id", otpRecord.id);
 
+      await logSecurityEvent(adminClient, {
+        event_type: "otp_verify",
+        event_action: "failed",
+        status: "warn",
+        user_id: user.id,
+        subject_hash: subjectHash,
+        ip_hash: ipHash,
+        reason: "invalid_code",
+        metadata: { attempts: otpRecord.attempts + 1 },
+      });
       return new Response(
         JSON.stringify({
           success: false,
@@ -174,6 +224,14 @@ Deno.serve(async (req) => {
     // Clean up verified OTPs
     await adminClient.from("phone_otps").delete().eq("user_id", user.id).eq("verified", true);
 
+    await logSecurityEvent(adminClient, {
+      event_type: "otp_verify",
+      event_action: "success",
+      user_id: user.id,
+      subject_hash: subjectHash,
+      ip_hash: ipHash,
+      user_agent: userAgent,
+    });
     return new Response(JSON.stringify({ success: true, verified: true }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
