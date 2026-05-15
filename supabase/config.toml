@@ -35,3 +35,7 @@ project_id = "hckpxwhjycmdflaneihd"
     verify_jwt = false
   [functions.match-quote-request]
     verify_jwt = true
+  [functions.admin-reveal-lead-contact]
+    verify_jwt = true
+  [functions.get-revealed-contact]
+    verify_jwt = true
