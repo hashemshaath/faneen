@@ -12,6 +12,13 @@ const json = (status: number, body: Record<string, unknown>) =>
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
 
+// ---- Commercial config (mirrors src/lib/providerCommercialConfig.ts) ----
+const COMMERCIAL = {
+  requireCreditForContactReveal: false,
+  freeRevealDuringLaunch: true,
+  defaultLeadRevealCost: 1,
+};
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
   if (req.method !== 'POST') return json(405, { success: false, message: 'Method not allowed' });
@@ -36,18 +43,18 @@ Deno.serve(async (req) => {
 
     const admin = createClient(SUPABASE_URL, SERVICE);
 
-    // Verify admin
     const { data: isAdmin, error: adminErr } = await admin.rpc('has_admin_access', { _user_id: userId });
     if (adminErr || !isAdmin) return json(403, { success: false, message: 'Forbidden' });
 
     const body = await req.json().catch(() => ({}));
     const lead_id = typeof body?.lead_id === 'string' ? body.lead_id : null;
     const note = typeof body?.note === 'string' ? body.note.slice(0, 500) : null;
+    const overrideCreditCheck = body?.override_credit_check === true;
     if (!lead_id) return json(400, { success: false, message: 'lead_id required' });
 
     const { data: lead, error: leadErr } = await admin
       .from('quote_request_leads')
-      .select('id, status, contact_revealed, quote_request_id, provider_user_id')
+      .select('id, status, contact_revealed, quote_request_id, provider_user_id, provider_id')
       .eq('id', lead_id)
       .maybeSingle();
     if (leadErr || !lead) return json(404, { success: false, message: 'Lead not found' });
@@ -57,6 +64,42 @@ Deno.serve(async (req) => {
     }
     if (!['new', 'viewed', 'interested'].includes(lead.status)) {
       return json(400, { success: false, message: 'لا يمكن إتاحة بيانات التواصل لهذه الفرصة' });
+    }
+
+    // ---- Commercial mode + optional credit consumption ----
+    const needCredit = COMMERCIAL.requireCreditForContactReveal && !overrideCreditCheck;
+    const cost = COMMERCIAL.defaultLeadRevealCost;
+
+    let { data: sub } = await admin
+      .from('provider_subscriptions')
+      .select('id, business_id, provider_user_id, lead_credits_balance')
+      .eq('business_id', lead.provider_id)
+      .maybeSingle();
+
+    if (needCredit) {
+      if (!sub || (sub.lead_credits_balance ?? 0) < cost) {
+        return json(402, { success: false, message: 'رصيد المزود غير كافٍ لإتاحة بيانات التواصل' });
+      }
+      const newBal = (sub.lead_credits_balance ?? 0) - cost;
+      const { error: balErr } = await admin
+        .from('provider_subscriptions')
+        .update({ lead_credits_balance: newBal })
+        .eq('id', sub.id);
+      if (balErr) {
+        console.error('balance update error', balErr);
+        return json(500, { success: false, message: 'تعذر خصم الرصيد' });
+      }
+      await admin.from('provider_lead_credit_transactions').insert({
+        business_id: sub.business_id,
+        provider_user_id: sub.provider_user_id,
+        quote_request_lead_id: lead_id,
+        type: 'consume',
+        amount: -cost,
+        balance_after: newBal,
+        reason: 'contact_reveal_consumption',
+        created_by: userId,
+      });
+      sub = { ...sub, lead_credits_balance: newBal };
     }
 
     const newStatus = lead.status === 'interested' ? 'contacted' : lead.status;
@@ -76,16 +119,37 @@ Deno.serve(async (req) => {
       return json(500, { success: false, message: 'تعذر إتاحة بيانات التواصل' });
     }
 
-    // Audit event
+    // Commercial-mode metadata for the reveal event (no PII)
+    const commercialMode = needCredit
+      ? 'paid'
+      : (overrideCreditCheck ? 'admin_override' : (COMMERCIAL.freeRevealDuringLaunch ? 'free_launch' : 'free'));
+    const creditCost = needCredit ? cost : 0;
+
     await admin.from('quote_request_lead_events').insert({
       lead_id,
       quote_request_id: lead.quote_request_id,
       event_type: 'contact_revealed',
       actor_user_id: userId,
-      metadata: { note },
+      metadata: { note, commercial_mode: commercialMode, credit_cost: creditCost },
     });
 
-    // Notify provider (if linked to a user)
+    // Zero-amount log so launch reveals are still auditable
+    if (!needCredit && sub) {
+      const reason = overrideCreditCheck
+        ? 'admin_override_reveal'
+        : (COMMERCIAL.freeRevealDuringLaunch ? 'launch_free_reveal' : 'free_reveal');
+      await admin.from('provider_lead_credit_transactions').insert({
+        business_id: sub.business_id,
+        provider_user_id: sub.provider_user_id,
+        quote_request_lead_id: lead_id,
+        type: 'consume',
+        amount: 0,
+        balance_after: sub.lead_credits_balance ?? 0,
+        reason,
+        created_by: userId,
+      });
+    }
+
     if (lead.provider_user_id) {
       await admin.from('notifications').insert({
         user_id: lead.provider_user_id,
@@ -100,7 +164,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    return json(200, { success: true, message: 'تمت إتاحة بيانات التواصل للمزود' });
+    return json(200, { success: true, message: 'تمت إتاحة بيانات التواصل للمزود', commercial_mode: commercialMode });
   } catch (e) {
     console.error('admin-reveal-lead-contact error', e);
     return json(500, { success: false, message: 'حدث خطأ غير متوقع' });
