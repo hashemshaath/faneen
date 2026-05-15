@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { getSearchHistory, addToSearchHistory } from '@/services/search/useSearch';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
+import { useAbVariant, trackAbClick } from '@/lib/abTesting';
 import heroSlide1 from '@/assets/home/hero-slide-1.jpg';
 import heroSlide2 from '@/assets/home/hero-slide-2.jpg';
 import heroSlide3 from '@/assets/home/hero-slide-3.jpg';
@@ -108,11 +109,11 @@ const SectionCover: React.FC<{
   );
 };
 
-const PrimaryCTA: React.FC<{ to: string; label: string }> = ({ to, label }) => {
+const PrimaryCTA: React.FC<{ to: string; label: string; onClick?: () => void }> = ({ to, label, onClick }) => {
   const { isRTL } = useLanguage();
   const Arrow = isRTL ? ArrowLeft : ArrowRight;
   return (
-    <Link to={to}>
+    <Link to={to} onClick={onClick}>
       <Button variant="primary" size="appLg" className="gap-2">
         {label}
         <Arrow className="w-4 h-4" />
