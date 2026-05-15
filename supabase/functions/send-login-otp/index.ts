@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.103.0";
+import { logSecurityEvent, hashSubject, hashIp } from "../_shared/securityAudit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -65,6 +66,16 @@ Deno.serve(async (req) => {
     }
 
     const fullPhone = `${country_code}${cleanPhone}`;
+    const subjectHash = await hashSubject(fullPhone);
+    const ipHash = await hashIp(req);
+    const userAgent = req.headers.get("user-agent");
+    await logSecurityEvent(adminClient, {
+      event_type: "login_otp_send",
+      event_action: "attempt",
+      subject_hash: subjectHash,
+      ip_hash: ipHash,
+      user_agent: userAgent,
+    });
 
     // Rate limit: check via DB function
     const { data: allowed } = await adminClient.rpc("check_rate_limit", {
@@ -76,6 +87,14 @@ Deno.serve(async (req) => {
     });
 
     if (allowed === false) {
+      await logSecurityEvent(adminClient, {
+        event_type: "login_otp_send",
+        event_action: "rate_limited",
+        status: "warn",
+        subject_hash: subjectHash,
+        ip_hash: ipHash,
+        reason: "rate_limited",
+      });
       return respond({
         success: false,
         error: "rate_limited",
@@ -96,6 +115,14 @@ Deno.serve(async (req) => {
     }
 
     if (!profile) {
+      await logSecurityEvent(adminClient, {
+        event_type: "login_otp_send",
+        event_action: "failed",
+        status: "warn",
+        subject_hash: subjectHash,
+        ip_hash: ipHash,
+        reason: "no_account",
+      });
       return respond({ success: false, error: "no_account", message: "No account found with this phone number" });
     }
 
@@ -115,6 +142,15 @@ Deno.serve(async (req) => {
 
     if (insertError) {
       console.error("Failed to create OTP:", insertError);
+      await logSecurityEvent(adminClient, {
+        event_type: "login_otp_send",
+        event_action: "failed",
+        status: "error",
+        user_id: profile.user_id,
+        subject_hash: subjectHash,
+        ip_hash: ipHash,
+        reason: "otp_create_failed",
+      });
       return respond({ success: false, error: "otp_create_failed", message: "Failed to create OTP" });
     }
 
@@ -147,6 +183,15 @@ Deno.serve(async (req) => {
 
     if (!smsSent) {
       console.error("SMS delivery failed for phone", fullPhone);
+      await logSecurityEvent(adminClient, {
+        event_type: "login_otp_send",
+        event_action: "failed",
+        status: "error",
+        user_id: profile.user_id,
+        subject_hash: subjectHash,
+        ip_hash: ipHash,
+        reason: "sms_delivery_failed",
+      });
       return respond({
         success: false,
         error: "sms_delivery_failed",
@@ -154,6 +199,15 @@ Deno.serve(async (req) => {
       });
     }
 
+    await logSecurityEvent(adminClient, {
+      event_type: "login_otp_send",
+      event_action: "success",
+      user_id: profile.user_id,
+      subject_hash: subjectHash,
+      ip_hash: ipHash,
+      user_agent: userAgent,
+      reason: "sms_sent",
+    });
     return respond({
       success: true,
       sms_sent: true,
