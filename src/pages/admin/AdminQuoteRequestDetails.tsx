@@ -746,7 +746,7 @@ const AdminQuoteRequestDetails: React.FC = () => {
           setRawEventId={setRawEventId}
         />
 
-        <Dialog open={!!revealLeadId} onOpenChange={(open) => { if (!open) { setRevealLeadId(null); setRevealNote(''); } }}>
+        <Dialog open={!!revealLeadId} onOpenChange={(open) => { if (!open) { setRevealLeadId(null); setRevealNote(''); setRevealOverride(false); } }}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>إتاحة بيانات التواصل للمزود؟</DialogTitle>
@@ -754,6 +754,29 @@ const AdminQuoteRequestDetails: React.FC = () => {
                 سيتمكن هذا المزود من الاطلاع على اسم العميل ورقم الجوال والبريد الإلكتروني إن وجد. لا يمكن التراجع عن هذا الإجراء من ناحية أن المزود قد يرى البيانات بعد الإتاحة.
               </DialogDescription>
             </DialogHeader>
+            <div className="rounded-md border border-border bg-muted/40 p-3 text-xs space-y-1">
+              <div className="flex justify-between gap-2">
+                <span className="text-muted-foreground">خطة المزود</span>
+                <span className="font-medium">{revealSub?.plan?.name_ar ?? '—'}</span>
+              </div>
+              <div className="flex justify-between gap-2">
+                <span className="text-muted-foreground">رصيد فرص التواصل</span>
+                <span className="tech-content font-medium">{revealSub?.lead_credits_balance ?? '—'}</span>
+              </div>
+              <div className="flex justify-between gap-2">
+                <span className="text-muted-foreground">تكلفة الإتاحة</span>
+                <span className="tech-content font-medium">
+                  {PROVIDER_COMMERCIAL_CONFIG.requireCreditForContactReveal
+                    ? `${PROVIDER_COMMERCIAL_CONFIG.defaultLeadRevealCost} رصيد`
+                    : '0 (مرحلة الإطلاق)'}
+                </span>
+              </div>
+              <p className="pt-1 text-muted-foreground">
+                {PROVIDER_COMMERCIAL_CONFIG.requireCreditForContactReveal
+                  ? `سيتم خصم ${PROVIDER_COMMERCIAL_CONFIG.defaultLeadRevealCost} رصيد من المزود عند إتاحة بيانات التواصل.`
+                  : 'مرحلة الإطلاق: لن يتم خصم رصيد عند إتاحة بيانات التواصل.'}
+              </p>
+            </div>
             <div className="space-y-2">
               <Label className="text-sm">ملاحظة داخلية (اختياري)</Label>
               <Textarea
@@ -761,12 +784,18 @@ const AdminQuoteRequestDetails: React.FC = () => {
                 placeholder="مثال: تم التحقق من اهتمام المزود هاتفيًا"
               />
             </div>
+            {PROVIDER_COMMERCIAL_CONFIG.requireCreditForContactReveal && (
+              <label className="flex items-center gap-2 text-xs">
+                <Checkbox checked={revealOverride} onCheckedChange={(v) => setRevealOverride(v === true)} />
+                <span>تجاوز شرط الرصيد</span>
+              </label>
+            )}
             <DialogFooter>
-              <Button variant="outline" onClick={() => { setRevealLeadId(null); setRevealNote(''); }} disabled={revealMutation.isPending}>
+              <Button variant="outline" onClick={() => { setRevealLeadId(null); setRevealNote(''); setRevealOverride(false); }} disabled={revealMutation.isPending}>
                 إلغاء
               </Button>
               <Button
-                onClick={() => revealLeadId && revealMutation.mutate({ lead_id: revealLeadId, note: revealNote })}
+                onClick={() => revealLeadId && revealMutation.mutate({ lead_id: revealLeadId, note: revealNote, override_credit_check: revealOverride })}
                 disabled={revealMutation.isPending}
               >
                 {revealMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
