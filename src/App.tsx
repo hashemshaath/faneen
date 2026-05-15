@@ -38,6 +38,7 @@ const Auth = lazyRetry(() => import("./pages/Auth"));
 const ResetPassword = lazyRetry(() => import("./pages/ResetPassword"));
 const BusinessProfile = lazyRetry(() => import("./pages/BusinessProfile"));
 const Search = lazyRetry(() => import("./pages/Search"));
+const Quote = lazyRetry(() => import("./pages/Quote"));
 const Contracts = lazyRetry(() => import("./pages/Contracts"));
 const ContractDetail = lazyRetry(() => import("./pages/ContractDetail"));
 const DashboardOverview = lazyRetry(() => import("./pages/dashboard/DashboardOverview"));
