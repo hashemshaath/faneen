@@ -44,6 +44,7 @@ const ProviderLeadDetails = lazyRetry(() => import("./pages/dashboard/ProviderLe
 const ProviderServiceAreas = lazyRetry(() => import("./pages/dashboard/ProviderServiceAreas"));
 const ProviderMembership = lazyRetry(() => import("./pages/dashboard/ProviderMembership"));
 const AdminProviderSubscriptions = lazyRetry(() => import("./pages/admin/AdminProviderSubscriptions"));
+const AdminAbExperiments = lazyRetry(() => import("./pages/admin/AdminAbExperiments"));
 const Contracts = lazyRetry(() => import("./pages/Contracts"));
 const ContractDetail = lazyRetry(() => import("./pages/ContractDetail"));
 const DashboardOverview = lazyRetry(() => import("./pages/dashboard/DashboardOverview"));
@@ -271,6 +272,7 @@ const AppRoutes = () => (
           <Route path="/dashboard/blog" element={<ProtectedRoute requireAdmin><DashboardBlog /></ProtectedRoute>} />
           <Route path="/dashboard/profile-systems" element={<ProtectedRoute requireAdmin><DashboardProfileSystems /></ProtectedRoute>} />
           <Route path="/admin/api-settings" element={<ProtectedRoute requireAdmin><AdminApiSettings /></ProtectedRoute>} />
+          <Route path="/admin/ab-experiments" element={<ProtectedRoute requireAdmin><AdminAbExperiments /></ProtectedRoute>} />
           <Route path="/admin/api-docs" element={<ProtectedRoute requireAdmin><AdminApiDocs /></ProtectedRoute>} />
           <Route path="/admin/activity-log" element={<ProtectedRoute requireAdmin><AdminActivityLog /></ProtectedRoute>} />
           <Route path="/admin/categories" element={<ProtectedRoute requireAdmin><AdminCategories /></ProtectedRoute>} />
