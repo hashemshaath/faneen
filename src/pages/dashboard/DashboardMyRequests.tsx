@@ -230,6 +230,79 @@ const DashboardMyRequests: React.FC = () => {
           </div>
         )}
 
+        {/* === Quote requests section === */}
+        <section className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="font-heading font-semibold text-base sm:text-lg flex items-center gap-2">
+              <ReceiptText className="h-4 w-4" />
+              {isRTL ? 'طلبات عروض الأسعار' : 'Quote requests'}
+            </h2>
+            <Button asChild size="sm" variant="outline" className="min-h-[40px]">
+              <Link to="/quote">{isRTL ? 'طلب جديد' : 'New request'}</Link>
+            </Button>
+          </div>
+
+          {loadingQuotes && (
+            <div className="space-y-3">
+              {[0, 1].map((i) => <Skeleton key={i} className="h-20 w-full rounded-xl" />)}
+            </div>
+          )}
+
+          {!loadingQuotes && (quoteRequests?.length ?? 0) === 0 && (
+            <Card>
+              <CardContent className="py-10 text-center space-y-3">
+                <ReceiptText className="mx-auto h-10 w-10 text-muted-foreground" />
+                <p className="font-medium">{isRTL ? 'لا توجد طلبات حتى الآن' : 'No quote requests yet'}</p>
+                <p className="text-sm text-muted-foreground">
+                  {isRTL
+                    ? 'ابدأ بإرسال طلب عرض سعر، وسنساعدك على تنظيم تفاصيله حسب القطاع والمدينة.'
+                    : 'Send a quote request and we will help organize the details by sector and city.'}
+                </p>
+                <Button asChild className="min-h-[44px]">
+                  <Link to="/quote">{isRTL ? 'اطلب عرض سعر' : 'Request a quote'}</Link>
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {(quoteRequests ?? []).map((q) => {
+            const fileCount = quoteFileCounts?.get(q.id) ?? 0;
+            const tone = QUOTE_STATUS_TONE[q.status] ?? 'bg-muted text-muted-foreground border-border';
+            return (
+              <Card key={q.id} className="overflow-hidden">
+                <CardContent className="p-4 sm:p-5 space-y-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-mono text-xs text-muted-foreground tech-content">#{q.id.slice(0, 8)}</span>
+                    <span className={`text-xs px-2 py-0.5 rounded-full border ${tone}`}>
+                      {isRTL ? QUOTE_STATUS_LABEL_AR[q.status] : QUOTE_STATUS_LABEL_EN[q.status]}
+                    </span>
+                    <span className="text-xs text-muted-foreground tech-content ms-auto">
+                      {new Date(q.created_at).toLocaleDateString(isRTL ? 'ar-SA-u-nu-latn' : 'en-US')}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+                    <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                      <Tag className="h-4 w-4" /> {q.sector}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                      <MapPin className="h-4 w-4" /> {q.city}{q.district ? ` · ${q.district}` : ''}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                      <MessageSquare className="h-4 w-4" /> {q.preferred_contact_method}
+                    </span>
+                    {fileCount > 0 && (
+                      <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                        <Paperclip className="h-4 w-4" /> {fileCount}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-foreground/80 line-clamp-2">{q.project_description}</p>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </section>
+
         {!isLoading && (leads?.length ?? 0) === 0 && (
           <Card>
             <CardContent className="py-14 text-center space-y-4">
