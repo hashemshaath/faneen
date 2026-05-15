@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { Beaker, Crown, Play, Pause, Trash2, Plus, RefreshCw, Trophy } from 'lucide-react';
 import { toast } from 'sonner';
+import type { Json } from '@/integrations/supabase/types';
 
 interface Experiment {
   id: string;
@@ -137,14 +138,16 @@ const AdminAbExperiments: React.FC = () => {
       } catch {
         throw new Error('محتوى JSON غير صالح');
       }
-      const { error } = await supabase.from('ab_variants').insert({
-        experiment_id: selected.id,
-        key,
-        content,
-        weight: newVar.weight,
-        is_control: newVar.is_control,
-        is_active: true,
-      });
+      const { error } = await supabase.from('ab_variants').insert([
+        {
+          experiment_id: selected.id,
+          key,
+          content: content as Json,
+          weight: newVar.weight,
+          is_control: newVar.is_control,
+          is_active: true,
+        },
+      ]);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -158,7 +161,9 @@ const AdminAbExperiments: React.FC = () => {
 
   const updateVariant = useMutation({
     mutationFn: async ({ id, patch }: { id: string; patch: Partial<Variant> }) => {
-      const { error } = await supabase.from('ab_variants').update(patch).eq('id', id);
+      const safePatch: Record<string, unknown> = { ...patch };
+      if ('content' in safePatch) safePatch.content = safePatch.content as Json;
+      const { error } = await supabase.from('ab_variants').update(safePatch).eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
