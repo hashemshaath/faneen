@@ -213,6 +213,12 @@ export const HeroV2 = () => {
   );
   const [liveMessage, setLiveMessage] = useState(initialLiveMessage);
   const lastAnnouncedRef = useRef<string>(initialLiveMessage);
+  // Timestamps of recent slide changes (`active` transitions). Used to
+  // adapt the live-region debounce: when changes come in very close
+  // together (rapid scrubbing, autoplay catching up after tab focus,
+  // bursts of arrow keys) we extend the wait so we only announce the
+  // final settled slide.
+  const slideChangeTimesRef = useRef<number[]>([]);
 
   // Top trending searches (manually curated based on industry priors)
   const TRENDING: { ar: string; en: string; cat?: string }[] = [
@@ -334,9 +340,21 @@ export const HeroV2 = () => {
     if (pendingLiveMessage === lastAnnouncedRef.current) return;
 
     // First announcement (mount) goes through immediately so initial users
-    // hear slide 1; subsequent changes are debounced (~450ms) so rapid
-    // scrubbing only announces the final settled slide.
-    const delay = lastAnnouncedRef.current === '' ? 0 : 450;
+    // hear slide 1; subsequent changes are debounced. Base delay is 450ms,
+    // but we record the timing between recent slide changes and adapt:
+    //   • 2 changes within the last 1s  → 700ms  (medium burst)
+    //   • 3+ changes within the last 1s → 1000ms (rapid scrub) — capped so
+    //     a settled slide always announces in <= ~1s.
+    // Combined with `clearTimeout` on every change, this guarantees only
+    // the FINAL slide of a fast burst is ever spoken aloud.
+    const now = Date.now();
+    const times = slideChangeTimesRef.current.filter((t) => now - t < 1000);
+    times.push(now);
+    slideChangeTimesRef.current = times.slice(-5); // keep last 5 only
+    let delay = 450;
+    if (times.length >= 3) delay = 1000;
+    else if (times.length === 2) delay = 700;
+    if (lastAnnouncedRef.current === '') delay = 0;
     const t = window.setTimeout(() => {
       lastAnnouncedRef.current = pendingLiveMessage;
       setLiveMessage(pendingLiveMessage);

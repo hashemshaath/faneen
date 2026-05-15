@@ -113,14 +113,16 @@ describe('HeroV2 — accessibility', () => {
 
       // Forward → wait past the 450ms debounce → live region speaks slide 2
       await act(async () => { fireEvent.click(nextBtn); });
-      await act(async () => { vi.advanceTimersByTime(500); });
+      await act(async () => { vi.advanceTimersByTime(1100); });
       const afterNext = live.textContent ?? '';
       expect(afterNext).toMatch(/(الشريحة|Slide)\s*2/);
       expect(afterNext).not.toBe(initial);
 
-      // Backward → live region speaks slide 1 once, NOT slide 2 again
+      // Backward → live region speaks slide 1 once, NOT slide 2 again.
+      // Wait past the adaptive debounce window (changes within 1s extend
+      // the wait — see slideChangeTimesRef in HomeV2).
       await act(async () => { fireEvent.click(prevBtn); });
-      await act(async () => { vi.advanceTimersByTime(500); });
+      await act(async () => { vi.advanceTimersByTime(1100); });
       const afterPrev = live.textContent ?? '';
       expect(afterPrev).toMatch(/(الشريحة|Slide)\s*1/);
       // Previous slide (slide 2) text must not linger in the live region
@@ -317,6 +319,52 @@ describe('HeroV2 — accessibility', () => {
       await act(async () => { fireEvent.click(dot3); });
       await act(async () => { vi.advanceTimersByTime(500); });
       expect((live.textContent ?? '')).toMatch(/(الشريحة|Slide)\s*3/);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('records timing between rapid slide changes and only announces the final settled slide', async () => {
+    vi.useFakeTimers();
+    try {
+      renderHero();
+      const live = document.getElementById('hero-live-region')!;
+      // Initial announcement (slide 1) is synchronous.
+      expect((live.textContent ?? '')).toMatch(/(الشريحة|Slide)\s*1/);
+
+      const dots = () =>
+        Array.from(
+          document.querySelectorAll<HTMLButtonElement>(
+            'button[aria-controls="hero-carousel"][aria-label]',
+          ),
+        ).filter((b) => /(\d+)\s*(من|of)\s*\d+/.test(b.getAttribute('aria-label') ?? ''));
+      const dotN = (n: number) =>
+        dots().find((b) =>
+          new RegExp(`(الشريحة|slide)\\s*${n}\\b`, 'i').test(
+            b.getAttribute('aria-label') ?? '',
+          ),
+        )!;
+
+      // Rapid burst: 3 dot clicks ~100ms apart (well under any debounce).
+      await act(async () => { fireEvent.click(dotN(2)); });
+      await act(async () => { vi.advanceTimersByTime(100); });
+      await act(async () => { fireEvent.click(dotN(3)); });
+      await act(async () => { vi.advanceTimersByTime(100); });
+      await act(async () => { fireEvent.click(dotN(4)); });
+
+      // Mid-burst: nothing new spoken yet — slide 1 text remains.
+      await act(async () => { vi.advanceTimersByTime(300); });
+      const mid = live.textContent ?? '';
+      expect(mid).not.toMatch(/(الشريحة|Slide)\s*2/);
+      expect(mid).not.toMatch(/(الشريحة|Slide)\s*3/);
+      expect(mid).not.toMatch(/(الشريحة|Slide)\s*4/);
+
+      // After the adaptive (~1s) debounce settles, only the FINAL slide (4)
+      // is announced — slides 2 and 3 never spoken aloud.
+      await act(async () => { vi.advanceTimersByTime(1100); });
+      const final = live.textContent ?? '';
+      expect(final).toMatch(/(الشريحة|Slide)\s*4/);
+      expect(final).not.toMatch(/(الشريحة|Slide)\s*[23]\b/);
     } finally {
       vi.useRealTimers();
     }
