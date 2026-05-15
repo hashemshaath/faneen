@@ -14,6 +14,142 @@ export type Database = {
   }
   public: {
     Tables: {
+      ab_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          experiment_id: string
+          id: number
+          variant_id: string
+          visitor_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          experiment_id: string
+          id?: number
+          variant_id: string
+          visitor_id: string
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          experiment_id?: string
+          id?: number
+          variant_id?: string
+          visitor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ab_events_experiment_id_fkey"
+            columns: ["experiment_id"]
+            isOneToOne: false
+            referencedRelation: "ab_experiments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ab_events_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "ab_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ab_experiments: {
+        Row: {
+          auto_promote: boolean
+          confidence_threshold: number
+          created_at: string
+          description: string | null
+          id: string
+          key: string
+          min_sample_per_variant: number
+          promoted_at: string | null
+          status: string
+          updated_at: string
+          winner_variant_id: string | null
+        }
+        Insert: {
+          auto_promote?: boolean
+          confidence_threshold?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          key: string
+          min_sample_per_variant?: number
+          promoted_at?: string | null
+          status?: string
+          updated_at?: string
+          winner_variant_id?: string | null
+        }
+        Update: {
+          auto_promote?: boolean
+          confidence_threshold?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          key?: string
+          min_sample_per_variant?: number
+          promoted_at?: string | null
+          status?: string
+          updated_at?: string
+          winner_variant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ab_experiments_winner_fk"
+            columns: ["winner_variant_id"]
+            isOneToOne: false
+            referencedRelation: "ab_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ab_variants: {
+        Row: {
+          content: Json
+          created_at: string
+          experiment_id: string
+          id: string
+          is_active: boolean
+          is_control: boolean
+          key: string
+          updated_at: string
+          weight: number
+        }
+        Insert: {
+          content?: Json
+          created_at?: string
+          experiment_id: string
+          id?: string
+          is_active?: boolean
+          is_control?: boolean
+          key: string
+          updated_at?: string
+          weight?: number
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          experiment_id?: string
+          id?: string
+          is_active?: boolean
+          is_control?: boolean
+          key?: string
+          updated_at?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ab_variants_experiment_id_fkey"
+            columns: ["experiment_id"]
+            isOneToOne: false
+            referencedRelation: "ab_experiments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       access_violation_log: {
         Row: {
           created_at: string
@@ -8912,6 +9048,28 @@ export type Database = {
         Returns: undefined
       }
       _membership_free_defaults: { Args: never; Returns: Json }
+      ab_assign_variant: {
+        Args: { p_experiment_key: string; p_visitor_id: string }
+        Returns: Json
+      }
+      ab_evaluate_experiments: { Args: never; Returns: Json }
+      ab_experiment_stats: {
+        Args: { p_key: string }
+        Returns: {
+          clicks: number
+          ctr: number
+          impressions: number
+          is_active: boolean
+          is_control: boolean
+          variant_id: string
+          variant_key: string
+        }[]
+      }
+      ab_track_click: {
+        Args: { p_experiment_key: string; p_visitor_id: string }
+        Returns: boolean
+      }
+      ab_two_tailed_p: { Args: { z: number }; Returns: number }
       accept_client_invitation: { Args: { _token: string }; Returns: Json }
       accept_contract: {
         Args: { _contract_id: string }
