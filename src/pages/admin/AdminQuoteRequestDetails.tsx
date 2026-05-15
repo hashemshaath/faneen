@@ -13,7 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   ArrowLeft, ArrowRight, Loader2, Phone, Copy, MessageCircle, FileText, Download,
-  AlertCircle, MapPin, Tag, Calendar, Wallet, User, Mail, Save, Lock,
+  AlertCircle, MapPin, Tag, Calendar, Wallet, User, Mail, Save, Lock, Send, Users,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNoIndex } from '@/hooks/useNoIndex';
@@ -22,6 +22,7 @@ import {
   CUSTOMER_TYPE_LABEL_AR, CONTACT_METHOD_LABEL_AR, SERVICE_LOCATION_LABEL_AR,
   TIMELINE_LABEL_AR, SECTOR_LABEL_AR, createSignedQuoteFileUrl, formatFileSize,
   normalizePhoneForWhatsApp, type QuoteStatus,
+  LEAD_STATUS_LABEL_AR, LEAD_STATUS_TONE, type LeadStatus,
 } from '@/lib/quoteRequests';
 
 interface AdminQuoteRow {
@@ -56,6 +57,17 @@ interface FileRow {
   file_path: string;
   file_size: number | null;
   file_type: string | null;
+}
+
+interface LeadSummaryRow {
+  id: string;
+  status: string;
+  match_score: number;
+  match_reasons: string[];
+  created_at: string;
+  viewed_at: string | null;
+  responded_at: string | null;
+  provider: { id: string; name_ar: string; city_id: string | null } | null;
 }
 
 interface StatusHistoryEntry {
@@ -109,6 +121,37 @@ const AdminQuoteRequestDetails: React.FC = () => {
       if (error) throw error;
       return (data ?? []) as FileRow[];
     },
+  });
+
+  const { data: leads, refetch: refetchLeads } = useQuery({
+    queryKey: ['admin-quote-leads', id],
+    enabled: !!id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('quote_request_leads')
+        .select('id, status, match_score, match_reasons, created_at, viewed_at, responded_at, provider:businesses!quote_request_leads_provider_id_fkey(id, name_ar, city_id)')
+        .eq('quote_request_id', id!)
+        .order('match_score', { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as unknown as LeadSummaryRow[];
+    },
+  });
+
+  const matchMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke('match-quote-request', {
+        body: { quote_request_id: id, limit: 10 },
+      });
+      if (error) throw error;
+      return data as { success: boolean; matched_count: number; message?: string };
+    },
+    onSuccess: (res) => {
+      if (res?.success) toast.success(`تم توجيه الطلب إلى ${res.matched_count} مزودين`);
+      else toast.message(res?.message ?? 'لم يتم العثور على مزودين مناسبين حاليًا');
+      refetchLeads();
+      qc.invalidateQueries({ queryKey: ['admin-quote-request', id] });
+    },
+    onError: () => toast.error('تعذر تشغيل عملية التوجيه'),
   });
 
   const saveMutation = useMutation({
@@ -322,6 +365,72 @@ const AdminQuoteRequestDetails: React.FC = () => {
                 </ul>
               </CardContent></Card>
             )}
+
+            {/* Provider matching */}
+            <Card><CardContent className="p-5 space-y-3">
+              <div className="flex items-center justify-between gap-2">
+                <h2 className="font-heading font-semibold text-base flex items-center gap-2">
+                  <Users className="h-4 w-4" /> توجيه الطلب للمزودين
+                </h2>
+                <Button
+                  size="sm" className="min-h-[36px]"
+                  onClick={() => matchMutation.mutate()}
+                  disabled={matchMutation.isPending}
+                >
+                  {matchMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                  توجيه الطلب للمزودين المناسبين
+                </Button>
+              </div>
+
+              {(() => {
+                const list = leads ?? [];
+                const interestedCount = list.filter((l) => l.status === 'interested').length;
+                const viewedCount = list.filter((l) => l.viewed_at).length;
+                const notInterested = list.filter((l) => l.status === 'not_interested').length;
+                const pending = list.filter((l) => !l.viewed_at).length;
+                return (
+                  <>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                      <Stat label="موجه لهم" value={list.length} />
+                      <Stat label="شاهدوا" value={viewedCount} />
+                      <Stat label="مهتمون" value={interestedCount} />
+                      <Stat label="غير مناسب" value={notInterested} />
+                    </div>
+                    {interestedCount > 0 && quote.status !== 'contacted' && quote.status !== 'completed' && (
+                      <div className="rounded-md border border-success/30 bg-success/5 p-3 text-xs text-success">
+                        يوجد مزودون مهتمون بهذا الطلب. يمكنك تحديث الحالة إلى "تم التواصل".
+                      </div>
+                    )}
+                    {pending > 0 && (
+                      <div className="text-[11px] text-muted-foreground">{pending} مزود لم يفتح الفرصة بعد.</div>
+                    )}
+                  </>
+                );
+              })()}
+
+              {(leads?.length ?? 0) === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">لم يتم توجيه الطلب لأي مزود بعد.</p>
+              ) : (
+                <ul className="divide-y divide-border">
+                  {(leads ?? []).map((l) => (
+                    <li key={l.id} className="py-2.5 flex flex-wrap items-center gap-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium truncate">{l.provider?.name_ar ?? '—'}</p>
+                        <div className="flex flex-wrap gap-1.5 mt-1">
+                          {(l.match_reasons ?? []).slice(0, 4).map((r, i) => (
+                            <span key={i} className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{r}</span>
+                          ))}
+                        </div>
+                      </div>
+                      <span className="text-xs text-muted-foreground tech-content">{l.match_score}</span>
+                      <span className={`text-[11px] px-2 py-0.5 rounded-full border ${LEAD_STATUS_TONE[l.status as LeadStatus] ?? ''}`}>
+                        {LEAD_STATUS_LABEL_AR[l.status as LeadStatus] ?? l.status}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent></Card>
           </div>
 
           {/* Side panel: status & admin notes */}
@@ -371,6 +480,13 @@ const Info: React.FC<{ icon?: React.ReactNode; label: string; value: React.React
       <div className="text-xs text-muted-foreground">{label}</div>
       <div className="text-foreground/90 break-words">{value}</div>
     </div>
+  </div>
+);
+
+const Stat: React.FC<{ label: string; value: number }> = ({ label, value }) => (
+  <div className="rounded-lg border border-border bg-muted/30 p-2 text-center">
+    <div className="text-xs text-muted-foreground">{label}</div>
+    <div className="text-base font-bold tech-content">{value}</div>
   </div>
 );
 
