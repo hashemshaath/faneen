@@ -207,8 +207,12 @@ export const HeroV2 = () => {
   //   1) the same slide re-renders (e.g. language toggle, parent re-render)
   //   2) the user scrubs rapidly through dots (only the final slide speaks)
   //   3) the tab is hidden (no point announcing)
-  const [liveMessage, setLiveMessage] = useState('');
-  const lastAnnouncedRef = useRef<string>('');
+  const initialLiveMessage = bi(
+    `الشريحة 1 من ${SLIDES.length}: ${SLIDES[0].titleAr}`,
+    `Slide 1 of ${SLIDES.length}: ${SLIDES[0].titleEn}`,
+  );
+  const [liveMessage, setLiveMessage] = useState(initialLiveMessage);
+  const lastAnnouncedRef = useRef<string>(initialLiveMessage);
 
   // Top trending searches (manually curated based on industry priors)
   const TRENDING: { ar: string; en: string; cat?: string }[] = [
