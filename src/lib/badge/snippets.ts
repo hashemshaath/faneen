@@ -132,7 +132,9 @@ export function buildBadgeHtml(opts: BadgeBuildOptions): string {
   const label = isRTL ? 'موثّق على قِطاعات' : 'Verified on Qitaat';
   const safeDisplay = escapeHtml(displayName);
   const sub = isRTL ? `قِطاعات · ${safeDisplay}` : `Qitaat · ${safeDisplay}`;
-  const safeName = escapeAttr(displayName);
+  // Use full HTML escape (incl. apostrophe) for attribute values too, so
+  // payloads cannot break out regardless of single/double-quoted context.
+  const safeName = escapeHtml(displayName);
   const pixel = pixelTag(username, variant);
   const dir = isRTL ? 'rtl' : 'ltr';
   const showSub = opts.showSubLabel !== false;
