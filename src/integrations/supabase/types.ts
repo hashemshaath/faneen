@@ -9028,6 +9028,60 @@ export type Database = {
           },
         ]
       }
+      provider_landing_settings_public: {
+        Row: {
+          bing_verification: string | null
+          enable_tracking: boolean | null
+          ga4_measurement_id: string | null
+          gsc_verification: string | null
+          gtm_container_id: string | null
+          hero_video_url: string | null
+          id: number | null
+          keywords: string | null
+          og_image_url: string | null
+          seo_desc_ar: string | null
+          seo_desc_en: string | null
+          seo_title_ar: string | null
+          seo_title_en: string | null
+          updated_at: string | null
+          yandex_verification: string | null
+        }
+        Insert: {
+          bing_verification?: string | null
+          enable_tracking?: boolean | null
+          ga4_measurement_id?: string | null
+          gsc_verification?: string | null
+          gtm_container_id?: string | null
+          hero_video_url?: string | null
+          id?: number | null
+          keywords?: string | null
+          og_image_url?: string | null
+          seo_desc_ar?: string | null
+          seo_desc_en?: string | null
+          seo_title_ar?: string | null
+          seo_title_en?: string | null
+          updated_at?: string | null
+          yandex_verification?: string | null
+        }
+        Update: {
+          bing_verification?: string | null
+          enable_tracking?: boolean | null
+          ga4_measurement_id?: string | null
+          gsc_verification?: string | null
+          gtm_container_id?: string | null
+          hero_video_url?: string | null
+          id?: number | null
+          keywords?: string | null
+          og_image_url?: string | null
+          seo_desc_ar?: string | null
+          seo_desc_en?: string | null
+          seo_title_ar?: string | null
+          seo_title_en?: string | null
+          updated_at?: string | null
+          yandex_verification?: string | null
+        }
+        Relationships: []
+      }
       reviews_public: {
         Row: {
           business_id: string | null

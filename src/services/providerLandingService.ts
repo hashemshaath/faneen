@@ -113,12 +113,15 @@ export const fetchLandingTestimonials = async (): Promise<LandingTestimonial[]> 
 
 export const fetchLandingSettings = async (): Promise<LandingSettings | null> => {
   const { data, error } = await supabase
-    .from('provider_landing_settings')
+    // Public-safe view: excludes the secret IndexNow key. Admin screens write
+    // directly to provider_landing_settings via the admin policy.
+    .from('provider_landing_settings_public' as never)
     .select('*')
     .eq('id', 1)
     .maybeSingle();
   if (error) throw error;
-  return (data ?? null) as LandingSettings | null;
+  const row = (data ?? null) as Omit<LandingSettings, 'indexnow_key'> | null;
+  return row ? ({ ...row, indexnow_key: null } as LandingSettings) : null;
 };
 
 export interface LandingMetricsSummary {

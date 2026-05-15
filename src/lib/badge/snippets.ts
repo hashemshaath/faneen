@@ -71,6 +71,16 @@ function escapeAttr(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 }
 
+/** Escape user-controlled text for safe injection into HTML/SVG text nodes. */
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 export function buildProfileLink(username: string): string {
   return `${SITE_URL}/${username}?ref=badge&utm_source=workshop_site&utm_medium=badge&utm_campaign=verified`;
 }
@@ -89,7 +99,8 @@ export function buildBadgeSvg(opts: BadgeBuildOptions): string {
   const accent = resolveAccent(opts);
   const fontFamily = opts.fontFamily || DEFAULT_FONT;
   const label = opts.isRTL ? 'موثّق على قِطاعات' : 'Verified on Qitaat';
-  const sub = opts.isRTL ? `قِطاعات · ${opts.displayName}` : `Qitaat · ${opts.displayName}`;
+  const safeDisplay = escapeHtml(opts.displayName);
+  const sub = opts.isRTL ? `قِطاعات · ${safeDisplay}` : `Qitaat · ${safeDisplay}`;
   const showSub = opts.showSubLabel !== false && variant !== 'compact' && variant !== 'minimal';
   const isDark = variant === 'dark';
   const isGradient = variant === 'gradient';
@@ -107,7 +118,7 @@ export function buildBadgeSvg(opts: BadgeBuildOptions): string {
   const seal = `<g transform="translate(${size.padX},${(h - size.iconBox) / 2})">${sealCircle}${sealInner}</g>`;
   const textX = size.padX + size.iconBox + size.gap;
   const textY = showSub ? h / 2 - 4 : h / 2 + size.label / 3;
-  const text = `<text x="${textX}" y="${textY}" fill="${isGradient ? '#ffffff' : fg}" font-family="${escapeAttr(fontFamily)}" font-size="${size.label}" font-weight="700">${label}</text>${showSub ? `<text x="${textX}" y="${h / 2 + size.sub + 4}" fill="${isGradient ? '#ffffffcc' : subFg}" font-family="${escapeAttr(fontFamily)}" font-size="${size.sub}" font-weight="500">${escapeAttr(sub)}</text>` : ''}`;
+  const text = `<text x="${textX}" y="${textY}" fill="${isGradient ? '#ffffff' : fg}" font-family="${escapeAttr(fontFamily)}" font-size="${size.label}" font-weight="700">${label}</text>${showSub ? `<text x="${textX}" y="${h / 2 + size.sub + 4}" fill="${isGradient ? '#ffffffcc' : subFg}" font-family="${escapeAttr(fontFamily)}" font-size="${size.sub}" font-weight="500">${sub}</text>` : ''}`;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img" aria-label="${escapeAttr(label)}">${bgFill}${seal}${text}</svg>`;
 }
 
@@ -119,7 +130,8 @@ export function buildBadgeHtml(opts: BadgeBuildOptions): string {
   const fontFamily = opts.fontFamily || DEFAULT_FONT;
   const href = buildProfileLink(username);
   const label = isRTL ? 'موثّق على قِطاعات' : 'Verified on Qitaat';
-  const sub = isRTL ? `قِطاعات · ${displayName}` : `Qitaat · ${displayName}`;
+  const safeDisplay = escapeHtml(displayName);
+  const sub = isRTL ? `قِطاعات · ${safeDisplay}` : `Qitaat · ${safeDisplay}`;
   const safeName = escapeAttr(displayName);
   const pixel = pixelTag(username, variant);
   const dir = isRTL ? 'rtl' : 'ltr';
