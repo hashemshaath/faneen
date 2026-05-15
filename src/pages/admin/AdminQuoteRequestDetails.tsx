@@ -17,11 +17,13 @@ import {
 import {
   ArrowLeft, ArrowRight, Loader2, Phone, Copy, MessageCircle, FileText, Download,
   AlertCircle, MapPin, Tag, Calendar, Wallet, User, Mail, Save, Lock, Send, Users,
-  CheckCircle2, XCircle, Sparkles, Eye, ShieldCheck,
+  CheckCircle2, XCircle, Sparkles, Eye, ShieldCheck, Activity, RefreshCw, ChevronDown,
+  ChevronUp, Filter,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { trackEvent } from '@/lib/analytics';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   QUOTE_STATUS_LABEL_AR, QUOTE_STATUS_TONE, QUOTE_STATUSES,
   CUSTOMER_TYPE_LABEL_AR, CONTACT_METHOD_LABEL_AR, SERVICE_LOCATION_LABEL_AR,
@@ -97,6 +99,9 @@ const AdminQuoteRequestDetails: React.FC = () => {
   const [revealLeadId, setRevealLeadId] = useState<string | null>(null);
   const [revealNote, setRevealNote] = useState('');
   const [leadFilter, setLeadFilter] = useState<'all' | 'interested' | 'pending_reveal' | 'revealed'>('all');
+  const [eventFilter, setEventFilter] = useState<'all' | 'quote' | 'lead' | 'matching' | 'interest' | 'contact'>('all');
+  const [eventOrderDesc, setEventOrderDesc] = useState(true);
+  const [rawEventId, setRawEventId] = useState<string | null>(null);
 
   const { data: quote, isLoading, error } = useQuery({
     queryKey: ['admin-quote-request', id],
@@ -190,8 +195,55 @@ const AdminQuoteRequestDetails: React.FC = () => {
       trackEvent('quote_matching_completed', { matched: res?.matched_count ?? 0 });
       refetchLeads();
       qc.invalidateQueries({ queryKey: ['admin-quote-request', id] });
+      qc.invalidateQueries({ queryKey: ['admin-quote-events', id] });
     },
     onError: () => toast.error('تعذر تشغيل عملية التوجيه'),
+  });
+
+  // Events timeline (admin only)
+  type QuoteEventRow = {
+    id: string; event_type: string; actor_user_id: string | null;
+    metadata: Record<string, unknown> | null; created_at: string;
+    source: 'quote' | 'lead'; lead_id?: string | null;
+    provider_name?: string | null;
+  };
+  const eventsQuery = useQuery({
+    queryKey: ['admin-quote-events', id],
+    enabled: !!id,
+    queryFn: async (): Promise<QuoteEventRow[]> => {
+      const [qe, le] = await Promise.all([
+        supabase.from('quote_request_events')
+          .select('id, event_type, actor_user_id, metadata, created_at')
+          .eq('quote_request_id', id!)
+          .order('created_at', { ascending: false }),
+        supabase.from('quote_request_lead_events')
+          .select('id, event_type, actor_user_id, metadata, created_at, lead_id, lead:quote_request_leads!quote_request_lead_events_lead_id_fkey(provider:businesses!quote_request_leads_provider_id_fkey(name_ar))')
+          .eq('quote_request_id', id!)
+          .order('created_at', { ascending: false }),
+      ]);
+      if (qe.error) throw qe.error;
+      if (le.error) throw le.error;
+      const rows: QuoteEventRow[] = [];
+      for (const r of (qe.data ?? [])) {
+        rows.push({
+          id: r.id, event_type: r.event_type, actor_user_id: r.actor_user_id,
+          metadata: (r.metadata as Record<string, unknown>) ?? null,
+          created_at: r.created_at, source: 'quote',
+        });
+      }
+      for (const r of (le.data ?? []) as unknown as Array<{
+        id: string; event_type: string; actor_user_id: string | null;
+        metadata: Record<string, unknown> | null; created_at: string; lead_id: string;
+        lead?: { provider?: { name_ar: string | null } | null } | null;
+      }>) {
+        rows.push({
+          id: r.id, event_type: r.event_type, actor_user_id: r.actor_user_id,
+          metadata: r.metadata ?? null, created_at: r.created_at, source: 'lead',
+          lead_id: r.lead_id, provider_name: r.lead?.provider?.name_ar ?? null,
+        });
+      }
+      return rows;
+    },
   });
 
   const saveMutation = useMutation({
@@ -214,6 +266,35 @@ const AdminQuoteRequestDetails: React.FC = () => {
         })
         .eq('id', quote.id);
       if (error) throw error;
+
+      // Audit: quote_status_changed (+ specific event for key transitions)
+      if (vars.statusChanged) {
+        const previousStatus = quote.status;
+        await supabase.from('quote_request_events').insert({
+          quote_request_id: quote.id,
+          event_type: 'quote_status_changed',
+          actor_user_id: user?.id ?? null,
+          metadata: {
+            previous_status: previousStatus,
+            new_status: vars.newStatus,
+            has_admin_notes: !!vars.notes,
+          },
+        });
+        const specific: Record<string, string> = {
+          contacted: 'quote_contacted',
+          completed: 'quote_completed',
+          cancelled: 'quote_cancelled',
+        };
+        const specificType = specific[vars.newStatus];
+        if (specificType) {
+          await supabase.from('quote_request_events').insert({
+            quote_request_id: quote.id,
+            event_type: specificType,
+            actor_user_id: user?.id ?? null,
+            metadata: { previous_status: previousStatus },
+          });
+        }
+      }
 
       // Notify owner if status actually changed
       if (vars.statusChanged && quote.user_id) {
@@ -242,6 +323,7 @@ const AdminQuoteRequestDetails: React.FC = () => {
       toast.success('تم حفظ التحديثات');
       qc.invalidateQueries({ queryKey: ['admin-quote-request', id] });
       qc.invalidateQueries({ queryKey: ['admin-quote-requests'] });
+      qc.invalidateQueries({ queryKey: ['admin-quote-events', id] });
       // Auto-route to providers when admin moves the quote into review.
       if (pendingStatus === 'under_review' && quote?.status !== 'under_review') {
         matchMutation.mutate();
@@ -626,6 +708,19 @@ const AdminQuoteRequestDetails: React.FC = () => {
           </div>
         </div>
 
+        {/* Events Timeline (full width) */}
+        <EventsTimelineCard
+          events={eventsQuery.data ?? []}
+          loading={eventsQuery.isLoading}
+          onRefresh={() => eventsQuery.refetch()}
+          filter={eventFilter}
+          setFilter={setEventFilter}
+          orderDesc={eventOrderDesc}
+          setOrderDesc={setEventOrderDesc}
+          rawEventId={rawEventId}
+          setRawEventId={setRawEventId}
+        />
+
         <Dialog open={!!revealLeadId} onOpenChange={(open) => { if (!open) { setRevealLeadId(null); setRevealNote(''); } }}>
           <DialogContent>
             <DialogHeader>
@@ -678,3 +773,214 @@ const Stat: React.FC<{ label: string; value: number }> = ({ label, value }) => (
 );
 
 export default AdminQuoteRequestDetails;
+
+// ===== Events timeline =====
+
+const EVENT_TITLE_AR: Record<string, string> = {
+  quote_created: 'تم إنشاء طلب عرض السعر',
+  quote_status_changed: 'تم تغيير حالة الطلب',
+  quote_matched: 'تم توجيه الطلب لمزودين',
+  quote_matching_failed: 'لم يتم العثور على مزودين مطابقين',
+  quote_contacted: 'تم بدء التواصل',
+  quote_completed: 'تم إغلاق الطلب كمكتمل',
+  quote_cancelled: 'تم إلغاء الطلب',
+  lead_created: 'تم إنشاء فرصة لمزود',
+  lead_viewed: 'شاهد المزود الفرصة',
+  provider_interested: 'المزود مهتم',
+  provider_not_interested: 'المزود غير مهتم',
+  contact_revealed: 'تمت إتاحة بيانات التواصل',
+  contact_viewed: 'شاهد المزود بيانات التواصل',
+};
+
+const EVENT_TONE: Record<string, string> = {
+  quote_created: 'bg-info/10 text-info border-info/30',
+  quote_status_changed: 'bg-muted text-foreground border-border',
+  quote_matched: 'bg-primary/10 text-primary border-primary/30',
+  quote_matching_failed: 'bg-warning/10 text-warning border-warning/30',
+  quote_contacted: 'bg-success/10 text-success border-success/30',
+  quote_completed: 'bg-success/10 text-success border-success/30',
+  quote_cancelled: 'bg-destructive/10 text-destructive border-destructive/30',
+  lead_created: 'bg-muted text-foreground border-border',
+  lead_viewed: 'bg-muted text-muted-foreground border-border',
+  provider_interested: 'bg-success/10 text-success border-success/30',
+  provider_not_interested: 'bg-muted text-muted-foreground border-border',
+  contact_revealed: 'bg-primary/10 text-primary border-primary/30',
+  contact_viewed: 'bg-info/10 text-info border-info/30',
+};
+
+function describeEvent(e: { event_type: string; metadata: Record<string, unknown> | null; provider_name?: string | null }): string {
+  const md = e.metadata ?? {};
+  switch (e.event_type) {
+    case 'lead_created':
+      return `تم توجيه الطلب إلى ${e.provider_name ?? 'مزود'} بدرجة مطابقة ${(md.match_score as number) ?? '—'}.`;
+    case 'lead_viewed':
+      return `قام ${e.provider_name ?? 'المزود'} بفتح تفاصيل الفرصة.`;
+    case 'provider_interested':
+      return `أبدى ${e.provider_name ?? 'المزود'} اهتمامه بهذه الفرصة.`;
+    case 'provider_not_interested':
+      return `اعتبر ${e.provider_name ?? 'المزود'} أن الفرصة غير مناسبة.`;
+    case 'contact_revealed':
+      return `أتاح الأدمن بيانات التواصل لـ ${e.provider_name ?? 'المزود'}.`;
+    case 'contact_viewed':
+      return `شاهد ${e.provider_name ?? 'المزود'} بيانات التواصل (المرة ${(md.view_count as number) ?? 1}).`;
+    case 'quote_matched':
+      return `تم توجيه الطلب إلى ${(md.matched_count as number) ?? 0} مزودين مناسبين.`;
+    case 'quote_matching_failed':
+      return 'لم يتم العثور على مزودين مناسبين حسب القطاع والمدينة ومناطق الخدمة.';
+    case 'quote_status_changed':
+      return `تم تغيير الحالة من ${(md.previous_status as string) ?? '—'} إلى ${(md.new_status as string) ?? '—'}.`;
+    case 'quote_created':
+      return `تم إنشاء طلب جديد في قطاع ${(md.sector as string) ?? '—'} بمدينة ${(md.city as string) ?? '—'}.`;
+    case 'quote_contacted': return 'بدأ فريق قطاعات التواصل بخصوص هذا الطلب.';
+    case 'quote_completed': return 'تم إغلاق هذا الطلب كمكتمل.';
+    case 'quote_cancelled': return 'تم إلغاء هذا الطلب.';
+    default: return e.event_type;
+  }
+}
+
+type EventRow = {
+  id: string; event_type: string; actor_user_id: string | null;
+  metadata: Record<string, unknown> | null; created_at: string;
+  source: 'quote' | 'lead'; lead_id?: string | null; provider_name?: string | null;
+};
+
+const EventsTimelineCard: React.FC<{
+  events: EventRow[]; loading: boolean; onRefresh: () => void;
+  filter: 'all' | 'quote' | 'lead' | 'matching' | 'interest' | 'contact';
+  setFilter: (v: 'all' | 'quote' | 'lead' | 'matching' | 'interest' | 'contact') => void;
+  orderDesc: boolean; setOrderDesc: (v: boolean) => void;
+  rawEventId: string | null; setRawEventId: (v: string | null) => void;
+}> = ({ events, loading, onRefresh, filter, setFilter, orderDesc, setOrderDesc, rawEventId, setRawEventId }) => {
+  const total = events.length;
+  const viewedProviders = new Set(events.filter((e) => e.event_type === 'lead_viewed').map((e) => e.provider_name)).size;
+  const interestedProviders = new Set(events.filter((e) => e.event_type === 'provider_interested').map((e) => e.provider_name)).size;
+  const contactViews = events.filter((e) => e.event_type === 'contact_viewed').length;
+  const lastEvent = events[0];
+
+  const matches = (e: EventRow): boolean => {
+    switch (filter) {
+      case 'all': return true;
+      case 'quote': return e.source === 'quote';
+      case 'lead': return e.source === 'lead';
+      case 'matching': return ['quote_matched','quote_matching_failed','lead_created'].includes(e.event_type);
+      case 'interest': return ['provider_interested','provider_not_interested'].includes(e.event_type);
+      case 'contact': return ['contact_revealed','contact_viewed','quote_contacted'].includes(e.event_type);
+      default: return true;
+    }
+  };
+
+  const sorted = [...events].sort((a, b) => {
+    const ta = new Date(a.created_at).getTime(); const tb = new Date(b.created_at).getTime();
+    return orderDesc ? tb - ta : ta - tb;
+  }).filter(matches);
+
+  const rawEvent = rawEventId ? events.find((e) => e.id === rawEventId) ?? null : null;
+
+  const filters: Array<[typeof filter, string]> = [
+    ['all','الكل'], ['quote','أحداث الطلب'], ['lead','أحداث المزودين'],
+    ['matching','المطابقة'], ['interest','الاهتمام'], ['contact','بيانات التواصل'],
+  ];
+
+  return (
+    <Card>
+      <CardContent className="p-5 space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="font-heading font-semibold text-base flex items-center gap-2">
+            <Activity className="h-4 w-4" /> سجل الأحداث
+          </h2>
+          <div className="flex items-center gap-1.5">
+            <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => setOrderDesc(!orderDesc)}>
+              {orderDesc ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronUp className="h-3.5 w-3.5" />}
+              {orderDesc ? 'الأحدث أولًا' : 'الأقدم أولًا'}
+            </Button>
+            <Button size="sm" variant="outline" className="h-8 text-xs" onClick={onRefresh} disabled={loading}>
+              {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+              تحديث
+            </Button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
+          <Stat label="إجمالي الأحداث" value={total} />
+          <Stat label="مزودون شاهدوا" value={viewedProviders} />
+          <Stat label="مهتمون" value={interestedProviders} />
+          <Stat label="عرض البيانات" value={contactViews} />
+          <div className="rounded-lg border border-border bg-muted/30 p-2 text-center">
+            <div className="text-xs text-muted-foreground">آخر حدث</div>
+            <div className="text-[11px] font-medium truncate">
+              {lastEvent ? (EVENT_TITLE_AR[lastEvent.event_type] ?? lastEvent.event_type) : '—'}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-1.5">
+          <Filter className="h-3.5 w-3.5 text-muted-foreground" />
+          {filters.map(([k, label]) => (
+            <button
+              key={k} type="button" onClick={() => setFilter(k)}
+              className={`text-[11px] px-2 py-1 rounded-full border transition ${
+                filter === k ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted/40 text-muted-foreground border-border hover:bg-muted'
+              }`}
+            >{label}</button>
+          ))}
+        </div>
+
+        {sorted.length === 0 ? (
+          <div className="text-center py-8 space-y-1.5">
+            <Activity className="h-8 w-8 mx-auto text-muted-foreground opacity-50" />
+            <p className="text-sm font-medium">لا توجد أحداث مسجلة حتى الآن</p>
+            <p className="text-xs text-muted-foreground">ستظهر هنا أحداث الطلب عند التوجيه، تفاعل المزودين، وإتاحة بيانات التواصل.</p>
+          </div>
+        ) : (
+          <ol className="relative ms-2 border-s border-border space-y-3">
+            {sorted.map((e) => {
+              const tone = EVENT_TONE[e.event_type] ?? 'bg-muted text-foreground border-border';
+              return (
+                <li key={e.id} className="ps-4 relative">
+                  <span className="absolute -start-[5px] top-1.5 h-2.5 w-2.5 rounded-full bg-primary border-2 border-background" />
+                  <div className="rounded-md border border-border bg-card p-3 space-y-1.5">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className={`text-[11px] px-2 py-0.5 rounded-full border ${tone}`}>
+                        {EVENT_TITLE_AR[e.event_type] ?? e.event_type}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground">
+                        {e.source === 'lead' ? 'حدث مزود' : 'حدث طلب'}
+                      </span>
+                      <span className="text-[11px] text-muted-foreground tech-content ms-auto">
+                        {new Date(e.created_at).toLocaleString('ar-SA-u-nu-latn')}
+                      </span>
+                    </div>
+                    <p className="text-sm text-foreground/90">{describeEvent(e)}</p>
+                    <Collapsible>
+                      <CollapsibleTrigger asChild>
+                        <button className="text-[11px] text-muted-foreground hover:text-foreground underline-offset-2 hover:underline" type="button">
+                          عرض البيانات الخام
+                        </button>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <pre className="mt-1.5 text-[10px] bg-muted/50 border border-border rounded p-2 overflow-x-auto tech-content">
+{JSON.stringify({ id: e.id, type: e.event_type, source: e.source, actor: e.actor_user_id, metadata: e.metadata }, null, 2)}
+                        </pre>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
+        )}
+
+        <Dialog open={!!rawEvent} onOpenChange={(o) => { if (!o) setRawEventId(null); }}>
+          <DialogContent>
+            <DialogHeader><DialogTitle>تفاصيل الحدث</DialogTitle></DialogHeader>
+            {rawEvent && (
+              <pre className="text-[11px] bg-muted/50 border border-border rounded p-3 overflow-x-auto tech-content max-h-[60vh]">
+{JSON.stringify(rawEvent, null, 2)}
+              </pre>
+            )}
+          </DialogContent>
+        </Dialog>
+      </CardContent>
+    </Card>
+  );
+};

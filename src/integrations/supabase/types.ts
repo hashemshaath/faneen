@@ -7484,6 +7484,41 @@ export type Database = {
           },
         ]
       }
+      quote_request_events: {
+        Row: {
+          actor_user_id: string | null
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json
+          quote_request_id: string
+        }
+        Insert: {
+          actor_user_id?: string | null
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json
+          quote_request_id: string
+        }
+        Update: {
+          actor_user_id?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json
+          quote_request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_request_events_quote_request_id_fkey"
+            columns: ["quote_request_id"]
+            isOneToOne: false
+            referencedRelation: "quote_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quote_request_files: {
         Row: {
           created_at: string
