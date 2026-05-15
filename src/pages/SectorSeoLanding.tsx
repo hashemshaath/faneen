@@ -13,6 +13,7 @@ import {
   SECTORS_SEO, SECTORS_SEO_LIST, type SeoSectorSlug,
 } from '@/lib/sectors-seo';
 import { buildBreadcrumbList, buildFaqPage, buildService } from '@/lib/seo/structured-data';
+import { SectorWorksGallery } from '@/components/sectors/SectorWorksGallery';
 
 const STEPS = [
   { title: 'اختر القطاع', text: 'ابدأ من القطاع الأقرب لاحتياجك.' },
