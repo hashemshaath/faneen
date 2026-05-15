@@ -1,4 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.49.4';
+import { normalizeCityName, citiesMatch } from './cityNormalize.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -6,7 +7,6 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
-// Map quote sectors -> business sector keywords. Loose match: any overlap counts.
 const SECTOR_ALIASES: Record<string, string[]> = {
   aluminum: ['aluminum', 'aluminum_glass'],
   glass: ['glass', 'aluminum_glass'],
@@ -23,9 +23,15 @@ interface MatchInput { quote_request_id: string; limit?: number }
 
 function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    status, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
+}
+
+function daysSince(iso: string | null): number | null {
+  if (!iso) return null;
+  const t = new Date(iso).getTime();
+  if (isNaN(t)) return null;
+  return Math.floor((Date.now() - t) / 86400000);
 }
 
 Deno.serve(async (req) => {
@@ -36,20 +42,30 @@ Deno.serve(async (req) => {
   const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
   const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
 
-  // Auth: must be admin (use anon client with caller's JWT to check)
   const auth = req.headers.get('Authorization') ?? '';
-  if (!auth.startsWith('Bearer ')) return jsonResponse({ error: 'unauthorized' }, 401);
-
-  const userClient = createClient(SUPABASE_URL, ANON_KEY, {
-    global: { headers: { Authorization: auth } },
-  });
-  const { data: userRes } = await userClient.auth.getUser();
-  const userId = userRes?.user?.id;
-  if (!userId) return jsonResponse({ error: 'unauthorized' }, 401);
+  // System trigger via service-role allowed (for auto-match by status change)
+  let isSystemCall = false;
+  let userId: string | null = null;
+  if (auth.startsWith('Bearer ')) {
+    const token = auth.slice(7);
+    if (token === SERVICE_KEY) {
+      isSystemCall = true;
+    } else {
+      const userClient = createClient(SUPABASE_URL, ANON_KEY, {
+        global: { headers: { Authorization: auth } },
+      });
+      const { data: userRes } = await userClient.auth.getUser();
+      userId = userRes?.user?.id ?? null;
+    }
+  }
 
   const admin = createClient(SUPABASE_URL, SERVICE_KEY);
-  const { data: isAdmin } = await admin.rpc('has_admin_access', { _user_id: userId });
-  if (!isAdmin) return jsonResponse({ error: 'forbidden' }, 403);
+
+  if (!isSystemCall) {
+    if (!userId) return jsonResponse({ error: 'unauthorized' }, 401);
+    const { data: isAdmin } = await admin.rpc('has_admin_access', { _user_id: userId });
+    if (!isAdmin) return jsonResponse({ error: 'forbidden' }, 403);
+  }
 
   let body: MatchInput;
   try { body = await req.json(); } catch { return jsonResponse({ error: 'invalid_json' }, 400); }
@@ -57,70 +73,128 @@ Deno.serve(async (req) => {
   const limit = Math.min(Math.max(body?.limit ?? 10, 1), 50);
   if (!quoteId || typeof quoteId !== 'string') return jsonResponse({ error: 'quote_request_id required' }, 400);
 
-  // Fetch quote
   const { data: quote, error: qErr } = await admin
     .from('quote_requests').select('*').eq('id', quoteId).maybeSingle();
   if (qErr || !quote) return jsonResponse({ success: false, error: 'quote_not_found' }, 404);
 
-  // Resolve city id by Arabic name (best effort)
+  const quoteCityNorm = normalizeCityName(quote.city);
+
+  // Resolve city id by Arabic/English name (best effort)
   let cityId: string | null = null;
   if (quote.city) {
-    const { data: city } = await admin
-      .from('cities').select('id').or(`name_ar.eq.${quote.city},name_en.ilike.${quote.city}`).maybeSingle();
-    cityId = city?.id ?? null;
+    const { data: cityRows } = await admin
+      .from('cities').select('id, name_ar, name_en');
+    const match = (cityRows ?? []).find((c: { name_ar: string | null; name_en: string | null }) =>
+      citiesMatch(c.name_ar, quote.city) || citiesMatch(c.name_en, quote.city));
+    cityId = match?.id ?? null;
   }
 
-  // Candidate providers: active + approved
+  // Candidates
   const { data: providers, error: pErr } = await admin
     .from('businesses')
-    .select('id,user_id,name_ar,city_id,district,sectors,is_active,is_verified,approval_status,onboarding_completion,phone,mobile,description_ar,logo_url')
+    .select('id,user_id,name_ar,city_id,district,sectors,is_active,is_verified,approval_status,onboarding_completion,phone,mobile,description_ar,logo_url,last_active_at')
     .eq('is_active', true)
     .eq('approval_status', 'approved')
     .limit(500);
   if (pErr) return jsonResponse({ success: false, error: pErr.message }, 500);
 
+  // Service areas for those providers
+  const providerIds = (providers ?? []).map((p) => p.id);
+  let areasByBiz = new Map<string, { city: string; district: string | null; is_primary: boolean }[]>();
+  if (providerIds.length) {
+    const { data: areas } = await admin
+      .from('business_service_areas')
+      .select('business_id, city, district, is_primary')
+      .in('business_id', providerIds);
+    for (const a of (areas ?? [])) {
+      const list = areasByBiz.get(a.business_id) ?? [];
+      list.push({ city: a.city, district: a.district, is_primary: a.is_primary });
+      areasByBiz.set(a.business_id, list);
+    }
+  }
+
+  // Resolve provider business city name for normalize compare
+  const cityIdsNeeded = Array.from(new Set((providers ?? []).map((p) => p.city_id).filter(Boolean) as string[]));
+  let cityNameById = new Map<string, string>();
+  if (cityIdsNeeded.length) {
+    const { data: cityRows } = await admin
+      .from('cities').select('id, name_ar, name_en').in('id', cityIdsNeeded);
+    for (const c of (cityRows ?? [])) {
+      cityNameById.set(c.id, c.name_ar ?? c.name_en ?? '');
+    }
+  }
+
   const aliases = SECTOR_ALIASES[quote.sector] ?? [quote.sector];
 
   type Scored = { id: string; user_id: string | null; score: number; reasons: string[] };
   const scored: Scored[] = [];
+
   for (const p of (providers ?? [])) {
     const reasons: string[] = [];
     let score = 0;
 
+    // Sector (required)
     const sectorList: string[] = Array.isArray(p.sectors) ? p.sectors : [];
     const sectorMatch = sectorList.some((s) => aliases.includes(s)) || sectorList.includes(quote.sector);
-    if (sectorMatch) { score += 50; reasons.push('نفس القطاع'); }
+    if (!sectorMatch) continue; // hard filter
+    score += 50; reasons.push('نفس القطاع');
 
-    if (cityId && p.city_id === cityId) { score += 25; reasons.push('نفس المدينة'); }
+    // Service areas city match
+    const areas = areasByBiz.get(p.id) ?? [];
+    const areaCityMatch = areas.some((a) => citiesMatch(a.city, quote.city));
+    if (areaCityMatch) { score += 30; reasons.push('ضمن مناطق الخدمة'); }
 
-    if (quote.district && p.district && String(p.district).trim() === String(quote.district).trim()) {
-      score += 5; reasons.push('نفس الحي');
+    // Business city match
+    const bizCityName = p.city_id ? (cityNameById.get(p.city_id) ?? '') : '';
+    const bizCityMatch = !!bizCityName && citiesMatch(bizCityName, quote.city);
+    if (bizCityMatch && !areaCityMatch) { score += 20; reasons.push('نفس المدينة'); }
+    else if (bizCityMatch && areaCityMatch) { score += 5; }
+
+    // District match (areas first, then business district)
+    if (quote.district) {
+      const qd = String(quote.district).trim();
+      const areaDistrict = areas.some((a) => a.district && a.district.trim() === qd && citiesMatch(a.city, quote.city));
+      const bizDistrict = !!p.district && String(p.district).trim() === qd && bizCityMatch;
+      if (areaDistrict || bizDistrict) { score += 10; reasons.push('نفس الحي'); }
     }
 
-    if (p.is_active) { score += 10; reasons.push('مزود نشط'); }
+    // Activity
+    const dActive = daysSince(p.last_active_at as string | null);
+    if (dActive !== null && dActive <= 7) { score += 15; reasons.push('مزود نشط مؤخرًا'); }
+    else if (dActive !== null && dActive <= 30) { score += 8; }
 
+    // Profile completeness
+    const oc = p.onboarding_completion ?? 0;
     const profileComplete = !!p.name_ar && !!p.city_id && sectorList.length > 0 && (!!p.phone || !!p.mobile) && (!!p.description_ar || !!p.logo_url);
-    if (profileComplete) { score += 10; reasons.push('بيانات المزود مكتملة'); }
-    if ((p.onboarding_completion ?? 0) >= 80) { score += 5; reasons.push('ملف منشأة شبه مكتمل'); }
+    if (profileComplete || oc >= 80) { score += 10; reasons.push('بيانات المنشأة مكتملة'); }
+    else if (oc >= 50) { score += 5; }
 
-    if (p.is_verified) { score += 10; reasons.push('مزود موثّق'); }
+    // Verified
+    if (p.is_verified) { score += 10; reasons.push('منشأة موثقة'); }
 
-    // TODO: portfolio/last_active_at scoring not available — skip for now.
+    // Contact info
+    if (p.phone || p.mobile) { score += 5; reasons.push('لديه بيانات تواصل واضحة'); }
 
-    // Only consider if at least sector OR city match
-    if (sectorMatch || (cityId && p.city_id === cityId)) {
-      scored.push({ id: p.id, user_id: p.user_id, score, reasons });
-    }
+    // Has description / logo (richer profile)
+    if (p.description_ar || p.logo_url) { score += 5; }
+
+    // Must have at least sector AND (city or service area)
+    if (!areaCityMatch && !bizCityMatch) continue;
+
+    scored.push({ id: p.id, user_id: p.user_id, score, reasons });
   }
 
   scored.sort((a, b) => b.score - a.score);
   const top = scored.slice(0, limit);
 
   if (top.length === 0) {
-    return jsonResponse({ success: false, matched_count: 0, message: 'لم يتم العثور على مزودين مناسبين حاليًا' });
+    return jsonResponse({
+      success: false, matched_count: 0,
+      message: 'لم يتم العثور على مزودين مناسبين حاليًا',
+      quote_city_normalized: quoteCityNorm,
+    });
   }
 
-  // Insert leads (skip duplicates via unique constraint with onConflict)
   const rows = top.map((s) => ({
     quote_request_id: quoteId,
     provider_id: s.id,
@@ -138,7 +212,7 @@ Deno.serve(async (req) => {
 
   const newLeads = inserted ?? [];
 
-  // Update quote status to matched (and append to status_history)
+  // Update quote status to matched
   if (quote.status === 'new' || quote.status === 'under_review') {
     const md = (quote.metadata ?? {}) as Record<string, unknown>;
     const history = Array.isArray(md.status_history) ? md.status_history : [];
@@ -148,13 +222,13 @@ Deno.serve(async (req) => {
         ...md,
         status_history: [
           ...history,
-          { status: 'matched', changed_at: new Date().toISOString(), changed_by: userId, source: 'match-quote-request' },
+          { status: 'matched', changed_at: new Date().toISOString(), changed_by: userId, source: isSystemCall ? 'auto-match' : 'match-quote-request' },
         ],
       },
     }).eq('id', quoteId);
   }
 
-  // Notify providers with a user account
+  // Notify providers
   const sectorAr = (() => {
     const map: Record<string, string> = { aluminum:'ألمنيوم', iron:'حديد', wood:'خشب', glass:'زجاج', stainless:'ستانلس', fabrication:'تصنيع وتركيب', storefronts:'واجهات', 'project-fitout':'تجهيزات مشاريع', other:'أخرى' };
     return map[quote.sector] ?? quote.sector;
@@ -177,9 +251,19 @@ Deno.serve(async (req) => {
     await admin.from('notifications').insert(notifs);
   }
 
+  // Compute summary stats for admin UI
+  const topScore = top[0]?.score ?? 0;
+  const avgScore = top.length ? Math.round(top.reduce((a, b) => a + b.score, 0) / top.length) : 0;
+  const reasonCounts: Record<string, number> = {};
+  for (const s of top) for (const r of s.reasons) reasonCounts[r] = (reasonCounts[r] ?? 0) + 1;
+
   return jsonResponse({
     success: true,
     matched_count: newLeads.length,
+    candidates_evaluated: scored.length,
+    top_score: topScore,
+    avg_score: avgScore,
+    reason_counts: reasonCounts,
     quote_request_id: quoteId,
     message: `تم توجيه الطلب إلى ${newLeads.length} مزودين`,
   });

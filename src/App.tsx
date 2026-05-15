@@ -41,6 +41,7 @@ const Search = lazyRetry(() => import("./pages/Search"));
 const Quote = lazyRetry(() => import("./pages/Quote"));
 const ProviderLeads = lazyRetry(() => import("./pages/dashboard/ProviderLeads"));
 const ProviderLeadDetails = lazyRetry(() => import("./pages/dashboard/ProviderLeadDetails"));
+const ProviderServiceAreas = lazyRetry(() => import("./pages/dashboard/ProviderServiceAreas"));
 const Contracts = lazyRetry(() => import("./pages/Contracts"));
 const ContractDetail = lazyRetry(() => import("./pages/ContractDetail"));
 const DashboardOverview = lazyRetry(() => import("./pages/dashboard/DashboardOverview"));
@@ -257,6 +258,7 @@ const AppRoutes = () => (
           <Route path="/dashboard/my-requests/:id" element={<ProtectedRoute><QuoteRequestDetails /></ProtectedRoute>} />
           <Route path="/dashboard/provider/leads" element={<ProtectedRoute requireProvider><ProviderLeads /></ProtectedRoute>} />
           <Route path="/dashboard/provider/leads/:id" element={<ProtectedRoute requireProvider><ProviderLeadDetails /></ProtectedRoute>} />
+          <Route path="/dashboard/provider/service-areas" element={<ProtectedRoute requireProvider><ProviderServiceAreas /></ProtectedRoute>} />
           <Route path="/admin/ai-center" element={<ProtectedRoute requireAdmin><DashboardAiCenter /></ProtectedRoute>} />
 
           <Route path="/dashboard/blog" element={<ProtectedRoute requireAdmin><DashboardBlog /></ProtectedRoute>} />

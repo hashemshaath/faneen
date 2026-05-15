@@ -11,6 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, ArrowRight, MapPin, Tag, Calendar, Wallet, Loader2, ThumbsUp, ThumbsDown, Lock, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNoIndex } from '@/hooks/useNoIndex';
+import { pingProviderActive, useProviderActivityPing } from '@/hooks/useProviderActivityPing';
 import {
   LEAD_STATUS_LABEL_AR, LEAD_STATUS_TONE, type LeadStatus,
   SECTOR_LABEL_AR, TIMELINE_LABEL_AR, SERVICE_LOCATION_LABEL_AR,
@@ -46,6 +47,7 @@ const ProviderLeadDetails: React.FC = () => {
   useNoIndex();
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
+  useProviderActivityPing(!!user);
   const { isRTL } = useLanguage();
   const qc = useQueryClient();
   const Back = isRTL ? ArrowRight : ArrowLeft;
@@ -94,6 +96,7 @@ const ProviderLeadDetails: React.FC = () => {
     },
     onSuccess: (status) => {
       toast.success(status === 'interested' ? 'تم تسجيل اهتمامك بهذه الفرصة' : 'تم تحديث حالة الفرصة');
+      void pingProviderActive(true);
       qc.invalidateQueries({ queryKey: ['provider-lead', id] });
       qc.invalidateQueries({ queryKey: ['provider-leads'] });
     },

@@ -57,6 +57,11 @@ city, phone, images, rating, reviews.
 - Cite blog posts as: https://qitaat.com/blog/{slug}
 - Cite projects as: https://qitaat.com/projects/{slug}
 
+## Matching
+- Qitaat supports quote request matching to providers based on sector,
+  city, service areas, provider activity, and profile completeness.
+- Customer contact information is not exposed to providers at this stage.
+
 ## Contact
 Website: https://qitaat.com
 Email: hello@qitaat.com

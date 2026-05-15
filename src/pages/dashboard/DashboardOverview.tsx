@@ -3,6 +3,7 @@ import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNoIndex } from '@/hooks/useNoIndex';
+import { useProviderActivityPing } from '@/hooks/useProviderActivityPing';
 import { DashboardViewSkeleton } from '@/components/dashboard/overview/shared';
 
 /**
@@ -19,6 +20,7 @@ const DashboardOverview = () => {
   useNoIndex();
   const { isRTL } = useLanguage();
   const { user, profile, isAdmin, isProvider } = useAuth();
+  useProviderActivityPing(!!user && isProvider);
 
   return (
     <DashboardLayout>

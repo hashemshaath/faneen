@@ -1107,6 +1107,51 @@ export type Database = {
           },
         ]
       }
+      business_service_areas: {
+        Row: {
+          business_id: string
+          city: string
+          created_at: string
+          district: string | null
+          id: string
+          is_primary: boolean
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          city: string
+          created_at?: string
+          district?: string | null
+          id?: string
+          is_primary?: boolean
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          city?: string
+          created_at?: string
+          district?: string | null
+          id?: string
+          is_primary?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_service_areas_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_service_areas_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_services: {
         Row: {
           business_id: string
@@ -1351,6 +1396,7 @@ export type Database = {
           is_active: boolean
           is_demo: boolean
           is_verified: boolean
+          last_active_at: string | null
           latitude: number | null
           logo_url: string | null
           longitude: number | null
@@ -1411,6 +1457,7 @@ export type Database = {
           is_active?: boolean
           is_demo?: boolean
           is_verified?: boolean
+          last_active_at?: string | null
           latitude?: number | null
           logo_url?: string | null
           longitude?: number | null
@@ -1471,6 +1518,7 @@ export type Database = {
           is_active?: boolean
           is_demo?: boolean
           is_verified?: boolean
+          last_active_at?: string | null
           latitude?: number | null
           logo_url?: string | null
           longitude?: number | null
@@ -10130,6 +10178,7 @@ export type Database = {
         Args: { p_note?: string; p_version_id: string }
         Returns: undefined
       }
+      touch_business_last_active: { Args: never; Returns: undefined }
       track_content_interaction: {
         Args: {
           _content_id: string
