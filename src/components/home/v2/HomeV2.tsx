@@ -296,8 +296,8 @@ export const HeroV2 = () => {
   const pendingLiveMessage = keyboardSlideChange
     ? ''
     : bi(
-        `الشريحة ${active + 1} من ${SLIDES.length}: ${slide.titleAr}`,
-        `Slide ${active + 1} of ${SLIDES.length}: ${slide.titleEn}`,
+        `الشريحة ${active + 1} من ${SLIDES.length}: ${SLIDES[active].titleAr}`,
+        `Slide ${active + 1} of ${SLIDES.length}: ${SLIDES[active].titleEn}`,
       );
 
   useEffect(() => {
