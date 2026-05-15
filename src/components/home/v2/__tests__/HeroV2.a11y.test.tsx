@@ -281,4 +281,44 @@ describe('HeroV2 — accessibility', () => {
       vi.useRealTimers();
     }
   });
+
+  it('supports PageDown/PageUp to navigate slides with the same keyboard mute logic', async () => {
+    vi.useFakeTimers();
+    try {
+      renderHero();
+      const carousel = document.getElementById('hero-carousel')!;
+      const live = document.getElementById('hero-live-region')!;
+      expect((live.textContent ?? '')).toMatch(/(الشريحة|Slide)\s*1/);
+
+      // PageDown → next slide; live region stays muted, focus moves to slide group.
+      await act(async () => {
+        fireEvent.keyDown(carousel, { key: 'PageDown' });
+      });
+      await act(async () => { vi.advanceTimersByTime(50); });
+      expect(document.activeElement?.id).toBe('hero-slide-content');
+      expect((live.textContent ?? '').trim()).toBe('');
+
+      // PageUp → previous slide; same mute behavior.
+      await act(async () => {
+        fireEvent.keyDown(carousel, { key: 'PageUp' });
+      });
+      await act(async () => { vi.advanceTimersByTime(50); });
+      expect(document.activeElement?.id).toBe('hero-slide-content');
+      expect((live.textContent ?? '').trim()).toBe('');
+
+      // After keyboard nav settles, a non-keyboard change (dot click) re-enables
+      // the live region for normal announcements.
+      const dot3 = Array.from(
+        document.querySelectorAll<HTMLButtonElement>(
+          'button[aria-controls="hero-carousel"][aria-label]',
+        ),
+      ).find((b) => /(الشريحة|slide)\s*3/i.test(b.getAttribute('aria-label') ?? ''))!;
+      expect(dot3).toBeTruthy();
+      await act(async () => { fireEvent.click(dot3); });
+      await act(async () => { vi.advanceTimersByTime(500); });
+      expect((live.textContent ?? '')).toMatch(/(الشريحة|Slide)\s*3/);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });
