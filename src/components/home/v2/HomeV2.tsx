@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { getSearchHistory, addToSearchHistory } from '@/services/search/useSearch';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
+import { useAbVariant, trackAbClick } from '@/lib/abTesting';
 import heroSlide1 from '@/assets/home/hero-slide-1.jpg';
 import heroSlide2 from '@/assets/home/hero-slide-2.jpg';
 import heroSlide3 from '@/assets/home/hero-slide-3.jpg';
@@ -108,11 +109,11 @@ const SectionCover: React.FC<{
   );
 };
 
-const PrimaryCTA: React.FC<{ to: string; label: string }> = ({ to, label }) => {
+const PrimaryCTA: React.FC<{ to: string; label: string; onClick?: () => void }> = ({ to, label, onClick }) => {
   const { isRTL } = useLanguage();
   const Arrow = isRTL ? ArrowLeft : ArrowRight;
   return (
-    <Link to={to}>
+    <Link to={to} onClick={onClick}>
       <Button variant="primary" size="appLg" className="gap-2">
         {label}
         <Arrow className="w-4 h-4" />
@@ -409,7 +410,23 @@ export const HeroV2 = () => {
 
   const PrevIcon = isRTL ? ArrowRight : ArrowLeft;
   const NextIcon = isRTL ? ArrowLeft : ArrowRight;
-  const slide = SLIDES[active];
+  // A/B test: override slide 0 (LCP slide) with the assigned variant's content.
+  const heroAb = useAbVariant<{
+    titleAr?: string;
+    titleEn?: string;
+    subAr?: string;
+    subEn?: string;
+  }>('hero_headline');
+  const baseSlide = SLIDES[active];
+  const slide = active === 0 && heroAb?.content
+    ? {
+        ...baseSlide,
+        titleAr: heroAb.content.titleAr || baseSlide.titleAr,
+        titleEn: heroAb.content.titleEn || baseSlide.titleEn,
+        subAr:   heroAb.content.subAr   || baseSlide.subAr,
+        subEn:   heroAb.content.subEn   || baseSlide.subEn,
+      }
+    : baseSlide;
 
   // Build filtered suggestions
   const acItems = (() => {
@@ -851,7 +868,11 @@ export const HeroV2 = () => {
 
             {/* CTAs */}
             <div className="mt-5 flex flex-col sm:flex-row items-center justify-center gap-3">
-              <PrimaryCTA to={ROUTES.quote} label={bi('اطلب عرض سعر', 'Request a quote')} />
+              <PrimaryCTA
+                to={ROUTES.quote}
+                label={bi('اطلب عرض سعر', 'Request a quote')}
+                onClick={() => trackAbClick('hero_headline')}
+              />
               <Link to={ROUTES.signupProvider}>
                 <Button
                   variant="outline"

@@ -1,58 +1,104 @@
-## إعادة بناء الصفحة الرئيسية لـ qitaat.com
+## الهدف
 
-سأعيد بناء `src/pages/Index.tsx` لتطبيق الترتيب والنبرة المطلوبة (أسلوب Apple/IKEA: جمل قصيرة، رسالة واحدة لكل قسم، بدون مبالغة).
+تشغيل تجربة A/B على عنوان Hero في الصفحة الرئيسية، مع تتبع نسبة الضغط (CTR) على زر "اطلب عرض سعر"، واستخدام النسخة الأفضل تلقائيًا بعد بلوغ حجم عينة كافٍ ومستوى ثقة محدد.
 
-### الترتيب الجديد للأقسام (13 قسمًا)
+---
 
-```text
-1. Hero            ← H1 + زر "اطلب عرض سعر" (أساسي) + "أضف منشأتك" (ثانوي)
-2. شريط القطاعات السريع (chips قابلة للضغط)
-3. قسم المشكلة (3 كروت قصيرة)
-4. قسم الحل (4 نقاط) + CTA "ابدأ طلبك"
-5. كيف تعمل قطاعات؟ (3 خطوات 01/02/03)
-6. لمن قطاعات؟ (4 فئات)
-7. القطاعات الرئيسية (6 كروت تفصيلية)
-8. قسم العملاء       → CTA: اطلب عرض سعر
-9. قسم المقاولين والمكاتب الهندسية → CTA: ابحث عن مزودين
-10. قسم مزودي الخدمة  → CTA: أضف منشأتك
-11. الثقة والوضوح + شارات + تنبيه ودي
-12. الأسئلة الشائعة المختصرة (5 أسئلة + FAQPage JSON-LD)
-13. CTA النهائي
-Footer
-```
+## 1) قاعدة البيانات (migration واحدة)
 
-### الملفات
+جداول:
+- `ab_experiments` — `key` (مثل `hero_headline`)، الحالة (`draft|running|completed`)، `min_sample_per_variant` (افتراضي 1000)، `confidence_threshold` (افتراضي 0.95)، `winner_variant_id`، `auto_promote` (bool).
+- `ab_variants` — `experiment_id`، `key` (`A`/`B`/...)، `content` (jsonb: `{titleAr, titleEn, subAr, subEn}` لكل شريحة أو فقط العنوان الرئيسي)، `weight` (افتراضي 1)، `is_control`، `is_active`.
+- `ab_events` — `experiment_id`، `variant_id`، `visitor_id` (text)، `event_type` (`impression|click`)، `created_at`. بدون أي PII.
 
-**جديدة** في `src/components/home/v2/`:
-- `HeroV2.tsx` — H1 «مزودو خدمات الصناعات الخفيفة في مكان واحد»، زرّان، نص داعم، 6 chips
-- `SectorChipsBar.tsx` — شريط القطاعات الثمانية
-- `ProblemSection.tsx` — 3 كروت
-- `SolutionSection.tsx` — 4 نقاط + CTA
-- `HowItWorksV2.tsx` — 3 خطوات بأرقام كبيرة
-- `WhoIsItForSection.tsx` — 4 فئات
-- `MainSectorsSection.tsx` — 6 كروت قطاعات
-- `ForClientsSection.tsx` — قسم العملاء
-- `ForContractorsSection.tsx` — قسم المقاولين
-- `ForProvidersSection.tsx` — قسم المزودين
-- `TrustSection.tsx` — 4 شارات + تنبيه
-- `FAQSection.tsx` — 5 أسئلة accordion
-- `FinalCTASection.tsx` — CTA نهائي بزرّين
+سياسات RLS:
+- قراءة `ab_experiments`/`ab_variants` للحالات `running` و `completed` فقط متاحة للعموم.
+- إدراج `ab_events` مسموح للعموم (visitor_id فقط، لا auth).
+- الإدارة الكاملة عبر `has_role(auth.uid(),'super_admin')`.
 
-**معدّلة**:
-- `src/pages/Index.tsx` — استبدال كامل للأقسام القديمة، تحديث `usePageMeta` للـMeta Title/Description المطلوبين، إضافة FAQPage JSON-LD، إبقاء `Navbar`/`Footer`/`ScrollToTop` كما هي
-- استخدام `<Bi>`/`useBi()` لكل النصوص (AR رئيسي + EN موازٍ)
+فهارس: `(experiment_id, variant_id, event_type, created_at)` لتسريع التجميع.
 
-### مبادئ التطبيق
-- **زر أساسي** = `/auth?intent=quote` أو `/search` (سأستخدم `/search` كنقطة طلب — لا توجد صفحة "اطلب عرض سعر" مستقلة، لذا CTA يقود لمسار البحث/الاتصال). الزر الثانوي «أضف منشأتك» → `/auth?mode=signup&role=provider`.
-- **تصميم**: tokens موجودة (`bg-card`, `text-foreground`, `bg-primary`, `rounded-xl`, `.hover-lift`)، خط `IBM Plex Sans Arabic`، RTL كامل، H1 واحد فقط (في Hero)، باقي الأقسام H2.
-- **جوال**: container-app + grids `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3`، أزرار `h-12` أو `size="appLg"`.
-- **أداء**: الأقسام الجديدة خفيفة (نص + أيقونات lucide فقط)، lazy-load عبر `LazyOnView` للأقسام تحت الطية كما في النمط الحالي.
-- **SEO**: Meta Title «قطاعات | مزودو خدمات الألمنيوم والحديد والخشب والزجاج في السعودية»، Description المطلوب، FAQPage JSON-LD، الكلمات المفتاحية مدمجة طبيعيًا في النصوص.
-- **عدم المبالغة**: لن أستخدم «الأفضل/الأسرع/مضمون» في أي مكان.
+---
 
-### ما لن يُلمس
-- `Navbar`, `Footer`, `HeroParticles` (يبقى للزينة)، نظام الترجمات، الـrouting، أي backend/RLS.
-- المكونات القديمة (`HeroSection.tsx`, `WhyQitaatSection.tsx`, إلخ) تبقى في الكود لاستخدامها في صفحات أخرى إن وُجدت — فقط `Index.tsx` يتوقف عن استيرادها.
+## 2) RPCs آمنة (SECURITY DEFINER, search_path=public)
 
-### التقرير النهائي
-بعد التنفيذ سأقدم التقرير المطلوب (8 نقاط: الأقسام المعدّلة، النصوص، الرحلة، CTAs، SEO، الجوال، روابط، الخطوات التالية).
+- `ab_assign_variant(p_experiment_key text, p_visitor_id text)` →
+  - يختار variant فعّالة بشكل ثابت لكل visitor عبر `hashtext(visitor_id || experiment_key) % sum(weight)` ⇒ لا تخزين assignment، نفس الزائر = نفس النسخة دائمًا.
+  - يسجل `impression` (مرة واحدة لكل visitor باستخدام `ON CONFLICT DO NOTHING` + قيد فريد جزئي على `event_type='impression'`).
+  - يُرجع `{variant_id, variant_key, content}`.
+- `ab_track_click(p_experiment_key text, p_visitor_id text)` → يحسب نفس النسخة المعيّنة ويسجل `click`.
+- `ab_evaluate_experiments()` (للأدمن/cron) → لكل تجربة `running`:
+  - يحسب impressions و clicks لكل variant.
+  - إن بلغت كل النسخ `min_sample_per_variant`، يُجري z-test للنسبتين بين الأعلى CTR والمتحكم.
+  - إن `p_value < 1 - confidence_threshold` و`auto_promote=true`: ينقل التجربة إلى `completed`، يضع `winner_variant_id`، ويعطل بقية النسخ (`is_active=false`).
+- `ab_experiment_stats(p_key text)` → للأدمن: impressions/clicks/CTR/p-value لكل variant.
+
+---
+
+## 3) الواجهة الأمامية
+
+- `src/lib/abTesting.ts`:
+  - `getOrCreateVisitorId()` — uuid في `localStorage` (`qitaat_visitor_id`).
+  - `useAbVariant(experimentKey)` — React Query، يستدعي `ab_assign_variant`، staleTime=∞، كاش في `sessionStorage` لمنع تكرار impressions داخل نفس الجلسة.
+  - `trackAbClick(experimentKey)` — fire-and-forget عبر `ab_track_click`.
+
+- تعديل `HomeV2.tsx`:
+  - في `HeroV2`، استدعاء `useAbVariant('hero_headline')` ودمج `content.titleAr/titleEn/subAr/subEn` فوق نسخة الـ slide الافتراضية (إن وُجد content للنسخة، يبدّل عنوان الشريحة الأولى أو الكل حسب النسخة المخزنة).
+  - في `PrimaryCTA` لزر "اطلب عرض سعر" داخل الـ hero فقط: استدعاء `trackAbClick('hero_headline')` عند النقر قبل التنقل.
+
+- لوحة الأدمن `/admin/ab-experiments`:
+  - قائمة التجارب + إنشاء/تعديل (inline form, لا منبثقات).
+  - لكل تجربة: variants مع محرر `content` (JSON آمن أو حقول AR/EN منظمة)، `weight`، `is_control`.
+  - عرض الإحصائيات الحية (impressions/clicks/CTR/p-value/المُعيَّن فائزًا).
+  - أزرار "تشغيل/إيقاف"، "تعيين فائز يدويًا"، تبديل `auto_promote`.
+  - محمي بـ `requireAdmin` + `useNoIndex`.
+
+---
+
+## 4) الترقية التلقائية
+
+- Edge function `ab-evaluate` تستدعي `ab_evaluate_experiments()`، محمية بـ `x-cron-secret` (نفس نمط `monthly-provider-credit-grant`).
+- إعداد cron يدويًا في SQL Editor (يومي 02:00 UTC). نُجهّز SQL، ولا نضع السر في الكود.
+
+---
+
+## 5) البيانات الأولية (seed)
+
+عبر `supabase--insert` بعد الـ migration:
+- تجربة واحدة `hero_headline` بحالة `running`، `auto_promote=true`، `min_sample_per_variant=1000`، `confidence_threshold=0.95`.
+- نسختان:
+  - **A (control)**: العنوان الحالي للشريحة الأولى.
+  - **B**: عنوان مختلف (مقترح: "اطلب عرض سعر صناعي خلال دقيقة" + sub مطابق).
+
+---
+
+## 6) الأمان والخصوصية
+
+- `visitor_id` معرّف عشوائي في المتصفح فقط، لا يربطه شيء بالمستخدم المسجَّل.
+- لا يُسجَّل IP أو user-agent.
+- RLS تمنع قراءة `ab_events` للعموم تمامًا.
+- كل RPCs بـ `search_path=public` و `SECURITY DEFINER` مع تحقق من المدخلات.
+
+---
+
+## 7) ما لن يتغير
+
+- منطق الطلبات والمطابقة والـ /quote نفسها.
+- بقية CTAs خارج الـ hero لا تُتتبَّع في هذه التجربة.
+- لا منبثقات/Dialogs (سياسة UX).
+
+---
+
+## التسليم
+
+| العنصر | الحالة |
+|---|---|
+| Migration (جداول + RLS + RPCs + فهارس) | ✓ |
+| Edge function `ab-evaluate` + ربط cron يدوي | ✓ (ملف + تعليمات SQL) |
+| `src/lib/abTesting.ts` + hook | ✓ |
+| تعديل `HeroV2` ودمج النسخة + تتبع زر CTA | ✓ |
+| `/admin/ab-experiments` + رابط في الشريط الجانبي | ✓ |
+| Seed التجربة الأولى | ✓ |
+| تقرير نهائي: الجداول، RPCs، طريقة التعيين، z-test، الترقية، الأمان | ✓ |
+
+هل أبدأ بالتنفيذ بهذا النطاق؟
