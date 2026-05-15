@@ -62,7 +62,7 @@ Deno.serve(async (req) => {
     const { data: lead, error: leadErr } = await admin
       .from('lead_requests')
       .select(
-        'id, ref_id, name, email, phone, message, budget_range, contact_preference, business_id',
+        'id, ref_id, name, email, phone, message, budget_range, contact_preference, business_id, created_at',
       )
       .eq('id', leadId)
       .maybeSingle()
@@ -71,6 +71,18 @@ Deno.serve(async (req) => {
       return new Response(
         JSON.stringify({ ok: false, error: 'lead_not_found' }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
+    }
+
+    // Replay guard: this function is only invoked immediately after the
+    // client inserts the lead. Reject anything older than 5 minutes so an
+    // attacker who learns a lead UUID cannot re-trigger emails later.
+    const createdAt = lead.created_at ? new Date(lead.created_at).getTime() : 0
+    if (!createdAt || Date.now() - createdAt > 5 * 60 * 1000) {
+      console.warn('notify-supplier-lead: stale lead rejected')
+      return new Response(
+        JSON.stringify({ ok: false, error: 'stale_lead' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       )
     }
 

@@ -105,8 +105,39 @@ function generateToken(): string {
 }
 
 // Auth note: this function uses verify_jwt = true in config.toml, so Supabase's
-// gateway validates the caller's JWT (anon or service_role) before the request
-// reaches this code. No in-function auth check is needed.
+// gateway validates that the caller presents a valid JWT — but the anon JWT is
+// publicly embedded in the client bundle. To prevent unauthenticated abuse
+// (phishing/spam from our verified sending domain), we additionally require
+// either:
+//   (a) the caller is authenticated (non-anon user) — for templates triggered
+//       from signed-in flows, OR
+//   (b) the caller is the service role (server-to-server invocation), OR
+//   (c) the request is for one of the public templates listed below AND the
+//       anon caller is within the per-IP rate limit.
+// Public templates are limited to flows that legitimately fire from
+// unauthenticated pages (signup confirmation, contact form, public lead form,
+// public booking widget).
+const ANON_ALLOWED_TEMPLATES = new Set<string>([
+  'welcome-signup',
+  'welcome-business',
+  'contact-confirmation',
+  'contact-admin-notification',
+  'lead-confirmation',
+  'lead-notification',
+  'booking-confirmation',
+])
+const ANON_RATE_LIMIT_PER_HOUR = 10
+
+function extractClientIp(req: Request): string {
+  const xff = req.headers.get('x-forwarded-for') || ''
+  const first = xff.split(',')[0]?.trim()
+  if (first) return first
+  return (
+    req.headers.get('cf-connecting-ip') ||
+    req.headers.get('x-real-ip') ||
+    'unknown'
+  )
+}
 
 Deno.serve(async (req) => {
   // Handle CORS preflight
@@ -116,8 +147,9 @@ Deno.serve(async (req) => {
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')
   const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+  const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')
 
-  if (!supabaseUrl || !supabaseServiceKey) {
+  if (!supabaseUrl || !supabaseServiceKey || !supabaseAnonKey) {
     console.error('Missing required environment variables')
     return new Response(
       JSON.stringify({ error: 'Server configuration error' }),
@@ -162,6 +194,58 @@ Deno.serve(async (req) => {
       }
     )
   }
+
+  // -------- Authorization gate (anti-abuse) --------
+  const authHeader = req.headers.get('Authorization') || ''
+  const bearer = authHeader.replace(/^Bearer\s+/i, '').trim()
+  const isServiceRole = bearer && bearer === supabaseServiceKey
+  let callerRole: 'service_role' | 'authenticated' | 'anon' = 'anon'
+  if (isServiceRole) {
+    callerRole = 'service_role'
+  } else if (bearer) {
+    try {
+      const userClient = createClient(supabaseUrl, supabaseAnonKey, {
+        global: { headers: { Authorization: `Bearer ${bearer}` } },
+      })
+      const { data: { user } } = await userClient.auth.getUser()
+      if (user && user.aud === 'authenticated' && !user.is_anonymous) {
+        callerRole = 'authenticated'
+      }
+    } catch (_e) {
+      // ignore — treat as anon
+    }
+  }
+
+  if (callerRole === 'anon') {
+    if (!ANON_ALLOWED_TEMPLATES.has(templateName)) {
+      console.warn('send-transactional-email: anon caller blocked', { templateName })
+      return new Response(
+        JSON.stringify({ error: 'Authentication required for this template' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
+    }
+    // Rate limit anon callers per IP to prevent template-allowlist abuse.
+    try {
+      const admin = createClient(supabaseUrl, supabaseServiceKey)
+      const ip = extractClientIp(req)
+      const { data: allowed } = await admin.rpc('check_rate_limit', {
+        _identifier: `send_email:anon:${ip}`,
+        _type: 'send_transactional_email_anon',
+        _max_attempts: ANON_RATE_LIMIT_PER_HOUR,
+        _window_minutes: 60,
+        _block_minutes: 60,
+      })
+      if (allowed === false) {
+        return new Response(
+          JSON.stringify({ error: 'Rate limit exceeded' }),
+          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        )
+      }
+    } catch (e) {
+      console.warn('send-transactional-email: rate limit check failed (fail-open)', e)
+    }
+  }
+  // -------------------------------------------------
 
   // 1. Look up template from registry (early — needed to resolve recipient)
   const template = TEMPLATES[templateName]
