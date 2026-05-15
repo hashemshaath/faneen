@@ -313,13 +313,14 @@ export const HeroV2 = () => {
     // Identical message? Skip — prevents re-announcement on incidental re-renders.
     if (pendingLiveMessage === lastAnnouncedRef.current) return;
 
-    // Debounce: only commit after the slide has stayed put for 450ms.
-    // Rapid scrubbing through dots replaces the timer before it fires,
-    // so screen readers only hear the final settled slide.
+    // First announcement (mount) goes through immediately so initial users
+    // hear slide 1; subsequent changes are debounced (~450ms) so rapid
+    // scrubbing only announces the final settled slide.
+    const delay = lastAnnouncedRef.current === '' ? 0 : 450;
     const t = window.setTimeout(() => {
       lastAnnouncedRef.current = pendingLiveMessage;
       setLiveMessage(pendingLiveMessage);
-    }, 450);
+    }, delay);
     return () => window.clearTimeout(t);
   }, [pendingLiveMessage, keyboardSlideChange]);
 
