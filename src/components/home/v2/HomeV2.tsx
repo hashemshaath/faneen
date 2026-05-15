@@ -848,6 +848,7 @@ export const HeroV2 = () => {
                     key={i}
                     type="button"
                     onClick={() => setActive(i)}
+                    onKeyDown={onDotKeyDown(i)}
                     aria-label={label}
                     aria-current={ariaCurrent}
                     aria-controls="hero-carousel"
@@ -878,6 +879,7 @@ export const HeroV2 = () => {
                     key={i}
                     type="button"
                     onClick={() => setActive(i)}
+                    onKeyDown={onDotKeyDown(i)}
                     aria-label={label}
                     aria-current={ariaCurrent}
                     aria-controls="hero-carousel"
