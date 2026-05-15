@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen, within, act, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { axe } from 'jest-axe';
 import { HeroV2 } from '../HomeV2';
@@ -74,5 +74,88 @@ describe('HeroV2 — accessibility', () => {
     const ids = Array.from(container.querySelectorAll('[id]')).map((el) => el.id);
     const dupes = ids.filter((id, i) => ids.indexOf(id) !== i);
     expect(dupes).toEqual([]);
+  });
+
+  it('uses #hero-live-region as the ONLY announcer of slide changes', () => {
+    renderHero();
+    const carousel = document.getElementById('hero-carousel')!;
+    const announcers = carousel.querySelectorAll(
+      '[role="status"], [role="alert"], [aria-live="polite"], [aria-live="assertive"]',
+    );
+    // The hero contains #hero-ac-status (autocomplete result count) too — that's
+    // fine because it speaks ONLY when the combobox opens, never when the slide
+    // changes. The contract we enforce here is:
+    //   1) #hero-live-region exists and is a status announcer.
+    //   2) NO other announcer carries slide text (slide N of M / الشريحة N من M),
+    //      which would cause the slide to be announced twice.
+    const live = document.getElementById('hero-live-region');
+    expect(live).not.toBeNull();
+    expect(announcers.length).toBeGreaterThanOrEqual(1);
+    const slideRe = /(الشريحة|Slide)\s*\d+/;
+    Array.from(announcers).forEach((el) => {
+      if ((el as HTMLElement).id === 'hero-live-region') return;
+      expect(el.textContent ?? '').not.toMatch(slideRe);
+    });
+  });
+
+  it('does not re-announce the previous slide after Next then Prev navigation', async () => {
+    vi.useFakeTimers();
+    try {
+      renderHero();
+      const live = document.getElementById('hero-live-region')!;
+
+      // Initial commit (slide 1) is synchronous via lazy state initializer
+      const initial = live.textContent ?? '';
+      expect(initial).toMatch(/(الشريحة|Slide)\s*1/);
+
+      const nextBtn = screen.getByLabelText(/Next slide|الشريحة التالية/);
+      const prevBtn = screen.getByLabelText(/Previous slide|الشريحة السابقة/);
+
+      // Forward → wait past the 450ms debounce → live region speaks slide 2
+      await act(async () => { fireEvent.click(nextBtn); });
+      await act(async () => { vi.advanceTimersByTime(500); });
+      const afterNext = live.textContent ?? '';
+      expect(afterNext).toMatch(/(الشريحة|Slide)\s*2/);
+      expect(afterNext).not.toBe(initial);
+
+      // Backward → live region speaks slide 1 once, NOT slide 2 again
+      await act(async () => { fireEvent.click(prevBtn); });
+      await act(async () => { vi.advanceTimersByTime(500); });
+      const afterPrev = live.textContent ?? '';
+      expect(afterPrev).toMatch(/(الشريحة|Slide)\s*1/);
+      // Previous slide (slide 2) text must not linger in the live region
+      expect(afterPrev).not.toMatch(/(الشريحة|Slide)\s*2/);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('does not re-announce the same slide on incidental re-renders', async () => {
+    vi.useFakeTimers();
+    try {
+      const { rerender } = renderHero();
+      const live = document.getElementById('hero-live-region')!;
+      const before = live.textContent ?? '';
+      expect(before).toMatch(/(الشريحة|Slide)\s*1/);
+
+      // Force a parent re-render without changing the active slide
+      const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+      rerender(
+        <QueryClientProvider client={qc}>
+          <LanguageProvider>
+            <MemoryRouter>
+              <HeroV2 />
+            </MemoryRouter>
+          </LanguageProvider>
+        </QueryClientProvider>,
+      );
+      await act(async () => { vi.advanceTimersByTime(500); });
+
+      const after = document.getElementById('hero-live-region')!.textContent ?? '';
+      // Same text → no diff for the screen reader to re-announce.
+      expect(after).toBe(before);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
