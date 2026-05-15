@@ -297,6 +297,13 @@ const DashboardMyRequests: React.FC = () => {
                     )}
                   </div>
                   <p className="text-sm text-foreground/80 line-clamp-2">{q.project_description}</p>
+                  <div className="pt-1">
+                    <Button asChild size="sm" variant="outline" className="min-h-[36px]">
+                      <Link to={`/dashboard/my-requests/${q.id}`}>
+                        {isRTL ? 'عرض التفاصيل' : 'View details'}
+                      </Link>
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             );

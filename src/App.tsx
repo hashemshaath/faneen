@@ -86,6 +86,9 @@ const AdminMembershipRejections = lazyRetry(() => import("./pages/admin/AdminMem
 const AdminMembershipEvents = lazyRetry(() => import("./pages/admin/AdminMembershipEvents"));
 const AdminContactCenter = lazyRetry(() => import("./pages/admin/AdminContactCenter"));
 const AdminLeadRequests = lazyRetry(() => import("./pages/admin/AdminLeadRequests"));
+const AdminQuoteRequests = lazyRetry(() => import("./pages/admin/AdminQuoteRequests"));
+const AdminQuoteRequestDetails = lazyRetry(() => import("./pages/admin/AdminQuoteRequestDetails"));
+const QuoteRequestDetails = lazyRetry(() => import("./pages/dashboard/QuoteRequestDetails"));
 const AdminEmailDeliverability = lazyRetry(() => import("./pages/admin/AdminEmailDeliverability"));
 const AdminEmailCenter = lazyRetry(() => import("./pages/admin/AdminEmailCenter"));
 const AdminSiteAudit = lazyRetry(() => import("./pages/admin/AdminSiteAudit"));
@@ -240,6 +243,7 @@ const AppRoutes = () => (
           <Route path="/dashboard/clients" element={<ProtectedRoute requireProvider><DashboardClients /></ProtectedRoute>} />
           <Route path="/dashboard/badge" element={<ProtectedRoute requireProvider><DashboardBadge /></ProtectedRoute>} />
           <Route path="/dashboard/my-requests" element={<ProtectedRoute><DashboardMyRequests /></ProtectedRoute>} />
+          <Route path="/dashboard/my-requests/:id" element={<ProtectedRoute><QuoteRequestDetails /></ProtectedRoute>} />
           <Route path="/admin/ai-center" element={<ProtectedRoute requireAdmin><DashboardAiCenter /></ProtectedRoute>} />
 
           <Route path="/dashboard/blog" element={<ProtectedRoute requireAdmin><DashboardBlog /></ProtectedRoute>} />
@@ -261,6 +265,8 @@ const AppRoutes = () => (
           <Route path="/admin/contact-sla-dashboard" element={<Navigate to="/admin/contact-messages?tab=sla" replace />} />
           <Route path="/admin/contact-notification-log" element={<Navigate to="/admin/contact-messages?tab=notifications" replace />} />
           <Route path="/admin/lead-requests" element={<ProtectedRoute requireAdmin><AdminLeadRequests /></ProtectedRoute>} />
+          <Route path="/admin/quote-requests" element={<ProtectedRoute requireAdmin><AdminQuoteRequests /></ProtectedRoute>} />
+          <Route path="/admin/quote-requests/:id" element={<ProtectedRoute requireAdmin><AdminQuoteRequestDetails /></ProtectedRoute>} />
           <Route path="/admin/email-deliverability" element={<ProtectedRoute requireAdmin><AdminEmailDeliverability /></ProtectedRoute>} />
           <Route path="/admin/email-center" element={<ProtectedRoute requireAdmin><AdminEmailCenter /></ProtectedRoute>} />
           <Route path="/admin/site-audit" element={<ProtectedRoute requireAdmin><AdminSiteAudit /></ProtectedRoute>} />
