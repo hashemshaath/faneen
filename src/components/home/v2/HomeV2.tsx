@@ -376,6 +376,14 @@ export const HeroV2 = () => {
     return () => window.clearTimeout(t);
   }, [pendingLiveMessage, keyboardSlideChange]);
 
+  // Release the timing buffer on unmount so it cannot outlive the component
+  // (defensive — refs are GC'd with the fiber, but explicit clearing makes
+  // leak hunting via heap snapshots trivial).
+  useEffect(() => {
+    const buf = slideChangeTimesRef.current;
+    return () => { buf.length = 0; };
+  }, []);
+
   // After a keyboard-driven slide change, move focus to the new slide's
   // content group. Its aria-label ("N من M") + aria-roledescription="slide"
   // gives the screen reader equivalent context to the live region — which
