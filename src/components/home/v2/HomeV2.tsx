@@ -877,6 +877,7 @@ export const HeroV2 = () => {
               <div className="flex items-center gap-2">
                 <button
                   type="button"
+                  id="hero-prev"
                   onClick={goPrev}
                   aria-label={bi('الشريحة السابقة', 'Previous slide')}
                   aria-controls="hero-carousel"
@@ -886,6 +887,7 @@ export const HeroV2 = () => {
                 </button>
                 <button
                   type="button"
+                  id="hero-next"
                   onClick={goNext}
                   aria-label={bi('الشريحة التالية', 'Next slide')}
                   aria-controls="hero-carousel"
