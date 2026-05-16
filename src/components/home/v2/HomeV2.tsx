@@ -146,10 +146,10 @@ export const HeroV2 = () => {
     {
       img: heroSlide1,
       tagAr: 'الصناعات الخفيفة', tagEn: 'Light industries',
-      titleAr: 'كل قطاعات الصناعة في منصة واحدة',
-      titleEn: 'Every industrial sector, on one platform',
-      subAr: 'ألمنيوم، حديد، خشب، زجاج، وستانلس ستيل. ابحث وقارن واطلب عرض سعر بخطوات بسيطة.',
-      subEn: 'Aluminum, iron, wood, glass and stainless steel. Search, compare and request a quote in a few simple steps.',
+      titleAr: 'مزودو الألمنيوم والحديد والخشب والزجاج في مكان واحد',
+      titleEn: 'Aluminum, iron, wood and glass providers — in one place',
+      subAr: 'ابحث عن ورش ومصانع للألمنيوم، الحديد، الزجاج، الخشب، المطابخ، الواجهات والبوابات — واطلب عرض سعر في خطوات بسيطة.',
+      subEn: 'Find workshops and factories for aluminum, iron, glass, wood, kitchens, facades and gates — and request a quote in a few simple steps.',
     },
     {
       img: heroSlide2,
