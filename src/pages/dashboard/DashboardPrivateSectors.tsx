@@ -257,7 +257,7 @@ const DashboardPrivateSectors: React.FC = () => {
 
             <div className="flex flex-wrap gap-2">
               <Button asChild>
-                <a href="/dashboard/business/edit">
+                <a href="/dashboard/business-edit">
                   <Plus className="h-4 w-4 me-1" />
                   {isRTL ? 'إنشاء منشأة جديدة' : 'Create a business'}
                 </a>

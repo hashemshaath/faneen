@@ -134,7 +134,7 @@ const ProviderMembership: React.FC = () => {
                 </p>
               </div>
               <Button asChild size="sm" variant="outline">
-                <Link to="/dashboard/business">تحديث ملف المنشأة</Link>
+                <Link to="/dashboard/business-edit">تحديث ملف المنشأة</Link>
               </Button>
             </CardContent>
           </Card>

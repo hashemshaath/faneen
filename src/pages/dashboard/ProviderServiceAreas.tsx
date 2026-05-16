@@ -135,7 +135,7 @@ const ProviderServiceAreas: React.FC = () => {
           <Building2 className="mx-auto h-10 w-10 text-muted-foreground" />
           <h1 className="font-heading font-bold text-xl">لا توجد منشأة بعد</h1>
           <p className="text-sm text-muted-foreground">أنشئ ملف منشأتك أولًا لتتمكن من إضافة مناطق الخدمة.</p>
-          <Button asChild className="min-h-[44px]"><Link to="/dashboard/business">إنشاء ملف المنشأة</Link></Button>
+          <Button asChild className="min-h-[44px]"><Link to="/dashboard/business-edit">إنشاء ملف المنشأة</Link></Button>
         </CardContent></Card>
       </DashboardLayout>
     );

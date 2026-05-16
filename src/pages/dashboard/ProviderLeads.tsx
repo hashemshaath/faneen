@@ -77,7 +77,7 @@ const ProviderLeads: React.FC = () => {
               <Link to="/dashboard/provider/service-areas">مناطق الخدمة</Link>
             </Button>
             <Button asChild size="sm" className="min-h-[36px]">
-              <Link to="/dashboard/business">تحديث الملف</Link>
+              <Link to="/dashboard/business-edit">تحديث الملف</Link>
             </Button>
           </div>
         </div>
