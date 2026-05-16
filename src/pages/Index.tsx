@@ -7,13 +7,11 @@ import { LazyOnView } from "@/components/LazyOnView";
 import {
   HeroV2,
   SectorChipsBar,
-  ProblemSection,
   SolutionSection,
   HowItWorksV2,
   WhoIsItForSection,
   MainSectorsSection,
   ForClientsSection,
-  ForContractorsSection,
   ForProvidersSection,
   TrustSection,
   FAQSection,
@@ -149,37 +147,47 @@ const Index = () => {
         {/* 2. Quick sectors — keeps users moving immediately */}
         <SectorChipsBar />
 
-        {/* 3-13. Below-the-fold sections, mounted as they approach view */}
-        <LazyOnView minHeight={420} className="cv-auto">
-          <Suspense fallback={<SectionFallback />}><ProblemSection /></Suspense>
-        </LazyOnView>
-        <LazyOnView minHeight={460} className="cv-auto">
-          <Suspense fallback={<SectionFallback />}><SolutionSection /></Suspense>
-        </LazyOnView>
-        <LazyOnView minHeight={460} className="cv-auto">
-          <Suspense fallback={<SectionFallback />}><HowItWorksV2 /></Suspense>
-        </LazyOnView>
-        <LazyOnView minHeight={420} className="cv-auto">
-          <Suspense fallback={<SectionFallback />}><WhoIsItForSection /></Suspense>
-        </LazyOnView>
+        {/* 3. Featured sectors (acts as featured-providers entry point) */}
         <LazyOnView minHeight={520} className="cv-auto">
           <Suspense fallback={<SectionFallback />}><MainSectorsSection /></Suspense>
         </LazyOnView>
-        <LazyOnView minHeight={420} className="cv-auto">
-          <Suspense fallback={<SectionFallback />}><ForClientsSection /></Suspense>
+
+        {/* 4. How it works */}
+        <LazyOnView minHeight={460} className="cv-auto">
+          <Suspense fallback={<SectionFallback />}><HowItWorksV2 /></Suspense>
         </LazyOnView>
-        <LazyOnView minHeight={420} className="cv-auto">
-          <Suspense fallback={<SectionFallback />}><ForContractorsSection /></Suspense>
+
+        {/* 5. Why Qitaat */}
+        <LazyOnView minHeight={460} className="cv-auto">
+          <Suspense fallback={<SectionFallback />}><SolutionSection /></Suspense>
         </LazyOnView>
+
+        {/* 6. Who it's for */}
         <LazyOnView minHeight={420} className="cv-auto">
-          <Suspense fallback={<SectionFallback />}><ForProvidersSection /></Suspense>
+          <Suspense fallback={<SectionFallback />}><WhoIsItForSection /></Suspense>
         </LazyOnView>
+
+        {/* 7. Trust / verification */}
         <LazyOnView minHeight={460} className="cv-auto">
           <Suspense fallback={<SectionFallback />}><TrustSection /></Suspense>
         </LazyOnView>
+
+        {/* 8. Provider CTA */}
+        <LazyOnView minHeight={420} className="cv-auto">
+          <Suspense fallback={<SectionFallback />}><ForProvidersSection /></Suspense>
+        </LazyOnView>
+
+        {/* 9. Customer CTA */}
+        <LazyOnView minHeight={420} className="cv-auto">
+          <Suspense fallback={<SectionFallback />}><ForClientsSection /></Suspense>
+        </LazyOnView>
+
+        {/* 10. FAQ */}
         <LazyOnView minHeight={460} className="cv-auto">
           <Suspense fallback={<SectionFallback />}><FAQSection /></Suspense>
         </LazyOnView>
+
+        {/* 11. Final CTA */}
         <LazyOnView minHeight={360} className="cv-auto">
           <Suspense fallback={<SectionFallback />}><FinalCTASection /></Suspense>
         </LazyOnView>
