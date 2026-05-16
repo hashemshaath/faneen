@@ -548,7 +548,7 @@ button:hover{background:#f1f5f9}button.primary:hover{filter:brightness(.95)}
               </div>
               <div className="flex items-center justify-center gap-2 flex-wrap">
                 <Button asChild size="sm" className="rounded-xl">
-                  <a href="/dashboard/business">
+                  <a href="/dashboard/business-edit">
                     {isRTL ? 'إنشاء ملف المنشأة' : 'Create business profile'}
                     <ArrowRight className="w-3.5 h-3.5 ms-1.5 rtl:rotate-180" />
                   </a>
