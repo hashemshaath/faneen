@@ -1,0 +1,2 @@
+REVOKE EXECUTE ON FUNCTION public.list_contract_pdf_exports(uuid, text, text, integer, integer, integer, integer) FROM anon, public;
+GRANT EXECUTE ON FUNCTION public.list_contract_pdf_exports(uuid, text, text, integer, integer, integer, integer) TO authenticated, service_role;
