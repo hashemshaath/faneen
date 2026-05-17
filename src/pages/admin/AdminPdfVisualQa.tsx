@@ -26,7 +26,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { CheckCircle2, XCircle, AlertTriangle, Upload, RotateCcw, Trash2, FileText, Eye } from 'lucide-react';
+import { CheckCircle2, XCircle, AlertTriangle, Upload, RotateCcw, Trash2, FileText, Eye, Maximize2, Minimize2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 type Verdict = 'pass' | 'fail' | 'needs-review';
