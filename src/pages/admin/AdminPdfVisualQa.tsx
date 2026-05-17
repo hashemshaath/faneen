@@ -172,6 +172,81 @@ const UploadSlot: React.FC<UploadSlotProps> = ({ label, hint, loaded, onFile, on
   );
 };
 
+interface PdfViewerProps {
+  title: string;
+  pdf: LoadedPdf | null;
+  isRTL: boolean;
+}
+
+const PdfViewer: React.FC<PdfViewerProps> = ({ title, pdf, isRTL }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    const handleChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleChange);
+    return () => document.removeEventListener('fullscreenchange', handleChange);
+  }, []);
+
+  const toggleFullscreen = async () => {
+    if (!containerRef.current) return;
+    try {
+      if (!document.fullscreenElement) {
+        await containerRef.current.requestFullscreen();
+      } else {
+        await document.exitFullscreen();
+      }
+    } catch {
+      /* ignore unsupported */
+    }
+  };
+
+  return (
+    <div ref={containerRef} className="rounded-lg border bg-muted/30 overflow-hidden flex flex-col">
+      <div className="px-3 py-2 border-b bg-card flex items-center justify-between">
+        <span className="text-xs font-medium">{title}</span>
+        <div className="flex items-center gap-2">
+          {pdf && (
+            <span className="text-[10px] text-muted-foreground tech-content truncate max-w-[120px]" title={pdf.fileName}>
+              {pdf.fileName}
+            </span>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={toggleFullscreen}
+            className="gap-1 text-xs h-7 px-2"
+            disabled={!pdf}
+          >
+            {isFullscreen ? (
+              <>
+                <Minimize2 className="w-3.5 h-3.5" />
+                {isRTL ? 'تصغير' : 'Exit'}
+              </>
+            ) : (
+              <>
+                <Maximize2 className="w-3.5 h-3.5" />
+                {isRTL ? 'تكبير' : 'Fullscreen'}
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
+      <div className="h-[70vh] min-h-[480px] bg-muted">
+        {pdf ? (
+          <iframe src={pdf.url} title={title} className="w-full h-full" />
+        ) : (
+          <div className="h-full flex items-center justify-center text-xs text-muted-foreground p-4 text-center">
+            {isRTL ? 'لم يتم تحميل ملف بعد.' : 'No file loaded yet.'}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const AdminPdfVisualQa: React.FC = () => {
   useNoIndex();
   const { isRTL } = useLanguage();
