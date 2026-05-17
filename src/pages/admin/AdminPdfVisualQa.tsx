@@ -445,30 +445,16 @@ const AdminPdfVisualQa: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="grid gap-3 md:grid-cols-2">
-              {[
-                { title: isRTL ? 'مرجعي' : 'Reference', pdf: reference },
-                { title: isRTL ? 'مرشّح' : 'Candidate', pdf: candidate },
-              ].map((slot) => (
-                <div key={slot.title} className="rounded-lg border bg-muted/30 overflow-hidden flex flex-col">
-                  <div className="px-3 py-2 border-b bg-card flex items-center justify-between">
-                    <span className="text-xs font-medium">{slot.title}</span>
-                    {slot.pdf && (
-                      <span className="text-[10px] text-muted-foreground tech-content truncate max-w-[60%]" title={slot.pdf.fileName}>
-                        {slot.pdf.fileName}
-                      </span>
-                    )}
-                  </div>
-                  <div className="h-[70vh] min-h-[480px] bg-muted">
-                    {slot.pdf ? (
-                      <iframe src={slot.pdf.url} title={slot.title} className="w-full h-full" />
-                    ) : (
-                      <div className="h-full flex items-center justify-center text-xs text-muted-foreground p-4 text-center">
-                        {isRTL ? 'لم يتم تحميل ملف بعد.' : 'No file loaded yet.'}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
+              <PdfViewer
+                title={isRTL ? 'مرجعي' : 'Reference'}
+                pdf={reference}
+                isRTL={isRTL}
+              />
+              <PdfViewer
+                title={isRTL ? 'مرشّح' : 'Candidate'}
+                pdf={candidate}
+                isRTL={isRTL}
+              />
             </div>
           </CardContent>
         </Card>
