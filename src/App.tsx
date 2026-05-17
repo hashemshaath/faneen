@@ -150,6 +150,7 @@ const AdminAnalyticsSettings = lazyRetry(() => import("./pages/admin/AdminAnalyt
 const AdminBranding = lazyRetry(() => import("./pages/admin/AdminBranding"));
 const AdminContractTemplates = lazyRetry(() => import("./pages/admin/AdminContractTemplates"));
 const AdminPdfExportAudit = lazyRetry(() => import("./pages/admin/AdminPdfExportAudit"));
+const AdminPdfVisualQa = lazyRetry(() => import("./pages/admin/AdminPdfVisualQa"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
