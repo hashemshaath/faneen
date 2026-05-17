@@ -150,6 +150,7 @@ const AdminAnalyticsSettings = lazyRetry(() => import("./pages/admin/AdminAnalyt
 const AdminBranding = lazyRetry(() => import("./pages/admin/AdminBranding"));
 const AdminContractTemplates = lazyRetry(() => import("./pages/admin/AdminContractTemplates"));
 const AdminPdfExportAudit = lazyRetry(() => import("./pages/admin/AdminPdfExportAudit"));
+const AdminPdfVisualQa = lazyRetry(() => import("./pages/admin/AdminPdfVisualQa"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -315,6 +316,7 @@ const AppRoutes = () => (
           <Route path="/admin/branding" element={<ProtectedRoute requireAdmin><AdminBranding /></ProtectedRoute>} />
           <Route path="/admin/contract-templates" element={<ProtectedRoute requireAdmin><AdminContractTemplates /></ProtectedRoute>} />
           <Route path="/admin/pdf-exports" element={<ProtectedRoute requireAdmin><AdminPdfExportAudit /></ProtectedRoute>} />
+          <Route path="/admin/pdf-visual-qa" element={<ProtectedRoute requireAdmin><AdminPdfVisualQa /></ProtectedRoute>} />
           <Route path="/admin/contracts/analytics" element={<ProtectedRoute requireAdmin><AdminContractAnalytics /></ProtectedRoute>} />
 
           <Route path="/:username" element={<BusinessProfile />} />
