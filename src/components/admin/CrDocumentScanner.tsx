@@ -3,7 +3,7 @@ import jsQR from 'jsqr';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Upload, FileText, ScanLine, CheckCircle2, Loader2, X, ExternalLink,
-  RefreshCw, Save, AlertCircle, Download,
+  RefreshCw, Save, AlertCircle, Download, Lightbulb,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -61,6 +61,120 @@ interface Props {
 /* ------------------------------------------------------------------ */
 
 const BUCKET = 'business-documents';
+
+/** Accepted MIME types & extensions for CR upload. */
+const ACCEPTED_MIME = ['application/pdf', 'image/png', 'image/jpeg', 'image/webp'];
+const ACCEPTED_EXT = ['.pdf', '.png', '.jpg', '.jpeg', '.webp'];
+const MAX_BYTES = 15 * 1024 * 1024;
+
+/** Structured scan error so the UI can render rich, localized guidance. */
+type ScanErrorKind = 'unsupported' | 'too_large' | 'too_small' | 'no_qr' | 'decode_failed';
+interface ScanError {
+  kind: ScanErrorKind;
+  message: string;
+  tips: string[];
+}
+
+function buildScanError(
+  kind: ScanErrorKind,
+  isRTL: boolean,
+  extra?: string,
+): ScanError {
+  const dict: Record<ScanErrorKind, { ar: { msg: string; tips: string[] }; en: { msg: string; tips: string[] } }> = {
+    unsupported: {
+      ar: {
+        msg: 'نوع الملف غير مدعوم. الأنواع المقبولة: PDF أو صورة (PNG / JPG / WEBP).',
+        tips: [
+          'إذا كان الملف Word أو صورة بصيغة HEIC، حوّله إلى PDF أو JPG ثم أعد المحاولة.',
+          'تأكد أن امتداد الملف صحيح (.pdf / .jpg / .png / .webp).',
+        ],
+      },
+      en: {
+        msg: 'Unsupported file type. Accepted: PDF or image (PNG / JPG / WEBP).',
+        tips: [
+          'If the file is a Word doc or a HEIC image, convert it to PDF or JPG and retry.',
+          'Verify the file extension is correct (.pdf / .jpg / .png / .webp).',
+        ],
+      },
+    },
+    too_large: {
+      ar: {
+        msg: 'حجم الملف أكبر من 15MB.',
+        tips: [
+          'اضغط الـ PDF أو خفّض دقّة الصورة قبل الرفع.',
+          'صدّر صفحة الباركود فقط بدلاً من المستند كاملاً.',
+        ],
+      },
+      en: {
+        msg: 'File exceeds 15MB.',
+        tips: [
+          'Compress the PDF or downscale the image before uploading.',
+          'Export only the page that contains the QR instead of the whole document.',
+        ],
+      },
+    },
+    too_small: {
+      ar: {
+        msg: 'دقّة الصورة منخفضة جدًا لاكتشاف الباركود.',
+        tips: [
+          'استخدم صورة لا تقل عن 800×800 بكسل.',
+          'صوّر السجل بإضاءة جيّدة وزاوية عمودية على الورقة.',
+        ],
+      },
+      en: {
+        msg: 'Image resolution is too low for QR detection.',
+        tips: [
+          'Use an image of at least 800×800 pixels.',
+          'Shoot the document with good lighting and a perpendicular angle.',
+        ],
+      },
+    },
+    no_qr: {
+      ar: {
+        msg: 'لم يتم العثور على باركود في الملف. يمكنك تعبئة الحقول يدويًا وحفظ المستند.',
+        tips: [
+          'تأكد أن صفحة الباركود غير مقصوصة في الـ PDF.',
+          'إذا كانت صورة: قرّب الكاميرا حتى يملأ الباركود ~ ثلث الإطار.',
+          'تجنّب الانعكاسات والظلال، وثبّت الكاميرا لتفادي الاهتزاز.',
+          'حاول إعادة المسح بصورة أوضح أو بنسخة PDF أصلية من منصّة المركز السعودي للأعمال.',
+        ],
+      },
+      en: {
+        msg: 'No QR code detected. You can still fill the fields manually and save the document.',
+        tips: [
+          'Make sure the QR page is not cropped in the PDF.',
+          'For photos: zoom in so the QR fills about a third of the frame.',
+          'Avoid glare and shadows, and hold the camera steady.',
+          'Try rescanning with a clearer image or the original PDF from the Saudi Business Center.',
+        ],
+      },
+    },
+    decode_failed: {
+      ar: {
+        msg: 'تعذّر فك ترميز الملف.',
+        tips: [
+          'قد يكون ملف الـ PDF محميًّا أو تالفًا — جرّب نسخة أخرى.',
+          'افتح الملف على جهازك أولًا للتأكد أنه يعمل، ثم أعد الرفع.',
+        ],
+      },
+      en: {
+        msg: 'Failed to decode the file.',
+        tips: [
+          'The PDF may be protected or corrupted — try another copy.',
+          'Open the file on your device first to confirm it works, then re-upload.',
+        ],
+      },
+    },
+  };
+  const t = isRTL ? dict[kind].ar : dict[kind].en;
+  return { kind, message: extra ? `${t.msg} (${extra})` : t.msg, tips: t.tips };
+}
+
+function isAcceptedFile(f: File): boolean {
+  if (ACCEPTED_MIME.includes(f.type)) return true;
+  const name = f.name.toLowerCase();
+  return ACCEPTED_EXT.some((ext) => name.endsWith(ext));
+}
 
 /** Normalize Arabic / Hindi digits to ASCII. */
 function normDigits(s: string): string {
@@ -257,7 +371,7 @@ export const CrDocumentScanner: React.FC<Props> = ({ businessId, defaults, onSav
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [busy, setBusy] = useState<'idle' | 'scanning' | 'uploading'>('idle');
   const [scan, setScan] = useState<CrScanResult | null>(null);
-  const [scanError, setScanError] = useState<string | null>(null);
+  const [scanError, setScanError] = useState<ScanError | null>(null);
 
   // Editable form (prefilled from defaults, then overridden by scan).
   const [form, setForm] = useState({
@@ -284,8 +398,16 @@ export const CrDocumentScanner: React.FC<Props> = ({ businessId, defaults, onSav
   const handleFiles = useCallback(async (f: File) => {
     setScanError(null);
     setScan(null);
-    if (f.size > 15 * 1024 * 1024) {
-      toast.error(isRTL ? 'حجم الملف أكبر من 15MB' : 'File exceeds 15MB');
+    if (!isAcceptedFile(f)) {
+      const err = buildScanError('unsupported', isRTL, f.type || f.name.split('.').pop() || '');
+      setScanError(err);
+      toast.error(err.message);
+      return;
+    }
+    if (f.size > MAX_BYTES) {
+      const err = buildScanError('too_large', isRTL, `${(f.size / 1024 / 1024).toFixed(1)} MB`);
+      setScanError(err);
+      toast.error(err.message);
       return;
     }
     setFile(f);
@@ -294,15 +416,20 @@ export const CrDocumentScanner: React.FC<Props> = ({ businessId, defaults, onSav
     setBusy('scanning');
     try {
       const pages = await fileToImageDataList(f);
+      // Flag low-resolution images so we can guide the user.
+      const smallest = pages.reduce(
+        (min, p) => Math.min(min, Math.min(p.width, p.height)),
+        Number.POSITIVE_INFINITY,
+      );
       let raw: string | null = null;
       for (const p of pages) {
         raw = scanQrFromImageData(p);
         if (raw) break;
       }
       if (!raw) {
-        setScanError(isRTL
-          ? 'لم يتم العثور على باركود في الملف. يمكنك الحفظ يدوياً.'
-          : 'No QR code detected. You can still fill the form manually.');
+        const kind: ScanErrorKind =
+          Number.isFinite(smallest) && smallest < 600 ? 'too_small' : 'no_qr';
+        setScanError(buildScanError(kind, isRTL));
         return;
       }
       const parsed = parseCrPayload(raw);
@@ -319,7 +446,9 @@ export const CrDocumentScanner: React.FC<Props> = ({ businessId, defaults, onSav
       }));
       toast.success(isRTL ? 'تم قراءة الباركود' : 'QR decoded');
     } catch (e) {
-      setScanError(e instanceof Error ? e.message : 'Scan failed');
+      const detail = e instanceof Error ? e.message : String(e);
+      const kind: ScanErrorKind = /unsupported/i.test(detail) ? 'unsupported' : 'decode_failed';
+      setScanError(buildScanError(kind, isRTL, detail));
     } finally {
       setBusy('idle');
     }
@@ -508,9 +637,36 @@ export const CrDocumentScanner: React.FC<Props> = ({ businessId, defaults, onSav
             )}
 
             {scanError && (
-              <div className="flex items-start gap-2 rounded-lg border border-warning/40 bg-warning/5 p-2.5 text-xs text-warning-foreground">
-                <AlertCircle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
-                <span>{scanError}</span>
+              <div className="rounded-lg border border-warning/40 bg-warning/5 p-3 space-y-2 text-xs">
+                <div className="flex items-start gap-2 font-medium text-warning-foreground">
+                  <AlertCircle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
+                  <span>{scanError.message}</span>
+                </div>
+                {scanError.tips.length > 0 && (
+                  <div className="ps-6 space-y-1 text-muted-foreground">
+                    <div className="flex items-center gap-1.5 font-medium text-foreground/80">
+                      <Lightbulb className="h-3.5 w-3.5 text-warning" />
+                      {isRTL ? 'نصائح لتحسين القراءة' : 'Tips to improve detection'}
+                    </div>
+                    <ul className="list-disc ps-4 space-y-0.5">
+                      {scanError.tips.map((t) => (
+                        <li key={t} dir="auto">{t}</li>
+                      ))}
+                    </ul>
+                    <div className="pt-1">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-[11px] gap-1"
+                        onClick={() => file && handleFiles(file)}
+                        disabled={busy !== 'idle'}
+                      >
+                        <RefreshCw className="h-3 w-3" />
+                        {isRTL ? 'إعادة المحاولة' : 'Try again'}
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
