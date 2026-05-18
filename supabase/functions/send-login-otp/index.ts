@@ -34,6 +34,16 @@ function phoneVariants(phone: string, countryCode: string): string[] {
 const OTP_LIFETIME_MS = 5 * 60 * 1000; // 5 minutes
 const MAX_OTP_REQUESTS_PER_HOUR = 6;
 
+/** Comma-separated full phones (e.g. "+966506315300,+201001234567") that
+ *  bypass SMS delivery and use the fixed OTP "000000" for QA/testing. */
+function bypassPhones(): Set<string> {
+  const raw = Deno.env.get("OTP_BYPASS_PHONES") ?? "";
+  return new Set(
+    raw.split(",").map((s) => s.trim()).filter(Boolean),
+  );
+}
+const TEST_OTP = "000000";
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -127,7 +137,8 @@ Deno.serve(async (req) => {
     }
 
     // Generate secure OTP
-    const otp = generateSecureOtp();
+    const isBypass = bypassPhones().has(fullPhone);
+    const otp = isBypass ? TEST_OTP : generateSecureOtp();
 
     // Delete previous OTPs for this user
     await adminClient.from("phone_otps").delete().eq("user_id", profile.user_id);
@@ -152,6 +163,26 @@ Deno.serve(async (req) => {
         reason: "otp_create_failed",
       });
       return respond({ success: false, error: "otp_create_failed", message: "Failed to create OTP" });
+    }
+
+    // Bypass SMS for test phones — return success immediately.
+    if (isBypass) {
+      await logSecurityEvent(adminClient, {
+        event_type: "login_otp_send",
+        event_action: "success",
+        status: "warn",
+        user_id: profile.user_id,
+        subject_hash: subjectHash,
+        ip_hash: ipHash,
+        user_agent: userAgent,
+        reason: "sms_bypass_test_phone",
+      });
+      return respond({
+        success: true,
+        sms_sent: false,
+        test_mode: true,
+        expires_in_seconds: OTP_LIFETIME_MS / 1000,
+      });
     }
 
     // Try to send via Twilio
