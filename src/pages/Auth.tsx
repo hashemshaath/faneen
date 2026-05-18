@@ -8,6 +8,7 @@ import { LoginForm } from '@/components/auth/LoginForm';
 import { RegisterForm } from '@/components/auth/RegisterForm';
 import { ForgotPasswordForm } from '@/components/auth/ForgotPasswordForm';
 import { RegistrationSuccessView } from '@/components/auth/RegistrationSuccessView';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import type { AuthMode } from '@/services/auth/types';
 
 const Auth = () => {
@@ -52,7 +53,8 @@ const Auth = () => {
   if (user) return null;
 
   return (
-    <AuthLayout>
+    <ErrorBoundary>
+      <AuthLayout>
       {mode === 'login' && (
         <LoginForm
           onSwitchToRegister={() => setMode('register')}
@@ -71,7 +73,8 @@ const Auth = () => {
       {mode === 'email-sent' && (
         <RegistrationSuccessView email={sentEmail} onBackToLogin={() => setMode('login')} />
       )}
-    </AuthLayout>
+      </AuthLayout>
+    </ErrorBoundary>
   );
 };
 
