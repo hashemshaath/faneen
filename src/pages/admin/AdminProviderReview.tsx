@@ -524,6 +524,26 @@ export default function AdminProviderReview() {
                     <p className="text-[11px] text-muted-foreground tech-content text-end">{notes.length}/800</p>
                   </div>
 
+                  {/* Commercial Registration scanner */}
+                  <CrDocumentScanner
+                    businessId={selected.id}
+                    defaults={{
+                      cr_document_url: selected.cr_document_url,
+                      cr_document_uploaded_at: selected.cr_document_uploaded_at,
+                      cr_scan_data: null,
+                      cr_scan_raw: null,
+                      national_id: selected.national_id,
+                      unified_number: selected.unified_number,
+                      vat_number: selected.vat_number,
+                      cr_owner_name: selected.cr_owner_name,
+                      cr_legal_entity: selected.cr_legal_entity,
+                      cr_issue_date: selected.cr_issue_date,
+                      cr_expiry_date: selected.cr_expiry_date,
+                      name_ar: selected.name_ar,
+                      name_en: selected.name_en,
+                    }}
+                  />
+
                   {/* Actions */}
                   <div className="flex flex-wrap gap-2">
                     <Button
