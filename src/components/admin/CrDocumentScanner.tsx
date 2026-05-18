@@ -209,7 +209,7 @@ async function fileToImageDataList(file: File): Promise<ImageData[]> {
       canvas.height = viewport.height;
       const ctx = canvas.getContext('2d');
       if (!ctx) continue;
-      await page.render({ canvasContext: ctx, viewport, canvas }).promise;
+      await page.render({ canvasContext: ctx, viewport }).promise;
       pages.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
     }
     return pages;
@@ -387,7 +387,7 @@ export const CrDocumentScanner: React.FC<Props> = ({ businessId, defaults, onSav
         update.cr_scan_at = new Date().toISOString();
       }
 
-      const { error } = await supabase.from('businesses').update(update).eq('id', businessId);
+      const { error } = await supabase.from('businesses').update(update as never).eq('id', businessId);
       if (error) throw error;
     },
     onSuccess: () => {
