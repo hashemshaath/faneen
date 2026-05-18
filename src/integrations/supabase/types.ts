@@ -1521,6 +1521,19 @@ export type Database = {
           contact_person: string | null
           country_id: string | null
           cover_url: string | null
+          cr_document_mime: string | null
+          cr_document_path: string | null
+          cr_document_size: number | null
+          cr_document_uploaded_at: string | null
+          cr_document_uploaded_by: string | null
+          cr_document_url: string | null
+          cr_expiry_date: string | null
+          cr_issue_date: string | null
+          cr_legal_entity: string | null
+          cr_owner_name: string | null
+          cr_scan_at: string | null
+          cr_scan_data: Json | null
+          cr_scan_raw: string | null
           created_at: string
           customer_service_phone: string | null
           description_ar: string | null
@@ -1582,6 +1595,19 @@ export type Database = {
           contact_person?: string | null
           country_id?: string | null
           cover_url?: string | null
+          cr_document_mime?: string | null
+          cr_document_path?: string | null
+          cr_document_size?: number | null
+          cr_document_uploaded_at?: string | null
+          cr_document_uploaded_by?: string | null
+          cr_document_url?: string | null
+          cr_expiry_date?: string | null
+          cr_issue_date?: string | null
+          cr_legal_entity?: string | null
+          cr_owner_name?: string | null
+          cr_scan_at?: string | null
+          cr_scan_data?: Json | null
+          cr_scan_raw?: string | null
           created_at?: string
           customer_service_phone?: string | null
           description_ar?: string | null
@@ -1643,6 +1669,19 @@ export type Database = {
           contact_person?: string | null
           country_id?: string | null
           cover_url?: string | null
+          cr_document_mime?: string | null
+          cr_document_path?: string | null
+          cr_document_size?: number | null
+          cr_document_uploaded_at?: string | null
+          cr_document_uploaded_by?: string | null
+          cr_document_url?: string | null
+          cr_expiry_date?: string | null
+          cr_issue_date?: string | null
+          cr_legal_entity?: string | null
+          cr_owner_name?: string | null
+          cr_scan_at?: string | null
+          cr_scan_data?: Json | null
+          cr_scan_raw?: string | null
           created_at?: string
           customer_service_phone?: string | null
           description_ar?: string | null
