@@ -16,6 +16,12 @@ function generateSecureOtp(): string {
 
 const OTP_LIFETIME_MS = 5 * 60 * 1000; // 5 minutes
 
+function bypassPhones(): Set<string> {
+  const raw = Deno.env.get("OTP_BYPASS_PHONES") ?? "";
+  return new Set(raw.split(",").map((s) => s.trim()).filter(Boolean));
+}
+const TEST_OTP = "000000";
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -114,7 +120,8 @@ Deno.serve(async (req) => {
     }
 
     // Generate secure OTP
-    const otp = generateSecureOtp();
+    const isBypass = bypassPhones().has(fullPhone);
+    const otp = isBypass ? TEST_OTP : generateSecureOtp();
 
     // Delete previous OTPs for this user/phone
     await adminClient.from("phone_otps").delete().eq("user_id", user.id);
@@ -141,6 +148,23 @@ Deno.serve(async (req) => {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    if (isBypass) {
+      await logSecurityEvent(adminClient, {
+        event_type: "otp_send",
+        event_action: "success",
+        status: "warn",
+        user_id: user.id,
+        subject_hash: subjectHash,
+        ip_hash: ipHash,
+        user_agent: userAgent,
+        reason: "sms_bypass_test_phone",
+      });
+      return new Response(
+        JSON.stringify({ success: true, sms_sent: false, test_mode: true }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     // Try to send via Twilio
