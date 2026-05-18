@@ -4,6 +4,7 @@ import { Footer } from "@/components/layout/Footer";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { usePageMeta, useMultiJsonLd } from "@/hooks/usePageMeta";
 import { LazyOnView } from "@/components/LazyOnView";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import {
   HeroV2,
   SectorChipsBar,
@@ -138,7 +139,8 @@ const Index = () => {
   ]), []));
 
   return (
-    <div className="min-h-screen bg-background">
+    <ErrorBoundary>
+      <div className="min-h-screen bg-background">
       <Navbar />
       <main>
         {/* 1. Hero — above the fold, eager */}
@@ -194,7 +196,8 @@ const Index = () => {
       </main>
       <Footer />
       <ScrollToTop />
-    </div>
+      </div>
+    </ErrorBoundary>
   );
 };
 
