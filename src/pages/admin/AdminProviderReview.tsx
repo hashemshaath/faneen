@@ -23,6 +23,7 @@ import { toast } from 'sonner';
 import { getSectorById, type SectorId } from '@/data/onboarding-sectors';
 import { trackProviderApproved, trackProviderRejected, trackProviderNeedsChanges } from '@/lib/analytics-events';
 import { useNoIndex } from "@/hooks/useNoIndex";
+import { CrDocumentScanner } from '@/components/admin/CrDocumentScanner';
 
 type ApprovalStatus =
   | 'draft' | 'submitted' | 'under_review'
@@ -103,6 +104,15 @@ interface ProviderRow {
   reviewed_at: string | null;
   published_at: string | null;
   created_at: string;
+  national_id: string | null;
+  unified_number: string | null;
+  vat_number: string | null;
+  cr_document_url: string | null;
+  cr_document_uploaded_at: string | null;
+  cr_owner_name: string | null;
+  cr_legal_entity: string | null;
+  cr_issue_date: string | null;
+  cr_expiry_date: string | null;
 }
 
 export default function AdminProviderReview() {
@@ -125,7 +135,7 @@ export default function AdminProviderReview() {
     queryFn: async () => {
       let q = supabase
         .from('businesses')
-        .select('id,user_id,name_ar,name_en,username,username_status,logo_url,description_ar,short_description_ar,email,phone,approval_status,approval_notes,onboarding_completion,sectors,sub_services,submitted_at,reviewed_at,published_at,created_at')
+        .select('id,user_id,name_ar,name_en,username,username_status,logo_url,description_ar,short_description_ar,email,phone,approval_status,approval_notes,onboarding_completion,sectors,sub_services,submitted_at,reviewed_at,published_at,created_at,national_id,unified_number,vat_number,cr_document_url,cr_document_uploaded_at,cr_owner_name,cr_legal_entity,cr_issue_date,cr_expiry_date')
         .order('submitted_at', { ascending: false, nullsFirst: false })
         .order('created_at', { ascending: false })
         .limit(200);
