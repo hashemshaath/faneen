@@ -18,7 +18,7 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
-    target: 'es2020',
+    target: 'es2022',
     cssMinify: true,
     chunkSizeWarningLimit: 500,
     rollupOptions: {
@@ -47,6 +47,14 @@ export default defineConfig(({ mode }) => ({
       },
     },
     minify: 'esbuild',
+  },
+  optimizeDeps: {
+    esbuildOptions: {
+      target: 'es2022',
+    },
+  },
+  esbuild: {
+    target: 'es2022',
   },
   plugins: [
     react(),
