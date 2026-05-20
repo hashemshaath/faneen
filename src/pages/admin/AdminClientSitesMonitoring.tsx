@@ -14,6 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useBi } from '@/components/common/Bilingual';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Activity, MapPin, QrCode, RefreshCw, Search, AlertTriangle, ExternalLink, Eye } from 'lucide-react';
+import AdminSiteSensitivePanel from '@/components/admin/client-sites/AdminSiteSensitivePanel';
 
 /* ------------------------------------------------------------------ */
 /* Types                                                              */
@@ -557,6 +558,8 @@ const AdminClientSitesMonitoring: React.FC = () => {
                     <p>{bi('آخر إنشاء', 'Last created')}: {fmtDate(detailQ.data.related_contracts.last_created_at, isRTL)}</p>
                   </div>
                 </section>
+
+                <AdminSiteSensitivePanel siteId={detailQ.data.site.id} />
               </div>
             ) : detailQ.error ? (
               <p className="mt-4 text-sm text-destructive">{(detailQ.error as Error).message}</p>
