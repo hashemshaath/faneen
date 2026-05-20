@@ -2033,6 +2033,99 @@ export type Database = {
         }
         Relationships: []
       }
+      client_site_visibility_settings: {
+        Row: {
+          id: string
+          section_key: string
+          site_id: string
+          updated_at: string
+          updated_by: string | null
+          visibility_level: string
+        }
+        Insert: {
+          id?: string
+          section_key: string
+          site_id: string
+          updated_at?: string
+          updated_by?: string | null
+          visibility_level: string
+        }
+        Update: {
+          id?: string
+          section_key?: string
+          site_id?: string
+          updated_at?: string
+          updated_by?: string | null
+          visibility_level?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_site_visibility_settings_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "client_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_site_visit_logs: {
+        Row: {
+          action: string
+          attempted_section: string | null
+          created_at: string
+          id: string
+          metadata: Json | null
+          provider_business_id: string | null
+          site_id: string | null
+          visit_source: string
+          visitor_user_id: string | null
+        }
+        Insert: {
+          action: string
+          attempted_section?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          provider_business_id?: string | null
+          site_id?: string | null
+          visit_source: string
+          visitor_user_id?: string | null
+        }
+        Update: {
+          action?: string
+          attempted_section?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          provider_business_id?: string | null
+          site_id?: string | null
+          visit_source?: string
+          visitor_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_site_visit_logs_provider_business_id_fkey"
+            columns: ["provider_business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_site_visit_logs_provider_business_id_fkey"
+            columns: ["provider_business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_site_visit_logs_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "client_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_sites: {
         Row: {
           access_notes: string | null
@@ -10550,6 +10643,17 @@ export type Database = {
         }
         Returns: string
       }
+      log_site_visit: {
+        Args: {
+          _action?: string
+          _attempted_section?: string
+          _metadata?: Json
+          _provider_business_id?: string
+          _site_id: string
+          _visit_source: string
+        }
+        Returns: Json
+      }
       log_upgrade_rejection: {
         Args: {
           _attempted_business_id: string
@@ -10752,6 +10856,14 @@ export type Database = {
         }
       }
       resend_client_invitation: { Args: { _id: string }; Returns: Json }
+      resolve_site_section_visibility: {
+        Args: {
+          _approved_grant_level?: string
+          _site_id: string
+          _viewer_business_id?: string
+        }
+        Returns: Json
+      }
       resume_subscription_renewal: {
         Args: { _subscription_id: string }
         Returns: undefined
@@ -10859,6 +10971,10 @@ export type Database = {
         }[]
       }
       search_site_by_ref: { Args: { _site_ref: string }; Returns: Json }
+      seed_client_site_default_visibility: {
+        Args: { _site_id: string }
+        Returns: undefined
+      }
       send_contract_for_approval: {
         Args: { _contract_id: string }
         Returns: {
@@ -11085,6 +11201,14 @@ export type Database = {
           _contract_id: string
           _expected_updated_at?: string
           _patch: Json
+        }
+        Returns: Json
+      }
+      update_site_section_visibility: {
+        Args: {
+          _section_key: string
+          _site_id: string
+          _visibility_level: string
         }
         Returns: Json
       }
