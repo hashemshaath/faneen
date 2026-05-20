@@ -47,6 +47,7 @@ Disallow: /onboarding
 Disallow: /forbidden
 Disallow: /unsubscribe
 Disallow: /s/
+Disallow: /q/
 Disallow: /profile/settings
 Disallow: /add-business/success
 
