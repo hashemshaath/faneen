@@ -15,6 +15,7 @@ import { useBi } from '@/components/common/Bilingual';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Activity, MapPin, QrCode, RefreshCw, Search, AlertTriangle, ExternalLink, Eye } from 'lucide-react';
 import AdminSiteSensitivePanel from '@/components/admin/client-sites/AdminSiteSensitivePanel';
+import AdminSiteQrManager from '@/components/admin/client-sites/AdminSiteQrManager';
 import AdminSiteSensitiveInline from '@/components/admin/client-sites/AdminSiteSensitiveInline';
 
 /* ------------------------------------------------------------------ */
