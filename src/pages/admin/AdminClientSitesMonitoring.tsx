@@ -748,7 +748,7 @@ const AdminClientSitesMonitoring: React.FC = () => {
                         type="button"
                         onClick={() => setSelectedId(isOpen ? null : r.id)}
                         aria-expanded={isOpen}
-                        className="w-full text-start p-4 flex flex-wrap items-center gap-3 hover:bg-muted/40 transition-colors focus:outline-none focus-visible:bg-muted/60"
+                        className={`w-full text-start ${density === 'compact' ? 'p-2.5' : 'p-4'} flex flex-wrap items-center gap-3 hover:bg-muted/40 transition-colors focus:outline-none focus-visible:bg-muted/60`}
                       >
                         <div className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 ${qr === 'enabled' ? 'bg-primary/10 text-primary' : qr === 'revoked' ? 'bg-destructive/10 text-destructive' : 'bg-muted text-muted-foreground'}`}>
                           {iconForType(r.site_type)}
