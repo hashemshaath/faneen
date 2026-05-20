@@ -2003,6 +2003,124 @@ export type Database = {
           },
         ]
       }
+      client_site_access_audit: {
+        Row: {
+          actor_business_id: string | null
+          actor_user_id: string | null
+          created_at: string
+          event_type: string
+          grant_id: string | null
+          id: string
+          metadata: Json | null
+          site_id: string | null
+        }
+        Insert: {
+          actor_business_id?: string | null
+          actor_user_id?: string | null
+          created_at?: string
+          event_type: string
+          grant_id?: string | null
+          id?: string
+          metadata?: Json | null
+          site_id?: string | null
+        }
+        Update: {
+          actor_business_id?: string | null
+          actor_user_id?: string | null
+          created_at?: string
+          event_type?: string
+          grant_id?: string | null
+          id?: string
+          metadata?: Json | null
+          site_id?: string | null
+        }
+        Relationships: []
+      }
+      client_site_access_grants: {
+        Row: {
+          access_level: string
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          id: string
+          ignored_at: string | null
+          ignored_by: string | null
+          provider_business_id: string
+          provider_user_id: string
+          reason: string | null
+          rejected_at: string | null
+          rejected_by: string | null
+          requested_at: string
+          revoked_at: string | null
+          revoked_by: string | null
+          site_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          access_level?: string
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          id?: string
+          ignored_at?: string | null
+          ignored_by?: string | null
+          provider_business_id: string
+          provider_user_id: string
+          reason?: string | null
+          rejected_at?: string | null
+          rejected_by?: string | null
+          requested_at?: string
+          revoked_at?: string | null
+          revoked_by?: string | null
+          site_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          access_level?: string
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          id?: string
+          ignored_at?: string | null
+          ignored_by?: string | null
+          provider_business_id?: string
+          provider_user_id?: string
+          reason?: string | null
+          rejected_at?: string | null
+          rejected_by?: string | null
+          requested_at?: string
+          revoked_at?: string | null
+          revoked_by?: string | null
+          site_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_site_access_grants_provider_business_id_fkey"
+            columns: ["provider_business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_site_access_grants_provider_business_id_fkey"
+            columns: ["provider_business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_site_access_grants_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "client_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_site_lookup_audit: {
         Row: {
           created_at: string
@@ -9501,6 +9619,35 @@ export type Database = {
         Returns: Json
       }
       _can_manage_client_site: { Args: { _site_id: string }; Returns: boolean }
+      _csag_manage_or_raise: {
+        Args: { _grant_id: string }
+        Returns: {
+          access_level: string
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          id: string
+          ignored_at: string | null
+          ignored_by: string | null
+          provider_business_id: string
+          provider_user_id: string
+          reason: string | null
+          rejected_at: string | null
+          rejected_by: string | null
+          requested_at: string
+          revoked_at: string | null
+          revoked_by: string | null
+          site_id: string
+          status: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "client_site_access_grants"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       _ct_assert_admin: { Args: never; Returns: undefined }
       _ct_assert_version_editable: {
         Args: { p_version_id: string }
@@ -9765,6 +9912,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      approve_client_site_access: {
+        Args: { _access_level?: string; _grant_id: string; _reason?: string }
+        Returns: Json
       }
       approve_contract_amendment: {
         Args: { _amendment_id: string }
@@ -10101,6 +10252,7 @@ export type Database = {
         Args: { _identifier: string; _purpose?: string; _user_id?: string }
         Returns: Json
       }
+      csag_site_summary: { Args: { _site_id: string }; Returns: Json }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
@@ -10475,6 +10627,10 @@ export type Database = {
         Returns: boolean
       }
       hash_site_qr_token: { Args: { _token: string }; Returns: string }
+      ignore_client_site_access: {
+        Args: { _grant_id: string; _reason?: string }
+        Returns: Json
+      }
       increment_blog_views: { Args: { _post_id: string }; Returns: undefined }
       increment_promotion_views: {
         Args: { _promotion_id: string }
@@ -10618,6 +10774,11 @@ export type Database = {
           template_version_number: number
           total_count: number
         }[]
+      }
+      list_my_site_access_grants: { Args: never; Returns: Json }
+      list_site_access_requests_for_owner: {
+        Args: { _site_id?: string }
+        Returns: Json
       }
       log_sector_pageview: {
         Args: {
@@ -10811,6 +10972,10 @@ export type Database = {
           success: boolean
         }[]
       }
+      reject_client_site_access: {
+        Args: { _grant_id: string; _reason?: string }
+        Returns: Json
+      }
       reject_contract_amendment: {
         Args: { _amendment_id: string; _reason: string }
         Returns: {
@@ -10854,6 +11019,14 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      request_client_site_access: {
+        Args: {
+          _provider_business_id: string
+          _reason?: string
+          _site_ref: string
+        }
+        Returns: Json
       }
       resend_client_invitation: { Args: { _id: string }; Returns: Json }
       resolve_site_section_visibility: {
@@ -10951,6 +11124,10 @@ export type Database = {
       revoke_access_key: {
         Args: { _key_id: string; _reason?: string }
         Returns: boolean
+      }
+      revoke_client_site_access: {
+        Args: { _grant_id: string; _reason?: string }
+        Returns: Json
       }
       revoke_client_site_qr_token: { Args: { _site_id: string }; Returns: Json }
       revoke_invite_key: {
