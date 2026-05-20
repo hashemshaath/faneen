@@ -171,19 +171,38 @@ const qrStatusOf = (row: { qr_enabled: boolean; qr_revoked_at: string | null }) 
 /* KPI card                                                           */
 /* ------------------------------------------------------------------ */
 
-const StatCard: React.FC<{ label: string; value: number | string; icon?: React.ReactNode; tone?: string }> = ({
-  label, value, icon, tone = 'text-primary',
-}) => (
-  <Card className="hover-lift">
+const StatCard: React.FC<{
+  label: string; value: number | string; icon?: React.ReactNode;
+  tone?: string; hint?: string;
+}> = ({ label, value, icon, tone = 'text-primary', hint }) => (
+  <Card className="hover-lift border-border/60 group">
     <CardContent className="p-4 flex items-center gap-3">
-      {icon && <div className={`h-10 w-10 rounded-xl bg-muted flex items-center justify-center ${tone}`}>{icon}</div>}
-      <div className="min-w-0">
-        <p className="text-xs text-muted-foreground">{label}</p>
-        <p className="text-xl font-bold tech-content">{value}</p>
+      {icon && (
+        <div className={`h-11 w-11 rounded-xl bg-muted/70 flex items-center justify-center ${tone} group-hover:scale-105 transition-transform`}>
+          {icon}
+        </div>
+      )}
+      <div className="min-w-0 flex-1">
+        <p className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium">{label}</p>
+        <p className="text-2xl font-bold tech-content leading-tight">{value}</p>
+        {hint && <p className="text-[10px] text-muted-foreground mt-0.5">{hint}</p>}
       </div>
     </CardContent>
   </Card>
 );
+
+const SITE_TYPE_ICONS: Record<string, React.ReactNode> = {
+  apartment: <Home className="h-4 w-4" />,
+  villa: <Home className="h-4 w-4" />,
+  showroom: <Store className="h-4 w-4" />,
+  office: <Briefcase className="h-4 w-4" />,
+  branch: <Building2 className="h-4 w-4" />,
+  warehouse: <Warehouse className="h-4 w-4" />,
+  project: <HardHat className="h-4 w-4" />,
+  commercial: <Building2 className="h-4 w-4" />,
+  other: <Layers className="h-4 w-4" />,
+};
+const iconForType = (t: string) => SITE_TYPE_ICONS[t] ?? <MapPin className="h-4 w-4" />;
 
 /* ------------------------------------------------------------------ */
 /* Page                                                               */
