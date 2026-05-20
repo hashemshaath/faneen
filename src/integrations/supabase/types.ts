@@ -11409,6 +11409,7 @@ export type Database = {
         Returns: Json
       }
       resend_client_invitation: { Args: { _id: string }; Returns: Json }
+      resolve_barcode: { Args: { _code: string }; Returns: Json }
       resolve_site_section_visibility: {
         Args: {
           _approved_grant_level?: string

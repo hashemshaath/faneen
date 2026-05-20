@@ -36,6 +36,7 @@ function lazyRetry<T extends ComponentType<any>>(
 
 const Auth = lazyRetry(() => import("./pages/Auth"));
 const PublicSiteScan = lazyRetry(() => import("./pages/PublicSiteScan"));
+const PublicBarcodeResolve = lazyRetry(() => import("./pages/PublicBarcodeResolve"));
 const ResetPassword = lazyRetry(() => import("./pages/ResetPassword"));
 const BusinessProfile = lazyRetry(() => import("./pages/BusinessProfile"));
 const Search = lazyRetry(() => import("./pages/Search"));
@@ -236,6 +237,7 @@ const AppRoutes = () => (
           <Route path="/invite/:token" element={<InviteAccept />} />
           <Route path="/staff-invite/:token" element={<StaffInviteAccept />} />
           <Route path="/s/:token" element={<PublicSiteScan />} />
+          <Route path="/q/:barcode_code" element={<PublicBarcodeResolve />} />
           <Route path="/diagnostics" element={<Diagnostics />} />
           <Route path="/for-providers" element={<ForProviders />} />
           <Route path="/join-as-provider" element={<ForProviders />} />
