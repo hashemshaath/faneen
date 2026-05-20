@@ -328,7 +328,78 @@ const AdminClientSitesMonitoring: React.FC = () => {
   });
 
   const s = summaryQ.data;
-  const rows = listQ.data?.rows ?? [];
+  const rawRows = listQ.data?.rows ?? [];
+  const rows = useMemo(() => {
+    const arr = [...rawRows];
+    const ts = (v: string | null | undefined) => (v ? new Date(v).getTime() : 0);
+    switch (sortBy) {
+      case 'activity_asc': arr.sort((a, b) => ts(a.latest_activity_at) - ts(b.latest_activity_at)); break;
+      case 'activity_desc': arr.sort((a, b) => ts(b.latest_activity_at) - ts(a.latest_activity_at)); break;
+      case 'scans_desc': arr.sort((a, b) => b.scan_count - a.scan_count); break;
+      case 'scans_asc': arr.sort((a, b) => a.scan_count - b.scan_count); break;
+      case 'pending_desc': arr.sort((a, b) => b.pending_requests_count - a.pending_requests_count); break;
+      case 'contracts_desc': arr.sort((a, b) => b.contracts_count - a.contracts_count); break;
+      case 'interests_desc': arr.sort((a, b) => b.provider_interests_count - a.provider_interests_count); break;
+      case 'created_desc': arr.sort((a, b) => ts(b.created_at) - ts(a.created_at)); break;
+      case 'created_asc': arr.sort((a, b) => ts(a.created_at) - ts(b.created_at)); break;
+    }
+    return arr;
+  }, [rawRows, sortBy]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      const inField = t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable);
+      if (e.key === '/' && !inField) { e.preventDefault(); searchInputRef.current?.focus(); }
+      else if (e.key === 'Escape' && selectedId) setSelectedId(null);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [selectedId]);
+
+  // Hash deep-link
+  useEffect(() => {
+    const target = selectedId ? `#site=${selectedId}` : '';
+    if (window.location.hash !== target) {
+      history.replaceState(null, '', `${window.location.pathname}${window.location.search}${target}`);
+    }
+  }, [selectedId]);
+
+  // Quick presets
+  type Preset = { id: string; ar: string; en: string; icon: React.ReactNode; apply: () => void; active: boolean };
+  const presets: Preset[] = [
+    {
+      id: 'pending', ar: 'طلبات معلّقة', en: 'Pending requests', icon: <AlertTriangle className="h-3.5 w-3.5" />,
+      apply: () => { setStatus('active'); setVisibility('all'); setQrStatus('all'); setSiteType('all'); setSortBy('pending_desc'); },
+      active: sortBy === 'pending_desc',
+    },
+    {
+      id: 'qr-on', ar: 'QR نشط', en: 'QR enabled', icon: <QrCode className="h-3.5 w-3.5" />,
+      apply: () => { setQrStatus('enabled'); setStatus('active'); },
+      active: qrStatus === 'enabled',
+    },
+    {
+      id: 'qr-revoked', ar: 'QR ملغى', en: 'QR revoked', icon: <X className="h-3.5 w-3.5" />,
+      apply: () => { setQrStatus('revoked'); setStatus('all'); },
+      active: qrStatus === 'revoked',
+    },
+    {
+      id: 'contracts', ar: 'لها عقود', en: 'In contracts', icon: <FileText className="h-3.5 w-3.5" />,
+      apply: () => { setSortBy('contracts_desc'); setStatus('active'); },
+      active: sortBy === 'contracts_desc',
+    },
+    {
+      id: 'hot', ar: 'الأكثر مسحاً', en: 'Hottest scans', icon: <TrendingUp className="h-3.5 w-3.5" />,
+      apply: () => { setSortBy('scans_desc'); setStatus('active'); },
+      active: sortBy === 'scans_desc',
+    },
+    {
+      id: 'archived', ar: 'المؤرشفة', en: 'Archived', icon: <Layers className="h-3.5 w-3.5" />,
+      apply: () => { setStatus('archived'); },
+      active: status === 'archived',
+    },
+  ];
 
   const activeFilters = useMemo(() => {
     const f: Array<{ key: string; label: string; clear: () => void }> = [];
