@@ -15,6 +15,7 @@ import { useBi } from '@/components/common/Bilingual';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Activity, MapPin, QrCode, RefreshCw, Search, AlertTriangle, ExternalLink, Eye } from 'lucide-react';
 import AdminSiteSensitivePanel from '@/components/admin/client-sites/AdminSiteSensitivePanel';
+import AdminSiteSensitiveInline from '@/components/admin/client-sites/AdminSiteSensitiveInline';
 
 /* ------------------------------------------------------------------ */
 /* Types                                                              */
@@ -265,8 +266,8 @@ const AdminClientSitesMonitoring: React.FC = () => {
             <AlertTriangle className="h-4 w-4 text-warning mt-0.5 shrink-0" />
             <p>
               {bi(
-                'العنوان الكامل، الهاتف، الإحداثيات، رموز QR الخام، والملاحظات الحساسة لا تُعرض في هذه الصفحة. الاستخدام لأغراض المراقبة التشغيلية فقط.',
-                'Full address, phone, coordinates, raw QR tokens and sensitive notes are not shown. Operational monitoring only.',
+                'تُعرض البيانات الحساسة (العنوان الكامل، الهاتف، الإحداثيات) داخل بطاقة كل موقع لأغراض المتابعة الإدارية، ويُسجَّل كل كشف في سجل التدقيق. رموز QR الخام لا يمكن استرجاعها بعد الإصدار — استخدم زر «تدوير» في لوحة المالك للحصول على رمز جديد.',
+                'Sensitive data (full address, phone, coordinates) is shown inline per site for operational monitoring; every reveal is written to the audit log. Raw QR tokens cannot be retrieved after issuance — use Rotate in the owner panel to obtain a new one.',
               )}
             </p>
           </CardContent>
@@ -558,6 +559,8 @@ const AdminClientSitesMonitoring: React.FC = () => {
                     <p>{bi('آخر إنشاء', 'Last created')}: {fmtDate(detailQ.data.related_contracts.last_created_at, isRTL)}</p>
                   </div>
                 </section>
+
+                <AdminSiteSensitiveInline siteId={detailQ.data.site.id} />
 
                 <AdminSiteSensitivePanel siteId={detailQ.data.site.id} />
               </div>
