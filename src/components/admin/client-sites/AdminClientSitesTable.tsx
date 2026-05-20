@@ -130,6 +130,11 @@ const AdminClientSitesTable: React.FC<Props> = ({
             {rows.map((r) => {
               const qr = getQrStatus(r);
               const isOpen = selectedId === r.id;
+              const biz = r.business_id ? businessLogos.get(r.business_id) : undefined;
+              const bizName = biz
+                ? (isRTL ? (biz.name_ar || biz.name_en) : (biz.name_en || biz.name_ar))
+                : (isRTL ? (r.business_name_ar || r.business_name_en) : (r.business_name_en || r.business_name_ar));
+              const bizInitials = (bizName ?? '?').trim().slice(0, 2).toUpperCase();
               return (
                 <div key={r.id} className={isOpen ? 'bg-muted/30' : ''}>
                   <button
@@ -139,8 +144,22 @@ const AdminClientSitesTable: React.FC<Props> = ({
                     aria-label={`${r.site_ref} ${r.site_name || r.label}`}
                     className={`w-full text-start ${density === 'compact' ? 'p-2.5' : 'p-4'} flex flex-wrap items-center gap-3 hover:bg-muted/40 transition-colors focus:outline-none focus-visible:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring`}
                   >
-                    <div className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 ${qr === 'enabled' ? 'bg-primary/10 text-primary' : qr === 'revoked' ? 'bg-destructive/10 text-destructive' : 'bg-muted text-muted-foreground'}`}>
-                      {iconForSiteType(r.site_type)}
+                    <div className="relative shrink-0">
+                      <Avatar className="h-10 w-10 rounded-xl border bg-background">
+                        {biz?.logo_url && <AvatarImage src={biz.logo_url} alt={bizName ?? ''} className="object-contain" />}
+                        <AvatarFallback className={`rounded-xl text-[11px] font-semibold ${r.business_id ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                          {biz?.logo_url || !r.business_id ? (
+                            r.business_id ? bizInitials : <Building2 className="h-4 w-4" aria-hidden />
+                          ) : bizInitials}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span
+                        className={`absolute -bottom-1 -end-1 h-5 w-5 rounded-md border-2 border-background flex items-center justify-center ${qr === 'enabled' ? 'bg-primary/15 text-primary' : qr === 'revoked' ? 'bg-destructive/15 text-destructive' : 'bg-muted text-muted-foreground'}`}
+                        title={r.site_type}
+                        aria-hidden
+                      >
+                        {iconForSiteType(r.site_type)}
+                      </span>
                     </div>
 
                     <div className="min-w-0 flex-1">
