@@ -1,104 +1,113 @@
-## الهدف
+# Phase 1 — Temporary Beta Login Codes
 
-تشغيل تجربة A/B على عنوان Hero في الصفحة الرئيسية، مع تتبع نسبة الضغط (CTR) على زر "اطلب عرض سعر"، واستخدام النسخة الأفضل تلقائيًا بعد بلوغ حجم عينة كافٍ ومستوى ثقة محدد.
+Beta-only safety net while SMS/email delivery is being finalized. Never weakens existing auth; can be removed by dropping one table + 2 RPCs.
+
+## Part A — Current auth audit (findings)
+
+**Methods in place**
+- Email + password (`authService.signInWithEmail` → Supabase `signInWithPassword`)
+- Phone OTP via custom edge functions `send-login-otp` / `verify-login-otp` (Twilio + `phone_otps` table). Test bypass already exists via `OTP_BYPASS_PHONES` secret → fixed code `000000`.
+- Google OAuth (`lovable.auth.signInWithOAuth("google")`)
+- Password reset via `resetPasswordForEmail` → `/reset-password`
+- Signup confirmation email
+- Invite acceptance: `/invite/:token` (`InviteAccept.tsx`) and `/staff-invite/:token` (`StaffInviteAccept.tsx`)
+
+**Routes**: `/auth`, `/reset-password`, `/onboarding`, `/invite/:token`, `/staff-invite/:token`, `/forbidden`.
+
+**Role gating**: `ProtectedRoute` + `useRoleRedirect`; DB-side `public.has_role(uuid, app_role)` SECURITY DEFINER on `public.user_roles` (`admin`, `super_admin`, etc.). No role data on `profiles`.
+
+**Weaknesses / gaps relevant to this phase**
+- SMS delivery not finalized → real users can't receive OTPs.
+- No "out-of-band" admin-issued code path for beta testers.
+- No infra for issuing a Supabase session purely from a verified custom code without service role — so any "temp code" must NOT mint a session client-side.
+
+**Verdict**: Safe to add a temp-code system as a **gate**, not a session issuer. Choose **Session Strategy = Option 3** (verification only, no auto-session). When messaging is ready, we flip beta testers back to existing OTP flow and disable the temp-code feature with a single flag.
+
+## Part B/C/D — Database
+
+New migration creates table + 2 RPCs + RLS.
+
+**Table `public.auth_temporary_login_codes`** (exactly the shape requested). Indexes on `(identifier, expires_at)` and `(used_at, revoked_at)`. RLS enabled, **no policies for anon/auth** — only SECURITY DEFINER RPCs touch it.
+
+**`public.create_temporary_login_code(_identifier, _user_id default null, _purpose default 'beta_login')`**
+- SECURITY DEFINER, `REVOKE EXECUTE FROM PUBLIC`, `GRANT EXECUTE TO authenticated`.
+- Requires `has_role(auth.uid(),'admin') OR has_role(auth.uid(),'super_admin')` → else raise `AUTH_TEMP_CODE:FORBIDDEN`.
+- Normalizes identifier (lowercase, trim; strip non-digits if looks like phone).
+- Generates 6-digit numeric code via `gen_random_bytes` (crypto-safe, not `random()`).
+- Stores `encode(digest(code || id::text, 'sha256'),'hex')` — pgcrypto already enabled in project.
+- `expires_at = now() + interval '10 minutes'`, `max_attempts = 5`, `created_by = auth.uid()`.
+- Revokes any prior unused non-expired codes for same identifier+purpose (one-active-at-a-time).
+- Returns `jsonb { identifier: <masked>, code, expires_at, purpose }`. Plaintext returned **once**.
+
+**`public.verify_temporary_login_code(_identifier, _code)`**
+- SECURITY DEFINER, `GRANT EXECUTE TO anon, authenticated` (needed pre-login).
+- Normalize identifier; lookup latest row where `used_at IS NULL AND revoked_at IS NULL AND expires_at > now()`.
+- None → `AUTH_TEMP_CODE:INVALID_OR_EXPIRED` (generic, no enumeration).
+- `attempt_count >= max_attempts` → `AUTH_TEMP_CODE:TOO_MANY_ATTEMPTS`.
+- Compare hash; mismatch → increment `attempt_count`, raise generic invalid.
+- Match → set `used_at = now()`; return `{ verified:true, identifier:<masked>, purpose, user_id }`.
+- Simple per-identifier rate-limit: reject if >10 verify attempts in last 5 min (count via same table's `attempt_count` sum).
+
+**Audit**: inserts into existing `public.audit_log` (if present — else skip) with action `temp_login_code.created` / `.verified` / `.failed`.
+
+## Part E — Session strategy (chosen: Option 3)
+
+Verify RPC is a **gate only**. After a successful verify the UI:
+1. Shows a success state.
+2. Tells the user that a Qitaat operator will complete sign-in for them, OR
+3. If `user_id` is linked and current visitor is already authenticated as that user, marks beta access flag in `localStorage` (`qitaat_beta_verified=<ts>`) — used by feature flags, never as an auth substitute.
+
+No service-role edge function, no fake JWTs, no client-side session minting.
+
+## Part F — UI (minimal, additive)
+
+`src/components/auth/TemporaryCodeForm.tsx` — new component.
+- Mounted as a 3rd tab in `LoginForm`'s method toggle: "رمز مؤقت / Temp code", behind `VITE_ENABLE_BETA_TEMP_CODE === 'true'` env flag so it's trivially hidden in prod.
+- Fields: identifier (email or phone, free text), 6-digit code (reuse `OtpInput`).
+- Calls `supabase.rpc('verify_temporary_login_code', …)`. Localized friendly errors mapped from the 3 sentinel strings. Never reveals account existence.
+- Copy strings (AR/EN) exactly as specified.
+- No "request code" button — instead shows: *"اطلب الرمز من فريق قطاعات."* / *"Request a code from the Qitaat team."*
+
+## Part G — Admin UI
+
+Defer. Phase 1 ships RPC + docs only. Operators call `create_temporary_login_code` via SQL editor; safer + zero UI surface to attack.
+
+## Part H — Security checklist (enforced by migration)
+
+- pgcrypto-hashed codes, salted with row id.
+- No anon/auth SELECT/INSERT/UPDATE policies — only DEFINER RPCs.
+- `EXECUTE` on create RPC restricted to `authenticated` + role check inside.
+- 10-min expiry, single-use, 5-attempt cap, per-identifier rate limit.
+- Generic error messages (no enumeration).
+- No role escalation: RPC never reads/writes `user_roles`, never issues sessions.
+- Audit trail via `created_by` + best-effort `audit_log` insert.
+- Feature flag gates UI; dropping table+RPCs fully removes feature.
+
+## Part I — Docs
+
+`docs/auth-temporary-login-code.md` covering purpose, beta-only warning, how to create via SQL, lifetime, sharing rules, revoking (`UPDATE … SET revoked_at=now()`), security rules, disable/removal steps, manual QA checklist.
+
+## Part J — Validation
+
+`bunx tsc --noEmit`, Supabase linter, manual RPC tests via `supabase--read_query` for: success, wrong-code increments, max attempts blocks, expired fails, used fails, revoked fails, non-admin create rejected, hashed storage confirmed (`SELECT code_hash FROM …`).
 
 ---
 
-## 1) قاعدة البيانات (migration واحدة)
+## Files touched
 
-جداول:
-- `ab_experiments` — `key` (مثل `hero_headline`)، الحالة (`draft|running|completed`)، `min_sample_per_variant` (افتراضي 1000)، `confidence_threshold` (افتراضي 0.95)، `winner_variant_id`، `auto_promote` (bool).
-- `ab_variants` — `experiment_id`، `key` (`A`/`B`/...)، `content` (jsonb: `{titleAr, titleEn, subAr, subEn}` لكل شريحة أو فقط العنوان الرئيسي)، `weight` (افتراضي 1)، `is_control`، `is_active`.
-- `ab_events` — `experiment_id`، `variant_id`، `visitor_id` (text)، `event_type` (`impression|click`)، `created_at`. بدون أي PII.
+```text
+NEW  supabase/migrations/<ts>_beta_temporary_login_codes.sql
+NEW  src/components/auth/TemporaryCodeForm.tsx
+EDIT src/components/auth/LoginForm.tsx          (add 3rd tab behind flag)
+NEW  docs/auth-temporary-login-code.md
+```
 
-سياسات RLS:
-- قراءة `ab_experiments`/`ab_variants` للحالات `running` و `completed` فقط متاحة للعموم.
-- إدراج `ab_events` مسموح للعموم (visitor_id فقط، لا auth).
-- الإدارة الكاملة عبر `has_role(auth.uid(),'super_admin')`.
+No edits to `authService`, `ProtectedRoute`, edge functions, or existing OTP flow.
 
-فهارس: `(experiment_id, variant_id, event_type, created_at)` لتسريع التجميع.
+## Remaining risks
 
----
+- Operators must share codes over a secure channel (WhatsApp/email out-of-band). Documented.
+- If `audit_log` table doesn't exist, audit insert is wrapped in `BEGIN…EXCEPTION WHEN OTHERS THEN NULL` so it never blocks.
+- Phase 2 (real session issuance) will need an edge function with service role — explicitly out of scope here.
 
-## 2) RPCs آمنة (SECURITY DEFINER, search_path=public)
-
-- `ab_assign_variant(p_experiment_key text, p_visitor_id text)` →
-  - يختار variant فعّالة بشكل ثابت لكل visitor عبر `hashtext(visitor_id || experiment_key) % sum(weight)` ⇒ لا تخزين assignment، نفس الزائر = نفس النسخة دائمًا.
-  - يسجل `impression` (مرة واحدة لكل visitor باستخدام `ON CONFLICT DO NOTHING` + قيد فريد جزئي على `event_type='impression'`).
-  - يُرجع `{variant_id, variant_key, content}`.
-- `ab_track_click(p_experiment_key text, p_visitor_id text)` → يحسب نفس النسخة المعيّنة ويسجل `click`.
-- `ab_evaluate_experiments()` (للأدمن/cron) → لكل تجربة `running`:
-  - يحسب impressions و clicks لكل variant.
-  - إن بلغت كل النسخ `min_sample_per_variant`، يُجري z-test للنسبتين بين الأعلى CTR والمتحكم.
-  - إن `p_value < 1 - confidence_threshold` و`auto_promote=true`: ينقل التجربة إلى `completed`، يضع `winner_variant_id`، ويعطل بقية النسخ (`is_active=false`).
-- `ab_experiment_stats(p_key text)` → للأدمن: impressions/clicks/CTR/p-value لكل variant.
-
----
-
-## 3) الواجهة الأمامية
-
-- `src/lib/abTesting.ts`:
-  - `getOrCreateVisitorId()` — uuid في `localStorage` (`qitaat_visitor_id`).
-  - `useAbVariant(experimentKey)` — React Query، يستدعي `ab_assign_variant`، staleTime=∞، كاش في `sessionStorage` لمنع تكرار impressions داخل نفس الجلسة.
-  - `trackAbClick(experimentKey)` — fire-and-forget عبر `ab_track_click`.
-
-- تعديل `HomeV2.tsx`:
-  - في `HeroV2`، استدعاء `useAbVariant('hero_headline')` ودمج `content.titleAr/titleEn/subAr/subEn` فوق نسخة الـ slide الافتراضية (إن وُجد content للنسخة، يبدّل عنوان الشريحة الأولى أو الكل حسب النسخة المخزنة).
-  - في `PrimaryCTA` لزر "اطلب عرض سعر" داخل الـ hero فقط: استدعاء `trackAbClick('hero_headline')` عند النقر قبل التنقل.
-
-- لوحة الأدمن `/admin/ab-experiments`:
-  - قائمة التجارب + إنشاء/تعديل (inline form, لا منبثقات).
-  - لكل تجربة: variants مع محرر `content` (JSON آمن أو حقول AR/EN منظمة)، `weight`، `is_control`.
-  - عرض الإحصائيات الحية (impressions/clicks/CTR/p-value/المُعيَّن فائزًا).
-  - أزرار "تشغيل/إيقاف"، "تعيين فائز يدويًا"، تبديل `auto_promote`.
-  - محمي بـ `requireAdmin` + `useNoIndex`.
-
----
-
-## 4) الترقية التلقائية
-
-- Edge function `ab-evaluate` تستدعي `ab_evaluate_experiments()`، محمية بـ `x-cron-secret` (نفس نمط `monthly-provider-credit-grant`).
-- إعداد cron يدويًا في SQL Editor (يومي 02:00 UTC). نُجهّز SQL، ولا نضع السر في الكود.
-
----
-
-## 5) البيانات الأولية (seed)
-
-عبر `supabase--insert` بعد الـ migration:
-- تجربة واحدة `hero_headline` بحالة `running`، `auto_promote=true`، `min_sample_per_variant=1000`، `confidence_threshold=0.95`.
-- نسختان:
-  - **A (control)**: العنوان الحالي للشريحة الأولى.
-  - **B**: عنوان مختلف (مقترح: "اطلب عرض سعر صناعي خلال دقيقة" + sub مطابق).
-
----
-
-## 6) الأمان والخصوصية
-
-- `visitor_id` معرّف عشوائي في المتصفح فقط، لا يربطه شيء بالمستخدم المسجَّل.
-- لا يُسجَّل IP أو user-agent.
-- RLS تمنع قراءة `ab_events` للعموم تمامًا.
-- كل RPCs بـ `search_path=public` و `SECURITY DEFINER` مع تحقق من المدخلات.
-
----
-
-## 7) ما لن يتغير
-
-- منطق الطلبات والمطابقة والـ /quote نفسها.
-- بقية CTAs خارج الـ hero لا تُتتبَّع في هذه التجربة.
-- لا منبثقات/Dialogs (سياسة UX).
-
----
-
-## التسليم
-
-| العنصر | الحالة |
-|---|---|
-| Migration (جداول + RLS + RPCs + فهارس) | ✓ |
-| Edge function `ab-evaluate` + ربط cron يدوي | ✓ (ملف + تعليمات SQL) |
-| `src/lib/abTesting.ts` + hook | ✓ |
-| تعديل `HeroV2` ودمج النسخة + تتبع زر CTA | ✓ |
-| `/admin/ab-experiments` + رابط في الشريط الجانبي | ✓ |
-| Seed التجربة الأولى | ✓ |
-| تقرير نهائي: الجداول، RPCs، طريقة التعيين، z-test، الترقية، الأمان | ✓ |
-
-هل أبدأ بالتنفيذ بهذا النطاق؟
+Approve to proceed with migration + code.
