@@ -9904,6 +9904,10 @@ export type Database = {
         Returns: number
       }
       expire_client_invitations: { Args: never; Returns: Json }
+      find_auth_user_email_by_identifier: {
+        Args: { _identifier: string }
+        Returns: string
+      }
       find_user_by_ref_id: {
         Args: { _ref_id: string }
         Returns: {
