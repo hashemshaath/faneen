@@ -22,6 +22,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import ClientSiteQrCard from '@/components/client-sites/ClientSiteQrCard';
 import ClientSiteVisibilitySettingsCard from '@/components/client-sites/ClientSiteVisibilitySettingsCard';
+import ClientSiteAccessRequestsPanel from '@/components/client-sites/ClientSiteAccessRequestsPanel';
 
 export interface ExecutionSiteRow {
   id: string;
@@ -344,6 +345,10 @@ export const ExecutionSiteSection: React.FC<Props> = ({
               siteId={selectedSite.id}
               siteRef={selectedSite.site_ref}
             />
+          )}
+
+          {selectedSite && selectedSite.site_ref && !adding && (
+            <ClientSiteAccessRequestsPanel isRTL={isRTL} siteId={selectedSite.id} />
           )}
 
           {adding && (
