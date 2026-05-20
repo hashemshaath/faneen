@@ -3,11 +3,14 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CopyButton } from '@/components/ui/copy-button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { X } from 'lucide-react';
+import { Activity, Calendar, Eye, QrCode, X } from 'lucide-react';
 import AdminSiteSensitiveInline from '@/components/admin/client-sites/AdminSiteSensitiveInline';
 import AdminSiteSensitivePanel from '@/components/admin/client-sites/AdminSiteSensitivePanel';
 import AdminSiteQrManager from '@/components/admin/client-sites/AdminSiteQrManager';
-import { formatDate, type SiteDetail } from '@/lib/client-sites/admin-client-site-monitoring';
+import AdminClientBusinessCard from '@/components/admin/client-sites/AdminClientBusinessCard';
+import {
+  formatDate, getQrStatus, type SiteDetail,
+} from '@/lib/client-sites/admin-client-site-monitoring';
 
 type Bi = (ar: string, en: string) => string;
 
@@ -21,6 +24,7 @@ interface Props {
 const AdminClientSiteInlineDetail: React.FC<Props> = ({ data, bi, isRTL, onClose }) => {
   if (!data.site) return null;
   const site = data.site;
+  const qr = getQrStatus({ qr_enabled: site.qr_enabled, qr_revoked_at: site.qr_revoked_at });
 
   return (
     <div className="space-y-4 text-sm">
@@ -61,27 +65,55 @@ const AdminClientSiteInlineDetail: React.FC<Props> = ({ data, bi, isRTL, onClose
         </TabsList>
 
         <TabsContent value="overview" className="mt-3 space-y-3">
-          <div className="grid grid-cols-3 gap-2">
-            <div className="rounded-lg border p-3 text-center">
-              <p className="text-[10px] uppercase text-muted-foreground">{bi('عقود', 'Contracts')}</p>
-              <p className="text-2xl font-bold tech-content">{data.related_contracts.total}</p>
-              <p className="text-[10px] text-success">{data.related_contracts.active} {bi('نشطة', 'active')}</p>
-            </div>
-            <div className="rounded-lg border p-3 text-center">
-              <p className="text-[10px] uppercase text-muted-foreground">{bi('اهتمامات', 'Interests')}</p>
-              <p className="text-2xl font-bold tech-content">{data.recent_interests.length}</p>
-            </div>
-            <div className="rounded-lg border p-3 text-center">
-              <p className="text-[10px] uppercase text-muted-foreground">{bi('وصول', 'Grants')}</p>
-              <p className="text-2xl font-bold tech-content">{data.recent_grants.length}</p>
-            </div>
+          <AdminClientBusinessCard
+            businessId={site.business_id}
+            fallbackNameAr={site.business_name_ar}
+            fallbackNameEn={site.business_name_en}
+            contractsTotal={data.related_contracts.total}
+            contractsActive={data.related_contracts.active}
+            bi={bi}
+            isRTL={isRTL}
+          />
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <MetricTile
+              icon={<Activity className="h-4 w-4" />}
+              label={bi('المسحات', 'Scans')}
+              value={site.scan_count}
+              hint={site.last_scanned_at ? formatDate(site.last_scanned_at, isRTL) : bi('لا توجد', 'None')}
+              tone="text-info"
+            />
+            <MetricTile
+              icon={<Eye className="h-4 w-4" />}
+              label={bi('طلبات وصول', 'Grants')}
+              value={data.recent_grants.length}
+              tone="text-primary"
+            />
+            <MetricTile
+              icon={<QrCode className="h-4 w-4" />}
+              label="QR"
+              value={qr === 'enabled' ? bi('مفعّل', 'On') : qr === 'revoked' ? bi('ملغى', 'Revoked') : bi('معطّل', 'Off')}
+              tone={qr === 'enabled' ? 'text-success' : qr === 'revoked' ? 'text-destructive' : 'text-muted-foreground'}
+            />
+            <MetricTile
+              icon={<Calendar className="h-4 w-4" />}
+              label={bi('أُنشئ', 'Created')}
+              value={formatDate(site.created_at, isRTL)}
+              tone="text-muted-foreground"
+              valueClass="text-xs font-medium"
+            />
           </div>
-          {(site.business_name_ar || site.business_name_en) && (
-            <div className="rounded-lg border p-3 text-xs">
-              <p className="text-[10px] uppercase text-muted-foreground mb-1">{bi('العميل', 'Owner')}</p>
-              <p className="font-medium">{isRTL ? (site.business_name_ar || site.business_name_en) : (site.business_name_en || site.business_name_ar)}</p>
-            </div>
-          )}
+
+          <div className="flex flex-wrap gap-1.5 text-[11px]">
+            <Badge variant="secondary">{bi('الرؤية', 'Visibility')}: {site.visibility}</Badge>
+            {site.archived_at && (
+              <Badge variant="outline">{bi('مؤرشف منذ', 'Archived')}: {formatDate(site.archived_at, isRTL)}</Badge>
+            )}
+            {data.related_contracts.last_created_at && (
+              <Badge variant="outline">{bi('آخر عقد', 'Last contract')}: {formatDate(data.related_contracts.last_created_at, isRTL)}</Badge>
+            )}
+          </div>
+
           <AdminSiteSensitiveInline siteId={site.id} />
           <AdminSiteSensitivePanel siteId={site.id} />
         </TabsContent>
