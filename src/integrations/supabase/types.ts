@@ -9422,6 +9422,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      _gen_client_site_qr_token: { Args: never; Returns: string }
       _membership_free_defaults: { Args: never; Returns: Json }
       ab_assign_variant: {
         Args: { p_experiment_key: string; p_visitor_id: string }
@@ -9862,6 +9863,13 @@ export type Database = {
       cleanup_expired_otps: { Args: never; Returns: undefined }
       cleanup_old_audit_data: { Args: never; Returns: undefined }
       cleanup_old_migration_telemetry: { Args: never; Returns: undefined }
+      client_site_can_manage: {
+        Args: {
+          _site: Database["public"]["Tables"]["client_sites"]["Row"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       clone_contract_as_draft: {
         Args: {
           _include_line_items?: boolean
@@ -10392,6 +10400,7 @@ export type Database = {
         Returns: boolean
       }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      issue_client_site_qr_token: { Args: { _site_id: string }; Returns: Json }
       jsonb_diff: { Args: { _new: Json; _old: Json }; Returns: Json }
       link_lead_to_contract: {
         Args: { _contract_id: string; _lead_id: string }
@@ -10831,10 +10840,12 @@ export type Database = {
         Args: { _key_id: string; _reason?: string }
         Returns: boolean
       }
+      revoke_client_site_qr_token: { Args: { _site_id: string }; Returns: Json }
       revoke_invite_key: {
         Args: { _key_id: string; _reason?: string }
         Returns: boolean
       }
+      rotate_client_site_qr_token: { Args: { _site_id: string }; Returns: Json }
       search_contract_clients: {
         Args: { _q: string }
         Returns: {
@@ -10903,6 +10914,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      set_client_site_visibility: {
+        Args: { _site_id: string; _visibility: string }
+        Returns: Json
       }
       set_contract_execution_site: {
         Args: { _contract_id: string; _site_id: string }
