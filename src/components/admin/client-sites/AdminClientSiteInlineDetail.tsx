@@ -8,6 +8,8 @@ import AdminSiteSensitiveInline from '@/components/admin/client-sites/AdminSiteS
 import AdminSiteSensitivePanel from '@/components/admin/client-sites/AdminSiteSensitivePanel';
 import AdminSiteQrManager from '@/components/admin/client-sites/AdminSiteQrManager';
 import AdminClientBusinessCard from '@/components/admin/client-sites/AdminClientBusinessCard';
+import BarcodeWidget from '@/components/barcodes/BarcodeWidget';
+import { useEntityBarcode } from '@/lib/barcodes/useEntityBarcode';
 import {
   formatDate, getQrStatus, type SiteDetail,
 } from '@/lib/client-sites/admin-client-site-monitoring';
@@ -43,6 +45,7 @@ const AdminClientSiteInlineDetail: React.FC<Props> = ({ data, bi, isRTL, onClose
   if (!data.site) return null;
   const site = data.site;
   const qr = getQrStatus({ qr_enabled: site.qr_enabled, qr_revoked_at: site.qr_revoked_at });
+  const { data: barcodeCode } = useEntityBarcode('client_site', site.id);
 
   return (
     <div className="space-y-4 text-sm">
@@ -92,6 +95,24 @@ const AdminClientSiteInlineDetail: React.FC<Props> = ({ data, bi, isRTL, onClose
             bi={bi}
             isRTL={isRTL}
           />
+
+          {/* Permanent Project Code (barcode_code → /q/:code).
+              Falls back to site_ref display if barcode not yet provisioned. */}
+          {barcodeCode ? (
+            <BarcodeWidget
+              barcodeCode={barcodeCode}
+              entityType="client_site"
+              title={bi('كود المشروع', 'Project Code')}
+              subtitle={site.site_name || site.label || undefined}
+              size="sm"
+            />
+          ) : (
+            <div className="rounded-lg border bg-muted/30 p-2.5 text-xs flex items-center gap-2">
+              <QrCode className="h-3.5 w-3.5 text-muted-foreground" />
+              <span className="text-muted-foreground">{bi('كود المشروع', 'Project Code')}:</span>
+              <span className="font-mono tech-content">{site.site_ref}</span>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             <MetricTile

@@ -20,6 +20,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import BarcodeWidget from '@/components/barcodes/BarcodeWidget';
+import { useEntityBarcode } from '@/lib/barcodes/useEntityBarcode';
 import ClientSiteQrCard from '@/components/client-sites/ClientSiteQrCard';
 import ClientSiteVisibilitySettingsCard from '@/components/client-sites/ClientSiteVisibilitySettingsCard';
 import ClientSiteAccessRequestsPanel from '@/components/client-sites/ClientSiteAccessRequestsPanel';
@@ -182,6 +184,7 @@ export const ExecutionSiteSection: React.FC<Props> = ({
   };
 
   const selectedSite = sites.find((s) => s.id === selectedSiteId) || null;
+  const { data: selectedSiteBarcode } = useEntityBarcode('client_site', selectedSite?.id);
   const showLockedSnapshot = locked && !!snapshot;
 
   return (
@@ -329,6 +332,15 @@ export const ExecutionSiteSection: React.FC<Props> = ({
 
           {selectedSite && selectedSite.site_ref && !adding && (
             <div className="space-y-3">
+              {selectedSiteBarcode && (
+                <BarcodeWidget
+                  barcodeCode={selectedSiteBarcode}
+                  entityType="client_site"
+                  title={isRTL ? 'كود المشروع' : 'Project Code'}
+                  subtitle={selectedSite.site_name ?? selectedSite.label ?? selectedSite.site_ref}
+                  size="sm"
+                />
+              )}
               <ClientSiteQrCard
                 siteId={selectedSite.id}
                 siteRef={selectedSite.site_ref}

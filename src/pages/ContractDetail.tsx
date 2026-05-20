@@ -28,6 +28,8 @@ import { ContractPdfPreviewOverlay } from '@/components/contract/ContractPdfPrev
 import { ContractPdfAnalysisLog } from '@/components/contract/ContractPdfAnalysisLog';
 import { PdfAnalysisReport } from '@/components/contract/PdfAnalysisReport';
 import { calculateVatBreakdown } from '@/lib/contract-financials';
+import BarcodeWidget from '@/components/barcodes/BarcodeWidget';
+import { useEntityBarcode } from '@/lib/barcodes/useEntityBarcode';
 
 // ─── Phase 5E.2 — Safe source-lead summary card ───
 type SourceLeadSummary = {
@@ -292,6 +294,7 @@ const ContractDetail = () => {
   const { t, language, isRTL } = useLanguage();
   const { user, isAdmin } = useAuth();
   const queryClient = useQueryClient();
+  const { data: contractBarcodeCode } = useEntityBarcode('contract', id);
   const [isExportingPDF, setIsExportingPDF] = useState(false);
   // PDF-UX1: inline fullscreen preview state.
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -1708,6 +1711,18 @@ const ContractDetail = () => {
       </div>
 
       <div className="container py-5 sm:py-8 px-4 sm:px-6 max-w-5xl mx-auto">
+        {/* Phase 6 — Permanent Contract Code (barcode_code → /q/:code). Renders only when active barcode exists. */}
+        {contractBarcodeCode && (
+          <div className="mb-5 sm:mb-6">
+            <BarcodeWidget
+              barcodeCode={contractBarcodeCode}
+              entityType="contract"
+              title={isRTL ? 'كود العقد' : 'Contract Code'}
+              subtitle={contract.contract_number}
+              size="sm"
+            />
+          </div>
+        )}
         {/* ─── Phase 5E.1 — Status Guidance (read-only) ─── */}
         {(() => {
           const guidance = getStatusGuidance(contract.status);
