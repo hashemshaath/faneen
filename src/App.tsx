@@ -95,6 +95,7 @@ const AdminLocationsHub = lazyRetry(() => import("./pages/admin/locations/AdminL
 const AdminLocationsCatalog = lazyRetry(() => import("./pages/admin/locations/AdminLocationsCatalog"));
 const AdminBusinessServiceAreas = lazyRetry(() => import("./pages/admin/locations/AdminBusinessServiceAreas"));
 const AdminBusinessCoordinates = lazyRetry(() => import("./pages/admin/locations/AdminBusinessCoordinates"));
+const AdminClientSitesMonitoring = lazyRetry(() => import("./pages/admin/AdminClientSitesMonitoring"));
 const AdminMemberships = lazyRetry(() => import("./pages/admin/AdminMemberships"));
 const AdminMembershipRejections = lazyRetry(() => import("./pages/admin/AdminMembershipRejections"));
 const AdminMembershipEvents = lazyRetry(() => import("./pages/admin/AdminMembershipEvents"));
@@ -295,6 +296,7 @@ const AppRoutes = () => (
           <Route path="/admin/locations/catalog" element={<ProtectedRoute requireAdmin><AdminLocationsCatalog /></ProtectedRoute>} />
           <Route path="/admin/locations/service-areas" element={<ProtectedRoute requireAdmin><AdminBusinessServiceAreas /></ProtectedRoute>} />
           <Route path="/admin/locations/business-coordinates" element={<ProtectedRoute requireAdmin><AdminBusinessCoordinates /></ProtectedRoute>} />
+          <Route path="/admin/client-sites" element={<ProtectedRoute requireAdmin><AdminClientSitesMonitoring /></ProtectedRoute>} />
           <Route path="/admin/provider-review" element={<ProtectedRoute requireAdmin><AdminProviderReview /></ProtectedRoute>} />
           <Route path="/admin/memberships" element={<ProtectedRoute requireAdmin><AdminMemberships /></ProtectedRoute>} />
           <Route path="/admin/membership-rejections" element={<ProtectedRoute requireAdmin><AdminMembershipRejections /></ProtectedRoute>} />
