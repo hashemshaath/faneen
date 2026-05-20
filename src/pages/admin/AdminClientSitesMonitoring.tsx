@@ -16,7 +16,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useBi } from '@/components/common/Bilingual';
 import { useLanguage } from '@/i18n/LanguageContext';
 import {
-  Activity, MapPin, QrCode, RefreshCw, Search, AlertTriangle, ExternalLink, Eye,
+  Activity, MapPin, QrCode, RefreshCw, Search, AlertTriangle, Eye,
   X, Download, Building2, Home, Warehouse, Briefcase, Store, HardHat, Layers,
   ShieldCheck, FileText, Users, TrendingUp, Filter,
 } from 'lucide-react';
