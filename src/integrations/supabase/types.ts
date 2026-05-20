@@ -10033,6 +10033,10 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_rotate_client_site_qr_token: {
+        Args: { _reason: string; _site_id: string }
+        Returns: Json
+      }
       admin_update_business_approval: {
         Args: {
           _business_id: string
