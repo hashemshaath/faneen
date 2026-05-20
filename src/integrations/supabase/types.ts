@@ -2003,6 +2003,36 @@ export type Database = {
           },
         ]
       }
+      client_site_lookup_audit: {
+        Row: {
+          created_at: string
+          found: boolean
+          id: string
+          lookup_type: string
+          site_id: string | null
+          site_ref: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          found: boolean
+          id?: string
+          lookup_type: string
+          site_id?: string | null
+          site_ref?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          found?: boolean
+          id?: string
+          lookup_type?: string
+          site_id?: string | null
+          site_ref?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       client_sites: {
         Row: {
           access_notes: string | null
@@ -10281,6 +10311,7 @@ export type Database = {
           website: string
         }[]
       }
+      get_public_site_by_token: { Args: { _token: string }; Returns: Json }
       get_review_authors: {
         Args: { _user_ids: string[] }
         Returns: {
@@ -10342,6 +10373,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      hash_site_qr_token: { Args: { _token: string }; Returns: string }
       increment_blog_views: { Args: { _post_id: string }; Returns: undefined }
       increment_promotion_views: {
         Args: { _promotion_id: string }
@@ -10815,6 +10847,7 @@ export type Database = {
           user_id: string
         }[]
       }
+      search_site_by_ref: { Args: { _site_ref: string }; Returns: Json }
       send_contract_for_approval: {
         Args: { _contract_id: string }
         Returns: {
